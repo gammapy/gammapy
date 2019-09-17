@@ -129,7 +129,7 @@ def make_datasets_example():
     print("expo sum : ", dataset0.exposure.data.sum())
     print("bkg0 sum : ", dataset0.background_model.evaluate().data.sum())
 
-    path = str("$GAMMAPY_DATA/tests/models/gc_example_")
+    path = "$GAMMAPY_DATA/tests/models/gc_example_"
     datasets.to_yaml(path, selection="simple", overwrite=True)
 
 

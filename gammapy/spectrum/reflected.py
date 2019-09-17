@@ -291,9 +291,9 @@ class ReflectedRegionsBackgroundEstimator:
 
     def __str__(self):
         s = self.__class__.__name__
-        s += "\n{}".format(self.on_region)
-        s += "\n{}".format(self.observations)
-        s += "\n{}".format(self.finder)
+        s += f"\n{self.on_region}"
+        s += f"\n{self.observations}"
+        s += f"\n{self.finder}"
         return s
 
     def run(self):
@@ -308,7 +308,7 @@ class ReflectedRegionsBackgroundEstimator:
 
     def process(self, obs):
         """Estimate background for one observation."""
-        log.debug("Processing observation {}".format(obs))
+        log.debug(f"Processing observation {obs}")
         self.finder.center = obs.pointing_radec
 
         self.finder.run()
@@ -327,9 +327,7 @@ class ReflectedRegionsBackgroundEstimator:
                 off_regions = off_regions.union(reg)
             off_events = obs.events.select_region(off_regions, wcs)
 
-        log.info(
-            "Found {0} reflected regions for the Obs #{1}".format(a_off, obs.obs_id)
-        )
+        log.info(f"Found {a_off} reflected regions for the Obs #{obs.obs_id}")
 
         return BackgroundEstimate(
             on_region=self.on_region,
@@ -409,7 +407,7 @@ class ReflectedRegionsBackgroundEstimator:
             off_regions = result[idx_].off_region
             for off in off_regions:
                 off_patch = off.to_pixel(wcs=geom.wcs).as_artist(
-                    alpha=0.8, edgecolor=colors[idx_], label="Obs {}".format(obs.obs_id)
+                    alpha=0.8, edgecolor=colors[idx_], label=f"Obs {obs.obs_id}"
                 )
                 handle = ax.add_patch(off_patch)
             if off_regions:

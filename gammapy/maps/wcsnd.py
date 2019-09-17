@@ -155,7 +155,7 @@ class WcsNDMap(WcsMap):
         elif order == 2 or order == 3:
             return self._interp_by_pix_map_coordinates(pix, order=order)
         else:
-            raise ValueError("Invalid interpolation order: {!r}".format(order))
+            raise ValueError(f"Invalid interpolation order: {order!r}")
 
     def _interp_by_pix_linear_grid(self, pix, order=1, fill_value=None):
         # TODO: Cache interpolator
@@ -163,7 +163,7 @@ class WcsNDMap(WcsMap):
         try:
             method = method_lookup[order]
         except KeyError:
-            raise ValueError("Invalid interpolation order: {!r}".format(order))
+            raise ValueError(f"Invalid interpolation order: {order!r}")
 
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
 
@@ -196,7 +196,7 @@ class WcsNDMap(WcsMap):
         method_lookup = {0: "nearest", 1: "linear", 3: "cubic"}
         method = method_lookup.get(order, None)
         if method is None:
-            raise ValueError("Invalid interp: {!r}".format(interp))
+            raise ValueError(f"Invalid interp: {interp!r}")
 
         grid_coords = tuple(self.geom.get_coord(flat=True))
         data = self.data[np.isfinite(self.data)]
@@ -278,9 +278,7 @@ class WcsNDMap(WcsMap):
                     (img, self.geom.wcs), geom.wcs, shape_out=shape_out
                 )
             else:
-                raise TypeError(
-                    "mode must be 'interp' or 'exact'. Got: {!r}".format(mode)
-                )
+                raise TypeError(f"mode must be 'interp' or 'exact'. Got: {mode!r}")
 
             data[idx] = vals
 
@@ -360,7 +358,7 @@ class WcsNDMap(WcsMap):
             vals = self.interp_by_coord(coords, interp=order)
             map_out.set_by_coord(coords, vals)
         else:
-            raise ValueError("Invalid mode: {!r}".format(mode))
+            raise ValueError(f"Invalid mode: {mode!r}")
 
         return map_out
 
@@ -570,7 +568,7 @@ class WcsNDMap(WcsMap):
             elif kernel == "box":
                 data = scipy.ndimage.uniform_filter(img, width, **kwargs)
             else:
-                raise ValueError("Invalid kernel: {!r}".format(kernel))
+                raise ValueError(f"Invalid kernel: {kernel!r}")
             smoothed_data[idx] = data
 
         return self._init_copy(data=smoothed_data)

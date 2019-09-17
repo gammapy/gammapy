@@ -83,7 +83,7 @@ class Background3D:
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += "\n{}".format(self.data)
+        ss += f"\n{self.data}"
         return ss
 
     @classmethod
@@ -175,7 +175,7 @@ class Background3D:
             fov_lat=fov_lat,
             energy=energy_reco,
             method=method,
-            **kwargs
+            **kwargs,
         )
         return values
 
@@ -267,7 +267,7 @@ class Background2D:
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += "\n{}".format(self.data)
+        ss += f"\n{self.data}"
         return ss
 
     @classmethod
@@ -403,14 +403,14 @@ class Background2D:
 
         caxes = ax.pcolormesh(x, y, z, norm=LogNorm(), **kwargs)
         ax.set_xscale("log")
-        ax.set_ylabel("Offset ({})".format(y.unit))
-        ax.set_xlabel("Energy ({})".format(x.unit))
+        ax.set_ylabel(f"Offset ({y.unit})")
+        ax.set_xlabel(f"Energy ({x.unit})")
 
         xmin, xmax = x.value.min(), x.value.max()
         ax.set_xlim(xmin, xmax)
 
         if add_cbar:
-            label = "Background rate ({unit})".format(unit=self.data.data.unit)
+            label = f"Background rate ({self.data.data.unit})"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
     def peek(self):

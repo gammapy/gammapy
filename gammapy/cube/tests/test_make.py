@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.cube import MapMaker, MapMakerRing, RingBackgroundEstimator
+from gammapy.cube import MapMaker, MapMakerObs, MapMakerRing, RingBackgroundEstimator
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
@@ -18,15 +18,11 @@ def observations():
     return data_store.get_observations(obs_id)
 
 
-def geom(ebounds):
+def geom(ebounds, binsz=0.5):
     skydir = SkyCoord(0, -1, unit="deg", frame="galactic")
     energy_axis = MapAxis.from_edges(ebounds, name="energy", unit="TeV", interp="log")
     return WcsGeom.create(
-        binsz=0.5 * u.deg,
-        skydir=skydir,
-        width=(10, 5),
-        coordsys="GAL",
-        axes=[energy_axis],
+        binsz=binsz, skydir=skydir, width=(10, 5), coordsys="GAL", axes=[energy_axis]
     )
 
 
@@ -135,3 +131,27 @@ def test_map_maker_ring(observations):
     assert_allclose(np.nansum(images["on"].data), 21981, rtol=1e-2)
     assert_allclose(np.nansum(images["exposure_off"].data), 109751.45, rtol=1e-2)
     assert images["on"].geom.is_image is True
+
+
+@requires_data()
+def test_map_maker_obs(observations):
+    # Test for different spatial geoms and etrue, ereco bins
+
+    geom_reco = geom(ebounds=[0.1, 1, 10])
+    geom_true = geom(ebounds=[0.1, 0.5, 2.5, 10.0], binsz=1.0)
+    geom_exp = geom(ebounds=[0.1, 0.5, 2.5, 10.0])
+    maker_obs = MapMakerObs(
+        observation=observations[0],
+        geom=geom_reco,
+        geom_true=geom_true,
+        offset_max=2.0 * u.deg,
+    )
+
+    map_obs = maker_obs.run()
+    assert map_obs["counts"].geom == geom_reco
+    assert map_obs["background"].geom == geom_reco
+    assert map_obs["exposure"].geom == geom_exp
+    assert map_obs["edisp"].edisp_map.data.shape == (3, 300, 5, 10)
+    assert map_obs["edisp"].exposure_map.data.shape == (3, 1, 5, 10)
+    assert map_obs["psf"].psf_map.data.shape == (3, 66, 5, 10)
+    assert map_obs["psf"].exposure_map.data.shape == (3, 1, 5, 10)

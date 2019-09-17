@@ -55,7 +55,7 @@ class ComputePlan:
         self.option = option
         self.modetutorials = modetutorials
         self.listfiles = {}
-        log.info("Looking for {}...".format(self.option))
+        log.info(f"Looking for {self.option}...")
 
     def getenvironment(self):
         try:
@@ -71,7 +71,7 @@ class ComputePlan:
         filepath_env = str(self.outfolder / filename_env)
         dl.enqueue_file(url_file_env, path=filepath_env)
         try:
-            log.info("Downloading {}".format(url_file_env))
+            log.info(f"Downloading {url_file_env}")
             Path(filepath_env).parent.mkdir(parents=True, exist_ok=True)
             dl.download()
         except Exception as ex:
@@ -79,14 +79,14 @@ class ComputePlan:
             exit()
 
     def getlocalfolder(self):
-        suffix = "-{}".format(self.release)
+        suffix = f"-{self.release}"
 
         if self.release == "":
             suffix += __version__
         if self.option == "notebooks":
-            return self.outfolder / "notebooks{}".format(suffix)
+            return self.outfolder / f"notebooks{suffix}"
         if self.option == "scripts":
-            return self.outfolder / "scripts{}".format(suffix)
+            return self.outfolder / f"scripts{suffix}"
         if self.option == "datasets" and self.modetutorials:
             return self.outfolder / "datasets"
         return self.outfolder
@@ -99,7 +99,7 @@ class ComputePlan:
         else:
             self.listfiles = {}
             if not self.modetutorials:
-                log.warning("{} {} not found".format(filetype, self.src))
+                log.warning(f"{filetype} {self.src} not found")
 
     def getfilelist(self):
         if self.option == "notebooks" or self.modetutorials:
@@ -120,7 +120,7 @@ class ComputePlan:
             if self.release:
                 filename_datasets = "gammapy-" + self.release + "-data-index.json"
                 url = BASE_URL + "/data/" + filename_datasets
-                log.info("Reading {}".format(url))
+                log.info(f"Reading {url}")
                 try:
                     txt = urlopen(url).read().decode("utf-8")
                 except Exception as ex:
@@ -129,7 +129,7 @@ class ComputePlan:
             else:
                 # for development just use the local index file
                 filename = (Path(__file__).parent / DEV_DATA_JSON_LOCAL).resolve()
-                log.info("Reading {}".format(filename))
+                log.info(f"Reading {filename}")
                 txt = filename.read_text()
 
             datasets = json.loads(txt)
@@ -155,7 +155,7 @@ class ComputePlan:
             filename_nbs = "gammapy-" + self.release + "-tutorials.yml"
             url = BASE_URL + "/tutorials/" + filename_nbs
 
-        log.info("Reading {}".format(url))
+        log.info(f"Reading {url}")
         try:
             txt = urlopen(url).read().decode("utf-8")
         except Exception as ex:
@@ -183,7 +183,7 @@ class ComputePlan:
             filename_scripts = "gammapy-" + self.release + "-scripts.yml"
             url = BASE_URL + "/tutorials/" + filename_scripts
 
-        log.info("Reading {}".format(url))
+        log.info(f"Reading {url}")
         try:
             txt = urlopen(url).read().decode("utf-8")
         except Exception as ex:
@@ -224,7 +224,7 @@ class ParallelDownload:
             return
 
         if self.listfiles:
-            log.info("Content will be downloaded in {}".format(self.outfolder))
+            log.info(f"Content will be downloaded in {self.outfolder}")
 
         dl = Downloader(progress=self.progress)
         for rec in self.listfiles:
@@ -258,13 +258,13 @@ class ParallelDownload:
                 print(
                     "*** Enter the following commands below to get started with this version of Gammapy"
                 )
-                print("cd {}".format(self.outfolder.parent))
+                print(f"cd {self.outfolder.parent}")
                 condaname = "gammapy-" + self.release
                 envfilename = condaname + "-environment.yml"
-                print("conda env create -f {}".format(envfilename))
-                print("conda activate {}".format(condaname))
+                print(f"conda env create -f {envfilename}")
+                print(f"conda activate {condaname}")
                 print("jupyter lab")
                 print("")
         print("*** You might want to declare GAMMAPY_DATA env variable")
-        print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
+        print(f"export GAMMAPY_DATA={GAMMAPY_DATA}")
         print("")

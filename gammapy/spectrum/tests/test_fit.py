@@ -5,12 +5,7 @@ import astropy.units as u
 from gammapy.irf import EffectiveAreaTable
 from gammapy.modeling import Fit
 from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLaw
-from gammapy.spectrum import (
-    CountsSpectrum,
-    SpectrumDataset,
-    SpectrumDatasetOnOff,
-    SpectrumDatasetOnOffStacker,
-)
+from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -158,10 +153,8 @@ class TestSpectralFit:
         assert_allclose(result.parameters["index"].value, 2.7961, atol=0.02)
 
     def test_stacked_fit(self):
-        obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)
-        obs_stacker.run()
-
-        dataset = obs_stacker.stacked_obs
+        dataset = self.obs_list[0].copy()
+        dataset.stack(self.obs_list[1])
         dataset.model = self.pwl
 
         fit = Fit([dataset])

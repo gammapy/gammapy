@@ -221,7 +221,7 @@ class SpectralModel(Model):
         flux_unit="cm-2 s-1 TeV-1",
         energy_power=0,
         n_points=100,
-        **kwargs
+        **kwargs,
     ):
         """Plot spectral model curve.
 
@@ -282,7 +282,7 @@ class SpectralModel(Model):
         flux_unit="cm-2 s-1 TeV-1",
         energy_power=0,
         n_points=100,
-        **kwargs
+        **kwargs,
     ):
         """Plot spectral model error band.
 
@@ -347,11 +347,11 @@ class SpectralModel(Model):
 
     @staticmethod
     def _plot_format_ax(ax, energy, y, energy_power):
-        ax.set_xlabel("Energy [{}]".format(energy.unit))
+        ax.set_xlabel(f"Energy [{energy.unit}]")
         if energy_power > 0:
-            ax.set_ylabel("E{} * Flux [{}]".format(energy_power, y.unit))
+            ax.set_ylabel(f"E{energy_power} * Flux [{y.unit}]")
         else:
-            ax.set_ylabel("Flux [{}]".format(y.unit))
+            ax.set_ylabel(f"Flux [{y.unit}]")
 
         ax.set_xscale("log", nonposx="clip")
         ax.set_yscale("log", nonposy="clip")
@@ -467,9 +467,9 @@ class CompoundSpectralModel(SpectralModel):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += "\n    Component 1 : {}".format(self.model1)
-        ss += "\n    Component 2 : {}".format(self.model2)
-        ss += "\n    Operator : {}".format(self.operator)
+        ss += f"\n    Component 1 : {self.model1}"
+        ss += f"\n    Component 2 : {self.model2}"
+        ss += f"\n    Operator : {self.operator}"
         return ss
 
     def __call__(self, energy):
@@ -519,7 +519,6 @@ class PowerLaw(SpectralModel):
         self.index = Parameter("index", index)
         self.amplitude = Parameter("amplitude", amplitude)
         self.reference = Parameter("reference", reference, frozen=True)
-        self.tag = "PowerLaw"
 
         super().__init__([self.index, self.amplitude, self.reference])
 
@@ -1283,9 +1282,7 @@ class TableModel(SpectralModel):
         pmin = table_param["MINIMUM"]
         pmax = table_param["MAXIMUM"]
         if param < pmin or param > pmax:
-            raise ValueError(
-                "Out of range: param={}, min={}, max={}".format(param, pmin, pmax)
-            )
+            raise ValueError(f"Out of range: param={param}, min={pmin}, max={pmax}")
 
         # Get energy values
         table_energy = Table.read(filename, hdu="ENERGIES")

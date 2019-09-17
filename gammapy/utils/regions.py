@@ -64,7 +64,7 @@ def make_region(region):
     elif isinstance(region, Region):
         return region
     else:
-        raise TypeError("Invalid type: {!r}".format(region))
+        raise TypeError(f"Invalid type: {region!r}")
 
 
 def make_pixel_region(region, wcs=None):
@@ -98,7 +98,7 @@ def make_pixel_region(region, wcs=None):
     elif isinstance(region, PixelRegion):
         return region
     else:
-        raise TypeError("Invalid type: {!r}".format(region))
+        raise TypeError(f"Invalid type: {region!r}")
 
 
 class SphericalCircleSkyRegion(CircleSkyRegion):

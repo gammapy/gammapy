@@ -329,7 +329,7 @@ class PSF3D:
         for theta in thetas:
             for fraction in fractions:
                 radius = self.containment_radius(energy, theta, fraction)
-                label = "{} deg, {:.1f}%".format(theta.deg, 100 * fraction)
+                label = f"{theta.deg} deg, {100 * fraction:.1f}%"
                 ax.plot(energy.value, radius.value, label=label)
 
         ax.semilogx()
@@ -386,8 +386,8 @@ class PSF3D:
 
         # Axes labels and ticks, colobar
         ax.semilogx()
-        ax.set_ylabel("Offset ({unit})".format(unit=offset.unit))
-        ax.set_xlabel("Energy ({unit})".format(unit=energy.unit))
+        ax.set_ylabel(f"Offset ({offset.unit})")
+        ax.set_xlabel(f"Energy ({energy.unit})")
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
 
@@ -395,9 +395,7 @@ class PSF3D:
             self._plot_safe_energy_range(ax)
 
         if add_cbar:
-            label = "Containment radius R{:.0f} ({})" "".format(
-                100 * fraction, containment.unit
-            )
+            label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
@@ -408,7 +406,7 @@ class PSF3D:
         omin = self.offset.value.min()
         omax = self.offset.value.max()
         ax.hlines(y=esafe.value, xmin=omin, xmax=omax)
-        label = "Safe energy threshold: {:3.2f}".format(esafe)
+        label = f"Safe energy threshold: {esafe:3.2f}"
         ax.text(x=0.1, y=0.9 * esafe.value, s=label, va="top")
 
     def peek(self, figsize=(15, 5)):

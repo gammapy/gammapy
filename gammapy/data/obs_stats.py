@@ -159,20 +159,20 @@ class ObservationStats(Stats):
     def __str__(self):
         ss = "*** Observation summary report ***\n"
         if type(self.obs_id) is list:
-            obs_str = "[{}-{}]".format(self.obs_id[0], self.obs_id[-1])
+            obs_str = f"[{self.obs_id[0]}-{self.obs_id[-1]}]"
         else:
-            obs_str = "{}".format(self.obs_id)
-        ss += "Observation Id: {}\n".format(obs_str)
-        ss += "Livetime: {:.3f}\n".format(self.livetime.to(u.h))
-        ss += "On events: {}\n".format(self.n_on)
-        ss += "Off events: {}\n".format(self.n_off)
-        ss += "Alpha: {:.3f}\n".format(self.alpha)
-        ss += "Bkg events in On region: {:.2f}\n".format(self.background)
-        ss += "Excess: {:.2f}\n".format(self.excess)
+            obs_str = f"{self.obs_id}"
+        ss += f"Observation Id: {obs_str}\n"
+        ss += f"Livetime: {self.livetime.to(u.h):.3f}\n"
+        ss += f"On events: {self.n_on}\n"
+        ss += f"Off events: {self.n_off}\n"
+        ss += f"Alpha: {self.alpha:.3f}\n"
+        ss += f"Bkg events in On region: {self.background:.2f}\n"
+        ss += f"Excess: {self.excess:.2f}\n"
         if self.background > 0:
-            ss += "Excess / Background: {:.2f}\n".format(self.excess / self.background)
+            ss += f"Excess / Background: {self.excess/self.background:.2f}\n"
         ss += "Gamma rate: {:.2f}\n".format(self.gamma_rate.to("1/min"))
         ss += "Bkg rate: {:.2f}\n".format(self.bg_rate.to("1/min"))
-        ss += "Sigma: {:.2f}\n".format(self.sigma)
+        ss += f"Sigma: {self.sigma:.2f}\n"
 
         return ss

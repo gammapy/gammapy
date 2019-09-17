@@ -62,8 +62,8 @@ class TestSourceCatalog:
         with pytest.raises(IndexError):
             self.cat[99]
 
-        with pytest.raises(ValueError):
-            self.cat[int]
+        with pytest.raises(TypeError):
+            self.cat[1.2]
 
     def test_positions(self):
         positions = self.cat.positions

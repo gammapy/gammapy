@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from copy import deepcopy
 import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
@@ -34,9 +35,11 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
     edispmap : `~gammapy.cube.EDispMap`
         the resulting EDisp map
     """
-    energy = geom.get_axis_by_name("energy").center
+    energy_axis = geom.get_axis_by_name("energy")
+    energy = energy_axis.center
 
-    migra = geom.get_axis_by_name("migra").center
+    migra_axis = geom.get_axis_by_name("migra")
+    migra = migra_axis.center
 
     # Compute separations with pointing position
     separations = pointing.separation(geom.to_image().get_coord().skycoord)
@@ -55,6 +58,12 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
     # Create Map and fill relevant entries
     edispmap = Map.from_geom(geom, unit="")
     edispmap.data[:, :, valid[0], valid[1]] += edisp_values.to_value(edispmap.unit)
+
+    if exposure_map is not None and exposure_map.geom.ndim == 3:
+        geom_image = exposure_map.geom.to_image()
+        geom = geom_image.to_cube([migra_axis.squash(), energy_axis])
+        data = exposure_map.data[:, np.newaxis, :, :]
+        exposure_map = Map.from_geom(geom=geom, data=data, unit=exposure_map.unit)
 
     return EDispMap(edispmap, exposure_map)
 
@@ -122,15 +131,6 @@ class EDispMap:
             raise ValueError("Incorrect migra axis position in input Map")
 
         self.edisp_map = edisp_map
-
-        if exposure_map is not None:
-            # First adapt geometry, keep only energy axis
-            expected_geom = edisp_map.geom.to_image().to_cube([edisp_map.geom.axes[1]])
-            if exposure_map.geom != expected_geom:
-                raise ValueError(
-                    "EDispMap and exposure_map have inconsistent geometries"
-                )
-
         self.exposure_map = exposure_map
 
     @classmethod
@@ -292,9 +292,7 @@ class EDispMap:
         )
 
     def stack(self, other):
-        """Stack EdispMap with another one.
-
-        The current EdispMap is unchanged and a new one is created and returned.
+        """Stack EDispMap with another one.
 
         Parameters
         ----------
@@ -307,35 +305,20 @@ class EDispMap:
             the stacked edispmap
         """
         if self.exposure_map is None or other.exposure_map is None:
-            raise ValueError("Missing exposure map for EdispMap.stack")
+            raise ValueError("Missing exposure map for PSFMap.stack")
 
-        # Reproject other exposure
-        exposure_coord = self.exposure_map.geom.get_coord()
-        reproj_exposure = Map.from_geom(
-            self.exposure_map.geom, unit=self.exposure_map.unit
-        )
-        reproj_exposure.fill_by_coord(
-            exposure_coord, other.exposure_map.get_by_coord(exposure_coord)
-        )
+        geom_image = other.edisp_map.geom.to_image()
+        coords = geom_image.get_coord()
 
-        # Reproject other psfmap using same geom
-        edispmap_coord = self.edisp_map.geom.get_coord()
-        reproj_edispmap = Map.from_geom(self.edisp_map.geom, unit=self.edisp_map.unit)
-        reproj_edispmap.fill_by_coord(
-            edispmap_coord, other.edisp_map.get_by_coord(edispmap_coord)
-        )
+        # compute indices in the map to stack in
+        idx_x, idx_y = self.edisp_map.geom.to_image().coord_to_idx(coords)
+        slice_ = (Ellipsis, idx_y, idx_x)
 
-        exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
-        stacked_edisp_quantity = self.edisp_map.quantity * exposure
+        self.edisp_map.data[slice_] *= self.exposure_map.data[slice_]
+        self.edisp_map.data[slice_] += other.edisp_map.data * other.exposure_map.data
+        self.exposure_map.data[slice_] += other.exposure_map.data
+        self.edisp_map.data[slice_] /= self.exposure_map.data[slice_]
 
-        other_exposure = reproj_exposure.quantity[:, np.newaxis, :, :]
-        stacked_edisp_quantity += reproj_edispmap.quantity * other_exposure
-
-        total_exposure = exposure + other_exposure
-        stacked_edisp_quantity /= total_exposure
-
-        reproj_edispmap.quantity = stacked_edisp_quantity
-        # We need to remove the extra axis in the total exposure
-        reproj_exposure.quantity = total_exposure[:, 0, :, :]
-
-        return EDispMap(reproj_edispmap, reproj_exposure)
+    def copy(self):
+        """Copy EDispMap"""
+        return deepcopy(self)

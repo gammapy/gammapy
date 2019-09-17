@@ -68,7 +68,7 @@ def velocity_glon_glat(x, y, z, vx, vy, vz):
     v_glon = (-y_prime * vx + x * vy) / r ** 2
     v_glat = vz / (np.sqrt(1 - (z / d) ** 2) * d) - np.sqrt(
         vx ** 2 + vy ** 2 + vz ** 2
-    ) * z / ((np.sqrt(1 - (z / d) ** 2) * d ** 2))
+    ) * z / (np.sqrt(1 - (z / d) ** 2) * d ** 2)
     return v_glon * Unit("rad"), v_glat * Unit("rad")
 
 

@@ -99,10 +99,8 @@ class EventListBase:
     def __str__(self):
         ss = (
             "EventList info:\n"
-            + "- Number of events: {}\n".format(len(self.table))
-            + "- Median energy: {:.3g} {}\n".format(
-                np.median(self.energy.value), self.energy.unit
-            )
+            f"- Number of events: {len(self.table)}\n"
+            f"- Median energy: {np.median(self.energy.value):.3g} {self.energy.unit}\n"
         )
 
         if "OBS_ID" in self.table.meta:
@@ -501,7 +499,7 @@ class EventListBase:
                 col = cols[axis.name.upper()]
                 coord[axis.name] = Quantity(col).to(axis.unit)
             except KeyError:
-                raise KeyError("Column not found in event list: {!r}".format(axis.name))
+                raise KeyError(f"Column not found in event list: {axis.name!r}")
 
         return coord
 
@@ -783,7 +781,7 @@ class EventListChecker(Checker):
         meta_missing = sorted(set(self.meta_required) - set(self.event_list.table.meta))
         if meta_missing:
             yield self._record(
-                level="error", msg="Missing meta keys: {!r}".format(meta_missing)
+                level="error", msg=f"Missing meta keys: {meta_missing!r}"
             )
 
     def check_columns(self):
@@ -794,13 +792,11 @@ class EventListChecker(Checker):
 
         for name, unit in self.columns_required:
             if name not in t.colnames:
-                yield self._record(
-                    level="error", msg="Missing table column: {!r}".format(name)
-                )
+                yield self._record(level="error", msg=f"Missing table column: {name!r}")
             else:
                 if Unit(unit) != (t[name].unit or ""):
                     yield self._record(
-                        level="error", msg="Invalid unit for column: {!r}".format(name)
+                        level="error", msg=f"Invalid unit for column: {name!r}"
                     )
 
     def check_times(self):

@@ -119,7 +119,7 @@ class AdaptiveRingBackgroundEstimator:
             widths = np.arange(width, (r_out_max - r_in), stepsize)
             r_ins = [r_in]
         else:
-            raise ValueError("Invalid method: {}".format(p["method"]))
+            raise ValueError(f"Invalid method: {p['method']!r}")
 
         kernels = []
         for r_in, width in itertools.product(r_ins, widths):
@@ -257,10 +257,7 @@ class RingBackgroundEstimator:
     r_in : `~astropy.units.Quantity`
         Inner ring radius
     width : `~astropy.units.Quantity`
-        Ring width.
-    use_fft_convolution : bool
-        Use FFT convolution?
-
+        Ring width
 
     Examples
     --------
@@ -363,7 +360,8 @@ class RingBackgroundEstimator:
         return result
 
     def __str__(self):
-        s = "RingBackground parameters: \n"
-        s += "r_in : {}\n".format(self.parameters["r_in"])
-        s += "width: {}\n".format(self.parameters["width"])
-        return s
+        return (
+            "RingBackground parameters: \n"
+            f"r_in : {self.parameters['r_in']}\n"
+            f"width: {self.parameters['width']}\n"
+        )

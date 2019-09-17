@@ -13,7 +13,7 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
 from .core import CountsSpectrum, SpectrumEvaluator
 
-__all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "SpectrumDatasetOnOffStacker"]
+__all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
 
 
 class SpectrumDataset(Dataset):
@@ -43,13 +43,12 @@ class SpectrumDataset(Dataset):
         Mask to apply to the likelihood for fitting.
     obs_id : int or list of int
         Observation id(s) corresponding to the (stacked) dataset.
-    gti : '~gammapy.data.gti.GTI'
+    gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
 
     See Also
     --------
     SpectrumDatasetOnOff, FluxPointsDataset, MapDataset
-
     """
 
     likelihood_type = "cash"
@@ -214,7 +213,7 @@ class SpectrumDataset(Dataset):
         return (self._energy_axis.nbin,)
 
     def npred(self):
-        """Returns npred map (model + background)"""
+        """Return npred map (model + background)"""
         if self._predictor is None:
             raise AttributeError("No model set for Dataset")
         npred = self._predictor.compute_npred()
@@ -244,8 +243,8 @@ class SpectrumDataset(Dataset):
         Parameters
         ----------
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-                Defines random number generator initialisation.
-                Passed to `~gammapy.utils.random.get_random_state`.
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
         """
         random_state = get_random_state(random_state)
         npred = self.npred()
@@ -317,7 +316,7 @@ class SpectrumDataset(Dataset):
 
         Parameters
         ----------
-        method: {"diff", "diff/model", "diff/sqrt(model)"}
+        method : {"diff", "diff/model", "diff/sqrt(model)"}
             Method used to compute the residuals. Available options are:
                 - `diff` (default): data - model
                 - `diff/model`: (data - model) / model
@@ -326,9 +325,8 @@ class SpectrumDataset(Dataset):
         Returns
         -------
         residuals : `CountsSpectrum`
-            Residual spectrum.
+            Residual spectrum
         """
-
         residuals = self._compute_residuals(self.counts, self.npred(), method)
         return residuals
 
@@ -364,8 +362,8 @@ class SpectrumDataset(Dataset):
         ymax = 1.2 * np.nanmax(residuals.data)
         ax.set_ylim(-ymax, ymax)
 
-        ax.set_xlabel("Energy [{}]".format(self._e_unit))
-        ax.set_ylabel("Residuals ({})".format(label))
+        ax.set_xlabel(f"Energy [{self._e_unit}]")
+        ax.set_ylabel(f"Residuals ({label})")
         return ax
 
     @classmethod
@@ -410,7 +408,7 @@ class SpectrumDataset(Dataset):
         )
 
     def stack(self, other):
-        """Stack this dataset with another one.
+        r"""Stack this dataset with another one.
 
         Safe mask is applied to compute the stacked counts vector.
         Counts outside each dataset safe mask are lost.
@@ -418,15 +416,16 @@ class SpectrumDataset(Dataset):
         Stacking is performed in-place.
 
         The stacking of 2 datasets is implemented as follows.
-        Here, :math:`k`  denotes a bin in reconstructed energy and :math: `j = {1,2}` is the dataset number
+        Here, :math:`k` denotes a bin in reconstructed energy and :math:`j = {1,2}` is the dataset number
 
-        The `mask_safe` of each dataset is defined as:
+        The ``mask_safe`` of each dataset is defined as:
 
         .. math::
-            \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
-                bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+            \epsilon_{jk} =\left\{\begin{array}{cl} 1, &
+            \mbox{if bin k is inside the energy thresholds}\\ 0, &
+            \mbox{otherwise} \end{array}\right.
 
-        Then the total `counts` and model background `bkg` are computed according to:
+        Then the total ``counts`` and model background ``bkg`` are computed according to:
 
         .. math::
             \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
@@ -435,7 +434,7 @@ class SpectrumDataset(Dataset):
             \overline{bkg}_k = bkg_{1k} \cdot \epsilon_{1k} +
              bkg_{2k} \cdot \epsilon_{2k}
 
-        The stacked `safe_mask` is then:
+        The stacked ``safe_mask`` is then:
 
         .. math::
             \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
@@ -443,13 +442,11 @@ class SpectrumDataset(Dataset):
         Please refer to the `~gammapy.irf.IRFStacker` for the description
         of how the IRFs are stacked.
 
-
         Parameters
         ----------
         other : `~gammapy.spectrum.SpectrumDataset`
             the dataset to stack to the current one
-       """
-
+        """
         if not isinstance(other, SpectrumDataset):
             raise TypeError("Incompatible types for SpectrumDataset stacking")
 
@@ -520,13 +517,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Relative background efficiency in the off region.
     obs_id : int or list of int
         Observation id(s) corresponding to the (stacked) dataset.
-    gti : '~gammapy.data.gti.GTI'
+    gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
 
     See Also
     --------
     SpectrumDataset, FluxPointsDataset, MapDataset
-
     """
 
     likelihood_type = "wstat"
@@ -617,8 +613,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     def fake(self, background_model, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
 
-         This method overwrites the counts and off counts defined on the dataset object.
-
+        This method overwrites the counts and off counts defined on the dataset object.
 
         Parameters
         ----------
@@ -626,8 +621,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             BackgroundModel. In the future will be part of the SpectrumDataset Class.
             For the moment, a CountSpectrum.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-                Defines random number generator initialisation.
-                Passed to `~gammapy.utils.random.get_random_state`.
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
         """
         random_state = get_random_state(random_state)
 
@@ -645,7 +640,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     @classmethod
     def create(cls, e_reco, e_true=None, reference_time="2000-01-01"):
-        """Creates empty SpectrumDatasetOnOff
+        """Create empty SpectrumDatasetOnOff.
 
         Empty containers are created with the correct geometry.
         counts, counts_off and aeff are zero and edisp is diagonal.
@@ -716,7 +711,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             return True
 
     def stack(self, other):
-        """Stack this dataset with another one.
+        r"""Stack this dataset with another one.
 
         Safe mask is applied to compute the stacked counts vector.
         Counts outside each dataset safe mask are lost.
@@ -724,47 +719,47 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Stacking is performed in-place.
 
         The stacking of 2 datasets is implemented as follows.
-        Here, :math:`k`  denotes a bin in reconstructed energy and :math: `j = {1,2}` is the dataset number
+        Here, :math:`k`  denotes a bin in reconstructed energy and :math:`j = {1,2}` is the dataset number
 
-        The `mask_safe` of each dataset is defined as:
+        The ``mask_safe`` of each dataset is defined as:
 
         .. math::
-            \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
-                bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+            \epsilon_{jk} =\left\{\begin{array}{cl} 1, &
+            \mbox{if k is inside the energy thresholds}\\ 0, &
+            \mbox{otherwise} \end{array}\right.
 
-        Then the total `counts` and `counts_off` are computed according to:
+        Then the total ``counts`` and ``counts_off`` are computed according to:
 
         .. math::
             \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
-             \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
+            \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
 
             \overline{\mathrm{n_{off}}}_k = \mathrm{n_{off}}_{1k} \cdot \epsilon_{1k} +
-             \mathrm{n_{off}}_{2k} \cdot \epsilon_{2k}
+            \mathrm{n_{off}}_{2k} \cdot \epsilon_{2k}
 
-        The stacked `safe_mask` is then:
+        The stacked ``safe_mask`` is then:
 
         .. math::
             \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
 
-        In each energy bin :math:`k`, the count excess is computed taking into account the ON `acceptance`,
-        :math:`a_{on}_k` and the OFF one:`acceptance_off`, :math:`a_{off}_k`. They define
+        In each energy bin :math:`k`, the count excess is computed taking into account the ON ``acceptance``,
+        :math:`a_{on}_k` and the OFF one: ``acceptance_off``, :math:`a_{off}_k`. They define
         the :math:`\alpha_k=a_{on}_k/a_{off}_k` factors such that :math:`n_{ex}_k = n_{on}_k - \alpha_k n_{off}_k`.
         We define the stacked value of :math:`\overline{{a}_{on}}_k = 1` so that:
 
         .. math::
-        \overline{{a}_{off}}_k = \frac{\overline{\mathrm {n_{off}}}}{\alpha_{1k} \cdot
+            \overline{{a}_{off}}_k = \frac{\overline{\mathrm {n_{off}}}}{\alpha_{1k} \cdot
             \mathrm{n_{off}}_{1k} \cdot \epsilon_{1k} + \alpha_{2k} \cdot \mathrm{n_{off}}_{2k} \cdot \epsilon_{2k}}
 
         Please refer to the `~gammapy.irf.IRFStacker` for the description
         of how the IRFs are stacked.
-
 
         Parameters
         ----------
         other : `~gammapy.spectrum.SpectrumDatasetOnOff`
             the dataset to stack to the current one
 
-         Examples
+        Examples
         --------
         >>> from gammapy.spectrum import SpectrumDatasetOnOff
         >>> obs_ids = [23523, 23526, 23559, 23592]
@@ -778,7 +773,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         >>>     stacked.stack(ds)
         >>> print(stacked.livetime)
         6313.8116406202325 s
-
         """
         if not isinstance(other, SpectrumDatasetOnOff):
             raise TypeError("Incompatible types for SpectrumDatasetOnOff stacking")
@@ -884,7 +878,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         if self.counts_off is not None:
             stats = ObservationStats(**self._info_dict(in_safe_energy_range=True))
-            ax3.text(0, 0.2, "{}".format(stats), fontsize=12)
+            ax3.text(0, 0.2, f"{stats}", fontsize=12)
 
         ax4.set_title("Energy Dispersion")
         if self.edisp is not None:
@@ -916,7 +910,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         if isinstance(self.obs_id, list):
             phafile = "pha_stacked.fits"
         else:
-            phafile = "pha_obs{}.fits".format(self.obs_id)
+            phafile = f"pha_obs{self.obs_id}.fits"
 
         bkgfile = phafile.replace("pha", "bkg")
         arffile = phafile.replace("pha", "arf")
@@ -1018,7 +1012,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         try:
             rmffile = phafile.replace("pha", "rmf")
             energy_dispersion = EnergyDispersion.read(str(dirname / rmffile))
-        except IOError:
+        except OSError:
             # TODO : Add logger and echo warning
             energy_dispersion = None
 
@@ -1035,7 +1029,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
                 )
 
                 acceptance_off = data_bkg["backscal"]
-        except IOError:
+        except OSError:
             # TODO : Add logger and echo warning
             counts_off, acceptance_off = None, None
 
@@ -1157,6 +1151,7 @@ class SpectrumDatasetOnOffStacker:
     >>> stacked = obs_stacker.run()
     >>> print(stacked.livetime)
     6313.8116406202325 s
+
     """
 
     def __init__(self, obs_list):
@@ -1172,7 +1167,7 @@ class SpectrumDatasetOnOffStacker:
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += "\n{}".format(self.obs_list)
+        ss += f"\n{self.obs_list}"
         return ss
 
     def run(self):

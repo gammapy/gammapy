@@ -77,5 +77,5 @@ def song(karaoke=False):
             "Supernova remnants, pulsar winds, AGN, Gamma, Gamma, Gammapy\n"
         )
 
-        centered = "\n".join("{:^80}".format(s) for s in lyrics.split("\n"))
+        centered = "\n".join(f"{s:^80}" for s in lyrics.split("\n"))
         sys.stdout.write(centered)

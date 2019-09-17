@@ -54,7 +54,7 @@ class MapDataset(Dataset):
         This mode is recommended for global optimization algorithms.
     mask_safe : `~numpy.ndarray`
         Mask defining the safe data range.
-    gti : '~gammapy.data.gti.GTI'
+    gti : '~gammapy.data.GTI'
         GTI of the observation or union of GTI if it is a stacked observation
 
     """
@@ -96,14 +96,14 @@ class MapDataset(Dataset):
             self._stat = cstat
             self._stat_sum = cstat_sum_cython
         else:
-            raise ValueError("Invalid likelihood: {!r}".format(likelihood))
+            raise ValueError(f"Invalid likelihood: {likelihood!r}")
 
     def __repr__(self):
         str_ = self.__class__.__name__
         return str_
 
     def __str__(self):
-        str_ = "{}\n".format(self.__class__.__name__)
+        str_ = f"{self.__class__.__name__}\n"
         str_ += "\n"
 
         counts = np.nan
@@ -175,7 +175,7 @@ class MapDataset(Dataset):
             components += [self.background_model]
 
         for idx, model in enumerate(components):
-            str_ += "\tComponent {}: \n".format(idx)
+            str_ += f"\tComponent {idx}: \n"
             str_ += "\t\t{:28}: {}\n".format("Name", model.name)
             str_ += "\t\t{:28}: {}\n".format("Type", model.__class__.__name__)
 
@@ -368,7 +368,7 @@ class MapDataset(Dataset):
         smooth_radius="0.1 deg",
         region=None,
         figsize=(12, 4),
-        **kwargs
+        **kwargs,
     ):
         """
         Plot spatial and spectral residuals.
@@ -444,7 +444,7 @@ class MapDataset(Dataset):
             y_max = 2 * np.nanmax(residuals.data)
             plt.ylim(-y_max, y_max)
             label = self._residuals_labels[method]
-            plt.ylabel("Residuals ({})".format(label))
+            plt.ylabel(f"Residuals ({label})")
 
             # Overlay spectral extraction region on the spatial residuals
             pix_region = region.to_pixel(wcs=spatial_residuals.geom.wcs)
@@ -678,7 +678,7 @@ class MapEvaluator:
         self.edisp = edisp
 
         if evaluation_mode not in {"local", "global"}:
-            raise ValueError("Invalid evaluation_mode: {!r}".format(evaluation_mode))
+            raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
 
         self.evaluation_mode = evaluation_mode
 
@@ -809,10 +809,8 @@ class MapEvaluator:
                 )
             except NoOverlapError:
                 raise ValueError(
-                    "Position {} of model component is outside the image boundaries."
-                    " Please check the starting values or position parameter boundaries of the model.".format(
-                        self.model.position
-                    )
+                    f"Position {self.model.position!r} of model component is outside the image boundaries."
+                    " Please check the starting values or position parameter boundaries of the model."
                 )
 
             # Reset cached quantities

@@ -84,7 +84,7 @@ class SpectrumExtraction:
     def run(self):
         """Run all steps.
         """
-        log.info("Running {}".format(self))
+        log.info(f"Running {self}")
         for obs, bkg in zip(self.observations, self.bkg_estimate):
             if not self._alpha_ok(bkg):
                 continue
@@ -115,7 +115,7 @@ class SpectrumExtraction:
         spectrum_observation : `~gammapy.spectrum.SpectrumObservation`
             Spectrum observation
         """
-        log.info("Process observation\n {}".format(observation))
+        log.info(f"Process observation\n {observation}")
         self.make_empty_vectors(observation, bkg)
         self.extract_counts(bkg)
         self.extract_irfs(observation, bkg)
@@ -145,7 +145,7 @@ class SpectrumExtraction:
                     emin=e_min, emax=e_max
                 )
             except KeyError:
-                log.warning("No thresholds defined for obs {}".format(observation))
+                log.warning(f"No thresholds defined for obs {observation}")
 
         return spectrum_observation
 
@@ -164,7 +164,7 @@ class SpectrumExtraction:
         log.info("Update observation meta info")
 
         offset = observation.pointing_radec.separation(bkg.on_region.center)
-        log.info("Offset : {}\n".format(offset))
+        log.info(f"Offset : {offset}\n")
 
         self._on_vector = CountsSpectrum(
             energy_lo=self.e_reco[:-1], energy_hi=self.e_reco[1:]
@@ -263,7 +263,7 @@ class SpectrumExtraction:
         """
         outdir = Path.cwd() if outdir is None else Path(outdir)
         outdir = make_path(outdir / ogipdir)
-        log.info("Writing OGIP files to {}".format(outdir))
+        log.info(f"Writing OGIP files to {outdir}")
         outdir.mkdir(exist_ok=True, parents=True)
         for obs in self.spectrum_observations:
             obs.to_ogip_files(outdir=outdir, use_sherpa=use_sherpa, overwrite=overwrite)

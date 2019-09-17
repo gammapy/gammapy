@@ -168,12 +168,15 @@ def test_psfmap_stacking():
     psfmap2 = make_test_psfmap(0.1 * u.deg, shape="flat")
     psfmap2.exposure_map.quantity *= 2
 
-    psfmap_stack = psfmap1.stack(psfmap2)
+    psfmap_stack = psfmap1.copy()
+    psfmap_stack.stack(psfmap2)
     assert_allclose(psfmap_stack.psf_map.data, psfmap1.psf_map.data)
     assert_allclose(psfmap_stack.exposure_map.data, psfmap1.exposure_map.data * 3)
 
     psfmap3 = make_test_psfmap(0.3 * u.deg, shape="flat")
-    psfmap_stack = psfmap1.stack(psfmap3)
+
+    psfmap_stack = psfmap1.copy()
+    psfmap_stack.stack(psfmap3)
 
     assert_allclose(psfmap_stack.psf_map.data[0, 40, 20, 20], 0.0)
     assert_allclose(psfmap_stack.psf_map.data[0, 20, 20, 20], 5805.28955078125)

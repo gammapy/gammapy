@@ -66,8 +66,8 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
     @staticmethod
     def _info_spectrum_one(d, idx):
-        label = "spec{}_".format(idx)
-        ss = "Spectrum {}:\n".format(idx)
+        label = f"spec{idx}_"
+        ss = f"Spectrum {idx}:\n"
         args = (
             "Flux at 7 TeV",
             d[label + "dnde"].value,
@@ -101,7 +101,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
     def _get_spectral_model(self, idx):
         pars, errs = {}, {}
         data = self.data
-        label = "spec{}_".format(idx)
+        label = f"spec{idx}_"
 
         pars["amplitude"] = data[label + "dnde"]
         errs["amplitude"] = data[label + "dnde_err"]

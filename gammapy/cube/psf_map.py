@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from copy import deepcopy
 import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
@@ -6,6 +7,7 @@ from astropy.coordinates import Angle
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.irf import EnergyDependentTablePSF
 from gammapy.maps import Map
+from .psf_kernel import PSFKernel
 
 __all__ = ["make_psf_map", "PSFMap"]
 
@@ -36,7 +38,8 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     psfmap : `~gammapy.cube.PSFMap`
         the resulting PSF map
     """
-    energy = geom.get_axis_by_name("energy").center
+    energy_axis = geom.get_axis_by_name("energy")
+    energy = energy_axis.center
 
     rad_axis = geom.get_axis_by_name("theta")
     rad = Angle(rad_axis.center, unit=rad_axis.unit)
@@ -55,6 +58,12 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     # Create Map and fill relevant entries
     psfmap = Map.from_geom(geom, unit="sr-1")
     psfmap.data[:, :, valid[0], valid[1]] += psf_values.to_value(psfmap.unit)
+
+    if exposure_map is not None and exposure_map.geom.ndim == 3:
+        geom_image = exposure_map.geom.to_image()
+        geom = geom_image.to_cube([rad_axis.squash(), energy_axis])
+        data = exposure_map.data[:, np.newaxis, :, :]
+        exposure_map = Map.from_geom(geom=geom, data=data, unit=exposure_map.unit)
 
     return PSFMap(psfmap, exposure_map)
 
@@ -122,13 +131,6 @@ class PSFMap:
             raise ValueError("Incorrect theta axis position in input Map")
 
         self.psf_map = psf_map
-
-        if exposure_map is not None:
-            # First adapt geometry, keep only energy axis
-            expected_geom = psf_map.geom.to_image().to_cube([psf_map.geom.axes[1]])
-            if exposure_map.geom != expected_geom:
-                raise ValueError("PSFMap and exposure_map have inconsistent geometries")
-
         self.exposure_map = exposure_map
 
     @classmethod
@@ -297,8 +299,6 @@ class PSFMap:
     def stack(self, other):
         """Stack PSFMap with another one.
 
-        The other PSFMap is projected on the current PSFMap geometry.
-
         Parameters
         ----------
         other : `~gammapy.cube.PSFMap`
@@ -312,33 +312,18 @@ class PSFMap:
         if self.exposure_map is None or other.exposure_map is None:
             raise ValueError("Missing exposure map for PSFMap.stack")
 
-        # Reproject other exposure
-        exposure_coord = self.exposure_map.geom.get_coord()
-        reproj_exposure = Map.from_geom(
-            self.exposure_map.geom, unit=self.exposure_map.unit
-        )
-        reproj_exposure.fill_by_coord(
-            exposure_coord, other.exposure_map.get_by_coord(exposure_coord)
-        )
+        geom_image = other.psf_map.geom.to_image()
+        coords = geom_image.get_coord()
 
-        # Reproject other psfmap using same geom
-        psfmap_coord = self.psf_map.geom.get_coord()
-        reproj_psfmap = Map.from_geom(self.psf_map.geom, unit=self.psf_map.unit)
-        reproj_psfmap.fill_by_coord(
-            psfmap_coord, other.psf_map.get_by_coord(psfmap_coord)
-        )
+        # compute indices in the map to stack in
+        idx_x, idx_y = self.psf_map.geom.to_image().coord_to_idx(coords)
+        slice_ = (Ellipsis, idx_y, idx_x)
 
-        exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
-        stacked_psf_quantity = self.psf_map.quantity * exposure
+        self.psf_map.data[slice_] *= self.exposure_map.data[slice_]
+        self.psf_map.data[slice_] += other.psf_map.data * other.exposure_map.data
+        self.exposure_map.data[slice_] += other.exposure_map.data
+        self.psf_map.data[slice_] /= self.exposure_map.data[slice_]
 
-        other_exposure = reproj_exposure.quantity[:, np.newaxis, :, :]
-        stacked_psf_quantity += reproj_psfmap.quantity * other_exposure
-
-        total_exposure = exposure + other_exposure
-        stacked_psf_quantity /= total_exposure
-
-        reproj_psfmap.quantity = stacked_psf_quantity
-        # We need to remove the extra axis in the total exposure
-        reproj_exposure.quantity = total_exposure[:, 0, :, :]
-
-        return PSFMap(reproj_psfmap, reproj_exposure)
+    def copy(self):
+        """Copy PSFMap"""
+        return deepcopy(self)

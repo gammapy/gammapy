@@ -11,13 +11,12 @@ import jsonschema
 import yaml
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling import Fit
+from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import SPECTRAL_MODELS
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
     ReflectedRegionsBackgroundEstimator,
-    SpectrumDatasetOnOffStacker,
     SpectrumExtraction,
 )
 from gammapy.utils.scripts import make_path, read_yaml
@@ -105,11 +104,7 @@ class Analysis:
         if self.settings["reduction"]["data_reducer"] == "1d":
             if self._validate_fp_settings():
                 log.info("Calculating flux points.")
-                obs_stacker = SpectrumDatasetOnOffStacker(
-                    self.extraction.spectrum_observations
-                )
-                obs_stacker.run()
-                stacked = obs_stacker.stacked_obs
+                stacked = Datasets(self.extraction.spectrum_observations).stack_reduce()
                 flux_model = self.model.copy()
                 flux_model.parameters.covariance = self.fit_result.parameters.covariance
                 stacked.model = flux_model
@@ -140,7 +135,7 @@ class Analysis:
         elif datastore_path.is_dir():
             datastore = DataStore().from_dir(datastore_path)
         else:
-            raise FileNotFoundError("Datastore {} not found.".format(datastore_path))
+            raise FileNotFoundError(f"Datastore {datastore_path} not found.")
         ids = set()
         selection = dict()
         for criteria in self.settings["observations"]["filters"]:
@@ -288,7 +283,7 @@ class Analysis:
         self.extraction = SpectrumExtraction(
             observations=self.observations,
             bkg_estimate=self.background_estimator.result,
-            **extraction_pars
+            **extraction_pars,
         )
         self.extraction.run()
 
@@ -366,7 +361,7 @@ class Config:
         return yaml.dump(self.settings)
 
     def print_help(self, section=""):
-        """Display template configuration settings."""
+        """Print template configuration settings."""
         doc = self._get_doc_sections()
         for keyword in doc.keys():
             if section == "" or section == keyword:
@@ -472,8 +467,7 @@ def extend_with_default(validator_class, template):
                     default = default_field
                 if default in sub_schema:
                     instance.setdefault(prop, sub_schema[default])
-        for error in validate_properties(validator, properties, instance, schema):
-            yield error
+        yield from validate_properties(validator, properties, instance, schema)
 
     return jsonschema.validators.extend(validator_class, {"properties": set_defaults})
 

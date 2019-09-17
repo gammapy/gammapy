@@ -42,7 +42,7 @@ class HpxConv:
         self.coordsys = kwargs.get("coordsys", "COORDSYS")
 
     def colname(self, indx):
-        return "{}{}".format(self.colstring, indx)
+        return f"{self.colstring}{indx}"
 
     @classmethod
     def create(cls, convname="gadf"):
@@ -184,7 +184,7 @@ def get_pix_size_from_nside(nside):
     """
     order = nside_to_order(nside)
     if np.any(order < 0) or np.any(order > 13):
-        raise ValueError("HEALPIX order must be 0 to 13. Got: {!r}".format(order))
+        raise ValueError(f"HEALPIX order must be 0 to 13. Got: {order!r}")
 
     return HPX_ORDER_TO_PIXSIZE[order]
 
@@ -328,7 +328,7 @@ def parse_hpxregion(region):
     m = re.match(r"([A-Za-z\_]*?)\((.*?)\)", region)
 
     if m is None:
-        raise ValueError("Failed to parse hpx region string: {!r}".format(region))
+        raise ValueError(f"Failed to parse hpx region string: {region!r}")
 
     if not m.group(1):
         return re.split(",", m.group(2))
@@ -365,13 +365,13 @@ def get_hpxregion_dir(region, coordsys):
         elif tokens[1] == "RING":
             nest_pix = False
         else:
-            raise ValueError("Invalid ordering scheme: {!r}".format(tokens[1]))
+            raise ValueError(f"Invalid ordering scheme: {tokens[1]!r}")
         theta, phi = hp.pix2ang(nside_pix, ipix_pix, nest_pix)
         lat = np.degrees((np.pi / 2) - theta)
         lon = np.degrees(phi)
         return SkyCoord(lon, lat, frame=frame, unit="deg")
     else:
-        raise ValueError("Invalid region type: {!r}".format(tokens[0]))
+        raise ValueError(f"Invalid region type: {tokens[0]!r}")
 
 
 def get_hpxregion_size(region):
@@ -384,7 +384,7 @@ def get_hpxregion_size(region):
         pix_size = get_pix_size_from_nside(int(tokens[2]))
         return 2.0 * pix_size
     else:
-        raise ValueError("Invalid region type: {!r}".format(tokens[0]))
+        raise ValueError(f"Invalid region type: {tokens[0]!r}")
 
 
 def is_power2(n):
@@ -670,7 +670,7 @@ class HpxGeom(MapGeom):
             self._npix = self._maxpix
 
         else:
-            raise ValueError("Invalid region string: {!r}".format(region))
+            raise ValueError(f"Invalid region string: {region!r}")
 
     def local_to_global(self, idx_local):
         """Compute a local index (partial-sky) from a global (all-sky) index.
@@ -1267,10 +1267,10 @@ class HpxGeom(MapGeom):
         elif isinstance(skydir, SkyCoord):
             lon, lat, frame = skycoord_to_lonlat(skydir, coordsys=coordsys)
         else:
-            raise ValueError("Invalid type for skydir: {!r}".format(type(skydir)))
+            raise ValueError(f"Invalid type for skydir: {type(skydir)!r}")
 
         if region is None and width is not None:
-            region = "DISK({:f},{:f},{:f})".format(lon, lat, width / 2.0)
+            region = f"DISK({lon},{lat},{width/2})"
 
         return cls(
             nside, nest=nest, coordsys=coordsys, region=region, axes=axes, conv=conv
@@ -1343,7 +1343,7 @@ class HpxGeom(MapGeom):
 
         if header["PIXTYPE"] != "HEALPIX":
             raise ValueError(
-                "Header PIXTYPE must be 'HEALPIX'. Got: {}".format(header["PIXTYPE"])
+                f"Invalid header PIXTYPE: {header['PIXTYPE']} (must be HEALPIX)"
             )
 
         if header["ORDERING"] == "RING":
@@ -1352,9 +1352,7 @@ class HpxGeom(MapGeom):
             nest = True
         else:
             raise ValueError(
-                "Header ORDERING must be RING or NESTED. Got: {}".format(
-                    header["ORDERING"]
-                )
+                f"Invalid header ORDERING: {header['ORDERING']} (must be RING or NESTED)"
             )
 
         if hdu_bands is not None and "NSIDE" in hdu_bands.columns.names:
@@ -1500,10 +1498,10 @@ class HpxGeom(MapGeom):
             elif tokens[1] == "RING":
                 ipix_ring = int(tokens[3])
             else:
-                raise ValueError("Invalid ordering scheme: {!r}".format(tokens[1]))
+                raise ValueError(f"Invalid ordering scheme: {tokens[1]!r}")
             ilist = match_hpx_pix(nside, nest, nside_pix, ipix_ring)
         else:
-            raise ValueError("Invalid region type: {!r}".format(reg_type))
+            raise ValueError(f"Invalid region type: {reg_type!r}")
 
         return ilist
 
@@ -1597,7 +1595,7 @@ class HpxGeom(MapGeom):
 
     def get_idx(self, idx=None, local=False, flat=False):
         if idx is not None and np.any(np.array(idx) >= np.array(self.shape_axes)):
-            raise ValueError("Image index out of range: {!r}".format(idx))
+            raise ValueError(f"Image index out of range: {idx!r}")
 
         # Regular all- and partial-sky maps
         if self.is_regular:
@@ -1717,19 +1715,20 @@ class HpxGeom(MapGeom):
         return Quantity(hp.nside2pixarea(self.nside), "sr")
 
     def __repr__(self):
-        str_ = self.__class__.__name__
-        str_ += "\n\n"
         axes = ["skycoord"] + [_.name for _ in self.axes]
-        str_ += "\taxes       : {}\n".format(", ".join(axes))
-        str_ += "\tshape      : {}\n".format(self.data_shape[::-1])
-        str_ += "\tndim       : {}\n".format(self.ndim)
-        str_ += "\tnside      : {nside[0]}\n".format(nside=self.nside)
-        str_ += "\tnested     : {}\n".format(self.nest)
-        str_ += "\tcoordsys   : {}\n".format(self.coordsys)
-        str_ += "\tprojection : {}\n".format(self.projection)
         lon, lat = self.center_skydir.data.lon.deg, self.center_skydir.data.lat.deg
-        str_ += "\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n".format(lon=lon, lat=lat)
-        return str_
+
+        return (
+            f"{self.__class__.__name__}\n\n"
+            f"\taxes       : {axes}\n"
+            f"\tshape      : {self.data_shape[::-1]}\n"
+            f"\tndim       : {self.ndim}\n"
+            f"\tnside      : {self.nside[0]}\n"
+            f"\tnested     : {self.nest}\n"
+            f"\tcoordsys   : {self.coordsys}\n"
+            f"\tprojection : {self.projection}\n"
+            f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
+        )
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):

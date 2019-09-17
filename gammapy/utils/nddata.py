@@ -55,7 +55,7 @@ class NDDataArray:
         try:
             idx = [_.name for _ in self.axes].index(name)
         except ValueError:
-            raise ValueError("Axis {} not found".format(name))
+            raise ValueError(f"Axis {name} not found")
         return self.axes[idx]
 
     @property
@@ -131,7 +131,7 @@ class NDDataArray:
 
         # This is to catch e.g. typos in axis names
         if kwargs != {}:
-            raise ValueError("Input given for unknown axis: {}".format(kwargs))
+            raise ValueError(f"Input given for unknown axis: {kwargs}")
 
         if self._regular_grid_interp is None:
             self._add_regular_grid_interp()

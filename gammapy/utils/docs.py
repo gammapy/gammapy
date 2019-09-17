@@ -24,10 +24,13 @@ import nbformat
 from docutils import nodes
 from docutils.parsers.rst import roles
 from docutils.parsers.rst.directives import register_directive
+from docutils.parsers.rst.directives.body import CodeBlock
 from docutils.parsers.rst.directives.images import Image
+from docutils.parsers.rst.directives.misc import Include
 from nbformat.v4 import new_markdown_cell
 from sphinx.util import logging
 from gammapy import __version__
+from gammapy.scripts import Config
 
 try:
     gammapy_data_path = Path(os.environ["GAMMAPY_DATA"])
@@ -36,6 +39,31 @@ except KeyError:
     HAS_GP_DATA = False
 
 log = logging.getLogger("__name__")
+
+
+class HowtoHLI(Include):
+    """Directive to insert how-to for high-level interface"""
+
+    def run(self):
+        raw = ""
+        section = self.arguments[0]
+        doc = Config._get_doc_sections()
+        for keyword in doc.keys():
+            if section == "" or section == keyword:
+                raw += doc[keyword]
+        include_lines = raw.splitlines()
+        codeblock = CodeBlock(
+            self.name,
+            [],
+            self.options,
+            include_lines,  # content
+            self.lineno,
+            self.content_offset,
+            self.block_text,
+            self.state,
+            self.state_machine,
+        )
+        return codeblock.run()
 
 
 class DocsImage(Image):
@@ -73,9 +101,7 @@ def LinkNotebook(name, rawtext, notebook, lineno, inliner, options={}, content=[
     nbfile = nbfolder / nbfilename
 
     if not nbfile.is_file():
-        msg = inliner.reporter.error(
-            "Unknown notebook {}".format(notebook), line=lineno
-        )
+        msg = inliner.reporter.error(f"Unknown notebook {notebook}", line=lineno)
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
     else:
@@ -101,7 +127,7 @@ def make_link_node(rawtext, app, refuri, notebook, options):
 
 def gammapy_sphinx_ext_activate():
     if HAS_GP_DATA:
-        log.info("*** Found GAMMAPY_DATA = {}".format(gammapy_data_path))
+        log.info(f"*** Found GAMMAPY_DATA = {gammapy_data_path}")
         log.info("*** Nice!")
     else:
         log.info("*** gammapy-data *not* found.")
@@ -111,6 +137,7 @@ def gammapy_sphinx_ext_activate():
     # Register our directives and roles with Sphinx
     register_directive("gp-image", DocsImage)
     roles.register_local_role("gp-notebook", LinkNotebook)
+    register_directive("gp-howto-hli", HowtoHLI)
 
 
 def parse_notebooks(folder, url_docs):

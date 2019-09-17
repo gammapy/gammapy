@@ -88,7 +88,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             )
             model = PLSuperExpCutoff4FGL(**pars)
         else:
-            raise ValueError("Invalid spec_type: {!r}".format(spec_type))
+            raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
         model.parameters.set_parameter_errors(errs)
         return model
@@ -370,7 +370,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             errs["ecut"] = self.data["Unc_Cutoff"].to("GeV")
             model = PLSuperExpCutoff3FGL(**pars)
         else:
-            raise ValueError("Invalid spec_type: {!r}".format(spec_type))
+            raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
         model.parameters.set_parameter_errors(errs)
         return model
@@ -408,7 +408,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
                 sigma = de["Model_SemiMajor"].to("deg")
                 return SkyGaussian(lon_0=glon, lat_0=glat, sigma=sigma)
             else:
-                raise ValueError("Invalid spatial model: {!r}".format(morph_type))
+                raise ValueError(f"Invalid spatial model: {morph_type!r}")
 
     @property
     def sky_model(self):
@@ -873,7 +873,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
             errs["beta"] = d["Unc_beta"]
             model = LogParabola(**pars)
         else:
-            raise ValueError("Invalid spec_type: {!r}".format(spec_type))
+            raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
         model.parameters.set_parameter_errors(errs)
         return model
@@ -945,7 +945,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
                 sigma = de["Model_SemiMajor"].to("deg")
                 return SkyGaussian(lon_0=glon, lat_0=glat, sigma=sigma)
             else:
-                raise ValueError("Invalid morph_type: {!r}".format(morph_type))
+                raise ValueError(f"Invalid morph_type: {morph_type!r}")
 
     @property
     def sky_model(self):
@@ -1069,7 +1069,7 @@ class SourceCatalog3FGL(SourceCatalog):
         elif source_class in np.unique(source_class_info):
             category = {source_class}
         else:
-            raise ValueError("Invalid source_class: {!r}".format(source_class))
+            raise ValueError(f"Invalid source_class: {source_class!r}")
 
         return np.array([_ in category for _ in source_class_info])
 
@@ -1281,7 +1281,7 @@ class SourceCatalog3FHL(SourceCatalog):
         elif source_class in np.unique(source_class_info):
             category = {source_class}
         else:
-            raise ValueError("Invalid source_class: {!r}".format(source_class))
+            raise ValueError(f"Invalid source_class: {source_class!r}")
 
         return np.array([_ in category for _ in source_class_info])
 

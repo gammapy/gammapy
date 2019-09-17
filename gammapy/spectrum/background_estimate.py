@@ -50,11 +50,11 @@ class BackgroundEstimate:
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += "\n Method: {}".format(self.method)
+        ss += f"\n Method: {self.method}"
         ss += "\n on region"
-        ss += "\n {}".format(self.on_region)
-        ss += "\n {}".format(self.on_events)
+        ss += f"\n {self.on_region}"
+        ss += f"\n {self.on_events}"
         ss += "\n off region"
-        ss += "\n {}".format(self.off_region)
-        ss += "\n {}".format(self.off_events)
+        ss += f"\n {self.off_region}"
+        ss += f"\n {self.off_events}"
         return ss

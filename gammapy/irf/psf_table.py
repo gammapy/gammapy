@@ -95,7 +95,7 @@ class TablePSF:
             gauss2d_pdf = Gauss2DPDF(sigma=width.radian)
             psf_value = gauss2d_pdf(rad.radian)
         else:
-            raise ValueError("Invalid shape: {}".format(shape))
+            raise ValueError(f"Invalid shape: {shape}")
 
         psf_value = u.Quantity(psf_value, "sr^-1")
 
@@ -104,11 +104,11 @@ class TablePSF:
     def info(self):
         """Print basic info."""
         ss = array_stats_str(self.rad.deg, "offset")
-        ss += "integral = {}\n".format(self.integral())
+        ss += f"integral = {self.integral()}\n"
 
         for containment in [68, 80, 95]:
             radius = self.containment_radius(0.01 * containment)
-            ss += "containment radius {} deg for {}%\n".format(radius.deg, containment)
+            ss += f"containment radius {radius.deg} deg for {containment}%\n"
 
         return ss
 
@@ -299,9 +299,8 @@ class EnergyDependentTablePSF:
         for fraction in fractions:
             rads = self.containment_radius(energy=energies, fraction=fraction)
             for energy, rad in zip(energies, rads):
-                ss += "  " + "{}% containment radius at {:3.0f}: {:.2f}\n".format(
-                    100 * fraction, energy, rad
-                )
+                ss += f"  {100 * fraction}% containment radius at {energy:3.0f}: {rad:.2f}\n"
+
         return ss
 
     @classmethod
@@ -516,12 +515,12 @@ class EnergyDependentTablePSF:
 
         for energy in energies:
             psf_value = np.squeeze(self.evaluate(energy=energy))
-            label = "{:.0f}".format(energy)
+            label = f"{energy:.0f}"
             ax.plot(
                 self.rad.to_value("deg"),
                 psf_value.to_value("sr-1"),
                 label=label,
-                **kwargs
+                **kwargs,
             )
 
         ax.set_yscale("log")
@@ -540,7 +539,7 @@ class EnergyDependentTablePSF:
 
         for fraction in fractions:
             rad = self.containment_radius(self.energy, fraction)
-            label = "{:.1f}% Containment".format(100 * fraction)
+            label = f"{100 * fraction:.1f}% Containment"
             ax.plot(self.energy.value, rad.value, label=label, **kwargs)
 
         ax.semilogx()
