@@ -322,9 +322,10 @@ def test_create(geom, geom_etrue):
     assert_allclose(empty_dataset.counts.data.sum(), 0.0)
     assert_allclose(empty_dataset.background_model.map.data.sum(), 0.0)
 
-    assert empty_dataset.psf.data.shape == (3, 50, 100, 100)
+    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 100, 100)
+    assert empty_dataset.psf.exposure_map.data.shape == (3, 100, 100)
 
-    assert empty_dataset.edisp.data.shape == (3, 50, 100, 100)
-    assert_allclose(empty_dataset.edisp.data.sum(), 30000)
+    assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 100, 100)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 30000)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
