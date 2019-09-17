@@ -2,9 +2,8 @@
 """Utilities to compute J-factor maps."""
 import astropy.units as u
 from astropy.units import Quantity
-from gammapy.maps import WcsNDMap
-from gammapy.modeling.models import SkyPointSource, SkyModel, AbsorbedSpectralModel
-from gammapy.cube.fit import MapDataset
+from gammapy.modeling.models import AbsorbedSpectralModel
+from gammapy.spectrum import SpectrumDatasetOnOff
 from gammapy.modeling import Fit
 from gammapy.utils.table import table_from_row_data
 from gammapy.astro.darkmatter import DMAnnihilation
@@ -79,12 +78,15 @@ class SigmaVEstimator:
 
     Parameters
     ----------
-    dataset : `~gammapy.cube.MapDataset`
-        Simulated dark matter annihilation dataset.
+    dataset : `~gammapy.spectrum.dataset.SpectrumDatasetOnOff`
+        Simulated dark matter annihilation spectrum dataset.
     masses : list of `~astropy.units.Quantity`
         List of particle masses where the values of :math:`\sigma\nu` will be calculated.
     channels : list of strings allowed in `~gammapy.astro.darkmatter.PrimaryFlux`
         List of channels where the values of :math:`\sigma\nu` will be calculated.
+    background_model: `~gammapy.spectrum.CountsSpectrum`
+        BackgroundModel. In the future will be part of the SpectrumDataset Class.
+        For the moment, a CountSpectrum.
     jfact : `~astropy.units.Quantity` (optional)
         Integrated J-Factor needed when `~gammapy.image.models.SkyPointSource` spatial model is used, default value 1.
     absorption_model : `~gammapy.spectrum.models.Absorption` (optional)
@@ -103,36 +105,25 @@ class SigmaVEstimator:
         import logging
         logging.basicConfig()
         logging.getLogger("gammapy.astro.darkmatter.utils").setLevel("INFO")
-        from gammapy.cube.simulate import simulate_dataset
-        from gammapy.maps import WcsGeom, MapAxis
-        from gammapy.modeling.models import SkyModel, SkyPointSource
-        from gammapy.astro.darkmatter import DMAnnihilation, SigmaVEstimator
-        from gammapy.irf import load_cta_irfs
-        from astropy.coordinates import SkyCoord
-        import astropy.units as u
-        import numpy as np
-
-        # Create point source map
-        GLON = 96.34 * u.deg
-        GLAT = -60.19 * u.deg
-        src_pos = SkyCoord(GLON, GLAT, frame="galactic")
-        irfs = load_cta_irfs("$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits")
-        axis = MapAxis.from_edges(np.logspace(np.log10(0.01), np.log10(100), 30), unit="TeV", name="energy", interp="log")
-        geom = WcsGeom.create(skydir=src_pos, binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis])
-        spatial_model = SkyPointSource(lat_0=GLAT, lon_0=GLON)
 
         # Create annihilation model
         JFAC = 3.41e19 * u.Unit("GeV2 cm-5")
-        flux_model = DMAnnihilation(mass=5000*u.GeV, channel="b", jfactor=JFAC, z=5)
+        flux_model = DMAnnihilation(mass=5000*u.GeV, channel="b", jfactor=JFAC)
 
-        # Combine into a sky model and create a simulated dataset
-        sky_model = SkyModel(spatial_model=spatial_model, spectral_model=flux_model)
-        sim_dataset = simulate_dataset(sky_model, geom=geom, pointing=src_pos, irfs=irfs, livetime=50*u.hour, offset=2*u.deg)
+        # Create an empty SpectrumDataSetOnOff dataset
+        dataset = SpectrumDatasetOnOff(
+            aeff=aeff,
+            edisp=edisp,
+            model=flux_model,
+            livetime=livetime,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+        )
 
         # Define channels and masses to run estimator
         channels = ["b", "t", "Z"]
         masses = [70, 200, 500, 5000, 10000, 50000, 100000]*u.GeV
-        estimator = SigmaVEstimator(sim_dataset, masses, channels, jfact=JFAC)
+        estimator = SigmaVEstimator(dataset, masses, channels, background_model=bkg, jfact=JFAC)
         result = estimator.run(likelihood_profile_opts=dict(bounds=(0, 500), nvalues=100))
     """
 
@@ -144,6 +135,7 @@ class SigmaVEstimator:
         dataset,
         masses,
         channels,
+        background_model,
         jfact=1,
         absorption_model=None,
         z=0,
@@ -154,6 +146,7 @@ class SigmaVEstimator:
         self.dataset = dataset
         self.masses = masses
         self.channels = channels
+        self.background = background_model
         self.jfact = jfact
         self.absorption_model = absorption_model
         self.z = z
@@ -183,23 +176,19 @@ class SigmaVEstimator:
             Dict with results as `~astropy.table.Table` objects for each channel.
         """
 
-        self.dataset.fake()
-        counts_map = WcsNDMap(
-            self.dataset.counts.geom, self.dataset.counts.data
-        )
+        self.dataset.fake(background_model=self.background)
         likelihood_profile_opts["parameter"] = "scale"
-        spatial_model = self.dataset.model.skymodels[0].spatial_model
 
         result = {}
         sigma_unit = ""
         for ch in self.channels:
             table_rows = []
-            log.info("Channel: {}".format(ch))
+            log.info(f"Channel: {ch}")
             for mass in self.masses:
                 row = {}
-                log.info("Mass: {}".format(mass))
+                log.info(f"Mass: {mass}")
                 DMAnnihilation.THERMAL_RELIC_CROSS_SECTION = self.xsection
-                spectral_model = DMAnnihilation(
+                flux_model = DMAnnihilation(
                     mass=mass,
                     channel=ch,
                     scale=1,
@@ -208,24 +197,12 @@ class SigmaVEstimator:
                     k=self.k,
                 )
                 if self.absorption_model:
-                    spectral_model = AbsorbedSpectralModel(
-                        spectral_model, self.absorption_model, self.z
+                    flux_model = AbsorbedSpectralModel(
+                        flux_model, self.absorption_model, self.z
                     )
-                flux_model = SkyModel(
-                    spatial_model=spatial_model, spectral_model=spectral_model
-                )
-                if isinstance(spatial_model, SkyPointSource):
-                    flux_model.parameters["lat_0"].frozen = True
-                    flux_model.parameters["lon_0"].frozen = True
+                dataset_loop = self.dataset.copy()
+                dataset_loop.model = flux_model
 
-                dataset_loop = MapDataset(
-                    model=flux_model,
-                    counts=counts_map,
-                    exposure=self.dataset.exposure,
-                    background_model=self.dataset.background_model,
-                    psf=self.dataset.psf,
-                    edisp=self.dataset.edisp,
-                )
                 try:
                     fit = Fit(dataset_loop)
                     fit_result = fit.run(optimize_opts, covariance_opts)
@@ -234,7 +211,7 @@ class SigmaVEstimator:
                     #
                     scale_best = fit_result.parameters["scale"].value
                     #
-                    likemin = fit_result.total_stat
+                    likemin = dataset_loop.likelihood()
                     profile = all_profile
 
                     # consider scale value in the physical region > 0
@@ -262,7 +239,6 @@ class SigmaVEstimator:
                     scale_best = None
                     scale_found = None
                     all_profile = None
-                    likemin = None
                     log.error(ex)
 
                 row["mass"] = mass
@@ -271,12 +247,11 @@ class SigmaVEstimator:
                     sigma_unit = sigma_v.unit
                 else:
                     row["sigma_v"] = sigma_v
-                row["scale"] = scale_best
+                row["scale_best"] = scale_best
                 row["scale_ul"] = scale_found
                 row["likeprofile"] = all_profile
-                row["likemin"] = likemin
                 table_rows.append(row)
-                log.info("Sigma v: {}".format(sigma_v))
+                log.info(f"Sigma v: {sigma_v}")
 
             table = table_from_row_data(rows=table_rows)
             table["sigma_v"].unit = sigma_unit
