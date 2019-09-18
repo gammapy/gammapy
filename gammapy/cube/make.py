@@ -101,15 +101,13 @@ class MapMaker:
 
             for name in selection:
                 if name == "exposure":
-                    data = maps_dataset.exposure.quantity.to_value(maps[name].unit)
+                    data = maps_dataset.exposure.quantity
                     maps[name].fill_by_coord(obs_maker.coords_etrue, data)
                 if name == "counts":
-                    data = maps_dataset.counts.quantity.to_value(maps[name].unit)
+                    data = maps_dataset.counts.quantity
                     maps[name].fill_by_coord(obs_maker.coords, data)
                 if name == "background":
-                    data = maps_dataset.background_model.map.quantity.to_value(
-                        maps[name].unit
-                    )
+                    data = maps_dataset.background_model.map.quantity
                     maps[name].fill_by_coord(obs_maker.coords, data)
         self._maps = maps
         return maps
@@ -277,15 +275,8 @@ class MapMakerObs:
 
         background_model = BackgroundModel(self.maps["background"])
 
-        if "psf" in self.maps:
-            psf = self.maps["psf"]
-        else:
-            psf = None
-
-        if "edisp" in self.maps:
-            edisp = self.maps["edisp"]
-        else:
-            edisp = None
+        psf = self.maps.get("psf")
+        edisp = self.maps.get("edisp")
 
         dataset = MapDataset(
             counts=self.maps["counts"],
@@ -293,6 +284,8 @@ class MapMakerObs:
             background_model=background_model,
             psf=psf,
             edisp=edisp,
+            gti=self.observation.gti,
+            name="obs_{}".format(self.observation.obs_id),
         )
 
         if "exposure_irf" in self.maps:
