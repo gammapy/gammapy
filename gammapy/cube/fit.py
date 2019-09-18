@@ -6,8 +6,11 @@ from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
 from gammapy.cube.psf_kernel import PSFKernel
+from gammapy.cube.psf_map import PSFMap
+from gammapy.cube.edisp_map import EDispMap
 from gammapy.irf import EnergyDispersion
-from gammapy.maps import Map
+from gammapy.maps import Map, MapAxis
+from gammapy.data import GTI
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
 from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
@@ -19,6 +22,14 @@ __all__ = ["MapEvaluator", "MapDataset"]
 log = logging.getLogger(__name__)
 
 CUTOUT_MARGIN = 0.1 * u.deg
+RAD_MAX = 0.66
+RAD_AXIS_DEFAULT = MapAxis.from_bounds(
+    0, RAD_MAX, nbin=66, node_type="edges", name="theta", unit="deg"
+)
+MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
+    0.2, 5, nbin=48, node_type="edges", name="migra"
+)
+# TODO: Choose optimal binnings depending on IRFs
 
 
 class MapDataset(Dataset):
@@ -266,6 +277,74 @@ class MapDataset(Dataset):
                     npred_total.data[evaluator.coords_idx] += npred.data
 
         return npred_total
+
+    @classmethod
+    def create(
+        cls,
+        geom,
+        geom_irf=None,
+        migra_axis=None,
+        rad_axis=None,
+        reference_time="2000-01-01",
+    ):
+
+        """Creates a MapDataset object with zero filled maps
+
+        Parameters
+        ----------
+        geom: `~gammapy.maps.WcsGeom`
+            Reference target geometry in reco energy, used for counts and background maps
+        geom_irf: `~gammapy.maps.WcsGeom`
+            Reference image geometry in true energy, used for IRF maps.
+        migra_axis: `~gammapy.maps.MapAxis`
+            Migration axis for the energy dispersion map
+        rad_axis: `~gammapy.maps.MapAxis`
+            Rad axis for the psf map
+        """
+
+        geom_irf = geom_irf or geom
+        migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
+        rad_axis = rad_axis or RAD_AXIS_DEFAULT
+
+        counts = Map.from_geom(geom, unit="")
+
+        background = Map.from_geom(geom, unit="")
+        background_model = BackgroundModel(background)
+
+        energy_axis = geom_irf.get_axis_by_name("ENERGY")
+
+        exposure_geom = geom.to_image().to_cube([energy_axis])
+        exposure = Map.from_geom(exposure_geom, unit="m2 s")
+        exposure_irf = Map.from_geom(geom_irf, unit="m2 s")
+
+        mask = np.ones(geom.data_shape, dtype=bool)
+
+        gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
+
+        geom_migra = geom_irf.to_image().to_cube([migra_axis, energy_axis])
+        edisp_map = Map.from_geom(geom_migra, unit="")
+        loc = migra_axis.edges.searchsorted(1.0)
+        edisp_map.data[:, loc, :, :] = 1.0
+        edisp = EDispMap(edisp_map, exposure_irf)
+
+        geom_rad = geom_irf.to_image().to_cube([rad_axis, energy_axis])
+        psf_map = Map.from_geom(geom_rad, unit="sr-1")
+        psf = PSFMap(psf_map, exposure_irf)
+
+        return cls(
+            model=None,
+            counts=counts,
+            exposure=exposure,
+            mask_fit=None,
+            psf=psf,
+            edisp=edisp,
+            background_model=background_model,
+            name="",
+            likelihood="cash",
+            evaluation_mode="local",
+            mask_safe=mask,
+            gti=gti,
+        )
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""

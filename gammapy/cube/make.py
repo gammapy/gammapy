@@ -11,6 +11,7 @@ from .counts import fill_map_counts
 from .edisp_map import make_edisp_map
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
 from .psf_map import make_psf_map
+from .fit import MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT
 
 __all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
 
@@ -230,8 +231,8 @@ class MapMakerObs:
         self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling
         self.maps = {}
-        self.migra_axis = migra_axis
-        self.rad_axis = rad_axis
+        self.migra_axis = migra_axis if migra_axis else MIGRA_AXIS_DEFAULT
+        self.rad_axis = rad_axis if rad_axis else RAD_AXIS_DEFAULT
 
     def _fov_mask(self, coords):
         pointing = self.observation.pointing_radec
@@ -325,11 +326,6 @@ class MapMakerObs:
 
     def _make_edisp(self):
         energy_axis = self.geom_true.get_axis_by_name("ENERGY")
-        if self.migra_axis is None:
-            axes = {
-                axis.name.lower(): axis for axis in self.observation.edisp.data.axes
-            }
-            self.migra_axis = axes["migra"]
         geom_migra = self.geom_true.to_image().to_cube([self.migra_axis, energy_axis])
         edisp_map = make_edisp_map(
             edisp=self.observation.edisp,
@@ -345,10 +341,7 @@ class MapMakerObs:
         if isinstance(psf, EnergyDependentMultiGaussPSF):
             psf = psf.to_psf3d()
         energy_axis = self.geom_true.get_axis_by_name("ENERGY")
-        if self.rad_axis is None:
-            rad = psf.rad_lo.value
-            rad_irf = np.append(rad, psf.rad_hi.value[-1])
-            self.rad_axis = MapAxis.from_edges(rad_irf, name="theta", unit="deg")
+
         geom_rad = self.geom_true.to_image().to_cube([self.rad_axis, energy_axis])
         psf_map = make_psf_map(
             psf=psf,

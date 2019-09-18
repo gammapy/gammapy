@@ -309,3 +309,23 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
     assert_allclose(pars.error("amplitude"), 2.163318e-12, rtol=1e-2)
+
+
+def test_create(geom, geom_etrue):
+    # tests empty datasets created
+
+    migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+
+    empty_dataset = MapDataset.create(geom, geom_etrue, migra_axis, rad_axis)
+
+    assert_allclose(empty_dataset.counts.data.sum(), 0.0)
+    assert_allclose(empty_dataset.background_model.map.data.sum(), 0.0)
+
+    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 100, 100)
+    assert empty_dataset.psf.exposure_map.data.shape == (3, 100, 100)
+
+    assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 100, 100)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 30000)
+
+    assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
