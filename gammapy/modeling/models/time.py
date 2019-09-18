@@ -125,26 +125,6 @@ class PhaseCurveTableModel(Model):
         fp = self.table["NORM"]
         return np.interp(x=phase, xp=xp, fp=fp, period=1)
 
-    #    @property
-    def ontime(self, t_min, t_max):
-        """On time (`~astropy.units.Quantity`)"""
-
-        t_min = Time(t_min)
-        t_max = Time(t_max)
-
-        ontime = t_max - t_min
-        return u.Quantity(ontime.sec, "s")
-
-    def _get_time_meta(self, t_min, t_max):
-        """Time meta information (`OrderedDict`)"""
-        # TODO: extend the meta information according to
-        #  https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
-        meta = OrderedDict()
-        meta["ONTIME"] = np.round(
-            self.ontime(t_min=t_min, t_max=t_max).to_value("s"), 1
-        )
-        return meta
-
     def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
         """Sample arrival times of events.
 
@@ -175,7 +155,8 @@ class PhaseCurveTableModel(Model):
         t_delta = u.Quantity(t_delta)
         random_state = get_random_state(random_state)
 
-        t_stop = self.ontime(t_min=t_min, t_max=t_max).to_value(time_unit)
+        ontime = u.Quantity((t_max - t_min).sec, "s")
+        t_stop = ontime.to_value(time_unit)
 
         # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
         #  is still incomplete, refactor once we change to recent numpy and astropy versions
@@ -317,26 +298,6 @@ class LightCurveTableModel(Model):
         integral = self._interpolator.integral(time_min, time_max)
         return integral / dt
 
-    #    @property
-    def ontime(self, t_min, t_max):
-        """On time (`~astropy.units.Quantity`)"""
-
-        t_min = Time(t_min)
-        t_max = Time(t_max)
-
-        ontime = t_max - t_min
-        return u.Quantity(ontime.sec, "s")
-
-    def _get_time_meta(self, t_min, t_max):
-        """Time meta information (`OrderedDict`)"""
-        # TODO: extend the meta information according to
-        #  https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
-        meta = OrderedDict()
-        meta["ONTIME"] = np.round(
-            self.ontime(t_min=t_min, t_max=t_max).to_value("s"), 1
-        )
-        return meta
-
     def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
         """Sample arrival times of events.
 
@@ -367,7 +328,8 @@ class LightCurveTableModel(Model):
         t_delta = u.Quantity(t_delta)
         random_state = get_random_state(random_state)
 
-        t_stop = self.ontime(t_min=t_min, t_max=t_max).to_value(time_unit)
+        ontime = u.Quantity((t_max - t_min).sec, "s")
+        t_stop = ontime.to_value(time_unit)
 
         # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
         #  is still incomplete, refactor once we change to recent numpy and astropy versions
