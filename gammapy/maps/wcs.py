@@ -538,7 +538,7 @@ class WcsGeom(MapGeom):
         else:
             return int(self.npix[0][idx]), int(self.npix[1][idx])
 
-    @lru_cache(maxsize=2)
+    @lru_cache()
     def get_idx(self, idx=None, flat=False):
         pix = self.get_pix(idx=idx, mode="center")
         if flat:
@@ -565,7 +565,7 @@ class WcsGeom(MapGeom):
         pix = np.meshgrid(*pix[::-1], indexing="ij")[::-1]
         return pix
 
-    @lru_cache(maxsize=2)
+    @lru_cache()
     def get_pix(self, idx=None, mode="center"):
         """Get map pix coordinates from the geometry.
 
@@ -586,7 +586,7 @@ class WcsGeom(MapGeom):
             _[~m] = INVALID_INDEX.float
         return pix
 
-    @lru_cache(maxsize=2)
+    @lru_cache()
     def get_coord(self, idx=None, flat=False, mode="center"):
         """Get map coordinates from the geometry.
 
@@ -758,7 +758,7 @@ class WcsGeom(MapGeom):
             axes[idx] = axes[idx].upsample(factor)
             return self._init_copy(axes=axes)
 
-    @lru_cache(maxsize=1)
+    @lru_cache()
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
 
