@@ -29,7 +29,7 @@ RAD_AXIS_DEFAULT = MapAxis.from_bounds(
 MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
     0.2, 5, nbin=48, node_type="edges", name="migra"
 )
-#TODO: Choose optimal binnings depending on IRFs
+# TODO: Choose optimal binnings depending on IRFs
 
 
 class MapDataset(Dataset):
@@ -279,8 +279,6 @@ class MapDataset(Dataset):
         return npred_total
 
     @classmethod
-
-
     def create(
         cls,
         geom,
@@ -326,7 +324,6 @@ class MapDataset(Dataset):
         loc = migra_axis.edges.searchsorted(1.0)
         edisp_map.data[:, loc, :, :] = 1.0
         edisp = EDispMap(edisp_map, exposure_irf)
-
 
         geom_rad = geom_irf.to_image().to_cube([rad_axis, energy_axis])
         psf_map = Map.from_geom(geom_rad, unit="sr-1")
