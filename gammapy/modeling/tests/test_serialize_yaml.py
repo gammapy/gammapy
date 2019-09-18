@@ -47,7 +47,7 @@ def test_dict_to_skymodels(tmpdir):
 
     model1 = models[1]
     assert isinstance(model1.spectral_model, spectral.PowerLaw)
-    assert isinstance(model1.spatial_model, spatial.SkyEllipse)
+    assert isinstance(model1.spatial_model, spatial.SkyDisk)
 
     pars1 = model1.parameters
     assert pars1["index"].value == 2.2

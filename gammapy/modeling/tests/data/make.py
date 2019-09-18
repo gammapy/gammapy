@@ -22,7 +22,7 @@ from gammapy.modeling.models import (
     SkyPointSource,
 )
 
-DATA_PATH = Path("gammapy/modeling/tests/data")
+DATA_PATH = Path("./")
 
 
 def make_example_2():

@@ -7,7 +7,7 @@ from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import (
     SkyDiffuseConstant,
     SkyDiffuseMap,
-    SkyEllipse,
+    SkyDisk,
     SkyGaussian,
     SkyPointSource,
     SkyShell,
@@ -87,7 +87,7 @@ def test_sky_gaussian():
 def test_sky_ellipse():
     # Test the disk case (e=0)
     r_0 = 2 * u.deg
-    model = SkyEllipse(lon_0="1 deg", lat_0="45 deg", r_0=r_0)
+    model = SkyDisk(lon_0="1 deg", lat_0="45 deg", r_0=r_0)
     lon = [1, 5, 359] * u.deg
     lat = 46 * u.deg
     val = model(lon, lat)
@@ -107,7 +107,7 @@ def test_sky_ellipse():
     lon = coords.lon
     lat = coords.lat
     r_0 = 10 * u.deg
-    model_1 = SkyEllipse(2 * u.deg, 2 * u.deg, r_0, 0.4, 30 * u.deg)
+    model_1 = SkyDisk(2 * u.deg, 2 * u.deg, r_0, 0.4, 30 * u.deg)
     vals_1 = model_1(lon, lat)
     assert vals_1.unit == "sr-1"
     assert_allclose(np.sum(vals_1 * solid_angle), 1, rtol=1.0e-3)
@@ -119,7 +119,7 @@ def test_sky_ellipse():
     r_0 = 2 * u.deg
     semi_minor = 1 * u.deg
     eccentricity = np.sqrt(1 - (semi_minor / r_0) ** 2)
-    model_rot_test = SkyEllipse(0 * u.deg, 0 * u.deg, r_0, eccentricity, 90 * u.deg)
+    model_rot_test = SkyDisk(0 * u.deg, 0 * u.deg, r_0, eccentricity, 90 * u.deg)
     assert_allclose(model_rot_test(0 * u.deg, 1.5 * u.deg).value, 0)
 
     # test the normalization for a disk (ellipse with e=0) at the Galactic Pole
@@ -131,7 +131,7 @@ def test_sky_ellipse():
     lat = coords.lat
 
     r_0 = 5 * u.deg
-    disk = SkyEllipse(0 * u.deg, 90 * u.deg, r_0)
+    disk = SkyDisk(0 * u.deg, 90 * u.deg, r_0)
     vals_disk = disk(lon, lat)
 
     solid_angle = 2 * np.pi * (1 - np.cos(5 * u.deg))
@@ -140,7 +140,7 @@ def test_sky_ellipse():
 
 def test_sky_ellipse_edge():
     r_0 = 2 * u.deg
-    model = SkyEllipse(lon_0="0 deg", lat_0="0 deg", r_0=r_0, e=0.5, phi="0 deg")
+    model = SkyDisk(lon_0="0 deg", lat_0="0 deg", r_0=r_0, e=0.5, phi="0 deg")
     value_center = model(0 * u.deg, 0 * u.deg)
     value_edge = model(0 * u.deg, r_0)
     print(value_center, value_edge)

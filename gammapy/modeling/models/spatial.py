@@ -14,7 +14,7 @@ __all__ = [
     "SkySpatialModel",
     "SkyPointSource",
     "SkyGaussian",
-    "SkyEllipse",
+    "SkyDisk",
     "SkyShell",
     "SkyDiffuseConstant",
     "SkyDiffuseMap",
@@ -119,7 +119,7 @@ class SkyGaussian(SkySpatialModel):
             \frac{1-\cos \theta}{1-\cos \sigma}\right\}\,,
 
     where :math:`\theta` is the sky separation to the model center. In this case, the
-     Gaussian is normalized to 1 on the sphere:
+    Gaussian is normalized to 1 on the sphere:
 
     .. math::
         N = \frac{1}{4\pi a\left[1-\exp(-1/a)\right]}\,,\,\,\,\,
@@ -127,26 +127,22 @@ class SkyGaussian(SkySpatialModel):
 
     In the limit of small :math:`\theta` and :math:`\sigma`, this definition
     reduces to the usual form:
+
     .. math::
         \phi(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma^2} \exp{\left(-\frac{1}{2}
             \frac{\theta^2}{\sigma^2}\right)}\,.
 
     In case an eccentricity (:math:`e`) and rotation angle (:math:`\phi`) are passed,
-    then the model is an elongated Gaussian defined as:
-
-    .. math::
-        \phi(\text{lon}, \text{lat}) = N \times \exp\left\{-\frac{1}{2}
-            \frac{1-\cos(\theta)}{1-\cos\sigma_{eff}}\right\}\,.
-
-    The effective radius of the Gaussian, used for the evaluation of the model, is:
+    then the model is an elongated Gaussian, whose evaluation is performed as in the symmetric case
+    but using the effective radius of the Gaussian:
 
     .. math::
         \sigma_{eff}(\text{lon}, \text{lat}) = \sqrt{
             (\sigma_M \sin(\Delta \phi))^2 +
             (\sigma_m \cos(\Delta \phi))^2
-        },
+        }.
 
-    where :math:`\sigma_M` (:math:`\sigma_m`) is the major (minor) semiaxis of the Gaussian, and
+    Here, :math:`\sigma_M` (:math:`\sigma_m`) is the major (minor) semiaxis of the Gaussian, and
     :math:`\Delta \phi` is the difference between `phi`, the position angle of the Gaussian, and the
     position angle of the evaluation point.
 
@@ -249,8 +245,8 @@ class SkyGaussian(SkySpatialModel):
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
 
 
-class SkyEllipse(SkySpatialModel):
-    r"""Constant elliptical model.
+class SkyDisk(SkySpatialModel):
+    r"""Constant disk model.
 
     By default, the model is symmetric, i.e. a disk:
 
@@ -300,9 +296,9 @@ class SkyEllipse(SkySpatialModel):
         import numpy as np
         import matplotlib.pyplot as plt
         from gammapy.maps import Map, WcsGeom
-        from gammapy.modeling.models import SkyEllipse
+        from gammapy.modeling.models import SkyDisk
 
-        model = SkyEllipse("2 deg", "2 deg", "1 deg", 0.8, "30 deg", frame="galactic")
+        model = SkyDisk("2 deg", "2 deg", "1 deg", 0.8, "30 deg", frame="galactic")
 
         m_geom = WcsGeom.create(
             binsz=0.01, width=(3, 3), skydir=(2, 2), coordsys="GAL", proj="AIT"
@@ -329,7 +325,7 @@ class SkyEllipse(SkySpatialModel):
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "r_0", "e", "phi", "_offset_by"]
-    tag = "SkyEllipse"
+    tag = "SkyDisk"
 
     def __init__(
         self, lon_0, lat_0, r_0, e=0, phi="0 deg", edge="0.01 deg", frame="galactic"
@@ -389,9 +385,9 @@ class SkyEllipse(SkySpatialModel):
         else:
             sigma_eff = compute_sigma_eff(lon_0, lat_0, lon, lat, phi, r_0, e)[1]
 
-        norm = SkyEllipse.compute_norm(r_0, e)
+        norm = SkyDisk.compute_norm(r_0, e)
 
-        in_ellipse = SkyEllipse.smooth_edge(sep - sigma_eff, edge)
+        in_ellipse = SkyDisk.smooth_edge(sep - sigma_eff, edge)
         return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
 
 

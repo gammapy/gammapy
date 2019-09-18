@@ -94,7 +94,7 @@ def test_complex():
     assert pars2["index"].min is np.nan
 
     model3 = sourcelib.skymodels[3]
-    assert isinstance(model3.spatial_model, spatial.SkyEllipse)
+    assert isinstance(model3.spatial_model, spatial.SkyDisk)
     pars3 = model3.parameters
     assert pars3["r_0"].unit == "deg"
 

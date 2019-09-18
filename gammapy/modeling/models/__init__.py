@@ -9,7 +9,7 @@ from .time import *
 
 SPATIAL_MODELS = {
     "SkyDiffuseMap": SkyDiffuseMap,
-    "SkyEllipse": SkyEllipse,
+    "SkyDisk": SkyDisk,
     "SkyGaussian": SkyGaussian,
     "SkyPointSource": SkyPointSource,
     "SkyShell": SkyShell,
