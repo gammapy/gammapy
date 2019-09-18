@@ -5,13 +5,14 @@ from astropy.coordinates import Angle
 from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.utils import lazyproperty
 from gammapy.irf import EnergyDependentMultiGaussPSF
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, WcsGeom
+from gammapy.modeling.models import BackgroundModel
 from .background import make_map_background_irf
 from .counts import fill_map_counts
-from .edisp_map import make_edisp_map
+from .edisp_map import make_edisp_map, EDispMap
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
-from .psf_map import make_psf_map
-from .fit import MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT
+from .psf_map import make_psf_map, PSFMap
+from .fit import MapDataset, MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT
 
 __all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
 
@@ -96,11 +97,12 @@ class MapMaker:
                 log.info(f"Skipping observation {obs.obs_id} (no map overlap)")
                 continue
 
-            maps_obs = obs_maker.run(selection)
+            maps_dataset = obs_maker.run(selection)
 
             for name in selection:
-                data = maps_obs[name].quantity.to_value(maps[name].unit)
+                data = maps_dataset..quantity.to_value(maps[name].unit)
                 if name == "exposure":
+                    data = maps_dataset.quantity.to_value(maps[name].unit)
                     maps[name].fill_by_coord(obs_maker.coords_etrue, data)
                 else:
                     maps[name].fill_by_coord(obs_maker.coords, data)
@@ -268,9 +270,22 @@ class MapMakerObs:
         for name in selection:
             getattr(self, "_make_" + name)()
 
+        background_model = BackgroundModel(self.maps['background'])
+        psf_obj = PSFMap(self.maps['edisp'], self.maps['exposure_irf'])
+        edisp_obj = EDispMap(self.maps['edisp'], self.maps['exposure_irf'])
+
+        dataset=MapDataset(
+            counts=self.maps["counts"],
+            exposure=self.maps['exposure'],
+            background_model=background_model,
+            psf=psf_obj,
+            edisp=edisp_obj
+        )
+
         if "exposure_irf" in self.maps:
             del self.maps["exposure_irf"]
-        return self.maps
+
+        return dataset
 
     def _make_counts(self):
         counts = Map.from_geom(self.geom)
