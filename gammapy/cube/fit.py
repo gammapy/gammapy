@@ -339,7 +339,7 @@ class MapDataset(Dataset):
             psf=psf,
             edisp=edisp,
             background_model=background_model,
-            name="empty_",
+            name="",
             likelihood="cash",
             evaluation_mode="local",
             mask_safe=mask,
