@@ -3,7 +3,6 @@
 import astropy.units as u
 from astropy.units import Quantity
 from gammapy.modeling.models import AbsorbedSpectralModel
-from gammapy.spectrum import SpectrumDatasetOnOff
 from gammapy.modeling import Fit
 from gammapy.utils.table import table_from_row_data
 from gammapy.astro.darkmatter import DMAnnihilation
@@ -88,7 +87,9 @@ class SigmaVEstimator:
         BackgroundModel. In the future will be part of the SpectrumDataset Class.
         For the moment, a CountSpectrum.
     jfact : `~astropy.units.Quantity` (optional)
-        Integrated J-Factor needed when `~gammapy.image.models.SkyPointSource` spatial model is used, default value 1.
+        Integrated J-Factor
+        Needed when `~gammapy.image.models.SkyPointSource` spatial model is used.
+        Default value 1.
     absorption_model : `~gammapy.spectrum.models.Absorption` (optional)
         Absorption model, default is None.
     z: float (optional)
@@ -96,7 +97,8 @@ class SigmaVEstimator:
     k: int (optional)
         Type of dark matter particle (k:2 Majorana, k:4 Dirac), default value 2.
     xsection: `~astropy.units.Quantity` (optional)
-        Thermally averaged annihilation cross-section, default value declared in `~gammapy.astro.darkmatter.DMAnnihilation`.
+        Thermally averaged annihilation cross-section.
+        Default value declared in `~gammapy.astro.darkmatter.DMAnnihilation`.
 
     Examples
     --------
@@ -158,6 +160,7 @@ class SigmaVEstimator:
 
     def run(
         self,
+        runs,
         likelihood_profile_opts=dict(bounds=5, nvalues=50),
         optimize_opts=None,
         covariance_opts=None,
@@ -166,6 +169,8 @@ class SigmaVEstimator:
 
         Parameters
         ----------
+        runs: int
+            Number of runs where to perform the fitting
         likelihood_profile_opts : dict
             Options passed to `~gammapy.utils.fitting.Fit.likelihood_profile`.
         optimize_opts : dict
@@ -176,42 +181,73 @@ class SigmaVEstimator:
         Returns
         -------
         result : dict
-            Dict with results as `~astropy.table.Table` objects for each channel.
+            Nested dict of channels with results in `~astropy.table.Table` objects for each channel.
+            result['mean'] provides mean values for sigma v vs. mass.
+            result['runs'] provides sigma v vs. mass. and profile likelihood for each channel and run.
         """
-
-        self.dataset.fake(background_model=self.background)
         likelihood_profile_opts["parameter"] = "scale"
 
-        result = {}
+        # initialization of data containers
+        sigmas = {}
+        result = dict(mean={}, runs={})
+        for ch in self.channels:
+            result["mean"][ch] = None
+            result["runs"][ch] = []
+            sigmas[ch] = {}
+            for mass in self.masses:
+                sigmas[ch][mass.value] = []
         sigma_unit = ""
+
+        for run in range(runs):
+            log.info(f"Run: {run}")
+            self.dataset.fake(background_model=self.background)
+            for ch in self.channels:
+                log.info(f"Channel: {ch}")
+                table_rows = []
+                for mass in self.masses:
+                    log.info(f"Mass: {mass}")
+                    row = {}
+                    DMAnnihilation.THERMAL_RELIC_CROSS_SECTION = self.xsection
+                    dataset_loop = self._set_model_dataset(ch, mass)
+                    fit_result = self._fit_dataset(
+                        dataset_loop,
+                        ch,
+                        run,
+                        mass,
+                        likelihood_profile_opts=likelihood_profile_opts,
+                        optimize_opts=optimize_opts,
+                        covariance_opts=covariance_opts,
+                    )
+                    row["mass"] = mass
+                    if isinstance(fit_result["sigma_v"], Quantity):
+                        row["sigma_v"] = fit_result["sigma_v"].value
+                        sigma_unit = fit_result["sigma_v"].unit
+                    else:
+                        row["sigma_v"] = fit_result["sigma_v"]
+                    row["scale_best"] = fit_result["scale_best"]
+                    row["scale_ul"] = fit_result["scale_ul"]
+                    row["likeprofile"] = fit_result["likeprofile"]
+                    table_rows.append(row)
+                    sigmas[ch][mass.value].append(row["sigma_v"])
+                    log.info(f"Sigma v:{row['sigma_v']}")
+                table = table_from_row_data(rows=table_rows)
+                table["sigma_v"].unit = sigma_unit
+                result["runs"][ch].append(table)
+
+        # calculate mean results
         for ch in self.channels:
             table_rows = []
-            log.info(f"Channel: {ch}")
             for mass in self.masses:
                 row = {}
-                log.info(f"Mass: {mass}")
-                DMAnnihilation.THERMAL_RELIC_CROSS_SECTION = self.xsection
-                dataset_loop = self._set_model_dataset(ch, mass)
-                fit_result = self._fit_dataset(
-                    dataset_loop,
-                    likelihood_profile_opts=likelihood_profile_opts,
-                    optimize_opts=optimize_opts,
-                    covariance_opts=covariance_opts,
-                )
+                npsigmas = np.array(sigmas[ch][mass.value], dtype=np.float)
+                sigma_mean = np.nanmean(npsigmas)
+                sigma_std = np.nanstd(npsigmas)
                 row["mass"] = mass
-                if isinstance(fit_result["sigma_v"], Quantity):
-                    row["sigma_v"] = fit_result["sigma_v"].value
-                    sigma_unit = fit_result["sigma_v"].unit
-                else:
-                    row["sigma_v"] = fit_result["sigma_v"]
-                row["scale_best"] = fit_result["scale_best"]
-                row["scale_ul"] = fit_result["scale_ul"]
-                row["likeprofile"] = fit_result["likeprofile"]
+                row["sigma_v"] = sigma_mean * sigma_unit
+                row["std"] = sigma_std * sigma_unit
                 table_rows.append(row)
-                log.info(f"Sigma v: {fit_result['sigma_v']}")
             table = table_from_row_data(rows=table_rows)
-            table["sigma_v"].unit = sigma_unit
-            result[ch] = table
+            result["mean"][ch] = table
         return result
 
     def _set_model_dataset(self, ch, mass):
@@ -230,24 +266,26 @@ class SigmaVEstimator:
     def _fit_dataset(
         self,
         dataset_loop,
+        ch,
+        run,
+        mass,
         likelihood_profile_opts=None,
         optimize_opts=None,
         covariance_opts=None,
     ):
-        """Fit dataset to model."""
+        """Fit dataset to model and calculate parameter value for upper limit."""
         try:
             fit = Fit(dataset_loop)
             fit_result = fit.run(optimize_opts, covariance_opts)
             likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
-            #
-            #
             scale_best = fit_result.parameters["scale"].value
-            #
             likemin = dataset_loop.likelihood()
             profile = likeprofile
 
             # consider scale value in the physical region > 0
-            assert (np.max(profile["values"]) > 0), "Values for scale found outside the physical region"
+            assert (
+                np.max(profile["values"]) > 0
+            ), "Values for scale found outside the physical region"
             if scale_best < 0:
                 scale_best = 0
                 likemin = interp1d(likeprofile["values"], likeprofile["likelihood"], kind="quadratic")(0)
@@ -255,7 +293,11 @@ class SigmaVEstimator:
                 filtered_x_values = likeprofile["values"][likeprofile["values"] > 0]
                 filtered_y_values = likeprofile["likelihood"][idx:]
                 profile["values"] = np.concatenate((np.array([0]), filtered_x_values))
-                profile["likelihood"] = np.concatenate((np.array([likemin]), filtered_y_values))
+                profile["likelihood"] = np.concatenate(
+                    (np.array([likemin]), filtered_y_values)
+                )
+            max_like_difference = np.max(profile["likelihood"]) - likemin - self.RATIO
+            assert max_like_difference > 0, "Flat likelihood"
             scale_ul = brentq(
                 interp1d(
                     profile["values"],
@@ -274,6 +316,7 @@ class SigmaVEstimator:
             scale_best = None
             scale_ul = None
             likeprofile = None
+            log.error(f"Channel: {ch} - Run: {run} - Mass: {mass}")
             log.error(ex)
 
         res = dict(
