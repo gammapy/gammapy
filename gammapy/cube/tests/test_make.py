@@ -147,11 +147,11 @@ def test_map_maker_obs(observations):
         offset_max=2.0 * u.deg,
     )
 
-    map_obs = maker_obs.run()
-    assert map_obs["counts"].geom == geom_reco
-    assert map_obs["background"].geom == geom_reco
-    assert map_obs["exposure"].geom == geom_exp
-    assert map_obs["edisp"].edisp_map.data.shape == (3, 48, 5, 10)
-    assert map_obs["edisp"].exposure_map.data.shape == (3, 1, 5, 10)
-    assert map_obs["psf"].psf_map.data.shape == (3, 66, 5, 10)
-    assert map_obs["psf"].exposure_map.data.shape == (3, 1, 5, 10)
+    map_dataset = maker_obs.run()
+    assert map_dataset.counts.geom == geom_reco
+    assert map_dataset.background_model.map.geom == geom_reco
+    assert map_dataset.exposure.geom == geom_exp
+    assert map_dataset.edisp.edisp_map.data.shape == (3, 48, 5, 10)
+    assert map_dataset.edisp.exposure_map.data.shape == (3, 1, 5, 10)
+    assert map_dataset.psf.psf_map.data.shape == (3, 66, 5, 10)
+    assert map_dataset.psf.exposure_map.data.shape == (3, 1, 5, 10)

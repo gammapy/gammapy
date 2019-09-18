@@ -9,9 +9,9 @@ from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import BackgroundModel
 from .background import make_map_background_irf
 from .counts import fill_map_counts
-from .edisp_map import make_edisp_map, EDispMap
+from .edisp_map import make_edisp_map
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
-from .psf_map import make_psf_map, PSFMap
+from .psf_map import make_psf_map
 from .fit import MapDataset, MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT
 
 __all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
@@ -100,11 +100,16 @@ class MapMaker:
             maps_dataset = obs_maker.run(selection)
 
             for name in selection:
-                data = maps_dataset..quantity.to_value(maps[name].unit)
                 if name == "exposure":
-                    data = maps_dataset.quantity.to_value(maps[name].unit)
+                    data = maps_dataset.exposure.quantity.to_value(maps[name].unit)
                     maps[name].fill_by_coord(obs_maker.coords_etrue, data)
-                else:
+                if name == "counts":
+                    data = maps_dataset.counts.quantity.to_value(maps[name].unit)
+                    maps[name].fill_by_coord(obs_maker.coords, data)
+                if name == "background":
+                    data = maps_dataset.background_model.map.quantity.to_value(
+                        maps[name].unit
+                    )
                     maps[name].fill_by_coord(obs_maker.coords, data)
         self._maps = maps
         return maps
@@ -270,16 +275,24 @@ class MapMakerObs:
         for name in selection:
             getattr(self, "_make_" + name)()
 
-        background_model = BackgroundModel(self.maps['background'])
-        psf_obj = PSFMap(self.maps['edisp'], self.maps['exposure_irf'])
-        edisp_obj = EDispMap(self.maps['edisp'], self.maps['exposure_irf'])
+        background_model = BackgroundModel(self.maps["background"])
 
-        dataset=MapDataset(
+        if "psf" in self.maps:
+            psf = self.maps["psf"]
+        else:
+            psf = None
+
+        if "edisp" in self.maps:
+            edisp = self.maps["edisp"]
+        else:
+            edisp = None
+
+        dataset = MapDataset(
             counts=self.maps["counts"],
-            exposure=self.maps['exposure'],
+            exposure=self.maps["exposure"],
             background_model=background_model,
-            psf=psf_obj,
-            edisp=edisp_obj
+            psf=psf,
+            edisp=edisp,
         )
 
         if "exposure_irf" in self.maps:
@@ -472,7 +485,11 @@ class MapMakerRing(MapMaker):
                 log.info(f"Skipping obs_id: {obs.obs_id} (partial map overlap)")
                 continue
 
-            maps_obs = obs_maker.run(selection=["counts", "exposure", "background"])
+            maps_dataset = obs_maker.run(selection=["counts", "exposure", "background"])
+            maps_obs = {}
+            maps_obs["counts"] = maps_dataset.counts
+            maps_obs["exposure"] = maps_dataset.exposure
+            maps_obs["background"] = maps_dataset.background_model.map
             maps_obs["exclusion"] = obs_maker.exclusion_mask
 
             if sum_over_axis:
