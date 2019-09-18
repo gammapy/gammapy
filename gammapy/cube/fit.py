@@ -31,6 +31,7 @@ MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
 )
 #TODO: Choose optimal binnings depending on IRFs
 
+
 class MapDataset(Dataset):
     """Perform sky model likelihood fit on maps.
 
@@ -278,7 +279,17 @@ class MapDataset(Dataset):
         return npred_total
 
     @classmethod
-    def create(cls, geom, geom_irf=None, migra_axis=None, rad_axis=None, reference_time="2000-01-01",):
+
+
+    def create(
+        cls,
+        geom,
+        geom_irf=None,
+        migra_axis=None,
+        rad_axis=None,
+        reference_time="2000-01-01",
+    ):
+
         """Creates a MapDataset object with zero filled maps
 
         Parameters
@@ -309,7 +320,6 @@ class MapDataset(Dataset):
         mask = np.ones(geom.data_shape, dtype=bool)
 
         gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
-
 
         geom_migra = geom_irf.to_image().to_cube([migra_axis, energy_axis])
         edisp_map = Map.from_geom(geom_migra, unit="")
