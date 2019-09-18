@@ -15,7 +15,7 @@ __all__ = ["PhaseCurveTableModel", "LightCurveTableModel"]
 
 
 class PhaseCurveTableModel(Model):
-    r"""Temporal phase curve model.
+    """Temporal phase curve model.
 
     Phase for a given time is computed as:
 
@@ -124,6 +124,74 @@ class PhaseCurveTableModel(Model):
         xp = self.table["PHASE"]
         fp = self.table["NORM"]
         return np.interp(x=phase, xp=xp, fp=fp, period=1)
+
+    #    @property
+    def ontime(self, t_min, t_max):
+        """On time (`~astropy.units.Quantity`)"""
+
+        t_min = Time(t_min)
+        t_max = Time(t_max)
+
+        ontime = t_max - t_min
+        return u.Quantity(ontime.sec, "s")
+
+    def _get_time_meta(self, t_min, t_max):
+        """Time meta information (`OrderedDict`)"""
+        # TODO: extend the meta information according to
+        #  https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
+        meta = OrderedDict()
+        meta["ONTIME"] = np.round(
+            self.ontime(t_min=t_min, t_max=t_max).to_value("s"), 1
+        )
+        return meta
+
+    def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
+        """Sample arrival times of events.
+        
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        t_min : `~astropy.time.Time`
+            Start time of the sampling.
+        t_max : `~astropy.time.Time`
+            Stop time of the sampling.
+        t_delta : `~astropy.units.Quantity`
+            Time step used for sampling of the temporal model.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+        
+        Returns
+        -------
+        time : `~astropy.units.Quantity`
+            Array with times of the sampled events.
+        """
+        time_unit = u.second
+
+        t_min = Time(t_min)
+        t_max = Time(t_max)
+        n_events = n_events
+        t_delta = u.Quantity(t_delta)
+        random_state = get_random_state(random_state)
+
+        t_stop = self.ontime(t_min=t_min, t_max=t_max).to_value(time_unit)
+
+        # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
+        #  is still incomplete, refactor once we change to recent numpy and astropy versions
+        if self.table is not None:
+            t_step = t_delta.to_value(time_unit)
+            t = np.arange(0, t_stop, t_step)
+
+            pdf = self.evaluate_norm_at_time(t)
+
+            sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
+            time_pix = sampler.sample(n_events)[0]
+            time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
+        else:
+            time = random_state.uniform(high=t_stop, size=n_events) * time_unit
+
+        return time
 
 
 class LightCurveTableModel(Model):
@@ -264,7 +332,9 @@ class LightCurveTableModel(Model):
         # TODO: extend the meta information according to
         #  https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
         meta = OrderedDict()
-        meta["ONTIME"] = np.round(self.ontime(t_min, t_max).to_value("s"), 1)
+        meta["ONTIME"] = np.round(
+            self.ontime(t_min=t_min, t_max=t_max).to_value("s"), 1
+        )
         return meta
 
     def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
@@ -291,26 +361,26 @@ class LightCurveTableModel(Model):
         """
         time_unit = u.second
 
-        self.t_min = Time(t_min)
-        self.t_max = Time(t_max)
-        self.n_events = n_events
-        self.t_delta = u.Quantity(t_delta)
-        self.random_state = get_random_state(random_state)
+        t_min = Time(t_min)
+        t_max = Time(t_max)
+        n_events = n_events
+        t_delta = u.Quantity(t_delta)
+        random_state = get_random_state(random_state)
 
         t_stop = self.ontime(t_min=t_min, t_max=t_max).to_value(time_unit)
 
         # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
         #  is still incomplete, refactor once we change to recent numpy and astropy versions
         if self.table is not None:
-            t_step = self.t_delta.to_value(time_unit)
+            t_step = t_delta.to_value(time_unit)
             t = np.arange(0, t_stop, t_step)
 
             pdf = self.evaluate_norm_at_time(t * time_unit)
 
-            sampler = InverseCDFSampler(pdf=pdf, random_state=self.random_state)
+            sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
             time_pix = sampler.sample(n_events)[0]
             time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
         else:
-            time = self.random_state.uniform(high=t_stop, size=n_events) * time_unit
+            time = random_state.uniform(high=t_stop, size=n_events) * time_unit
 
         return time

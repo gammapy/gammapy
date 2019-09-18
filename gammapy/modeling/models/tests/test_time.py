@@ -68,7 +68,11 @@ def rate(x, c="1e4 s"):
     return np.exp(-x / c)
 
 
-def test_map_sampling():
+def ph_curve(x, amplitude=0.5, x0=0.01):
+    return 1.0 + amplitude * np.sin(2 * np.pi * (x - x0) / 1.0)
+
+
+def test_time_sampling():
     time = np.arange(0, 10, 0.06) * u.hour
 
     table = Table()
@@ -91,3 +95,25 @@ def test_map_sampling():
     assert len(sampler_no_lc) == 2
     assert_allclose(sampler.value, [12661.65802564, 26.9299098], rtol=1e-5)
     assert_allclose(sampler_no_lc.value, [15805.82891311, 20597.45375153], rtol=1e-5)
+
+
+def test_phase_time_sampling():
+    time_0 = Time("2010-01-01T00:00:00").mjd
+    phase = np.arange(0, 1, 0.01)
+
+    table = Table()
+    table["PHASE"] = phase
+    table["NORM"] = ph_curve(phase)
+    phase_model = PhaseCurveTableModel(
+        table, time_0=time_0, phase_0=0.0, f0=2, f1=0.0, f2=0.0
+    )
+
+    t_min = "2010-01-01T00:00:00"
+    t_max = "2010-01-01T08:00:00"
+
+    sampler = phase_model.sample_time(
+        n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
+    )
+
+    assert len(sampler) == 2
+    assert_allclose(sampler.value, [1261.65802564, 6026.9299098], rtol=1e-5)
