@@ -303,6 +303,8 @@ class MapDataset(Dataset):
         """
 
         geom_irf = geom_irf or geom
+        migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
+        rad_axis = rad_axis or RAD_AXIS_DEFAULT
 
         counts = Map.from_geom(geom, unit="")
 
