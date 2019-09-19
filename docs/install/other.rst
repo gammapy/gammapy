@@ -52,8 +52,7 @@ yum
 
 `yum`_ is a popular package manager on Linux, e.g. on Scientific linux or Red Hat Linux.
 
-If you are a ``yum`` user, please contribute the equivalent commands (see e.g.
-the Macports section below).
+If you are a ``yum`` user, please contribute the equivalent commands.
 
 Homebrew
 --------
@@ -66,9 +65,6 @@ Python / pip / Numpy / Astropy with ``brew`` and then to install Gammapy with
 
 If you're a ``brew`` user, please let us know if it works and what the exact
 commands are.
-
-Note that we have some Gammapy developers and users on Mac that use Macports.
-For this you can find detailed instructions here: :ref:`install-macports`
 
 Fermi ScienceTools
 ------------------

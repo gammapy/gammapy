@@ -25,47 +25,25 @@ Help!?
 If you have any questions or issues, please ask for help on the Gammapy Slack,
 mailing list or on Github (whatever is easiest for you, see `Gammapy contact`_)
 
-Install
--------
+Check
+-----
 
-To install Gammapy we recommend that you install the Anaconda distribution from
-https://www.anaconda.com/download/. The following instructions and commands below
-need to have Anaconda installed.
-
-Anaconda it's free, works on Linux, MacOS and Windows. It installs in your home
-directory, no system privileges needed, and you can just delete it without
-problems if you don't need or want it any more.
-
-Besides the software included in the Anaconda distribution, it gives you the
-`conda`_ tool, which is a package and environment manager. We will use it to
-create a dedicated environment for the latest stable Gammapy version and a known
-good set of Gammapy dependencies (e.g. Python, Numpy and Astropy).
-
-Once Anaconda has been installed, use the following commands to install and activate
-the ``gammapy-0.13`` conda environment:
+To check your Gammapy installation, use this command:
 
 .. code-block:: bash
 
-    curl -O https://gammapy.org/download/install/gammapy-0.13-environment.yml
-    conda env create -f gammapy-0.13-environment.yml
-    conda activate gammapy-0.13
+    gammapy info
 
-On Windows, comment out the lines for ``sherpa`` and ``healpy`` in the
-environment YAML file. These are optional dependencies that we are currently
-using that aren't supported on Windows. You will be able to do most analyses
-with Gammapy, but you will not be able to work with HEALPix data or fit
-with Sherpa (the default fitting backend currently is Minuit).
-
-Congratulations! You are all set to start using Gammapy!
-
-.. note::
-
-    Every time you open a new terminal window, you will have to activate
-    the Gammapy conda environment again before you can use it.
+You can also start a Python interactive prompt and check your Gammapy install
+location and version like this:
 
 .. code-block:: bash
 
-    conda activate gammapy-0.13
+    $ python
+    >>> import gammapy
+    >>> print(gammapy.__version__)
+    >>> print(gammapy)
+
 
 Download tutorials
 ------------------

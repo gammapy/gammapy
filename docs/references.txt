@@ -1,14 +1,13 @@
 .. _uncertainties: http://pythonhosted.org/uncertainties/
 .. _scikit-image: http://scikit-image.org
 .. _scikit-learn: http://scikit-learn.org/stable/
-.. _scipy library: http://scipy.org/scipylib/
-.. _scipy: http://scipy.org/scipylib/
+.. _scipy: https://docs.scipy.org/doc/scipy/reference/
 .. _Scipy Lecture Notes: http://www.scipy-lectures.org/
 .. _Practical Python for Astronomers Tutorial: http://python4astronomers.github.io/
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools
 .. _3ML: https://threeml.stanford.edu/
-.. _Numpy: http://www.numpy.org/
+.. _numpy: http://www.numpy.org/
 .. _affiliated package: http://www.astropy.org/affiliated/index.html
 .. _regions: https://astropy-regions.readthedocs.io
 .. _reproject: https://reproject.readthedocs.io
@@ -35,6 +34,9 @@
 .. _healpy: https://healpy.readthedocs.io/en/latest/
 .. _HEALPix: https://en.wikipedia.org/wiki/HEALPix
 .. _PyYAML: https://pypi.org/project/PyYAML/
+.. _YAML: https://en.wikipedia.org/wiki/YAML
+.. _jsonschema: https://python-jsonschema.readthedocs.io
+.. _json-schema.org: https://json-schema.org/
 .. _emcee: http://dan.iel.fm/emcee/current/
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
 .. _click: http://click.pocoo.org/
@@ -50,6 +52,9 @@
 .. _pointlike: https://github.com/tburnett/Fermi-LAT
 .. _NaN: https://en.wikipedia.org/wiki/NaN
 .. _Python: https://www.python.org
+.. _parfive: https://parfive.readthedocs.io
+.. _corner: https://corner.readthedocs.io
+.. _gammapy-0.13-environment.yml: https://gammapy.org/download/install/gammapy-0.13-environment.yml
 
 .. _MPIK Heidelberg: https://www.mpi-hd.mpg.de/mpi/en/start/
 .. _APC Paris: http://www.apc.univ-paris7.fr/
@@ -109,7 +114,8 @@
 
 .. _Github clone URL help article: https://help.github.com/articles/which-remote-url-should-i-use/
 
-.. _Jupyter: http://jupyter.org
+.. _ipython: https://ipython.org
+.. _Jupyter: https://jupyter.org
 .. _JupyterLab: https://jupyterlab.readthedocs.io/
 .. _nbsphinx: https://nbsphinx.readthedocs.io
 .. _Installing Python Packages from a Jupyter Notebook: http://jakevdp.github.io/blog/2017/12/05/installing-python-packages-from-jupyter/
