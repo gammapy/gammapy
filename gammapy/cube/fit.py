@@ -346,6 +346,49 @@ class MapDataset(Dataset):
             gti=gti,
         )
 
+    def stack(self, other):
+        """
+        Stack the maps in other onto self.
+        The stacking is done inplace
+
+        Parameters
+        ----------
+        other: `~gammapy.cube.MapDataset`
+            the MapDatasets to be stacked with this one.
+
+        Returns
+        -------
+        new : `~gammapy.cube.MapDataset`
+            A dataset with the stacked maps
+
+        """
+
+        if self.counts:
+            if other.mask_fit:
+                other.counts = other.counts * other.mask_fit
+            self.counts.coadd(other.counts)
+
+        self.exposure.coadd(other.exposure)
+
+        if other.mask_fit:
+            other.background_model.map = other.background_model.map * other.mask_fit
+        self.background_model.map.coadd(other.background_model.evaluate())
+
+        if isinstance(self.psf, PSFMap):
+            self.psf.stack(other.stack())
+        elif isinstance(other.psf, PSFKernel):
+            raise ValueError("Stacking of PSF kernels not supported")
+
+        if isinstance(other.edisp, EDispMap):
+            self.edisp.stack(other.stack())
+        elif isinstance(self.psf, EnergyDispersion):
+            raise ValueError("Stacking of edisp kernels not supported")
+
+        if self.gti:
+            self.gti = self.gti.stack(other.gti).union()
+
+        # How to stack the mask?
+
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
         return self._stat(n_on=self.counts.data, mu_on=self.npred().data)
