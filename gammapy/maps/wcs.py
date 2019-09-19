@@ -469,16 +469,8 @@ class WcsGeom(MapGeom):
         for i in range(naxis - 2):
             wcs = wcs.dropaxis(2)
 
-        axes = find_and_read_bands(hdu_bands, header)
+        axes = find_and_read_bands(hdu_bands)
         shape = tuple([ax.nbin for ax in axes])
-        conv = "gadf"
-
-        # Discover FITS convention
-        if hdu_bands is not None:
-            if hdu_bands.name == "EBOUNDS":
-                conv = "fgst-ccube"
-            elif hdu_bands.name == "ENERGIES":
-                conv = "fgst-template"
 
         if hdu_bands is not None and "NPIX" in hdu_bands.columns.names:
             npix = hdu_bands.data.field("NPIX").reshape(shape + (2,))

@@ -165,6 +165,10 @@ class WcsMap(Map):
         if sparse and hdu == "PRIMARY":
             raise ValueError("Sparse maps cannot be written to the PRIMARY HDU.")
 
+        if conv in ["fgst-ccube", "fgst-template"]:
+            if self.geom.axes[0].name != "energy" or len(self.geom.axes) > 1:
+                raise ValueError("All 'fgst' formats don't support extra axes except for energy.")
+
         if self.geom.axes:
             hdu_bands_out = self.geom.make_bands_hdu(
                 hdu=hdu_bands, hdu_skymap=hdu, conv=conv

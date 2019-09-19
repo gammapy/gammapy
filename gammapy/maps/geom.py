@@ -3,15 +3,14 @@ import abc
 import copy
 import inspect
 import logging
-import re
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.table import Column, QTable
+from astropy.table import Column, QTable, Table
 from gammapy.utils.interpolation import interpolation_scale
-from .utils import INVALID_INDEX, find_bands_hdu, find_hdu
+from .utils import INVALID_INDEX, find_bands_hdu, find_hdu, edges_from_lo_hi
 
 __all__ = ["MapCoord", "MapGeom", "MapAxis"]
 
@@ -77,69 +76,82 @@ def make_axes_cols(axes, axis_names=None):
     return cols
 
 
-def find_and_read_bands(hdu, header=None):
+def energy_axis_from_fgst_ccube(hdu):
+    bands = Table.read(hdu)
+    edges_min = bands["E_MIN"].data
+    edges_max = bands["E_MAX"].data
+    edges = edges_from_lo_hi(edges_min, edges_max)
+    return [MapAxis.from_edges(edges=edges, name="energy", unit="MeV", interp="log")]
+
+
+def energy_axis_from_fgst_template(hdu):
+    bands = Table.read(hdu)
+
+    # TODO: check upper / lowercase handling
+    try:
+        nodes = bands["Energy"].data
+    except KeyError:
+        nodes = bands["ENERGY"].data
+
+    return [MapAxis.from_nodes(nodes=nodes, name="energy", unit="MeV", interp="log")]
+
+
+def axes_from_bands_hdu(hdu):
     """Read and returns the map axes from a BANDS table.
 
     Parameters
     ----------
     hdu : `~astropy.io.fits.BinTableHDU`
         The BANDS table HDU.
-    header : `~astropy.io.fits.Header`
-        Header
 
     Returns
     -------
     axes : list of `~MapAxis`
         List of axis objects.
     """
+    axes = []
+
+    bands = Table.read(hdu)
+
+    for idx in range(5):
+        axcols = bands.meta.get("AXCOLS{}".format(idx + 1))
+
+        if axcols is None:
+            break
+
+        colnames = axcols.split(",")
+        node_type = "edges" if len(colnames) == 2 else "center"
+
+        # TODO: check why this extra case is needed
+        if colnames[0] == "E_MIN":
+            name = "energy"
+        else:
+            name = colnames[0].split("_")[0].lower()
+        interp = bands.meta.get("INTERP{}".format(idx + 1), "lin")
+
+        if node_type == "center":
+            nodes = np.unique(bands[colnames[0]].quantity)
+        else:
+            edges_min = np.unique(bands[colnames[0]].quantity)
+            edges_max = np.unique(bands[colnames[1]].quantity)
+            nodes = edges_from_lo_hi(edges_min, edges_max)
+
+        axis = MapAxis(nodes=nodes, node_type=node_type, interp=interp, name=name)
+        axes.append(axis)
+
+    return axes
+
+def find_and_read_bands(hdu):
     if hdu is None:
         return []
 
-    axes = []
-    axis_cols = []
     if hdu.name == "ENERGIES":
-        axis_cols = [["ENERGY"]]
+        axes = energy_axis_from_fgst_template(hdu)
     elif hdu.name == "EBOUNDS":
-        axis_cols = [["E_MIN", "E_MAX"]]
+        axes = energy_axis_from_fgst_ccube(hdu)
     else:
-        for i in range(5):
-            if "AXCOLS%i" % i in hdu.header:
-                axis_cols += [hdu.header["AXCOLS%i" % i].split(",")]
-
-    interp = "lin"
-    for i, cols in enumerate(axis_cols):
-
-        if "ENERGY" in cols or "E_MIN" in cols:
-            name = "energy"
-            interp = "log"
-        elif re.search("(.+)_MIN", cols[0]):
-            name = re.search("(.+)_MIN", cols[0]).group(1)
-        else:
-            name = cols[0]
-
-        interp_header_key = "INTERP%i" % (i + 1)
-        if header is not None and interp_header_key in header:
-            interp_header_val = header[interp_header_key]
-            if interp_header_val in ["sqrt", "log", "lin"]:
-                interp = interp_header_val
-            else:
-                log.warning(
-                    f"Invalid map axis interp: {interp_header_val!r}. Using default: {interp!r}"
-                )
-
-        unit = hdu.data.columns[cols[0]].unit
-        if unit is None and header is not None:
-            unit = header.get("CUNIT%i" % (3 + i), "")
-        if unit is None:
-            unit = ""
-        if len(cols) == 2:
-            xmin = np.unique(hdu.data.field(cols[0]))
-            xmax = np.unique(hdu.data.field(cols[1]))
-            nodes = np.append(xmin, xmax[-1])
-            axes.append(MapAxis(nodes, name=name, unit=unit, interp=interp))
-        else:
-            nodes = np.unique(hdu.data.field(cols[0]))
-            axes.append(MapAxis.from_nodes(nodes, name=name, unit=unit, interp=interp))
+        axes = axes_from_bands_hdu(hdu)
+        print(axes)
 
     return axes
 
