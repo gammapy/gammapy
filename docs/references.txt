@@ -114,7 +114,8 @@
 
 .. _Github clone URL help article: https://help.github.com/articles/which-remote-url-should-i-use/
 
-.. _Jupyter: http://jupyter.org
+.. _ipython: https://ipython.org
+.. _Jupyter: https://jupyter.org
 .. _JupyterLab: https://jupyterlab.readthedocs.io/
 .. _nbsphinx: https://nbsphinx.readthedocs.io
 .. _Installing Python Packages from a Jupyter Notebook: http://jakevdp.github.io/blog/2017/12/05/installing-python-packages-from-jupyter/
