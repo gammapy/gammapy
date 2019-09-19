@@ -1042,9 +1042,9 @@ class MapCoord:
     def __repr__(self):
         return (
             f"{self.__class__.__name__}\n\n"
-            f"\taxes     : {self._data.keys()}\n"
+            f"\taxes     : {list(self._data.keys())}\n"
             f"\tshape    : {self.shape[::-1]}\n"
-            f"\tndim     : {self.ndim}n"
+            f"\tndim     : {self.ndim}\n"
             f"\tcoordsys : {self.coordsys}\n"
         )
 
