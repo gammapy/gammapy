@@ -21,9 +21,8 @@ TIME_MODELS = {
 }
 
 # TODO: add support for these models writing their .from_dict()
-# "AbsorbedSpectralModel":AbsorbedSpectralModel,
-# "Absorption":Absorption,
 # "NaimaModel":NaimaModel,
+# "ScaleModel": ScaleModel,
 SPECTRAL_MODELS = {
     "ConstantModel": ConstantModel,
     "PowerLaw": PowerLaw,
@@ -36,5 +35,6 @@ SPECTRAL_MODELS = {
     "TableModel": TableModel,
     "SpectralGaussian": SpectralGaussian,
     "SpectralLogGaussian": SpectralLogGaussian,
-    "ScaleModel": ScaleModel,
+    "AbsorbedSpectralModel": AbsorbedSpectralModel,
+    "Absorption": Absorption,
 }

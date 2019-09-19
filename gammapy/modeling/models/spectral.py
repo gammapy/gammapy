@@ -1341,8 +1341,7 @@ class TableModel(SpectralModel):
     def from_dict(cls, data):
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
-        params = {"energy": energy, "values": values}
-        init = cls(**params)
+        init = cls(energy=energy, values=values)
         init.parameters = Parameters.from_dict(data)
         for parameter in init.parameters.parameters:
             setattr(init, parameter.name, parameter)
@@ -1423,14 +1422,12 @@ class Absorption:
     """
     tag = "Absorption"
 
-    def __init__(
-        self, energy_lo, energy_hi, param_lo, param_hi, data, interp_kwargs=None
-    ):
+    def __init__(self, energy, param, data, filename=None, interp_kwargs=None):
         self.data = data
-
+        self.filename = filename
         # set values log centers
-        self.energy = np.sqrt(energy_lo * energy_hi)
-        self.param = (param_hi + param_lo) / 2
+        self.param = param
+        self.energy = energy
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("points_scale", ("log", "lin"))
@@ -1438,6 +1435,37 @@ class Absorption:
         self._evaluate = ScaledRegularGridInterpolator(
             points=(self.param, self.energy), values=data, **interp_kwargs
         )
+
+    def to_dict(self):
+        if self.filename is None:
+            return {
+                "type": self.tag,
+                "energy": {
+                    "data": self.energy.data.tolist(),
+                    "unit": str(self.energy.unit),
+                },
+                "param": {
+                    "data": self.param.data.tolist(),
+                    "unit": str(self.param.unit),
+                },
+                "values": {
+                    "data": self.data.data.tolist(),
+                    "unit": str(self.data.unit),
+                },
+            }
+        else:
+            return {"type": self.tag, "filename": self.filename}
+
+    @classmethod
+    def from_dict(cls, data):
+
+        if "filename" in data:
+            return cls.read(data["filename"])
+        else:
+            energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
+            param = u.Quantity(data["param"]["data"], data["param"]["unit"])
+            values = u.Quantity(data["values"]["data"], data["values"]["unit"])
+            return cls(energy=energy, param=param, data=values)
 
     @classmethod
     def read(cls, filename):
@@ -1453,18 +1481,7 @@ class Absorption:
         # Create EBL data array
         filename = str(make_path(filename))
         table_param = Table.read(filename, hdu="PARAMETERS")
-
-        par_min = table_param["MINIMUM"]
-        par_max = table_param["MAXIMUM"]
-
-        par_array = table_param[0]["VALUE"]
-        par_delta = np.diff(par_array) * 0.5
-
-        param_lo, param_hi = par_array, par_array  # initialisation
-        param_lo[0] = par_min - par_delta[0]
-        param_lo[1:] -= par_delta
-        param_hi[:-1] += par_delta
-        param_hi[-1] = par_max
+        param = table_param[0]["VALUE"]
 
         # Get energy values
         table_energy = Table.read(filename, hdu="ENERGIES")
@@ -1474,18 +1491,13 @@ class Absorption:
         energy_hi = u.Quantity(
             table_energy["ENERG_HI"], "keV", copy=False
         )  # unit not stored in file
+        energy = np.sqrt(energy_lo * energy_hi)
 
         # Get spectrum values
         table_spectra = Table.read(filename, hdu="SPECTRA")
         data = table_spectra["INTPSPEC"].data
 
-        return cls(
-            energy_lo=energy_lo,
-            energy_hi=energy_hi,
-            param_lo=param_lo,
-            param_hi=param_hi,
-            data=data,
-        )
+        return cls(energy=energy, param=param, data=data, filename=filename)
 
     @classmethod
     def read_builtin(cls, name):
@@ -1577,6 +1589,34 @@ class AbsorbedSpectralModel(SpectralModel):
         flux = self.spectral_model.evaluate(energy=energy, **kwargs)
         absorption = self.absorption.evaluate(energy=energy, parameter=parameter)
         return flux * absorption
+
+    def to_dict(self, selection="all"):
+        return {
+            "type": self.tag,
+            "base_model": self.spectral_model.to_dict(selection),
+            "absorption": self.absorption.to_dict(),
+            "absorption_parameter": {
+                "name": self.parameter_name,
+                "value": self.parameter,
+            },
+            "parameters": self.parameters.to_dict(selection)["parameters"],
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        from gammapy.modeling.models import SPECTRAL_MODELS
+
+        base_model = SPECTRAL_MODELS[data["base_model"]["type"]]
+        init = cls(
+            spectral_model=base_model.from_dict(data["base_model"]),
+            absorption=Absorption.from_dict(data["absorption"]),
+            parameter=data["absorption_parameter"]["value"],
+            parameter_name=data["absorption_parameter"]["name"],
+        )
+        init.parameters = Parameters.from_dict(data)
+        for parameter in init.parameters.parameters:
+            setattr(init, parameter.name, parameter)
+        return init
 
 
 class NaimaModel(SpectralModel):
