@@ -151,7 +151,6 @@ def find_and_read_bands(hdu):
         axes = energy_axis_from_fgst_ccube(hdu)
     else:
         axes = axes_from_bands_hdu(hdu)
-        print(axes)
 
     return axes
 
