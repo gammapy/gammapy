@@ -14,7 +14,6 @@ from gammapy.modeling.models import (
     PowerLaw,
     PowerLaw2,
     SkyDiffuseMap,
-    SkyDisk,
     SkyGaussian,
     SkyModel,
     SkyPointSource,
