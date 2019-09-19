@@ -17,19 +17,19 @@ Gammapy and it's dependencies by executing these commands in a terminal:
 
 .. note::
 
-    On Windows, you have to open up the conda environment file and uncomment the
+    On Windows, you have to open up the conda environment file and delete the
     lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
     currently aren't available on Windows.
 
-This creates a conda environment called ``gammapy-0.13``. To activate it:
+This creates a conda environment called ``gammapy-0.13`` which you can activate via:
 
 .. code-block:: bash
 
     conda activate gammapy-0.13
 
-Note that you have to execute that activation command every time you open a new
-terminal window, because the default with conda is the base environment, which
-doesn't have Gammapy installed.
+Note that you have to execute that activation command (but not the environment
+cration command) every time you open a new terminal window, because the default
+with conda is the base environment, which doesn't have Gammapy installed.
 
 To check your Gammapy installation, you can use this command:
 
@@ -39,16 +39,11 @@ To check your Gammapy installation, you can use this command:
 
 Congratulations! You are all set to start using Gammapy!
 
-If you're new to Gammapy, go to :ref:`getting-started` and :ref:`tutorials` to
-start learning how to use it. To learn more about installing Gammapy with conda,
-see :ref:`install-conda` and :ref:`install-dependencies`.
+If you're new to Python, ipython and Jupyter, read the :ref:`getting-started`
+guide. To learn how to use Gammapy, go to :ref:`tutorials`.
 
-Note that there are other ways to install Gammapy, either with ``conda``, or
-with ``pip`` or other package managers (see :ref:`install-other`). Experts and
-developers can also install the latest non-stable development version of Gammapy
-(see :ref:`install-check`).
-
-The following pages contain detailed installation information:
+The following pages contain detailed information about Gammapy dependencies in
+various installation options:
 
 .. toctree::
     :maxdepth: 1
