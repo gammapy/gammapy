@@ -86,16 +86,6 @@ class SigmaVEstimator:
     background_model: `~gammapy.spectrum.CountsSpectrum`
         BackgroundModel. In the future will be part of the SpectrumDataset Class.
         For the moment, a CountSpectrum.
-    jfact : `~astropy.units.Quantity` (optional)
-        Integrated J-Factor
-        Needed when `~gammapy.image.models.SkyPointSource` spatial model is used.
-        Default value 1.
-    absorption_model : `~gammapy.spectrum.models.Absorption` (optional)
-        Absorption model, default is None.
-    z: float (optional)
-        Redshift value, default value 0.
-    k: int (optional)
-        Type of dark matter particle (k:2 Majorana, k:4 Dirac), default value 2.
     xsection: `~astropy.units.Quantity` (optional)
         Thermally averaged annihilation cross-section.
         Default value declared in `~gammapy.astro.darkmatter.DMAnnihilation`.
@@ -125,7 +115,7 @@ class SigmaVEstimator:
         # Define channels and masses to run estimator
         channels = ["b", "t", "Z"]
         masses = [70, 200, 500, 5000, 10000, 50000, 100000]*u.GeV
-        estimator = SigmaVEstimator(dataset, masses, channels, background_model=bkg, jfact=JFAC)
+        estimator = SigmaVEstimator(dataset, masses, channels, background_model=bkg)
         result = estimator.run(likelihood_profile_opts=dict(bounds=(0, 500), nvalues=100))
     """
 
@@ -138,10 +128,6 @@ class SigmaVEstimator:
         masses,
         channels,
         background_model,
-        jfact=1,
-        absorption_model=None,
-        z=0,
-        k=2,
         xsection=None,
     ):
 
@@ -149,10 +135,13 @@ class SigmaVEstimator:
         self.masses = masses
         self.channels = channels
         self.background = background_model
-        self.jfact = jfact
-        self.absorption_model = absorption_model
-        self.z = z
-        self.k = k
+
+        dm_params_container = dataset.model
+        if isinstance(dataset.model, AbsorbedSpectralModel):
+            dm_params_container = dataset.model.spectral_model
+        self.jfactor = dm_params_container.jfactor
+        self.z = dm_params_container.z
+        self.k = dm_params_container.k
 
         if not xsection:
             xsection = DMAnnihilation.THERMAL_RELIC_CROSS_SECTION
@@ -161,7 +150,7 @@ class SigmaVEstimator:
     def run(
         self,
         runs,
-        likelihood_profile_opts=dict(bounds=5, nvalues=50),
+        likelihood_profile_opts=dict(bounds=100, nvalues=50),
         optimize_opts=None,
         covariance_opts=None,
     ):
@@ -185,7 +174,7 @@ class SigmaVEstimator:
             result['mean'] provides mean values for sigma v vs. mass.
             result['runs'] provides sigma v vs. mass. and profile likelihood for each channel and run.
         """
-        likelihood_profile_opts["parameter"] = "scale"
+        likelihood_profile_opts["parameter"] = "jfactor"
 
         # initialization of data containers
         sigmas = {}
@@ -224,8 +213,8 @@ class SigmaVEstimator:
                         sigma_unit = fit_result["sigma_v"].unit
                     else:
                         row["sigma_v"] = fit_result["sigma_v"]
-                    row["scale_best"] = fit_result["scale_best"]
-                    row["scale_ul"] = fit_result["scale_ul"]
+                    row["jfactor_best"] = fit_result["jfactor_best"]
+                    row["jfactor_ul"] = fit_result["jfactor_ul"]
                     row["likeprofile"] = fit_result["likeprofile"]
                     table_rows.append(row)
                     sigmas[ch][mass.value].append(row["sigma_v"])
@@ -253,11 +242,11 @@ class SigmaVEstimator:
     def _set_model_dataset(self, ch, mass):
         """Set model to fit in dataset."""
         flux_model = DMAnnihilation(
-            mass=mass, channel=ch, scale=1, jfactor=self.jfact, z=self.z, k=self.k
+            mass=mass, channel=ch, jfactor=self.jfactor, z=self.z, k=self.k
         )
-        if self.absorption_model:
+        if isinstance(self.dataset.model, AbsorbedSpectralModel):
             flux_model = AbsorbedSpectralModel(
-                flux_model, self.absorption_model, self.z
+                flux_model, self.dataset.model.absorption, self.z
             )
         ds = self.dataset.copy()
         ds.model = flux_model
@@ -274,55 +263,54 @@ class SigmaVEstimator:
         covariance_opts=None,
     ):
         """Fit dataset to model and calculate parameter value for upper limit."""
-        try:
-            fit = Fit(dataset_loop)
-            fit_result = fit.run(optimize_opts, covariance_opts)
-            likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
-            scale_best = fit_result.parameters["scale"].value
-            likemin = dataset_loop.likelihood()
-            profile = likeprofile
+        fit = Fit(dataset_loop)
+        fit_result = fit.run(optimize_opts, covariance_opts)
+        likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
+        jfactor_best = fit_result.parameters["jfactor"].value
+        likemin = dataset_loop.likelihood()
+        profile = likeprofile
 
-            # consider scale value in the physical region > 0
+        # consider jfactor value in the physical region > 0
+        if jfactor_best < 0:
+            jfactor_best = 0
+            likemin = interp1d(likeprofile["values"], likeprofile["likelihood"], kind="quadratic")(0)
+            idx = np.min(np.argwhere(likeprofile["values"] > 0))
+            filtered_x_values = likeprofile["values"][likeprofile["values"] > 0]
+            filtered_y_values = likeprofile["likelihood"][idx:]
+            profile["values"] = np.concatenate((np.array([0]), filtered_x_values))
+            profile["likelihood"] = np.concatenate(
+                (np.array([likemin]), filtered_y_values)
+            )
+        max_like_difference = np.max(profile["likelihood"]) - likemin - self.RATIO
+
+        try:
+            assert max_like_difference > 0, "Wider range needed in likelihood profile"
             assert (
                 np.max(profile["values"]) > 0
-            ), "Values for scale found outside the physical region"
-            if scale_best < 0:
-                scale_best = 0
-                likemin = interp1d(likeprofile["values"], likeprofile["likelihood"], kind="quadratic")(0)
-                idx = np.min(np.argwhere(likeprofile["values"] > 0))
-                filtered_x_values = likeprofile["values"][likeprofile["values"] > 0]
-                filtered_y_values = likeprofile["likelihood"][idx:]
-                profile["values"] = np.concatenate((np.array([0]), filtered_x_values))
-                profile["likelihood"] = np.concatenate(
-                    (np.array([likemin]), filtered_y_values)
-                )
-            max_like_difference = np.max(profile["likelihood"]) - likemin - self.RATIO
-            assert max_like_difference > 0, "Flat likelihood"
-            scale_ul = brentq(
+            ), "Values for jfactor found outside the physical region"
+            jfactor_ul = brentq(
                 interp1d(
                     profile["values"],
                     profile["likelihood"] - likemin - self.RATIO,
                     kind="quadratic",
                 ),
-                scale_best,
+                jfactor_best,
                 np.max(profile["values"]),
                 maxiter=100,
                 rtol=1e-5,
             )
-            sigma_v = scale_ul * self.xsection
-
+            sigma_v = (jfactor_ul / self.jfactor.value) * self.xsection
         except Exception as ex:
             sigma_v = None
-            scale_best = None
-            scale_ul = None
-            likeprofile = None
-            log.error(f"Channel: {ch} - Run: {run} - Mass: {mass}")
-            log.error(ex)
+            jfactor_best = None
+            jfactor_ul = None
+            log.warning(f"Channel: {ch} - Run: {run} - Mass: {mass}")
+            log.warning(ex)
 
         res = dict(
             sigma_v=sigma_v,
-            scale_best=scale_best,
-            scale_ul=scale_ul,
+            jfactor_best=jfactor_best,
+            jfactor_ul=jfactor_ul,
             likeprofile=likeprofile,
         )
         return res
