@@ -33,7 +33,6 @@ class WcsMap(Map):
         axes=None,
         skydir=None,
         dtype="float32",
-        conv="gadf",
         meta=None,
         unit="",
     ):
@@ -89,8 +88,6 @@ class WcsMap(Map):
         """
         from .wcsnd import WcsNDMap
 
-        # from .wcssparse import WcsMapSparse
-
         geom = WcsGeom.create(
             npix=npix,
             binsz=binsz,
@@ -100,7 +97,6 @@ class WcsMap(Map):
             coordsys=coordsys,
             refpix=refpix,
             axes=axes,
-            conv=conv,
         )
 
         if map_type == "wcs":
@@ -141,7 +137,7 @@ class WcsMap(Map):
 
         return cls.from_hdu(hdu, hdu_bands)
 
-    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, conv=None):
+    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, conv="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -153,9 +149,8 @@ class WcsMap(Map):
         sparse : bool
             Sparsify the map by only writing pixels with non-zero
             amplitude.
-        conv : {'fgst-ccube','fgst-template','gadf',None}, optional
-            FITS format convention.  If None this will be set to the
-            default convention of the map.
+        conv : {'gadf', 'fgst-ccube','fgst-template'}
+            FITS format convention.
 
         Returns
         -------

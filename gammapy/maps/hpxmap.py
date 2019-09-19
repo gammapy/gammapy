@@ -44,7 +44,6 @@ class HpxMap(Map):
         dtype="float32",
         region=None,
         axes=None,
-        conv="gadf",
         meta=None,
         unit="",
     ):
@@ -75,9 +74,6 @@ class HpxMap(Map):
             geometry will be created.
         axes : list
             List of `~MapAxis` objects for each non-spatial dimension.
-        conv : {'fgst-ccube','fgst-template','gadf'}, optional
-            Default FITS format convention that will be used when
-            writing this map to a file.  Default is 'gadf'.
         meta : `dict`
             Dictionary to store meta data.
         unit : str or `~astropy.units.Unit`
@@ -97,7 +93,6 @@ class HpxMap(Map):
             nest=nest,
             coordsys=coordsys,
             region=region,
-            conv=conv,
             axes=axes,
             skydir=skydir,
             width=width,
@@ -147,7 +142,7 @@ class HpxMap(Map):
 
         return cls.from_hdu(hdu_out, hdu_bands_out)
 
-    def to_hdulist(self, hdu="SKYMAP", hdu_bands=None, sparse=False, conv=None):
+    def to_hdulist(self, hdu="SKYMAP", hdu_bands=None, sparse=False, conv="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -282,10 +277,9 @@ class HpxMap(Map):
         hdu_out : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
             Output HDU containing map data.
         """
-        convname = self.geom.conv if conv is None else conv
-        conv = HpxConv.create(convname)
-        hduname = conv.hduname if hdu is None else hdu
-        hduname_bands = conv.bands_hdu if hdu_bands is None else hdu_bands
+        hpxconv = HpxConv.create(conv)
+        hduname = hpxconv.hduname if hdu is None else hdu
+        hduname_bands = hpxconv.bands_hdu if hdu_bands is None else hdu_bands
 
         header = self.geom.make_header(conv=conv)
 
@@ -303,5 +297,5 @@ class HpxMap(Map):
             array = np.arange(self.data.shape[-1])
             cols.append(fits.Column("PIX", "J", array=array))
 
-        cols += self._make_cols(header, conv)
+        cols += self._make_cols(header, hpxconv)
         return fits.BinTableHDU.from_columns(cols, header=header, name=hduname)

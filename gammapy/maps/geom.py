@@ -18,20 +18,18 @@ __all__ = ["MapCoord", "MapGeom", "MapAxis"]
 log = logging.getLogger(__name__)
 
 
-def make_axes(axes_in, conv):
+def make_axes(axes_in):
     """Make a sequence of `~MapAxis` objects."""
     if axes_in is None:
         return []
 
     axes_out = []
-    for i, ax in enumerate(axes_in):
+    for idx, ax in enumerate(axes_in):
         if isinstance(ax, np.ndarray):
             ax = MapAxis(ax)
 
-        if conv in ["fgst-ccube", "fgst-template"]:
-            ax.name = "energy"
-        elif ax.name == "":
-            ax.name = "axis%i" % i
+        if ax.name == "":
+            ax.name = "axis{}".format(idx)
 
         axes_out += [ax]
 
@@ -1139,7 +1137,6 @@ class MapGeom(abc.ABC):
         return cls.from_header(hdu.header, hdu_bands)
 
     def make_bands_hdu(self, hdu=None, hdu_skymap=None, conv=None):
-        conv = self.conv if conv is None else conv
         header = fits.Header()
         self._fill_header_from_axes(header)
         axis_names = None

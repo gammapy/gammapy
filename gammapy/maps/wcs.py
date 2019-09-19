@@ -178,21 +178,17 @@ class WcsGeom(MapGeom):
         Reference pixel coordinate in each image plane.
     axes : list
         Axes for non-spatial dimensions
-    conv : {'gadf', 'fgst-ccube', 'fgst-template'}
-        Serialization format convention.  This sets the default format
-        that will be used when writing this geometry to a file.
     """
 
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, None)
     is_hpx = False
 
-    def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, conv="gadf"):
+    def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None):
         self._wcs = wcs
         self._coordsys = get_coordys(wcs)
         self._projection = get_projection(wcs)
-        self._conv = conv
-        self._axes = make_axes(axes, conv)
+        self._axes = make_axes(axes)
 
         if cdelt is None:
             cdelt = tuple(np.abs(self.wcs.wcs.cdelt))
@@ -287,11 +283,6 @@ class WcsGeom(MapGeom):
         return self._npix
 
     @property
-    def conv(self):
-        """Name of default FITS convention associated with this geometry."""
-        return self._conv
-
-    @property
     def axes(self):
         """List of non-spatial axes."""
         return self._axes
@@ -355,7 +346,6 @@ class WcsGeom(MapGeom):
         axes=None,
         skydir=None,
         width=None,
-        conv="gadf",
     ):
         """Create a WCS geometry object.
 
@@ -397,9 +387,6 @@ class WcsGeom(MapGeom):
         refpix : tuple
             Reference pixel of the projection.  If None this will be
             set to the center of the map.
-        conv : string, optional
-            FITS format convention ('fgst-ccube', 'fgst-template',
-            'gadf').  Default is 'gadf'.
 
         Returns
         -------
@@ -459,7 +446,7 @@ class WcsGeom(MapGeom):
             yrefpix=refpix[1],
         )
         wcs = WCS(header)
-        return cls(wcs, npix, cdelt=binsz, axes=axes, conv=conv)
+        return cls(wcs, npix, cdelt=binsz, axes=axes)
 
     @classmethod
     def from_header(cls, header, hdu_bands=None):
@@ -506,7 +493,7 @@ class WcsGeom(MapGeom):
             npix = (header["NAXIS1"], header["NAXIS2"])
             cdelt = None
 
-        return cls(wcs, npix, cdelt=cdelt, axes=axes, conv=conv)
+        return cls(wcs, npix, cdelt=cdelt, axes=axes)
 
     def _make_bands_cols(self, hdu=None, conv=None):
 
