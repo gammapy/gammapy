@@ -154,6 +154,7 @@ def setup(app):
     app.add_stylesheet("gammapy.css")
     app.add_javascript("copybutton.js")
     app.add_javascript("gammapy.js")
+    app.add_stylesheet("https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css")
 
 
 # copybutton.js provides hide/show button for python prompts >>>
