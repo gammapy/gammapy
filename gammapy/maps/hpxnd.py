@@ -4,7 +4,7 @@ from astropy.io import fits
 from astropy.units import Quantity
 from gammapy.utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
-from .hpx import HpxGeom, HpxToWcsMapping, nside_to_order
+from .hpx import HpxGeom, HpxToWcsMapping, nside_to_order, HPX_FITS_CONVENTIONS
 from .hpxmap import HpxMap
 from .utils import INVALID_INDEX, interp_to_order
 
@@ -65,6 +65,10 @@ class HpxNDMap(HpxMap):
             The BANDS table HDU
         """
         hpx = HpxGeom.from_header(hdu.header, hdu_bands)
+
+        convname = HpxGeom.identify_hpx_convention(hdu.header)
+        hpx_conv = HPX_FITS_CONVENTIONS[convname]
+
         shape = tuple([ax.nbin for ax in hpx.axes[::-1]])
         # shape_data = shape + tuple([np.max(hpx.npix)])
 
@@ -89,7 +93,7 @@ class HpxNDMap(HpxMap):
             map_out.set_by_idx(idx[::-1], vals)
         else:
             for c in colnames:
-                if c.find(hpx.hpx_conv.colstring) == 0:
+                if c.find(hpx_conv.colstring) == 0:
                     cnames.append(c)
             nbin = len(cnames)
             if nbin == 1:

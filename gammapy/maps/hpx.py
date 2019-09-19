@@ -557,8 +557,6 @@ class HpxGeom(MapGeom):
         encompassed by the geometry.
     axes : list
         Axes for non-spatial dimensions.
-    conv : str
-        Convention for FITS serialization format.
     sparse : bool
         If True defer allocation of partial- to all-sky index mapping
         arrays.  This option is only compatible with partial-sky maps
@@ -574,7 +572,6 @@ class HpxGeom(MapGeom):
         coordsys="CEL",
         region=None,
         axes=None,
-        conv="gadf",
         sparse=False,
     ):
 
@@ -582,7 +579,7 @@ class HpxGeom(MapGeom):
         # FIXME: Require NSIDE to be power of two when nest=True
 
         self._nside = np.array(nside, ndmin=1)
-        self._axes = make_axes(axes, conv)
+        self._axes = make_axes(axes)
         if self.nside.size > 1 and self.nside.shape != self.shape_axes:
             raise ValueError(
                 "Wrong dimensionality for nside. nside must "
@@ -608,7 +605,6 @@ class HpxGeom(MapGeom):
                 self._rmap[ipix] = i
 
         self._npix = self._npix * np.ones(self.shape_axes, dtype=int)
-        self._conv = conv
         self._center_skydir = self._get_ref_dir()
         lon, lat, frame = skycoord_to_lonlat(self._center_skydir)
         self._center_coord = tuple(
@@ -889,7 +885,7 @@ class HpxGeom(MapGeom):
         else:
             region = self.region
 
-        return self.__class__(nside, self.nest, self.coordsys, region, axes, self.conv)
+        return self.__class__(nside, self.nest, self.coordsys, region, axes)
 
     @property
     def axes(self):
@@ -937,15 +933,6 @@ class HpxGeom(MapGeom):
         be less than the number of pixels for the band NSIDE.
         """
         return self._npix
-
-    @property
-    def conv(self):
-        """Name of default FITS convention associated with this geometry."""
-        return self._conv
-
-    @property
-    def hpx_conv(self):
-        return HPX_FITS_CONVENTIONS[self.conv]
 
     @property
     def coordsys(self):
@@ -1026,7 +1013,6 @@ class HpxGeom(MapGeom):
             coordsys=self.coordsys,
             region=self.region,
             axes=axes,
-            conv=self.conv,
         )
 
     def to_swapped(self):
@@ -1044,7 +1030,6 @@ class HpxGeom(MapGeom):
             coordsys=self.coordsys,
             region=self.region,
             axes=axes,
-            conv=self.conv,
         )
 
     def to_image(self):
@@ -1053,7 +1038,6 @@ class HpxGeom(MapGeom):
             self.nest,
             coordsys=self.coordsys,
             region=self.region,
-            conv=self.conv,
         )
 
     def to_cube(self, axes):
@@ -1063,7 +1047,6 @@ class HpxGeom(MapGeom):
             self.nest,
             coordsys=self.coordsys,
             region=self.region,
-            conv=self.conv,
             axes=axes,
         )
 
@@ -1106,7 +1089,6 @@ class HpxGeom(MapGeom):
             self.nest,
             coordsys=self.coordsys,
             region=idx,
-            conv=self.conv,
             axes=copy.deepcopy(self.axes),
         )
 
@@ -1135,7 +1117,6 @@ class HpxGeom(MapGeom):
             self.nest,
             coordsys=self.coordsys,
             region=idx,
-            conv=self.conv,
             axes=copy.deepcopy(self.axes),
         )
 
@@ -1149,7 +1130,6 @@ class HpxGeom(MapGeom):
                 self.nest,
                 coordsys=self.coordsys,
                 region=self.region,
-                conv=self.conv,
                 axes=copy.deepcopy(self.axes),
             )
 
@@ -1166,7 +1146,6 @@ class HpxGeom(MapGeom):
             self.nest,
             coordsys=self.coordsys,
             region=tuple(idx),
-            conv=self.conv,
             axes=copy.deepcopy(self.axes),
         )
 
@@ -1180,7 +1159,6 @@ class HpxGeom(MapGeom):
                 self.nest,
                 coordsys=self.coordsys,
                 region=self.region,
-                conv=self.conv,
                 axes=copy.deepcopy(self.axes),
             )
 
@@ -1193,7 +1171,6 @@ class HpxGeom(MapGeom):
             self.nest,
             coordsys=self.coordsys,
             region=tuple(idx),
-            conv=self.conv,
             axes=copy.deepcopy(self.axes),
         )
 
@@ -1206,7 +1183,6 @@ class HpxGeom(MapGeom):
         coordsys="CEL",
         region=None,
         axes=None,
-        conv="gadf",
         skydir=None,
         width=None,
     ):
@@ -1237,8 +1213,6 @@ class HpxGeom(MapGeom):
             ``skydir``.
         axes : list
             List of axes for non-spatial dimensions.
-        conv : str
-            Convention for FITS file format.
 
         Returns
         -------
@@ -1273,7 +1247,7 @@ class HpxGeom(MapGeom):
             region = f"DISK({lon},{lat},{width/2})"
 
         return cls(
-            nside, nest=nest, coordsys=coordsys, region=region, axes=axes, conv=conv
+            nside, nest=nest, coordsys=coordsys, region=region, axes=axes
         )
 
     @staticmethod
@@ -1378,7 +1352,7 @@ class HpxGeom(MapGeom):
                 region = None
 
         return cls(
-            nside, nest, coordsys=coordsys, region=region, axes=axes, conv=convname
+            nside, nest, coordsys=coordsys, region=region, axes=axes
         )
 
     @classmethod
@@ -1408,10 +1382,10 @@ class HpxGeom(MapGeom):
 
         return cls.from_header(hdu.header, hdu_bands=hdu_bands, pix=pix)
 
-    def make_header(self, **kwargs):
+    def make_header(self, conv="gadf", **kwargs):
         """Build and return FITS header for this HEALPIX map."""
         header = fits.Header()
-        conv = kwargs.get("conv", HPX_FITS_CONVENTIONS[self.conv])
+        conv = kwargs.get("conv", HPX_FITS_CONVENTIONS[conv])
 
         # FIXME: For some sparse maps we may want to allow EXPLICIT
         # with an empty region string

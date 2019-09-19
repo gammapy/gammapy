@@ -72,7 +72,7 @@ class Map(abc.ABC):
     def data(self, val):
         if val.shape != self.geom.data_shape:
             raise ValueError(
-                "Shape {val.shape!r} does not match map data shape {self.geom.data_shape!r}"
+                f"Shape {val.shape!r} does not match map data shape {self.geom.data_shape!r}"
             )
 
         if isinstance(val, u.Quantity):

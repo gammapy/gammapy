@@ -388,7 +388,7 @@ map_serialization_args = [("log")]
 @pytest.mark.parametrize(("interp"), map_serialization_args)
 def test_arithmetics_after_serialization(tmpdir, interp):
     axis = MapAxis.from_bounds(
-        1.0, 10.0, 3, interp=interp, name="energy", node_type="center"
+        1.0, 10.0, 3, interp=interp, name="energy", node_type="center", unit="TeV"
     )
     m_wcs = Map.create(binsz=0.1, width=1.0, map_type="wcs", skydir=(0, 0), axes=[axis])
     m_wcs += 1
