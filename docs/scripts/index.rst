@@ -39,7 +39,7 @@ them into a file that you can edit to start a new analysis from the modified con
 .. code-block:: python
 
     >>> print(analysis.config)
-    >>> analysis.config.dump("myconfig.yaml")
+    >>> analysis.config.dump("config.yaml")
     >>> analysis = Analysis.from_file("config.yaml")
 
 You could also have started the analysis with your custom settings declared in a Python
@@ -50,9 +50,10 @@ dictionary must follow the parameters hierarchical structure which may be prone 
 
     >>> config_dict = {"general": {"logging": {"level": "WARNING"}}}
     >>> analysis = Analysis(config=config_dict)
+    >>> analysis = Analysis(config=config_dict, template="1d")
 
-Configuration settings
-======================
+Configuration and methods
+=========================
 The hierarchical structure of the tens of parameters needed may be hard to follow. You can
 print at any moment a *how-to* documentation with example values for all the sections and
 parameters or only for one specific section or group of parameters.
@@ -62,15 +63,16 @@ parameters or only for one specific section or group of parameters.
     >>> analysis.config.print_help()
     >>> analysis.config.print_help("flux")
 
-You amy also choose to start an analysis using a predefined settings template. As we have
-seen before you may dump these settings into a file, edit the file and re-initialize your
-settings from the modified file.
+You may also choose to start an analysis using a predefined **settings template**. If no
+value for the settings template is provided, the basic template will be used by default.
+As we have seen before you may dump these settings into a file, edit the file and
+re-initialize your settings from the modified file.
 
 .. code-block:: python
 
     >>> analysis = Analysis(template="1d")
-    >>> analysis.config.dump("settings.yaml")
-    >>> analysis = Analysis.from_file("settings.yaml")
+    >>> analysis.config.dump("config.yaml")
+    >>> analysis = Analysis.from_file("config.yaml")
 
 At any moment you can change the value of one specific parameter needed in the analysis. Note
 that it is a good practice to validate your settings when you modify the value of parameters.
@@ -79,6 +81,17 @@ that it is a good practice to validate your settings when you modify the value o
 
     >>> analysis.settings["reduction"]["background"]["on_region"]["frame"] = "galactic"
     >>> analysis.config.validate()
+
+It is also possible to add new configuration parameters and values or overwrite the ones already
+defined in your session analysis. In this case you may use the `config.update_settings()` method
+using a custom nested dictionary or custom YAML files (i.e. re-use config files for specific
+sections and/or from previous analysis).
+
+.. code-block:: python
+
+    >>> config_dict = {"observations": {"datastore": "$GAMMAPY_DATA/hess-dl3-dr1"}}
+    >>> analysis.config.update_settings(config=config_dict)
+    >>> analysis.config.update_settings(configfile="model.yaml")
 
 In the following you may find more detailed information on the different sections which
 compose the YAML formatted nested configuration settings hierarchy.

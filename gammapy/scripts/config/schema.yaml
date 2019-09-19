@@ -23,29 +23,43 @@ properties:
 #
     general:
         type: object
-        default: {"logging": {}}
+        default_all: {"logging": {}}
+        default_basic: {"logging": {}}
+        default_1d: {"logging": {}}
+        default_3d: {"logging": {}}
         additionalProperties: false
         properties:
-            outdir: {type: string, default: "."}
+            outdir:
+                type: string
+                default_all: "."
+                default_basic: "."
+                default_1d: "."
             logging:
                 type: object
-                default: {"level": ""}
+                default_all: {}
+                default_basic: {}
+                default_1d: {}
+                default_3d: {}
                 additionalProperties: false
                 properties:
                     level:
-                        description: ""
                         type: string
-                        default: INFO
+                        default_all: "INFO"
+                        default_basic: "INFO"
+                        default_1d: "INFO"
+                        default_3d: "INFO"
                         enum: [CRITICAL, 50,
                                ERROR, 40,
                                WARNING, 30,
                                INFO, 20,
                                DEBUG, 10,
                                NOTSET]
-                    filename: {type: string, default: filename.log}
-                    filemode: {type: string, default: w}
-                    format: {type: string, default: "%(asctime)s - %(message)s"}
-                    datefmt: {type: string, default: "%d-%b-%y %H:%M:%S"}
+                    filename: {type: string, default_all: gammapy.log}
+                    filemode: {type: string, default_all: w}
+                    format:
+                        type: string
+                        default_all: "%(asctime)s - %(message)s"
+                    datefmt: {type: string, default_all: "%d-%b-%y %H:%M:%S"}
                 required: [level]
                 dependencies:
                     filemode: [filename]
@@ -74,10 +88,12 @@ properties:
 #          Properties when filter_type is "par_box" or "par_value"
 #          variable: TARGET_NAME
 #
-#          Value parameter to match declared variable when filter_type is "par_value"
+#          Value to match declared variable
+#          when filter_type is "par_value"
 #          value_param: Crab
 #
-#          Value range with units to match declared variable when filter_type is "par_box"
+#          Value range with units to match declared variable
+#          when filter_type is "par_box"
 #          value_range:
 #              - 265 deg
 #              - 268 deg
@@ -92,24 +108,36 @@ properties:
 #
     observations:
         type: object
-        default: {}
+        default_all: {}
+        default_basic: {}
+        default_1d: {}
+        default_3d: {}
         additionalProperties: false
         properties:
             datastore:
                 type: string
-                default:
-                    $GAMMAPY_DATA/hess-dl3-dr1
+                default_all: $GAMMAPY_DATA/hess-dl3-dr1
+                default_basic: $GAMMAPY_DATA/hess-dl3-dr1
+                default_1d: $GAMMAPY_DATA/hess-dl3-dr1
+                default_3d:
+                    $GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz
             filters:
                 type: array
-                default: [{}]
+                default_all: [{}]
+                default_basic: [{}]
+                default_1d: [{}]
+                default_3d: [{}]
                 items:
                     type: object
                     additionalProperties: false
                     properties:
-                        exclude: {type: boolean, default: false}
-                        inverted: {type: boolean, default: false}
+                        exclude: {type: boolean, default_all: false}
+                        inverted: {type: boolean, default_all: false}
                         filter_type:
-                            default: par_value
+                            default_all: all
+                            default_basic: all
+                            default_1d: par_value
+                            default_3d: par_value
                             enum: [sky_circle,
                                    angle_box,
                                    par_box,
@@ -117,24 +145,32 @@ properties:
                                    ids,
                                    all]
                         frame:
-                            default: icrs
+                            default_all: icrs
                             enum: [galactic, equatorial, icrs, fk5]
-                        lon: {type: number, default: 83.633 deg}
-                        lat: {type: number, default: 22.014 deg}
-                        radius: {type: number, default: 0.5 deg}
-                        border: {type: number, default: 0.5 deg}
-                        variable: {type: string, default: TARGET_NAME}
-                        value_param: {type: string, default: Crab}
+                        lon: {type: number, default_all: 83.633 deg}
+                        lat: {type: number, default_all: 22.014 deg}
+                        radius: {type: number, default_all: 0.5 deg}
+                        border: {type: number, default_all: 0.5 deg}
+                        variable:
+                            type: string
+                            default_all: TARGET_NAME
+                            default_1d: TARGET_NAME
+                            default_3d: TARGET_NAME
+                        value_param:
+                            type: string
+                            default_all: Crab
+                            default_1d: Crab
+                            default_3d: Crab
                         value_range:
                             type: array
-                            items: {type: number, default:[1 TeV, 100 TeV]}
+                            items: {type: number, default_all:[1 TeV, 100 TeV]}
                             minItems: 2
                             maxItems: 2
                         obs_ids:
                             type: array
-                            items: {type: integer, default: [23523, 23526]}
+                            items: {type: integer, default_all: [23523, 23526]}
                     required: [filter_type]
-        required: [datastore]
+        required: [datastore, filters]
 
 # Block: reduction
 # Process of data reduction
@@ -161,52 +197,67 @@ properties:
 #
     reduction:
         type: object
-        default: {}
+        default_all: {}
+        default_basic: {}
+        default_1d: {}
+        default_3d: {}
         additionalProperties: false
         properties:
             background:
                 type: object
-                default: {}
+                default_all: {}
+                default_1d: {}
                 additionalProperties: false
                 properties:
                     background_estimator:
-                        default: reflected
+                        default_all: reflected
+                        default_1d: reflected
                         enum: [reflected, ring]
                     on_region:
                         type: object
-                        default: {}
+                        default_all: {}
+                        default_1d: {}
                         additionalProperties: false
                         properties:
                             center:
                                 type: array
                                 items: {type: number}
-                                default: [83.633 deg, 22.014 deg]
+                                default_all: [83.633 deg, 22.014 deg]
+                                default_1d: [83.633 deg, 22.014 deg]
                                 minItems: 2
                                 maxItems: 2
-                            radius: {type: number, default: 0.1 deg}
+                            radius:
+                                type: number
+                                default_all: 0.1 deg
+                                default_1d: 0.1 deg
                             frame:
-                                default: icrs
+                                default_all: icrs
+                                default_1d: icrs
                                 enum: [galactic, equatorial, icrs, fk5]
                     exclusion_mask:
                         type: object
-                        default: {}
+                        default_all: {}
                         additionalProperties: false
                         properties:
-                            filename: {type: string, default: filename.fits}
-                            hdu: {type: string, default: IMAGE}
+                            filename: {type: string, default_all: mask.fits}
+                            hdu: {type: string, default_all: IMAGE}
                 if:
                     properties:
                         exclusion_mask:
                             required: [filename]
             data_reducer:
-                default: 1d
-                enum: [1d, 2d, 3d]
-            containment_correction: {type: boolean, default: false}
+                default_all: 1d
+                default_basic: not assigned
+                default_1d: 1d
+                default_3d: 3d
+                enum: [not assigned, 1d, 2d, 3d]
+            containment_correction: {type: boolean, default_all: false}
         if:
             properties:
                 data_reducer:
                     const: 1d
         then:
+            required: [background]
             properties:
                 background:
                     required: [background_estimator, on_region]
@@ -225,6 +276,7 @@ properties:
 #        Width of the map in degrees
 #        width: [5, 5]
 #        offset_max: 3 deg
+#        psf_max_radius: 0.3 deg
 #
 #        Additional Map Axes other than spatial
 #        Example values for energy axes
@@ -245,67 +297,109 @@ properties:
     geometry:
         description: ""
         type: object
-        default: {}
+        default_all: {}
+        default_basic: {}
+        default_1d: {}
+        default_3d: {}
         additionalProperties: false
         properties:
-            binsz: {type: number, default: 0.02}
+            binsz:
+                type: number
+                default_all: 0.02
+                default_3d: 0.02
             coordsys:
                 type: string
-                default: CEL
+                default_all: CEL
+                default_3d: CEL
                 enum: [CEL, GAL]
-            proj: {type: string, default: CAR}
+            proj:
+                type: string
+                default_all: TAN
+                default_3d: TAN
             skydir:
                 type: array
-                items: {type: number, default: [83, 22]}
+                default_all: [83.633, 22.014]
+                default_3d: [83.633, 22.014]
+                items: {type: number}
                 minItems: 2
                 maxItems: 2
             width:
                 type: array
-                items: {type: number, default: [5, 5]}
+                default_all: [5, 5]
+                default_3d: [5, 5]
+                items: {type: number}
                 minItems: 1
                 maxItems: 2
-            offset_max: {type: number, default: 3 deg}
+            offset_max:
+                type: string
+                default_all: 3 deg
+                default_3d: 2.5 deg
+            psf_max_radius:
+                type: string
+                default_all: 0.3 deg
+                default_3d: 0.3 deg
             axes:
                 type: object
-                default: {}
+                default_all: {}
+                default_basic: {}
+                default_1d: {}
+                default_3d: {}
                 additionalProperties: false
                 properties:
                     e_reco:
                         type: object
-                        default: {}
+                        default_all: {}
+                        default_3d: {}
                         additionalProperties: false
                         properties:
-                            name: {type: string, default: e_reco}
-                            lo_bnd: {type: number, default: 0.01}
-                            hi_bnd: {type: number, default: 100}
-                            nbin: {type: number, default: 73}
-                            unit: {type: string, default: TeV}
+                            name:
+                                type: string
+                                default_all: e_reco
+                                default_3d: energy
+                            lo_bnd:
+                                type: number
+                                default_all: 0.01
+                                default_3d: 1
+                            hi_bnd:
+                                type: number
+                                default_all: 100
+                                default_3d: 10
+                            nbin:
+                                type: number
+                                default_all: 73
+                                default_3d: 4
+                            unit:
+                                type: string
+                                default_all: TeV
+                                default_3d: TeV
                             interp:
                                 type: string
-                                default: log
+                                default_all: log
+                                default_3d: log
                                 enum: [lin, log, sqrt]
                             node_type:
                                 type: string
-                                default: center
+                                default_all: center
+                                default_3d: center
                                 enum: [edges, center]
                         required: [lo_bnd, hi_bnd, nbin, unit]
                     e_true:
                         type: object
-                        default: {}
+                        default_all: {}
                         additionalProperties: false
                         properties:
-                            name: {type: string, default: e_true}
-                            lo_bnd: {type: number, default: 0.01}
-                            hi_bnd: {type: number, default: 315}
-                            nbin: {type: number, default: 109}
-                            unit: {type: string, default: TeV}
+                            name: {type: string, default_all: e_true}
+                            lo_bnd: {type: number, default_all: 0.01}
+                            hi_bnd: {type: number, default_all: 315}
+                            nbin: {type: number, default_all: 109}
+                            unit: {type: string, default_all: TeV}
                             interp:
                                 type: string
-                                default: log
+                                default_all: log
                                 enum: [lin, log, sqrt]
                             node_type:
                                 type: string
-                                default: center
+                                default_all: center
                                 enum: [edges, center]
                         required: [lo_bnd, hi_bnd, nbin, unit]
 
@@ -316,26 +410,35 @@ properties:
 #
     model:
         type: object
-        default: {}
+        default_all: {}
+        default_basic: {}
+        default_1d: {}
+        default_3d: {}
         additionalProperties: false
         properties:
             components:
                 type: array
-                default: [{}]
+                default_all: [{}]
+                default_basic: [{}]
+                default_1d: [{}]
+                default_3d: [{}]
                 items:
                     type: object
                     additionalProperties: false
                     properties:
-                        name: {type: string, default: source}
+                        name:
+                            type: string
+                            default_all: source
+                            default_1d: source
                         spatial:
                             type: object
-                            default: {}
+                            default_all: {}
                             additionalProperties: false
                             properties:
-                                type: {type: string, default: SkyGaussian}
+                                type: {type: string, default_all: SkyGaussian}
                                 parameters:
                                     type: array
-                                    default:
+                                    default_all:
                                         - factor: 0.0
                                           frozen: false
                                           max: 180.0
@@ -374,13 +477,68 @@ properties:
                                             frozen: {type: boolean}
                         spectral:
                             type: object
-                            default: {}
+                            default_all: {}
+                            default_basic: {}
+                            default_1d: {}
                             additionalProperties: false
                             properties:
-                                type: {type: string, default: PowerLaw}
+                                type:
+                                    type: string
+                                    default_all: PowerLaw
+                                    default_1d: PowerLaw
                                 parameters:
                                     type: array
-                                    default:
+                                    default_all:
+                                        - factor: 2.0
+                                          frozen: false
+                                          max: .nan
+                                          min: .nan
+                                          name: index
+                                          scale: 1.0
+                                          unit: ''
+                                          value: 2.0
+                                        - factor: 1.0e-12
+                                          frozen: false
+                                          max: .nan
+                                          min: .nan
+                                          name: amplitude
+                                          scale: 1.0
+                                          unit: cm-2 s-1 TeV-1
+                                          value: 1.0e-12
+                                        - factor: 1.0
+                                          frozen: true
+                                          max: .nan
+                                          min: .nan
+                                          name: reference
+                                          scale: 1.0
+                                          unit: TeV
+                                          value: 1.0
+                                    default_basic:
+                                        - factor: 2.0
+                                          frozen: false
+                                          max: .nan
+                                          min: .nan
+                                          name: index
+                                          scale: 1.0
+                                          unit: ''
+                                          value: 2.0
+                                        - factor: 1.0e-12
+                                          frozen: false
+                                          max: .nan
+                                          min: .nan
+                                          name: amplitude
+                                          scale: 1.0
+                                          unit: cm-2 s-1 TeV-1
+                                          value: 1.0e-12
+                                        - factor: 1.0
+                                          frozen: true
+                                          max: .nan
+                                          min: .nan
+                                          name: reference
+                                          scale: 1.0
+                                          unit: TeV
+                                          value: 1.0
+                                    default_1d:
                                         - factor: 2.0
                                           frozen: false
                                           max: .nan
@@ -428,15 +586,29 @@ properties:
     fit:
         type: object
         additionalProperties: false
-        default: {}
+        default_all: {}
+        default_basic: {}
+        default_1d: {}
+        default_3d: {}
         properties:
             fit_range:
                 type: object
-                default: {}
+                default_all: {}
+                default_basic: {}
+                default_1d: {}
                 additionalProperties: false
                 properties:
-                    min: {type: number, default: 1 TeV}
-                    max: {type: number, default: 100 TeV}
+                    min:
+                        type: number
+                        default_all: 1 TeV
+                        default_1d: 1 TeV
+                    max:
+                        type: number
+                        default_all: 100 TeV
+                        default_1d: 100 TeV
+                dependencies:
+                    min: [max]
+                    max: [min]
 
 # Block: flux
 # Parameters that are used during the flux estimation process
@@ -448,30 +620,68 @@ properties:
 #            nbin: 11
 #            unit: TeV
 #            interp: log
+#            node_type: edges
 #
     flux:
         type: object
         additionalProperties: false
-        default: {}
+        default_all: {}
+        default_basic: {}
+        default_1d: {}
+        default_3d: {}
         properties:
             fp_binning:
                 type: object
-                default: {}
+                default_all:
+                    lo_bnd: 1
+                    hi_bnd: 10
+                    nbin: 11
+                    unit: TeV
+                    interp: log
+                default_1d:
+                    lo_bnd: 1
+                    hi_bnd: 10
+                    nbin: 11
+                    unit: TeV
+                    interp: log
                 additionalProperties: false
                 properties:
-                    name: {type: string, default: flux_binning}
-                    lo_bnd: {type: number, default: 1}
-                    hi_bnd: {type: number, default: 10}
-                    nbin: {type: number, default: 11}
-                    unit: {type: string, default: TeV}
+                    name: {type: string}
+                    lo_bnd: {type: number}
+                    hi_bnd: {type: number}
+                    nbin: {type: number}
+                    unit: {type: string}
                     interp:
                         type: string
-                        default: log
                         enum: [lin, log, sqrt]
                     node_type:
                         type: string
-                        default: edges
                         enum: [edges, center]
                 required: [lo_bnd, hi_bnd, nbin, unit]
 
-required: [general, observations]
+if:
+    properties:
+        reduction:
+            properties:
+                data_reducer:
+                    const: 1d
+then:
+    properties:
+        flux:
+            required: [fp_binning]
+
+if:
+    properties:
+        reduction:
+            properties:
+                data_reducer:
+                    const: 3d
+then:
+    properties:
+        geometry:
+            required: [binsz, width, skydir, coordsys, proj, axes]
+            properties:
+                axes:
+                    required: [e_reco]
+
+required: [general, observations, reduction, model, fit, flux]

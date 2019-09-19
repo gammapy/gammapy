@@ -9,6 +9,8 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
+from gammapy.irf import make_mean_psf
+from gammapy.cube import MapDataset, MapMaker, PSFKernel
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
@@ -54,7 +56,7 @@ class Analysis:
     Probably not here, but in high-level docs, linked to from class docstring.
     """
 
-    def __init__(self, config=None, template="1d"):
+    def __init__(self, config=None, template="basic"):
         self._config = Config(config, template)
         self._set_logging()
 
@@ -62,6 +64,9 @@ class Analysis:
         self.geom = None
         self.background_estimator = None
         self.extraction = None
+        self.images = None
+        self.maps = None
+        self.psf_kernel = None
         self.model = None
         self.fit_result = None
         self.flux_points_dataset = None
@@ -79,25 +84,28 @@ class Analysis:
     def fit(self, optimize_opts=None):
         """Fitting reduced data sets to model."""
         if self.settings["reduction"]["data_reducer"] == "1d":
-            if self._validate_fitting_settings():
+            if self._validate_fitting_settings_1d():
                 self._read_model()
-                self._fit_reduced_data(optimize_opts=optimize_opts)
+                self._fit_reduced_data_1d(optimize_opts=optimize_opts)
         else:
-            # TODO: raise error?
-            log.info("Fitting available only for 1D spectrum.")
+            # TODO raise error?
+            log.info("Fitting available only for joint likelihood with 1D spectrum.")
 
     @classmethod
-    def from_file(cls, filename):
+    def from_file(cls, filename, template="basic"):
         """Instantiation of analysis from settings in config file.
 
         Parameters
         ----------
         filename : str, Path
             Configuration settings filename
+        template: str
+            Consider also values in configuration template
+            Default value basic
         """
         filename = make_path(filename)
         config = read_yaml(filename)
-        return cls(config=config)
+        return cls(config=config, template=template)
 
     def get_flux_points(self):
         """Calculate flux points."""
@@ -108,12 +116,8 @@ class Analysis:
                 flux_model = self.model.copy()
                 flux_model.parameters.covariance = self.fit_result.parameters.covariance
                 stacked.model = flux_model
-
-                # TODO: set default fp_binning handled in jsonschema validation class
-                if "fp_binning" not in self.settings["flux"]:
-                    raise RuntimeError()
-                ax_pars = self.settings["flux"]["fp_binning"]
-                e_edges = MapAxis.from_bounds(**ax_pars).edges
+                axis_params = self.settings["flux"]["fp_binning"]
+                e_edges = MapAxis.from_bounds(**axis_params).edges
                 flux_point_estimator = FluxPointsEstimator(
                     e_edges=e_edges, datasets=stacked
                 )
@@ -123,6 +127,7 @@ class Analysis:
                 cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
                 log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
         else:
+            # TODO raise error?
             log.info("Flux point estimation available only for 1D spectrum.")
 
     def get_observations(self):
@@ -154,9 +159,7 @@ class Analysis:
             if selection["type"] == "sky_circle" or selection["type"].endswith("_box"):
                 selected_obs = datastore.obs_table.select_observations(selection)
             if selection["type"] == "par_value":
-                mask = (
-                    datastore.obs_table[criteria["variable"]] == criteria["value_param"]
-                )
+                mask = (datastore.obs_table[criteria["variable"]] == criteria["value_param"])
                 selected_obs = datastore.obs_table[mask]
             if selection["type"] == "ids":
                 obs_list = datastore.get_observations(criteria["obs_ids"])
@@ -176,55 +179,82 @@ class Analysis:
 
     def reduce(self):
         """Produce reduced data sets."""
+        if not self._validate_reduction_settings():
+            return False
         if self.settings["reduction"]["data_reducer"] == "1d":
-            if self._validate_reduction_settings():
-                log.info("Reducing data sets.")
-                self._spectrum_extraction()
-        else:
-            # TODO
-            log.info("Data reduction available only for 1D spectrum.")
+            self._spectrum_extraction()
+        elif self.settings["reduction"]["data_reducer"] == "3d":
+            self._create_geometry()
+            maker_params = {}
+            if "offset_max" in self.settings["geometry"]:
+                maker_params = {"offset_max": self.settings["geometry"]["offset_max"]}
+            maker = MapMaker(self.geom, **maker_params)
+            self.maps = maker.run(self.observations)
+            self.images = maker.run_images()
+            table_psf = make_mean_psf(self.observations, self.geom.center_skydir)
+            psf_params = {}
+            if "psf_max_radius" in self.settings["geometry"]:
+                psf_params = {"max_radius": self.settings["geometry"]["psf_max_radius"]}
+            self.psf_kernel = PSFKernel.from_table_psf(table_psf, self.geom, **psf_params)
 
-    # TODO
-    # add energy axes and other eventual params and types
-    # validated and properly transformed in the jsonschema validation class
+        else:
+            # TODO raise error?
+            log.info("Data reduction method not available.")
+
     def _create_geometry(self):
         """Create the geometry."""
-        geom_params = self.settings["geometry"]
+        # TODO: handled in jsonschema validation class
+        geom_params = copy.deepcopy(self.settings["geometry"])
+        e_reco, e_true = self._energy_axes()
+        geom_params["axes"] = []
+        geom_params["axes"].append(e_reco)
+        geom_params["skydir"] = tuple(geom_params["skydir"])
+        if "offset_max" in geom_params:
+            del geom_params["offset_max"]
+        if "psf_max_radius" in geom_params:
+            del geom_params["psf_max_radius"]
         self.geom = WcsGeom.create(**geom_params)
 
-    def _fit_reduced_data(self, optimize_opts=None):
-        """Fit data to models."""
-        if self.settings["reduction"]["data_reducer"] == "1d":
-            for obs in self.extraction.spectrum_observations:
-                # TODO: fit_range handled in jsonschema validation class
-                if "fit_range" in self.settings["fit"]:
-                    e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
-                    e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
-                    obs.mask_fit = obs.counts.energy_mask(e_min, e_max)
-                obs.model = self.model
-            log.info("Fitting data sets to model.")
-            fit = Fit(self.extraction.spectrum_observations)
-            self.fit_result = fit.run(optimize_opts=optimize_opts)
-            log.info(self.fit_result)
-        else:
-            # TODO: implement or raise error
-            log.info("Fitting available only for joint likelihood with 1D spectrum.")
-            return False
+    def _energy_axes(self):
+        """Builds energy axes from settings in geometry."""
+        # TODO: e_reco/e_true handled in jsonschema validation class
+        e_reco = e_true = None
+        if "e_reco" in self.settings["geometry"]["axes"]:
+            axis_params = self.settings["geometry"]["axes"]["e_reco"]
+            e_reco = MapAxis.from_bounds(**axis_params)
+        if "e_true" in self.settings["geometry"]["axes"]:
+            axis_params = self.settings["geometry"]["axes"]["e_true"]
+            e_true = MapAxis.from_bounds(**axis_params)
+        return e_reco, e_true
+
+    def _fit_reduced_data_1d(self, optimize_opts=None):
+        """Fit data to models as joint-likelihood with 1D spectrum."""
+        for obs in self.extraction.spectrum_observations:
+            # TODO: fit_range handled in jsonschema validation class
+            if "fit_range" in self.settings["fit"]:
+                e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
+                e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
+                obs.mask_fit = obs.counts.energy_mask(e_min, e_max)
+            obs.model = self.model
+        log.info("Fitting spectra to model with joint likelihood.")
+        fit = Fit(self.extraction.spectrum_observations)
+        self.fit_result = fit.run(optimize_opts=optimize_opts)
+        log.info(self.fit_result)
 
     def _read_model(self):
         """Read the model from settings."""
         # TODO: make reading for generic spatial and spectral models with multiple components
         # use models = serialisation.io.dict_to_models() or models = SkyModels.from_yaml(filename)
         if self.settings["reduction"]["data_reducer"] == "1d":
-            model_pars = self.settings["model"]["components"][0]["spectral"]
+            model_yaml = self.settings["model"]["components"][0]["spectral"]
         else:
             log.info(
                 "Model reading available only for single component spectral model."
             )
             return False
         log.info("Reading model.")
-        model_class = SPECTRAL_MODELS[model_pars["type"]]
-        self.model = model_class.from_dict(model_pars)
+        model_class = SPECTRAL_MODELS[model_yaml["type"]]
+        self.model = model_class.from_dict(model_yaml)
         log.info(self.model)
 
     def _set_logging(self):
@@ -236,75 +266,64 @@ class Analysis:
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
-        background_params = self.settings["reduction"]["background"]
-
-        on = background_params["on_region"]
+        background = self.settings["reduction"]["background"]
+        log.info("Reducing spectrum data sets.")
+        on = background["on_region"]
         on_lon = Angle(on["center"][0])
         on_lat = Angle(on["center"][1])
         on_center = SkyCoord(on_lon, on_lat, frame=on["frame"])
         on_region = CircleSkyRegion(on_center, Angle(on["radius"]))
-        background_pars = {"on_region": on_region}
+        background_params = {"on_region": on_region}
 
         if "exclusion_mask" in background_params:
             map_hdu = {}
-            filename = background_params["exclusion_mask"]["filename"]
-            if "hdu" in background_params["exclusion_mask"]:
-                map_hdu = {"hdu": background_params["exclusion_mask"]["hdu"]}
+            filename = background["exclusion_mask"]["filename"]
+            if "hdu" in background["exclusion_mask"]:
+                map_hdu = {"hdu": background["exclusion_mask"]["hdu"]}
             exclusion_region = Map.read(filename, **map_hdu)
-            background_pars["exclusion_mask"] = exclusion_region
+            background_params["exclusion_mask"] = exclusion_region
 
-        if background_params["background_estimator"] == "reflected":
+        if background["background_estimator"] == "reflected":
             self.background_estimator = ReflectedRegionsBackgroundEstimator(
-                observations=self.observations, **background_pars
+                observations=self.observations, **background_params
             )
             self.background_estimator.run()
         else:
-            # TODO: raise or handle return
-            log.info(
-                "Background estimation available only for reflected regions method."
-            )
+            # TODO: raise error?
+            log.info("Background estimation only for reflected regions method.")
             return False
 
-        extraction_pars = {}
+        extraction_params = {}
         if "containment_correction" in self.settings["reduction"]:
-            extraction_pars["containment_correction"] = self.settings["reduction"][
+            extraction_params["containment_correction"] = self.settings["reduction"][
                 "containment_correction"
             ]
-
-        # TODO: e_reco/e_true handled in jsonschema validation class
-        if "e_reco" in self.settings["geometry"]["axes"]:
-            ax_pars = self.settings["geometry"]["axes"]["e_reco"]
-            e_reco = MapAxis.from_bounds(**ax_pars).center
-            extraction_pars["e_reco"] = e_reco
-        if "e_true" in self.settings["geometry"]["axes"]:
-            ax_pars = self.settings["geometry"]["axes"]["e_true"]
-            e_true = MapAxis.from_bounds(**ax_pars).center
-            extraction_pars["e_true"] = e_true
+        e_reco, e_true = self._energy_axes()
+        if e_reco:
+            extraction_params["e_reco"] = e_reco.center
+        if e_true:
+            extraction_params["e_true"] = e_true.center
         self.extraction = SpectrumExtraction(
             observations=self.observations,
             bkg_estimate=self.background_estimator.result,
-            **extraction_pars,
+            **extraction_params,
         )
         self.extraction.run()
 
-    def _validate_fitting_settings(self):
+    def _validate_fitting_settings_1d(self):
         """Validate settings before proceeding to fit."""
-        if (
-            self.settings["reduction"]["background"]["background_estimator"]
-            == "reflected"
-        ):
-            if self.extraction and len(self.extraction.spectrum_observations):
+
+        if self.extraction and len(self.extraction.spectrum_observations):
+            if self.settings["reduction"]["background"]["background_estimator"] == "reflected":
                 self.config.validate()
                 return True
             else:
-                log.info("No spectrum observations extracted.")
-                log.info("Fit cannot be done.")
+                # TODO raise error?
+                log.info("Background estimation only for reflected regions method.")
                 return False
         else:
-            # TODO
-            log.info(
-                "Background estimation available only for reflected regions method."
-            )
+            log.info("No spectrum observations extracted.")
+            log.info("Fit cannot be done.")
             return False
 
     def _validate_fp_settings(self):
@@ -313,8 +332,8 @@ class Analysis:
             self.config.validate()
             return True
         else:
-            log.info("No observations selected.")
-            log.info("Data reduction cannot be done.")
+            log.info("No results available from fit.")
+            log.info("Flux points calculation cannot be done.")
             return False
 
     def _validate_reduction_settings(self):
@@ -337,35 +356,23 @@ class Config:
         Configuration parameters
     """
 
-    def __init__(self, config=None, template="1d"):
-        self._default_settings = {}
-        self._command_settings = {}
+    def __init__(self, config=None, template="basic"):
+        self._user_settings = {}
         self._template = template
+        if template not in _implemented_templates:
+            log.warning(f"Template {template} not implemented.")
+            log.warning("Fetching basic template settings.")
+            self._template = "basic"
+        # fill with default values
         self.settings = {}
-
-        # fill settings with default values
         self.validate()
         self._default_settings = copy.deepcopy(self.settings)
-
-        # overwrite with config provided by the user
-        if config is None:
-            config = {}
-        if len(config):
-            self._command_settings = config
-            self._update_settings(self._command_settings, self.settings)
-
-        self.validate()
+        # add user settings
+        self.update_settings(config)
 
     def __str__(self):
         """Display settings in pretty YAML format."""
         return yaml.dump(self.settings)
-
-    def print_help(self, section=""):
-        """Print template configuration settings."""
-        doc = self._get_doc_sections()
-        for keyword in doc.keys():
-            if section == "" or section == keyword:
-                print(doc[keyword])
 
     def dump(self, filename="config.yaml"):
         """Serialize config into a yaml formatted file.
@@ -382,16 +389,34 @@ class Config:
         for section in doc_dic.keys():
             if section in self.settings:
                 settings_str += doc_dic[section] + "\n"
-                settings_str += yaml.dump(self.settings[section]) + "\n"
+                settings_str += yaml.dump({section: self.settings[section]}) + "\n"
         filename = make_path(filename)
         path_file = Path(self.settings["general"]["outdir"]) / filename
         path_file.write_text(settings_str)
 
+    def print_help(self, section=""):
+        """Print template configuration settings."""
+        doc = self._get_doc_sections()
+        for keyword in doc.keys():
+            if section == "" or section == keyword:
+                print(doc[keyword])
+
+    def update_settings(self, config=None, configfile=""):
+        """Update settings with config dictionary or values in configfile"""
+        if configfile:
+            filename = make_path(configfile)
+            config = read_yaml(filename)
+        if config is None:
+            config = {}
+        if len(config):
+            self._user_settings = config
+            self._update_settings(self._user_settings, self.settings)
+            self.validate()
+
     def validate(self):
         """Validate and/or fill initial config parameters against schema."""
-        jsonschema.validate(
-            self.settings, read_yaml(SCHEMA_FILE), _gp_defaults[self._template]
-        )
+        validator = _gp_defaults[self._template]
+        jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
 
     @staticmethod
     def _get_doc_sections():
@@ -427,46 +452,13 @@ def extend_with_default(validator_class, template):
         "properties",
         "patternProperties",
     ]
-    template_pars = {
-        "all": {"default_field": "default", "exclude_props": []},
-        "1d": {
-            "default_field": "default_1d",
-            "exclude_props": [
-                "binsz",
-                "border",
-                "coordsys",
-                "datefmt",
-                "e_reco",
-                "e_true",
-                "exclude",
-                "exclusion_mask",
-                "filename",
-                "filemode",
-                "format",
-                "inverted",
-                "lat",
-                "lon",
-                "proj",
-                "skydir",
-                "spatial",
-                "width",
-                "offset_max",
-            ],
-        },
-    }
-    reserved.extend(template_pars[template]["exclude_props"])
-    default_field = template_pars["all"]["default_field"]
-    default_specific_field = template_pars[template]["default_field"]
+    default_field = f"default_{template}"
 
     def set_defaults(validator, properties, instance, schema):
         for prop, sub_schema in properties.items():
             if prop not in reserved:
-                if default_specific_field in sub_schema:
-                    default = default_specific_field
-                else:
-                    default = default_field
-                if default in sub_schema:
-                    instance.setdefault(prop, sub_schema[default])
+                if default_field in sub_schema:
+                    instance.setdefault(prop, sub_schema[default_field])
         yield from validate_properties(validator, properties, instance, schema)
 
     return jsonschema.validators.extend(validator_class, {"properties": set_defaults})
@@ -499,5 +491,8 @@ _gp_units_validator = jsonschema.validators.extend(
 )
 _gp_defaults = {
     "1d": extend_with_default(_gp_units_validator, template="1d"),
+    "3d": extend_with_default(_gp_units_validator, template="3d"),
     "all": extend_with_default(_gp_units_validator, template="all"),
+    "basic": extend_with_default(_gp_units_validator, template="basic"),
 }
+_implemented_templates = ["1d", "3d", "all", "basic"]
