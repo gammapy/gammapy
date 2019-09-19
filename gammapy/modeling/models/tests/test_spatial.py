@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -84,7 +83,7 @@ def test_sky_gaussian():
     assert_allclose(ratio_minor_rotated, np.exp(0.5))
 
 
-def test_sky_ellipse():
+def test_sky_disk():
     # Test the disk case (e=0)
     r_0 = 2 * u.deg
     model = SkyDisk(lon_0="1 deg", lat_0="45 deg", r_0=r_0)
@@ -138,12 +137,11 @@ def test_sky_ellipse():
     assert_allclose(np.max(vals_disk).value * solid_angle, 1)
 
 
-def test_sky_ellipse_edge():
+def test_sky_disk_edge():
     r_0 = 2 * u.deg
     model = SkyDisk(lon_0="0 deg", lat_0="0 deg", r_0=r_0, e=0.5, phi="0 deg")
     value_center = model(0 * u.deg, 0 * u.deg)
     value_edge = model(0 * u.deg, r_0)
-    print(value_center, value_edge)
     assert_allclose((value_edge / value_center).to_value(""), 0.5)
 
     edge = model.edge.quantity

@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 
 def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
-    """Effective radius, used for the evaluationn of elongated models"""
+    """Effective radius, used for the evaluation of elongated models"""
     phi_0 = position_angle(lon_0, lat_0, lon, lat)
     d_phi = phi - phi_0
     minor_axis = Angle(major_axis * np.sqrt(1 - e ** 2))
@@ -175,16 +175,15 @@ class SkyGaussian(SkySpatialModel):
 
         import numpy as np
         import matplotlib.pyplot as plt
-        import astropy.units as u
         from astropy.coordinates import Angle
-        from gammapy.modeling.models import SkyGaussianElongated
+        from gammapy.modeling.models import SkyGaussian
         from gammapy.maps import Map, WcsGeom
 
         m_geom = WcsGeom.create(
             binsz=0.01, width=(5, 5), skydir=(2, 2), coordsys="GAL", proj="AIT"
         )
         phi = Angle("30 deg")
-        model = SkyGaussianElongated("2 deg", "2 deg", "1 deg", 0.7, phi, frame="galactic")
+        model = SkyGaussian("2 deg", "2 deg", "1 deg", 0.7, phi, frame="galactic")
 
         coords = m_geom.get_coord()
         vals = model(coords.lon, coords.lat)
