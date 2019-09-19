@@ -151,7 +151,6 @@ class PhaseCurveTableModel(Model):
 
         t_min = Time(t_min)
         t_max = Time(t_max)
-        n_events = n_events
         t_delta = u.Quantity(t_delta)
         random_state = get_random_state(random_state)
 
@@ -160,19 +159,16 @@ class PhaseCurveTableModel(Model):
 
         # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
         #  is still incomplete, refactor once we change to recent numpy and astropy versions
-        if self.table is not None:
-            t_step = t_delta.to_value(time_unit)
-            t = np.arange(0, t_stop, t_step)
+        t_step = t_delta.to_value(time_unit)
+        t = np.arange(0, t_stop, t_step)
 
-            pdf = self.evaluate_norm_at_time(t)
+        pdf = self.evaluate_norm_at_time(t)
 
-            sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
-            time_pix = sampler.sample(n_events)[0]
-            time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
-        else:
-            time = random_state.uniform(high=t_stop, size=n_events) * time_unit
+        sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
+        time_pix = sampler.sample(n_events)[0]
+        time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
 
-        return time
+        return t_min + time
 
 
 class LightCurveTableModel(Model):
@@ -324,7 +320,6 @@ class LightCurveTableModel(Model):
 
         t_min = Time(t_min)
         t_max = Time(t_max)
-        n_events = n_events
         t_delta = u.Quantity(t_delta)
         random_state = get_random_state(random_state)
 
@@ -333,16 +328,13 @@ class LightCurveTableModel(Model):
 
         # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
         #  is still incomplete, refactor once we change to recent numpy and astropy versions
-        if self.table is not None:
-            t_step = t_delta.to_value(time_unit)
-            t = np.arange(0, t_stop, t_step)
+        t_step = t_delta.to_value(time_unit)
+        t = np.arange(0, t_stop, t_step)
 
-            pdf = self.evaluate_norm_at_time(t * time_unit)
+        pdf = self.evaluate_norm_at_time(t * time_unit)
 
-            sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
-            time_pix = sampler.sample(n_events)[0]
-            time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
-        else:
-            time = random_state.uniform(high=t_stop, size=n_events) * time_unit
+        sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
+        time_pix = sampler.sample(n_events)[0]
+        time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
 
-        return time
+        return t_min + time

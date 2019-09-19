@@ -69,7 +69,7 @@ def rate(x, c="1e4 s"):
 
 
 def ph_curve(x, amplitude=0.5, x0=0.01):
-    return 1.0 + amplitude * np.sin(2 * np.pi * (x - x0) / 1.0)
+    return 100.0 + amplitude * np.sin(2 * np.pi * (x - x0) / 1.0)
 
 
 def test_time_sampling():
@@ -80,6 +80,7 @@ def test_time_sampling():
     table["NORM"] = rate(time)
     temporal_model = LightCurveTableModel(table)
 
+    t_ref = "2010-01-01T00:00:00"
     t_min = "2010-01-01T00:00:00"
     t_max = "2010-01-01T08:00:00"
 
@@ -87,33 +88,44 @@ def test_time_sampling():
         n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
     )
 
-    sampler_no_lc = LightCurveTableModel(None).sample_time(
+    sampler = u.Quantity((sampler - Time(t_ref)).sec, "s")
+
+    table = Table()
+    table["TIME"] = time
+    table["NORM"] = np.ones(len(time))
+    temporal_model_uniform = LightCurveTableModel(table)
+
+    sampler_uniform = temporal_model_uniform.sample_time(
         n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
     )
 
+    sampler_uniform = u.Quantity((sampler_uniform - Time(t_ref)).sec, "s")
+
     assert len(sampler) == 2
-    assert len(sampler_no_lc) == 2
+    assert len(sampler_uniform) == 2
     assert_allclose(sampler.value, [12661.65802564, 26.9299098], rtol=1e-5)
-    assert_allclose(sampler_no_lc.value, [15805.82891311, 20597.45375153], rtol=1e-5)
+    assert_allclose(sampler_uniform.value, [1261.65802564, 6026.9299098], rtol=1e-5)
 
 
 def test_phase_time_sampling():
-    time_0 = Time("2010-01-01T00:00:00").mjd
+    time_0 = "2010-01-01T00:00:00"
     phase = np.arange(0, 1, 0.01)
 
     table = Table()
     table["PHASE"] = phase
     table["NORM"] = ph_curve(phase)
     phase_model = PhaseCurveTableModel(
-        table, time_0=time_0, phase_0=0.0, f0=2, f1=0.0, f2=0.0
+        table, time_0=Time(time_0).mjd, phase_0=0.0, f0=2, f1=0.0, f2=0.0
     )
 
     t_min = "2010-01-01T00:00:00"
     t_max = "2010-01-01T08:00:00"
 
     sampler = phase_model.sample_time(
-        n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
+        n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="0.01 s"
     )
 
+    sampler = u.Quantity((sampler - Time(time_0)).sec, "s")
+
     assert len(sampler) == 2
-    assert_allclose(sampler.value, [1261.65802564, 6026.9299098], rtol=1e-5)
+    assert_allclose(sampler.value, [8525.00102763, 11362.44044883], rtol=1e-5)
