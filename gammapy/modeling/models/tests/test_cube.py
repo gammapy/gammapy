@@ -10,9 +10,11 @@ from gammapy.modeling.models import (
     BackgroundModel,
     PowerLaw,
     SkyDiffuseCube,
+    SkyPointSource,
     SkyGaussian,
     SkyModel,
     SkyModels,
+    ConstantModel,
 )
 from gammapy.utils.testing import requires_data
 
@@ -430,3 +432,36 @@ class TestSkyModelMapEvaluator:
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 2.253073467739508e-06, rtol=1e-5)
         assert_allclose(out.data[0, 0, 0], 2.407252e-08, rtol=1e-5)
+
+
+def test_sky_point_source():
+    # Test special case of point source. Regression test for GH 2367.
+
+    energy_axis = MapAxis.from_edges([1, 10], unit="TeV", name="energy", interp="log")
+    exposure = Map.create(
+        skydir=(100, 70),
+        npix=(4, 4),
+        binsz=0.1,
+        proj="AIT",
+        unit="cm2 s",
+        axes=[energy_axis],
+    )
+    exposure.data = np.ones_like(exposure.data)
+
+    spatial_model = SkyPointSource(100.06 * u.deg, 70.03 * u.deg, frame="icrs")
+    # Create a spectral model with integral flux of 1 cm-2 s-1 in this energy band
+    spectral_model = ConstantModel("1 cm-2 s-1 TeV-1")
+    spectral_model.const.value /= spectral_model.integral(1 * u.TeV, 10 * u.TeV).value
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+    evaluator = MapEvaluator(model=model, exposure=exposure)
+    flux = evaluator.compute_flux().to_value("cm-2 s-1")[0]
+
+    expected = [
+        [0, 0, 0, 0],
+        [0, 0.048, 0.020, 0.0],
+        [0, 0.192, 0.080, 0],
+        [0, 0, 0, 0],
+    ]
+    assert_allclose(flux, expected, atol=0.01)
+
+    assert_allclose(flux.sum(), 1)
