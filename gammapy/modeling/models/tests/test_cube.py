@@ -8,13 +8,13 @@ from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     BackgroundModel,
+    ConstantModel,
     PowerLaw,
     SkyDiffuseCube,
-    SkyPointSource,
     SkyGaussian,
     SkyModel,
     SkyModels,
-    ConstantModel,
+    SkyPointSource,
 )
 from gammapy.utils.testing import requires_data
 
@@ -458,8 +458,8 @@ def test_sky_point_source():
 
     expected = [
         [0, 0, 0, 0],
-        [0, 0.048, 0.020, 0.0],
-        [0, 0.192, 0.080, 0],
+        [0, 0.140, 0.058, 0.0],
+        [0, 0.564, 0.236, 0],
         [0, 0, 0, 0],
     ]
     assert_allclose(flux, expected, atol=0.01)

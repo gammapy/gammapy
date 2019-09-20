@@ -330,6 +330,7 @@ class MapAxis:
     unit : str
         String specifying the data units.
     """
+
     # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
