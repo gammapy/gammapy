@@ -387,21 +387,8 @@ def test_absorption():
     model = AbsorbedSpectralModel(
         spectral_model=pwl, absorption=absorption, parameter=redshift
     )
-
-    # Test if the absorption factor at the reference energy
-    # corresponds to the ratio of the absorbed flux
-    # divided by the flux of the spectral model
-    kwargs = dict(
-        index=index, amplitude=amplitude, reference=reference, redshift=redshift
-    )
-    model_ref_energy = model.evaluate(energy=reference, **kwargs)
-    pwl_ref_energy = pwl.evaluate(
-        energy=reference, index=index, amplitude=amplitude, reference=reference
-    )
-
-    desired = absorption.evaluate(energy=reference, parameter=redshift)
-    actual = model_ref_energy / pwl_ref_energy
-    assert_quantity_allclose(actual, desired)
+    desired = u.Quantity(5.140765e-13, "TeV-1 s-1 cm-2")
+    assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
 
 
 @requires_dependency("uncertainties")

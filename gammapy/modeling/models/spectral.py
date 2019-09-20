@@ -1483,7 +1483,7 @@ class Absorption:
         table_param = Table.read(filename, hdu="PARAMETERS")
 
         # TODO: for some reason the table contain duplicated values
-        param = np.unique(table_param[0]["VALUE"])
+        param, idx = np.unique(table_param[0]["VALUE"], return_index=True)
 
         # Get energy values
         table_energy = Table.read(filename, hdu="ENERGIES")
@@ -1497,7 +1497,7 @@ class Absorption:
 
         # Get spectrum values
         table_spectra = Table.read(filename, hdu="SPECTRA")
-        data = np.unique(table_spectra["INTPSPEC"].data, axis=0)
+        data = table_spectra["INTPSPEC"].data[idx, :]
         return cls(energy=energy, param=param, data=data, filename=filename)
 
     @classmethod
