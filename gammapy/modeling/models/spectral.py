@@ -1481,7 +1481,9 @@ class Absorption:
         # Create EBL data array
         filename = str(make_path(filename))
         table_param = Table.read(filename, hdu="PARAMETERS")
-        param = table_param[0]["VALUE"]
+
+        # TODO: for some reason the table contain duplicated values
+        param = np.unique(table_param[0]["VALUE"])
 
         # Get energy values
         table_energy = Table.read(filename, hdu="ENERGIES")
@@ -1495,8 +1497,7 @@ class Absorption:
 
         # Get spectrum values
         table_spectra = Table.read(filename, hdu="SPECTRA")
-        data = table_spectra["INTPSPEC"].data
-
+        data = np.unique(table_spectra["INTPSPEC"].data, axis=0)
         return cls(energy=energy, param=param, data=data, filename=filename)
 
     @classmethod
@@ -1524,20 +1525,18 @@ class Absorption:
 
         return cls.read(models[name])
 
-    def table_model(self, parameter, unit="TeV"):
+    def table_model(self, parameter):
         """Table model for a given parameter (`~gammapy.modeling.models.TableModel`).
 
         Parameters
         ----------
         parameter : float
             Parameter value.
-        unit : str, (optional)
-            desired value for energy axis
         """
-        energy = self.energy.to(unit)
+        energy = self.energy
         values = self.evaluate(energy=energy, parameter=parameter)
         return TableModel(
-            energy=energy, values=values, interp_kwargs={"values_scale": "lin"}
+            energy=energy, values=values, interp_kwargs={"values_scale": "log"}
         )
 
     def evaluate(self, energy, parameter):
