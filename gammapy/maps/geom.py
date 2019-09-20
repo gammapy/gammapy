@@ -390,7 +390,7 @@ class MapAxis:
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash((self._nodes.tostring(), self._node_type, self._name))
+        return id(self)
 
     @property
     def interp(self):

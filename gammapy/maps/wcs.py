@@ -942,7 +942,7 @@ class WcsGeom(MapGeom):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash((self._wcs, tuple(self._axes)))
+        return id(self)
 
 
 def pix2world(wcs, cdelt, crpix, pix):
