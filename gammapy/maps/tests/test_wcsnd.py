@@ -179,16 +179,10 @@ def test_wcsndmap_set_get_by_coord(npix, binsz, coordsys, proj, skydir, axes):
     m.set_by_coord(coords, coords[0])
     assert_allclose(coords[0].value, m.get_by_coord(coords))
 
-    if not geom.is_allsky:
-        coords[1][...] = 0.0
-        assert_allclose(np.nan * np.ones(coords[0].shape), m.get_by_coord(coords))
-
     # Test with SkyCoords
     m = WcsNDMap(geom)
     coords = m.geom.get_coord()
-    skydir = SkyCoord(
-        coords[0], coords[1], unit="deg", frame=coordsys_to_frame(geom.coordsys)
-    )
+    skydir = coords.skycoord
     skydir_cel = skydir.transform_to("icrs")
     skydir_gal = skydir.transform_to("galactic")
 

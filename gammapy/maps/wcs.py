@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
+from functools import lru_cache
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -537,6 +538,7 @@ class WcsGeom(MapGeom):
         else:
             return int(self.npix[0][idx]), int(self.npix[1][idx])
 
+    @lru_cache()
     def get_idx(self, idx=None, flat=False):
         pix = self.get_pix(idx=idx, mode="center")
         if flat:
@@ -563,6 +565,7 @@ class WcsGeom(MapGeom):
         pix = np.meshgrid(*pix[::-1], indexing="ij")[::-1]
         return pix
 
+    @lru_cache()
     def get_pix(self, idx=None, mode="center"):
         """Get map pix coordinates from the geometry.
 
@@ -583,6 +586,7 @@ class WcsGeom(MapGeom):
             _[~m] = INVALID_INDEX.float
         return pix
 
+    @lru_cache()
     def get_coord(self, idx=None, flat=False, mode="center"):
         """Get map coordinates from the geometry.
 
@@ -754,6 +758,7 @@ class WcsGeom(MapGeom):
             axes[idx] = axes[idx].upsample(factor)
             return self._init_copy(axes=axes)
 
+    @lru_cache()
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
 
@@ -935,6 +940,9 @@ class WcsGeom(MapGeom):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __hash__(self):
+        return id(self)
 
 
 def pix2world(wcs, cdelt, crpix, pix):

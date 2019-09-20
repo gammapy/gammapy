@@ -250,6 +250,10 @@ def test_wcsgeom_get_coord():
     assert_allclose(coord.lat[0, 0].value, -1.5)
     assert coord.lat[0, 0].unit == "deg"
 
+    coord_cached = geom.get_coord(mode="edges")
+    # test coord caching
+    assert id(coord) == id(coord_cached)
+
 
 def test_wcsgeom_get_pix_coords():
     geom = WcsGeom.create(
