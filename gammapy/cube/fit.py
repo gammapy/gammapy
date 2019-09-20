@@ -5,12 +5,12 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
+from gammapy.cube.edisp_map import EDispMap
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.cube.psf_map import PSFMap
-from gammapy.cube.edisp_map import EDispMap
+from gammapy.data import GTI
 from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map, MapAxis
-from gammapy.data import GTI
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
 from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython

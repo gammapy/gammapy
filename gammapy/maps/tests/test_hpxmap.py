@@ -147,6 +147,7 @@ def test_hpxmap_read_write_fgst(tmpdir):
 
     m2 = Map.read(filename)
 
+
 @pytest.mark.parametrize(
     ("nside", "nested", "coordsys", "region", "axes", "sparse"), hpx_test_geoms_sparse
 )

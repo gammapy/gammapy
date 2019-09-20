@@ -10,7 +10,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Column, QTable, Table
 from gammapy.utils.interpolation import interpolation_scale
-from .utils import INVALID_INDEX, find_bands_hdu, find_hdu, edges_from_lo_hi
+from .utils import INVALID_INDEX, edges_from_lo_hi, find_bands_hdu, find_hdu
 
 __all__ = ["MapCoord", "MapGeom", "MapAxis"]
 
@@ -140,6 +140,7 @@ def axes_from_bands_hdu(hdu):
         axes.append(axis)
 
     return axes
+
 
 def find_and_read_bands(hdu):
     if hdu is None:

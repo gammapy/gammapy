@@ -4,7 +4,7 @@ from astropy.io import fits
 from astropy.units import Quantity
 from gammapy.utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
-from .hpx import HpxGeom, HpxToWcsMapping, nside_to_order, HPX_FITS_CONVENTIONS
+from .hpx import HPX_FITS_CONVENTIONS, HpxGeom, HpxToWcsMapping, nside_to_order
 from .hpxmap import HpxMap
 from .utils import INVALID_INDEX, interp_to_order
 

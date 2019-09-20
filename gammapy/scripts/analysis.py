@@ -9,9 +9,9 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
-from gammapy.irf import make_mean_psf
 from gammapy.cube import MapDataset, MapMaker, PSFKernel
 from gammapy.data import DataStore, ObservationTable
+from gammapy.irf import make_mean_psf
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import SPECTRAL_MODELS
@@ -159,7 +159,9 @@ class Analysis:
             if selection["type"] == "sky_circle" or selection["type"].endswith("_box"):
                 selected_obs = datastore.obs_table.select_observations(selection)
             if selection["type"] == "par_value":
-                mask = (datastore.obs_table[criteria["variable"]] == criteria["value_param"])
+                mask = (
+                    datastore.obs_table[criteria["variable"]] == criteria["value_param"]
+                )
                 selected_obs = datastore.obs_table[mask]
             if selection["type"] == "ids":
                 obs_list = datastore.get_observations(criteria["obs_ids"])
@@ -195,7 +197,9 @@ class Analysis:
             psf_params = {}
             if "psf_max_radius" in self.settings["geometry"]:
                 psf_params = {"max_radius": self.settings["geometry"]["psf_max_radius"]}
-            self.psf_kernel = PSFKernel.from_table_psf(table_psf, self.geom, **psf_params)
+            self.psf_kernel = PSFKernel.from_table_psf(
+                table_psf, self.geom, **psf_params
+            )
 
         else:
             # TODO raise error?
@@ -314,7 +318,10 @@ class Analysis:
         """Validate settings before proceeding to fit."""
 
         if self.extraction and len(self.extraction.spectrum_observations):
-            if self.settings["reduction"]["background"]["background_estimator"] == "reflected":
+            if (
+                self.settings["reduction"]["background"]["background_estimator"]
+                == "reflected"
+            ):
                 self.config.validate()
                 return True
             else:

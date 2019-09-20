@@ -566,13 +566,7 @@ class HpxGeom(MapGeom):
     is_hpx = True
 
     def __init__(
-        self,
-        nside,
-        nest=True,
-        coordsys="CEL",
-        region=None,
-        axes=None,
-        sparse=False,
+        self, nside, nest=True, coordsys="CEL", region=None, axes=None, sparse=False
     ):
 
         # FIXME: Figure out what to do when sparse=True
@@ -1008,11 +1002,7 @@ class HpxGeom(MapGeom):
 
         axes = copy.deepcopy(self.axes)
         return self.__class__(
-            2 ** order,
-            self.nest,
-            coordsys=self.coordsys,
-            region=self.region,
-            axes=axes,
+            2 ** order, self.nest, coordsys=self.coordsys, region=self.region, axes=axes
         )
 
     def to_swapped(self):
@@ -1034,10 +1024,7 @@ class HpxGeom(MapGeom):
 
     def to_image(self):
         return self.__class__(
-            np.max(self.nside),
-            self.nest,
-            coordsys=self.coordsys,
-            region=self.region,
+            np.max(self.nside), self.nest, coordsys=self.coordsys, region=self.region
         )
 
     def to_cube(self, axes):
@@ -1246,9 +1233,7 @@ class HpxGeom(MapGeom):
         if region is None and width is not None:
             region = f"DISK({lon},{lat},{width/2})"
 
-        return cls(
-            nside, nest=nest, coordsys=coordsys, region=region, axes=axes
-        )
+        return cls(nside, nest=nest, coordsys=coordsys, region=region, axes=axes)
 
     @staticmethod
     def identify_hpx_convention(header):
@@ -1351,9 +1336,7 @@ class HpxGeom(MapGeom):
             except KeyError:
                 region = None
 
-        return cls(
-            nside, nest, coordsys=coordsys, region=region, axes=axes
-        )
+        return cls(nside, nest, coordsys=coordsys, region=region, axes=axes)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
