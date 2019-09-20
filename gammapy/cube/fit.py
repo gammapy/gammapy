@@ -356,23 +356,27 @@ class MapDataset(Dataset):
         other: `~gammapy.cube.MapDataset`
             the MapDatasets to be stacked with this one.
 
-        Returns
-        -------
-        new : `~gammapy.cube.MapDataset`
-            A dataset with the stacked maps
-
         """
 
         if self.counts:
-            if other.mask_fit:
-                other.counts = other.counts * other.mask_fit
-            self.counts.coadd(other.counts)
+            if self.mask_safe is not None:
+                self.counts = self.counts * self.mask
+            self.counts.coadd(other.counts, other.mask_safe)
 
         self.exposure.coadd(other.exposure)
 
-        if other.mask_fit:
-            other.background_model.map = other.background_model.map * other.mask_fit
-        self.background_model.map.coadd(other.background_model.evaluate())
+        mask_safe = Map.from_geom(self.counts.geom, data=self.mask_safe)
+        mask_safe_other = Map.from_geom(other.counts.geom, data=other.mask_safe)
+
+        if self.mask_safe is not None:
+            self.background_model.map = self.background_model.map * self.mask_safe
+
+            mask_safe.coadd(mask_safe_other)
+            self.mask_safe = mask_safe.data
+
+        self.background_model.map.coadd(
+            other.background_model.evaluate(), other.mask_safe
+        )
 
         if isinstance(self.psf, PSFMap):
             self.psf.stack(other.stack())
@@ -386,8 +390,6 @@ class MapDataset(Dataset):
 
         if self.gti:
             self.gti = self.gti.stack(other.gti).union()
-
-        # How to stack the mask?
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""

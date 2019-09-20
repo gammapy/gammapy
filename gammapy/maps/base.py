@@ -339,7 +339,7 @@ class Map(abc.ABC):
         """Reduce to a 2D image by summing over non-spatial dimensions."""
         pass
 
-    def coadd(self, map_in):
+    def coadd(self, map_in, weights=None):
         """Add the contents of ``map_in`` to this map.
 
         This method can be used to combine maps containing integral quantities (e.g. counts)
@@ -349,12 +349,16 @@ class Map(abc.ABC):
         ----------
         map_in : `Map`
             Input map.
+        weights: `Map` or `~numpy.ndarray`
+            The weight factors while adding
         """
         if not self.unit.is_equivalent(map_in.unit):
             raise ValueError("Incompatible units")
 
         # TODO: Check whether geometries are aligned and if so sum the
         # data vectors directly
+        if weights is not None:
+            map_in = map_in * weights
         idx = map_in.geom.get_idx()
         coords = map_in.geom.get_coord()
         vals = u.Quantity(map_in.get_by_idx(idx), map_in.unit)
