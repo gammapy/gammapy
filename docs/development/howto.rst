@@ -1020,13 +1020,13 @@ DocSearch
 ---------
 
 The search field in the gammapy documentation is powered by `Algolia DocSearch
-<https://community.algolia.com/docsearch/>`_. The free version of DocSearch is
+<https://community.algolia.com/docsearch/>`__. The free version of DocSearch is
 hosted on their servers and they build the search index for us based on this
 `configuration file
-<https://github.com/algolia/docsearch-configs/blob/master/configs/gammapy.json>`_.
+<https://github.com/algolia/docsearch-configs/blob/master/configs/gammapy.json>`__.
 More information on DocSearch can be found `here
-<https://community.algolia.com/docsearch/what-is-docsearch.html>`_. The
+<https://community.algolia.com/docsearch/what-is-docsearch.html>`__. The
 analytics related to the search index are available `here
-<>https://www.algolia.com/apps/BH4D9OD16A/analytics/overview`_. You need an
+<https://www.algolia.com/apps/BH4D9OD16A/analytics/overview>`_. You need an
 Algolia account and access to the App in order to view this page. Ask for
 permission at accounts+documentation-search@algolia.com (APP-ID: BH4D9OD16A)
