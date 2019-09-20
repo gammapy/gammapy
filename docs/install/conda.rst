@@ -1,3 +1,5 @@
+.. include:: ../references.txt
+
 .. _install-conda:
 
 Gammapy conda installation
