@@ -670,11 +670,7 @@ class MapEvaluator:
 
     _cached_properties = [
         "lon_lat",
-        "solid_angle",
-        "bin_volume",
         "geom_reco",
-        "energy_bin_width",
-        "energy_edges",
         "energy_center",
     ]
 
@@ -712,12 +708,6 @@ class MapEvaluator:
         """True energy axis bin centers (`~astropy.units.Quantity`)"""
         energy_axis = self.geom.get_axis_by_name("energy")
         return energy_axis.center[:, np.newaxis, np.newaxis]
-
-    @lazyproperty
-    def energy_edges(self):
-        """True energy axis bin edges (`~astropy.units.Quantity`)"""
-        energy_axis = self.geom.get_axis_by_name("energy")
-        return energy_axis.edges[:, np.newaxis, np.newaxis]
 
     @lazyproperty
     def lon_lat(self):
