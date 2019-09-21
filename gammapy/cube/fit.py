@@ -317,7 +317,7 @@ class MapDataset(Dataset):
         exposure = Map.from_geom(exposure_geom, unit="m2 s")
         exposure_irf = Map.from_geom(geom_irf, unit="m2 s")
 
-        mask = np.ones(geom.data_shape, dtype=bool)
+        mask_safe = np.zeros(geom.data_shape, dtype=bool)
 
         gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
 
@@ -332,63 +332,59 @@ class MapDataset(Dataset):
         psf = PSFMap(psf_map, exposure_irf)
 
         return cls(
-            model=None,
             counts=counts,
             exposure=exposure,
-            mask_fit=None,
             psf=psf,
             edisp=edisp,
             background_model=background_model,
-            name="",
-            likelihood="cash",
-            evaluation_mode="local",
-            mask_safe=mask,
             gti=gti,
+            mask_safe=mask_safe
         )
 
     def stack(self, other):
-        """
-        Stack the maps in other onto self.
-        The stacking is done inplace
+        """Stack another dataset in place.
 
         Parameters
         ----------
         other: `~gammapy.cube.MapDataset`
-            the MapDatasets to be stacked with this one.
+            Map dataset to be stacked with this one.
 
         """
 
-        if self.counts:
-            if self.mask_safe is not None:
-                self.counts = self.counts * self.mask
-            self.counts.coadd(other.counts, other.mask_safe)
+        if self.counts and other.counts:
+            self.counts.data[~self.mask_safe] = 0
+            self.counts.coadd(other.counts, weights=other.mask_safe)
 
-        self.exposure.coadd(other.exposure)
+        if self.exposure and other.exposure:
+            self.exposure.coadd(other.exposure)
 
-        mask_safe = Map.from_geom(self.counts.geom, data=self.mask_safe)
-        mask_safe_other = Map.from_geom(other.counts.geom, data=other.mask_safe)
+        if self.background_model and other.background_model:
+            bkg = self.background_model.evaluate()
+            bkg.data[~self.mask_safe] = 0
+            other_bkg = other.background_model.evaluate()
+            other_bkg.data[~other.mask_safe] = 0
+            bkg.coadd(other_bkg)
+            self.background_model = BackgroundModel(bkg)
 
-        if self.mask_safe is not None:
-            self.background_model.map = self.background_model.map * self.mask_safe
-
+        if self.mask_safe is not None and other.mask_safe is not None:
+            mask_safe = Map.from_geom(self.counts.geom, data=self.mask_safe)
+            mask_safe_other = Map.from_geom(other.counts.geom, data=other.mask_safe)
             mask_safe.coadd(mask_safe_other)
             self.mask_safe = mask_safe.data
 
-        self.background_model.map.coadd(
-            other.background_model.evaluate(), other.mask_safe
-        )
+        if self.psf and other.psf:
+            if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
+                self.psf.stack(other.psf)
+            else:
+                raise ValueError("Stacking of PSF kernels not supported")
 
-        if isinstance(self.psf, PSFMap):
-            self.psf.stack(other.stack())
-        elif isinstance(other.psf, PSFKernel):
-            raise ValueError("Stacking of PSF kernels not supported")
+        if self.edisp and other.edisp:
+            if isinstance(self.edisp, EDispMap) and isinstance(other.edisp, EDispMap):
+                self.edisp.stack(other.edisp)
+            else:
+                raise ValueError("Stacking of edisp kernels not supported")
 
-        if isinstance(other.edisp, EDispMap):
-            self.edisp.stack(other.stack())
-        elif isinstance(self.psf, EnergyDispersion):
-            raise ValueError("Stacking of edisp kernels not supported")
-
-        if self.gti:
+        if self.gti and other.gti:
             self.gti = self.gti.stack(other.gti).union()
 
     def likelihood_per_bin(self):
