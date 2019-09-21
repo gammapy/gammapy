@@ -329,3 +329,39 @@ def test_create(geom, geom_etrue):
     assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 30000)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
+
+@requires_data()
+def test_stack(geom, geom_etrue):
+
+    m = Map.from_geom(geom)
+    m.quantity = 0.2 * np.ones(m.data.shape)
+    background_model1 = BackgroundModel(m)
+    c_map1 = Map.from_geom(geom)
+    c_map1.quantity = 0.3 * np.ones(c_map1.data.shape)
+    mask1 = np.ones(m.data.shape, dtype=bool)
+    mask1[0][0][0:10] = False
+
+    dataset1 = MapDataset(
+        counts=c_map1,
+        background_model=background_model1,
+        exposure=get_exposure(geom_etrue),
+        mask_safe=mask1,
+    )
+
+    c_map2 = Map.from_geom(geom)
+    c_map2.quantity = 0.1 * np.ones(c_map2.data.shape)
+    background_model2 = BackgroundModel(m, norm=0.5)
+    mask2 = np.ones(m.data.shape, dtype=bool)
+    mask2[0][3] = False
+
+    dataset2 = MapDataset(
+        counts=c_map2,
+        background_model=background_model2,
+        exposure=get_exposure(geom_etrue),
+        mask_safe=mask2,
+    )
+    dataset1.stack(dataset2)
+    assert_allclose(dataset1.counts.data.sum(), 7987)
+    assert_allclose(dataset1.background_model.map.data.sum(), 5988)
+    assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
+    assert_allclose(dataset1.mask_safe.sum(), 20000)
