@@ -420,6 +420,11 @@ class MapAxis:
         pix = np.arange(self.nbin, dtype=float)
         return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
 
+    @lazyproperty
+    def bin_width(self):
+        """Return array of bin widths"""
+        return np.diff(self.edges)
+
     @property
     def nbin(self):
         """Return number of bins."""
@@ -846,12 +851,14 @@ class MapCoord:
     @property
     def theta(self):
         """Theta co-latitude angle in radians."""
-        return np.pi / 2.0 - np.radians(self.lat)
+        theta = u.Quantity(self.lat, unit="deg", copy=False).to_value("rad")
+        return np.pi / 2.0 - theta
 
     @property
     def phi(self):
         """Phi longitude angle in radians."""
-        return np.radians(self.lon)
+        phi = u.Quantity(self.lon, unit="deg", copy=False).to_value("rad")
+        return phi
 
     @property
     def coordsys(self):
@@ -1014,6 +1021,12 @@ class MapCoord:
             skycoord = lonlat_to_skycoord(self.lon, self.lat, self.coordsys)
             lon, lat, frame = skycoord_to_lonlat(skycoord, coordsys=coordsys)
             data = copy.deepcopy(self._data)
+            if isinstance(self.lon, u.Quantity):
+                lon = u.Quantity(lon, unit="deg", copy=False)
+
+            if isinstance(self.lon, u.Quantity):
+                lat = u.Quantity(lat, unit="deg", copy=False)
+
             data["lon"] = lon
             data["lat"] = lat
             return self.__class__(data, coordsys, self._match_by_name)

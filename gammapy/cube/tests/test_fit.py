@@ -22,7 +22,7 @@ def geom():
     ebounds = np.logspace(-1.0, 1.0, 3)
     axis = MapAxis.from_edges(ebounds, name="energy", unit=u.TeV)
     return WcsGeom.create(
-        skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
+        skydir=(266.40498829, -28.93617776), binsz=0.02, width=(2, 2), coordsys="CEL", axes=[axis]
     )
 
 
@@ -31,7 +31,7 @@ def geom_etrue():
     ebounds_true = np.logspace(-1.0, 1.0, 4)
     axis = MapAxis.from_edges(ebounds_true, name="energy", unit=u.TeV)
     return WcsGeom.create(
-        skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
+        skydir=(266.40498829, -28.93617776), binsz=0.02, width=(2, 2), coordsys="CEL", axes=[axis]
     )
 
 
@@ -132,19 +132,19 @@ def test_fake(sky_model, geom, geom_etrue):
     dataset.fake(314)
 
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
-    assert_allclose(real_dataset.counts.data.sum(), 6455.037802)
-    assert_allclose(dataset.counts.data.sum(), 6553)
+    assert_allclose(real_dataset.counts.data.sum(), 6454.959516)
+    assert_allclose(dataset.counts.data.sum(), 6581)
 
 
 @requires_data()
-def test_different_exposure_unit(sky_model, geom, geom_etrue):
-    dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=False)
+def test_different_exposure_unit(sky_model, geom):
+    dataset_ref = get_map_dataset(sky_model, geom, geom, edisp=False)
     npred_ref = dataset_ref.npred()
 
-    ebounds_true = np.logspace(2, 4, 4)
+    ebounds_true = np.logspace(2, 4, 3)
     axis = MapAxis.from_edges(ebounds_true, name="energy", unit="GeV")
     geom_gev = WcsGeom.create(
-        skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
+        skydir=(266.40498829, -28.93617776), binsz=0.02, width=(2, 2), coordsys="CEL", axes=[axis]
     )
 
     dataset = get_map_dataset(sky_model, geom, geom_gev, edisp=False)
@@ -238,7 +238,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     npred = dataset_1.npred().data.sum()
     assert_allclose(npred, 4454.932873, rtol=1e-3)
-    assert_allclose(result.total_stat, 12728.351643, rtol=1e-3)
+    assert_allclose(result.total_stat, 12811.238924, rtol=1e-3)
 
     pars = result.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
@@ -264,7 +264,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_2.mask_safe = mask_safe
 
     stat = fit.datasets.likelihood()
-    assert_allclose(stat, 5895.205587)
+    assert_allclose(stat, 5936.781716)
 
     # test model evaluation outside image
 

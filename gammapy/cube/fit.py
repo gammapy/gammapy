@@ -712,17 +712,6 @@ class MapEvaluator:
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
     """
-
-    _cached_properties = [
-        "lon_lat",
-        "solid_angle",
-        "bin_volume",
-        "geom_reco",
-        "energy_bin_width",
-        "energy_edges",
-        "energy_center",
-    ]
-
     def __init__(
         self, model=None, exposure=None, psf=None, edisp=None, evaluation_mode="local"
     ):
@@ -740,80 +729,6 @@ class MapEvaluator:
     def geom(self):
         """True energy map geometry (`~gammapy.maps.MapGeom`)"""
         return self.exposure.geom
-
-    @lazyproperty
-    def geom_reco(self):
-        """Reco energy map geometry (`~gammapy.maps.MapGeom`)"""
-        e_reco_axis = self.edisp.e_reco.copy(name="energy")
-        return self.geom_image.to_cube(axes=[e_reco_axis])
-
-    @property
-    def geom_image(self):
-        """Image map geometry (`~gammapy.maps.MapGeom`)"""
-        return self.geom.to_image()
-
-    @lazyproperty
-    def energy_center(self):
-        """True energy axis bin centers (`~astropy.units.Quantity`)"""
-        energy_axis = self.geom.get_axis_by_name("energy")
-        return energy_axis.center[:, np.newaxis, np.newaxis]
-
-    @lazyproperty
-    def energy_edges(self):
-        """True energy axis bin edges (`~astropy.units.Quantity`)"""
-        energy_axis = self.geom.get_axis_by_name("energy")
-        return energy_axis.edges[:, np.newaxis, np.newaxis]
-
-    @lazyproperty
-    def energy_bin_width(self):
-        """Energy axis bin widths (`astropy.units.Quantity`)"""
-        return np.diff(self.energy_edges, axis=0)
-
-    @lazyproperty
-    def lon_lat(self):
-        """Spatial coordinate pixel centers (``lon, lat`` tuple of `~astropy.units.Quantity`).
-        """
-        coord = self.geom_image.get_coord()
-        frame = self.model.frame
-
-        if frame is not None:
-            coordsys = "CEL" if frame == "icrs" else "GAL"
-
-            if not coord.coordsys == coordsys:
-                coord = coord.to_coordsys(coordsys)
-
-        return coord.lon, coord.lat
-
-    @property
-    def lon(self):
-        return self.lon_lat[0]
-
-    @property
-    def lat(self):
-        return self.lon_lat[1]
-
-    @lazyproperty
-    def solid_angle(self):
-        """Solid angle per pixel"""
-        return self.geom.solid_angle()
-
-    @lazyproperty
-    def bin_volume(self):
-        """Map pixel bin volume (solid angle times energy bin width)."""
-        omega = self.solid_angle
-        de = self.energy_bin_width
-        return omega * de
-
-    @property
-    def coords(self):
-        """Return evaluator coords"""
-        lon, lat = self.lon_lat
-        if self.edisp:
-            energy = self.edisp.e_reco.center[:, np.newaxis, np.newaxis]
-        else:
-            energy = self.energy_center
-
-        return {"lon": lon, "lat": lat, "energy": energy}
 
     @property
     def needs_update(self):
@@ -867,11 +782,9 @@ class MapEvaluator:
                     " Please check the starting values or position parameter boundaries of the model."
                 )
 
-            # Reset cached quantities
-            for cached_property in self._cached_properties:
-                self.__dict__.pop(cached_property, None)
-
-            self.coords_idx = geom.coord_to_idx(self.coords)[::-1]
+            coords = self.exposure.geom.to_image().get_coord()
+            idx_x, idx_y = geom.to_image().coord_to_idx(coords)
+            self.coords_idx = (Ellipsis, idx_y, idx_x)
 
         else:
             self.exposure = exposure
@@ -893,7 +806,7 @@ class MapEvaluator:
         For now, we simply multiply dnde with bin volume.
         """
         dnde = self.compute_dnde()
-        volume = self.bin_volume
+        volume = self.geom.bin_volume()
         return dnde * volume
 
     def apply_exposure(self, flux):
@@ -923,11 +836,7 @@ class MapEvaluator:
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reco energy bins
         """
-        loc = npred.geom.get_axis_index_by_name("energy")
-        data = np.rollaxis(npred.data, loc, len(npred.data.shape))
-        data = np.dot(data, self.edisp.pdf_matrix)
-        data = np.rollaxis(data, -1, loc)
-        return Map.from_geom(self.geom_reco, data=data, unit="")
+        return npred.apply_edisp(self.edisp)
 
     def compute_npred(self):
         """

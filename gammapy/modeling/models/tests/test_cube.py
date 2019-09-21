@@ -346,46 +346,6 @@ class TestSkyDiffuseCubeMapEvaluator:
 
 class TestSkyModelMapEvaluator:
     @staticmethod
-    def test_energy_center(evaluator):
-        val = evaluator.energy_center
-        assert val.shape == (3, 1, 1)
-        assert val.unit == "TeV"
-
-    @staticmethod
-    def test_energy_edges(evaluator):
-        val = evaluator.energy_edges
-        assert val.shape == (4, 1, 1)
-        assert val.unit == "TeV"
-
-    @staticmethod
-    def test_energy_bin_width(evaluator):
-        val = evaluator.energy_bin_width
-        assert val.shape == (3, 1, 1)
-        assert val.unit == "TeV"
-
-    @staticmethod
-    def test_lon_lat(evaluator):
-        val = evaluator.lon
-        assert val.shape == (4, 5)
-        assert val.unit == "deg"
-
-        val = evaluator.lat
-        assert val.shape == (4, 5)
-        assert val.unit == "deg"
-
-    @staticmethod
-    def test_solid_angle(evaluator):
-        val = evaluator.solid_angle
-        assert val.shape == (3, 4, 5)
-        assert val.unit == "sr"
-
-    @staticmethod
-    def test_bin_volume(evaluator):
-        val = evaluator.bin_volume
-        assert val.shape == (3, 4, 5)
-        assert val.unit == "TeV sr"
-
-    @staticmethod
     def test_compute_dnde(evaluator):
         out = evaluator.compute_dnde()
         assert out.shape == (3, 4, 5)

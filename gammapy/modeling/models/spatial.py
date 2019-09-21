@@ -59,7 +59,9 @@ class SkySpatialModel(Model):
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
-        coords = geom.get_coord()
+        # TODO: change to uniform coordinate frame names
+        coordsys = "CEL" if self.frame == "icrs" else "GAL"
+        coords = geom.get_coord(coordsys=coordsys)
         return self(coords.lon, coords.lat)
 
 

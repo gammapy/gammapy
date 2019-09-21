@@ -587,7 +587,7 @@ class WcsGeom(MapGeom):
         return pix
 
     @lru_cache()
-    def get_coord(self, idx=None, flat=False, mode="center"):
+    def get_coord(self, idx=None, flat=False, mode="center", coordsys=None):
         """Get map coordinates from the geometry.
 
         Parameters
@@ -610,7 +610,10 @@ class WcsGeom(MapGeom):
         axes_names = ["lon", "lat"] + [ax.name for ax in self.axes]
         cdict = dict(zip(axes_names, coords))
 
-        return MapCoord.create(cdict, coordsys=self.coordsys)
+        if coordsys is None:
+            coordsys = self.coordsys
+
+        return MapCoord.create(cdict, coordsys=self.coordsys).to_coordsys(coordsys)
 
     def coord_to_pix(self, coords):
         coords = MapCoord.create(coords, coordsys=self.coordsys)
@@ -688,6 +691,7 @@ class WcsGeom(MapGeom):
         idx = self.coord_to_idx(coords)
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
+    @lru_cache()
     def to_image(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
@@ -795,6 +799,18 @@ class WcsGeom(MapGeom):
         area_up_left = 0.5 * up * left * np.sin(angle_up_left)
 
         return u.Quantity(area_low_right + area_up_left, "sr", copy=False)
+
+    @lru_cache()
+    def bin_volume(self):
+        """Bin volume (`~astropy.units.Quantity`)"""
+        bin_volume = self.to_image().solid_angle()
+
+        for idx, ax in enumerate(self.axes):
+            shape = self.ndim * [1]
+            shape[-(idx + 3)] = -1
+            bin_volume = bin_volume * ax.bin_width.reshape(tuple(shape))
+
+        return bin_volume
 
     def separation(self, center):
         """Compute sky separation wrt a given center.
