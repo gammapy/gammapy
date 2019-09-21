@@ -1019,8 +1019,14 @@ class MapCoord:
             skycoord = lonlat_to_skycoord(self.lon, self.lat, self.coordsys)
             lon, lat, frame = skycoord_to_lonlat(skycoord, coordsys=coordsys)
             data = copy.deepcopy(self._data)
-            data["lon"] = u.Quantity(lon, unit="deg", copy=False)
-            data["lat"] = u.Quantity(lat, unit="deg", copy=False)
+            if isinstance(self.lon, u.Quantity):
+                lon = u.Quantity(lon, unit="deg", copy=False)
+
+            if isinstance(self.lon, u.Quantity):
+                lat = u.Quantity(lat, unit="deg", copy=False)
+
+            data["lon"] = lon
+            data["lat"] = lat
             return self.__class__(data, coordsys, self._match_by_name)
 
     def apply_mask(self, mask):
