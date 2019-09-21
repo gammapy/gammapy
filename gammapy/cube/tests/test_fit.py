@@ -330,7 +330,7 @@ def test_create(geom, geom_etrue):
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
-
+@requires_data()
 def test_stack(geom, geom_etrue):
 
     m = Map.from_geom(geom)
