@@ -346,16 +346,6 @@ class TestSkyDiffuseCubeMapEvaluator:
 
 class TestSkyModelMapEvaluator:
     @staticmethod
-    def test_lon_lat(evaluator):
-        val = evaluator.lon
-        assert val.shape == (4, 5)
-        assert val.unit == "deg"
-
-        val = evaluator.lat
-        assert val.shape == (4, 5)
-        assert val.unit == "deg"
-
-    @staticmethod
     def test_compute_dnde(evaluator):
         out = evaluator.compute_dnde()
         assert out.shape == (3, 4, 5)

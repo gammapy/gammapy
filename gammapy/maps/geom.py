@@ -851,12 +851,14 @@ class MapCoord:
     @property
     def theta(self):
         """Theta co-latitude angle in radians."""
-        return np.pi / 2.0 - np.radians(self.lat)
+        theta = u.Quantity(self.lat, unit="deg", copy=False).to_value("rad")
+        return np.pi / 2.0 - theta
 
     @property
     def phi(self):
         """Phi longitude angle in radians."""
-        return np.radians(self.lon)
+        phi = u.Quantity(self.lat, unit="deg", copy=False).to_value("rad")
+        return phi
 
     @property
     def coordsys(self):

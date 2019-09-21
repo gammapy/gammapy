@@ -667,11 +667,6 @@ class MapEvaluator:
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
     """
-
-    _cached_properties = [
-        "lon_lat",
-    ]
-
     def __init__(
         self, model=None, exposure=None, psf=None, edisp=None, evaluation_mode="local"
     ):
@@ -689,41 +684,6 @@ class MapEvaluator:
     def geom(self):
         """True energy map geometry (`~gammapy.maps.MapGeom`)"""
         return self.exposure.geom
-
-    @lazyproperty
-    def lon_lat(self):
-        """Spatial coordinate pixel centers (``lon, lat`` tuple of `~astropy.units.Quantity`).
-        """
-        coord = self.geom.to_image().get_coord()
-        frame = self.model.frame
-
-        if frame is not None:
-            coordsys = "CEL" if frame == "icrs" else "GAL"
-
-            if not coord.coordsys == coordsys:
-                coord = coord.to_coordsys(coordsys)
-
-        return coord.lon, coord.lat
-
-    @property
-    def lon(self):
-        return self.lon_lat[0]
-
-    @property
-    def lat(self):
-        return self.lon_lat[1]
-
-    @property
-    def coords(self):
-        """Return evaluator coords"""
-        lon, lat = self.lon_lat
-        if self.edisp:
-            energy = self.edisp.e_reco.center[:, np.newaxis, np.newaxis]
-        else:
-            energy_axis = self.geom.get_axis_by_name("energy")
-            energy = energy_axis.center[:, np.newaxis, np.newaxis]
-
-        return {"lon": lon, "lat": lat, "energy": energy}
 
     @property
     def needs_update(self):
@@ -776,10 +736,6 @@ class MapEvaluator:
                     f"Position {self.model.position!r} of model component is outside the image boundaries."
                     " Please check the starting values or position parameter boundaries of the model."
                 )
-
-            # Reset cached quantities
-            for cached_property in self._cached_properties:
-                self.__dict__.pop(cached_property, None)
 
             coords = self.exposure.geom.to_image().get_coord()
             idx_x, idx_y = geom.to_image().coord_to_idx(coords)
