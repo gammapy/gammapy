@@ -22,7 +22,7 @@ def geom():
     ebounds = np.logspace(-1.0, 1.0, 3)
     axis = MapAxis.from_edges(ebounds, name="energy", unit=u.TeV)
     return WcsGeom.create(
-        skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
+        skydir=(266.42, -29.0), binsz=0.02, width=(2, 2), coordsys="CEL", axes=[axis]
     )
 
 
@@ -31,7 +31,7 @@ def geom_etrue():
     ebounds_true = np.logspace(-1.0, 1.0, 4)
     axis = MapAxis.from_edges(ebounds_true, name="energy", unit=u.TeV)
     return WcsGeom.create(
-        skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
+        skydir=(266.42, -29.0), binsz=0.02, width=(2, 2), coordsys="CEL", axes=[axis]
     )
 
 
