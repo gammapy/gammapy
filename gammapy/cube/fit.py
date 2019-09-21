@@ -720,11 +720,6 @@ class MapEvaluator:
         return energy_axis.edges[:, np.newaxis, np.newaxis]
 
     @lazyproperty
-    def energy_bin_width(self):
-        """Energy axis bin widths (`astropy.units.Quantity`)"""
-        return np.diff(self.energy_edges, axis=0)
-
-    @lazyproperty
     def lon_lat(self):
         """Spatial coordinate pixel centers (``lon, lat`` tuple of `~astropy.units.Quantity`).
         """
@@ -746,18 +741,6 @@ class MapEvaluator:
     @property
     def lat(self):
         return self.lon_lat[1]
-
-    @lazyproperty
-    def solid_angle(self):
-        """Solid angle per pixel"""
-        return self.geom.solid_angle()
-
-    @lazyproperty
-    def bin_volume(self):
-        """Map pixel bin volume (solid angle times energy bin width)."""
-        omega = self.solid_angle
-        de = self.energy_bin_width
-        return omega * de
 
     @property
     def coords(self):
@@ -848,7 +831,7 @@ class MapEvaluator:
         For now, we simply multiply dnde with bin volume.
         """
         dnde = self.compute_dnde()
-        volume = self.bin_volume
+        volume = self.geom.bin_volume()
         return dnde * volume
 
     def apply_exposure(self, flux):
