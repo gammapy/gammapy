@@ -695,18 +695,13 @@ class MapEvaluator:
     def geom_reco(self):
         """Reco energy map geometry (`~gammapy.maps.MapGeom`)"""
         e_reco_axis = self.edisp.e_reco.copy(name="energy")
-        return self.geom_image.to_cube(axes=[e_reco_axis])
-
-    @property
-    def geom_image(self):
-        """Image map geometry (`~gammapy.maps.MapGeom`)"""
-        return self.geom.to_image()
+        return self.geom.to_image().to_cube(axes=[e_reco_axis])
 
     @lazyproperty
     def lon_lat(self):
         """Spatial coordinate pixel centers (``lon, lat`` tuple of `~astropy.units.Quantity`).
         """
-        coord = self.geom_image.get_coord()
+        coord = self.geom.to_image().get_coord()
         frame = self.model.frame
 
         if frame is not None:
