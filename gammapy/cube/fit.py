@@ -671,7 +671,6 @@ class MapEvaluator:
     _cached_properties = [
         "lon_lat",
         "geom_reco",
-        "energy_center",
     ]
 
     def __init__(
@@ -704,12 +703,6 @@ class MapEvaluator:
         return self.geom.to_image()
 
     @lazyproperty
-    def energy_center(self):
-        """True energy axis bin centers (`~astropy.units.Quantity`)"""
-        energy_axis = self.geom.get_axis_by_name("energy")
-        return energy_axis.center[:, np.newaxis, np.newaxis]
-
-    @lazyproperty
     def lon_lat(self):
         """Spatial coordinate pixel centers (``lon, lat`` tuple of `~astropy.units.Quantity`).
         """
@@ -739,7 +732,8 @@ class MapEvaluator:
         if self.edisp:
             energy = self.edisp.e_reco.center[:, np.newaxis, np.newaxis]
         else:
-            energy = self.energy_center
+            energy_axis = self.geom.get_axis_by_name("energy")
+            energy = energy_axis.center[:, np.newaxis, np.newaxis]
 
         return {"lon": lon, "lat": lat, "energy": energy}
 
