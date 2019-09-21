@@ -587,7 +587,7 @@ class WcsGeom(MapGeom):
         return pix
 
     @lru_cache()
-    def get_coord(self, idx=None, flat=False, mode="center"):
+    def get_coord(self, idx=None, flat=False, mode="center", coordsys=None):
         """Get map coordinates from the geometry.
 
         Parameters
@@ -610,7 +610,10 @@ class WcsGeom(MapGeom):
         axes_names = ["lon", "lat"] + [ax.name for ax in self.axes]
         cdict = dict(zip(axes_names, coords))
 
-        return MapCoord.create(cdict, coordsys=self.coordsys)
+        if coordsys is None:
+            coordsys = self.coordsys
+
+        return MapCoord.create(cdict, coordsys=self.coordsys).to_coordsys(coordsys)
 
     def coord_to_pix(self, coords):
         coords = MapCoord.create(coords, coordsys=self.coordsys)
