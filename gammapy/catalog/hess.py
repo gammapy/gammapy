@@ -759,7 +759,7 @@ class SourceCatalogLargeScaleHGPS:
 
         Parameters
         ----------
-        glon : `~astropy.coordinates.Longitude`
+        glon : `~astropy.coordinates.Angle`
             Galactic Longitude.
         """
         return self._interpolate_parameter("Surface_Brightness", glon)
@@ -769,7 +769,7 @@ class SourceCatalogLargeScaleHGPS:
 
         Parameters
         ----------
-        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+        glon : `~astropy.coordinates.Angle`
             Galactic Longitude.
         """
         return self._interpolate_parameter("Surface_Brightness_Err", glon)
@@ -779,7 +779,7 @@ class SourceCatalogLargeScaleHGPS:
 
         Parameters
         ----------
-        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+        glon : `~astropy.coordinates.Angle`
             Galactic Longitude.
         """
         return self._interpolate_parameter("Width", glon)
@@ -789,7 +789,7 @@ class SourceCatalogLargeScaleHGPS:
 
         Parameters
         ----------
-        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+        glon : `~astropy.coordinates.Angle`
             Galactic Longitude.
         """
         return self._interpolate_parameter("Width_Err", glon)
@@ -799,7 +799,7 @@ class SourceCatalogLargeScaleHGPS:
 
         Parameters
         ----------
-        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+        glon : `~astropy.coordinates.Angle`
             Galactic Longitude.
         """
         return self._interpolate_parameter("GLAT", glon)
@@ -809,7 +809,7 @@ class SourceCatalogLargeScaleHGPS:
 
         Parameters
         ----------
-        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+        glon : `~astropy.coordinates.Angle`
             Galactic Longitude.
         """
         return self._interpolate_parameter("GLAT_Err", glon)
