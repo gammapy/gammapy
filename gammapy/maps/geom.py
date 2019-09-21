@@ -420,6 +420,11 @@ class MapAxis:
         pix = np.arange(self.nbin, dtype=float)
         return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
 
+    @lazyproperty
+    def bin_width(self):
+        """Return array of bin widths"""
+        return np.diff(self.edges)
+
     @property
     def nbin(self):
         """Return number of bins."""
