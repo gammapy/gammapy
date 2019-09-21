@@ -670,7 +670,6 @@ class MapEvaluator:
 
     _cached_properties = [
         "lon_lat",
-        "geom_reco",
     ]
 
     def __init__(
@@ -690,12 +689,6 @@ class MapEvaluator:
     def geom(self):
         """True energy map geometry (`~gammapy.maps.MapGeom`)"""
         return self.exposure.geom
-
-    @lazyproperty
-    def geom_reco(self):
-        """Reco energy map geometry (`~gammapy.maps.MapGeom`)"""
-        e_reco_axis = self.edisp.e_reco.copy(name="energy")
-        return self.geom.to_image().to_cube(axes=[e_reco_axis])
 
     @lazyproperty
     def lon_lat(self):
