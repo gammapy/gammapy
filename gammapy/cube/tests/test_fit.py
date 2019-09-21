@@ -137,14 +137,14 @@ def test_fake(sky_model, geom, geom_etrue):
 
 
 @requires_data()
-def test_different_exposure_unit(sky_model, geom, geom_etrue):
-    dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=False)
+def test_different_exposure_unit(sky_model, geom):
+    dataset_ref = get_map_dataset(sky_model, geom, geom, edisp=False)
     npred_ref = dataset_ref.npred()
 
-    ebounds_true = np.logspace(2, 4, 4)
+    ebounds_true = np.logspace(2, 4, 3)
     axis = MapAxis.from_edges(ebounds_true, name="energy", unit="GeV")
     geom_gev = WcsGeom.create(
-        skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
+        skydir=(266.40498829, -28.93617776), binsz=0.02, width=(2, 2), coordsys="CEL", axes=[axis]
     )
 
     dataset = get_map_dataset(sky_model, geom, geom_gev, edisp=False)

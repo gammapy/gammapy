@@ -781,7 +781,9 @@ class MapEvaluator:
             for cached_property in self._cached_properties:
                 self.__dict__.pop(cached_property, None)
 
-            self.coords_idx = geom.coord_to_idx(self.coords)[::-1]
+            coords = self.exposure.geom.to_image().get_coord()
+            idx_x, idx_y = geom.to_image().coord_to_idx(coords)
+            self.coords_idx = (Ellipsis, idx_y, idx_x)
 
         else:
             self.exposure = exposure
