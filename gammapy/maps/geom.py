@@ -857,7 +857,7 @@ class MapCoord:
     @property
     def phi(self):
         """Phi longitude angle in radians."""
-        phi = u.Quantity(self.lat, unit="deg", copy=False).to_value("rad")
+        phi = u.Quantity(self.lon, unit="deg", copy=False).to_value("rad")
         return phi
 
     @property
