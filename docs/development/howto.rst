@@ -418,7 +418,7 @@ the unicode literals warnings to clean up the output of the tool:
     import click
     click.disable_unicode_literals_warning = True
 
-See `here <http://click.pocoo.org/5/python3/#unicode-literals>`_ for further
+See `here <http://click.pocoo.org/5/python3/#unicode-literals>`__ for further
 information.
 
 
@@ -878,7 +878,7 @@ Class attributes
 
 Class attributes (data members) and properties are currently a bit of a mess.
 Attributes are listed in an *Attributes* section because I've listed them in a class-level
-docstring attributes section as recommended `here`__.
+docstring attributes section.
 Properties are listed in separate *Attributes summary* and *Attributes Documentation*
 sections, which is confusing to users ("what's the difference between attributes and properties?").
 
@@ -1027,6 +1027,6 @@ hosted on their servers and they build the search index for us based on this
 More information on DocSearch can be found `here
 <https://community.algolia.com/docsearch/what-is-docsearch.html>`__. The
 analytics related to the search index are available `here
-<https://www.algolia.com/apps/BH4D9OD16A/analytics/overview>`_. You need an
+<https://www.algolia.com/apps/BH4D9OD16A/analytics/overview>`__. You need an
 Algolia account and access to the App in order to view this page. Ask for
 permission at accounts+documentation-search@algolia.com (APP-ID: BH4D9OD16A)
