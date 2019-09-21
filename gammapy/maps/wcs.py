@@ -797,6 +797,18 @@ class WcsGeom(MapGeom):
 
         return u.Quantity(area_low_right + area_up_left, "sr", copy=False)
 
+    @lru_cache()
+    def bin_volume(self):
+        """Bin volume (`~astropy.units.Quantity`)"""
+        bin_volume = self.to_image().solid_angle()
+
+        for idx, ax in enumerate(self.axes):
+            shape = self.ndim * [1]
+            shape[-(idx + 3)] = -1
+            bin_volume = bin_volume * ax.bin_width.reshape(tuple(shape))
+
+        return bin_volume
+
     def separation(self, center):
         """Compute sky separation wrt a given center.
 
