@@ -57,6 +57,11 @@ class SkySpatialModel(Model):
         except IndexError:
             raise ValueError("Model does not have a defined center position")
 
+    def evaluate_geom(self, geom):
+        """Evaluate model on `~gammapy.maps.Geom`."""
+        coords = geom.get_coord()
+        return self(coords.lon, coords.lat)
+
 
 class SkyPointSource(SkySpatialModel):
     r"""Point Source.
@@ -93,20 +98,22 @@ class SkyPointSource(SkySpatialModel):
         return 0 * u.deg
 
     @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0):
-        """Evaluate model."""
-        wrapval = lon_0 + 180 * u.deg
-        lon = Angle(lon).wrap_at(wrapval)
+    def _grid_weights(x, y, x0, y0):
+        """Compute 4-pixel weights such that centroid is preserved."""
+        dx = np.abs(x - x0)
+        dx = np.where(dx < 1, 1 - dx, 0)
 
-        _, grad_lon = np.gradient(lon)
-        grad_lat, _ = np.gradient(lat)
-        lon_diff = np.abs((lon - lon_0) / grad_lon)
-        lat_diff = np.abs((lat - lat_0) / grad_lat)
+        dy = np.abs(y - y0)
+        dy = np.where(dy < 1, 1 - dy, 0)
 
-        lon_val = np.select([lon_diff < 1], [1 - lon_diff], 0) / np.abs(grad_lon)
-        lat_val = np.select([lat_diff < 1], [1 - lat_diff], 0) / np.abs(grad_lat)
+        return dx * dy
 
-        return lon_val * lat_val
+    def evaluate_geom(self, geom):
+        """Evaluate model on `~gammapy.maps.Geom`."""
+        x, y = geom.get_pix()
+        x0, y0 = self.position.to_pixel(geom.wcs)
+        w = self._grid_weights(x, y, x0, y0)
+        return w / geom.solid_angle()
 
 
 class SkyGaussian(SkySpatialModel):

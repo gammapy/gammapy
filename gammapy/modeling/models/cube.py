@@ -30,6 +30,10 @@ class SkyModelBase(Model):
     def __call__(self, lon, lat, energy):
         return self.evaluate(lon, lat, energy)
 
+    def evaluate_geom(self, geom):
+        coords = geom.get_coord()
+        return self(coords.lon, coords.lat, coords["energy"])
+
 
 class SkyModels:
     """Collection of `~gammapy.modeling.models.SkyModel`
@@ -280,6 +284,13 @@ class SkyModel(SkyModelBase):
         """
         val_spatial = self.spatial_model(lon, lat)  # pylint:disable=not-callable
         val_spectral = self.spectral_model(energy)  # pylint:disable=not-callable
+        return val_spatial * val_spectral
+
+    def evaluate_geom(self, geom):
+        """Evaluate model on `~gammapy.maps.Geom`."""
+        val_spatial = self.spatial_model.evaluate_geom(geom.to_image())
+        energy = geom.get_axis_by_name("energy").center[:, np.newaxis, np.newaxis]
+        val_spectral = self.spectral_model(energy)
         return val_spatial * val_spectral
 
     def copy(self, **kwargs):

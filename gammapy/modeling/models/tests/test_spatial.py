@@ -15,18 +15,20 @@ from gammapy.utils.testing import requires_data
 
 
 def test_sky_point_source():
-    model = SkyPointSource(lon_0="2.5 deg", lat_0="2.5 deg")
-    lat, lon = np.mgrid[0:6, 0:6] * u.deg
-    val = model(lon, lat)
-    assert val.unit == "deg-2"
-    assert_allclose(val.sum().value, 1)
-    radius = model.evaluation_radius
-    assert radius.unit == "deg"
-    assert_allclose(radius.value, 0)
-    assert model.frame == "galactic"
+    geom = WcsGeom.create(skydir=(2.4, 2.3), npix=(10, 10), binsz=0.3)
+    model = SkyPointSource(lon_0="2.5 deg", lat_0="2.5 deg", frame="icrs")
 
-    assert_allclose(model.position.l.deg, 2.5)
-    assert_allclose(model.position.b.deg, 2.5)
+    assert model.evaluation_radius.unit == "deg"
+    assert_allclose(model.evaluation_radius.value, 0)
+
+    assert model.frame == "icrs"
+
+    assert_allclose(model.position.ra.deg, 2.5)
+    assert_allclose(model.position.dec.deg, 2.5)
+
+    val = model.evaluate_geom(geom)
+    assert val.unit == "sr-1"
+    assert_allclose(np.sum(val * geom.solid_angle()), 1)
 
 
 def test_sky_gaussian():

@@ -12,7 +12,7 @@ from gammapy.data import GTI
 from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
-from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
+from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels, SkyPointSource
 from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
@@ -737,7 +737,7 @@ class MapEvaluator:
             if not coord.coordsys == coordsys:
                 coord = coord.to_coordsys(coordsys)
 
-        return (coord.lon, coord.lat)
+        return coord.lon, coord.lat
 
     @property
     def lon(self):
@@ -840,9 +840,7 @@ class MapEvaluator:
             Sky cube with data filled with evaluated model values.
             Units: ``cm-2 s-1 TeV-1 deg-2``
         """
-        coord = (self.lon, self.lat, self.energy_center)
-        dnde = self.model.evaluate(*coord)
-        return dnde
+        return self.model.evaluate_geom(self.geom)
 
     def compute_flux(self):
         """Compute model integral flux over map pixel volumes.
@@ -851,8 +849,7 @@ class MapEvaluator:
         """
         dnde = self.compute_dnde()
         volume = self.bin_volume
-        flux = dnde * volume
-        return flux
+        return dnde * volume
 
     def apply_exposure(self, flux):
         """Compute npred cube
