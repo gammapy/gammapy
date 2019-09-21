@@ -652,6 +652,28 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=convolved_data)
 
+    def apply_edisp(self, edisp):
+        """Apply energy dispersion to map. Requires energy axis.
+
+        Parameters
+        ----------
+        edisp : `EnergyDispersion`
+            Energy dispersion.
+
+        Returns
+        -------
+        map : `WcsNDMap`
+            Map with energy dispersion applied.
+        """
+        loc = self.geom.get_axis_index_by_name("energy")
+        data = np.rollaxis(self.data, loc, len(self.data.shape))
+        data = np.dot(data, edisp.pdf_matrix)
+        data = np.rollaxis(data, -1, loc)
+
+        e_reco_axis = edisp.e_reco.copy(name="energy")
+        geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
+        return self._init_copy(geom=geom_reco, data=data)
+
     def cutout(self, position, width, mode="trim"):
         """
         Create a cutout around a given position.

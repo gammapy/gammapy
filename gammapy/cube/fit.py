@@ -840,11 +840,7 @@ class MapEvaluator:
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reco energy bins
         """
-        loc = npred.geom.get_axis_index_by_name("energy")
-        data = np.rollaxis(npred.data, loc, len(npred.data.shape))
-        data = np.dot(data, self.edisp.pdf_matrix)
-        data = np.rollaxis(data, -1, loc)
-        return Map.from_geom(self.geom_reco, data=data, unit="")
+        return npred.apply_edisp(self.edisp)
 
     def compute_npred(self):
         """
