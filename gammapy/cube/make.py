@@ -273,19 +273,22 @@ class MapMakerObs:
         for name in selection:
             getattr(self, "_make_" + name)()
 
-        background_model = BackgroundModel(self.maps["background"])
+        bkg = self.maps.get("background")
 
-        psf = self.maps.get("psf")
-        edisp = self.maps.get("edisp")
+        if bkg is not None:
+            background_model = BackgroundModel(bkg)
+        else:
+            background_model = None
 
         dataset = MapDataset(
-            counts=self.maps["counts"],
-            exposure=self.maps["exposure"],
+            counts=self.maps.get("counts"),
+            exposure=self.maps.get("exposure"),
             background_model=background_model,
-            psf=psf,
-            edisp=edisp,
+            psf=self.maps.get("psf"),
+            edisp=self.maps.get("edisp"),
             gti=self.observation.gti,
             name="obs_{}".format(self.observation.obs_id),
+            mask_safe=~self.fov_mask
         )
 
         if "exposure_irf" in self.maps:
@@ -307,8 +310,11 @@ class MapMakerObs:
             aeff=self.observation.aeff,
             geom=self.geom_true,
         )
+        mask_irf = self._fov_mask(exposure_irf.geom.get_coord())
+        exposure_irf_masked = exposure_irf.copy()
+        exposure_irf_masked.data[..., mask_irf] = 0
         # the exposure associated with the IRFS
-        self.maps["exposure_irf"] = exposure_irf
+        self.maps["exposure_irf"] = exposure_irf_masked
 
         # The real exposure map, with FoV cuts
         factor = self.geom.data_shape[-1] / self.geom_true.data_shape[-1]
