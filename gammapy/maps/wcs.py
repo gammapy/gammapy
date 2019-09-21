@@ -688,6 +688,7 @@ class WcsGeom(MapGeom):
         idx = self.coord_to_idx(coords)
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
+    @lru_cache()
     def to_image(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
