@@ -59,12 +59,6 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
     edispmap = Map.from_geom(geom, unit="")
     edispmap.data[:, :, valid[0], valid[1]] += edisp_values.to_value(edispmap.unit)
 
-    if exposure_map is not None and exposure_map.geom.ndim == 3:
-        geom_image = exposure_map.geom.to_image()
-        geom = geom_image.to_cube([migra_axis.squash(), energy_axis])
-        data = exposure_map.data[:, np.newaxis, :, :]
-        exposure_map = Map.from_geom(geom=geom, data=data, unit=exposure_map.unit)
-
     return EDispMap(edispmap, exposure_map)
 
 
@@ -131,6 +125,15 @@ class EDispMap:
             raise ValueError("Incorrect migra axis position in input Map")
 
         self.edisp_map = edisp_map
+
+        if exposure_map is not None and exposure_map.geom.ndim == 3:
+            energy_axis = edisp_map.geom.get_axis_by_name("energy")
+            migra_axis = edisp_map.geom.get_axis_by_name("migra")
+            geom_image = exposure_map.geom.to_image()
+            geom = geom_image.to_cube([migra_axis.squash(), energy_axis])
+            data = exposure_map.data[:, np.newaxis, :, :]
+            exposure_map = Map.from_geom(geom=geom, data=data, unit=exposure_map.unit)
+
         self.exposure_map = exposure_map
 
     @classmethod
@@ -317,7 +320,9 @@ class EDispMap:
         self.edisp_map.data[slice_] *= self.exposure_map.data[slice_]
         self.edisp_map.data[slice_] += other.edisp_map.data * other.exposure_map.data
         self.exposure_map.data[slice_] += other.exposure_map.data
-        self.edisp_map.data[slice_] /= self.exposure_map.data[slice_]
+        with np.errstate(invalid="ignore"):
+            self.edisp_map.data[slice_] /= self.exposure_map.data[slice_]
+            self.edisp_map.data = np.nan_to_num(self.edisp_map.data)
 
     def copy(self):
         """Copy EDispMap"""
