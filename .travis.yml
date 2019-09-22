@@ -11,6 +11,8 @@ language: c
 os:
     - linux
 
+stage: Comprehensive tests
+
 # This is a signal to travis-ci to use the new build infrastructure
 sudo: false
 
@@ -46,6 +48,12 @@ env:
         - TEST_FERMIPY=false
         - RUN_INSTALL=true
 
+stages:
+   # Do the style check and a single test job, don't proceed if it fails
+   - name: Initial tests
+   # Test docs, dev dependencies, and without optional dependencies
+   - name: Comprehensive tests
+
 matrix:
 
     # Don't wait for allowed failures
@@ -54,7 +62,8 @@ matrix:
     include:
 
         # Main test, used for coverage
-        - env: TEST_COVERAGE=true CMD='make test-cov'
+        - stage: Initial tests
+          env: TEST_COVERAGE=true CMD='make test-cov'
                PIP_DEPENDENCIES="$PIP_DEPENDENCIES pytest-cov"
 
         # MacOS X tests
@@ -68,7 +77,8 @@ matrix:
                PIP_DEPENDENCIES='pytest-astropy parfive jsonschema'
 
         # Run tests without GAMMAPY_EXTRA available
-        - env: CMD='make test'
+        - stage: Initial tests
+          env: CMD='make test'
                FETCH_GAMMAPY_EXTRA=false FETCH_GAMMAPY_DATA=false
 
         # Build docs
