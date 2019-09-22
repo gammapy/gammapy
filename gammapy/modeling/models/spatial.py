@@ -5,7 +5,7 @@ import numpy as np
 import scipy.integrate
 import scipy.special
 import astropy.units as u
-from astropy.coordinates import Angle, Latitude, Longitude, SkyCoord
+from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
@@ -72,7 +72,7 @@ class SkyPointSource(SkySpatialModel):
 
     Parameters
     ----------
-    lon_0 : `~astropy.coordinates.Longitude`
+    lon_0 : `~astropy.coordinates.Angle`
         :math:`lon_0`
     lat_0 : `~astropy.coordinates.Latitude`
         :math:`lat_0`
@@ -84,10 +84,8 @@ class SkyPointSource(SkySpatialModel):
 
     def __init__(self, lon_0, lat_0, frame="galactic"):
         self.frame = frame
-        self.lon_0 = Parameter(
-            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
-        )
-        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.lon_0 = Parameter("lon_0", Angle(lon_0))
+        self.lat_0 = Parameter("lat_0", Angle(lat_0), min=-90, max=90)
 
         super().__init__([self.lon_0, self.lat_0])
 
@@ -163,9 +161,9 @@ class SkyGaussian(SkySpatialModel):
 
     Parameters
     ----------
-    lon_0 : `~astropy.coordinates.Longitude`
+    lon_0 : `~astropy.coordinates.Angle`
         :math:`\text{lon}_0`: `lon` coordinate for the center of the Gaussian.
-    lat_0 : `~astropy.coordinates.Latitude`
+    lat_0 : `~astropy.coordinates.Angle`
         :math:`\text{lat}_0`: `lat` coordinate for the center of the Gaussian.
     sigma : `~astropy.coordinates.Angle`
         Length of the major semiaxis of the Gaussian, in angular units.
@@ -216,10 +214,8 @@ class SkyGaussian(SkySpatialModel):
 
     def __init__(self, lon_0, lat_0, sigma, e=0, phi="0 deg", frame="galactic"):
         self.frame = frame
-        self.lon_0 = Parameter(
-            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
-        )
-        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.lon_0 = Parameter("lon_0", Angle(lon_0))
+        self.lat_0 = Parameter("lat_0", Angle(lat_0), min=-90, max=90)
         self.sigma = Parameter("sigma", Angle(sigma), min=0)
         self.e = Parameter("e", e, min=0, max=1, frozen=True)
         self.phi = Parameter("phi", Angle(phi), frozen=True)
@@ -279,9 +275,9 @@ class SkyDisk(SkySpatialModel):
 
     Parameters
     ----------
-    lon_0 : `~astropy.coordinates.Longitude`
+    lon_0 : `~astropy.coordinates.Angle`
         :math:`\text{lon}_0`: `lon` coordinate for the center of the ellipse.
-    lat_0 : `~astropy.coordinates.Latitude`
+    lat_0 : `~astropy.coordinates.Angle`
         :math:`\text{lat}_0`: `lat` coordinate for the center of the ellipse.
     r_0 : `~astropy.coordinates.Angle`
         :math:`a`: length of the major semiaxis, in angular units.
@@ -339,10 +335,8 @@ class SkyDisk(SkySpatialModel):
         self, lon_0, lat_0, r_0, e=0, phi="0 deg", edge="0.01 deg", frame="galactic"
     ):
         self.frame = frame
-        self.lon_0 = Parameter(
-            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
-        )
-        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.lon_0 = Parameter("lon_0", Angle(lon_0))
+        self.lat_0 = Parameter("lat_0", Angle(lat_0), min=-90, max=90)
         self.r_0 = Parameter("r_0", Angle(r_0), min=0)
         self.e = Parameter("e", e, min=0, max=1, frozen=True)
         self.phi = Parameter("phi", Angle(phi), frozen=True)
@@ -419,9 +413,9 @@ class SkyShell(SkySpatialModel):
 
     Parameters
     ----------
-    lon_0 : `~astropy.coordinates.Longitude`
+    lon_0 : `~astropy.coordinates.Angle`
         :math:`lon_0`
-    lat_0 : `~astropy.coordinates.Latitude`
+    lat_0 : `~astropy.coordinates.Angle`
         :math:`lat_0`
     radius : `~astropy.coordinates.Angle`
         Inner radius, :math:`r_{in}`
@@ -436,10 +430,8 @@ class SkyShell(SkySpatialModel):
 
     def __init__(self, lon_0, lat_0, radius, width, frame="galactic"):
         self.frame = frame
-        self.lon_0 = Parameter(
-            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
-        )
-        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.lon_0 = Parameter("lon_0", Angle(lon_0))
+        self.lat_0 = Parameter("lat_0", Angle(lat_0), min=-90, max=90)
         self.radius = Parameter("radius", Angle(radius))
         self.width = Parameter("width", Angle(width))
 
