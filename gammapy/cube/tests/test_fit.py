@@ -72,7 +72,7 @@ def get_psf(geom_etrue):
 
 @pytest.fixture
 def sky_model():
-    spatial_model = SkyGaussian(lon_0="0.2 deg", lat_0="0.1 deg", sigma="0.2 deg")
+    spatial_model = SkyGaussian(lon_0="0.2 deg", lat_0="0.1 deg", sigma="0.2 deg", frame="galactic")
     spectral_model = PowerLaw(
         index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )

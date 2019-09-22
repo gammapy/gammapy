@@ -17,7 +17,7 @@ def test_simulate():
     )
 
     # Define sky model to simulate the data
-    spatial_model = SkyGaussian(lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg")
+    spatial_model = SkyGaussian(lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic")
     spectral_model = PowerLaw(
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
