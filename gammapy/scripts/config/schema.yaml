@@ -34,6 +34,7 @@ properties:
                 default_all: "."
                 default_basic: "."
                 default_1d: "."
+                default_3d: "."
             logging:
                 type: object
                 default_all: {}
