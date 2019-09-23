@@ -144,8 +144,8 @@ def config_analysis_data():
 def test_analysis(config_analysis_data):
     analysis = Analysis(config_analysis_data, template="1d")
     analysis.get_observations()
-    analysis.reduce()
-    analysis.fit()
+    analysis.get_datasets()
+    analysis.run_fit()
     analysis.get_flux_points()
     assert len(analysis.extraction.spectrum_observations) == 2
     assert len(analysis.flux_points_dataset.data.table) == 4

@@ -69,6 +69,7 @@ class Analysis:
         self.maps = None
         self.psf_kernel = None
         self.model = None
+        self.fit = None
         self.fit_result = None
         self.flux_points_dataset = None
 
@@ -82,12 +83,20 @@ class Analysis:
         """Configuration settings for the analysis session."""
         return self.config.settings
 
-    def fit(self, optimize_opts=None):
+    def run_fit(self, optimize_opts=None):
         """Fitting reduced data sets to model."""
-        if self.settings["reduction"]["data_reducer"] == "1d":
-            if self._validate_fitting_settings_1d():
-                self._read_model()
-                self._fit_reduced_data_1d(optimize_opts=optimize_opts)
+        if self.settings["reduction"]["data_reducer"] == "1d" and self._validate_fitting_settings_1d():
+            for obs in self.datasets.datasets:
+                # TODO: fit_range handled in jsonschema validation class
+                if "fit_range" in self.settings["fit"]:
+                    e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
+                    e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
+                    obs.mask_fit = obs.counts.energy_mask(e_min, e_max)
+                obs.model = self.model
+            log.info("Fitting with joint likelihood.")
+            self.fit = Fit(self.datasets)
+            self.fit_result = self.fit.run(optimize_opts=optimize_opts)
+            log.info(self.fit_result)
         else:
             # TODO raise error?
             log.info("Fitting available only for joint likelihood with 1D spectrum.")
@@ -180,7 +189,7 @@ class Analysis:
         for obs in self.observations.list:
             log.info(obs)
 
-    def reduce(self):
+    def get_datasets(self):
         """Produce reduced data sets."""
         if not self._validate_reduction_settings():
             return False
@@ -231,20 +240,6 @@ class Analysis:
             axis_params = self.settings["geometry"]["axes"]["e_true"]
             e_true = MapAxis.from_bounds(**axis_params)
         return e_reco, e_true
-
-    def _fit_reduced_data_1d(self, optimize_opts=None):
-        """Fit data to models as joint-likelihood with 1D spectrum."""
-        for obs in self.datasets.datasets:
-            # TODO: fit_range handled in jsonschema validation class
-            if "fit_range" in self.settings["fit"]:
-                e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
-                e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
-                obs.mask_fit = obs.counts.energy_mask(e_min, e_max)
-            obs.model = self.model
-        log.info("Fitting spectra to model with joint likelihood.")
-        fit = Fit(self.datasets)
-        self.fit_result = fit.run(optimize_opts=optimize_opts)
-        log.info(self.fit_result)
 
     def _read_model(self):
         """Read the model from settings."""
@@ -314,11 +309,11 @@ class Analysis:
             **extraction_params,
         )
         self.extraction.run()
+        self._read_model()
         self.datasets = Datasets(self.extraction.spectrum_observations)
 
     def _validate_fitting_settings_1d(self):
-        """Validate settings before proceeding to fit."""
-
+        """Validate settings before proceeding to fit 1D."""
         if self.extraction and self.datasets:
             if (
                 self.settings["reduction"]["background"]["background_estimator"]
@@ -337,7 +332,7 @@ class Analysis:
 
     def _validate_fp_settings(self):
         """Validate settings before proceeding to flux points estimation."""
-        if self.fit_result:
+        if self.fit:
             self.config.validate()
             return True
         else:
