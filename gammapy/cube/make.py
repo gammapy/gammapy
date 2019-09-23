@@ -86,7 +86,8 @@ class MapMaker:
         """
 
         selection = _check_selection(selection)
-        maps = self._get_empty_maps(selection)
+
+        stacked = MapDataset.create(geom=self.geom, geom_irf=self.geom_true)
 
         for obs in observations:
             log.info(f"Processing observation: OBS_ID = {obs.obs_id}")
@@ -97,18 +98,15 @@ class MapMaker:
                 log.info(f"Skipping observation {obs.obs_id} (no map overlap)")
                 continue
 
-            maps_dataset = obs_maker.run(selection)
+            dataset = obs_maker.run(selection)
+            stacked.stack(dataset)
 
-            for name in selection:
-                if name == "exposure":
-                    data = maps_dataset.exposure.quantity
-                    maps[name].fill_by_coord(obs_maker.coords_etrue, data)
-                if name == "counts":
-                    data = maps_dataset.counts.quantity
-                    maps[name].fill_by_coord(obs_maker.coords, data)
-                if name == "background":
-                    data = maps_dataset.background_model.map.quantity
-                    maps[name].fill_by_coord(obs_maker.coords, data)
+
+        maps = {
+            "counts": stacked.counts,
+            "exposure": stacked.exposure,
+            "background": stacked.background_model.evaluate(),
+        }
         self._maps = maps
         return maps
 
@@ -290,10 +288,6 @@ class MapMakerObs:
             name="obs_{}".format(self.observation.obs_id),
             mask_safe=~self.fov_mask
         )
-
-        if "exposure_irf" in self.maps:
-            del self.maps["exposure_irf"]
-
         return dataset
 
     def _make_counts(self):
@@ -484,11 +478,11 @@ class MapMakerRing(MapMaker):
                 log.info(f"Skipping obs_id: {obs.obs_id} (partial map overlap)")
                 continue
 
-            maps_dataset = obs_maker.run(selection=["counts", "exposure", "background"])
+            dataset = obs_maker.run(selection=["counts", "exposure", "background"])
             maps_obs = {}
-            maps_obs["counts"] = maps_dataset.counts
-            maps_obs["exposure"] = maps_dataset.exposure
-            maps_obs["background"] = maps_dataset.background_model.map
+            maps_obs["counts"] = dataset.counts
+            maps_obs["exposure"] = dataset.exposure
+            maps_obs["background"] = dataset.background_model.map
             maps_obs["exclusion"] = obs_maker.exclusion_mask
 
             if sum_over_axis:
