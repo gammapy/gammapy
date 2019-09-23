@@ -123,14 +123,14 @@ def test_map_maker_ring(observations):
     maker = MapMakerRing(geomd, 2.0 * u.deg, mask, ring_bkg)
 
     maps = maker.run(observations)
-    assert_allclose(np.nansum(maps["on"].data), 21981, rtol=1e-2)
-    assert_allclose(np.nansum(maps["exposure_off"].data), 8310.035, rtol=1e-2)
-    assert maps["on"].geom.is_image is False
+    assert_allclose(np.nansum(maps["on"].data), 34366, rtol=1e-2)
+    assert_allclose(np.nansum(maps["exposure_off"].data), 12362.756, rtol=1e-2)
+    assert not maps["on"].geom.is_image
 
     images = maker.run_images(observations)
-    assert_allclose(np.nansum(images["on"].data), 21981, rtol=1e-2)
-    assert_allclose(np.nansum(images["exposure_off"].data), 109751.45, rtol=1e-2)
-    assert images["on"].geom.is_image is True
+    assert_allclose(np.nansum(images["on"].data), 34366, rtol=1e-2)
+    assert_allclose(np.nansum(images["exposure_off"].data), 163730.62, rtol=1e-2)
+    assert images["on"].geom.is_image
 
 
 @requires_data()
