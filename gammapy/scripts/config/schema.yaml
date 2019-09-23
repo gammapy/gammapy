@@ -380,7 +380,7 @@ properties:
                             node_type:
                                 type: string
                                 default_all: center
-                                default_3d: center
+                                default_3d: edges
                                 enum: [edges, center]
                         required: [lo_bnd, hi_bnd, nbin, unit]
                     e_true:

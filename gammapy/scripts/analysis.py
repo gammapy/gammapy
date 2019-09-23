@@ -63,6 +63,7 @@ class Analysis:
         self.observations = None
         self.geom = None
         self.background_estimator = None
+        self.datasets = None
         self.extraction = None
         self.images = None
         self.maps = None
@@ -112,7 +113,7 @@ class Analysis:
         if self.settings["reduction"]["data_reducer"] == "1d":
             if self._validate_fp_settings():
                 log.info("Calculating flux points.")
-                stacked = Datasets(self.extraction.spectrum_observations).stack_reduce()
+                stacked = self.datasets.stack_reduce()
                 flux_model = self.model.copy()
                 flux_model.parameters.covariance = self.fit_result.parameters.covariance
                 stacked.model = flux_model
@@ -233,7 +234,7 @@ class Analysis:
 
     def _fit_reduced_data_1d(self, optimize_opts=None):
         """Fit data to models as joint-likelihood with 1D spectrum."""
-        for obs in self.extraction.spectrum_observations:
+        for obs in self.datasets.datasets:
             # TODO: fit_range handled in jsonschema validation class
             if "fit_range" in self.settings["fit"]:
                 e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
@@ -241,7 +242,7 @@ class Analysis:
                 obs.mask_fit = obs.counts.energy_mask(e_min, e_max)
             obs.model = self.model
         log.info("Fitting spectra to model with joint likelihood.")
-        fit = Fit(self.extraction.spectrum_observations)
+        fit = Fit(self.datasets)
         self.fit_result = fit.run(optimize_opts=optimize_opts)
         log.info(self.fit_result)
 
@@ -313,11 +314,12 @@ class Analysis:
             **extraction_params,
         )
         self.extraction.run()
+        self.datasets = Datasets(self.extraction.spectrum_observations)
 
     def _validate_fitting_settings_1d(self):
         """Validate settings before proceeding to fit."""
 
-        if self.extraction and len(self.extraction.spectrum_observations):
+        if self.extraction and self.datasets:
             if (
                 self.settings["reduction"]["background"]["background_estimator"]
                 == "reflected"
