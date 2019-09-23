@@ -124,8 +124,8 @@ The observations are stored as a list of `DataStoreObservation` containers.
          <gammapy.data.observations.DataStoreObservation at 0x110a84160>,
          <gammapy.data.observations.DataStoreObservation at 0x110a84b38>]
 
-Data reduction
---------------
+Data reduction and datasets
+---------------------------
 The data reduction process needs a method that is declared as the value (1d, 2d, or 3d)
 of the `data_reducer` parameter in the `reduction` section of the settings. For the
 estimation of the background, a `background_estimator` is needed, other parameters
@@ -140,8 +140,8 @@ related with the background estimation is stored in the `background_estimator` p
 
 .. code-block:: python
 
-    >>> analysis.reduce()
-    >>> analysis.extraction.spectrum_observations
+    >>> analysis.get_datasets()
+    >>> analysis.datasets.datasets
         [SpectrumDatasetOnOff,
          SpectrumDatasetOnOff,
          SpectrumDatasetOnOff,
@@ -208,7 +208,7 @@ is stored in the `fit_result` property.
 
 .. code-block:: python
 
-    >>> analysis.fit()
+    >>> analysis.run_fit()
     >>> analysis.fit_result
         OptimizeResult
 
@@ -229,6 +229,8 @@ may declare the parameters needed in the `flux` section.
 You may use the `get_flux_points()` method to calculate the flux points. The result
 is stored in the `flux_points_dataset` property as a `FluxPointsDataset` container.
 
+.. code-block:: python
+
     >>> analysis.get_flux_points()
         INFO:gammapy.scripts.analysis:Calculating flux points.
         INFO:gammapy.scripts.analysis:
@@ -248,6 +250,29 @@ is stored in the `flux_points_dataset` property as a `FluxPointsDataset` contain
           8.79922543569107  1.877442373267013e-13  7.097738087032472e-14  1.254638299336029e-13 2.2705519890120373e-14 False
     >>> analysis.flux_points_dataset.peek()
 
+Residuals
+---------
+For 3D analysis we can compute a residual image to check how good are the models
+for the source and/or the background.
+
+.. code-block:: python
+
+    >>> analysis.get_residuals()
+        INFO:gammapy.scripts.analysis:Calculating residuals.
+        INFO:gammapy.scripts.analysis:WcsNDMap
+
+            geom  : WcsGeom
+            axes  : ['lon', 'lat', 'energy']
+            shape : (250, 250, 4)
+            ndim  : 3
+            unit  :
+            dtype : float64
+
+Using the high-level interface
+------------------------------
+Gammapy tutorial notebooks that show examples using the high-level interface:
+
+* :gp-notebook:`hess`
 
 Command line tools
 ==================
