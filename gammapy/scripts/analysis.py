@@ -73,6 +73,7 @@ class Analysis:
         self.fit = None
         self.fit_result = None
         self.flux_points_dataset = None
+        self.residuals = None
 
     @property
     def config(self):
@@ -99,6 +100,7 @@ class Analysis:
             self.fit_result = self.fit.run(optimize_opts=optimize_opts)
             log.info(self.fit_result)
 
+
     @classmethod
     def from_file(cls, filename, template="basic"):
         """Instantiation of analysis from settings in config file.
@@ -114,6 +116,19 @@ class Analysis:
         filename = make_path(filename)
         config = read_yaml(filename)
         return cls(config=config, template=template)
+
+    def get_datasets(self):
+        """Produce reduced data sets."""
+        if not self._validate_reduction_settings():
+            return False
+        if self.settings["reduction"]["data_reducer"] == "1d":
+            self._spectrum_extraction()
+        elif self.settings["reduction"]["data_reducer"] == "3d":
+            self._create_geometry()
+            self._map_making()
+        else:
+            # TODO raise error?
+            log.info("Data reduction method not available.")
 
     def get_flux_points(self):
         """Calculate flux points."""
@@ -187,18 +202,12 @@ class Analysis:
         for obs in self.observations.list:
             log.info(obs)
 
-    def get_datasets(self):
-        """Produce reduced data sets."""
-        if not self._validate_reduction_settings():
-            return False
-        if self.settings["reduction"]["data_reducer"] == "1d":
-            self._spectrum_extraction()
-        elif self.settings["reduction"]["data_reducer"] == "3d":
-            self._create_geometry()
-            self._map_making()
-        else:
-            # TODO raise error?
-            log.info("Data reduction method not available.")
+    def get_residuals(self):
+        log.info("Calculating residuals.")
+        npred = self.datasets.datasets[0].npred()
+        self.residuals = Map.from_geom(self.geom)
+        self.residuals.data = self.maps["counts"].data - npred.data
+        log.info(self.residuals)
 
     def _create_geometry(self):
         """Create the geometry."""
