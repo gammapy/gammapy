@@ -68,6 +68,17 @@ def geom(ebounds, binsz=0.5):
             "background": 28760.283,
             "background_oversampling": 2,
         },
+        {
+            # Test for different e_true and e_reco bins
+            "geom": geom(ebounds=[0.1, 1, 10]),
+            "geom_true": geom(ebounds=[0.1, 0.5, 2.5, 10.0], binsz=1),
+            "counts": 34366,
+            "exposure": 5.971096e11,
+            "exposure_image": 6.492968e10,
+            "background": 28760.283,
+            "background_oversampling": 2,
+        },
+
     ],
 )
 @pytest.mark.parametrize("keepdims", [True, False])
