@@ -86,10 +86,7 @@ class Analysis:
 
     def run_fit(self, optimize_opts=None):
         """Fitting reduced data sets to model."""
-        if (
-            self.settings["reduction"]["data_reducer"] == "1d"
-            and self._validate_fitting_settings_1d()
-        ):
+        if self._validate_fitting_settings():
             for obs in self.datasets.datasets:
                 # TODO: fit_range handled in jsonschema validation class
                 if "fit_range" in self.settings["fit"]:
@@ -101,9 +98,6 @@ class Analysis:
             self.fit = Fit(self.datasets)
             self.fit_result = self.fit.run(optimize_opts=optimize_opts)
             log.info(self.fit_result)
-        else:
-            # TODO raise error?
-            log.info("Fitting available only for joint likelihood with 1D spectrum.")
 
     @classmethod
     def from_file(cls, filename, template="basic"):
@@ -233,6 +227,7 @@ class Analysis:
         return e_reco, e_true
 
     def _map_making(self):
+        """Make maps and data sets for 3d analysis."""
         maker_params = {}
         if "offset_max" in self.settings["geometry"]:
             maker_params = {"offset_max": self.settings["geometry"]["offset_max"]}
@@ -328,21 +323,20 @@ class Analysis:
         self._read_model()
         self.datasets = Datasets(self.extraction.spectrum_observations)
 
-    def _validate_fitting_settings_1d(self):
+    def _validate_fitting_settings(self):
         """Validate settings before proceeding to fit 1D."""
-        if self.extraction and self.datasets:
-            if (
+        if self.datasets.datasets:
+            if (self.extraction and
                 self.settings["reduction"]["background"]["background_estimator"]
-                == "reflected"
+                != "reflected"
             ):
-                self.config.validate()
-                return True
-            else:
                 # TODO raise error?
                 log.info("Background estimation only for reflected regions method.")
                 return False
+            self.config.validate()
+            return True
         else:
-            log.info("No spectrum observations extracted.")
+            log.info("No datasets reduced.")
             log.info("Fit cannot be done.")
             return False
 

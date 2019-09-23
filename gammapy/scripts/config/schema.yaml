@@ -491,15 +491,15 @@ properties:
                                     default_3d:
                                         - frozen: false
                                           name: lon_0
-                                          max: 10
-                                          min: -10
+                                          max: 85
+                                          min: 80
                                           scale: 1.0
                                           unit: deg
                                           value: 83.633
                                         - frozen: false
                                           name: lat_0
-                                          max: 10
-                                          min: -10
+                                          max: 24
+                                          min: 20
                                           scale: 1.0
                                           unit: deg
                                           value: 22.14
