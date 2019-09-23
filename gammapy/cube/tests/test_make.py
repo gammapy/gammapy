@@ -35,7 +35,7 @@ def geom(ebounds, binsz=0.5):
             "geom": geom(ebounds=[0.1, 1, 10]),
             "geom_true": None,
             "counts": 34366,
-            "exposure": 3.99815e11,
+            "exposure": 9.995376e+08,
             "exposure_image": 7.921993e10,
             "background": 27989.05,
         },
@@ -44,7 +44,7 @@ def geom(ebounds, binsz=0.5):
             "geom": geom(ebounds=[0.1, 10]),
             "geom_true": None,
             "counts": 34366,
-            "exposure": 1.16866e11,
+            "exposure": 5.843302e+08,
             "exposure_image": 1.16866e11,
             "background": 30424.451,
         },
@@ -54,7 +54,7 @@ def geom(ebounds, binsz=0.5):
             "geom_true": None,
             "exclusion_mask": Map.from_geom(geom(ebounds=[0.1, 10])),
             "counts": 34366,
-            "exposure": 1.16866e11,
+            "exposure": 5.843302e+08,
             "exposure_image": 1.16866e11,
             "background": 30424.451,
         },
@@ -63,7 +63,7 @@ def geom(ebounds, binsz=0.5):
             "geom": geom(ebounds=[0.1, 1, 10]),
             "geom_true": geom(ebounds=[0.1, 0.5, 2.5, 10.0]),
             "counts": 34366,
-            "exposure": 5.971096e11,
+            "exposure": 9.951827e+08,
             "exposure_image": 6.492968e10,
             "background": 28760.283,
             "background_oversampling": 2,
@@ -73,8 +73,8 @@ def geom(ebounds, binsz=0.5):
             "geom": geom(ebounds=[0.1, 1, 10]),
             "geom_true": geom(ebounds=[0.1, 0.5, 2.5, 10.0], binsz=1),
             "counts": 34366,
-            "exposure": 1.457486e+11,
-            "exposure_image": 1.585265e+10,
+            "exposure": 9.699206e+08,
+            "exposure_image": 6.327697e+10,
             "background": 28760.283,
             "background_oversampling": 2,
         },
@@ -98,7 +98,7 @@ def test_map_maker(pars, observations, keepdims):
 
     exposure = maps["exposure"]
     assert exposure.unit == "m2 s"
-    assert_allclose(exposure.data.sum(), pars["exposure"], rtol=1e-5)
+    assert_allclose(exposure.data.mean(), pars["exposure"], rtol=3e-3)
 
     background = maps["background"]
     assert background.unit == ""
@@ -112,7 +112,7 @@ def test_map_maker(pars, observations, keepdims):
 
     exposure = images["exposure"]
     assert exposure.unit == "m2 s"
-    assert_allclose(exposure.data.sum(), pars["exposure_image"], rtol=1e-5)
+    assert_allclose(exposure.data.sum(), pars["exposure_image"], rtol=3e-3)
 
     background = images["background"]
     assert background.unit == ""
