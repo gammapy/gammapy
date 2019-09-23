@@ -312,7 +312,7 @@ class MapMakerObs:
 
         # The real exposure map, with FoV cuts
         factor = self.geom.data_shape[-1] / self.geom_true.data_shape[-1]
-        exposure = exposure_irf.upsample(factor)
+        exposure = exposure_irf.upsample(factor, preserve_counts=False, order=1)
         coords_etrue = exposure.geom.get_coord()
         fov_mask_etrue = self._fov_mask(coords_etrue)
         if fov_mask_etrue is not None:
