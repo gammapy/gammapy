@@ -429,13 +429,25 @@ properties:
                         name:
                             type: string
                             default_all: source
+                            default_basic: source
                             default_1d: source
+                            default_3d: source
+                        type:
+                            type: string
+                            default_all: SkyModel
+                            default_basic: SkyModel
+                            default_1d: SkyModel
+                            default_3d: SkyModel
                         spatial:
                             type: object
                             default_all: {}
+                            default_1d: {}
                             additionalProperties: false
                             properties:
-                                type: {type: string, default_all: SkyGaussian}
+                                type:
+                                    type: string
+                                    default_all: SkyGaussian
+                                    default_1d: SkyPointSource
                                 parameters:
                                     type: array
                                     default_all:
@@ -463,6 +475,17 @@ properties:
                                           scale: 1.0
                                           unit: deg
                                           value: 1.0
+                                    default_1d:
+                                        - frozen: true
+                                          name: lon_0
+                                          scale: 1.0
+                                          unit: deg
+                                          value: 83.633
+                                        - frozen: true
+                                          name: lat_0
+                                          scale: 1.0
+                                          unit: deg
+                                          value: 22.14
                                     items:
                                         type: object
                                         additionalProperties: false

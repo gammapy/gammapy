@@ -14,7 +14,7 @@ from gammapy.data import DataStore, ObservationTable
 from gammapy.irf import make_mean_psf
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import SPECTRAL_MODELS
+from gammapy.modeling.serialize import dict_to_models
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
@@ -243,19 +243,16 @@ class Analysis:
 
     def _read_model(self):
         """Read the model from settings."""
-        # TODO: make reading for generic spatial and spectral models with multiple components
-        # use models = serialisation.io.dict_to_models() or models = SkyModels.from_yaml(filename)
         if self.settings["reduction"]["data_reducer"] == "1d":
-            model_yaml = self.settings["model"]["components"][0]["spectral"]
+            log.info("Reading model.")
+            model_yaml = self.settings["model"]
+            self.model = dict_to_models(model_yaml)[0].spectral_model
+            log.info(self.model)
         else:
             log.info(
                 "Model reading available only for single component spectral model."
             )
             return False
-        log.info("Reading model.")
-        model_class = SPECTRAL_MODELS[model_yaml["type"]]
-        self.model = model_class.from_dict(model_yaml)
-        log.info(self.model)
 
     def _set_logging(self):
         """Set logging parameters for API."""
