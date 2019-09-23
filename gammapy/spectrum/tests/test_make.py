@@ -2,8 +2,8 @@
 import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
-from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_data
+from gammapy.utils.testing import assert_quantity_allclose
+from gammapy.utils.testing import requires_data
 from ...spectrum import SpectrumDatasetMakerObs
 from ...data import DataStore
 

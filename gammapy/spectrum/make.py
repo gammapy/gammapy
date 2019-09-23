@@ -10,9 +10,9 @@ from ..irf import (
 )
 from .core import CountsSpectrum
 from .dataset import SpectrumDataset
-from ..background import ReflectedRegionsFinder
-from ..cube import MapMakerObs
-from ..maps import MapAxis
+from .reflected import ReflectedRegionsFinder
+from gammapy.cube import MapMakerObs
+from gammapy.maps import MapAxis
 
 __all__ = ["SpectrumDatasetMakerObs"]
 
