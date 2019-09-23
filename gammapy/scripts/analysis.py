@@ -14,6 +14,7 @@ from gammapy.data import DataStore, ObservationTable
 from gammapy.irf import make_mean_psf
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
+from gammapy.modeling.models import SkyModel, BackgroundModel
 from gammapy.modeling.serialize import dict_to_models
 from gammapy.spectrum import (
     FluxPointsDataset,
@@ -85,7 +86,10 @@ class Analysis:
 
     def run_fit(self, optimize_opts=None):
         """Fitting reduced data sets to model."""
-        if self.settings["reduction"]["data_reducer"] == "1d" and self._validate_fitting_settings_1d():
+        if (
+            self.settings["reduction"]["data_reducer"] == "1d"
+            and self._validate_fitting_settings_1d()
+        ):
             for obs in self.datasets.datasets:
                 # TODO: fit_range handled in jsonschema validation class
                 if "fit_range" in self.settings["fit"]:
@@ -197,20 +201,7 @@ class Analysis:
             self._spectrum_extraction()
         elif self.settings["reduction"]["data_reducer"] == "3d":
             self._create_geometry()
-            maker_params = {}
-            if "offset_max" in self.settings["geometry"]:
-                maker_params = {"offset_max": self.settings["geometry"]["offset_max"]}
-            maker = MapMaker(self.geom, **maker_params)
-            self.maps = maker.run(self.observations)
-            self.images = maker.run_images()
-            table_psf = make_mean_psf(self.observations, self.geom.center_skydir)
-            psf_params = {}
-            if "psf_max_radius" in self.settings["geometry"]:
-                psf_params = {"max_radius": self.settings["geometry"]["psf_max_radius"]}
-            self.psf_kernel = PSFKernel.from_table_psf(
-                table_psf, self.geom, **psf_params
-            )
-
+            self._map_making()
         else:
             # TODO raise error?
             log.info("Data reduction method not available.")
@@ -241,18 +232,46 @@ class Analysis:
             e_true = MapAxis.from_bounds(**axis_params)
         return e_reco, e_true
 
+    def _map_making(self):
+        maker_params = {}
+        if "offset_max" in self.settings["geometry"]:
+            maker_params = {"offset_max": self.settings["geometry"]["offset_max"]}
+        maker = MapMaker(self.geom, **maker_params)
+        self.maps = maker.run(self.observations)
+        self.images = maker.run_images()
+        table_psf = make_mean_psf(self.observations, self.geom.center_skydir)
+        psf_params = {}
+        if "psf_max_radius" in self.settings["geometry"]:
+            psf_params = {"max_radius": self.settings["geometry"]["psf_max_radius"]}
+        self.psf_kernel = PSFKernel.from_table_psf(table_psf, self.geom, **psf_params)
+        self._read_model()
+        # TODO: background model may come from YAML parameters
+        background_model = BackgroundModel(self.maps["background"], norm=1.0)
+        background_model.parameters["tilt"].frozen = False
+        self.datasets = Datasets(
+            MapDataset(
+                model=self.model,
+                counts=self.maps["counts"],
+                exposure=self.maps["exposure"],
+                background_model=background_model,
+                psf=self.psf_kernel,
+            )
+        )
+
     def _read_model(self):
         """Read the model from settings."""
+        # TODO: Deal with multiple components
+        log.info("Reading model.")
+        model_yaml = self.settings["model"]
         if self.settings["reduction"]["data_reducer"] == "1d":
-            log.info("Reading model.")
-            model_yaml = self.settings["model"]
             self.model = dict_to_models(model_yaml)[0].spectral_model
-            log.info(self.model)
         else:
-            log.info(
-                "Model reading available only for single component spectral model."
+            spatial_model = dict_to_models(model_yaml)[0].spatial_model
+            spectral_model = dict_to_models(model_yaml)[0].spectral_model
+            self.model = SkyModel(
+                spatial_model=spatial_model, spectral_model=spectral_model
             )
-            return False
+        log.info(self.model)
 
     def _set_logging(self):
         """Set logging parameters for API."""
