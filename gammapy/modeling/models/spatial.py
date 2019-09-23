@@ -64,6 +64,12 @@ class SkySpatialModel(Model):
         coords = geom.get_coord(coordsys=coordsys)
         return self(coords.lon, coords.lat)
 
+    def to_dict(self, selection="all"):
+        data = super().to_dict(selection=selection)
+        data["frame"] = self.frame
+        data["parameters"] = data.pop("parameters")
+        return data
+
 
 class SkyPointSource(SkySpatialModel):
     r"""Point Source.
@@ -82,7 +88,7 @@ class SkyPointSource(SkySpatialModel):
     tag = "SkyPointSource"
     __slots__ = ["frame", "lon_0", "lat_0"]
 
-    def __init__(self, lon_0, lat_0, frame="galactic"):
+    def __init__(self, lon_0, lat_0, frame="icrs"):
         self.frame = frame
         self.lon_0 = Parameter("lon_0", Angle(lon_0))
         self.lat_0 = Parameter("lat_0", Angle(lat_0), min=-90, max=90)
@@ -212,7 +218,7 @@ class SkyGaussian(SkySpatialModel):
     __slots__ = ["frame", "lon_0", "lat_0", "sigma", "e", "phi"]
     tag = "SkyGaussian"
 
-    def __init__(self, lon_0, lat_0, sigma, e=0, phi="0 deg", frame="galactic"):
+    def __init__(self, lon_0, lat_0, sigma, e=0, phi="0 deg", frame="icrs"):
         self.frame = frame
         self.lon_0 = Parameter("lon_0", Angle(lon_0))
         self.lat_0 = Parameter("lat_0", Angle(lat_0), min=-90, max=90)
@@ -332,7 +338,7 @@ class SkyDisk(SkySpatialModel):
     tag = "SkyDisk"
 
     def __init__(
-        self, lon_0, lat_0, r_0, e=0, phi="0 deg", edge="0.01 deg", frame="galactic"
+        self, lon_0, lat_0, r_0, e=0, phi="0 deg", edge="0.01 deg", frame="icrs"
     ):
         self.frame = frame
         self.lon_0 = Parameter("lon_0", Angle(lon_0))
@@ -428,7 +434,7 @@ class SkyShell(SkySpatialModel):
     __slots__ = ["frame", "lon_0", "lat_0", "radius", "width"]
     tag = "SkyShell"
 
-    def __init__(self, lon_0, lat_0, radius, width, frame="galactic"):
+    def __init__(self, lon_0, lat_0, radius, width, frame="icrs"):
         self.frame = frame
         self.lon_0 = Parameter("lon_0", Angle(lon_0))
         self.lat_0 = Parameter("lat_0", Angle(lat_0), min=-90, max=90)

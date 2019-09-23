@@ -603,7 +603,7 @@ def get_npred_map():
         unit="cm2 s",
     )
 
-    spatial_model = SkyGaussian("0 deg", "0 deg", sigma="0.2 deg")
+    spatial_model = SkyGaussian("0 deg", "0 deg", sigma="0.2 deg", frame="galactic")
     spectral_model = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 

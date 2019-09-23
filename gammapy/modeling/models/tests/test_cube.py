@@ -21,7 +21,7 @@ from gammapy.utils.testing import requires_data
 
 @pytest.fixture(scope="session")
 def sky_model():
-    spatial_model = SkyGaussian(lon_0="3 deg", lat_0="4 deg", sigma="3 deg")
+    spatial_model = SkyGaussian(lon_0="3 deg", lat_0="4 deg", sigma="3 deg", frame="galactic")
     spectral_model = PowerLaw(
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
