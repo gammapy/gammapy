@@ -476,12 +476,9 @@ class MapMakerRing(MapMaker):
 
         for obs in observations:
             try:
-                obs_maker = self._get_obs_maker(obs, mode="strict")
+                obs_maker = self._get_obs_maker(obs, mode="trim")
             except NoOverlapError:
                 log.info(f"Skipping obs_id: {obs.obs_id} (no map overlap)")
-                continue
-            except PartialOverlapError:
-                log.info(f"Skipping obs_id: {obs.obs_id} (partial map overlap)")
                 continue
 
             maps_dataset = obs_maker.run(selection=["counts", "exposure", "background"])
