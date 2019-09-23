@@ -61,7 +61,7 @@ def make_datasets_example():
     models = []
 
     for ind, (lon, lat) in enumerate(sources_coords):
-        spatial_model = SkyPointSource(lon_0=lon * u.deg, lat_0=lat * u.deg)
+        spatial_model = SkyPointSource(lon_0=lon * u.deg, lat_0=lat * u.deg, frame="galactic")
         spectral_model = ExponentialCutoffPowerLaw(
             index=2 * u.Unit(""),
             amplitude=3e-12 * u.Unit("cm-2 s-1 TeV-1"),

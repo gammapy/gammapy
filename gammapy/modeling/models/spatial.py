@@ -64,6 +64,12 @@ class SkySpatialModel(Model):
         coords = geom.get_coord(coordsys=coordsys)
         return self(coords.lon, coords.lat)
 
+    def to_dict(self, selection="all"):
+        data = super().to_dict(selection=selection)
+        data["frame"] = self.frame
+        data["parameters"] = data.pop("parameters")
+        return data
+
 
 class SkyPointSource(SkySpatialModel):
     r"""Point Source.

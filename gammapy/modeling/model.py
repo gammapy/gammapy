@@ -52,6 +52,11 @@ class Model:
             x["name"].split("@")[0]: x["value"] * u.Unit(x["unit"])
             for x in data["parameters"]
         }
+
+        # TODO: this is a special case for spatial models, maybe better move to `SkySpatialModel` base class
+        if "frame" in data:
+            params["frame"] = data["frame"]
+
         init = cls(**params)
         init.parameters = Parameters.from_dict(data)
         for parameter in init.parameters.parameters:
