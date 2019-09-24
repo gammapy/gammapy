@@ -1149,11 +1149,12 @@ class FluxPointsDataset(Dataset):
         print(result.parameters.to_table())
     """
 
-    def __init__(self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None):
+    def __init__(self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None, name=""):
         self.model = model
         self.data = data
         self.mask_fit = mask_fit
         self.parameters = model.parameters
+        self.name = name
 
         if data.sed_type != "dnde":
             raise ValueError("Currently only flux points of type 'dnde' are supported.")

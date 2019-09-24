@@ -114,7 +114,9 @@ class TestSpectrumExtraction:
         containment_actual = extraction.containment[60]
 
         # TODO: Introduce assert_stats_allclose
-        stats = ObservationStats(**obs._info_dict())
+        info = obs._info_dict()
+        info["obs_id"] = info.pop("name")
+        stats = ObservationStats(**info)
         n_on_actual = stats.n_on
         sigma_actual = stats.sigma
 

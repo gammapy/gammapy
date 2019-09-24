@@ -7,7 +7,7 @@ from .test_fit import MyDataset
 
 @pytest.fixture(scope="session")
 def datasets():
-    return Datasets([MyDataset(), MyDataset()])
+    return Datasets([MyDataset(name="test-1"), MyDataset(name="test-2")])
 
 
 class TestDatasets:
@@ -23,3 +23,8 @@ class TestDatasets:
     @staticmethod
     def test_str(datasets):
         assert "MyDataset: 2" in str(datasets)
+
+    @staticmethod
+    def test_getitem(datasets):
+        assert datasets["test-1"].name == "test-1"
+        assert datasets["test-2"].name == "test-2"
