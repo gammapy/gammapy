@@ -99,6 +99,11 @@ class Datasets:
         return Parameters(parameters)
 
     @property
+    def names(self):
+        """List of dataset names"""
+        return [_.name for _ in self.datasets]
+
+    @property
     def datasets(self):
         """List of datasets"""
         return self._datasets
@@ -205,3 +210,7 @@ class Datasets:
         for ds in self.datasets[1:]:
             dataset.stack(ds)
         return dataset
+
+    def __getitem__(self, item):
+        idx = self.names.index(item)
+        return self.datasets[idx]
