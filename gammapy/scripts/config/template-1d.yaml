@@ -12,6 +12,7 @@ observations:
           variable: TARGET_NAME
 
 reduction:
+    dataset-type: SpectrumDatasetOnOff
     background:
         background_estimator: reflected
         on_region:
@@ -20,7 +21,6 @@ reduction:
                 - 22.014 deg
             frame: icrs
             radius: 0.1 deg
-    data_reducer: 1d
 
 geometry:
     axes: {}

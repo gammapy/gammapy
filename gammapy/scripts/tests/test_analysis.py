@@ -108,7 +108,7 @@ def config_analysis_data():
                 frame: icrs
                 radius: 0.11 deg
         containment_correction: false
-        data_reducer: 1d
+        dataset-type: SpectrumDatasetOnOff
     flux:
         fp_binning:
             lo_bnd: 1

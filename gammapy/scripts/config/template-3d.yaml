@@ -12,7 +12,7 @@ observations:
           variable: TARGET_NAME
 
 reduction:
-    data_reducer: 3d
+    dataset-type: MapDataset
 
 geometry:
     axes:

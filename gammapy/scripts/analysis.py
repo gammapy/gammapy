@@ -138,9 +138,9 @@ class Analysis:
         """Produce reduced data sets."""
         if not self._validate_reduction_settings():
             return False
-        if self.settings["reduction"]["data_reducer"] == "1d":
+        if self.settings["reduction"]["dataset-type"] == "SpectrumDatasetOnOff":
             self._spectrum_extraction()
-        elif self.settings["reduction"]["data_reducer"] == "3d":
+        elif self.settings["reduction"]["dataset-type"] == "MapDataset":
             self._map_making()
         else:
             # TODO raise error?

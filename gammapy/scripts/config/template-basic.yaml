@@ -10,12 +10,12 @@ observations:
         - filter_type: all
 
 reduction:
-    data_reducer: not assigned
+    dataset-type: not assigned
 
 geometry:
     axes: {}
 
-model: gammapy/scripts/config/model.yaml
+model: model.yaml
 
 fit:
     fit_range: {}
