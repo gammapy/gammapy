@@ -399,16 +399,10 @@ class Config:
             Configuration settings filename
             Default config.yaml
         """
-
-        settings_str = ""
-        doc_dic = self._get_doc_sections()
-        for section in doc_dic.keys():
-            if section in self.settings:
-                settings_str += doc_dic[section] + "\n"
-                settings_str += yaml.dump({section: self.settings[section]}) + "\n"
         filename = make_path(filename)
         path_file = Path(self.settings["general"]["outdir"]) / filename
-        path_file.write_text(settings_str)
+        path_file.write_text(yaml.dump(self.settings))
+        log.info(f"Configuration settings saved into {path_file}")
 
     def print_help(self, section=""):
         """Print template configuration settings."""
