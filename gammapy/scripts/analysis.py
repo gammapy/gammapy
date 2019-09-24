@@ -58,8 +58,8 @@ class Analysis:
     Probably not here, but in high-level docs, linked to from class docstring.
     """
 
-    def __init__(self, config=None, template="basic"):
-        self._config = Config(config, template)
+    def __init__(self, config=None):
+        self._config = Config(config)
         self._set_logging()
 
         self.observations = None
@@ -100,20 +100,39 @@ class Analysis:
             log.info(self.fit_result)
 
     @classmethod
-    def from_file(cls, filename, template="basic"):
-        """Instantiation of analysis from settings in config file.
+    def from_file(cls, filename):
+        """Create analysis from settings in config file.
 
         Parameters
         ----------
         filename : str, Path
             Configuration settings filename
-        template: str
-            Consider also values in configuration template
-            Default value basic
+
+        Returns
+        -------
+        analysis : `Analysis`
+            Analysis class
         """
         filename = make_path(filename)
         config = read_yaml(filename)
-        return cls(config=config, template=template)
+        return cls(config=config)
+
+    @classmethod
+    def from_template(cls, template):
+        """Create Analysis from existing templates.
+
+        Parameters
+        ----------
+        template : {"1d", "3d", "basic"}
+            Build in templates.
+
+        Returns
+        -------
+        analysis : `Analysis`
+            Analysis class
+        """
+        filename = CONFIG_PATH / _implemented_templates[template]
+        return cls.from_file(filename)
 
     def get_datasets(self):
         """Produce reduced data sets."""
@@ -370,19 +389,9 @@ class Config:
         Configuration parameters
     """
 
-    def __init__(self, config=None, template="basic"):
+    def __init__(self, config=None):
         self._user_settings = {}
-        self._template = template
-        if template not in _implemented_templates.keys():
-            log.warning(f"Template {template} not implemented.")
-            log.warning("Fetching basic template settings.")
-            self._template = "basic"
         self.settings = {}
-        # fill with default values
-        template_file = CONFIG_PATH / _implemented_templates[self._template]
-        filename = make_path(template_file)
-        self.settings = read_yaml(filename)
-        self._default_settings = copy.deepcopy(self.settings)
         # add user settings
         self.update_settings(config)
 

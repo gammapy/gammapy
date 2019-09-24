@@ -7,11 +7,12 @@ from gammapy.utils.testing import requires_data, requires_dependency
 
 
 def test_config():
-    analysis = Analysis()
+    analysis = Analysis.from_template(template="basic")
     assert analysis.settings["general"]["logging"]["level"] == "INFO"
 
     config = {"general": {"outdir": "test"}}
-    analysis = Analysis(config)
+    analysis = Analysis.from_template(template="basic")
+    analysis.config.update_settings(config)
     assert analysis.settings["general"]["logging"]["level"] == "INFO"
     assert analysis.settings["general"]["outdir"] == "test"
 
@@ -82,7 +83,8 @@ def config_observations():
 @requires_data()
 @pytest.mark.parametrize("config", config_observations())
 def test_get_observations(config):
-    analysis = Analysis(config)
+    analysis = Analysis.from_template(template="basic")
+    analysis.config.update_settings(config)
     analysis.get_observations()
     assert len(analysis.observations) == config["result"]
 
@@ -121,7 +123,8 @@ def config_analysis_data():
 @requires_dependency("iminuit")
 @requires_data()
 def test_analysis_1d(config_analysis_data):
-    analysis = Analysis(config_analysis_data, template="1d")
+    analysis = Analysis.from_template(template="1d")
+    analysis.config.update_settings(config_analysis_data)
     analysis.get_observations()
     analysis.get_datasets()
     analysis.run_fit()
@@ -137,7 +140,7 @@ def test_analysis_1d(config_analysis_data):
 @requires_dependency("iminuit")
 @requires_data()
 def test_analysis_3d():
-    analysis = Analysis(template="3d")
+    analysis = Analysis.from_template(template="3d")
     analysis.get_observations()
     analysis.get_datasets()
     analysis.run_fit()
@@ -150,12 +153,12 @@ def test_analysis_3d():
 
 
 def test_validate_astropy_quantities():
-    analysis = Analysis()
+    analysis = Analysis.from_template(template="basic")
     config = {"observations": {"filters": [{"filter_type": "all", "lon": "1 deg"}]}}
     analysis.config.update_settings(config)
     assert analysis.config.validate() is None
 
 
 def test_validate_config():
-    analysis = Analysis()
+    analysis = Analysis.from_template(template="basic")
     assert analysis.config.validate() is None
