@@ -133,7 +133,7 @@ class SpectrumExtraction:
             livetime=observation.observation_live_time_duration,
             acceptance=1,
             acceptance_off=bkg.a_off,
-            obs_id=observation.obs_id,
+            name=str(observation.obs_id),
             gti=observation.gti,
         )
 

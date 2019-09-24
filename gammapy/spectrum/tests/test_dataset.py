@@ -242,7 +242,7 @@ class TestSpectrumOnOff:
             livetime=self.livetime,
             acceptance=np.ones(elo.shape),
             acceptance_off=np.ones(elo.shape) * 10,
-            obs_id="test",
+            name="test",
         )
 
     def test_spectrumdatasetonoff_create(self):
@@ -331,7 +331,7 @@ class TestSpectrumOnOff:
             mask_safe=np.ones(self.on_counts.energy.nbin, dtype=bool),
             acceptance=1,
             acceptance_off=10,
-            obs_id="test",
+            name="test",
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / "pha_obstest.fits"
@@ -348,7 +348,7 @@ class TestSpectrumOnOff:
             livetime=self.livetime,
             mask_safe=np.ones(self.on_counts.energy.nbin, dtype=bool),
             acceptance=1,
-            obs_id="test",
+            name="test",
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / "pha_obstest.fits"
@@ -614,7 +614,7 @@ def make_observation_list():
         mask_safe=np.ones(on_vector.energy.nbin, dtype=bool),
         acceptance=1,
         acceptance_off=2,
-        obs_id=2,
+        name="2",
         gti=gti1,
     )
     obs2 = SpectrumDatasetOnOff(
@@ -626,7 +626,7 @@ def make_observation_list():
         mask_safe=np.ones(on_vector.energy.nbin, dtype=bool),
         acceptance=1,
         acceptance_off=4,
-        obs_id=2,
+        name="2",
         gti=gti2,
     )
 

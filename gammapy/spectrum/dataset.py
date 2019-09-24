@@ -41,8 +41,8 @@ class SpectrumDataset(Dataset):
         Mask defining the safe data range.
     mask_fit : `~numpy.ndarray`
         Mask to apply to the likelihood for fitting.
-    obs_id : int or list of int
-        Observation id(s) corresponding to the (stacked) dataset.
+    name : str
+        Dataset name.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
 
@@ -63,7 +63,7 @@ class SpectrumDataset(Dataset):
         background=None,
         mask_safe=None,
         mask_fit=None,
-        obs_id=None,
+        name="",
         gti=None,
     ):
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
@@ -81,7 +81,7 @@ class SpectrumDataset(Dataset):
         self.background = background
         self.model = model
         self.mask_safe = mask_safe
-        self.obs_id = obs_id
+        self.name = name
         self.gti = gti
 
     def __repr__(self):
@@ -515,8 +515,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Relative background efficiency in the on region.
     acceptance_off : `~numpy.array` or float
         Relative background efficiency in the off region.
-    obs_id : int or list of int
-        Observation id(s) corresponding to the (stacked) dataset.
+    name : str
+        Name of the dataset.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
 
@@ -539,7 +539,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         mask_fit=None,
         acceptance=None,
         acceptance_off=None,
-        obs_id=None,
+        name="",
         gti=None,
     ):
 
@@ -564,7 +564,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
-        self.obs_id = obs_id
+        self.name = name
         self.gti = gti
 
     def __repr__(self):
@@ -877,7 +877,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         ax3.axis("off")
 
         if self.counts_off is not None:
-            stats = ObservationStats(**self._info_dict(in_safe_energy_range=True))
+            info = self._info_dict(in_safe_energy_range=True)
+            info["obs_id"] = info.pop("name")
+            stats = ObservationStats(**info)
             ax3.text(0, 0.2, f"{stats}", fontsize=12)
 
         ax4.set_title("Energy Dispersion")
@@ -907,10 +909,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         outdir = Path.cwd() if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
-        if isinstance(self.obs_id, list):
-            phafile = "pha_stacked.fits"
-        else:
-            phafile = f"pha_obs{self.obs_id}.fits"
+        phafile = f"pha_obs{self.name}.fits"
 
         bkgfile = phafile.replace("pha", "bkg")
         arffile = phafile.replace("pha", "arf")
@@ -982,7 +981,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             "lo_thres": self.energy_range[0].to_value("TeV"),
             "hi_thres": self.energy_range[1].to_value("TeV"),
             "exposure": self.livetime.to_value("s"),
-            "obs_id": self.obs_id,
+            "obs_id": self.name,
         }
 
     @classmethod
@@ -1047,7 +1046,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             mask_safe=mask_safe,
             acceptance=data["backscal"],
             acceptance_off=acceptance_off,
-            obs_id=data["obs_id"],
+            name=str(data["obs_id"]),
         )
 
     # TODO: decide on a design for dataset info tables / dicts and make it part
@@ -1069,7 +1068,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             info["a_off"] = 1
 
         info["livetime"] = self.livetime
-        info["obs_id"] = self.obs_id
+        info["name"] = self.name
         return info
 
 
