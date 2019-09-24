@@ -9,7 +9,8 @@ pytest.importorskip("iminuit")
 
 
 class MyDataset:
-    def __init__(self):
+    def __init__(self, name=""):
+        self.name = name
         self.parameters = Parameters(
             [Parameter("x", 2), Parameter("y", 3e2), Parameter("z", 4e-2)]
         )
