@@ -425,8 +425,8 @@ class Config:
         if config is None:
             config = {}
         if len(config):
-            self._user_settings = config
-            self._update_settings(self._user_settings, self.settings)
+            self._user_settings.update(config)
+            self._update_settings(config, self.settings)
             self.validate()
 
     def validate(self):
