@@ -373,13 +373,15 @@ class Config:
     def __init__(self, config=None, template="basic"):
         self._user_settings = {}
         self._template = template
-        if template not in _implemented_templates:
+        if template not in _implemented_templates.keys():
             log.warning(f"Template {template} not implemented.")
             log.warning("Fetching basic template settings.")
             self._template = "basic"
-        # fill with default values
         self.settings = {}
-        self.validate()
+        # fill with default values
+        template_file = CONFIG_PATH / _implemented_templates[self._template]
+        filename = make_path(template_file)
+        self.settings = read_yaml(filename)
         self._default_settings = copy.deepcopy(self.settings)
         # add user settings
         self.update_settings(config)
@@ -429,7 +431,7 @@ class Config:
 
     def validate(self):
         """Validate and/or fill initial config parameters against schema."""
-        validator = _gp_defaults[self._template]
+        validator = _gp_units_validator
         jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
 
     @staticmethod
@@ -452,30 +454,6 @@ class Config:
                 target[key] = val
             else:
                 self._update_settings(val, target[key])
-
-
-def extend_with_default(validator_class, template):
-    validate_properties = validator_class.VALIDATORS["properties"]
-    reserved = [
-        "default",
-        "const",
-        "readOnly",
-        "items",
-        "uniqueItems",
-        "definitions",
-        "properties",
-        "patternProperties",
-    ]
-    default_field = f"default_{template}"
-
-    def set_defaults(validator, properties, instance, schema):
-        for prop, sub_schema in properties.items():
-            if prop not in reserved:
-                if default_field in sub_schema:
-                    instance.setdefault(prop, sub_schema[default_field])
-        yield from validate_properties(validator, properties, instance, schema)
-
-    return jsonschema.validators.extend(validator_class, {"properties": set_defaults})
 
 
 def _astropy_quantity(_, instance):
@@ -503,10 +481,4 @@ _type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(
 _gp_units_validator = jsonschema.validators.extend(
     jsonschema.Draft7Validator, type_checker=_type_checker
 )
-_gp_defaults = {
-    "1d": extend_with_default(_gp_units_validator, template="1d"),
-    "3d": extend_with_default(_gp_units_validator, template="3d"),
-    "all": extend_with_default(_gp_units_validator, template="all"),
-    "basic": extend_with_default(_gp_units_validator, template="basic"),
-}
-_implemented_templates = ["1d", "3d", "all", "basic"]
+_implemented_templates = {"basic": "basic.yaml", "1d": "1D.yaml", "3d": "3D.yaml"}
