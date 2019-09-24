@@ -150,8 +150,9 @@ def test_analysis_3d():
 
 
 def test_validate_astropy_quantities():
-    config = {"observations": {"filters": [{"lon": "1 deg"}]}}
-    analysis = Analysis(config)
+    analysis = Analysis()
+    config = {"observations": {"filters": [{"filter_type": "all", "lon": "1 deg"}]}}
+    analysis.config.update_settings(config)
     assert analysis.config.validate() is None
 
 

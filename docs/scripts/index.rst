@@ -40,6 +40,7 @@ them into a file that you can edit to start a new analysis from the modified con
 
     >>> print(analysis.config)
     >>> analysis.config.dump("config.yaml")
+    INFO:gammapy.scripts.analysis:Configuration settings saved into config.yaml
     >>> analysis = Analysis.from_file("config.yaml")
 
 You could also have started the analysis with your custom settings declared in a Python
