@@ -14,12 +14,14 @@ from gammapy.data import DataStore, ObservationTable
 from gammapy.irf import make_mean_psf
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import SPECTRAL_MODELS
+from gammapy.modeling.models import SkyModel, BackgroundModel
+from gammapy.modeling.serialize import dict_to_models
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
     ReflectedRegionsBackgroundEstimator,
     SpectrumExtraction,
+    SpectrumDatasetOnOff,
 )
 from gammapy.utils.scripts import make_path, read_yaml
 
@@ -61,13 +63,11 @@ class Analysis:
         self._set_logging()
 
         self.observations = None
-        self.geom = None
         self.background_estimator = None
+        self.datasets = None
         self.extraction = None
-        self.images = None
-        self.maps = None
-        self.psf_kernel = None
         self.model = None
+        self.fit = None
         self.fit_result = None
         self.flux_points_dataset = None
 
@@ -81,15 +81,23 @@ class Analysis:
         """Configuration settings for the analysis session."""
         return self.config.settings
 
-    def fit(self, optimize_opts=None):
+    def run_fit(self, optimize_opts=None):
         """Fitting reduced data sets to model."""
-        if self.settings["reduction"]["data_reducer"] == "1d":
-            if self._validate_fitting_settings_1d():
-                self._read_model()
-                self._fit_reduced_data_1d(optimize_opts=optimize_opts)
-        else:
-            # TODO raise error?
-            log.info("Fitting available only for joint likelihood with 1D spectrum.")
+        if self._validate_fitting_settings():
+            for ds in self.datasets.datasets:
+                # TODO: fit_range handled in jsonschema validation class
+                if "fit_range" in self.settings["fit"]:
+                    e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
+                    e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
+                    if isinstance(ds, SpectrumDatasetOnOff):
+                        ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
+                    if isinstance(ds, MapDataset):
+                        ds.mask_fit = ds.counts.geom.energy_mask(e_min, e_max)
+                ds.model = self.model
+            log.info("Fitting reduced data sets.")
+            self.fit = Fit(self.datasets)
+            self.fit_result = self.fit.run(optimize_opts=optimize_opts)
+            log.info(self.fit_result)
 
     @classmethod
     def from_file(cls, filename, template="basic"):
@@ -107,12 +115,24 @@ class Analysis:
         config = read_yaml(filename)
         return cls(config=config, template=template)
 
+    def get_datasets(self):
+        """Produce reduced data sets."""
+        if not self._validate_reduction_settings():
+            return False
+        if self.settings["reduction"]["data_reducer"] == "1d":
+            self._spectrum_extraction()
+        elif self.settings["reduction"]["data_reducer"] == "3d":
+            self._map_making()
+        else:
+            # TODO raise error?
+            log.info("Data reduction method not available.")
+
     def get_flux_points(self):
         """Calculate flux points."""
         if self.settings["reduction"]["data_reducer"] == "1d":
             if self._validate_fp_settings():
                 log.info("Calculating flux points.")
-                stacked = Datasets(self.extraction.spectrum_observations).stack_reduce()
+                stacked = self.datasets.stack_reduce()
                 flux_model = self.model.copy()
                 flux_model.parameters.covariance = self.fit_result.parameters.covariance
                 stacked.model = flux_model
@@ -179,32 +199,6 @@ class Analysis:
         for obs in self.observations.list:
             log.info(obs)
 
-    def reduce(self):
-        """Produce reduced data sets."""
-        if not self._validate_reduction_settings():
-            return False
-        if self.settings["reduction"]["data_reducer"] == "1d":
-            self._spectrum_extraction()
-        elif self.settings["reduction"]["data_reducer"] == "3d":
-            self._create_geometry()
-            maker_params = {}
-            if "offset_max" in self.settings["geometry"]:
-                maker_params = {"offset_max": self.settings["geometry"]["offset_max"]}
-            maker = MapMaker(self.geom, **maker_params)
-            self.maps = maker.run(self.observations)
-            self.images = maker.run_images()
-            table_psf = make_mean_psf(self.observations, self.geom.center_skydir)
-            psf_params = {}
-            if "psf_max_radius" in self.settings["geometry"]:
-                psf_params = {"max_radius": self.settings["geometry"]["psf_max_radius"]}
-            self.psf_kernel = PSFKernel.from_table_psf(
-                table_psf, self.geom, **psf_params
-            )
-
-        else:
-            # TODO raise error?
-            log.info("Data reduction method not available.")
-
     def _create_geometry(self):
         """Create the geometry."""
         # TODO: handled in jsonschema validation class
@@ -217,7 +211,7 @@ class Analysis:
             del geom_params["offset_max"]
         if "psf_max_radius" in geom_params:
             del geom_params["psf_max_radius"]
-        self.geom = WcsGeom.create(**geom_params)
+        return WcsGeom.create(**geom_params)
 
     def _energy_axes(self):
         """Builds energy axes from settings in geometry."""
@@ -231,34 +225,47 @@ class Analysis:
             e_true = MapAxis.from_bounds(**axis_params)
         return e_reco, e_true
 
-    def _fit_reduced_data_1d(self, optimize_opts=None):
-        """Fit data to models as joint-likelihood with 1D spectrum."""
-        for obs in self.extraction.spectrum_observations:
-            # TODO: fit_range handled in jsonschema validation class
-            if "fit_range" in self.settings["fit"]:
-                e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
-                e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
-                obs.mask_fit = obs.counts.energy_mask(e_min, e_max)
-            obs.model = self.model
-        log.info("Fitting spectra to model with joint likelihood.")
-        fit = Fit(self.extraction.spectrum_observations)
-        self.fit_result = fit.run(optimize_opts=optimize_opts)
-        log.info(self.fit_result)
+    def _map_making(self):
+        """Make maps and data sets for 3d analysis."""
+        maker_params = {}
+        if "offset_max" in self.settings["geometry"]:
+            maker_params = {"offset_max": self.settings["geometry"]["offset_max"]}
+        geom = self._create_geometry()
+        maker = MapMaker(geom, **maker_params)
+        maps = maker.run(self.observations)
+        # self.images = maker.run_images()
+        table_psf = make_mean_psf(self.observations, geom.center_skydir)
+        psf_params = {}
+        if "psf_max_radius" in self.settings["geometry"]:
+            psf_params = {"max_radius": self.settings["geometry"]["psf_max_radius"]}
+        psf_kernel = PSFKernel.from_table_psf(table_psf, geom, **psf_params)
+        self._read_model()
+        # TODO: background model may come from YAML parameters
+        background_model = BackgroundModel(maps["background"], norm=1.0)
+        background_model.parameters["tilt"].frozen = False
+        self.datasets = Datasets(
+            MapDataset(
+                model=self.model,
+                counts=maps["counts"],
+                exposure=maps["exposure"],
+                background_model=background_model,
+                psf=psf_kernel,
+            )
+        )
 
     def _read_model(self):
         """Read the model from settings."""
-        # TODO: make reading for generic spatial and spectral models with multiple components
-        # use models = serialisation.io.dict_to_models() or models = SkyModels.from_yaml(filename)
-        if self.settings["reduction"]["data_reducer"] == "1d":
-            model_yaml = self.settings["model"]["components"][0]["spectral"]
-        else:
-            log.info(
-                "Model reading available only for single component spectral model."
-            )
-            return False
+        # TODO: Deal with multiple components
         log.info("Reading model.")
-        model_class = SPECTRAL_MODELS[model_yaml["type"]]
-        self.model = model_class.from_dict(model_yaml)
+        model_yaml = self.settings["model"]
+        if self.settings["reduction"]["data_reducer"] == "1d":
+            self.model = dict_to_models(model_yaml)[0].spectral_model
+        else:
+            spatial_model = dict_to_models(model_yaml)[0].spatial_model
+            spectral_model = dict_to_models(model_yaml)[0].spectral_model
+            self.model = SkyModel(
+                spatial_model=spatial_model, spectral_model=spectral_model
+            )
         log.info(self.model)
 
     def _set_logging(self):
@@ -313,29 +320,29 @@ class Analysis:
             **extraction_params,
         )
         self.extraction.run()
+        self._read_model()
+        self.datasets = Datasets(self.extraction.spectrum_observations)
 
-    def _validate_fitting_settings_1d(self):
-        """Validate settings before proceeding to fit."""
-
-        if self.extraction and len(self.extraction.spectrum_observations):
-            if (
+    def _validate_fitting_settings(self):
+        """Validate settings before proceeding to fit 1D."""
+        if self.datasets.datasets:
+            if (self.extraction and
                 self.settings["reduction"]["background"]["background_estimator"]
-                == "reflected"
+                != "reflected"
             ):
-                self.config.validate()
-                return True
-            else:
                 # TODO raise error?
                 log.info("Background estimation only for reflected regions method.")
                 return False
+            self.config.validate()
+            return True
         else:
-            log.info("No spectrum observations extracted.")
+            log.info("No datasets reduced.")
             log.info("Fit cannot be done.")
             return False
 
     def _validate_fp_settings(self):
         """Validate settings before proceeding to flux points estimation."""
-        if self.fit_result:
+        if self.fit:
             self.config.validate()
             return True
         else:

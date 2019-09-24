@@ -91,27 +91,6 @@ def test_get_observations(config):
 def config_analysis_data():
     """Get test config, extend to several scenarios"""
     cfg = """
-    model:
-        components:
-        - name: source
-          spectral:
-                parameters:
-                - factor: 2.0
-                  frozen: false
-                  name: index
-                  unit: ''
-                  value: 2.0
-                - factor: 1.0e-12
-                  frozen: false
-                  name: amplitude
-                  unit: cm-2 s-1 TeV-1
-                  value: 1.0e-11
-                - factor: 1.0
-                  frozen: true
-                  name: reference
-                  unit: TeV
-                  value: 1.0
-                type: PowerLaw
     observations:
         datastore: $GAMMAPY_DATA/hess-dl3-dr1
         filters:
@@ -141,18 +120,33 @@ def config_analysis_data():
 
 @requires_dependency("iminuit")
 @requires_data()
-def test_analysis(config_analysis_data):
+def test_analysis_1d(config_analysis_data):
     analysis = Analysis(config_analysis_data, template="1d")
     analysis.get_observations()
-    analysis.reduce()
-    analysis.fit()
+    analysis.get_datasets()
+    analysis.run_fit()
     analysis.get_flux_points()
-    assert len(analysis.extraction.spectrum_observations) == 2
+    assert len(analysis.datasets.datasets) == 2
     assert len(analysis.flux_points_dataset.data.table) == 4
     dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
     assert dnde.unit == "cm-2 s-1 TeV-1"
     assert_allclose(dnde[0].value, 6.601518e-12, rtol=1e-2)
     assert_allclose(dnde[-1].value, 1.295918e-15, rtol=1e-2)
+
+
+@requires_dependency("iminuit")
+@requires_data()
+def test_analysis_3d():
+    analysis = Analysis(template="3d")
+    analysis.get_observations()
+    analysis.get_datasets()
+    analysis.run_fit()
+    assert len(analysis.datasets.datasets) == 1
+    assert len(analysis.fit_result.parameters.parameters) == 8
+    res = analysis.fit_result.parameters.parameters
+    assert res[3].unit == "cm-2 s-1 TeV-1"
+    assert_allclose(res[5].value, 2.920, rtol=1e-1)
+    assert_allclose(res[6].value, -1.983e-02, rtol=1e-1)
 
 
 def test_validate_astropy_quantities():
