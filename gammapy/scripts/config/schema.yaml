@@ -46,7 +46,7 @@ properties:
                 required: [level]
                 dependencies:
                     filemode: [filename]
-        required: [logging]
+        required: [outdir, logging]
 
 # Block: observations
 # Observations used in the analysis
@@ -186,6 +186,7 @@ properties:
             data_reducer:
                 enum: [not assigned, 1d, 2d, 3d]
             containment_correction: {type: boolean}
+        required: [data_reducer]
         if:
             properties:
                 data_reducer:
@@ -286,6 +287,7 @@ properties:
                                 type: string
                                 enum: [edges, center]
                         required: [lo_bnd, hi_bnd, nbin, unit]
+        required: [axes]
 
 # Block: model
 # Parameters that define the models used in the analysis process
