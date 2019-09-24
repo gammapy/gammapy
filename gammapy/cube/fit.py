@@ -9,11 +9,12 @@ from gammapy.cube.edisp_map import EDispMap
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
-from gammapy.irf import EnergyDispersion
+from gammapy.irf import EnergyDispersion, EffectiveAreaTable
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels, SkyPointSource
 from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
+from gammapy.spectrum import SpectrumDataset
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
 
@@ -683,6 +684,56 @@ class MapDataset(Dataset):
         data["filename"] = filename
         return data
 
+    def to_spectrum_dataset(self, on_region):
+        """Return a ~gammapy.spectrum.SpectrumDataset from on_region.
+
+        Counts and background are summed in the on_region.
+
+        Effective area is taken from the average exposure divided by the livetime.
+        Here we assume it is the sum of the GTIs.
+
+        EnergyDispersion is obtained at the on_region center
+
+        Parameters
+        ----------
+        on_region : `~regions.SkyRegion`
+            the input ON region on which to extract the spectrum
+        Returns
+        -------
+        dataset : `~gammapy.spectrum.SpectrumDataset`
+            the resulting reduced dataset
+        """
+        if self.gti is not None:
+            livetime = self.gti.time_sum
+        else:
+            raise ValueError("No GTI in MapDataset. Impossible to compute livetime")
+
+        if self.counts is not None:
+            counts = self.counts.get_spectrum(on_region, np.sum)
+        else:
+            counts = None
+
+        #TODO : change to proper evaluation of BackgroundModel
+        if self.background_model is not None:
+            background = self.background_model.map.get_spectrum(on_region, np.sum)
+        else:
+            background = None
+
+        if self.exposure is not None:
+            exposure = self.exposure.get_spectrum(on_region, np.mean)
+            aeff = EffectiveAreaTable(
+                energy_lo=exposure.energy.edges[:-1], energy_hi=exposure.energy.edges[1:],
+                data=exposure.data/livetime
+            )
+        else:
+            aeff = None
+
+        # TODO: add obs_id once it is correctly defined in the MapDataset
+        return SpectrumDataset(counts=counts,
+                               background=background,
+                               aeff=aeff,
+                               livetime=livetime,
+                               gti=self.gti)
 
 class MapEvaluator:
     """Sky model evaluation on maps.

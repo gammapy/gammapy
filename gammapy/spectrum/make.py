@@ -164,7 +164,7 @@ class SpectrumDatasetMakerObs:
 
         maps = self.mapmaker.run(["background"])
         mask = self.cutout.to_image().region_mask([self.on_region])
-        bkg_data = maps.background_model.quantity[..., mask].sum(axis=1)
+        bkg_data = maps.background_model.map.get_spectrum(self.on_region, np.sum) #quantity[..., mask].sum(axis=1)
 
         self.dataset.background = CountsSpectrum(
             energy_lo=self.e_reco[:-1], energy_hi=self.e_reco[1:], data=bkg_data
