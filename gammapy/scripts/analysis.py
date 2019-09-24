@@ -475,4 +475,4 @@ _type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(
 _gp_units_validator = jsonschema.validators.extend(
     jsonschema.Draft7Validator, type_checker=_type_checker
 )
-_implemented_templates = {"basic": "basic.yaml", "1d": "1D.yaml", "3d": "3D.yaml"}
+_implemented_templates = {"basic": "template-basic.yaml", "1d": "template-1d.yaml", "3d": "template-3d.yaml"}
