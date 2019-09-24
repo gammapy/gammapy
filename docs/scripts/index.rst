@@ -257,10 +257,7 @@ for the source and/or the background.
 
 .. code-block:: python
 
-    >>> analysis.get_residuals()
-        INFO:gammapy.scripts.analysis:Calculating residuals.
-        INFO:gammapy.scripts.analysis:WcsNDMap
-
+    >>> analysis.datasets.datasets[0].residuals()
             geom  : WcsGeom
             axes  : ['lon', 'lat', 'energy']
             shape : (250, 250, 4)

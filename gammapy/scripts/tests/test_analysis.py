@@ -141,7 +141,6 @@ def test_analysis_3d():
     analysis.get_observations()
     analysis.get_datasets()
     analysis.run_fit()
-    analysis.get_residuals()
     assert len(analysis.datasets.datasets) == 1
     assert len(analysis.fit_result.parameters.parameters) == 8
     res = analysis.fit_result.parameters.parameters

@@ -69,7 +69,6 @@ class Analysis:
         self.fit = None
         self.fit_result = None
         self.flux_points_dataset = None
-        self.residuals = None
 
     @property
     def config(self):
@@ -195,13 +194,6 @@ class Analysis:
         self.observations = datastore.get_observations(ids, skip_missing=True)
         for obs in self.observations.list:
             log.info(obs)
-
-    def get_residuals(self):
-        log.info("Calculating residuals.")
-        npred = self.datasets.datasets[0].npred()
-        self.residuals = Map.from_geom(self.geom)
-        self.residuals.data = self.maps["counts"].data - npred.data
-        log.info(self.residuals)
 
     def _create_geometry(self):
         """Create the geometry."""
