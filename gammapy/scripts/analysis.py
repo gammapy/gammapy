@@ -14,7 +14,7 @@ from gammapy.data import DataStore, ObservationTable
 from gammapy.irf import make_mean_psf
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import SkyModel, BackgroundModel
+from gammapy.modeling.models import SkyModel, BackgroundModel, SkyModels
 from gammapy.modeling.serialize import dict_to_models
 from gammapy.spectrum import (
     FluxPointsDataset,
@@ -44,24 +44,25 @@ class Analysis:
     ----------
     config : dict
         Configuration options following `Config` schema
-    template : str
-        Template for configuration settings
 
     Examples
     --------
     Example how to create an Analysis object:
 
     >>> from gammapy.scripts import Analysis
-    >>> analysis = Analysis(template="1d")
+    >>> analysis = Analysis.from_template(template="1d")
 
     TODO: show a working example of running an analysis.
     Probably not here, but in high-level docs, linked to from class docstring.
     """
 
     def __init__(self, config=None):
-        self._config = Config(config)
-        self._set_logging()
+        if isinstance(config, Config):
+            self._config = config
+        else:
+            self._config = Config(config)
 
+        self._set_logging()
         self.observations = None
         self.background_estimator = None
         self.datasets = None
@@ -89,11 +90,11 @@ class Analysis:
                 if "fit_range" in self.settings["fit"]:
                     e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
                     e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
-                    if isinstance(ds, SpectrumDatasetOnOff):
-                        ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
                     if isinstance(ds, MapDataset):
                         ds.mask_fit = ds.counts.geom.energy_mask(e_min, e_max)
-                ds.model = self.model
+                    else:
+                        ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
+
             log.info("Fitting reduced data sets.")
             self.fit = Fit(self.datasets)
             self.fit_result = self.fit.run(optimize_opts=optimize_opts)
@@ -113,8 +114,7 @@ class Analysis:
         analysis : `Analysis`
             Analysis class
         """
-        filename = make_path(filename)
-        config = read_yaml(filename)
+        config = Config.read(filename)
         return cls(config=config)
 
     @classmethod
@@ -148,26 +148,22 @@ class Analysis:
 
     def get_flux_points(self):
         """Calculate flux points."""
-        if self.settings["reduction"]["data_reducer"] == "1d":
-            if self._validate_fp_settings():
-                log.info("Calculating flux points.")
-                stacked = self.datasets.stack_reduce()
-                flux_model = self.model.copy()
-                flux_model.parameters.covariance = self.fit_result.parameters.covariance
-                stacked.model = flux_model
-                axis_params = self.settings["flux"]["fp_binning"]
-                e_edges = MapAxis.from_bounds(**axis_params).edges
-                flux_point_estimator = FluxPointsEstimator(
-                    e_edges=e_edges, datasets=stacked
-                )
-                fp = flux_point_estimator.run()
-                fp.table["is_ul"] = fp.table["ts"] < 4
-                self.flux_points_dataset = FluxPointsDataset(data=fp, model=self.model)
-                cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
-                log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
-        else:
-            # TODO raise error?
-            log.info("Flux point estimation available only for 1D spectrum.")
+        if self._validate_fp_settings():
+            log.info("Calculating flux points.")
+
+            axis_params = self.settings["flux"]["fp_binning"]
+            e_edges = MapAxis.from_bounds(**axis_params).edges
+
+            flux_point_estimator = FluxPointsEstimator(
+                e_edges=e_edges, datasets=self.datasets
+            )
+            self.fpe = flux_point_estimator
+            fp = flux_point_estimator.run()
+            fp.table["is_ul"] = fp.table["ts"] < 4
+
+            self.flux_points_dataset = FluxPointsDataset(data=fp, model=self.model)
+            cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
+            log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
@@ -258,7 +254,6 @@ class Analysis:
         if "psf_max_radius" in self.settings["geometry"]:
             psf_params = {"max_radius": self.settings["geometry"]["psf_max_radius"]}
         psf_kernel = PSFKernel.from_table_psf(table_psf, geom, **psf_params)
-        self._read_model()
         # TODO: background model may come from YAML parameters
         background_model = BackgroundModel(maps["background"], norm=1.0)
         background_model.parameters["tilt"].frozen = False
@@ -272,19 +267,23 @@ class Analysis:
             )
         )
 
-    def _read_model(self):
+    def get_model(self):
         """Read the model from settings."""
         # TODO: Deal with multiple components
         log.info("Reading model.")
-        model_yaml = self.settings["model"]
-        if self.settings["reduction"]["data_reducer"] == "1d":
-            self.model = dict_to_models(model_yaml)[0].spectral_model
-        else:
-            spatial_model = dict_to_models(model_yaml)[0].spatial_model
-            spectral_model = dict_to_models(model_yaml)[0].spectral_model
-            self.model = SkyModel(
-                spatial_model=spatial_model, spectral_model=spectral_model
-            )
+        model_yaml = Path(self.settings["model"])
+        base_path = self.config.settings["filename"].parent
+
+        self.model = SkyModels.from_yaml(base_path / model_yaml)
+
+        for dataset in self.datasets.datasets:
+            if isinstance(dataset, MapDataset):
+                dataset.model = self.model
+            else:
+                if len(self.model.skymodels) > 1:
+                    raise ValueError("Can only fit a single spectral model at one time.")
+                dataset.model = self.model.skymodels[0].spectral_model
+
         log.info(self.model)
 
     def _set_logging(self):
@@ -339,7 +338,6 @@ class Analysis:
             **extraction_params,
         )
         self.extraction.run()
-        self._read_model()
         self.datasets = Datasets(self.extraction.spectrum_observations)
 
     def _validate_fitting_settings(self):
@@ -412,6 +410,14 @@ class Config:
         path_file = Path(self.settings["general"]["outdir"]) / filename
         path_file.write_text(yaml.dump(self.settings, indent=4))
         log.info(f"Configuration settings saved into {path_file}")
+
+    @classmethod
+    def read(cls, filename):
+        """Read config from filename"""
+        filename = make_path(filename)
+        config = read_yaml(filename)
+        config["filename"] = filename
+        return cls(config)
 
     def print_help(self, section=""):
         """Print template configuration settings."""

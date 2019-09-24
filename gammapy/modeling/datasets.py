@@ -90,7 +90,7 @@ class Datasets:
             datasets = [datasets]
         self._datasets = datasets
 
-    @lazyproperty
+    @property
     def parameters(self):
         # join parameter lists
         parameters = []

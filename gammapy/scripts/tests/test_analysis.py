@@ -127,6 +127,7 @@ def test_analysis_1d(config_analysis_data):
     analysis.config.update_settings(config_analysis_data)
     analysis.get_observations()
     analysis.get_datasets()
+    analysis.get_model()
     analysis.run_fit()
     analysis.get_flux_points()
     assert len(analysis.datasets.datasets) == 2
@@ -143,6 +144,7 @@ def test_analysis_3d():
     analysis = Analysis.from_template(template="3d")
     analysis.get_observations()
     analysis.get_datasets()
+    analysis.get_model()
     analysis.run_fit()
     assert len(analysis.datasets.datasets) == 1
     assert len(analysis.fit_result.parameters.parameters) == 8

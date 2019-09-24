@@ -265,22 +265,22 @@ properties:
 # List of models with spatial and /or spectral components
 # TODO
 #
-    model:
-        type: object
-        additionalProperties: false
-        properties:
-            components:
-                type: array
-                items:
-                    type: object
-                    additionalProperties: false
-                    properties:
-                        name: {type: string}
-                        type: {type: string}
-                        spatial:
-                            "$ref": "#/definitions/model_components"
-                        spectral:
-                            "$ref": "#/definitions/model_components"
+    model: {type: string}
+#        type: object
+#        additionalProperties: false
+#        properties:
+#            components:
+#                type: array
+#                items:
+#                    type: object
+#                    additionalProperties: false
+#                    properties:
+#                        name: {type: string}
+#                        type: {type: string}
+#                        spatial:
+#                            "$ref": "#/definitions/model_components"
+#                        spectral:
+#                            "$ref": "#/definitions/model_components"
 
 # Block: fit
 # Parameters that are used in the fitting process
