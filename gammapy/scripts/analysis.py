@@ -21,6 +21,7 @@ from gammapy.spectrum import (
     FluxPointsEstimator,
     ReflectedRegionsBackgroundEstimator,
     SpectrumExtraction,
+    SpectrumDatasetOnOff,
 )
 from gammapy.utils.scripts import make_path, read_yaml
 
@@ -83,14 +84,17 @@ class Analysis:
     def run_fit(self, optimize_opts=None):
         """Fitting reduced data sets to model."""
         if self._validate_fitting_settings():
-            for obs in self.datasets.datasets:
+            for ds in self.datasets.datasets:
                 # TODO: fit_range handled in jsonschema validation class
                 if "fit_range" in self.settings["fit"]:
                     e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
                     e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
-                    obs.mask_fit = obs.counts.energy_mask(e_min, e_max)
-                obs.model = self.model
-            log.info("Fitting with joint likelihood.")
+                    if isinstance(ds, SpectrumDatasetOnOff):
+                        ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
+                    if isinstance(ds, MapDataset):
+                        ds.mask_fit = ds.counts.geom.energy_mask(e_min, e_max)
+                ds.model = self.model
+            log.info("Fitting reduced data sets.")
             self.fit = Fit(self.datasets)
             self.fit_result = self.fit.run(optimize_opts=optimize_opts)
             log.info(self.fit_result)
