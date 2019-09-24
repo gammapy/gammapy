@@ -230,7 +230,6 @@ properties:
 #                interp: log
 #
     geometry:
-        description: ""
         type: object
         additionalProperties: false
         properties:
@@ -256,37 +255,9 @@ properties:
                 additionalProperties: false
                 properties:
                     e_reco:
-                        type: object
-                        additionalProperties: false
-                        properties:
-                            name: {type: string}
-                            lo_bnd: {type: number}
-                            hi_bnd: {type: number}
-                            nbin: {type: number}
-                            unit: {type: string}
-                            interp:
-                                type: string
-                                enum: [lin, log, sqrt]
-                            node_type:
-                                type: string
-                                enum: [edges, center]
-                        required: [lo_bnd, hi_bnd, nbin, unit]
+                        "$ref": "#/definitions/energy_axis"
                     e_true:
-                        type: object
-                        additionalProperties: false
-                        properties:
-                            name: {type: string}
-                            lo_bnd: {type: number}
-                            hi_bnd: {type: number}
-                            nbin: {type: number}
-                            unit: {type: string}
-                            interp:
-                                type: string
-                                enum: [lin, log, sqrt]
-                            node_type:
-                                type: string
-                                enum: [edges, center]
-                        required: [lo_bnd, hi_bnd, nbin, unit]
+                        "$ref": "#/definitions/energy_axis"
         required: [axes]
 
 # Block: model
@@ -307,43 +278,10 @@ properties:
                         name: {type: string}
                         type: {type: string}
                         spatial:
-                            type: object
-                            additionalProperties: false
-                            properties:
-                                type: {type: string}
-                                parameters:
-                                    type: array
-                                    items:
-                                        type: object
-                                        additionalProperties: false
-                                        properties:
-                                            name: {type: string}
-                                            value: {type: number}
-                                            factor: {type: number}
-                                            scale: {type: number}
-                                            unit: {type: string}
-                                            min: {type: number}
-                                            max: {type: number}
-                                            frozen: {type: boolean}
+                            "$ref": "#/definitions/model_components"
                         spectral:
-                            type: object
-                            additionalProperties: false
-                            properties:
-                                type: {type: string}
-                                parameters:
-                                    type: array
-                                    items:
-                                        type: object
-                                        additionalProperties: false
-                                        properties:
-                                            name: {type: string}
-                                            value: {type: number}
-                                            factor: {type: number}
-                                            scale: {type: number}
-                                            unit: {type: string}
-                                            min: {type: number}
-                                            max: {type: number}
-                                            frozen: {type: boolean}
+                            "$ref": "#/definitions/model_components"
+
 # Block: fit
 # Parameters that are used in the fitting process
 #
@@ -383,21 +321,7 @@ properties:
         additionalProperties: false
         properties:
             fp_binning:
-                type: object
-                additionalProperties: false
-                properties:
-                    name: {type: string}
-                    lo_bnd: {type: number}
-                    hi_bnd: {type: number}
-                    nbin: {type: number}
-                    unit: {type: string}
-                    interp:
-                        type: string
-                        enum: [lin, log, sqrt]
-                    node_type:
-                        type: string
-                        enum: [edges, center]
-                required: [lo_bnd, hi_bnd, nbin, unit]
+                "$ref": "#/definitions/energy_axis"
 
 if:
     properties:
@@ -425,3 +349,40 @@ then:
                     required: [e_reco]
 
 required: [general, observations, reduction, model, fit, flux]
+
+definitions:
+    model_components:
+        type: object
+        additionalProperties: false
+        properties:
+            type: {type: string}
+            parameters:
+                type: array
+                items:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                        name: {type: string}
+                        value: {type: number}
+                        factor: {type: number}
+                        scale: {type: number}
+                        unit: {type: string}
+                        min: {type: number}
+                        max: {type: number}
+                        frozen: {type: boolean}
+    energy_axis:
+        type: object
+        additionalProperties: false
+        properties:
+            name: {type: string}
+            lo_bnd: {type: number}
+            hi_bnd: {type: number}
+            nbin: {type: number}
+            unit: {type: string}
+            interp:
+                type: string
+                enum: [lin, log, sqrt]
+            node_type:
+                type: string
+                enum: [edges, center]
+        required: [lo_bnd, hi_bnd, nbin, unit]
