@@ -1,47 +1,46 @@
 ---
 general:
-  logging:
-    level: INFO
-  outdir: .
+    logging:
+        level: INFO
+    outdir: .
 
 observations:
-  datastore: $GAMMAPY_DATA/hess-dl3-dr1
-  filters:
-  - filter_type: all
+    datastore: $GAMMAPY_DATA/hess-dl3-dr1
+    filters:
+        - filter_type: all
 
 reduction:
-  data_reducer: not assigned
+    data_reducer: not assigned
 
 geometry:
-  axes: {}
+    axes: {}
 
 model:
-  components:
-  - name: source
-    spectral:
-      parameters:
-      - factor: 2.0
-        frozen: false
-        name: index
-        scale: 1.0
-        unit: ''
-        value: 2.0
-      - factor: 1.0e-12
-        frozen: false
-        name: amplitude
-        scale: 1.0
-        unit: cm-2 s-1 TeV-1
-        value: 1.0e-12
-      - factor: 1.0
-        frozen: true
-        name: reference
-        scale: 1.0
-        unit: TeV
-        value: 1.0
-    type: SkyModel
+    components:
+        - name: source
+          spectral:
+              parameters:
+                  - factor: 2.0
+                    frozen: false
+                    name: index
+                    scale: 1.0
+                    unit: ''
+                    value: 2.0
+                  - factor: 1.0e-12
+                    frozen: false
+                    name: amplitude
+                    scale: 1.0
+                    unit: cm-2 s-1 TeV-1
+                    value: 1.0e-12
+                  - factor: 1.0
+                    frozen: true
+                    name: reference
+                    scale: 1.0
+                    unit: TeV
+                    value: 1.0
+          type: SkyModel
 
 fit:
-  fit_range: {}
+    fit_range: {}
 
 flux: {}
-

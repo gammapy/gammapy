@@ -388,7 +388,7 @@ class Config:
 
     def __str__(self):
         """Display settings in pretty YAML format."""
-        return yaml.dump(self.settings)
+        return yaml.dump(self.settings, indent=4)
 
     def dump(self, filename="config.yaml"):
         """Serialize config into a yaml formatted file.
@@ -401,7 +401,7 @@ class Config:
         """
         filename = make_path(filename)
         path_file = Path(self.settings["general"]["outdir"]) / filename
-        path_file.write_text(yaml.dump(self.settings))
+        path_file.write_text(yaml.dump(self.settings, indent=4))
         log.info(f"Configuration settings saved into {path_file}")
 
     def print_help(self, section=""):
