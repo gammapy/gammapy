@@ -101,7 +101,7 @@ class Analysis:
             log.info(self.fit_result)
 
     @classmethod
-    def from_file(cls, filename):
+    def from_yaml(cls, filename):
         """Create analysis from settings in config file.
 
         Parameters
@@ -132,7 +132,7 @@ class Analysis:
             Analysis class
         """
         filename = CONFIG_PATH / _implemented_templates[template]
-        return cls.from_file(filename)
+        return cls.from_yaml(filename)
 
     def get_datasets(self):
         """Produce reduced data sets."""
@@ -149,19 +149,21 @@ class Analysis:
     def get_flux_points(self):
         """Calculate flux points."""
         if self._validate_fp_settings():
+            # TODO: add "source" to config
+            source = "source"
             log.info("Calculating flux points.")
 
             axis_params = self.settings["flux"]["fp_binning"]
             e_edges = MapAxis.from_bounds(**axis_params).edges
 
             flux_point_estimator = FluxPointsEstimator(
-                e_edges=e_edges, datasets=self.datasets
+                e_edges=e_edges, datasets=self.datasets, source=source,
             )
-            self.fpe = flux_point_estimator
             fp = flux_point_estimator.run()
             fp.table["is_ul"] = fp.table["ts"] < 4
 
-            self.flux_points_dataset = FluxPointsDataset(data=fp, model=self.model)
+            model = self.model[source].spectral_model.copy()
+            self.flux_points_dataset = FluxPointsDataset(data=fp, model=model)
             cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
             log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
 
