@@ -146,6 +146,7 @@ def test_analysis_3d():
     analysis.get_observations()
     analysis.get_datasets()
     analysis.get_model()
+    analysis.datasets["stacked"].background_model.tilt.frozen = False
     analysis.run_fit()
     assert len(analysis.datasets.datasets) == 1
     assert len(analysis.fit_result.parameters.parameters) == 8

@@ -9,12 +9,11 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
-from gammapy.irf import make_mean_psf, make_mean_edisp
-from gammapy.cube import MapDataset, MapMaker, PSFKernel
+from gammapy.cube import MapDataset, MapMakerObs
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import SkyModels, BackgroundModel
+from gammapy.modeling.models import SkyModels
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
@@ -248,37 +247,34 @@ class Analysis:
             maker_params["offset_max"] = Angle(self.settings["reduction"]["offset-max"])
 
         geom = self._create_geometry(self.settings["reduction"]["geom"])
+        geom_irf = self._create_geometry(self.settings["reduction"]["geom-irf"])
 
-        pars = self.settings["reduction"].get("geom-irf")
-        if pars is not None:
-            geom_true = self._create_geometry(pars)
-        else:
-            geom_true = geom
+        stacked = MapDataset.create(geom=geom, geom_irf=geom_irf, name="stacked")
 
-        maker = MapMaker(geom=geom, geom_true=geom_true, **maker_params)
-        maps = maker.run(self.observations)
-        table_psf = make_mean_psf(self.observations, geom.center_skydir)
-        psf_kernel = PSFKernel.from_table_psf(table_psf, geom_true, max_radius=Angle("0.3 deg"))
+        for obs in self.observations:
+            position, width = obs.pointing_radec, 2 * maker_params["offset_max"]
+            geom_cutout = geom.cutout(position=position, width=width)
+            geom_irf_cutout = geom_irf.cutout(position=position, width=width)
+
+            maker = MapMakerObs(
+                observation=obs,
+                geom=geom_cutout,
+                geom_true=geom_irf_cutout,
+                offset_max=maker_params["offset_max"]
+            )
+
+            dataset = maker.run()
+            stacked.stack(dataset)
+
+        #TODO: handle IRF maps in fit
+        position = geom.center_skydir
+        geom_psf = geom.to_image().to_cube(geom_irf.axes)
+        stacked.psf = stacked.psf.get_psf_kernel(position=position, geom=geom_psf, max_radius="0.5 deg")
 
         e_reco = geom.get_axis_by_name("energy").edges
-        e_true = geom_true.get_axis_by_name("energy").edges
-        edisp = make_mean_edisp(
-            self.observations, position=geom.center_skydir, e_true=e_true, e_reco=e_reco
-        )
+        stacked.edisp = stacked.edisp.get_energy_dispersion(position=position, e_reco=e_reco)
 
-        background_model = BackgroundModel(maps["background"], norm=1.0)
-        background_model.parameters["tilt"].frozen = False
-
-        self.datasets = Datasets(
-            MapDataset(
-                counts=maps["counts"],
-                exposure=maps["exposure"],
-                background_model=background_model,
-                psf=psf_kernel,
-                edisp=edisp,
-                name="stacked",
-            )
-        )
+        self.datasets = Datasets([stacked])
 
     def get_model(self):
         """Read the model from settings."""
