@@ -131,7 +131,7 @@ properties:
 # Block: reduction
 # Process of data reduction
 #
-#    Chosen data reducer process
+#    Chosen dataset type
 #    dataset-type: SpectrumDatasetOnOff, MapDataset
 #
 #    Parameters used in the estimation of the background
@@ -149,8 +149,31 @@ properties:
 #            filename: mask.fits
 #            hdu: IMAGE
 #
-#    containment_correction: true
+#        containment_correction: true
 #
+#    geom:
+#        Map pixel size in degrees
+#        binsz: 0.02
+#        Coordinate system
+#        coordsys: CEL, GAL
+#        Any valid WCS projection type
+#        proj: CAR
+#        Lon and lat in deg in the coordsys of the map
+#        skydir: [83, 22]
+#        Width of the map in degrees
+#        width: [5, 5]
+#
+#        Additional Map Axes other than spatial
+#        Example values for energy axes
+#        axes:
+#            - name: energy
+#              lo_bnd: 0.01
+#              hi_bnd: 100
+#              nbin: 73
+#              unit: TeV
+#              interp: log
+
+
     reduction:
         type: object
         additionalProperties: false
@@ -202,65 +225,6 @@ properties:
                 background:
                     required: [background_estimator, on_region]
 
-# Block: geom
-# Geometry where to perform data reduction and analysis
-#
-#        Map pixel size in degrees
-#        binsz: 0.02
-#        Coordinate system
-#        coordsys: CEL, GAL
-#        Any valid WCS projection type
-#        proj: CAR
-#        Lon and lat in deg in the coordsys of the map
-#        skydir: [83, 22]
-#        Width of the map in degrees
-#        width: [5, 5]
-#        offset_max: 3 deg
-#
-#        Additional Map Axes other than spatial
-#        Example values for energy axes
-#        axes:
-#            e_reco:
-#                lo_bnd: 0.01
-#                hi_bnd: 100
-#                nbin: 73
-#                unit: TeV
-#                interp: log
-#            e_true:
-#                lo_bnd: 0.01
-#                hi_bnd: 315
-#                nbin: 109
-#                unit: TeV
-#                interp: log
-#
-#    geom:
-#        type: object
-#        additionalProperties: false
-#        properties:
-#            binsz: {type: number}
-#            coordsys:
-#                type: string
-#                enum: [CEL, GAL]
-#            proj: {type: string}
-#            skydir:
-#                type: array
-#                items: {type: number}
-#                minItems: 2
-#                maxItems: 2
-#            width:
-#                type: array
-#                items: {type: number}
-#                minItems: 1
-#                maxItems: 2
-#            axes:
-#                type: object
-#                additionalProperties: false
-#                properties:
-#                    e_reco:
-#                        "$ref": "#/definitions/energy_axis"
-#                    e_true:
-#                        "$ref": "#/definitions/energy_axis"
-#        required: [axes]
 
 # Block: model
 # Parameters that define the models used in the analysis process
@@ -344,11 +308,10 @@ if:
                     const: MapDataset
 then:
     properties:
-        geom:
-            required: [binsz, width, skydir, coordsys, proj, axes]
+        reduction:
             properties:
-                axes:
-                    required: [e_reco]
+                geom:
+                    required: [binsz, width, skydir, coordsys, proj, axes]
 
 required: [general, observations, reduction, model, fit, flux]
 
