@@ -15,24 +15,19 @@ reduction:
     dataset-type: MapDataset
     offset-max: 2.5 deg
     geom:
-        axes:
-            e_reco:
-                hi_bnd: 10
-                interp: log
-                lo_bnd: 1
-                name: energy
-                nbin: 4
-                node_type: edges
-                unit: TeV
+        skydir: [83.633, 22.014]
+        width: [5, 5]
         binsz: 0.02
         coordsys: CEL
         proj: TAN
-        skydir:
-            - 83.633
-            - 22.014
-        width:
-            - 5
-            - 5
+        axes:
+          - name: energy
+            hi_bnd: 10
+            lo_bnd: 1
+            nbin: 4
+            interp: log
+            node_type: edges
+            unit: TeV
 
 model: model.yaml
 

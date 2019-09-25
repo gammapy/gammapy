@@ -207,15 +207,12 @@ properties:
                         minItems: 1
                         maxItems: 2
                     axes:
-                        type: object
+                        type: array
                         additionalProperties: false
-                        properties:
-                            e_reco:
-                                "$ref": "#/definitions/energy_axis"
-                            e_true:
-                                "$ref": "#/definitions/energy_axis"
+                        items:
+                            "$ref": "#/definitions/map_axis"
                 required: [axes]
-        required: [dataset-type, geom]
+        required: [dataset-type]
         if:
             properties:
                 dataset-type:
@@ -347,7 +344,7 @@ properties:
         additionalProperties: false
         properties:
             fp_binning:
-                "$ref": "#/definitions/energy_axis"
+                "$ref": "#/definitions/map_axis"
 
 if:
     properties:
@@ -396,7 +393,7 @@ definitions:
                         min: {type: number}
                         max: {type: number}
                         frozen: {type: boolean}
-    energy_axis:
+    map_axis:
         type: object
         additionalProperties: false
         properties:

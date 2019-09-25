@@ -229,23 +229,15 @@ class Analysis:
         """Create the geometry."""
         # TODO: handled in jsonschema validation class
         geom_params = copy.deepcopy(self.settings["reduction"]["geom"])
-        e_reco, e_true = self._energy_axes()
-        geom_params["axes"] = []
-        geom_params["axes"].append(e_reco)
+
+        axes = []
+        for axis_params in self.settings["reduction"]["geom"].get("axes", []):
+            ax = MapAxis.from_bounds(**axis_params)
+            axes.append(ax)
+
+        geom_params["axes"] = axes
         geom_params["skydir"] = tuple(geom_params["skydir"])
         return WcsGeom.create(**geom_params)
-
-    def _energy_axes(self):
-        """Builds energy axes from settings in geometry."""
-        # TODO: e_reco/e_true handled in jsonschema validation class
-        e_reco = e_true = None
-        if "e_reco" in self.settings["reduction"]["geom"]["axes"]:
-            axis_params = self.settings["reduction"]["geom"]["axes"]["e_reco"]
-            e_reco = MapAxis.from_bounds(**axis_params)
-        if "e_true" in self.settings["reduction"]["geom"]["axes"]:
-            axis_params = self.settings["reduction"]["geom"]["axes"]["e_true"]
-            e_true = MapAxis.from_bounds(**axis_params)
-        return e_reco, e_true
 
     def _map_making(self):
         """Make maps and data sets for 3d analysis."""
@@ -334,11 +326,8 @@ class Analysis:
             extraction_params["containment_correction"] = self.settings["reduction"][
                 "containment_correction"
             ]
-        e_reco, e_true = self._energy_axes()
-        if e_reco:
-            extraction_params["e_reco"] = e_reco.center
-        if e_true:
-            extraction_params["e_true"] = e_true.center
+        extraction_params["e_reco"] = None
+        extraction_params["e_true"] = None
         self.extraction = SpectrumExtraction(
             observations=self.observations,
             bkg_estimate=self.background_estimator.result,
