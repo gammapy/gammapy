@@ -340,7 +340,10 @@ class Analysis:
             extraction_params["containment_correction"] = self.settings["reduction"][
                 "containment_correction"
             ]
-        extraction_params["e_reco"] = None
+
+        params = self.settings["reduction"]["geom"]["axes"][0]
+        e_reco = MapAxis.from_bounds(**params).edges
+        extraction_params["e_reco"] = e_reco
         extraction_params["e_true"] = None
         self.extraction = SpectrumExtraction(
             observations=self.observations,

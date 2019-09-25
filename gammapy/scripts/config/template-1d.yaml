@@ -21,6 +21,15 @@ reduction:
                 - 22.014 deg
             frame: icrs
             radius: 0.1 deg
+    geom:
+        axes:
+          - name: energy
+            hi_bnd: 100
+            lo_bnd: 0.01
+            nbin: 73
+            interp: log
+            node_type: edges
+            unit: TeV
 
 model: model.yaml
 
