@@ -1060,7 +1060,9 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         amplitude="1e-12 cm-2 s-1 TeV-1",
         reference="1 TeV",
         expfactor="1e-2 TeV-2",
-    ):
+    ):  
+        if reference.unit != expfactor.unit.bases[0]:
+            raise(ValueError("Base energy unit for expfactor must match reference unit"))
         self.index_1 = Parameter("index_1", index_1)
         self.index_2 = Parameter("index_2", index_2)
         self.amplitude = Parameter("amplitude", amplitude)
