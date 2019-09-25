@@ -186,7 +186,7 @@ properties:
             dataset-type:
                 enum: [not assigned, SpectrumDatasetOnOff, MapDataset]
             containment_correction: {type: boolean}
-            offset-max: {type: string}
+            offset-max: {type: number}
             geom:
                 "$ref": "#/definitions/map_geom"
             geom-irf:
