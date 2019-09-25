@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 import astropy.units as u
+from regions import CircleSkyRegion
 from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
@@ -9,7 +10,7 @@ from gammapy.cube.edisp_map import EDispMap
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
-from gammapy.irf import EnergyDispersion, EffectiveAreaTable
+from gammapy.irf import EnergyDispersion, EffectiveAreaTable, apply_containment_fraction
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels, SkyPointSource
@@ -688,7 +689,7 @@ class MapDataset(Dataset):
         data["filename"] = filename
         return data
 
-    def to_spectrum_dataset(self, on_region):
+    def to_spectrum_dataset(self, on_region, containment_correction=False):
         """Return a ~gammapy.spectrum.SpectrumDataset from on_region.
 
         Counts and background are summed in the on_region.
@@ -703,6 +704,8 @@ class MapDataset(Dataset):
         ----------
         on_region : `~regions.SkyRegion`
             the input ON region on which to extract the spectrum
+        containment_correction : bool
+            Apply containment correction for point sources and circular on regions
         Returns
         -------
         dataset : `~gammapy.spectrum.SpectrumDataset`
@@ -733,6 +736,18 @@ class MapDataset(Dataset):
         else:
             aeff = None
 
+        if containment_correction:
+            if not isinstance(on_region, CircleSkyRegion):
+                raise TypeError(
+                    "Incorrect region type for containment correction."
+                    " Should be CircleSkyRegion."
+                )
+            elif self.psf is None or isinstance(self.psf, PSFKernel):
+                raise ValueError("No PSFMap set. Containement correction impossible")
+            else:
+                psf_table = self.psf.get_energy_dependent_table_psf(on_region.center)
+                aeff = apply_containment_fraction(aeff, psf_table, on_region.radius)
+
         if self.edisp is not None:
             if isinstance(self.edisp, EnergyDispersion):
                 edisp = self.edisp
@@ -741,14 +756,13 @@ class MapDataset(Dataset):
         else:
             edisp=None
 
-        # TODO: change obs_id to name
         return SpectrumDataset(counts=counts,
                                background=background,
                                aeff=aeff,
                                edisp=edisp,
                                livetime=livetime,
                                gti=self.gti,
-                               obs_id=self.name)
+                               name=self.name)
 
 class MapEvaluator:
     """Sky model evaluation on maps.
