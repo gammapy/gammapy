@@ -282,7 +282,7 @@ class Analysis:
         # TODO: Deal with multiple components
         log.info("Reading model.")
         model_yaml = Path(self.settings["model"])
-        base_path = self.config.settings["filename"].parent
+        base_path = self.config.filename.parent
 
         self.model = SkyModels.from_yaml(base_path / model_yaml)
 
@@ -397,17 +397,23 @@ class AnalysisConfig:
         Configuration parameters
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, filename="config.yaml"):
         self._user_settings = {}
         self.settings = {}
         # add user settings
         self.update_settings(config)
+        self.filename = filename
 
     def __str__(self):
         """Display settings in pretty YAML format."""
-        return yaml.dump(self.settings, indent=4)
+        info = self.__class__.__name__ + "\n\n\t"
 
-    def to_yaml(self, filename="config.yaml"):
+        data = yaml.dump(self.settings, sort_keys=False, indent=4)
+        data = data.replace("\n", "\n\t")
+        info += data
+        return info.expandtabs(tabsize=4)
+
+    def to_yaml(self, filename=None, overwrite=False):
         """Serialize config into a yaml formatted file.
 
         Parameters
@@ -415,10 +421,20 @@ class AnalysisConfig:
         filename : str, Path
             Configuration settings filename
             Default config.yaml
+        overwrite : bool
+            Whether to overwrite an existing file.
         """
+        if filename is None:
+            filename = self.filename
+
         filename = make_path(filename)
         path_file = Path(self.settings["general"]["outdir"]) / filename
-        path_file.write_text(yaml.dump(self.settings, indent=4))
+        self.filename = path_file
+
+        if path_file.exists() and not overwrite:
+            raise IOError(f"File {filename} already exists.")
+
+        path_file.write_text(yaml.dump(self.settings, sort_keys=False, indent=4))
         log.info(f"Configuration settings saved into {path_file}")
 
     @classmethod
@@ -426,8 +442,7 @@ class AnalysisConfig:
         """Read config from filename"""
         filename = make_path(filename)
         config = read_yaml(filename)
-        config["filename"] = filename
-        return cls(config)
+        return cls(config, filename=filename)
 
     def print_help(self, section=""):
         """Print template configuration settings."""
