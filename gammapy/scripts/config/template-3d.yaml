@@ -13,6 +13,7 @@ observations:
 
 reduction:
     dataset-type: MapDataset
+    offset-max: 2.5 deg
 
 geometry:
     axes:
@@ -26,7 +27,6 @@ geometry:
             unit: TeV
     binsz: 0.02
     coordsys: CEL
-    offset_max: 2.5 deg
     proj: TAN
     skydir:
         - 83.633

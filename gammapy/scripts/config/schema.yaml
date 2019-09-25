@@ -186,6 +186,8 @@ properties:
             dataset-type:
                 enum: [not assigned, SpectrumDatasetOnOff, MapDataset]
             containment_correction: {type: boolean}
+            offset-max: {type: string}
+
         required: [dataset-type]
         if:
             properties:
@@ -247,7 +249,6 @@ properties:
                 items: {type: number}
                 minItems: 1
                 maxItems: 2
-            offset_max: {type: string}
             axes:
                 type: object
                 additionalProperties: false

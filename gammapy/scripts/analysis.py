@@ -233,9 +233,6 @@ class Analysis:
         geom_params["axes"] = []
         geom_params["axes"].append(e_reco)
         geom_params["skydir"] = tuple(geom_params["skydir"])
-        if "offset_max" in geom_params:
-            del geom_params["offset_max"]
-
         return WcsGeom.create(**geom_params)
 
     def _energy_axes(self):
@@ -253,8 +250,10 @@ class Analysis:
     def _map_making(self):
         """Make maps and data sets for 3d analysis."""
         maker_params = {}
-        if "offset_max" in self.settings["geometry"]:
-            maker_params = {"offset_max": self.settings["geometry"]["offset_max"]}
+
+        if "offset-max" in self.settings["reduction"]:
+            maker_params = {"offset_max": self.settings["reduction"]["offset-max"]}
+
         geom = self._create_geometry()
         maker = MapMaker(geom, **maker_params)
         maps = maker.run(self.observations)
