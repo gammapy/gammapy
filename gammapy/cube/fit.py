@@ -251,6 +251,10 @@ class MapDataset(Dataset):
             return self.background_model.map.geom
 
     @property
+    def _energy_axis(self):
+        return self._geom.get_axis_by_name("energy")
+
+    @property
     def data_shape(self):
         """Shape of the counts data (tuple)"""
         return self.counts.data.shape
@@ -692,7 +696,8 @@ class MapDataset(Dataset):
         Effective area is taken from the average exposure divided by the livetime.
         Here we assume it is the sum of the GTIs.
 
-        EnergyDispersion is obtained at the on_region center
+        EnergyDispersion is obtained at the on_region center.
+        Only regions with centers are supported.
 
         Parameters
         ----------
@@ -728,10 +733,19 @@ class MapDataset(Dataset):
         else:
             aeff = None
 
+        if self.edisp is not None:
+            if isinstance(self.edisp, EnergyDispersion):
+                edisp = self.edisp
+            else:
+                self.edisp.get_energy_dispersion(on_region.center,self._energy_axis)
+        else:
+            edisp=None
+
         # TODO: add obs_id once it is correctly defined in the MapDataset
         return SpectrumDataset(counts=counts,
                                background=background,
                                aeff=aeff,
+                               edisp=edisp,
                                livetime=livetime,
                                gti=self.gti)
 

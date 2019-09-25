@@ -154,18 +154,23 @@ def test_different_exposure_unit(sky_model, geom):
     assert_allclose(npred.data[0, 50, 50], npred_ref.data[0, 50, 50])
 
 @requires_data()
-def test_to_spectrum_dataset(sky_model, geom):
-    dataset_ref = get_map_dataset(sky_model, geom, geom, edisp=True)
+def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
+    dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=True)
     dataset_ref.counts = dataset_ref.background_model.map*0.
     dataset_ref.counts.data[1,50,50]=1
     dataset_ref.counts.data[1,60,50]=1
 
-    gti = GTI.create( [0*u.s], [10000*u.s], reference_time = "2010-01-01T00:00:00")
+    gti = GTI.create( [0*u.s], [1*u.h], reference_time = "2010-01-01T00:00:00")
     dataset_ref.gti = gti
     on_region = CircleSkyRegion(center = geom.center_skydir, radius=0.1*u.deg)
     spectrum_dataset = dataset_ref.to_spectrum_dataset(on_region)
 
     assert np.sum(spectrum_dataset.counts.data) == 1
+    assert spectrum_dataset.data_shape == (2,)
+    assert spectrum_dataset.background.energy.nbin == 2
+    assert spectrum_dataset.aeff.energy.nbin == 3
+    assert spectrum_dataset.edisp.e_reco.nbin == 2
+    assert spectrum_dataset.edisp.e_true.nbin == 3
 
 @requires_data()
 def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
