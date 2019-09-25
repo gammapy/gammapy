@@ -14,22 +14,26 @@ from gammapy.data import DataStore, ObservationTable
 from gammapy.irf import make_mean_psf
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import SkyModel, BackgroundModel, SkyModels
-from gammapy.modeling.serialize import dict_to_models
+from gammapy.modeling.models import BackgroundModel, SkyModels
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
     ReflectedRegionsBackgroundEstimator,
     SpectrumExtraction,
-    SpectrumDatasetOnOff,
 )
 from gammapy.utils.scripts import make_path, read_yaml
 
-__all__ = ["Analysis", "Config"]
+__all__ = ["Analysis", "AnalysisConfig"]
 
 log = logging.getLogger(__name__)
 CONFIG_PATH = Path(__file__).resolve().parent / "config"
 SCHEMA_FILE = CONFIG_PATH / "schema.yaml"
+
+ANALYSIS_TEMPLATES = {
+    "basic": "template-basic.yaml",
+    "1d": "template-1d.yaml",
+    "3d": "template-3d.yaml"
+}
 
 
 class Analysis:
@@ -57,10 +61,10 @@ class Analysis:
     """
 
     def __init__(self, config=None):
-        if isinstance(config, Config):
+        if isinstance(config, AnalysisConfig):
             self._config = config
         else:
-            self._config = Config(config)
+            self._config = AnalysisConfig(config)
 
         self._set_logging()
         self.observations = None
@@ -74,7 +78,7 @@ class Analysis:
 
     @property
     def config(self):
-        """Analysis configuration (`Config`)"""
+        """Analysis configuration (`AnalysisConfig`)"""
         return self._config
 
     @property
@@ -114,16 +118,16 @@ class Analysis:
         analysis : `Analysis`
             Analysis class
         """
-        config = Config.read(filename)
+        config = AnalysisConfig.from_yaml(filename)
         return cls(config=config)
 
     @classmethod
-    def from_template(cls, template):
+    def from_template(cls, template="basic"):
         """Create Analysis from existing templates.
 
         Parameters
         ----------
-        template : {"1d", "3d", "basic"}
+        template : {"basic", "1d", "3d"}
             Build in templates.
 
         Returns
@@ -131,7 +135,7 @@ class Analysis:
         analysis : `Analysis`
             Analysis class
         """
-        filename = CONFIG_PATH / _implemented_templates[template]
+        filename = CONFIG_PATH / ANALYSIS_TEMPLATES[template]
         return cls.from_yaml(filename)
 
     def get_datasets(self):
@@ -380,7 +384,7 @@ class Analysis:
             return False
 
 
-class Config:
+class AnalysisConfig:
     """Analysis configuration.
 
     Parameters
@@ -399,7 +403,7 @@ class Config:
         """Display settings in pretty YAML format."""
         return yaml.dump(self.settings, indent=4)
 
-    def dump(self, filename="config.yaml"):
+    def to_yaml(self, filename="config.yaml"):
         """Serialize config into a yaml formatted file.
 
         Parameters
@@ -414,7 +418,7 @@ class Config:
         log.info(f"Configuration settings saved into {path_file}")
 
     @classmethod
-    def read(cls, filename):
+    def from_yaml(cls, filename):
         """Read config from filename"""
         filename = make_path(filename)
         config = read_yaml(filename)
@@ -492,4 +496,3 @@ _type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(
 _gp_units_validator = jsonschema.validators.extend(
     jsonschema.Draft7Validator, type_checker=_type_checker
 )
-_implemented_templates = {"basic": "template-basic.yaml", "1d": "template-1d.yaml", "3d": "template-3d.yaml"}
