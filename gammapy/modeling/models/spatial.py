@@ -505,7 +505,7 @@ class TemplateSpatialModel(SpatialModel):
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
     """
 
-    __slots__ = ["map", "norm", "meta", "_interp_kwargs", "filename"]
+    __slots__ = ["map", "norm", "meta", "renormalize", "_interp_kwargs", "filename"]
     tag = "TemplateSpatialModel"
 
     def __init__(
@@ -515,7 +515,7 @@ class TemplateSpatialModel(SpatialModel):
             log.warning("Diffuse map has negative values. Check and fix this!")
 
         self.map = map
-
+        self.renormalize = normalize
         if normalize:
             self.normalize()
 
@@ -579,7 +579,7 @@ class TemplateSpatialModel(SpatialModel):
 
     @classmethod
     def from_dict(cls, data):
-        init = cls.read(data["filename"])
+        init = cls.read(data["filename"], normalize=data.get("renormalize", True))
         init.parameters = Parameters.from_dict(data)
         for parameter in init.parameters.parameters:
             setattr(init, parameter.name, parameter)
@@ -588,4 +588,5 @@ class TemplateSpatialModel(SpatialModel):
     def to_dict(self):
         data = super().to_dict()
         data["filename"] = self.filename
+        data["renormalize"] = self.renormalize
         return data
