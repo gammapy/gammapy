@@ -214,7 +214,7 @@ properties:
                 "$ref": "#/definitions/map_geom"
             geom-irf:
                 "$ref": "#/definitions/map_geom"
-        required: [dataset-type]
+        required: [dataset-type, geom]
         if:
             properties:
                 dataset-type:
@@ -299,19 +299,6 @@ then:
     properties:
         flux:
             required: [fp_binning]
-
-if:
-    properties:
-        reduction:
-            properties:
-                dataset-type:
-                    const: MapDataset
-then:
-    properties:
-        reduction:
-            properties:
-                geom:
-                    required: [binsz, width, skydir, coordsys, proj, axes]
 
 required: [general, observations, reduction, model, fit, flux]
 
