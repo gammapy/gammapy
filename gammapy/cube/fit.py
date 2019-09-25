@@ -748,7 +748,7 @@ class MapDataset(Dataset):
                                edisp=edisp,
                                livetime=livetime,
                                gti=self.gti,
-                               obs_id=name)
+                               obs_id=self.name)
 
 class MapEvaluator:
     """Sky model evaluation on maps.
