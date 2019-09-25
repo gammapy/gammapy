@@ -79,10 +79,10 @@ def make_axes_cols(axes, axis_names=None):
 
 def energy_axis_from_fgst_ccube(hdu):
     bands = Table.read(hdu)
-    edges_min = bands["E_MIN"].data
-    edges_max = bands["E_MAX"].data
+    edges_min = bands["E_MIN"].quantity
+    edges_max = bands["E_MAX"].quantity
     edges = edges_from_lo_hi(edges_min, edges_max)
-    return [MapAxis.from_edges(edges=edges, name="energy", unit="MeV", interp="log")]
+    return [MapAxis.from_edges(edges=edges, name="energy", interp="log")]
 
 
 def energy_axis_from_fgst_template(hdu):
