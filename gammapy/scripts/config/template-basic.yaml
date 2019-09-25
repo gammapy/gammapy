@@ -11,6 +11,7 @@ observations:
 
 reduction:
     dataset-type: not assigned
+    stack-datasets: true
     geom:
         region: {}
         axes: []

@@ -141,6 +141,24 @@ def test_analysis_1d(config_analysis_data):
 
 @requires_dependency("iminuit")
 @requires_data()
+def test_analysis_1d_stacked():
+    analysis = Analysis.from_template(template="1d")
+    analysis.config.settings["reduction"]["stack-datasets"] = True
+    analysis.get_observations()
+    analysis.get_datasets()
+    analysis.get_model()
+    analysis.run_fit()
+
+    assert len(analysis.datasets.datasets) == 1
+    assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 404)
+    pars = analysis.fit_result.parameters
+
+    assert_allclose(pars["index"].value, 2.689559, rtol=1e-3)
+    assert_allclose(pars["amplitude"].value, 2.81629e-11, rtol=1e-3)
+
+
+@requires_dependency("iminuit")
+@requires_data()
 def test_analysis_3d():
     analysis = Analysis.from_template(template="3d")
     analysis.get_observations()

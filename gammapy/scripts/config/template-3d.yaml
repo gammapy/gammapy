@@ -13,6 +13,7 @@ observations:
 
 reduction:
     dataset-type: MapDataset
+    stack-datasets: true
     offset-max: 2.5 deg
     geom:
         skydir: [83.633, 22.014]

@@ -196,13 +196,14 @@ properties:
                             required: [filename]
             dataset-type:
                 enum: [not assigned, SpectrumDatasetOnOff, MapDataset]
+            stack-datasets: {type: boolean}
             containment_correction: {type: boolean}
             offset-max: {type: number}
             geom:
                 "$ref": "#/definitions/map_geom"
             geom-irf:
                 "$ref": "#/definitions/map_geom"
-        required: [dataset-type, geom]
+        required: [dataset-type, geom, stack-datasets]
         if:
             properties:
                 dataset-type:
@@ -212,6 +213,12 @@ properties:
             properties:
                 background:
                     required: [background_estimator]
+        if:
+            properties:
+                dataset-type:
+                    const: MapDataset
+        then:
+            required: [offset-max]
 
 
 # Block: model

@@ -241,40 +241,56 @@ class Analysis:
 
     def _map_making(self):
         """Make maps and data sets for 3d analysis."""
-        maker_params = {}
-
-        if "offset-max" in self.settings["reduction"]:
-            maker_params["offset_max"] = Angle(self.settings["reduction"]["offset-max"])
-
         geom = self._create_geometry(self.settings["reduction"]["geom"])
         geom_irf = self._create_geometry(self.settings["reduction"]["geom-irf"])
+        offset_max = Angle(self.settings["reduction"]["offset-max"])
+        stack_datasets = self.settings["reduction"]["stack-datasets"]
 
-        stacked = MapDataset.create(geom=geom, geom_irf=geom_irf, name="stacked")
+        if stack_datasets:
+            stacked = MapDataset.create(geom=geom, geom_irf=geom_irf, name="stacked")
 
-        for obs in self.observations:
-            position, width = obs.pointing_radec, 2 * maker_params["offset_max"]
-            geom_cutout = geom.cutout(position=position, width=width)
-            geom_irf_cutout = geom_irf.cutout(position=position, width=width)
+            for obs in self.observations:
+                dataset = self._get_dataset(obs, geom, geom_irf, offset_max)
+                stacked.stack(dataset)
 
-            maker = MapMakerObs(
-                observation=obs,
-                geom=geom_cutout,
-                geom_true=geom_irf_cutout,
-                offset_max=maker_params["offset_max"]
-            )
+            self._extract_irf_kernels(stacked)
+            datasets = [stacked]
+        else:
+            datasets = []
+            for obs in self.observations:
+                dataset = self._get_dataset(obs, geom, geom_irf, offset_max)
+                self._extract_irf_kernels(dataset)
+                datasets.append(dataset)
 
-            dataset = maker.run()
-            stacked.stack(dataset)
+        self.datasets = Datasets(datasets)
 
+    @staticmethod
+    def _get_dataset(obs, geom, geom_irf, offset_max):
+        position, width = obs.pointing_radec, 2 * offset_max
+        geom_cutout = geom.cutout(position=position, width=width)
+        geom_irf_cutout = geom_irf.cutout(position=position, width=width)
+
+        maker = MapMakerObs(
+            observation=obs,
+            geom=geom_cutout,
+            geom_true=geom_irf_cutout,
+            offset_max=offset_max
+        )
+
+        return maker.run()
+
+    @staticmethod
+    def _extract_irf_kernels(dataset):
         #TODO: handle IRF maps in fit
+        geom = dataset.counts.geom
+        geom_irf = dataset.exposure.geom
+
         position = geom.center_skydir
         geom_psf = geom.to_image().to_cube(geom_irf.axes)
-        stacked.psf = stacked.psf.get_psf_kernel(position=position, geom=geom_psf, max_radius="0.5 deg")
+        dataset.psf = dataset.psf.get_psf_kernel(position=position, geom=geom_psf, max_radius="0.5 deg")
 
         e_reco = geom.get_axis_by_name("energy").edges
-        stacked.edisp = stacked.edisp.get_energy_dispersion(position=position, e_reco=e_reco)
-
-        self.datasets = Datasets([stacked])
+        dataset.edisp = dataset.edisp.get_energy_dispersion(position=position, e_reco=e_reco)
 
     def get_model(self):
         """Read the model from settings."""
@@ -349,6 +365,11 @@ class Analysis:
         )
         self.extraction.run()
         self.datasets = Datasets(self.extraction.spectrum_observations)
+
+        if self.settings["reduction"]["stack-datasets"]:
+            stacked = self.datasets.stack_reduce()
+            stacked.name = "stacked"
+            self.datasets = Datasets([stacked])
 
     def _validate_fitting_settings(self):
         """Validate settings before proceeding to fit 1D."""
