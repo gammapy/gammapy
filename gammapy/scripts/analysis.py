@@ -62,7 +62,8 @@ class Analysis:
 
     def __init__(self, config=None):
         if config is None:
-            self._config = AnalysisConfig.from_template(template="basic")
+            filename = CONFIG_PATH / ANALYSIS_TEMPLATES["basic"]
+            self._config = AnalysisConfig.from_yaml(filename)
         elif isinstance(config, dict):
             self._config = AnalysisConfig(config)
         elif isinstance(config, AnalysisConfig):
