@@ -15,15 +15,21 @@ reduction:
     dataset-type: SpectrumDatasetOnOff
     background:
         background_estimator: reflected
-        on_region:
-            center:
-                - 83.633 deg
-                - 22.014 deg
-            frame: icrs
-            radius: 0.1 deg
-
-geometry:
-    axes: {}
+    geom:
+        region:
+          center:
+            - 83.633 deg
+            - 22.014 deg
+          frame: icrs
+          radius: 0.1 deg
+        axes:
+          - name: energy
+            hi_bnd: 100
+            lo_bnd: 0.01
+            nbin: 73
+            interp: log
+            node_type: edges
+            unit: TeV
 
 model: model.yaml
 

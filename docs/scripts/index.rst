@@ -125,17 +125,17 @@ The observations are stored as a list of `DataStoreObservation` containers.
 
 Data reduction and datasets
 ---------------------------
-The data reduction process needs a method that is declared as the value (1d, 2d, or 3d)
-of the `data_reducer` parameter in the `reduction` section of the settings. For the
+The data reduction process needs a choice of a dataset type, declared as the class name
+(MapDataset, SpectrumDatasetOnOff) in the `reduction` section of the settings. For the
 estimation of the background, a `background_estimator` is needed, other parameters
 related with the `on_region` and `exclusion_mask` FITS file may be also present.
 
 .. gp-howto-hli:: reduction
 
-You may use the `reduce()` method to proceed to the data reduction process. For spectral
-data reduction the extracted spectra are stored in the `extraction` property as a
-The observations are stored as a list of `SpectrumDatasetOnOff` containers and information
-related with the background estimation is stored in the `background_estimator` property.
+You may use the `get_datasets()` method to proceed to the data reduction process.
+The final reduced datasets are stored in the `.datasets` attribute.
+For spectral reduction the information related with the background estimation is
+stored in the `background_estimator` property.
 
 .. code-block:: python
 
@@ -153,48 +153,9 @@ related with the background estimation is stored in the `background_estimator` p
         <CircleSkyRegion(<SkyCoord (ICRS): (ra, dec) in deg
             (83.633, 22.014)>, radius=0.1 deg)>
 
-Geometry
---------
-The ranges and referential frames related with spatial, energy and time coordinates where to perform
-the data reduction and analysis process are declared in the `geometry` section.
-
-.. gp-howto-hli:: geometry
-
-The geometry is stored in the `geometry` property as a `WcsGeom` container.
-
-.. code-block:: python
-
-    >>> analysis.geom
-        WcsGeom
-
-            axes       : lon, lat
-            shape      : (250, 250)
-            ndim       : 2
-            coordsys   : GAL
-            projection : CAR
-            center     : 83.0 deg, 22.0 deg
-            width      : 5.0 deg x 5.0 deg
-
 Model
 -----
-The different spectral and spatial parameters describing a composed model are declared in the `model` section.
-
-.. gp-howto-hli:: model
-
-The model is stored in the `model` property.
-
-.. code-block:: python
-
-    >>> print(analysis.model)
-        PowerLaw
-
-        Parameters:
-
-               name     value   error      unit      min max frozen
-            --------- --------- ----- -------------- --- --- ------
-                index 2.678e+00   nan                nan nan  False
-            amplitude 2.801e-11   nan cm-2 s-1 TeV-1 nan nan  False
-            reference 1.000e+00   nan            TeV nan nan   True
+For now we simply declare the model as a reference to a separate yaml file.
 
 Fitting
 -------

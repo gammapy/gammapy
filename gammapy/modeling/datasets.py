@@ -212,5 +212,6 @@ class Datasets:
         return dataset
 
     def __getitem__(self, item):
-        idx = self.names.index(item)
-        return self.datasets[idx]
+        if isinstance(item, str):
+            item = self.names.index(item)
+        return self.datasets[item]

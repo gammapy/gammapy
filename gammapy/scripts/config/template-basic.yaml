@@ -11,9 +11,9 @@ observations:
 
 reduction:
     dataset-type: not assigned
-
-geometry:
-    axes: {}
+    geom:
+        region: {}
+        axes: []
 
 model: model.yaml
 

@@ -286,6 +286,7 @@ class MapDataset(Dataset):
         migra_axis=None,
         rad_axis=None,
         reference_time="2000-01-01",
+        name=""
     ):
 
         """Creates a MapDataset object with zero filled maps
@@ -300,6 +301,8 @@ class MapDataset(Dataset):
             Migration axis for the energy dispersion map
         rad_axis: `~gammapy.maps.MapAxis`
             Rad axis for the psf map
+        name : str
+            Name of the dataset.
         """
 
         geom_irf = geom_irf or geom
@@ -338,7 +341,8 @@ class MapDataset(Dataset):
             edisp=edisp,
             background_model=background_model,
             gti=gti,
-            mask_safe=mask_safe
+            mask_safe=mask_safe,
+            name=name
         )
 
     def stack(self, other):

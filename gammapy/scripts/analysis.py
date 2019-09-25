@@ -9,12 +9,12 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
+from gammapy.irf import make_mean_psf, make_mean_edisp
 from gammapy.cube import MapDataset, MapMaker, PSFKernel
 from gammapy.data import DataStore, ObservationTable
-from gammapy.irf import make_mean_psf
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import BackgroundModel, SkyModels
+from gammapy.modeling.models import SkyModels, BackgroundModel
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
@@ -225,56 +225,58 @@ class Analysis:
         for obs in self.observations.list:
             log.info(obs)
 
-    def _create_geometry(self):
+    @staticmethod
+    def _create_geometry(params):
         """Create the geometry."""
         # TODO: handled in jsonschema validation class
-        geom_params = copy.deepcopy(self.settings["geometry"])
-        e_reco, e_true = self._energy_axes()
-        geom_params["axes"] = []
-        geom_params["axes"].append(e_reco)
-        geom_params["skydir"] = tuple(geom_params["skydir"])
-        if "offset_max" in geom_params:
-            del geom_params["offset_max"]
-        if "psf_max_radius" in geom_params:
-            del geom_params["psf_max_radius"]
-        return WcsGeom.create(**geom_params)
+        geom_params = copy.deepcopy(params)
 
-    def _energy_axes(self):
-        """Builds energy axes from settings in geometry."""
-        # TODO: e_reco/e_true handled in jsonschema validation class
-        e_reco = e_true = None
-        if "e_reco" in self.settings["geometry"]["axes"]:
-            axis_params = self.settings["geometry"]["axes"]["e_reco"]
-            e_reco = MapAxis.from_bounds(**axis_params)
-        if "e_true" in self.settings["geometry"]["axes"]:
-            axis_params = self.settings["geometry"]["axes"]["e_true"]
-            e_true = MapAxis.from_bounds(**axis_params)
-        return e_reco, e_true
+        axes = []
+        for axis_params in geom_params.get("axes", []):
+            ax = MapAxis.from_bounds(**axis_params)
+            axes.append(ax)
+
+        geom_params["axes"] = axes
+        geom_params["skydir"] = tuple(geom_params["skydir"])
+        return WcsGeom.create(**geom_params)
 
     def _map_making(self):
         """Make maps and data sets for 3d analysis."""
         maker_params = {}
-        if "offset_max" in self.settings["geometry"]:
-            maker_params = {"offset_max": self.settings["geometry"]["offset_max"]}
-        geom = self._create_geometry()
-        maker = MapMaker(geom, **maker_params)
+
+        if "offset-max" in self.settings["reduction"]:
+            maker_params["offset_max"] = Angle(self.settings["reduction"]["offset-max"])
+
+        geom = self._create_geometry(self.settings["reduction"]["geom"])
+
+        pars = self.settings["reduction"].get("geom-irf")
+        if pars is not None:
+            geom_true = self._create_geometry(pars)
+        else:
+            geom_true = geom
+
+        maker = MapMaker(geom=geom, geom_true=geom_true, **maker_params)
         maps = maker.run(self.observations)
-        # self.images = maker.run_images()
         table_psf = make_mean_psf(self.observations, geom.center_skydir)
-        psf_params = {}
-        if "psf_max_radius" in self.settings["geometry"]:
-            psf_params = {"max_radius": self.settings["geometry"]["psf_max_radius"]}
-        psf_kernel = PSFKernel.from_table_psf(table_psf, geom, **psf_params)
-        # TODO: background model may come from YAML parameters
+        psf_kernel = PSFKernel.from_table_psf(table_psf, geom_true, max_radius=Angle("0.3 deg"))
+
+        e_reco = geom.get_axis_by_name("energy").edges
+        e_true = geom_true.get_axis_by_name("energy").edges
+        edisp = make_mean_edisp(
+            self.observations, position=geom.center_skydir, e_true=e_true, e_reco=e_reco
+        )
+
         background_model = BackgroundModel(maps["background"], norm=1.0)
         background_model.parameters["tilt"].frozen = False
+
         self.datasets = Datasets(
             MapDataset(
-                model=self.model,
                 counts=maps["counts"],
                 exposure=maps["exposure"],
                 background_model=background_model,
                 psf=psf_kernel,
+                edisp=edisp,
+                name="stacked",
             )
         )
 
@@ -306,16 +308,17 @@ class Analysis:
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
-        background = self.settings["reduction"]["background"]
+        region = self.settings["reduction"]["geom"]["region"]
         log.info("Reducing spectrum data sets.")
-        on = background["on_region"]
-        on_lon = Angle(on["center"][0])
-        on_lat = Angle(on["center"][1])
-        on_center = SkyCoord(on_lon, on_lat, frame=on["frame"])
-        on_region = CircleSkyRegion(on_center, Angle(on["radius"]))
+        on_lon = Angle(region["center"][0])
+        on_lat = Angle(region["center"][1])
+        on_center = SkyCoord(on_lon, on_lat, frame=region["frame"])
+        on_region = CircleSkyRegion(on_center, Angle(region["radius"]))
         background_params = {"on_region": on_region}
 
-        if "exclusion_mask" in background_params:
+        background = self.settings["reduction"]["background"]
+
+        if "exclusion_mask" in background:
             map_hdu = {}
             filename = background["exclusion_mask"]["filename"]
             if "hdu" in background["exclusion_mask"]:
@@ -338,11 +341,11 @@ class Analysis:
             extraction_params["containment_correction"] = self.settings["reduction"][
                 "containment_correction"
             ]
-        e_reco, e_true = self._energy_axes()
-        if e_reco:
-            extraction_params["e_reco"] = e_reco.center
-        if e_true:
-            extraction_params["e_true"] = e_true.center
+
+        params = self.settings["reduction"]["geom"]["axes"][0]
+        e_reco = MapAxis.from_bounds(**params).edges
+        extraction_params["e_reco"] = e_reco
+        extraction_params["e_true"] = None
         self.extraction = SpectrumExtraction(
             observations=self.observations,
             bkg_estimate=self.background_estimator.result,
