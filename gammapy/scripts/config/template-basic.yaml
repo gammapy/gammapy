@@ -11,7 +11,7 @@ observations:
 
 reduction:
     dataset-type: not assigned
-    geometry:
+    geom:
         axes: {}
 
 model: model.yaml

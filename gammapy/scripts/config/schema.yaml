@@ -187,7 +187,7 @@ properties:
                 enum: [not assigned, SpectrumDatasetOnOff, MapDataset]
             containment_correction: {type: boolean}
             offset-max: {type: string}
-            geometry:
+            geom:
                 type: object
                 additionalProperties: false
                 properties:
@@ -215,7 +215,7 @@ properties:
                             e_true:
                                 "$ref": "#/definitions/energy_axis"
                 required: [axes]
-        required: [dataset-type, geometry]
+        required: [dataset-type, geom]
         if:
             properties:
                 dataset-type:
@@ -226,7 +226,7 @@ properties:
                 background:
                     required: [background_estimator, on_region]
 
-# Block: geometry
+# Block: geom
 # Geometry where to perform data reduction and analysis
 #
 #        Map pixel size in degrees
@@ -257,7 +257,7 @@ properties:
 #                unit: TeV
 #                interp: log
 #
-#    geometry:
+#    geom:
 #        type: object
 #        additionalProperties: false
 #        properties:
@@ -368,7 +368,7 @@ if:
                     const: MapDataset
 then:
     properties:
-        geometry:
+        geom:
             required: [binsz, width, skydir, coordsys, proj, axes]
             properties:
                 axes:

@@ -14,7 +14,7 @@ observations:
 reduction:
     dataset-type: MapDataset
     offset-max: 2.5 deg
-    geometry:
+    geom:
         axes:
             e_reco:
                 hi_bnd: 10

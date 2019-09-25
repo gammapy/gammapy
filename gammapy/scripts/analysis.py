@@ -228,7 +228,7 @@ class Analysis:
     def _create_geometry(self):
         """Create the geometry."""
         # TODO: handled in jsonschema validation class
-        geom_params = copy.deepcopy(self.settings["reduction"]["geometry"])
+        geom_params = copy.deepcopy(self.settings["reduction"]["geom"])
         e_reco, e_true = self._energy_axes()
         geom_params["axes"] = []
         geom_params["axes"].append(e_reco)
@@ -239,11 +239,11 @@ class Analysis:
         """Builds energy axes from settings in geometry."""
         # TODO: e_reco/e_true handled in jsonschema validation class
         e_reco = e_true = None
-        if "e_reco" in self.settings["reduction"]["geometry"]["axes"]:
-            axis_params = self.settings["reduction"]["geometry"]["axes"]["e_reco"]
+        if "e_reco" in self.settings["reduction"]["geom"]["axes"]:
+            axis_params = self.settings["reduction"]["geom"]["axes"]["e_reco"]
             e_reco = MapAxis.from_bounds(**axis_params)
-        if "e_true" in self.settings["reduction"]["geometry"]["axes"]:
-            axis_params = self.settings["reduction"]["geometry"]["axes"]["e_true"]
+        if "e_true" in self.settings["reduction"]["geom"]["axes"]:
+            axis_params = self.settings["reduction"]["geom"]["axes"]["e_true"]
             e_true = MapAxis.from_bounds(**axis_params)
         return e_reco, e_true
 
