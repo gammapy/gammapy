@@ -188,55 +188,9 @@ properties:
             containment_correction: {type: boolean}
             offset-max: {type: string}
             geom:
-                type: object
-                additionalProperties: false
-                properties:
-                    binsz: {type: number}
-                    coordsys:
-                        type: string
-                        enum: [CEL, GAL]
-                    proj: {type: string}
-                    skydir:
-                        type: array
-                        items: {type: number}
-                        minItems: 2
-                        maxItems: 2
-                    width:
-                        type: array
-                        items: {type: number}
-                        minItems: 1
-                        maxItems: 2
-                    axes:
-                        type: array
-                        additionalProperties: false
-                        items:
-                            "$ref": "#/definitions/map_axis"
-                required: [axes]
+                "$ref": "#/definitions/map_geom"
             geom-irf:
-                type: object
-                additionalProperties: false
-                properties:
-                    binsz: {type: number}
-                    coordsys:
-                        type: string
-                        enum: [CEL, GAL]
-                    proj: {type: string}
-                    skydir:
-                        type: array
-                        items: {type: number}
-                        minItems: 2
-                        maxItems: 2
-                    width:
-                        type: array
-                        items: {type: number}
-                        minItems: 1
-                        maxItems: 2
-                    axes:
-                        type: array
-                        additionalProperties: false
-                        items:
-                            "$ref": "#/definitions/map_axis"
-                required: [axes]
+                "$ref": "#/definitions/map_geom"
         required: [dataset-type]
         if:
             properties:
@@ -434,3 +388,29 @@ definitions:
                 type: string
                 enum: [edges, center]
         required: [lo_bnd, hi_bnd, nbin, unit]
+
+    map_geom:
+        type: object
+        additionalProperties: false
+        properties:
+            binsz: {type: number}
+            coordsys:
+                type: string
+                enum: [CEL, GAL]
+            proj: {type: string}
+            skydir:
+                type: array
+                items: {type: number}
+                minItems: 2
+                maxItems: 2
+            width:
+                type: array
+                items: {type: number}
+                minItems: 1
+                maxItems: 2
+            axes:
+                type: array
+                additionalProperties: false
+                items:
+                    "$ref": "#/definitions/map_axis"
+        required: [axes]
