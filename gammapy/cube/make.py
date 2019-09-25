@@ -304,17 +304,23 @@ class MapMakerObs:
             aeff=self.observation.aeff,
             geom=self.geom_true,
         )
-        mask_irf = self._fov_mask(exposure_irf.geom.get_coord())
+        mask_irf = self._fov_mask(self.geom_true.to_image().get_coord())
         exposure_irf_masked = exposure_irf.copy()
         exposure_irf_masked.data[..., mask_irf] = 0
         # the exposure associated with the IRFS
         self.maps["exposure_irf"] = exposure_irf_masked
 
-        # The real exposure map, with FoV cuts
-        factor = self.geom.data_shape[-1] / self.geom_true.data_shape[-1]
-        exposure = exposure_irf.upsample(factor, preserve_counts=False, order=1)
-        coords_etrue = exposure.geom.get_coord()
-        fov_mask_etrue = self._fov_mask(coords_etrue)
+        energy_axis = self.geom_true.get_axis_by_name("energy")
+        geom = self.geom.to_image().to_cube([energy_axis])
+
+        exposure = make_map_exposure_true_energy(
+            pointing=self.observation.pointing_radec,
+            livetime=self.observation.observation_live_time_duration,
+            aeff=self.observation.aeff,
+            geom=geom,
+        )
+
+        fov_mask_etrue = self._fov_mask(geom.to_image().get_coord())
         if fov_mask_etrue is not None:
             exposure.data[..., fov_mask_etrue] = 0
         self.maps["exposure"] = exposure
