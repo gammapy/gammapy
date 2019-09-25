@@ -741,13 +741,14 @@ class MapDataset(Dataset):
         else:
             edisp=None
 
-        # TODO: add obs_id once it is correctly defined in the MapDataset
+        # TODO: change obs_id to name
         return SpectrumDataset(counts=counts,
                                background=background,
                                aeff=aeff,
                                edisp=edisp,
                                livetime=livetime,
-                               gti=self.gti)
+                               gti=self.gti,
+                               obs_id=name)
 
 class MapEvaluator:
     """Sky model evaluation on maps.

@@ -153,7 +153,7 @@ class SpectrumDatasetMakerObs:
         else:
             maps = self.mapmaker.run(["exposure"])
             mask = self.cutout.to_image().region_mask([self.on_region])
-            exp_data = maps.exposure.get_spectrum(self.on_region, np.mean)#quantity[..., mask].mean(axis=1)
+            exp_data = maps.exposure.get_spectrum(self.on_region, np.mean)
 
             self.dataset.aeff = EffectiveAreaTable(
                 energy_lo=self.e_true[:-1], energy_hi=self.e_true[1:], data=exp_data
@@ -164,7 +164,7 @@ class SpectrumDatasetMakerObs:
 
         maps = self.mapmaker.run(["background"])
         mask = self.cutout.to_image().region_mask([self.on_region])
-        bkg_data = maps.background_model.map.get_spectrum(self.on_region, np.sum) #quantity[..., mask].sum(axis=1)
+        bkg_data = maps.background_model.map.get_spectrum(self.on_region, np.sum)
 
         self.dataset.background = CountsSpectrum(
             energy_lo=self.e_reco[:-1], energy_hi=self.e_reco[1:], data=bkg_data
