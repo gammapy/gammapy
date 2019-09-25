@@ -522,8 +522,8 @@ class TestSpectralFit:
 
     def test_basic_errors(self):
         self.set_model(self.pwl)
-        self.fit.run()
-        pars = self.fit.datasets.parameters
+        result = self.fit.run()
+        pars = result.parameters
 
         assert_allclose(pars.error("index"), 0.1496, rtol=1e-3)
         assert_allclose(pars.error("amplitude"), 6.423e-12, rtol=1e-3)

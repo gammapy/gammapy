@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+from astropy.utils import lazyproperty
 from .datasets import Datasets
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
 from .scipy import confidence_scipy, covariance_scipy, optimize_scipy
@@ -74,7 +75,7 @@ class Fit:
 
         self.datasets = datasets
 
-    @property
+    @lazyproperty
     def _parameters(self):
         return self.datasets.parameters
 

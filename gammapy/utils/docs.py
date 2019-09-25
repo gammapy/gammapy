@@ -30,7 +30,7 @@ from docutils.parsers.rst.directives.misc import Include
 from nbformat.v4 import new_markdown_cell
 from sphinx.util import logging
 from gammapy import __version__
-from gammapy.scripts import Config
+from gammapy.scripts import AnalysisConfig
 
 try:
     gammapy_data_path = Path(os.environ["GAMMAPY_DATA"])
@@ -47,7 +47,7 @@ class HowtoHLI(Include):
     def run(self):
         raw = ""
         section = self.arguments[0]
-        doc = Config._get_doc_sections()
+        doc = AnalysisConfig._get_doc_sections()
         for keyword in doc.keys():
             if section == "" or section == keyword:
                 raw += doc[keyword]

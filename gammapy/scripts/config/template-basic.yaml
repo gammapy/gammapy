@@ -1,0 +1,23 @@
+---
+general:
+    logging:
+        level: INFO
+    outdir: .
+
+observations:
+    datastore: $GAMMAPY_DATA/hess-dl3-dr1
+    filters:
+        - filter_type: all
+
+reduction:
+    dataset-type: not assigned
+
+geometry:
+    axes: {}
+
+model: model.yaml
+
+fit:
+    fit_range: {}
+
+flux: {}

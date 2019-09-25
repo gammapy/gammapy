@@ -1,0 +1,41 @@
+---
+general:
+    logging:
+        level: INFO
+    outdir: .
+
+observations:
+    datastore: $GAMMAPY_DATA/hess-dl3-dr1
+    filters:
+        - filter_type: par_value
+          value_param: Crab
+          variable: TARGET_NAME
+
+reduction:
+    dataset-type: SpectrumDatasetOnOff
+    background:
+        background_estimator: reflected
+        on_region:
+            center:
+                - 83.633 deg
+                - 22.014 deg
+            frame: icrs
+            radius: 0.1 deg
+
+geometry:
+    axes: {}
+
+model: model.yaml
+
+fit:
+    fit_range:
+        max: 100 TeV
+        min: 1 TeV
+
+flux:
+    fp_binning:
+        hi_bnd: 10
+        interp: log
+        lo_bnd: 1
+        nbin: 11
+        unit: TeV

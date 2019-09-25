@@ -39,19 +39,19 @@ them into a file that you can edit to start a new analysis from the modified con
 .. code-block:: python
 
     >>> print(analysis.config)
-    >>> analysis.config.dump("config.yaml")
+    >>> analysis.config.to_yaml("config.yaml")
     INFO:gammapy.scripts.analysis:Configuration settings saved into config.yaml
-    >>> analysis = Analysis.from_file("config.yaml")
+    >>> analysis = Analysis.from_yaml("config.yaml")
 
-You could also have started the analysis with your custom settings declared in a Python
-nested dictionary which will overwrite the values provided by default. Note how the nested
+You could also have started with a builtin analysis configuration and extend it with
+with your custom settings declared in a Python nested dictionary. Note how the nested
 dictionary must follow the parameters hierarchical structure which may be prone to errors.
 
 .. code-block:: python
 
     >>> config_dict = {"general": {"logging": {"level": "WARNING"}}}
-    >>> analysis = Analysis(config=config_dict)
-    >>> analysis = Analysis(config=config_dict, template="1d")
+    >>> analysis = Analysis()
+    >>> analysis.config.update_settings(config_dict)
 
 Configuration and methods
 =========================
@@ -71,9 +71,9 @@ re-initialize your settings from the modified file.
 
 .. code-block:: python
 
-    >>> analysis = Analysis(template="1d")
-    >>> analysis.config.dump("config.yaml")
-    >>> analysis = Analysis.from_file("config.yaml")
+    >>> analysis = Analysis.from_template(template="1d")
+    >>> analysis.config.to_yaml("config.yaml")
+    >>> analysis = Analysis.from_yaml("config.yaml")
 
 At any moment you can change the value of one specific parameter needed in the analysis. Note
 that it is a good practice to validate your settings when you modify the value of parameters.
@@ -85,14 +85,12 @@ that it is a good practice to validate your settings when you modify the value o
 
 It is also possible to add new configuration parameters and values or overwrite the ones already
 defined in your session analysis. In this case you may use the `config.update_settings()` method
-using a custom nested dictionary or custom YAML files (i.e. re-use config files for specific
-sections and/or from previous analysis).
+using a custom nested dictionary:
 
 .. code-block:: python
 
     >>> config_dict = {"observations": {"datastore": "$GAMMAPY_DATA/hess-dl3-dr1"}}
     >>> analysis.config.update_settings(config=config_dict)
-    >>> analysis.config.update_settings(configfile="model.yaml")
 
 In the following you may find more detailed information on the different sections which
 compose the YAML formatted nested configuration settings hierarchy.
@@ -204,7 +202,7 @@ The parameters used in the fitting process are declared in the `fit` section.
 
 .. gp-howto-hli:: fit
 
-You may use the `fit()` method to proceed to the model fitting process. The result
+You may use the `run_fit()` method to proceed to the model fitting process. The result
 is stored in the `fit_result` property.
 
 .. code-block:: python

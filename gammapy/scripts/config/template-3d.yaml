@@ -1,0 +1,43 @@
+---
+general:
+    logging:
+        level: INFO
+    outdir: .
+
+observations:
+    datastore: $GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz
+    filters:
+        - filter_type: par_value
+          value_param: Crab
+          variable: TARGET_NAME
+
+reduction:
+    dataset-type: MapDataset
+
+geometry:
+    axes:
+        e_reco:
+            hi_bnd: 10
+            interp: log
+            lo_bnd: 1
+            name: energy
+            nbin: 4
+            node_type: edges
+            unit: TeV
+    binsz: 0.02
+    coordsys: CEL
+    offset_max: 2.5 deg
+    proj: TAN
+    psf_max_radius: 0.3 deg
+    skydir:
+        - 83.633
+        - 22.014
+    width:
+        - 5
+        - 5
+
+model: model.yaml
+
+fit: {}
+
+flux: {}

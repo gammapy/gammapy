@@ -132,7 +132,7 @@ properties:
 # Process of data reduction
 #
 #    Chosen data reducer process
-#    data_reducer: 1d, 2d, 3d
+#    dataset-type: SpectrumDatasetOnOff, MapDataset
 #
 #    Parameters used in the estimation of the background
 #    Example values for the following properties
@@ -183,14 +183,14 @@ properties:
                     properties:
                         exclusion_mask:
                             required: [filename]
-            data_reducer:
-                enum: [not assigned, 1d, 2d, 3d]
+            dataset-type:
+                enum: [not assigned, SpectrumDatasetOnOff, MapDataset]
             containment_correction: {type: boolean}
-        required: [data_reducer]
+        required: [dataset-type]
         if:
             properties:
-                data_reducer:
-                    const: 1d
+                dataset-type:
+                    const: SpectrumDatasetOnOff
         then:
             required: [background]
             properties:
@@ -265,22 +265,22 @@ properties:
 # List of models with spatial and /or spectral components
 # TODO
 #
-    model:
-        type: object
-        additionalProperties: false
-        properties:
-            components:
-                type: array
-                items:
-                    type: object
-                    additionalProperties: false
-                    properties:
-                        name: {type: string}
-                        type: {type: string}
-                        spatial:
-                            "$ref": "#/definitions/model_components"
-                        spectral:
-                            "$ref": "#/definitions/model_components"
+    model: {type: string}
+#        type: object
+#        additionalProperties: false
+#        properties:
+#            components:
+#                type: array
+#                items:
+#                    type: object
+#                    additionalProperties: false
+#                    properties:
+#                        name: {type: string}
+#                        type: {type: string}
+#                        spatial:
+#                            "$ref": "#/definitions/model_components"
+#                        spectral:
+#                            "$ref": "#/definitions/model_components"
 
 # Block: fit
 # Parameters that are used in the fitting process
@@ -327,8 +327,8 @@ if:
     properties:
         reduction:
             properties:
-                data_reducer:
-                    const: 1d
+                dataset-type:
+                    const: SpectrumDatasetOnOff
 then:
     properties:
         flux:
@@ -338,8 +338,8 @@ if:
     properties:
         reduction:
             properties:
-                data_reducer:
-                    const: 3d
+                dataset-type:
+                    const: MapDataset
 then:
     properties:
         geometry:

@@ -14,22 +14,26 @@ from gammapy.data import DataStore, ObservationTable
 from gammapy.irf import make_mean_psf
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import SkyModel, BackgroundModel
-from gammapy.modeling.serialize import dict_to_models
+from gammapy.modeling.models import BackgroundModel, SkyModels
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
     ReflectedRegionsBackgroundEstimator,
     SpectrumExtraction,
-    SpectrumDatasetOnOff,
 )
 from gammapy.utils.scripts import make_path, read_yaml
 
-__all__ = ["Analysis", "Config"]
+__all__ = ["Analysis", "AnalysisConfig"]
 
 log = logging.getLogger(__name__)
 CONFIG_PATH = Path(__file__).resolve().parent / "config"
 SCHEMA_FILE = CONFIG_PATH / "schema.yaml"
+
+ANALYSIS_TEMPLATES = {
+    "basic": "template-basic.yaml",
+    "1d": "template-1d.yaml",
+    "3d": "template-3d.yaml"
+}
 
 
 class Analysis:
@@ -42,26 +46,31 @@ class Analysis:
 
     Parameters
     ----------
-    config : dict
-        Configuration options following `Config` schema
-    template : str
-        Template for configuration settings
+    config : dict or `AnalysisConfig`
+        Configuration options following `AnalysisConfig` schema
 
     Examples
     --------
     Example how to create an Analysis object:
 
     >>> from gammapy.scripts import Analysis
-    >>> analysis = Analysis(template="1d")
+    >>> analysis = Analysis.from_template(template="1d")
 
     TODO: show a working example of running an analysis.
     Probably not here, but in high-level docs, linked to from class docstring.
     """
 
-    def __init__(self, config=None, template="basic"):
-        self._config = Config(config, template)
-        self._set_logging()
+    def __init__(self, config=None):
+        if config is None:
+            self._config = AnalysisConfig.from_template(template="basic")
+        elif isinstance(config, dict):
+            self._config = AnalysisConfig(config)
+        elif isinstance(config, AnalysisConfig):
+            self._config = config
+        else:
+            raise ValueError("Dict or `AnalysiConfig` object required.")
 
+        self._set_logging()
         self.observations = None
         self.background_estimator = None
         self.datasets = None
@@ -73,7 +82,7 @@ class Analysis:
 
     @property
     def config(self):
-        """Analysis configuration (`Config`)"""
+        """Analysis configuration (`AnalysisConfig`)"""
         return self._config
 
     @property
@@ -89,39 +98,57 @@ class Analysis:
                 if "fit_range" in self.settings["fit"]:
                     e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
                     e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
-                    if isinstance(ds, SpectrumDatasetOnOff):
-                        ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
                     if isinstance(ds, MapDataset):
                         ds.mask_fit = ds.counts.geom.energy_mask(e_min, e_max)
-                ds.model = self.model
+                    else:
+                        ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
+
             log.info("Fitting reduced data sets.")
             self.fit = Fit(self.datasets)
             self.fit_result = self.fit.run(optimize_opts=optimize_opts)
             log.info(self.fit_result)
 
     @classmethod
-    def from_file(cls, filename, template="basic"):
-        """Instantiation of analysis from settings in config file.
+    def from_yaml(cls, filename):
+        """Create analysis from settings in config file.
 
         Parameters
         ----------
         filename : str, Path
             Configuration settings filename
-        template: str
-            Consider also values in configuration template
-            Default value basic
+
+        Returns
+        -------
+        analysis : `Analysis`
+            Analysis class
         """
-        filename = make_path(filename)
-        config = read_yaml(filename)
-        return cls(config=config, template=template)
+        config = AnalysisConfig.from_yaml(filename)
+        return cls(config=config)
+
+    @classmethod
+    def from_template(cls, template="basic"):
+        """Create Analysis from existing templates.
+
+        Parameters
+        ----------
+        template : {"basic", "1d", "3d"}
+            Build in templates.
+
+        Returns
+        -------
+        analysis : `Analysis`
+            Analysis class
+        """
+        filename = CONFIG_PATH / ANALYSIS_TEMPLATES[template]
+        return cls.from_yaml(filename)
 
     def get_datasets(self):
         """Produce reduced data sets."""
         if not self._validate_reduction_settings():
             return False
-        if self.settings["reduction"]["data_reducer"] == "1d":
+        if self.settings["reduction"]["dataset-type"] == "SpectrumDatasetOnOff":
             self._spectrum_extraction()
-        elif self.settings["reduction"]["data_reducer"] == "3d":
+        elif self.settings["reduction"]["dataset-type"] == "MapDataset":
             self._map_making()
         else:
             # TODO raise error?
@@ -129,26 +156,24 @@ class Analysis:
 
     def get_flux_points(self):
         """Calculate flux points."""
-        if self.settings["reduction"]["data_reducer"] == "1d":
-            if self._validate_fp_settings():
-                log.info("Calculating flux points.")
-                stacked = self.datasets.stack_reduce()
-                flux_model = self.model.copy()
-                flux_model.parameters.covariance = self.fit_result.parameters.covariance
-                stacked.model = flux_model
-                axis_params = self.settings["flux"]["fp_binning"]
-                e_edges = MapAxis.from_bounds(**axis_params).edges
-                flux_point_estimator = FluxPointsEstimator(
-                    e_edges=e_edges, datasets=stacked
-                )
-                fp = flux_point_estimator.run()
-                fp.table["is_ul"] = fp.table["ts"] < 4
-                self.flux_points_dataset = FluxPointsDataset(data=fp, model=self.model)
-                cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
-                log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
-        else:
-            # TODO raise error?
-            log.info("Flux point estimation available only for 1D spectrum.")
+        if self._validate_fp_settings():
+            # TODO: add "source" to config
+            source = "source"
+            log.info("Calculating flux points.")
+
+            axis_params = self.settings["flux"]["fp_binning"]
+            e_edges = MapAxis.from_bounds(**axis_params).edges
+
+            flux_point_estimator = FluxPointsEstimator(
+                e_edges=e_edges, datasets=self.datasets, source=source,
+            )
+            fp = flux_point_estimator.run()
+            fp.table["is_ul"] = fp.table["ts"] < 4
+
+            model = self.model[source].spectral_model.copy()
+            self.flux_points_dataset = FluxPointsDataset(data=fp, model=model)
+            cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
+            log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
@@ -239,7 +264,6 @@ class Analysis:
         if "psf_max_radius" in self.settings["geometry"]:
             psf_params = {"max_radius": self.settings["geometry"]["psf_max_radius"]}
         psf_kernel = PSFKernel.from_table_psf(table_psf, geom, **psf_params)
-        self._read_model()
         # TODO: background model may come from YAML parameters
         background_model = BackgroundModel(maps["background"], norm=1.0)
         background_model.parameters["tilt"].frozen = False
@@ -253,19 +277,23 @@ class Analysis:
             )
         )
 
-    def _read_model(self):
+    def get_model(self):
         """Read the model from settings."""
         # TODO: Deal with multiple components
         log.info("Reading model.")
-        model_yaml = self.settings["model"]
-        if self.settings["reduction"]["data_reducer"] == "1d":
-            self.model = dict_to_models(model_yaml)[0].spectral_model
-        else:
-            spatial_model = dict_to_models(model_yaml)[0].spatial_model
-            spectral_model = dict_to_models(model_yaml)[0].spectral_model
-            self.model = SkyModel(
-                spatial_model=spatial_model, spectral_model=spectral_model
-            )
+        model_yaml = Path(self.settings["model"])
+        base_path = self.config.filename.parent
+
+        self.model = SkyModels.from_yaml(base_path / model_yaml)
+
+        for dataset in self.datasets.datasets:
+            if isinstance(dataset, MapDataset):
+                dataset.model = self.model
+            else:
+                if len(self.model.skymodels) > 1:
+                    raise ValueError("Can only fit a single spectral model at one time.")
+                dataset.model = self.model.skymodels[0].spectral_model
+
         log.info(self.model)
 
     def _set_logging(self):
@@ -320,7 +348,6 @@ class Analysis:
             **extraction_params,
         )
         self.extraction.run()
-        self._read_model()
         self.datasets = Datasets(self.extraction.spectrum_observations)
 
     def _validate_fitting_settings(self):
@@ -361,7 +388,7 @@ class Analysis:
             return False
 
 
-class Config:
+class AnalysisConfig:
     """Analysis configuration.
 
     Parameters
@@ -370,27 +397,23 @@ class Config:
         Configuration parameters
     """
 
-    def __init__(self, config=None, template="basic"):
+    def __init__(self, config=None, filename="config.yaml"):
         self._user_settings = {}
-        self._template = template
-        if template not in _implemented_templates.keys():
-            log.warning(f"Template {template} not implemented.")
-            log.warning("Fetching basic template settings.")
-            self._template = "basic"
         self.settings = {}
-        # fill with default values
-        template_file = CONFIG_PATH / _implemented_templates[self._template]
-        filename = make_path(template_file)
-        self.settings = read_yaml(filename)
-        self._default_settings = copy.deepcopy(self.settings)
         # add user settings
         self.update_settings(config)
+        self.filename = filename
 
     def __str__(self):
         """Display settings in pretty YAML format."""
-        return yaml.dump(self.settings, indent=4)
+        info = self.__class__.__name__ + "\n\n\t"
 
-    def dump(self, filename="config.yaml"):
+        data = yaml.dump(self.settings, sort_keys=False, indent=4)
+        data = data.replace("\n", "\n\t")
+        info += data
+        return info.expandtabs(tabsize=4)
+
+    def to_yaml(self, filename=None, overwrite=False):
         """Serialize config into a yaml formatted file.
 
         Parameters
@@ -398,11 +421,28 @@ class Config:
         filename : str, Path
             Configuration settings filename
             Default config.yaml
+        overwrite : bool
+            Whether to overwrite an existing file.
         """
+        if filename is None:
+            filename = self.filename
+
         filename = make_path(filename)
         path_file = Path(self.settings["general"]["outdir"]) / filename
-        path_file.write_text(yaml.dump(self.settings, indent=4))
+        self.filename = path_file
+
+        if path_file.exists() and not overwrite:
+            raise IOError(f"File {filename} already exists.")
+
+        path_file.write_text(yaml.dump(self.settings, sort_keys=False, indent=4))
         log.info(f"Configuration settings saved into {path_file}")
+
+    @classmethod
+    def from_yaml(cls, filename):
+        """Read config from filename"""
+        filename = make_path(filename)
+        config = read_yaml(filename)
+        return cls(config, filename=filename)
 
     def print_help(self, section=""):
         """Print template configuration settings."""
@@ -475,4 +515,3 @@ _type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(
 _gp_units_validator = jsonschema.validators.extend(
     jsonschema.Draft7Validator, type_checker=_type_checker
 )
-_implemented_templates = {"basic": "basic.yaml", "1d": "1D.yaml", "3d": "3D.yaml"}
