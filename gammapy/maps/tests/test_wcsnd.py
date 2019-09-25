@@ -113,6 +113,14 @@ def test_wcsndmap_read_write_fgst(tmpdir):
         assert "ENERGIES" in h
 
 
+@requires_data()
+def test_wcsndmap_read_ccube():
+    counts = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts-cube.fits.gz")
+    energy_axis = counts.geom.get_axis_by_name("energy")
+    # for the 3FGL data the lower energy threshold should be at 10 GeV
+    assert_allclose(energy_axis.edges.min().to_value("GeV"), 10, rtol=1e-3)
+
+
 def test_wcs_nd_map_data_transpose_issue(tmpdir):
     # Regression test for https://github.com/gammapy/gammapy/issues/1346
 
