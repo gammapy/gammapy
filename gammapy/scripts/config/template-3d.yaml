@@ -28,7 +28,6 @@ geometry:
     coordsys: CEL
     offset_max: 2.5 deg
     proj: TAN
-    psf_max_radius: 0.3 deg
     skydir:
         - 83.633
         - 22.014

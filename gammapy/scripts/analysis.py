@@ -235,8 +235,7 @@ class Analysis:
         geom_params["skydir"] = tuple(geom_params["skydir"])
         if "offset_max" in geom_params:
             del geom_params["offset_max"]
-        if "psf_max_radius" in geom_params:
-            del geom_params["psf_max_radius"]
+
         return WcsGeom.create(**geom_params)
 
     def _energy_axes(self):
@@ -261,10 +260,8 @@ class Analysis:
         maps = maker.run(self.observations)
         # self.images = maker.run_images()
         table_psf = make_mean_psf(self.observations, geom.center_skydir)
-        psf_params = {}
-        if "psf_max_radius" in self.settings["geometry"]:
-            psf_params = {"max_radius": self.settings["geometry"]["psf_max_radius"]}
-        psf_kernel = PSFKernel.from_table_psf(table_psf, geom, **psf_params)
+
+        psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius=Angle("0.3 deg"))
         # TODO: background model may come from YAML parameters
         background_model = BackgroundModel(maps["background"], norm=1.0)
         background_model.parameters["tilt"].frozen = False
