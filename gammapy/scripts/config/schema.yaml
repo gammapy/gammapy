@@ -139,7 +139,7 @@ properties:
 #    background:
 #
 #        background_estimator: reflected
-#        on_region:
+#        region:
 #            center:
 #            - 83.633 deg
 #            - 22.014 deg
@@ -184,18 +184,6 @@ properties:
                 properties:
                     background_estimator:
                         enum: [reflected, ring]
-                    on_region:
-                        type: object
-                        additionalProperties: false
-                        properties:
-                            center:
-                                type: array
-                                items: {type: number}
-                                minItems: 2
-                                maxItems: 2
-                            radius: {type: number}
-                            frame:
-                                enum: [galactic, equatorial, icrs, fk5]
                     exclusion_mask:
                         type: object
                         additionalProperties: false
@@ -223,7 +211,7 @@ properties:
             required: [background]
             properties:
                 background:
-                    required: [background_estimator, on_region]
+                    required: [background_estimator]
 
 
 # Block: model
@@ -299,6 +287,11 @@ then:
     properties:
         flux:
             required: [fp_binning]
+    properties:
+        reduction:
+            properties:
+                geom:
+                    required: [region, axes]
 
 required: [general, observations, reduction, model, fit, flux]
 
@@ -343,6 +336,18 @@ definitions:
         type: object
         additionalProperties: false
         properties:
+            region:
+                type: object
+                additionalProperties: false
+                properties:
+                    center:
+                        type: array
+                        items: {type: number}
+                        minItems: 2
+                        maxItems: 2
+                    radius: {type: number}
+                    frame:
+                        enum: [galactic, equatorial, icrs, fk5]
             binsz: {type: number}
             coordsys:
                 type: string

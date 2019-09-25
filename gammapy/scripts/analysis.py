@@ -308,16 +308,17 @@ class Analysis:
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
-        background = self.settings["reduction"]["background"]
+        region = self.settings["reduction"]["geom"]["region"]
         log.info("Reducing spectrum data sets.")
-        on = background["on_region"]
-        on_lon = Angle(on["center"][0])
-        on_lat = Angle(on["center"][1])
-        on_center = SkyCoord(on_lon, on_lat, frame=on["frame"])
-        on_region = CircleSkyRegion(on_center, Angle(on["radius"]))
+        on_lon = Angle(region["center"][0])
+        on_lat = Angle(region["center"][1])
+        on_center = SkyCoord(on_lon, on_lat, frame=region["frame"])
+        on_region = CircleSkyRegion(on_center, Angle(region["radius"]))
         background_params = {"on_region": on_region}
 
-        if "exclusion_mask" in background_params:
+        background = self.settings["reduction"]["background"]
+
+        if "exclusion_mask" in background:
             map_hdu = {}
             filename = background["exclusion_mask"]["filename"]
             if "hdu" in background["exclusion_mask"]:

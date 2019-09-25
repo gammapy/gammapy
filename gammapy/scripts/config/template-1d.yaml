@@ -15,13 +15,13 @@ reduction:
     dataset-type: SpectrumDatasetOnOff
     background:
         background_estimator: reflected
-        on_region:
-            center:
-                - 83.633 deg
-                - 22.014 deg
-            frame: icrs
-            radius: 0.1 deg
     geom:
+        region:
+          center:
+            - 83.633 deg
+            - 22.014 deg
+          frame: icrs
+          radius: 0.1 deg
         axes:
           - name: energy
             hi_bnd: 100

@@ -101,14 +101,15 @@ def config_analysis_data():
     reduction:
         background:
             background_estimator: reflected
-            on_region:
+        containment_correction: false
+        dataset-type: SpectrumDatasetOnOff
+        geom:
+            region:
                 center:
                 - 83.633 deg
                 - 22.014 deg
                 frame: icrs
                 radius: 0.11 deg
-        containment_correction: false
-        dataset-type: SpectrumDatasetOnOff
     flux:
         fp_binning:
             lo_bnd: 1
