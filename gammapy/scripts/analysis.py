@@ -46,8 +46,8 @@ class Analysis:
 
     Parameters
     ----------
-    config : dict
-        Configuration options following `Config` schema
+    config : dict or `AnalysisConfig`
+        Configuration options following `AnalysisConfig` schema
 
     Examples
     --------
@@ -61,10 +61,14 @@ class Analysis:
     """
 
     def __init__(self, config=None):
-        if isinstance(config, AnalysisConfig):
+        if config is None:
+            self._config = AnalysisConfig.from_template(template="basic")
+        elif isinstance(config, dict):
+            self._config = AnalysisConfig(config)
+        elif isinstance(config, AnalysisConfig):
             self._config = config
         else:
-            self._config = AnalysisConfig(config)
+            raise ValueError("Dict or `AnalysiConfig` object required.")
 
         self._set_logging()
         self.observations = None
