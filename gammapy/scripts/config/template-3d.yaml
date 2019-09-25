@@ -28,6 +28,20 @@ reduction:
             interp: log
             node_type: edges
             unit: TeV
+    geom-irf:
+        skydir: [83.633, 22.014]
+        width: [5, 5]
+        binsz: 0.02
+        coordsys: CEL
+        proj: TAN
+        axes:
+            - name: energy
+              hi_bnd: 10
+              lo_bnd: 1
+              nbin: 11
+              interp: log
+              node_type: center
+              unit: TeV
 
 model: model.yaml
 

@@ -212,6 +212,31 @@ properties:
                         items:
                             "$ref": "#/definitions/map_axis"
                 required: [axes]
+            geom-irf:
+                type: object
+                additionalProperties: false
+                properties:
+                    binsz: {type: number}
+                    coordsys:
+                        type: string
+                        enum: [CEL, GAL]
+                    proj: {type: string}
+                    skydir:
+                        type: array
+                        items: {type: number}
+                        minItems: 2
+                        maxItems: 2
+                    width:
+                        type: array
+                        items: {type: number}
+                        minItems: 1
+                        maxItems: 2
+                    axes:
+                        type: array
+                        additionalProperties: false
+                        items:
+                            "$ref": "#/definitions/map_axis"
+                required: [axes]
         required: [dataset-type]
         if:
             properties:

@@ -9,12 +9,12 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
+from gammapy.irf import make_mean_psf, make_mean_edisp
 from gammapy.cube import MapDataset, MapMaker, PSFKernel
 from gammapy.data import DataStore, ObservationTable
-from gammapy.irf import make_mean_psf
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import BackgroundModel, SkyModels
+from gammapy.modeling.models import SkyModels, BackgroundModel
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
@@ -225,13 +225,14 @@ class Analysis:
         for obs in self.observations.list:
             log.info(obs)
 
-    def _create_geometry(self):
+    @staticmethod
+    def _create_geometry(params):
         """Create the geometry."""
         # TODO: handled in jsonschema validation class
-        geom_params = copy.deepcopy(self.settings["reduction"]["geom"])
+        geom_params = copy.deepcopy(params)
 
         axes = []
-        for axis_params in self.settings["reduction"]["geom"].get("axes", []):
+        for axis_params in geom_params.get("axes", []):
             ax = MapAxis.from_bounds(**axis_params)
             axes.append(ax)
 
@@ -244,25 +245,38 @@ class Analysis:
         maker_params = {}
 
         if "offset-max" in self.settings["reduction"]:
-            maker_params = {"offset_max": self.settings["reduction"]["offset-max"]}
+            maker_params["offset_max"] = Angle(self.settings["reduction"]["offset-max"])
 
-        geom = self._create_geometry()
-        maker = MapMaker(geom, **maker_params)
+        geom = self._create_geometry(self.settings["reduction"]["geom"])
+
+        pars = self.settings["reduction"].get("geom-irf")
+        if pars is not None:
+            geom_true = self._create_geometry(pars)
+        else:
+            geom_true = geom
+
+        maker = MapMaker(geom=geom, geom_true=geom_true, **maker_params)
         maps = maker.run(self.observations)
-        # self.images = maker.run_images()
         table_psf = make_mean_psf(self.observations, geom.center_skydir)
+        psf_kernel = PSFKernel.from_table_psf(table_psf, geom_true, max_radius=Angle("0.3 deg"))
 
-        psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius=Angle("0.3 deg"))
-        # TODO: background model may come from YAML parameters
+        e_reco = geom.get_axis_by_name("energy").edges
+        e_true = geom_true.get_axis_by_name("energy").edges
+        edisp = make_mean_edisp(
+            self.observations, position=geom.center_skydir, e_true=e_true, e_reco=e_reco
+        )
+
         background_model = BackgroundModel(maps["background"], norm=1.0)
         background_model.parameters["tilt"].frozen = False
+
         self.datasets = Datasets(
             MapDataset(
-                model=self.model,
                 counts=maps["counts"],
                 exposure=maps["exposure"],
                 background_model=background_model,
                 psf=psf_kernel,
+                edisp=edisp,
+                name="stacked",
             )
         )
 
