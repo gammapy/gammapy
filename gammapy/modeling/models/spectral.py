@@ -1074,7 +1074,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
-        expfactor = expfactor.value / energy.unit ** index_2
+        expfactor = expfactor.value / reference.unit ** index_2
         cutoff = np.exp(expfactor * (reference ** index_2 - energy ** index_2))
         return pwl * cutoff
 
