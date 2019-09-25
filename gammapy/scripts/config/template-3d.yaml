@@ -14,26 +14,25 @@ observations:
 reduction:
     dataset-type: MapDataset
     offset-max: 2.5 deg
-
-geometry:
-    axes:
-        e_reco:
-            hi_bnd: 10
-            interp: log
-            lo_bnd: 1
-            name: energy
-            nbin: 4
-            node_type: edges
-            unit: TeV
-    binsz: 0.02
-    coordsys: CEL
-    proj: TAN
-    skydir:
-        - 83.633
-        - 22.014
-    width:
-        - 5
-        - 5
+    geometry:
+        axes:
+            e_reco:
+                hi_bnd: 10
+                interp: log
+                lo_bnd: 1
+                name: energy
+                nbin: 4
+                node_type: edges
+                unit: TeV
+        binsz: 0.02
+        coordsys: CEL
+        proj: TAN
+        skydir:
+            - 83.633
+            - 22.014
+        width:
+            - 5
+            - 5
 
 model: model.yaml
 

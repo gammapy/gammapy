@@ -22,8 +22,8 @@ reduction:
             frame: icrs
             radius: 0.1 deg
 
-geometry:
-    axes: {}
+    geometry:
+        axes: {}
 
 model: model.yaml
 
