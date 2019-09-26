@@ -13,7 +13,7 @@ from astropy.utils import lazyproperty
 from gammapy.utils.interpolation import interpolation_scale
 from .utils import INVALID_INDEX, edges_from_lo_hi, find_bands_hdu, find_hdu
 
-__all__ = ["MapCoord", "MapGeom", "MapAxis"]
+__all__ = ["MapCoord", "Geom", "MapAxis"]
 
 log = logging.getLogger(__name__)
 
@@ -1068,7 +1068,7 @@ class MapCoord:
 
         Parameters
         ----------
-        geom : `MapGeom`
+        geom : `Geom`
             Map geometry with specified units per axis.
 
         Returns
@@ -1088,7 +1088,7 @@ class MapCoord:
         return self.__class__(coords, coordsys=self.coordsys)
 
 
-class MapGeom(abc.ABC):
+class Geom(abc.ABC):
     """Map geometry base class.
 
     See also: `~gammapy.maps.WcsGeom` and `~gammapy.maps.HpxGeom`
@@ -1137,7 +1137,7 @@ class MapGeom(abc.ABC):
 
         Returns
         -------
-        geom : `~MapGeom`
+        geom : `~Geom`
             Geometry object.
         """
         if hdu is None:
@@ -1371,7 +1371,7 @@ class MapGeom(abc.ABC):
 
         Returns
         -------
-        geom : `~MapGeom`
+        geom : `~Geom`
             Sliced geometry.
         """
         axes = []
@@ -1390,7 +1390,7 @@ class MapGeom(abc.ABC):
 
         Returns
         -------
-        geom : `~MapGeom`
+        geom : `~Geom`
             Image geometry.
         """
         pass
@@ -1410,7 +1410,7 @@ class MapGeom(abc.ABC):
 
         Returns
         -------
-        geom : `~MapGeom`
+        geom : `~Geom`
             Map geometry.
         """
         pass
@@ -1446,7 +1446,7 @@ class MapGeom(abc.ABC):
 
         Returns
         -------
-        geom : `~MapGeom`
+        geom : `~Geom`
             Padded geometry.
         """
         pass
@@ -1463,7 +1463,7 @@ class MapGeom(abc.ABC):
 
         Returns
         -------
-        geom : `~MapGeom`
+        geom : `~Geom`
             Cropped geometry.
         """
         pass
@@ -1481,7 +1481,7 @@ class MapGeom(abc.ABC):
 
         Returns
         -------
-        geom : `~MapGeom`
+        geom : `~Geom`
             Downsampled geometry.
 
         """
@@ -1500,7 +1500,7 @@ class MapGeom(abc.ABC):
 
         Returns
         -------
-        geom : `~MapGeom`
+        geom : `~Geom`
             Upsampled geometry.
 
         """
@@ -1581,7 +1581,7 @@ class MapGeom(abc.ABC):
         return self.__class__(**kwargs)
 
     def copy(self, **kwargs):
-        """Copy `MapGeom` instance and overwrite given attributes.
+        """Copy and overwrite given attributes.
 
         Parameters
         ----------
@@ -1590,7 +1590,7 @@ class MapGeom(abc.ABC):
 
         Returns
         -------
-        copy : `MapGeom`
+        copy : `Geom`
             Copied map geometry.
         """
         return self._init_copy(**kwargs)

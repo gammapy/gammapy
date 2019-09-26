@@ -50,9 +50,9 @@ def _compute_kernel_separations(geom, factor):
 
 
 def table_psf_to_kernel_map(table_psf, geom, factor=4):
-    """Compute a PSF kernel on a given MapGeom.
+    """Compute a PSF kernel on a given Geom.
 
-    If the MapGeom is not an image, the same kernel will be present on all axes.
+    If the Geom is not an image, the same kernel will be present on all axes.
 
     The PSF is estimated by oversampling defined by a given factor.
     The PSF kernel is normalized
@@ -61,7 +61,7 @@ def table_psf_to_kernel_map(table_psf, geom, factor=4):
     ----------
     table_psf : `~gammapy.irf.TablePSF`
         the input table PSF
-    geom : `~gammapy.maps.MapGeom`
+    geom : `~gammapy.maps.Geom`
         the target geometry. The PSF kernel will be centered on the spatial center.
     factor : int
         the oversample factor to compute the PSF
@@ -79,7 +79,7 @@ def table_psf_to_kernel_map(table_psf, geom, factor=4):
 
 
 def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
-    """Compute an energy dependent PSF kernel on a given MapGeom.
+    """Compute an energy dependent PSF kernel on a given Geom.
 
     The PSF is estimated by oversampling defined by a given factor.
 
@@ -87,7 +87,7 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
     ----------
     table_psf : `~gammapy.irf.EnergyDependentTablePSF`
         the input table PSF
-    geom : `~gammapy.maps.MapGeom`
+    geom : `~gammapy.maps.Geom`
         the target geometry.
         The PSF kernel will be centered on the spatial centre.
         the geometry axes should contain an "energy" axis.
@@ -176,9 +176,9 @@ class PSFKernel:
 
     @classmethod
     def from_table_psf(cls, table_psf, geom, max_radius=None, factor=4):
-        """Create a PSF kernel from a TablePSF or an EnergyDependentTablePSF on a given MapGeom.
+        """Create a PSF kernel from a TablePSF or an EnergyDependentTablePSF on a given Geom.
 
-        If the MapGeom is not an image, the same kernel will be present on all axes.
+        If the Geom is not an image, the same kernel will be present on all axes.
 
         The PSF is estimated by oversampling defined by a given factor.
 

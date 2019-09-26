@@ -723,7 +723,7 @@ class MapEvaluator:
 
     @property
     def geom(self):
-        """True energy map geometry (`~gammapy.maps.MapGeom`)"""
+        """True energy map geometry (`~gammapy.maps.Geom`)"""
         return self.exposure.geom
 
     @property
@@ -748,7 +748,7 @@ class MapEvaluator:
             PSF map.
         edisp : `gammapy.cube.EDispMap`
             Edisp map.
-        geom : `gammapy.maps.MapGeom`
+        geom : `gammapy.maps.Geom`
             Reference geometry of the data.
         """
         log.debug("Updating model evaluator")

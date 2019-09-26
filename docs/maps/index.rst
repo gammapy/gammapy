@@ -24,9 +24,9 @@ non-spatial dimensions and can represent images (2D), cubes (3D), or hypercubes
   sphere. Pixels are equal area but have irregular shapes.
 
 `gammapy.maps` is organized around two data structures: *geometry* classes
-inheriting from `~MapGeom` and *map* classes inheriting from `~Map`. A geometry
+inheriting from `~Geom` and *map* classes inheriting from `~Map`. A geometry
 defines the map boundaries, pixelization scheme, and provides methods for
-converting to/from map and pixel coordinates. A map owns a `~MapGeom` instance
+converting to/from map and pixel coordinates. A map owns a `~Geom` instance
 as well as a data array containing map values. Where possible it is recommended
 to use the abstract `~Map` interface for accessing or updating the contents of a
 map as this allows algorithms to be used interchangeably with different map

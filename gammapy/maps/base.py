@@ -21,7 +21,7 @@ class Map(abc.ABC):
 
     Parameters
     ----------
-    geom : `~gammapy.maps.MapGeom`
+    geom : `~gammapy.maps.Geom`
         Geometry
     data : `~numpy.ndarray`
         Data array
@@ -56,7 +56,7 @@ class Map(abc.ABC):
 
     @property
     def geom(self):
-        """Map geometry (`~gammapy.maps.MapGeom`)"""
+        """Map geometry (`~gammapy.maps.Geom`)"""
         return self._geom
 
     @geom.setter
@@ -189,11 +189,11 @@ class Map(abc.ABC):
     def from_geom(
         geom, meta=None, data=None, map_type="auto", unit="", dtype="float32"
     ):
-        """Generate an empty map from a `MapGeom` instance.
+        """Generate an empty map from a `Geom` instance.
 
         Parameters
         ----------
-        geom : `MapGeom`
+        geom : `Geom`
             Map geometry.
         data : `numpy.ndarray`
             data array
@@ -372,7 +372,7 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-        geom : `MapGeom`
+        geom : `Geom`
             Geometry of projection.
         mode : {'interp', 'exact'}
             Method for reprojection.  'interp' method interpolates at pixel

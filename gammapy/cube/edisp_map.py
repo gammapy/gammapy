@@ -21,7 +21,7 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
         the 2D Energy Dispersion IRF
     pointing : `~astropy.coordinates.SkyCoord`
         the pointing direction
-    geom : `~gammapy.maps.MapGeom`
+    geom : `~gammapy.maps.Geom`
         the map geom to be used. It provides the target geometry.
         rad and true energy axes should be given in this specific order.
     max_offset : `~astropy.coordinates.Angle`
