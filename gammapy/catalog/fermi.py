@@ -8,7 +8,7 @@ from astropy.time import Time
 from gammapy.maps import Map
 from gammapy.modeling.models import (
     ExpCutoffPowerLaw3FGLSpectralModel,
-    LogParabola,
+    LogParabolaSpectralModel,
     SuperExpCutoffPowerLaw3FGLSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     PowerLawSpectralModel,
@@ -66,14 +66,14 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             errs["amplitude"] = self.data["Unc_PL_Flux_Density"]
             errs["index"] = self.data["Unc_PL_Index"]
             model = PowerLawSpectralModel(**pars)
-        elif spec_type == "LogParabola":
+        elif spec_type == "LogParabolaSpectralModel":
             pars["amplitude"] = self.data["LP_Flux_Density"]
             pars["alpha"] = self.data["LP_Index"]
             pars["beta"] = self.data["LP_beta"]
             errs["amplitude"] = self.data["Unc_LP_Flux_Density"]
             errs["alpha"] = self.data["Unc_LP_Index"]
             errs["beta"] = self.data["Unc_LP_beta"]
-            model = LogParabola(**pars)
+            model = LogParabolaSpectralModel(**pars)
         elif spec_type == "PLSuperExpCutoff":
             pars["amplitude"] = self.data["PLEC_Flux_Density"]
             pars["index_1"] = self.data["PLEC_Index"]
@@ -195,7 +195,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             " 0.25.",
             10: "Spectral Fit Quality > 16.3 (see Equation 3 in 2FGL catalog paper).",
             11: "Possibly due to the Sun (see Section 3.6 in catalog paper).",
-            12: "Highly curved spectrum; LogParabola beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see "
+            12: "Highly curved spectrum; LogParabolaSpectralModel beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see "
             "Section 3.3 in catalog paper).",
         }
         ss += "{:<20s} : {}\n".format(
@@ -238,7 +238,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         if spec_type == "PowerLawSpectralModel":
             pass
-        elif spec_type == "LogParabola":
+        elif spec_type == "LogParabolaSpectralModel":
             ss += "{:<45s} : {} +- {}\n".format("beta", d["beta"], d["Unc_beta"])
         elif spec_type in ["PLExpCutoff", "PlSuperExpCutoff"]:
             fmt = "{:<45s} : {:.0f} +- {:.0f} {}\n"
@@ -352,12 +352,12 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             errs["index"] = self.data["Unc_Spectral_Index"]
             errs["ecut"] = self.data["Unc_Cutoff"]
             model = ExpCutoffPowerLaw3FGLSpectralModel(**pars)
-        elif spec_type == "LogParabola":
+        elif spec_type == "LogParabolaSpectralModel":
             pars["alpha"] = self.data["Spectral_Index"]
             pars["beta"] = self.data["beta"]
             errs["alpha"] = self.data["Unc_Spectral_Index"]
             errs["beta"] = self.data["Unc_beta"]
-            model = LogParabola(**pars)
+            model = LogParabolaSpectralModel(**pars)
         elif spec_type == "PLSuperExpCutoff":
             # TODO: why convert to GeV here? Remove?
             pars["reference"] = pars["reference"].to("GeV")
@@ -777,16 +777,16 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
         if spec_type == "PowerLawSpectralModel":
             pass
-        elif spec_type == "LogParabola":
+        elif spec_type == "LogParabolaSpectralModel":
             fmt = "{:<32s} : {:.3f} +- {:.3f}\n"
             ss += fmt.format(
-                "LogParabola spectral index",
+                "LogParabolaSpectralModel spectral index",
                 d["Spectral_Index"],
                 d["Unc_Spectral_Index"],
             )
 
             ss += "{:<32s} : {:.3f} +- {:.3f}\n".format(
-                "LogParabola beta", d["beta"], d["Unc_beta"]
+                "LogParabolaSpectralModel beta", d["beta"], d["Unc_beta"]
             )
         else:
             raise ValueError("Invalid spec_type")
@@ -865,12 +865,12 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
             pars["index"] = d["PowerLaw_Index"]
             errs["index"] = d["Unc_PowerLaw_Index"]
             model = PowerLawSpectralModel(**pars)
-        elif spec_type == "LogParabola":
+        elif spec_type == "LogParabolaSpectralModel":
             pars["alpha"] = d["Spectral_Index"]
             pars["beta"] = d["beta"]
             errs["alpha"] = d["Unc_Spectral_Index"]
             errs["beta"] = d["Unc_beta"]
-            model = LogParabola(**pars)
+            model = LogParabolaSpectralModel(**pars)
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 

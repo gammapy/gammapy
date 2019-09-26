@@ -22,7 +22,7 @@ __all__ = [
     "ExpCutoffPowerLaw3FGLSpectralModel",
     "SuperExpCutoffPowerLaw3FGLSpectralModel",
     "SuperExpCutoffPowerLaw4FGLSpectralModel",
-    "LogParabola",
+    "LogParabolaSpectralModel",
     "TableModel",
     "AbsorbedSpectralModel",
     "Absorption",
@@ -1103,7 +1103,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         return pwl * cutoff
 
 
-class LogParabola(SpectralModel):
+class LogParabolaSpectralModel(SpectralModel):
     r"""Spectral log parabola model.
 
     .. math::
@@ -1119,7 +1119,7 @@ class LogParabola(SpectralModel):
     The `Sherpa <http://cxc.harvard.edu/sherpa/ahelp/logparabola.html_
     package>`_ package, however, uses :math:`log_{10}`. If you have
     parametrization based on :math:`log_{10}` you can use the
-    :func:`~gammapy.modeling.models.LogParabola.from_log10` method.
+    :func:`~gammapy.modeling.models.LogParabolaSpectralModel.from_log10` method.
 
     Parameters
     ----------
@@ -1134,18 +1134,18 @@ class LogParabola(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `LogParabola` model::
+    This is how to plot the default `LogParabolaSpectralModel` model::
 
         from astropy import units as u
-        from gammapy.modeling.models import LogParabola
+        from gammapy.modeling.models import LogParabolaSpectralModel
 
-        log_parabola = LogParabola()
+        log_parabola = LogParabolaSpectralModel()
         log_parabola.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
     __slots__ = ["amplitude", "reference", "alpha", "beta"]
-    tag = "LogParabola"
+    tag = "LogParabolaSpectralModel"
 
     def __init__(
         self, amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2, beta=1

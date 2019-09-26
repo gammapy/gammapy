@@ -9,7 +9,7 @@ from gammapy.modeling.models import (
     ConstantSpectralModel,
     ExpCutoffPowerLawSpectralModel,
     ExpCutoffPowerLaw3FGLSpectralModel,
-    LogParabola,
+    LogParabolaSpectralModel,
     NaimaModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     PowerLawSpectralModel,
@@ -115,7 +115,7 @@ TEST_MODELS = [
     ),
     dict(
         name="logpar",
-        model=LogParabola(
+        model=LogParabolaSpectralModel(
             alpha=2.3 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -128,7 +128,7 @@ TEST_MODELS = [
     ),
     dict(
         name="logpar10",
-        model=LogParabola.from_log10(
+        model=LogParabolaSpectralModel.from_log10(
             alpha=2.3 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,

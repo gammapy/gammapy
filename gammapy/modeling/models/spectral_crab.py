@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy import units as u
-from .spectral import ExpCutoffPowerLawSpectralModel, LogParabola, PowerLawSpectralModel, SpectralModel
+from .spectral import ExpCutoffPowerLawSpectralModel, LogParabolaSpectralModel, PowerLawSpectralModel, SpectralModel
 
 __all__ = ["create_crab_spectral_model"]
 
@@ -93,7 +93,7 @@ def create_crab_spectral_model(reference="meyer"):
             reference=1 * u.TeV,
         )
     elif reference == "magic_lp":
-        return LogParabola(
+        return LogParabolaSpectralModel(
             amplitude=3.23e-11 * u.Unit("1 / (cm2 s TeV)"),
             alpha=2.47,
             beta=0.24 / np.log(10),
