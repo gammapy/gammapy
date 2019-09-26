@@ -5,7 +5,7 @@ from .spatial import *
 from .spectral import *
 from .spectral_cosmic_ray import *
 from .spectral_crab import *
-from .time import *
+from .temporal import *
 
 SPATIAL_MODELS = {
     "SkyDiffuseMap": SkyDiffuseMap,
@@ -16,8 +16,8 @@ SPATIAL_MODELS = {
 }
 
 TIME_MODELS = {
-    "PhaseCurveTableModel": PhaseCurveTableModel,
-    "LightCurveTableModel": LightCurveTableModel,
+    "PhaseCurveTemplateTemporalModel": PhaseCurveTemplateTemporalModel,
+    "LightCurveTemplateTemporalModel": LightCurveTemplateTemporalModel,
 }
 
 # TODO: add support for these models writing their .from_dict()

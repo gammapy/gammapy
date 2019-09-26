@@ -11,10 +11,15 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
 
-__all__ = ["PhaseCurveTableModel", "LightCurveTableModel"]
+__all__ = ["PhaseCurveTemplateTemporalModel", "LightCurveTemplateTemporalModel", "TemporalModel"]
 
 
-class PhaseCurveTableModel(Model):
+# TODO: make this a small ABC to define a uniform interface.
+class TemporalModel(Model):
+    """Temporal model base class"""
+
+
+class PhaseCurveTemplateTemporalModel(TemporalModel):
     """Temporal phase curve model.
 
     Phase for a given time is computed as:
@@ -49,10 +54,10 @@ class PhaseCurveTableModel(Model):
 
         from astropy.table import Table
         from gammapy.utils.scripts import make_path
-        from gammapy.modeling.models import PhaseCurveTableModel
+        from gammapy.modeling.models import PhaseCurveTemplateTemporalModel
         filename = make_path('$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits')
         table = Table.read(str(filename))
-        phase_curve = PhaseCurveTableModel(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
+        phase_curve = PhaseCurveTemplateTemporalModel(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
 
     Use it to compute a phase and evaluate the phase curve model for a given time:
 
@@ -171,7 +176,7 @@ class PhaseCurveTableModel(Model):
         return t_min + time
 
 
-class LightCurveTableModel(Model):
+class LightCurveTemplateTemporalModel(TemporalModel):
     """Temporal light curve model.
 
     The lightcurve is given as a table with columns ``time`` and ``norm``.
@@ -195,9 +200,9 @@ class LightCurveTableModel(Model):
     --------
     Read an example light curve object:
 
-    >>> from gammapy.modeling.models import LightCurveTableModel
+    >>> from gammapy.modeling.models import LightCurveTemplateTemporalModel
     >>> path = '$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits'
-    >>> light_curve = LightCurveTableModel.read(path)
+    >>> light_curve = LightCurveTemplateTemporalModel.read(path)
 
     Show basic information about the lightcurve:
 
@@ -225,7 +230,7 @@ class LightCurveTableModel(Model):
     def __str__(self):
         norm = self.table["NORM"]
         return (
-            f"LightCurveTableModel model summary:\n"
+            f"{self.__class__.__name__} model summary:\n"
             f"Start time: {self._time[0].mjd} MJD\n"
             f"End time: {self._time[-1].mjd} MJD\n"
             f"Norm min: {norm.min()}\n"
