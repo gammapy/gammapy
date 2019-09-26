@@ -1089,7 +1089,10 @@ class MapCoord:
 
 
 class MapGeom(abc.ABC):
-    """Base class for WCS and HEALPix geometries."""
+    """Map geometry base class.
+
+    See also: `~gammapy.maps.WcsGeom` and `~gammapy.maps.HpxGeom`
+    """
 
     @property
     @abc.abstractmethod
