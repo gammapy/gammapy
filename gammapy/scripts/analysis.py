@@ -91,7 +91,7 @@ class Analysis:
         return self.config.settings
 
     def run_fit(self, optimize_opts=None):
-        """Fitting reduced data sets to model."""
+        """Fitting reduced datasets to model."""
         if self._validate_fitting_settings():
             for ds in self.datasets.datasets:
                 # TODO: fit_range handled in jsonschema validation class
@@ -103,7 +103,7 @@ class Analysis:
                     else:
                         ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
 
-            log.info("Fitting reduced data sets.")
+            log.info("Fitting reduced datasets.")
             self.fit = Fit(self.datasets)
             self.fit_result = self.fit.run(optimize_opts=optimize_opts)
             log.info(self.fit_result)
@@ -143,7 +143,7 @@ class Analysis:
         return cls.from_yaml(filename)
 
     def get_datasets(self):
-        """Produce reduced data sets."""
+        """Produce reduced datasets."""
         if not self._validate_reduction_settings():
             return False
         if self.settings["reduction"]["dataset-type"] == "SpectrumDatasetOnOff":
@@ -154,11 +154,16 @@ class Analysis:
             # TODO raise error?
             log.info("Data reduction method not available.")
 
-    def get_flux_points(self):
-        """Calculate flux points."""
+    def get_flux_points(self, source="source"):
+        """Calculate flux points for a specific model component.
+
+        Parameters
+        ----------
+        source : string
+            Name of the model component where to calculate the flux points.
+        """
         if self._validate_fp_settings():
             # TODO: add "source" to config
-            source = "source"
             log.info("Calculating flux points.")
 
             axis_params = self.settings["flux"]["fp_binning"]
@@ -240,11 +245,13 @@ class Analysis:
         return WcsGeom.create(**geom_params)
 
     def _map_making(self):
-        """Make maps and data sets for 3d analysis."""
+        """Make maps and datasets for 3d analysis."""
+        log.info("Creating geometry.")
         geom = self._create_geometry(self.settings["reduction"]["geom"])
         geom_irf = self._create_geometry(self.settings["reduction"]["geom-irf"])
         offset_max = Angle(self.settings["reduction"]["offset-max"])
         stack_datasets = self.settings["reduction"]["stack-datasets"]
+        log.info("Creating datasets.")
 
         if stack_datasets:
             stacked = MapDataset.create(geom=geom, geom_irf=geom_irf, name="stacked")
@@ -323,7 +330,7 @@ class Analysis:
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
         region = self.settings["reduction"]["geom"]["region"]
-        log.info("Reducing spectrum data sets.")
+        log.info("Reducing spectrum datasets.")
         on_lon = Angle(region["center"][0])
         on_lat = Angle(region["center"][1])
         on_center = SkyCoord(on_lon, on_lat, frame=region["frame"])
@@ -375,7 +382,8 @@ class Analysis:
 
     def _validate_fitting_settings(self):
         """Validate settings before proceeding to fit 1D."""
-        if self.datasets.datasets:
+        valid = True
+        if self.datasets and self.datasets.datasets:
             if (self.extraction and
                 self.settings["reduction"]["background"]["background_estimator"]
                 != "reflected"
@@ -384,21 +392,31 @@ class Analysis:
                 log.info("Background estimation only for reflected regions method.")
                 return False
             self.config.validate()
-            return True
         else:
             log.info("No datasets reduced.")
+            valid = False
+        if not self.model:
+            log.info("No model fetched for datasets.")
+            valid = False
+        if not valid:
             log.info("Fit cannot be done.")
-            return False
+        return valid
 
     def _validate_fp_settings(self):
         """Validate settings before proceeding to flux points estimation."""
+        valid = True
         if self.fit:
             self.config.validate()
-            return True
         else:
             log.info("No results available from fit.")
+            valid = False
+        if "fp_binning" not in self.settings["flux"]:
+            log.info("No values declared for the energy bins.")
+            valid = False
+        if not valid:
             log.info("Flux points calculation cannot be done.")
-            return False
+
+        return valid
 
     def _validate_reduction_settings(self):
         """Validate settings before proceeding to data reduction."""
@@ -484,19 +502,23 @@ class AnalysisConfig:
         if len(config):
             self._user_settings.update(config)
             self._update_settings(config, self.settings)
-            self.validate()
+        self.validate()
 
     def validate(self):
         """Validate and/or fill initial config parameters against schema."""
         validator = _gp_units_validator
-        jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
+        try:
+            jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
+        except jsonschema.exceptions.ValidationError as ex:
+            log.error('Error when validating configuration parameters against schema.')
+            log.error(ex.message)
 
     @staticmethod
     def _get_doc_sections():
         """Returns dict with commented docs from schema"""
         doc = defaultdict(str)
         with open(SCHEMA_FILE) as f:
-            for line in filter(lambda line: line.startswith("#"), f):
+            for line in filter(lambda line: line.startswith("# "), f):
                 line = line.strip("\n")
                 if line.startswith("# Block: "):
                     keyword = line.replace("# Block: ", "")
