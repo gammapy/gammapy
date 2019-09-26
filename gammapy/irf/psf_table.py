@@ -427,12 +427,12 @@ class EnergyDependentTablePSF:
         psf : `TablePSF`
             Table PSF
         """
-        from gammapy.modeling.models import PowerLawSpectralModel, TableModel
+        from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
 
         if spectrum is None:
             spectrum = PowerLawSpectralModel()
 
-        exposure = TableModel(self.energy, self.exposure)
+        exposure = TemplateSpectralModel(self.energy, self.exposure)
 
         e_min, e_max = energy_band
         energy = energy_logspace(emin=e_min, emax=e_max, nbins=n_bins)

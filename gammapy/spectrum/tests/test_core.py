@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.units import Quantity
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
-from gammapy.modeling.models import PowerLawSpectralModel, PowerLaw2SpectralModel, TableModel
+from gammapy.modeling.models import PowerLawSpectralModel, PowerLaw2SpectralModel, TemplateSpectralModel
 from gammapy.spectrum import CountsSpectrum, SpectrumEvaluator
 from gammapy.utils.energy import energy_logspace
 from gammapy.utils.testing import (
@@ -89,7 +89,7 @@ def get_test_cases():
             npred=1437.450076,
         ),
         dict(
-            model=TableModel(
+            model=TemplateSpectralModel(
                 energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
                 values=[4.0, 3.0, 1.0, 0.1] * u.Unit("TeV-1"),
             ),

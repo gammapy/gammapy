@@ -4,7 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from gammapy.modeling import Parameter
-from gammapy.modeling.models import SpectralModel, TableModel
+from gammapy.modeling.models import SpectralModel, TemplateSpectralModel
 from gammapy.utils.scripts import make_path
 
 __all__ = ["PrimaryFlux", "DMAnnihilation"]
@@ -16,7 +16,7 @@ class PrimaryFlux:
     Based on the precomputed models by Cirelli et al. (2016). All available
     annihilation channels can be found there. The dark matter mass will be set
     to the nearest available value. The spectra will be available as
-    `~gammapy.modeling.models.TableModel` for a chosen dark matter mass and
+    `~gammapy.modeling.models.TemplateSpectralModel` for a chosen dark matter mass and
     annihilation channel.
 
     References
@@ -111,13 +111,13 @@ class PrimaryFlux:
 
     @property
     def table_model(self):
-        """Spectrum as `~gammapy.modeling.models.TableModel`."""
+        """Spectrum as `~gammapy.modeling.models.TemplateSpectralModel`."""
         subtable = self.table[self.table["mDM"] == self.mDM.value]
         energies = (10 ** subtable["Log[10,x]"]) * self.mDM
         channel_name = self.channel_registry[self.channel]
         dN_dlogx = subtable[channel_name]
         dN_dE = dN_dlogx / (energies * np.log(10))
-        return TableModel(energy=energies, values=dN_dE)
+        return TemplateSpectralModel(energy=energies, values=dN_dE)
 
 
 class DMAnnihilation(SpectralModel):

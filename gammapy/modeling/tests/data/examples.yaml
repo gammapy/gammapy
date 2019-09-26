@@ -110,7 +110,7 @@ components:
       unit: ''
       frozen: false
   spectral:
-    type: TableModel
+    type: TemplateSpectralModel
     energy:
       data:
       - 34.171

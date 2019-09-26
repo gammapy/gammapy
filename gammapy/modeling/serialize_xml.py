@@ -60,7 +60,7 @@ model_registry = {
         },
         # TODO: FileFunction is not working
         "FileFunction": {
-            "model": spectral.TableModel,
+            "model": spectral.TemplateSpectralModel,
             "parameters": {
                 "Value": ["const", "cm-2 s-1 MeV-1"],
                 "Normalization": ["const", "cm-2 s-1 MeV-1"],

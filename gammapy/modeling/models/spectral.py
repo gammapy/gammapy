@@ -23,7 +23,7 @@ __all__ = [
     "SuperExpCutoffPowerLaw3FGLSpectralModel",
     "SuperExpCutoffPowerLaw4FGLSpectralModel",
     "LogParabolaSpectralModel",
-    "TableModel",
+    "TemplateSpectralModel",
     "AbsorbedSpectralModel",
     "Absorption",
     "NaimaModel",
@@ -1191,7 +1191,7 @@ class LogParabolaSpectralModel(SpectralModel):
         return reference * np.exp((2 - alpha) / (2 * beta))
 
 
-class TableModel(SpectralModel):
+class TemplateSpectralModel(SpectralModel):
     """A model generated from a table of energy and value arrays.
 
     the units returned will be the units of the values array provided at
@@ -1200,7 +1200,7 @@ class TableModel(SpectralModel):
     energy array.
 
     Class implementation follows closely what has been done in
-    `naima.models.TableModel`
+    `naima.models.TemplateSpectralModel`
 
     Parameters
     ----------
@@ -1221,7 +1221,7 @@ class TableModel(SpectralModel):
     """
 
     __slots__ = ["energy", "values", "norm", "meta", "_evaluate"]
-    tag = "TableModel"
+    tag = "TemplateSpectralModel"
 
     def __init__(
         self,
@@ -1271,9 +1271,9 @@ class TableModel(SpectralModel):
         --------
         Fill table from an EBL model (Franceschini, 2008)
 
-        >>> from gammapy.modeling.models import TableModel
+        >>> from gammapy.modeling.models import TemplateSpectralModel
         >>> filename = '$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz'
-        >>> table_model = TableModel.read_xspec_model(filename=filename, param=0.3)
+        >>> table_model = TemplateSpectralModel.read_xspec_model(filename=filename, param=0.3)
         """
         filename = str(make_path(filename))
 
@@ -1526,7 +1526,7 @@ class Absorption:
         return cls.read(models[name])
 
     def table_model(self, parameter):
-        """Table model for a given parameter (`~gammapy.modeling.models.TableModel`).
+        """Table model for a given parameter (`~gammapy.modeling.models.TemplateSpectralModel`).
 
         Parameters
         ----------
@@ -1535,7 +1535,7 @@ class Absorption:
         """
         energy = self.energy
         values = self.evaluate(energy=energy, parameter=parameter)
-        return TableModel(
+        return TemplateSpectralModel(
             energy=energy, values=values, interp_kwargs={"values_scale": "log"}
         )
 
@@ -1702,7 +1702,7 @@ class NaimaModel(SpectralModel):
         self.distance = Parameter("distance", distance, frozen=True)
         self.seed = seed
 
-        # This ensures the support of naima.models.TableModel
+        # This ensures the support of naima.models.TemplateSpectralModel
         if isinstance(self._particle_distribution, naima.models.TableModel):
             param_names = ["amplitude"]
         else:

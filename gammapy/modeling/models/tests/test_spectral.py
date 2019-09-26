@@ -16,7 +16,7 @@ from gammapy.modeling.models import (
     PowerLaw2SpectralModel,
     SpectralGaussian,
     SpectralLogGaussian,
-    TableModel,
+    TemplateSpectralModel,
 )
 from gammapy.utils.energy import energy_logspace
 from gammapy.utils.testing import (
@@ -37,7 +37,7 @@ def table_model():
     pl = PowerLawSpectralModel(index, amplitude, reference)
     flux = pl(energy)
 
-    return TableModel(energy, flux, 1 * u.Unit(""))
+    return TemplateSpectralModel(energy, flux, 1 * u.Unit(""))
 
 
 TEST_MODELS = [
@@ -366,7 +366,7 @@ def test_to_from_dict():
 @requires_data()
 def test_table_model_from_file():
     filename = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
-    absorption_z03 = TableModel.read_xspec_model(filename=filename, param=0.3)
+    absorption_z03 = TemplateSpectralModel.read_xspec_model(filename=filename, param=0.3)
     with mpl_plot_check():
         absorption_z03.plot(energy_range=(0.03, 10), energy_unit=u.TeV, flux_unit="")
 
@@ -418,7 +418,7 @@ def test_pwl_index_2_error():
 @requires_data()
 def test_fermi_isotropic():
     filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
-    model = TableModel.read_fermi_isotropic_model(filename)
+    model = TemplateSpectralModel.read_fermi_isotropic_model(filename)
     assert_quantity_allclose(
         model(50 * u.GeV), 1.463 * u.Unit("1e-13 MeV-1 cm-2 s-1 sr-1"), rtol=1e-3
     )
