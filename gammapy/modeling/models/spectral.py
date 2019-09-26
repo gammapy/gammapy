@@ -21,7 +21,7 @@ __all__ = [
     "ExpCutoffPowerLawSpectralModel",
     "ExpCutoffPowerLaw3FGLSpectralModel",
     "SuperExpCutoffPowerLaw3FGLSpectralModel",
-    "PLSuperExpCutoff4FGL",
+    "SuperExpCutoffPowerLaw4FGLSpectralModel",
     "LogParabola",
     "TableModel",
     "AbsorbedSpectralModel",
@@ -1031,7 +1031,7 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
         return pwl * cutoff
 
 
-class PLSuperExpCutoff4FGL(SpectralModel):
+class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 4FGL.
 
     This model parametrisation is very similar, but slightly different from
@@ -1060,18 +1060,18 @@ class PLSuperExpCutoff4FGL(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `PLSuperExpCutoff4FGL` model::
+    This is how to plot the default `SuperExpCutoffPowerLaw4FGLSpectralModel` model::
 
         from astropy import units as u
-        from gammapy.modeling.models import PLSuperExpCutoff4FGL
+        from gammapy.modeling.models import SuperExpCutoffPowerLaw4FGLSpectralModel
 
-        model = PLSuperExpCutoff4FGL()
+        model = SuperExpCutoffPowerLaw4FGLSpectralModel()
         model.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
     __slots__ = ["index_1", "index_2", "amplitude", "reference", "expfactor"]
-    tag = "PLSuperExpCutoff4FGL"
+    tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
 
     def __init__(
         self,

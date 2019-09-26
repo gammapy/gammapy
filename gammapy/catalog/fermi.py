@@ -10,7 +10,7 @@ from gammapy.modeling.models import (
     ExpCutoffPowerLaw3FGLSpectralModel,
     LogParabola,
     SuperExpCutoffPowerLaw3FGLSpectralModel,
-    PLSuperExpCutoff4FGL,
+    SuperExpCutoffPowerLaw4FGLSpectralModel,
     PowerLawSpectralModel,
     PowerLaw2SpectralModel,
     TemplateSpatialModel,
@@ -85,7 +85,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             errs["expfactor"] = (
                 self.data["Unc_PLEC_Expfactor"] / u.MeV ** pars["index_2"]
             )
-            model = PLSuperExpCutoff4FGL(**pars)
+            model = SuperExpCutoffPowerLaw4FGLSpectralModel(**pars)
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 

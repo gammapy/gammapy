@@ -16,7 +16,7 @@ from gammapy.modeling.models import (
     ExpCutoffPowerLaw3FGLSpectralModel,
     LogParabola,
     SuperExpCutoffPowerLaw3FGLSpectralModel,
-    PLSuperExpCutoff4FGL,
+    SuperExpCutoffPowerLaw4FGLSpectralModel,
     PowerLawSpectralModel,
 )
 from gammapy.utils.testing import (
@@ -44,7 +44,7 @@ SOURCES_4FGL = [
     dict(
         idx=7,
         name="4FGL J0002.8+6217",
-        spec_type=PLSuperExpCutoff4FGL,
+        spec_type=SuperExpCutoffPowerLaw4FGLSpectralModel,
         dnde=u.Quantity(2.084e-09, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.0885e-10, "cm-2 s-1 GeV-1"),
     ),

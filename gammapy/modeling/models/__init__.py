@@ -30,7 +30,7 @@ SPECTRAL_MODELS = {
     "ExpCutoffPowerLawSpectralModel": ExpCutoffPowerLawSpectralModel,
     "ExpCutoffPowerLaw3FGLSpectralModel": ExpCutoffPowerLaw3FGLSpectralModel,
     "SuperExpCutoffPowerLaw3FGLSpectralModel": SuperExpCutoffPowerLaw3FGLSpectralModel,
-    "PLSuperExpCutoff4FGL": PLSuperExpCutoff4FGL,
+    "SuperExpCutoffPowerLaw4FGLSpectralModel": SuperExpCutoffPowerLaw4FGLSpectralModel,
     "LogParabola": LogParabola,
     "TableModel": TableModel,
     "SpectralGaussian": SpectralGaussian,

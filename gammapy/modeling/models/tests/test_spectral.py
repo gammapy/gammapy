@@ -11,7 +11,7 @@ from gammapy.modeling.models import (
     ExpCutoffPowerLaw3FGLSpectralModel,
     LogParabola,
     NaimaModel,
-    PLSuperExpCutoff4FGL,
+    SuperExpCutoffPowerLaw4FGLSpectralModel,
     PowerLawSpectralModel,
     PowerLaw2SpectralModel,
     SpectralGaussian,
@@ -102,7 +102,7 @@ TEST_MODELS = [
     ),
     dict(
         name="plsec_4fgl",
-        model=PLSuperExpCutoff4FGL(
+        model=SuperExpCutoffPowerLaw4FGLSpectralModel(
             index_1=1.5,
             index_2=2,
             amplitude=1 / u.cm ** 2 / u.s / u.TeV,
