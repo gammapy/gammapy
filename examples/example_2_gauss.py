@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from gammapy.cube import MapEvaluator, make_map_exposure_true_energy
 from gammapy.irf import EffectiveAreaTable2D
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
-from gammapy.modeling.models import PowerLaw, SkyGaussian, SkyModel
+from gammapy.modeling.models import PowerLaw, GaussianSpatialModel, SkyModel
 from gammapy.utils.random import get_random_state
 
 filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"

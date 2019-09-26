@@ -69,7 +69,7 @@ model_registry = {
     },
     "spatial": {
         "PointSource": {
-            "model": spatial.SkyPointSource,
+            "model": spatial.PointSpatialModel,
             "parameters": {
                 "RA": ["lon_0", "deg"],
                 "DEC": ["lat_0", "deg"],
@@ -78,7 +78,7 @@ model_registry = {
             },
         },
         "RadialGaussian": {
-            "model": spatial.SkyGaussian,
+            "model": spatial.GaussianSpatialModel,
             "parameters": {
                 "RA": ["lon_0", "deg"],
                 "DEC": ["lat_0", "deg"],
@@ -88,7 +88,7 @@ model_registry = {
             },
         },
         "RadialDisk": {
-            "model": spatial.SkyDisk,
+            "model": spatial.DiskSpatialModel,
             "parameters": {
                 "RA": ["lon_0", "deg"],
                 "DEC": ["lat_0", "deg"],
@@ -98,7 +98,7 @@ model_registry = {
             },
         },
         "RadialShell": {
-            "model": spatial.SkyShell,
+            "model": spatial.ShellSpatialModel,
             "parameters": {
                 "RA": ["lon_0", "deg"],
                 "DEC": ["lat_0", "deg"],
@@ -109,7 +109,7 @@ model_registry = {
             },
         },
         "DiffuseMap": {
-            "model": spatial.SkyDiffuseMap,
+            "model": spatial.TemplateSpatialModel,
             "parameters": {
                 "Prefactor": ["norm", ""],
                 "Normalization": ["norm", ""],
@@ -117,7 +117,7 @@ model_registry = {
             },
         },
         "DiffuseIsotropic": {
-            "model": spatial.SkyDiffuseConstant,
+            "model": spatial.ConstantSpatialModel,
             "parameters": {
                 "Prefactor": ["value", ""],
                 "Normalization": ["value", ""],
@@ -177,7 +177,7 @@ def xml_to_skymodel(xml):
 
 def xml_to_model(xml, which):
     """
-    Convert XML to `~gammapy.modeling.models.SkySpatialModel` or
+    Convert XML to `~gammapy.modeling.models.SpatialModel` or
     `~gammapy.modeling.models.SpectralModel`
     """
     type_ = xml["@type"]
@@ -292,7 +292,7 @@ def skymodel_to_xml(skymodel):
 
 def model_to_xml(model, which):
     """
-    Convert `~gammapy.modeling.models.SkySpatialModel` or
+    Convert `~gammapy.modeling.models.SpatialModel` or
     `~gammapy.modeling.models.SpectralModel` to XML
     """
     tag = "spatialModel" if which == "spatial" else "spectrum"

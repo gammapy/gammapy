@@ -139,7 +139,7 @@ class DMAnnihilation(SpectralModel):
     scale : float
         Scale parameter for model fitting
     jfactor : `~astropy.units.Quantity`
-        Integrated J-Factor needed when `~gammapy.modeling.models.SkyPointSource` spatial model is used
+        Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel` spatial model is used
     z: float
         Redshift value
     k: int

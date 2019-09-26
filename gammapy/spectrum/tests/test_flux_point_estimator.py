@@ -10,7 +10,7 @@ from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw,
     PowerLaw,
-    SkyGaussian,
+    GaussianSpatialModel,
     SkyModel,
 )
 from gammapy.spectrum import (
@@ -58,7 +58,7 @@ def simulate_map_dataset(random_state=0):
         skydir=skydir, width=(4, 4), binsz=0.1, axes=[energy_axis], coordsys="GAL"
     )
 
-    gauss = SkyGaussian("0 deg", "0 deg", "0.4 deg", frame="galactic")
+    gauss = GaussianSpatialModel("0 deg", "0 deg", "0.4 deg", frame="galactic")
     pwl = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=gauss, spectral_model=pwl, name="source")
     dataset = simulate_dataset(

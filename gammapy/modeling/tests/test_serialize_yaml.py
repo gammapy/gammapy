@@ -20,7 +20,7 @@ def test_dict_to_skymodels(tmpdir):
 
     model0 = models[0]
     assert isinstance(model0.spectral_model, spectral.ExponentialCutoffPowerLaw)
-    assert isinstance(model0.spatial_model, spatial.SkyPointSource)
+    assert isinstance(model0.spatial_model, spatial.PointSpatialModel)
 
     pars0 = model0.parameters
     assert pars0["index"].value == 2.1
@@ -48,7 +48,7 @@ def test_dict_to_skymodels(tmpdir):
 
     model1 = models[1]
     assert isinstance(model1.spectral_model, spectral.PowerLaw)
-    assert isinstance(model1.spatial_model, spatial.SkyDisk)
+    assert isinstance(model1.spatial_model, spatial.DiskSpatialModel)
 
     pars1 = model1.parameters
     assert pars1["index"].value == 2.2
@@ -70,11 +70,11 @@ def test_dict_to_skymodels(tmpdir):
     assert model2.spectral_model.values.unit == "1 / (cm2 MeV s sr)"
 
     assert isinstance(model2.spectral_model, spectral.TableModel)
-    assert isinstance(model2.spatial_model, spatial.SkyDiffuseMap)
+    assert isinstance(model2.spatial_model, spatial.TemplateSpatialModel)
 
     assert model2.spatial_model.parameters["norm"].value == 1.0
     assert model2.spectral_model.parameters["norm"].value == 2.1
-    # TODO problem of duplicate parameter name between SkyDiffuseMap and TableModel
+    # TODO problem of duplicate parameter name between TemplateSpatialModel and TableModel
     # assert model2.parameters["norm"].value == 2.1 # fail
 
 

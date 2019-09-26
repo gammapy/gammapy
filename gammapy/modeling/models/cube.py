@@ -185,7 +185,7 @@ class SkyModel(SkyModelBase):
 
     Parameters
     ----------
-    spatial_model : `~gammapy.modeling.models.SkySpatialModel`
+    spatial_model : `~gammapy.modeling.models.SpatialModel`
         Spatial model (must be normalised to integrate to 1)
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model
@@ -197,14 +197,14 @@ class SkyModel(SkyModelBase):
     __slots__ = ["name", "_spatial_model", "_spectral_model"]
 
     def __init__(self, spatial_model, spectral_model, name="source"):
-        from gammapy.modeling.models import SkySpatialModel, SpectralModel
+        from gammapy.modeling.models import SpatialModel, SpectralModel
 
         self.name = name
 
-        if not isinstance(spatial_model, SkySpatialModel):
+        if not isinstance(spatial_model, SpatialModel):
             raise ValueError(
                 f"Spatial model must be instance / subclass "
-                f" of `SkySpatialModel` and not {spatial_model.__class__.__name__}."
+                f" of `SpatialModel` and not {spatial_model.__class__.__name__}."
             )
 
         self._spatial_model = spatial_model
@@ -224,7 +224,7 @@ class SkyModel(SkyModelBase):
 
     @property
     def spatial_model(self):
-        """`~gammapy.modeling.models.SkySpatialModel`"""
+        """`~gammapy.modeling.models.SpatialModel`"""
         return self._spatial_model
 
     @property
@@ -330,7 +330,7 @@ class SkyModel(SkyModelBase):
 class SkyDiffuseCube(SkyModelBase):
     """Cube sky map template model (3D).
 
-    This is for a 3D map with an energy axis. Use `~gammapy.modeling.models.SkyDiffuseMap`
+    This is for a 3D map with an energy axis. Use `~gammapy.modeling.models.TemplateSpatialModel`
     for 2D maps.
 
     Parameters

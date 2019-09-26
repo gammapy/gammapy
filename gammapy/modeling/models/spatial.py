@@ -11,13 +11,13 @@ from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
 
 __all__ = [
-    "SkySpatialModel",
-    "SkyPointSource",
-    "SkyGaussian",
-    "SkyDisk",
-    "SkyShell",
-    "SkyDiffuseConstant",
-    "SkyDiffuseMap",
+    "SpatialModel",
+    "PointSpatialModel",
+    "GaussianSpatialModel",
+    "DiskSpatialModel",
+    "ShellSpatialModel",
+    "ConstantSpatialModel",
+    "TemplateSpatialModel",
 ]
 
 log = logging.getLogger(__name__)
@@ -36,8 +36,8 @@ def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     return minor_axis, sigma_eff
 
 
-class SkySpatialModel(Model):
-    """Sky spatial model base class."""
+class SpatialModel(Model):
+    """Spatial model base class."""
 
     def __call__(self, lon, lat):
         """Call evaluate method"""
@@ -71,7 +71,7 @@ class SkySpatialModel(Model):
         return data
 
 
-class SkyPointSource(SkySpatialModel):
+class PointSpatialModel(SpatialModel):
     r"""Point Source.
 
     .. math:: \phi(lon, lat) = \delta{(lon - lon_0, lat - lat_0)}
@@ -85,7 +85,7 @@ class SkyPointSource(SkySpatialModel):
     frame : {"galactic", "icrs"}
         Coordinate frame of `lon_0` and `lat_0`.
     """
-    tag = "SkyPointSource"
+    tag = "PointSpatialModel"
     __slots__ = ["frame", "lon_0", "lat_0"]
 
     def __init__(self, lon_0, lat_0, frame="icrs"):
@@ -122,7 +122,7 @@ class SkyPointSource(SkySpatialModel):
         return w / geom.solid_angle()
 
 
-class SkyGaussian(SkySpatialModel):
+class GaussianSpatialModel(SpatialModel):
     r"""Two-dimensional Gaussian model.
 
     By default, the Gaussian is symmetric:
@@ -189,14 +189,14 @@ class SkyGaussian(SkySpatialModel):
         import numpy as np
         import matplotlib.pyplot as plt
         from astropy.coordinates import Angle
-        from gammapy.modeling.models import SkyGaussian
+        from gammapy.modeling.models import GaussianSpatialModel
         from gammapy.maps import Map, WcsGeom
 
         m_geom = WcsGeom.create(
             binsz=0.01, width=(5, 5), skydir=(2, 2), coordsys="GAL", proj="AIT"
         )
         phi = Angle("30 deg")
-        model = SkyGaussian("2 deg", "2 deg", "1 deg", 0.7, phi, frame="galactic")
+        model = GaussianSpatialModel("2 deg", "2 deg", "1 deg", 0.7, phi, frame="galactic")
 
         coords = m_geom.get_coord()
         vals = model(coords.lon, coords.lat)
@@ -216,7 +216,7 @@ class SkyGaussian(SkySpatialModel):
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "sigma", "e", "phi"]
-    tag = "SkyGaussian"
+    tag = "GaussianSpatialModel"
 
     def __init__(self, lon_0, lat_0, sigma, e=0, phi="0 deg", frame="icrs"):
         self.frame = frame
@@ -255,7 +255,7 @@ class SkyGaussian(SkySpatialModel):
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
 
 
-class SkyDisk(SkySpatialModel):
+class DiskSpatialModel(SpatialModel):
     r"""Constant disk model.
 
     By default, the model is symmetric, i.e. a disk:
@@ -306,9 +306,9 @@ class SkyDisk(SkySpatialModel):
         import numpy as np
         import matplotlib.pyplot as plt
         from gammapy.maps import Map, WcsGeom
-        from gammapy.modeling.models import SkyDisk
+        from gammapy.modeling.models import DiskSpatialModel
 
-        model = SkyDisk("2 deg", "2 deg", "1 deg", 0.8, "30 deg", frame="galactic")
+        model = DiskSpatialModel("2 deg", "2 deg", "1 deg", 0.8, "30 deg", frame="galactic")
 
         m_geom = WcsGeom.create(
             binsz=0.01, width=(3, 3), skydir=(2, 2), coordsys="GAL", proj="AIT"
@@ -335,7 +335,7 @@ class SkyDisk(SkySpatialModel):
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "r_0", "e", "phi", "_offset_by"]
-    tag = "SkyDisk"
+    tag = "DiskSpatialModel"
 
     def __init__(
         self, lon_0, lat_0, r_0, e=0, phi="0 deg", edge="0.01 deg", frame="icrs"
@@ -393,13 +393,13 @@ class SkyDisk(SkySpatialModel):
         else:
             sigma_eff = compute_sigma_eff(lon_0, lat_0, lon, lat, phi, r_0, e)[1]
 
-        norm = SkyDisk.compute_norm(r_0, e)
+        norm = DiskSpatialModel.compute_norm(r_0, e)
 
-        in_ellipse = SkyDisk.smooth_edge(sep - sigma_eff, edge)
+        in_ellipse = DiskSpatialModel.smooth_edge(sep - sigma_eff, edge)
         return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
 
 
-class SkyShell(SkySpatialModel):
+class ShellSpatialModel(SpatialModel):
     r"""Shell model.
 
     .. math::
@@ -432,7 +432,7 @@ class SkyShell(SkySpatialModel):
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "radius", "width"]
-    tag = "SkyShell"
+    tag = "ShellSpatialModel"
 
     def __init__(self, lon_0, lat_0, radius, width, frame="icrs"):
         self.frame = frame
@@ -470,7 +470,7 @@ class SkyShell(SkySpatialModel):
         return norm * value
 
 
-class SkyDiffuseConstant(SkySpatialModel):
+class ConstantSpatialModel(SpatialModel):
     """Spatially constant (isotropic) spatial model.
 
     Parameters
@@ -480,7 +480,7 @@ class SkyDiffuseConstant(SkySpatialModel):
     """
 
     frame = None
-    tag = "SkyDiffuseConstant"
+    tag = "ConstantSpatialModel"
     evaluation_radius = None
 
     def __init__(self, value=1):
@@ -494,7 +494,7 @@ class SkyDiffuseConstant(SkySpatialModel):
         return value
 
 
-class SkyDiffuseMap(SkySpatialModel):
+class TemplateSpatialModel(SpatialModel):
     """Spatial sky map template model (2D).
 
     This is for a 2D image. Use `~gammapy.modeling.models.SkyDiffuseCube` for 3D cubes with
@@ -516,7 +516,7 @@ class SkyDiffuseMap(SkySpatialModel):
     """
 
     __slots__ = ["map", "norm", "meta", "_interp_kwargs", "filename"]
-    tag = "SkyDiffuseMap"
+    tag = "TemplateSpatialModel"
 
     def __init__(
         self, map, norm=1, meta=None, normalize=True, interp_kwargs=None, filename=None

@@ -14,11 +14,11 @@ from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw,
     PowerLaw,
     PowerLaw2,
-    SkyGaussian,
+    GaussianSpatialModel,
     SkyModel,
     SkyModels,
-    SkyPointSource,
-    SkyShell,
+    PointSpatialModel,
+    ShellSpatialModel,
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.scripts import make_path
@@ -322,7 +322,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Source spatial model (`~gammapy.modeling.models.SkySpatialModel`).
+        """Source spatial model (`~gammapy.modeling.models.SpatialModel`).
 
         TODO: add parameter errors!
         """
@@ -333,7 +333,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         glat = d["glat"]
 
         if morph_type == "point":
-            return SkyPointSource(lon_0=glon, lat_0=glat)
+            return PointSpatialModel(lon_0=glon, lat_0=glat)
         elif morph_type == "gauss":
             # TODO: add infos back once model support elongation
             # pars['x_stddev'] = d['morph_sigma']
@@ -343,9 +343,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             # if not np.isnan(d['morph_pa']):
             #     # TODO: handle reference frame for rotation angle
             #     pars['theta'] = Angle(d['morph_pa'], 'deg').rad
-            return SkyGaussian(lon_0=glon, lat_0=glat, sigma=d["morph_sigma"])
+            return GaussianSpatialModel(lon_0=glon, lat_0=glat, sigma=d["morph_sigma"])
         elif morph_type == "shell":
-            return SkyShell(
+            return ShellSpatialModel(
                 lon_0=glon,
                 lat_0=glat,
                 # TODO: probably we shouldn't guess a shell width here!

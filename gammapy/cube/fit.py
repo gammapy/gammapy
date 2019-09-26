@@ -12,7 +12,7 @@ from gammapy.data import GTI
 from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
-from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels, SkyPointSource
+from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels, PointSpatialModel
 from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path

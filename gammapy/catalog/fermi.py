@@ -13,10 +13,10 @@ from gammapy.modeling.models import (
     PLSuperExpCutoff4FGL,
     PowerLaw,
     PowerLaw2,
-    SkyDiffuseMap,
-    SkyGaussian,
+    TemplateSpatialModel,
+    GaussianSpatialModel,
     SkyModel,
-    SkyPointSource,
+    PointSpatialModel,
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.time import LightCurve
@@ -377,7 +377,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     @property
     def spatial_model(self):
         """
-        Source spatial model (`~gammapy.modeling.models.SkySpatialModel`).
+        Source spatial model (`~gammapy.modeling.models.SpatialModel`).
         """
         d = self.data
 
@@ -388,7 +388,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         if self.is_pointlike:
             pars["lon_0"] = glon
             pars["lat_0"] = glat
-            return SkyPointSource(lon_0=glon, lat_0=glat)
+            return PointSpatialModel(lon_0=glon, lat_0=glat)
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
@@ -401,11 +401,11 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v15/Templates/"
                 )
-                return SkyDiffuseMap.read(path / filename)
+                return TemplateSpatialModel.read(path / filename)
             elif morph_type == "2D Gaussian":
                 # TODO: fill elongation info as soon as model supports it
                 sigma = de["Model_SemiMajor"].to("deg")
-                return SkyGaussian(lon_0=glon, lat_0=glat, sigma=sigma)
+                return GaussianSpatialModel(lon_0=glon, lat_0=glat, sigma=sigma)
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
 
@@ -915,7 +915,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Source spatial model (`~gammapy.modeling.models.SkySpatialModel`)."""
+        """Source spatial model (`~gammapy.modeling.models.SpatialModel`)."""
         d = self.data
 
         pars = {}
@@ -925,7 +925,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         if self.is_pointlike:
             pars["lon_0"] = glon
             pars["lat_0"] = glat
-            return SkyPointSource(lon_0=glon, lat_0=glat)
+            return PointSpatialModel(lon_0=glon, lat_0=glat)
         else:
             de = self.data_extended
             morph_type = de["Spatial_Function"].strip()
@@ -938,11 +938,11 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/"
                 )
-                return SkyDiffuseMap.read(path / filename)
+                return TemplateSpatialModel.read(path / filename)
             elif morph_type == "RadialGauss":
                 # TODO: fill elongation info as soon as model supports it
                 sigma = de["Model_SemiMajor"].to("deg")
-                return SkyGaussian(lon_0=glon, lat_0=glat, sigma=sigma)
+                return GaussianSpatialModel(lon_0=glon, lat_0=glat, sigma=sigma)
             else:
                 raise ValueError(f"Invalid morph_type: {morph_type!r}")
 

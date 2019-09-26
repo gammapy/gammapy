@@ -8,11 +8,11 @@ from .spectral_crab import *
 from .temporal import *
 
 SPATIAL_MODELS = {
-    "SkyDiffuseMap": SkyDiffuseMap,
-    "SkyDisk": SkyDisk,
-    "SkyGaussian": SkyGaussian,
-    "SkyPointSource": SkyPointSource,
-    "SkyShell": SkyShell,
+    "TemplateSpatialModel": TemplateSpatialModel,
+    "DiskSpatialModel": DiskSpatialModel,
+    "GaussianSpatialModel": GaussianSpatialModel,
+    "PointSpatialModel": PointSpatialModel,
+    "ShellSpatialModel": ShellSpatialModel,
 }
 
 TIME_MODELS = {
