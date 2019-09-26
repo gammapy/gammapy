@@ -241,10 +241,12 @@ class Analysis:
 
     def _map_making(self):
         """Make maps and datasets for 3d analysis."""
+        log.info("Creating geometry.")
         geom = self._create_geometry(self.settings["reduction"]["geom"])
         geom_irf = self._create_geometry(self.settings["reduction"]["geom-irf"])
         offset_max = Angle(self.settings["reduction"]["offset-max"])
         stack_datasets = self.settings["reduction"]["stack-datasets"]
+        log.info("Creating datasets.")
 
         if stack_datasets:
             stacked = MapDataset.create(geom=geom, geom_irf=geom_irf, name="stacked")
@@ -376,7 +378,7 @@ class Analysis:
     def _validate_fitting_settings(self):
         """Validate settings before proceeding to fit 1D."""
         valid = True
-        if self.datasets.datasets:
+        if self.datasets and self.datasets.datasets:
             if (self.extraction and
                 self.settings["reduction"]["background"]["background_estimator"]
                 != "reflected"
@@ -397,13 +399,19 @@ class Analysis:
 
     def _validate_fp_settings(self):
         """Validate settings before proceeding to flux points estimation."""
+        valid = True
         if self.fit:
             self.config.validate()
-            return True
         else:
             log.info("No results available from fit.")
+            valid = False
+        if "fp_binning" not in self.settings["flux"]:
+            log.info("No values declared for the energy bins.")
+            valid = False
+        if not valid:
             log.info("Flux points calculation cannot be done.")
-            return False
+
+        return valid
 
     def _validate_reduction_settings(self):
         """Validate settings before proceeding to data reduction."""
