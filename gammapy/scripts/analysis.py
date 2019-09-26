@@ -279,15 +279,17 @@ class Analysis:
 
         return maker.run()
 
-    @staticmethod
-    def _extract_irf_kernels(dataset):
-        #TODO: handle IRF maps in fit
+    def _extract_irf_kernels(self, dataset):
+        # TODO: remove hard-coded default value
+        max_radius = self.settings["reduction"].get("psf-kernel-radius", "0.5 deg")
+
+        # TODO: handle IRF maps in fit
         geom = dataset.counts.geom
         geom_irf = dataset.exposure.geom
 
         position = geom.center_skydir
         geom_psf = geom.to_image().to_cube(geom_irf.axes)
-        dataset.psf = dataset.psf.get_psf_kernel(position=position, geom=geom_psf, max_radius="0.5 deg")
+        dataset.psf = dataset.psf.get_psf_kernel(position=position, geom=geom_psf, max_radius=max_radius)
 
         e_reco = geom.get_axis_by_name("energy").edges
         dataset.edisp = dataset.edisp.get_energy_dispersion(position=position, e_reco=e_reco)

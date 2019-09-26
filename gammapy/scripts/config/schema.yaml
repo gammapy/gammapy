@@ -199,6 +199,7 @@ properties:
             stack-datasets: {type: boolean}
             containment_correction: {type: boolean}
             offset-max: {type: number}
+            psf-kernel-radius: {type: number}
             geom:
                 "$ref": "#/definitions/map_geom"
             geom-irf:

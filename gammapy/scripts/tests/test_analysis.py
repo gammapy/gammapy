@@ -143,7 +143,7 @@ def test_analysis_1d(config_analysis_data):
 @requires_data()
 def test_analysis_1d_stacked():
     analysis = Analysis.from_template(template="1d")
-    analysis.config.settings["reduction"]["stack-datasets"] = True
+    analysis.settings["reduction"]["stack-datasets"] = True
     analysis.get_observations()
     analysis.get_datasets()
     analysis.get_model()
