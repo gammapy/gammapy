@@ -11,10 +11,10 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
 
-__all__ = ["PhaseCurveTableModel", "LightCurveTableModel"]
+__all__ = ["PhaseCurveTemplateTemporalModel", "LightCurveTableModel"]
 
 
-class PhaseCurveTableModel(Model):
+class PhaseCurveTemplateTemporalModel(Model):
     """Temporal phase curve model.
 
     Phase for a given time is computed as:
@@ -49,10 +49,10 @@ class PhaseCurveTableModel(Model):
 
         from astropy.table import Table
         from gammapy.utils.scripts import make_path
-        from gammapy.modeling.models import PhaseCurveTableModel
+        from gammapy.modeling.models import PhaseCurveTemplateTemporalModel
         filename = make_path('$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits')
         table = Table.read(str(filename))
-        phase_curve = PhaseCurveTableModel(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
+        phase_curve = PhaseCurveTemplateTemporalModel(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
 
     Use it to compute a phase and evaluate the phase curve model for a given time:
 

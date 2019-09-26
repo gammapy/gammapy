@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
-from gammapy.modeling.models import LightCurveTableModel, PhaseCurveTableModel
+from gammapy.modeling.models import LightCurveTableModel, PhaseCurveTemplateTemporalModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
@@ -14,7 +14,7 @@ from gammapy.utils.testing import requires_data
 def phase_curve():
     filename = make_path("$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits")
     table = Table.read(str(filename))
-    return PhaseCurveTableModel(
+    return PhaseCurveTemplateTemporalModel(
         table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0
     )
 
@@ -114,7 +114,7 @@ def test_phase_time_sampling():
     table = Table()
     table["PHASE"] = phase
     table["NORM"] = ph_curve(phase)
-    phase_model = PhaseCurveTableModel(
+    phase_model = PhaseCurveTemplateTemporalModel(
         table, time_0=Time(time_0).mjd, phase_0=0.0, f0=2, f1=0.0, f2=0.0
     )
 

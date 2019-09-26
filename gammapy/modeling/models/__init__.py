@@ -16,7 +16,7 @@ SPATIAL_MODELS = {
 }
 
 TIME_MODELS = {
-    "PhaseCurveTableModel": PhaseCurveTableModel,
+    "PhaseCurveTemplateTemporalModel": PhaseCurveTemplateTemporalModel,
     "LightCurveTableModel": LightCurveTableModel,
 }
 
