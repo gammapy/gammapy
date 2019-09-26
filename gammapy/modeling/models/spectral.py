@@ -1323,10 +1323,10 @@ class TemplateSpectralModel(SpectralModel):
         tilt_factor = np.power(energy / reference, -tilt)
         return norm * values * tilt_factor
 
-    def to_dict(self, selection="all"):
+    def to_dict(self):
         return {
             "type": self.tag,
-            "parameters": self.parameters.to_dict(selection)["parameters"],
+            "parameters": self.parameters.to_dict()["parameters"],
             "energy": {
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
@@ -1589,16 +1589,16 @@ class AbsorbedSpectralModel(SpectralModel):
         absorption = self.absorption.evaluate(energy=energy, parameter=parameter)
         return flux * absorption
 
-    def to_dict(self, selection="all"):
+    def to_dict(self):
         return {
             "type": self.tag,
-            "base_model": self.spectral_model.to_dict(selection),
+            "base_model": self.spectral_model.to_dict(),
             "absorption": self.absorption.to_dict(),
             "absorption_parameter": {
                 "name": self.parameter_name,
                 "value": self.parameter,
             },
-            "parameters": self.parameters.to_dict(selection)["parameters"],
+            "parameters": self.parameters.to_dict()["parameters"],
         }
 
     @classmethod

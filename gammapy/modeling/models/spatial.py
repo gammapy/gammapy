@@ -64,8 +64,8 @@ class SpatialModel(Model):
         coords = geom.get_coord(coordsys=coordsys)
         return self(coords.lon, coords.lat)
 
-    def to_dict(self, selection="all"):
-        data = super().to_dict(selection=selection)
+    def to_dict(self):
+        data = super().to_dict()
         data["frame"] = self.frame
         data["parameters"] = data.pop("parameters")
         return data
@@ -595,7 +595,7 @@ class TemplateSpatialModel(SpatialModel):
             setattr(init, parameter.name, parameter)
         return init
 
-    def to_dict(self, selection):
-        data = super().to_dict(selection=selection)
+    def to_dict(self):
+        data = super().to_dict()
         data["filename"] = self.filename
         return data

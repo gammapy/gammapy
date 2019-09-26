@@ -1,13 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Model parameter classes."""
 import copy
+import inspect
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from astropy.units.core import UnitConversionError
 from gammapy.utils.array import check_type
 
 __all__ = ["Parameter", "Parameters"]
+
+
+def get_default_args(func):
+    signature = inspect.signature(func)
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
 
 
 class Parameter:
@@ -171,34 +180,23 @@ class Parameter:
             f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r})"
         )
 
-    def to_dict(self, selection="all"):
-        """Convert to dict.
+    def to_dict(self):
+        """Convert to dict."""
+        data = {
+            "name": self.name,
+            "value": self.value,
+            "unit": self.unit.to_string("fits"),
+        }
 
-        Parameters
-        ----------
-        selection : {"all", "simple"}
-            Selection of information to include
-        """
-        if selection == "simple":
-            return dict(
-                name=self.name,
-                value=self.value,
-                unit=self.unit.to_string("fits"),
-                frozen=self.frozen,
-            )
-        elif selection == "all":
-            return dict(
-                name=self.name,
-                value=self.value,
-                factor=self.factor,
-                scale=self.scale,
-                unit=self.unit.to_string("fits"),
-                min=self.min,
-                max=self.max,
-                frozen=self.frozen,
-            )
-        else:
-            raise ValueError(f"Invalid selection: {selection!r}")
+        defaults = get_default_args(self.__init__)
+
+        for attr in ["frozen", "min", "max"]:
+            value = getattr(self, attr)
+            default = defaults[attr]
+            if value != default and value is not default:
+                data[attr] = value
+
+        return data
 
     def autoscale(self, method="scale10"):
         """Autoscale the parameters.
@@ -339,10 +337,10 @@ class Parameters:
         idx = self._get_idx(name)
         return self.parameters[idx]
 
-    def to_dict(self, selection="all"):
+    def to_dict(self):
         data = dict(parameters=[], covariance=None)
         for par in self.parameters:
-            data["parameters"].append(par.to_dict(selection))
+            data["parameters"].append(par.to_dict())
         if self.covariance is not None:
             data["covariance"] = self.covariance.tolist()
 

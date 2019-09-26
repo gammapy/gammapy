@@ -126,11 +126,11 @@ class SkyModels:
         skymodels = dict_to_models(data)
         return cls(skymodels)
 
-    def to_yaml(self, filename, selection="all"):
+    def to_yaml(self, filename):
         """Write to YAML file."""
         from gammapy.modeling.serialize import models_to_dict
 
-        components_dict = models_to_dict(self.skymodels, selection)
+        components_dict = models_to_dict(self.skymodels)
         write_yaml(components_dict, filename)
 
     def evaluate(self, lon, lat, energy):
@@ -301,13 +301,13 @@ class SkyModel(SkyModelBase):
         kwargs.setdefault("name", self.name + "-copy")
         return self.__class__(**kwargs)
 
-    def to_dict(self, selection):
+    def to_dict(self):
         """Create dict for YAML serilisation"""
         data = {}
         data["name"] = self.name
         data["type"] = self.tag
-        data["spatial"] = self.spatial_model.to_dict(selection)
-        data["spectral"] = self.spectral_model.to_dict(selection)
+        data["spatial"] = self.spatial_model.to_dict()
+        data["spectral"] = self.spectral_model.to_dict()
         return data
 
     @classmethod
@@ -467,8 +467,8 @@ class SkyDiffuseCube(SkyModelBase):
             setattr(init, parameter.name, parameter)
         return init
 
-    def to_dict(self, selection):
-        data = super().to_dict(selection=selection)
+    def to_dict(self):
+        data = super().to_dict()
         data["name"] = self.name
         data["type"] = data.pop("type")
         data["filename"] = self.filename
@@ -541,10 +541,10 @@ class BackgroundModel(Model):
         back_values = norm * self.map.data * tilt_factor.value
         return self.map.copy(data=back_values)
 
-    def to_dict(self, selection):
+    def to_dict(self):
         data = {}
         data["name"] = self.name
-        data.update(super().to_dict(selection=selection))
+        data.update(super().to_dict())
         if self.filename is not None:
             data["filename"] = self.filename
         data["parameters"] = data.pop("parameters")

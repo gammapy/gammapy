@@ -40,10 +40,10 @@ class Model:
             ss += "\n\t".join(covariance.pformat())
         return ss
 
-    def to_dict(self, selection="all"):
+    def to_dict(self):
         return {
             "type": self.tag,
-            "parameters": self.parameters.to_dict(selection)["parameters"],
+            "parameters": self.parameters.to_dict()["parameters"],
         }
 
     @classmethod

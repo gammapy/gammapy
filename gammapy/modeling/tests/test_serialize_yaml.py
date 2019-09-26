@@ -87,11 +87,7 @@ def test_sky_models_io(tmpdir):
     filename = str(tmpdir / "io_example.yaml")
     models.to_yaml(filename)
     models = SkyModels.from_yaml(filename)
-    assert models.parameters["lat_0"].min == -90.0
-
-    models.to_yaml(filename, selection="simple")
-    models = SkyModels.from_yaml(filename)
-    assert np.isnan(models.parameters["lat_0"].min)
+    assert_allclose(models.parameters["lat_0"].min, -90.0)
 
     # TODO: not sure if we should just round-trip, or if we should
     # check YAML file content (e.g. against a ref file in the repo)
@@ -138,7 +134,7 @@ def test_datasets_to_io(tmpdir):
     )
 
     path = str(tmpdir / "/written_")
-    datasets.to_yaml(path, selection="simple", overwrite=True)
+    datasets.to_yaml(path, overwrite=True)
     datasets_read = Datasets.from_yaml(path + "datasets.yaml", path + "models.yaml")
     assert len(datasets_read.datasets) == 2
     dataset0 = datasets_read.datasets[0]
