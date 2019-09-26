@@ -4,7 +4,10 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import EffectiveAreaTable
 from gammapy.modeling import Fit
-from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel, PowerLawSpectralModel
+from gammapy.modeling.models import (
+    ExpCutoffPowerLawSpectralModel,
+    PowerLawSpectralModel,
+)
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import requires_data, requires_dependency
@@ -20,7 +23,9 @@ class TestFit:
         self.source_model = PowerLawSpectralModel(
             index=2, amplitude=1e5 / u.TeV, reference=0.1 * u.TeV
         )
-        self.bkg_model = PowerLawSpectralModel(index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV)
+        self.bkg_model = PowerLawSpectralModel(
+            index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV
+        )
 
         self.alpha = 0.1
         random_state = get_random_state(23)

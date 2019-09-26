@@ -1,7 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import astropy.units as u
-from gammapy.astro.darkmatter import DarkMatterAnnihilationSpectralModel, JFactory, profiles
+from gammapy.astro.darkmatter import (
+    DarkMatterAnnihilationSpectralModel,
+    JFactory,
+    profiles,
+)
 from gammapy.maps import WcsGeom
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 

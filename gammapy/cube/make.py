@@ -101,7 +101,6 @@ class MapMaker:
             dataset = obs_maker.run(selection)
             stacked.stack(dataset)
 
-
         maps = {
             "counts": stacked.counts,
             "exposure": stacked.exposure,
@@ -286,7 +285,7 @@ class MapMakerObs:
             edisp=self.maps.get("edisp"),
             gti=self.observation.gti,
             name="obs_{}".format(self.observation.obs_id),
-            mask_safe=~self.fov_mask
+            mask_safe=~self.fov_mask,
         )
         return dataset
 

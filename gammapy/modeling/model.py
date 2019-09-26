@@ -41,10 +41,7 @@ class Model:
         return ss
 
     def to_dict(self):
-        return {
-            "type": self.tag,
-            "parameters": self.parameters.to_dict()["parameters"],
-        }
+        return {"type": self.tag, "parameters": self.parameters.to_dict()["parameters"]}
 
     @classmethod
     def from_dict(cls, data):

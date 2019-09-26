@@ -240,7 +240,9 @@ def dataset():
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     data = FluxPoints.read(path)
     data.table["e_ref"] = data.e_ref.to("TeV")
-    model = PowerLawSpectralModel(index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV")
+    model = PowerLawSpectralModel(
+        index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
+    )
     dataset = FluxPointsDataset(model, data)
     return dataset
 

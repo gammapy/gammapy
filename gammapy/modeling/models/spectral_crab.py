@@ -1,7 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy import units as u
-from .spectral import ExpCutoffPowerLawSpectralModel, LogParabolaSpectralModel, PowerLawSpectralModel, SpectralModel
+from .spectral import (
+    ExpCutoffPowerLawSpectralModel,
+    LogParabolaSpectralModel,
+    PowerLawSpectralModel,
+    SpectralModel,
+)
 
 __all__ = ["create_crab_spectral_model"]
 

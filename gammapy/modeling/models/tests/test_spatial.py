@@ -120,7 +120,9 @@ def test_sky_disk():
     r_0 = 2 * u.deg
     semi_minor = 1 * u.deg
     eccentricity = np.sqrt(1 - (semi_minor / r_0) ** 2)
-    model_rot_test = DiskSpatialModel(0 * u.deg, 0 * u.deg, r_0, eccentricity, 90 * u.deg)
+    model_rot_test = DiskSpatialModel(
+        0 * u.deg, 0 * u.deg, r_0, eccentricity, 90 * u.deg
+    )
     assert_allclose(model_rot_test(0 * u.deg, 1.5 * u.deg).value, 0)
 
     # test the normalization for a disk (ellipse with e=0) at the Galactic Pole

@@ -1149,7 +1149,9 @@ class FluxPointsDataset(Dataset):
         print(result.parameters.to_table())
     """
 
-    def __init__(self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None, name=""):
+    def __init__(
+        self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None, name=""
+    ):
         self.model = model
         self.data = data
         self.mask_fit = mask_fit

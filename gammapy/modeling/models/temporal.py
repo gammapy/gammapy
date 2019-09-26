@@ -11,7 +11,11 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
 
-__all__ = ["PhaseCurveTemplateTemporalModel", "LightCurveTemplateTemporalModel", "TemporalModel"]
+__all__ = [
+    "PhaseCurveTemplateTemporalModel",
+    "LightCurveTemplateTemporalModel",
+    "TemporalModel",
+]
 
 
 # TODO: make this a small ABC to define a uniform interface.

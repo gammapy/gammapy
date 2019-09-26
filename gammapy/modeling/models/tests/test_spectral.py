@@ -183,7 +183,9 @@ TEST_MODELS = [
     ),
     dict(
         name="LogGaussianSpectralModel",
-        model=LogGaussianSpectralModel(norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2),
+        model=LogGaussianSpectralModel(
+            norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2
+        ),
         val_at_2TeV=u.Quantity(3.98942280401, "cm-2 s-1 TeV-1"),
         val_at_3TeV=u.Quantity(0.34066933236079916, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(3.994439, "cm-2 s-1"),
@@ -366,7 +368,9 @@ def test_to_from_dict():
 @requires_data()
 def test_table_model_from_file():
     filename = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
-    absorption_z03 = TemplateSpectralModel.read_xspec_model(filename=filename, param=0.3)
+    absorption_z03 = TemplateSpectralModel.read_xspec_model(
+        filename=filename, param=0.3
+    )
     with mpl_plot_check():
         absorption_z03.plot(energy_range=(0.03, 10), energy_unit=u.TeV, flux_unit="")
 

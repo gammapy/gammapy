@@ -31,7 +31,7 @@ SCHEMA_FILE = CONFIG_PATH / "schema.yaml"
 ANALYSIS_TEMPLATES = {
     "basic": "template-basic.yaml",
     "1d": "template-1d.yaml",
-    "3d": "template-3d.yaml"
+    "3d": "template-3d.yaml",
 }
 
 
@@ -170,7 +170,7 @@ class Analysis:
             e_edges = MapAxis.from_bounds(**axis_params).edges
 
             flux_point_estimator = FluxPointsEstimator(
-                e_edges=e_edges, datasets=self.datasets, source=source,
+                e_edges=e_edges, datasets=self.datasets, source=source
             )
             fp = flux_point_estimator.run()
             fp.table["is_ul"] = fp.table["ts"] < 4
@@ -281,7 +281,7 @@ class Analysis:
             observation=obs,
             geom=geom_cutout,
             geom_true=geom_irf_cutout,
-            offset_max=offset_max
+            offset_max=offset_max,
         )
 
         return maker.run()
@@ -296,10 +296,14 @@ class Analysis:
 
         position = geom.center_skydir
         geom_psf = geom.to_image().to_cube(geom_irf.axes)
-        dataset.psf = dataset.psf.get_psf_kernel(position=position, geom=geom_psf, max_radius=max_radius)
+        dataset.psf = dataset.psf.get_psf_kernel(
+            position=position, geom=geom_psf, max_radius=max_radius
+        )
 
         e_reco = geom.get_axis_by_name("energy").edges
-        dataset.edisp = dataset.edisp.get_energy_dispersion(position=position, e_reco=e_reco)
+        dataset.edisp = dataset.edisp.get_energy_dispersion(
+            position=position, e_reco=e_reco
+        )
 
     def get_model(self):
         """Read the model from settings."""
@@ -315,7 +319,9 @@ class Analysis:
                 dataset.model = self.model
             else:
                 if len(self.model.skymodels) > 1:
-                    raise ValueError("Can only fit a single spectral model at one time.")
+                    raise ValueError(
+                        "Can only fit a single spectral model at one time."
+                    )
                 dataset.model = self.model.skymodels[0].spectral_model
 
         log.info(self.model)
@@ -384,8 +390,9 @@ class Analysis:
         """Validate settings before proceeding to fit 1D."""
         valid = True
         if self.datasets and self.datasets.datasets:
-            if (self.extraction and
-                self.settings["reduction"]["background"]["background_estimator"]
+            if (
+                self.extraction
+                and self.settings["reduction"]["background"]["background_estimator"]
                 != "reflected"
             ):
                 # TODO raise error?
@@ -510,7 +517,7 @@ class AnalysisConfig:
         try:
             jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
         except jsonschema.exceptions.ValidationError as ex:
-            log.error('Error when validating configuration parameters against schema.')
+            log.error("Error when validating configuration parameters against schema.")
             log.error(ex.message)
 
     @staticmethod

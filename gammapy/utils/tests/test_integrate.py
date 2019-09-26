@@ -2,7 +2,10 @@
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.units import Quantity
-from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel, PowerLawSpectralModel
+from gammapy.modeling.models import (
+    ExpCutoffPowerLawSpectralModel,
+    PowerLawSpectralModel,
+)
 from gammapy.utils.integrate import integrate_spectrum
 from gammapy.utils.testing import assert_quantity_allclose, requires_dependency
 

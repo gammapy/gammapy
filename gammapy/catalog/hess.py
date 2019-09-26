@@ -522,7 +522,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             r_out = d["Size"]
             radius = 0.95 * r_out
             width = r_out - radius
-            model = ShellSpatialModel(lon_0=glon, lat_0=glat, width=width, radius=radius)
+            model = ShellSpatialModel(
+                lon_0=glon, lat_0=glat, width=width, radius=radius
+            )
         else:
             raise ValueError(f"Not a valid spatial model: {spatial_type}")
 

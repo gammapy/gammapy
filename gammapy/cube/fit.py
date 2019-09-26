@@ -13,7 +13,12 @@ from gammapy.data import GTI
 from gammapy.irf import EnergyDispersion, EffectiveAreaTable, apply_containment_fraction
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
-from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels, PointSpatialModel
+from gammapy.modeling.models import (
+    BackgroundModel,
+    SkyModel,
+    SkyModels,
+    PointSpatialModel,
+)
 from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
 from gammapy.spectrum import SpectrumDataset
 from gammapy.utils.random import get_random_state
@@ -292,7 +297,7 @@ class MapDataset(Dataset):
         migra_axis=None,
         rad_axis=None,
         reference_time="2000-01-01",
-        name=""
+        name="",
     ):
 
         """Creates a MapDataset object with zero filled maps
@@ -348,7 +353,7 @@ class MapDataset(Dataset):
             background_model=background_model,
             gti=gti,
             mask_safe=mask_safe,
-            name=name
+            name=name,
         )
 
     def stack(self, other):
@@ -727,15 +732,18 @@ class MapDataset(Dataset):
             counts = None
 
         if self.background_model is not None:
-            background = self.background_model.evaluate().get_spectrum(on_region, np.sum)
+            background = self.background_model.evaluate().get_spectrum(
+                on_region, np.sum
+            )
         else:
             background = None
 
         if self.exposure is not None:
             exposure = self.exposure.get_spectrum(on_region, np.mean)
             aeff = EffectiveAreaTable(
-                energy_lo=exposure.energy.edges[:-1], energy_hi=exposure.energy.edges[1:],
-                data=exposure.data/livetime
+                energy_lo=exposure.energy.edges[:-1],
+                energy_hi=exposure.energy.edges[1:],
+                data=exposure.data / livetime,
             )
         else:
             aeff = None
@@ -758,17 +766,17 @@ class MapDataset(Dataset):
             else:
                 self.edisp.get_energy_dispersion(on_region.center, self._energy_axis)
         else:
-            edisp=None
+            edisp = None
 
         return SpectrumDataset(
-                counts=counts,
-                background=background,
-                aeff=aeff,
-                edisp=edisp,
-                livetime=livetime,
-                gti=self.gti,
-                name=self.name
-            )
+            counts=counts,
+            background=background,
+            aeff=aeff,
+            edisp=edisp,
+            livetime=livetime,
+            gti=self.gti,
+            name=self.name,
+        )
 
 
 class MapEvaluator:
@@ -795,6 +803,7 @@ class MapEvaluator:
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
     """
+
     def __init__(
         self, model=None, exposure=None, psf=None, edisp=None, evaluation_mode="local"
     ):
