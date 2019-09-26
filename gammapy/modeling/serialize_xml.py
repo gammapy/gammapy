@@ -29,7 +29,7 @@ __all__ = [
 # TODO: Move to a separate file ?
 model_registry = {
     "spectral": {
-        "PowerLawSpectralModel": {
+        "PowerLaw": {
             "model": spectral.PowerLawSpectralModel,
             "parameters": {
                 "Prefactor": ["amplitude", "cm-2 s-1 MeV-1"],
@@ -38,7 +38,7 @@ model_registry = {
                 "PivotEnergy": ["reference", "MeV"],
             },
         },
-        "ExpCutoffPowerLawSpectralModel": {
+        "ExponentialCutoffPowerLaw": {
             "model": spectral.ExpCutoffPowerLawSpectralModel,
             "parameters": {
                 "Prefactor": ["amplitude", "cm-2 s-1 MeV-1"],
@@ -209,11 +209,11 @@ def xml_to_model(xml, which):
 
         # Special case models for which the XML definition does not map one to
         # one to the gammapy model definition
-        if type_ == "PowerLawSpectralModel":
+        if type_ == "PowerLaw":
             model.parameters["index"].value *= -1
             model.parameters["index"].min = np.nan
             model.parameters["index"].max = np.nan
-        if type_ == "ExpCutoffPowerLawSpectralModel":
+        if type_ == "ExponentialCutoffPowerLaw":
             model.parameters["lambda_"].value = 1 / model.parameters["lambda_"].value
             model.parameters["lambda_"].unit = (
                 model.parameters["lambda_"].unit.to_string("fits") + "-1"

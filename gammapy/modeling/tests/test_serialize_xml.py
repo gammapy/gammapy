@@ -11,7 +11,7 @@ def test_from_xml():
     xml = """<?xml version="1.0" encoding="utf-8"?>
         <source_library title="source library">
             <source name="3C 273" type="PointSource">
-                <spectrum type="PowerLawSpectralModel">;i
+                <spectrum type="PowerLaw">;i
                     <parameter free="1" max="1000.0" min="0.001" name="Prefactor" scale="1e-09" value="10"></parameter>
                     <parameter free="1" max="-1.0" min="-5.0" name="Index" scale="1.0" value="-2.1"></parameter>
                     <parameter free="0" max="2000.0" min="30.0" name="Scale" scale="1.0" value="100.0"></parameter>
