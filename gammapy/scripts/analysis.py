@@ -484,7 +484,7 @@ class AnalysisConfig:
         if len(config):
             self._user_settings.update(config)
             self._update_settings(config, self.settings)
-            self.validate()
+        self.validate()
 
     def validate(self):
         """Validate and/or fill initial config parameters against schema."""
