@@ -21,7 +21,7 @@ TIME_MODELS = {
 }
 
 # TODO: add support for these models writing their .from_dict()
-# "NaimaModel":NaimaModel,
+# "NaimaSpectralModel":NaimaSpectralModel,
 # "ScaleSpectralModel": ScaleSpectralModel,
 SPECTRAL_MODELS = {
     "ConstantSpectralModel": ConstantSpectralModel,

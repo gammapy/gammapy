@@ -10,7 +10,7 @@ from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     ExpCutoffPowerLaw3FGLSpectralModel,
     LogParabolaSpectralModel,
-    NaimaModel,
+    NaimaSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     PowerLawSpectralModel,
     PowerLaw2SpectralModel,
@@ -463,7 +463,7 @@ class TestNaimaModel:
         radiative_model = naima.radiative.PionDecay(
             particle_distribution, nh=1 * u.cm ** -3
         )
-        model = NaimaModel(radiative_model)
+        model = NaimaSpectralModel(radiative_model)
 
         val_at_2TeV = 9.725347355450884e-14 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 3.530537143620737e-13 * u.Unit("cm-2 s-1")
@@ -495,7 +495,7 @@ class TestNaimaModel:
             particle_distribution, seed_photon_fields=["CMB"]
         )
 
-        model = NaimaModel(radiative_model)
+        model = NaimaSpectralModel(radiative_model)
 
         val_at_2TeV = 4.347836316893546e-12 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 1.5958109911918303e-11 * u.Unit("cm-2 s-1")
@@ -520,7 +520,7 @@ class TestNaimaModel:
         )
         radiative_model = naima.radiative.Synchrotron(particle_distribution, B=2 * u.G)
 
-        model = NaimaModel(radiative_model)
+        model = NaimaSpectralModel(radiative_model)
 
         val_at_2TeV = 1.0565840392550432e-24 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 4.4491861907713736e-13 * u.Unit("cm-2 s-1")

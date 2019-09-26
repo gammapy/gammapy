@@ -26,7 +26,7 @@ __all__ = [
     "TemplateSpectralModel",
     "AbsorbedSpectralModel",
     "Absorption",
-    "NaimaModel",
+    "NaimaSpectralModel",
     "SpectralGaussian",
     "SpectralLogGaussian",
     "ScaleSpectralModel",
@@ -1618,7 +1618,7 @@ class AbsorbedSpectralModel(SpectralModel):
         return init
 
 
-class NaimaModel(SpectralModel):
+class NaimaSpectralModel(SpectralModel):
     r"""A wrapper for Naima models.
 
     This class provides an interface with the models defined in the `~naima.models` module.
@@ -1657,7 +1657,7 @@ class NaimaModel(SpectralModel):
         :include-source:
 
         import naima
-        from gammapy.modeling.models import NaimaModel
+        from gammapy.modeling.models import NaimaSpectralModel
         import astropy.units as u
         import matplotlib.pyplot as plt
 
@@ -1672,7 +1672,7 @@ class NaimaModel(SpectralModel):
             Eemin=100 * u.GeV,
         )
 
-        model = NaimaModel(radiative_model, distance=1.5 * u.kpc)
+        model = NaimaSpectralModel(radiative_model, distance=1.5 * u.kpc)
 
         opts = {
             "energy_range" : [10 * u.GeV, 80 * u.TeV],
@@ -1685,13 +1685,13 @@ class NaimaModel(SpectralModel):
 
         # Plot the separate contributions from each seed photon field
         for seed, ls in zip(['CMB','FIR'], ['-','--']):
-            model = NaimaModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
+            model = NaimaSpectralModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
             model.plot(label="IC ({})".format(seed), ls=ls, color="gray", **opts)
 
         plt.legend(loc='best')
         plt.show()
     """
-    tag = "NaimaModel"
+    tag = "NaimaSpectralModel"
 
     # TODO: prevent users from setting new attributes after init
     def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
