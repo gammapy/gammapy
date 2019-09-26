@@ -14,7 +14,7 @@ from gammapy.modeling.models import (
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     PowerLawSpectralModel,
     PowerLaw2SpectralModel,
-    SpectralGaussian,
+    GaussianSpectralModel,
     SpectralLogGaussian,
     TemplateSpectralModel,
 )
@@ -171,8 +171,8 @@ TEST_MODELS = [
         e_peak=np.nan * u.TeV,
     ),
     dict(
-        name="SpectralGaussian",
-        model=SpectralGaussian(
+        name="GaussianSpectralModel",
+        model=GaussianSpectralModel(
             norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2 * u.TeV
         ),
         val_at_2TeV=u.Quantity(7.978845608028654, "cm-2 s-1 TeV-1"),
@@ -299,7 +299,7 @@ def test_models(spectrum):
     if not (
         isinstance(model, ConstantSpectralModel)
         or spectrum["name"] == "compound6"
-        or spectrum["name"] == "SpectralGaussian"
+        or spectrum["name"] == "GaussianSpectralModel"
         or spectrum["name"] == "SpectralLogGaussian"
     ):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.01)

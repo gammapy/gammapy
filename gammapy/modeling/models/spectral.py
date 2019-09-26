@@ -27,7 +27,7 @@ __all__ = [
     "AbsorbedSpectralModel",
     "Absorption",
     "NaimaSpectralModel",
-    "SpectralGaussian",
+    "GaussianSpectralModel",
     "SpectralLogGaussian",
     "ScaleSpectralModel",
 ]
@@ -1751,14 +1751,11 @@ class NaimaSpectralModel(SpectralModel):
         return dnde.to(unit)
 
 
-class SpectralGaussian(SpectralModel):
+class GaussianSpectralModel(SpectralModel):
     r"""Gaussian spectral model.
 
     .. math::
-
         \phi(E) = \frac{N_0}{\sigma \sqrt{2\pi}}  \exp{ \frac{- \left( E-\bar{E} \right)^2 }{2 \sigma^2} }
-
-
 
     Parameters
     ----------
@@ -1769,7 +1766,6 @@ class SpectralGaussian(SpectralModel):
     sigma : `~astropy.units.Quantity`
         :math:`\sigma`
 
-
     Examples
     --------
     This is how to plot the default `Gaussian` spectral model:
@@ -1777,13 +1773,13 @@ class SpectralGaussian(SpectralModel):
     .. code:: python
 
         from astropy import units as u
-        from gammapy.modeling.models import SpectralGaussian
+        from gammapy.modeling.models import GaussianSpectralModel
 
-        gaussian = SpectralGaussian()
+        gaussian = GaussianSpectralModel()
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
-    tag = "SpectralGaussian"
+    tag = "GaussianSpectralModel"
 
     def __init__(
         self, norm=1e-12 * u.Unit("cm-2 s-1"), mean=1 * u.TeV, sigma=2 * u.TeV
@@ -1882,7 +1878,7 @@ class SpectralLogGaussian(SpectralModel):
 
     Examples
     --------
-    This is how to plot a Gaussian Log spectral model. Very similar from the `SpectralGaussian` model but the Gaussian
+    This is how to plot a Gaussian Log spectral model. Very similar from the `GaussianSpectralModel` model but the Gaussian
     is based on the logarithm of the energy
 
     .. code:: python
