@@ -6,17 +6,17 @@ from .spectral import ExpCutoffPowerLawSpectralModel, LogParabolaSpectralModel, 
 __all__ = ["create_crab_spectral_model"]
 
 
-class MeyerCrabModel(SpectralModel):
+class MeyerCrabSpectralModel(SpectralModel):
     """Meyer 2010 log polynomial Crab spectral model.
 
-    See 2010A%26A...523A...2M, Appendix D.
+    Reference: https://ui.adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
     """
 
     coefficients = [-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708]
 
     @staticmethod
     def evaluate(energy):
-        polynomial = np.poly1d(MeyerCrabModel.coefficients)
+        polynomial = np.poly1d(MeyerCrabSpectralModel.coefficients)
         log_energy = np.log10(energy.to_value("TeV"))
         log_flux = polynomial(log_energy)
         flux = u.Quantity(np.power(10, log_flux), "erg / (cm2 s)", copy=False)
@@ -72,7 +72,7 @@ def create_crab_spectral_model(reference="meyer"):
         3.5350582166 %
     """
     if reference == "meyer":
-        return MeyerCrabModel()
+        return MeyerCrabSpectralModel()
     elif reference == "hegra":
         return PowerLawSpectralModel(
             amplitude=2.83e-11 * u.Unit("1 / (cm2 s TeV)"),
