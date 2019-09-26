@@ -500,7 +500,7 @@ class AnalysisConfig:
         """Returns dict with commented docs from schema"""
         doc = defaultdict(str)
         with open(SCHEMA_FILE) as f:
-            for line in filter(lambda line: line.startswith("#"), f):
+            for line in filter(lambda line: line.startswith("# "), f):
                 line = line.strip("\n")
                 if line.startswith("# Block: "):
                     keyword = line.replace("# Block: ", "")
