@@ -27,7 +27,7 @@ ROI number           : 326
 
 *** Spectral info ***
 
-Spectrum type                                 : LogParabolaSpectralModel
+Spectrum type                                 : LogParabola     
 Detection significance (100 MeV - 300 GeV)    : 11.350
 Significance curvature                        : 4.4
 beta                                          : 0.5191451907157898 +- 0.15508420765399933

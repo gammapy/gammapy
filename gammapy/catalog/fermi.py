@@ -60,13 +60,13 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
         pars, errs = {}, {}
         pars["reference"] = self.data["Pivot_Energy"]
 
-        if spec_type == "PowerLawSpectralModel":
+        if spec_type == "PowerLaw":
             pars["amplitude"] = self.data["PL_Flux_Density"]
             pars["index"] = self.data["PL_Index"]
             errs["amplitude"] = self.data["Unc_PL_Flux_Density"]
             errs["index"] = self.data["Unc_PL_Index"]
             model = PowerLawSpectralModel(**pars)
-        elif spec_type == "LogParabolaSpectralModel":
+        elif spec_type == "LogParabola":
             pars["amplitude"] = self.data["LP_Flux_Density"]
             pars["alpha"] = self.data["LP_Index"]
             pars["beta"] = self.data["LP_beta"]
@@ -236,9 +236,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss += fmt.format("Detection significance (100 MeV - 300 GeV)", d["Signif_Avg"])
         ss += "{:<45s} : {:.1f}\n".format("Significance curvature", d["Signif_Curve"])
 
-        if spec_type == "PowerLawSpectralModel":
+        if spec_type == "PowerLaw":
             pass
-        elif spec_type == "LogParabolaSpectralModel":
+        elif spec_type == "LogParabola":
             ss += "{:<45s} : {} +- {}\n".format("beta", d["beta"], d["Unc_beta"])
         elif spec_type in ["PLExpCutoff", "PlSuperExpCutoff"]:
             fmt = "{:<45s} : {:.0f} +- {:.0f} {}\n"
@@ -253,7 +253,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
                 "Super-exponential cutoff index", d["Exp_Index"], d["Unc_Exp_Index"]
             )
         else:
-            raise ValueError("Invalid spec_type")
+            raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
         ss += "{:<45s} : {:.0f} {}\n".format(
             "Pivot energy", d["Pivot_Energy"].value, d["Pivot_Energy"].unit
@@ -342,7 +342,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         errs["amplitude"] = self.data["Unc_Flux_Density"]
         pars["reference"] = self.data["Pivot_Energy"]
 
-        if spec_type == "PowerLawSpectralModel":
+        if spec_type == "PowerLaw":
             pars["index"] = self.data["Spectral_Index"]
             errs["index"] = self.data["Unc_Spectral_Index"]
             model = PowerLawSpectralModel(**pars)
@@ -352,7 +352,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             errs["index"] = self.data["Unc_Spectral_Index"]
             errs["ecut"] = self.data["Unc_Cutoff"]
             model = ExpCutoffPowerLaw3FGLSpectralModel(**pars)
-        elif spec_type == "LogParabolaSpectralModel":
+        elif spec_type == "LogParabola":
             pars["alpha"] = self.data["Spectral_Index"]
             pars["beta"] = self.data["beta"]
             errs["alpha"] = self.data["Unc_Spectral_Index"]
@@ -775,9 +775,9 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
             "Power-law spectral index", d["PowerLaw_Index"], d["Unc_PowerLaw_Index"]
         )
 
-        if spec_type == "PowerLawSpectralModel":
+        if spec_type == "PowerLaw":
             pass
-        elif spec_type == "LogParabolaSpectralModel":
+        elif spec_type == "LogParabola":
             fmt = "{:<32s} : {:.3f} +- {:.3f}\n"
             ss += fmt.format(
                 "LogParabolaSpectralModel spectral index",
@@ -789,7 +789,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
                 "LogParabolaSpectralModel beta", d["beta"], d["Unc_beta"]
             )
         else:
-            raise ValueError("Invalid spec_type")
+            raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
         ss += "{:<32s} : {:.1f} {}\n".format(
             "Pivot energy", d["Pivot_Energy"].value, d["Pivot_Energy"].unit
@@ -861,11 +861,11 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         errs["amplitude"] = d["Unc_Flux_Density"]
         pars["reference"] = d["Pivot_Energy"]
 
-        if spec_type == "PowerLawSpectralModel":
+        if spec_type == "PowerLaw":
             pars["index"] = d["PowerLaw_Index"]
             errs["index"] = d["Unc_PowerLaw_Index"]
             model = PowerLawSpectralModel(**pars)
-        elif spec_type == "LogParabolaSpectralModel":
+        elif spec_type == "LogParabola":
             pars["alpha"] = d["Spectral_Index"]
             pars["beta"] = d["beta"]
             errs["alpha"] = d["Unc_Spectral_Index"]
