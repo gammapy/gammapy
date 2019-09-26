@@ -11,7 +11,7 @@ from astropy.wcs.utils import proj_plane_pixel_scales
 from regions import SkyRegion
 from .geom import (
     MapCoord,
-    MapGeom,
+    Geom,
     axes_pix_to_coord,
     find_and_read_bands,
     get_shape,
@@ -159,7 +159,7 @@ def _make_image_header(
     return header
 
 
-class WcsGeom(MapGeom):
+class WcsGeom(Geom):
     """Geometry class for WCS maps.
 
     This class encapsulates both the WCS transformation object and the

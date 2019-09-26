@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy.units import Quantity
 from .geom import (
     MapCoord,
-    MapGeom,
+    Geom,
     coordsys_to_frame,
     find_and_read_bands,
     make_axes,
@@ -523,7 +523,7 @@ def get_subpixels(idx, nside_superpix, nside_subpix, nest=True):
     return idx
 
 
-class HpxGeom(MapGeom):
+class HpxGeom(Geom):
     """Geometry class for HEALPIX maps.
 
     This class performs mapping between partial-sky indices (pixel

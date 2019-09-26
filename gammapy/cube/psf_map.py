@@ -24,7 +24,7 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
         the PSF IRF
     pointing : `~astropy.coordinates.SkyCoord`
         the pointing direction
-    geom : `~gammapy.maps.MapGeom`
+    geom : `~gammapy.maps.Geom`
         the map geom to be used. It provides the target geometry.
         rad and true energy axes should be given in this specific order.
     max_offset : `~astropy.coordinates.Angle`
@@ -253,13 +253,13 @@ class PSFMap:
     def get_psf_kernel(self, position, geom, max_radius=None, factor=4):
         """Returns a PSF kernel at the given position.
 
-        The PSF is returned in the form a WcsNDMap defined by the input MapGeom.
+        The PSF is returned in the form a WcsNDMap defined by the input Geom.
 
         Parameters
         ----------
         position : `~astropy.coordinates.SkyCoord`
             the target position. Should be a single coordinate
-        geom : `~gammapy.maps.MapGeom`
+        geom : `~gammapy.maps.Geom`
             the target geometry to use
         max_radius : `~astropy.coordinates.Angle`
             maximum angular size of the kernel map

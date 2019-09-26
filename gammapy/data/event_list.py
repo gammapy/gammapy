@@ -483,7 +483,7 @@ class EventListBase:
 
         Parameters
         ----------
-        geom : `~gammapy.maps.MapGeom`
+        geom : `~gammapy.maps.Geom`
             the geom used to define the MapCoord
 
         Returns
