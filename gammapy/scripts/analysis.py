@@ -489,7 +489,11 @@ class AnalysisConfig:
     def validate(self):
         """Validate and/or fill initial config parameters against schema."""
         validator = _gp_units_validator
-        jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
+        try:
+            jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
+        except jsonschema.exceptions.ValidationError as ex:
+            log.error('Error when validating configuration parameters against schema.')
+            log.error(ex.message)
 
     @staticmethod
     def _get_doc_sections():
