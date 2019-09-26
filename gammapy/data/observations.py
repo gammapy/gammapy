@@ -275,6 +275,9 @@ class Observations:
         self.list = obs_list or []
 
     def __getitem__(self, key):
+        if isinstance(key, str):
+            key = self.ids.index(key)
+
         return self.list[key]
 
     def __len__(self):
@@ -286,6 +289,11 @@ class Observations:
         for obs in self:
             s += str(obs)
         return s
+
+    @property
+    def ids(self):
+        """List of obs IDs (`list`)"""
+        return [str(obs.obs_id) for obs in self.list]
 
     def select_time(self, time_interval):
         """Select a time interval of the observations.
