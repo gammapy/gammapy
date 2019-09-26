@@ -2,7 +2,7 @@
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.units import Quantity
-from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLaw
+from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLawSpectralModel
 from gammapy.utils.integrate import integrate_spectrum
 from gammapy.utils.testing import assert_quantity_allclose, requires_dependency
 
@@ -13,7 +13,7 @@ def test_integrate_spectrum():
     """
     emin = Quantity(1, "TeV")
     emax = Quantity(10, "TeV")
-    pwl = PowerLaw(index=2.3)
+    pwl = PowerLawSpectralModel(index=2.3)
 
     ref = pwl.integral(emin=emin, emax=emax)
 

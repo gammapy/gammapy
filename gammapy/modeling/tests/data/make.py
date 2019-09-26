@@ -14,7 +14,7 @@ from gammapy.modeling import Datasets
 from gammapy.modeling.models import (
     BackgroundModel,
     ExponentialCutoffPowerLaw,
-    PowerLaw,
+    PowerLawSpectralModel,
     SkyDiffuseCube,
     GaussianSpatialModel,
     SkyModel,
@@ -27,7 +27,7 @@ DATA_PATH = Path("./")
 
 def make_example_2():
     spatial = GaussianSpatialModel("0 deg", "0 deg", "1 deg")
-    model = SkyModel(spatial, PowerLaw())
+    model = SkyModel(spatial, PowerLawSpectralModel())
     models = SkyModels([model])
     models.to_yaml(DATA_PATH / "example2.yaml")
 

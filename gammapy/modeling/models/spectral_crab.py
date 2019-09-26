@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy import units as u
-from .spectral import ExponentialCutoffPowerLaw, LogParabola, PowerLaw, SpectralModel
+from .spectral import ExponentialCutoffPowerLaw, LogParabola, PowerLawSpectralModel, SpectralModel
 
 __all__ = ["create_crab_spectral_model"]
 
@@ -56,7 +56,7 @@ def create_crab_spectral_model(reference="meyer"):
 
     Use a reference crab spectrum as unit to measure a differential flux (at 10 TeV)::
 
-        >>> pwl = PowerLaw(index=2.3, amplitude=1e-12 * u.Unit('1 / (cm2 s TeV)'), reference=1 * u.TeV)
+        >>> pwl = PowerLawSpectralModel(index=2.3, amplitude=1e-12 * u.Unit('1 / (cm2 s TeV)'), reference=1 * u.TeV)
         >>> crab = create_crab_spectral_model('hess_pl')
         >>> energy = 10 * u.TeV
         >>> dnde_cu = (pwl(energy) / crab(energy)).to('%')
@@ -74,13 +74,13 @@ def create_crab_spectral_model(reference="meyer"):
     if reference == "meyer":
         return MeyerCrabModel()
     elif reference == "hegra":
-        return PowerLaw(
+        return PowerLawSpectralModel(
             amplitude=2.83e-11 * u.Unit("1 / (cm2 s TeV)"),
             index=2.62,
             reference=1 * u.TeV,
         )
     elif reference == "hess_pl":
-        return PowerLaw(
+        return PowerLawSpectralModel(
             amplitude=3.45e-11 * u.Unit("1 / (cm2 s TeV)"),
             index=2.63,
             reference=1 * u.TeV,

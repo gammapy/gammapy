@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import EffectiveAreaTable
 from gammapy.modeling import Fit
-from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLaw
+from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLawSpectralModel
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import requires_data, requires_dependency
@@ -17,10 +17,10 @@ class TestFit:
     def setup(self):
         self.nbins = 30
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
-        self.source_model = PowerLaw(
+        self.source_model = PowerLawSpectralModel(
             index=2, amplitude=1e5 / u.TeV, reference=0.1 * u.TeV
         )
-        self.bkg_model = PowerLaw(index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV)
+        self.bkg_model = PowerLawSpectralModel(index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV)
 
         self.alpha = 0.1
         random_state = get_random_state(23)
@@ -102,7 +102,7 @@ class TestSpectralFit:
         obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
         self.obs_list = [obs1, obs2]
 
-        self.pwl = PowerLaw(
+        self.pwl = PowerLawSpectralModel(
             index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
 

@@ -27,7 +27,7 @@ ROI number           : 185
 
 *** Spectral info ***
 
-Spectrum type                                 : PowerLaw        
+Spectrum type                                 : PowerLawSpectralModel
 Detection significance (100 MeV - 300 GeV)    : 6.813
 Significance curvature                        : 3.4
 Pivot energy                                  : 1159 MeV

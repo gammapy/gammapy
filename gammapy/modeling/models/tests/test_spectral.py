@@ -12,7 +12,7 @@ from gammapy.modeling.models import (
     LogParabola,
     NaimaModel,
     PLSuperExpCutoff4FGL,
-    PowerLaw,
+    PowerLawSpectralModel,
     PowerLaw2,
     SpectralGaussian,
     SpectralLogGaussian,
@@ -34,7 +34,7 @@ def table_model():
     index = 2.3 * u.Unit("")
     amplitude = 4 / u.cm ** 2 / u.s / u.TeV
     reference = 1 * u.TeV
-    pl = PowerLaw(index, amplitude, reference)
+    pl = PowerLawSpectralModel(index, amplitude, reference)
     flux = pl(energy)
 
     return TableModel(energy, flux, 1 * u.Unit(""))
@@ -43,7 +43,7 @@ def table_model():
 TEST_MODELS = [
     dict(
         name="powerlaw",
-        model=PowerLaw(
+        model=PowerLawSpectralModel(
             index=2.3 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -54,7 +54,7 @@ TEST_MODELS = [
     ),
     dict(
         name="powerlaw",
-        model=PowerLaw(
+        model=PowerLawSpectralModel(
             index=2 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -148,7 +148,7 @@ TEST_MODELS = [
     ),
     dict(
         name="powerlaw_index1",
-        model=PowerLaw(
+        model=PowerLawSpectralModel(
             index=1 * u.Unit(""),
             amplitude=2 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -324,7 +324,7 @@ def test_models(spectrum):
 
 
 def test_model_unit():
-    pwl = PowerLaw()
+    pwl = PowerLawSpectralModel()
     value = pwl(500 * u.MeV)
     assert value.unit == "cm-2 s-1 TeV-1"
 
@@ -338,7 +338,7 @@ def test_model_plot():
     pars["index"] = 2 * u.Unit("")
     errs["amplitude"] = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
 
-    pwl = PowerLaw(**pars)
+    pwl = PowerLawSpectralModel(**pars)
     pwl.parameters.set_parameter_errors(errs)
     with mpl_plot_check():
         pwl.plot((1 * u.TeV, 10 * u.TeV))
@@ -355,7 +355,7 @@ def test_to_from_dict():
     model_class = SPECTRAL_MODELS[model_dict["type"]]
     new_model = model_class.from_dict(model_dict)
 
-    assert isinstance(new_model, PowerLaw)
+    assert isinstance(new_model, PowerLawSpectralModel)
 
     actual = [par.value for par in new_model.parameters]
     desired = [par.value for par in model.parameters]
@@ -381,7 +381,7 @@ def test_absorption():
     index = 3.53
     amplitude = 1.81 * 1e-12 * u.Unit("cm-2 s-1 TeV-1")
     reference = 1 * u.TeV
-    pwl = PowerLaw(index=index, amplitude=amplitude, reference=reference)
+    pwl = PowerLawSpectralModel(index=index, amplitude=amplitude, reference=reference)
 
     # EBL + PWL model
     model = AbsorbedSpectralModel(
@@ -399,7 +399,7 @@ def test_pwl_index_2_error():
     pars["index"] = 2 * u.Unit("")
     errs["amplitude"] = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
 
-    pwl = PowerLaw(**pars)
+    pwl = PowerLawSpectralModel(**pars)
     pwl.parameters.set_parameter_errors(errs)
 
     val, val_err = pwl.evaluate_error(1 * u.TeV)
@@ -432,7 +432,7 @@ def test_ecpl_integrate():
 
 
 def test_pwl_pivot_energy():
-    pwl = PowerLaw(amplitude="5.35510540e-11 TeV-1 cm-1 s-1")
+    pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 TeV-1 cm-1 s-1")
 
     pwl.parameters.covariance = np.array(
         [[0.0318377 ** 2, 6.56889442e-14, 0], [6.56889442e-14, 0, 0], [0, 0, 0]]

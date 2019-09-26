@@ -29,8 +29,8 @@ __all__ = [
 # TODO: Move to a separate file ?
 model_registry = {
     "spectral": {
-        "PowerLaw": {
-            "model": spectral.PowerLaw,
+        "PowerLawSpectralModel": {
+            "model": spectral.PowerLawSpectralModel,
             "parameters": {
                 "Prefactor": ["amplitude", "cm-2 s-1 MeV-1"],
                 "Index": ["index", ""],
@@ -209,7 +209,7 @@ def xml_to_model(xml, which):
 
         # Special case models for which the XML definition does not map one to
         # one to the gammapy model definition
-        if type_ == "PowerLaw":
+        if type_ == "PowerLawSpectralModel":
             model.parameters["index"].value *= -1
             model.parameters["index"].min = np.nan
             model.parameters["index"].max = np.nan

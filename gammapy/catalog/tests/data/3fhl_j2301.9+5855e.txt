@@ -35,7 +35,7 @@ Spatial filename :
 
 *** Spectral fit info ***
 
-Spectrum type                    : PowerLaw   
+Spectrum type                    : PowerLawSpectralModel
 Significance curvature           : 1.0
 Power-law spectral index         : 2.006 +- 0.174
 Pivot energy                     : 30.2 GeV

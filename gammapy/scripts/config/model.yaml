@@ -37,5 +37,5 @@ components:
                 scale: 1.0
                 unit: TeV
                 value: 1.0
-          type: PowerLaw
+          type: PowerLawSpectralModel
       type: SkyModel

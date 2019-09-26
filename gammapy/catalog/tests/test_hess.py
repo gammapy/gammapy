@@ -9,7 +9,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import SourceCatalogHGPS, SourceCatalogLargeScaleHGPS
-from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLaw
+from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLawSpectralModel
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     requires_data,
@@ -137,7 +137,7 @@ class TestSourceCatalogObjectHGPS:
 
         model = source.spectral_model()
 
-        assert isinstance(model, PowerLaw)
+        assert isinstance(model, PowerLawSpectralModel)
         pars = model.parameters
         assert_allclose(pars["amplitude"].value, 9.140179932365378e-13)
         assert_allclose(pars["index"].value, 2.1513476371765137)
@@ -166,7 +166,7 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(err, source.data["Flux_Spec_Int_1TeV_Err"].value, rtol=0.01)
 
         model = source.spectral_model("pl")
-        assert isinstance(model, PowerLaw)
+        assert isinstance(model, PowerLawSpectralModel)
 
         pars = model.parameters
         assert_allclose(pars["amplitude"].value, 1.833056926733856e-12)

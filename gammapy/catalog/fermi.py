@@ -11,7 +11,7 @@ from gammapy.modeling.models import (
     LogParabola,
     PLSuperExpCutoff3FGL,
     PLSuperExpCutoff4FGL,
-    PowerLaw,
+    PowerLawSpectralModel,
     PowerLaw2,
     TemplateSpatialModel,
     GaussianSpatialModel,
@@ -60,12 +60,12 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
         pars, errs = {}, {}
         pars["reference"] = self.data["Pivot_Energy"]
 
-        if spec_type == "PowerLaw":
+        if spec_type == "PowerLawSpectralModel":
             pars["amplitude"] = self.data["PL_Flux_Density"]
             pars["index"] = self.data["PL_Index"]
             errs["amplitude"] = self.data["Unc_PL_Flux_Density"]
             errs["index"] = self.data["Unc_PL_Index"]
-            model = PowerLaw(**pars)
+            model = PowerLawSpectralModel(**pars)
         elif spec_type == "LogParabola":
             pars["amplitude"] = self.data["LP_Flux_Density"]
             pars["alpha"] = self.data["LP_Index"]
@@ -236,7 +236,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss += fmt.format("Detection significance (100 MeV - 300 GeV)", d["Signif_Avg"])
         ss += "{:<45s} : {:.1f}\n".format("Significance curvature", d["Signif_Curve"])
 
-        if spec_type == "PowerLaw":
+        if spec_type == "PowerLawSpectralModel":
             pass
         elif spec_type == "LogParabola":
             ss += "{:<45s} : {} +- {}\n".format("beta", d["beta"], d["Unc_beta"])
@@ -342,10 +342,10 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         errs["amplitude"] = self.data["Unc_Flux_Density"]
         pars["reference"] = self.data["Pivot_Energy"]
 
-        if spec_type == "PowerLaw":
+        if spec_type == "PowerLawSpectralModel":
             pars["index"] = self.data["Spectral_Index"]
             errs["index"] = self.data["Unc_Spectral_Index"]
-            model = PowerLaw(**pars)
+            model = PowerLawSpectralModel(**pars)
         elif spec_type == "PLExpCutoff":
             pars["index"] = self.data["Spectral_Index"]
             pars["ecut"] = self.data["Cutoff"]
@@ -775,7 +775,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
             "Power-law spectral index", d["PowerLaw_Index"], d["Unc_PowerLaw_Index"]
         )
 
-        if spec_type == "PowerLaw":
+        if spec_type == "PowerLawSpectralModel":
             pass
         elif spec_type == "LogParabola":
             fmt = "{:<32s} : {:.3f} +- {:.3f}\n"
@@ -861,10 +861,10 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         errs["amplitude"] = d["Unc_Flux_Density"]
         pars["reference"] = d["Pivot_Energy"]
 
-        if spec_type == "PowerLaw":
+        if spec_type == "PowerLawSpectralModel":
             pars["index"] = d["PowerLaw_Index"]
             errs["index"] = d["Unc_PowerLaw_Index"]
-            model = PowerLaw(**pars)
+            model = PowerLawSpectralModel(**pars)
         elif spec_type == "LogParabola":
             pars["alpha"] = d["Spectral_Index"]
             pars["beta"] = d["beta"]

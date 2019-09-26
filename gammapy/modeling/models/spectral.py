@@ -16,7 +16,7 @@ __all__ = [
     "SpectralModel",
     "ConstantSpectralModel",
     "CompoundSpectralModel",
-    "PowerLaw",
+    "PowerLawSpectralModel",
     "PowerLaw2",
     "ExponentialCutoffPowerLaw",
     "ExponentialCutoffPowerLaw3FGL",
@@ -39,7 +39,7 @@ class SpectralModel(Model):
     Derived classes should store their parameters as
     `~gammapy.utils.modeling.Parameters`
     See for example return pardict of
-    `~gammapy.modeling.models.PowerLaw`.
+    `~gammapy.modeling.models.PowerLawSpectralModel`.
     """
 
     def __call__(self, energy):
@@ -485,7 +485,7 @@ class CompoundSpectralModel(SpectralModel):
         retval["operator"] = self.operator
 
 
-class PowerLaw(SpectralModel):
+class PowerLawSpectralModel(SpectralModel):
     r"""Spectral power-law model.
 
     .. math::
@@ -502,18 +502,18 @@ class PowerLaw(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `PowerLaw` model::
+    This is how to plot the default `PowerLawSpectralModel` model::
 
         from astropy import units as u
-        from gammapy.modeling.models import PowerLaw
+        from gammapy.modeling.models import PowerLawSpectralModel
 
-        pwl = PowerLaw()
+        pwl = PowerLawSpectralModel()
         pwl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
     __slots__ = ["index", "amplitude", "reference"]
-    tag = "PowerLaw"
+    tag = "PowerLawSpectralModel"
 
     def __init__(self, index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"):
         self.index = Parameter("index", index)

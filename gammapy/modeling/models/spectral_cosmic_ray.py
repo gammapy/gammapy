@@ -5,7 +5,7 @@ For measurements, the "Database of Charged Cosmic Rays (CRDB)" is a great resour
 http://lpsc.in2p3.fr/cosmic-rays-db/
 """
 from astropy import units as u
-from .spectral import PowerLaw, SpectralLogGaussian
+from .spectral import PowerLawSpectralModel, SpectralLogGaussian
 
 __all__ = ["create_cosmic_ray_spectral_model"]
 
@@ -31,31 +31,31 @@ def create_cosmic_ray_spectral_model(particle="proton"):
         Cosmic ray flux in unit ``m^-2 s^-1 TeV^-1 sr^-1``
     """
     if particle == "proton":
-        return PowerLaw(
+        return PowerLawSpectralModel(
             amplitude=0.096 * u.Unit("1 / (m2 s TeV sr)"),
             index=2.70,
             reference=1 * u.TeV,
         )
     elif particle == "N":
-        return PowerLaw(
+        return PowerLawSpectralModel(
             amplitude=0.0719 * u.Unit("1 / (m2 s TeV sr)"),
             index=2.64,
             reference=1 * u.TeV,
         )
     elif particle == "Si":
-        return PowerLaw(
+        return PowerLawSpectralModel(
             amplitude=0.0284 * u.Unit("1 / (m2 s TeV sr)"),
             index=2.66,
             reference=1 * u.TeV,
         )
     elif particle == "Fe":
-        return PowerLaw(
+        return PowerLawSpectralModel(
             amplitude=0.0134 * u.Unit("1 / (m2 s TeV sr)"),
             index=2.63,
             reference=1 * u.TeV,
         )
     elif particle == "electron":
-        return PowerLaw(
+        return PowerLawSpectralModel(
             amplitude=6.85e-5 * u.Unit("1 / (m2 s TeV sr)"),
             index=3.21,
             reference=1 * u.TeV,

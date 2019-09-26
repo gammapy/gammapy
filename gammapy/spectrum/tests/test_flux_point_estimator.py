@@ -9,7 +9,7 @@ from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw,
-    PowerLaw,
+    PowerLawSpectralModel,
     GaussianSpatialModel,
     SkyModel,
 )
@@ -25,7 +25,7 @@ from gammapy.utils.testing import requires_data, requires_dependency
 def simulate_spectrum_dataset(model, random_state=0):
     energy = np.logspace(-0.5, 1.5, 21) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
-    bkg_model = PowerLaw(index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1")
+    bkg_model = PowerLawSpectralModel(index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1")
 
     dataset = SpectrumDatasetOnOff(
         aeff=aeff, model=model, livetime=100 * u.h, acceptance=1, acceptance_off=5
@@ -59,7 +59,7 @@ def simulate_map_dataset(random_state=0):
     )
 
     gauss = GaussianSpatialModel("0 deg", "0 deg", "0.4 deg", frame="galactic")
-    pwl = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
+    pwl = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=gauss, spectral_model=pwl, name="source")
     dataset = simulate_dataset(
         skymodel=skymodel,
@@ -104,7 +104,7 @@ def fpe_map_pwl_reoptimize():
 
 @pytest.fixture(scope="session")
 def fpe_pwl():
-    return create_fpe(PowerLaw())
+    return create_fpe(PowerLawSpectralModel())
 
 
 @pytest.fixture(scope="session")
@@ -204,8 +204,8 @@ class TestFluxPointsEstimator:
 
 
 def test_no_likelihood_contribution():
-    dataset = simulate_spectrum_dataset(PowerLaw())
-    dataset.model = PowerLaw()
+    dataset = simulate_spectrum_dataset(PowerLawSpectralModel())
+    dataset.model = PowerLawSpectralModel()
     dataset.mask_safe = np.zeros(dataset.data_shape, dtype=bool)
 
     fpe = FluxPointsEstimator([dataset], e_edges=[1, 10] * u.TeV)

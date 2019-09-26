@@ -12,7 +12,7 @@ from astropy import units as u
 from astropy.table import Table
 from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw,
-    PowerLaw,
+    PowerLawSpectralModel,
     PowerLaw2,
     GaussianSpatialModel,
     SkyModel,
@@ -285,7 +285,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         pars, errs = {}, {}
 
         if spec_type == "pl":
-            model_class = PowerLaw
+            model_class = PowerLawSpectralModel
             pars["amplitude"] = data["spec_pl_norm"]
             errs["amplitude"] = data["spec_pl_norm_err"]
             pars["index"] = data["spec_pl_index"]

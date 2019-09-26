@@ -13,7 +13,7 @@ from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import HpxGeom, Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.maps.geom import coordsys_to_frame
 from gammapy.maps.utils import fill_poisson
-from gammapy.modeling.models import PowerLaw, GaussianSpatialModel, SkyModel
+from gammapy.modeling.models import PowerLawSpectralModel, GaussianSpatialModel, SkyModel
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 pytest.importorskip("reproject")
@@ -612,7 +612,7 @@ def get_npred_map():
     )
 
     spatial_model = GaussianSpatialModel("0 deg", "0 deg", sigma="0.2 deg", frame="galactic")
-    spectral_model = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
+    spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
     exposure.data = 1e14 * np.ones(exposure.data.shape)

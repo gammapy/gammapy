@@ -73,7 +73,7 @@ components:
       unit: deg
       frozen: false
   spectral:
-    type: PowerLaw
+    type: PowerLawSpectralModel
     parameters:
     - name: index
       value: 2.2

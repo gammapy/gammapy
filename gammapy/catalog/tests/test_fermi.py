@@ -17,7 +17,7 @@ from gammapy.modeling.models import (
     LogParabola,
     PLSuperExpCutoff3FGL,
     PLSuperExpCutoff4FGL,
-    PowerLaw,
+    PowerLawSpectralModel,
 )
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -30,7 +30,7 @@ SOURCES_4FGL = [
     dict(
         idx=0,
         name="4FGL J0000.3-7355",
-        spec_type=PowerLaw,
+        spec_type=PowerLawSpectralModel,
         dnde=u.Quantity(2.9476e-11, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(5.3318e-12, "cm-2 s-1 GeV-1"),
     ),
@@ -55,7 +55,7 @@ SOURCES_3FGL = [
         idx=0,
         name="3FGL J0000.1+6545",
         str_ref_file="data/3fgl_J0000.1+6545.txt",
-        spec_type=PowerLaw,
+        spec_type=PowerLawSpectralModel,
         dnde=u.Quantity(1.4351261e-9, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(2.1356270e-10, "cm-2 s-1 GeV-1"),
     ),
@@ -89,7 +89,7 @@ SOURCES_3FHL = [
     dict(
         idx=352,
         name="3FHL J0534.5+2201",
-        spec_type=PowerLaw,
+        spec_type=PowerLawSpectralModel,
         dnde=u.Quantity(6.3848912826152664e-12, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(2.679593524691324e-13, "cm-2 s-1 GeV-1"),
     ),

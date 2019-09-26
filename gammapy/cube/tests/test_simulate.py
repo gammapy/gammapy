@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord
 from gammapy.cube import MapDataset, simulate_dataset
 from gammapy.irf import load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.modeling.models import PowerLaw, GaussianSpatialModel, SkyModel, SkyModels
+from gammapy.modeling.models import PowerLawSpectralModel, GaussianSpatialModel, SkyModel, SkyModels
 from gammapy.utils.testing import requires_data
 
 
@@ -18,7 +18,7 @@ def test_simulate():
 
     # Define sky model to simulate the data
     spatial_model = GaussianSpatialModel(lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic")
-    spectral_model = PowerLaw(
+    spectral_model = PowerLawSpectralModel(
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
     sky_model_simu = SkyModel(
