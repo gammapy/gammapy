@@ -5,7 +5,7 @@ from .spatial import *
 from .spectral import *
 from .spectral_cosmic_ray import *
 from .spectral_crab import *
-from .time import *
+from .temporal import *
 
 SPATIAL_MODELS = {
     "SkyDiffuseMap": SkyDiffuseMap,
