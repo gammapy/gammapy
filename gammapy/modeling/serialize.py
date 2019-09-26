@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
-from gammapy.cube.fit import MapDataset, MapEvaluator
+from gammapy.cube.fit import MapDataset
 from .models import BackgroundModel, SkyDiffuseCube, SkyModel, SkyModels
 
 __all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]

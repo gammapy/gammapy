@@ -3,7 +3,6 @@ import abc
 import copy
 from collections import Counter
 import numpy as np
-from astropy.utils import lazyproperty
 from gammapy.utils.scripts import read_yaml, write_yaml
 from .parameter import Parameters
 

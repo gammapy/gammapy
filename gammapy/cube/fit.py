@@ -15,7 +15,6 @@ from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import (
     BackgroundModel,
-    PointSpatialModel,
     SkyModel,
     SkyModels,
 )

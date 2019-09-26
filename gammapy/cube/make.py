@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 from astropy.coordinates import Angle
-from astropy.nddata.utils import NoOverlapError, PartialOverlapError
+from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map, WcsGeom

@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDataset, MapEvaluator, MapMaker, PSFKernel
+from gammapy.cube import MapDataset, MapMaker, PSFKernel
 from gammapy.data import DataStore
 from gammapy.irf import make_mean_edisp, make_mean_psf
 from gammapy.maps import MapAxis, WcsGeom
