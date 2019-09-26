@@ -428,6 +428,15 @@ def test_fermi_isotropic():
     )
 
 
+def test_TableModel_evaluate_tiny():
+    energy = np.array([1.00000000e06, 1.25892541e06, 1.58489319e06, 1.99526231e06])
+    values = np.array([4.39150790e-38, 1.96639562e-38, 8.80497507e-39, 3.94262401e-39])
+
+    model = TableModel(energy=energy, values=values * u.Unit("MeV-1 s-1 sr-1"))
+    result = model.evaluate(energy, norm=1.0, tilt=0.0, reference=1 * u.TeV)
+    np.testing.assert_allclose(values / values.max(), result.value / values.max())
+
+
 def test_ecpl_integrate():
     # regression test to check the numerical integration for small energy bins
     ecpl = ExpCutoffPowerLawSpectralModel()
