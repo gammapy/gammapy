@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import astropy.units as u
-from gammapy.astro.darkmatter import DMAnnihilation, JFactory, profiles
+from gammapy.astro.darkmatter import DarkMatterAnnihilationSpectralModel, JFactory, profiles
 from gammapy.maps import WcsGeom
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
@@ -24,7 +24,7 @@ def test_dmfluxmap(jfact):
     massDM = 1 * u.TeV
     channel = "W"
 
-    diff_flux = DMAnnihilation(mass=massDM, channel=channel)
+    diff_flux = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel)
     int_flux = (jfact * diff_flux.integral(emin=emin, emax=emax)).to("cm-2 s-1")
     actual = int_flux[5, 5]
     desired = 1.94839226e-12 / u.cm ** 2 / u.s
