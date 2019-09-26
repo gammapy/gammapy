@@ -212,3 +212,10 @@ def test_sky_diffuse_map_normalize():
     assert vals.unit == ""
     integral = vals.sum()
     assert_allclose(integral.value, 1, rtol=1e-4)
+
+
+def test_evaluate_fk5():
+    geom = WcsGeom.create(width=(5, 5), binsz=0.1, coordsys="CEL")
+    model = GaussianSpatialModel("0 deg", "0 deg", "0.1 deg", frame="fk5")
+    data = model.evaluate_geom(geom)
+    assert data.value[12, 12] > 0
