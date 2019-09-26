@@ -511,23 +511,18 @@ class AnalysisConfig:
                 self._update_settings(val, target[key])
 
 
+def is_quantity(instance):
+    try:
+        _ = u.Quantity(instance)
+        return True
+    except ValueError:
+        return False
+
+
 def _astropy_quantity(_, instance):
     """Check a number may also be an astropy quantity."""
-    quantity = str(instance).split()
-    if len(quantity) >= 2:
-        value = str(instance).split()[0]
-        unit = "".join(str(instance).split()[1:])
-        try:
-            return u.Quantity(float(value), unit).unit.physical_type != "dimensionless"
-        except ValueError:
-            log.error("{} is not a valid astropy quantity.".format(str(instance)))
-            raise ValueError("Not a valid astropy quantity.")
-    else:
-        try:
-            number = float(instance)
-        except ValueError:
-            number = instance
-        return jsonschema.Draft7Validator.TYPE_CHECKER.is_type(number, "number")
+    is_number = jsonschema.Draft7Validator.TYPE_CHECKER.is_type(instance, "number")
+    return is_number or is_quantity(instance)
 
 
 _type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(
