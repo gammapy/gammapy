@@ -154,11 +154,16 @@ class Analysis:
             # TODO raise error?
             log.info("Data reduction method not available.")
 
-    def get_flux_points(self):
-        """Calculate flux points."""
+    def get_flux_points(self, source="source"):
+        """Calculate flux points for a specific model component.
+
+        Parameters
+        ----------
+        source : string
+            Name of the model component where to calculate the flux points.
+        """
         if self._validate_fp_settings():
             # TODO: add "source" to config
-            source = "source"
             log.info("Calculating flux points.")
 
             axis_params = self.settings["flux"]["fp_binning"]

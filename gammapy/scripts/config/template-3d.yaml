@@ -26,7 +26,7 @@ reduction:
           - name: energy
             hi_bnd: 10
             lo_bnd: 1
-            nbin: 4
+            nbin: 11
             interp: log
             node_type: edges
             unit: TeV
@@ -47,6 +47,15 @@ reduction:
 
 model: model.yaml
 
-fit: {}
+fit:
+    fit_range:
+        max: 100 TeV
+        min: 1 TeV
 
-flux: {}
+flux:
+    fp_binning:
+        hi_bnd: 10
+        interp: log
+        lo_bnd: 1
+        nbin: 11
+        unit: TeV
