@@ -134,6 +134,9 @@ properties:
 #    Chosen dataset type
 #    dataset-type: SpectrumDatasetOnOff, MapDataset
 #
+#    Stack datasets flag
+#    stack-datasets: False
+#
 #    Parameters used in the estimation of the background
 #    Example values for the following properties
 #    background:
@@ -151,6 +154,8 @@ properties:
 #
 #        containment_correction: true
 #
+#    Geometry settings for the analysis
+#    Note that there may be different values for geom and geom-irf
 #    geom:
 #        Map pixel size in degrees
 #        binsz: 0.02
