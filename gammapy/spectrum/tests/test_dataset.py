@@ -8,7 +8,7 @@ from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import ConstantModel, ExponentialCutoffPowerLaw, PowerLaw
+from gammapy.modeling.models import ConstantSpectralModel, ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
@@ -276,7 +276,7 @@ class TestSpectrumOnOff:
 
     def test_npred_no_edisp(self):
         const = 1 / u.TeV / u.cm ** 2 / u.s
-        model = ConstantModel(const)
+        model = ConstantSpectralModel(const)
         livetime = 1 * u.s
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,

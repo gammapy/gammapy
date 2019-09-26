@@ -8,7 +8,7 @@ from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     BackgroundModel,
-    ConstantModel,
+    ConstantSpectralModel,
     PowerLaw,
     SkyDiffuseCube,
     GaussianSpatialModel,
@@ -410,7 +410,7 @@ def test_sky_point_source():
 
     spatial_model = PointSpatialModel(100.06 * u.deg, 70.03 * u.deg, frame="icrs")
     # Create a spectral model with integral flux of 1 cm-2 s-1 in this energy band
-    spectral_model = ConstantModel("1 cm-2 s-1 TeV-1")
+    spectral_model = ConstantSpectralModel("1 cm-2 s-1 TeV-1")
     spectral_model.const.value /= spectral_model.integral(1 * u.TeV, 10 * u.TeV).value
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     evaluator = MapEvaluator(model=model, exposure=exposure)

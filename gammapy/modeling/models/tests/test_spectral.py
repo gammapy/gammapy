@@ -6,7 +6,7 @@ from gammapy.modeling.models import (
     SPECTRAL_MODELS,
     AbsorbedSpectralModel,
     Absorption,
-    ConstantModel,
+    ConstantSpectralModel,
     ExponentialCutoffPowerLaw,
     ExponentialCutoffPowerLaw3FGL,
     LogParabola,
@@ -141,7 +141,7 @@ TEST_MODELS = [
     ),
     dict(
         name="constant",
-        model=ConstantModel(const=4 / u.cm ** 2 / u.s / u.TeV),
+        model=ConstantSpectralModel(const=4 / u.cm ** 2 / u.s / u.TeV),
         val_at_2TeV=u.Quantity(4, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(35.9999999999999, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(198.00000000000006, "TeV cm-2 s-1"),
@@ -294,10 +294,10 @@ def test_models(spectrum):
     if "e_peak" in spectrum:
         assert_quantity_allclose(model.e_peak, spectrum["e_peak"], rtol=1e-2)
 
-    # inverse for ConstantModel is irrelevant.
+    # inverse for ConstantSpectralModel is irrelevant.
     # inverse for Gaussian has a degeneracy
     if not (
-        isinstance(model, ConstantModel)
+        isinstance(model, ConstantSpectralModel)
         or spectrum["name"] == "compound6"
         or spectrum["name"] == "SpectralGaussian"
         or spectrum["name"] == "SpectralLogGaussian"

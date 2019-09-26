@@ -5,7 +5,7 @@ from astropy.coordinates import SkyCoord
 from gammapy.cube.exposure import _map_spectrum_weight, make_map_exposure_true_energy
 from gammapy.irf import EffectiveAreaTable2D
 from gammapy.maps import HpxGeom, MapAxis, WcsGeom, WcsNDMap
-from gammapy.modeling.models import ConstantModel
+from gammapy.modeling.models import ConstantSpectralModel
 from gammapy.utils.testing import requires_data
 
 pytest.importorskip("healpy")
@@ -69,7 +69,7 @@ def test_map_spectrum_weight():
     axis = MapAxis.from_edges([0.1, 10, 1000], unit="TeV", name="energy")
     expo_map = WcsNDMap.create(npix=10, binsz=1, axes=[axis], unit="m2 s")
     expo_map.data += 1
-    spectrum = ConstantModel(42)
+    spectrum = ConstantSpectralModel(42)
 
     weighted_expo = _map_spectrum_weight(expo_map, spectrum)
 

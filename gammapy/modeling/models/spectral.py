@@ -14,7 +14,7 @@ from gammapy.utils.scripts import make_path
 
 __all__ = [
     "SpectralModel",
-    "ConstantModel",
+    "ConstantSpectralModel",
     "CompoundSpectralModel",
     "PowerLaw",
     "PowerLaw2",
@@ -54,7 +54,7 @@ class SpectralModel(Model):
 
     def __mul__(self, model):
         if not isinstance(model, SpectralModel):
-            model = ConstantModel(const=model)
+            model = ConstantSpectralModel(const=model)
         return CompoundSpectralModel(self, model, operator.mul)
 
     def __rmul__(self, model):
@@ -63,7 +63,7 @@ class SpectralModel(Model):
 
     def __add__(self, model):
         if not isinstance(model, SpectralModel):
-            model = ConstantModel(const=model)
+            model = ConstantSpectralModel(const=model)
         return CompoundSpectralModel(self, model, operator.add)
 
     def __radd__(self, model):
@@ -71,7 +71,7 @@ class SpectralModel(Model):
 
     def __sub__(self, model):
         if not isinstance(model, SpectralModel):
-            model = ConstantModel(const=model)
+            model = ConstantSpectralModel(const=model)
         return CompoundSpectralModel(self, model, operator.sub)
 
     def __rsub__(self, model):
@@ -79,7 +79,7 @@ class SpectralModel(Model):
 
     def __truediv__(self, model):
         if not isinstance(model, SpectralModel):
-            model = ConstantModel(const=model)
+            model = ConstantSpectralModel(const=model)
         return CompoundSpectralModel(self, model, operator.truediv)
 
     def __rtruediv__(self, model):
@@ -422,7 +422,7 @@ class SpectralModel(Model):
         return u.Quantity(energies, eunit, copy=False)
 
 
-class ConstantModel(SpectralModel):
+class ConstantSpectralModel(SpectralModel):
     r"""Constant model.
 
     .. math:: \phi(E) = k
@@ -434,7 +434,7 @@ class ConstantModel(SpectralModel):
     """
 
     __slots__ = ["const"]
-    tag = "ConstantModel"
+    tag = "ConstantSpectralModel"
 
     def __init__(self, const):
         self.const = Parameter("const", const)

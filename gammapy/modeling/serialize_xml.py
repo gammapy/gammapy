@@ -52,7 +52,7 @@ model_registry = {
             },
         },
         "ConstantValue": {
-            "model": spectral.ConstantModel,
+            "model": spectral.ConstantSpectralModel,
             "parameters": {
                 "Value": ["const", "cm-2 s-1 MeV-1"],
                 "Normalization": ["const", "cm-2 s-1 MeV-1"],

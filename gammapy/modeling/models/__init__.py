@@ -24,7 +24,7 @@ TIME_MODELS = {
 # "NaimaModel":NaimaModel,
 # "ScaleModel": ScaleModel,
 SPECTRAL_MODELS = {
-    "ConstantModel": ConstantModel,
+    "ConstantSpectralModel": ConstantSpectralModel,
     "PowerLaw": PowerLaw,
     "PowerLaw2": PowerLaw2,
     "ExponentialCutoffPowerLaw": ExponentialCutoffPowerLaw,
