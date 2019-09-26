@@ -706,6 +706,7 @@ class MapDataset(Dataset):
             the input ON region on which to extract the spectrum
         containment_correction : bool
             Apply containment correction for point sources and circular on regions
+
         Returns
         -------
         dataset : `~gammapy.spectrum.SpectrumDataset`
@@ -714,16 +715,15 @@ class MapDataset(Dataset):
         if self.gti is not None:
             livetime = self.gti.time_sum
         else:
-            raise ValueError("No GTI in MapDataset. Impossible to compute livetime")
+            raise ValueError("No GTI in `MapDataset`, cannot compute livetime")
 
         if self.counts is not None:
             counts = self.counts.get_spectrum(on_region, np.sum)
         else:
             counts = None
 
-        #TODO : change to proper evaluation of BackgroundModel
         if self.background_model is not None:
-            background = self.background_model.map.get_spectrum(on_region, np.sum)
+            background = self.background_model.evaluate().get_spectrum(on_region, np.sum)
         else:
             background = None
 
@@ -739,8 +739,8 @@ class MapDataset(Dataset):
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
                 raise TypeError(
-                    "Incorrect region type for containment correction."
-                    " Should be CircleSkyRegion."
+                    "Containement correction is only supported for"
+                    " `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containement correction impossible")
@@ -752,17 +752,20 @@ class MapDataset(Dataset):
             if isinstance(self.edisp, EnergyDispersion):
                 edisp = self.edisp
             else:
-                self.edisp.get_energy_dispersion(on_region.center,self._energy_axis)
+                self.edisp.get_energy_dispersion(on_region.center, self._energy_axis)
         else:
             edisp=None
 
-        return SpectrumDataset(counts=counts,
-                               background=background,
-                               aeff=aeff,
-                               edisp=edisp,
-                               livetime=livetime,
-                               gti=self.gti,
-                               name=self.name)
+        return SpectrumDataset(
+                counts=counts,
+                background=background,
+                aeff=aeff,
+                edisp=edisp,
+                livetime=livetime,
+                gti=self.gti,
+                name=self.name
+            )
+
 
 class MapEvaluator:
     """Sky model evaluation on maps.
