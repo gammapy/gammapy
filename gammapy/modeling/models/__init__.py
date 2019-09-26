@@ -26,7 +26,7 @@ TIME_MODELS = {
 SPECTRAL_MODELS = {
     "ConstantSpectralModel": ConstantSpectralModel,
     "PowerLawSpectralModel": PowerLawSpectralModel,
-    "PowerLaw2": PowerLaw2,
+    "PowerLaw2SpectralModel": PowerLaw2SpectralModel,
     "ExponentialCutoffPowerLaw": ExponentialCutoffPowerLaw,
     "ExponentialCutoffPowerLaw3FGL": ExponentialCutoffPowerLaw3FGL,
     "PLSuperExpCutoff3FGL": PLSuperExpCutoff3FGL,

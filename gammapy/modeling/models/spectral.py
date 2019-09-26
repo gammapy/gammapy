@@ -17,7 +17,7 @@ __all__ = [
     "ConstantSpectralModel",
     "CompoundSpectralModel",
     "PowerLawSpectralModel",
-    "PowerLaw2",
+    "PowerLaw2SpectralModel",
     "ExponentialCutoffPowerLaw",
     "ExponentialCutoffPowerLaw3FGL",
     "PLSuperExpCutoff3FGL",
@@ -696,7 +696,7 @@ class PowerLawSpectralModel(SpectralModel):
         return reference * np.exp(cov_index_ampl / (amplitude * index_err ** 2))
 
 
-class PowerLaw2(SpectralModel):
+class PowerLaw2SpectralModel(SpectralModel):
     r"""Spectral power-law model with integral as amplitude parameter.
 
     See also: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
@@ -718,18 +718,18 @@ class PowerLaw2(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `PowerLaw2` model::
+    This is how to plot the default `PowerLaw2SpectralModel` model::
 
         from astropy import units as u
-        from gammapy.modeling.models import PowerLaw2
+        from gammapy.modeling.models import PowerLaw2SpectralModel
 
-        pwl2 = PowerLaw2()
+        pwl2 = PowerLaw2SpectralModel()
         pwl2.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
     __slots__ = ["index", "amplitude", "emin", "emax"]
-    tag = "PowerLaw2"
+    tag = "PowerLaw2SpectralModel"
 
     def __init__(
         self, amplitude="1e-12 cm-2 s-1", index=2, emin="0.1 TeV", emax="100 TeV"

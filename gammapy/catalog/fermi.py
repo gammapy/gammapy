@@ -12,7 +12,7 @@ from gammapy.modeling.models import (
     PLSuperExpCutoff3FGL,
     PLSuperExpCutoff4FGL,
     PowerLawSpectralModel,
-    PowerLaw2,
+    PowerLaw2SpectralModel,
     TemplateSpatialModel,
     GaussianSpatialModel,
     SkyModel,
@@ -573,7 +573,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         pars["index"] = self.data["Spectral_Index"]
         errs["amplitude"] = self.data["Unc_Flux"]
         errs["index"] = self.data["Unc_Spectral_Index"]
-        model = PowerLaw2(**pars)
+        model = PowerLaw2SpectralModel(**pars)
         model.parameters.set_parameter_errors(errs)
         return model
 
@@ -647,7 +647,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         errs["amplitude"] = self.data["Unc_Flux50"]
         errs["index"] = self.data["Unc_Spectral_Index"]
 
-        model = PowerLaw2(**pars)
+        model = PowerLaw2SpectralModel(**pars)
         model.parameters.set_parameter_errors(errs)
         return model
 

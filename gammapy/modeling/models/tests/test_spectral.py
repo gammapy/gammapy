@@ -13,7 +13,7 @@ from gammapy.modeling.models import (
     NaimaModel,
     PLSuperExpCutoff4FGL,
     PowerLawSpectralModel,
-    PowerLaw2,
+    PowerLaw2SpectralModel,
     SpectralGaussian,
     SpectralLogGaussian,
     TableModel,
@@ -65,7 +65,7 @@ TEST_MODELS = [
     ),
     dict(
         name="powerlaw2",
-        model=PowerLaw2(
+        model=PowerLaw2SpectralModel(
             amplitude=u.Quantity(2.9227116204223784, "cm-2 s-1"),
             index=2.3 * u.Unit(""),
             emin=1 * u.TeV,

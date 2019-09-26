@@ -13,7 +13,7 @@ from astropy.table import Table
 from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw,
     PowerLawSpectralModel,
-    PowerLaw2,
+    PowerLaw2SpectralModel,
     GaussianSpatialModel,
     SkyModel,
     SkyModels,
@@ -292,7 +292,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             errs["index"] = data["spec_pl_index_err"]
             pars["reference"] = data["spec_pl_e_ref"]
         elif spec_type == "pl2":
-            model_class = PowerLaw2
+            model_class = PowerLaw2SpectralModel
             pars["amplitude"] = data["spec_pl2_flux"]
             errs["amplitude"] = data["spec_pl2_flux_err"]
             pars["index"] = data["spec_pl2_index"]
