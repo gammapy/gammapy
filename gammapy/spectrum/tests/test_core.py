@@ -6,8 +6,8 @@ from astropy import units as u
 from astropy.units import Quantity
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
     PowerLaw2SpectralModel,
+    PowerLawSpectralModel,
     TemplateSpectralModel,
 )
 from gammapy.spectrum import CountsSpectrum, SpectrumEvaluator

@@ -9,12 +9,12 @@ from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     BackgroundModel,
     ConstantSpectralModel,
+    GaussianSpatialModel,
+    PointSpatialModel,
     PowerLawSpectralModel,
     SkyDiffuseCube,
-    GaussianSpatialModel,
     SkyModel,
     SkyModels,
-    PointSpatialModel,
 )
 from gammapy.utils.testing import requires_data
 

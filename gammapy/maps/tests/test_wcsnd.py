@@ -14,8 +14,8 @@ from gammapy.maps import HpxGeom, Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.maps.geom import coordsys_to_frame
 from gammapy.maps.utils import fill_poisson
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
     GaussianSpatialModel,
+    PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency

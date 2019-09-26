@@ -7,12 +7,12 @@ from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
-    PowerLawSpectralModel,
     GaussianSpatialModel,
+    PointSpatialModel,
+    PowerLawSpectralModel,
+    ShellSpatialModel,
     SkyModel,
     SkyModels,
-    PointSpatialModel,
-    ShellSpatialModel,
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator

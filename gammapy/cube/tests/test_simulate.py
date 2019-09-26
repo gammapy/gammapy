@@ -7,8 +7,8 @@ from gammapy.cube import MapDataset, simulate_dataset
 from gammapy.irf import load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
     GaussianSpatialModel,
+    PowerLawSpectralModel,
     SkyModel,
     SkyModels,
 )

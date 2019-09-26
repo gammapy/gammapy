@@ -15,9 +15,9 @@ from gammapy.catalog import (
 from gammapy.modeling.models import (
     ExpCutoffPowerLaw3FGLSpectralModel,
     LogParabolaSpectralModel,
+    PowerLawSpectralModel,
     SuperExpCutoffPowerLaw3FGLSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
-    PowerLawSpectralModel,
 )
 from gammapy.utils.testing import (
     assert_quantity_allclose,

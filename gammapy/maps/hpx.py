@@ -7,8 +7,8 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
 from .geom import (
-    MapCoord,
     Geom,
+    MapCoord,
     coordsys_to_frame,
     find_and_read_bands,
     make_axes,

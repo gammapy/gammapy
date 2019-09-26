@@ -8,8 +8,8 @@ from gammapy.cube import MapEvaluator, make_map_exposure_true_energy
 from gammapy.irf import EffectiveAreaTable2D
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
     GaussianSpatialModel,
+    PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.utils.random import get_random_state

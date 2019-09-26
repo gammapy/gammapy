@@ -8,15 +8,15 @@ from astropy.time import Time
 from gammapy.maps import Map
 from gammapy.modeling.models import (
     ExpCutoffPowerLaw3FGLSpectralModel,
+    GaussianSpatialModel,
     LogParabolaSpectralModel,
+    PointSpatialModel,
+    PowerLaw2SpectralModel,
+    PowerLawSpectralModel,
+    SkyModel,
     SuperExpCutoffPowerLaw3FGLSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
-    PowerLawSpectralModel,
-    PowerLaw2SpectralModel,
     TemplateSpatialModel,
-    GaussianSpatialModel,
-    SkyModel,
-    PointSpatialModel,
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.time import LightCurve

@@ -9,8 +9,8 @@ from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
-    PowerLawSpectralModel,
     GaussianSpatialModel,
+    PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.spectrum import (

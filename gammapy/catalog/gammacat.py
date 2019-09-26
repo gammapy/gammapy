@@ -12,13 +12,13 @@ from astropy import units as u
 from astropy.table import Table
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
-    PowerLawSpectralModel,
-    PowerLaw2SpectralModel,
     GaussianSpatialModel,
+    PointSpatialModel,
+    PowerLaw2SpectralModel,
+    PowerLawSpectralModel,
+    ShellSpatialModel,
     SkyModel,
     SkyModels,
-    PointSpatialModel,
-    ShellSpatialModel,
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.scripts import make_path

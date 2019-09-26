@@ -5,8 +5,8 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.data import GTI
 from gammapy.cube import MapDataset, PSFKernel, make_map_exposure_true_energy
+from gammapy.data import GTI
 from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
@@ -16,8 +16,8 @@ from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     BackgroundModel,
-    PowerLawSpectralModel,
     GaussianSpatialModel,
+    PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency

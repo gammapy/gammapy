@@ -2,25 +2,25 @@
 import logging
 import numpy as np
 import astropy.units as u
-from regions import CircleSkyRegion
 from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
+from regions import CircleSkyRegion
 from gammapy.cube.edisp_map import EDispMap
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
-from gammapy.irf import EnergyDispersion, EffectiveAreaTable, apply_containment_fraction
+from gammapy.irf import EffectiveAreaTable, EnergyDispersion, apply_containment_fraction
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import (
     BackgroundModel,
+    PointSpatialModel,
     SkyModel,
     SkyModels,
-    PointSpatialModel,
 )
-from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
 from gammapy.spectrum import SpectrumDataset
+from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
 

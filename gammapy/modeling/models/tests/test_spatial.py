@@ -5,11 +5,11 @@ import astropy.units as u
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpatialModel,
-    TemplateSpatialModel,
     DiskSpatialModel,
     GaussianSpatialModel,
     PointSpatialModel,
     ShellSpatialModel,
+    TemplateSpatialModel,
 )
 from gammapy.utils.testing import requires_data
 
