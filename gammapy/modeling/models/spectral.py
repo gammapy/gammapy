@@ -1662,7 +1662,7 @@ class NaimaSpectralModel(SpectralModel):
         import matplotlib.pyplot as plt
 
 
-        particle_distribution = naima.models.ExpCutoffPowerLawSpectralModel(1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV)
+        particle_distribution = naima.models.ExponentialCutoffPowerLaw(1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV)
         radiative_model = naima.radiative.InverseCompton(
             particle_distribution,
             seed_photon_fields=[
