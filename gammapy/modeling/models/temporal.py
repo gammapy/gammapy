@@ -11,10 +11,15 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
 
-__all__ = ["PhaseCurveTemplateTemporalModel", "LightCurveTemplateTemporalModel"]
+__all__ = ["PhaseCurveTemplateTemporalModel", "LightCurveTemplateTemporalModel", "TemporalModel"]
 
 
-class PhaseCurveTemplateTemporalModel(Model):
+# TODO: make this a small ABC to define a uniform interface.
+class TemporalModel(Model):
+    """Temporal model base class"""
+
+
+class PhaseCurveTemplateTemporalModel(TemporalModel):
     """Temporal phase curve model.
 
     Phase for a given time is computed as:
@@ -171,7 +176,7 @@ class PhaseCurveTemplateTemporalModel(Model):
         return t_min + time
 
 
-class LightCurveTemplateTemporalModel(Model):
+class LightCurveTemplateTemporalModel(TemporalModel):
     """Temporal light curve model.
 
     The lightcurve is given as a table with columns ``time`` and ``norm``.
