@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.modeling import Dataset, Datasets, Fit
-from gammapy.modeling.models import PowerLawSpectralModel, ScaleModel
+from gammapy.modeling.models import PowerLawSpectralModel, ScaleSpectralModel
 from gammapy.utils.interpolation import interpolate_likelihood_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -798,7 +798,7 @@ class FluxPointsEstimator:
         else:
             model = dataset.model[source].spectral_model
 
-        self.model = ScaleModel(model)
+        self.model = ScaleSpectralModel(model)
         self.model.norm.min = 0
         self.model.norm.max = 1e3
 

@@ -29,7 +29,7 @@ __all__ = [
     "NaimaModel",
     "SpectralGaussian",
     "SpectralLogGaussian",
-    "ScaleModel",
+    "ScaleSpectralModel",
 ]
 
 
@@ -1348,7 +1348,7 @@ class TemplateSpectralModel(SpectralModel):
         return init
 
 
-class ScaleModel(SpectralModel):
+class ScaleSpectralModel(SpectralModel):
     """Wrapper to scale another spectral model by a norm factor.
 
     Parameters
@@ -1360,7 +1360,7 @@ class ScaleModel(SpectralModel):
     """
 
     __slots__ = ["norm", "model"]
-    tag = "ScaleModel"
+    tag = "ScaleSpectralModel"
 
     def __init__(self, model, norm=1):
         self.norm = Parameter("norm", norm, unit="")
