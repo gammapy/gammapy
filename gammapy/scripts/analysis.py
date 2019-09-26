@@ -375,6 +375,7 @@ class Analysis:
 
     def _validate_fitting_settings(self):
         """Validate settings before proceeding to fit 1D."""
+        valid = True
         if self.datasets.datasets:
             if (self.extraction and
                 self.settings["reduction"]["background"]["background_estimator"]
@@ -384,11 +385,15 @@ class Analysis:
                 log.info("Background estimation only for reflected regions method.")
                 return False
             self.config.validate()
-            return True
         else:
             log.info("No datasets reduced.")
+            valid = False
+        if not self.model:
+            log.info("No model fetched for datasets.")
+            valid = False
+        if not valid:
             log.info("Fit cannot be done.")
-            return False
+        return valid
 
     def _validate_fp_settings(self):
         """Validate settings before proceeding to flux points estimation."""
