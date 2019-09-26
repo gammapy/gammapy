@@ -9,12 +9,11 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
-from gammapy.irf import make_mean_psf, make_mean_edisp
-from gammapy.cube import MapDataset, MapMaker, PSFKernel
+from gammapy.cube import MapDataset, MapMakerObs
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import SkyModels, BackgroundModel
+from gammapy.modeling.models import SkyModels
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
@@ -242,43 +241,58 @@ class Analysis:
 
     def _map_making(self):
         """Make maps and data sets for 3d analysis."""
-        maker_params = {}
-
-        if "offset-max" in self.settings["reduction"]:
-            maker_params["offset_max"] = Angle(self.settings["reduction"]["offset-max"])
-
         geom = self._create_geometry(self.settings["reduction"]["geom"])
+        geom_irf = self._create_geometry(self.settings["reduction"]["geom-irf"])
+        offset_max = Angle(self.settings["reduction"]["offset-max"])
+        stack_datasets = self.settings["reduction"]["stack-datasets"]
 
-        pars = self.settings["reduction"].get("geom-irf")
-        if pars is not None:
-            geom_true = self._create_geometry(pars)
+        if stack_datasets:
+            stacked = MapDataset.create(geom=geom, geom_irf=geom_irf, name="stacked")
+
+            for obs in self.observations:
+                dataset = self._get_dataset(obs, geom, geom_irf, offset_max)
+                stacked.stack(dataset)
+
+            self._extract_irf_kernels(stacked)
+            datasets = [stacked]
         else:
-            geom_true = geom
+            datasets = []
+            for obs in self.observations:
+                dataset = self._get_dataset(obs, geom, geom_irf, offset_max)
+                self._extract_irf_kernels(dataset)
+                datasets.append(dataset)
 
-        maker = MapMaker(geom=geom, geom_true=geom_true, **maker_params)
-        maps = maker.run(self.observations)
-        table_psf = make_mean_psf(self.observations, geom.center_skydir)
-        psf_kernel = PSFKernel.from_table_psf(table_psf, geom_true, max_radius=Angle("0.3 deg"))
+        self.datasets = Datasets(datasets)
+
+    @staticmethod
+    def _get_dataset(obs, geom, geom_irf, offset_max):
+        position, width = obs.pointing_radec, 2 * offset_max
+        geom_cutout = geom.cutout(position=position, width=width)
+        geom_irf_cutout = geom_irf.cutout(position=position, width=width)
+
+        maker = MapMakerObs(
+            observation=obs,
+            geom=geom_cutout,
+            geom_true=geom_irf_cutout,
+            offset_max=offset_max
+        )
+
+        return maker.run()
+
+    def _extract_irf_kernels(self, dataset):
+        # TODO: remove hard-coded default value
+        max_radius = self.settings["reduction"].get("psf-kernel-radius", "0.5 deg")
+
+        # TODO: handle IRF maps in fit
+        geom = dataset.counts.geom
+        geom_irf = dataset.exposure.geom
+
+        position = geom.center_skydir
+        geom_psf = geom.to_image().to_cube(geom_irf.axes)
+        dataset.psf = dataset.psf.get_psf_kernel(position=position, geom=geom_psf, max_radius=max_radius)
 
         e_reco = geom.get_axis_by_name("energy").edges
-        e_true = geom_true.get_axis_by_name("energy").edges
-        edisp = make_mean_edisp(
-            self.observations, position=geom.center_skydir, e_true=e_true, e_reco=e_reco
-        )
-
-        background_model = BackgroundModel(maps["background"], norm=1.0)
-        background_model.parameters["tilt"].frozen = False
-
-        self.datasets = Datasets(
-            MapDataset(
-                counts=maps["counts"],
-                exposure=maps["exposure"],
-                background_model=background_model,
-                psf=psf_kernel,
-                edisp=edisp,
-                name="stacked",
-            )
-        )
+        dataset.edisp = dataset.edisp.get_energy_dispersion(position=position, e_reco=e_reco)
 
     def get_model(self):
         """Read the model from settings."""
@@ -353,6 +367,11 @@ class Analysis:
         )
         self.extraction.run()
         self.datasets = Datasets(self.extraction.spectrum_observations)
+
+        if self.settings["reduction"]["stack-datasets"]:
+            stacked = self.datasets.stack_reduce()
+            stacked.name = "stacked"
+            self.datasets = Datasets([stacked])
 
     def _validate_fitting_settings(self):
         """Validate settings before proceeding to fit 1D."""
@@ -494,23 +513,18 @@ class AnalysisConfig:
                 self._update_settings(val, target[key])
 
 
+def is_quantity(instance):
+    try:
+        _ = u.Quantity(instance)
+        return True
+    except ValueError:
+        return False
+
+
 def _astropy_quantity(_, instance):
     """Check a number may also be an astropy quantity."""
-    quantity = str(instance).split()
-    if len(quantity) >= 2:
-        value = str(instance).split()[0]
-        unit = "".join(str(instance).split()[1:])
-        try:
-            return u.Quantity(float(value), unit).unit.physical_type != "dimensionless"
-        except ValueError:
-            log.error("{} is not a valid astropy quantity.".format(str(instance)))
-            raise ValueError("Not a valid astropy quantity.")
-    else:
-        try:
-            number = float(instance)
-        except ValueError:
-            number = instance
-        return jsonschema.Draft7Validator.TYPE_CHECKER.is_type(number, "number")
+    is_number = jsonschema.Draft7Validator.TYPE_CHECKER.is_type(instance, "number")
+    return is_number or is_quantity(instance)
 
 
 _type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(
