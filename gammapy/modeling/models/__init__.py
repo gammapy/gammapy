@@ -8,6 +8,7 @@ from .spectral_crab import *
 from .temporal import *
 
 SPATIAL_MODELS = {
+    "ConstantSpatialModel": ConstantSpatialModel,
     "TemplateSpatialModel": TemplateSpatialModel,
     "DiskSpatialModel": DiskSpatialModel,
     "GaussianSpatialModel": GaussianSpatialModel,
@@ -36,5 +37,4 @@ SPECTRAL_MODELS = {
     "GaussianSpectralModel": GaussianSpectralModel,
     "LogGaussianSpectralModel": LogGaussianSpectralModel,
     "AbsorbedSpectralModel": AbsorbedSpectralModel,
-    "Absorption": Absorption,
 }
