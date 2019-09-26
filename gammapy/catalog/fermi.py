@@ -9,7 +9,7 @@ from gammapy.maps import Map
 from gammapy.modeling.models import (
     ExpCutoffPowerLaw3FGLSpectralModel,
     LogParabola,
-    PLSuperExpCutoff3FGL,
+    SuperExpCutoffPowerLaw3FGLSpectralModel,
     PLSuperExpCutoff4FGL,
     PowerLawSpectralModel,
     PowerLaw2SpectralModel,
@@ -367,7 +367,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             errs["index_1"] = self.data["Unc_Spectral_Index"]
             errs["index_2"] = self.data["Unc_Exp_Index"]
             errs["ecut"] = self.data["Unc_Cutoff"].to("GeV")
-            model = PLSuperExpCutoff3FGL(**pars)
+            model = SuperExpCutoffPowerLaw3FGLSpectralModel(**pars)
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 

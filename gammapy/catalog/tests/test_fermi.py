@@ -15,7 +15,7 @@ from gammapy.catalog import (
 from gammapy.modeling.models import (
     ExpCutoffPowerLaw3FGLSpectralModel,
     LogParabola,
-    PLSuperExpCutoff3FGL,
+    SuperExpCutoffPowerLaw3FGLSpectralModel,
     PLSuperExpCutoff4FGL,
     PowerLawSpectralModel,
 )
@@ -79,7 +79,7 @@ SOURCES_3FGL = [
         idx=960,
         name="3FGL J0835.3-4510",
         str_ref_file="data/3fgl_J0835.3-4510.txt",
-        spec_type=PLSuperExpCutoff3FGL,
+        spec_type=SuperExpCutoffPowerLaw3FGLSpectralModel,
         dnde=u.Quantity(1.6547128794756733e-06, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.6621504e-11, "cm-2 s-1 MeV-1"),
     ),
