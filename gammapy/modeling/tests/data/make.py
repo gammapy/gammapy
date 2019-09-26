@@ -16,17 +16,17 @@ from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw,
     PowerLaw,
     SkyDiffuseCube,
-    SkyGaussian,
+    GaussianSpatialModel,
     SkyModel,
     SkyModels,
-    SkyPointSource,
+    PointSpatialModel,
 )
 
 DATA_PATH = Path("./")
 
 
 def make_example_2():
-    spatial = SkyGaussian("0 deg", "0 deg", "1 deg")
+    spatial = GaussianSpatialModel("0 deg", "0 deg", "1 deg")
     model = SkyModel(spatial, PowerLaw())
     models = SkyModels([model])
     models.to_yaml(DATA_PATH / "example2.yaml")
@@ -61,7 +61,7 @@ def make_datasets_example():
     models = []
 
     for ind, (lon, lat) in enumerate(sources_coords):
-        spatial_model = SkyPointSource(lon_0=lon * u.deg, lat_0=lat * u.deg, frame="galactic")
+        spatial_model = PointSpatialModel(lon_0=lon * u.deg, lat_0=lat * u.deg, frame="galactic")
         spectral_model = ExponentialCutoffPowerLaw(
             index=2 * u.Unit(""),
             amplitude=3e-12 * u.Unit("cm-2 s-1 TeV-1"),

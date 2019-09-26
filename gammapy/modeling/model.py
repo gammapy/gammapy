@@ -53,7 +53,7 @@ class Model:
             for x in data["parameters"]
         }
 
-        # TODO: this is a special case for spatial models, maybe better move to `SkySpatialModel` base class
+        # TODO: this is a special case for spatial models, maybe better move to `SpatialModel` base class
         if "frame" in data:
             params["frame"] = data["frame"]
 

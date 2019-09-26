@@ -8,11 +8,11 @@ from astropy.table import Table
 from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw,
     PowerLaw,
-    SkyGaussian,
+    GaussianSpatialModel,
     SkyModel,
     SkyModels,
-    SkyPointSource,
-    SkyShell,
+    PointSpatialModel,
+    ShellSpatialModel,
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
@@ -83,9 +83,9 @@ class SourceCatalogObjectHGPSComponent:
 
     @property
     def spatial_model(self):
-        """Component spatial model (`~gammapy.modeling.models.SkyGaussian`)."""
+        """Component spatial model (`~gammapy.modeling.models.GaussianSpatialModel`)."""
         d = self.data
-        model = SkyGaussian(lon_0=d["GLON"], lat_0=d["GLAT"], sigma=d["Size"])
+        model = GaussianSpatialModel(lon_0=d["GLON"], lat_0=d["GLAT"], sigma=d["Size"])
         model.parameters.set_parameter_errors(
             dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"])
         )
@@ -495,14 +495,14 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Spatial model (`~gammapy.modeling.models.SkySpatialModel`).
+        """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
         One of the following models (given by ``Spatial_Model`` in the catalog):
 
-        - ``Point-Like`` or has a size upper limit : `~gammapy.modeling.models.SkyPointSource`
-        - ``Gaussian``: `~gammapy.modeling.models.SkyGaussian`
+        - ``Point-Like`` or has a size upper limit : `~gammapy.modeling.models.PointSpatialModel`
+        - ``Gaussian``: `~gammapy.modeling.models.GaussianSpatialModel`
         - ``2-Gaussian`` or ``3-Gaussian``: composite model (using ``+`` with Gaussians)
-        - ``Shell``: `~gammapy.modeling.models.SkyShell`
+        - ``Shell``: `~gammapy.modeling.models.ShellSpatialModel`
         """
         d = self.data
         glon = d["GLON"]
@@ -511,9 +511,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         spatial_type = self.spatial_model_type
 
         if self.is_pointlike:
-            model = SkyPointSource(lon_0=glon, lat_0=glat)
+            model = PointSpatialModel(lon_0=glon, lat_0=glat)
         elif spatial_type == "gaussian":
-            model = SkyGaussian(lon_0=glon, lat_0=glat, sigma=d["Size"])
+            model = GaussianSpatialModel(lon_0=glon, lat_0=glat, sigma=d["Size"])
         elif spatial_type in {"2-gaussian", "3-gaussian"}:
             raise ValueError("For Gaussian or Multi-Gaussian models, use sky_model()!")
         elif spatial_type == "shell":
@@ -522,7 +522,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             r_out = d["Size"]
             radius = 0.95 * r_out
             width = r_out - radius
-            model = SkyShell(lon_0=glon, lat_0=glat, width=width, radius=radius)
+            model = ShellSpatialModel(lon_0=glon, lat_0=glat, width=width, radius=radius)
         else:
             raise ValueError(f"Not a valid spatial model: {spatial_type}")
 

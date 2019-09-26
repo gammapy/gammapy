@@ -53,11 +53,11 @@ def test_complex():
 
     model0 = sourcelib.skymodels[0]
     assert isinstance(model0.spectral_model, spectral.PowerLaw)
-    assert isinstance(model0.spatial_model, spatial.SkyPointSource)
+    assert isinstance(model0.spatial_model, spatial.PointSpatialModel)
 
     model1 = sourcelib.skymodels[1]
     assert isinstance(model1.spectral_model, spectral.PowerLaw)
-    assert isinstance(model1.spatial_model, spatial.SkyPointSource)
+    assert isinstance(model1.spatial_model, spatial.PointSpatialModel)
 
     pars1 = model1.parameters
     assert pars1["index"].value == 2.1
@@ -80,7 +80,7 @@ def test_complex():
 
     model2 = sourcelib.skymodels[2]
     assert isinstance(model2.spectral_model, spectral.ExponentialCutoffPowerLaw)
-    assert isinstance(model2.spatial_model, spatial.SkyGaussian)
+    assert isinstance(model2.spatial_model, spatial.GaussianSpatialModel)
 
     pars2 = model2.parameters
     assert pars2["sigma"].unit == "deg"
@@ -94,21 +94,21 @@ def test_complex():
     assert pars2["index"].min is np.nan
 
     model3 = sourcelib.skymodels[3]
-    assert isinstance(model3.spatial_model, spatial.SkyDisk)
+    assert isinstance(model3.spatial_model, spatial.DiskSpatialModel)
     pars3 = model3.parameters
     assert pars3["r_0"].unit == "deg"
 
     model4 = sourcelib.skymodels[4]
-    assert isinstance(model4.spatial_model, spatial.SkyShell)
+    assert isinstance(model4.spatial_model, spatial.ShellSpatialModel)
     pars4 = model4.parameters
     assert pars4["radius"].unit == "deg"
     assert pars4["width"].unit == "deg"
 
     model5 = sourcelib.skymodels[5]
-    assert isinstance(model5.spatial_model, spatial.SkyDiffuseMap)
+    assert isinstance(model5.spatial_model, spatial.TemplateSpatialModel)
 
     model6 = sourcelib.skymodels[6]
-    assert isinstance(model6.spatial_model, spatial.SkyDiffuseMap)
+    assert isinstance(model6.spatial_model, spatial.TemplateSpatialModel)
 
 
 @pytest.mark.xfail(reason="Need to improve XML read")

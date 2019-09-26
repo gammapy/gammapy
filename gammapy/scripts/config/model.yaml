@@ -16,7 +16,7 @@ components:
                 scale: 1.0
                 unit: deg
                 value: 22.14
-          type: SkyPointSource
+          type: PointSpatialModel
       spectral:
           parameters:
               - factor: 2.0

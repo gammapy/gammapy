@@ -2,7 +2,7 @@ components:
 - name: source0
   type: SkyModel
   spatial:
-    type: SkyPointSource
+    type: PointSpatialModel
     parameters:
     - name: lon_0
       value: -50.
@@ -58,7 +58,7 @@ components:
 - name: source1
   type: SkyModel
   spatial:
-    type: SkyDisk
+    type: DiskSpatialModel
     parameters:
     - name: lon_0
       value: -50.
@@ -102,7 +102,7 @@ components:
 - name: source2
   type: SkyModel
   spatial:
-    type: SkyDiffuseMap
+    type: TemplateSpatialModel
     filename: $GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits
     parameters:
     - name: norm
