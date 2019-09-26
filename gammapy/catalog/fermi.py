@@ -7,7 +7,7 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.maps import Map
 from gammapy.modeling.models import (
-    ExponentialCutoffPowerLaw3FGL,
+    ExpCutoffPowerLaw3FGLSpectralModel,
     LogParabola,
     PLSuperExpCutoff3FGL,
     PLSuperExpCutoff4FGL,
@@ -351,7 +351,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             pars["ecut"] = self.data["Cutoff"]
             errs["index"] = self.data["Unc_Spectral_Index"]
             errs["ecut"] = self.data["Unc_Cutoff"]
-            model = ExponentialCutoffPowerLaw3FGL(**pars)
+            model = ExpCutoffPowerLaw3FGLSpectralModel(**pars)
         elif spec_type == "LogParabola":
             pars["alpha"] = self.data["Spectral_Index"]
             pars["beta"] = self.data["beta"]

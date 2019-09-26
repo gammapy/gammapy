@@ -8,7 +8,7 @@ from gammapy.modeling.models import (
     Absorption,
     ConstantSpectralModel,
     ExpCutoffPowerLawSpectralModel,
-    ExponentialCutoffPowerLaw3FGL,
+    ExpCutoffPowerLaw3FGLSpectralModel,
     LogParabola,
     NaimaModel,
     PLSuperExpCutoff4FGL,
@@ -90,7 +90,7 @@ TEST_MODELS = [
     ),
     dict(
         name="ecpl_3fgl",
-        model=ExponentialCutoffPowerLaw3FGL(
+        model=ExpCutoffPowerLaw3FGLSpectralModel(
             index=2.3 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
