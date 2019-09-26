@@ -139,7 +139,7 @@ class InterpolationScale:
 class LogScale(InterpolationScale):
     """Logarithmic scaling"""
 
-    tiny = np.finfo(np.float32).tiny
+    tiny = np.finfo(np.float64).tiny
 
     def _scale(self, values):
         values = np.clip(values, self.tiny, np.inf)
