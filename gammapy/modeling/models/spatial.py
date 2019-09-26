@@ -60,7 +60,7 @@ class SpatialModel(Model):
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
         # TODO: change to uniform coordinate frame names
-        coordsys = "CEL" if self.frame == "icrs" else "GAL"
+        coordsys = "CEL" if self.frame in ["icrs", "fk5"] else "GAL"
         coords = geom.get_coord(coordsys=coordsys)
         return self(coords.lon, coords.lat)
 

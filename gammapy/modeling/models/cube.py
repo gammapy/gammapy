@@ -31,7 +31,8 @@ class SkyModelBase(Model):
         return self.evaluate(lon, lat, energy)
 
     def evaluate_geom(self, geom):
-        coords = geom.get_coord()
+        coordsys = "CEL" if self.frame in ["icrs", "fk5"] else "GAL"
+        coords = geom.get_coord(coordsys=coordsys)
         return self(coords.lon, coords.lat, coords["energy"])
 
 
