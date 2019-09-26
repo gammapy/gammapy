@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.units import Quantity
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
-from gammapy.modeling.models import PowerLaw, PowerLaw2, TableModel
+from gammapy.modeling.models import PowerLawSpectralModel, PowerLaw2SpectralModel, TemplateSpectralModel
 from gammapy.spectrum import CountsSpectrum, SpectrumEvaluator
 from gammapy.utils.energy import energy_logspace
 from gammapy.utils.testing import (
@@ -61,26 +61,26 @@ def get_test_cases():
     e_true = Quantity(np.logspace(-1, 2, 120), "TeV")
     e_reco = Quantity(np.logspace(-1, 2, 100), "TeV")
     return [
-        dict(model=PowerLaw(amplitude="1e2 TeV-1"), e_true=e_true, npred=999),
+        dict(model=PowerLawSpectralModel(amplitude="1e2 TeV-1"), e_true=e_true, npred=999),
         dict(
-            model=PowerLaw2(amplitude="1", emin="0.1 TeV", emax="100 TeV"),
+            model=PowerLaw2SpectralModel(amplitude="1", emin="0.1 TeV", emax="100 TeV"),
             e_true=e_true,
             npred=1,
         ),
         dict(
-            model=PowerLaw(amplitude="1e-11 TeV-1 cm-2 s-1"),
+            model=PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1"),
             aeff=EffectiveAreaTable.from_parametrization(e_true),
             livetime="10 h",
             npred=1448.05960,
         ),
         dict(
-            model=PowerLaw(reference="1 GeV", amplitude="1e-11 GeV-1 cm-2 s-1"),
+            model=PowerLawSpectralModel(reference="1 GeV", amplitude="1e-11 GeV-1 cm-2 s-1"),
             aeff=EffectiveAreaTable.from_parametrization(e_true),
             livetime="30 h",
             npred=4.34417881,
         ),
         dict(
-            model=PowerLaw(amplitude="1e-11 TeV-1 cm-2 s-1"),
+            model=PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1"),
             aeff=EffectiveAreaTable.from_parametrization(e_true),
             edisp=EnergyDispersion.from_gauss(
                 e_reco=e_reco, e_true=e_true, bias=0, sigma=0.2
@@ -89,7 +89,7 @@ def get_test_cases():
             npred=1437.450076,
         ),
         dict(
-            model=TableModel(
+            model=TemplateSpectralModel(
                 energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
                 values=[4.0, 3.0, 1.0, 0.1] * u.Unit("TeV-1"),
             ),

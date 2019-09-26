@@ -6,17 +6,17 @@ from gammapy.modeling.models import (
     SPECTRAL_MODELS,
     AbsorbedSpectralModel,
     Absorption,
-    ConstantModel,
-    ExponentialCutoffPowerLaw,
-    ExponentialCutoffPowerLaw3FGL,
-    LogParabola,
-    NaimaModel,
-    PLSuperExpCutoff4FGL,
-    PowerLaw,
-    PowerLaw2,
-    SpectralGaussian,
-    SpectralLogGaussian,
-    TableModel,
+    ConstantSpectralModel,
+    ExpCutoffPowerLawSpectralModel,
+    ExpCutoffPowerLaw3FGLSpectralModel,
+    LogParabolaSpectralModel,
+    NaimaSpectralModel,
+    SuperExpCutoffPowerLaw4FGLSpectralModel,
+    PowerLawSpectralModel,
+    PowerLaw2SpectralModel,
+    GaussianSpectralModel,
+    LogGaussianSpectralModel,
+    TemplateSpectralModel,
 )
 from gammapy.utils.energy import energy_logspace
 from gammapy.utils.testing import (
@@ -34,16 +34,16 @@ def table_model():
     index = 2.3 * u.Unit("")
     amplitude = 4 / u.cm ** 2 / u.s / u.TeV
     reference = 1 * u.TeV
-    pl = PowerLaw(index, amplitude, reference)
+    pl = PowerLawSpectralModel(index, amplitude, reference)
     flux = pl(energy)
 
-    return TableModel(energy, flux, 1 * u.Unit(""))
+    return TemplateSpectralModel(energy, flux, 1 * u.Unit(""))
 
 
 TEST_MODELS = [
     dict(
         name="powerlaw",
-        model=PowerLaw(
+        model=PowerLawSpectralModel(
             index=2.3 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -54,7 +54,7 @@ TEST_MODELS = [
     ),
     dict(
         name="powerlaw",
-        model=PowerLaw(
+        model=PowerLawSpectralModel(
             index=2 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -65,7 +65,7 @@ TEST_MODELS = [
     ),
     dict(
         name="powerlaw2",
-        model=PowerLaw2(
+        model=PowerLaw2SpectralModel(
             amplitude=u.Quantity(2.9227116204223784, "cm-2 s-1"),
             index=2.3 * u.Unit(""),
             emin=1 * u.TeV,
@@ -77,7 +77,7 @@ TEST_MODELS = [
     ),
     dict(
         name="ecpl",
-        model=ExponentialCutoffPowerLaw(
+        model=ExpCutoffPowerLawSpectralModel(
             index=1.6 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -90,7 +90,7 @@ TEST_MODELS = [
     ),
     dict(
         name="ecpl_3fgl",
-        model=ExponentialCutoffPowerLaw3FGL(
+        model=ExpCutoffPowerLaw3FGLSpectralModel(
             index=2.3 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -102,7 +102,7 @@ TEST_MODELS = [
     ),
     dict(
         name="plsec_4fgl",
-        model=PLSuperExpCutoff4FGL(
+        model=SuperExpCutoffPowerLaw4FGLSpectralModel(
             index_1=1.5,
             index_2=2,
             amplitude=1 / u.cm ** 2 / u.s / u.TeV,
@@ -115,7 +115,7 @@ TEST_MODELS = [
     ),
     dict(
         name="logpar",
-        model=LogParabola(
+        model=LogParabolaSpectralModel(
             alpha=2.3 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -128,7 +128,7 @@ TEST_MODELS = [
     ),
     dict(
         name="logpar10",
-        model=LogParabola.from_log10(
+        model=LogParabolaSpectralModel.from_log10(
             alpha=2.3 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -141,14 +141,14 @@ TEST_MODELS = [
     ),
     dict(
         name="constant",
-        model=ConstantModel(const=4 / u.cm ** 2 / u.s / u.TeV),
+        model=ConstantSpectralModel(const=4 / u.cm ** 2 / u.s / u.TeV),
         val_at_2TeV=u.Quantity(4, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(35.9999999999999, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(198.00000000000006, "TeV cm-2 s-1"),
     ),
     dict(
         name="powerlaw_index1",
-        model=PowerLaw(
+        model=PowerLawSpectralModel(
             index=1 * u.Unit(""),
             amplitude=2 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -159,7 +159,7 @@ TEST_MODELS = [
     ),
     dict(
         name="ecpl_2",
-        model=ExponentialCutoffPowerLaw(
+        model=ExpCutoffPowerLawSpectralModel(
             index=2.0 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -171,8 +171,8 @@ TEST_MODELS = [
         e_peak=np.nan * u.TeV,
     ),
     dict(
-        name="SpectralGaussian",
-        model=SpectralGaussian(
+        name="GaussianSpectralModel",
+        model=GaussianSpectralModel(
             norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2 * u.TeV
         ),
         val_at_2TeV=u.Quantity(7.978845608028654, "cm-2 s-1 TeV-1"),
@@ -182,8 +182,8 @@ TEST_MODELS = [
         eflux_1_10TeV=u.Quantity(7.999998896163037, "TeV cm-2 s-1"),
     ),
     dict(
-        name="SpectralLogGaussian",
-        model=SpectralLogGaussian(norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2),
+        name="LogGaussianSpectralModel",
+        model=LogGaussianSpectralModel(norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2),
         val_at_2TeV=u.Quantity(3.98942280401, "cm-2 s-1 TeV-1"),
         val_at_3TeV=u.Quantity(0.34066933236079916, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(3.994439, "cm-2 s-1"),
@@ -294,13 +294,13 @@ def test_models(spectrum):
     if "e_peak" in spectrum:
         assert_quantity_allclose(model.e_peak, spectrum["e_peak"], rtol=1e-2)
 
-    # inverse for ConstantModel is irrelevant.
+    # inverse for ConstantSpectralModel is irrelevant.
     # inverse for Gaussian has a degeneracy
     if not (
-        isinstance(model, ConstantModel)
+        isinstance(model, ConstantSpectralModel)
         or spectrum["name"] == "compound6"
-        or spectrum["name"] == "SpectralGaussian"
-        or spectrum["name"] == "SpectralLogGaussian"
+        or spectrum["name"] == "GaussianSpectralModel"
+        or spectrum["name"] == "LogGaussianSpectralModel"
     ):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.01)
 
@@ -324,7 +324,7 @@ def test_models(spectrum):
 
 
 def test_model_unit():
-    pwl = PowerLaw()
+    pwl = PowerLawSpectralModel()
     value = pwl(500 * u.MeV)
     assert value.unit == "cm-2 s-1 TeV-1"
 
@@ -338,7 +338,7 @@ def test_model_plot():
     pars["index"] = 2 * u.Unit("")
     errs["amplitude"] = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
 
-    pwl = PowerLaw(**pars)
+    pwl = PowerLawSpectralModel(**pars)
     pwl.parameters.set_parameter_errors(errs)
     with mpl_plot_check():
         pwl.plot((1 * u.TeV, 10 * u.TeV))
@@ -355,7 +355,7 @@ def test_to_from_dict():
     model_class = SPECTRAL_MODELS[model_dict["type"]]
     new_model = model_class.from_dict(model_dict)
 
-    assert isinstance(new_model, PowerLaw)
+    assert isinstance(new_model, PowerLawSpectralModel)
 
     actual = [par.value for par in new_model.parameters]
     desired = [par.value for par in model.parameters]
@@ -366,7 +366,7 @@ def test_to_from_dict():
 @requires_data()
 def test_table_model_from_file():
     filename = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
-    absorption_z03 = TableModel.read_xspec_model(filename=filename, param=0.3)
+    absorption_z03 = TemplateSpectralModel.read_xspec_model(filename=filename, param=0.3)
     with mpl_plot_check():
         absorption_z03.plot(energy_range=(0.03, 10), energy_unit=u.TeV, flux_unit="")
 
@@ -381,7 +381,7 @@ def test_absorption():
     index = 3.53
     amplitude = 1.81 * 1e-12 * u.Unit("cm-2 s-1 TeV-1")
     reference = 1 * u.TeV
-    pwl = PowerLaw(index=index, amplitude=amplitude, reference=reference)
+    pwl = PowerLawSpectralModel(index=index, amplitude=amplitude, reference=reference)
 
     # EBL + PWL model
     model = AbsorbedSpectralModel(
@@ -399,7 +399,7 @@ def test_pwl_index_2_error():
     pars["index"] = 2 * u.Unit("")
     errs["amplitude"] = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
 
-    pwl = PowerLaw(**pars)
+    pwl = PowerLawSpectralModel(**pars)
     pwl.parameters.set_parameter_errors(errs)
 
     val, val_err = pwl.evaluate_error(1 * u.TeV)
@@ -418,7 +418,7 @@ def test_pwl_index_2_error():
 @requires_data()
 def test_fermi_isotropic():
     filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
-    model = TableModel.read_fermi_isotropic_model(filename)
+    model = TemplateSpectralModel.read_fermi_isotropic_model(filename)
     assert_quantity_allclose(
         model(50 * u.GeV), 1.463 * u.Unit("1e-13 MeV-1 cm-2 s-1 sr-1"), rtol=1e-3
     )
@@ -426,13 +426,13 @@ def test_fermi_isotropic():
 
 def test_ecpl_integrate():
     # regression test to check the numerical integration for small energy bins
-    ecpl = ExponentialCutoffPowerLaw()
+    ecpl = ExpCutoffPowerLawSpectralModel()
     value = ecpl.integral(1 * u.TeV, 1.1 * u.TeV)
     assert_quantity_allclose(value, 8.380714e-14 * u.Unit("s-1 cm-2"))
 
 
 def test_pwl_pivot_energy():
-    pwl = PowerLaw(amplitude="5.35510540e-11 TeV-1 cm-1 s-1")
+    pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 TeV-1 cm-1 s-1")
 
     pwl.parameters.covariance = np.array(
         [[0.0318377 ** 2, 6.56889442e-14, 0], [6.56889442e-14, 0, 0], [0, 0, 0]]
@@ -463,7 +463,7 @@ class TestNaimaModel:
         radiative_model = naima.radiative.PionDecay(
             particle_distribution, nh=1 * u.cm ** -3
         )
-        model = NaimaModel(radiative_model)
+        model = NaimaSpectralModel(radiative_model)
 
         val_at_2TeV = 9.725347355450884e-14 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 3.530537143620737e-13 * u.Unit("cm-2 s-1")
@@ -495,7 +495,7 @@ class TestNaimaModel:
             particle_distribution, seed_photon_fields=["CMB"]
         )
 
-        model = NaimaModel(radiative_model)
+        model = NaimaSpectralModel(radiative_model)
 
         val_at_2TeV = 4.347836316893546e-12 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 1.5958109911918303e-11 * u.Unit("cm-2 s-1")
@@ -520,7 +520,7 @@ class TestNaimaModel:
         )
         radiative_model = naima.radiative.Synchrotron(particle_distribution, B=2 * u.G)
 
-        model = NaimaModel(radiative_model)
+        model = NaimaSpectralModel(radiative_model)
 
         val_at_2TeV = 1.0565840392550432e-24 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 4.4491861907713736e-13 * u.Unit("cm-2 s-1")

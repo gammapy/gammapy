@@ -5,7 +5,7 @@ from astropy.coordinates import Angle
 from astropy.coordinates.angle_utilities import angular_separation
 from gammapy.irf import TablePSF
 from gammapy.maps import Map, WcsGeom
-from gammapy.modeling.models import PowerLaw
+from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.gauss import Gauss2DPDF
 
 __all__ = ["PSFKernel"]
@@ -283,7 +283,7 @@ class PSFKernel:
             Weighted 2D psf
         """
         if spectrum is None:
-            spectrum = PowerLaw(index=2.0)
+            spectrum = PowerLawSpectralModel(index=2.0)
 
         energy_axis = self.psf_kernel_map.geom.get_axis_by_name("energy")
         energy_width = np.diff(energy_axis.edges)

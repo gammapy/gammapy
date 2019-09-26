@@ -472,7 +472,7 @@ class EnergyDispersion:
         bias_energy : `~astropy.unit.Quantity`
             Reconstructed energy corresponding to the given bias.
         """
-        from gammapy.modeling.models import TableModel
+        from gammapy.modeling.models import TemplateSpectralModel
 
         e_true = self.e_true.center
         values = self.get_bias(e_true)
@@ -483,7 +483,7 @@ class EnergyDispersion:
         if emax is None:
             emax = e_true[-1]
 
-        bias_spectrum = TableModel(e_true, values)
+        bias_spectrum = TemplateSpectralModel(e_true, values)
         e_true_bias = bias_spectrum.inverse(Quantity(bias), emin=emin, emax=emax)
 
         # return reconstructed energy

@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
-from gammapy.modeling.models import PowerLaw
+from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.spectrum.tests.test_flux_point_estimator import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
@@ -157,7 +157,7 @@ def test_lightcurve_plot_time(lc, time_format, output):
 
 
 def get_spectrum_datasets():
-    model = PowerLaw()
+    model = PowerLawSpectralModel()
     dataset_1 = simulate_spectrum_dataset(model=model, random_state=0)
     dataset_1.counts.meta = {
         "t_start": Time("2010-01-01T00:00:00"),

@@ -21,7 +21,7 @@ components:
       max: 90.0
       frozen: true
   spectral:
-    type: ExponentialCutoffPowerLaw
+    type: ExpCutoffPowerLawSpectralModel
     parameters:
     - name: index
       value: 2.1
@@ -73,7 +73,7 @@ components:
       unit: deg
       frozen: false
   spectral:
-    type: PowerLaw
+    type: PowerLawSpectralModel
     parameters:
     - name: index
       value: 2.2
@@ -110,7 +110,7 @@ components:
       unit: ''
       frozen: false
   spectral:
-    type: TableModel
+    type: TemplateSpectralModel
     energy:
       data:
       - 34.171

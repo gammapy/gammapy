@@ -542,8 +542,8 @@ class Parameters:
         --------
         ::
 
-            from gammapy.modeling.models import PowerLaw
-            pwl = PowerLaw(index=2)
+            from gammapy.modeling.models import PowerLawSpectralModel
+            pwl = PowerLawSpectralModel(index=2)
             with pwl.parameters.restore_values:
                 pwl.parameters["index"].value = 3
             print(pwl.parameters["index"].value)

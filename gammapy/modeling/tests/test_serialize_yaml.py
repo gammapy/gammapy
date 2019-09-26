@@ -19,7 +19,7 @@ def test_dict_to_skymodels(tmpdir):
     assert len(models) == 3
 
     model0 = models[0]
-    assert isinstance(model0.spectral_model, spectral.ExponentialCutoffPowerLaw)
+    assert isinstance(model0.spectral_model, spectral.ExpCutoffPowerLawSpectralModel)
     assert isinstance(model0.spatial_model, spatial.PointSpatialModel)
 
     pars0 = model0.parameters
@@ -47,7 +47,7 @@ def test_dict_to_skymodels(tmpdir):
     assert np.isnan(pars0["lambda_"].max)
 
     model1 = models[1]
-    assert isinstance(model1.spectral_model, spectral.PowerLaw)
+    assert isinstance(model1.spectral_model, spectral.PowerLawSpectralModel)
     assert isinstance(model1.spatial_model, spatial.DiskSpatialModel)
 
     pars1 = model1.parameters
@@ -69,12 +69,12 @@ def test_dict_to_skymodels(tmpdir):
     )
     assert model2.spectral_model.values.unit == "1 / (cm2 MeV s sr)"
 
-    assert isinstance(model2.spectral_model, spectral.TableModel)
+    assert isinstance(model2.spectral_model, spectral.TemplateSpectralModel)
     assert isinstance(model2.spatial_model, spatial.TemplateSpatialModel)
 
     assert model2.spatial_model.parameters["norm"].value == 1.0
     assert model2.spectral_model.parameters["norm"].value == 2.1
-    # TODO problem of duplicate parameter name between TemplateSpatialModel and TableModel
+    # TODO problem of duplicate parameter name between TemplateSpatialModel and TemplateSpectralModel
     # assert model2.parameters["norm"].value == 2.1 # fail
 
 
@@ -153,7 +153,7 @@ def test_datasets_to_io(tmpdir):
 def test_absorption_io(tmpdir):
     dominguez = spectral.Absorption.read_builtin("dominguez")
     model = spectral.AbsorbedSpectralModel(
-        spectral_model=spectral.PowerLaw(),
+        spectral_model=spectral.PowerLawSpectralModel(),
         absorption=dominguez,
         parameter=0.5,
         parameter_name="redshift",
@@ -162,7 +162,7 @@ def test_absorption_io(tmpdir):
     new_model = spectral.AbsorbedSpectralModel.from_dict(model_dict)
     assert new_model.parameter == 0.5
     assert new_model.parameter_name == "redshift"
-    assert new_model.spectral_model.tag == "PowerLaw"
+    assert new_model.spectral_model.tag == "PowerLawSpectralModel"
     assert_allclose(new_model.absorption.energy, dominguez.energy)
     assert_allclose(new_model.absorption.param, dominguez.param)
     assert len(new_model.parameters.parameters) == 4
@@ -173,7 +173,7 @@ def test_absorption_io(tmpdir):
         u.Quantity(np.ones((2, 3)), ""),
     )
     model = spectral.AbsorbedSpectralModel(
-        spectral_model=spectral.PowerLaw(),
+        spectral_model=spectral.PowerLawSpectralModel(),
         absorption=test_absorption,
         parameter=0.5,
         parameter_name="redshift",

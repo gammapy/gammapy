@@ -8,6 +8,7 @@ from .spectral_crab import *
 from .temporal import *
 
 SPATIAL_MODELS = {
+    "ConstantSpatialModel": ConstantSpatialModel,
     "TemplateSpatialModel": TemplateSpatialModel,
     "DiskSpatialModel": DiskSpatialModel,
     "GaussianSpatialModel": GaussianSpatialModel,
@@ -21,20 +22,19 @@ TIME_MODELS = {
 }
 
 # TODO: add support for these models writing their .from_dict()
-# "NaimaModel":NaimaModel,
-# "ScaleModel": ScaleModel,
+# "NaimaSpectralModel":NaimaSpectralModel,
+# "ScaleSpectralModel": ScaleSpectralModel,
 SPECTRAL_MODELS = {
-    "ConstantModel": ConstantModel,
-    "PowerLaw": PowerLaw,
-    "PowerLaw2": PowerLaw2,
-    "ExponentialCutoffPowerLaw": ExponentialCutoffPowerLaw,
-    "ExponentialCutoffPowerLaw3FGL": ExponentialCutoffPowerLaw3FGL,
-    "PLSuperExpCutoff3FGL": PLSuperExpCutoff3FGL,
-    "PLSuperExpCutoff4FGL": PLSuperExpCutoff4FGL,
-    "LogParabola": LogParabola,
-    "TableModel": TableModel,
-    "SpectralGaussian": SpectralGaussian,
-    "SpectralLogGaussian": SpectralLogGaussian,
+    "ConstantSpectralModel": ConstantSpectralModel,
+    "PowerLawSpectralModel": PowerLawSpectralModel,
+    "PowerLaw2SpectralModel": PowerLaw2SpectralModel,
+    "ExpCutoffPowerLawSpectralModel": ExpCutoffPowerLawSpectralModel,
+    "ExpCutoffPowerLaw3FGLSpectralModel": ExpCutoffPowerLaw3FGLSpectralModel,
+    "SuperExpCutoffPowerLaw3FGLSpectralModel": SuperExpCutoffPowerLaw3FGLSpectralModel,
+    "SuperExpCutoffPowerLaw4FGLSpectralModel": SuperExpCutoffPowerLaw4FGLSpectralModel,
+    "LogParabolaSpectralModel": LogParabolaSpectralModel,
+    "TemplateSpectralModel": TemplateSpectralModel,
+    "GaussianSpectralModel": GaussianSpectralModel,
+    "LogGaussianSpectralModel": LogGaussianSpectralModel,
     "AbsorbedSpectralModel": AbsorbedSpectralModel,
-    "Absorption": Absorption,
 }

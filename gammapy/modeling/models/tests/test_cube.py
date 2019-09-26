@@ -8,8 +8,8 @@ from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     BackgroundModel,
-    ConstantModel,
-    PowerLaw,
+    ConstantSpectralModel,
+    PowerLawSpectralModel,
     SkyDiffuseCube,
     GaussianSpatialModel,
     SkyModel,
@@ -22,7 +22,7 @@ from gammapy.utils.testing import requires_data
 @pytest.fixture(scope="session")
 def sky_model():
     spatial_model = GaussianSpatialModel(lon_0="3 deg", lat_0="4 deg", sigma="3 deg", frame="galactic")
-    spectral_model = PowerLaw(
+    spectral_model = PowerLawSpectralModel(
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
     return SkyModel(spatial_model, spectral_model, name="source-1")
@@ -110,7 +110,7 @@ def test_sky_model_init():
     assert "Spectral model" in str(excinfo.value)
 
     with pytest.raises(ValueError) as excinfo:
-        _ = SkyModel(spectral_model=PowerLaw(), spatial_model=1234)
+        _ = SkyModel(spectral_model=PowerLawSpectralModel(), spatial_model=1234)
 
     assert "Spatial model" in str(excinfo.value)
 
@@ -410,7 +410,7 @@ def test_sky_point_source():
 
     spatial_model = PointSpatialModel(100.06 * u.deg, 70.03 * u.deg, frame="icrs")
     # Create a spectral model with integral flux of 1 cm-2 s-1 in this energy band
-    spectral_model = ConstantModel("1 cm-2 s-1 TeV-1")
+    spectral_model = ConstantSpectralModel("1 cm-2 s-1 TeV-1")
     spectral_model.const.value /= spectral_model.integral(1 * u.TeV, 10 * u.TeV).value
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     evaluator = MapEvaluator(model=model, exposure=exposure)

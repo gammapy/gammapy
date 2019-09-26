@@ -29,8 +29,8 @@ __all__ = [
 # TODO: Move to a separate file ?
 model_registry = {
     "spectral": {
-        "PowerLaw": {
-            "model": spectral.PowerLaw,
+        "PowerLawSpectralModel": {
+            "model": spectral.PowerLawSpectralModel,
             "parameters": {
                 "Prefactor": ["amplitude", "cm-2 s-1 MeV-1"],
                 "Index": ["index", ""],
@@ -38,8 +38,8 @@ model_registry = {
                 "PivotEnergy": ["reference", "MeV"],
             },
         },
-        "ExponentialCutoffPowerLaw": {
-            "model": spectral.ExponentialCutoffPowerLaw,
+        "ExpCutoffPowerLawSpectralModel": {
+            "model": spectral.ExpCutoffPowerLawSpectralModel,
             "parameters": {
                 "Prefactor": ["amplitude", "cm-2 s-1 MeV-1"],
                 "Index": ["index", ""],
@@ -52,7 +52,7 @@ model_registry = {
             },
         },
         "ConstantValue": {
-            "model": spectral.ConstantModel,
+            "model": spectral.ConstantSpectralModel,
             "parameters": {
                 "Value": ["const", "cm-2 s-1 MeV-1"],
                 "Normalization": ["const", "cm-2 s-1 MeV-1"],
@@ -60,7 +60,7 @@ model_registry = {
         },
         # TODO: FileFunction is not working
         "FileFunction": {
-            "model": spectral.TableModel,
+            "model": spectral.TemplateSpectralModel,
             "parameters": {
                 "Value": ["const", "cm-2 s-1 MeV-1"],
                 "Normalization": ["const", "cm-2 s-1 MeV-1"],
@@ -209,11 +209,11 @@ def xml_to_model(xml, which):
 
         # Special case models for which the XML definition does not map one to
         # one to the gammapy model definition
-        if type_ == "PowerLaw":
+        if type_ == "PowerLawSpectralModel":
             model.parameters["index"].value *= -1
             model.parameters["index"].min = np.nan
             model.parameters["index"].max = np.nan
-        if type_ == "ExponentialCutoffPowerLaw":
+        if type_ == "ExpCutoffPowerLawSpectralModel":
             model.parameters["lambda_"].value = 1 / model.parameters["lambda_"].value
             model.parameters["lambda_"].unit = (
                 model.parameters["lambda_"].unit.to_string("fits") + "-1"

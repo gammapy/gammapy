@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import astropy.units as u
-from gammapy.astro.darkmatter import DMAnnihilation, PrimaryFlux
+from gammapy.astro.darkmatter import DarkMatterAnnihilationSpectralModel, PrimaryFlux
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
@@ -24,7 +24,7 @@ def test_DMAnnihilation():
     emin = 0.01 * u.TeV
     emax = 10 * u.TeV
 
-    model = DMAnnihilation(mass=massDM, channel=channel, jfactor=jfactor)
+    model = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel, jfactor=jfactor)
     integral_flux = model.integral(emin=emin, emax=emax).to("cm-2 s-1")
     differential_flux = model.evaluate(energy=1 * u.TeV, scale=1).to("cm-2 s-1 TeV-1")
 

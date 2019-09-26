@@ -13,8 +13,8 @@ from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling import Datasets
 from gammapy.modeling.models import (
     BackgroundModel,
-    ExponentialCutoffPowerLaw,
-    PowerLaw,
+    ExpCutoffPowerLawSpectralModel,
+    PowerLawSpectralModel,
     SkyDiffuseCube,
     GaussianSpatialModel,
     SkyModel,
@@ -27,7 +27,7 @@ DATA_PATH = Path("./")
 
 def make_example_2():
     spatial = GaussianSpatialModel("0 deg", "0 deg", "1 deg")
-    model = SkyModel(spatial, PowerLaw())
+    model = SkyModel(spatial, PowerLawSpectralModel())
     models = SkyModels([model])
     models.to_yaml(DATA_PATH / "example2.yaml")
 
@@ -62,7 +62,7 @@ def make_datasets_example():
 
     for ind, (lon, lat) in enumerate(sources_coords):
         spatial_model = PointSpatialModel(lon_0=lon * u.deg, lat_0=lat * u.deg, frame="galactic")
-        spectral_model = ExponentialCutoffPowerLaw(
+        spectral_model = ExpCutoffPowerLawSpectralModel(
             index=2 * u.Unit(""),
             amplitude=3e-12 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1.0 * u.TeV,

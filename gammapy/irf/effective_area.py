@@ -274,7 +274,7 @@ class EffectiveAreaTable:
         energy : `~astropy.units.Quantity`
             Energy corresponding to the given aeff.
         """
-        from gammapy.modeling.models import TableModel
+        from gammapy.modeling.models import TemplateSpectralModel
 
         energy = self.energy.center
 
@@ -284,7 +284,7 @@ class EffectiveAreaTable:
             # use the peak effective area as a default for the energy maximum
             emax = energy[np.argmax(self.data.data)]
 
-        aeff_spectrum = TableModel(energy, self.data.data)
+        aeff_spectrum = TemplateSpectralModel(energy, self.data.data)
         return aeff_spectrum.inverse(aeff, emin=emin, emax=emax)
 
     def to_sherpa(self, name):

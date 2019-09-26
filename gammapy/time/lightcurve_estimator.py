@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import ScaleModel
+from gammapy.modeling.models import ScaleSpectralModel
 from gammapy.spectrum import FluxPoints, SpectrumDatasetOnOff
 from gammapy.time import LightCurve
 from gammapy.utils.table import table_from_row_data
@@ -68,7 +68,7 @@ class LightCurveEstimator:
         else:
             model = dataset.model[source].spectral_model
 
-        self.model = ScaleModel(model)
+        self.model = ScaleSpectralModel(model)
         self.model.norm.min = 0
         self.model.norm.max = 1e5
 

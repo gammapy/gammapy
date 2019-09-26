@@ -11,9 +11,9 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from gammapy.modeling.models import (
-    ExponentialCutoffPowerLaw,
-    PowerLaw,
-    PowerLaw2,
+    ExpCutoffPowerLawSpectralModel,
+    PowerLawSpectralModel,
+    PowerLaw2SpectralModel,
     GaussianSpatialModel,
     SkyModel,
     SkyModels,
@@ -285,14 +285,14 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         pars, errs = {}, {}
 
         if spec_type == "pl":
-            model_class = PowerLaw
+            model_class = PowerLawSpectralModel
             pars["amplitude"] = data["spec_pl_norm"]
             errs["amplitude"] = data["spec_pl_norm_err"]
             pars["index"] = data["spec_pl_index"]
             errs["index"] = data["spec_pl_index_err"]
             pars["reference"] = data["spec_pl_e_ref"]
         elif spec_type == "pl2":
-            model_class = PowerLaw2
+            model_class = PowerLaw2SpectralModel
             pars["amplitude"] = data["spec_pl2_flux"]
             errs["amplitude"] = data["spec_pl2_flux_err"]
             pars["index"] = data["spec_pl2_index"]
@@ -304,7 +304,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 e_max = DEFAULT_E_MAX
             pars["emax"] = e_max
         elif spec_type == "ecpl":
-            model_class = ExponentialCutoffPowerLaw
+            model_class = ExpCutoffPowerLawSpectralModel
             pars["amplitude"] = data["spec_ecpl_norm"]
             errs["amplitude"] = data["spec_ecpl_norm_err"]
             pars["index"] = data["spec_ecpl_index"]

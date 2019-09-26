@@ -11,7 +11,7 @@ def test_from_xml():
     xml = """<?xml version="1.0" encoding="utf-8"?>
         <source_library title="source library">
             <source name="3C 273" type="PointSource">
-                <spectrum type="PowerLaw">;i
+                <spectrum type="PowerLawSpectralModel">;i
                     <parameter free="1" max="1000.0" min="0.001" name="Prefactor" scale="1e-09" value="10"></parameter>
                     <parameter free="1" max="-1.0" min="-5.0" name="Index" scale="1.0" value="-2.1"></parameter>
                     <parameter free="0" max="2000.0" min="30.0" name="Scale" scale="1.0" value="100.0"></parameter>
@@ -52,11 +52,11 @@ def test_complex():
     assert len(sourcelib.skymodels) == 7
 
     model0 = sourcelib.skymodels[0]
-    assert isinstance(model0.spectral_model, spectral.PowerLaw)
+    assert isinstance(model0.spectral_model, spectral.PowerLawSpectralModel)
     assert isinstance(model0.spatial_model, spatial.PointSpatialModel)
 
     model1 = sourcelib.skymodels[1]
-    assert isinstance(model1.spectral_model, spectral.PowerLaw)
+    assert isinstance(model1.spectral_model, spectral.PowerLawSpectralModel)
     assert isinstance(model1.spatial_model, spatial.PointSpatialModel)
 
     pars1 = model1.parameters
@@ -79,7 +79,7 @@ def test_complex():
     assert pars1["lat_0"].frozen is True
 
     model2 = sourcelib.skymodels[2]
-    assert isinstance(model2.spectral_model, spectral.ExponentialCutoffPowerLaw)
+    assert isinstance(model2.spectral_model, spectral.ExpCutoffPowerLawSpectralModel)
     assert isinstance(model2.spatial_model, spatial.GaussianSpatialModel)
 
     pars2 = model2.parameters
