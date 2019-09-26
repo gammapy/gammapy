@@ -19,7 +19,7 @@ def test_dict_to_skymodels(tmpdir):
     assert len(models) == 3
 
     model0 = models[0]
-    assert isinstance(model0.spectral_model, spectral.ExponentialCutoffPowerLaw)
+    assert isinstance(model0.spectral_model, spectral.ExpCutoffPowerLawSpectralModel)
     assert isinstance(model0.spatial_model, spatial.PointSpatialModel)
 
     pars0 = model0.parameters

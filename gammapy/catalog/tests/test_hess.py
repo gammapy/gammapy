@@ -9,7 +9,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import SourceCatalogHGPS, SourceCatalogLargeScaleHGPS
-from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLawSpectralModel
+from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel, PowerLawSpectralModel
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     requires_data,
@@ -153,7 +153,7 @@ class TestSourceCatalogObjectHGPS:
         source = cat["HESS J0835-455"]
 
         model = source.spectral_model()
-        assert isinstance(model, ExponentialCutoffPowerLaw)
+        assert isinstance(model, ExpCutoffPowerLawSpectralModel)
 
         pars = model.parameters
         assert_allclose(pars["amplitude"].value, 6.408420542586617e-12)

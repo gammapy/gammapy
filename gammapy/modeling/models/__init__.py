@@ -27,7 +27,7 @@ SPECTRAL_MODELS = {
     "ConstantSpectralModel": ConstantSpectralModel,
     "PowerLawSpectralModel": PowerLawSpectralModel,
     "PowerLaw2SpectralModel": PowerLaw2SpectralModel,
-    "ExponentialCutoffPowerLaw": ExponentialCutoffPowerLaw,
+    "ExpCutoffPowerLawSpectralModel": ExpCutoffPowerLawSpectralModel,
     "ExponentialCutoffPowerLaw3FGL": ExponentialCutoffPowerLaw3FGL,
     "PLSuperExpCutoff3FGL": PLSuperExpCutoff3FGL,
     "PLSuperExpCutoff4FGL": PLSuperExpCutoff4FGL,

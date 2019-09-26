@@ -6,7 +6,7 @@ from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from gammapy.modeling.models import (
-    ExponentialCutoffPowerLaw,
+    ExpCutoffPowerLawSpectralModel,
     PowerLawSpectralModel,
     GaussianSpatialModel,
     SkyModel,
@@ -437,7 +437,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         One of the following models (given by ``Spectral_Model`` in the catalog):
 
         - ``PL`` : `~gammapy.modeling.models.PowerLawSpectralModel`
-        - ``ECPL`` : `~gammapy.modeling.models.ExponentialCutoffPowerLaw`
+        - ``ECPL`` : `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel`
 
         Parameters
         ----------
@@ -470,7 +470,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             errs["index"] = data["Index_Spec_ECPL_Err"]
             errs["amplitude"] = data["Flux_Spec_ECPL_Diff_Pivot_Err"]
             errs["lambda_"] = data["Lambda_Spec_ECPL_Err"]
-            model = ExponentialCutoffPowerLaw(**pars)
+            model = ExpCutoffPowerLawSpectralModel(**pars)
         else:
             raise ValueError(f"Invalid spectral model: {spec_type}")
 

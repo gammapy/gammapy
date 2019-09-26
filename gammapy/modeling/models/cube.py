@@ -100,7 +100,7 @@ class SkyModels:
         * PowerLawSpectralModel: The spectral index is negative in XML but positive in
           gammapy. Parameter limits are ignored
 
-        * ExponentialCutoffPowerLaw: The cutoff energy is transferred to
+        * ExpCutoffPowerLawSpectralModel: The cutoff energy is transferred to
           lambda = 1 / cutof energy on read
         """
         path = make_path(filename)

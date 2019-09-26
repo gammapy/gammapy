@@ -21,7 +21,7 @@ components:
       max: 90.0
       frozen: true
   spectral:
-    type: ExponentialCutoffPowerLaw
+    type: ExpCutoffPowerLawSpectralModel
     parameters:
     - name: index
       value: 2.1

@@ -7,7 +7,7 @@ from gammapy.modeling.models import (
     AbsorbedSpectralModel,
     Absorption,
     ConstantSpectralModel,
-    ExponentialCutoffPowerLaw,
+    ExpCutoffPowerLawSpectralModel,
     ExponentialCutoffPowerLaw3FGL,
     LogParabola,
     NaimaModel,
@@ -77,7 +77,7 @@ TEST_MODELS = [
     ),
     dict(
         name="ecpl",
-        model=ExponentialCutoffPowerLaw(
+        model=ExpCutoffPowerLawSpectralModel(
             index=1.6 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -159,7 +159,7 @@ TEST_MODELS = [
     ),
     dict(
         name="ecpl_2",
-        model=ExponentialCutoffPowerLaw(
+        model=ExpCutoffPowerLawSpectralModel(
             index=2.0 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
@@ -426,7 +426,7 @@ def test_fermi_isotropic():
 
 def test_ecpl_integrate():
     # regression test to check the numerical integration for small energy bins
-    ecpl = ExponentialCutoffPowerLaw()
+    ecpl = ExpCutoffPowerLawSpectralModel()
     value = ecpl.integral(1 * u.TeV, 1.1 * u.TeV)
     assert_quantity_allclose(value, 8.380714e-14 * u.Unit("s-1 cm-2"))
 

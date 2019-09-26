@@ -79,7 +79,7 @@ def test_complex():
     assert pars1["lat_0"].frozen is True
 
     model2 = sourcelib.skymodels[2]
-    assert isinstance(model2.spectral_model, spectral.ExponentialCutoffPowerLaw)
+    assert isinstance(model2.spectral_model, spectral.ExpCutoffPowerLawSpectralModel)
     assert isinstance(model2.spatial_model, spatial.GaussianSpatialModel)
 
     pars2 = model2.parameters

@@ -18,7 +18,7 @@ __all__ = [
     "CompoundSpectralModel",
     "PowerLawSpectralModel",
     "PowerLaw2SpectralModel",
-    "ExponentialCutoffPowerLaw",
+    "ExpCutoffPowerLawSpectralModel",
     "ExponentialCutoffPowerLaw3FGL",
     "PLSuperExpCutoff3FGL",
     "PLSuperExpCutoff4FGL",
@@ -230,10 +230,10 @@ class SpectralModel(Model):
         By default a log-log scaling of the axes is used, if you want to change
         the y axis scaling to linear you can use::
 
-            from gammapy.modeling.models import ExponentialCutoffPowerLaw
+            from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel
             from astropy import units as u
 
-            pwl = ExponentialCutoffPowerLaw()
+            pwl = ExpCutoffPowerLawSpectralModel()
             ax = pwl.plot(energy_range=(0.1, 100) * u.TeV)
             ax.set_yscale('linear')
 
@@ -827,7 +827,7 @@ class PowerLaw2SpectralModel(SpectralModel):
         return np.power(term.to_value(""), -1.0 / index) * emax
 
 
-class ExponentialCutoffPowerLaw(SpectralModel):
+class ExpCutoffPowerLawSpectralModel(SpectralModel):
     r"""Spectral exponential cutoff power-law model.
 
     .. math::
@@ -846,18 +846,18 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `ExponentialCutoffPowerLaw` model::
+    This is how to plot the default `ExpCutoffPowerLawSpectralModel` model::
 
         from astropy import units as u
-        from gammapy.modeling.models import ExponentialCutoffPowerLaw
+        from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel
 
-        ecpl = ExponentialCutoffPowerLaw()
+        ecpl = ExpCutoffPowerLawSpectralModel()
         ecpl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
     __slots__ = ["index", "amplitude", "reference", "lambda_"]
-    tag = "ExponentialCutoffPowerLaw"
+    tag = "ExpCutoffPowerLawSpectralModel"
 
     def __init__(
         self,
@@ -906,7 +906,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     r"""Spectral exponential cutoff power-law model used for 3FGL.
 
-    Note that the parametrization is different from `ExponentialCutoffPowerLaw`:
+    Note that the parametrization is different from `ExpCutoffPowerLawSpectralModel`:
 
     .. math::
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma}
@@ -1650,7 +1650,7 @@ class NaimaModel(SpectralModel):
 
     Examples
     --------
-    Create and plot a spectral model that convolves an `ExponentialCutoffPowerLaw` electron distribution
+    Create and plot a spectral model that convolves an `ExpCutoffPowerLawSpectralModel` electron distribution
     with an `InverseCompton` radiative model, in the presence of multiple seed photon fields.
 
     .. plot::
@@ -1662,7 +1662,7 @@ class NaimaModel(SpectralModel):
         import matplotlib.pyplot as plt
 
 
-        particle_distribution = naima.models.ExponentialCutoffPowerLaw(1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV)
+        particle_distribution = naima.models.ExpCutoffPowerLawSpectralModel(1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV)
         radiative_model = naima.radiative.InverseCompton(
             particle_distribution,
             seed_photon_fields=[

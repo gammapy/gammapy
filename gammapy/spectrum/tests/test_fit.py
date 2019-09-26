@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import EffectiveAreaTable
 from gammapy.modeling import Fit
-from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLawSpectralModel
+from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel, PowerLawSpectralModel
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import requires_data, requires_dependency
@@ -106,7 +106,7 @@ class TestSpectralFit:
             index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
 
-        self.ecpl = ExponentialCutoffPowerLaw(
+        self.ecpl = ExpCutoffPowerLawSpectralModel(
             index=2,
             amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1 * u.TeV,

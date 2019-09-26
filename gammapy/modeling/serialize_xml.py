@@ -38,8 +38,8 @@ model_registry = {
                 "PivotEnergy": ["reference", "MeV"],
             },
         },
-        "ExponentialCutoffPowerLaw": {
-            "model": spectral.ExponentialCutoffPowerLaw,
+        "ExpCutoffPowerLawSpectralModel": {
+            "model": spectral.ExpCutoffPowerLawSpectralModel,
             "parameters": {
                 "Prefactor": ["amplitude", "cm-2 s-1 MeV-1"],
                 "Index": ["index", ""],
@@ -213,7 +213,7 @@ def xml_to_model(xml, which):
             model.parameters["index"].value *= -1
             model.parameters["index"].min = np.nan
             model.parameters["index"].max = np.nan
-        if type_ == "ExponentialCutoffPowerLaw":
+        if type_ == "ExpCutoffPowerLawSpectralModel":
             model.parameters["lambda_"].value = 1 / model.parameters["lambda_"].value
             model.parameters["lambda_"].unit = (
                 model.parameters["lambda_"].unit.to_string("fits") + "-1"

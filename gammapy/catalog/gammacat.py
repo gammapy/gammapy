@@ -11,7 +11,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from gammapy.modeling.models import (
-    ExponentialCutoffPowerLaw,
+    ExpCutoffPowerLawSpectralModel,
     PowerLawSpectralModel,
     PowerLaw2SpectralModel,
     GaussianSpatialModel,
@@ -304,7 +304,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 e_max = DEFAULT_E_MAX
             pars["emax"] = e_max
         elif spec_type == "ecpl":
-            model_class = ExponentialCutoffPowerLaw
+            model_class = ExpCutoffPowerLawSpectralModel
             pars["amplitude"] = data["spec_ecpl_norm"]
             errs["amplitude"] = data["spec_ecpl_norm_err"]
             pars["index"] = data["spec_ecpl_index"]

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy import units as u
-from .spectral import ExponentialCutoffPowerLaw, LogParabola, PowerLawSpectralModel, SpectralModel
+from .spectral import ExpCutoffPowerLawSpectralModel, LogParabola, PowerLawSpectralModel, SpectralModel
 
 __all__ = ["create_crab_spectral_model"]
 
@@ -86,7 +86,7 @@ def create_crab_spectral_model(reference="meyer"):
             reference=1 * u.TeV,
         )
     elif reference == "hess_ecpl":
-        return ExponentialCutoffPowerLaw(
+        return ExpCutoffPowerLawSpectralModel(
             amplitude=3.76e-11 * u.Unit("1 / (cm2 s TeV)"),
             index=2.39,
             lambda_=1 / (14.3 * u.TeV),
@@ -100,7 +100,7 @@ def create_crab_spectral_model(reference="meyer"):
             reference=1 * u.TeV,
         )
     elif reference == "magic_ecpl":
-        return ExponentialCutoffPowerLaw(
+        return ExpCutoffPowerLawSpectralModel(
             amplitude=3.80e-11 * u.Unit("1 / (cm2 s TeV)"),
             index=2.21,
             lambda_=1 / (6.0 * u.TeV),

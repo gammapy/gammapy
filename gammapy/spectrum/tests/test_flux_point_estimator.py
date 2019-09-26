@@ -8,7 +8,7 @@ from gammapy.cube import simulate_dataset
 from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
-    ExponentialCutoffPowerLaw,
+    ExpCutoffPowerLawSpectralModel,
     PowerLawSpectralModel,
     GaussianSpatialModel,
     SkyModel,
@@ -109,7 +109,7 @@ def fpe_pwl():
 
 @pytest.fixture(scope="session")
 def fpe_ecpl():
-    return create_fpe(ExponentialCutoffPowerLaw(lambda_="1 TeV-1"))
+    return create_fpe(ExpCutoffPowerLawSpectralModel(lambda_="1 TeV-1"))
 
 
 class TestFluxPointsEstimator:

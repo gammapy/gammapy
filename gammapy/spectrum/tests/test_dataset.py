@@ -8,7 +8,7 @@ from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import ConstantSpectralModel, ExponentialCutoffPowerLaw, PowerLawSpectralModel
+from gammapy.modeling.models import ConstantSpectralModel, ExpCutoffPowerLawSpectralModel, PowerLawSpectralModel
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
@@ -490,7 +490,7 @@ class TestSpectralFit:
             index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
 
-        self.ecpl = ExponentialCutoffPowerLaw(
+        self.ecpl = ExpCutoffPowerLawSpectralModel(
             index=2,
             amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1 * u.TeV,
