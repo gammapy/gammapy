@@ -5,7 +5,7 @@ For measurements, the "Database of Charged Cosmic Rays (CRDB)" is a great resour
 http://lpsc.in2p3.fr/cosmic-rays-db/
 """
 from astropy import units as u
-from .spectral import PowerLawSpectralModel, SpectralLogGaussian
+from .spectral import PowerLawSpectralModel, LogGaussianSpectralModel
 
 __all__ = ["create_cosmic_ray_spectral_model"]
 
@@ -59,7 +59,7 @@ def create_cosmic_ray_spectral_model(particle="proton"):
             amplitude=6.85e-5 * u.Unit("1 / (m2 s TeV sr)"),
             index=3.21,
             reference=1 * u.TeV,
-        ) + SpectralLogGaussian(
+        ) + LogGaussianSpectralModel(
             norm=3.19e-3 * u.Unit("1 / (m2 s sr)"), mean=0.107 * u.TeV, sigma=0.776
         )
     else:

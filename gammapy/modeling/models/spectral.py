@@ -28,7 +28,7 @@ __all__ = [
     "Absorption",
     "NaimaSpectralModel",
     "GaussianSpectralModel",
-    "SpectralLogGaussian",
+    "LogGaussianSpectralModel",
     "ScaleSpectralModel",
 ]
 
@@ -1854,17 +1854,15 @@ class GaussianSpectralModel(SpectralModel):
         )
 
 
-class SpectralLogGaussian(SpectralModel):
-    r"""Gaussian Log spectral model.
+class LogGaussianSpectralModel(SpectralModel):
+    r"""Log Gaussian spectral model.
 
     .. math::
-
         \phi(E) = \frac{N_0}{E \, \sigma \sqrt{2\pi}}
          \exp{ \frac{- \left( \ln(\frac{E}{\bar{E}}) \right)^2 }{2 \sigma^2} }
 
     This model was used in this CTA study for the electron spectrum: Table 3
-     in https://ui.adsabs.harvard.edu/abs/2013APh....43..171B
-
+    in https://ui.adsabs.harvard.edu/abs/2013APh....43..171B
 
     Parameters
     ----------
@@ -1875,7 +1873,6 @@ class SpectralLogGaussian(SpectralModel):
     sigma : `float`
         :math:`\sigma`
 
-
     Examples
     --------
     This is how to plot a Gaussian Log spectral model. Very similar from the `GaussianSpectralModel` model but the Gaussian
@@ -1884,13 +1881,13 @@ class SpectralLogGaussian(SpectralModel):
     .. code:: python
 
         from astropy import units as u
-        from gammapy.modeling.models import SpectralLogGaussian
+        from gammapy.modeling.models import LogGaussianSpectralModel
 
-        gaussian = SpectralLogGaussian()
+        gaussian = LogGaussianSpectralModel()
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
-    tag = "SpectralLogGaussian"
+    tag = "LogGaussianSpectralModel"
 
     def __init__(self, norm=1e-12 * u.Unit("cm-2 s-1"), mean=1 * u.TeV, sigma=2):
         self.norm = Parameter("norm", norm)

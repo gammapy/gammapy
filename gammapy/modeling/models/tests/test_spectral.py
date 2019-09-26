@@ -15,7 +15,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     PowerLaw2SpectralModel,
     GaussianSpectralModel,
-    SpectralLogGaussian,
+    LogGaussianSpectralModel,
     TemplateSpectralModel,
 )
 from gammapy.utils.energy import energy_logspace
@@ -182,8 +182,8 @@ TEST_MODELS = [
         eflux_1_10TeV=u.Quantity(7.999998896163037, "TeV cm-2 s-1"),
     ),
     dict(
-        name="SpectralLogGaussian",
-        model=SpectralLogGaussian(norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2),
+        name="LogGaussianSpectralModel",
+        model=LogGaussianSpectralModel(norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2),
         val_at_2TeV=u.Quantity(3.98942280401, "cm-2 s-1 TeV-1"),
         val_at_3TeV=u.Quantity(0.34066933236079916, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(3.994439, "cm-2 s-1"),
@@ -300,7 +300,7 @@ def test_models(spectrum):
         isinstance(model, ConstantSpectralModel)
         or spectrum["name"] == "compound6"
         or spectrum["name"] == "GaussianSpectralModel"
-        or spectrum["name"] == "SpectralLogGaussian"
+        or spectrum["name"] == "LogGaussianSpectralModel"
     ):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.01)
 

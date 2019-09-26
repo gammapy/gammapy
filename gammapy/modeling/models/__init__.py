@@ -34,7 +34,7 @@ SPECTRAL_MODELS = {
     "LogParabolaSpectralModel": LogParabolaSpectralModel,
     "TemplateSpectralModel": TemplateSpectralModel,
     "GaussianSpectralModel": GaussianSpectralModel,
-    "SpectralLogGaussian": SpectralLogGaussian,
+    "LogGaussianSpectralModel": LogGaussianSpectralModel,
     "AbsorbedSpectralModel": AbsorbedSpectralModel,
     "Absorption": Absorption,
 }
