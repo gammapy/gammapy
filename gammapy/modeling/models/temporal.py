@@ -225,7 +225,7 @@ class LightCurveTemplateTemporalModel(Model):
     def __str__(self):
         norm = self.table["NORM"]
         return (
-            f"LightCurveTemplateTemporalModel model summary:\n"
+            f"{self.__class__.__name__} model summary:\n"
             f"Start time: {self._time[0].mjd} MJD\n"
             f"End time: {self._time[-1].mjd} MJD\n"
             f"Norm min: {norm.min()}\n"
