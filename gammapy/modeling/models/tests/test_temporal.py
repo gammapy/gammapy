@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
-from gammapy.modeling.models import LightCurveTableModel, PhaseCurveTemplateTemporalModel
+from gammapy.modeling.models import LightCurveTemplateTemporalModel, PhaseCurveTemplateTemporalModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
@@ -42,13 +42,13 @@ def test_phasecurve_evaluate(phase_curve):
 @pytest.fixture(scope="session")
 def light_curve():
     path = "$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits"
-    return LightCurveTableModel.read(path)
+    return LightCurveTemplateTemporalModel.read(path)
 
 
 @requires_data()
 def test_light_curve_str(light_curve):
     ss = str(light_curve)
-    assert "LightCurveTableModel" in ss
+    assert "LightCurveTemplateTemporalModel" in ss
 
 
 @requires_data()
@@ -78,7 +78,7 @@ def test_time_sampling():
     table = Table()
     table["TIME"] = time
     table["NORM"] = rate(time)
-    temporal_model = LightCurveTableModel(table)
+    temporal_model = LightCurveTemplateTemporalModel(table)
 
     t_ref = "2010-01-01T00:00:00"
     t_min = "2010-01-01T00:00:00"
@@ -93,7 +93,7 @@ def test_time_sampling():
     table = Table()
     table["TIME"] = time
     table["NORM"] = np.ones(len(time))
-    temporal_model_uniform = LightCurveTableModel(table)
+    temporal_model_uniform = LightCurveTemplateTemporalModel(table)
 
     sampler_uniform = temporal_model_uniform.sample_time(
         n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"

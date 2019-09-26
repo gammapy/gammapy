@@ -11,7 +11,7 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
 
-__all__ = ["PhaseCurveTemplateTemporalModel", "LightCurveTableModel"]
+__all__ = ["PhaseCurveTemplateTemporalModel", "LightCurveTemplateTemporalModel"]
 
 
 class PhaseCurveTemplateTemporalModel(Model):
@@ -171,7 +171,7 @@ class PhaseCurveTemplateTemporalModel(Model):
         return t_min + time
 
 
-class LightCurveTableModel(Model):
+class LightCurveTemplateTemporalModel(Model):
     """Temporal light curve model.
 
     The lightcurve is given as a table with columns ``time`` and ``norm``.
@@ -195,9 +195,9 @@ class LightCurveTableModel(Model):
     --------
     Read an example light curve object:
 
-    >>> from gammapy.modeling.models import LightCurveTableModel
+    >>> from gammapy.modeling.models import LightCurveTemplateTemporalModel
     >>> path = '$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits'
-    >>> light_curve = LightCurveTableModel.read(path)
+    >>> light_curve = LightCurveTemplateTemporalModel.read(path)
 
     Show basic information about the lightcurve:
 
@@ -225,7 +225,7 @@ class LightCurveTableModel(Model):
     def __str__(self):
         norm = self.table["NORM"]
         return (
-            f"LightCurveTableModel model summary:\n"
+            f"LightCurveTemplateTemporalModel model summary:\n"
             f"Start time: {self._time[0].mjd} MJD\n"
             f"End time: {self._time[-1].mjd} MJD\n"
             f"Norm min: {norm.min()}\n"
