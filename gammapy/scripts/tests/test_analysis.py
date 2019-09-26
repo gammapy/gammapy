@@ -166,10 +166,18 @@ def test_analysis_3d():
     analysis.get_model()
     analysis.datasets["stacked"].background_model.tilt.frozen = False
     analysis.run_fit()
+    analysis.get_flux_points()
+
     assert len(analysis.datasets.datasets) == 1
     assert len(analysis.fit_result.parameters.parameters) == 8
     res = analysis.fit_result.parameters.parameters
     assert res[3].unit == "cm-2 s-1 TeV-1"
+    assert len(analysis.flux_points_dataset.data.table) == 2
+    dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
+    print(dnde[0].value, dnde[-1].value)
+
+    assert_allclose(dnde[0].value, 1.175e-11, rtol=1e-1)
+    assert_allclose(dnde[-1].value, 4.061e-13, rtol=1e-1)
     assert_allclose(res[5].value, 2.920, rtol=1e-1)
     assert_allclose(res[6].value, -1.983e-02, rtol=1e-1)
 
