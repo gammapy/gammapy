@@ -91,7 +91,7 @@ class Analysis:
         return self.config.settings
 
     def run_fit(self, optimize_opts=None):
-        """Fitting reduced data sets to model."""
+        """Fitting reduced datasets to model."""
         if self._validate_fitting_settings():
             for ds in self.datasets.datasets:
                 # TODO: fit_range handled in jsonschema validation class
@@ -103,7 +103,7 @@ class Analysis:
                     else:
                         ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
 
-            log.info("Fitting reduced data sets.")
+            log.info("Fitting reduced datasets.")
             self.fit = Fit(self.datasets)
             self.fit_result = self.fit.run(optimize_opts=optimize_opts)
             log.info(self.fit_result)
@@ -143,7 +143,7 @@ class Analysis:
         return cls.from_yaml(filename)
 
     def get_datasets(self):
-        """Produce reduced data sets."""
+        """Produce reduced datasets."""
         if not self._validate_reduction_settings():
             return False
         if self.settings["reduction"]["dataset-type"] == "SpectrumDatasetOnOff":
@@ -240,7 +240,7 @@ class Analysis:
         return WcsGeom.create(**geom_params)
 
     def _map_making(self):
-        """Make maps and data sets for 3d analysis."""
+        """Make maps and datasets for 3d analysis."""
         geom = self._create_geometry(self.settings["reduction"]["geom"])
         geom_irf = self._create_geometry(self.settings["reduction"]["geom-irf"])
         offset_max = Angle(self.settings["reduction"]["offset-max"])
@@ -323,7 +323,7 @@ class Analysis:
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
         region = self.settings["reduction"]["geom"]["region"]
-        log.info("Reducing spectrum data sets.")
+        log.info("Reducing spectrum datasets.")
         on_lon = Angle(region["center"][0])
         on_lat = Angle(region["center"][1])
         on_center = SkyCoord(on_lon, on_lat, frame=region["frame"])
