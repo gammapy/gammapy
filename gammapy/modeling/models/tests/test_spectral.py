@@ -107,7 +107,7 @@ TEST_MODELS = [
             index_2=2,
             amplitude=1 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
-            expfactor=1e-2 / u.TeV ** 2,
+            expfactor=1e-2,
         ),
         val_at_2TeV=u.Quantity(0.3431043087721737, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(1.2125247, "cm-2 s-1"),

@@ -1037,6 +1037,8 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         :math:`E_0`
     expfactor : `~astropy.units.Quantity`
         :math: `a`
+        Given as dimensionless value but
+        internally assumes unit of :math: `[E_0]` power  :math: `-\Gamma_2`
 
     Examples
     --------
@@ -1059,7 +1061,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         index_2=2,
         amplitude="1e-12 cm-2 s-1 TeV-1",
         reference="1 TeV",
-        expfactor="1e-2 TeV-2",
+        expfactor="1e-2",
     ):
         self.index_1 = Parameter("index_1", index_1)
         self.index_2 = Parameter("index_2", index_2)
@@ -1075,7 +1077,11 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
         try:
-            cutoff = np.exp(expfactor * (reference ** index_2 - energy ** index_2))
+            cutoff = np.exp(
+                expfactor
+                / reference.unit ** index_2
+                * (reference ** index_2 - energy ** index_2)
+            )
         except (AttributeError, TypeError):
             from uncertainties.unumpy import exp
 
