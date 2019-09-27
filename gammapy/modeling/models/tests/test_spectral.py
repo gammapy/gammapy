@@ -426,7 +426,7 @@ def test_fermi_isotropic():
     assert_quantity_allclose(
         model(50 * u.GeV), 1.463 * u.Unit("1e-13 MeV-1 cm-2 s-1 sr-1"), rtol=1e-3
     )
-    
+
 
 def test_ecpl_integrate():
     # regression test to check the numerical integration for small energy bins
@@ -443,6 +443,21 @@ def test_pwl_pivot_energy():
     )
 
     assert_quantity_allclose(pwl.pivot_energy, 3.3540034240210987 * u.TeV)
+
+
+def test_TableModel_evaluate_tiny():
+    energy = np.array([1.00000000e06, 1.25892541e06, 1.58489319e06, 1.99526231e06])
+    values = np.array([4.39150790e-38, 1.96639562e-38, 8.80497507e-39, 3.94262401e-39])
+
+    model = TableModel(energy=energy, values=values * u.Unit("MeV-1 s-1 sr-1"))
+    result = model.evaluate(energy, norm=1.0, tilt=0.0, reference=1 * u.TeV)
+    tiny = np.finfo(np.float32).tiny
+    mask = abs(values) - tiny > tiny
+    np.testing.assert_allclose(
+        values[mask] / values.max(), result[mask].value / values.max()
+    )
+    mask = abs(result.value) - tiny <= tiny
+    assert np.all(result[mask] == 0.0)
 
 
 @requires_dependency("naima")
