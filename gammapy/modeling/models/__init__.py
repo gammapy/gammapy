@@ -18,6 +18,7 @@ SPATIAL_MODELS = {
 TIME_MODELS = {
     "PhaseCurveTemplateTemporalModel": PhaseCurveTemplateTemporalModel,
     "LightCurveTemplateTemporalModel": LightCurveTemplateTemporalModel,
+    "ConstantTemporalModel":ConstantTemporalModel
 }
 
 # TODO: add support for these models writing their .from_dict()

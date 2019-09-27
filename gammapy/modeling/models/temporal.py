@@ -15,6 +15,7 @@ __all__ = [
     "PhaseCurveTemplateTemporalModel",
     "LightCurveTemplateTemporalModel",
     "TemporalModel",
+    "ConstantTemporalModel",
 ]
 
 
@@ -22,41 +23,90 @@ __all__ = [
 class TemporalModel(Model):
     """Temporal model base class"""
 
+
 class ConstantTemporalModel(TemporalModel):
+    """Constant temporal model.
+
+    Parameters
+    ----------
+    norm : float
+        The normalization of the constant temporal model
+
+    Examples
+    --------
+    Create an example constant lightcurve::
+    >>> time = np.arange(0, 1, 0.1)
+    >>> norm = 10.0
+    >>> const_mod = ConstantTemporalModel(norm)
+    >>> const_mod.evaluate_norm_at_time(time)
+    array([10., 10., 10., 10., 10., 10., 10., 10., 10., 10.])
     """
-        
-        """
+
     def __init__(self, norm):
-        self.norm = Parameter()
-    
-    def evaluate_norm_at_time(self, t):
-        """
-        
+        self.norm = Parameter("norm", norm)
+
+    def evaluate_norm_at_time(self, time):
+        """Evaluate for a given time.
+
         Parameters
         ----------
-        t
-        
+        time : array_like
+            Time since the ``reference`` time.
+
         Returns
         -------
-        
+        norm : float
+            Mean norm
         """
-        return self.norm.value
-    
+
+        return np.ones(len(time), float) * self.norm.value
+
     def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
-        """
+        """Sample arrival times of events.
             
         Parameters
         ----------
-        t_min
-        t_max
-        random_state
+        n_events : int
+            Number of events to sample.
+        t_min : `~astropy.time.Time`
+            Start time of the sampling.
+        t_max : `~astropy.time.Time`
+            Stop time of the sampling.
+        t_delta : `~astropy.units.Quantity`
+            Time step used for sampling of the temporal model.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
         
         Returns
         -------
-        
+        time : `~astropy.units.Quantity`
+            Array with times of the sampled events.
         """
-        np.random.
-        return time
+
+        time_unit = u.second
+
+        t_min = Time(t_min)
+        t_max = Time(t_max)
+        t_delta = u.Quantity(t_delta)
+        random_state = get_random_state(random_state)
+
+        ontime = u.Quantity((t_max - t_min).sec, "s")
+        t_stop = ontime.to_value(time_unit)
+
+        # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
+        #  is still incomplete, refactor once we change to recent numpy and astropy versions
+        t_step = t_delta.to_value(time_unit)
+        t = np.arange(0, t_stop, t_step)
+
+        pdf = self.evaluate_norm_at_time(t * time_unit)
+
+        sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
+        time_pix = sampler.sample(n_events)[0]
+        time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
+
+        return t_min + time
+
 
 class PhaseCurveTemplateTemporalModel(TemporalModel):
     """Temporal phase curve model.
