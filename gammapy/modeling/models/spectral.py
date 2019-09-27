@@ -1039,7 +1039,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         :math: `a`
         Given as dimensionless value but
         internally assumes unit of :math: `[E_0]` power  :math: `-\Gamma_2`
-            
+
     Examples
     --------
     This is how to plot the default `SuperExpCutoffPowerLaw4FGLSpectralModel` model::
@@ -1076,9 +1076,12 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
-        expfactor = expfactor / reference.unit ** index_2
         try:
-            cutoff = np.exp(expfactor * (reference ** index_2 - energy ** index_2))
+            cutoff = np.exp(
+                expfactor
+                / reference.unit ** index_2
+                * (reference ** index_2 - energy ** index_2)
+            )
         except (AttributeError, TypeError):
             from uncertainties.unumpy import exp
 
