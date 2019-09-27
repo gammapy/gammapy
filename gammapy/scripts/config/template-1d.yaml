@@ -32,8 +32,6 @@ reduction:
             node_type: edges
             unit: TeV
 
-model: model.yaml
-
 fit:
     fit_range:
         max: 100 TeV

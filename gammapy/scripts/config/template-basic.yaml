@@ -16,8 +16,6 @@ reduction:
         region: {}
         axes: []
 
-model: model.yaml
-
 fit:
     fit_range: {}
 

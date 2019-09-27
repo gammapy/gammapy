@@ -45,8 +45,6 @@ reduction:
               node_type: center
               unit: TeV
 
-model: model.yaml
-
 fit: {}
 
 flux:
