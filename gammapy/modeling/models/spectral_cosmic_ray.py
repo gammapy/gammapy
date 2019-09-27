@@ -7,8 +7,6 @@ http://lpsc.in2p3.fr/cosmic-rays-db/
 from astropy import units as u
 from .spectral import LogGaussianSpectralModel, PowerLawSpectralModel
 
-__all__ = ["create_cosmic_ray_spectral_model"]
-
 
 def create_cosmic_ray_spectral_model(particle="proton"):
     """Cosmic a cosmic ray spectral model at Earth.

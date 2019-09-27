@@ -12,26 +12,6 @@ from gammapy.utils.integrate import integrate_spectrum
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 
-__all__ = [
-    "SpectralModel",
-    "ConstantSpectralModel",
-    "CompoundSpectralModel",
-    "PowerLawSpectralModel",
-    "PowerLaw2SpectralModel",
-    "ExpCutoffPowerLawSpectralModel",
-    "ExpCutoffPowerLaw3FGLSpectralModel",
-    "SuperExpCutoffPowerLaw3FGLSpectralModel",
-    "SuperExpCutoffPowerLaw4FGLSpectralModel",
-    "LogParabolaSpectralModel",
-    "TemplateSpectralModel",
-    "AbsorbedSpectralModel",
-    "Absorption",
-    "NaimaSpectralModel",
-    "GaussianSpectralModel",
-    "LogGaussianSpectralModel",
-    "ScaleSpectralModel",
-]
-
 
 class SpectralModel(Model):
     """Spectral model base class.
@@ -1605,9 +1585,9 @@ class AbsorbedSpectralModel(SpectralModel):
     def from_dict(cls, data):
         from gammapy.modeling.models import SPECTRAL_MODELS
 
-        base_model = SPECTRAL_MODELS[data["base_model"]["type"]]
+        model_class = SPECTRAL_MODELS.get_cls(data["base_model"]["type"])
         init = cls(
-            spectral_model=base_model.from_dict(data["base_model"]),
+            spectral_model=model_class.from_dict(data["base_model"]),
             absorption=Absorption.from_dict(data["absorption"]),
             parameter=data["absorption_parameter"]["value"],
             parameter_name=data["absorption_parameter"]["name"],

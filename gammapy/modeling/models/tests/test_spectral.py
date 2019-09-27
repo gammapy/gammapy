@@ -354,7 +354,7 @@ def test_to_from_dict():
     model = spectrum["model"]
 
     model_dict = model.to_dict()
-    model_class = SPECTRAL_MODELS[model_dict["type"]]
+    model_class = SPECTRAL_MODELS.get_cls(model_dict["type"])
     new_model = model_class.from_dict(model_dict)
 
     assert isinstance(new_model, PowerLawSpectralModel)
