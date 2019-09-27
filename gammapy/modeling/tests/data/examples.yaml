@@ -104,6 +104,7 @@ components:
   spatial:
     type: TemplateSpatialModel
     filename: $GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits
+    normalize: false
     parameters:
     - name: norm
       value: 1.0

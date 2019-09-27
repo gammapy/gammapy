@@ -25,6 +25,6 @@ class TestPSF3DChecker:
         # Check results
         assert res["nan"]["status"] == "failed"
         assert res["nan"]["n_failed_bins"] == 4
-        assert res["normalise"]["status"] == "ok"
+        assert res["normalize"]["status"] == "ok"
         assert res["containment"]["status"] == "ok"
         assert res["status"] == "failed"

@@ -54,12 +54,12 @@ class PSF3DChecker:
         """Run all checks.
         """
         self.check_nan()
-        self.check_normalise()
+        self.check_normalize()
         self.check_containment()
 
         # Aggregate status of all checks
         status = "ok"
-        for key in ["nan", "normalise", "containment"]:
+        for key in ["nan", "normalize", "containment"]:
             if self.results[key]["status"] == "failed":
                 status = "failed"
         self.results["status"] = status
@@ -103,7 +103,7 @@ class PSF3DChecker:
 
         self.results["nan"] = results
 
-    def check_normalise(self):
+    def check_normalize(self):
         """Check PSF normalisation.
 
         For each energy / offset, the PSF should integrate to 1.
@@ -150,7 +150,7 @@ class PSF3DChecker:
         else:
             results["status"] = "failed"
             results["n_failed_bins"] = fail_count
-        self.results["normalise"] = results
+        self.results["normalize"] = results
 
     def check_containment(self):
         """Check PSF containment.
