@@ -94,19 +94,6 @@ class ScaledRegularGridInterpolator:
             values = self._interpolate(points[0])
             values = self.scale.inverse(values)
 
-        tiny = np.finfo(np.float32).tiny
-        try:
-            mask = abs(values.value) - tiny <= tiny
-        except (AttributeError):
-            mask = values - tiny <= tiny
-        if np.any(mask):
-            values[mask] = 0.0
-            warnings.warn(
-                "Interpolated values reached float32 precision limit", Warning
-            )
-            # for example TableModel used to define a diffuse model
-            # could require large precision so users may want to redefine unit scaling.
-
         if clip:
             values = np.clip(values, 0, np.inf)
         return values
@@ -143,7 +130,7 @@ class InterpolationScale:
         return self._scale(values)
 
     def inverse(self, values):
-        values = self._inverse(values)
+        values = self._inverse(self, values)
         if hasattr(self, "_unit"):
             return u.Quantity(values, self._unit, copy=False)
         else:
@@ -160,8 +147,17 @@ class LogScale(InterpolationScale):
         return np.log(values)
 
     @staticmethod
-    def _inverse(values):
-        return np.exp(values)
+    def _inverse(self, values):
+        output = np.exp(values)
+        is_tiny = abs(output) - self.tiny <= self.tiny
+        if np.any(is_tiny):
+            output[is_tiny] = 0.0
+            warnings.warn(
+                "Interpolated values reached float32 precision limit", Warning
+            )
+            # for example TemplateSpectralModel used to define diffuse models
+            # could require large precision so users may want to redefine unit scaling.
+        return output
 
 
 class SqrtScale(InterpolationScale):
@@ -173,7 +169,7 @@ class SqrtScale(InterpolationScale):
         return sign * np.sqrt(sign * values)
 
     @staticmethod
-    def _inverse(values):
+    def _inverse(self, values):
         return np.power(values, 2)
 
 
@@ -185,7 +181,7 @@ class LinearScale(InterpolationScale):
         return values
 
     @staticmethod
-    def _inverse(values):
+    def _inverse(self, values):
         return values
 
 

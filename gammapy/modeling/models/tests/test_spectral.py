@@ -445,11 +445,11 @@ def test_pwl_pivot_energy():
     assert_quantity_allclose(pwl.pivot_energy, 3.3540034240210987 * u.TeV)
 
 
-def test_TableModel_evaluate_tiny():
+def test_TemplateSpectralModel_evaluate_tiny():
     energy = np.array([1.00000000e06, 1.25892541e06, 1.58489319e06, 1.99526231e06])
     values = np.array([4.39150790e-38, 1.96639562e-38, 8.80497507e-39, 3.94262401e-39])
 
-    model = TableModel(energy=energy, values=values * u.Unit("MeV-1 s-1 sr-1"))
+    model = TemplateSpectralModel(energy=energy, values=values * u.Unit("MeV-1 s-1 sr-1"))
     result = model.evaluate(energy, norm=1.0, tilt=0.0, reference=1 * u.TeV)
     tiny = np.finfo(np.float32).tiny
     mask = abs(values) - tiny > tiny
