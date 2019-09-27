@@ -131,10 +131,12 @@ def test_analysis_1d(config_analysis_data):
     analysis.get_model()
     analysis.run_fit()
     analysis.get_flux_points()
+
     assert len(analysis.datasets.datasets) == 2
     assert len(analysis.flux_points_dataset.data.table) == 4
     dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
     assert dnde.unit == "cm-2 s-1 TeV-1"
+
     assert_allclose(dnde[0].value, 8.03604e-12, rtol=1e-2)
     assert_allclose(dnde[-1].value, 4.780021e-21, rtol=1e-2)
 
@@ -174,7 +176,6 @@ def test_analysis_3d():
     assert res[3].unit == "cm-2 s-1 TeV-1"
     assert len(analysis.flux_points_dataset.data.table) == 2
     dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
-    print(dnde[0].value, dnde[-1].value)
 
     assert_allclose(dnde[0].value, 1.175e-11, rtol=1e-1)
     assert_allclose(dnde[-1].value, 4.061e-13, rtol=1e-1)
@@ -192,3 +193,8 @@ def test_validate_astropy_quantities():
 def test_validate_config():
     analysis = Analysis.from_template(template="basic")
     assert analysis.config.validate() is None
+
+
+def test_help():
+    analysis = Analysis.from_template(template="basic")
+    assert analysis.config.help() is None
