@@ -42,13 +42,6 @@ class SkyModels:
     skymodels : list of `~gammapy.modeling.models.SkyModel`
         Sky models
 
-    Examples
-    --------
-    Read from an XML file::
-
-        from gammapy.cube import SkyModels
-        filename = '$GAMMAPY_DATA/tests/models/fermi_model.xml'
-        sourcelib = SkyModels.read(filename)
     """
 
     frame = None
@@ -80,40 +73,6 @@ class SkyModels:
     def names(self):
         """Sky model names"""
         return [_.name for _ in self.skymodels]
-
-    @classmethod
-    def from_xml(cls, xml):
-        """Read from XML string."""
-        from gammapy.modeling.serialize_xml import xml_to_sky_models
-
-        return xml_to_sky_models(xml)
-
-    @classmethod
-    def read(cls, filename):
-        """Read from XML file.
-
-        The XML definition of some models is uncompatible with the models
-        currently implemented in gammapy. Therefore the following modifications
-        happen to the XML model definition
-
-        * PowerLawSpectralModel: The spectral index is negative in XML but positive in
-          gammapy. Parameter limits are ignored
-
-        * ExpCutoffPowerLawSpectralModel: The cutoff energy is transferred to
-          lambda = 1 / cutof energy on read
-        """
-        path = make_path(filename)
-        xml = path.read_text()
-        return cls.from_xml(xml)
-
-    def to_xml(self, filename):
-        """Write to XML file."""
-        from gammapy.modeling.serialize_xml import sky_models_to_xml
-
-        xml = sky_models_to_xml(self)
-        filename = make_path(filename)
-        with filename.open("w") as output:
-            output.write(xml)
 
     @classmethod
     def from_yaml(cls, filename):
