@@ -139,21 +139,6 @@ html_title = "{} v{}".format(project, release)
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + "doc"
 
-html_css_files = [
-    "gammapy.css",
-    "https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css",
-]
-
-html_js_files = [
-    "copybutton.js",
-    "gammapy.js",
-    (
-        "https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js",
-        {"defer": "defer"},
-    ),
-    ("docsearch.js", {"defer": "defer"}),
-]
-
 # Static files to copy after template files
 html_static_path = ["_static"]
 
@@ -161,6 +146,15 @@ gammapy_sphinx_ext_activate()
 
 # Integration of notebooks
 gammapy_sphinx_notebooks(setup_cfg)
+
+
+# Theme style
+# html_style = ''
+def setup(app):
+    app.add_stylesheet("gammapy.css")
+    app.add_javascript("copybutton.js")
+    app.add_javascript("gammapy.js")
+
 
 # copybutton.js provides hide/show button for python prompts >>>
 # slightly modified to work on RTD theme from javascript file in easydev package
