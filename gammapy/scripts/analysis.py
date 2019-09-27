@@ -231,6 +231,9 @@ class Analysis:
         modelfile : string
             Name of the model YAML file describing the model.
         """
+        if not self._validate_get_model():
+            return False
+
         # TODO: Deal with multiple components
         log.info(f"Reading model from {modelfile}.")
         model_yaml = Path(modelfile)
@@ -381,28 +384,32 @@ class Analysis:
             stacked.name = "stacked"
             self.datasets = Datasets([stacked])
 
-    def _validate_fitting_settings(self):
-        """Validate settings before proceeding to fit 1D."""
-        valid = True
-        if self.datasets and self.datasets.datasets:
-            if (
-                self.extraction
-                and self.settings["reduction"]["background"]["background_estimator"]
-                != "reflected"
-            ):
-                # TODO raise error?
-                log.info("Background estimation only for reflected regions method.")
-                return False
+    def _validate_reduction_settings(self):
+        """Validate settings before proceeding to data reduction."""
+        if self.observations and len(self.observations):
             self.config.validate()
+            return True
+        else:
+            log.info("No observations selected.")
+            log.info("Data reduction cannot be done.")
+            return False
+
+    def _validate_get_model(self):
+        if self.datasets and self.datasets.datasets:
+            self.config.validate()
+            return True
         else:
             log.info("No datasets reduced.")
-            valid = False
+            return False
+
+    def _validate_fitting_settings(self):
+        """Validate settings before proceeding to fit 1D."""
         if not self.model:
             log.info("No model fetched for datasets.")
-            valid = False
-        if not valid:
             log.info("Fit cannot be done.")
-        return valid
+            return False
+        else:
+            return True
 
     def _validate_fp_settings(self):
         """Validate settings before proceeding to flux points estimation."""
@@ -417,18 +424,7 @@ class Analysis:
             valid = False
         if not valid:
             log.info("Flux points calculation cannot be done.")
-
         return valid
-
-    def _validate_reduction_settings(self):
-        """Validate settings before proceeding to data reduction."""
-        if self.observations and len(self.observations):
-            self.config.validate()
-            return True
-        else:
-            log.info("No observations selected.")
-            log.info("Data reduction cannot be done.")
-            return False
 
 
 class AnalysisConfig:
