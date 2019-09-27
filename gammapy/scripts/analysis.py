@@ -44,21 +44,14 @@ class Analysis:
     parameters passed as a nested dictionary at the moment of instantiation. In that case these
     parameters will overwrite the default values of those present in the configuration file.
 
+    You may find usage examples in :ref:`HLI`
+
     Parameters
     ----------
     config : dict or `AnalysisConfig`
         Configuration options following `AnalysisConfig` schema
 
-    Examples
-    --------
-    Example how to create an Analysis object:
-
-    >>> from gammapy.scripts import Analysis
-    >>> analysis = Analysis.from_template(template="1d")
-
-    TODO: show a working example of running an analysis.
-    Probably not here, but in high-level docs, linked to from class docstring.
-    """
+        """
 
     def __init__(self, config=None):
         if config is None:
