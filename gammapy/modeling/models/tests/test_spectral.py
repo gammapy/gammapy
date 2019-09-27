@@ -426,7 +426,7 @@ def test_fermi_isotropic():
     assert_quantity_allclose(
         model(50 * u.GeV), 1.463 * u.Unit("1e-13 MeV-1 cm-2 s-1 sr-1"), rtol=1e-3
     )
-
+    
 
 def test_ecpl_integrate():
     # regression test to check the numerical integration for small energy bins

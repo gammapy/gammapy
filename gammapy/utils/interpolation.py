@@ -95,10 +95,7 @@ class ScaledRegularGridInterpolator:
             values = self.scale.inverse(values)
 
         tiny = np.finfo(np.float32).tiny
-        try:
-            mask = abs(values.value) - tiny <= tiny
-        except (AttributeError):
-            mask = abs(values) - tiny <= tiny
+        mask = abs(values.value) - tiny <= tiny
         if np.any(mask):
             values[mask] = 0.0
             warnings.warn(
