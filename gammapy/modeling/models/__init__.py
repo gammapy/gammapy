@@ -54,6 +54,15 @@ TEMPORAL_MODELS = ModelRegistry(
 )
 """Built-in temporal models."""
 
+MODELS = ModelRegistry(
+    SPATIAL_MODELS
+    + SPECTRAL_MODELS
+    + TEMPORAL_MODELS
+    + [SkyModel, SkyDiffuseCube, BackgroundModel]
+)
+"""All built-in models."""
+
+
 __all__ = [
     "SPATIAL_MODELS",
     "TEMPORAL_MODELS",
