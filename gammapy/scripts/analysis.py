@@ -13,6 +13,7 @@ from gammapy.cube import MapDataset, MapMakerObs
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
+from gammapy.modeling.serialize import dict_to_models
 from gammapy.modeling.models import SkyModels
 from gammapy.spectrum import (
     FluxPointsDataset,
@@ -179,21 +180,29 @@ class Analysis:
             # TODO raise error?
             log.info("Data reduction method not available.")
 
-    def get_model(self, modelfile):
-        """Read the model from settings and attach it to datasets.
+    def get_model(self, model=None, filename=""):
+        """Read the model from dict or filename and attach it to datasets.
 
         Parameters
         ----------
-        modelfile : string
+        model: dict
+            Dictionary with the serialized model.
+        filename : string
             Name of the model YAML file describing the model.
         """
         if not self._validate_get_model():
             return False
-
+        log.info(f"Reading model.")
+        if model:
+            model_yaml = yaml.safe_load(model)
+            self.model = SkyModels(dict_to_models(model_yaml))
+        elif filename:
+            print(filename)
+            filepath = make_path(filename)
+            self.model = SkyModels.from_yaml(filepath)
+        else:
+            return False
         # TODO: Deal with multiple components
-        log.info(f"Reading model from {modelfile}.")
-        model_yaml = Path(modelfile)
-        self.model = SkyModels.from_yaml(model_yaml)
         for dataset in self.datasets.datasets:
             if isinstance(dataset, MapDataset):
                 dataset.model = self.model
@@ -478,11 +487,11 @@ class AnalysisConfig:
             if section == "" or section == keyword:
                 print(doc[keyword])
 
-    def update_settings(self, config=None, configfile=""):
+    def update_settings(self, config=None, filename=""):
         """Update settings with config dictionary or values in configfile"""
-        if configfile:
-            filename = make_path(configfile)
-            config = read_yaml(filename)
+        if filename:
+            filepath = make_path(filename)
+            config = read_yaml(filepath)
         if config is None:
             config = {}
         if len(config):

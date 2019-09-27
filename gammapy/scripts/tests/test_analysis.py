@@ -133,7 +133,7 @@ def test_analysis_1d(config_analysis_data):
     analysis.config.update_settings(config_analysis_data)
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.get_model(MODEL_FILE)
+    analysis.get_model(filename=MODEL_FILE)
     analysis.run_fit()
     analysis.get_flux_points()
 
@@ -153,7 +153,7 @@ def test_analysis_1d_stacked():
     analysis.settings["reduction"]["stack-datasets"] = True
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.get_model(MODEL_FILE)
+    analysis.get_model(filename=MODEL_FILE)
     analysis.run_fit()
 
     assert len(analysis.datasets.datasets) == 1
@@ -170,7 +170,7 @@ def test_analysis_3d():
     analysis = Analysis.from_template(template="3d")
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.get_model(MODEL_FILE)
+    analysis.get_model(filename=MODEL_FILE)
     analysis.datasets["stacked"].background_model.tilt.frozen = False
     analysis.run_fit()
     analysis.get_flux_points()
