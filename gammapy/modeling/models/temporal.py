@@ -63,7 +63,7 @@ class ConstantTemporalModel(TemporalModel):
 
     def sample_time(self, n_events, t_min, t_max, random_state=0):
         """Sample arrival times of events.
-            
+
         Parameters
         ----------
         n_events : int
