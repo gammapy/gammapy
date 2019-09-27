@@ -3,6 +3,7 @@
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
+import warnings
 
 __all__ = [
     "ScaledRegularGridInterpolator",
@@ -81,6 +82,7 @@ class ScaledRegularGridInterpolator:
         clip : bool
             Clip values at zero after interpolation.
         """
+
         points = tuple([scale(p) for scale, p in zip(self.scale_points, points)])
 
         if self.axis is None:
@@ -92,9 +94,15 @@ class ScaledRegularGridInterpolator:
             values = self._interpolate(points[0])
             values = self.scale.inverse(values)
 
+        tiny = np.finfo(np.float32).tiny
+        mask = abs(values.value) - tiny <= tiny
+        if np.any(mask):
+            values[mask] = 0.0
+            warnings.warn(
+                "Interpolated values reached float32 precision limit", Warning
+            )
         if clip:
             values = np.clip(values, 0, np.inf)
-
         return values
 
 
@@ -139,7 +147,7 @@ class InterpolationScale:
 class LogScale(InterpolationScale):
     """Logarithmic scaling"""
 
-    tiny = np.finfo(np.float64).tiny
+    tiny = np.finfo(np.float32).tiny
 
     def _scale(self, values):
         values = np.clip(values, self.tiny, np.inf)
