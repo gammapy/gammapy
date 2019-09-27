@@ -77,7 +77,7 @@ class ConstantTemporalModel(TemporalModel):
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
-        
+
         Returns
         -------
         time : `~astropy.units.Quantity`
