@@ -6,21 +6,6 @@ type: object
 additionalProperties: true
 properties:
 
-# Block: general
-# General settings for the API
-#
-#    Logging settings for the session
-#    Example values for the following properties
-#    logging:
-#        level: CRITICAL, ERROR, WARNING, INFO, DEBUG
-#        filename: filename.log
-#        filemode: w
-#        format: "%(asctime)s - %(message)s"
-#        datefmt: "%d-%b-%y %H:%M:%S"
-#
-#    Output folder where files will be stored
-#    outdir:
-#
     general:
         type: object
         additionalProperties: false
@@ -40,55 +25,13 @@ properties:
                                NOTSET]
                     filename: {type: string}
                     filemode: {type: string}
-                    format:
-                        type: string
+                    format: {type: string}
                     datefmt: {type: string}
                 required: [level]
                 dependencies:
                     filemode: [filename]
         required: [outdir, logging]
 
-# Block: observations
-# Observations used in the analysis
-#
-#    Path to data store where to fetch observations
-#    datastore:
-#
-#    List of filters with selection criteria
-#    Example values for the following properties
-#    filters:
-#
-#        - filter_type: sky_circle, angle_box, par_box, par_value, ids, all
-#          Type of filter used
-#
-#          Properties when filter_type is "par_box"
-#          frame: galactic, equatorial, icrs, fk5
-#          lon: 83.633 deg
-#          lat: 22.014 deg
-#          radius: 1 deg
-#          border: 1 deg
-#
-#          Properties when filter_type is "par_box" or "par_value"
-#          variable: TARGET_NAME
-#
-#          Value to match declared variable
-#          when filter_type is "par_value"
-#          value_param: Crab
-#
-#          Value range with units to match declared variable
-#          when filter_type is "par_box"
-#          value_range:
-#              - 265 deg
-#              - 268 deg
-#
-#          List of observation identifiers when filter_type is "ids"
-#          obs_ids:
-#              - 23523
-#              - 23526
-#
-#          inverted: true for not matching criteria
-#          exclude: true to exclude matched observations
-#
     observations:
         type: object
         additionalProperties: false
@@ -127,57 +70,6 @@ properties:
                             items: {type: integer}
                     required: [filter_type]
         required: [datastore, filters]
-
-# Block: reduction
-# Process of data reduction
-#
-#    Chosen dataset type
-#    dataset-type: SpectrumDatasetOnOff, MapDataset
-#
-#    Stack datasets flag
-#    stack-datasets: False
-#
-#    Parameters used in the estimation of the background
-#    Example values for the following properties
-#    background:
-#
-#        background_estimator: reflected
-#        region:
-#            center:
-#            - 83.633 deg
-#            - 22.014 deg
-#            frame: icrs
-#            radius: 0.11 deg
-#        exclusion_mask
-#            filename: mask.fits
-#            hdu: IMAGE
-#
-#        containment_correction: true
-#
-#    Geometry settings for the analysis
-#    Note that there may be different values for geom and geom-irf
-#    geom:
-#        Map pixel size in degrees
-#        binsz: 0.02
-#        Coordinate system
-#        coordsys: CEL, GAL
-#        Any valid WCS projection type
-#        proj: CAR
-#        Lon and lat in deg in the coordsys of the map
-#        skydir: [83, 22]
-#        Width of the map in degrees
-#        width: [5, 5]
-#
-#        Additional Map Axes other than spatial
-#        Example values for energy axes
-#        axes:
-#            - name: energy
-#              lo_bnd: 0.01
-#              hi_bnd: 100
-#              nbin: 73
-#              unit: TeV
-#              interp: log
-
 
     reduction:
         type: object
@@ -226,38 +118,6 @@ properties:
         then:
             required: [offset-max]
 
-
-# Block: model
-# Filename containing the YAML definition of your model.
-#
-#   model: model.yaml
-
-    model: {type: string}
-
-##        type: object
-##        additionalProperties: false
-##        properties:
-##            components:
-##                type: array
-##                items:
-##                    type: object
-##                    additionalProperties: false
-##                    properties:
-##                        name: {type: string}
-##                        type: {type: string}
-##                        spatial:
-##                            "$ref": "#/definitions/model_components"
-##                        spectral:
-##                            "$ref": "#/definitions/model_components"
-
-# Block: fit
-# Parameters that are used in the fitting process
-#
-#        Energy range considered, min and max values with units
-#        fit_range:
-#            min: 1 TeV
-#            max: 100 Tev
-#
     fit:
         type: object
         additionalProperties: false
@@ -272,18 +132,6 @@ properties:
                     min: [max]
                     max: [min]
 
-# Block: flux
-# Parameters that are used during the flux estimation process
-#
-#        Energy binning considered
-#        fp_binning:
-#            lo_bnd: 1
-#            hi_bnd: 10
-#            nbin: 11
-#            unit: TeV
-#            interp: log
-#            node_type: edges
-#
     flux:
         type: object
         additionalProperties: false
@@ -307,28 +155,10 @@ then:
                 geom:
                     required: [region, axes]
 
-required: [general, observations, reduction, model, fit, flux]
+required: [general, observations, reduction, fit, flux]
 
 definitions:
-    model_components:
-        type: object
-        additionalProperties: false
-        properties:
-            type: {type: string}
-            parameters:
-                type: array
-                items:
-                    type: object
-                    additionalProperties: false
-                    properties:
-                        name: {type: string}
-                        value: {type: number}
-                        factor: {type: number}
-                        scale: {type: number}
-                        unit: {type: string}
-                        min: {type: number}
-                        max: {type: number}
-                        frozen: {type: boolean}
+
     map_axis:
         type: object
         additionalProperties: false
