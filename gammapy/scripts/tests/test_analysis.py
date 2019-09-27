@@ -6,6 +6,10 @@ import yaml
 from gammapy.scripts import Analysis
 from gammapy.utils.testing import requires_data, requires_dependency
 
+CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
+MODEL_FILE = CONFIG_PATH / "model.yaml"
+DOC_FILE = CONFIG_PATH / "docs.yaml"
+
 
 def test_config():
     analysis = Analysis.from_template(template="basic")
@@ -129,7 +133,7 @@ def test_analysis_1d(config_analysis_data):
     analysis.config.update_settings(config_analysis_data)
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.get_model()
+    analysis.get_model(MODEL_FILE)
     analysis.run_fit()
     analysis.get_flux_points()
 
@@ -149,7 +153,7 @@ def test_analysis_1d_stacked():
     analysis.settings["reduction"]["stack-datasets"] = True
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.get_model()
+    analysis.get_model(MODEL_FILE)
     analysis.run_fit()
 
     assert len(analysis.datasets.datasets) == 1
@@ -166,7 +170,7 @@ def test_analysis_3d():
     analysis = Analysis.from_template(template="3d")
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.get_model()
+    analysis.get_model(MODEL_FILE)
     analysis.datasets["stacked"].background_model.tilt.frozen = False
     analysis.run_fit()
     analysis.get_flux_points()
@@ -197,9 +201,7 @@ def test_validate_config():
 
 
 def test_docs_file():
-    path = Path(__file__).resolve().parent / ".." / "config"
-    filename = path / "docs.yaml"
-    analysis = Analysis.from_yaml(filename)
+    analysis = Analysis.from_yaml(DOC_FILE)
     assert analysis.config.validate() is None
 
 
