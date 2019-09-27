@@ -1,5 +1,6 @@
 ---
-# General settings for the API
+# Section: general
+# General settings for the high-level interface
 general:
     # logging settings for the session
     logging:
@@ -12,6 +13,7 @@ general:
     # output folder where files will be stored
     outdir: .
 
+# Section: observations
 # Observations used in the analysis
 observations:
     # path to data store where to fetch observations
@@ -39,6 +41,7 @@ observations:
           inverted: false      # true for not matching criteria
           exclude: false       # true to exclude matched observations
 
+# Section: reduction
 # Process of data reduction
 reduction:
     dataset-type: SpectrumDatasetOnOff   # also MapDataset
@@ -74,12 +77,14 @@ reduction:
               unit: TeV
               interp: log
 
+# Section: fit
 # Fitting process
 fit:
     fit_range:
         min: 1 TeV
         max: 100 TeV
 
+# Section: flux
 # Flux estimation process
 flux:
     fp_binning:

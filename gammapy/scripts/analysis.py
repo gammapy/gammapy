@@ -27,6 +27,7 @@ __all__ = ["Analysis", "AnalysisConfig"]
 log = logging.getLogger(__name__)
 CONFIG_PATH = Path(__file__).resolve().parent / "config"
 SCHEMA_FILE = CONFIG_PATH / "schema.yaml"
+DOCS_FILE = CONFIG_PATH / "docs.yaml"
 
 ANALYSIS_TEMPLATES = {
     "basic": "template-basic.yaml",
@@ -492,7 +493,7 @@ class AnalysisConfig:
         config = read_yaml(filename)
         return cls(config, filename=filename)
 
-    def print_help(self, section=""):
+    def help(self, section=""):
         """Print template configuration settings."""
         doc = self._get_doc_sections()
         for keyword in doc.keys():
@@ -522,13 +523,13 @@ class AnalysisConfig:
 
     @staticmethod
     def _get_doc_sections():
-        """Returns dict with commented docs from schema"""
+        """Returns dict with commented docs from docs file"""
         doc = defaultdict(str)
-        with open(SCHEMA_FILE) as f:
-            for line in filter(lambda line: line.startswith("# "), f):
+        with open(DOCS_FILE) as f:
+            for line in filter(lambda line: not line.startswith("---"), f):
                 line = line.strip("\n")
-                if line.startswith("# Block: "):
-                    keyword = line.replace("# Block: ", "")
+                if line.startswith("# Section: "):
+                    keyword = line.replace("# Section: ", "")
                 doc[keyword] += line + "\n"
         return doc
 
