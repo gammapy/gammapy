@@ -78,13 +78,11 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             pars["amplitude"] = self.data["PLEC_Flux_Density"]
             pars["index_1"] = self.data["PLEC_Index"]
             pars["index_2"] = self.data["PLEC_Exp_Index"]
-            pars["expfactor"] = self.data["PLEC_Expfactor"] / u.MeV ** pars["index_2"]
+            pars["expfactor"] = self.data["PLEC_Expfactor"]
             errs["amplitude"] = self.data["Unc_PLEC_Flux_Density"]
             errs["index_1"] = self.data["Unc_PLEC_Index"]
             errs["index_2"] = np.nan_to_num(self.data["Unc_PLEC_Exp_Index"])
-            errs["expfactor"] = (
-                self.data["Unc_PLEC_Expfactor"] / u.MeV ** pars["index_2"]
-            )
+            errs["expfactor"] = (self.data["Unc_PLEC_Expfactor"])
             model = SuperExpCutoffPowerLaw4FGLSpectralModel(**pars)
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")

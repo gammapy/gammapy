@@ -1037,7 +1037,8 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         :math:`E_0`
     expfactor : `~astropy.units.Quantity`
         :math: `a`
-        
+        in unit of :math: `[E_0]` power  :math: `-\Gamma_2`
+            
     Examples
     --------
     This is how to plot the default `SuperExpCutoffPowerLaw4FGLSpectralModel` model::
@@ -1059,10 +1060,8 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         index_2=2,
         amplitude="1e-12 cm-2 s-1 TeV-1",
         reference="1 TeV",
-        expfactor="1e-2 TeV-2",
-    ):  
-        if reference.unit != expfactor.unit.bases[0]:
-            raise(ValueError("Base energy unit for expfactor must match reference unit"))
+        expfactor="1e-2",
+    ):
         self.index_1 = Parameter("index_1", index_1)
         self.index_2 = Parameter("index_2", index_2)
         self.amplitude = Parameter("amplitude", amplitude)
@@ -1076,8 +1075,13 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
-        expfactor = expfactor.value / reference.unit ** index_2
-        cutoff = np.exp(expfactor * (reference ** index_2 - energy ** index_2))
+        expfactor = expfactor / reference.unit ** index_2
+        try:
+            cutoff = np.exp(expfactor * (reference ** index_2 - energy ** index_2))
+        except (AttributeError, TypeError):
+            from uncertainties.unumpy import exp
+
+            cutoff = exp(expfactor * (reference ** index_2 - energy ** index_2))
         return pwl * cutoff
 
 
