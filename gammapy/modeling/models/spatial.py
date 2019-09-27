@@ -505,7 +505,7 @@ class TemplateSpatialModel(SpatialModel):
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
     """
 
-    __slots__ = ["map", "norm", "meta", "renormalize", "_interp_kwargs", "filename"]
+    __slots__ = ["map", "norm", "meta", "normalize", "_interp_kwargs", "filename"]
     tag = "TemplateSpatialModel"
 
     def __init__(
@@ -515,9 +515,12 @@ class TemplateSpatialModel(SpatialModel):
             log.warning("Diffuse map has negative values. Check and fix this!")
 
         self.map = map
-        self.renormalize = normalize
+        self.normalize = normalize
         if normalize:
-            self.normalize()
+            # Normalize the diffuse map model so that it integrates to unity."""
+            data = self.map.data / self.map.data.sum()
+            data /= self.map.geom.solid_angle().to_value("sr")
+            self.map = self.map.copy(data=data, unit="sr-1")
 
         self.norm = Parameter("norm", norm)
         self.meta = dict() if meta is None else meta
@@ -535,12 +538,6 @@ class TemplateSpatialModel(SpatialModel):
         Set to half of the maximal dimension of the map.
         """
         return np.max(self.map.geom.width) / 2.0
-
-    def normalize(self):
-        """Normalize the diffuse map model so that it integrates to unity."""
-        data = self.map.data / self.map.data.sum()
-        data /= self.map.geom.solid_angle().to_value("sr")
-        self.map = self.map.copy(data=data, unit="sr-1")
 
     @classmethod
     def read(cls, filename, normalize=True, **kwargs):
@@ -579,7 +576,7 @@ class TemplateSpatialModel(SpatialModel):
 
     @classmethod
     def from_dict(cls, data):
-        init = cls.read(data["filename"], normalize=data.get("renormalize", True))
+        init = cls.read(data["filename"], normalize=data.get("normalize", True))
         init.parameters = Parameters.from_dict(data)
         for parameter in init.parameters.parameters:
             setattr(init, parameter.name, parameter)
@@ -588,5 +585,5 @@ class TemplateSpatialModel(SpatialModel):
     def to_dict(self):
         data = super().to_dict()
         data["filename"] = self.filename
-        data["renormalize"] = self.renormalize
+        data["normalize"] = self.normalize
         return data

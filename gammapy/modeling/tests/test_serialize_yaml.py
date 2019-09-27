@@ -74,7 +74,7 @@ def test_dict_to_skymodels(tmpdir):
     assert isinstance(model2.spatial_model, spatial.TemplateSpatialModel)
 
     assert model2.spatial_model.parameters["norm"].value == 1.0
-    assert model2.spatial_model.renormalize == False
+    assert model2.spatial_model.normalize == False
     assert model2.spectral_model.parameters["norm"].value == 2.1
     # TODO problem of duplicate parameter name between TemplateSpatialModel and TemplateSpectralModel
     # assert model2.parameters["norm"].value == 2.1 # fail
