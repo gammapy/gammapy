@@ -22,27 +22,41 @@ __all__ = [
 class TemporalModel(Model):
     """Temporal model base class"""
 
-    @classmethod
-    def constant_model(table, time, norm=1.0):
-        """Constant light-curve model.
+class ConstantTemporalModel(TemporalModel):
+    """
+        
+        """
+    def __init__(self, norm):
+        self.norm = Parameter()
+    
+    def evaluate_norm_at_time(self, t):
+        """
+        
         Parameters
         ----------
-        time : array_like
-            Time since a ``reference`` time.
-        norm : float
-            Normalization of the constant light-curve
-
+        t
+        
         Returns
         -------
-        table : `~astropy.table`
+        
         """
-
-        table = Table()
-        table["TIME"] = time
-        table["NORM"] = np.ones(len(table["TIME"])) * norm
-
-        return table
-
+        return self.norm.value
+    
+    def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
+        """
+            
+        Parameters
+        ----------
+        t_min
+        t_max
+        random_state
+        
+        Returns
+        -------
+        
+        """
+        np.random.
+        return time
 
 class PhaseCurveTemplateTemporalModel(TemporalModel):
     """Temporal phase curve model.
