@@ -120,13 +120,20 @@ def test_ConstantTemporalModel():
     t_max = "2010-01-01T08:00:00"
 
     sampler = temporal_model.sample_time(
-        n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
+        n_events=2, t_min=t_min, t_max=t_max, random_state=0
     )
 
     sampler = u.Quantity((sampler - Time(t_ref)).sec, "s")
 
     assert len(sampler) == 2
     assert_allclose(sampler.value, [15805.82891311, 20597.45375153], rtol=1e-5)
+
+
+def test_constant_model_evaluate_norm_at_time():
+    norm = 10.0
+    temporal_model = ConstantTemporalModel(norm)
+    val = temporal_model.evaluate_norm_at_time(46300)
+    assert_allclose(val, 10.0, rtol=1e-5)
 
 
 def test_phase_time_sampling():

@@ -59,9 +59,9 @@ class ConstantTemporalModel(TemporalModel):
             Mean norm
         """
 
-        return np.ones(len(time), float) * self.norm.value
+        return np.ones_like(time) * self.norm.value
 
-    def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
+    def sample_time(self, n_events, t_min, t_max, random_state=0):
         """Sample arrival times of events.
             
         Parameters
@@ -72,8 +72,6 @@ class ConstantTemporalModel(TemporalModel):
             Start time of the sampling.
         t_max : `~astropy.time.Time`
             Stop time of the sampling.
-        t_delta : `~astropy.units.Quantity`
-            Time step used for sampling of the temporal model.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
@@ -88,7 +86,6 @@ class ConstantTemporalModel(TemporalModel):
 
         t_min = Time(t_min)
         t_max = Time(t_max)
-        t_delta = u.Quantity(t_delta)
         random_state = get_random_state(random_state)
 
         ontime = u.Quantity((t_max - t_min).sec, "s")
