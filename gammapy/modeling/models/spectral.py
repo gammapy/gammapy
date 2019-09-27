@@ -1218,14 +1218,16 @@ class TemplateSpectralModel(SpectralModel):
         self.reference = Parameter("reference", reference, frozen=True)
 
         self.energy = energy
-        self.values = values
+        exponents = np.floor(np.log10(np.abs(values.value)))
+        scale = max(exponents, key=abs)
+        self.values = u.Quantity(values.value / 10 ** scale, 10 ** scale * values.unit)
         self.meta = dict() if meta is None else meta
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
         interp_kwargs.setdefault("points_scale", ("log",))
 
         self._evaluate = ScaledRegularGridInterpolator(
-            points=(energy,), values=values, **interp_kwargs
+            points=(energy,), values=self.values.value, **interp_kwargs
         )
 
         super().__init__([self.norm, self.tilt, self.reference])
@@ -1299,7 +1301,7 @@ class TemplateSpectralModel(SpectralModel):
 
     def evaluate(self, energy, norm, tilt, reference):
         """Evaluate the model (static function)."""
-        values = self._evaluate((energy,), clip=True)
+        values = self._evaluate((energy,), clip=True) * self.values.unit
         tilt_factor = np.power(energy / reference, -tilt)
         return norm * values * tilt_factor
 
