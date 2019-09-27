@@ -132,7 +132,7 @@ def make_datasets_example():
     print("bkg0 sum : ", dataset0.background_model.evaluate().data.sum())
 
     path = "$GAMMAPY_DATA/tests/models/gc_example_"
-    datasets.to_yaml(path, selection="simple", overwrite=True)
+    datasets.to_yaml(path, overwrite=True)
 
 
 if __name__ == "__main__":

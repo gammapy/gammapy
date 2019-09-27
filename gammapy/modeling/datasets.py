@@ -177,9 +177,8 @@ class Datasets:
         ----------
         path : str
             path to write files
-        selection : {"all", "simple"}
-            "simple" option reduce models parameters attributes displayed to only
-            name, value, unit,frozen
+        overwrite : bool
+            overwrite datasets FITS files
         """
         from .serialize import datasets_to_dict
 
