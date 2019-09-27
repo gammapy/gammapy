@@ -17,6 +17,78 @@ class TemporalModel(Model):
     """Temporal model base class"""
 
 
+class ConstantTemporalModel(TemporalModel):
+    """Constant temporal model.
+
+    Parameters
+    ----------
+    norm : float
+        The normalization of the constant temporal model
+
+    Examples
+    --------
+    Create an example constant lightcurve::
+    >>> time = np.arange(0, 1, 0.1)
+    >>> norm = 10.0
+    >>> const_mod = ConstantTemporalModel(norm)
+    >>> const_mod.evaluate_norm_at_time(time)
+    array([10., 10., 10., 10., 10., 10., 10., 10., 10., 10.])
+    """
+
+    def __init__(self, norm):
+        self.norm = Parameter("norm", norm)
+
+    def evaluate_norm_at_time(self, time):
+        """Evaluate for a given time.
+
+        Parameters
+        ----------
+        time : array_like
+            Time since the ``reference`` time.
+
+        Returns
+        -------
+        norm : float
+            Mean norm
+        """
+
+        return np.ones_like(time) * self.norm.value
+
+    def sample_time(self, n_events, t_min, t_max, random_state=0):
+        """Sample arrival times of events.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        t_min : `~astropy.time.Time`
+            Start time of the sampling.
+        t_max : `~astropy.time.Time`
+            Stop time of the sampling.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        time : `~astropy.units.Quantity`
+            Array with times of the sampled events.
+        """
+
+        time_unit = u.second
+
+        t_min = Time(t_min)
+        t_max = Time(t_max)
+        random_state = get_random_state(random_state)
+
+        ontime = u.Quantity((t_max - t_min).sec, "s")
+        t_stop = ontime.to_value(time_unit)
+
+        time = random_state.uniform(high=t_stop, size=n_events) * time_unit
+
+        return t_min + time
+
+
 class PhaseCurveTemplateTemporalModel(TemporalModel):
     """Temporal phase curve model.
 

@@ -8,6 +8,7 @@ from astropy.time import Time
 from gammapy.modeling.models import (
     LightCurveTemplateTemporalModel,
     PhaseCurveTemplateTemporalModel,
+    ConstantTemporalModel,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
@@ -108,6 +109,31 @@ def test_time_sampling():
     assert len(sampler_uniform) == 2
     assert_allclose(sampler.value, [12661.65802564, 26.9299098], rtol=1e-5)
     assert_allclose(sampler_uniform.value, [1261.65802564, 6026.9299098], rtol=1e-5)
+
+
+def test_constant_temporal_model_sample():
+    norm = 10.0
+    temporal_model = ConstantTemporalModel(norm)
+
+    t_ref = "2010-01-01T00:00:00"
+    t_min = "2010-01-01T00:00:00"
+    t_max = "2010-01-01T08:00:00"
+
+    sampler = temporal_model.sample_time(
+        n_events=2, t_min=t_min, t_max=t_max, random_state=0
+    )
+
+    sampler = u.Quantity((sampler - Time(t_ref)).sec, "s")
+
+    assert len(sampler) == 2
+    assert_allclose(sampler.value, [15805.82891311, 20597.45375153], rtol=1e-5)
+
+
+def test_constant_temporal_model_evaluate_norm_at_time():
+    norm = 10.0
+    temporal_model = ConstantTemporalModel(norm)
+    val = temporal_model.evaluate_norm_at_time(46300)
+    assert_allclose(val, 10.0, rtol=1e-5)
 
 
 def test_phase_time_sampling():
