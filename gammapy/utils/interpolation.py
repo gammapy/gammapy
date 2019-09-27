@@ -151,7 +151,10 @@ class LogScale(InterpolationScale):
         output = np.exp(values)
         is_tiny = abs(output) - self.tiny <= self.tiny
         if np.any(is_tiny):
-            output[is_tiny] = 0.0
+            try:
+                output[is_tiny] = 0.0
+            except(TypeError):
+                output = 0.0
             warnings.warn(
                 "Interpolated values reached float32 precision limit", Warning
             )
