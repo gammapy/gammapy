@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling import Datasets, make_model
+from gammapy.modeling import Datasets, Model
 from gammapy.modeling.models import SkyModels, MODELS, Absorption, AbsorbedSpectralModel
 from gammapy.modeling.serialize import dict_to_models
 from gammapy.utils.scripts import read_yaml, write_yaml
@@ -152,7 +152,7 @@ def test_datasets_to_io(tmpdir):
 def test_absorption_io(tmpdir):
     dominguez = Absorption.read_builtin("dominguez")
     model = AbsorbedSpectralModel(
-        spectral_model=make_model("PowerLawSpectralModel"),
+        spectral_model=Model.create("PowerLawSpectralModel"),
         absorption=dominguez,
         parameter=0.5,
         parameter_name="redshift",
@@ -172,7 +172,7 @@ def test_absorption_io(tmpdir):
         u.Quantity(np.ones((2, 3)), ""),
     )
     model = AbsorbedSpectralModel(
-        spectral_model=make_model("PowerLawSpectralModel"),
+        spectral_model=Model.create("PowerLawSpectralModel"),
         absorption=test_absorption,
         parameter=0.5,
         parameter_name="redshift",
@@ -187,46 +187,46 @@ def test_absorption_io(tmpdir):
 
 def make_all_models():
     """Make an instance of each model, for testing."""
-    yield make_model("ConstantSpatialModel")
-    yield make_model("TemplateSpatialModel", map=Map.create(npix=(10, 20)))
-    yield make_model("DiskSpatialModel", lon_0="1d", lat_0="2d", r_0="3d")
-    yield make_model("GaussianSpatialModel", lon_0="1d", lat_0="2d", sigma="3d")
-    yield make_model("PointSpatialModel", lon_0="1d", lat_0="2d")
-    yield make_model(
+    yield Model.create("ConstantSpatialModel")
+    yield Model.create("TemplateSpatialModel", map=Map.create(npix=(10, 20)))
+    yield Model.create("DiskSpatialModel", lon_0="1d", lat_0="2d", r_0="3d")
+    yield Model.create("GaussianSpatialModel", lon_0="1d", lat_0="2d", sigma="3d")
+    yield Model.create("PointSpatialModel", lon_0="1d", lat_0="2d")
+    yield Model.create(
         "ShellSpatialModel", lon_0="1d", lat_0="2d", radius="3d", width="4d"
     )
-    yield make_model(
+    yield Model.create(
         "ConstantSpectralModel", const="99 cm"
     )  # TODO: add unit validation?
-    # TODO: yield make_model("CompoundSpectralModel")
-    yield make_model("PowerLawSpectralModel")
-    yield make_model("PowerLaw2SpectralModel")
-    yield make_model("ExpCutoffPowerLawSpectralModel")
-    yield make_model("ExpCutoffPowerLaw3FGLSpectralModel")
-    yield make_model("SuperExpCutoffPowerLaw3FGLSpectralModel")
-    yield make_model("SuperExpCutoffPowerLaw4FGLSpectralModel")
-    yield make_model("LogParabolaSpectralModel")
-    yield make_model(
+    # TODO: yield Model.create("CompoundSpectralModel")
+    yield Model.create("PowerLawSpectralModel")
+    yield Model.create("PowerLaw2SpectralModel")
+    yield Model.create("ExpCutoffPowerLawSpectralModel")
+    yield Model.create("ExpCutoffPowerLaw3FGLSpectralModel")
+    yield Model.create("SuperExpCutoffPowerLaw3FGLSpectralModel")
+    yield Model.create("SuperExpCutoffPowerLaw4FGLSpectralModel")
+    yield Model.create("LogParabolaSpectralModel")
+    yield Model.create(
         "TemplateSpectralModel", energy=[1, 2] * u.cm, values=[3, 4] * u.cm
     )  # TODO: add unit validation?
-    yield make_model("GaussianSpectralModel")
-    yield make_model("LogGaussianSpectralModel")
-    # TODO: yield make_model("AbsorbedSpectralModel")
-    # TODO: yield make_model("NaimaSpectralModel")
-    # TODO: yield make_model("ScaleSpectralModel")
-    yield make_model(
+    yield Model.create("GaussianSpectralModel")
+    yield Model.create("LogGaussianSpectralModel")
+    # TODO: yield Model.create("AbsorbedSpectralModel")
+    # TODO: yield Model.create("NaimaSpectralModel")
+    # TODO: yield Model.create("ScaleSpectralModel")
+    yield Model.create(
         "PhaseCurveTemplateTemporalModel", Table(), time_0=1, phase_0=2, f0=3
     )  # TODO: add table content validation?
-    yield make_model("LightCurveTemplateTemporalModel", Table())
-    yield make_model(
+    yield Model.create("LightCurveTemplateTemporalModel", Table())
+    yield Model.create(
         "SkyModel",
-        spatial_model=make_model("ConstantSpatialModel"),
-        spectral_model=make_model("PowerLawSpectralModel"),
+        spatial_model=Model.create("ConstantSpatialModel"),
+        spectral_model=Model.create("PowerLawSpectralModel"),
     )
     m1 = Map.create(npix=(10, 20, 30), axes=[MapAxis.from_nodes([1, 2] * u.TeV, name="energy")])
-    yield make_model("SkyDiffuseCube", map=m1)
+    yield Model.create("SkyDiffuseCube", map=m1)
     m2 = Map.create(npix=(10, 20, 30), axes=[MapAxis.from_edges([1, 2] * u.TeV, name="energy")])
-    yield make_model("BackgroundModel", map=m2)
+    yield Model.create("BackgroundModel", map=m2)
 
 
 @pytest.mark.parametrize("model_class", MODELS)

@@ -3,7 +3,7 @@ import copy
 import astropy.units as u
 from .parameter import Parameters
 
-__all__ = ["Model", "make_model"]
+__all__ = ["Model"]
 
 
 class Model:
@@ -60,26 +60,17 @@ class Model:
             setattr(init, parameter.name, parameter)
         return init
 
+    @staticmethod
+    def create(tag, *args, **kwargs):
+        """Create a model instance.
 
-def make_model(tag, *args, **kwargs):
-    """Make a model, the easy way.
-
-    Examples
-    --------
-    >>> from gammapy.modeling import make_model
-    >>> spectral_model = make_model("PowerLaw2SpectralModel", amplitude="1e-10 cm-2 s-1", index=3)
-    >>> print(spectral_model)
-    PowerLaw2SpectralModel
-
-    Parameters:
-
-           name     value   error   unit   min max frozen
-        --------- --------- ----- -------- --- --- ------
-            index 2.000e+00   nan          nan nan  False
-        amplitude 1.000e-12   nan cm-2 s-1 nan nan  False
-             emin 1.000e-01   nan      TeV nan nan   True
-             emax 1.000e+02   nan      TeV nan nan   True
-    """
-    from .models import MODELS
-    cls = MODELS.get_cls(tag)
-    return cls(*args, **kwargs)
+        Examples
+        --------
+        >>> from gammapy.modeling import Model
+        >>> spectral_model = Model.create("PowerLaw2SpectralModel", amplitude="1e-10 cm-2 s-1", index=3)
+        >>> type(spectral_model)
+        gammapy.modeling.models.spectral.PowerLaw2SpectralModel
+        """
+        from .models import MODELS
+        cls = MODELS.get_cls(tag)
+        return cls(*args, **kwargs)
