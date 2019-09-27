@@ -442,7 +442,7 @@ class BackgroundModel(Model):
 
     Parameters
     ----------
-    background : `~gammapy.maps.Map`
+    map : `~gammapy.maps.Map`
         Background model map
     norm : float
         Background normalisation
@@ -457,18 +457,18 @@ class BackgroundModel(Model):
 
     def __init__(
         self,
-        background,
+        map,
         norm=1,
         tilt=0,
         reference="1 TeV",
         name="background",
         filename=None,
     ):
-        axis = background.geom.get_axis_by_name("energy")
+        axis = map.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":
             raise ValueError('Need an integrated map, energy axis node_type="edges"')
 
-        self.map = background
+        self.map = map
         self.norm = Parameter("norm", norm, unit="", min=0)
         self.tilt = Parameter("tilt", tilt, unit="", frozen=True)
         self.reference = Parameter("reference", reference, frozen=True)
@@ -510,13 +510,13 @@ class BackgroundModel(Model):
     @classmethod
     def from_dict(cls, data):
         if "filename" in data:
-            background = Map.read(data["filename"])
+            map = Map.read(data["filename"])
         elif "map" in data:
-            background = data["map"]
+            map = data["map"]
         else:
             raise ValueError("Requires either filename or `Map` object")
 
-        init = cls(background=background, name=data["name"])
+        init = cls(map=map, name=data["name"])
         init.parameters = Parameters.from_dict(data)
         for parameter in init.parameters.parameters:
             setattr(init, parameter.name, parameter)

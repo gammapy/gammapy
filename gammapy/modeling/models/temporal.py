@@ -138,8 +138,9 @@ class PhaseCurveTemplateTemporalModel(TemporalModel):
     """
 
     __slots__ = ["table", "time_0", "phase_0", "f0", "f1", "f2"]
+    tag = "PhaseCurveTemplateTemporalModel"
 
-    def __init__(self, table, time_0, phase_0, f0, f1, f2):
+    def __init__(self, table, time_0, phase_0, f0, f1=0, f2=0):
         self.table = table
         self.time_0 = Parameter("time_0", time_0)
         self.phase_0 = Parameter("phase_0", phase_0)
@@ -292,6 +293,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     >>> light_curve.mean_norm_in_time_interval(46300, 46301)
     """
+    tag = "LightCurveTemplateTemporalModel"
 
     def __init__(self, table):
         self.table = table

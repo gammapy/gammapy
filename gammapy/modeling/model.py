@@ -59,3 +59,18 @@ class Model:
         for parameter in init.parameters.parameters:
             setattr(init, parameter.name, parameter)
         return init
+
+    @staticmethod
+    def create(tag, *args, **kwargs):
+        """Create a model instance.
+
+        Examples
+        --------
+        >>> from gammapy.modeling import Model
+        >>> spectral_model = Model.create("PowerLaw2SpectralModel", amplitude="1e-10 cm-2 s-1", index=3)
+        >>> type(spectral_model)
+        gammapy.modeling.models.spectral.PowerLaw2SpectralModel
+        """
+        from .models import MODELS
+        cls = MODELS.get_cls(tag)
+        return cls(*args, **kwargs)

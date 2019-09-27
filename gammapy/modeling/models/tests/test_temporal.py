@@ -19,7 +19,7 @@ def phase_curve():
     filename = make_path("$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits")
     table = Table.read(str(filename))
     return PhaseCurveTemplateTemporalModel(
-        table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0
+        table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7
     )
 
 
