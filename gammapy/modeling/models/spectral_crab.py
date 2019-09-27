@@ -8,8 +8,6 @@ from .spectral import (
     SpectralModel,
 )
 
-__all__ = ["create_crab_spectral_model"]
-
 
 class MeyerCrabSpectralModel(SpectralModel):
     """Meyer 2010 log polynomial Crab spectral model.

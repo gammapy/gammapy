@@ -10,16 +10,6 @@ from astropy.coordinates.angle_utilities import angular_separation, position_ang
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
 
-__all__ = [
-    "SpatialModel",
-    "PointSpatialModel",
-    "GaussianSpatialModel",
-    "DiskSpatialModel",
-    "ShellSpatialModel",
-    "ConstantSpatialModel",
-    "TemplateSpatialModel",
-]
-
 log = logging.getLogger(__name__)
 
 

@@ -8,8 +8,6 @@ from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
 from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 
-__all__ = ["SkyModelBase", "SkyModels", "SkyModel", "SkyDiffuseCube", "BackgroundModel"]
-
 
 class SkyModelBase(Model):
     """Sky model base class"""
@@ -315,10 +313,10 @@ class SkyModel(SkyModelBase):
         """Create SkyModel from dict"""
         from gammapy.modeling.models import SPATIAL_MODELS, SPECTRAL_MODELS
 
-        model_class = SPECTRAL_MODELS[data["spectral"]["type"]]
+        model_class = SPECTRAL_MODELS.get_cls(data["spectral"]["type"])
         spectral_model = model_class.from_dict(data["spectral"])
 
-        model_class = SPATIAL_MODELS[data["spatial"]["type"]]
+        model_class = SPATIAL_MODELS.get_cls(data["spatial"]["type"])
         spatial_model = model_class.from_dict(data["spatial"])
 
         return cls(
