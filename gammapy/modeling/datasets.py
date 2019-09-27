@@ -3,7 +3,6 @@ import abc
 import copy
 from collections import Counter
 import numpy as np
-from astropy.utils import lazyproperty
 from gammapy.utils.scripts import read_yaml, write_yaml
 from .parameter import Parameters
 
@@ -171,7 +170,7 @@ class Datasets:
         constructor = dict_to_datasets(data_list, components)
         return cls(constructor.datasets)
 
-    def to_yaml(self, path, selection="all", overwrite=False):
+    def to_yaml(self, path, overwrite=False):
         """Serialize datasets to YAML and FITS files.
 
         Parameters
@@ -185,7 +184,7 @@ class Datasets:
         from .serialize import datasets_to_dict
 
         datasets_dict, components_dict = datasets_to_dict(
-            self.datasets, path, selection, overwrite
+            self.datasets, path, overwrite
         )
         write_yaml(datasets_dict, path + "datasets.yaml", sort_keys=False)
         write_yaml(components_dict, path + "models.yaml", sort_keys=False)

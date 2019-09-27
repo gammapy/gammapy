@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import astropy.units as u
 from astropy.table import Column, Table
-from gammapy.modeling.models import PowerLaw
+from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import excess_matching_significance_on_off
 from .core import SpectrumEvaluator
 
@@ -86,7 +86,7 @@ class SensitivityEstimator:
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
 
-        model = PowerLaw(
+        model = PowerLawSpectralModel(
             index=self.index, amplitude="1 cm-2 s-1 TeV-1", reference="1 TeV"
         )
 

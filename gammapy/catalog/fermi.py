@@ -7,16 +7,16 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.maps import Map
 from gammapy.modeling.models import (
-    ExponentialCutoffPowerLaw3FGL,
-    LogParabola,
-    PLSuperExpCutoff3FGL,
-    PLSuperExpCutoff4FGL,
-    PowerLaw,
-    PowerLaw2,
-    SkyDiffuseMap,
-    SkyGaussian,
+    ExpCutoffPowerLaw3FGLSpectralModel,
+    GaussianSpatialModel,
+    LogParabolaSpectralModel,
+    PointSpatialModel,
+    PowerLaw2SpectralModel,
+    PowerLawSpectralModel,
     SkyModel,
-    SkyPointSource,
+    SuperExpCutoffPowerLaw3FGLSpectralModel,
+    SuperExpCutoffPowerLaw4FGLSpectralModel,
+    TemplateSpatialModel,
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.time import LightCurve
@@ -65,7 +65,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             pars["index"] = self.data["PL_Index"]
             errs["amplitude"] = self.data["Unc_PL_Flux_Density"]
             errs["index"] = self.data["Unc_PL_Index"]
-            model = PowerLaw(**pars)
+            model = PowerLawSpectralModel(**pars)
         elif spec_type == "LogParabola":
             pars["amplitude"] = self.data["LP_Flux_Density"]
             pars["alpha"] = self.data["LP_Index"]
@@ -73,7 +73,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             errs["amplitude"] = self.data["Unc_LP_Flux_Density"]
             errs["alpha"] = self.data["Unc_LP_Index"]
             errs["beta"] = self.data["Unc_LP_beta"]
-            model = LogParabola(**pars)
+            model = LogParabolaSpectralModel(**pars)
         elif spec_type == "PLSuperExpCutoff":
             pars["amplitude"] = self.data["PLEC_Flux_Density"]
             pars["index_1"] = self.data["PLEC_Index"]
@@ -85,7 +85,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             errs["expfactor"] = (
                 self.data["Unc_PLEC_Expfactor"] / u.MeV ** pars["index_2"]
             )
-            model = PLSuperExpCutoff4FGL(**pars)
+            model = SuperExpCutoffPowerLaw4FGLSpectralModel(**pars)
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
@@ -195,7 +195,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             " 0.25.",
             10: "Spectral Fit Quality > 16.3 (see Equation 3 in 2FGL catalog paper).",
             11: "Possibly due to the Sun (see Section 3.6 in catalog paper).",
-            12: "Highly curved spectrum; LogParabola beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see "
+            12: "Highly curved spectrum; LogParabolaSpectralModel beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see "
             "Section 3.3 in catalog paper).",
         }
         ss += "{:<20s} : {}\n".format(
@@ -253,7 +253,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
                 "Super-exponential cutoff index", d["Exp_Index"], d["Unc_Exp_Index"]
             )
         else:
-            raise ValueError("Invalid spec_type")
+            raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
         ss += "{:<45s} : {:.0f} {}\n".format(
             "Pivot energy", d["Pivot_Energy"].value, d["Pivot_Energy"].unit
@@ -345,19 +345,19 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         if spec_type == "PowerLaw":
             pars["index"] = self.data["Spectral_Index"]
             errs["index"] = self.data["Unc_Spectral_Index"]
-            model = PowerLaw(**pars)
+            model = PowerLawSpectralModel(**pars)
         elif spec_type == "PLExpCutoff":
             pars["index"] = self.data["Spectral_Index"]
             pars["ecut"] = self.data["Cutoff"]
             errs["index"] = self.data["Unc_Spectral_Index"]
             errs["ecut"] = self.data["Unc_Cutoff"]
-            model = ExponentialCutoffPowerLaw3FGL(**pars)
+            model = ExpCutoffPowerLaw3FGLSpectralModel(**pars)
         elif spec_type == "LogParabola":
             pars["alpha"] = self.data["Spectral_Index"]
             pars["beta"] = self.data["beta"]
             errs["alpha"] = self.data["Unc_Spectral_Index"]
             errs["beta"] = self.data["Unc_beta"]
-            model = LogParabola(**pars)
+            model = LogParabolaSpectralModel(**pars)
         elif spec_type == "PLSuperExpCutoff":
             # TODO: why convert to GeV here? Remove?
             pars["reference"] = pars["reference"].to("GeV")
@@ -367,7 +367,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             errs["index_1"] = self.data["Unc_Spectral_Index"]
             errs["index_2"] = self.data["Unc_Exp_Index"]
             errs["ecut"] = self.data["Unc_Cutoff"].to("GeV")
-            model = PLSuperExpCutoff3FGL(**pars)
+            model = SuperExpCutoffPowerLaw3FGLSpectralModel(**pars)
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
@@ -377,7 +377,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     @property
     def spatial_model(self):
         """
-        Source spatial model (`~gammapy.modeling.models.SkySpatialModel`).
+        Source spatial model (`~gammapy.modeling.models.SpatialModel`).
         """
         d = self.data
 
@@ -388,7 +388,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         if self.is_pointlike:
             pars["lon_0"] = glon
             pars["lat_0"] = glat
-            return SkyPointSource(lon_0=glon, lat_0=glat)
+            return PointSpatialModel(lon_0=glon, lat_0=glat)
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
@@ -401,11 +401,11 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v15/Templates/"
                 )
-                return SkyDiffuseMap.read(path / filename)
+                return TemplateSpatialModel.read(path / filename)
             elif morph_type == "2D Gaussian":
                 # TODO: fill elongation info as soon as model supports it
                 sigma = de["Model_SemiMajor"].to("deg")
-                return SkyGaussian(lon_0=glon, lat_0=glat, sigma=sigma)
+                return GaussianSpatialModel(lon_0=glon, lat_0=glat, sigma=sigma)
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
 
@@ -573,7 +573,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         pars["index"] = self.data["Spectral_Index"]
         errs["amplitude"] = self.data["Unc_Flux"]
         errs["index"] = self.data["Unc_Spectral_Index"]
-        model = PowerLaw2(**pars)
+        model = PowerLaw2SpectralModel(**pars)
         model.parameters.set_parameter_errors(errs)
         return model
 
@@ -647,7 +647,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         errs["amplitude"] = self.data["Unc_Flux50"]
         errs["index"] = self.data["Unc_Spectral_Index"]
 
-        model = PowerLaw2(**pars)
+        model = PowerLaw2SpectralModel(**pars)
         model.parameters.set_parameter_errors(errs)
         return model
 
@@ -780,16 +780,16 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         elif spec_type == "LogParabola":
             fmt = "{:<32s} : {:.3f} +- {:.3f}\n"
             ss += fmt.format(
-                "LogParabola spectral index",
+                "LogParabolaSpectralModel spectral index",
                 d["Spectral_Index"],
                 d["Unc_Spectral_Index"],
             )
 
             ss += "{:<32s} : {:.3f} +- {:.3f}\n".format(
-                "LogParabola beta", d["beta"], d["Unc_beta"]
+                "LogParabolaSpectralModel beta", d["beta"], d["Unc_beta"]
             )
         else:
-            raise ValueError("Invalid spec_type")
+            raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
         ss += "{:<32s} : {:.1f} {}\n".format(
             "Pivot energy", d["Pivot_Energy"].value, d["Pivot_Energy"].unit
@@ -864,13 +864,13 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         if spec_type == "PowerLaw":
             pars["index"] = d["PowerLaw_Index"]
             errs["index"] = d["Unc_PowerLaw_Index"]
-            model = PowerLaw(**pars)
+            model = PowerLawSpectralModel(**pars)
         elif spec_type == "LogParabola":
             pars["alpha"] = d["Spectral_Index"]
             pars["beta"] = d["beta"]
             errs["alpha"] = d["Unc_Spectral_Index"]
             errs["beta"] = d["Unc_beta"]
-            model = LogParabola(**pars)
+            model = LogParabolaSpectralModel(**pars)
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
@@ -915,7 +915,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Source spatial model (`~gammapy.modeling.models.SkySpatialModel`)."""
+        """Source spatial model (`~gammapy.modeling.models.SpatialModel`)."""
         d = self.data
 
         pars = {}
@@ -925,7 +925,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         if self.is_pointlike:
             pars["lon_0"] = glon
             pars["lat_0"] = glat
-            return SkyPointSource(lon_0=glon, lat_0=glat)
+            return PointSpatialModel(lon_0=glon, lat_0=glat)
         else:
             de = self.data_extended
             morph_type = de["Spatial_Function"].strip()
@@ -938,11 +938,11 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/"
                 )
-                return SkyDiffuseMap.read(path / filename)
+                return TemplateSpatialModel.read(path / filename)
             elif morph_type == "RadialGauss":
                 # TODO: fill elongation info as soon as model supports it
                 sigma = de["Model_SemiMajor"].to("deg")
-                return SkyGaussian(lon_0=glon, lat_0=glat, sigma=sigma)
+                return GaussianSpatialModel(lon_0=glon, lat_0=glat, sigma=sigma)
             else:
                 raise ValueError(f"Invalid morph_type: {morph_type!r}")
 

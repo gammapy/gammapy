@@ -4,19 +4,19 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import (
-    SkyDiffuseConstant,
-    SkyDiffuseMap,
-    SkyDisk,
-    SkyGaussian,
-    SkyPointSource,
-    SkyShell,
+    ConstantSpatialModel,
+    DiskSpatialModel,
+    GaussianSpatialModel,
+    PointSpatialModel,
+    ShellSpatialModel,
+    TemplateSpatialModel,
 )
 from gammapy.utils.testing import requires_data
 
 
 def test_sky_point_source():
     geom = WcsGeom.create(skydir=(2.4, 2.3), npix=(10, 10), binsz=0.3)
-    model = SkyPointSource(lon_0="2.5 deg", lat_0="2.5 deg", frame="icrs")
+    model = PointSpatialModel(lon_0="2.5 deg", lat_0="2.5 deg", frame="icrs")
 
     assert model.evaluation_radius.unit == "deg"
     assert_allclose(model.evaluation_radius.value, 0)
@@ -34,7 +34,7 @@ def test_sky_point_source():
 def test_sky_gaussian():
     # Test symmetric model
     sigma = 1 * u.deg
-    model = SkyGaussian(lon_0="5 deg", lat_0="15 deg", sigma=sigma)
+    model = GaussianSpatialModel(lon_0="5 deg", lat_0="15 deg", sigma=sigma)
     assert model.parameters["sigma"].min == 0
     val_0 = model(5 * u.deg, 15 * u.deg)
     val_sigma = model(5 * u.deg, 16 * u.deg)
@@ -54,7 +54,7 @@ def test_sky_gaussian():
     lon = coords.lon
     lat = coords.lat
     sigma = 3 * u.deg
-    model_1 = SkyGaussian(2 * u.deg, 2 * u.deg, sigma, 0.8, 30 * u.deg)
+    model_1 = GaussianSpatialModel(2 * u.deg, 2 * u.deg, sigma, 0.8, 30 * u.deg)
     vals_1 = model_1(lon, lat)
     assert vals_1.unit == "sr-1"
     assert_allclose(np.sum(vals_1 * solid_angle), 1, rtol=1.0e-3)
@@ -67,7 +67,7 @@ def test_sky_gaussian():
     sigma = 4 * u.deg
     semi_minor = 2 * u.deg
     e = np.sqrt(1 - (semi_minor / sigma) ** 2)
-    model_2 = SkyGaussian(0 * u.deg, 0 * u.deg, sigma, e, 0 * u.deg)
+    model_2 = GaussianSpatialModel(0 * u.deg, 0 * u.deg, sigma, e, 0 * u.deg)
     val_0 = model_2(0 * u.deg, 0 * u.deg)
     val_major = model_2(0 * u.deg, 4 * u.deg)
     val_minor = model_2(2 * u.deg, 0 * u.deg)
@@ -79,7 +79,7 @@ def test_sky_gaussian():
     assert_allclose(ratio_minor, np.exp(0.5))
 
     # check the rotation
-    model_3 = SkyGaussian(0 * u.deg, 0 * u.deg, sigma, e, 90 * u.deg)
+    model_3 = GaussianSpatialModel(0 * u.deg, 0 * u.deg, sigma, e, 90 * u.deg)
     val_minor_rotated = model_3(0 * u.deg, 2 * u.deg)
     ratio_minor_rotated = val_0 / val_minor_rotated
     assert_allclose(ratio_minor_rotated, np.exp(0.5))
@@ -88,7 +88,7 @@ def test_sky_gaussian():
 def test_sky_disk():
     # Test the disk case (e=0)
     r_0 = 2 * u.deg
-    model = SkyDisk(lon_0="1 deg", lat_0="45 deg", r_0=r_0)
+    model = DiskSpatialModel(lon_0="1 deg", lat_0="45 deg", r_0=r_0)
     lon = [1, 5, 359] * u.deg
     lat = 46 * u.deg
     val = model(lon, lat)
@@ -108,7 +108,7 @@ def test_sky_disk():
     lon = coords.lon
     lat = coords.lat
     r_0 = 10 * u.deg
-    model_1 = SkyDisk(2 * u.deg, 2 * u.deg, r_0, 0.4, 30 * u.deg)
+    model_1 = DiskSpatialModel(2 * u.deg, 2 * u.deg, r_0, 0.4, 30 * u.deg)
     vals_1 = model_1(lon, lat)
     assert vals_1.unit == "sr-1"
     assert_allclose(np.sum(vals_1 * solid_angle), 1, rtol=1.0e-3)
@@ -120,7 +120,9 @@ def test_sky_disk():
     r_0 = 2 * u.deg
     semi_minor = 1 * u.deg
     eccentricity = np.sqrt(1 - (semi_minor / r_0) ** 2)
-    model_rot_test = SkyDisk(0 * u.deg, 0 * u.deg, r_0, eccentricity, 90 * u.deg)
+    model_rot_test = DiskSpatialModel(
+        0 * u.deg, 0 * u.deg, r_0, eccentricity, 90 * u.deg
+    )
     assert_allclose(model_rot_test(0 * u.deg, 1.5 * u.deg).value, 0)
 
     # test the normalization for a disk (ellipse with e=0) at the Galactic Pole
@@ -132,7 +134,7 @@ def test_sky_disk():
     lat = coords.lat
 
     r_0 = 5 * u.deg
-    disk = SkyDisk(0 * u.deg, 90 * u.deg, r_0)
+    disk = DiskSpatialModel(0 * u.deg, 90 * u.deg, r_0)
     vals_disk = disk(lon, lat)
 
     solid_angle = 2 * np.pi * (1 - np.cos(5 * u.deg))
@@ -141,7 +143,7 @@ def test_sky_disk():
 
 def test_sky_disk_edge():
     r_0 = 2 * u.deg
-    model = SkyDisk(lon_0="0 deg", lat_0="0 deg", r_0=r_0, e=0.5, phi="0 deg")
+    model = DiskSpatialModel(lon_0="0 deg", lat_0="0 deg", r_0=r_0, e=0.5, phi="0 deg")
     value_center = model(0 * u.deg, 0 * u.deg)
     value_edge = model(0 * u.deg, r_0)
     assert_allclose((value_edge / value_center).to_value(""), 0.5)
@@ -157,7 +159,7 @@ def test_sky_disk_edge():
 def test_sky_shell():
     width = 2 * u.deg
     rad = 2 * u.deg
-    model = SkyShell(lon_0="1 deg", lat_0="45 deg", radius=rad, width=width)
+    model = ShellSpatialModel(lon_0="1 deg", lat_0="45 deg", radius=rad, width=width)
     lon = [1, 2, 4] * u.deg
     lat = 45 * u.deg
     val = model(lon, lat)
@@ -170,7 +172,7 @@ def test_sky_shell():
 
 
 def test_sky_diffuse_constant():
-    model = SkyDiffuseConstant(value="42 sr-1")
+    model = ConstantSpatialModel(value="42 sr-1")
     lon = [1, 2] * u.deg
     lat = 45 * u.deg
     val = model(lon, lat)
@@ -183,7 +185,7 @@ def test_sky_diffuse_constant():
 @requires_data()
 def test_sky_diffuse_map():
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
-    model = SkyDiffuseMap.read(filename, normalize=False)
+    model = TemplateSpatialModel.read(filename, normalize=False)
     lon = [258.5, 0] * u.deg
     lat = -39.8 * u.deg
     val = model(lon, lat)
@@ -201,7 +203,7 @@ def test_sky_diffuse_map_normalize():
     # define model map with a constant value of 1
     model_map = Map.create(map_type="wcs", width=(10, 5), binsz=0.5)
     model_map.data += 1.0
-    model = SkyDiffuseMap(model_map)
+    model = TemplateSpatialModel(model_map)
 
     # define data map with a different spatial binning
     data_map = Map.create(map_type="wcs", width=(10, 5), binsz=1)
@@ -212,3 +214,10 @@ def test_sky_diffuse_map_normalize():
     assert vals.unit == ""
     integral = vals.sum()
     assert_allclose(integral.value, 1, rtol=1e-4)
+
+
+def test_evaluate_fk5():
+    geom = WcsGeom.create(width=(5, 5), binsz=0.1, coordsys="CEL")
+    model = GaussianSpatialModel("0 deg", "0 deg", "0.1 deg", frame="fk5")
+    data = model.evaluate_geom(geom)
+    assert data.value[12, 12] > 0

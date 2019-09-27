@@ -1,27 +1,25 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
-from gammapy.cube.fit import MapDataset, MapEvaluator
+from gammapy.cube.fit import MapDataset
 from .models import BackgroundModel, SkyDiffuseCube, SkyModel, SkyModels
 
 __all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
 
 
-def models_to_dict(models, selection="all"):
+def models_to_dict(models):
     """Convert list of models to dict.
 
     Parameters
     ----------
     models : list
         Python list of Model objects
-    selection : {"all", "simple"}
-        Selection of information to include
     """
     # update shared parameters names for serialization
     _rename_shared_parameters(models)
 
     models_data = []
     for model in models:
-        model_data = model.to_dict(selection)
+        model_data = model.to_dict()
         # De-duplicate if model appears several times
         if model_data not in models_data:
             models_data.append(model_data)
@@ -104,7 +102,7 @@ def _link_shared_parameters(models):
                     shared_register[name] = param
 
 
-def datasets_to_dict(datasets, path, selection, overwrite):
+def datasets_to_dict(datasets, path, overwrite):
     unique_models = []
     unique_backgrounds = []
     datasets_dictlist = []
@@ -122,7 +120,7 @@ def datasets_to_dict(datasets, path, selection, overwrite):
             unique_backgrounds.append(dataset.background_model)
 
     datasets_dict = {"datasets": datasets_dictlist}
-    components_dict = models_to_dict(unique_models + unique_backgrounds, selection)
+    components_dict = models_to_dict(unique_models + unique_backgrounds)
     return datasets_dict, components_dict
 
 

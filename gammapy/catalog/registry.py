@@ -1,5 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from astropy.table import Table
+from .hess import SourceCatalogHGPS
+from .gammacat import SourceCatalogGammaCat
+from .fermi import SourceCatalog3FGL
+from .fermi import SourceCatalog1FHL
+from .fermi import SourceCatalog2FHL
+from .fermi import SourceCatalog3FHL
+from .hawc import SourceCatalog2HWC
 
 __all__ = ["source_catalogs", "SourceCatalogRegistry"]
 
@@ -22,37 +29,15 @@ class SourceCatalogRegistry:
     @classmethod
     def builtins(cls):
         """Create a catalog registry containing the built-in catalogs."""
-        source_catalogs = cls()
-
-        from .hess import SourceCatalogHGPS
-
-        source_catalogs.register("hgps", SourceCatalogHGPS)
-
-        from .gammacat import SourceCatalogGammaCat
-
-        source_catalogs.register("gamma-cat", SourceCatalogGammaCat)
-
-        from .fermi import SourceCatalog3FGL
-
-        source_catalogs.register("3fgl", SourceCatalog3FGL)
-
-        from .fermi import SourceCatalog1FHL
-
-        source_catalogs.register("1fhl", SourceCatalog1FHL)
-
-        from .fermi import SourceCatalog2FHL
-
-        source_catalogs.register("2fhl", SourceCatalog2FHL)
-
-        from .fermi import SourceCatalog3FHL
-
-        source_catalogs.register("3fhl", SourceCatalog3FHL)
-
-        from .hawc import SourceCatalog2HWC
-
-        source_catalogs.register("2hwc", SourceCatalog2HWC)
-
-        return source_catalogs
+        cats = cls()
+        cats.register("hgps", SourceCatalogHGPS)
+        cats.register("gamma-cat", SourceCatalogGammaCat)
+        cats.register("3fgl", SourceCatalog3FGL)
+        cats.register("1fhl", SourceCatalog1FHL)
+        cats.register("2fhl", SourceCatalog2FHL)
+        cats.register("3fhl", SourceCatalog3FHL)
+        cats.register("2hwc", SourceCatalog2HWC)
+        return cats
 
     @property
     def catalog_names(self):
@@ -104,9 +89,4 @@ class SourceCatalogRegistry:
 
 
 source_catalogs = SourceCatalogRegistry.builtins()
-"""Registry of built-in catalogs in Gammapy.
-
-The main point of the registry is to have one point that
-knows about all available catalogs and there's an easy way
-to load them.
-"""
+"""Registry of built-in catalogs in Gammapy."""

@@ -11,14 +11,14 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from gammapy.modeling.models import (
-    ExponentialCutoffPowerLaw,
-    PowerLaw,
-    PowerLaw2,
-    SkyGaussian,
+    ExpCutoffPowerLawSpectralModel,
+    GaussianSpatialModel,
+    PointSpatialModel,
+    PowerLaw2SpectralModel,
+    PowerLawSpectralModel,
+    ShellSpatialModel,
     SkyModel,
     SkyModels,
-    SkyPointSource,
-    SkyShell,
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.scripts import make_path
@@ -285,14 +285,14 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         pars, errs = {}, {}
 
         if spec_type == "pl":
-            model_class = PowerLaw
+            model_class = PowerLawSpectralModel
             pars["amplitude"] = data["spec_pl_norm"]
             errs["amplitude"] = data["spec_pl_norm_err"]
             pars["index"] = data["spec_pl_index"]
             errs["index"] = data["spec_pl_index_err"]
             pars["reference"] = data["spec_pl_e_ref"]
         elif spec_type == "pl2":
-            model_class = PowerLaw2
+            model_class = PowerLaw2SpectralModel
             pars["amplitude"] = data["spec_pl2_flux"]
             errs["amplitude"] = data["spec_pl2_flux_err"]
             pars["index"] = data["spec_pl2_index"]
@@ -304,7 +304,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 e_max = DEFAULT_E_MAX
             pars["emax"] = e_max
         elif spec_type == "ecpl":
-            model_class = ExponentialCutoffPowerLaw
+            model_class = ExpCutoffPowerLawSpectralModel
             pars["amplitude"] = data["spec_ecpl_norm"]
             errs["amplitude"] = data["spec_ecpl_norm_err"]
             pars["index"] = data["spec_ecpl_index"]
@@ -322,7 +322,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Source spatial model (`~gammapy.modeling.models.SkySpatialModel`).
+        """Source spatial model (`~gammapy.modeling.models.SpatialModel`).
 
         TODO: add parameter errors!
         """
@@ -333,7 +333,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         glat = d["glat"]
 
         if morph_type == "point":
-            return SkyPointSource(lon_0=glon, lat_0=glat)
+            return PointSpatialModel(lon_0=glon, lat_0=glat)
         elif morph_type == "gauss":
             # TODO: add infos back once model support elongation
             # pars['x_stddev'] = d['morph_sigma']
@@ -343,9 +343,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             # if not np.isnan(d['morph_pa']):
             #     # TODO: handle reference frame for rotation angle
             #     pars['theta'] = Angle(d['morph_pa'], 'deg').rad
-            return SkyGaussian(lon_0=glon, lat_0=glat, sigma=d["morph_sigma"])
+            return GaussianSpatialModel(lon_0=glon, lat_0=glat, sigma=d["morph_sigma"])
         elif morph_type == "shell":
-            return SkyShell(
+            return ShellSpatialModel(
                 lon_0=glon,
                 lat_0=glat,
                 # TODO: probably we shouldn't guess a shell width here!

@@ -1,22 +1,25 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy import units as u
-from .spectral import ExponentialCutoffPowerLaw, LogParabola, PowerLaw, SpectralModel
+from .spectral import (
+    ExpCutoffPowerLawSpectralModel,
+    LogParabolaSpectralModel,
+    PowerLawSpectralModel,
+    SpectralModel,
+)
 
-__all__ = ["create_crab_spectral_model"]
 
-
-class MeyerCrabModel(SpectralModel):
+class MeyerCrabSpectralModel(SpectralModel):
     """Meyer 2010 log polynomial Crab spectral model.
 
-    See 2010A%26A...523A...2M, Appendix D.
+    Reference: https://ui.adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
     """
 
     coefficients = [-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708]
 
     @staticmethod
     def evaluate(energy):
-        polynomial = np.poly1d(MeyerCrabModel.coefficients)
+        polynomial = np.poly1d(MeyerCrabSpectralModel.coefficients)
         log_energy = np.log10(energy.to_value("TeV"))
         log_flux = polynomial(log_energy)
         flux = u.Quantity(np.power(10, log_flux), "erg / (cm2 s)", copy=False)
@@ -56,7 +59,7 @@ def create_crab_spectral_model(reference="meyer"):
 
     Use a reference crab spectrum as unit to measure a differential flux (at 10 TeV)::
 
-        >>> pwl = PowerLaw(index=2.3, amplitude=1e-12 * u.Unit('1 / (cm2 s TeV)'), reference=1 * u.TeV)
+        >>> pwl = PowerLawSpectralModel(index=2.3, amplitude=1e-12 * u.Unit('1 / (cm2 s TeV)'), reference=1 * u.TeV)
         >>> crab = create_crab_spectral_model('hess_pl')
         >>> energy = 10 * u.TeV
         >>> dnde_cu = (pwl(energy) / crab(energy)).to('%')
@@ -72,35 +75,35 @@ def create_crab_spectral_model(reference="meyer"):
         3.5350582166 %
     """
     if reference == "meyer":
-        return MeyerCrabModel()
+        return MeyerCrabSpectralModel()
     elif reference == "hegra":
-        return PowerLaw(
+        return PowerLawSpectralModel(
             amplitude=2.83e-11 * u.Unit("1 / (cm2 s TeV)"),
             index=2.62,
             reference=1 * u.TeV,
         )
     elif reference == "hess_pl":
-        return PowerLaw(
+        return PowerLawSpectralModel(
             amplitude=3.45e-11 * u.Unit("1 / (cm2 s TeV)"),
             index=2.63,
             reference=1 * u.TeV,
         )
     elif reference == "hess_ecpl":
-        return ExponentialCutoffPowerLaw(
+        return ExpCutoffPowerLawSpectralModel(
             amplitude=3.76e-11 * u.Unit("1 / (cm2 s TeV)"),
             index=2.39,
             lambda_=1 / (14.3 * u.TeV),
             reference=1 * u.TeV,
         )
     elif reference == "magic_lp":
-        return LogParabola(
+        return LogParabolaSpectralModel(
             amplitude=3.23e-11 * u.Unit("1 / (cm2 s TeV)"),
             alpha=2.47,
             beta=0.24 / np.log(10),
             reference=1 * u.TeV,
         )
     elif reference == "magic_ecpl":
-        return ExponentialCutoffPowerLaw(
+        return ExpCutoffPowerLawSpectralModel(
             amplitude=3.80e-11 * u.Unit("1 / (cm2 s TeV)"),
             index=2.21,
             lambda_=1 / (6.0 * u.TeV),

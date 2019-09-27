@@ -111,7 +111,7 @@ def test_time_sampling():
     assert_allclose(sampler_uniform.value, [1261.65802564, 6026.9299098], rtol=1e-5)
 
 
-def test_ConstantTemporalModel():
+def test_constant_temporal_model_sample():
     norm = 10.0
     temporal_model = ConstantTemporalModel(norm)
 
@@ -129,7 +129,7 @@ def test_ConstantTemporalModel():
     assert_allclose(sampler.value, [15805.82891311, 20597.45375153], rtol=1e-5)
 
 
-def test_constant_model_evaluate_norm_at_time():
+def test_constant_temporal_model_evaluate_norm_at_time():
     norm = 10.0
     temporal_model = ConstantTemporalModel(norm)
     val = temporal_model.evaluate_norm_at_time(46300)

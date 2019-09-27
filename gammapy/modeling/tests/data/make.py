@@ -6,28 +6,28 @@ from pathlib import Path
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDataset, MapEvaluator, MapMaker, PSFKernel
+from gammapy.cube import MapDataset, MapMaker, PSFKernel
 from gammapy.data import DataStore
 from gammapy.irf import make_mean_edisp, make_mean_psf
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling import Datasets
 from gammapy.modeling.models import (
     BackgroundModel,
-    ExponentialCutoffPowerLaw,
-    PowerLaw,
+    ExpCutoffPowerLawSpectralModel,
+    GaussianSpatialModel,
+    PointSpatialModel,
+    PowerLawSpectralModel,
     SkyDiffuseCube,
-    SkyGaussian,
     SkyModel,
     SkyModels,
-    SkyPointSource,
 )
 
 DATA_PATH = Path("./")
 
 
 def make_example_2():
-    spatial = SkyGaussian("0 deg", "0 deg", "1 deg")
-    model = SkyModel(spatial, PowerLaw())
+    spatial = GaussianSpatialModel("0 deg", "0 deg", "1 deg")
+    model = SkyModel(spatial, PowerLawSpectralModel())
     models = SkyModels([model])
     models.to_yaml(DATA_PATH / "example2.yaml")
 
@@ -61,8 +61,10 @@ def make_datasets_example():
     models = []
 
     for ind, (lon, lat) in enumerate(sources_coords):
-        spatial_model = SkyPointSource(lon_0=lon * u.deg, lat_0=lat * u.deg, frame="galactic")
-        spectral_model = ExponentialCutoffPowerLaw(
+        spatial_model = PointSpatialModel(
+            lon_0=lon * u.deg, lat_0=lat * u.deg, frame="galactic"
+        )
+        spectral_model = ExpCutoffPowerLawSpectralModel(
             index=2 * u.Unit(""),
             amplitude=3e-12 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1.0 * u.TeV,

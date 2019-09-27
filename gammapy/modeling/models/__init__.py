@@ -7,35 +7,70 @@ from .spectral_cosmic_ray import *
 from .spectral_crab import *
 from .temporal import *
 
-SPATIAL_MODELS = {
-    "SkyDiffuseMap": SkyDiffuseMap,
-    "SkyDisk": SkyDisk,
-    "SkyGaussian": SkyGaussian,
-    "SkyPointSource": SkyPointSource,
-    "SkyShell": SkyShell,
-}
 
-TIME_MODELS = {
-    "PhaseCurveTemplateTemporalModel": PhaseCurveTemplateTemporalModel,
-    "LightCurveTemplateTemporalModel": LightCurveTemplateTemporalModel,
-    "ConstantTemporalModel":ConstantTemporalModel
-}
+class ModelRegistry(list):
+    def get_cls(self, tag):
+        for cls in self:
+            if hasattr(cls, "tag") and cls.tag == tag:
+                return cls
+        raise KeyError(f"No model found with tag: {tag!r}")
 
-# TODO: add support for these models writing their .from_dict()
-# "NaimaModel":NaimaModel,
-# "ScaleModel": ScaleModel,
-SPECTRAL_MODELS = {
-    "ConstantModel": ConstantModel,
-    "PowerLaw": PowerLaw,
-    "PowerLaw2": PowerLaw2,
-    "ExponentialCutoffPowerLaw": ExponentialCutoffPowerLaw,
-    "ExponentialCutoffPowerLaw3FGL": ExponentialCutoffPowerLaw3FGL,
-    "PLSuperExpCutoff3FGL": PLSuperExpCutoff3FGL,
-    "PLSuperExpCutoff4FGL": PLSuperExpCutoff4FGL,
-    "LogParabola": LogParabola,
-    "TableModel": TableModel,
-    "SpectralGaussian": SpectralGaussian,
-    "SpectralLogGaussian": SpectralLogGaussian,
-    "AbsorbedSpectralModel": AbsorbedSpectralModel,
-    "Absorption": Absorption,
-}
+
+SPATIAL_MODELS = ModelRegistry(
+    [
+        ConstantSpatialModel,
+        TemplateSpatialModel,
+        DiskSpatialModel,
+        GaussianSpatialModel,
+        PointSpatialModel,
+        ShellSpatialModel,
+    ]
+)
+"""Built-in spatial models."""
+
+SPECTRAL_MODELS = ModelRegistry(
+    [
+        ConstantSpectralModel,
+        CompoundSpectralModel,
+        PowerLawSpectralModel,
+        PowerLaw2SpectralModel,
+        ExpCutoffPowerLawSpectralModel,
+        ExpCutoffPowerLaw3FGLSpectralModel,
+        SuperExpCutoffPowerLaw3FGLSpectralModel,
+        SuperExpCutoffPowerLaw4FGLSpectralModel,
+        LogParabolaSpectralModel,
+        TemplateSpectralModel,
+        GaussianSpectralModel,
+        LogGaussianSpectralModel,
+        AbsorbedSpectralModel,
+        NaimaSpectralModel,
+        ScaleSpectralModel,
+    ]
+)
+"""Built-in spectral models."""
+
+TEMPORAL_MODELS = ModelRegistry(
+    [PhaseCurveTemplateTemporalModel, LightCurveTemplateTemporalModel]
+)
+"""Built-in temporal models."""
+
+__all__ = [
+    "SPATIAL_MODELS",
+    "TEMPORAL_MODELS",
+    "SPECTRAL_MODELS",
+    "SkyModelBase",
+    "SkyModels",
+    "SkyModel",
+    "SkyDiffuseCube",
+    "BackgroundModel",
+    "create_crab_spectral_model",
+    "create_cosmic_ray_spectral_model",
+    "Absorption",
+    "SpatialModel",
+    "SpectralModel",
+    "TemporalModel",
+]
+
+__all__.extend(cls.__name__ for cls in SPATIAL_MODELS)
+__all__.extend(cls.__name__ for cls in SPECTRAL_MODELS)
+__all__.extend(cls.__name__ for cls in TEMPORAL_MODELS)

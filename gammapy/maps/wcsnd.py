@@ -9,14 +9,13 @@ import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.io import fits
 from astropy.nddata import Cutout2D
-from astropy.table import Table
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
-from .utils import INVALID_INDEX, get_random_state, interp_to_order
+from .utils import INVALID_INDEX, interp_to_order
 from .wcs import _check_width
 from .wcsmap import WcsGeom, WcsMap
 

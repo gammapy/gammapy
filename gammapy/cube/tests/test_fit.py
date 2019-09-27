@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.cube import MapDataset, PSFKernel, make_map_exposure_true_energy
+from gammapy.data import GTI
 from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
@@ -13,7 +14,12 @@ from gammapy.irf import (
 )
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
-from gammapy.modeling.models import BackgroundModel, PowerLaw, SkyGaussian, SkyModel
+from gammapy.modeling.models import (
+    BackgroundModel,
+    GaussianSpatialModel,
+    PowerLawSpectralModel,
+    SkyModel,
+)
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -22,7 +28,11 @@ def geom():
     ebounds = np.logspace(-1.0, 1.0, 3)
     axis = MapAxis.from_edges(ebounds, name="energy", unit=u.TeV)
     return WcsGeom.create(
-        skydir=(266.40498829, -28.93617776), binsz=0.02, width=(2, 2), coordsys="CEL", axes=[axis]
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(2, 2),
+        coordsys="CEL",
+        axes=[axis],
     )
 
 
@@ -31,7 +41,11 @@ def geom_etrue():
     ebounds_true = np.logspace(-1.0, 1.0, 4)
     axis = MapAxis.from_edges(ebounds_true, name="energy", unit=u.TeV)
     return WcsGeom.create(
-        skydir=(266.40498829, -28.93617776), binsz=0.02, width=(2, 2), coordsys="CEL", axes=[axis]
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(2, 2),
+        coordsys="CEL",
+        axes=[axis],
     )
 
 
@@ -72,8 +86,10 @@ def get_psf(geom_etrue):
 
 @pytest.fixture
 def sky_model():
-    spatial_model = SkyGaussian(lon_0="0.2 deg", lat_0="0.1 deg", sigma="0.2 deg", frame="galactic")
-    spectral_model = PowerLaw(
+    spatial_model = GaussianSpatialModel(
+        lon_0="0.2 deg", lat_0="0.1 deg", sigma="0.2 deg", frame="galactic"
+    )
+    spectral_model = PowerLawSpectralModel(
         index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
     return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
@@ -144,13 +160,37 @@ def test_different_exposure_unit(sky_model, geom):
     ebounds_true = np.logspace(2, 4, 3)
     axis = MapAxis.from_edges(ebounds_true, name="energy", unit="GeV")
     geom_gev = WcsGeom.create(
-        skydir=(266.40498829, -28.93617776), binsz=0.02, width=(2, 2), coordsys="CEL", axes=[axis]
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(2, 2),
+        coordsys="CEL",
+        axes=[axis],
     )
 
     dataset = get_map_dataset(sky_model, geom, geom_gev, edisp=False)
     npred = dataset.npred()
 
     assert_allclose(npred.data[0, 50, 50], npred_ref.data[0, 50, 50])
+
+
+@requires_data()
+def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
+    dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=True)
+    dataset_ref.counts = dataset_ref.background_model.map * 0.0
+    dataset_ref.counts.data[1, 50, 50] = 1
+    dataset_ref.counts.data[1, 60, 50] = 1
+
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+    dataset_ref.gti = gti
+    on_region = CircleSkyRegion(center=geom.center_skydir, radius=0.1 * u.deg)
+    spectrum_dataset = dataset_ref.to_spectrum_dataset(on_region)
+
+    assert np.sum(spectrum_dataset.counts.data) == 1
+    assert spectrum_dataset.data_shape == (2,)
+    assert spectrum_dataset.background.energy.nbin == 2
+    assert spectrum_dataset.aeff.energy.nbin == 3
+    assert spectrum_dataset.edisp.e_reco.nbin == 2
+    assert spectrum_dataset.edisp.e_true.nbin == 3
 
 
 @requires_data()
@@ -331,6 +371,7 @@ def test_create(geom, geom_etrue):
     assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 30000)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
+
 
 @requires_data()
 def test_stack(geom, geom_etrue):

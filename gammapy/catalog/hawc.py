@@ -2,7 +2,7 @@
 """HAWC catalogs (https://www.hawc-observatory.org)."""
 import numpy as np
 from astropy.table import Table
-from gammapy.modeling.models import PowerLaw
+from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -109,7 +109,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         errs["index"] = data[label + "index_err"]
         pars["reference"] = "7 TeV"
 
-        model = PowerLaw(**pars)
+        model = PowerLawSpectralModel(**pars)
         model.parameters.set_parameter_errors(errs)
 
         return model

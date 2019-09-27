@@ -42,7 +42,7 @@ components:
       scale: 1.0
       unit: deg
       value: 0.0
-    type: SkyGaussian
+    type: GaussianSpatialModel
   spectral:
     parameters:
     - factor: 2.0
@@ -69,5 +69,5 @@ components:
       scale: 1.0
       unit: TeV
       value: 1.0
-    type: PowerLaw
+    type: PowerLawSpectralModel
   type: SkyModel

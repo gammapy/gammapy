@@ -6,13 +6,13 @@ from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from gammapy.modeling.models import (
-    ExponentialCutoffPowerLaw,
-    PowerLaw,
-    SkyGaussian,
+    ExpCutoffPowerLawSpectralModel,
+    GaussianSpatialModel,
+    PointSpatialModel,
+    PowerLawSpectralModel,
+    ShellSpatialModel,
     SkyModel,
     SkyModels,
-    SkyPointSource,
-    SkyShell,
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
@@ -83,9 +83,9 @@ class SourceCatalogObjectHGPSComponent:
 
     @property
     def spatial_model(self):
-        """Component spatial model (`~gammapy.modeling.models.SkyGaussian`)."""
+        """Component spatial model (`~gammapy.modeling.models.GaussianSpatialModel`)."""
         d = self.data
-        model = SkyGaussian(lon_0=d["GLON"], lat_0=d["GLAT"], sigma=d["Size"])
+        model = GaussianSpatialModel(lon_0=d["GLON"], lat_0=d["GLAT"], sigma=d["Size"])
         model.parameters.set_parameter_errors(
             dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"])
         )
@@ -436,8 +436,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         One of the following models (given by ``Spectral_Model`` in the catalog):
 
-        - ``PL`` : `~gammapy.modeling.models.PowerLaw`
-        - ``ECPL`` : `~gammapy.modeling.models.ExponentialCutoffPowerLaw`
+        - ``PL`` : `~gammapy.modeling.models.PowerLawSpectralModel`
+        - ``ECPL`` : `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel`
 
         Parameters
         ----------
@@ -461,7 +461,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             pars["reference"] = data["Energy_Spec_PL_Pivot"]
             errs["amplitude"] = data["Flux_Spec_PL_Diff_Pivot_Err"]
             errs["index"] = data["Index_Spec_PL_Err"]
-            model = PowerLaw(**pars)
+            model = PowerLawSpectralModel(**pars)
         elif spec_type == "ecpl":
             pars["index"] = data["Index_Spec_ECPL"]
             pars["amplitude"] = data["Flux_Spec_ECPL_Diff_Pivot"]
@@ -470,7 +470,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             errs["index"] = data["Index_Spec_ECPL_Err"]
             errs["amplitude"] = data["Flux_Spec_ECPL_Diff_Pivot_Err"]
             errs["lambda_"] = data["Lambda_Spec_ECPL_Err"]
-            model = ExponentialCutoffPowerLaw(**pars)
+            model = ExpCutoffPowerLawSpectralModel(**pars)
         else:
             raise ValueError(f"Invalid spectral model: {spec_type}")
 
@@ -495,14 +495,14 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Spatial model (`~gammapy.modeling.models.SkySpatialModel`).
+        """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
         One of the following models (given by ``Spatial_Model`` in the catalog):
 
-        - ``Point-Like`` or has a size upper limit : `~gammapy.modeling.models.SkyPointSource`
-        - ``Gaussian``: `~gammapy.modeling.models.SkyGaussian`
+        - ``Point-Like`` or has a size upper limit : `~gammapy.modeling.models.PointSpatialModel`
+        - ``Gaussian``: `~gammapy.modeling.models.GaussianSpatialModel`
         - ``2-Gaussian`` or ``3-Gaussian``: composite model (using ``+`` with Gaussians)
-        - ``Shell``: `~gammapy.modeling.models.SkyShell`
+        - ``Shell``: `~gammapy.modeling.models.ShellSpatialModel`
         """
         d = self.data
         glon = d["GLON"]
@@ -511,9 +511,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         spatial_type = self.spatial_model_type
 
         if self.is_pointlike:
-            model = SkyPointSource(lon_0=glon, lat_0=glat)
+            model = PointSpatialModel(lon_0=glon, lat_0=glat)
         elif spatial_type == "gaussian":
-            model = SkyGaussian(lon_0=glon, lat_0=glat, sigma=d["Size"])
+            model = GaussianSpatialModel(lon_0=glon, lat_0=glat, sigma=d["Size"])
         elif spatial_type in {"2-gaussian", "3-gaussian"}:
             raise ValueError("For Gaussian or Multi-Gaussian models, use sky_model()!")
         elif spatial_type == "shell":
@@ -522,7 +522,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             r_out = d["Size"]
             radius = 0.95 * r_out
             width = r_out - radius
-            model = SkyShell(lon_0=glon, lat_0=glat, width=width, radius=radius)
+            model = ShellSpatialModel(
+                lon_0=glon, lat_0=glat, width=width, radius=radius
+            )
         else:
             raise ValueError(f"Not a valid spatial model: {spatial_type}")
 

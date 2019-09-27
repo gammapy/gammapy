@@ -8,8 +8,6 @@ from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
 from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 
-__all__ = ["SkyModelBase", "SkyModels", "SkyModel", "SkyDiffuseCube", "BackgroundModel"]
-
 
 class SkyModelBase(Model):
     """Sky model base class"""
@@ -31,7 +29,8 @@ class SkyModelBase(Model):
         return self.evaluate(lon, lat, energy)
 
     def evaluate_geom(self, geom):
-        coords = geom.get_coord()
+        coordsys = "CEL" if self.frame in ["icrs", "fk5"] else "GAL"
+        coords = geom.get_coord(coordsys=coordsys)
         return self(coords.lon, coords.lat, coords["energy"])
 
 
@@ -43,13 +42,6 @@ class SkyModels:
     skymodels : list of `~gammapy.modeling.models.SkyModel`
         Sky models
 
-    Examples
-    --------
-    Read from an XML file::
-
-        from gammapy.cube import SkyModels
-        filename = '$GAMMAPY_DATA/tests/models/fermi_model.xml'
-        sourcelib = SkyModels.read(filename)
     """
 
     frame = None
@@ -83,40 +75,6 @@ class SkyModels:
         return [_.name for _ in self.skymodels]
 
     @classmethod
-    def from_xml(cls, xml):
-        """Read from XML string."""
-        from gammapy.modeling.serialize_xml import xml_to_sky_models
-
-        return xml_to_sky_models(xml)
-
-    @classmethod
-    def read(cls, filename):
-        """Read from XML file.
-
-        The XML definition of some models is uncompatible with the models
-        currently implemented in gammapy. Therefore the following modifications
-        happen to the XML model definition
-
-        * PowerLaw: The spectral index is negative in XML but positive in
-          gammapy. Parameter limits are ignored
-
-        * ExponentialCutoffPowerLaw: The cutoff energy is transferred to
-          lambda = 1 / cutof energy on read
-        """
-        path = make_path(filename)
-        xml = path.read_text()
-        return cls.from_xml(xml)
-
-    def to_xml(self, filename):
-        """Write to XML file."""
-        from gammapy.modeling.serialize_xml import sky_models_to_xml
-
-        xml = sky_models_to_xml(self)
-        filename = make_path(filename)
-        with filename.open("w") as output:
-            output.write(xml)
-
-    @classmethod
     def from_yaml(cls, filename):
         """Write to YAML file."""
         from gammapy.modeling.serialize import dict_to_models
@@ -125,11 +83,11 @@ class SkyModels:
         skymodels = dict_to_models(data)
         return cls(skymodels)
 
-    def to_yaml(self, filename, selection="all"):
+    def to_yaml(self, filename):
         """Write to YAML file."""
         from gammapy.modeling.serialize import models_to_dict
 
-        components_dict = models_to_dict(self.skymodels, selection)
+        components_dict = models_to_dict(self.skymodels)
         write_yaml(components_dict, filename)
 
     def evaluate(self, lon, lat, energy):
@@ -185,7 +143,7 @@ class SkyModel(SkyModelBase):
 
     Parameters
     ----------
-    spatial_model : `~gammapy.modeling.models.SkySpatialModel`
+    spatial_model : `~gammapy.modeling.models.SpatialModel`
         Spatial model (must be normalised to integrate to 1)
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model
@@ -197,14 +155,14 @@ class SkyModel(SkyModelBase):
     __slots__ = ["name", "_spatial_model", "_spectral_model"]
 
     def __init__(self, spatial_model, spectral_model, name="source"):
-        from gammapy.modeling.models import SkySpatialModel, SpectralModel
+        from gammapy.modeling.models import SpatialModel, SpectralModel
 
         self.name = name
 
-        if not isinstance(spatial_model, SkySpatialModel):
+        if not isinstance(spatial_model, SpatialModel):
             raise ValueError(
                 f"Spatial model must be instance / subclass "
-                f" of `SkySpatialModel` and not {spatial_model.__class__.__name__}."
+                f" of `SpatialModel` and not {spatial_model.__class__.__name__}."
             )
 
         self._spatial_model = spatial_model
@@ -224,7 +182,7 @@ class SkyModel(SkyModelBase):
 
     @property
     def spatial_model(self):
-        """`~gammapy.modeling.models.SkySpatialModel`"""
+        """`~gammapy.modeling.models.SpatialModel`"""
         return self._spatial_model
 
     @property
@@ -300,13 +258,13 @@ class SkyModel(SkyModelBase):
         kwargs.setdefault("name", self.name + "-copy")
         return self.__class__(**kwargs)
 
-    def to_dict(self, selection):
+    def to_dict(self):
         """Create dict for YAML serilisation"""
         data = {}
         data["name"] = self.name
         data["type"] = self.tag
-        data["spatial"] = self.spatial_model.to_dict(selection)
-        data["spectral"] = self.spectral_model.to_dict(selection)
+        data["spatial"] = self.spatial_model.to_dict()
+        data["spectral"] = self.spectral_model.to_dict()
         return data
 
     @classmethod
@@ -314,10 +272,10 @@ class SkyModel(SkyModelBase):
         """Create SkyModel from dict"""
         from gammapy.modeling.models import SPATIAL_MODELS, SPECTRAL_MODELS
 
-        model_class = SPECTRAL_MODELS[data["spectral"]["type"]]
+        model_class = SPECTRAL_MODELS.get_cls(data["spectral"]["type"])
         spectral_model = model_class.from_dict(data["spectral"])
 
-        model_class = SPATIAL_MODELS[data["spatial"]["type"]]
+        model_class = SPATIAL_MODELS.get_cls(data["spatial"]["type"])
         spatial_model = model_class.from_dict(data["spatial"])
 
         return cls(
@@ -330,7 +288,7 @@ class SkyModel(SkyModelBase):
 class SkyDiffuseCube(SkyModelBase):
     """Cube sky map template model (3D).
 
-    This is for a 3D map with an energy axis. Use `~gammapy.modeling.models.SkyDiffuseMap`
+    This is for a 3D map with an energy axis. Use `~gammapy.modeling.models.TemplateSpatialModel`
     for 2D maps.
 
     Parameters
@@ -466,8 +424,8 @@ class SkyDiffuseCube(SkyModelBase):
             setattr(init, parameter.name, parameter)
         return init
 
-    def to_dict(self, selection):
-        data = super().to_dict(selection=selection)
+    def to_dict(self):
+        data = super().to_dict()
         data["name"] = self.name
         data["type"] = data.pop("type")
         data["filename"] = self.filename
@@ -540,10 +498,10 @@ class BackgroundModel(Model):
         back_values = norm * self.map.data * tilt_factor.value
         return self.map.copy(data=back_values)
 
-    def to_dict(self, selection):
+    def to_dict(self):
         data = {}
         data["name"] = self.name
-        data.update(super().to_dict(selection=selection))
+        data.update(super().to_dict())
         if self.filename is not None:
             data["filename"] = self.filename
         data["parameters"] = data.pop("parameters")

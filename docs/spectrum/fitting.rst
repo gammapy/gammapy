@@ -23,14 +23,14 @@ simulated crab runs using the `~gammapy.modeling.Fit` class.
 
     from gammapy.spectrum import SpectrumDatasetOnOff
     from gammapy.modeling import Fit
-    from gammapy.modeling.models import PowerLaw
+    from gammapy.modeling.models import PowerLawSpectralModel
     import matplotlib.pyplot as plt
 
     path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
     obs_1 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits")
     obs_2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
 
-    model = PowerLaw(
+    model = PowerLawSpectralModel(
         index=2,
         amplitude='1e-12  cm-2 s-1 TeV-1',
         reference='1 TeV',
@@ -61,7 +61,7 @@ You can check the fit results by looking at the result and model object:
 
     >>> print(model)
 
-        PowerLaw
+        PowerLawSpectralModel
 
         Parameters:
 

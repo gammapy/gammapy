@@ -12,26 +12,6 @@ from gammapy.utils.integrate import integrate_spectrum
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 
-__all__ = [
-    "SpectralModel",
-    "ConstantModel",
-    "CompoundSpectralModel",
-    "PowerLaw",
-    "PowerLaw2",
-    "ExponentialCutoffPowerLaw",
-    "ExponentialCutoffPowerLaw3FGL",
-    "PLSuperExpCutoff3FGL",
-    "PLSuperExpCutoff4FGL",
-    "LogParabola",
-    "TableModel",
-    "AbsorbedSpectralModel",
-    "Absorption",
-    "NaimaModel",
-    "SpectralGaussian",
-    "SpectralLogGaussian",
-    "ScaleModel",
-]
-
 
 class SpectralModel(Model):
     """Spectral model base class.
@@ -39,7 +19,7 @@ class SpectralModel(Model):
     Derived classes should store their parameters as
     `~gammapy.utils.modeling.Parameters`
     See for example return pardict of
-    `~gammapy.modeling.models.PowerLaw`.
+    `~gammapy.modeling.models.PowerLawSpectralModel`.
     """
 
     def __call__(self, energy):
@@ -54,7 +34,7 @@ class SpectralModel(Model):
 
     def __mul__(self, model):
         if not isinstance(model, SpectralModel):
-            model = ConstantModel(const=model)
+            model = ConstantSpectralModel(const=model)
         return CompoundSpectralModel(self, model, operator.mul)
 
     def __rmul__(self, model):
@@ -63,7 +43,7 @@ class SpectralModel(Model):
 
     def __add__(self, model):
         if not isinstance(model, SpectralModel):
-            model = ConstantModel(const=model)
+            model = ConstantSpectralModel(const=model)
         return CompoundSpectralModel(self, model, operator.add)
 
     def __radd__(self, model):
@@ -71,7 +51,7 @@ class SpectralModel(Model):
 
     def __sub__(self, model):
         if not isinstance(model, SpectralModel):
-            model = ConstantModel(const=model)
+            model = ConstantSpectralModel(const=model)
         return CompoundSpectralModel(self, model, operator.sub)
 
     def __rsub__(self, model):
@@ -79,7 +59,7 @@ class SpectralModel(Model):
 
     def __truediv__(self, model):
         if not isinstance(model, SpectralModel):
-            model = ConstantModel(const=model)
+            model = ConstantSpectralModel(const=model)
         return CompoundSpectralModel(self, model, operator.truediv)
 
     def __rtruediv__(self, model):
@@ -230,10 +210,10 @@ class SpectralModel(Model):
         By default a log-log scaling of the axes is used, if you want to change
         the y axis scaling to linear you can use::
 
-            from gammapy.modeling.models import ExponentialCutoffPowerLaw
+            from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel
             from astropy import units as u
 
-            pwl = ExponentialCutoffPowerLaw()
+            pwl = ExpCutoffPowerLawSpectralModel()
             ax = pwl.plot(energy_range=(0.1, 100) * u.TeV)
             ax.set_yscale('linear')
 
@@ -422,7 +402,7 @@ class SpectralModel(Model):
         return u.Quantity(energies, eunit, copy=False)
 
 
-class ConstantModel(SpectralModel):
+class ConstantSpectralModel(SpectralModel):
     r"""Constant model.
 
     .. math:: \phi(E) = k
@@ -434,7 +414,7 @@ class ConstantModel(SpectralModel):
     """
 
     __slots__ = ["const"]
-    tag = "ConstantModel"
+    tag = "ConstantSpectralModel"
 
     def __init__(self, const):
         self.const = Parameter("const", const)
@@ -485,7 +465,7 @@ class CompoundSpectralModel(SpectralModel):
         retval["operator"] = self.operator
 
 
-class PowerLaw(SpectralModel):
+class PowerLawSpectralModel(SpectralModel):
     r"""Spectral power-law model.
 
     .. math::
@@ -502,18 +482,18 @@ class PowerLaw(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `PowerLaw` model::
+    This is how to plot the default `PowerLawSpectralModel` model::
 
         from astropy import units as u
-        from gammapy.modeling.models import PowerLaw
+        from gammapy.modeling.models import PowerLawSpectralModel
 
-        pwl = PowerLaw()
+        pwl = PowerLawSpectralModel()
         pwl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
     __slots__ = ["index", "amplitude", "reference"]
-    tag = "PowerLaw"
+    tag = "PowerLawSpectralModel"
 
     def __init__(self, index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"):
         self.index = Parameter("index", index)
@@ -696,7 +676,7 @@ class PowerLaw(SpectralModel):
         return reference * np.exp(cov_index_ampl / (amplitude * index_err ** 2))
 
 
-class PowerLaw2(SpectralModel):
+class PowerLaw2SpectralModel(SpectralModel):
     r"""Spectral power-law model with integral as amplitude parameter.
 
     See also: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
@@ -718,18 +698,18 @@ class PowerLaw2(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `PowerLaw2` model::
+    This is how to plot the default `PowerLaw2SpectralModel` model::
 
         from astropy import units as u
-        from gammapy.modeling.models import PowerLaw2
+        from gammapy.modeling.models import PowerLaw2SpectralModel
 
-        pwl2 = PowerLaw2()
+        pwl2 = PowerLaw2SpectralModel()
         pwl2.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
     __slots__ = ["index", "amplitude", "emin", "emax"]
-    tag = "PowerLaw2"
+    tag = "PowerLaw2SpectralModel"
 
     def __init__(
         self, amplitude="1e-12 cm-2 s-1", index=2, emin="0.1 TeV", emax="100 TeV"
@@ -827,7 +807,7 @@ class PowerLaw2(SpectralModel):
         return np.power(term.to_value(""), -1.0 / index) * emax
 
 
-class ExponentialCutoffPowerLaw(SpectralModel):
+class ExpCutoffPowerLawSpectralModel(SpectralModel):
     r"""Spectral exponential cutoff power-law model.
 
     .. math::
@@ -846,18 +826,18 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `ExponentialCutoffPowerLaw` model::
+    This is how to plot the default `ExpCutoffPowerLawSpectralModel` model::
 
         from astropy import units as u
-        from gammapy.modeling.models import ExponentialCutoffPowerLaw
+        from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel
 
-        ecpl = ExponentialCutoffPowerLaw()
+        ecpl = ExpCutoffPowerLawSpectralModel()
         ecpl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
     __slots__ = ["index", "amplitude", "reference", "lambda_"]
-    tag = "ExponentialCutoffPowerLaw"
+    tag = "ExpCutoffPowerLawSpectralModel"
 
     def __init__(
         self,
@@ -903,10 +883,10 @@ class ExponentialCutoffPowerLaw(SpectralModel):
             return (2 - index) / lambda_
 
 
-class ExponentialCutoffPowerLaw3FGL(SpectralModel):
+class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     r"""Spectral exponential cutoff power-law model used for 3FGL.
 
-    Note that the parametrization is different from `ExponentialCutoffPowerLaw`:
+    Note that the parametrization is different from `ExpCutoffPowerLawSpectralModel`:
 
     .. math::
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma}
@@ -925,18 +905,18 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `ExponentialCutoffPowerLaw3FGL` model::
+    This is how to plot the default `ExpCutoffPowerLaw3FGLSpectralModel` model::
 
         from astropy import units as u
-        from gammapy.modeling.models import ExponentialCutoffPowerLaw3FGL
+        from gammapy.modeling.models import ExpCutoffPowerLaw3FGLSpectralModel
 
-        ecpl_3fgl = ExponentialCutoffPowerLaw3FGL()
+        ecpl_3fgl = ExpCutoffPowerLaw3FGLSpectralModel()
         ecpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
     __slots__ = ["index", "amplitude", "reference", "ecut"]
-    tag = "ExponentialCutoffPowerLaw3FGL"
+    tag = "ExpCutoffPowerLaw3FGLSpectralModel"
 
     def __init__(
         self,
@@ -964,7 +944,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         return pwl * cutoff
 
 
-class PLSuperExpCutoff3FGL(SpectralModel):
+class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 3FGL.
 
     .. math::
@@ -988,18 +968,18 @@ class PLSuperExpCutoff3FGL(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `PLSuperExpCutoff3FGL` model::
+    This is how to plot the default `SuperExpCutoffPowerLaw3FGLSpectralModel` model::
 
         from astropy import units as u
-        from gammapy.modeling.models import PLSuperExpCutoff3FGL
+        from gammapy.modeling.models import SuperExpCutoffPowerLaw3FGLSpectralModel
 
-        secpl_3fgl = PLSuperExpCutoff3FGL()
+        secpl_3fgl = SuperExpCutoffPowerLaw3FGLSpectralModel()
         secpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
     __slots__ = ["index_1", "index_2", "amplitude", "reference", "ecut"]
-    tag = "PLSuperExpCutoff3FGL"
+    tag = "SuperExpCutoffPowerLaw3FGLSpectralModel"
 
     def __init__(
         self,
@@ -1031,11 +1011,11 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         return pwl * cutoff
 
 
-class PLSuperExpCutoff4FGL(SpectralModel):
+class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 4FGL.
 
     This model parametrisation is very similar, but slightly different from
-    `PLSuperExpCutoff3FGL` or `ExponentialCutoffPowerLaw3FGL`.
+    `SuperExpCutoffPowerLaw3FGLSpectralModel` or `ExpCutoffPowerLaw3FGLSpectralModel`.
 
     See Equation (3) in https://arxiv.org/pdf/1902.10045.pdf
 
@@ -1060,18 +1040,18 @@ class PLSuperExpCutoff4FGL(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `PLSuperExpCutoff4FGL` model::
+    This is how to plot the default `SuperExpCutoffPowerLaw4FGLSpectralModel` model::
 
         from astropy import units as u
-        from gammapy.modeling.models import PLSuperExpCutoff4FGL
+        from gammapy.modeling.models import SuperExpCutoffPowerLaw4FGLSpectralModel
 
-        model = PLSuperExpCutoff4FGL()
+        model = SuperExpCutoffPowerLaw4FGLSpectralModel()
         model.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
     __slots__ = ["index_1", "index_2", "amplitude", "reference", "expfactor"]
-    tag = "PLSuperExpCutoff4FGL"
+    tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
 
     def __init__(
         self,
@@ -1103,7 +1083,7 @@ class PLSuperExpCutoff4FGL(SpectralModel):
         return pwl * cutoff
 
 
-class LogParabola(SpectralModel):
+class LogParabolaSpectralModel(SpectralModel):
     r"""Spectral log parabola model.
 
     .. math::
@@ -1119,7 +1099,7 @@ class LogParabola(SpectralModel):
     The `Sherpa <http://cxc.harvard.edu/sherpa/ahelp/logparabola.html_
     package>`_ package, however, uses :math:`log_{10}`. If you have
     parametrization based on :math:`log_{10}` you can use the
-    :func:`~gammapy.modeling.models.LogParabola.from_log10` method.
+    :func:`~gammapy.modeling.models.LogParabolaSpectralModel.from_log10` method.
 
     Parameters
     ----------
@@ -1134,18 +1114,18 @@ class LogParabola(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `LogParabola` model::
+    This is how to plot the default `LogParabolaSpectralModel` model::
 
         from astropy import units as u
-        from gammapy.modeling.models import LogParabola
+        from gammapy.modeling.models import LogParabolaSpectralModel
 
-        log_parabola = LogParabola()
+        log_parabola = LogParabolaSpectralModel()
         log_parabola.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
     __slots__ = ["amplitude", "reference", "alpha", "beta"]
-    tag = "LogParabola"
+    tag = "LogParabolaSpectralModel"
 
     def __init__(
         self, amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2, beta=1
@@ -1191,7 +1171,7 @@ class LogParabola(SpectralModel):
         return reference * np.exp((2 - alpha) / (2 * beta))
 
 
-class TableModel(SpectralModel):
+class TemplateSpectralModel(SpectralModel):
     """A model generated from a table of energy and value arrays.
 
     the units returned will be the units of the values array provided at
@@ -1200,7 +1180,7 @@ class TableModel(SpectralModel):
     energy array.
 
     Class implementation follows closely what has been done in
-    `naima.models.TableModel`
+    `naima.models.TemplateSpectralModel`
 
     Parameters
     ----------
@@ -1221,7 +1201,7 @@ class TableModel(SpectralModel):
     """
 
     __slots__ = ["energy", "values", "norm", "meta", "_evaluate"]
-    tag = "TableModel"
+    tag = "TemplateSpectralModel"
 
     def __init__(
         self,
@@ -1271,9 +1251,9 @@ class TableModel(SpectralModel):
         --------
         Fill table from an EBL model (Franceschini, 2008)
 
-        >>> from gammapy.modeling.models import TableModel
+        >>> from gammapy.modeling.models import TemplateSpectralModel
         >>> filename = '$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz'
-        >>> table_model = TableModel.read_xspec_model(filename=filename, param=0.3)
+        >>> table_model = TemplateSpectralModel.read_xspec_model(filename=filename, param=0.3)
         """
         filename = str(make_path(filename))
 
@@ -1323,10 +1303,10 @@ class TableModel(SpectralModel):
         tilt_factor = np.power(energy / reference, -tilt)
         return norm * values * tilt_factor
 
-    def to_dict(self, selection="all"):
+    def to_dict(self):
         return {
             "type": self.tag,
-            "parameters": self.parameters.to_dict(selection)["parameters"],
+            "parameters": self.parameters.to_dict()["parameters"],
             "energy": {
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
@@ -1348,7 +1328,7 @@ class TableModel(SpectralModel):
         return init
 
 
-class ScaleModel(SpectralModel):
+class ScaleSpectralModel(SpectralModel):
     """Wrapper to scale another spectral model by a norm factor.
 
     Parameters
@@ -1360,7 +1340,7 @@ class ScaleModel(SpectralModel):
     """
 
     __slots__ = ["norm", "model"]
-    tag = "ScaleModel"
+    tag = "ScaleSpectralModel"
 
     def __init__(self, model, norm=1):
         self.norm = Parameter("norm", norm, unit="")
@@ -1526,7 +1506,7 @@ class Absorption:
         return cls.read(models[name])
 
     def table_model(self, parameter):
-        """Table model for a given parameter (`~gammapy.modeling.models.TableModel`).
+        """Table model for a given parameter (`~gammapy.modeling.models.TemplateSpectralModel`).
 
         Parameters
         ----------
@@ -1535,7 +1515,7 @@ class Absorption:
         """
         energy = self.energy
         values = self.evaluate(energy=energy, parameter=parameter)
-        return TableModel(
+        return TemplateSpectralModel(
             energy=energy, values=values, interp_kwargs={"values_scale": "log"}
         )
 
@@ -1589,25 +1569,25 @@ class AbsorbedSpectralModel(SpectralModel):
         absorption = self.absorption.evaluate(energy=energy, parameter=parameter)
         return flux * absorption
 
-    def to_dict(self, selection="all"):
+    def to_dict(self):
         return {
             "type": self.tag,
-            "base_model": self.spectral_model.to_dict(selection),
+            "base_model": self.spectral_model.to_dict(),
             "absorption": self.absorption.to_dict(),
             "absorption_parameter": {
                 "name": self.parameter_name,
                 "value": self.parameter,
             },
-            "parameters": self.parameters.to_dict(selection)["parameters"],
+            "parameters": self.parameters.to_dict()["parameters"],
         }
 
     @classmethod
     def from_dict(cls, data):
         from gammapy.modeling.models import SPECTRAL_MODELS
 
-        base_model = SPECTRAL_MODELS[data["base_model"]["type"]]
+        model_class = SPECTRAL_MODELS.get_cls(data["base_model"]["type"])
         init = cls(
-            spectral_model=base_model.from_dict(data["base_model"]),
+            spectral_model=model_class.from_dict(data["base_model"]),
             absorption=Absorption.from_dict(data["absorption"]),
             parameter=data["absorption_parameter"]["value"],
             parameter_name=data["absorption_parameter"]["name"],
@@ -1618,7 +1598,7 @@ class AbsorbedSpectralModel(SpectralModel):
         return init
 
 
-class NaimaModel(SpectralModel):
+class NaimaSpectralModel(SpectralModel):
     r"""A wrapper for Naima models.
 
     This class provides an interface with the models defined in the `~naima.models` module.
@@ -1650,14 +1630,14 @@ class NaimaModel(SpectralModel):
 
     Examples
     --------
-    Create and plot a spectral model that convolves an `ExponentialCutoffPowerLaw` electron distribution
+    Create and plot a spectral model that convolves an `ExpCutoffPowerLawSpectralModel` electron distribution
     with an `InverseCompton` radiative model, in the presence of multiple seed photon fields.
 
     .. plot::
         :include-source:
 
         import naima
-        from gammapy.modeling.models import NaimaModel
+        from gammapy.modeling.models import NaimaSpectralModel
         import astropy.units as u
         import matplotlib.pyplot as plt
 
@@ -1672,7 +1652,7 @@ class NaimaModel(SpectralModel):
             Eemin=100 * u.GeV,
         )
 
-        model = NaimaModel(radiative_model, distance=1.5 * u.kpc)
+        model = NaimaSpectralModel(radiative_model, distance=1.5 * u.kpc)
 
         opts = {
             "energy_range" : [10 * u.GeV, 80 * u.TeV],
@@ -1685,13 +1665,13 @@ class NaimaModel(SpectralModel):
 
         # Plot the separate contributions from each seed photon field
         for seed, ls in zip(['CMB','FIR'], ['-','--']):
-            model = NaimaModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
+            model = NaimaSpectralModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
             model.plot(label="IC ({})".format(seed), ls=ls, color="gray", **opts)
 
         plt.legend(loc='best')
         plt.show()
     """
-    tag = "NaimaModel"
+    tag = "NaimaSpectralModel"
 
     # TODO: prevent users from setting new attributes after init
     def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
@@ -1702,7 +1682,7 @@ class NaimaModel(SpectralModel):
         self.distance = Parameter("distance", distance, frozen=True)
         self.seed = seed
 
-        # This ensures the support of naima.models.TableModel
+        # This ensures the support of naima.models.TemplateSpectralModel
         if isinstance(self._particle_distribution, naima.models.TableModel):
             param_names = ["amplitude"]
         else:
@@ -1751,14 +1731,11 @@ class NaimaModel(SpectralModel):
         return dnde.to(unit)
 
 
-class SpectralGaussian(SpectralModel):
+class GaussianSpectralModel(SpectralModel):
     r"""Gaussian spectral model.
 
     .. math::
-
         \phi(E) = \frac{N_0}{\sigma \sqrt{2\pi}}  \exp{ \frac{- \left( E-\bar{E} \right)^2 }{2 \sigma^2} }
-
-
 
     Parameters
     ----------
@@ -1769,7 +1746,6 @@ class SpectralGaussian(SpectralModel):
     sigma : `~astropy.units.Quantity`
         :math:`\sigma`
 
-
     Examples
     --------
     This is how to plot the default `Gaussian` spectral model:
@@ -1777,13 +1753,13 @@ class SpectralGaussian(SpectralModel):
     .. code:: python
 
         from astropy import units as u
-        from gammapy.modeling.models import SpectralGaussian
+        from gammapy.modeling.models import GaussianSpectralModel
 
-        gaussian = SpectralGaussian()
+        gaussian = GaussianSpectralModel()
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
-    tag = "SpectralGaussian"
+    tag = "GaussianSpectralModel"
 
     def __init__(
         self, norm=1e-12 * u.Unit("cm-2 s-1"), mean=1 * u.TeV, sigma=2 * u.TeV
@@ -1858,17 +1834,15 @@ class SpectralGaussian(SpectralModel):
         )
 
 
-class SpectralLogGaussian(SpectralModel):
-    r"""Gaussian Log spectral model.
+class LogGaussianSpectralModel(SpectralModel):
+    r"""Log Gaussian spectral model.
 
     .. math::
-
         \phi(E) = \frac{N_0}{E \, \sigma \sqrt{2\pi}}
          \exp{ \frac{- \left( \ln(\frac{E}{\bar{E}}) \right)^2 }{2 \sigma^2} }
 
     This model was used in this CTA study for the electron spectrum: Table 3
-     in https://ui.adsabs.harvard.edu/abs/2013APh....43..171B
-
+    in https://ui.adsabs.harvard.edu/abs/2013APh....43..171B
 
     Parameters
     ----------
@@ -1879,22 +1853,21 @@ class SpectralLogGaussian(SpectralModel):
     sigma : `float`
         :math:`\sigma`
 
-
     Examples
     --------
-    This is how to plot a Gaussian Log spectral model. Very similar from the `SpectralGaussian` model but the Gaussian
+    This is how to plot a Gaussian Log spectral model. Very similar from the `GaussianSpectralModel` model but the Gaussian
     is based on the logarithm of the energy
 
     .. code:: python
 
         from astropy import units as u
-        from gammapy.modeling.models import SpectralLogGaussian
+        from gammapy.modeling.models import LogGaussianSpectralModel
 
-        gaussian = SpectralLogGaussian()
+        gaussian = LogGaussianSpectralModel()
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
-    tag = "SpectralLogGaussian"
+    tag = "LogGaussianSpectralModel"
 
     def __init__(self, norm=1e-12 * u.Unit("cm-2 s-1"), mean=1 * u.TeV, sigma=2):
         self.norm = Parameter("norm", norm)

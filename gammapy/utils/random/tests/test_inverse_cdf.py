@@ -2,7 +2,6 @@
 import numpy as np
 import scipy.stats as stats
 from numpy.testing import assert_allclose
-from astropy import units as u
 from gammapy.utils.random import InverseCDFSampler
 
 

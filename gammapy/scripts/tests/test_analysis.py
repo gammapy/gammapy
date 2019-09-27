@@ -141,16 +141,43 @@ def test_analysis_1d(config_analysis_data):
 
 @requires_dependency("iminuit")
 @requires_data()
+def test_analysis_1d_stacked():
+    analysis = Analysis.from_template(template="1d")
+    analysis.settings["reduction"]["stack-datasets"] = True
+    analysis.get_observations()
+    analysis.get_datasets()
+    analysis.get_model()
+    analysis.run_fit()
+
+    assert len(analysis.datasets.datasets) == 1
+    assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 404)
+    pars = analysis.fit_result.parameters
+
+    assert_allclose(pars["index"].value, 2.689559, rtol=1e-3)
+    assert_allclose(pars["amplitude"].value, 2.81629e-11, rtol=1e-3)
+
+
+@requires_dependency("iminuit")
+@requires_data()
 def test_analysis_3d():
     analysis = Analysis.from_template(template="3d")
     analysis.get_observations()
     analysis.get_datasets()
     analysis.get_model()
+    analysis.datasets["stacked"].background_model.tilt.frozen = False
     analysis.run_fit()
+    analysis.get_flux_points()
+
     assert len(analysis.datasets.datasets) == 1
     assert len(analysis.fit_result.parameters.parameters) == 8
     res = analysis.fit_result.parameters.parameters
     assert res[3].unit == "cm-2 s-1 TeV-1"
+    assert len(analysis.flux_points_dataset.data.table) == 2
+    dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
+    print(dnde[0].value, dnde[-1].value)
+
+    assert_allclose(dnde[0].value, 1.175e-11, rtol=1e-1)
+    assert_allclose(dnde[-1].value, 4.061e-13, rtol=1e-1)
     assert_allclose(res[5].value, 2.920, rtol=1e-1)
     assert_allclose(res[6].value, -1.983e-02, rtol=1e-1)
 

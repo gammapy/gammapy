@@ -19,8 +19,8 @@ def test_dict_to_skymodels(tmpdir):
     assert len(models) == 3
 
     model0 = models[0]
-    assert isinstance(model0.spectral_model, spectral.ExponentialCutoffPowerLaw)
-    assert isinstance(model0.spatial_model, spatial.SkyPointSource)
+    assert isinstance(model0.spectral_model, spectral.ExpCutoffPowerLawSpectralModel)
+    assert isinstance(model0.spatial_model, spatial.PointSpatialModel)
 
     pars0 = model0.parameters
     assert pars0["index"].value == 2.1
@@ -47,8 +47,8 @@ def test_dict_to_skymodels(tmpdir):
     assert np.isnan(pars0["lambda_"].max)
 
     model1 = models[1]
-    assert isinstance(model1.spectral_model, spectral.PowerLaw)
-    assert isinstance(model1.spatial_model, spatial.SkyDisk)
+    assert isinstance(model1.spectral_model, spectral.PowerLawSpectralModel)
+    assert isinstance(model1.spatial_model, spatial.DiskSpatialModel)
 
     pars1 = model1.parameters
     assert pars1["index"].value == 2.2
@@ -69,12 +69,12 @@ def test_dict_to_skymodels(tmpdir):
     )
     assert model2.spectral_model.values.unit == "1 / (cm2 MeV s sr)"
 
-    assert isinstance(model2.spectral_model, spectral.TableModel)
-    assert isinstance(model2.spatial_model, spatial.SkyDiffuseMap)
+    assert isinstance(model2.spectral_model, spectral.TemplateSpectralModel)
+    assert isinstance(model2.spatial_model, spatial.TemplateSpatialModel)
 
     assert model2.spatial_model.parameters["norm"].value == 1.0
     assert model2.spectral_model.parameters["norm"].value == 2.1
-    # TODO problem of duplicate parameter name between SkyDiffuseMap and TableModel
+    # TODO problem of duplicate parameter name between TemplateSpatialModel and TemplateSpectralModel
     # assert model2.parameters["norm"].value == 2.1 # fail
 
 
@@ -87,11 +87,7 @@ def test_sky_models_io(tmpdir):
     filename = str(tmpdir / "io_example.yaml")
     models.to_yaml(filename)
     models = SkyModels.from_yaml(filename)
-    assert models.parameters["lat_0"].min == -90.0
-
-    models.to_yaml(filename, selection="simple")
-    models = SkyModels.from_yaml(filename)
-    assert np.isnan(models.parameters["lat_0"].min)
+    assert_allclose(models.parameters["lat_0"].min, -90.0)
 
     # TODO: not sure if we should just round-trip, or if we should
     # check YAML file content (e.g. against a ref file in the repo)
@@ -138,7 +134,7 @@ def test_datasets_to_io(tmpdir):
     )
 
     path = str(tmpdir / "/written_")
-    datasets.to_yaml(path, selection="simple", overwrite=True)
+    datasets.to_yaml(path, overwrite=True)
     datasets_read = Datasets.from_yaml(path + "datasets.yaml", path + "models.yaml")
     assert len(datasets_read.datasets) == 2
     dataset0 = datasets_read.datasets[0]
@@ -153,7 +149,7 @@ def test_datasets_to_io(tmpdir):
 def test_absorption_io(tmpdir):
     dominguez = spectral.Absorption.read_builtin("dominguez")
     model = spectral.AbsorbedSpectralModel(
-        spectral_model=spectral.PowerLaw(),
+        spectral_model=spectral.PowerLawSpectralModel(),
         absorption=dominguez,
         parameter=0.5,
         parameter_name="redshift",
@@ -162,7 +158,7 @@ def test_absorption_io(tmpdir):
     new_model = spectral.AbsorbedSpectralModel.from_dict(model_dict)
     assert new_model.parameter == 0.5
     assert new_model.parameter_name == "redshift"
-    assert new_model.spectral_model.tag == "PowerLaw"
+    assert new_model.spectral_model.tag == "PowerLawSpectralModel"
     assert_allclose(new_model.absorption.energy, dominguez.energy)
     assert_allclose(new_model.absorption.param, dominguez.param)
     assert len(new_model.parameters.parameters) == 4
@@ -173,7 +169,7 @@ def test_absorption_io(tmpdir):
         u.Quantity(np.ones((2, 3)), ""),
     )
     model = spectral.AbsorbedSpectralModel(
-        spectral_model=spectral.PowerLaw(),
+        spectral_model=spectral.PowerLawSpectralModel(),
         absorption=test_absorption,
         parameter=0.5,
         parameter_name="redshift",

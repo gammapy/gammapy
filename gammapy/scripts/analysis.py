@@ -9,12 +9,11 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
-from gammapy.irf import make_mean_psf, make_mean_edisp
-from gammapy.cube import MapDataset, MapMaker, PSFKernel
+from gammapy.cube import MapDataset, MapMakerObs
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import SkyModels, BackgroundModel
+from gammapy.modeling.models import SkyModels
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
@@ -32,7 +31,7 @@ SCHEMA_FILE = CONFIG_PATH / "schema.yaml"
 ANALYSIS_TEMPLATES = {
     "basic": "template-basic.yaml",
     "1d": "template-1d.yaml",
-    "3d": "template-3d.yaml"
+    "3d": "template-3d.yaml",
 }
 
 
@@ -92,7 +91,7 @@ class Analysis:
         return self.config.settings
 
     def run_fit(self, optimize_opts=None):
-        """Fitting reduced data sets to model."""
+        """Fitting reduced datasets to model."""
         if self._validate_fitting_settings():
             for ds in self.datasets.datasets:
                 # TODO: fit_range handled in jsonschema validation class
@@ -104,7 +103,7 @@ class Analysis:
                     else:
                         ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
 
-            log.info("Fitting reduced data sets.")
+            log.info("Fitting reduced datasets.")
             self.fit = Fit(self.datasets)
             self.fit_result = self.fit.run(optimize_opts=optimize_opts)
             log.info(self.fit_result)
@@ -144,7 +143,7 @@ class Analysis:
         return cls.from_yaml(filename)
 
     def get_datasets(self):
-        """Produce reduced data sets."""
+        """Produce reduced datasets."""
         if not self._validate_reduction_settings():
             return False
         if self.settings["reduction"]["dataset-type"] == "SpectrumDatasetOnOff":
@@ -155,18 +154,23 @@ class Analysis:
             # TODO raise error?
             log.info("Data reduction method not available.")
 
-    def get_flux_points(self):
-        """Calculate flux points."""
+    def get_flux_points(self, source="source"):
+        """Calculate flux points for a specific model component.
+
+        Parameters
+        ----------
+        source : string
+            Name of the model component where to calculate the flux points.
+        """
         if self._validate_fp_settings():
             # TODO: add "source" to config
-            source = "source"
             log.info("Calculating flux points.")
 
             axis_params = self.settings["flux"]["fp_binning"]
             e_edges = MapAxis.from_bounds(**axis_params).edges
 
             flux_point_estimator = FluxPointsEstimator(
-                e_edges=e_edges, datasets=self.datasets, source=source,
+                e_edges=e_edges, datasets=self.datasets, source=source
             )
             fp = flux_point_estimator.run()
             fp.table["is_ul"] = fp.table["ts"] < 4
@@ -241,43 +245,64 @@ class Analysis:
         return WcsGeom.create(**geom_params)
 
     def _map_making(self):
-        """Make maps and data sets for 3d analysis."""
-        maker_params = {}
-
-        if "offset-max" in self.settings["reduction"]:
-            maker_params["offset_max"] = Angle(self.settings["reduction"]["offset-max"])
-
+        """Make maps and datasets for 3d analysis."""
+        log.info("Creating geometry.")
         geom = self._create_geometry(self.settings["reduction"]["geom"])
+        geom_irf = self._create_geometry(self.settings["reduction"]["geom-irf"])
+        offset_max = Angle(self.settings["reduction"]["offset-max"])
+        stack_datasets = self.settings["reduction"]["stack-datasets"]
+        log.info("Creating datasets.")
 
-        pars = self.settings["reduction"].get("geom-irf")
-        if pars is not None:
-            geom_true = self._create_geometry(pars)
+        if stack_datasets:
+            stacked = MapDataset.create(geom=geom, geom_irf=geom_irf, name="stacked")
+
+            for obs in self.observations:
+                dataset = self._get_dataset(obs, geom, geom_irf, offset_max)
+                stacked.stack(dataset)
+
+            self._extract_irf_kernels(stacked)
+            datasets = [stacked]
         else:
-            geom_true = geom
+            datasets = []
+            for obs in self.observations:
+                dataset = self._get_dataset(obs, geom, geom_irf, offset_max)
+                self._extract_irf_kernels(dataset)
+                datasets.append(dataset)
 
-        maker = MapMaker(geom=geom, geom_true=geom_true, **maker_params)
-        maps = maker.run(self.observations)
-        table_psf = make_mean_psf(self.observations, geom.center_skydir)
-        psf_kernel = PSFKernel.from_table_psf(table_psf, geom_true, max_radius=Angle("0.3 deg"))
+        self.datasets = Datasets(datasets)
 
-        e_reco = geom.get_axis_by_name("energy").edges
-        e_true = geom_true.get_axis_by_name("energy").edges
-        edisp = make_mean_edisp(
-            self.observations, position=geom.center_skydir, e_true=e_true, e_reco=e_reco
+    @staticmethod
+    def _get_dataset(obs, geom, geom_irf, offset_max):
+        position, width = obs.pointing_radec, 2 * offset_max
+        geom_cutout = geom.cutout(position=position, width=width)
+        geom_irf_cutout = geom_irf.cutout(position=position, width=width)
+
+        maker = MapMakerObs(
+            observation=obs,
+            geom=geom_cutout,
+            geom_true=geom_irf_cutout,
+            offset_max=offset_max,
         )
 
-        background_model = BackgroundModel(maps["background"], norm=1.0)
-        background_model.parameters["tilt"].frozen = False
+        return maker.run()
 
-        self.datasets = Datasets(
-            MapDataset(
-                counts=maps["counts"],
-                exposure=maps["exposure"],
-                background_model=background_model,
-                psf=psf_kernel,
-                edisp=edisp,
-                name="stacked",
-            )
+    def _extract_irf_kernels(self, dataset):
+        # TODO: remove hard-coded default value
+        max_radius = self.settings["reduction"].get("psf-kernel-radius", "0.5 deg")
+
+        # TODO: handle IRF maps in fit
+        geom = dataset.counts.geom
+        geom_irf = dataset.exposure.geom
+
+        position = geom.center_skydir
+        geom_psf = geom.to_image().to_cube(geom_irf.axes)
+        dataset.psf = dataset.psf.get_psf_kernel(
+            position=position, geom=geom_psf, max_radius=max_radius
+        )
+
+        e_reco = geom.get_axis_by_name("energy").edges
+        dataset.edisp = dataset.edisp.get_energy_dispersion(
+            position=position, e_reco=e_reco
         )
 
     def get_model(self):
@@ -294,7 +319,9 @@ class Analysis:
                 dataset.model = self.model
             else:
                 if len(self.model.skymodels) > 1:
-                    raise ValueError("Can only fit a single spectral model at one time.")
+                    raise ValueError(
+                        "Can only fit a single spectral model at one time."
+                    )
                 dataset.model = self.model.skymodels[0].spectral_model
 
         log.info(self.model)
@@ -309,7 +336,7 @@ class Analysis:
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
         region = self.settings["reduction"]["geom"]["region"]
-        log.info("Reducing spectrum data sets.")
+        log.info("Reducing spectrum datasets.")
         on_lon = Angle(region["center"][0])
         on_lat = Angle(region["center"][1])
         on_center = SkyCoord(on_lon, on_lat, frame=region["frame"])
@@ -354,32 +381,49 @@ class Analysis:
         self.extraction.run()
         self.datasets = Datasets(self.extraction.spectrum_observations)
 
+        if self.settings["reduction"]["stack-datasets"]:
+            stacked = self.datasets.stack_reduce()
+            stacked.name = "stacked"
+            self.datasets = Datasets([stacked])
+
     def _validate_fitting_settings(self):
         """Validate settings before proceeding to fit 1D."""
-        if self.datasets.datasets:
-            if (self.extraction and
-                self.settings["reduction"]["background"]["background_estimator"]
+        valid = True
+        if self.datasets and self.datasets.datasets:
+            if (
+                self.extraction
+                and self.settings["reduction"]["background"]["background_estimator"]
                 != "reflected"
             ):
                 # TODO raise error?
                 log.info("Background estimation only for reflected regions method.")
                 return False
             self.config.validate()
-            return True
         else:
             log.info("No datasets reduced.")
+            valid = False
+        if not self.model:
+            log.info("No model fetched for datasets.")
+            valid = False
+        if not valid:
             log.info("Fit cannot be done.")
-            return False
+        return valid
 
     def _validate_fp_settings(self):
         """Validate settings before proceeding to flux points estimation."""
+        valid = True
         if self.fit:
             self.config.validate()
-            return True
         else:
             log.info("No results available from fit.")
+            valid = False
+        if "fp_binning" not in self.settings["flux"]:
+            log.info("No values declared for the energy bins.")
+            valid = False
+        if not valid:
             log.info("Flux points calculation cannot be done.")
-            return False
+
+        return valid
 
     def _validate_reduction_settings(self):
         """Validate settings before proceeding to data reduction."""
@@ -465,19 +509,23 @@ class AnalysisConfig:
         if len(config):
             self._user_settings.update(config)
             self._update_settings(config, self.settings)
-            self.validate()
+        self.validate()
 
     def validate(self):
         """Validate and/or fill initial config parameters against schema."""
         validator = _gp_units_validator
-        jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
+        try:
+            jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
+        except jsonschema.exceptions.ValidationError as ex:
+            log.error("Error when validating configuration parameters against schema.")
+            log.error(ex.message)
 
     @staticmethod
     def _get_doc_sections():
         """Returns dict with commented docs from schema"""
         doc = defaultdict(str)
         with open(SCHEMA_FILE) as f:
-            for line in filter(lambda line: line.startswith("#"), f):
+            for line in filter(lambda line: line.startswith("# "), f):
                 line = line.strip("\n")
                 if line.startswith("# Block: "):
                     keyword = line.replace("# Block: ", "")
@@ -494,23 +542,18 @@ class AnalysisConfig:
                 self._update_settings(val, target[key])
 
 
+def is_quantity(instance):
+    try:
+        _ = u.Quantity(instance)
+        return True
+    except ValueError:
+        return False
+
+
 def _astropy_quantity(_, instance):
     """Check a number may also be an astropy quantity."""
-    quantity = str(instance).split()
-    if len(quantity) >= 2:
-        value = str(instance).split()[0]
-        unit = "".join(str(instance).split()[1:])
-        try:
-            return u.Quantity(float(value), unit).unit.physical_type != "dimensionless"
-        except ValueError:
-            log.error("{} is not a valid astropy quantity.".format(str(instance)))
-            raise ValueError("Not a valid astropy quantity.")
-    else:
-        try:
-            number = float(instance)
-        except ValueError:
-            number = instance
-        return jsonschema.Draft7Validator.TYPE_CHECKER.is_type(number, "number")
+    is_number = jsonschema.Draft7Validator.TYPE_CHECKER.is_type(instance, "number")
+    return is_number or is_quantity(instance)
 
 
 _type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(

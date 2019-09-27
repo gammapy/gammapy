@@ -13,7 +13,9 @@ observations:
 
 reduction:
     dataset-type: MapDataset
+    stack-datasets: true
     offset-max: 2.5 deg
+    psf-kernel-radius: 0.3 deg
     geom:
         skydir: [83.633, 22.014]
         width: [5, 5]
@@ -31,7 +33,7 @@ reduction:
     geom-irf:
         skydir: [83.633, 22.014]
         width: [5, 5]
-        binsz: 0.02
+        binsz: 0.2
         coordsys: CEL
         proj: TAN
         axes:
@@ -47,4 +49,10 @@ model: model.yaml
 
 fit: {}
 
-flux: {}
+flux:
+    fp_binning:
+        hi_bnd: 10
+        interp: log
+        lo_bnd: 1
+        nbin: 2
+        unit: TeV

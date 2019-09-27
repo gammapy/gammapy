@@ -8,21 +8,23 @@ from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     BackgroundModel,
-    ConstantModel,
-    PowerLaw,
+    ConstantSpectralModel,
+    GaussianSpatialModel,
+    PointSpatialModel,
+    PowerLawSpectralModel,
     SkyDiffuseCube,
-    SkyGaussian,
     SkyModel,
     SkyModels,
-    SkyPointSource,
 )
 from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")
 def sky_model():
-    spatial_model = SkyGaussian(lon_0="3 deg", lat_0="4 deg", sigma="3 deg", frame="galactic")
-    spectral_model = PowerLaw(
+    spatial_model = GaussianSpatialModel(
+        lon_0="3 deg", lat_0="4 deg", sigma="3 deg", frame="galactic"
+    )
+    spectral_model = PowerLawSpectralModel(
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
     return SkyModel(spatial_model, spectral_model, name="source-1")
@@ -104,13 +106,13 @@ def sky_models_2(sky_model):
 
 def test_sky_model_init():
     with pytest.raises(ValueError) as excinfo:
-        spatial_model = SkyGaussian("0 deg", "0 deg", "0.1 deg")
+        spatial_model = GaussianSpatialModel("0 deg", "0 deg", "0.1 deg")
         _ = SkyModel(spectral_model=1234, spatial_model=spatial_model)
 
     assert "Spectral model" in str(excinfo.value)
 
     with pytest.raises(ValueError) as excinfo:
-        _ = SkyModel(spectral_model=PowerLaw(), spatial_model=1234)
+        _ = SkyModel(spectral_model=PowerLawSpectralModel(), spatial_model=1234)
 
     assert "Spatial model" in str(excinfo.value)
 
@@ -408,9 +410,9 @@ def test_sky_point_source():
     )
     exposure.data = np.ones_like(exposure.data)
 
-    spatial_model = SkyPointSource(100.06 * u.deg, 70.03 * u.deg, frame="icrs")
+    spatial_model = PointSpatialModel(100.06 * u.deg, 70.03 * u.deg, frame="icrs")
     # Create a spectral model with integral flux of 1 cm-2 s-1 in this energy band
-    spectral_model = ConstantModel("1 cm-2 s-1 TeV-1")
+    spectral_model = ConstantSpectralModel("1 cm-2 s-1 TeV-1")
     spectral_model.const.value /= spectral_model.integral(1 * u.TeV, 10 * u.TeV).value
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     evaluator = MapEvaluator(model=model, exposure=exposure)

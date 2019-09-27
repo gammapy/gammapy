@@ -10,8 +10,8 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 from regions import SkyRegion
 from .geom import (
-    MapCoord,
     Geom,
+    MapCoord,
     axes_pix_to_coord,
     find_and_read_bands,
     get_shape,

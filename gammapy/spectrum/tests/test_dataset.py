@@ -8,7 +8,11 @@ from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import ConstantModel, ExponentialCutoffPowerLaw, PowerLaw
+from gammapy.modeling.models import (
+    ConstantSpectralModel,
+    ExpCutoffPowerLawSpectralModel,
+    PowerLawSpectralModel,
+)
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
@@ -23,7 +27,7 @@ class TestSpectrumDataset:
         self.nbins = 30
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
 
-        self.source_model = PowerLaw(
+        self.source_model = PowerLawSpectralModel(
             index=2.1, amplitude=1e5 / u.TeV / u.s, reference=0.1 * u.TeV
         )
 
@@ -276,7 +280,7 @@ class TestSpectrumOnOff:
 
     def test_npred_no_edisp(self):
         const = 1 / u.TeV / u.cm ** 2 / u.s
-        model = ConstantModel(const)
+        model = ConstantSpectralModel(const)
         livetime = 1 * u.s
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
@@ -307,7 +311,7 @@ class TestSpectrumOnOff:
 
     @requires_dependency("matplotlib")
     def test_plot_fit(self):
-        model = PowerLaw()
+        model = PowerLawSpectralModel()
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -372,7 +376,7 @@ class TestSpectrumOnOff:
         assert_allclose(mask, desired)
 
     def test_str(self):
-        model = PowerLaw()
+        model = PowerLawSpectralModel()
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -388,7 +392,7 @@ class TestSpectrumOnOff:
 
     def test_fake(self):
         """Test the fake dataset"""
-        source_model = PowerLaw()
+        source_model = PowerLawSpectralModel()
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -426,10 +430,12 @@ class TestSimpleFit:
     def setup(self):
         self.nbins = 30
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
-        self.source_model = PowerLaw(
+        self.source_model = PowerLawSpectralModel(
             index=2, amplitude=1e5 / u.TeV, reference=0.1 * u.TeV
         )
-        self.bkg_model = PowerLaw(index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV)
+        self.bkg_model = PowerLawSpectralModel(
+            index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV
+        )
 
         self.alpha = 0.1
         random_state = get_random_state(23)
@@ -486,11 +492,11 @@ class TestSpectralFit:
         obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
         self.obs_list = [obs1, obs2]
 
-        self.pwl = PowerLaw(
+        self.pwl = PowerLawSpectralModel(
             index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
 
-        self.ecpl = ExponentialCutoffPowerLaw(
+        self.ecpl = ExpCutoffPowerLawSpectralModel(
             index=2,
             amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1 * u.TeV,
@@ -678,7 +684,7 @@ class TestSpectrumDatasetOnOffStack:
 
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""
-        pwl = PowerLaw(
+        pwl = PowerLawSpectralModel(
             index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
         self.stacked_dataset.model = pwl

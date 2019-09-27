@@ -33,6 +33,8 @@ an IPython console or a notebook.
     >>> analysis = Analysis()
         INFO:gammapy.scripts.analysis:Setting logging config: {'level': 'INFO'}
 
+Configuration and methods
+=========================
 You can have a look at the configuration settings provided by default, and also dump
 them into a file that you can edit to start a new analysis from the modified config file.
 
@@ -43,18 +45,30 @@ them into a file that you can edit to start a new analysis from the modified con
     INFO:gammapy.scripts.analysis:Configuration settings saved into config.yaml
     >>> analysis = Analysis.from_yaml("config.yaml")
 
-You could also have started with a builtin analysis configuration and extend it with
+You may choose to start an analysis using a predefined **settings template**. If no
+value for the settings template is provided, the `basic` template will be used by default.
+You may dump these settings into a file, edit the file and re-initialize your settings
+from the modified file.
+
+.. code-block:: python
+
+    >>> analysis = Analysis.from_template("1d")
+    >>> analysis.config.to_yaml("config.yaml")
+    >>> analysis = Analysis.from_yaml("config.yaml")
+
+You could also have started with a built-in analysis configuration and extend it with
 with your custom settings declared in a Python nested dictionary. Note how the nested
-dictionary must follow the parameters hierarchical structure which may be prone to errors.
+dictionary must follow the hierarchical structure of the parameters. Declaring the
+configuration settings of the analysis in this way may be tedious and prone to errors
+if you have several parameters to set, so we suggest you to proceed using a configuration
+file.
 
 .. code-block:: python
 
     >>> config_dict = {"general": {"logging": {"level": "WARNING"}}}
-    >>> analysis = Analysis()
+    >>> analysis = Analysis("3d")
     >>> analysis.config.update_settings(config_dict)
 
-Configuration and methods
-=========================
 The hierarchical structure of the tens of parameters needed may be hard to follow. You can
 print at any moment a *how-to* documentation with example values for all the sections and
 parameters or only for one specific section or group of parameters.
@@ -63,17 +77,6 @@ parameters or only for one specific section or group of parameters.
 
     >>> analysis.config.print_help()
     >>> analysis.config.print_help("flux")
-
-You may also choose to start an analysis using a predefined **settings template**. If no
-value for the settings template is provided, the basic template will be used by default.
-As we have seen before you may dump these settings into a file, edit the file and
-re-initialize your settings from the modified file.
-
-.. code-block:: python
-
-    >>> analysis = Analysis.from_template(template="1d")
-    >>> analysis.config.to_yaml("config.yaml")
-    >>> analysis = Analysis.from_yaml("config.yaml")
 
 At any moment you can change the value of one specific parameter needed in the analysis. Note
 that it is a good practice to validate your settings when you modify the value of parameters.
@@ -85,12 +88,14 @@ that it is a good practice to validate your settings when you modify the value o
 
 It is also possible to add new configuration parameters and values or overwrite the ones already
 defined in your session analysis. In this case you may use the `config.update_settings()` method
-using a custom nested dictionary:
+using a custom nested dictionary or custom YAML file (i.e. re-use a config file for specific
+sections and/or from a previous analysis).:
 
 .. code-block:: python
 
     >>> config_dict = {"observations": {"datastore": "$GAMMAPY_DATA/hess-dl3-dr1"}}
     >>> analysis.config.update_settings(config=config_dict)
+    >>> analysis.config.update_settings(configfile="fit.yaml")
 
 In the following you may find more detailed information on the different sections which
 compose the YAML formatted nested configuration settings hierarchy.
@@ -127,8 +132,10 @@ Data reduction and datasets
 ---------------------------
 The data reduction process needs a choice of a dataset type, declared as the class name
 (MapDataset, SpectrumDatasetOnOff) in the `reduction` section of the settings. For the
-estimation of the background, a `background_estimator` is needed, other parameters
-related with the `on_region` and `exclusion_mask` FITS file may be also present.
+estimation of the background with a dataset type SpectrumDatasetOnOff, a `background_estimator`
+is needed, other parameters related with the `on_region` and `exclusion_mask` FITS file
+may be also present. Parameters for geometry are also needed and declared in this section,
+as well as a boolean flag `stack-datasets`.
 
 .. gp-howto-hli:: reduction
 
@@ -156,6 +163,8 @@ stored in the `background_estimator` property.
 Model
 -----
 For now we simply declare the model as a reference to a separate yaml file.
+You may use the `get_model()` method to fetch the model and attach it to your
+datasets.
 
 Fitting
 -------

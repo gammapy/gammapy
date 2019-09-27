@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 from astropy.coordinates import Angle
-from astropy.nddata.utils import NoOverlapError, PartialOverlapError
+from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map, WcsGeom
@@ -100,7 +99,6 @@ class MapMaker:
 
             dataset = obs_maker.run(selection)
             stacked.stack(dataset)
-
 
         maps = {
             "counts": stacked.counts,
@@ -286,7 +284,7 @@ class MapMakerObs:
             edisp=self.maps.get("edisp"),
             gti=self.observation.gti,
             name="obs_{}".format(self.observation.obs_id),
-            mask_safe=~self.fov_mask
+            mask_safe=~self.fov_mask,
         )
         return dataset
 

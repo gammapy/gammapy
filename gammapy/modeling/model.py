@@ -40,11 +40,8 @@ class Model:
             ss += "\n\t".join(covariance.pformat())
         return ss
 
-    def to_dict(self, selection="all"):
-        return {
-            "type": self.tag,
-            "parameters": self.parameters.to_dict(selection)["parameters"],
-        }
+    def to_dict(self):
+        return {"type": self.tag, "parameters": self.parameters.to_dict()["parameters"]}
 
     @classmethod
     def from_dict(cls, data):
@@ -53,7 +50,7 @@ class Model:
             for x in data["parameters"]
         }
 
-        # TODO: this is a special case for spatial models, maybe better move to `SkySpatialModel` base class
+        # TODO: this is a special case for spatial models, maybe better move to `SpatialModel` base class
         if "frame" in data:
             params["frame"] = data["frame"]
 

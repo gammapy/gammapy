@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.modeling import Dataset, Datasets, Fit
-from gammapy.modeling.models import PowerLaw, ScaleModel
+from gammapy.modeling.models import PowerLawSpectralModel, ScaleSpectralModel
 from gammapy.utils.interpolation import interpolate_likelihood_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -87,10 +87,10 @@ class FluxPoints:
         from astropy import units as u
         from astropy.table import Table
         from gammapy.spectrum import FluxPoints
-        from gammapy.modeling.models import PowerLaw
+        from gammapy.modeling.models import PowerLawSpectralModel
 
         table = Table()
-        pwl = PowerLaw()
+        pwl = PowerLawSpectralModel()
         e_ref = np.logspace(0, 2, 7) * u.TeV
         table['e_ref'] = e_ref
         table['dnde'] = pwl(e_ref)
@@ -249,7 +249,7 @@ class FluxPoints:
 
     def _flux_to_dnde(self, e_ref, table, model, pwl_approx):
         if model is None:
-            model = PowerLaw()
+            model = PowerLawSpectralModel()
 
         e_min, e_max = self.e_min, self.e_max
 
@@ -333,10 +333,10 @@ class FluxPoints:
         Examples
         --------
         >>> from gammapy.spectrum import FluxPoints
-        >>> from gammapy.modeling.models import PowerLaw
+        >>> from gammapy.modeling.models import PowerLawSpectralModel
         >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)
-        >>> model = PowerLaw(index=2.2)
+        >>> model = PowerLawSpectralModel(index=2.2)
         >>> flux_points_dnde = flux_points.to_sed_type('dnde', model=model)
         """
         # TODO: implement other directions.
@@ -397,7 +397,7 @@ class FluxPoints:
 
         if pwl_approx:
             index = model.spectral_index(e_ref)
-            flux_model = PowerLaw.evaluate_integral(
+            flux_model = PowerLawSpectralModel.evaluate_integral(
                 emin=e_min,
                 emax=e_max,
                 index=index,
@@ -798,7 +798,7 @@ class FluxPointsEstimator:
         else:
             model = dataset.model[source].spectral_model
 
-        self.model = ScaleModel(model)
+        self.model = ScaleSpectralModel(model)
         self.model.norm.min = 0
         self.model.norm.max = 1e3
 
@@ -1135,12 +1135,12 @@ class FluxPointsDataset(Dataset):
         from astropy import units as u
         from gammapy.spectrum import FluxPoints, FluxPointsDataset
         from gammapy.modeling import Fit
-        from gammapy.modeling.models import PowerLaw
+        from gammapy.modeling.models import PowerLawSpectralModel
 
         filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits'
         flux_points = FluxPoints.read(filename)
 
-        model = PowerLaw()
+        model = PowerLawSpectralModel()
 
         dataset = FluxPointsDataset(model, flux_points)
         fit = Fit(dataset)
@@ -1149,7 +1149,9 @@ class FluxPointsDataset(Dataset):
         print(result.parameters.to_table())
     """
 
-    def __init__(self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None, name=""):
+    def __init__(
+        self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None, name=""
+    ):
         self.model = model
         self.data = data
         self.mask_fit = mask_fit

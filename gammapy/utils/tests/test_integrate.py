@@ -2,7 +2,10 @@
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.units import Quantity
-from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLaw
+from gammapy.modeling.models import (
+    ExpCutoffPowerLawSpectralModel,
+    PowerLawSpectralModel,
+)
 from gammapy.utils.integrate import integrate_spectrum
 from gammapy.utils.testing import assert_quantity_allclose, requires_dependency
 
@@ -13,7 +16,7 @@ def test_integrate_spectrum():
     """
     emin = Quantity(1, "TeV")
     emax = Quantity(10, "TeV")
-    pwl = PowerLaw(index=2.3)
+    pwl = PowerLawSpectralModel(index=2.3)
 
     ref = pwl.integral(emin=emin, emax=emax)
 
@@ -27,7 +30,7 @@ def test_integrate_spectrum_ecpl():
     Test ecpl integration. Regression test for
     https://github.com/gammapy/gammapy/issues/687
     """
-    ecpl = ExponentialCutoffPowerLaw(
+    ecpl = ExpCutoffPowerLawSpectralModel(
         index=2.3,
         amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
         reference=1 * u.TeV,

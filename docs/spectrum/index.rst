@@ -31,12 +31,12 @@ OGIP format and fit a spectral model.
 
     from gammapy.spectrum import SpectrumDatasetOnOff
     from gammapy.modeling import Fit
-    from gammapy.modeling.models import PowerLaw
+    from gammapy.modeling.models import PowerLawSpectralModel
 
     filename = '$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits'
     dataset = SpectrumDatasetOnOff.from_ogip_files(filename)
 
-    model = PowerLaw(
+    model = PowerLawSpectralModel(
         index=2,
         amplitude='1e-12 cm-2 s-1 TeV-1',
         reference='1 TeV',
@@ -53,7 +53,7 @@ It will print the following output to the console:
 
 .. code-block:: text
 
-    PowerLaw
+    PowerLawSpectralModel
 
     Parameters:
 
