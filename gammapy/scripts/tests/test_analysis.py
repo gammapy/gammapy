@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
+from pathlib import Path
 import yaml
 from gammapy.scripts import Analysis
 from gammapy.utils.testing import requires_data, requires_dependency
@@ -192,6 +193,13 @@ def test_validate_astropy_quantities():
 
 def test_validate_config():
     analysis = Analysis.from_template(template="basic")
+    assert analysis.config.validate() is None
+
+
+def test_docs_file():
+    path = Path(__file__).resolve().parent / ".." / "config"
+    filename = path / "docs.yaml"
+    analysis = Analysis.from_yaml(filename)
     assert analysis.config.validate() is None
 
 
