@@ -5,7 +5,11 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
-from gammapy.modeling.models import LightCurveTemplateTemporalModel, PhaseCurveTemplateTemporalModel
+from gammapy.modeling.models import (
+    TemporalModel,
+    LightCurveTemplateTemporalModel,
+    PhaseCurveTemplateTemporalModel,
+)
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
@@ -104,6 +108,27 @@ def test_time_sampling():
     assert len(sampler) == 2
     assert len(sampler_uniform) == 2
     assert_allclose(sampler.value, [12661.65802564, 26.9299098], rtol=1e-5)
+    assert_allclose(sampler_uniform.value, [1261.65802564, 6026.9299098], rtol=1e-5)
+
+
+def test_constant_model():
+    time = np.arange(0, 10, 0.06) * u.hour
+
+    norm = 10.0
+    table = TemporalModel.constant_model(time, norm)
+    temporal_model = LightCurveTemplateTemporalModel(table)
+
+    t_ref = "2010-01-01T00:00:00"
+    t_min = "2010-01-01T00:00:00"
+    t_max = "2010-01-01T08:00:00"
+
+    sampler_uniform = temporal_model.sample_time(
+        n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
+    )
+
+    sampler_uniform = u.Quantity((sampler_uniform - Time(t_ref)).sec, "s")
+
+    assert len(sampler_uniform) == 2
     assert_allclose(sampler_uniform.value, [1261.65802564, 6026.9299098], rtol=1e-5)
 
 

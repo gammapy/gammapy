@@ -11,12 +11,37 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
 
-__all__ = ["PhaseCurveTemplateTemporalModel", "LightCurveTemplateTemporalModel", "TemporalModel"]
+__all__ = [
+    "PhaseCurveTemplateTemporalModel",
+    "LightCurveTemplateTemporalModel",
+    "TemporalModel",
+]
 
 
 # TODO: make this a small ABC to define a uniform interface.
 class TemporalModel(Model):
     """Temporal model base class"""
+
+    @classmethod
+    def constant_model(table, time, norm=1.0):
+        """Constant light-curve model.
+        Parameters
+        ----------
+        time : array_like
+            Time since a ``reference`` time.
+        norm : float
+            Normalization of the constant light-curve
+
+        Returns
+        -------
+        table : `~astropy.table`
+        """
+
+        table = Table()
+        table["TIME"] = time
+        table["NORM"] = np.ones(len(table["TIME"])) * norm
+
+        return table
 
 
 class PhaseCurveTemplateTemporalModel(TemporalModel):
