@@ -17,7 +17,7 @@ general:
 # Observations used in the analysis
 observations:
     # path to data store where to fetch observations
-    datastore: $GAMMAPY_DATA/hess-dl3-dr1
+    datastore: "$GAMMAPY_DATA/hess-dl3-dr1"
     # filtering composed of a list of filters with selection criteria
     filters:
         - filter_type: sky_circle

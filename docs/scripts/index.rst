@@ -70,20 +70,20 @@ file.
     >>> analysis.config.update_settings(config_dict)
 
 The hierarchical structure of the tens of parameters needed may be hard to follow. You can
-print at any moment a *how-to* documentation with example values for all the sections and
-parameters or only for one specific section or group of parameters.
+print as a *how-to* documentation a helping sample config file with example values for all
+the sections and parameters or only for one specific section or group of parameters.
 
 .. code-block:: python
 
-    >>> analysis.config.print_help()
-    >>> analysis.config.print_help("flux")
+    >>> analysis.config.help()
+    >>> analysis.config.help("flux")
 
 At any moment you can change the value of one specific parameter needed in the analysis. Note
 that it is a good practice to validate your settings when you modify the value of parameters.
 
 .. code-block:: python
 
-    >>> analysis.settings["reduction"]["background"]["on_region"]["frame"] = "galactic"
+    >>> analysis.settings["reduction"]["geom"]["on_region"]["frame"] = "galactic"
     >>> analysis.config.validate()
 
 It is also possible to add new configuration parameters and values or overwrite the ones already
@@ -131,8 +131,8 @@ The observations are stored as a list of `DataStoreObservation` containers.
 Data reduction and datasets
 ---------------------------
 The data reduction process needs a choice of a dataset type, declared as the class name
-(MapDataset, SpectrumDatasetOnOff) in the `reduction` section of the settings. For the
-estimation of the background with a dataset type SpectrumDatasetOnOff, a `background_estimator`
+(`MapDataset`, `SpectrumDatasetOnOff`) in the `reduction` section of the settings. For the
+estimation of the background with a dataset type `SpectrumDatasetOnOff`, a `background_estimator`
 is needed, other parameters related with the `on_region` and `exclusion_mask` FITS file
 may be also present. Parameters for geometry are also needed and declared in this section,
 as well as a boolean flag `stack-datasets`.
@@ -140,7 +140,7 @@ as well as a boolean flag `stack-datasets`.
 .. gp-howto-hli:: reduction
 
 You may use the `get_datasets()` method to proceed to the data reduction process.
-The final reduced datasets are stored in the `.datasets` attribute.
+The final reduced datasets are stored in the `datasets` attribute.
 For spectral reduction the information related with the background estimation is
 stored in the `background_estimator` property.
 
@@ -162,8 +162,8 @@ stored in the `background_estimator` property.
 
 Model
 -----
-For now we simply declare the model as a reference to a separate yaml file.
-You may use the `get_model()` method to fetch the model and attach it to your
+For now we simply declare the model as a reference to a separate YAML file, passing
+the filename into the `get_model()` method to fetch the model and attach it to your
 datasets.
 
 Fitting
