@@ -94,16 +94,7 @@ class ConstantTemporalModel(TemporalModel):
         ontime = u.Quantity((t_max - t_min).sec, "s")
         t_stop = ontime.to_value(time_unit)
 
-        # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
-        #  is still incomplete, refactor once we change to recent numpy and astropy versions
-        t_step = t_delta.to_value(time_unit)
-        t = np.arange(0, t_stop, t_step)
-
-        pdf = self.evaluate_norm_at_time(t * time_unit)
-
-        sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
-        time_pix = sampler.sample(n_events)[0]
-        time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
+        time = random_state.uniform(high=t_stop, size=n_events) * time_unit
 
         return t_min + time
 

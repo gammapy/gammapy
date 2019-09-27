@@ -6,7 +6,6 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.modeling.models import (
-    TemporalModel,
     LightCurveTemplateTemporalModel,
     PhaseCurveTemplateTemporalModel,
     ConstantTemporalModel,
@@ -113,10 +112,8 @@ def test_time_sampling():
 
 
 def test_ConstantTemporalModel():
-    time = np.arange(0, 10, 0.06) * u.hour
-
     norm = 10.0
-    temporal_model = ConstantTemporalModel(10)
+    temporal_model = ConstantTemporalModel(norm)
 
     t_ref = "2010-01-01T00:00:00"
     t_min = "2010-01-01T00:00:00"
@@ -129,7 +126,7 @@ def test_ConstantTemporalModel():
     sampler = u.Quantity((sampler - Time(t_ref)).sec, "s")
 
     assert len(sampler) == 2
-    assert_allclose(sampler.value, [1261.65802564, 6026.9299098], rtol=1e-5)
+    assert_allclose(sampler.value, [15805.82891311, 20597.45375153], rtol=1e-5)
 
 
 def test_phase_time_sampling():
