@@ -223,6 +223,28 @@ class Analysis:
         for obs in self.observations.list:
             log.info(obs)
 
+    def get_model(self, modelfile):
+        """Read the model from settings and attach it to datasets.
+
+        Parameters
+        ----------
+        modelfile : string
+            Name of the model YAML file describing the model.
+        """
+        # TODO: Deal with multiple components
+        log.info(f"Reading model from {modelfile}.")
+        model_yaml = Path(modelfile)
+        self.model = SkyModels.from_yaml(model_yaml)
+        for dataset in self.datasets.datasets:
+            if isinstance(dataset, MapDataset):
+                dataset.model = self.model
+            else:
+                if len(self.model.skymodels) > 1:
+                    raise ValueError(
+                        "Can only fit a single spectral model at one time."
+                    )
+                dataset.model = self.model.skymodels[0].spectral_model
+        log.info(self.model)
     @staticmethod
     def _create_geometry(params):
         """Create the geometry."""
@@ -298,27 +320,6 @@ class Analysis:
         dataset.edisp = dataset.edisp.get_energy_dispersion(
             position=position, e_reco=e_reco
         )
-
-    def get_model(self):
-        """Read the model from settings."""
-        # TODO: Deal with multiple components
-        log.info("Reading model.")
-        model_yaml = Path(self.settings["model"])
-        base_path = self.config.filename.parent
-
-        self.model = SkyModels.from_yaml(base_path / model_yaml)
-
-        for dataset in self.datasets.datasets:
-            if isinstance(dataset, MapDataset):
-                dataset.model = self.model
-            else:
-                if len(self.model.skymodels) > 1:
-                    raise ValueError(
-                        "Can only fit a single spectral model at one time."
-                    )
-                dataset.model = self.model.skymodels[0].spectral_model
-
-        log.info(self.model)
 
     def _set_logging(self):
         """Set logging parameters for API."""
