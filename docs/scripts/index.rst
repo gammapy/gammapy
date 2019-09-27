@@ -83,7 +83,7 @@ that it is a good practice to validate your settings when you modify the value o
 
 .. code-block:: python
 
-    >>> analysis.settings["reduction"]["geom"]["on_region"]["frame"] = "galactic"
+    >>> analysis.settings["reduction"]["geom"]["region"]["frame"] = "galactic"
     >>> analysis.config.validate()
 
 It is also possible to add new configuration parameters and values or overwrite the ones already
