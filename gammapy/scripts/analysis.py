@@ -13,8 +13,8 @@ from gammapy.cube import MapDataset, MapMakerObs
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.serialize import dict_to_models
 from gammapy.modeling.models import SkyModels
+from gammapy.modeling.serialize import dict_to_models
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,

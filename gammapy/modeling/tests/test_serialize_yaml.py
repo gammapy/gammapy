@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from astropy.table import Table
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Datasets, Model
-from gammapy.modeling.models import SkyModels, MODELS, Absorption, AbsorbedSpectralModel
+from gammapy.modeling.models import MODELS, AbsorbedSpectralModel, Absorption, SkyModels
 from gammapy.modeling.serialize import dict_to_models
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
@@ -225,9 +225,13 @@ def make_all_models():
         spatial_model=Model.create("ConstantSpatialModel"),
         spectral_model=Model.create("PowerLawSpectralModel"),
     )
-    m1 = Map.create(npix=(10, 20, 30), axes=[MapAxis.from_nodes([1, 2] * u.TeV, name="energy")])
+    m1 = Map.create(
+        npix=(10, 20, 30), axes=[MapAxis.from_nodes([1, 2] * u.TeV, name="energy")]
+    )
     yield Model.create("SkyDiffuseCube", map=m1)
-    m2 = Map.create(npix=(10, 20, 30), axes=[MapAxis.from_edges([1, 2] * u.TeV, name="energy")])
+    m2 = Map.create(
+        npix=(10, 20, 30), axes=[MapAxis.from_edges([1, 2] * u.TeV, name="energy")]
+    )
     yield Model.create("BackgroundModel", map=m2)
 
 

@@ -456,13 +456,7 @@ class BackgroundModel(Model):
     __slots__ = ["map", "norm", "tilt", "reference", "name", "filename"]
 
     def __init__(
-        self,
-        map,
-        norm=1,
-        tilt=0,
-        reference="1 TeV",
-        name="background",
-        filename=None,
+        self, map, norm=1, tilt=0, reference="1 TeV", name="background", filename=None
     ):
         axis = map.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":

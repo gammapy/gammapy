@@ -72,5 +72,6 @@ class Model:
         gammapy.modeling.models.spectral.PowerLaw2SpectralModel
         """
         from .models import MODELS
+
         cls = MODELS.get_cls(tag)
         return cls(*args, **kwargs)

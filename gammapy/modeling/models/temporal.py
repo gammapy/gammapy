@@ -293,6 +293,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     >>> light_curve.mean_norm_in_time_interval(46300, 46301)
     """
+
     tag = "LightCurveTemplateTemporalModel"
 
     def __init__(self, table):

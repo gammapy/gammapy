@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from astropy.table import Table
-from .hess import SourceCatalogHGPS
+from .fermi import (
+    SourceCatalog1FHL,
+    SourceCatalog2FHL,
+    SourceCatalog3FGL,
+    SourceCatalog3FHL,
+)
 from .gammacat import SourceCatalogGammaCat
-from .fermi import SourceCatalog3FGL
-from .fermi import SourceCatalog1FHL
-from .fermi import SourceCatalog2FHL
-from .fermi import SourceCatalog3FHL
 from .hawc import SourceCatalog2HWC
+from .hess import SourceCatalogHGPS
 
 __all__ = ["source_catalogs", "SourceCatalogRegistry"]
 

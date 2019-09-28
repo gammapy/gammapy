@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from pathlib import Path
 import pytest
 from numpy.testing import assert_allclose
-from pathlib import Path
 import yaml
 from gammapy.scripts import Analysis, AnalysisConfig
 from gammapy.utils.testing import requires_data, requires_dependency

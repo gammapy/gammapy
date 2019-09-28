@@ -6,9 +6,9 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.modeling.models import (
+    ConstantTemporalModel,
     LightCurveTemplateTemporalModel,
     PhaseCurveTemplateTemporalModel,
-    ConstantTemporalModel,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
