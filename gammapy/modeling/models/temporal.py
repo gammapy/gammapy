@@ -14,7 +14,7 @@ from gammapy.utils.time import time_ref_from_dict
 
 # TODO: make this a small ABC to define a uniform interface.
 class TemporalModel(Model):
-    """Temporal model base class"""
+    """Temporal model base class."""
 
 
 class ConstantTemporalModel(TemporalModel):
@@ -24,16 +24,8 @@ class ConstantTemporalModel(TemporalModel):
     ----------
     norm : float
         The normalization of the constant temporal model
-
-    Examples
-    --------
-    Create an example constant lightcurve::
-    >>> time = np.arange(0, 1, 0.1)
-    >>> norm = 10.0
-    >>> const_mod = ConstantTemporalModel(norm)
-    >>> const_mod.evaluate_norm_at_time(time)
-    array([10., 10., 10., 10., 10., 10., 10., 10., 10., 10.])
     """
+    tag = "ConstantTemporalModel"
 
     def __init__(self, norm):
         self.norm = Parameter("norm", norm)
@@ -51,7 +43,6 @@ class ConstantTemporalModel(TemporalModel):
         norm : float
             Mean norm
         """
-
         return np.ones_like(time) * self.norm.value
 
     def sample_time(self, n_events, t_min, t_max, random_state=0):
@@ -74,19 +65,16 @@ class ConstantTemporalModel(TemporalModel):
         time : `~astropy.units.Quantity`
             Array with times of the sampled events.
         """
-
-        time_unit = u.second
+        random_state = get_random_state(random_state)
 
         t_min = Time(t_min)
         t_max = Time(t_max)
-        random_state = get_random_state(random_state)
 
-        ontime = u.Quantity((t_max - t_min).sec, "s")
-        t_stop = ontime.to_value(time_unit)
+        t_stop = (t_max - t_min).sec
 
-        time = random_state.uniform(high=t_stop, size=n_events) * time_unit
+        time_delta = random_state.uniform(high=t_stop, size=n_events) * u.s
 
-        return t_min + time
+        return t_min + time_delta
 
 
 class PhaseCurveTemplateTemporalModel(TemporalModel):

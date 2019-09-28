@@ -50,7 +50,11 @@ SPECTRAL_MODELS = ModelRegistry(
 """Built-in spectral models."""
 
 TEMPORAL_MODELS = ModelRegistry(
-    [PhaseCurveTemplateTemporalModel, LightCurveTemplateTemporalModel]
+    [
+        ConstantTemporalModel,
+        PhaseCurveTemplateTemporalModel,
+        LightCurveTemplateTemporalModel,
+    ]
 )
 """Built-in temporal models."""
 
