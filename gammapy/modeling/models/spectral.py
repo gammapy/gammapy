@@ -1036,9 +1036,8 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     reference : `~astropy.units.Quantity`
         :math:`E_0`
     expfactor : `~astropy.units.Quantity`
-        :math: `a`
-        Given as dimensionless value but
-        internally assumes unit of :math: `[E_0]` power  :math: `-\Gamma_2`
+        :math:`a`, given as dimensionless value but
+        internally assumes unit of :math:`[E_0]` power :math:`-\Gamma_2`
 
     Examples
     --------
