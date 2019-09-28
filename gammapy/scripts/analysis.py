@@ -55,10 +55,7 @@ class Analysis:
         """
 
     def __init__(self, config=None):
-        if config is None:
-            filename = CONFIG_PATH / ANALYSIS_TEMPLATES["basic"]
-            self._config = AnalysisConfig.from_yaml(filename)
-        elif isinstance(config, dict):
+        if isinstance(config, dict):
             self._config = AnalysisConfig(config)
         elif isinstance(config, AnalysisConfig):
             self._config = config
@@ -84,40 +81,6 @@ class Analysis:
     def settings(self):
         """Configuration settings for the analysis session."""
         return self.config.settings
-
-    @classmethod
-    def from_yaml(cls, filename):
-        """Create analysis from settings in config file.
-
-        Parameters
-        ----------
-        filename : str, Path
-            Configuration settings filename
-
-        Returns
-        -------
-        analysis : `Analysis`
-            Analysis class
-        """
-        config = AnalysisConfig.from_yaml(filename)
-        return cls(config=config)
-
-    @classmethod
-    def from_template(cls, template="basic"):
-        """Create Analysis from existing templates.
-
-        Parameters
-        ----------
-        template : {"basic", "1d", "3d"}
-            Build in templates.
-
-        Returns
-        -------
-        analysis : `Analysis`
-            Analysis class
-        """
-        filename = CONFIG_PATH / ANALYSIS_TEMPLATES[template]
-        return cls.from_yaml(filename)
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
@@ -436,8 +399,11 @@ class AnalysisConfig:
     def __init__(self, config=None, filename="config.yaml"):
         self._user_settings = {}
         self.settings = {}
+        self.template = ""
+        if config is None:
+            self.template = CONFIG_PATH / ANALYSIS_TEMPLATES["basic"]
         # add user settings
-        self.update_settings(config)
+        self.update_settings(config, self.template)
         self.filename = filename
 
     def __str__(self):
@@ -479,6 +445,23 @@ class AnalysisConfig:
         filename = make_path(filename)
         config = read_yaml(filename)
         return cls(config, filename=filename)
+
+    @classmethod
+    def from_template(cls, template="basic"):
+        """Create AnalysisConfig from existing templates.
+
+        Parameters
+        ----------
+        template : {"basic", "1d", "3d"}
+            Build in templates.
+
+        Returns
+        -------
+        analysis : `AnalysisConfig`
+            AnalysisConfig class
+        """
+        filename = CONFIG_PATH / ANALYSIS_TEMPLATES[template]
+        return cls.from_yaml(filename)
 
     def help(self, section=""):
         """Print template configuration settings."""
