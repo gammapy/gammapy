@@ -29,8 +29,9 @@ an IPython console or a notebook.
 
 .. code-block:: python
 
-    >>> from gammapy.scripts import Analysis
-    >>> analysis = Analysis()
+    >>> from gammapy.scripts import Analysis, AnalysisConfig
+    >>> config = AnalysisConfig()
+    >>> analysis = Analysis(config)
         INFO:gammapy.scripts.analysis:Setting logging config: {'level': 'INFO'}
 
 Configuration and methods
@@ -40,21 +41,21 @@ them into a file that you can edit to start a new analysis from the modified con
 
 .. code-block:: python
 
-    >>> print(analysis.config)
-    >>> analysis.config.to_yaml("config.yaml")
+    >>> print(config)
+    >>> config.to_yaml("config.yaml")
     INFO:gammapy.scripts.analysis:Configuration settings saved into config.yaml
-    >>> analysis = Analysis.from_yaml("config.yaml")
+    >>> config = AnalysisConfig.from_yaml("config.yaml")
 
-You may choose to start an analysis using a predefined **settings template**. If no
-value for the settings template is provided, the `basic` template will be used by default.
-You may dump these settings into a file, edit the file and re-initialize your settings
-from the modified file.
+You may choose a predefined **configuration template** for your configuration. If no
+value for the configuration template is provided, the `basic` template will be used by
+default. You may dump the settings into a file, edit the file and re-initialize your
+configuration from the modified file.
 
 .. code-block:: python
 
-    >>> analysis = Analysis.from_template("1d")
-    >>> analysis.config.to_yaml("config.yaml")
-    >>> analysis = Analysis.from_yaml("config.yaml")
+    >>> config = AnalysisConfig.from_template("1d")
+    >>> config.to_yaml("config.yaml")
+    >>> config = AnalysisConfig.from_yaml("config.yaml")
 
 You could also have started with a built-in analysis configuration and extend it with
 with your custom settings declared in a Python nested dictionary. Note how the nested
@@ -65,9 +66,10 @@ file.
 
 .. code-block:: python
 
+    >>> config = AnalysisConfig.from_template("1d")
+    >>> analysis = Analysis(config)
     >>> config_dict = {"general": {"logging": {"level": "WARNING"}}}
-    >>> analysis = Analysis("3d")
-    >>> analysis.config.update_settings(config_dict)
+    >>> config.update_settings(config_dict)
 
 The hierarchical structure of the tens of parameters needed may be hard to follow. You can
 print as a *how-to* documentation a helping sample config file with example values for all
@@ -75,16 +77,16 @@ the sections and parameters or only for one specific section or group of paramet
 
 .. code-block:: python
 
-    >>> analysis.config.help()
-    >>> analysis.config.help("flux")
+    >>> config.help()
+    >>> config.help("flux")
 
 At any moment you can change the value of one specific parameter needed in the analysis. Note
 that it is a good practice to validate your settings when you modify the value of parameters.
 
 .. code-block:: python
 
-    >>> analysis.settings["reduction"]["geom"]["region"]["frame"] = "galactic"
-    >>> analysis.config.validate()
+    >>> config.settings["reduction"]["geom"]["region"]["frame"] = "galactic"
+    >>> config.validate()
 
 It is also possible to add new configuration parameters and values or overwrite the ones already
 defined in your session analysis. In this case you may use the `config.update_settings()` method
@@ -94,8 +96,8 @@ sections and/or from a previous analysis).:
 .. code-block:: python
 
     >>> config_dict = {"observations": {"datastore": "$GAMMAPY_DATA/hess-dl3-dr1"}}
-    >>> analysis.config.update_settings(config=config_dict)
-    >>> analysis.config.update_settings(configfile="fit.yaml")
+    >>> config.update_settings(config=config_dict)
+    >>> config.update_settings(configfile="fit.yaml")
 
 In the following you may find more detailed information on the different sections which
 compose the YAML formatted nested configuration settings hierarchy.
@@ -164,7 +166,12 @@ Model
 -----
 For now we simply declare the model as a reference to a separate YAML file, passing
 the filename into the `get_model()` method to fetch the model and attach it to your
-datasets.
+datasets. Note that You may also pass a serialized model as a dictionary.
+
+.. code-block:: python
+
+    >>> analysis.get_model(filename="model.yaml")
+    >>> analysis.get_model(model=dict_model)
 
 Fitting
 -------
