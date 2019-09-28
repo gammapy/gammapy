@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 from pathlib import Path
 import yaml
-from gammapy.scripts import Analysis
+from gammapy.scripts import Analysis, AnalysisConfig
 from gammapy.utils.testing import requires_data, requires_dependency
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
@@ -12,14 +12,12 @@ DOC_FILE = CONFIG_PATH / "docs.yaml"
 
 
 def test_config():
-    analysis = Analysis.from_template(template="basic")
-    assert analysis.settings["general"]["logging"]["level"] == "INFO"
-
-    config = {"general": {"outdir": "test"}}
-    analysis = Analysis.from_template(template="basic")
-    analysis.config.update_settings(config)
-    assert analysis.settings["general"]["logging"]["level"] == "INFO"
-    assert analysis.settings["general"]["outdir"] == "test"
+    config = AnalysisConfig()
+    assert config.settings["general"]["logging"]["level"] == "INFO"
+    cfg = {"general": {"outdir": "test"}}
+    config.update_settings(cfg)
+    assert config.settings["general"]["logging"]["level"] == "INFO"
+    assert config.settings["general"]["outdir"] == "test"
 
 
 def config_observations():
@@ -86,12 +84,13 @@ def config_observations():
 
 
 @requires_data()
-@pytest.mark.parametrize("config", config_observations())
-def test_get_observations(config):
-    analysis = Analysis.from_template(template="basic")
-    analysis.config.update_settings(config)
+@pytest.mark.parametrize("config_obs", config_observations())
+def test_get_observations(config_obs):
+    config = AnalysisConfig()
+    analysis = Analysis(config)
+    analysis.config.update_settings(config_obs)
     analysis.get_observations()
-    assert len(analysis.observations) == config["result"]
+    assert len(analysis.observations) == config_obs["result"]
 
 
 @pytest.fixture(scope="session")
@@ -129,7 +128,8 @@ def config_analysis_data():
 @requires_dependency("iminuit")
 @requires_data()
 def test_analysis_1d(config_analysis_data):
-    analysis = Analysis.from_template(template="1d")
+    config = AnalysisConfig.from_template("1d")
+    analysis = Analysis(config)
     analysis.config.update_settings(config_analysis_data)
     analysis.get_observations()
     analysis.get_datasets()
@@ -149,7 +149,8 @@ def test_analysis_1d(config_analysis_data):
 @requires_dependency("iminuit")
 @requires_data()
 def test_analysis_1d_stacked():
-    analysis = Analysis.from_template(template="1d")
+    config = AnalysisConfig.from_template("1d")
+    analysis = Analysis(config)
     analysis.settings["reduction"]["stack-datasets"] = True
     analysis.get_observations()
     analysis.get_datasets()
@@ -167,7 +168,8 @@ def test_analysis_1d_stacked():
 @requires_dependency("iminuit")
 @requires_data()
 def test_analysis_3d():
-    analysis = Analysis.from_template(template="3d")
+    config = AnalysisConfig.from_template("3d")
+    analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
     analysis.get_model(filename=MODEL_FILE)
@@ -189,22 +191,22 @@ def test_analysis_3d():
 
 
 def test_validate_astropy_quantities():
-    analysis = Analysis.from_template(template="basic")
-    config = {"observations": {"filters": [{"filter_type": "all", "lon": "1 deg"}]}}
-    analysis.config.update_settings(config)
-    assert analysis.config.validate() is None
+    config = AnalysisConfig()
+    cfg = {"observations": {"filters": [{"filter_type": "all", "lon": "1 deg"}]}}
+    config.update_settings(cfg)
+    assert config.validate() is None
 
 
 def test_validate_config():
-    analysis = Analysis.from_template(template="basic")
-    assert analysis.config.validate() is None
+    config = AnalysisConfig()
+    assert config.validate() is None
 
 
 def test_docs_file():
-    analysis = Analysis.from_yaml(DOC_FILE)
-    assert analysis.config.validate() is None
+    config = AnalysisConfig.from_yaml(DOC_FILE)
+    assert config.validate() is None
 
 
 def test_help():
-    analysis = Analysis.from_template(template="basic")
-    assert analysis.config.help() is None
+    config = AnalysisConfig()
+    assert config.help() is None
