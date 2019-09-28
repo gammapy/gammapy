@@ -228,9 +228,22 @@ class DataStoreObservation:
         """Observation muon efficiency."""
         return self.obs_info["MUONEFF"]
 
-    def peek(self):
+    def peek(self, figsize=(12, 10)):
         """Quick-look plots in a few panels."""
-        raise NotImplementedError
+        import matplotlib.pyplot as plt
+
+        fig, ((ax_aeff, ax_bkg), (ax_psf, ax_edisp)) = plt.subplots(
+            nrows=2, ncols=2, figsize=figsize, gridspec_kw={"wspace": 0.25, "hspace": 0.25})
+
+        self.aeff.plot(ax=ax_aeff)
+        self.bkg.plot(ax=ax_bkg)
+        self.psf.plot_containment_vs_energy(ax=ax_psf)
+        self.edisp.plot_bias(ax=ax_edisp, add_cbar=True)
+
+        ax_aeff.set_title("Effective area")
+        ax_bkg.set_title("Background rate")
+        ax_psf.set_title("Point spread function")
+        ax_edisp.set_title("Energy dispersion")
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.
