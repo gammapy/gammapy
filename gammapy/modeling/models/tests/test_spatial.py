@@ -2,6 +2,8 @@
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.wcs.utils import celestial_frame_to_wcs
+from astropy.coordinates import FK5
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpatialModel,
@@ -216,8 +218,11 @@ def test_sky_diffuse_map_normalize():
     assert_allclose(integral.value, 1, rtol=1e-4)
 
 
-def test_evaluate_fk5():
-    geom = WcsGeom.create(width=(5, 5), binsz=0.1, coordsys="CEL")
-    model = GaussianSpatialModel("0 deg", "0 deg", "0.1 deg", frame="fk5")
+def test_evaluate_on_fk5_map():
+    # Check if spatial model can be evaluated on a map with FK5 frame
+    # Regression test for GH-2402
+    wcs = celestial_frame_to_wcs(FK5())
+    geom = WcsGeom(wcs, npix=(10, 10))
+    model = GaussianSpatialModel("0 deg", "0 deg", "0.1 deg")
     data = model.evaluate_geom(geom)
-    assert data.value[12, 12] > 0
+    assert data.sum() > 0

@@ -23,7 +23,7 @@ observations:
         - filter_type: sky_circle
           # also angle_box, par_box, par_value, ids, all
           # filter_type "sky_circle"
-          frame: icrs          # also equatorial, galactic, fk5
+          frame: icrs          #  or galactic
           lon: 83.633 deg
           lat: 22.014 deg
           radius: 1 deg
@@ -59,7 +59,7 @@ reduction:
         # on region in spectrum extraction
         region:
             center: [83.633 deg, 22.014 deg]
-            frame: icrs        # also equatorial, galactic, fk5
+            frame: icrs        # or galactic
             radius: 0.1 deg
         # spatial geometry ofr 2d maps
         binsz: 0.02             # map pixel size in degrees
