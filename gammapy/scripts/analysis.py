@@ -156,11 +156,11 @@ class Analysis:
         if not self._validate_get_model():
             return False
         log.info(f"Reading model.")
+        if isinstance(model, str):
+            model = yaml.safe_load(model)
         if model:
-            model_yaml = yaml.safe_load(model)
-            self.model = SkyModels(dict_to_models(model_yaml))
+            self.model = SkyModels(dict_to_models(model))
         elif filename:
-            print(filename)
             filepath = make_path(filename)
             self.model = SkyModels.from_yaml(filepath)
         else:
@@ -477,6 +477,8 @@ class AnalysisConfig:
             config = read_yaml(filepath)
         if config is None:
             config = {}
+        if isinstance(config, str):
+            config = yaml.safe_load(config)
         if len(config):
             self._user_settings.update(config)
             self._update_settings(config, self.settings)
