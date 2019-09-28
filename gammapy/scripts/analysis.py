@@ -240,7 +240,12 @@ class Analysis:
         """Make maps and datasets for 3d analysis."""
         log.info("Creating geometry.")
         geom = self._create_geometry(self.settings["reduction"]["geom"])
-        geom_irf = self._create_geometry(self.settings["reduction"]["geom-irf"])
+
+        if "geom-irf" in self.settings["reduction"]:
+            geom_irf = self._create_geometry(self.settings["reduction"]["geom-irf"])
+        else:
+            geom_irf = geom.downsample(factor=10)
+
         offset_max = Angle(self.settings["reduction"]["offset-max"])
         stack_datasets = self.settings["reduction"]["stack-datasets"]
         log.info("Creating datasets.")
@@ -276,7 +281,7 @@ class Analysis:
 
     def _extract_irf_kernels(self, dataset):
         # TODO: remove hard-coded default value
-        max_radius = self.settings["reduction"].get("psf-kernel-radius", "0.5 deg")
+        max_radius = self.settings["reduction"].get("psf-kernel-radius", "0.6 deg")
         # TODO: handle IRF maps in fit
         geom = dataset.counts.geom
         geom_irf = dataset.exposure.geom
