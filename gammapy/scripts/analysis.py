@@ -13,6 +13,7 @@ from gammapy.cube import MapDataset, MapMakerObs
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
+from gammapy.modeling.serialize import dict_to_models
 from gammapy.modeling.models import SkyModels
 from gammapy.spectrum import (
     FluxPointsDataset,
@@ -27,6 +28,7 @@ __all__ = ["Analysis", "AnalysisConfig"]
 log = logging.getLogger(__name__)
 CONFIG_PATH = Path(__file__).resolve().parent / "config"
 SCHEMA_FILE = CONFIG_PATH / "schema.yaml"
+DOCS_FILE = CONFIG_PATH / "docs.yaml"
 
 ANALYSIS_TEMPLATES = {
     "basic": "template-basic.yaml",
@@ -43,27 +45,17 @@ class Analysis:
     parameters passed as a nested dictionary at the moment of instantiation. In that case these
     parameters will overwrite the default values of those present in the configuration file.
 
+    You may find usage examples in :ref:`HLI`
+
     Parameters
     ----------
     config : dict or `AnalysisConfig`
         Configuration options following `AnalysisConfig` schema
 
-    Examples
-    --------
-    Example how to create an Analysis object:
-
-    >>> from gammapy.scripts import Analysis
-    >>> analysis = Analysis.from_template(template="1d")
-
-    TODO: show a working example of running an analysis.
-    Probably not here, but in high-level docs, linked to from class docstring.
-    """
+        """
 
     def __init__(self, config=None):
-        if config is None:
-            filename = CONFIG_PATH / ANALYSIS_TEMPLATES["basic"]
-            self._config = AnalysisConfig.from_yaml(filename)
-        elif isinstance(config, dict):
+        if isinstance(config, dict):
             self._config = AnalysisConfig(config)
         elif isinstance(config, AnalysisConfig):
             self._config = config
@@ -89,96 +81,6 @@ class Analysis:
     def settings(self):
         """Configuration settings for the analysis session."""
         return self.config.settings
-
-    def run_fit(self, optimize_opts=None):
-        """Fitting reduced datasets to model."""
-        if self._validate_fitting_settings():
-            for ds in self.datasets.datasets:
-                # TODO: fit_range handled in jsonschema validation class
-                if "fit_range" in self.settings["fit"]:
-                    e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
-                    e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
-                    if isinstance(ds, MapDataset):
-                        ds.mask_fit = ds.counts.geom.energy_mask(e_min, e_max)
-                    else:
-                        ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
-
-            log.info("Fitting reduced datasets.")
-            self.fit = Fit(self.datasets)
-            self.fit_result = self.fit.run(optimize_opts=optimize_opts)
-            log.info(self.fit_result)
-
-    @classmethod
-    def from_yaml(cls, filename):
-        """Create analysis from settings in config file.
-
-        Parameters
-        ----------
-        filename : str, Path
-            Configuration settings filename
-
-        Returns
-        -------
-        analysis : `Analysis`
-            Analysis class
-        """
-        config = AnalysisConfig.from_yaml(filename)
-        return cls(config=config)
-
-    @classmethod
-    def from_template(cls, template="basic"):
-        """Create Analysis from existing templates.
-
-        Parameters
-        ----------
-        template : {"basic", "1d", "3d"}
-            Build in templates.
-
-        Returns
-        -------
-        analysis : `Analysis`
-            Analysis class
-        """
-        filename = CONFIG_PATH / ANALYSIS_TEMPLATES[template]
-        return cls.from_yaml(filename)
-
-    def get_datasets(self):
-        """Produce reduced datasets."""
-        if not self._validate_reduction_settings():
-            return False
-        if self.settings["reduction"]["dataset-type"] == "SpectrumDatasetOnOff":
-            self._spectrum_extraction()
-        elif self.settings["reduction"]["dataset-type"] == "MapDataset":
-            self._map_making()
-        else:
-            # TODO raise error?
-            log.info("Data reduction method not available.")
-
-    def get_flux_points(self, source="source"):
-        """Calculate flux points for a specific model component.
-
-        Parameters
-        ----------
-        source : string
-            Name of the model component where to calculate the flux points.
-        """
-        if self._validate_fp_settings():
-            # TODO: add "source" to config
-            log.info("Calculating flux points.")
-
-            axis_params = self.settings["flux"]["fp_binning"]
-            e_edges = MapAxis.from_bounds(**axis_params).edges
-
-            flux_point_estimator = FluxPointsEstimator(
-                e_edges=e_edges, datasets=self.datasets, source=source
-            )
-            fp = flux_point_estimator.run()
-            fp.table["is_ul"] = fp.table["ts"] < 4
-
-            model = self.model[source].spectral_model.copy()
-            self.flux_points_dataset = FluxPointsDataset(data=fp, model=model)
-            cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
-            log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
@@ -229,6 +131,96 @@ class Analysis:
         for obs in self.observations.list:
             log.info(obs)
 
+    def get_datasets(self):
+        """Produce reduced datasets."""
+        if not self._validate_reduction_settings():
+            return False
+        if self.settings["reduction"]["dataset-type"] == "SpectrumDatasetOnOff":
+            self._spectrum_extraction()
+        elif self.settings["reduction"]["dataset-type"] == "MapDataset":
+            self._map_making()
+        else:
+            # TODO raise error?
+            log.info("Data reduction method not available.")
+
+    def get_model(self, model=None, filename=""):
+        """Read the model from dict or filename and attach it to datasets.
+
+        Parameters
+        ----------
+        model: dict
+            Dictionary with the serialized model.
+        filename : string
+            Name of the model YAML file describing the model.
+        """
+        if not self._validate_get_model():
+            return False
+        log.info(f"Reading model.")
+        if isinstance(model, str):
+            model = yaml.safe_load(model)
+        if model:
+            self.model = SkyModels(dict_to_models(model))
+        elif filename:
+            filepath = make_path(filename)
+            self.model = SkyModels.from_yaml(filepath)
+        else:
+            return False
+        # TODO: Deal with multiple components
+        for dataset in self.datasets.datasets:
+            if isinstance(dataset, MapDataset):
+                dataset.model = self.model
+            else:
+                if len(self.model.skymodels) > 1:
+                    raise ValueError(
+                        "Can only fit a single spectral model at one time."
+                    )
+                dataset.model = self.model.skymodels[0].spectral_model
+        log.info(self.model)
+
+    def run_fit(self, optimize_opts=None):
+        """Fitting reduced datasets to model."""
+        if not self._validate_fitting_settings():
+            return False
+
+        for ds in self.datasets.datasets:
+            # TODO: fit_range handled in jsonschema validation class
+            if "fit_range" in self.settings["fit"]:
+                e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
+                e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
+                if isinstance(ds, MapDataset):
+                    ds.mask_fit = ds.counts.geom.energy_mask(e_min, e_max)
+                else:
+                    ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
+        log.info("Fitting reduced datasets.")
+        self.fit = Fit(self.datasets)
+        self.fit_result = self.fit.run(optimize_opts=optimize_opts)
+        log.info(self.fit_result)
+
+    def get_flux_points(self, source="source"):
+        """Calculate flux points for a specific model component.
+
+        Parameters
+        ----------
+        source : string
+            Name of the model component where to calculate the flux points.
+        """
+        if not self._validate_fp_settings():
+            return False
+
+        # TODO: add "source" to config
+        log.info("Calculating flux points.")
+        axis_params = self.settings["flux"]["fp_binning"]
+        e_edges = MapAxis.from_bounds(**axis_params).edges
+        flux_point_estimator = FluxPointsEstimator(
+            e_edges=e_edges, datasets=self.datasets, source=source
+        )
+        fp = flux_point_estimator.run()
+        fp.table["is_ul"] = fp.table["ts"] < 4
+        model = self.model[source].spectral_model.copy()
+        self.flux_points_dataset = FluxPointsDataset(data=fp, model=model)
+        cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
+        log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
+
     @staticmethod
     def _create_geometry(params):
         """Create the geometry."""
@@ -255,11 +247,9 @@ class Analysis:
 
         if stack_datasets:
             stacked = MapDataset.create(geom=geom, geom_irf=geom_irf, name="stacked")
-
             for obs in self.observations:
                 dataset = self._get_dataset(obs, geom, geom_irf, offset_max)
                 stacked.stack(dataset)
-
             self._extract_irf_kernels(stacked)
             datasets = [stacked]
         else:
@@ -276,55 +266,29 @@ class Analysis:
         position, width = obs.pointing_radec, 2 * offset_max
         geom_cutout = geom.cutout(position=position, width=width)
         geom_irf_cutout = geom_irf.cutout(position=position, width=width)
-
         maker = MapMakerObs(
             observation=obs,
             geom=geom_cutout,
             geom_true=geom_irf_cutout,
             offset_max=offset_max,
         )
-
         return maker.run()
 
     def _extract_irf_kernels(self, dataset):
         # TODO: remove hard-coded default value
         max_radius = self.settings["reduction"].get("psf-kernel-radius", "0.5 deg")
-
         # TODO: handle IRF maps in fit
         geom = dataset.counts.geom
         geom_irf = dataset.exposure.geom
-
         position = geom.center_skydir
         geom_psf = geom.to_image().to_cube(geom_irf.axes)
         dataset.psf = dataset.psf.get_psf_kernel(
             position=position, geom=geom_psf, max_radius=max_radius
         )
-
         e_reco = geom.get_axis_by_name("energy").edges
         dataset.edisp = dataset.edisp.get_energy_dispersion(
             position=position, e_reco=e_reco
         )
-
-    def get_model(self):
-        """Read the model from settings."""
-        # TODO: Deal with multiple components
-        log.info("Reading model.")
-        model_yaml = Path(self.settings["model"])
-        base_path = self.config.filename.parent
-
-        self.model = SkyModels.from_yaml(base_path / model_yaml)
-
-        for dataset in self.datasets.datasets:
-            if isinstance(dataset, MapDataset):
-                dataset.model = self.model
-            else:
-                if len(self.model.skymodels) > 1:
-                    raise ValueError(
-                        "Can only fit a single spectral model at one time."
-                    )
-                dataset.model = self.model.skymodels[0].spectral_model
-
-        log.info(self.model)
 
     def _set_logging(self):
         """Set logging parameters for API."""
@@ -342,9 +306,7 @@ class Analysis:
         on_center = SkyCoord(on_lon, on_lat, frame=region["frame"])
         on_region = CircleSkyRegion(on_center, Angle(region["radius"]))
         background_params = {"on_region": on_region}
-
         background = self.settings["reduction"]["background"]
-
         if "exclusion_mask" in background:
             map_hdu = {}
             filename = background["exclusion_mask"]["filename"]
@@ -352,7 +314,6 @@ class Analysis:
                 map_hdu = {"hdu": background["exclusion_mask"]["hdu"]}
             exclusion_region = Map.read(filename, **map_hdu)
             background_params["exclusion_mask"] = exclusion_region
-
         if background["background_estimator"] == "reflected":
             self.background_estimator = ReflectedRegionsBackgroundEstimator(
                 observations=self.observations, **background_params
@@ -362,13 +323,11 @@ class Analysis:
             # TODO: raise error?
             log.info("Background estimation only for reflected regions method.")
             return False
-
         extraction_params = {}
         if "containment_correction" in self.settings["reduction"]:
             extraction_params["containment_correction"] = self.settings["reduction"][
                 "containment_correction"
             ]
-
         params = self.settings["reduction"]["geom"]["axes"][0]
         e_reco = MapAxis.from_bounds(**params).edges
         extraction_params["e_reco"] = e_reco
@@ -380,34 +339,37 @@ class Analysis:
         )
         self.extraction.run()
         self.datasets = Datasets(self.extraction.spectrum_observations)
-
         if self.settings["reduction"]["stack-datasets"]:
             stacked = self.datasets.stack_reduce()
             stacked.name = "stacked"
             self.datasets = Datasets([stacked])
 
-    def _validate_fitting_settings(self):
-        """Validate settings before proceeding to fit 1D."""
-        valid = True
-        if self.datasets and self.datasets.datasets:
-            if (
-                self.extraction
-                and self.settings["reduction"]["background"]["background_estimator"]
-                != "reflected"
-            ):
-                # TODO raise error?
-                log.info("Background estimation only for reflected regions method.")
-                return False
+    def _validate_reduction_settings(self):
+        """Validate settings before proceeding to data reduction."""
+        if self.observations and len(self.observations):
             self.config.validate()
+            return True
+        else:
+            log.info("No observations selected.")
+            log.info("Data reduction cannot be done.")
+            return False
+
+    def _validate_get_model(self):
+        if self.datasets and self.datasets.datasets:
+            self.config.validate()
+            return True
         else:
             log.info("No datasets reduced.")
-            valid = False
+            return False
+
+    def _validate_fitting_settings(self):
+        """Validate settings before proceeding to fit 1D."""
         if not self.model:
             log.info("No model fetched for datasets.")
-            valid = False
-        if not valid:
             log.info("Fit cannot be done.")
-        return valid
+            return False
+        else:
+            return True
 
     def _validate_fp_settings(self):
         """Validate settings before proceeding to flux points estimation."""
@@ -422,18 +384,7 @@ class Analysis:
             valid = False
         if not valid:
             log.info("Flux points calculation cannot be done.")
-
         return valid
-
-    def _validate_reduction_settings(self):
-        """Validate settings before proceeding to data reduction."""
-        if self.observations and len(self.observations):
-            self.config.validate()
-            return True
-        else:
-            log.info("No observations selected.")
-            log.info("Data reduction cannot be done.")
-            return False
 
 
 class AnalysisConfig:
@@ -448,8 +399,11 @@ class AnalysisConfig:
     def __init__(self, config=None, filename="config.yaml"):
         self._user_settings = {}
         self.settings = {}
+        self.template = ""
+        if config is None:
+            self.template = CONFIG_PATH / ANALYSIS_TEMPLATES["basic"]
         # add user settings
-        self.update_settings(config)
+        self.update_settings(config, self.template)
         self.filename = filename
 
     def __str__(self):
@@ -492,20 +446,39 @@ class AnalysisConfig:
         config = read_yaml(filename)
         return cls(config, filename=filename)
 
-    def print_help(self, section=""):
+    @classmethod
+    def from_template(cls, template="basic"):
+        """Create AnalysisConfig from existing templates.
+
+        Parameters
+        ----------
+        template : {"basic", "1d", "3d"}
+            Build in templates.
+
+        Returns
+        -------
+        analysis : `AnalysisConfig`
+            AnalysisConfig class
+        """
+        filename = CONFIG_PATH / ANALYSIS_TEMPLATES[template]
+        return cls.from_yaml(filename)
+
+    def help(self, section=""):
         """Print template configuration settings."""
         doc = self._get_doc_sections()
         for keyword in doc.keys():
             if section == "" or section == keyword:
                 print(doc[keyword])
 
-    def update_settings(self, config=None, configfile=""):
+    def update_settings(self, config=None, filename=""):
         """Update settings with config dictionary or values in configfile"""
-        if configfile:
-            filename = make_path(configfile)
-            config = read_yaml(filename)
+        if filename:
+            filepath = make_path(filename)
+            config = read_yaml(filepath)
         if config is None:
             config = {}
+        if isinstance(config, str):
+            config = yaml.safe_load(config)
         if len(config):
             self._user_settings.update(config)
             self._update_settings(config, self.settings)
@@ -522,13 +495,13 @@ class AnalysisConfig:
 
     @staticmethod
     def _get_doc_sections():
-        """Returns dict with commented docs from schema"""
+        """Returns dict with commented docs from docs file"""
         doc = defaultdict(str)
-        with open(SCHEMA_FILE) as f:
-            for line in filter(lambda line: line.startswith("# "), f):
+        with open(DOCS_FILE) as f:
+            for line in filter(lambda line: not line.startswith("---"), f):
                 line = line.strip("\n")
-                if line.startswith("# Block: "):
-                    keyword = line.replace("# Block: ", "")
+                if line.startswith("# Section: "):
+                    keyword = line.replace("# Section: ", "")
                 doc[keyword] += line + "\n"
         return doc
 

@@ -1,20 +1,23 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
+from pathlib import Path
 import yaml
-from gammapy.scripts import Analysis
+from gammapy.scripts import Analysis, AnalysisConfig
 from gammapy.utils.testing import requires_data, requires_dependency
+
+CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
+MODEL_FILE = CONFIG_PATH / "model.yaml"
+DOC_FILE = CONFIG_PATH / "docs.yaml"
 
 
 def test_config():
-    analysis = Analysis.from_template(template="basic")
-    assert analysis.settings["general"]["logging"]["level"] == "INFO"
-
-    config = {"general": {"outdir": "test"}}
-    analysis = Analysis.from_template(template="basic")
-    analysis.config.update_settings(config)
-    assert analysis.settings["general"]["logging"]["level"] == "INFO"
-    assert analysis.settings["general"]["outdir"] == "test"
+    config = AnalysisConfig()
+    assert config.settings["general"]["logging"]["level"] == "INFO"
+    cfg = {"general": {"outdir": "test"}}
+    config.update_settings(cfg)
+    assert config.settings["general"]["logging"]["level"] == "INFO"
+    assert config.settings["general"]["outdir"] == "test"
 
 
 def config_observations():
@@ -81,12 +84,13 @@ def config_observations():
 
 
 @requires_data()
-@pytest.mark.parametrize("config", config_observations())
-def test_get_observations(config):
-    analysis = Analysis.from_template(template="basic")
-    analysis.config.update_settings(config)
+@pytest.mark.parametrize("config_obs", config_observations())
+def test_get_observations(config_obs):
+    config = AnalysisConfig()
+    analysis = Analysis(config)
+    analysis.config.update_settings(config_obs)
     analysis.get_observations()
-    assert len(analysis.observations) == config["result"]
+    assert len(analysis.observations) == config_obs["result"]
 
 
 @pytest.fixture(scope="session")
@@ -124,17 +128,20 @@ def config_analysis_data():
 @requires_dependency("iminuit")
 @requires_data()
 def test_analysis_1d(config_analysis_data):
-    analysis = Analysis.from_template(template="1d")
+    config = AnalysisConfig.from_template("1d")
+    analysis = Analysis(config)
     analysis.config.update_settings(config_analysis_data)
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.get_model()
+    analysis.get_model(filename=MODEL_FILE)
     analysis.run_fit()
     analysis.get_flux_points()
+
     assert len(analysis.datasets.datasets) == 2
     assert len(analysis.flux_points_dataset.data.table) == 4
     dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
     assert dnde.unit == "cm-2 s-1 TeV-1"
+
     assert_allclose(dnde[0].value, 8.03604e-12, rtol=1e-2)
     assert_allclose(dnde[-1].value, 4.780021e-21, rtol=1e-2)
 
@@ -142,11 +149,12 @@ def test_analysis_1d(config_analysis_data):
 @requires_dependency("iminuit")
 @requires_data()
 def test_analysis_1d_stacked():
-    analysis = Analysis.from_template(template="1d")
+    config = AnalysisConfig.from_template("1d")
+    analysis = Analysis(config)
     analysis.settings["reduction"]["stack-datasets"] = True
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.get_model()
+    analysis.get_model(filename=MODEL_FILE)
     analysis.run_fit()
 
     assert len(analysis.datasets.datasets) == 1
@@ -160,10 +168,11 @@ def test_analysis_1d_stacked():
 @requires_dependency("iminuit")
 @requires_data()
 def test_analysis_3d():
-    analysis = Analysis.from_template(template="3d")
+    config = AnalysisConfig.from_template("3d")
+    analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.get_model()
+    analysis.get_model(filename=MODEL_FILE)
     analysis.datasets["stacked"].background_model.tilt.frozen = False
     analysis.run_fit()
     analysis.get_flux_points()
@@ -174,7 +183,6 @@ def test_analysis_3d():
     assert res[3].unit == "cm-2 s-1 TeV-1"
     assert len(analysis.flux_points_dataset.data.table) == 2
     dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
-    print(dnde[0].value, dnde[-1].value)
 
     assert_allclose(dnde[0].value, 1.175e-11, rtol=1e-1)
     assert_allclose(dnde[-1].value, 4.061e-13, rtol=1e-1)
@@ -183,12 +191,22 @@ def test_analysis_3d():
 
 
 def test_validate_astropy_quantities():
-    analysis = Analysis.from_template(template="basic")
-    config = {"observations": {"filters": [{"filter_type": "all", "lon": "1 deg"}]}}
-    analysis.config.update_settings(config)
-    assert analysis.config.validate() is None
+    config = AnalysisConfig()
+    cfg = {"observations": {"filters": [{"filter_type": "all", "lon": "1 deg"}]}}
+    config.update_settings(cfg)
+    assert config.validate() is None
 
 
 def test_validate_config():
-    analysis = Analysis.from_template(template="basic")
-    assert analysis.config.validate() is None
+    config = AnalysisConfig()
+    assert config.validate() is None
+
+
+def test_docs_file():
+    config = AnalysisConfig.from_yaml(DOC_FILE)
+    assert config.validate() is None
+
+
+def test_help():
+    config = AnalysisConfig()
+    assert config.help() is None

@@ -1,0 +1,96 @@
+---
+# Section: general
+# General settings for the high-level interface
+general:
+    # logging settings for the session
+    logging:
+        # choose one of the example values for level
+        level: INFO            # also CRITICAL, ERROR, WARNING, DEBUG
+        filename: filename.log
+        filemode: w
+        format: "%(asctime)s - %(message)s"
+        datefmt: "%d-%b-%y %H:%M:%S"
+    # output folder where files will be stored
+    outdir: .
+
+# Section: observations
+# Observations used in the analysis
+observations:
+    # path to data store where to fetch observations
+    datastore: "$GAMMAPY_DATA/hess-dl3-dr1"
+    # filtering composed of a list of filters with selection criteria
+    filters:
+        - filter_type: sky_circle
+          # also angle_box, par_box, par_value, ids, all
+          # filter_type "sky_circle"
+          frame: icrs          # also equatorial, galactic, fk5
+          lon: 83.633 deg
+          lat: 22.014 deg
+          radius: 1 deg
+          border: 1 deg
+          # alternatively define the box search within a given variable
+          # filter_type "par_box" and values with units for value_range
+          variable: ENERGY
+          value_range: [1 TeV, 100 TeV]
+          # alternatively define the search for a specific value
+          # filter_type "par_value" with value_param parameter
+          value_param: Crab    # used for i.e variable TARGET
+          # alternatively choose a list of specific observations
+          # filter_type "ids" providing a list of identifiers in obs_ids
+          obs_ids: [23523, 23526]
+          inverted: false      # true for not matching criteria
+          exclude: false       # true to exclude matched observations
+
+# Section: reduction
+# Process of data reduction
+reduction:
+    dataset-type: SpectrumDatasetOnOff   # also MapDataset
+    stack-datasets: false
+    # parameters for the estimation of the background if SpectrumDatasetOnOff
+    background:
+        background_estimator: reflected
+        exclusion_mask:
+            filename: mask.fits
+            hdu: IMAGE
+    containment_correction: true
+    # geometry settings
+    # note that there may be different values for geom and geom-irf
+    geom:
+        # on region in spectrum extraction
+        region:
+            center: [83.633 deg, 22.014 deg]
+            frame: icrs        # also equatorial, galactic, fk5
+            radius: 0.1 deg
+        # spatial geometry ofr 2d maps
+        binsz: 0.02             # map pixel size in degrees
+        coordsys: CEL           # coordinate system also GAL
+        proj: CAR               # any valid WCS projection type
+        skydir: [83, 22]        # lon and lat in deg in the coordsys of the map
+        width: [5, 5]           # width of the map in degrees
+        # additional axes other than spatial
+        # example values for energy axis
+        axes:
+            - name: energy
+              lo_bnd: 0.01
+              hi_bnd: 100
+              nbin: 73
+              unit: TeV
+              interp: log
+
+# Section: fit
+# Fitting process
+fit:
+    fit_range:
+        min: 1 TeV
+        max: 100 TeV
+
+# Section: flux
+# Flux estimation process
+flux:
+    fp_binning:
+        lo_bnd: 1
+        hi_bnd: 10
+        nbin: 11
+        unit: TeV
+        interp: log
+        node_type: edges
