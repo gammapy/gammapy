@@ -397,7 +397,6 @@ class AnalysisConfig:
     """
 
     def __init__(self, config=None, filename="config.yaml"):
-        self._user_settings = {}
         self.settings = {}
         self.template = ""
         if config is None:
@@ -480,7 +479,6 @@ class AnalysisConfig:
         if isinstance(config, str):
             config = yaml.safe_load(config)
         if len(config):
-            self._user_settings.update(config)
             self._update_settings(config, self.settings)
         self.validate()
 
