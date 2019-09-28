@@ -3,6 +3,7 @@
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
+import warnings
 
 __all__ = [
     "ScaledRegularGridInterpolator",
@@ -81,6 +82,7 @@ class ScaledRegularGridInterpolator:
         clip : bool
             Clip values at zero after interpolation.
         """
+
         points = tuple([scale(p) for scale, p in zip(self.scale_points, points)])
 
         if self.axis is None:
@@ -94,7 +96,6 @@ class ScaledRegularGridInterpolator:
 
         if clip:
             values = np.clip(values, 0, np.inf)
-
         return values
 
 
@@ -129,7 +130,7 @@ class InterpolationScale:
         return self._scale(values)
 
     def inverse(self, values):
-        values = self._inverse(values)
+        values = self._inverse(self, values)
         if hasattr(self, "_unit"):
             return u.Quantity(values, self._unit, copy=False)
         else:
@@ -146,8 +147,20 @@ class LogScale(InterpolationScale):
         return np.log(values)
 
     @staticmethod
-    def _inverse(values):
-        return np.exp(values)
+    def _inverse(self, values):
+        output = np.exp(values)
+        is_tiny = abs(output) - self.tiny <= self.tiny
+        if np.any(is_tiny):
+            try:
+                output[is_tiny] = 0.0
+            except(TypeError):
+                output = 0.0
+            warnings.warn(
+                "Interpolated values reached float32 precision limit", Warning
+            )
+            # for example TemplateSpectralModel used to define diffuse models
+            # could require large precision so users may want to redefine unit scaling.
+        return output
 
 
 class SqrtScale(InterpolationScale):
@@ -159,7 +172,7 @@ class SqrtScale(InterpolationScale):
         return sign * np.sqrt(sign * values)
 
     @staticmethod
-    def _inverse(values):
+    def _inverse(self, values):
         return np.power(values, 2)
 
 
@@ -171,7 +184,7 @@ class LinearScale(InterpolationScale):
         return values
 
     @staticmethod
-    def _inverse(values):
+    def _inverse(self, values):
         return values
 
 
