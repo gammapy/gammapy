@@ -91,6 +91,9 @@ class SpectrumDataset(Dataset):
     def __str__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
+
+        str_ += "\t{:32}: {} \n\n".format("Name", self.name)
+
         counts = np.nan
         if self.counts is not None:
             counts = np.sum(self.counts.data)
