@@ -62,8 +62,7 @@ MANIFEST
 docs/_static/notebooks
 docs/notebooks
 tutorials/fit_result_LogParabola.yaml
-tutorials/config.yaml
-tutorials/model.yaml
+tutorials/model-best-fit.yaml
 tutorials/hgps_data
 gammapy-datasets
 temp
