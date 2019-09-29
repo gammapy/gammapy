@@ -8,6 +8,7 @@ from gammapy.utils.testing import (
     assert_skycoord_allclose,
     assert_time_allclose,
     requires_data,
+    mpl_plot_check
 )
 
 
@@ -32,6 +33,14 @@ def test_data_store_observation(data_store):
 
     c = SkyCoord(83.63333129882812, 22.01444435119629, unit="deg")
     assert_skycoord_allclose(obs.target_radec, c)
+
+
+@requires_data()
+def test_observation_peek(data_store):
+    obs = data_store.obs(23523)
+
+    with mpl_plot_check():
+        obs.peek()
 
 
 @requires_data()

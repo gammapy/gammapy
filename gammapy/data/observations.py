@@ -8,6 +8,7 @@ from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.table import table_row_to_dict
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
+from gammapy.irf import Background3D
 from .event_list import EventListChecker
 from .filters import ObservationFilter
 from .pointing import FixedPointingInfo
@@ -236,7 +237,17 @@ class DataStoreObservation:
             nrows=2, ncols=2, figsize=figsize, gridspec_kw={"wspace": 0.25, "hspace": 0.25})
 
         self.aeff.plot(ax=ax_aeff)
-        self.bkg.plot(ax=ax_bkg)
+
+        try:
+            if isinstance(self.bkg, Background3D):
+                bkg = self.bkg.to_2d()
+            else:
+                bkg = self.bkg
+
+            bkg.plot(ax=ax_bkg)
+        except IndexError:
+            logging.warning(f"No background model found for obs {self.obs_id}.")
+
         self.psf.plot_containment_vs_energy(ax=ax_psf)
         self.edisp.plot_bias(ax=ax_edisp, add_cbar=True)
 
