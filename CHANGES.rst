@@ -18,22 +18,27 @@ or stacked 3D as well as 1D reflected region analyses. It also supports
 computation of flux points for all cases. The usage of this new ``Analysis``
 class is demonstrated in the ``hess.ipynb`` tutorial.
 
-To bundle all model classes and the functionality from ``gammapy.utils.fitting``
-into a single namespace, a new ``gammapy.modeling`` subpackage was introduced.
-All spectral, spatial, temporal and combined models were moved to the
-``gammapy.modeling`` subpackage and renamed following a consistent naming
-scheme. A new ``ConstantTemporalModel`` was introduced and the ``GaussianSpatialModel``
-now supports elongation parameters. A bug that lead to an incorrect flux
-normalisation of the ``PointSpatialModel`` at high latitudes was fixed.
-The default coordinate frame for all spatial models was changed to ``icrs``.
-
-
 Following the proposal in `PIG 16`_ the subpackages ``gammapy.background``
 and ``gammapy.image`` were removed. Existing functionality was moved to the
 ``gammapy.cube`` and ``gammapy.spectrum`` subpackages.
 
+To bundle all model classes and the functionality from ``gammapy.utils.fitting``
+into a single namespace, a new ``gammapy.modeling`` subpackage was introduced.
+All spectral, spatial, temporal and combined models were moved to the
+``gammapy.modeling`` subpackage and renamed following a consistent naming
+scheme. This provides a much clearer structure of the model types and hierarchy
+for users.
+
+A new ``ConstantTemporalModel`` was introduced and the ``GaussianSpatialModel``
+now supports elongation parameters. A bug that lead to an incorrect flux
+normalisation of the ``PointSpatialModel`` at high latitudes was fixed.
+The default coordinate frame for all spatial models was changed to ``icrs``.
+
 A new ``MapDataset.to_spectrum_dataset()`` method allows to reduce a map
-dataset to a spectrum dataset in a specified analysis region.
+dataset to a spectrum dataset in a specified analysis region. The
+``SpectrumDatasetOnOffStacker`` was removed and placed by a ``SpectrumDatasetOnOff.stack()``
+and ``Datasets.stack_reduce()`` method. A ``SpectrumDataset.stack()``
+method was also added.
 
 
 For Gammapy v0.14 the support for Python 3.5 was dropped.
