@@ -78,7 +78,7 @@ the sections and parameters or only for one specific section or group of paramet
 .. code-block:: python
 
     >>> config.help()
-    >>> config.help("flux-point")
+    >>> config.help("flux-points")
 
 At any moment you can change the value of one specific parameter needed in the analysis. Note
 that it is a good practice to validate your settings when you modify the value of parameters.
@@ -198,7 +198,7 @@ is stored in the `fit_result` property.
 Flux points
 -----------
 For spectral analysis where we aim to calculate flux points in a range of energies, we
-may declare the parameters needed in the `flux` section.
+may declare the parameters needed in the `flux-points` section.
 
 .. gp-howto-hli:: flux
 
@@ -224,7 +224,7 @@ is stored in the `flux_points` property as a `FluxPointsDataset` container.
          5.994842503189405 3.5749624179174077e-13 2.2261366353081893e-13  3.350617464903039e-13  4.898878805758816e-14 False
           7.26291750173621 1.2879288326657447e-13 2.5317668601400673e-13 4.0803852787540073e-13  6.601201499048379e-14 False
           8.79922543569107  1.877442373267013e-13  7.097738087032472e-14  1.254638299336029e-13 2.2705519890120373e-14 False
-    >>> analysis.flux_points_dataset.peek()
+    >>> analysis.flux_points.peek()
 
 Residuals
 ---------
