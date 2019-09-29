@@ -1,7 +1,7 @@
 .. _gammapy_0p14_release:
 
-0.14 (unreleased)
------------------
+0.14 (Sep 30, 2019)
+-------------------
 
 Summary
 +++++++
@@ -13,26 +13,26 @@ Summary
 **What's new**
 
 Gammapy v0.14 features a new high level analysis interface. Starting from
-a YAML configuration file, it supports the standard use-cases of joined
+a YAML configuration file, it supports the standard use-cases of joint
 or stacked 3D as well as 1D reflected region analyses. It also supports
 computation of flux points for all cases. The usage of this new ``Analysis``
-class is demonstrated in the ``hess.ipynb`` tutorial.
+class is demonstrated in the :gp-notebook:`hess` tutorial.
 
-Following the proposal in `PIG 16`_ the subpackages ``gammapy.background``
+Following the proposal in :ref:`pig-016` the subpackages ``gammapy.background``
 and ``gammapy.image`` were removed. Existing functionality was moved to the
 ``gammapy.cube`` and ``gammapy.spectrum`` subpackages.
 
-To bundle all model classes and the functionality from ``gammapy.utils.fitting``
-into a single namespace, a new ``gammapy.modeling`` subpackage was introduced.
-All spectral, spatial, temporal and combined models were moved to the
-``gammapy.modeling`` subpackage and renamed following a consistent naming
-scheme. This provides a much clearer structure of the model types and hierarchy
-for users.
+A new subpackage ``gammapy.modeling`` subpackage as introduced. All spectral,
+spatial, temporal and combined models were moved to the new namespace and
+renamed following a consistent naming scheme. This provides a much clearer
+structure of the model types and hierarchy for users.
 
-A new ``ConstantTemporalModel`` was introduced and the ``GaussianSpatialModel``
-now supports elongation parameters. A bug that lead to an incorrect flux
-normalisation of the ``PointSpatialModel`` at high latitudes was fixed.
-The default coordinate frame for all spatial models was changed to ``icrs``.
+The ``SkyEllipse`` model was removed. Instead the ``GaussianSpatialModel``
+as well as the ``DiskSpatialModel`` now support parameters for
+elongation. A bug that lead to an incorrect flux normalisation of the
+``PointSpatialModel`` at high latitudes was fixed. The default coordinate
+frame for all spatial models was changed to ``icrs``. A new
+``ConstantTemporalModel`` was introduced.
 
 A new ``MapDataset.to_spectrum_dataset()`` method allows to reduce a map
 dataset to a spectrum dataset in a specified analysis region. The
@@ -40,8 +40,10 @@ dataset to a spectrum dataset in a specified analysis region. The
 and ``Datasets.stack_reduce()`` method. A ``SpectrumDataset.stack()``
 method was also added.
 
-
-For Gammapy v0.14 the support for Python 3.5 was dropped.
+Following :ref:`pig-013` the support for Python 3.5 was dropped with Gammapy v0.14.
+At the same time the versions of the required dependencies were updated to
+Numpy 1.16, Scipy 1.2, Astropy 3.2, Regions 0.5, Pyyaml 5.1, Click 7.0 and
+Jsonschema 3.0.
 
 
 **Contributors:**
@@ -111,8 +113,6 @@ See the complete `Gammapy v0.14 merged pull requests list on Github <https://git
 - [#2218] PIG 13 - Gammapy dependencies and distribution (Christoph Deil)
 - [#2136] PIG 9 - Event sampling (Fabio Pintore)
 
-
-.. _PIG 16: https://docs.gammapy.org/0.14/development/pigs/pig-016.html
 
 .. _gammapy_0p13_release:
 
