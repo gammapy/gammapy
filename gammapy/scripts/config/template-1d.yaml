@@ -11,7 +11,7 @@ observations:
           value_param: Crab
           variable: TARGET_NAME
 
-reduction:
+datasets:
     dataset-type: SpectrumDatasetOnOff
     stack-datasets: false
     background:
@@ -37,7 +37,7 @@ fit:
         max: 100 TeV
         min: 1 TeV
 
-flux:
+flux-points:
     fp_binning:
         hi_bnd: 10
         interp: log

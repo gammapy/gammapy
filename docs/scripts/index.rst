@@ -165,13 +165,13 @@ stored in the `background_estimator` property.
 Model
 -----
 For now we simply declare the model as a reference to a separate YAML file, passing
-the filename into the `get_model()` method to fetch the model and attach it to your
+the filename into the `set_model()` method to fetch the model and attach it to your
 datasets. Note that You may also pass a serialized model as a dictionary.
 
 .. code-block:: python
 
-    >>> analysis.get_model(filename="model.yaml")
-    >>> analysis.get_model(model=dict_model)
+    >>> analysis.set_model(filename="model.yaml")
+    >>> analysis.set_model(model=dict_model)
 
 Fitting
 -------
@@ -203,7 +203,7 @@ may declare the parameters needed in the `flux` section.
 .. gp-howto-hli:: flux
 
 You may use the `get_flux_points()` method to calculate the flux points. The result
-is stored in the `flux_points_dataset` property as a `FluxPointsDataset` container.
+is stored in the `flux_points` property as a `FluxPointsDataset` container.
 
 .. code-block:: python
 
