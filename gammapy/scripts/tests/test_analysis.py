@@ -102,7 +102,7 @@ def config_analysis_data():
         filters:
             - filter_type: ids
               obs_ids: [23523, 23526]
-    reduction:
+    datasets:
         background:
             background_estimator: reflected
         containment_correction: false
@@ -114,7 +114,7 @@ def config_analysis_data():
                 - 22.014 deg
                 frame: icrs
                 radius: 0.11 deg
-    flux:
+    flux-points:
         fp_binning:
             lo_bnd: 1
             hi_bnd: 50
@@ -133,13 +133,13 @@ def test_analysis_1d(config_analysis_data):
     analysis.config.update_settings(config_analysis_data)
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.get_model(filename=MODEL_FILE)
+    analysis.set_model(filename=MODEL_FILE)
     analysis.run_fit()
     analysis.get_flux_points()
 
     assert len(analysis.datasets.datasets) == 2
-    assert len(analysis.flux_points_dataset.data.table) == 4
-    dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
+    assert len(analysis.flux_points.data.table) == 4
+    dnde = analysis.flux_points.data.table["dnde"].quantity
     assert dnde.unit == "cm-2 s-1 TeV-1"
 
     assert_allclose(dnde[0].value, 8.03604e-12, rtol=1e-2)
@@ -151,10 +151,10 @@ def test_analysis_1d(config_analysis_data):
 def test_analysis_1d_stacked():
     config = AnalysisConfig.from_template("1d")
     analysis = Analysis(config)
-    analysis.settings["reduction"]["stack-datasets"] = True
+    analysis.settings["datasets"]["stack-datasets"] = True
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.get_model(filename=MODEL_FILE)
+    analysis.set_model(filename=MODEL_FILE)
     analysis.run_fit()
 
     assert len(analysis.datasets.datasets) == 1
@@ -172,7 +172,7 @@ def test_analysis_3d():
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.get_model(filename=MODEL_FILE)
+    analysis.set_model(filename=MODEL_FILE)
     analysis.datasets["stacked"].background_model.tilt.frozen = False
     analysis.run_fit()
     analysis.get_flux_points()
@@ -181,8 +181,8 @@ def test_analysis_3d():
     assert len(analysis.fit_result.parameters.parameters) == 8
     res = analysis.fit_result.parameters.parameters
     assert res[3].unit == "cm-2 s-1 TeV-1"
-    assert len(analysis.flux_points_dataset.data.table) == 2
-    dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
+    assert len(analysis.flux_points.data.table) == 2
+    dnde = analysis.flux_points.data.table["dnde"].quantity
 
     assert_allclose(dnde[0].value, 1.175e-11, rtol=1e-1)
     assert_allclose(dnde[-1].value, 4.061e-13, rtol=1e-1)

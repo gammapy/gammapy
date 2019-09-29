@@ -43,7 +43,7 @@ observations:
 
 # Section: reduction
 # Process of data reduction
-reduction:
+datasets:
     dataset-type: SpectrumDatasetOnOff   # also MapDataset
     stack-datasets: false
     # parameters for the estimation of the background if SpectrumDatasetOnOff
@@ -86,7 +86,7 @@ fit:
 
 # Section: flux
 # Flux estimation process
-flux:
+flux-points:
     fp_binning:
         lo_bnd: 1
         hi_bnd: 10

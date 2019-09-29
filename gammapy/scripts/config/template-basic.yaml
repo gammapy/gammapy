@@ -9,14 +9,14 @@ observations:
     filters:
         - filter_type: all
 
-reduction:
+datasets:
     dataset-type: not assigned
     stack-datasets: true
     geom:
         region: {}
         axes: []
 
-fit:
+flux-points:
     fit_range: {}
 
 flux: {}

@@ -11,7 +11,7 @@ observations:
           value_param: Crab
           variable: TARGET_NAME
 
-reduction:
+datasets:
     dataset-type: MapDataset
     stack-datasets: true
     offset-max: 2.5 deg
@@ -47,7 +47,7 @@ reduction:
 
 fit: {}
 
-flux:
+flux-points:
     fp_binning:
         hi_bnd: 10
         interp: log

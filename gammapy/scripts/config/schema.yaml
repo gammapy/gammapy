@@ -71,7 +71,7 @@ properties:
                     required: [filter_type]
         required: [datastore, filters]
 
-    reduction:
+    datasets:
         type: object
         additionalProperties: false
         properties:
@@ -132,7 +132,7 @@ properties:
                     min: [max]
                     max: [min]
 
-    flux:
+    flux-points:
         type: object
         additionalProperties: false
         properties:
@@ -141,21 +141,21 @@ properties:
 
 if:
     properties:
-        reduction:
+        datasets:
             properties:
                 dataset-type:
                     const: SpectrumDatasetOnOff
 then:
     properties:
-        flux:
+        flux-points:
             required: [fp_binning]
     properties:
-        reduction:
+        datasets:
             properties:
                 geom:
                     required: [region, axes]
 
-required: [general, observations, reduction, fit, flux]
+required: [general, observations, datasets, fit]
 
 definitions:
 

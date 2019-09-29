@@ -1294,7 +1294,7 @@ class FluxPointsDataset(Dataset):
         residuals[fp.is_ul] = np.nan
         return residuals
 
-    def peek(self, method="diff", **kwargs):
+    def peek(self, method="diff/model", **kwargs):
         """Plot flux points, best fit model and residuals.
 
         Parameters
@@ -1378,7 +1378,7 @@ class FluxPointsDataset(Dataset):
 
         # format axes
         ax.axhline(0, color="black", lw=0.5)
-        ax.set_ylabel("Residuals   {}".format(unit.__str__()))
+        ax.set_ylabel("Residuals {}".format(unit.__str__()))
         ax.set_xlabel(f"Energy ({self._e_unit})")
         ax.set_xscale("log")
         ax.set_xlim(self._e_range.to_value(self._e_unit))

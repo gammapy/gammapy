@@ -70,7 +70,7 @@ class Analysis:
         self.model = None
         self.fit = None
         self.fit_result = None
-        self.flux_points_dataset = None
+        self.flux_points = None
 
     @property
     def config(self):
@@ -135,15 +135,15 @@ class Analysis:
         """Produce reduced datasets."""
         if not self._validate_reduction_settings():
             return False
-        if self.settings["reduction"]["dataset-type"] == "SpectrumDatasetOnOff":
+        if self.settings["datasets"]["dataset-type"] == "SpectrumDatasetOnOff":
             self._spectrum_extraction()
-        elif self.settings["reduction"]["dataset-type"] == "MapDataset":
+        elif self.settings["datasets"]["dataset-type"] == "MapDataset":
             self._map_making()
         else:
             # TODO raise error?
             log.info("Data reduction method not available.")
 
-    def get_model(self, model=None, filename=""):
+    def set_model(self, model=None, filename=""):
         """Read the model from dict or filename and attach it to datasets.
 
         Parameters
@@ -209,7 +209,7 @@ class Analysis:
 
         # TODO: add "source" to config
         log.info("Calculating flux points.")
-        axis_params = self.settings["flux"]["fp_binning"]
+        axis_params = self.settings["flux-points"]["fp_binning"]
         e_edges = MapAxis.from_bounds(**axis_params).edges
         flux_point_estimator = FluxPointsEstimator(
             e_edges=e_edges, datasets=self.datasets, source=source
@@ -217,9 +217,9 @@ class Analysis:
         fp = flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
         model = self.model[source].spectral_model.copy()
-        self.flux_points_dataset = FluxPointsDataset(data=fp, model=model)
+        self.flux_points = FluxPointsDataset(data=fp, model=model)
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
-        log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
+        log.info("\n{}".format(self.flux_points.data.table[cols]))
 
     @staticmethod
     def _create_geometry(params):
@@ -239,10 +239,15 @@ class Analysis:
     def _map_making(self):
         """Make maps and datasets for 3d analysis."""
         log.info("Creating geometry.")
-        geom = self._create_geometry(self.settings["reduction"]["geom"])
-        geom_irf = self._create_geometry(self.settings["reduction"]["geom-irf"])
-        offset_max = Angle(self.settings["reduction"]["offset-max"])
-        stack_datasets = self.settings["reduction"]["stack-datasets"]
+        geom = self._create_geometry(self.settings["datasets"]["geom"])
+
+        if "geom-irf" in self.settings["datasets"]:
+            geom_irf = self._create_geometry(self.settings["datasets"]["geom-irf"])
+        else:
+            geom_irf = geom.downsample(factor=10)
+
+        offset_max = Angle(self.settings["datasets"]["offset-max"])
+        stack_datasets = self.settings["datasets"]["stack-datasets"]
         log.info("Creating datasets.")
 
         if stack_datasets:
@@ -276,7 +281,7 @@ class Analysis:
 
     def _extract_irf_kernels(self, dataset):
         # TODO: remove hard-coded default value
-        max_radius = self.settings["reduction"].get("psf-kernel-radius", "0.5 deg")
+        max_radius = self.settings["datasets"].get("psf-kernel-radius", "0.6 deg")
         # TODO: handle IRF maps in fit
         geom = dataset.counts.geom
         geom_irf = dataset.exposure.geom
@@ -299,14 +304,14 @@ class Analysis:
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
-        region = self.settings["reduction"]["geom"]["region"]
+        region = self.settings["datasets"]["geom"]["region"]
         log.info("Reducing spectrum datasets.")
         on_lon = Angle(region["center"][0])
         on_lat = Angle(region["center"][1])
         on_center = SkyCoord(on_lon, on_lat, frame=region["frame"])
         on_region = CircleSkyRegion(on_center, Angle(region["radius"]))
         background_params = {"on_region": on_region}
-        background = self.settings["reduction"]["background"]
+        background = self.settings["datasets"]["background"]
         if "exclusion_mask" in background:
             map_hdu = {}
             filename = background["exclusion_mask"]["filename"]
@@ -324,11 +329,11 @@ class Analysis:
             log.info("Background estimation only for reflected regions method.")
             return False
         extraction_params = {}
-        if "containment_correction" in self.settings["reduction"]:
-            extraction_params["containment_correction"] = self.settings["reduction"][
+        if "containment_correction" in self.settings["datasets"]:
+            extraction_params["containment_correction"] = self.settings["datasets"][
                 "containment_correction"
             ]
-        params = self.settings["reduction"]["geom"]["axes"][0]
+        params = self.settings["datasets"]["geom"]["axes"][0]
         e_reco = MapAxis.from_bounds(**params).edges
         extraction_params["e_reco"] = e_reco
         extraction_params["e_true"] = None
@@ -339,7 +344,7 @@ class Analysis:
         )
         self.extraction.run()
         self.datasets = Datasets(self.extraction.spectrum_observations)
-        if self.settings["reduction"]["stack-datasets"]:
+        if self.settings["datasets"]["stack-datasets"]:
             stacked = self.datasets.stack_reduce()
             stacked.name = "stacked"
             self.datasets = Datasets([stacked])
@@ -379,7 +384,7 @@ class Analysis:
         else:
             log.info("No results available from fit.")
             valid = False
-        if "fp_binning" not in self.settings["flux"]:
+        if "fp_binning" not in self.settings["flux-points"]:
             log.info("No values declared for the energy bins.")
             valid = False
         if not valid:

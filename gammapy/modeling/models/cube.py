@@ -88,7 +88,7 @@ class SkyModels:
         from gammapy.modeling.serialize import models_to_dict
 
         components_dict = models_to_dict(self.skymodels)
-        write_yaml(components_dict, filename)
+        write_yaml(components_dict, filename, sort_keys=False)
 
     def evaluate(self, lon, lat, energy):
         out = self.skymodels[0].evaluate(lon, lat, energy)
