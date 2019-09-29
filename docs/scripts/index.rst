@@ -78,7 +78,7 @@ the sections and parameters or only for one specific section or group of paramet
 .. code-block:: python
 
     >>> config.help()
-    >>> config.help("flux")
+    >>> config.help("flux-point")
 
 At any moment you can change the value of one specific parameter needed in the analysis. Note
 that it is a good practice to validate your settings when you modify the value of parameters.

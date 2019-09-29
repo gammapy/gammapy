@@ -102,21 +102,22 @@ properties:
             geom-irf:
                 "$ref": "#/definitions/map_geom"
         required: [dataset-type, geom, stack-datasets]
-        if:
-            properties:
-                dataset-type:
-                    const: SpectrumDatasetOnOff
-        then:
-            required: [background]
-            properties:
-                background:
-                    required: [background_estimator]
-        if:
-            properties:
-                dataset-type:
-                    const: MapDataset
-        then:
-            required: [offset-max]
+        allOf:
+            - if:
+                  properties:
+                      dataset-type:
+                          const: SpectrumDatasetOnOff
+              then:
+                  required: [background]
+                  properties:
+                      background:
+                          required: [background_estimator]
+            - if:
+                  properties:
+                      dataset-type:
+                          const: MapDataset
+              then:
+                  required: [offset-max]
 
     fit:
         type: object
@@ -149,7 +150,6 @@ then:
     properties:
         flux-points:
             required: [fp_binning]
-    properties:
         datasets:
             properties:
                 geom:

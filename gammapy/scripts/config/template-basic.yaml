@@ -16,7 +16,7 @@ datasets:
         region: {}
         axes: []
 
-flux-points:
+fit:
     fit_range: {}
 
-flux: {}
+flux-points: {}

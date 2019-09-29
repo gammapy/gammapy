@@ -84,7 +84,7 @@ fit:
         min: 1 TeV
         max: 100 TeV
 
-# Section: flux
+# Section: flux-points
 # Flux estimation process
 flux-points:
     fp_binning:
