@@ -168,9 +168,9 @@ def get_shape(param):
 
 
 def coordsys_to_frame(coordsys):
-    if coordsys in ["CEL", "C"]:
+    if coordsys in ["CEL", "C", "fk5", "fk4", "icrs"]:
         return "icrs"
-    elif coordsys in ["GAL", "G"]:
+    elif coordsys in ["GAL", "G", "galactic"]:
         return "galactic"
     else:
         raise ValueError(f"Unrecognized coordinate system: {coordsys!r}")
@@ -186,21 +186,12 @@ def skycoord_to_lonlat(skycoord, coordsys=None):
         Longitude in degrees.
     lat : `~numpy.ndarray`
         Latitude in degrees.
-    frame : str
-        Name of coordinate frame.
     """
-    if coordsys in ["CEL", "C"]:
-        skycoord = skycoord.transform_to("icrs")
-    elif coordsys in ["GAL", "G"]:
-        skycoord = skycoord.transform_to("galactic")
+    if coordsys:
+        frame = coordsys_to_frame(coordsys)
+        skycoord = skycoord.transform_to(frame)
 
-    frame = skycoord.frame.name
-    if frame in ["icrs", "fk5"]:
-        return skycoord.ra.deg, skycoord.dec.deg, frame
-    elif frame in ["galactic"]:
-        return skycoord.l.deg, skycoord.b.deg, frame
-    else:
-        raise ValueError(f"Unrecognized SkyCoord frame: {frame!r}")
+    return skycoord.data.lon.deg, skycoord.data.lat.deg, skycoord.frame
 
 
 def lonlat_to_skycoord(lon, lat, coordsys):
