@@ -387,14 +387,16 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         if self.is_pointlike:
             pars["lon_0"] = glon
             pars["lat_0"] = glat
-            return PointSpatialModel(lon_0=glon, lat_0=glat)
+            return PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
 
             if morph_type == "Disk":
                 r_0 = de["Model_SemiMajor"].to("deg")
-                return DiskSpatialModel(lon_0=glon, lat_0=glat, r_0=r_0)
+                return DiskSpatialModel(
+                    lon_0=glon, lat_0=glat, r_0=r_0, frame="galactic"
+                )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
                 filename = de["Spatial_Filename"].strip()
                 path = make_path(
@@ -404,7 +406,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             elif morph_type == "2D Gaussian":
                 # TODO: fill elongation info as soon as model supports it
                 sigma = de["Model_SemiMajor"].to("deg")
-                return GaussianSpatialModel(lon_0=glon, lat_0=glat, sigma=sigma)
+                return GaussianSpatialModel(
+                    lon_0=glon, lat_0=glat, sigma=sigma, frame="galactic"
+                )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
 
@@ -924,14 +928,16 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         if self.is_pointlike:
             pars["lon_0"] = glon
             pars["lat_0"] = glat
-            return PointSpatialModel(lon_0=glon, lat_0=glat)
+            return PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
         else:
             de = self.data_extended
             morph_type = de["Spatial_Function"].strip()
 
             if morph_type == "RadialDisk":
                 r_0 = de["Model_SemiMajor"].to("deg")
-                return DiskSpatialModel(lon_0=glon, lat_0=glat, r_0=r_0)
+                return DiskSpatialModel(
+                    lon_0=glon, lat_0=glat, r_0=r_0, frame="galactic"
+                )
             elif morph_type in ["SpatialMap"]:
                 filename = de["Spatial_Filename"].strip()
                 path = make_path(
@@ -941,7 +947,9 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
             elif morph_type == "RadialGauss":
                 # TODO: fill elongation info as soon as model supports it
                 sigma = de["Model_SemiMajor"].to("deg")
-                return GaussianSpatialModel(lon_0=glon, lat_0=glat, sigma=sigma)
+                return GaussianSpatialModel(
+                    lon_0=glon, lat_0=glat, sigma=sigma, frame="galactic"
+                )
             else:
                 raise ValueError(f"Invalid morph_type: {morph_type!r}")
 

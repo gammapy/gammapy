@@ -169,9 +169,35 @@ class TestFermi3FGLObject:
         assert_quantity_allclose(dnde, ref["dnde"])
         assert_quantity_allclose(dnde_err, ref["dnde_err"])
 
-    @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
-    def test_spatial_model(self, ref):
-        self.cat[ref["idx"]].spatial_model
+    def test_spatial_model(self):
+        # TODO: check spatial parameter errors as soon as they are filled
+        model = self.cat[0].spatial_model
+        assert model.tag == "PointSpatialModel"
+        assert model.frame == "galactic"
+        p = model.parameters
+        assert_allclose(p["lon_0"].value, 117.693878)
+        assert_allclose(p["lat_0"].value, 3.402958)
+
+        model = self.cat[122].spatial_model
+        assert model.tag == "GaussianSpatialModel"
+        assert model.frame == "galactic"
+        p = model.parameters
+        assert_allclose(p["lon_0"].value, 302.145142)
+        assert_allclose(p["lat_0"].value, -44.41674)
+        assert_allclose(p["sigma"].value, 1.35)
+
+        model = self.cat[955].spatial_model
+        assert model.tag == "DiskSpatialModel"
+        assert model.frame == "galactic"
+        p = model.parameters
+        assert_allclose(p["lon_0"].value, 263.33252)
+        assert_allclose(p["lat_0"].value, -3.105928)
+        assert_allclose(p["r_0"].value, 0.91)
+
+        model = self.cat[602].spatial_model
+        assert model.tag == "TemplateSpatialModel"
+        assert model.frame == "fk5"
+        assert model.normalize is True
 
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
     def test_sky_model(self, ref):
@@ -353,7 +379,8 @@ class TestFermi3FHLObject:
 
     @pytest.mark.parametrize("ref", SOURCES_3FHL, ids=lambda _: _["name"])
     def test_spatial_model(self, ref):
-        self.cat[ref["idx"]].spatial_model
+        model = self.cat[ref["idx"]].spatial_model
+        assert model.frame == "galactic"
 
     @pytest.mark.parametrize("ref", SOURCES_3FHL, ids=lambda _: _["name"])
     def test_sky_model(self, ref):

@@ -85,7 +85,9 @@ class SourceCatalogObjectHGPSComponent:
     def spatial_model(self):
         """Component spatial model (`~gammapy.modeling.models.GaussianSpatialModel`)."""
         d = self.data
-        model = GaussianSpatialModel(lon_0=d["GLON"], lat_0=d["GLAT"], sigma=d["Size"])
+        model = GaussianSpatialModel(
+            lon_0=d["GLON"], lat_0=d["GLAT"], sigma=d["Size"], frame="galactic"
+        )
         model.parameters.set_parameter_errors(
             dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"])
         )
@@ -511,9 +513,11 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         spatial_type = self.spatial_model_type
 
         if self.is_pointlike:
-            model = PointSpatialModel(lon_0=glon, lat_0=glat)
+            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
         elif spatial_type == "gaussian":
-            model = GaussianSpatialModel(lon_0=glon, lat_0=glat, sigma=d["Size"])
+            model = GaussianSpatialModel(
+                lon_0=glon, lat_0=glat, sigma=d["Size"], frame="galactic"
+            )
         elif spatial_type in {"2-gaussian", "3-gaussian"}:
             raise ValueError("For Gaussian or Multi-Gaussian models, use sky_model()!")
         elif spatial_type == "shell":
@@ -523,7 +527,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             radius = 0.95 * r_out
             width = r_out - radius
             model = ShellSpatialModel(
-                lon_0=glon, lat_0=glat, width=width, radius=radius
+                lon_0=glon, lat_0=glat, width=width, radius=radius, frame="galactic"
             )
         else:
             raise ValueError(f"Not a valid spatial model: {spatial_type}")

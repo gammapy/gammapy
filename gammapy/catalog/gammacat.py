@@ -333,7 +333,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         glat = d["glat"]
 
         if morph_type == "point":
-            return PointSpatialModel(lon_0=glon, lat_0=glat)
+            return PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
         elif morph_type == "gauss":
             # TODO: add infos back once model support elongation
             # pars['x_stddev'] = d['morph_sigma']
@@ -343,7 +343,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             # if not np.isnan(d['morph_pa']):
             #     # TODO: handle reference frame for rotation angle
             #     pars['theta'] = Angle(d['morph_pa'], 'deg').rad
-            return GaussianSpatialModel(lon_0=glon, lat_0=glat, sigma=d["morph_sigma"])
+            return GaussianSpatialModel(
+                lon_0=glon, lat_0=glat, sigma=d["morph_sigma"], frame="galactic"
+            )
         elif morph_type == "shell":
             return ShellSpatialModel(
                 lon_0=glon,
@@ -351,6 +353,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 # TODO: probably we shouldn't guess a shell width here!
                 radius=0.8 * d["morph_sigma"],
                 width=0.2 * d["morph_sigma"],
+                frame="galactic",
             )
         elif morph_type == "none":
             raise NoDataAvailableError(f"No spatial model available: {self.name}")
