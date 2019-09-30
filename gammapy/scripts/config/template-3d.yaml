@@ -19,7 +19,7 @@ datasets:
     geom:
         skydir: [83.633, 22.014]
         width: [5, 5]
-        binsz: 0.02
+        binsz: 0.04
         coordsys: CEL
         proj: TAN
         axes:

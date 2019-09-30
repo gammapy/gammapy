@@ -19,6 +19,16 @@ def test_config():
     assert config.settings["general"]["logging"]["level"] == "INFO"
     assert config.settings["general"]["outdir"] == "test"
 
+    assert "AnalysisConfig" in str(config)
+
+
+def test_config_to_yaml(tmpdir):
+    config = AnalysisConfig()
+    filename = tmpdir / "test_config.yaml"
+    config.to_yaml(filename=filename)
+    text = Path(filename).read_text()
+    assert "stack-datasets" in text
+
 
 def config_observations():
     cfg = """
@@ -179,16 +189,27 @@ def test_analysis_3d():
 
     assert len(analysis.datasets.datasets) == 1
     assert len(analysis.fit_result.parameters.parameters) == 8
-    res = analysis.fit_result.parameters.parameters
+    res = analysis.fit_result.parameters
     assert res[3].unit == "cm-2 s-1 TeV-1"
     assert len(analysis.flux_points.data.table) == 2
     dnde = analysis.flux_points.data.table["dnde"].quantity
 
     assert_allclose(dnde[0].value, 1.175e-11, rtol=1e-1)
     assert_allclose(dnde[-1].value, 4.061e-13, rtol=1e-1)
-    assert_allclose(res[5].value, 2.920, rtol=1e-1)
-    assert_allclose(res[6].value, -1.983e-02, rtol=1e-1)
+    assert_allclose(res["index"].value, 2.76607, rtol=1e-1)
+    assert_allclose(res["tilt"].value, -0.021689, rtol=1e-1)
 
+
+@requires_data()
+def test_analysis_3d_joint_datasets():
+    config = AnalysisConfig.from_template("3d")
+    config.settings["datasets"]["stack-datasets"] = False
+    analysis = Analysis(config)
+    analysis.get_observations()
+    analysis.get_datasets()
+
+    assert len(analysis.datasets.datasets) == 4
+    
 
 def test_validate_astropy_quantities():
     config = AnalysisConfig()
