@@ -259,3 +259,7 @@ def test_validation_checks():
     assert analysis.run_fit() is False
     assert analysis.set_model() is False
     assert analysis.get_datasets() is False
+
+    analysis.get_observations()
+    analysis.settings["datasets"]["dataset-type"] = "not assigned"
+    assert analysis.get_datasets() is False
