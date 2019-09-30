@@ -172,7 +172,7 @@ class TestFermi3FGLObject:
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
     def test_spatial_model(self, ref):
         model = self.cat[ref["idx"]].spatial_model
-        model.frame = "galactic"
+        assert model.frame == "galactic"
 
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
     def test_sky_model(self, ref):
@@ -355,7 +355,7 @@ class TestFermi3FHLObject:
     @pytest.mark.parametrize("ref", SOURCES_3FHL, ids=lambda _: _["name"])
     def test_spatial_model(self, ref):
         model = self.cat[ref["idx"]].spatial_model
-        model.frame = "galactic"
+        assert model.frame == "galactic"
 
     @pytest.mark.parametrize("ref", SOURCES_3FHL, ids=lambda _: _["name"])
     def test_sky_model(self, ref):
