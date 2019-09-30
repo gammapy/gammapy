@@ -244,3 +244,11 @@ def test_analysis_3d_no_geom_irf():
     analysis.get_datasets()
 
     assert len(analysis.datasets.datasets) == 1
+
+
+def test_validation_checks():
+    config = AnalysisConfig()
+    analysis = Analysis(config)
+    analysis.settings["observations"]["datastore"] = "other"
+    with pytest.raises(FileNotFoundError):
+        analysis.get_observations()
