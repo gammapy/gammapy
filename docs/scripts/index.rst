@@ -12,6 +12,7 @@ scripts - High-level interface
 
 Introduction
 ============
+
 The high-level interface for Gammapy follows the recommendations written in
 :ref:`pig-012`. It provides a high-level Python API for the most common use cases
 identified in the analysis process. The classes and methods included may be used in
@@ -24,6 +25,7 @@ configuration templates to address the most common analysis use cases identified
 
 Getting started
 ===============
+
 The easiest way to get started with the high-level interface is using it within
 an IPython console or a notebook.
 
@@ -36,6 +38,7 @@ an IPython console or a notebook.
 
 Configuration and methods
 =========================
+
 You can have a look at the configuration settings provided by default, and also dump
 them into a file that you can edit to start a new analysis from the modified config file.
 
@@ -47,7 +50,7 @@ them into a file that you can edit to start a new analysis from the modified con
     >>> config = AnalysisConfig.from_yaml("config.yaml")
 
 You may choose a predefined **configuration template** for your configuration. If no
-value for the configuration template is provided, the `basic` template will be used by
+value for the configuration template is provided, the ``basic`` template will be used by
 default. You may dump the settings into a file, edit the file and re-initialize your
 configuration from the modified file.
 
@@ -104,22 +107,24 @@ compose the YAML formatted nested configuration settings hierarchy.
 
 General settings
 ----------------
-The `general` section comprises information related with the `logging` configuration,
+
+The ``general`` section comprises information related with the ``logging`` configuration,
 as well as the output folder where all file outputs and datasets will be stored, declared
-as value of the `outdir` parameter.
+as value of the ``outdir`` parameter.
 
 .. gp-howto-hli:: general
 
 Observations selection
 ----------------------
-The observations used in the analysis may be selected from a `datastore` declared in the
-`observations` section of the settings, using also different parameters and values to
+
+The observations used in the analysis may be selected from a ``datastore`` declared in the
+``observations`` section of the settings, using also different parameters and values to
 build a composed filter.
 
 .. gp-howto-hli:: observations
 
 You may use the `get_observations()` method to proceed to make the observation filtering.
-The observations are stored as a list of `DataStoreObservation` containers.
+The observations are stored as a list of `~gammapy.data.DataStoreObservation` objects.
 
 .. code-block:: python
 
@@ -132,19 +137,20 @@ The observations are stored as a list of `DataStoreObservation` containers.
 
 Data reduction and datasets
 ---------------------------
+
 The data reduction process needs a choice of a dataset type, declared as the class name
-(`MapDataset`, `SpectrumDatasetOnOff`) in the `reduction` section of the settings. For the
-estimation of the background with a dataset type `SpectrumDatasetOnOff`, a `background_estimator`
-is needed, other parameters related with the `on_region` and `exclusion_mask` FITS file
+(`~gammapy.cube.MapDataset`, `~gammapy.spectrum.SpectrumDatasetOnOff`) in the ``reduction`` section of the settings. For the
+estimation of the background with a dataset type `~gammapy.spectrum.SpectrumDatasetOnOff`, a ``background_estimator``
+is needed, other parameters related with the ``on_region`` and ``exclusion_mask`` FITS file
 may be also present. Parameters for geometry are also needed and declared in this section,
-as well as a boolean flag `stack-datasets`.
+as well as a boolean flag ``stack-datasets``.
 
 .. gp-howto-hli:: datasets
 
 You may use the `get_datasets()` method to proceed to the data reduction process.
-The final reduced datasets are stored in the `datasets` attribute.
+The final reduced datasets are stored in the ``datasets`` attribute.
 For spectral reduction the information related with the background estimation is
-stored in the `background_estimator` property.
+stored in the ``background_estimator`` property.
 
 .. code-block:: python
 
@@ -164,6 +170,7 @@ stored in the `background_estimator` property.
 
 Model
 -----
+
 For now we simply declare the model as a reference to a separate YAML file, passing
 the filename into the `set_model()` method to fetch the model and attach it to your
 datasets. Note that You may also pass a serialized model as a dictionary.
@@ -175,12 +182,13 @@ datasets. Note that You may also pass a serialized model as a dictionary.
 
 Fitting
 -------
-The parameters used in the fitting process are declared in the `fit` section.
+
+The parameters used in the fitting process are declared in the ``fit`` section.
 
 .. gp-howto-hli:: fit
 
 You may use the `run_fit()` method to proceed to the model fitting process. The result
-is stored in the `fit_result` property.
+is stored in the ``fit_result`` property.
 
 .. code-block:: python
 
@@ -197,13 +205,14 @@ is stored in the `fit_result` property.
 
 Flux points
 -----------
+
 For spectral analysis where we aim to calculate flux points in a range of energies, we
-may declare the parameters needed in the `flux-points` section.
+may declare the parameters needed in the ``flux-points`` section.
 
 .. gp-howto-hli:: flux-points
 
 You may use the `get_flux_points()` method to calculate the flux points. The result
-is stored in the `flux_points` property as a `FluxPointsDataset` container.
+is stored in the ``flux_points`` property as a `~gammapy.spectrum.FluxPoints` object.
 
 .. code-block:: python
 
@@ -228,6 +237,7 @@ is stored in the `flux_points` property as a `FluxPointsDataset` container.
 
 Residuals
 ---------
+
 For 3D analysis we can compute a residual image to check how good are the models
 for the source and/or the background.
 
@@ -243,6 +253,7 @@ for the source and/or the background.
 
 Using the high-level interface
 ------------------------------
+
 Gammapy tutorial notebooks that show examples using the high-level interface:
 
 * :gp-notebook:`hess`

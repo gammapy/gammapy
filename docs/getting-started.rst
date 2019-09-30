@@ -182,7 +182,7 @@ As an example, here's how you can create `gammapy.data.DataStore` and
     >>> events.energy.mean()
     <Quantity 4.418008 TeV>
 
-Try to make your first plot using the `peek` helper method:
+Try to make your first plot using the `gammapy.data.EventList.peek` helper method:
 
 .. code-block:: python
 

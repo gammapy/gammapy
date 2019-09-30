@@ -404,7 +404,7 @@ Iterating by image
 ------------------
 
 For maps with non-spatial dimensions the `~Map.iter_by_image` method can be used
-to loop over image slices. The image plane index `idx` is returned in data order,
+to loop over image slices. The image plane index ``idx`` is returned in data order,
 so that the data array can be indexed directly. Here is an example for an in-place
 convolution of an image using `astropy.convolution.convolve` to interpolate NaN
 values:
@@ -529,7 +529,7 @@ Generating a Cutout of a Model Cube
 -----------------------------------
 
 This example shows how to extract a cut-out of LAT galactic diffuse model cube
-using the `~Map.cutout` method:
+using the `WcsNDMap.cutout` method:
 
 .. code:: python
 

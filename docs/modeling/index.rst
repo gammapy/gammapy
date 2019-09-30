@@ -16,10 +16,10 @@ data. This includes spectral, spatial and temporal model classes, as well as the
 and parameter API. A list of available model can be found further down this page.
 In general the models are grouped into the following categories:
 
-- `SpectralModel`: models to describe spectral shapes of sources
-- `SpatialModel`: models to describe spatial shapes (morphologies) of sources
-- `SkyModel` and `SkyDiffuseCube`: model to combine the spectral and spatial model components
-- `TemporalModel`: models to describe temporal flux evolution of sources, such as light and phase curves
+- `~gammapy.modeling.models.SpectralModel`: models to describe spectral shapes of sources
+- `~gammapy.modeling.models.SpatialModel`: models to describe spatial shapes (morphologies) of sources
+- `~gammapy.modeling.models.TemporalModel`: models to describe temporal flux evolution of sources, such as light and phase curves
+- `~gammapy.modeling.models.SkyModel` and `~gammapy.modeling.models.SkyDiffuseCube`: model to combine the spectral and spatial model components
 
 The models follow a naming scheme which contains the category as a suffix to the class
 name.
@@ -29,7 +29,7 @@ Getting Started
 
 Spectral Models
 ---------------
-Models are imported from the `~gammapy.modeling.models` namespace:
+Models are imported from the `gammapy.modeling.models` namespace:
 
 .. code:: python
 
@@ -91,7 +91,7 @@ in a given energy range:
 Spatial Models
 --------------
 
-Spatial models are imported from the same `~gammapy.modeling.models` namespace:
+Spatial models are imported from the same `gammapy.modeling.models` namespace:
 
 .. code:: python
 
@@ -100,8 +100,8 @@ Spatial models are imported from the same `~gammapy.modeling.models` namespace:
 	gauss = GaussianSpatialModel(lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg")
 	print(gauss)
 
-The default coordinate frame is `"icrs"`, but the frame can be modified using the
-`frame` argument:
+The default coordinate frame is ``"icrs"``, but the frame can be modified using the
+``frame`` argument:
 
 .. code:: python
 
@@ -127,7 +127,7 @@ Spatial models can be evaluated again by calling the instance:
 	flux_per_omega = gauss(lon, lat)
 
 The returned quantity corresponds to a surface brightness. Spatial model
-can be also evaluated using `Map` and `Geom` objects:
+can be also evaluated using `gammapy.maps.Map` and `gammapy.maps.Geom` objects:
 
 .. code:: python
 
@@ -145,7 +145,7 @@ can be also evaluated using `Map` and `Geom` objects:
 SkyModel and SkyDiffuseCube
 ---------------------------
 
-The `SkyModel` class combines a spectral and a spatial model. It can be created
+The `~gammapy.modeling.models.SkyModel` class combines a spectral and a spatial model. It can be created
 from existing spatial and spectral model components:
 
 .. code:: python
@@ -158,10 +158,10 @@ from existing spatial and spectral model components:
 	source = SkyModel(spectral_model=pwl, spatial_model=gauss, name="my-source")
 	print(source)
 
-In addition a `name` can be assigned to model as an identifier for models with
+In addition a ``name`` can be assigned to model as an identifier for models with
 multiple components.
 
-The `SkyDiffuseCube` can be used to represent source models based on templates.
+The `gammapy.modeling.models.SkyDiffuseCube` can be used to represent source models based on templates.
 It can be created from an existing FITS file:
 
 .. code:: python

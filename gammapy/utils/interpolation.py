@@ -74,7 +74,7 @@ class ScaledRegularGridInterpolator:
 
         Parameters
         ----------
-        points : tuple of `np.ndarray` or `~astropy.units.Quantity`
+        points : tuple of `~numpy.ndarray` or `~astropy.units.Quantity`
             Tuple of coordinate arrays of the form (x_1, x_2, x_3, ...). Arrays are
             broadcasted internally.
         method : {"linear", "nearest"}
