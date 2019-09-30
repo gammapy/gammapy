@@ -29,7 +29,7 @@ structure of the model types and hierarchy for users.
 
 The ``SkyEllipse`` model was removed. Instead the ``GaussianSpatialModel``
 as well as the ``DiskSpatialModel`` now support parameters for
-elongation. A bug that lead to an incorrect flux normalisation of the
+elongation. A bug that lead to an incorrect flux normalization of the
 ``PointSpatialModel`` at high latitudes was fixed. The default coordinate
 frame for all spatial models was changed to ``icrs``. A new
 ``ConstantTemporalModel`` was introduced.
@@ -461,7 +461,7 @@ Summary
 **What's new?**
 
 Gammapy v0.10 is a small release. An option to have a background model with
-parameters such as normalisation and spectral tilt was added. The curated
+parameters such as normalization and spectral tilt was added. The curated
 example datasets were improved, the ``gammapy download`` script and access of
 example data from the tutorials via the ``GAMMAPY_DATA`` environment variable
 were improved. A notebook ``image_analysis`` showing how to use Gammapy to make

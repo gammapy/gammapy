@@ -28,7 +28,7 @@ class SensitivityEstimator:
     index : float, optional
         Index of the spectral shape (Power-law), should be positive (>0)
     alpha : float, optional
-        On/OFF normalisation
+        On/OFF normalization
     sigma : float, optional
         Minimum significance
     gamma_min : float, optional

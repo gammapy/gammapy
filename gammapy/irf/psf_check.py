@@ -104,7 +104,7 @@ class PSF3DChecker:
         self.results["nan"] = results
 
     def check_normalize(self):
-        """Check PSF normalisation.
+        """Check PSF normalization.
 
         For each energy / offset, the PSF should integrate to 1.
         """

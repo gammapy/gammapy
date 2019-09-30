@@ -435,14 +435,14 @@ class SkyDiffuseCube(SkyModelBase):
 class BackgroundModel(Model):
     """Background model.
 
-    Create a new map by a tilt and normalisation on the available map
+    Create a new map by a tilt and normalization on the available map
 
     Parameters
     ----------
     map : `~gammapy.maps.Map`
         Background model map
     norm : float
-        Background normalisation
+        Background normalization
     tilt : float
         Additional tilt in the spectrum
     reference : `~astropy.units.Quantity`

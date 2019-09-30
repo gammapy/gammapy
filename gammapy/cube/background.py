@@ -100,7 +100,7 @@ def _fov_background_norm(acceptance_map, counts_map, exclusion_mask=None):
     Returns
     -------
     norm_factor : `~numpy.ndarray`
-        Background normalisation factor as function of energy (1D vector)
+        Background normalization factor as function of energy (1D vector)
     """
     if exclusion_mask is None:
         mask = np.ones_like(counts_map, dtype=bool)
