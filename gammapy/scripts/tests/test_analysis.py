@@ -209,7 +209,6 @@ def test_analysis_3d_joint_datasets():
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-
     assert len(analysis.datasets.datasets) == 4
 
 
@@ -233,3 +232,15 @@ def test_docs_file():
 def test_help():
     config = AnalysisConfig()
     assert config.help() is None
+
+
+@requires_data()
+def test_analysis_3d_no_geom_irf():
+    config = AnalysisConfig.from_template("3d")
+    analysis = Analysis(config)
+    del analysis.settings["datasets"]["geom-irf"]
+    analysis.settings["datasets"]["geom"]["binsz"] = 0.05
+    analysis.get_observations()
+    analysis.get_datasets()
+
+    assert len(analysis.datasets.datasets) == 1
