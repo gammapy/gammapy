@@ -6,7 +6,7 @@ import numpy as np
 import astropy.units as u
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
-from gammapy.utils.scripts import make_path, read_yaml, write_yaml
+from gammapy.utils.scripts import read_yaml, write_yaml
 
 
 class SkyModelBase(Model):
@@ -40,9 +40,7 @@ class SkyModels:
     ----------
     skymodels : list of `~gammapy.modeling.models.SkyModel`
         Sky models
-
     """
-
     frame = None
 
     __slots__ = ["skymodels"]
