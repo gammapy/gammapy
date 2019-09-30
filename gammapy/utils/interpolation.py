@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Interpolation utilities"""
+import warnings
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
-import warnings
 
 __all__ = [
     "ScaledRegularGridInterpolator",
@@ -153,7 +153,7 @@ class LogScale(InterpolationScale):
         if np.any(is_tiny):
             try:
                 output[is_tiny] = 0.0
-            except(TypeError):
+            except (TypeError):
                 output = 0.0
             warnings.warn(
                 "Interpolated values reached float32 precision limit", Warning

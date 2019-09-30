@@ -37,9 +37,13 @@ spectral_model_2 = PowerLawSpectralModel(
     index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
 )
 
-sky_model_1 = SkyModel(spatial_model=spatial_model_1, spectral_model=spectral_model_1, name="source-1")
+sky_model_1 = SkyModel(
+    spatial_model=spatial_model_1, spectral_model=spectral_model_1, name="source-1"
+)
 
-sky_model_2 = SkyModel(spatial_model=spatial_model_2, spectral_model=spectral_model_2, name="source-2")
+sky_model_2 = SkyModel(
+    spatial_model=spatial_model_2, spectral_model=spectral_model_2, name="source-2"
+)
 
 models = sky_model_1 + sky_model_2
 
@@ -85,8 +89,12 @@ models.parameters.set_error(spatial_model_1.lat_0, 0.1 * u.deg)
 models.parameters.set_error(spatial_model_2.lon_0, 0.1 * u.deg)
 models.parameters.set_error(spatial_model_1.lat_0, 0.1 * u.deg)
 
-models.parameters.set_error(spectral_model_1.amplitude, 1e-12 * u.Unit("cm-2 s-1 TeV-1"))
-models.parameters.set_error(spectral_model_2.amplitude, 1e-12 * u.Unit("cm-2 s-1 TeV-1"))
+models.parameters.set_error(
+    spectral_model_1.amplitude, 1e-12 * u.Unit("cm-2 s-1 TeV-1")
+)
+models.parameters.set_error(
+    spectral_model_2.amplitude, 1e-12 * u.Unit("cm-2 s-1 TeV-1")
+)
 
 fit = Fit(dataset)
 fit.run()

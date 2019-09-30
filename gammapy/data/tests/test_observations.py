@@ -7,9 +7,9 @@ from gammapy.data import DataStore
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
     assert_time_allclose,
+    mpl_plot_check,
     requires_data,
     requires_dependency,
-    mpl_plot_check
 )
 
 

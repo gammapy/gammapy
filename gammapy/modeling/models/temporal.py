@@ -25,6 +25,7 @@ class ConstantTemporalModel(TemporalModel):
     norm : float
         The normalization of the constant temporal model
     """
+
     tag = "ConstantTemporalModel"
 
     def __init__(self, norm):
