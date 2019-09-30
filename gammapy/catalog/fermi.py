@@ -7,6 +7,7 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.maps import Map
 from gammapy.modeling.models import (
+    DiskSpatialModel,
     ExpCutoffPowerLaw3FGLSpectralModel,
     GaussianSpatialModel,
     LogParabolaSpectralModel,
@@ -393,7 +394,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
             if morph_type == "Disk":
                 r_0 = de["Model_SemiMajor"].to("deg")
-                return SkyDisk(lon_0=glon, lat_0=glat, r_0=r_0)
+                return DiskSpatialModel(lon_0=glon, lat_0=glat, r_0=r_0)
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
                 filename = de["Spatial_Filename"].strip()
                 path = make_path(
@@ -930,7 +931,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
             if morph_type == "RadialDisk":
                 r_0 = de["Model_SemiMajor"].to("deg")
-                return SkyDisk(lon_0=glon, lat_0=glat, r_0=r_0)
+                return DiskSpatialModel(lon_0=glon, lat_0=glat, r_0=r_0)
             elif morph_type in ["SpatialMap"]:
                 filename = de["Spatial_Filename"].strip()
                 path = make_path(
