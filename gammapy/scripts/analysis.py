@@ -142,18 +142,19 @@ class Analysis:
         else:
             # TODO raise error?
             log.info("Data reduction method not available.")
+            return False
 
     def set_model(self, model=None, filename=""):
         """Read the model from dict or filename and attach it to datasets.
 
         Parameters
         ----------
-        model: dict
-            Dictionary with the serialized model.
+        model: dict or string
+            Dictionary or string in YAML format with the serialized model.
         filename : string
             Name of the model YAML file describing the model.
         """
-        if not self._validate_get_model():
+        if not self._validate_set_model():
             return False
         log.info(f"Reading model.")
         if isinstance(model, str):
@@ -327,7 +328,7 @@ class Analysis:
         else:
             # TODO: raise error?
             log.info("Background estimation only for reflected regions method.")
-            return False
+
         extraction_params = {}
         if "containment_correction" in self.settings["datasets"]:
             extraction_params["containment_correction"] = self.settings["datasets"][
@@ -359,7 +360,7 @@ class Analysis:
             log.info("Data reduction cannot be done.")
             return False
 
-    def _validate_get_model(self):
+    def _validate_set_model(self):
         if self.datasets and self.datasets.datasets:
             self.config.validate()
             return True

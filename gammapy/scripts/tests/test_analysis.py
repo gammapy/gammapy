@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 import yaml
 from gammapy.scripts import Analysis, AnalysisConfig
 from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.modeling.models import SkyModels
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 MODEL_FILE = CONFIG_PATH / "model.yaml"
@@ -134,7 +135,7 @@ def config_analysis_data():
             unit: TeV
             interp: log
     """
-    return yaml.safe_load(cfg)
+    return cfg
 
 
 @requires_dependency("iminuit")
@@ -263,3 +264,11 @@ def test_validation_checks():
     analysis.get_observations()
     analysis.settings["datasets"]["dataset-type"] = "not assigned"
     assert analysis.get_datasets() is False
+
+    analysis.settings["datasets"]["dataset-type"] = "SpectrumDatasetOnOff"
+    analysis.get_observations()
+    analysis.get_datasets()
+    model_str = Path(MODEL_FILE).read_text()
+    analysis.set_model(model=model_str)
+    assert isinstance(analysis.model, SkyModels) is True
+    assert analysis.set_model() is False
