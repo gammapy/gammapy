@@ -252,3 +252,10 @@ def test_validation_checks():
     analysis.settings["observations"]["datastore"] = "other"
     with pytest.raises(FileNotFoundError):
         analysis.get_observations()
+
+    config_1d = AnalysisConfig.from_template("1d")
+    analysis = Analysis(config_1d)
+    assert analysis.get_flux_points() is False
+    assert analysis.run_fit() is False
+    assert analysis.set_model() is False
+    assert analysis.get_datasets() is False
