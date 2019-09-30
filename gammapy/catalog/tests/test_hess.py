@@ -292,6 +292,7 @@ class TestSourceCatalogObjectHGPSComponent:
     @staticmethod
     def test_spatial_model(component):
         model = component.spatial_model
+        model.frame = "galactic"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 28.77037811279297)
         assert_allclose(p.error("lon_0"), 0.058748625218868256)
