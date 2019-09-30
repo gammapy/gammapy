@@ -51,7 +51,7 @@ class MapMaker:
             raise ValueError("MapMaker only works with geom with an energy axis")
 
         self.geom = geom
-        self.geom_true = geom_true if geom_true else geom
+        self.geom_true = geom_true if geom_true else geom.to_binsz()
         self.offset_max = Angle(offset_max)
         self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling

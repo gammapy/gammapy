@@ -31,6 +31,7 @@ RAD_AXIS_DEFAULT = MapAxis.from_bounds(
 MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
     0.2, 5, nbin=48, node_type="edges", name="migra"
 )
+BINSZ_IRF = 0.2
 # TODO: Choose optimal binnings depending on IRFs
 
 
@@ -308,7 +309,7 @@ class MapDataset(Dataset):
         name : str
             Name of the dataset.
         """
-        geom_irf = geom_irf or geom
+        geom_irf = geom_irf or geom.to_binsz(BINSZ_IRF)
         migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
         rad_axis = rad_axis or RAD_AXIS_DEFAULT
 
