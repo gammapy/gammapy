@@ -250,8 +250,10 @@ class MapDataset(Dataset):
     def _geom(self):
         if self.counts is not None:
             return self.counts.geom
-        else:
+        elif self.background_model is not None:
             return self.background_model.map.geom
+        else:
+            return self.exposure.geom
 
     @property
     def _energy_axis(self):
