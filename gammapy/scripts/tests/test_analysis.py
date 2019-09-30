@@ -25,11 +25,10 @@ def test_config():
     assert "AnalysisConfig" in str(config)
 
 
-def test_config_to_yaml(tmpdir):
+def test_config_to_yaml():
     config = AnalysisConfig()
-    filename = tmpdir / "test_config.yaml"
-    config.to_yaml(filename=filename)
-    text = Path(filename).read_text()
+    config.to_yaml(overwrite=True)
+    text = Path(config.filename).read_text()
     assert "stack-datasets" in text
 
 
