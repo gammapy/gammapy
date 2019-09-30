@@ -58,15 +58,39 @@ class WcsNDMap(WcsMap):
     @staticmethod
     def _make_default_data(geom, shape_np, dtype):
         # Check whether corners of each image plane are valid
-        coords = geom.get_coord()
+        coords = []
+        if not geom.is_regular:
+            for idx in np.ndindex(geom.shape_axes):
+                pix = (
+                    np.array([0.0, float(geom.npix[0][idx] - 1)]),
+                    np.array([0.0, float(geom.npix[1][idx] - 1)]),
+                )
+                pix += tuple([np.array(2 * [t]) for t in idx])
+                coords += geom.pix_to_coord(pix)
 
-        data = np.zeros(shape_np, dtype=dtype)
-        is_nan = np.isnan(coords.lon)
+        else:
+            pix = (
+                np.array([0.0, float(geom.npix[0] - 1)]),
+                np.array([0.0, float(geom.npix[1] - 1)]),
+            )
+            pix += tuple([np.array(2 * [0.0]) for i in range(geom.ndim - 2)])
+            coords += geom.pix_to_coord(pix)
 
-        if is_nan.any():
-            data[is_nan] = np.nan
+        if np.all(np.isfinite(np.vstack(coords))):
+            if geom.is_regular:
+                data = np.zeros(shape_np, dtype=dtype)
+            else:
+                data = np.full(shape_np, np.nan, dtype=dtype)
+                for idx in np.ndindex(geom.shape_axes):
+                    data[idx, slice(geom.npix[0][idx]), slice(geom.npix[1][idx])] = 0.0
+        else:
+            data = np.full(shape_np, np.nan, dtype=dtype)
+            idx = geom.get_idx()
+            m = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
+            data[m] = 0.0
 
         return data
+
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
