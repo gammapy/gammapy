@@ -76,7 +76,7 @@ class WcsNDMap(WcsMap):
             pix += tuple([np.array(2 * [0.0]) for i in range(geom.ndim - 2)])
             coords += geom.pix_to_coord(pix)
 
-        if np.all(np.isfinite(np.vstack(coords))):
+        if np.all(np.isfinite(_) for _ in coords):
             if geom.is_regular:
                 data = np.zeros(shape_np, dtype=dtype)
             else:
