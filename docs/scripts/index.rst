@@ -139,7 +139,7 @@ is needed, other parameters related with the `on_region` and `exclusion_mask` FI
 may be also present. Parameters for geometry are also needed and declared in this section,
 as well as a boolean flag `stack-datasets`.
 
-.. gp-howto-hli:: reduction
+.. gp-howto-hli:: datasets
 
 You may use the `get_datasets()` method to proceed to the data reduction process.
 The final reduced datasets are stored in the `datasets` attribute.
@@ -200,7 +200,7 @@ Flux points
 For spectral analysis where we aim to calculate flux points in a range of energies, we
 may declare the parameters needed in the `flux-points` section.
 
-.. gp-howto-hli:: flux
+.. gp-howto-hli:: flux-points
 
 You may use the `get_flux_points()` method to calculate the flux points. The result
 is stored in the `flux_points` property as a `FluxPointsDataset` container.

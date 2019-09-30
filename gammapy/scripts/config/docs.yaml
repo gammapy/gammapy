@@ -41,7 +41,7 @@ observations:
           inverted: false      # true for not matching criteria
           exclude: false       # true to exclude matched observations
 
-# Section: reduction
+# Section: datasets
 # Process of data reduction
 datasets:
     dataset-type: SpectrumDatasetOnOff   # also MapDataset
