@@ -454,9 +454,9 @@ class EnergyDispersion:
     def get_bias_energy(self, bias, emin=None, emax=None):
         """Find energy corresponding to a given bias.
 
-        In case the solution is not unique, provide the `emin` or `emax` arguments
+        In case the solution is not unique, provide the ``emin`` or ``emax`` arguments
         to limit the solution to the given range.  By default the peak energy of the
-        bias is chosen as `emin`.
+        bias is chosen as ``emin``.
 
         Parameters
         ----------
@@ -469,7 +469,7 @@ class EnergyDispersion:
 
         Returns
         -------
-        bias_energy : `~astropy.unit.Quantity`
+        bias_energy : `~astropy.units.Quantity`
             Reconstructed energy corresponding to the given bias.
         """
         from gammapy.modeling.models import TemplateSpectralModel
@@ -970,9 +970,9 @@ class EnergyDispersion2D:
             Axis
         offset : `~astropy.coordinates.Angle`, optional
             Offset
-        e_true : `~astropy.utils.Quantity`, optional
+        e_true : `~astropy.units.Quantity`, optional
             True energy
-        migra : `~numpy.array`, list, optional
+        migra : `~numpy.ndarray`, optional
             Migration nodes
 
         Returns

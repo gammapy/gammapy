@@ -241,7 +241,7 @@ we recommend you use Jupyter notebooks. Assuming you have followed the steps abo
 
 This should open up JupyterLab app in your web browser, where you can
 create new Jupyter notebooks or open up existing ones. If you have downloaded the
-tutorials with `gammapy download tutorials`, you can browse your `gammapy-tutorials`
+tutorials with ``gammapy download tutorials``, you can browse your ``gammapy-tutorials``
 folder with Jupyterlab and execute them there.
 
 If you haven't used Jupyter before, try typing ``print("Hello Jupyter")`` in the

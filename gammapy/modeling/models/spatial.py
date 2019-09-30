@@ -66,12 +66,10 @@ class PointSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    lon_0 : `~astropy.coordinates.Angle`
-        :math:`lon_0`
-    lat_0 : `~astropy.coordinates.Latitude`
-        :math:`lat_0`
-    frame : {"galactic", "icrs"}
-        Coordinate frame of `lon_0` and `lat_0`.
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
+    frame : {"icrs", "galactic"}
+        Center position coordinate frame
     """
 
     tag = "PointSpatialModel"
@@ -156,10 +154,8 @@ class GaussianSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    lon_0 : `~astropy.coordinates.Angle`
-        :math:`\text{lon}_0`: `lon` coordinate for the center of the Gaussian.
-    lat_0 : `~astropy.coordinates.Angle`
-        :math:`\text{lat}_0`: `lat` coordinate for the center of the Gaussian.
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
     sigma : `~astropy.coordinates.Angle`
         Length of the major semiaxis of the Gaussian, in angular units.
     e : `float`
@@ -167,8 +163,8 @@ class GaussianSpatialModel(SpatialModel):
     phi : `~astropy.coordinates.Angle`
         Rotation angle :math:`\phi`: of the major semiaxis.
         Increases counter-clockwise from the North direction.
-    frame : {"galactic", "icrs"}
-        Coordinate frame of `lon_0` and `lat_0`.
+    frame : {"icrs", "galactic"}
+        Center position coordinate frame
 
     Examples
     --------
@@ -270,10 +266,8 @@ class DiskSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    lon_0 : `~astropy.coordinates.Angle`
-        :math:`\text{lon}_0`: `lon` coordinate for the center of the ellipse.
-    lat_0 : `~astropy.coordinates.Angle`
-        :math:`\text{lat}_0`: `lat` coordinate for the center of the ellipse.
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
     r_0 : `~astropy.coordinates.Angle`
         :math:`a`: length of the major semiaxis, in angular units.
     e : `float`
@@ -284,8 +278,8 @@ class DiskSpatialModel(SpatialModel):
     edge : `~astropy.coordinates.Angle`
         Width of the edge. The width is defined as the range within the
         smooth edges of the model drops from 95% to 5% of its amplitude.
-    frame : {"galactic", "icrs"}
-        Coordinate frame of `lon_0` and `lat_0`.
+    frame : {"icrs", "galactic"}
+        Center position coordinate frame
 
     Examples
     --------
@@ -410,16 +404,14 @@ class ShellSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    lon_0 : `~astropy.coordinates.Angle`
-        :math:`lon_0`
-    lat_0 : `~astropy.coordinates.Angle`
-        :math:`lat_0`
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
     radius : `~astropy.coordinates.Angle`
         Inner radius, :math:`r_{in}`
     width : `~astropy.coordinates.Angle`
         Shell width
-    frame : {"galactic", "icrs"}
-        Coordinate frame of `lon_0` and `lat_0`.
+    frame : {"icrs", "galactic"}
+        Center position coordinate frame
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "radius", "width"]

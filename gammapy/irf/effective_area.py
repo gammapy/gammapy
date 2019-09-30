@@ -587,5 +587,5 @@ class EffectiveAreaTable2D:
         return table
 
     def to_fits(self, name="EFFECTIVE AREA"):
-        """Convert to `~astropy.io.fits.BinTable`."""
+        """Convert to `~astropy.io.fits.BinTableHDU`."""
         return fits.BinTableHDU(self.to_table(), name=name)

@@ -227,10 +227,9 @@ class Fit:
         Extra ``kwargs`` are passed to the backend.
         E.g. `iminuit.Minuit.minos` supports a ``maxcall`` option.
 
-
         For the scipy backend ``kwargs`` are forwarded to `~scipy.optimize.brentq`. If the
         confidence estimation fails, the bracketing interval can be adapted by modifying the
-        the upper bound of the interval (`b`) value.
+        the upper bound of the interval (``b``) value.
 
         Parameters
         ----------
@@ -305,7 +304,7 @@ class Fit:
             When an `int` is passed the bounds are computed from `bounds * sigma`
             from the best fit value of the parameter, where `sigma` corresponds to
             the one sigma error on the parameter. If a tuple of floats is given
-            those are taken as the min and max values and `nvalues` are linearly
+            those are taken as the min and max values and ``nvalues`` are linearly
             spaced between those.
         nvalues : int
             Number of parameter grid points to use.

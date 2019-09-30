@@ -133,7 +133,7 @@ class SkyModel(SkyModelBase):
     """Sky model component.
 
     This model represents a factorised sky model.
-    It has a `~gammapy.utils.modeling.Parameters`
+    It has `~gammapy.modeling.Parameters`
     combining the spatial and spectral parameters.
 
     TODO: add possibility to have a temporal model component also.

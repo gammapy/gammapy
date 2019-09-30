@@ -60,7 +60,7 @@ example data download (``parfive``) or in one of the tutorials (``sherpa``).
 * reproject_ for image reprojection
 * uncertainties_ for linear error propagation
 * iminuit_ for fitting by optimization
-* Sherpa_ for modelling and fitting
+* Sherpa_ for modeling and fitting
 * naima_ for SED modeling
 * emcee_ for fitting by MCMC sampling
 * corner_ for MCMC corner plots

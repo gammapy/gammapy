@@ -119,7 +119,7 @@ class EnergyDependentMultiGaussPSF:
 
         Parameters
         ----------
-        hdu : `~astropy.io.fits.BintableHDU`
+        hdu : `~astropy.io.fits.BinTableHDU`
             HDU
         """
         energy_lo = Quantity(hdu.data["ENERG_LO"][0], "TeV")

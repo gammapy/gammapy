@@ -109,7 +109,7 @@ The URLs of the input files used by the notebooks should be noted in the
 ``tutorials/notebooks.yaml`` file in the Gammapy repository, also accounting
 for the list of notebooks to download as tutorials. For the different stable releases, 
 the list of tutorials to download, their locations and datasets used are declared in 
-YAML files placed in the ``download/tutorials`` folder of the `gammapy-web`_ Github repository.
+YAML files placed in the ``download/tutorials`` folder of the `gammapy-webpage`_ Github repository.
 The same happens for conda working environments of stable releases declared in files placed
 in the ``download/install`` folder of that repository. The datasets are not versioned and 
 are similarly declared in the ``download/data`` folder.
@@ -150,7 +150,6 @@ It was finally approved during the Gammapy coding sprint on Oct 4, 2018.
 .. _gammapy-extra/datasets/cta-1dc: https://github.com/gammapy/gammapy-extra/tree/master/datasets/cta-1dc
 .. _HESS DL3 DR1: https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/
 .. _nbstripout: https://github.com/kynan/nbstripout
-.. _gammapy-web: https://github.com/gammapy/gammapy-webpage
 
 .. _GH 1419: https://github.com/gammapy/gammapy/pull/1419
 .. _GH 1369: https://github.com/gammapy/gammapy/pull/1369

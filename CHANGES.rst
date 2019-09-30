@@ -1570,7 +1570,7 @@ i.e. for some things there is no pull request we can list here.
 - [#167] Add image profile function (Ellis Owen)
 - [#166] Add SED from Cube function (Ellis Owen)
 - [#160] Add code to make model images from a source catalog (Ellis Owen)
-- [#157] Re-write Galaxy modelling code (Axel Donath)
+- [#157] Re-write Galaxy modeling code (Axel Donath)
 - [#156] Add Fermi Vela dataset (Ellis Owen)
 - [#155] Add PSF convolve function (Ellis Owen)
 - [#154] Add Fermi PSF convolution method (Ellis Owen)

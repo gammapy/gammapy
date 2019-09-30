@@ -48,7 +48,7 @@ class SpectrumDataset(Dataset):
 
     See Also
     --------
-    SpectrumDatasetOnOff, FluxPointsDataset, MapDataset
+    SpectrumDatasetOnOff, FluxPointsDataset, gammapy.cube.MapDataset
     """
 
     likelihood_type = "cash"
@@ -317,9 +317,9 @@ class SpectrumDataset(Dataset):
         ----------
         method : {"diff", "diff/model", "diff/sqrt(model)"}
             Method used to compute the residuals. Available options are:
-                - `diff` (default): data - model
-                - `diff/model`: (data - model) / model
-                - `diff/sqrt(model)`: (data - model) / sqrt(model)
+                - ``diff`` (default): data - model
+                - ``diff/model``: (data - model) / model
+                - ``diff/sqrt(model)``: (data - model) / sqrt(model)
 
         Returns
         -------

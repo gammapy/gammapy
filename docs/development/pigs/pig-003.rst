@@ -76,8 +76,7 @@ Maintainer and developer perspective
 
 This change will have a big positive impact on Gammapy maintenance and
 development. It is an important step to allow for developments in 2019 towards
-the Gammapy 1.0 release that is planned for fall 2019 (see `PIG 5 - Gammapy 1.0
-Roadmap`_).
+the Gammapy 1.0 release that is planned for fall 2019 (see :ref:`pig-005`).
 
 Python 3 was introduced 10 years ago. The transition from Python 2 to Python 3
 has been long and painful, and is still ongoing, but it is coming to an end.
@@ -126,7 +125,7 @@ following the v0.10 release.
 
 The motivation for this is that in 2019 we will have to re-organise the Gammapy
 sub-packages and move and edit most files as we work towards Gammapy v1.0 in
-fall 2019 (see `PIG 5 - Gammapy 1.0 Roadmap`). So it seems unlikely that ``git
+fall 2019 (see :ref:`pig-005`). So it seems unlikely that ``git
 cherry-pick`` would work at all to backport bugfixes. Instead, the strategy
 would be to manually re-apply important bug fixes (mostly to ``gammapy.maps``,
 hopefully not many) in the ``v0.10.x`` branch.
@@ -143,7 +142,5 @@ by Gammapy coordination committee.
 .. _Numpy statement: https://docs.scipy.org/doc/numpy-1.14.1/neps/dropping-python2.7-proposal.html
 .. _Astropy statement: https://github.com/astropy/astropy-APEs/blob/master/APE10.rst
 .. _Python 3 statement: http://www.python3statement.org/
-.. _ctapipe: https://github.com/cta-observatory/ctapipe
-.. _PIG 5 - Gammapy 1.0 Roadmap: https://github.com/gammapy/gammapy/pull/1841
 .. _GH 111 for astropy-healpix: https://github.com/astropy/astropy-healpix/issues/111
 .. _GH 1167 for Gammapy: https://github.com/gammapy/gammapy/pull/1167

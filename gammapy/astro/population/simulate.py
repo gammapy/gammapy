@@ -143,7 +143,7 @@ def make_base_catalog_galactic(
     Choose a radial distribution, a velocity distribution, the number
     of pulsars n_pulsars, the maximal age max_age[years] and the fraction
     of the individual morphtypes. There's an option spiralarms. If set on
-    True a spiralarm modelling after Faucher&Kaspi is included.
+    True a spiralarm modeling after Faucher&Kaspi is included.
 
     max_age and n_sources effectively correspond to s SN rate:
     SN_rate = n_sources / max_age

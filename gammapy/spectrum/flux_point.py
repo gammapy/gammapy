@@ -742,7 +742,7 @@ class FluxPointsEstimator:
 
     Parameters
     ----------
-    datasets : list of `~gammapy.spectrum.SpectrumDatatset`
+    datasets : list of `~gammapy.spectrum.SpectrumDataset`
         Spectrum datasets.
     e_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.

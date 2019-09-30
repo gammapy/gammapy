@@ -17,7 +17,7 @@ class Likelihood:
 
     Parameters
     ----------
-    parameters : `~gammapy.utils.modeling.Parameters`
+    parameters : `~gammapy.modeling.Parameters`
         Parameters with starting values
     function : callable
         Likelihood function

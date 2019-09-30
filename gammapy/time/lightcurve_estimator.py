@@ -105,11 +105,11 @@ class LightCurveEstimator:
 
         Parameters
         ----------
-        e_ref : `~astropy.unit.Quantity`
+        e_ref : `~astropy.units.Quantity`
             reference energy of dnde flux normalization
-        e_min : `~astropy.unit.Quantity`
+        e_min : `~astropy.units.Quantity`
             minimum energy of integral and energy flux normalization interval
-        e_max : `~astropy.unit.Quantity`
+        e_max : `~astropy.units.Quantity`
             minimum energy of integral and energy flux normalization interval
         steps : list of str
             Which steps to execute. Available options are:

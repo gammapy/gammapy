@@ -110,13 +110,13 @@ IRFs
 Clean up and partly redesign the `gammapy.irf` sub-package. Implement IRF coordinate
 handling, unify axis handling with `gammapy.maps`. Evaluate the use of maps to store
 IRFs. Work on the IRF interface and data formats in close collaboration with
-`ctapipe`. Implement support for event types.
+`ctapipe`_. Implement support for event types.
 
 
 Maps
 ----
 Unify coordinate and unit handling in `gammapy.maps`. Migrate the healpix code
-from `healpy` to `astropy_healpix`. Finish implementation of multi-resolution
+from `healpy`_ to ``astropy_healpix``. Finish implementation of multi-resolution
 maps (low priority).
 
 
@@ -132,7 +132,7 @@ estimation with 3D analysis.
 
 Datasets
 --------
-Implement a `Dataset` or `Observation` container class, that bundles data and
+Implement a ``Dataset`` or ``Observation`` container class, that bundles data and
 reduced IRFs and is used to evaluate the likelihood. Enable joint fit across
 multiple datasets. Enable joint Fermi-LAT / IACT analyses.
 
@@ -149,9 +149,9 @@ on model parameters. Add support for handling tied parameters.
 Fitting
 -------
 Design and implement configuration and result handling. Finish implemention of
-the unified fitting front end in `gammapy.utils.fitting`. Fully support of the
-`sherpa` fitting backend. Add further fitting backends, such as `scipy.optimize`
-or `emcee`. Implement fitting helper and diagnosis methods to compute likelihood
+the unified fitting front end in ``gammapy.utils.fitting``. Fully support of the
+``sherpa`` fitting backend. Add further fitting backends, such as ``scipy.optimize``
+or ``emcee``. Implement fitting helper and diagnosis methods to compute likelihood
 contours. Improve interactive handling of the fitting front end.
 
 
@@ -163,13 +163,13 @@ CTA DC2 data.
 
 Timing Analysis
 ---------------
-Rewrite the current lightcurve estimation . Improve the existing `Lightcurve` class.
+Rewrite the current lightcurve estimation . Improve the existing ``Lightcurve`` class.
 Implement 3D analysis based lightcurve estimation.
 
 
 High-level interface
 --------------------
-Implement a config-file based high level analysis interface (e.g. as used in `fermipy`)
+Implement a config-file based high level analysis interface (e.g. as used in ``fermipy``)
 and command line tool. It gives access to limited, pre-scripted standard analysis
 workflows. Alternatively the high level analysis interface could generate pre-filled
 Python scripts or notebooks, that can be edited and executed by users.

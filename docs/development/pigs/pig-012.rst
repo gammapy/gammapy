@@ -85,7 +85,7 @@ The main use cases for analysis to be covered are:
 - 1D spectrum analysis
 - Light curve estimation
 
-Including the main methods for data reduction, modelling and fitting:
+Including the main methods for data reduction, modeling and fitting:
 
 - On vs on/off data reduction
 - Different background models

@@ -244,7 +244,7 @@ class Parameters:
         Order of values as specified by `parameters`.
     apply_autoscale : bool, optional
         Flag for optimizers, if True parameters are autoscaled before the fit,
-        see `~gammapy.utils.modeling.Parameter.autoscale`
+        see `~gammapy.modeling.Parameter.autoscale`
     """
 
     def __init__(self, parameters=None, covariance=None, apply_autoscale=True):
@@ -519,7 +519,7 @@ class Parameters:
     def autoscale(self, method="scale10"):
         """Autoscale all parameters.
 
-        See :func:`~gammapy.utils.modelling.Parameter.autoscale`
+        See :func:`~gammapy.modeling.Parameter.autoscale`
 
         Parameters
         ----------

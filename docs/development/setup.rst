@@ -53,8 +53,7 @@ functionalities for testing, code formatting, stripping output cells and executi
 The ``gammapy download`` command allows to download notebooks published as tutorials
 as well as the related datasets needed to execute them. For stable releases, the list of
 tutorials to download, their locations and datasets used are declared in YAML files
-placed in the ``download/tutorials`` folder of the `gammapy-webpage`
-`Github repository <https://github.com/gammapy/gammapy-webpage>`__.
+placed in the ``download/tutorials`` folder of the `gammapy-webpage`_ Github repository.
 The same happens for conda working environments of stable releases declared
 in ``download/install`` folder of that repository. The datasets are not versioned and
 are similarly declared in the ``download/data`` folder.
@@ -228,8 +227,8 @@ gammapy.org
 https://gammapy.org/ is a small landing page for the Gammapy project. The page
 shown there a static webpage served via Github pages.
 
-To update it, edit the HTML and CSS files this repo:
-https://github.com/gammapy/gammapy-webpage and then make a pull request against
+To update it, edit the HTML and CSS files in the `gammapy-webpage`_ repo
+and then make a pull request against
 the default branch for that repo, called ``gh-pages``. Once it's merged, the
 webpage at https://gammapy.org/ usually updates within less than a minute.
 
@@ -258,8 +257,7 @@ is created using the ``Dockerfile`` and ``binder.py`` files. The Dockerfile make
 the Docker image used by Binder running some linux commands to install base-packages
 and copy the tutorials and datasets neeeded. It executes ``binder.py`` to conda
 install Gammapy dependencies listed in the environment YAML file placed in the
-``download/install`` folder of the `gammapy-webpage`
-`Github repository <https://github.com/gammapy/gammapy-webpage>`__
+``download/install`` folder of the `gammapy-webpage`_ Github repository.
 
 Continuous integration
 ======================

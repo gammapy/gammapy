@@ -415,7 +415,7 @@ class EnergyDependentTablePSF:
         ----------
         energy_band : `~astropy.units.Quantity`
             Energy band
-        spectrum : `SpectralModel`
+        spectrum : `~gammapy.modeling.models.SpectralModel`
             Spectral model used for weighting the PSF. Default is a power law
             with index=2.
         n_bins : int

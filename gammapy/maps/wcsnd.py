@@ -575,20 +575,20 @@ class WcsNDMap(WcsMap):
     def get_spectrum(self, region=None, func=np.nansum):
         """Extract spectrum in a given region.
 
-        The spectrum can be computed by summing (or, more generally, applying `func`)
-        along the spatial axes in each energy bin. This occurs only inside the `region`,
+        The spectrum can be computed by summing (or, more generally, applying ``func``)
+        along the spatial axes in each energy bin. This occurs only inside the ``region``,
         which by default is assumed to be the whole spatial extension of the map.
 
         Parameters
         ----------
         region: `~regions.Region`
              Region (pixel or sky regions accepted).
-        func : `~numpy.ufunc`
+        func : numpy.ufunc
             Function to reduce the data.
 
         Returns
         -------
-        spectrum : `CountsSpectrum`
+        spectrum : `~gammapy.spectrum.CountsSpectrum`
             Spectrum in the given region.
         """
         from gammapy.spectrum import CountsSpectrum
@@ -656,8 +656,8 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        edisp : `EnergyDispersion`
-            Energy dispersion.
+        edisp : `gammapy.irf.EnergyDispersion`
+            Energy dispersion matrix
 
         Returns
         -------

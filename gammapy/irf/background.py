@@ -99,7 +99,7 @@ class Background3D:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
         # Currently some files (e.g. CTA 1DC) contain unit in the FITS file
-        # '1/s/MeV/sr', which is invalid ( try: astropy.unit.Unit('1/s/MeV/sr')
+        # '1/s/MeV/sr', which is invalid ( try: astropy.units.Unit('1/s/MeV/sr')
         # This should be corrected.
         # For now, we hard-code the unit here:
         data_unit = u.Unit("s-1 MeV-1 sr-1")
@@ -283,7 +283,7 @@ class Background2D:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
         # Currently some files (e.g. CTA 1DC) contain unit in the FITS file
-        # '1/s/MeV/sr', which is invalid ( try: astropy.unit.Unit('1/s/MeV/sr')
+        # '1/s/MeV/sr', which is invalid ( try: astropy.units.Unit('1/s/MeV/sr')
         # This should be corrected.
         # For now, we hard-code the unit here:
         data_unit = u.Unit("s-1 MeV-1 sr-1")

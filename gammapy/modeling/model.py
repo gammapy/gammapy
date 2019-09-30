@@ -16,7 +16,7 @@ class Model:
 
     @property
     def parameters(self):
-        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
+        """Parameters (`~gammapy.modeling.Parameters`)"""
         return self._parameters
 
     @parameters.setter
