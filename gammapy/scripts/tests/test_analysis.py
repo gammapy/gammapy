@@ -272,3 +272,7 @@ def test_validation_checks():
     analysis.set_model(model=model_str)
     assert isinstance(analysis.model, SkyModels) is True
     assert analysis.set_model() is False
+
+    analysis.run_fit()
+    del analysis.settings["flux-points"]
+    assert analysis.get_flux_points() is False

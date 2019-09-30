@@ -385,7 +385,10 @@ class Analysis:
         else:
             log.info("No results available from fit.")
             valid = False
-        if "fp_binning" not in self.settings["flux-points"]:
+        if "flux-points" not in self.settings:
+            log.info("No values declared for the energy bins.")
+            valid = False
+        elif "fp_binning" not in self.settings["flux-points"]:
             log.info("No values declared for the energy bins.")
             valid = False
         if not valid:
