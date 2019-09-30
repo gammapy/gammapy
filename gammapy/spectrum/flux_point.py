@@ -1174,10 +1174,6 @@ class FluxPointsDataset(Dataset):
                 " either 'chi2' or 'chi2assym'"
             )
 
-    def __repr__(self):
-        str_ = self.__class__.__name__
-        return str_
-
     def __str__(self):
         str_ = f"{self.__class__.__name__}: \n"
         str_ += "\n"

@@ -84,10 +84,6 @@ class SpectrumDataset(Dataset):
         self.name = name
         self.gti = gti
 
-    def __repr__(self):
-        str_ = self.__class__.__name__
-        return str_
-
     def __str__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
@@ -569,10 +565,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.acceptance_off = acceptance_off
         self.name = name
         self.gti = gti
-
-    def __repr__(self):
-        str_ = self.__class__.__name__
-        return str_
 
     def __str__(self):
         str_ = super().__str__()

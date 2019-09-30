@@ -107,10 +107,6 @@ class MapDataset(Dataset):
         else:
             raise ValueError(f"Invalid likelihood: {likelihood!r}")
 
-    def __repr__(self):
-        str_ = self.__class__.__name__
-        return str_
-
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
         str_ += "\n"
