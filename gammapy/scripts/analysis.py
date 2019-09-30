@@ -4,6 +4,7 @@ import copy
 import logging
 from collections import defaultdict
 from pathlib import Path
+import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
@@ -243,7 +244,10 @@ class Analysis:
         if "geom-irf" in self.settings["datasets"]:
             geom_irf = self._create_geometry(self.settings["datasets"]["geom-irf"])
         else:
-            geom_irf = geom.downsample(factor=10)
+            # TODO: change parametrisation from geom-irf to binsz_irf and energy_true_axis
+            #  and remove hard coded pixel size for IRF maps
+            factor = np.ceil((0.2 * u.deg) / geom.pixel_scales[0])
+            geom_irf = geom.downsample(factor=factor)
 
         offset_max = Angle(self.settings["datasets"]["offset-max"])
         stack_datasets = self.settings["datasets"]["stack-datasets"]
