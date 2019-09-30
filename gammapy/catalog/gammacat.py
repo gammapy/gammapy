@@ -566,14 +566,13 @@ class GammaCatResource:
         )
 
     def __repr__(self):
-        fmt = "{}(source_id={!r}, reference_id={!r}, file_id={!r}, type={!r}, location={!r})"
-        return fmt.format(
-            self.__class__.__name__,
-            self.source_id,
-            str(self.reference_id),
-            self.file_id,
-            str(self.type),
-            str(self.location),
+        return (
+            f"{self.__class__.__name__}("
+            f"source_id={self.source_id!r}, "
+            f"reference_id={self.reference_id!r}, "
+            f"file_id={self.file_id!r}, "
+            f"type={self.type!r}, "
+            f"location={self.location!r})"
         )
 
     def __eq__(self, other):
@@ -622,7 +621,7 @@ class GammaCatResourceIndex:
         self.resources = resources
 
     def __repr__(self):
-        return "{}(n_resources={})".format(self.__class__.__name__, len(self.resources))
+        return f"{self.__class__.__name__}(n_resources={len(self.resources)})"
 
     def __eq__(self, other):
         if len(self.resources) != len(other.resources):

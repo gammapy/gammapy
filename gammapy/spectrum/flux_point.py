@@ -134,8 +134,7 @@ class FluxPoints:
         self._validate_table(self.table, table.meta["SED_TYPE"])
 
     def __repr__(self):
-        fmt = '{}(sed_type="{}", n_points={})'
-        return fmt.format(self.__class__.__name__, self.sed_type, len(self.table))
+        return f"{self.__class__.__name__}(sed_type={self.sed_type!r}, n_points={len(self.table)})"
 
     @property
     def table_formatted(self):

@@ -30,7 +30,7 @@ class LightCurve:
         self.table = table
 
     def __repr__(self):
-        return "{}(len={})".format(self.__class__.__name__, len(self.table))
+        return f"{self.__class__.__name__}(len={len(self.table)})"
 
     @property
     def time_scale(self):

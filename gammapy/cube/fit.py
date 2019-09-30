@@ -669,7 +669,7 @@ class MapDataset(Dataset):
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
         return {
-            "name":  self.name,
+            "name": self.name,
             "models": self.model.names,
             "background": self.background_model.name,
             "filename": filename,

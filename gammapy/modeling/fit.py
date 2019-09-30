@@ -449,13 +449,13 @@ class FitResult:
         return self._message
 
     def __repr__(self):
-        str_ = self.__class__.__name__
-        str_ += "\n\n"
-        str_ += f"\tbackend    : {self.backend}\n"
-        str_ += f"\tmethod     : {self.method}\n"
-        str_ += f"\tsuccess    : {self.success}\n"
-        str_ += f"\tmessage    : {self.message}\n"
-        return str_
+        return (
+            f"{self.__class__.__name__}\n\n"
+            f"\tbackend    : {self.backend}\n"
+            f"\tmethod     : {self.method}\n"
+            f"\tsuccess    : {self.success}\n"
+            f"\tmessage    : {self.message}\n"
+        )
 
 
 class CovarianceResult(FitResult):

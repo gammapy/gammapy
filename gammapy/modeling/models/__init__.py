@@ -10,6 +10,7 @@ from .temporal import *
 
 class ModelRegistry(list):
     """Gammapy model registry class."""
+
     def get_cls(self, tag):
         for cls in self:
             if hasattr(cls, "tag") and cls.tag == tag:
