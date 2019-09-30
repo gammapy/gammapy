@@ -79,7 +79,7 @@ class ConstantTemporalModel(TemporalModel):
 
 
 class PhaseCurveTemplateTemporalModel(TemporalModel):
-    """Temporal phase curve model.
+    r"""Temporal phase curve model.
 
     Phase for a given time is computed as:
 

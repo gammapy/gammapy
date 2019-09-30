@@ -1361,10 +1361,10 @@ class Absorption:
 
     Parameters
     ----------
-    energy_lo, energy_hi : `~astropy.units.Quantity`
-        Lower and upper bin edges of energy axis
-    param_lo, param_hi : `~astropy.units.Quantity`
-        Lower and upper bin edges of parameter axis
+    energy : `~astropy.units.Quantity`
+        Energy node values
+    param : `~astropy.units.Quantity`
+        Parameter node values
     data : `~astropy.units.Quantity`
         Model value
 
@@ -1405,6 +1405,7 @@ class Absorption:
         # show plot
         plt.show()
     """
+
     tag = "Absorption"
 
     def __init__(self, energy, param, data, filename=None, interp_kwargs=None):
@@ -1676,6 +1677,7 @@ class NaimaSpectralModel(SpectralModel):
         plt.legend(loc='best')
         plt.show()
     """
+
     tag = "NaimaSpectralModel"
 
     # TODO: prevent users from setting new attributes after init
@@ -1764,6 +1766,7 @@ class GaussianSpectralModel(SpectralModel):
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
+
     tag = "GaussianSpectralModel"
 
     def __init__(
@@ -1872,6 +1875,7 @@ class LogGaussianSpectralModel(SpectralModel):
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
+
     tag = "LogGaussianSpectralModel"
 
     def __init__(self, norm=1e-12 * u.Unit("cm-2 s-1"), mean=1 * u.TeV, sigma=2):

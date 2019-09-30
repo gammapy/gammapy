@@ -45,14 +45,13 @@ class Analysis:
     parameters passed as a nested dictionary at the moment of instantiation. In that case these
     parameters will overwrite the default values of those present in the configuration file.
 
-    You may find usage examples in :ref:`HLI`
+    For more info see  :ref:`HLI`.
 
     Parameters
     ----------
     config : dict or `AnalysisConfig`
         Configuration options following `AnalysisConfig` schema
-
-        """
+    """
 
     def __init__(self, config=None):
         if isinstance(config, dict):

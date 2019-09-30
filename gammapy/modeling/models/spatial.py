@@ -73,6 +73,7 @@ class PointSpatialModel(SpatialModel):
     frame : {"galactic", "icrs"}
         Coordinate frame of `lon_0` and `lat_0`.
     """
+
     tag = "PointSpatialModel"
     __slots__ = ["frame", "lon_0", "lat_0"]
 

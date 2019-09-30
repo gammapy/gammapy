@@ -66,7 +66,6 @@ class MapDataset(Dataset):
         Mask defining the safe data range.
     gti : '~gammapy.data.GTI'
         GTI of the observation or union of GTI if it is a stacked observation
-
     """
 
     def __init__(
@@ -298,7 +297,6 @@ class MapDataset(Dataset):
         reference_time="2000-01-01",
         name="",
     ):
-
         """Creates a MapDataset object with zero filled maps
 
         Parameters
@@ -314,7 +312,6 @@ class MapDataset(Dataset):
         name : str
             Name of the dataset.
         """
-
         geom_irf = geom_irf or geom
         migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
         rad_axis = rad_axis or RAD_AXIS_DEFAULT
@@ -362,9 +359,7 @@ class MapDataset(Dataset):
         ----------
         other: `~gammapy.cube.MapDataset`
             Map dataset to be stacked with this one.
-
         """
-
         if self.counts and other.counts:
             self.counts.data[~self.mask_safe] = 0
             self.counts.coadd(other.counts, weights=other.mask_safe)
@@ -420,10 +415,8 @@ class MapDataset(Dataset):
         -------
         residuals : `gammapy.maps.WcsNDMap`
             Residual map.
-
         """
-        residuals = self._compute_residuals(self.counts, self.npred(), method=method)
-        return residuals
+        return self._compute_residuals(self.counts, self.npred(), method=method)
 
     def plot_residuals(
         self,
@@ -521,21 +514,16 @@ class MapDataset(Dataset):
         return self.counts.data.astype(float)
 
     def likelihood(self):
-        """Total likelihood given the current model parameters.
-
-        """
+        """Total likelihood given the current model parameters."""
         counts, npred = self._counts_data, self.npred().data
 
         if self.mask is not None:
-            stat = self._stat_sum(counts[self.mask], npred[self.mask])
+            return self._stat_sum(counts[self.mask], npred[self.mask])
         else:
-            stat = self._stat_sum(counts.ravel(), npred.ravel())
-
-        return stat
+            return self._stat_sum(counts.ravel(), npred.ravel())
 
     def fake(self, random_state="random-seed"):
-        """
-        Simulate fake counts for the current model and reduced irfs.
+        """Simulate fake counts for the current model and reduced IRFs.
 
         This method overwrites the counts defined on the dataset object.
 
@@ -683,19 +671,13 @@ class MapDataset(Dataset):
         return cls.from_hdulist(hdulist, name=name)
 
     def to_dict(self, filename=""):
-        """Create dict for YAML serilisation
-
-        Returns
-        -------
-        data : dict
-            Dict with data for the YAML serilisation.
-        """
-        data = {}
-        data["name"] = self.name
-        data["models"] = self.model.names
-        data["background"] = self.background_model.name
-        data["filename"] = filename
-        return data
+        """Convert to dict for YAML serialization."""
+        return {
+            "name":  self.name,
+            "models": self.model.names,
+            "background": self.background_model.name,
+            "filename": filename,
+        }
 
     def to_spectrum_dataset(self, on_region, containment_correction=False):
         """Return a ~gammapy.spectrum.SpectrumDataset from on_region.
