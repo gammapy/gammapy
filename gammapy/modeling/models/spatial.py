@@ -348,7 +348,7 @@ class DiskSpatialModel(SpatialModel):
         return self.parameters["r_0"].quantity
 
     @staticmethod
-    def compute_norm(r_0, e):
+    def _evaluate_norm_factor(r_0, e):
         """Compute the normalization factor."""
         semi_minor = r_0 * np.sqrt(1 - e ** 2)
 
@@ -367,12 +367,14 @@ class DiskSpatialModel(SpatialModel):
             )[0]
         ) ** -1
 
-    def smooth_edge(x, width):
+    @staticmethod
+    def _evaluate_smooth_edge(x, width):
         value = (x / width).to_value("")
         edge_width_95 = 2.326174307353347
         return 0.5 * (1 - scipy.special.erf(value * edge_width_95))
 
-    def evaluate(self, lon, lat, lon_0, lat_0, r_0, e, phi, edge):
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, r_0, e, phi, edge):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
@@ -381,9 +383,9 @@ class DiskSpatialModel(SpatialModel):
         else:
             sigma_eff = compute_sigma_eff(lon_0, lat_0, lon, lat, phi, r_0, e)[1]
 
-        norm = DiskSpatialModel.compute_norm(r_0, e)
+        norm = DiskSpatialModel._evaluate_norm_factor(r_0, e)
 
-        in_ellipse = DiskSpatialModel.smooth_edge(sep - sigma_eff, edge)
+        in_ellipse = DiskSpatialModel._evaluate_smooth_edge(sep - sigma_eff, edge)
         return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
 
 
