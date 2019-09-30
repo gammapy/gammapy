@@ -247,6 +247,7 @@ def test_analysis_3d_no_geom_irf():
     assert len(analysis.datasets.datasets) == 1
 
 
+@requires_data()
 def test_validation_checks():
     config = AnalysisConfig()
     analysis = Analysis(config)
@@ -254,8 +255,8 @@ def test_validation_checks():
     with pytest.raises(FileNotFoundError):
         analysis.get_observations()
 
-    config_1d = AnalysisConfig.from_template("1d")
-    analysis = Analysis(config_1d)
+    config = AnalysisConfig.from_template("1d")
+    analysis = Analysis(config)
     assert analysis.get_flux_points() is False
     assert analysis.run_fit() is False
     assert analysis.set_model() is False
