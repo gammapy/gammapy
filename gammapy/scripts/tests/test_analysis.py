@@ -19,6 +19,9 @@ def test_config():
     assert config.settings["general"]["logging"]["level"] == "INFO"
     assert config.settings["general"]["outdir"] == "test"
 
+    with pytest.raises(ValueError):
+        Analysis()
+
     assert "AnalysisConfig" in str(config)
 
 
