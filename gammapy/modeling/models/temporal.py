@@ -31,6 +31,8 @@ class ConstantTemporalModel(TemporalModel):
     def __init__(self, norm):
         self.norm = Parameter("norm", norm)
 
+        super().__init__([self.norm])
+
     def evaluate_norm_at_time(self, time):
         """Evaluate for a given time.
 
@@ -137,12 +139,7 @@ class PhaseCurveTemplateTemporalModel(TemporalModel):
         self.f1 = Parameter("f1", f1)
         self.f2 = Parameter("f2", f2)
 
-        params = []
-        for slot in self.__slots__:
-            attr = getattr(self, slot)
-            if isinstance(attr, Parameter):
-                params.append(getattr(self, slot))
-        super().__init__(params)
+        super().__init__([self.time_0, self.phase_0, self.f0, self.f1, self.f2])
 
     def phase(self, time):
         """Evaluate phase for a given time.

@@ -209,7 +209,7 @@ def test_analysis_3d_joint_datasets():
     analysis.get_datasets()
 
     assert len(analysis.datasets.datasets) == 4
-    
+
 
 def test_validate_astropy_quantities():
     config = AnalysisConfig()

@@ -537,10 +537,6 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         ss += "GLAT        : {}\n".format(d["GLAT"])
         ss += "\n"
 
-        # val, err = d['Energy_Flux100'], d['Unc_Energy_Flux100']
-        # ss += 'Energy flux (100 MeV - 100 GeV) : {} +- {} erg cm^-2 s^-1\n'.format(val, err)
-        # ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
-
         return ss
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
