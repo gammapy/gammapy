@@ -11,10 +11,9 @@ Gammapy :ref:`tutorials`.
 This section explains the steps to get set up for the Gammapy tutorials on your
 machine:
 
-1. Install Anaconda and the Gammapy environment
+1. Check your setup and Gammapy environment
 2. Download tutorial notebooks and example datasets
-3. Check your setup and Gammapy environment
-4. Use Gammapy with Python, IPython or Jupyter
+3. Use Gammapy with Python, IPython or Jupyter
 
 If you have used conda, Python, IPython and Jupyter before, you can just skim
 this page, and quickly copy & paste the commands to get set up.
