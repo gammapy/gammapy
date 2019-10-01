@@ -10,7 +10,7 @@ from .background import make_map_background_irf
 from .counts import fill_map_counts
 from .edisp_map import make_edisp_map
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
-from .fit import MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, BINSZ_IRF, MapDataset
+from .fit import BINSZ_IRF, MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, MapDataset
 from .psf_map import make_psf_map
 
 __all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]

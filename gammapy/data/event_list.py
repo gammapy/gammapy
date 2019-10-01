@@ -463,7 +463,9 @@ class EventListBase:
         offset_bounds = np.linspace(0, 4, 30)
 
         counts = np.histogram2d(
-            x=self.energy.to_value("TeV"), y=self.offset.to_value("deg"), bins=(energy_bounds, offset_bounds)
+            x=self.energy.to_value("TeV"),
+            y=self.offset.to_value("deg"),
+            bins=(energy_bounds, offset_bounds),
         )[0]
 
         ax.pcolormesh(energy_bounds, offset_bounds, counts.T, norm=LogNorm())
