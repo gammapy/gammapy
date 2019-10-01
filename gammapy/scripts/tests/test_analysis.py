@@ -26,10 +26,11 @@ def test_config():
     assert "AnalysisConfig" in str(config)
 
 
-def test_config_to_yaml():
+def test_config_to_yaml(tmpdir):
     config = AnalysisConfig()
+    config.settings["general"]["outdir"] = tmpdir
     config.to_yaml(overwrite=True)
-    text = Path(config.filename).read_text()
+    text = Path(tmpdir/config.filename).read_text()
     assert "stack-datasets" in text
 
 
@@ -240,7 +241,6 @@ def test_analysis_3d_no_geom_irf():
     config = AnalysisConfig.from_template("3d")
     analysis = Analysis(config)
     del analysis.settings["datasets"]["geom-irf"]
-    analysis.settings["datasets"]["geom"]["binsz"] = 0.05
     analysis.get_observations()
     analysis.get_datasets()
 

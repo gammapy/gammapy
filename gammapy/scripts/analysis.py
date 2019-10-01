@@ -412,7 +412,7 @@ class AnalysisConfig:
             self.template = CONFIG_PATH / ANALYSIS_TEMPLATES["basic"]
         # add user settings
         self.update_settings(config, self.template)
-        self.filename = filename
+        self.filename = Path(filename).name
 
     def __str__(self):
         """Display settings in pretty YAML format."""
@@ -437,9 +437,8 @@ class AnalysisConfig:
         if filename is None:
             filename = self.filename
 
-        filename = make_path(filename)
-        path_file = Path(self.settings["general"]["outdir"]) / filename
-        self.filename = path_file
+        self.filename = Path(filename).name
+        path_file = Path(self.settings["general"]["outdir"]) / self.filename
 
         if path_file.exists() and not overwrite:
             raise IOError(f"File {filename} already exists.")
