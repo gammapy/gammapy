@@ -762,6 +762,28 @@ class WcsGeom(Geom):
             axes[idx] = axes[idx].upsample(factor)
             return self._init_copy(axes=axes)
 
+    def to_binsz(self, binsz):
+        """Change pixel size of the geometry
+
+        Parameters
+        ----------
+        binsz : float or tuple or list
+            New pixel size in degree.
+
+        Returns
+        -------
+        geom : `WcsGeom`
+            Geometry with new pixel size.
+        """
+        kwargs = {}
+        kwargs["skydir"] = self.center_skydir
+        kwargs["binsz"] = binsz
+        kwargs["width"] = self.width
+        kwargs["proj"] = self.projection
+        kwargs["coordsys"] = self.coordsys
+        kwargs["axes"] = copy.deepcopy(self.axes)
+        return self.create(**kwargs)
+
     @lru_cache()
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).

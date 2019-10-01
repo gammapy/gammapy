@@ -419,3 +419,17 @@ def test_read_write(tmpdir, node_type, interp):
     m.write(filename, overwrite=True)
     m2 = Map.read(filename)
     assert m2.geom == m.geom
+
+
+@pytest.mark.parametrize(
+    ("npix", "binsz", "coordsys", "proj", "skypos", "axes", "result"),
+    compatibility_test_geoms,
+)
+def test_wcs_geom_to_binsz(npix, binsz, coordsys, proj, skypos, axes, result):
+    geom = WcsGeom.create(
+        skydir=skydir, npix=10, binsz=0.1, proj="CAR", coordsys="GAL", axes=test_axis1
+    )
+
+    geom_new = geom.to_binsz(binsz=0.5)
+
+    assert_allclose(geom_new.pixel_scales.value, 0.5)
