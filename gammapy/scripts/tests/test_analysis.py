@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 import yaml
 from gammapy.scripts import Analysis, AnalysisConfig
 from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.modeling.models import SkyModels
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 MODEL_FILE = CONFIG_PATH / "model.yaml"
@@ -19,14 +20,17 @@ def test_config():
     assert config.settings["general"]["logging"]["level"] == "INFO"
     assert config.settings["general"]["outdir"] == "test"
 
+    with pytest.raises(ValueError):
+        Analysis()
+
     assert "AnalysisConfig" in str(config)
 
 
 def test_config_to_yaml(tmpdir):
     config = AnalysisConfig()
-    filename = tmpdir / "test_config.yaml"
-    config.to_yaml(filename=filename)
-    text = Path(filename).read_text()
+    config.settings["general"]["outdir"] = tmpdir
+    config.to_yaml(overwrite=True)
+    text = Path(tmpdir/config.filename).read_text()
     assert "stack-datasets" in text
 
 
@@ -132,7 +136,7 @@ def config_analysis_data():
             unit: TeV
             interp: log
     """
-    return yaml.safe_load(cfg)
+    return cfg
 
 
 @requires_dependency("iminuit")
@@ -207,7 +211,6 @@ def test_analysis_3d_joint_datasets():
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-
     assert len(analysis.datasets.datasets) == 4
 
 
@@ -231,3 +234,47 @@ def test_docs_file():
 def test_help():
     config = AnalysisConfig()
     assert config.help() is None
+
+
+@requires_data()
+def test_analysis_3d_no_geom_irf():
+    config = AnalysisConfig.from_template("3d")
+    analysis = Analysis(config)
+    del analysis.settings["datasets"]["geom-irf"]
+    analysis.get_observations()
+    analysis.get_datasets()
+
+    assert len(analysis.datasets.datasets) == 1
+
+    
+@requires_dependency("iminuit")
+@requires_data()
+def test_validation_checks():
+    config = AnalysisConfig()
+    analysis = Analysis(config)
+    analysis.settings["observations"]["datastore"] = "other"
+    with pytest.raises(FileNotFoundError):
+        analysis.get_observations()
+
+    config = AnalysisConfig.from_template("1d")
+    analysis = Analysis(config)
+    assert analysis.get_flux_points() is False
+    assert analysis.run_fit() is False
+    assert analysis.set_model() is False
+    assert analysis.get_datasets() is False
+
+    analysis.get_observations()
+    analysis.settings["datasets"]["dataset-type"] = "not assigned"
+    assert analysis.get_datasets() is False
+
+    analysis.settings["datasets"]["dataset-type"] = "SpectrumDatasetOnOff"
+    analysis.get_observations()
+    analysis.get_datasets()
+    model_str = Path(MODEL_FILE).read_text()
+    analysis.set_model(model=model_str)
+    assert isinstance(analysis.model, SkyModels) is True
+    assert analysis.set_model() is False
+
+    analysis.run_fit()
+    del analysis.settings["flux-points"]
+    assert analysis.get_flux_points() is False
