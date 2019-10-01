@@ -246,7 +246,8 @@ def test_analysis_3d_no_geom_irf():
 
     assert len(analysis.datasets.datasets) == 1
 
-
+    
+@requires_dependency("iminuit")
 @requires_data()
 def test_validation_checks():
     config = AnalysisConfig()
