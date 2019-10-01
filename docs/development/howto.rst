@@ -890,7 +890,7 @@ so many getters and setters. We could start using descriptors.
 TODO: make a decision on this and describe the issue / solution here.
 
 Link to a notebook from the docs
--------------------------------------------------
+--------------------------------
 
 Jupyter notebooks stored in the ``tutorials`` folder and are copied to the ``notebooks`` folder
 during the process of Sphinx building documentation. They are converted to HTML files using

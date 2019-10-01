@@ -29,7 +29,7 @@ that you just need to create a branch off of ``master``.
 Making bugfix releases would be more difficult and involve identifying commits with bug fixes and
 backporting those to the stable branches.
 
-In these notes we'll use the Gammapy 0.3 release as an example.
+In these notes we'll use the Gammapy 0.14 release as an example.
 
 Pre release
 -----------
@@ -37,23 +37,14 @@ Pre release
 Steps to prepare for the release (e.g. a week before) to check that things are in order:
 
 #. Check the issue (example: https://github.com/gammapy/gammapy/issues/302 )
-   and milestone (example: https://github.com/gammapy/gammapy/milestones/0.3 )
+   and milestone (example: https://github.com/gammapy/gammapy/milestones/0.14 )
    for the release. Try to get developers to finish up their PRs, try to help
    fix bugs, and postpone non-critical issues to the next release.
-#. Follow the instructions `here <http://docs.astropy.org/en/latest/development/affiliated-packages.html#updating-to-the-latest-template-files>`__
-   to check that the astropy-helpers sub-module in Gammapy is pointing to the
-   latest stable astropy-helpers release and whether there have been any fixes /
-   changes to the Astropy `package-template
-   <https://github.com/astropy/package-template/blob/master/TEMPLATE_CHANGES.md>`__
-   since the last Gammapy release that should be copied over. In Gammapy we are
-   using the method that's described in the section "managing the template files
-   manually" that's described. If there are any updates to be done, you should
-   do them via a PR so that travis-ci testing can run.
 #. Do these extra checks and clean up any warnings / errors that come up::
 
-       make trailing-spaces
-       make code-analysis
-       python setup.py test -V --remote-data
+       make polish
+       make pylint
+       make flake8
 
 #. Check external HTML links from the docs (see :ref:`here <dev-check_html_links>`).
 #. Check that the travis-ci build is working.
@@ -67,18 +58,20 @@ Make release
 
 Steps for the day of the release:
 
-#. Mention release on the front page and on the news page of the Gammapy webpage.
+#. Update the dataset index file by running `make dataset-index` and copy it over to `gammapy-0.14-data-index.json` in
+   the webpage repo.
+#. Copy over `notebooks.yaml` to `gammapy-0.14-tutorials.yml` and adapt the links contained
+   in the file to point to `https://docs.gammapy.org/0.14/_static/notebooks`.
+#. Copy the script index file from the last release to `gammapy-0.14-scripts.yml`
+   and add new examples by hand if needed.
+#. Copy the environment file from the last release to `gammapy-0.14-environment.yml`
+   and adapt dependency versions as required.
+#. Mention release on the front page and on the news page of the Gammapy webpage
+   (update `index.html` and `news.html` in the `gammapy webpage repo <https://github.com/gammapy/gammapy-webpage>`__).
 #. Follow the instructions how to release an Astropy affiliated package
-   `here <http://docs.astropy.org/en/latest/development/affiliated-packages.html#releasing-an-affiliated-package>`__.
-#. Check that the tarball and description (which is from ``LONG_DESCRIPTION.rst``) on PyPI is OK.
-#. Build the stable release documentation and publish it in `gammapy-docs` `Github repository <https://github.com/gammapy/gammapy-docs>`__
-#. Update the Gammapy stable branch to point to the new tag
-   as described `here <http://docs.astropy.org/en/latest/development/releasing.html>`__.
-#. Add the environment and tutorials YAML files, as well as the JSON datasets file in `gammapy-webpage` `Github repository <https://github.com/gammapy/gammapy-webpage>`__
-#. Update the Binder Dockerfile in the `gammapy-webpage` Github repository, changing the Gammapy release number in four different
-   lines, and create the tag release accordingly in the `master` branch.
-#. Draft the release announcement as a new file in https://github.com/gammapy/gammapy/tree/master/dev/notes
-   (usually by copy & pasting the announcement from the last release)
+   `here <https://docs.astropy.org/en/stable/development/astropy-package-template.html>`__.
+#. Checkout the git tag v0.14 and build the release documentation and publish it in `gammapy-docs` `Github repository <https://github.com/gammapy/gammapy-docs>`__
+   Adapt `stable/index.html` to point to v0.14 in the gammapy docs repo.
 #. Update the Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock
 #. Encourage the Gammapy developers to try out the new stable version (update and run tests)
    via the Github issue for the release and wait a day or two for feedback.
