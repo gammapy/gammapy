@@ -4,13 +4,13 @@ import copy
 import logging
 from collections import defaultdict
 from pathlib import Path
-import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
 from gammapy.cube import MapDataset, MapMakerObs
+from gammapy.cube.fit import BINSZ_IRF
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
@@ -244,9 +244,7 @@ class Analysis:
         if "geom-irf" in self.settings["datasets"]:
             geom_irf = self._create_geometry(self.settings["datasets"]["geom-irf"])
         else:
-            # TODO: change parametrisation from geom-irf to binsz_irf and energy_true_axis
-            #  and remove hard coded pixel size for IRF maps
-            geom_irf = geom.to_binsz(binsz=0.5)
+            geom_irf = geom.to_binsz(binsz=BINSZ_IRF)
 
         offset_max = Angle(self.settings["datasets"]["offset-max"])
         stack_datasets = self.settings["datasets"]["stack-datasets"]

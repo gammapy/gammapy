@@ -10,7 +10,7 @@ from .background import make_map_background_irf
 from .counts import fill_map_counts
 from .edisp_map import make_edisp_map
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
-from .fit import MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, MapDataset
+from .fit import MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, BINSZ_IRF, MapDataset
 from .psf_map import make_psf_map
 
 __all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
@@ -51,20 +51,10 @@ class MapMaker:
             raise ValueError("MapMaker only works with geom with an energy axis")
 
         self.geom = geom
-        self.geom_true = geom_true if geom_true else geom.to_binsz()
+        self.geom_true = geom_true if geom_true else geom.to_binsz(BINSZ_IRF)
         self.offset_max = Angle(offset_max)
         self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling
-
-    def _get_empty_maps(self, selection):
-        # Initialise zero-filled maps
-        maps = {}
-        for name in selection:
-            if name == "exposure":
-                maps[name] = Map.from_geom(self.geom_true, unit="m2 s")
-            else:
-                maps[name] = Map.from_geom(self.geom, unit="")
-        return maps
 
     def run(self, observations, selection=["counts", "exposure", "background"]):
         """Make maps for a list of observations.
@@ -227,7 +217,7 @@ class MapMakerObs:
     ):
         self.observation = observation
         self.geom = geom
-        self.geom_true = geom_true if geom_true else geom
+        self.geom_true = geom_true if geom_true else geom.to_binsz(BINSZ_IRF)
         self.offset_max = offset_max
         self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling
@@ -465,6 +455,16 @@ class MapMakerRing(MapMaker):
             geom_true=None,
         )
         self.background_estimator = background_estimator
+
+    def _get_empty_maps(self, selection):
+        # Initialise zero-filled maps
+        maps = {}
+        for name in selection:
+            if name == "exposure":
+                maps[name] = Map.from_geom(self.geom, unit="m2 s")
+            else:
+                maps[name] = Map.from_geom(self.geom, unit="")
+        return maps
 
     def _run(self, observations, sum_over_axis=False, spectrum=None, keepdims=False):
         selection = ["on", "exposure_on", "off", "exposure_off", "exposure"]
