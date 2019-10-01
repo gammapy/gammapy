@@ -8,7 +8,7 @@ Summary
 
 - Released on September 30th, 2019
 - 8 contributors
-- 95 pull requests (not all listed below)
+- 101 pull requests (not all listed below)
 
 **What's new**
 
