@@ -6,14 +6,14 @@
 Installation
 ************
 
-The recommended way to install Gammapy version 0.13 is to install the Anaconda
+The recommended way to install Gammapy is to install the Anaconda
 distribution from https://www.anaconda.com/download/ and then to install the
 Gammapy and it's dependencies by executing these commands in a terminal:
 
 .. code-block:: bash
 
-    curl -O https://gammapy.org/download/install/gammapy-0.13-environment.yml
-    conda env create -f gammapy-0.13-environment.yml
+    curl -O https://gammapy.org/download/install/gammapy-0.14-environment.yml
+    conda env create -f gammapy-0.14-environment.yml
 
 .. note::
 
@@ -21,11 +21,11 @@ Gammapy and it's dependencies by executing these commands in a terminal:
     lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
     currently aren't available on Windows.
 
-This creates a conda environment called ``gammapy-0.13`` which you can activate via:
+This creates a conda environment called ``gammapy-0.14`` which you can activate via:
 
 .. code-block:: bash
 
-    conda activate gammapy-0.13
+    conda activate gammapy-0.14
 
 Note that you have to execute that activation command (but not the environment
 cration command) every time you open a new terminal window, because the default
