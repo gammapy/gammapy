@@ -246,7 +246,7 @@ class Analysis:
         else:
             # TODO: change parametrisation from geom-irf to binsz_irf and energy_true_axis
             #  and remove hard coded pixel size for IRF maps
-            factor = np.ceil((0.2 * u.deg) / geom.pixel_scales[0])
+            factor = int(np.ceil((0.2 * u.deg) / geom.pixel_scales[0]))
             geom_irf = geom.downsample(factor=factor)
 
         offset_max = Angle(self.settings["datasets"]["offset-max"])

@@ -456,13 +456,14 @@ class EventListBase:
         import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
 
+        # TODO: remove hard coded energy and offset unit
         ax = plt.gca() if ax is None else ax
 
-        energy_bounds = self._default_plot_ebounds()
+        energy_bounds = self._default_plot_ebounds().to_value("TeV")
         offset_bounds = np.linspace(0, 4, 30)
 
         counts = np.histogram2d(
-            x=self.energy, y=self.offset, bins=(energy_bounds, offset_bounds)
+            x=self.energy.to_value("TeV"), y=self.offset.to_value("deg"), bins=(energy_bounds, offset_bounds)
         )[0]
 
         ax.pcolormesh(energy_bounds, offset_bounds, counts.T, norm=LogNorm())

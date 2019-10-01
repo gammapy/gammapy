@@ -132,8 +132,9 @@ class CountsSpectrum:
         if isinstance(events, EventList):
             events = events.energy
 
-        energy = events.to(self.energy.unit)
-        binned_val = np.histogram(energy.value, self.energy.edges)[0]
+        energy = events.to_value(self.energy.unit)
+        edges = self.energy.edges.to_value(self.energy.unit)
+        binned_val = np.histogram(energy, edges)[0]
         self.data = binned_val
 
     @property

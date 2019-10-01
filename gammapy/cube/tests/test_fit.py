@@ -254,6 +254,7 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
 
 
 @requires_dependency("iminuit")
+@requires_dependency("matplotlib")
 @requires_data()
 def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1 = get_map_dataset(sky_model, geom, geom_etrue, evaluation_mode="local")
