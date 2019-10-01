@@ -773,7 +773,7 @@ class WcsGeom(Geom):
         Returns
         -------
         geom : `WcsGeom`
-            Geometry with new bin size.
+            Geometry with new pixel size.
         """
         kwargs = {}
         kwargs["skydir"] = self.center_skydir
