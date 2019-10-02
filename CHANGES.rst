@@ -96,7 +96,7 @@ See the complete `Gammapy v0.14 merged pull requests list on Github <https://git
 - [#2356] Add ``SpectrumDataset.stack()`` (Régis Terrier)
 - [#2354] Move gammapy.utils.fitting to gammapy.modeling (Christoph Deil)
 - [#2351] Change OrderedDict to dict  (Christoph Deil)
-- [#2347] Simplify ``EdispMap.stack()``and ``PsfMap.stack()`` (Luca Giunti)
+- [#2347] Simplify ``EdispMap.stack()`` and ``PsfMap.stack()`` (Luca Giunti)
 - [#2346] Add ``SpectrumDatasetOnOff.create()`` (Régis Terrier)
 - [#2345] Add ``SpectrumDataset.create()`` (Régis Terrier)
 - [#2344] Change return type of ``WcsGeom.get_coord()`` to quantities (Axel Donath)
