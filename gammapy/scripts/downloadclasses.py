@@ -59,7 +59,7 @@ class ComputePlan:
 
         if self.release == "" and "dev" not in __version__:
             self.release = __version__
-            
+
     def getenvironment(self):
         try:
             from parfive import Downloader

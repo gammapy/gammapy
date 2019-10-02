@@ -3,9 +3,9 @@ from pathlib import Path
 import pytest
 from numpy.testing import assert_allclose
 import yaml
+from gammapy.modeling.models import SkyModels
 from gammapy.scripts import Analysis, AnalysisConfig
 from gammapy.utils.testing import requires_data, requires_dependency
-from gammapy.modeling.models import SkyModels
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 MODEL_FILE = CONFIG_PATH / "model.yaml"
@@ -30,7 +30,7 @@ def test_config_to_yaml(tmpdir):
     config = AnalysisConfig()
     config.settings["general"]["outdir"] = tmpdir
     config.to_yaml(overwrite=True)
-    text = Path(tmpdir/config.filename).read_text()
+    text = Path(tmpdir / config.filename).read_text()
     assert "stack-datasets" in text
 
 
@@ -246,7 +246,7 @@ def test_analysis_3d_no_geom_irf():
 
     assert len(analysis.datasets.datasets) == 1
 
-    
+
 @requires_dependency("iminuit")
 @requires_data()
 def test_validation_checks():
