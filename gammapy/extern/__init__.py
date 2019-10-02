@@ -6,9 +6,6 @@ but not have an extra dependency (these are single-file external packages).
 
 Alphabetical order:
 
-* ``appdirs.py`` is a copy from Github on 2016-01-08
-  Origin: https://raw.githubusercontent.com/ActiveState/appdirs/master/appdirs.py
-  See also: https://pypi.org/project/appdirs/
 * ``xmltodict.py`` for easily converting XML from / to Python dicts
   Origin: https://github.com/martinblech/xmltodict/blob/master/xmltodict.py
 * ``zeros.py`` - Modified copy of the file from ``scipy.optimize``,
