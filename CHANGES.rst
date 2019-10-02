@@ -1,10 +1,9 @@
 .. _gammapy_0p15_release:
 
 0.15 (unreleased)
-----------------
+-----------------
 
- - Planned for October 15, 2019
-
+- Planned for October 2019
 
 .. _gammapy_0p14_release:
 
@@ -14,7 +13,7 @@
 Summary
 +++++++
 
-- Released on September 30th, 2019
+- Released Sep 30, 2019
 - 8 contributors
 - 101 pull requests (not all listed below)
 
@@ -124,13 +123,13 @@ See the complete `Gammapy v0.14 merged pull requests list on Github <https://git
 
 .. _gammapy_0p13_release:
 
-0.13 (July 26, 2019)
---------------------
+0.13 (Jul 26, 2019)
+-------------------
 
 Summary
 +++++++
 
-- Released on July 26th, 2019
+- Released Jul 26, 2019
 - 15 contributors
 - 2 months of work
 - 72 pull requests (not all listed below)
@@ -170,7 +169,6 @@ on Python 3.7, Ipython 7.5, Scipy 1.3, Matplotlib 3.1, Astropy 3.1, and Healpy 1
 These updates should be backwards compatible. Sripts and notebooks should
 run and give the same results.
 
-
 **Contributors:**
 
 In alphabetical order by first name:
@@ -190,8 +188,6 @@ In alphabetical order by first name:
 - Régis Terrier
 - Silvia Manconi
 - Yu Wun Wong
-
-
 
 Pull Requests
 +++++++++++++
@@ -247,7 +243,7 @@ See the complete `Gammapy v0.13 merged pull requests list on Github <https://git
 Summary
 +++++++
 
-- Released on May 30, 2019
+- Released May 30, 2019
 - 9 contributors
 - 2 months of work
 - 66 pull requests (not all listed below)
@@ -298,8 +294,6 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy v0.12 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.12+>`__.
 
-
-
 - [#2171] Remove Poisson chi2 approximations (Christoph Deil)
 - [#2169] Remove warning astropy_helpers.sphinx.conf is deprecated (José Enrique Ruiz)
 - [#2166] Remove PHACountsSpectrumList class (Régis Terrier)
@@ -335,7 +329,6 @@ See the complete `Gammapy v0.12 merged pull requests list on Github <https://git
 - [#2106] Add frame attribute for SkyDiffuseMap (Lars Mohrmann)
 - [#2104] Implement sparse summed fit statistics in Cython (Axel Donath)
 
-
 .. _gammapy_0p11_release:
 
 0.11 (Mar 29, 2019)
@@ -344,7 +337,7 @@ See the complete `Gammapy v0.12 merged pull requests list on Github <https://git
 Summary
 +++++++
 
-- Released on March 29, 2019
+- Released Mar 29, 2019
 - 11 contributors
 - 2 months of work
 - 65 pull requests (not all listed below)
@@ -461,7 +454,7 @@ See the complete `Gammapy 0.11 merged pull requests list on Github <https://gith
 Summary
 +++++++
 
-- Released on January 28, 2019 (`Gammapy 0.10 on PyPI <https://pypi.org/project/gammapy/0.10>`__)
+- Released Jan 28, 2019
 - 7 contributors
 - 2 months of work
 - 30 pull requests (not all listed below)
@@ -535,7 +528,7 @@ See the complete `Gammapy 0.10 merged pull requests list on Github <https://gith
 Summary
 +++++++
 
-- Released on November 29, 2018 (`Gammapy 0.9 on PyPI <https://pypi.org/project/gammapy/0.9>`__)
+- Released Nov 29, 2018
 - 9 contributors (3 new)
 - 2 months of work
 - 88 pull requests (not all listed below)
@@ -643,9 +636,9 @@ See the complete `Gammapy 0.9 merged pull requests list on Github <https://githu
 Summary
 +++++++
 
-- Released on September 23, 2018 (`Gammapy 0.8 on PyPI <https://pypi.org/project/gammapy/0.8>`__)
+- Released Sep 23, 2018
 - 24 contributors (6 new)
-- 7 months of work (from Feb 28, 2018 to Sep 23, 2018)
+- 7 months of work
 - 314 pull requests (not all listed below)
 
 **What's new?**
@@ -860,9 +853,9 @@ See the complete `Gammapy 0.8 merged pull requests list on Github <https://githu
 Summary
 +++++++
 
-- Released on February 28, 2018 (`Gammapy 0.7 on PyPI <https://pypi.org/project/gammapy/0.7>`__)
+- Released Feb 28, 2018
 - 25 contributors (16 new)
-- 10 months of work (from April 28, 2017 to Feb 28, 2018)
+- 10 months of work
 - 178 pull requests (not all listed below)
 
 **What's new?**
@@ -925,7 +918,6 @@ Command line interface:
   bin``). Discussions on developing the high-level interface for Gammapy (e.g.
   as a set of command line tools, or a config file driven analysis) are starting
   now.
-
 
 Organisation:
 
@@ -1076,9 +1068,9 @@ See the complete `Gammapy 0.7 merged pull requests list on Github <https://githu
 Summary
 +++++++
 
-- Released on April 28, 2017 (`Gammapy 0.6 on PyPI <https://pypi.org/project/gammapy/0.6>`__)
+- Released Apr 28, 2017
 - 14 contributors (5 new)
-- 5 months of work (from November 22, 2016 to April 28, 2017)
+- 5 months of work
 - 147 pull requests (not all listed below)
 
 **What's new?**
@@ -1224,9 +1216,9 @@ See the complete `Gammapy 0.6 merged pull requests list on Github <https://githu
 Summary
 +++++++
 
-- Released on November 22, 2016 (`Gammapy 0.5 on PyPI <https://pypi.org/project/gammapy/0.5>`__)
+- Released Nov 22, 2016
 - 12 contributors (5 new)
-- 7 months of work (from April 20, 2016 to November 22, 2016)
+- 7 months of work
 - 184 pull requests (not all listed below)
 - Requires Python 2.7 or 3.4+, Numpy 1.8+, Scipy 0.15+, Astropy 1.2+, Sherpa 4.8.2+
 
@@ -1339,9 +1331,9 @@ See the complete `Gammapy 0.5 merged pull requests list on Github <https://githu
 Summary
 +++++++
 
-- Released on April 20, 2016 (`Gammapy 0.4 on PyPI <https://pypi.org/project/gammapy/0.4>`__)
+- Released Apr 20, 2016
 - 10 contributors (5 new)
-- 8 months of work (from August 13, 2015 to April 20, 2016)
+- 8 months of work
 - 108 pull requests (not all listed below)
 - Requires Python 2.7 or 3.4+, Numpy 1.8+, Scipy 0.15+, Astropy 1.0+, Sherpa 4.8+
 
@@ -1442,9 +1434,9 @@ See the complete `Gammapy 0.4 merged pull requests list on Github <https://githu
 Summary
 +++++++
 
-- Released on August 13, 2015 (`Gammapy 0.3 on PyPI <https://pypi.org/project/gammapy/0.3>`__)
+- Released Aug 13, 2015
 - 9 contributors (5 new)
-- 4 months of work (from April 13, 2014 to August 13, 2015)
+- 4 months of work
 - 24 pull requests
 - Requires Astropy version 1.0 or later.
 - On-off likelihood spectral analysis was added in gammapy.hspec,
@@ -1500,9 +1492,9 @@ Pull requests
 Summary
 +++++++
 
-- Released on April 13, 2015 (`Gammapy 0.2 on PyPI <https://pypi.org/project/gammapy/0.2>`__)
+- Released Apr 13, 2015
 - 4 contributors (1 new)
-- 8 months of work (from August 25, 2014 to April 13, 2015)
+- 8 months of work
 - 40 pull requests
 - Requires Astropy version 1.0 or later.
 - Gammapy now uses `Cython <http://cython.org/>`__,
@@ -1552,9 +1544,9 @@ Pull requests
 Summary
 +++++++
 
-- Released on August 25, 2014 (`Gammapy 0.1 on PyPI <https://pypi.org/project/gammapy/0.1>`__)
+- Released Aug 25, 2014
 - 5 contributors
-- 15 months of work (from May 15, 2013 to August 25, 2014)
+- 15 months of work
 - 82 pull requests
 - Requires Astropy version 0.4 or later.
 
