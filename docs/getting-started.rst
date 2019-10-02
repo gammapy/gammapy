@@ -55,7 +55,7 @@ size to download is about 100 MB.
 
     gammapy download tutorials --release 0.14
     cd gammapy-tutorials
-    export GAMMAPY_DATA=$PWD/datasets-0.14
+    export GAMMAPY_DATA=$PWD/datasets
 
 You might want to put the definition of the ``$GAMMAPY_DATA`` environment
 variable in your shell profile setup file that is executed when you open a new
