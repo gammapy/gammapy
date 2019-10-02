@@ -57,6 +57,9 @@ class ComputePlan:
         self.listfiles = {}
         log.info(f"Looking for {self.option}...")
 
+        if self.release == "" and "dev" not in __version__:
+            self.release = __version__
+            
     def getenvironment(self):
         try:
             from parfive import Downloader
