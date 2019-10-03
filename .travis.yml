@@ -27,7 +27,7 @@ addons:
 env:
     global:
         - PYTHON_VERSION=3.7
-        - NUMPY_VERSION=1.15
+        - NUMPY_VERSION=stable
         - ASTROPY_VERSION=stable
         - ASTROPY_USE_SYSTEM_PYTEST=1
 
@@ -89,10 +89,6 @@ matrix:
         # See https://conda.io/docs/bdist_conda.html
         - env: CMD='python setup.py bdist_conda'
                TEST_PACKAGING=true
-
-        # Test with Astropy LTS version
-        - env: PYTHON_VERSION=3.6 ASTROPY_VERSION=lts CMD='make test'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         # Test with Astropy dev version
         - env: PYTHON_VERSION=3.6 ASTROPY_VERSION=dev CMD='make test'
