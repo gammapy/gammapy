@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.cube import MapMaker, MapMakerObs, MapMakerRing, RingBackgroundEstimator
+from gammapy.cube import MapMakerObs, MapMakerRing, RingBackgroundEstimator, MapDataset
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
@@ -82,38 +82,43 @@ def geom(ebounds, binsz=0.5):
 )
 @pytest.mark.parametrize("keepdims", [True, False])
 def test_map_maker(pars, observations, keepdims):
-    maker = MapMaker(
-        geom=pars["geom"],
-        geom_true=pars["geom_true"],
-        offset_max="2 deg",
-        background_oversampling=pars.get("background_oversampling"),
-    )
 
-    maps = maker.run(observations)
+    stacked = MapDataset.create(geom=pars["geom"], geom_irf=pars["geom_true"])
 
-    counts = maps["counts"]
+    for obs in observations:
+        maker = MapMakerObs(
+            observation=obs,
+            geom=pars["geom"],
+            geom_true=pars["geom_true"],
+            offset_max="2 deg",
+            background_oversampling=pars.get("background_oversampling"),
+        )
+        dataset = maker.run()
+        stacked.stack(dataset)
+
+    counts = stacked.counts
     assert counts.unit == ""
     assert_allclose(counts.data.sum(), pars["counts"], rtol=1e-5)
 
-    exposure = maps["exposure"]
+    exposure = stacked.exposure
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.mean(), pars["exposure"], rtol=3e-3)
 
-    background = maps["background"]
+    background = stacked.background_model.map
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-5)
 
-    images = maker.run_images(keepdims=keepdims)
+    image_dataset = stacked.to_image()
 
-    counts = images["counts"]
+    counts = image_dataset.counts
     assert counts.unit == ""
     assert_allclose(counts.data.sum(), pars["counts"], rtol=1e-5)
 
-    exposure = images["exposure"]
+    exposure = image_dataset.exposure
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.sum(), pars["exposure_image"], rtol=3e-3)
 
-    background = images["background"]
+    background = image_dataset.background_model.map
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-5)
 

@@ -206,7 +206,7 @@ class MapMakerObs:
 
         cutout_kwargs = {
             "position": observation.pointing_radec,
-            "width": 2 * offset_max,
+            "width": 2 * Angle(offset_max),
             "mode": "trim",
         }
 
@@ -220,7 +220,7 @@ class MapMakerObs:
         self.observation = observation
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom.to_binsz(BINSZ_IRF)
-        self.offset_max = offset_max
+        self.offset_max = Angle(offset_max)
         self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling
         self.maps = {}

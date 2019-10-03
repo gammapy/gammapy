@@ -18,6 +18,7 @@ from gammapy.spectrum import SpectrumDataset
 from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
+from .exposure import _map_spectrum_weight
 
 __all__ = ["MapEvaluator", "MapDataset"]
 
@@ -759,6 +760,45 @@ class MapDataset(Dataset):
             aeff=aeff,
             edisp=edisp,
             livetime=livetime,
+            gti=self.gti,
+            name=self.name,
+        )
+
+    def to_image(self, spectrum=None, keepdims=True):
+        """Create images by summing over the energy axis.
+
+        Exposure is weighted with an assumed spectrum,
+        resulting in a weighted mean exposure image.
+
+        Parameters
+        ----------
+        spectrum : `~gammapy.modeling.models.SpectralModel`
+            Spectral model to compute the weights.
+            Default is power-law with spectral index of 2.
+        keepdims : bool, optional
+            If this is set to True, the energy axes is kept with a single bin.
+            If False, the energy axes is removed
+
+        Returns
+        -------
+        dataset : `MapDataset`
+            Map dataset containing images.
+        """
+        counts = self.counts.sum_over_axes(keepdims=keepdims)
+        exposure = _map_spectrum_weight(self.exposure, spectrum)
+        exposure = exposure.sum_over_axes(keepdims=keepdims)
+        background = self.background_model.evaluate().sum_over_axes(keepdims=keepdims)
+
+        # TODO: add edisp and psf
+        edisp = None
+        psf = None
+
+        return self.__class__(
+            counts=counts,
+            exposure=exposure,
+            background_model=BackgroundModel(background),
+            edisp=edisp,
+            psf=psf,
             gti=self.gti,
             name=self.name,
         )
