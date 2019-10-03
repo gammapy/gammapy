@@ -73,8 +73,8 @@
   requires: sherpa
   datasets:
     - cta-1dc
-- name: intro_maps
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/intro_maps.ipynb
+- name: maps
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/maps.ipynb
   datasets:
     - fermi-3fhl-gc
   images:
