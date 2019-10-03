@@ -291,7 +291,6 @@ class SpectralModel(Model):
         **kwargs : dict
             Keyword arguments forwarded to `matplotlib.pyplot.fill_between`
 
-
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
@@ -473,17 +472,6 @@ class PowerLawSpectralModel(SpectralModel):
         :math:`\phi_0`
     reference : `~astropy.units.Quantity`
         :math:`E_0`
-
-    Examples
-    --------
-    This is how to plot the default `PowerLawSpectralModel` model::
-
-        from astropy import units as u
-        from gammapy.modeling.models import PowerLawSpectralModel
-
-        pwl = PowerLawSpectralModel()
-        pwl.plot(energy_range=[0.1, 100] * u.TeV)
-        plt.show()
     """
 
     __slots__ = ["index", "amplitude", "reference"]
@@ -689,17 +677,6 @@ class PowerLaw2SpectralModel(SpectralModel):
         Lower energy limit :math:`E_{0, min}`.
     emax : `~astropy.units.Quantity`
         Upper energy limit :math:`E_{0, max}`.
-
-    Examples
-    --------
-    This is how to plot the default `PowerLaw2SpectralModel` model::
-
-        from astropy import units as u
-        from gammapy.modeling.models import PowerLaw2SpectralModel
-
-        pwl2 = PowerLaw2SpectralModel()
-        pwl2.plot(energy_range=[0.1, 100] * u.TeV)
-        plt.show()
     """
 
     __slots__ = ["index", "amplitude", "emin", "emax"]
@@ -817,17 +794,6 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         :math:`E_0`
     lambda_ : `~astropy.units.Quantity`
         :math:`\lambda`
-
-    Examples
-    --------
-    This is how to plot the default `ExpCutoffPowerLawSpectralModel` model::
-
-        from astropy import units as u
-        from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel
-
-        ecpl = ExpCutoffPowerLawSpectralModel()
-        ecpl.plot(energy_range=[0.1, 100] * u.TeV)
-        plt.show()
     """
 
     __slots__ = ["index", "amplitude", "reference", "lambda_"]
@@ -896,17 +862,6 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
         :math:`E_0`
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
-
-    Examples
-    --------
-    This is how to plot the default `ExpCutoffPowerLaw3FGLSpectralModel` model::
-
-        from astropy import units as u
-        from gammapy.modeling.models import ExpCutoffPowerLaw3FGLSpectralModel
-
-        ecpl_3fgl = ExpCutoffPowerLaw3FGLSpectralModel()
-        ecpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
-        plt.show()
     """
 
     __slots__ = ["index", "amplitude", "reference", "ecut"]
@@ -959,17 +914,6 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
         :math:`E_0`
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
-
-    Examples
-    --------
-    This is how to plot the default `SuperExpCutoffPowerLaw3FGLSpectralModel` model::
-
-        from astropy import units as u
-        from gammapy.modeling.models import SuperExpCutoffPowerLaw3FGLSpectralModel
-
-        secpl_3fgl = SuperExpCutoffPowerLaw3FGLSpectralModel()
-        secpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
-        plt.show()
     """
 
     __slots__ = ["index_1", "index_2", "amplitude", "reference", "ecut"]
@@ -1032,17 +976,6 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     expfactor : `~astropy.units.Quantity`
         :math:`a`, given as dimensionless value but
         internally assumes unit of :math:`[E_0]` power :math:`-\Gamma_2`
-
-    Examples
-    --------
-    This is how to plot the default `SuperExpCutoffPowerLaw4FGLSpectralModel` model::
-
-        from astropy import units as u
-        from gammapy.modeling.models import SuperExpCutoffPowerLaw4FGLSpectralModel
-
-        model = SuperExpCutoffPowerLaw4FGLSpectralModel()
-        model.plot(energy_range=[0.1, 100] * u.TeV)
-        plt.show()
     """
 
     __slots__ = ["index_1", "index_2", "amplitude", "reference", "expfactor"]
@@ -1110,17 +1043,6 @@ class LogParabolaSpectralModel(SpectralModel):
         :math:`\alpha`
     beta : `~astropy.units.Quantity`
         :math:`\beta`
-
-    Examples
-    --------
-    This is how to plot the default `LogParabolaSpectralModel` model::
-
-        from astropy import units as u
-        from gammapy.modeling.models import LogParabolaSpectralModel
-
-        log_parabola = LogParabolaSpectralModel()
-        log_parabola.plot(energy_range=[0.1, 100] * u.TeV)
-        plt.show()
     """
 
     __slots__ = ["amplitude", "reference", "alpha", "beta"]
@@ -1361,43 +1283,6 @@ class Absorption:
         Parameter node values
     data : `~astropy.units.Quantity`
         Model value
-
-    Examples
-    --------
-    Create and plot EBL absorption models for a redshift of 0.5:
-
-    .. plot::
-        :include-source:
-
-        import matplotlib.pyplot as plt
-        import astropy.units as u
-        from gammapy.modeling.models import Absorption
-
-        # Load tables for z=0.5
-        redshift = 0.5
-        dominguez = Absorption.read_builtin('dominguez').table_model(redshift)
-        franceschini = Absorption.read_builtin('franceschini').table_model(redshift)
-        finke = Absorption.read_builtin('finke').table_model(redshift)
-
-        # start customised plot
-        energy_range = [0.08, 3] * u.TeV
-        ax = plt.gca()
-        opts = dict(energy_range=energy_range, energy_unit='TeV', ax=ax, flux_unit='')
-        franceschini.plot(label='Franceschini 2008', **opts)
-        finke.plot(label='Finke 2010', **opts)
-        dominguez.plot(label='Dominguez 2011', **opts)
-
-        # tune plot
-        ax.set_ylabel(r'Absorption coefficient [$\exp{(-\tau(E))}$]')
-        ax.set_xlim(energy_range.value)  # we get ride of units
-        ax.set_ylim([1.e-4, 2.])
-        ax.set_yscale('log')
-        ax.set_title('EBL models (z=' + str(redshift) + ')')
-        plt.grid(which='both')
-        plt.legend(loc='best') # legend
-
-        # show plot
-        plt.show()
     """
 
     tag = "Absorption"
@@ -1627,49 +1512,6 @@ class NaimaSpectralModel(SpectralModel):
         in case of a `~naima.models.InverseCompton` model. It can be a subset of the
         `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
         of photon fields
-
-    Examples
-    --------
-    Create and plot a spectral model that convolves an `ExpCutoffPowerLawSpectralModel` electron distribution
-    with an `InverseCompton` radiative model, in the presence of multiple seed photon fields.
-
-    .. plot::
-        :include-source:
-
-        import naima
-        from gammapy.modeling.models import NaimaSpectralModel
-        import astropy.units as u
-        import matplotlib.pyplot as plt
-
-
-        particle_distribution = naima.models.ExponentialCutoffPowerLaw(1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV)
-        radiative_model = naima.radiative.InverseCompton(
-            particle_distribution,
-            seed_photon_fields=[
-                "CMB",
-                ["FIR", 26.5 * u.K, 0.415 * u.eV / u.cm ** 3],
-            ],
-            Eemin=100 * u.GeV,
-        )
-
-        model = NaimaSpectralModel(radiative_model, distance=1.5 * u.kpc)
-
-        opts = {
-            "energy_range" : [10 * u.GeV, 80 * u.TeV],
-            "energy_power" : 2,
-            "flux_unit" : "erg-1 cm-2 s-1",
-        }
-
-        # Plot the total inverse Compton emission
-        model.plot(label='IC (total)', **opts)
-
-        # Plot the separate contributions from each seed photon field
-        for seed, ls in zip(['CMB','FIR'], ['-','--']):
-            model = NaimaSpectralModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
-            model.plot(label="IC ({})".format(seed), ls=ls, color="gray", **opts)
-
-        plt.legend(loc='best')
-        plt.show()
     """
 
     tag = "NaimaSpectralModel"
@@ -1746,19 +1588,6 @@ class GaussianSpectralModel(SpectralModel):
         :math:`\bar{E}`
     sigma : `~astropy.units.Quantity`
         :math:`\sigma`
-
-    Examples
-    --------
-    This is how to plot the default `Gaussian` spectral model:
-
-    .. code:: python
-
-        from astropy import units as u
-        from gammapy.modeling.models import GaussianSpectralModel
-
-        gaussian = GaussianSpectralModel()
-        gaussian.plot(energy_range=[0.1, 100] * u.TeV)
-        plt.show()
     """
 
     tag = "GaussianSpectralModel"
@@ -1785,7 +1614,6 @@ class GaussianSpectralModel(SpectralModel):
 
         .. math::
             F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}
-
 
         Parameters
         ----------
@@ -1854,20 +1682,6 @@ class LogGaussianSpectralModel(SpectralModel):
         :math:`\bar{E}`
     sigma : `float`
         :math:`\sigma`
-
-    Examples
-    --------
-    This is how to plot a Gaussian Log spectral model. Very similar from the `GaussianSpectralModel` model but the Gaussian
-    is based on the logarithm of the energy
-
-    .. code:: python
-
-        from astropy import units as u
-        from gammapy.modeling.models import LogGaussianSpectralModel
-
-        gaussian = LogGaussianSpectralModel()
-        gaussian.plot(energy_range=[0.1, 100] * u.TeV)
-        plt.show()
     """
 
     tag = "LogGaussianSpectralModel"
