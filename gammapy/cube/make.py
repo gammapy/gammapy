@@ -6,6 +6,7 @@ from astropy.utils import lazyproperty
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import BackgroundModel
+from gammapy.utils.table import table_from_row_data
 from .background import make_map_background_irf
 from .counts import fill_map_counts
 from .edisp_map import make_edisp_map
@@ -16,7 +17,6 @@ from .psf_map import make_psf_map
 __all__ = ["MapMakerObs", "MapMakerRing"]
 
 log = logging.getLogger(__name__)
-
 
 class MapMakerObs:
     """Make maps for a single IACT observation.
@@ -123,6 +123,12 @@ class MapMakerObs:
         else:
             background_model = None
 
+        # Export observation info if it exists
+        if self.observation.obs_info is not None:
+            obs_info = table_from_row_data([self.observation.obs_info])
+        else:
+            obs_info = None
+
         dataset = MapDataset(
             counts=self.maps.get("counts"),
             exposure=self.maps.get("exposure"),
@@ -132,6 +138,7 @@ class MapMakerObs:
             gti=self.observation.gti,
             name="obs_{}".format(self.observation.obs_id),
             mask_safe=~self.fov_mask,
+            obs_info=obs_info,
         )
         return dataset
 

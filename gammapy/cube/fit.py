@@ -5,6 +5,7 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
+from astropy.table import vstack, Table
 from regions import CircleSkyRegion
 from gammapy.cube.edisp_map import EDispMap
 from gammapy.cube.psf_kernel import PSFKernel
@@ -105,6 +106,7 @@ class MapDataset(Dataset):
         self.mask_safe = mask_safe
         self.gti = gti
         self.obs_info = obs_info
+
         if likelihood == "cash":
             self._stat = cash
             self._stat_sum = cash_sum_cython
@@ -344,6 +346,8 @@ class MapDataset(Dataset):
         psf_map = Map.from_geom(geom_rad, unit="sr-1")
         psf = PSFMap(psf_map, exposure_irf)
 
+        obs_info = Table()
+
         return cls(
             counts=counts,
             exposure=exposure,
@@ -353,6 +357,7 @@ class MapDataset(Dataset):
             gti=gti,
             mask_safe=mask_safe,
             name=name,
+            obs_info=obs_info,
         )
 
     def stack(self, other):
