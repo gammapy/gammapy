@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, vstack
 from gammapy.data import GTI, ObservationStats
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 from gammapy.modeling import Dataset, Parameters
@@ -488,6 +488,9 @@ class SpectrumDataset(Dataset):
         # of GTIs
         self.livetime += other.livetime
 
+        if self.obs_info is not None:
+            self.obs_info = vstack([self.obs_info, other.obs_info])
+
 
 class SpectrumDatasetOnOff(SpectrumDataset):
     """Spectrum dataset for on-off likelihood fitting.
@@ -844,6 +847,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
         # of GTIs
         self.livetime += other.livetime
+
+        if self.obs_info is not None:
+            self.obs_info = vstack([self.obs_info, other.obs_info])
+
 
     def peek(self, figsize=(10, 10)):
         """Quick-look summary plots."""

@@ -146,12 +146,16 @@ class TestSpectrumDataset:
             self.src.energy.edges, self.src.energy.edges
         )
         livetime = self.livetime
+
+        obs_info1 = Table([[1], [2], [3]], names=('col1', 'col2', 'col3'))
+
         dataset1 = SpectrumDataset(
             counts=self.src.copy(),
             livetime=livetime,
             aeff=aeff,
             edisp=edisp,
             background=self.bkg.copy(),
+            obs_info=obs_info1,
         )
 
         livetime2 = 0.5 * livetime
@@ -165,6 +169,10 @@ class TestSpectrumDataset:
         )
         safe_mask2 = np.ones_like(self.src.data, bool)
         safe_mask2[0] = False
+
+        # testing different column names
+        obs_info2 = Table([[4], [5], [6]], names=('col4', 'col5', 'col6'))
+
         dataset2 = SpectrumDataset(
             counts=self.src.copy(),
             livetime=livetime2,
@@ -172,6 +180,7 @@ class TestSpectrumDataset:
             edisp=edisp,
             background=bkg2,
             mask_safe=safe_mask2,
+            obs_info=obs_info2,
         )
         dataset1.stack(dataset2)
 
@@ -186,6 +195,10 @@ class TestSpectrumDataset:
         )
         assert_allclose(dataset1.edisp.pdf_matrix[1:], edisp.pdf_matrix[1:])
         assert_allclose(dataset1.edisp.pdf_matrix[0], 0.5 * edisp.pdf_matrix[0])
+
+        assert len(dataset1.obs_info)==2
+        assert dataset1.obs_info['col1'][0] == 1
+        assert_allclose(dataset1.obs_info['col1'].mask,[False, True])
 
     def test_spectrum_dataset_stack_nondiagonal_no_bkg(self):
         aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
@@ -732,6 +745,13 @@ class TestSpectrumDatasetOnOffStack:
         assert_allclose(table_gti_stacked_obs["START"], table_gti["START"])
         assert_allclose(table_gti_stacked_obs["STOP"], table_gti["STOP"])
 
+    def test_stack_obs_id(self):
+        obs1, obs2 = make_observation_list()
+        obs1.stack(obs2)
+        assert len(obs1.obs_info)==2
+        assert obs1.obs_info['col1'][1] == 4
+        assert obs1.obs_info['col3'][0] == 3
+
 @requires_data("gammapy-data")
 def test_datasets_stack_reduce():
     obs_ids = [23523, 23526, 23559, 23592]
@@ -743,5 +763,4 @@ def test_datasets_stack_reduce():
     datasets = Datasets(dataset_list)
     stacked = datasets.stack_reduce()
     assert_allclose(stacked.livetime.to_value("s"), 6313.8116406202325)
-    assert len(stacked.obs_info) == 4
 
