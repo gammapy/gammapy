@@ -24,7 +24,7 @@ Notebooks
 
    notebooks/first_steps.ipynb
    notebooks/intro_maps.ipynb
-   notebooks/modeling.ipynb
+   notebooks/models.ipynb
    notebooks/cta_1dc_introduction.ipynb
    notebooks/cta_data_analysis.ipynb
    notebooks/analysis_3d.ipynb
@@ -47,7 +47,7 @@ For a quick introduction to Gammapy, go here:
 
 - `First steps with Gammapy <notebooks/first_steps.html>`__  | *first_steps.ipynb*
 - `Introduction to gammapy.maps <notebooks/intro_maps.html>`__  | *intro_maps.ipynb*
-- `Modeling and models <notebooks/modeling.html>`__  | *modeling.ipynb*
+- `Models <notebooks/models.html>`__  | *models.ipynb*
 
 Interested to do a first analysis of simulated CTA data?
 
