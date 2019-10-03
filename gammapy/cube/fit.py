@@ -68,6 +68,9 @@ class MapDataset(Dataset):
         Mask defining the safe data range.
     gti : '~gammapy.data.GTI'
         GTI of the observation or union of GTI if it is a stacked observation
+    obs_info : `~astropy.table.Table`
+        Table listing informations on observations used to create the dataset
+        One line per observation for stacked datasets.
     """
 
     def __init__(
@@ -84,6 +87,7 @@ class MapDataset(Dataset):
         evaluation_mode="local",
         mask_safe=None,
         gti=None,
+        obs_info=None,
     ):
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
@@ -100,6 +104,7 @@ class MapDataset(Dataset):
         self.name = name
         self.mask_safe = mask_safe
         self.gti = gti
+        self.obs_info = obs_info
         if likelihood == "cash":
             self._stat = cash
             self._stat_sum = cash_sum_cython
@@ -393,6 +398,9 @@ class MapDataset(Dataset):
 
         if self.gti and other.gti:
             self.gti = self.gti.stack(other.gti).union()
+
+        if self.obs_info is not None:
+            self.obs_info = vstack([self.obs_info, other.obs_info])
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
