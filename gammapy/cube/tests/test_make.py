@@ -155,6 +155,7 @@ def test_map_maker_obs(observations):
         geom=geom_reco,
         geom_true=geom_true,
         offset_max=2.0 * u.deg,
+        cutout=False
     )
 
     map_dataset = maker_obs.run()

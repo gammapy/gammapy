@@ -10,7 +10,7 @@ from .background import make_map_background_irf
 from .counts import fill_map_counts
 from .edisp_map import make_edisp_map
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
-from .fit import BINSZ_IRF, MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, MapDataset
+from .fit import MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, BINSZ_IRF, MapDataset
 from .psf_map import make_psf_map
 
 __all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
@@ -98,29 +98,16 @@ class MapMaker:
         self._maps = maps
         return maps
 
-    def _get_obs_maker(self, obs, mode="trim"):
+    def _get_obs_maker(self, obs):
         # Compute cutout geometry and slices to stack results back later
-        cutout_kwargs = {
-            "position": obs.pointing_radec,
-            "width": 2 * self.offset_max,
-            "mode": mode,
-        }
-
-        cutout_geom = self.geom.cutout(**cutout_kwargs)
-        cutout_geom_etrue = self.geom_true.cutout(**cutout_kwargs)
-
-        if self.exclusion_mask is not None:
-            cutout_exclusion = self.exclusion_mask.cutout(**cutout_kwargs)
-        else:
-            cutout_exclusion = None
 
         # Make maps for this observation
         return MapMakerObs(
             observation=obs,
-            geom=cutout_geom,
-            geom_true=cutout_geom_etrue,
+            geom=self.geom,
+            geom_true=self.geom_true,
             offset_max=self.offset_max,
-            exclusion_mask=cutout_exclusion,
+            exclusion_mask=self.exclusion_mask,
             background_oversampling=self.background_oversampling,
         )
 
@@ -214,7 +201,22 @@ class MapMakerObs:
         background_oversampling=None,
         migra_axis=None,
         rad_axis=None,
+        cutout=True,
     ):
+
+        cutout_kwargs = {
+            "position": observation.pointing_radec,
+            "width": 2 * offset_max,
+            "mode": "trim",
+        }
+
+        if cutout:
+            geom = geom.cutout(**cutout_kwargs)
+            if geom_true is not None:
+                geom_true = geom_true.cutout(**cutout_kwargs)
+            if exclusion_mask is not None:
+                exclusion_mask = exclusion_mask.cutout(**cutout_kwargs)
+
         self.observation = observation
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom.to_binsz(BINSZ_IRF)
@@ -474,7 +476,7 @@ class MapMakerRing(MapMaker):
 
         for obs in observations:
             try:
-                obs_maker = self._get_obs_maker(obs, mode="trim")
+                obs_maker = self._get_obs_maker(obs)
             except NoOverlapError:
                 log.info(f"Skipping obs_id: {obs.obs_id} (no map overlap)")
                 continue
