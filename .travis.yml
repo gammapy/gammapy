@@ -90,10 +90,6 @@ matrix:
         - env: CMD='python setup.py bdist_conda'
                TEST_PACKAGING=true
 
-        # Test with Astropy LTS version
-        - env: PYTHON_VERSION=3.6 ASTROPY_VERSION=lts CMD='make test'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
-
         # Test with Astropy dev version
         - env: PYTHON_VERSION=3.6 ASTROPY_VERSION=dev CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
