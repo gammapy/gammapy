@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.table import Table
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.cube import MapDataset, PSFKernel, make_map_exposure_true_energy
@@ -379,6 +380,7 @@ def test_create(geom, geom_etrue):
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
+    assert len(empty_dataset.obs_info) == 0
 
 @requires_data()
 def test_stack(geom, geom_etrue):
@@ -391,11 +393,14 @@ def test_stack(geom, geom_etrue):
     mask1 = np.ones(m.data.shape, dtype=bool)
     mask1[0][0][0:10] = False
 
+    obs_info1 = Table([[1], [2], [3]], names=('col1', 'col2', 'col3'))
+
     dataset1 = MapDataset(
         counts=c_map1,
         background_model=background_model1,
         exposure=get_exposure(geom_etrue),
         mask_safe=mask1,
+        obs_info=obs_info1,
     )
 
     c_map2 = Map.from_geom(geom)
@@ -404,14 +409,20 @@ def test_stack(geom, geom_etrue):
     mask2 = np.ones(m.data.shape, dtype=bool)
     mask2[0][3] = False
 
+    obs_info2 = Table([[4], [5], [6]], names=('col4', 'col5', 'col6'))
+
     dataset2 = MapDataset(
         counts=c_map2,
         background_model=background_model2,
         exposure=get_exposure(geom_etrue),
         mask_safe=mask2,
+        obs_info = obs_info2,
     )
     dataset1.stack(dataset2)
     assert_allclose(dataset1.counts.data.sum(), 7987)
     assert_allclose(dataset1.background_model.map.data.sum(), 5988)
     assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
     assert_allclose(dataset1.mask_safe.sum(), 20000)
+    assert len(dataset1.obs_info) == 2
+    assert dataset1.obs_info['col1'][0] == 1
+    assert_allclose(dataset1.obs_info['col1'].mask, [False, True])

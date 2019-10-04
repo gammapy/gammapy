@@ -3,6 +3,7 @@ import abc
 import copy
 from collections import Counter
 import numpy as np
+from astropy.table import vstack
 from gammapy.utils.scripts import read_yaml, write_yaml
 from .parameter import Parameters
 
@@ -111,6 +112,10 @@ class Datasets:
     def types(self):
         """Types of the contained datasets"""
         return [type(dataset).__name__ for dataset in self.datasets]
+
+    @property
+    def obs_info(self):
+        return vstack([_.obs_info for _ in self.datasets])
 
     @property
     def is_all_same_type(self):
