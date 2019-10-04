@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from astropy.io import fits
 from astropy.table import Table, vstack
 from astropy.time import Time
 from astropy.units import Quantity
@@ -82,18 +83,35 @@ class GTI:
         return cls(table)
 
     @classmethod
-    def read(cls, filename, **kwargs):
+    def from_hdulist(cls, hdulist, hdu="GTI"):
+        """Create from `~astropy.io.fits.HDUList`."""
+        gti = Table.read(hdulist[hdu])
+        return cls(gti)
+
+    def to_hdulist(self):
+        """Convert to `~astropy.io.fits.HDUList`."""
+        hdu = fits.BinTableHDU(self.table, name="GTI")
+        return fits.HDUList([hdu])
+
+    @classmethod
+    def read(cls, filename, hdu="GTI"):
         """Read from FITS file.
 
         Parameters
         ----------
         filename : `pathlib.Path`, str
             Filename
+        hdu : str
+            hdu name. Default GTI.
         """
         filename = make_path(filename)
-        kwargs.setdefault("hdu", "GTI")
-        table = Table.read(str(filename), **kwargs)
-        return cls(table=table)
+        with fits.open(str(filename), memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, hdu)
+
+    def write(self, filename, **kwargs):
+        """Write to file."""
+        filename = make_path(filename)
+        self.to_hdulist().writeto(str(filename), **kwargs)
 
     def __str__(self):
         return (
