@@ -606,6 +606,10 @@ class MapDataset(Dataset):
         if self.gti is not None:
             hdulist += self.gti.to_hdulist()
 
+        if self.obs_info is not None:
+            header = self.obs_info.meta
+            hdulist += [fits.BinTableHDU(self.obs_info, header=header, name="obs_info")]
+
         return hdulist
 
     @classmethod
@@ -654,6 +658,11 @@ class MapDataset(Dataset):
         if "GTI" in hdulist:
             gti = GTI.from_hdulist(hdulist, hdu="GTI")
             init_kwargs["gti"] = gti
+
+        if "OBS_INFO" in hdulist:
+            obs_info = Table.read(hdulist["obs_info"])
+            init_kwargs["obs_info"] = obs_info
+
         return cls(**init_kwargs)
 
     def write(self, filename, overwrite=False):

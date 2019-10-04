@@ -202,6 +202,8 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
     dataset.gti = gti
 
+    dataset.obs_info = Table([[1], [2], [3]], names=('col1', 'col2', 'col3'))
+
     hdulist = dataset.to_hdulist()
     actual = [hdu.name for hdu in hdulist]
 
@@ -222,6 +224,7 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
         "MASK_FIT",
         "MASK_FIT_BANDS",
         "GTI",
+        "OBS_INFO"
     ]
 
     assert actual == desired
@@ -259,6 +262,9 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
         dataset.gti.time_sum.to_value("s"), dataset_new.gti.time_sum.to_value("s")
     )
 
+    assert len(dataset_new.obs_info) == 1
+    assert dataset_new.obs_info['col1'][0] == 1
+    assert dataset_new.obs_info['col3'][0] == 3
 
 @requires_dependency("iminuit")
 @requires_dependency("matplotlib")

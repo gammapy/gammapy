@@ -941,6 +941,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         name = counts_table.meta["name"]
         hdu = fits.BinTableHDU(counts_table, name=name)
+        # TODO add export of obs_info table into OGIP counts spectrum file?
         hdulist = fits.HDUList([fits.PrimaryHDU(), hdu, self._ebounds_hdu(use_sherpa)])
 
         if self.gti is not None:
