@@ -177,6 +177,7 @@ Fitting
 
 For examples how to fit models to data please check out the following tutorials:
 
+- :gp-notebook:`models`
 - :gp-notebook:`analysis_3d`
 - :gp-notebook:`spectrum_analysis`
 

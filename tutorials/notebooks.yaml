@@ -73,12 +73,15 @@
   requires: sherpa
   datasets:
     - cta-1dc
-- name: intro_maps
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/intro_maps.ipynb
+- name: maps
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/maps.ipynb
   datasets:
     - fermi-3fhl-gc
   images:
     - gammapy_maps
+- name: models
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/models.ipynb
+  requires: naima
 - name: light_curve
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/light_curve.ipynb
   datasets:

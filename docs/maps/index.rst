@@ -547,7 +547,7 @@ Using `gammapy.maps`
 
 :ref:`tutorials` that show examples using ``gammapy.maps``:
 
-* :gp-notebook:`intro_maps`
+* :gp-notebook:`maps`
 * :gp-notebook:`analysis_3d`
 * :gp-notebook:`simulate_3d`
 * :gp-notebook:`fermi_lat`
