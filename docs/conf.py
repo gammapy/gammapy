@@ -45,6 +45,7 @@ intersphinx_mapping["gadf"] = (
     None,
 )
 intersphinx_mapping["iminuit"] = ("https://iminuit.readthedocs.io/en/latest/", None)
+intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/", None)
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
