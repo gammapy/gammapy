@@ -15,7 +15,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency, assert_time_allclose
 from gammapy.utils.time import time_ref_to_dict
 
 
@@ -236,7 +236,11 @@ class TestSpectrumOnOff:
         self.on_counts = CountsSpectrum(elo, ehi, data)
         self.off_counts = CountsSpectrum(elo, ehi, np.ones(elo.shape) * 10)
 
-        self.livetime = 1000 * u.s
+        start = u.Quantity([0], "s")
+        stop = u.Quantity([1000], "s")
+        time_ref = Time("2010-01-01 00:00:00.0")
+        self.gti = GTI.create(start, stop, time_ref)
+        self.livetime = self.gti.time_sum
 
         self.dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
@@ -336,6 +340,7 @@ class TestSpectrumOnOff:
             acceptance=1,
             acceptance_off=10,
             name="test",
+            gti=self.gti,
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / "pha_obstest.fits"
@@ -344,6 +349,7 @@ class TestSpectrumOnOff:
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert_allclose(self.off_counts.data, newdataset.counts_off.data)
         assert_allclose(self.edisp.pdf_matrix, newdataset.edisp.pdf_matrix)
+        assert_time_allclose(newdataset.gti.time_start, dataset.gti.time_start)
 
     def test_to_from_ogip_files_no_edisp(self, tmpdir):
         dataset = SpectrumDatasetOnOff(
@@ -361,6 +367,7 @@ class TestSpectrumOnOff:
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert newdataset.counts_off is None
         assert newdataset.edisp is None
+        assert newdataset.gti is None
 
     def test_energy_mask(self):
         mask = self.dataset.counts.energy_mask(emin=0.3 * u.TeV, emax=6 * u.TeV)
