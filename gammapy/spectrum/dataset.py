@@ -1082,7 +1082,7 @@ def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS", hdu3="GTI"):
     if hdu3 in hdulist:
         gti = GTI.from_hdulist(hdulist, hdu3)
     else:
-        gti=None
+        gti = None
 
     # Check if column are present in the header
     quality = None

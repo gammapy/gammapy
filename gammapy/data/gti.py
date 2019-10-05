@@ -111,7 +111,7 @@ class GTI:
     def write(self, filename, **kwargs):
         """Write to file."""
         filename = make_path(filename)
-        hdulist  = fits.HDUList([fits.PrimaryHDU()])
+        hdulist = fits.HDUList([fits.PrimaryHDU()])
         hdulist += self.to_hdulist()
         hdulist.writeto(str(filename), **kwargs)
 

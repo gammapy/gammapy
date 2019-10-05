@@ -15,7 +15,12 @@ from gammapy.modeling.models import (
 )
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency, assert_time_allclose
+from gammapy.utils.testing import (
+    mpl_plot_check,
+    requires_data,
+    requires_dependency,
+    assert_time_allclose,
+)
 from gammapy.utils.time import time_ref_to_dict
 
 
