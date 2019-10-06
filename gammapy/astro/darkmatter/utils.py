@@ -86,6 +86,10 @@ class SigmaVEstimator:
     background_model: `~gammapy.spectrum.CountsSpectrum`
         BackgroundModel. In the future will be part of the SpectrumDataset Class.
         For the moment, a CountSpectrum.
+    jfact : `~astropy.units.Quantity` (optional)
+        Integrated J-Factor
+        Needed when `~gammapy.image.models.SkyPointSource` spatial model is used.
+        Default value 1.
     xsection: `~astropy.units.Quantity` (optional)
         Thermally averaged annihilation cross-section.
         Default value declared in `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`.
@@ -115,7 +119,7 @@ class SigmaVEstimator:
         # Define channels and masses to run estimator
         channels = ["b", "t", "Z"]
         masses = [70, 200, 500, 5000, 10000, 50000, 100000]*u.GeV
-        estimator = SigmaVEstimator(dataset, masses, channels, background_model=bkg)
+        estimator = SigmaVEstimator(dataset, masses, channels, background_model=bkg, jfactor=JFAC)
         result = estimator.run(likelihood_profile_opts=dict(bounds=(0, 500), nvalues=100))
     """
 
@@ -128,6 +132,7 @@ class SigmaVEstimator:
         masses,
         channels,
         background_model,
+        jfactor=1,
         xsection=None,
     ):
 
@@ -135,11 +140,11 @@ class SigmaVEstimator:
         self.masses = masses
         self.channels = channels
         self.background = background_model
+        self.jfactor = jfactor
 
         dm_params_container = dataset.model
         if isinstance(dataset.model, AbsorbedSpectralModel):
             dm_params_container = dataset.model.spectral_model
-        self.jfactor = dm_params_container.jfactor
         self.z = dm_params_container.z
         self.k = dm_params_container.k
 
@@ -174,7 +179,7 @@ class SigmaVEstimator:
             result['mean'] provides mean values for sigma v vs. mass.
             result['runs'] provides sigma v vs. mass. and profile likelihood for each channel and run.
         """
-        likelihood_profile_opts["parameter"] = "jfactor"
+        likelihood_profile_opts["parameter"] = "sv"
 
         # initialization of data containers
         sigmas = {}
@@ -213,8 +218,8 @@ class SigmaVEstimator:
                         sigma_unit = fit_result["sigma_v"].unit
                     else:
                         row["sigma_v"] = fit_result["sigma_v"]
-                    row["jfactor_best"] = fit_result["jfactor_best"]
-                    row["jfactor_ul"] = fit_result["jfactor_ul"]
+                    row["sv_best"] = fit_result["sv_best"]
+                    row["sv_ul"] = fit_result["sv_ul"]
                     row["likeprofile"] = fit_result["likeprofile"]
                     table_rows.append(row)
                     sigmas[ch][mass.value].append(row["sigma_v"])
@@ -242,7 +247,7 @@ class SigmaVEstimator:
     def _set_model_dataset(self, ch, mass):
         """Set model to fit in dataset."""
         flux_model = DarkMatterAnnihilationSpectralModel(
-            mass=mass, channel=ch, jfactor=self.jfactor, z=self.z, k=self.k
+            mass=mass, channel=ch, sv=1, jfactor=self.jfactor, z=self.z, k=self.k
         )
         if isinstance(self.dataset.model, AbsorbedSpectralModel):
             flux_model = AbsorbedSpectralModel(
@@ -266,13 +271,13 @@ class SigmaVEstimator:
         fit = Fit(dataset_loop)
         fit_result = fit.run(optimize_opts, covariance_opts)
         likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
-        jfactor_best = fit_result.parameters["jfactor"].value
+        sv_best = fit_result.parameters["sv"].value
         likemin = dataset_loop.likelihood()
         profile = likeprofile
 
-        # consider jfactor value in the physical region > 0
-        if jfactor_best < 0:
-            jfactor_best = 0
+        # consider sv value in the physical region > 0
+        if sv_best < 0:
+            sv_best = 0
             likemin = interp1d(likeprofile["values"], likeprofile["likelihood"], kind="quadratic")(0)
             idx = np.min(np.argwhere(likeprofile["values"] > 0))
             filtered_x_values = likeprofile["values"][likeprofile["values"] > 0]
@@ -288,29 +293,29 @@ class SigmaVEstimator:
             assert (
                 np.max(profile["values"]) > 0
             ), "Values for jfactor found outside the physical region"
-            jfactor_ul = brentq(
+            sv_ul = brentq(
                 interp1d(
                     profile["values"],
                     profile["likelihood"] - likemin - self.RATIO,
                     kind="quadratic",
                 ),
-                jfactor_best,
+                sv_best,
                 np.max(profile["values"]),
                 maxiter=100,
                 rtol=1e-5,
             )
-            sigma_v = (jfactor_ul / self.jfactor.value) * self.xsection
+            sigma_v = sv_ul * self.xsection
         except Exception as ex:
             sigma_v = None
-            jfactor_best = None
-            jfactor_ul = None
+            sv_best = None
+            sv_ul = None
             log.warning(f"Channel: {ch} - Run: {run} - Mass: {mass}")
             log.warning(ex)
 
         res = dict(
             sigma_v=sigma_v,
-            jfactor_best=jfactor_best,
-            jfactor_ul=jfactor_ul,
+            sv_best=sv_best,
+            sv_ul=sv_ul,
             likeprofile=likeprofile,
         )
         return res

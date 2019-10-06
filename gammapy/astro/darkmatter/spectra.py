@@ -141,9 +141,11 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         Dark matter mass
     channel : str
         Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`
+    sv : float
+        Scale parameter for model fitting
     jfactor : `~astropy.units.Quantity`
         Integrated J-Factor
-        Needed when `~gammapy.image.models.SkyPointSource` spatial model is used.
+        Needed when `~gammapy.modeling.models.PointSpatialModel` spatial model is used.
         Default value 1.
     z: float
         Redshift value
@@ -170,19 +172,21 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
     """Thermally averaged annihilation cross-section"""
 
-    def __init__(self, mass, channel, jfactor=1, z=0, k=2):
+    def __init__(self, mass, channel, sv=1, jfactor=1, z=0, k=2):
+        self.sv = Parameter("sv", sv)
         self.k = k
         self.z = z
         self.mass = mass
         self.channel = channel
-        self.jfactor = Parameter("jfactor", jfactor.value, unit=jfactor.unit)
+        self.jfactor = jfactor
         self.primary_flux = PrimaryFlux(mass, channel=self.channel).table_model
-        super().__init__([self.jfactor])
+        super().__init__([self.sv])
 
-    def evaluate(self, energy, jfactor):
+    def evaluate(self, energy, sv):
         """Evaluate dark matter annihilation model."""
         flux = (
-            jfactor
+            sv
+            * self.jfactor
             * self.THERMAL_RELIC_CROSS_SECTION
             * self.primary_flux(energy=energy * (1 + self.z))
             / self.k
