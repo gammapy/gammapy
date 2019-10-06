@@ -926,6 +926,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         hdu = fits.BinTableHDU(counts_table, name=name)
         hdulist = fits.HDUList([fits.PrimaryHDU(), hdu, self._ebounds_hdu(use_sherpa)])
 
+        if self.gti is not None:
+            gti_hdu = self.gti.to_hdulist()
+            hdulist += gti_hdu
+
         hdulist.writeto(str(outdir / phafile), overwrite=overwrite)
 
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
@@ -1042,6 +1046,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             acceptance=data["backscal"],
             acceptance_off=acceptance_off,
             name=str(data["obs_id"]),
+            gti=data["gti"],
         )
 
     # TODO: decide on a design for dataset info tables / dicts and make it part
@@ -1067,12 +1072,17 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         return info
 
 
-def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS"):
+def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS", hdu3="GTI"):
     """Create from `~astropy.io.fits.HDUList`."""
     counts_table = Table.read(hdulist[hdu1])
     ebounds = Table.read(hdulist[hdu2])
     emin = ebounds["E_MIN"].quantity
     emax = ebounds["E_MAX"].quantity
+
+    if hdu3 in hdulist:
+        gti = GTI.from_hdulist(hdulist, hdu3)
+    else:
+        gti = None
 
     # Check if column are present in the header
     quality = None
@@ -1096,4 +1106,5 @@ def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS"):
         livetime=counts_table.meta["EXPOSURE"] * u.s,
         obs_id=counts_table.meta["OBS_ID"],
         is_bkg=False,
+        gti=gti,
     )

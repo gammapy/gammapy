@@ -589,6 +589,9 @@ class MapDataset(Dataset):
             )
             hdulist += mask_fit_map.to_hdulist(hdu="mask_fit")[exclude_primary]
 
+        if self.gti is not None:
+            hdulist += self.gti.to_hdulist()
+
         return hdulist
 
     @classmethod
@@ -633,6 +636,10 @@ class MapDataset(Dataset):
         if "MASK_FIT" in hdulist:
             mask_fit_map = Map.from_hdulist(hdulist, hdu="mask_fit")
             init_kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
+
+        if "GTI" in hdulist:
+            gti = GTI.from_hdulist(hdulist, hdu="GTI")
+            init_kwargs["gti"] = gti
         return cls(**init_kwargs)
 
     def write(self, filename, overwrite=False):

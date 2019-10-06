@@ -125,3 +125,14 @@ def test_gti_create():
     assert len(gti.table) == 2
     assert_allclose(gti.time_ref.mjd, time_ref.tt.mjd)
     assert_allclose(gti.table["START"], start.to_value("s"))
+
+
+def test_gti_write(tmpdir):
+    gti = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]})
+    filename = tmpdir / "test.fits"
+    gti.write(filename, overwrite=True)
+
+    new_gti = GTI.read(filename)
+    assert_time_allclose(new_gti.time_start, gti.time_start)
+    assert_time_allclose(new_gti.time_stop, gti.time_stop)
+    assert new_gti.table.meta["MJDREFF"] == gti.table.meta["MJDREFF"]
