@@ -245,9 +245,8 @@ class MapMakerObs:
         return self.geom_true.get_coord()
 
     def run(self, selection=None):
-        """Make maps.
+        """Make map dataset.
 
-        Returns dict with keys "counts", "exposure" and "background", "psf" and "edisp".
 
         Parameters
         ----------
@@ -255,6 +254,12 @@ class MapMakerObs:
             List of str, selecting which maps to make.
             Available: 'counts', 'exposure', 'background'
             By default, all maps are made.
+
+        Returns
+        -------
+        dataset : `MapDataset`
+            Map dataset.
+
         """
         selection = _check_selection(selection)
 
