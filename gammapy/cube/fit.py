@@ -568,7 +568,7 @@ class MapDataset(Dataset):
                 hdulist.append(hdus["EDISP_MATRIX"])
                 hdulist.append(hdus["EDISP_MATRIX_EBOUNDS"])
             else:
-                hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")
+                hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")[exclude_primary]
 
         if self.psf is not None:
             if isinstance(self.psf, PSFKernel):
