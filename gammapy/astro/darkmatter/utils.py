@@ -5,7 +5,7 @@ from astropy.units import Quantity
 from gammapy.modeling.models import AbsorbedSpectralModel
 from gammapy.modeling import Fit
 from gammapy.utils.table import table_from_row_data
-from gammapy.astro.darkmatter import DMAnnihilation
+from gammapy.astro.darkmatter import DarkMatterAnnihilationSpectralModel
 from scipy.optimize import brentq
 from scipy.interpolate import interp1d
 import numpy as np
@@ -68,7 +68,7 @@ class SigmaVEstimator:
     r"""Estimates :math:`\sigma\nu` for a list of annihilation channels and particle masses.
 
     To estimate the different values of :math:`\sigma\nu`, a random poisson realization for a given
-    annihilation simulated dataset is fitted to a list of `~gammapy.astro.darkmatter.DMAnnihilation`
+    annihilation simulated dataset is fitted to a list of `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`
     models. These are created within the range of the given lists of annihilation channels and particle
     masses. For each fit, the value of the scale parameter (in the range of the physical region >=0)
     that makes the likelihood ratio :math:`-2\lambda_P = RATIO` is multiplied by the thermal relic cross
@@ -88,7 +88,7 @@ class SigmaVEstimator:
         For the moment, a CountSpectrum.
     xsection: `~astropy.units.Quantity` (optional)
         Thermally averaged annihilation cross-section.
-        Default value declared in `~gammapy.astro.darkmatter.DMAnnihilation`.
+        Default value declared in `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`.
 
     Examples
     --------
@@ -100,7 +100,7 @@ class SigmaVEstimator:
 
         # Create annihilation model
         JFAC = 3.41e19 * u.Unit("GeV2 cm-5")
-        flux_model = DMAnnihilation(mass=5000*u.GeV, channel="b", jfactor=JFAC)
+        flux_model = DarkMatterAnnihilationSpectralModel(mass=5000*u.GeV, channel="b", jfactor=JFAC)
 
         # Create an empty SpectrumDataSetOnOff dataset
         dataset = SpectrumDatasetOnOff(
@@ -144,7 +144,7 @@ class SigmaVEstimator:
         self.k = dm_params_container.k
 
         if not xsection:
-            xsection = DMAnnihilation.THERMAL_RELIC_CROSS_SECTION
+            xsection = DarkMatterAnnihilationSpectralModel.THERMAL_RELIC_CROSS_SECTION
         self.xsection = xsection
 
     def run(
@@ -196,7 +196,7 @@ class SigmaVEstimator:
                 for mass in self.masses:
                     log.info(f"Mass: {mass}")
                     row = {}
-                    DMAnnihilation.THERMAL_RELIC_CROSS_SECTION = self.xsection
+                    DarkMatterAnnihilationSpectralModel.THERMAL_RELIC_CROSS_SECTION = self.xsection
                     dataset_loop = self._set_model_dataset(ch, mass)
                     fit_result = self._fit_dataset(
                         dataset_loop,
@@ -241,7 +241,7 @@ class SigmaVEstimator:
 
     def _set_model_dataset(self, ch, mass):
         """Set model to fit in dataset."""
-        flux_model = DMAnnihilation(
+        flux_model = DarkMatterAnnihilationSpectralModel(
             mass=mass, channel=ch, jfactor=self.jfactor, z=self.z, k=self.k
         )
         if isinstance(self.dataset.model, AbsorbedSpectralModel):
