@@ -9,8 +9,8 @@ PIG 7 - Models
 * Author: Axel Donath (editor), Christoph Deil & Regis Terrier
 * Created: Dec 17th, 2018
 * Accepted:
-* Status:
-* Discussion:
+* Status: withdrawn
+* Discussion: `GH_1971`_
 
 
 Introduction
@@ -395,8 +395,8 @@ Non radial-symmetric disk. In planar approximation...
 Spectral Gaussian model. `LogGaussian`?
 
 
-List of Pull Requests
-=====================
+Task list
+=========
 
 This is a proposal for a list of pull requests implementing the proposed changes,
 ordered by priority:
@@ -454,7 +454,10 @@ a `SpectralEvaluator` and a `SourceEvaluator` and `BackgroundEvaluator` class.
 Decision
 ========
 
+The authors decided to withdraw the PIG. Most of the proposed changes have been
+discussed and implemented independently.
 
 
 .. _gammapy: https://github.com/gammapy/gammapy
 .. _gammapy-web: https://github.com/gammapy/gammapy-webpage
+.. _GH_1971: https://github.com/gammapy/gammapy/pull/1971
