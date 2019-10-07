@@ -371,7 +371,7 @@ class MapDataset(Dataset):
             other_bkg = other.background_model.evaluate()
             other_bkg.data[~other.mask_safe] = 0
             bkg.coadd(other_bkg)
-            self.background_model = BackgroundModel(bkg)
+            self.background_model = BackgroundModel(bkg, name=self.background_model.name)
 
         if self.mask_safe is not None and other.mask_safe is not None:
             mask_safe = Map.from_geom(self.counts.geom, data=self.mask_safe)

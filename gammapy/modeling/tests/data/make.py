@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDataset, MapMaker, PSFKernel
+from gammapy.cube import MapDataset, MapMakerObs, PSFKernel
 from gammapy.data import DataStore
 from gammapy.irf import make_mean_edisp, make_mean_psf
 from gammapy.maps import MapAxis, WcsGeom
@@ -93,35 +93,23 @@ def make_datasets_example():
     )
 
     datasets_list = []
-    for ind, geom in enumerate(geoms):
+    for idx, geom in enumerate(geoms):
         observations = data_store.get_observations(obs_ids)
 
-        maker = MapMaker(geom, offset_max=4.0 * u.deg)
-        maps = maker.run(observations)
+        stacked = MapDataset.create(geom=geom)
+        stacked.background_model.name = "background_irf_" + names[idx]
 
-        src_pos = SkyCoord(0, 0, unit="deg", frame="galactic")
-        table_psf = make_mean_psf(observations, src_pos)
-        psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius="0.3 deg")
+        for obs in observations:
+            maker = MapMakerObs(observation=obs, geom=geom, offset_max=4.0 * u.deg)
+            dataset = maker.run()
+            stacked.stack(dataset)
 
-        energy = energy_axis.edges
-        edisp = make_mean_edisp(
-            observations, position=src_pos, e_true=energy, e_reco=energy
-        )
+        stacked.psf = stacked.psf.get_psf_kernel(position=geom.center_skydir, geom=geom, max_radius="0.3 deg")
+        stacked.edisp = stacked.edisp.get_energy_dispersion(position=geom.center_skydir, e_reco=energy_axis.edges)
 
-        background_irf = BackgroundModel(
-            maps["background"], norm=1.0, tilt=0.0, name="background_irf_" + names[ind]
-        )
-
-        dataset = MapDataset(
-            name=names[ind],
-            model=models[ind] + diffuse_model,
-            counts=maps["counts"],
-            exposure=maps["exposure"],
-            background_model=background_irf,
-            psf=psf_kernel,
-            edisp=edisp,
-        )
-        datasets_list.append(dataset)
+        stacked.name = names[idx]
+        stacked.model = models[idx] + diffuse_model
+        datasets_list.append(stacked)
 
     datasets = Datasets(datasets_list)
 
