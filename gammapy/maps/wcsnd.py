@@ -669,24 +669,14 @@ class WcsNDMap(WcsMap):
         cutout : `~gammapy.maps.WcsNDMap`
             Cutout map
         """
-        width = _check_width(width)
-        idx = (0,) * len(self.geom.axes)
-        c2d = Cutout2D(
-            data=self.data[idx],
-            wcs=self.geom.wcs,
-            position=position,
-            # Cutout2D takes size with order (lat, lon)
-            size=width[::-1] * u.deg,
-            mode=mode,
-        )
+        geom_cutout = self.geom.cutout(position=position, width=width, mode=mode)
 
-        # Create the slices with the non-spatial axis
-        cutout_slices = Ellipsis, c2d.slices_original[0], c2d.slices_original[1]
+        slices = geom_cutout.cutout_info["parent-slices"]
+        cutout_slices = Ellipsis, slices[0], slices[1]
 
-        geom = WcsGeom(c2d.wcs, c2d.shape[::-1], axes=self.geom.axes)
         data = self.data[cutout_slices]
 
-        return self._init_copy(geom=geom, data=data)
+        return self._init_copy(geom=geom_cutout, data=data)
 
     def sample_coord(self, n_events, random_state=0):
         """Sample position and energy of events.
