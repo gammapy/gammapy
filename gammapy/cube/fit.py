@@ -273,7 +273,7 @@ class MapDataset(Dataset):
                 # if the model component drifts out of its support the evaluator has
                 # has to be updated
                 if evaluator.needs_update:
-                    evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+                    evaluator.update(self.exposure, self.psf, self.edisp)
 
                 npred = evaluator.compute_npred()
                 npred_total.stack(npred, check=False)
