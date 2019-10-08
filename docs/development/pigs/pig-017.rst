@@ -2,12 +2,12 @@
 
 .. _pig-017:
 
-*******************
-PIG 16 - Provenance
-*******************
+****************************
+PIG 16 - Provenance tracking
+****************************
 
 * Author: José Enrique Ruiz, Mathieu Servillat
-* Created: September 6, 2019
+* Created: October 15, 2019
 * Accepted:
 * Status: Draft
 * Discussion:
@@ -15,21 +15,48 @@ PIG 16 - Provenance
 Abstract
 ========
 
+Gammapy v0.14 has delivered a first version of a `High-level interface`_ that intends to
+provide the main basic features proposed in `PIG12`_. It is expected that all of these
+features will be addressed in the coming releases. Having this high-level interface Python API
+allow us to think on procuring a way to automatically record a structured provenance of
+the data analysis processes undertaken in working sessions or in Python scripts.
+
+A structured provenance capture opens the door to provide the means to perform comparisons
+and forensic studies of different analysis processes, extracting relevant information,
+which in turn should improve reproducibility and reuse by the community. The proposed
+contribution described in this PIG is a necessary first step to accomplish this ultimate
+goal, which will only be achieved in another PIG with tools for provenance inspection and
+filtering.
 
 Status
 ======
 
-
+Logging
 
 Proposal
 ========
+
+- Interoperability with other provenance logs (ctapipe)
+    - Use Prov IVOA model
+- Reuse and extend ctapipe Provenance API
+- Extensibility and modularity
+    - Simple and non-intrusive in Gammapy code-base
+- Serialization
+    - Use Prov IVOA model
+    - Files in prov model format
+    - Parsed/converted into prov model format
+        - files in python objects format
+        - relational database
+        - structlogs
 
 
 
 Outlook
 =======
 
-
+- OPUS
+- database M.Sanguillon SQL Alchemy  into SQLite and Posgres
+- Provenance extraction
 
 Task list
 =========
@@ -38,3 +65,11 @@ Task list
 
 Decision
 ========
+
+
+.. _High-level interface: https://docs.gammapy.org/0.14/scripts/index.html
+.. _PIG12: https://docs.gammapy.org/0.14/development/pigs/pig-012.html
+.. _GH 2216: https://github.com/gammapy/gammapy/issues/2216
+.. _GH 346: https://github.com/gammapy/gammapy/issues/346
+.. _GH 320: https://github.com/gammapy/gammapy/issues/320
+.. _GH 139: https://github.com/gammapy/gammapy/issues/139
