@@ -3,7 +3,7 @@
 .. _pig-017:
 
 ****************************
-PIG 16 - Provenance tracking
+PIG 17 - Provenance tracking
 ****************************
 
 * Author: José Enrique Ruiz, Mathieu Servillat
@@ -21,42 +21,64 @@ features will be addressed in the coming releases. Having this high-level interf
 allow us to think on procuring a way to automatically record a structured provenance of
 the data analysis processes undertaken in working sessions or in Python scripts.
 
-A structured provenance capture opens the door to provide the means to perform comparisons
-and forensic studies of different analysis processes, extracting relevant information,
-which in turn should improve reproducibility and reuse by the community. The proposed
-contribution described in this PIG is a necessary first step to accomplish this ultimate
-goal, which will only be achieved in another PIG with tools for provenance inspection and
-filtering.
+A structured provenance capture using a standard model opens the door to provide the
+means to perform comparisons and forensic studies of different analysis processes, extracting
+relevant information, which in turn should improve reproducibility and reuse by the community.
+The proposed contribution described in this PIG is a necessary first step to accomplish this
+ultimate goal, which will only be achieved with tools for provenance inspection and filtering.
+The latter could be found as solutions developed outside Gammapy or, in the worst of the cases,
+as future custom Gammapy development proposed in a future PIG.
 
 Status
 ======
 
-Logging
+- Logging issues
+- W3C / IVOA Model
+- ctapipe Provenance API
+- prov Python API
 
 Proposal
 ========
 
 - Interoperability with other provenance logs (ctapipe)
     - Use Prov IVOA model
-- Reuse and extend ctapipe Provenance API
+
+- Reuse and extend ctapipe Provenance API (execution environment)
+    - Execution environment
+    - Data processing steps
+    - Parameter values used and datasets involved
+    - Detailed relationships among processes and datasets
+
 - Extensibility and modularity
     - Simple and non-intrusive in Gammapy code-base
+    - Re-use description YAML file
+
 - Serialization
     - Use Prov IVOA model
-    - Files in prov model format
-    - Parsed/converted into prov model format
-        - files in python objects format
-        - relational database
-        - structlogs
-
+    - Log files with specific PROV logs syntax
+    - Log files parsed/converted into prov model format
+    - Use a .prov folder for prov serialisation and intermediate files -> sharing
+    - Graph generation
 
 
 Outlook
 =======
 
-- OPUS
-- database M.Sanguillon SQL Alchemy  into SQLite and Posgres
-- Provenance extraction
+- Relational database serialisation (M. Sanguillon SQL Alchemy into SQLite and PosgreSQL)
+- Re-use json-schema file to generate YAML
+- Provenance extraction / filtering features
+- Independent Python API
+- Distributed infrastructure deployment (OPUS)
+
+
+Alternatives
+============
+
+- ctapipe tools
+- Eliot
+- structlog
+- autologging
+- noWorkflow
 
 Task list
 =========
@@ -65,10 +87,23 @@ Task list
 
 Decision
 ========
+TBD
 
 
 .. _High-level interface: https://docs.gammapy.org/0.14/scripts/index.html
 .. _PIG12: https://docs.gammapy.org/0.14/development/pigs/pig-012.html
+.. _PROV-Overview: https://www.w3.org/TR/prov-overview/
+.. _PROV-DM: https://www.w3.org/TR/2013/REC-prov-dm-20130430/
+.. _IVOA Provenance DM: http://www.ivoa.net/documents/ProvenanceDM/20190719/index.html
+.. _ctapipe.core.provenance: https://cta-observatory.github.io/ctapipe/api/ctapipe.core.Provenance.html
+.. _ctapipe provenance service: https://cta-observatory.github.io/ctapipe/examples/provenance.html
+.. _ctapipe tools: https://cta-observatory.github.io/ctapipe/ctapipe_api/tools/index.html
+.. _Prov Python API: http://prov.readthedocs.io
+.. _Eliot: https://eliot.readthedocs.io/en/stable/
+.. _Structlog: http://www.structlog.org/en/stable/
+.. _Autologging: https://pythonhosted.org/Autologging/
+.. _noWorkflow: http://gems-uff.github.io/noworkflow/
+.. _Recipy: https://github.com/recipy/recipy
 .. _GH 2216: https://github.com/gammapy/gammapy/issues/2216
 .. _GH 346: https://github.com/gammapy/gammapy/issues/346
 .. _GH 320: https://github.com/gammapy/gammapy/issues/320
