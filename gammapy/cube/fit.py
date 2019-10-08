@@ -357,24 +357,24 @@ class MapDataset(Dataset):
         """
         if self.counts and other.counts:
             self.counts.data[~self.mask_safe] = 0
-            self.counts.stack(other.counts, weights=other.mask_safe)
+            self.counts.stack(other.counts, weights=other.mask_safe, check=False)
 
         if self.exposure and other.exposure:
-            self.exposure.stack(other.exposure)
+            self.exposure.stack(other.exposure, check=False)
 
         if self.background_model and other.background_model:
             bkg = self.background_model.evaluate()
             bkg.data[~self.mask_safe] = 0
             other_bkg = other.background_model.evaluate()
             other_bkg.data[~other.mask_safe] = 0
-            bkg.stack(other_bkg)
+            bkg.stack(other_bkg, check=False)
             self.background_model = BackgroundModel(bkg, name=self.background_model.name)
 
         if self.mask_safe is not None and other.mask_safe is not None:
             # TODO: make mask_safe a Map object
             mask_safe = Map.from_geom(self.counts.geom, data=self.mask_safe)
             mask_safe_other = Map.from_geom(other.counts.geom, data=other.mask_safe)
-            mask_safe.stack(mask_safe_other)
+            mask_safe.stack(mask_safe_other, check=False)
             self.mask_safe = mask_safe.data
 
         if self.psf and other.psf:

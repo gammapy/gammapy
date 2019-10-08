@@ -514,7 +514,7 @@ class MapMakerRing:
 
             # Now paste the returned maps on the ref geom
             for name in selection:
-                maps[name].stack(maps_obs[name])
+                maps[name].stack(maps_obs[name], check=False)
 
         self._maps = maps
         return maps

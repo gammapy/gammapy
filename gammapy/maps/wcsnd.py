@@ -685,20 +685,19 @@ class WcsNDMap(WcsMap):
         ----------
         other : `WcsNDMap`
             Other map to stack
-        weights : `WcsNDMap`
+        weights : `~numpy.ndarray`
             Other map to be used as weights.
         check : bool
-            Check whether geoms are aligned.
-
+            Check whether other is cutout of self.geom.
         """
-        if check:
-            if other.geom != self.geom:
-                if other.geom.cutout_info is None:
-                    raise ValueError("Can only stack into the map, the cutout was created from.")
-
         if self.geom == other.geom:
             parent_slices, cutout_slices = None, None
         else:
+            if other.geom.cutout_info is None:
+                raise ValueError("Can only stack cutout into larger map.")
+            elif other.geom.cutout_info["parent-geom"] is not self.geom and check:
+                raise ValueError("Can only stack into map, the cutout was created from.")
+
             slices = other.geom.cutout_info["parent-slices"]
             parent_slices = Ellipsis, slices[0], slices[1]
 
