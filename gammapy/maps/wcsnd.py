@@ -678,6 +678,40 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(geom=geom_cutout, data=data)
 
+    def stack(self, other, weights=None, check=True):
+        """Stack cutout into larger map.
+
+        Parameters
+        ----------
+        other : `WcsNDMap`
+            Other map to stack
+        weights : `WcsNDMap`
+            Other map to be used as weights.
+        check : bool
+            Check whether geoms are aligned.
+
+        """
+        if check:
+            if other.geom != self.geom:
+                if other.geom.cutout_info is None:
+                    raise ValueError("Can only stack into the map, the cutout was created from.")
+
+        if self.geom == other.geom:
+            parent_slices, cutout_slices = None, None
+        else:
+            slices = other.geom.cutout_info["parent-slices"]
+            parent_slices = Ellipsis, slices[0], slices[1]
+
+            slices = other.geom.cutout_info["cutout-slices"]
+            cutout_slices = Ellipsis, slices[0], slices[1]
+
+        data = other.data[cutout_slices]
+
+        if weights is not None:
+            data = data * weights
+
+        self.data[parent_slices] += data
+
     def sample_coord(self, n_events, random_state=0):
         """Sample position and energy of events.
 
