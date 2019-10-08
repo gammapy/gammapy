@@ -10,175 +10,12 @@ from .background import make_map_background_irf
 from .counts import fill_map_counts
 from .edisp_map import make_edisp_map
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
-from .fit import BINSZ_IRF, MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, MapDataset
+from .fit import MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, BINSZ_IRF, MapDataset
 from .psf_map import make_psf_map
 
-__all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
+__all__ = ["MapMakerObs", "MapMakerRing"]
 
 log = logging.getLogger(__name__)
-
-
-class MapMaker:
-    """Make maps from IACT observations.
-
-    Parameters
-    ----------
-    geom : `~gammapy.maps.WcsGeom`
-        Reference image geometry in reco energy
-    offset_max : `~astropy.coordinates.Angle`
-        Maximum offset angle
-    geom_true : `~gammapy.maps.WcsGeom`
-        Reference image geometry in true energy, used for exposure maps and PSF.
-        If none, the same as geom is assumed
-    exclusion_mask : `~gammapy.maps.Map`
-        Exclusion mask
-    background_oversampling : int
-        Background oversampling factor in energy axis.
-    """
-
-    def __init__(
-        self,
-        geom,
-        offset_max,
-        geom_true=None,
-        exclusion_mask=None,
-        background_oversampling=None,
-    ):
-        if not isinstance(geom, WcsGeom):
-            raise ValueError("MapMaker only works with WcsGeom")
-
-        if geom.is_image:
-            raise ValueError("MapMaker only works with geom with an energy axis")
-
-        self.geom = geom
-        self.geom_true = geom_true if geom_true else geom.to_binsz(BINSZ_IRF)
-        self.offset_max = Angle(offset_max)
-        self.exclusion_mask = exclusion_mask
-        self.background_oversampling = background_oversampling
-
-    def run(self, observations, selection=["counts", "exposure", "background"]):
-        """Make maps for a list of observations.
-
-        Parameters
-        ----------
-        observations : `~gammapy.data.Observations`
-            Observations to process
-        selection : list
-            List of str, selecting which maps to make.
-            Available: 'counts', 'exposure', 'background'
-            By default, all maps are made.
-
-        Returns
-        -------
-        maps : dict
-            Stacked counts, background and exposure maps
-        """
-
-        selection = _check_selection(selection)
-
-        stacked = MapDataset.create(geom=self.geom, geom_irf=self.geom_true)
-
-        for obs in observations:
-            log.info(f"Processing observation: OBS_ID = {obs.obs_id}")
-
-            try:
-                obs_maker = self._get_obs_maker(obs)
-            except NoOverlapError:
-                log.info(f"Skipping observation {obs.obs_id} (no map overlap)")
-                continue
-
-            dataset = obs_maker.run(selection)
-            stacked.stack(dataset)
-
-        maps = {
-            "counts": stacked.counts,
-            "exposure": stacked.exposure,
-            "background": stacked.background_model.evaluate(),
-        }
-        self._maps = maps
-        return maps
-
-    def _get_obs_maker(self, obs, mode="trim"):
-        # Compute cutout geometry and slices to stack results back later
-        cutout_kwargs = {
-            "position": obs.pointing_radec,
-            "width": 2 * self.offset_max,
-            "mode": mode,
-        }
-
-        cutout_geom = self.geom.cutout(**cutout_kwargs)
-        cutout_geom_etrue = self.geom_true.cutout(**cutout_kwargs)
-
-        if self.exclusion_mask is not None:
-            cutout_exclusion = self.exclusion_mask.cutout(**cutout_kwargs)
-        else:
-            cutout_exclusion = None
-
-        # Make maps for this observation
-        return MapMakerObs(
-            observation=obs,
-            geom=cutout_geom,
-            geom_true=cutout_geom_etrue,
-            offset_max=self.offset_max,
-            exclusion_mask=cutout_exclusion,
-            background_oversampling=self.background_oversampling,
-        )
-
-    @staticmethod
-    def _maps_sum_over_axes(maps, spectrum, keepdims):
-        """Compute weighted sum over map axes.
-
-        Parameters
-        ----------
-        spectrum : `~gammapy.modeling.models.SpectralModel`
-            Spectral model to compute the weights.
-            Default is power-law with spectral index of 2.
-        keepdims : bool, optional
-            If this is set to True, the energy axes is kept with a single bin.
-            If False, the energy axes is removed
-        """
-        images = {}
-        for name, map in maps.items():
-            if name == "exposure":
-                map = _map_spectrum_weight(map, spectrum)
-            images[name] = map.sum_over_axes(keepdims=keepdims)
-        # TODO: PSF (and edisp) map sum_over_axis
-
-        return images
-
-    def run_images(self, observations=None, spectrum=None, keepdims=False):
-        """Create images by summing over the energy axis.
-
-        Either MapMaker.run() has to be called before calling this function,
-        or observations need to be passed.
-        If  MapMaker.run() has been called before, then those maps will be
-        summed over. Else, new maps will be computed and then summed.
-
-        Exposure is weighted with an assumed spectrum,
-        resulting in a weighted mean exposure image.
-
-
-        Parameters
-        ----------
-        observations : `~gammapy.data.Observations`
-            Observations to process
-        spectrum : `~gammapy.modeling.models.SpectralModel`
-            Spectral model to compute the weights.
-            Default is power-law with spectral index of 2.
-        keepdims : bool, optional
-            If this is set to True, the energy axes is kept with a single bin.
-            If False, the energy axes is removed
-
-        Returns
-        -------
-        images : dict of `~gammapy.maps.Map`
-        """
-        if not hasattr(self, "_maps"):
-            if observations is None:
-                raise ValueError("Requires observations...")
-            self.run(observations)
-
-        return self._maps_sum_over_axes(self._maps, spectrum, keepdims)
 
 
 class MapMakerObs:
@@ -214,11 +51,26 @@ class MapMakerObs:
         background_oversampling=None,
         migra_axis=None,
         rad_axis=None,
+        cutout=True,
     ):
+
+        cutout_kwargs = {
+            "position": observation.pointing_radec,
+            "width": 2 * Angle(offset_max),
+            "mode": "trim",
+        }
+
+        if cutout:
+            geom = geom.cutout(**cutout_kwargs)
+            if geom_true is not None:
+                geom_true = geom_true.cutout(**cutout_kwargs)
+            if exclusion_mask is not None:
+                exclusion_mask = exclusion_mask.cutout(**cutout_kwargs)
+
         self.observation = observation
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom.to_binsz(BINSZ_IRF)
-        self.offset_max = offset_max
+        self.offset_max = Angle(offset_max)
         self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling
         self.maps = {}
@@ -243,9 +95,8 @@ class MapMakerObs:
         return self.geom_true.get_coord()
 
     def run(self, selection=None):
-        """Make maps.
+        """Make map dataset.
 
-        Returns dict with keys "counts", "exposure" and "background", "psf" and "edisp".
 
         Parameters
         ----------
@@ -253,6 +104,12 @@ class MapMakerObs:
             List of str, selecting which maps to make.
             Available: 'counts', 'exposure', 'background'
             By default, all maps are made.
+
+        Returns
+        -------
+        dataset : `MapDataset`
+            Map dataset.
+
         """
         selection = _check_selection(selection)
 
@@ -384,7 +241,7 @@ def _check_selection(selection):
     return selection
 
 
-class MapMakerRing(MapMaker):
+class MapMakerRing:
     """Make maps from IACT observations.
 
     The main motivation for this class in addition to the `MapMaker`
@@ -448,12 +305,10 @@ class MapMakerRing(MapMaker):
     def __init__(
         self, geom, offset_max, exclusion_mask=None, background_estimator=None
     ):
-        super().__init__(
-            geom=geom,
-            offset_max=offset_max,
-            exclusion_mask=exclusion_mask,
-            geom_true=None,
-        )
+
+        self.geom = geom
+        self.offset_max = Angle(offset_max)
+        self.exclusion_mask = exclusion_mask
         self.background_estimator = background_estimator
 
     def _get_empty_maps(self, selection):
@@ -466,6 +321,40 @@ class MapMakerRing(MapMaker):
                 maps[name] = Map.from_geom(self.geom, unit="")
         return maps
 
+    def _get_obs_maker(self, obs):
+        # Compute cutout geometry and slices to stack results back later
+
+        # Make maps for this observation
+        return MapMakerObs(
+            observation=obs,
+            geom=self.geom,
+            offset_max=self.offset_max,
+            exclusion_mask=self.exclusion_mask,
+        )
+
+    @staticmethod
+    def _maps_sum_over_axes(maps, spectrum, keepdims):
+        """Compute weighted sum over map axes.
+
+        Parameters
+        ----------
+        spectrum : `~gammapy.modeling.models.SpectralModel`
+            Spectral model to compute the weights.
+            Default is power-law with spectral index of 2.
+        keepdims : bool, optional
+            If this is set to True, the energy axes is kept with a single bin.
+            If False, the energy axes is removed
+        """
+        images = {}
+        for name, map in maps.items():
+            if name == "exposure":
+                map = _map_spectrum_weight(map, spectrum)
+            images[name] = map.sum_over_axes(keepdims=keepdims)
+        # TODO: PSF (and edisp) map sum_over_axis
+
+        return images
+
+
     def _run(self, observations, sum_over_axis=False, spectrum=None, keepdims=False):
         selection = ["on", "exposure_on", "off", "exposure_off", "exposure"]
         maps = self._get_empty_maps(selection)
@@ -474,7 +363,7 @@ class MapMakerRing(MapMaker):
 
         for obs in observations:
             try:
-                obs_maker = self._get_obs_maker(obs, mode="trim")
+                obs_maker = self._get_obs_maker(obs)
             except NoOverlapError:
                 log.info(f"Skipping obs_id: {obs.obs_id} (no map overlap)")
                 continue
