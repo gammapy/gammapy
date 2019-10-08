@@ -256,9 +256,12 @@ class SpectrumDataset(Dataset):
         energy = self._energy_axis.edges
         e_min, e_max = energy[:-1], energy[1:]
 
-        if self.mask_safe is not None and self.mask_safe.any():
-            e_min = e_min[self.mask_safe]
-            e_max = e_max[self.mask_safe]
+        if self.mask_safe is not None:
+            if self.mask_safe.any():
+                e_min = e_min[self.mask_safe]
+                e_max = e_max[self.mask_safe]
+            else:
+                return None, None
 
         return u.Quantity([e_min.min(), e_max.max()])
 
