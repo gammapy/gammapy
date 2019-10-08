@@ -26,7 +26,7 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 @pytest.fixture
 def geom():
     ebounds = np.logspace(-1.0, 1.0, 3)
-    axis = MapAxis.from_edges(ebounds, name="energy", unit=u.TeV)
+    axis = MapAxis.from_edges(ebounds, name="energy", unit=u.TeV, interp="log")
     return WcsGeom.create(
         skydir=(266.40498829, -28.93617776),
         binsz=0.02,
@@ -39,7 +39,7 @@ def geom():
 @pytest.fixture
 def geom_etrue():
     ebounds_true = np.logspace(-1.0, 1.0, 4)
-    axis = MapAxis.from_edges(ebounds_true, name="energy", unit=u.TeV)
+    axis = MapAxis.from_edges(ebounds_true, name="energy", unit=u.TeV, interp="log")
     return WcsGeom.create(
         skydir=(266.40498829, -28.93617776),
         binsz=0.02,
@@ -52,7 +52,7 @@ def geom_etrue():
 @pytest.fixture
 def geom_image():
     ebounds_true = np.logspace(-1.0, 1.0, 2)
-    axis = MapAxis.from_edges(ebounds_true, name="energy", unit=u.TeV)
+    axis = MapAxis.from_edges(ebounds_true, name="energy", unit=u.TeV, interp="log")
     return WcsGeom.create(
         skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
     )
@@ -148,8 +148,8 @@ def test_fake(sky_model, geom, geom_etrue):
     dataset.fake(314)
 
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
-    assert_allclose(real_dataset.counts.data.sum(), 6454.959516)
-    assert_allclose(dataset.counts.data.sum(), 6581)
+    assert_allclose(real_dataset.counts.data.sum(), 8220.399727)
+    assert_allclose(dataset.counts.data.sum(), 8397)
 
 
 @requires_data()
@@ -158,7 +158,7 @@ def test_different_exposure_unit(sky_model, geom):
     npred_ref = dataset_ref.npred()
 
     ebounds_true = np.logspace(2, 4, 3)
-    axis = MapAxis.from_edges(ebounds_true, name="energy", unit="GeV")
+    axis = MapAxis.from_edges(ebounds_true, name="energy", unit="GeV", interp="log")
     geom_gev = WcsGeom.create(
         skydir=(266.40498829, -28.93617776),
         binsz=0.02,
@@ -284,26 +284,26 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert "minuit" in repr(result)
 
     npred = dataset_1.npred().data.sum()
-    assert_allclose(npred, 4454.932873, rtol=1e-3)
-    assert_allclose(result.total_stat, 12811.238924, rtol=1e-3)
+    assert_allclose(npred, 6220.529956, rtol=1e-3)
+    assert_allclose(result.total_stat, 11802.750562, rtol=1e-3)
 
     pars = result.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("lon_0"), 0.003627, rtol=1e-2)
+    assert_allclose(pars.error("lon_0"), 0.002651, rtol=1e-2)
 
     assert_allclose(pars["index"].value, 3, rtol=1e-2)
-    assert_allclose(pars.error("index"), 0.031294, rtol=1e-2)
+    assert_allclose(pars.error("index"), 0.021222, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error("amplitude"), 3.885326e-13, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 3.117271e-13, rtol=1e-2)
 
     # background norm 1
     assert_allclose(pars[8].value, 0.5, rtol=1e-2)
-    assert_allclose(pars.error(pars[8]), 0.015399, rtol=1e-2)
+    assert_allclose(pars.error(pars[8]), 0.015759, rtol=1e-2)
 
     # background norm 2
     assert_allclose(pars[11].value, 1, rtol=1e-2)
-    assert_allclose(pars.error(pars[11]), 0.02104, rtol=1e-2)
+    assert_allclose(pars.error(pars[11]), 0.02147, rtol=1e-2)
 
     # test mask_safe evaluation
     mask_safe = geom.energy_mask(emin=1 * u.TeV)
@@ -311,7 +311,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_2.mask_safe = mask_safe
 
     stat = fit.datasets.likelihood()
-    assert_allclose(stat, 5936.781716)
+    assert_allclose(stat, 6425.389198)
 
     # test model evaluation outside image
 
@@ -343,19 +343,19 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
     assert result.success
 
     npred = dataset.npred().data.sum()
-    assert_allclose(npred, 1087.073518, rtol=1e-3)
-    assert_allclose(result.total_stat, 5177.19198, rtol=1e-3)
+    assert_allclose(npred, 4076.779039, rtol=1e-3)
+    assert_allclose(result.total_stat, 5722.439112, rtol=1e-3)
 
     pars = result.parameters
 
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("lon_0"), 0.04623, rtol=1e-2)
+    assert_allclose(pars.error("lon_0"), 0.00407, rtol=1e-2)
 
     assert_allclose(pars["sigma"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("sigma"), 0.031759, rtol=1e-2)
+    assert_allclose(pars.error("sigma"), 0.00237, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error("amplitude"), 2.163318e-12, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 1.901406e-13, rtol=1e-2)
 
 
 def test_create(geom, geom_etrue):
