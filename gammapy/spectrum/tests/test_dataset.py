@@ -140,6 +140,8 @@ class TestSpectrumDataset:
         assert empty_dataset.livetime.value == 0
         assert len(empty_dataset.gti.table) == 0
 
+        assert_allclose(empty_dataset.energy_range[0].value, 0.1)
+
     def test_spectrum_dataset_stack_diagonal_safe_mask(self):
         aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
         edisp = EnergyDispersion.from_diagonal_response(
@@ -273,6 +275,8 @@ class TestSpectrumOnOff:
         assert empty_dataset.acceptance_off.shape[0] == 2
         assert empty_dataset.livetime.value == 0
         assert len(empty_dataset.gti.table) == 0
+
+        assert_allclose(empty_dataset.energy_range[0].value, 0.1)
 
     def test_init_no_model(self):
         with pytest.raises(AttributeError):
