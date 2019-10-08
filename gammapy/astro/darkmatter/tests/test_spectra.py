@@ -28,7 +28,7 @@ def test_DMAnnihilation():
         mass=massDM, channel=channel, jfactor=jfactor
     )
     integral_flux = model.integral(emin=emin, emax=emax).to("cm-2 s-1")
-    differential_flux = model.evaluate(energy=1 * u.TeV, scale=1).to("cm-2 s-1 TeV-1")
+    differential_flux = model.evaluate(energy=1 * u.TeV, sv=1).to("cm-2 s-1 TeV-1")
 
     assert_quantity_allclose(integral_flux.value, 6.19575457e-14, rtol=1e-5)
     assert_quantity_allclose(differential_flux.value, 2.97506768e-16, rtol=1e-5)
