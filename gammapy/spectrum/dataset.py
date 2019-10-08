@@ -254,9 +254,13 @@ class SpectrumDataset(Dataset):
     def energy_range(self):
         """Energy range defined by the safe mask"""
         energy = self._energy_axis.edges
-        e_lo = energy[:-1][self.mask_safe]
-        e_hi = energy[1:][self.mask_safe]
-        return u.Quantity([e_lo.min(), e_hi.max()])
+        e_min, e_max = energy[:-1], energy[1:]
+
+        if self.mask_safe is not None and self.mask_safe.any():
+            e_min = e_min[self.mask_safe]
+            e_max = e_max[self.mask_safe]
+
+        return u.Quantity([e_min.min(), e_max.max()])
 
     def plot_fit(self):
         """Plot counts and residuals in two panels.
@@ -392,7 +396,7 @@ class SpectrumDataset(Dataset):
             e_true[:-1], e_true[1:], np.zeros(e_true[:-1].shape) * u.m ** 2
         )
         edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
-        mask_safe = np.ones_like(counts.data, "bool")
+        mask_safe = np.zeros_like(counts.data, "bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
         livetime = gti.time_sum
 
