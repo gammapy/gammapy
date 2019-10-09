@@ -54,13 +54,13 @@ allow, in a straight-forward way, for the implementation of a generic provenance
 this model, hence custom coding is needed.
 
 The prototype for CTA pipeline framework *ctapipe* provides a custom `ctapipe.core.provenance`_
-provenance Python API to code a custom provenance capture. The general functioning of the API is
-described in the `ctapipe provenance service`_ documentation. The API allows for a seamless capture of
-the execution environment, and provides methods to register start/end of processes as well as related
-input/output datasets. For this it uses the concepts provided in the IVOA and W3C provenance models
-(i.e. activities, entities, roles, etc.) also capturing additional information on execution environment.
-It also provides the means to serialize the provenance capture into flat files, exposing the provenance
-information as a Python dictionary or in JSON format.
+Python API to code a custom provenance capture. The general functioning of the API is described in the
+`ctapipe provenance service`_ documentation. The API allows for a seamless capture of the execution
+environment, and provides methods to register start/end of processes as well as related input/output
+datasets. For this it uses the concepts provided in the IVOA and W3C provenance models (i.e. activities,
+entities, roles, etc.) also capturing additional information on execution environment. It also provides
+the means to serialize the provenance capture into flat files, exposing the provenance information as a
+Python dictionary or in JSON format.
 
 The `prov package`_ is a free Python library providing methods to build and read provenance information
 that has been stored using the standard W3C Provenance Data Model. It supports the most common formats
@@ -83,12 +83,12 @@ as with other potential astronomical archive services or software providing prov
 the VO framework. In this optic, we will build our solution on top of `ctapipe.core.provenance`_,
 re-using and extending their present capabilities. The information captured relates to the execution
 environment, the overall high-level interface configuration and the workflow execution process (i.e the
-relationships among datasets and processes and the parameter values used in each process step).
+relationships among datasets and proce`sses and the parameter values used in each process step).
 
 A simple and non-intrusive implementation strategy should be considered, with minor modifications in the
 code-base of Gammapy. Metaclass inheritance, class decoration and subclassing mechanisms applied to the
-`Analysys` class of the high-level interface will be explored. The code will be placed in one or a few
-python scripts inside a new folder `provenance` at the `gammapy.utils` level. The whole solution will
+``Analysys`` class of the high-level interface will be explored. The code will be placed in one or a few
+python scripts inside a new folder ``provenance`` at the ``gammapy.utils`` level. The whole solution will
 be mainly based on a provenance description YAML file that will bind tasks of the high-level interface,
 their parameters allowed, datasets needed and produced, etc. with the provenance model, its specific
 semantics and the desired provenance capture granularity. In order to procure an accurate provenance
@@ -98,9 +98,9 @@ would be desirable before actually writing the provenance description YAML file.
 
 Serialisation of the captured provenance into log files will be done if proper logging configuration
 settings of the high-level interface are defined. In the same way, the intermediate and final datasets
-and results produced will be saved into a local session hidden `.prov` folder if this option is enabled
+and results produced will be saved into a local session hidden ``.prov`` folder if this option is enabled
 in its correspondent configuration parameter. All the configuration seetings and parameter values may be
-accessed via the `Analysis` class at the very moment of the execution of each task. We will also provide
+accessed via the ``Analysis`` class at the very moment of the execution of each task. We will also provide
 a small set of tools that will extract the provenance information from log files and translate it into
 standard W3C file formats (i.e. PROV-O RDF, PROV-XML and PROV-JSON), as well as to provenance graphs
 (i.e. PDF, PNG, SVG).
@@ -131,7 +131,12 @@ Task list
 =========
 
 - General cleaning of Gammapy code-base to replace ``print()`` functions with standard Python ``logging``.
-
+- Define a syntax for the description provenance file and a level of provenance granularity captured.
+- Prototype a non-intrusive solution to capture provenance on a high-level interface session.
+- Minor additions on the configuration settings of the high-level interface to enable provenance capture.
+- Improve the prototype based on users and core developers feedback to achieve a final solution.
+- Develop a small set of tools which translate provenance logs into W3C syntax formatted files.
+- Develop a small set of tools which produce graphs of the workflow process using provenance logs.
 
 Decision
 ========
