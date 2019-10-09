@@ -52,6 +52,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog4FGL`.
     """
+
     _ebounds = u.Quantity([50, 100, 300, 1000, 3000, 10000, 30000, 300000], "MeV")
 
     def __str__(self):
@@ -95,7 +96,16 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             vals = [d[_].strip() for _ in keys]
             return ", ".join([_ for _ in vals if _ != ""])
 
-        keys = ["ASSOC1", "ASSOC2", "ASSOC_TEV", "ASSOC_FGL", "ASSOC_FHL", "ASSOC_GAM1", "ASSOC_GAM2", "ASSOC_GAM3"]
+        keys = [
+            "ASSOC1",
+            "ASSOC2",
+            "ASSOC_TEV",
+            "ASSOC_FGL",
+            "ASSOC_FHL",
+            "ASSOC_GAM1",
+            "ASSOC_GAM2",
+            "ASSOC_GAM3",
+        ]
         associations = get_nonentry_keys(keys)
         ss += "{:<16s} : {}\n".format("Associations", associations)
         ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_BAY", d["ASSOC_PROB_BAY"])
@@ -119,7 +129,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
         ss += fmt.format("Significance (100 MeV - 1 TeV)", d["Signif_Avg"])
         ss += "{:<32s} : {:.1f}\n".format("Npred", d["Npred"])
 
-        flag_message = {  
+        flag_message = {
             0: "None",
             1: "Source with T S > 35 which went to T S < 25 when changing the diffuse model "
             "(see Sec. 3.7.1 in catalog paper) or the analysis method (see Sec. 3.7.2 in catalog paper). "
@@ -139,9 +149,9 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             'is equivalent to the "c" suffix in the source name (see Sec. 3.7.1 in catalog paper).',
             9: "Localization Quality > 8 in pointlike (see Section 3.1 in catalog paper) or long axis of 95% ellipse > 0.25.",
             10: "Total Spectral Fit Quality > 20  or Spectral Fit Quality > 9 in any band (see Equation 5 in catalog paper).",
-            12:  "Highly curved spectrum; LogParabolaSpectralModel beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see "
-            "Section 3.3 in catalog paper)."
-            }
+            12: "Highly curved spectrum; LogParabolaSpectralModel beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see "
+            "Section 3.3 in catalog paper).",
+        }
         ss += "{:<20s} : {}\n".format(
             "Other flags", flag_message.get(d["Flags"], "N/A")
         )
@@ -191,7 +201,9 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             tag = "PL"
         elif spec_type == "LogParabola":
             tag = "LP"
-            ss += "{:<45s} : {:.4f} +- {:.5f}\n".format("beta", d["LP_beta"], d["Unc_LP_beta"])
+            ss += "{:<45s} : {:.4f} +- {:.5f}\n".format(
+                "beta", d["LP_beta"], d["Unc_LP_beta"]
+            )
             ss += "{:<45s} : {:.1f}\n".format("Significance curvature", d["LP_SigCurv"])
 
         elif spec_type == "PLSuperExpCutoff":
@@ -204,9 +216,13 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
                 d["PLEC_Expfactor"].unit,
             )
             ss += "{:<45s} : {} +- {}\n".format(
-                "Super-exponential cutoff index", d["PLEC_Exp_Index"], d["Unc_PLEC_Exp_Index"]
+                "Super-exponential cutoff index",
+                d["PLEC_Exp_Index"],
+                d["Unc_PLEC_Exp_Index"],
             )
-            ss += "{:<45s} : {:.1f}\n".format("Significance curvature", d["PLEC_SigCurv"])
+            ss += "{:<45s} : {:.1f}\n".format(
+                "Significance curvature", d["PLEC_SigCurv"]
+            )
 
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
@@ -216,13 +232,15 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
         )
 
         fmt = "{:<45s} : {:.3f} +- {:.3f}\n"
-        ss += fmt.format("Spectral index", d[tag+"_Index"], d["Unc_"+tag+"_Index"])
+        ss += fmt.format(
+            "Spectral index", d[tag + "_Index"], d["Unc_" + tag + "_Index"]
+        )
 
         fmt = "{:<45s} : {:.3} +- {:.3} {}\n"
         ss += fmt.format(
             "Flux Density at pivot energy",
-            d[tag+"_Flux_Density"].value,
-            d["Unc_"+tag+"_Flux_Density"].value,
+            d[tag + "_Flux_Density"].value,
+            d["Unc_" + tag + "_Flux_Density"].value,
             "cm-2 MeV-1 s-1",
         )
 
@@ -302,11 +320,13 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
-
+            e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
+            sigma = de["Model_SemiMajor"].to("deg")
+            phi = de["Model_PosAng"].to("deg")
             if morph_type == "Disk":
                 r_0 = de["Model_SemiMajor"].to("deg")
                 return DiskSpatialModel(
-                    lon_0=glon, lat_0=glat, r_0=r_0, frame="galactic"
+                    lon_0=glon, lat_0=glat, r_0=r_0, e=e, phi=phi, frame="galactic"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
                 filename = de["Spatial_Filename"].strip()
@@ -315,9 +335,6 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
                 )
                 return TemplateSpatialModel.read(path / filename)
             elif morph_type == "2D Gaussian":
-                e = (1-(de["Model_SemiMinor"]/de["Model_SemiMajor"])**2.)**0.5
-                sigma = de["Model_SemiMajor"].to("deg")
-                phi = de["Model_PosAng"].to("deg")
                 return GaussianSpatialModel(
                     lon_0=glon, lat_0=glat, sigma=sigma, e=e, phi=phi, frame="galactic"
                 )
@@ -372,7 +389,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
 
         model.parameters.set_parameter_errors(errs)
         return model
-    
+
     @property
     def flux_points(self):
         """Flux points (`~gammapy.spectrum.FluxPoints`)."""
@@ -497,7 +514,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         else:
             tevcat_message = "N/A"
         ss += "{:<20s} : {}\n".format("TeVCat flag", tevcat_message)
-        
+
         flag_message = {
             0: "None",
             1: "Source with TS > 35 which went to TS < 25 when changing the diffuse model. Note that sources with TS < "
@@ -714,11 +731,13 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
-
+            e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
+            sigma = de["Model_SemiMajor"].to("deg")
+            phi = de["Model_PosAng"].to("deg")
             if morph_type == "Disk":
                 r_0 = de["Model_SemiMajor"].to("deg")
                 return DiskSpatialModel(
-                    lon_0=glon, lat_0=glat, r_0=r_0, frame="galactic"
+                    lon_0=glon, lat_0=glat, r_0=r_0, e=e, phi=phi, frame="galactic"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
                 filename = de["Spatial_Filename"].strip()
@@ -727,9 +746,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
                 )
                 return TemplateSpatialModel.read(path / filename)
             elif morph_type == "2D Gaussian":
-                e = (1-(de["Model_SemiMinor"]/de["Model_SemiMajor"])**2.)**0.5
-                sigma = de["Model_SemiMajor"].to("deg")
-                phi = de["Model_PosAng"].to("deg")
                 return GaussianSpatialModel(
                     lon_0=glon, lat_0=glat, sigma=sigma, e=e, phi=phi, frame="galactic"
                 )
@@ -1252,11 +1268,13 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         else:
             de = self.data_extended
             morph_type = de["Spatial_Function"].strip()
-
+            e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
+            sigma = de["Model_SemiMajor"].to("deg")
+            phi = de["Model_PosAng"].to("deg")
             if morph_type == "RadialDisk":
                 r_0 = de["Model_SemiMajor"].to("deg")
                 return DiskSpatialModel(
-                    lon_0=glon, lat_0=glat, r_0=r_0, frame="galactic"
+                    lon_0=glon, lat_0=glat, r_0=r_0, e=e, phi=phi, frame="galactic"
                 )
             elif morph_type in ["SpatialMap"]:
                 filename = de["Spatial_Filename"].strip()
@@ -1265,9 +1283,6 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
                 )
                 return TemplateSpatialModel.read(path / filename)
             elif morph_type == "RadialGauss":
-                e = (1-(de["Model_SemiMinor"]/de["Model_SemiMajor"])**2.)**0.5
-                sigma = de["Model_SemiMajor"].to("deg")
-                phi = de["Model_PosAng"].to("deg")
                 return GaussianSpatialModel(
                     lon_0=glon, lat_0=glat, sigma=sigma, e=e, phi=phi, frame="galactic"
                 )
