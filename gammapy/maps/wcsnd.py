@@ -678,31 +678,26 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(geom=geom_cutout, data=data)
 
-    def stack(self, other, weights=None, check=True):
-        """Stack cutout into larger map.
+    def stack(self, other, weights=None):
+        """Stack cutout into map.
 
         Parameters
         ----------
         other : `WcsNDMap`
             Other map to stack
         weights : `~numpy.ndarray`
-            Other map to be used as weights.
-        check : bool
-            Check whether other is cutout of self.geom.
+            Array to be used as weights.
         """
         if self.geom == other.geom:
             parent_slices, cutout_slices = None, None
-        else:
-            if other.geom.cutout_info is None:
-                raise ValueError("Can only stack cutout into larger map.")
-            elif other.geom.cutout_info["parent-geom"] is not self.geom and check:
-                raise ValueError("Can only stack into map, the cutout was created from.")
-
+        elif other.geom.cutout_info is not None and self.geom == other.geom.cutout_info["parent-geom"]:
             slices = other.geom.cutout_info["parent-slices"]
             parent_slices = Ellipsis, slices[0], slices[1]
 
             slices = other.geom.cutout_info["cutout-slices"]
             cutout_slices = Ellipsis, slices[0], slices[1]
+        else:
+            raise ValueError("Can only stack equivalent maps or cutout of the same map.")
 
         data = other.data[cutout_slices]
 

@@ -475,7 +475,6 @@ class MapMakerRing:
 
         return images
 
-
     def _run(self, observations, sum_over_axis=False, spectrum=None, keepdims=False):
         selection = ["on", "exposure_on", "off", "exposure_off", "exposure"]
         maps = self._get_empty_maps(selection)
@@ -514,7 +513,8 @@ class MapMakerRing:
 
             # Now paste the returned maps on the ref geom
             for name in selection:
-                maps[name].stack(maps_obs[name], check=False)
+                data = maps_obs[name].quantity.to_value(maps[name].unit)
+                maps[name].fill_by_coord(maps_obs[name].geom.get_coord(), data)
 
         self._maps = maps
         return maps
