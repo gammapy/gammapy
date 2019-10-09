@@ -15,21 +15,20 @@ PIG 17 - Provenance tracking
 Abstract
 ========
 
-Gammapy v0.14 has delivered a first version of a `High-level interface`_ that intends to
-provide the main basic features proposed in `PIG12`_. It is expected that all of these
-features will be addressed in the coming releases. Having this high-level interface Python API
-allow us to think on procuring a way to automatically record a structured provenance of
-the data analysis processes undertaken with the high-level interface in IPython working sessions
-(shell and notebooks) or in Python scripts.
+Gammapy v0.14 has delivered a first version of a `High-level interface`_ that intends to provide the
+main basic features proposed in `PIG12`_. It is expected that all of these features will be addressed in
+the coming releases. Having this well defined high-level interface Python API allow us to think on
+procuring a way to automatically record a structured provenance of the data analysis processes undertaken
+with the high-level interface in IPython working sessions (shell and notebooks) or in Python scripts.
 
-We propose to develop an automatic capture of a structured provenance using a standard provenance
-model. This will open the door to provide the means to perform comparisons and forensic studies of
-different analysis processes, extracting relevant information to trace back the origin of results,
-which in turn should improve reproducibility and reuse by the community. Hence, the proposed
-contribution described in this PIG is a necessary first step to accomplish that ultimate goal, which
-would only be achieved with tools for provenance inspection and filtering. Those could be found as
-standard tools developed outside Gammapy or, in the worst of the cases, as a custom tool for provenance
-extraction and analysis proposed for development in a future PIG.
+We propose to develop an automatic capture of a structured provenance using a standard provenance model.
+This will open the door to provide the means to perform comparisons and forensic studies of different
+analysis processes, extracting relevant information to trace back the origin of results, which in turn
+should improve reproducibility and reuse by the community. Hence, the proposed contribution described in
+this PIG is a necessary first step to accomplish that ultimate goal, which would only be achieved with
+tools for provenance inspection and filtering. Those could be found as standard tools developed outside
+Gammapy or, in the worst of the cases, as a custom tool for provenance extraction and analysis proposed
+for development in a future PIG.
 
 Status
 ======
@@ -40,69 +39,74 @@ functions in a Python library like Gammapy, since this does not allow for a flex
 of the output format, nor the severity level neither the place where these logs are recorded. There has
 been some discussion about logging in Gammapy in the past (see `GH 315`_, `GH 318`_, `GH 320`_, `GH 346`_,
 `GH 2216`_ as the most relevant examples) The present solution is documented in the `Logging`_ section of
-the Developer HowTo in the Gammapy documentation. Though there is always room for improvement (i.e. modular
-configuration of loggers, handlers and formatters, addition of custom severity levels, colored output, etc),
-we consider that capturing structure-modeled provenance needs a different solution than fine-tuning the
-configuration of the Python ``logging`` mechanism.
+the Developer HowTo in the Gammapy documentation. Though there is always room for improvement (i.e.
+modular configuration of loggers, handlers and formatters, addition of custom severity levels, colored
+output, etc), we consider that capturing structure-modeled provenance needs a different solution than
+fine-tuning the configuration of the Python ``logging`` mechanism.
 
-The International Virtual Observatory Alliance (IVOA) has been working in the elaboration of a provenance model
-for astrophysics data. It is expected that this model will be accepted as a standard recommendation very soon.
-This `IVOA Provenance Data Model`_ adapts many concepts described in `PROV-Overview`_ and `PROV-DM`_ W3C
-provenance standards into the astronomy data processing context. This model has been successfully implemented in
-several prototypes for provenance capture (i.e. `Pollux`_, `OPUS`_, `RAVE`_, and generation of HiPS data
-collection at CDS). At this moment there are no solutions or libraries that allow, in a straight-forward way, for
-the implementation of a generic provenance capture mechanism using this model, hence custom coding is needed.
+The International Virtual Observatory Alliance (IVOA) has been working in the elaboration of a provenance
+model for astrophysics data. It is expected that this model will be accepted as a standard recommendation
+very soon. This `IVOA Provenance Data Model`_ adapts many concepts described in `PROV-Overview`_ and
+`PROV-DM`_ W3C provenance standards into the astronomy data processing context. This model has been
+successfully implemented in several prototypes for provenance capture (i.e. `Pollux`_, `OPUS`_, `RAVE`_,
+and generation of HiPS data collection at CDS). At this moment there are no solutions or libraries that
+allow, in a straight-forward way, for the implementation of a generic provenance capture mechanism using
+this model, hence custom coding is needed.
 
-The prototype for CTA pipeline framework *ctapipe* provides a custom `ctapipe.core.provenance`_ provenance
-Python API to code a custom provenance capture. The general functioning of the API is described in the
-`ctapipe provenance service`_ documentation. The API allows for a seamless capture of the execution environment,
-and provides methods to register start/end of processes as well as related input/output datasets. For this it
-uses the concepts provided in the IVOA and W3C provenance models (i.e. activities, entities, roles, etc.) with
-additional information of execution environment. It also provides the means to serialize the provenance capture
-into flat files, exposing the provenance information as a Python dictionary or in JSON format.
+The prototype for CTA pipeline framework *ctapipe* provides a custom `ctapipe.core.provenance`_
+provenance Python API to code a custom provenance capture. The general functioning of the API is
+described in the `ctapipe provenance service`_ documentation. The API allows for a seamless capture of
+the execution environment, and provides methods to register start/end of processes as well as related
+input/output datasets. For this it uses the concepts provided in the IVOA and W3C provenance models
+(i.e. activities, entities, roles, etc.) also capturing additional information on execution environment.
+It also provides the means to serialize the provenance capture into flat files, exposing the provenance
+information as a Python dictionary or in JSON format.
 
 The `prov package`_ is a free Python library providing methods to build and read provenance information
 that has been stored using the standard W3C Provenance Data Model. It supports the most common formats
-(i.e. PROV-O RDF, PROV-XML and PROV-JSON), as well as serialization into graphical formats (i.e. PDF, PNG,
-SVG). Since the IVOA Provenance Data Model shares the same conceptual modelling with W3C, the *prov package*
-may also be used to build those standard-formatted files and graphs from a custom log format using the model.
+(i.e. PROV-O RDF, PROV-XML and PROV-JSON), as well as serialization into graphical formats (i.e. PDF,
+PNG, SVG). Since the IVOA Provenance Data Model shares the same conceptual modelling with W3C, the
+*prov package* may also be used to build those standard-formatted files and graphs from a custom log
+format using the model.
 
 Proposal
 ========
 
 We propose to develop a set of classes and methods that will automatically capture the provenance of a
-data analysis session using the Gammapy high-level interface. This provenance information will be captured
-only when expressly declared as a configuration parameter of the high-level interface. It will be structured
-using the `IVOA Provenance Data Model`_ and in the same output channel used for the standard logging, but with
-a different severity level. We will also provide a small set of tools that will extract the provenance
-information from log files and translate it into standard W3C file formats (i.e. PROV-O RDF, PROV-XML and
-PROV-JSON), as well as to provenance graphs (i.e. PDF, PNG, SVG) exposing the workflow execution, the
-relationships among datasets and processes and the parameter values used in each process.
+data analysis session using the Gammapy high-level interface. This provenance information will be
+captured only when expressly declared as a configuration parameter of the high-level interface.
 
+It will be structured using the `IVOA Provenance Data Model`_ and in the same output channel used
+for the standard logging, but with a different severity level. The choice of the IVOA Provenance
+Data Model allows for interoperability with provenance information captured from *ctapipe* as well
+as with other potential astronomical archive services or software providing provenance information in
+the VO framework. In this optic, we will build our solution on top of `ctapipe.core.provenance`_,
+re-using and extending their present capabilities. The information captured relates to the execution
+environment, the overall high-level interface configuration and the workflow execution process (i.e the
+relationships among datasets and processes and the parameter values used in each process step).
 
-- General cleaning of Gammapy code-base to replace ``print()`` functions with standard Python ``logging``.
+A simple and non-intrusive implementation strategy should be considered, with minor modifications in the
+code-base of Gammapy. Metaclass inheritance, class decoration and subclassing mechanisms applied to the
+`Analysys` class of the high-level interface will be explored. The code will be placed in one or a few
+python scripts inside a new folder `provenance` at the `gammapy.utils` level. The whole solution will
+be mainly based on a provenance description YAML file that will bind tasks of the high-level interface,
+their parameters allowed, datasets needed and produced, etc. with the provenance model, its specific
+semantics and the desired provenance capture granularity. In order to procure an accurate provenance
+description file, a good knowledge and understanding of the high-level interface code-base is needed.
+A well established and defined description of the tools and configuration of the high-level interface
+would be desirable before actually writing the provenance description YAML file.
 
-- Interoperability with other provenance logs (ctapipe)
-    - Use Prov IVOA model
+Serialisation of the captured provenance into log files will be done if proper logging configuration
+settings of the high-level interface are defined. In the same way, the intermediate and final datasets
+and results produced will be saved into a local session hidden `.prov` folder if this option is enabled
+in its correspondent configuration parameter. All the configuration seetings and parameter values may be
+accessed via the `Analysis` class at the very moment of the execution of each task. We will also provide
+a small set of tools that will extract the provenance information from log files and translate it into
+standard W3C file formats (i.e. PROV-O RDF, PROV-XML and PROV-JSON), as well as to provenance graphs
+(i.e. PDF, PNG, SVG).
 
-- Reuse and extend ctapipe Provenance API (execution environment)
-    - Execution environment
-    - Data processing steps
-    - Parameter values used and datasets involved
-    - Detailed relationships among processes and datasets
-
-- Extensibility and modularity
-    - Simple and non-intrusive in Gammapy code-base
-    - Covering high-level interface API
-    - Re-use description YAML file
-
-- Serialization
-    - Use Prov IVOA model
-    - Log files with specific PROV logs syntax
-    - Log files parsed/converted into prov model format
-    - Use a .prov folder for prov serialisation and intermediate files -> sharing
-    - Graph generation
-
+Finally, it is advisable to proceed with a general cleaning of the Gammapy code-base so to replace
+``print()`` functions with the standard Python ``logging`` mechanism present in Gammapy.
 
 Outlook
 =======
