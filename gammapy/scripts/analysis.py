@@ -9,7 +9,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
-from gammapy.cube import MapDataset, MapMakerObs
+from gammapy.cube import MapDataset, MapDatasetMaker
 from gammapy.cube.fit import BINSZ_IRF
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
@@ -272,7 +272,7 @@ class Analysis:
         position, width = obs.pointing_radec, 2 * offset_max
         geom_cutout = geom.cutout(position=position, width=width)
         geom_irf_cutout = geom_irf.cutout(position=position, width=width)
-        maker = MapMakerObs(
+        maker = MapDatasetMaker(
             observation=obs,
             geom=geom_cutout,
             geom_true=geom_irf_cutout,

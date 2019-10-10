@@ -15,12 +15,12 @@ from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
 from .fit import MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, BINSZ_IRF, MapDataset
 from .psf_map import make_psf_map
 
-__all__ = ["MapMakerObs", "MapMakerRing"]
+__all__ = ["MapDatasetMaker", "MapMakerRing"]
 
 log = logging.getLogger(__name__)
 
 
-class MapMakerObs:
+class MapDatasetMaker:
     """Make maps for a single IACT observation.
 
     Parameters
@@ -342,7 +342,7 @@ class MapMakerRing:
         # Compute cutout geometry and slices to stack results back later
 
         # Make maps for this observation
-        return MapMakerObs(
+        return MapDatasetMaker(
             geom=self.geom,
             offset_max=self.offset_max,
         )
