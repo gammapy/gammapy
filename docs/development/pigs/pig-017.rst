@@ -81,7 +81,7 @@ for the standard logging, but with a different severity level. The choice of the
 Data Model allows for interoperability with provenance information captured from *ctapipe* as well
 as with other astronomical archive services or software providing provenance information in the Virtual
 Observatory framework. In this optic, the development will be done on top of `ctapipe.core.provenance`_,
-re-using and extending their present capabilities. The information captured will relate to the execution
+re-using and extending its present capabilities. The information captured will relate to the execution
 environment, the overall high-level interface configuration, the workflow execution process (i.e the
 relationships among datasets and processes and the parameter values used in each process step), and the
 serialisations of the intermediate and final datasets or objects produced.
@@ -100,14 +100,15 @@ and configuration settings would be desirable before actually writing the proven
 Serialisation of the captured provenance into log files will be done according to the logging configuration
 settings defined in the high-level interface. A structured format will be defined to record objects used
 and produced, tasks execution, parameters used and relationships among the whole, as time-stamped log
-messages. We will also provide a small set of tools that will extract the provenance information from log
-files and translate it into standard W3C file formats (i.e. PROV-O RDF, PROV-XML and PROV-JSON), as well
-as to provenance graphs (i.e. PDF, PNG, SVG). The use of a custom structured log format allows us to record
-additional information other than the strictly permitted by W3C standards.
+messages. We will also provide a small set of tools developed with `prov package`_ that will extract the
+provenance information from log files and translate it into standard W3C file formats (i.e. PROV-O RDF,
+PROV-XML and PROV-JSON), as well as to provenance graphs (i.e. PDF, PNG, SVG). The use of a custom
+structured log format allows us to record additional information other than the strictly permitted by
+W3C standards.
 
 All the configuration settings and parameter values may be accessed via the ``Analysis`` class at the very
 moment of the execution of each task. Captured tasks, datasets and hashable objects in general need a unique
-identifier that could be calculated as MD5 hashes. The intermediate and final datasets and objects produced
+identifier that could be generated with MD5 hashing. The intermediate and final datasets and objects produced
 will be saved into the local disk if this option is enabled as a configuration parameter, and links to the
 serialisations of these objects will be recorded accordingly in the provenance log file. Finally, it is
 advisable to proceed with a general cleaning of the Gammapy code-base so to replace ``print()`` functions
@@ -135,22 +136,42 @@ also described in a YAML file using the `JSON Schema`_ standard. This could open
 automatically generate most of the content of the provenance description file from the JSON schema file
 used to validate the configuration parameters of the high-level interface.
 
-The technical solution proposed in this PIG is tightly-coupled with the Gammapy high-level interface.
-Taking advantage of the fact that the ``Analysis`` class has a straight-forward access to all the tasks
-and objects involved in the analysis process, as well as to all the configuration settings of the
-high-level interface. The development of a generic independent Python package that could be used for
-any other Python command-line-tool software and/or API could be explored taking a different approach for
-the capture provenance values but keeping the provenance description file.
+The developments proposed in this PIG are tightly-coupled to the specific functioning of the Gammapy
+high-level interface. They take advantage of the fact that the ``Analysis`` class has a straight-forward
+access to all the tasks and objects involved in the analysis process, as well as to all the configuration
+settings of the high-level interface. The development of a generic independent Python package that could
+be used for any other Python command-line-tool software and/or API could be explored taking a different
+approach for the capture provenance values but keeping the provenance description file.
+
+There may be some provenance information that could be good to have stuck to the datasets or to other
+objects produced in the data analysis process (i.e. see related discussion in `GH 2447`_, `GH 2452`_
+on accessing and serialising a table of observations metadata and selection cuts together with the derived
+datasets) In those cases the provenance capture and extraction is part of the I/O methods of the object
+where it is linked, and those potential features do not replace the proposal of this PIG.
 
 Alternatives
 ============
 
-- ctapipe tools
-- Eliot
-- structlog
-- autologging
-- Recipy
-- noWorkflow
+The are other technical solutions that could be used to capture provenance or perform a structured logging
+in the context of Python scripting executions. The `ctapipe tools`_ come with provenance capture features
+implemented by `ctapipe.core.provenance`_, which capture the execution environment and input/output files.
+This PIG proposal takes the *ctapipe provenance* API as a starting point for re-use and extension of its
+present capabilities. Other Python packages that provide provenance capture are `Recipy`_ and `noWorkflow`_.
+Both provide non-intrusive implementation mechanisms and provenance inspection features, but need a relational
+database (TinyDB, SQLite) to store the information and use different different non standard fixed proprietary
+models. In the end they are not highly flexible to configure the kind of information captured and the desired
+level of granularity.
+
+A different approach is to record provenance as structured logs, which is the one proposed in this PIG. In
+this optic we may find as the most relevant examples `Autologging`_, `Eliot`_ and `Structlog`_. Autologging
+provides an automatic basic logging for class methods calls with parameters values passed and returned, that
+is activated through class decorators. Whereas Eliot and Structlog provide Python APIs to perform a detailed
+structured logging in the form of nested dictionaries and arrays. Eliot also provides a tool to display these
+logs as a structured sequence of nested actions and subactions, as well as the parameters values involved.
+These APIs could be used to develop the custom-model provenance capture layer proposed in this PIG, but they
+add an external dependency that for our simple model we find oversized and could be easily avoided. It remains
+that if technical blockers are found during the development of this PIG, we could always explore the solutions
+offered by these APIs.
 
 Task list
 =========
@@ -188,6 +209,8 @@ TBD
 .. _GH 320: https://github.com/gammapy/gammapy/issues/320
 .. _GH 318: https://github.com/gammapy/gammapy/issues/318
 .. _GH 315: https://github.com/gammapy/gammapy/issues/315
+.. _GH 2447: https://github.com/gammapy/gammapy/pull/2447
+.. _GH 2452: https://github.com/gammapy/gammapy/issues/2452
 .. _Logging: https://docs.gammapy.org/0.14/development/howto.html#logging
 .. _OPUS: https://github.com/mservillat/OPUS
 .. _RAVE: https://www.rave-survey.org/project
