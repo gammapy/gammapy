@@ -33,8 +33,6 @@ class MapMakerObs:
         Reference image geometry in true energy, used for IRF maps. It can have a coarser
         spatial bins than the counts geom.
         If none, the same as geom is assumed
-    exclusion_mask : `~gammapy.maps.Map`
-        Exclusion mask (used by some background estimators)
     migra_axis : `~gammapy.maps.MapAxis`
         Migration axis for edisp map
     rad_axis : `~gammapy.maps.MapAxis`
@@ -47,7 +45,6 @@ class MapMakerObs:
         geom,
         offset_max,
         geom_true=None,
-        exclusion_mask=None,
         background_oversampling=None,
         migra_axis=None,
         rad_axis=None,
@@ -64,14 +61,11 @@ class MapMakerObs:
             geom = geom.cutout(**cutout_kwargs)
             if geom_true is not None:
                 geom_true = geom_true.cutout(**cutout_kwargs)
-            if exclusion_mask is not None:
-                exclusion_mask = exclusion_mask.cutout(**cutout_kwargs)
 
         self.observation = observation
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom.to_binsz(BINSZ_IRF)
         self.offset_max = Angle(offset_max)
-        self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling
         self.maps = {}
         self.migra_axis = migra_axis if migra_axis else MIGRA_AXIS_DEFAULT
@@ -329,7 +323,6 @@ class MapMakerRing:
             observation=obs,
             geom=self.geom,
             offset_max=self.offset_max,
-            exclusion_mask=self.exclusion_mask,
         )
 
     @staticmethod
@@ -373,11 +366,13 @@ class MapMakerRing:
             maps_obs["counts"] = dataset.counts
             maps_obs["exposure"] = dataset.exposure
             maps_obs["background"] = dataset.background_model.map
-            maps_obs["exclusion"] = obs_maker.exclusion_mask
+            maps_obs["exclusion"] = self.exclusion_mask.cutout(
+                position=obs.pointing_radec, width=2 * self.offset_max, mode="trim"
+                )
 
             if sum_over_axis:
                 maps_obs = self._maps_sum_over_axes(maps_obs, spectrum, keepdims)
-                maps_obs["exclusion"] = obs_maker.exclusion_mask.sum_over_axes(
+                maps_obs["exclusion"] = maps_obs["exclusion"].sum_over_axes(
                     keepdims=keepdims
                 )
                 maps_obs["exclusion"].data = (
