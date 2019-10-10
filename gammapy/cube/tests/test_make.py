@@ -87,13 +87,12 @@ def test_map_maker(pars, observations, keepdims):
 
     for obs in observations:
         maker = MapMakerObs(
-            observation=obs,
             geom=pars["geom"],
             geom_true=pars["geom_true"],
             offset_max="2 deg",
             background_oversampling=pars.get("background_oversampling"),
         )
-        dataset = maker.run()
+        dataset = maker.run(obs)
         stacked.stack(dataset)
 
     counts = stacked.counts
@@ -156,14 +155,13 @@ def test_map_maker_obs(observations):
     geom_true = geom(ebounds=[0.1, 0.5, 2.5, 10.0], binsz=1.0)
     geom_exp = geom(ebounds=[0.1, 0.5, 2.5, 10.0])
     maker_obs = MapMakerObs(
-        observation=observations[0],
         geom=geom_reco,
         geom_true=geom_true,
         offset_max=2.0 * u.deg,
         cutout=False
     )
 
-    map_dataset = maker_obs.run()
+    map_dataset = maker_obs.run(observations[0])
     assert map_dataset.counts.geom == geom_reco
     assert map_dataset.background_model.map.geom == geom_reco
     assert map_dataset.exposure.geom == geom_exp
