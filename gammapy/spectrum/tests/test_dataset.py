@@ -139,8 +139,7 @@ class TestSpectrumDataset:
         assert empty_dataset.edisp.data.axis("e_reco").nbin == 2
         assert empty_dataset.livetime.value == 0
         assert len(empty_dataset.gti.table) == 0
-
-        assert_allclose(empty_dataset.energy_range[0].value, 0.1)
+        assert empty_dataset.energy_range[0] is None
 
     def test_spectrum_dataset_stack_diagonal_safe_mask(self):
         aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
@@ -234,7 +233,7 @@ class TestSpectrumOnOff:
         ereco = np.logspace(-1, 1, 5) * u.TeV
         elo = ereco[:-1]
         ehi = ereco[1:]
-
+        self.e_reco = ereco
         self.aeff = EffectiveAreaTable(etrue[:-1], etrue[1:], np.ones(9) * u.cm ** 2)
         self.edisp = EnergyDispersion.from_diagonal_response(etrue, ereco)
 
@@ -258,6 +257,7 @@ class TestSpectrumOnOff:
             acceptance=np.ones(elo.shape),
             acceptance_off=np.ones(elo.shape) * 10,
             name="test",
+            gti=self.gti
         )
 
     def test_spectrumdatasetonoff_create(self):
@@ -275,8 +275,12 @@ class TestSpectrumOnOff:
         assert empty_dataset.acceptance_off.shape[0] == 2
         assert empty_dataset.livetime.value == 0
         assert len(empty_dataset.gti.table) == 0
+        assert empty_dataset.energy_range[0] is None
 
-        assert_allclose(empty_dataset.energy_range[0].value, 0.1)
+    def test_create_stack(self):
+        stacked = SpectrumDatasetOnOff.create(self.e_reco, self.e_true)
+        stacked.stack(self.dataset)
+        assert_allclose(stacked.energy_range.value, self.dataset.energy_range.value)
 
     def test_init_no_model(self):
         with pytest.raises(AttributeError):

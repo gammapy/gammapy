@@ -139,7 +139,11 @@ class EnergyDispersion:
         """
         data = self.pdf_matrix.copy()
         energy = self.e_reco.edges
-        idx = (energy[:-1] < lo_threshold) | (energy[1:] > hi_threshold)
+
+        if lo_threshold is None and hi_threshold is None:
+            idx = slice(None)
+        else:
+            idx = (energy[:-1] < lo_threshold) | (energy[1:] > hi_threshold)
         data[:, idx] = 0
         return data
 
