@@ -71,6 +71,28 @@ class MapMakerObs:
         self.migra_axis = migra_axis if migra_axis else MIGRA_AXIS_DEFAULT
         self.rad_axis = rad_axis if rad_axis else RAD_AXIS_DEFAULT
 
+    @lazyproperty
+    def geom_exposure(self):
+        """Exposure map geom (`Geom`)"""
+        energy_axis = self.geom_true.get_axis_by_name("energy")
+        geom_exposure = self.geom.to_image().to_cube([energy_axis])
+        return geom_exposure
+
+
+    @lazyproperty
+    def geom_psf(self):
+        """PSFMap geom (`Geom`)"""
+        energy_axis = self.geom_true.get_axis_by_name("ENERGY")
+        geom_psf = self.geom_true.to_image().to_cube([self.rad_axis, energy_axis])
+        return geom_psf
+
+    @lazyproperty
+    def geom_edisp(self):
+        """EdispMap geom (`Geom`)"""
+        energy_axis = self.geom_true.get_axis_by_name("ENERGY")
+        geom_edisp = self.geom_true.to_image().to_cube([self.migra_axis, energy_axis])
+        return geom_edisp
+
     def _fov_mask(self, coords):
         pointing = self.observation.pointing_radec
         offset = coords.skycoord.separation(pointing)
@@ -149,17 +171,15 @@ class MapMakerObs:
         # the exposure associated with the IRFS
         self.maps["exposure_irf"] = exposure_irf_masked
 
-        energy_axis = self.geom_true.get_axis_by_name("energy")
-        geom = self.geom.to_image().to_cube([energy_axis])
 
         exposure = make_map_exposure_true_energy(
             pointing=self.observation.pointing_radec,
             livetime=self.observation.observation_live_time_duration,
             aeff=self.observation.aeff,
-            geom=geom,
+            geom=self.geom_exposure,
         )
 
-        fov_mask_etrue = self._fov_mask(geom.to_image().get_coord())
+        fov_mask_etrue = self._fov_mask(self.geom.to_image().get_coord())
         if fov_mask_etrue is not None:
             exposure.data[..., fov_mask_etrue] = 0
         self.maps["exposure"] = exposure
@@ -191,12 +211,10 @@ class MapMakerObs:
         self.maps["background"] = background
 
     def _make_edisp(self):
-        energy_axis = self.geom_true.get_axis_by_name("ENERGY")
-        geom_migra = self.geom_true.to_image().to_cube([self.migra_axis, energy_axis])
         edisp_map = make_edisp_map(
             edisp=self.observation.edisp,
             pointing=self.observation.pointing_radec,
-            geom=geom_migra,
+            geom=self.geom_edisp,
             max_offset=self.offset_max,
             exposure_map=self.maps["exposure_irf"],
         )
@@ -206,13 +224,10 @@ class MapMakerObs:
         psf = self.observation.psf
         if isinstance(psf, EnergyDependentMultiGaussPSF):
             psf = psf.to_psf3d()
-        energy_axis = self.geom_true.get_axis_by_name("ENERGY")
-
-        geom_rad = self.geom_true.to_image().to_cube([self.rad_axis, energy_axis])
         psf_map = make_psf_map(
             psf=psf,
             pointing=self.observation.pointing_radec,
-            geom=geom_rad,
+            geom=self.geom_psf,
             max_offset=self.offset_max,
             exposure_map=self.maps["exposure_irf"],
         )
