@@ -208,12 +208,9 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
 
         elif spec_type == "PLSuperExpCutoff":
             tag = "PLEC"
-            fmt = "{:<45s} : {:.0f} +- {:.0f} {}\n"
+            fmt = "{:<45s} : {} +- {}\n"
             ss += fmt.format(
-                "Exponential factor",
-                d["PLEC_Expfactor"].value,
-                d["Unc_PLEC_Expfactor"].value,
-                d["PLEC_Expfactor"].unit,
+                "Exponential factor", d["PLEC_Expfactor"], d["Unc_PLEC_Expfactor"]
             )
             ss += "{:<45s} : {} +- {}\n".format(
                 "Super-exponential cutoff index",
@@ -277,7 +274,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
 
         ss += "{:<15s} : {:.3f}\n".format("Variability index", d["Variability_Index"])
 
-        if d["Signif_Peak"] == np.nan:
+        if np.isfinite(d["Flux_Peak"]):
             ss += "{:<40s} : {:.3f}\n".format(
                 "Significance peak (100 MeV - 100 GeV)", d["Signif_Peak"]
             )
@@ -430,6 +427,50 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
         values = self.data[prefix]
         return u.Quantity(values, unit)
+
+    @property
+    def lightcurve(self):
+        """Lightcurve (`~gammapy.time.LightCurve`).
+
+        Examples
+        --------
+        >>> from gammapy.catalog import source_catalogs
+        >>> source = source_catalogs['3fgl']['3FGL J0349.9-2102']
+        >>> lc = source.lightcurve
+        >>> lc.plot()
+        """
+        flux = self.data["Flux_History"]
+
+        # Flux error is given as asymmetric high/low
+        flux_errn = -self.data["Unc_Flux_History"][:, 0]
+        flux_errp = self.data["Unc_Flux_History"][:, 1]
+
+        # Really the time binning is stored in a separate HDU in the FITS
+        # catalog file called `Hist_Start`, with a single column `Hist_Start`
+        # giving the time binning in MET (mission elapsed time)
+        # This is not available here for now.
+        # TODO: read that info in `SourceCatalog3FGL` and pass it down to the
+        # `SourceCatalogObject3FGL` object somehow.
+
+        # For now, we just hard-code the start and stop time and assume
+        # equally-spaced time intervals. This is roughly correct,
+        # for plotting the difference doesn't matter, only for analysis
+        time_start = Time("2008-08-04T15:43:36.0000")
+        time_end = Time("2016-08-02T05:44:11.9999")
+        n_points = len(flux)
+        time_step = (time_end - time_start) / n_points
+        time_bounds = time_start + np.arange(n_points + 1) * time_step
+
+        table = Table(
+            [
+                Column(time_bounds[:-1].utc.mjd, "time_min"),
+                Column(time_bounds[1:].utc.mjd, "time_max"),
+                Column(flux, "flux"),
+                Column(flux_errp, "flux_errp"),
+                Column(flux_errn, "flux_errn"),
+            ]
+        )
+        return LightCurve(table)
 
 
 class SourceCatalogObject3FGL(SourceCatalogObject):
@@ -646,7 +687,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         ss += "{:<15s} : {:.3f}\n".format("Variability index", d["Variability_Index"])
 
-        if d["Signif_Peak"] == np.nan:
+        if np.isfinite(d["Flux_Peak"]):
             ss += "{:<40s} : {:.3f}\n".format(
                 "Significance peak (100 MeV - 100 GeV)", d["Signif_Peak"]
             )
