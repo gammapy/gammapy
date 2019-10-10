@@ -36,7 +36,9 @@ class MapDatasetMaker:
     migra_axis : `~gammapy.maps.MapAxis`
         Migration axis for edisp map
     rad_axis : `~gammapy.maps.MapAxis`
-        Radial axis for psf map
+        Radial axis for psf map.
+    cutout : bool
+        Whether to cutout the observation.
     """
 
     def __init__(
@@ -90,12 +92,36 @@ class MapDatasetMaker:
         return geom_edisp
 
     def make_counts(self, observation):
+        """Make counts map.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        counts : `Map`
+            Counts map.
+        """
         geom = self._cutout_geom(self.geom, observation)
         counts = Map.from_geom(geom)
         fill_map_counts(counts, observation.events)
         return counts
 
     def make_exposure(self, observation):
+        """Make exposure map.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        exposure : `Map`
+            Exposure map.
+        """
         geom = self._cutout_geom(self.geom_exposure, observation)
         exposure = make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
@@ -107,6 +133,18 @@ class MapDatasetMaker:
 
     @lru_cache(maxsize=1)
     def make_exposure_irf(self, observation):
+        """Make exposure map with irf geometry.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        exposure : `Map`
+            Exposure map.
+        """
         geom = self._cutout_geom(self.geom_true, observation)
         exposure = make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
@@ -117,6 +155,18 @@ class MapDatasetMaker:
         return exposure
 
     def make_background(self, observation):
+        """Make background map.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        background : `Map`
+            Background map.
+        """
         geom = self._cutout_geom(self.geom, observation)
 
         bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "ALTAZ")
@@ -139,6 +189,18 @@ class MapDatasetMaker:
         return background
 
     def make_edisp(self, observation):
+        """Make edisp map.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        edisp : `EdispMap`
+            Edisp map.
+        """
         geom = self._cutout_geom(self.geom_edisp, observation)
 
         exposure = self.make_exposure_irf(observation)
@@ -153,6 +215,18 @@ class MapDatasetMaker:
         return edisp
 
     def make_psf(self, observation):
+        """Make psf map.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        psf : `PSFMap`
+            Psf map.
+        """
         psf = observation.psf
         geom = self._cutout_geom(self.geom_psf, observation)
 
@@ -172,12 +246,36 @@ class MapDatasetMaker:
 
     @lru_cache(maxsize=1)
     def make_mask_safe(self, observation):
+        """Make offset mask.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        mask : `~numpy.ndarray`
+            Mask
+        """
         geom = self._cutout_geom(self.geom, observation)
         offset = geom.separation(observation.pointing_radec)
         return offset >= self.offset_max
 
     @lru_cache(maxsize=1)
     def make_mask_safe_irf(self, observation):
+        """Make offset mask with irf geometry.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        mask : `~numpy.ndarray`
+            Mask
+        """
         geom = self._cutout_geom(self.geom_true, observation)
         offset = geom.separation(observation.pointing_radec)
         return offset >= self.offset_max
@@ -216,6 +314,8 @@ class MapDatasetMaker:
 
         if "counts" in selection:
             counts = self.make_counts(observation)
+            # TODO: remove masking out the values here and instead handle the safe mask only when
+            #  fitting and / or stacking datasets?
             counts.data[..., mask_safe] = 0
             kwargs["counts"] = counts
 
