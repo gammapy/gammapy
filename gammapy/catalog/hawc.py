@@ -2,7 +2,12 @@
 """HAWC catalogs (https://www.hawc-observatory.org)."""
 import numpy as np
 from astropy.table import Table
-from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.modeling.models import (
+    PowerLawSpectralModel,
+    SkyModel,
+    DiskSpatialModel,
+    PointSpatialModel,
+)
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -132,9 +137,53 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
         return models
 
-    # TODO: add spatial models
+    def _get_spatial_model(self, idx):
+        d = self.data
+        label = f"spec{idx}_"
 
-    # TODO: add sky model property
+        r_0 = d[label + "radius"]
+        if r_0 != 0.0:
+            model = DiskSpatialModel(d["glon"], d["glat"], r_0, frame="galactic")
+        else:
+            model = PointSpatialModel(d["glon"], d["glon"], frame="galactic")
+
+        return model
+
+    @property
+    def spatial_models(self):
+        """Spatial models (either one or two).
+
+        The HAWC catalog has one or two tested radius for each source.
+
+        Returns
+        -------
+        models : list
+            List of `~gammapy.modeling.models.SpatialModel`
+        """
+        models = [self._get_spatial_model(0)]
+
+        if self.n_spectra == 2:
+            models.append(self._get_spatial_model(1))
+
+        return models
+
+    @property
+    def sky_models(self):
+        """Sky models (either one or two).
+
+        The HAWC catalog has one or two models for each source.
+
+        Returns
+        -------
+        models : list
+            List of `~gammapy.modeling.models.SkyModel`
+        """
+        sky_models = []
+        for km in range(self.n_spectra):
+            spatial_model = self.spatial_models[km]
+            spectral_model = self.spectral_models[km]
+            sky_models.append(SkyModel(spatial_model, spectral_model, name=self.name))
+        return sky_models
 
 
 class SourceCatalog2HWC(SourceCatalog):

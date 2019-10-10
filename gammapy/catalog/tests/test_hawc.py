@@ -5,6 +5,7 @@ import astropy.units as u
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import SourceCatalog2HWC
 from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.modeling.models import DiskSpatialModel, PointSpatialModel
 
 SOURCES = [
     {"idx": 0, "name": "2HWC J0534+220", "str_ref_file": "data/2hwc_j0534+220.txt"},
@@ -81,3 +82,33 @@ class TestSourceCatalogObject2HWC:
         assert_allclose(flux.value, 3.3381204455973463e-13)
         assert flux_err.unit == "cm-2 s-1"
         assert_allclose(flux_err.value, 4.697084075095061e-14)
+
+    @staticmethod
+    @requires_dependency("uncertainties")
+    def test_spatial_models_one(cat):
+        source = cat[0]
+        assert source.n_spectra == 1
+
+        spatial_models = source.spatial_models
+        assert len(spatial_models) == 1
+
+    @staticmethod
+    @requires_dependency("uncertainties")
+    def test_spatial_models_two(cat):
+        # This test is just to check that sources with 2 spectra also work OK.
+        source = cat[1]
+        assert source.n_spectra == 2
+
+        spatial_models = source.spatial_models
+        sky_models = source.sky_models
+        assert len(spatial_models) == 2
+        assert len(sky_models) == 2
+
+        model0 = spatial_models[0]
+        model1 = spatial_models[1]
+        assert isinstance(model0, PointSpatialModel)
+        assert isinstance(model1, DiskSpatialModel)
+
+        assert_allclose(model1.lon_0.value, 195.614)
+        assert_allclose(model1.lat_0.value, 3.507)
+        assert_allclose(model1.r_0.value, 2.0)
