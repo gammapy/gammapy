@@ -52,12 +52,16 @@ class TestSourceCatalogObject2HWC:
 
     @staticmethod
     @requires_dependency("uncertainties")
-    def test_spectral_models_one(cat):
+    def test_sky_models_one(cat):
         source = cat[0]
-        assert source.n_spectra == 1
+        assert source.n_models == 1
+        sky_models = source.sky_models
+        assert len(sky_models) == 1
 
-        spectral_models = source.spectral_models
+        spectral_models = [model.spectral_model for model in sky_models]
         assert len(spectral_models) == 1
+        spatial_models = [model.spatial_model for model in sky_models]
+        assert len(spatial_models) == 1
 
         e_min, e_max = [1, 10] * u.TeV
         flux, flux_err = spectral_models[0].integral_error(e_min, e_max)
@@ -68,13 +72,17 @@ class TestSourceCatalogObject2HWC:
 
     @staticmethod
     @requires_dependency("uncertainties")
-    def test_spectral_models_two(cat):
+    def test_sky_models_two(cat):
         # This test is just to check that sources with 2 spectra also work OK.
         source = cat[1]
-        assert source.n_spectra == 2
+        assert source.n_models == 2
+        sky_models = source.sky_models
+        assert len(sky_models) == 2
 
-        spectral_models = source.spectral_models
+        spectral_models = [model.spectral_model for model in sky_models]
         assert len(spectral_models) == 2
+        spatial_models = [model.spatial_model for model in sky_models]
+        assert len(spatial_models) == 2
 
         e_min, e_max = [1, 10] * u.TeV
         flux, flux_err = spectral_models[1].integral_error(e_min, e_max)
@@ -83,30 +91,8 @@ class TestSourceCatalogObject2HWC:
         assert flux_err.unit == "cm-2 s-1"
         assert_allclose(flux_err.value, 4.697084075095061e-14)
 
-    @staticmethod
-    @requires_dependency("uncertainties")
-    def test_spatial_models_one(cat):
-        source = cat[0]
-        assert source.n_spectra == 1
-
-        spatial_models = source.spatial_models
-        assert len(spatial_models) == 1
-
-    @staticmethod
-    @requires_dependency("uncertainties")
-    def test_spatial_models_two(cat):
-        # This test is just to check that sources with 2 spectra also work OK.
-        source = cat[1]
-        assert source.n_spectra == 2
-
-        spatial_models = source.spatial_models
-        sky_models = source.sky_models
-        assert len(spatial_models) == 2
-        assert len(sky_models) == 2
-
-        model0 = spatial_models[0]
         model1 = spatial_models[1]
-        assert isinstance(model0, PointSpatialModel)
+        assert isinstance(spatial_models[0], PointSpatialModel)
         assert isinstance(model1, DiskSpatialModel)
 
         assert_allclose(model1.lon_0.value, 195.614)

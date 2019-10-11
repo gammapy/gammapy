@@ -91,7 +91,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         ss = "\n*** Spectral info ***\n\n"
         ss += self._info_spectrum_one(d, 0)
 
-        if self.n_spectra == 2:
+        if self.n_models == 2:
             ss += self._info_spectrum_one(d, 1)
         else:
             ss += "No second spectrum available for this source"
@@ -99,7 +99,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         return ss
 
     @property
-    def n_spectra(self):
+    def n_models(self):
         """Number of measured spectra (1 or 2)."""
         return 1 if np.isnan(self.data["spec1_dnde"]) else 2
 
@@ -120,7 +120,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         return model
 
     @property
-    def spectral_models(self):
+    def _spectral_models(self):
         """Spectral models (either one or two).
 
         The HAWC catalog has one or two spectral measurements for each source.
@@ -132,7 +132,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """
         models = [self._get_spectral_model(0)]
 
-        if self.n_spectra == 2:
+        if self.n_models == 2:
             models.append(self._get_spectral_model(1))
 
         return models
@@ -150,7 +150,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         return model
 
     @property
-    def spatial_models(self):
+    def _spatial_models(self):
         """Spatial models (either one or two).
 
         The HAWC catalog has one or two tested radius for each source.
@@ -162,7 +162,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """
         models = [self._get_spatial_model(0)]
 
-        if self.n_spectra == 2:
+        if self.n_models == 2:
             models.append(self._get_spatial_model(1))
 
         return models
@@ -172,16 +172,19 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """Sky models (either one or two).
 
         The HAWC catalog has one or two models for each source.
-
+        The radius of secondary model is a rough estimate based on the residual excess 
+        above the point source model. This radius should not be regarded as a definite 
+        measurement of the source extent.
+        
         Returns
         -------
         models : list
             List of `~gammapy.modeling.models.SkyModel`
         """
         sky_models = []
-        for km in range(self.n_spectra):
-            spatial_model = self.spatial_models[km]
-            spectral_model = self.spectral_models[km]
+        for km in range(self.n_models):
+            spatial_model = self._spatial_models[km]
+            spectral_model = self._spectral_models[km]
             sky_models.append(SkyModel(spatial_model, spectral_model, name=self.name))
         return sky_models
 
