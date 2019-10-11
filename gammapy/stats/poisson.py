@@ -168,8 +168,8 @@ def significance(n_on, mu_bkg, method="lima", n_on_min=1):
     It is given by the following formula:
 
     .. math::
-        S_{lima} = \left[
-          2 n_{on} \log \left( \frac{n_{on}}{\mu_{bkg}} \right) - n_{on} + \mu_{bkg}
+        S_{lima} = \sqrt{2} \left[
+          n_{on} \log \left( \frac{n_{on}}{\mu_{bkg}} \right) - n_{on} + \mu_{bkg}
         \right] ^ {1/2}
 
     For ``method="simple"``, the significance estimate is given by:
