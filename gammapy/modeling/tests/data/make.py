@@ -5,14 +5,11 @@
 from pathlib import Path
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDataset, MapDatasetMaker, PSFKernel
+from gammapy.cube import MapDataset, MapDatasetMaker
 from gammapy.data import DataStore
-from gammapy.irf import make_mean_edisp, make_mean_psf
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling import Datasets
 from gammapy.modeling.models import (
-    BackgroundModel,
     ExpCutoffPowerLawSpectralModel,
     GaussianSpatialModel,
     PointSpatialModel,
@@ -99,9 +96,10 @@ def make_datasets_example():
         stacked = MapDataset.create(geom=geom)
         stacked.background_model.name = "background_irf_" + names[idx]
 
+        maker = MapDatasetMaker(geom=geom, offset_max=4.0 * u.deg)
+
         for obs in observations:
-            maker = MapDatasetMaker(observation=obs, geom=geom, offset_max=4.0 * u.deg)
-            dataset = maker.run()
+            dataset = maker.run(obs)
             stacked.stack(dataset)
 
         stacked.psf = stacked.psf.get_psf_kernel(position=geom.center_skydir, geom=geom, max_radius="0.3 deg")

@@ -237,7 +237,7 @@ class MapDatasetMaker:
         geom = self._cutout_geom(self.geom_psf, observation)
 
         if isinstance(psf, EnergyDependentMultiGaussPSF):
-            psf = psf.to_psf3d()
+            psf = psf.to_psf3d(rad=self.rad_axis.center)
 
         exposure = self.make_exposure_irf(observation)
 
