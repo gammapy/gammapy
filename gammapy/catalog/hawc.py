@@ -172,10 +172,10 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """Sky models (either one or two).
 
         The HAWC catalog has one or two models for each source.
-        The radius of secondary model is a rough estimate based on the residual excess 
-        above the point source model. This radius should not be regarded as a definite 
+        The radius of secondary model is a rough estimate based on the residual excess
+        above the point source model. This radius should not be regarded as a definite
         measurement of the source extent.
-        
+
         Returns
         -------
         models : list
