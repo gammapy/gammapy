@@ -1422,13 +1422,23 @@ class AbsorbedSpectralModel(SpectralModel):
         parameter value for absorption model
     parameter_name : str, optional
         parameter name
+    alpha_norm: float
+        Norm of the EBL model, by default 1.
+    alpha_norm_frozen: bool
+        False if you want to have it as a free parameter
     """
 
     __slots__ = ["spectral_model", "absorption", "parameter", "parameter_name"]
     tag = "AbsorbedSpectralModel"
 
     def __init__(
-        self, spectral_model, absorption, parameter, parameter_name="redshift"
+        self,
+        spectral_model,
+        absorption,
+        parameter,
+        parameter_name="redshift",
+        alpha_norm=1.0,
+        alpha_norm_frozen=True,
     ):
         self.spectral_model = spectral_model
         self.absorption = absorption
@@ -1440,6 +1450,8 @@ class AbsorbedSpectralModel(SpectralModel):
 
         parameters = spectral_model.parameters.parameters.copy()
         parameters.append(par)
+        self.alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=alpha_norm_frozen)
+        parameters.append(self.alpha_norm)
 
         super().__init__(parameters)
 
@@ -1449,9 +1461,11 @@ class AbsorbedSpectralModel(SpectralModel):
         # since it does not belong to the spectral model
         parameter = kwargs[self.parameter_name]
         del kwargs[self.parameter_name]
+        del kwargs["alpha_norm"]
 
         flux = self.spectral_model.evaluate(energy=energy, **kwargs)
         absorption = self.absorption.evaluate(energy=energy, parameter=parameter)
+        absorption = np.power(absorption, self.alpha_norm.value)
         return flux * absorption
 
     def to_dict(self):

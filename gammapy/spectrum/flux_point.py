@@ -1289,13 +1289,15 @@ class FluxPointsDataset(Dataset):
         residuals[fp.is_ul] = np.nan
         return residuals
 
-    def peek(self, method="diff/model", **kwargs):
+    def peek(self, method="diff/model", plot_error=True, **kwargs):
         """Plot flux points, best fit model and residuals.
 
         Parameters
         ----------
         method : {"diff", "diff/model", "diff/sqrt(model)"}
             Method used to compute the residuals, see `MapDataset.residuals()`
+        plot_error : bool
+            False to not plot the errors of the model since for some of them it is not handle yet properly in Gammapy
         """
         from matplotlib.gridspec import GridSpec
         import matplotlib.pyplot as plt
@@ -1303,7 +1305,7 @@ class FluxPointsDataset(Dataset):
         gs = GridSpec(7, 1)
 
         ax_spectrum = plt.subplot(gs[:5, :])
-        self.plot_spectrum(ax=ax_spectrum, **kwargs)
+        self.plot_spectrum(ax=ax_spectrum, plot_error=plot_error, **kwargs)
 
         ax_spectrum.set_xticks([])
 
@@ -1381,7 +1383,9 @@ class FluxPointsDataset(Dataset):
         ax.set_ylim(-y_max, y_max)
         return ax
 
-    def plot_spectrum(self, ax=None, fp_kwargs=None, model_kwargs=None):
+    def plot_spectrum(
+        self, ax=None, fp_kwargs=None, plot_error=True, model_kwargs=None
+    ):
         """
         Plot spectrum including flux points and model.
 
@@ -1393,6 +1397,8 @@ class FluxPointsDataset(Dataset):
             Keyword arguments passed to `FluxPoints.plot`.
         model_kwargs : dict
             Keywords passed to `SpectralModel.plot` and `SpectralModel.plot_error`
+        plot_error : bool
+            False to not plot the errors of the model since for some of them it is not handle yet properly in Gammapy
 
         Returns
         -------
@@ -1426,7 +1432,8 @@ class FluxPointsDataset(Dataset):
         plot_kwargs.setdefault("color", ax.lines[-1].get_color())
         del plot_kwargs["label"]
 
-        if self.model.parameters.covariance is not None:
+        # TODO: remove this plot error option when there is a better manipulation of uncertainties
+        if self.model.parameters.covariance is not None and plot_error:
             self.model.plot_error(ax=ax, **plot_kwargs)
 
         # format axes
