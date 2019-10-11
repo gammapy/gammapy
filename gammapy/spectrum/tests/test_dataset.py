@@ -140,6 +140,7 @@ class TestSpectrumDataset:
         assert empty_dataset.livetime.value == 0
         assert len(empty_dataset.gti.table) == 0
         assert empty_dataset.energy_range[0] is None
+        assert_allclose(empty_dataset.mask_safe, 0)
 
     def test_spectrum_dataset_stack_diagonal_safe_mask(self):
         aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
