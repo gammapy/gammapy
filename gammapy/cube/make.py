@@ -38,7 +38,10 @@ class MapDatasetMaker:
     rad_axis : `~gammapy.maps.MapAxis`
         Radial axis for psf map.
     cutout : bool
-        Whether to cutout the observation.
+         Whether to cutout the observation.
+    cutout_mode : {'trim', 'partial', 'strict'}
+        Mode option for cutting out the observation,
+        for details see `~astropy.nddata.utils.Cutout2D`.
     """
 
     def __init__(
@@ -49,22 +52,25 @@ class MapDatasetMaker:
         background_oversampling=None,
         migra_axis=None,
         rad_axis=None,
-        cutout=True,
+        cutout_mode="trim",
+        cutout=True
     ):
-        self.cutout = cutout
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom.to_binsz(BINSZ_IRF)
         self.offset_max = Angle(offset_max)
         self.background_oversampling = background_oversampling
         self.migra_axis = migra_axis if migra_axis else MIGRA_AXIS_DEFAULT
         self.rad_axis = rad_axis if rad_axis else RAD_AXIS_DEFAULT
+        self.cutout_mode = cutout_mode
+        self.cutout_width = 2 * self.offset_max
+        self.cutout = cutout
 
     def _cutout_geom(self, geom, observation):
         if self.cutout:
             cutout_kwargs = {
                 "position": observation.pointing_radec,
-                "width": 2 * self.offset_max,
-                "mode": "trim",
+                "width": self.cutout_width,
+                "mode": self.cutout_mode,
             }
             return geom.cutout(**cutout_kwargs)
         else:
