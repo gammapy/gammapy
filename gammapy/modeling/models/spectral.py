@@ -1410,7 +1410,22 @@ class Absorption:
 
 
 class AbsorbedSpectralModel(SpectralModel):
-    """Spectral model with EBL absorption.
+    r"""Spectral model with EBL absorption.
+       The absorption of the EBL is described as:
+
+    .. math::
+        \exp{ \left ( -\alpha \times \tau(E,z) \right )}
+
+    where tau(E,z) is the optical depth predicted by the model (`~gammapy.modeling.models.Absorption`), which depends
+    on the energy of the gamma-rays and the redshift z of the source. The class `~gammapy.modeling.models.Absorption`
+    computes this correction
+
+    .. math:: \exp{ \left ( - \tau(E,z) \right )}
+
+    With the optical depth scaled by a factor alpha, the observed spectrum is formed as
+
+    .. math::
+        \mathrm{spectral \, model} \times \exp{ \left ( -\alpha \times \tau(E,z) \right )}
 
     Parameters
     ----------
@@ -1424,8 +1439,6 @@ class AbsorbedSpectralModel(SpectralModel):
         parameter name
     alpha_norm: float
         Norm of the EBL model, by default 1.
-    alpha_norm_frozen: bool
-        False if you want to have it as a free parameter
     """
 
     __slots__ = ["spectral_model", "absorption", "parameter", "parameter_name"]
@@ -1438,7 +1451,6 @@ class AbsorbedSpectralModel(SpectralModel):
         parameter,
         parameter_name="redshift",
         alpha_norm=1.0,
-        alpha_norm_frozen=True,
     ):
         self.spectral_model = spectral_model
         self.absorption = absorption
@@ -1447,11 +1459,9 @@ class AbsorbedSpectralModel(SpectralModel):
         min_ = self.absorption.param.min()
         max_ = self.absorption.param.max()
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
-
+        self.alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
         parameters = spectral_model.parameters.parameters.copy()
-        parameters.append(par)
-        self.alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=alpha_norm_frozen)
-        parameters.append(self.alpha_norm)
+        parameters.extend([par, self.alpha_norm])
 
         super().__init__(parameters)
 

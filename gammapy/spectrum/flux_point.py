@@ -1297,7 +1297,7 @@ class FluxPointsDataset(Dataset):
         method : {"diff", "diff/model", "diff/sqrt(model)"}
             Method used to compute the residuals, see `MapDataset.residuals()`
         plot_error : bool
-            False to not plot the errors of the model since for some of them it is not handle yet properly in Gammapy
+            False to not plot the error band of the model
         """
         from matplotlib.gridspec import GridSpec
         import matplotlib.pyplot as plt
@@ -1398,7 +1398,7 @@ class FluxPointsDataset(Dataset):
         model_kwargs : dict
             Keywords passed to `SpectralModel.plot` and `SpectralModel.plot_error`
         plot_error : bool
-            False to not plot the errors of the model since for some of them it is not handle yet properly in Gammapy
+            False to not plot the error band of the model
 
         Returns
         -------

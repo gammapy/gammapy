@@ -130,8 +130,8 @@ def test_datasets_to_io(tmpdir):
     assert dataset0.model.skymodels[1].name == "gll_iem_v06_cutout"
 
     assert (
-            dataset0.model.skymodels[0].parameters["reference"]
-            is dataset1.model.skymodels[1].parameters["reference"]
+        dataset0.model.skymodels[0].parameters["reference"]
+        is dataset1.model.skymodels[1].parameters["reference"]
     )
 
     assert_allclose(
