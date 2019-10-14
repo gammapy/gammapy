@@ -52,7 +52,7 @@ class SpectrumDataset(Dataset):
     """
 
     likelihood_type = "cash"
-    tag = "SpectrumDataset" 
+    tag = "SpectrumDataset"
     def __init__(
         self,
         model=None,

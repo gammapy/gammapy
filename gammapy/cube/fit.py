@@ -696,7 +696,7 @@ class MapDataset(Dataset):
         if"likelihood" in data:
             dataset.likelihood_type = data["likelihood"]
         return dataset
-    
+
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
         return {
