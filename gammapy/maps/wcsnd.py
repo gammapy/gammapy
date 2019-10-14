@@ -669,24 +669,42 @@ class WcsNDMap(WcsMap):
         cutout : `~gammapy.maps.WcsNDMap`
             Cutout map
         """
-        width = _check_width(width)
-        idx = (0,) * len(self.geom.axes)
-        c2d = Cutout2D(
-            data=self.data[idx],
-            wcs=self.geom.wcs,
-            position=position,
-            # Cutout2D takes size with order (lat, lon)
-            size=width[::-1] * u.deg,
-            mode=mode,
-        )
+        geom_cutout = self.geom.cutout(position=position, width=width, mode=mode)
 
-        # Create the slices with the non-spatial axis
-        cutout_slices = Ellipsis, c2d.slices_original[0], c2d.slices_original[1]
+        slices = geom_cutout.cutout_info["parent-slices"]
+        cutout_slices = Ellipsis, slices[0], slices[1]
 
-        geom = WcsGeom(c2d.wcs, c2d.shape[::-1], axes=self.geom.axes)
         data = self.data[cutout_slices]
 
-        return self._init_copy(geom=geom, data=data)
+        return self._init_copy(geom=geom_cutout, data=data)
+
+    def stack(self, other, weights=None):
+        """Stack cutout into map.
+
+        Parameters
+        ----------
+        other : `WcsNDMap`
+            Other map to stack
+        weights : `~numpy.ndarray`
+            Array to be used as weights.
+        """
+        if self.geom == other.geom:
+            parent_slices, cutout_slices = None, None
+        elif other.geom.cutout_info is not None and self.geom == other.geom.cutout_info["parent-geom"]:
+            slices = other.geom.cutout_info["parent-slices"]
+            parent_slices = Ellipsis, slices[0], slices[1]
+
+            slices = other.geom.cutout_info["cutout-slices"]
+            cutout_slices = Ellipsis, slices[0], slices[1]
+        else:
+            raise ValueError("Can only stack equivalent maps or cutout of the same map.")
+
+        data = other.data[cutout_slices]
+
+        if weights is not None:
+            data = data * weights
+
+        self.data[parent_slices] += data
 
     def sample_coord(self, n_events, random_state=0):
         """Sample position and energy of events.

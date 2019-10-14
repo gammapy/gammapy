@@ -179,13 +179,15 @@ class WcsGeom(Geom):
         Reference pixel coordinate in each image plane.
     axes : list
         Axes for non-spatial dimensions
+    cutout_info : dict
+        Dict with cutout info, if the `WcsGeom` was created by `WcsGeom.cutout()`
     """
 
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, None)
     is_hpx = False
 
-    def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None):
+    def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, cutout_info=None):
         self._wcs = wcs
         self._coordsys = get_coordys(wcs)
         self._projection = get_projection(wcs)
@@ -204,6 +206,7 @@ class WcsGeom(Geom):
             crpix = tuple(1.0 + (np.array(self._npix) - 1.0) / 2.0)
 
         self._crpix = crpix
+        self._cutout_info = cutout_info
 
     @property
     def data_shape(self):
@@ -239,6 +242,11 @@ class WcsGeom(Geom):
         Galactic ('GAL') or Equatorial ('CEL').
         """
         return self._coordsys
+
+    @property
+    def cutout_info(self):
+        """Cutout info dict."""
+        return self._cutout_info
 
     @property
     def projection(self):
@@ -695,13 +703,26 @@ class WcsGeom(Geom):
     def to_image(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
-        return self.__class__(self._wcs, npix, cdelt=cdelt)
+
+        if self.cutout_info:
+            cutout_info = self.cutout_info.copy()
+            cutout_info["parent-geom"] = cutout_info["parent-geom"].to_image()
+        else:
+            cutout_info = None
+        return self.__class__(self._wcs, npix, cdelt=cdelt, cutout_info=cutout_info)
 
     def to_cube(self, axes):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
         axes = copy.deepcopy(self.axes) + axes
-        return self.__class__(self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes)
+
+        if self.cutout_info:
+            cutout_info = self.cutout_info.copy()
+            cutout_info["parent-geom"] = cutout_info["parent-geom"].to_cube(axes)
+        else:
+            cutout_info = None
+
+        return self.__class__(self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes, cutout_info=cutout_info)
 
     def pad(self, pad_width):
         if np.isscalar(pad_width):
@@ -880,7 +901,13 @@ class WcsGeom(Geom):
             mode=mode,
         )
 
-        return self._init_copy(wcs=c2d.wcs, npix=c2d.shape[::-1])
+        cutout_info = {
+            "parent-geom": self,
+            "parent-slices": c2d.slices_original,
+            "cutout-slices": c2d.slices_cutout
+        }
+
+        return self._init_copy(wcs=c2d.wcs, npix=c2d.shape[::-1], cutout_info=cutout_info)
 
     def region_mask(self, regions, inside=True):
         """Create a mask from a given list of regions

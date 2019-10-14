@@ -225,7 +225,7 @@ class MapDataset(Dataset):
                 evaluator = MapEvaluator(
                     component, evaluation_mode=self.evaluation_mode
                 )
-                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+                evaluator.update(self.exposure, self.psf, self.edisp)
                 evaluators.append(evaluator)
 
             self._evaluators = evaluators
@@ -273,15 +273,10 @@ class MapDataset(Dataset):
                 # if the model component drifts out of its support the evaluator has
                 # has to be updated
                 if evaluator.needs_update:
-                    evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+                    evaluator.update(self.exposure, self.psf, self.edisp)
 
                 npred = evaluator.compute_npred()
-
-                # avoid slow fancy indexing, when the shape is equivalent
-                if npred.data.shape == npred_total.data.shape:
-                    npred_total += npred.data
-                else:
-                    npred_total.data[evaluator.coords_idx] += npred.data
+                npred_total.stack(npred)
 
         return npred_total
 
@@ -294,6 +289,7 @@ class MapDataset(Dataset):
         rad_axis=None,
         reference_time="2000-01-01",
         name="",
+        **kwargs
     ):
         """Creates a MapDataset object with zero filled maps
 
@@ -348,6 +344,7 @@ class MapDataset(Dataset):
             gti=gti,
             mask_safe=mask_safe,
             name=name,
+            **kwargs
         )
 
     def stack(self, other):
@@ -360,23 +357,24 @@ class MapDataset(Dataset):
         """
         if self.counts and other.counts:
             self.counts.data[~self.mask_safe] = 0
-            self.counts.coadd(other.counts, weights=other.mask_safe)
+            self.counts.stack(other.counts, weights=other.mask_safe)
 
         if self.exposure and other.exposure:
-            self.exposure.coadd(other.exposure)
+            self.exposure.stack(other.exposure)
 
         if self.background_model and other.background_model:
             bkg = self.background_model.evaluate()
             bkg.data[~self.mask_safe] = 0
             other_bkg = other.background_model.evaluate()
             other_bkg.data[~other.mask_safe] = 0
-            bkg.coadd(other_bkg)
+            bkg.stack(other_bkg)
             self.background_model = BackgroundModel(bkg, name=self.background_model.name)
 
         if self.mask_safe is not None and other.mask_safe is not None:
+            # TODO: make mask_safe a Map object
             mask_safe = Map.from_geom(self.counts.geom, data=self.mask_safe)
             mask_safe_other = Map.from_geom(other.counts.geom, data=other.mask_safe)
-            mask_safe.coadd(mask_safe_other)
+            mask_safe.stack(mask_safe_other)
             self.mask_safe = mask_safe.data
 
         if self.psf and other.psf:
@@ -858,7 +856,7 @@ class MapEvaluator:
             update = separation > (self.model.evaluation_radius + CUTOUT_MARGIN)
         return update
 
-    def update(self, exposure, psf, edisp, geom):
+    def update(self, exposure, psf, edisp):
         """Update MapEvaluator, based on the current position of the model component.
 
         Parameters
@@ -869,8 +867,6 @@ class MapEvaluator:
             PSF map.
         edisp : `gammapy.cube.EDispMap`
             Edisp map.
-        geom : `gammapy.maps.Geom`
-            Reference geometry of the data.
         """
         log.debug("Updating model evaluator")
         # cache current position of the model component
@@ -898,11 +894,6 @@ class MapEvaluator:
                     f"Position {self.model.position!r} of model component is outside the image boundaries."
                     " Please check the starting values or position parameter boundaries of the model."
                 )
-
-            coords = self.exposure.geom.to_image().get_coord()
-            idx_x, idx_y = geom.to_image().coord_to_idx(coords)
-            self.coords_idx = (Ellipsis, idx_y, idx_x)
-
         else:
             self.exposure = exposure
 
