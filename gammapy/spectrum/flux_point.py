@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.modeling import Dataset, Datasets, Fit
-from gammapy.modeling.models import PowerLawSpectralModel, ScaleSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, ScaleSpectralModel, SkyModels
 from gammapy.utils.interpolation import interpolate_likelihood_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -1175,14 +1175,6 @@ class FluxPointsDataset(Dataset):
                 " either 'chi2' or 'chi2assym'"
             )
 
-    @classmethod
-    def read(cls, filename, name="", **kwargs):
-        table = Table.read(str(filename), **kwargs)
-        return cls(model=None,
-                   data=table["dnde"],
-                   mask_fit=table["mask_fit"],
-                   mask_safe=table["mask_safe"],
-                   name=name)
     
     def write(self, filename, overwrite=True, **kwargs):
         table = self.data.table.copy()
@@ -1197,14 +1189,17 @@ class FluxPointsDataset(Dataset):
 
     @classmethod
     def from_dict(cls, data, components, models):
-        dataset = cls.read(data["filename"], name=data["name"])
         models_list = [model for model in models if model.name in data["models"]]
-        dataset.model = models_list
-        dataset.likelihood_type = data["likelihood"]
         # TODO: assumes that the model is a skymodel
         # so this will work only when this change will be effective
-        return dataset
-
+        table = Table.read(data["filename"])
+        return cls(model=SkyModels(models_list),
+                   name=data["name"],
+                   data=table["dnde"],
+                   mask_fit=table["mask_fit"],
+                   mask_safe=table["mask_safe"].data.astype("bool"),
+                   likelihood=data["likelihood"])
+        
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
         return {
