@@ -149,7 +149,7 @@ def list_to_compound_region(regions):
     region_union = regions[0]
 
     for region in regions[1:]:
-        region_union.union(region)
+        region_union = region_union.union(region)
 
     return region_union
 

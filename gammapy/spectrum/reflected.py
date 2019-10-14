@@ -6,6 +6,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import PixCoord
 from gammapy.maps import Map, WcsGeom, WcsNDMap
 from gammapy.maps.geom import frame_to_coordsys
+from gammapy.utils.regions import list_to_compound_region
 from .background_estimate import BackgroundEstimate
 from .core import CountsSpectrum
 from .dataset import SpectrumDatasetOnOff
@@ -322,9 +323,7 @@ class ReflectedRegionsBackgroundEstimator:
         if a_off == 0:
             off_events = obs.events.select_row_subset([])
         else:
-            off_regions = off_region[0]
-            for reg in off_region[1:]:
-                off_regions = off_regions.union(reg)
+            off_regions = list_to_compound_region(off_region)
             off_events = obs.events.select_region(off_regions, wcs)
 
         log.info(f"Found {a_off} reflected regions for the Obs #{obs.obs_id}")
