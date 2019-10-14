@@ -1168,7 +1168,7 @@ class FluxPointsDataset(Dataset):
         self.mask_safe = mask_safe
 
         if likelihood in ["chi2", "chi2assym"]:
-            self._likelihood = likelihood
+            self.likelihood_type = likelihood
         else:
             raise ValueError(
                 "'{likelihood}' is not a valid fit statistic, please choose"
@@ -1194,12 +1194,15 @@ class FluxPointsDataset(Dataset):
         table["mask_safe"]= self.mask_safe
         table.write(str(filename), overwrite=True, **kwargs)
 
+
     @classmethod
     def from_dict(cls, data, components, models):
-        dataset = cls.read(data["filename"])
-        model = [model for model in models if model.name in data["models"]]
-        dataset.model = model[0].spectral_model
-        dataset._likelihood = data["likelihood"]
+        dataset = cls.read(data["filename"], name=data["name"])
+        models_list = [model for model in models if model.name in data["models"]]
+        dataset.model = models_list
+        dataset.likelihood_type = data["likelihood"]
+        # TODO: assumes that the model is a skymodel
+        # so this will work only when this change will be effective
         return dataset
 
     def to_dict(self, filename=""):
@@ -1207,8 +1210,8 @@ class FluxPointsDataset(Dataset):
         return {
             "name": self.name,
             "type": self.tag,
-            "models": self.name,
-            "likelihood": self._likelihood,
+            "models": self.model.names,
+            "likelihood": self.likelihood_type,
             "filename": filename,
         }
 
@@ -1260,7 +1263,7 @@ class FluxPointsDataset(Dataset):
                         str_ += "\t \t {:23}:   {:.2f} {} \n".format(
                             par.name, par.value, par.unit
                         )
-            str_ += "\t{:32}:   {}\n".format("Likelihood type", self._likelihood)
+            str_ += "\t{:32}:   {}\n".format("Likelihood type", self.likelihood_type)
             str_ += "\t{:32}:   {:.2f}\n".format("Likelihood value", self.likelihood())
         return str_
 
@@ -1289,10 +1292,10 @@ class FluxPointsDataset(Dataset):
         model = self.flux_pred()
         data = self.data.table["dnde"].quantity
 
-        if self._likelihood == "chi2":
+        if self.likelihood_type == "chi2":
             sigma = self.data.table["dnde_err"].quantity
             return self._likelihood_chi2(data, model, sigma)
-        elif self._likelihood == "chi2assym":
+        elif self.likelihood_type == "chi2assym":
             sigma_n = self.data.table["dnde_errn"].quantity
             sigma_p = self.data.table["dnde_errp"].quantity
             return self._likelihood_chi2_assym(data, model, sigma_n, sigma_p)
