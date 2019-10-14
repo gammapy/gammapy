@@ -1275,6 +1275,8 @@ class ScaleSpectralModel(SpectralModel):
 class Absorption:
     r"""Gamma-ray absorption models.
 
+    Usually used as part of `AbsorbedSpectralModel`.
+
     Parameters
     ----------
     energy : `~astropy.units.Quantity`
@@ -1411,34 +1413,30 @@ class Absorption:
 
 class AbsorbedSpectralModel(SpectralModel):
     r"""Spectral model with EBL absorption.
-       The absorption of the EBL is described as:
+
+    The spectral model is evaluated, and then multiplied with an EBL
+    absorption factor given by
 
     .. math::
-        \exp{ \left ( -\alpha \times \tau(E,z) \right )}
+        \exp{ \left ( -\alpha \times \tau(E, z) \right )}
 
-    where tau(E,z) is the optical depth predicted by the model (`~gammapy.modeling.models.Absorption`), which depends
-    on the energy of the gamma-rays and the redshift z of the source. The class `~gammapy.modeling.models.Absorption`
-    computes this correction
-
-    .. math:: \exp{ \left ( - \tau(E,z) \right )}
-
-    With the optical depth scaled by a factor alpha, the observed spectrum is formed as
-
-    .. math::
-        \mathrm{spectral \, model} \times \exp{ \left ( -\alpha \times \tau(E,z) \right )}
+    where :math:`\tau(E, z)` is the optical depth predicted by the model
+    (`Absorption`), which depends on the energy
+    of the gamma-rays and the redshift z of the source, and :math:`\alpha`
+    is a scale factor (default: 1) for the optical depth.
 
     Parameters
     ----------
-    spectral_model : `~gammapy.modeling.models.SpectralModel`
+    spectral_model : `SpectralModel`
         Spectral model.
-    absorption : `~gammapy.modeling.models.Absorption`
+    absorption : `Absorption`
         Absorption model.
     parameter : float
         parameter value for absorption model
     parameter_name : str, optional
         parameter name
     alpha_norm: float
-        Norm of the EBL model, by default 1.
+        Norm of the EBL model
     """
 
     __slots__ = ["spectral_model", "absorption", "parameter", "parameter_name"]
@@ -1460,23 +1458,24 @@ class AbsorbedSpectralModel(SpectralModel):
         max_ = self.absorption.param.max()
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
         self.alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
-        parameters = spectral_model.parameters.parameters.copy()
-        parameters.extend([par, self.alpha_norm])
 
-        super().__init__(parameters)
+        super().__init__(
+            spectral_model.parameters.parameters.copy() + [par, self.alpha_norm]
+        )
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""
-        # assign redshift value and remove it from dictionnary
+        # assign redshift value and remove it from dictionary
         # since it does not belong to the spectral model
         parameter = kwargs[self.parameter_name]
         del kwargs[self.parameter_name]
         del kwargs["alpha_norm"]
 
-        flux = self.spectral_model.evaluate(energy=energy, **kwargs)
+        dnde = self.spectral_model.evaluate(energy=energy, **kwargs)
         absorption = self.absorption.evaluate(energy=energy, parameter=parameter)
+        # Power rule: (e ^ a) ^ b = e ^ (a * b)
         absorption = np.power(absorption, self.alpha_norm.value)
-        return flux * absorption
+        return dnde * absorption
 
     def to_dict(self):
         return {
