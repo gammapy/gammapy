@@ -167,8 +167,8 @@ class Datasets:
 
         components = read_yaml(filemodel)
         data_list = read_yaml(filedata)
-        constructor = dict_to_datasets(data_list, components)
-        return cls(constructor.datasets)
+        datasets = dict_to_datasets(data_list, components)
+        return cls(datasets)
 
     def to_yaml(self, path, overwrite=False):
         """Serialize datasets to YAML and FITS files.

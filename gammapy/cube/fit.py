@@ -69,7 +69,7 @@ class MapDataset(Dataset):
     gti : '~gammapy.data.GTI'
         GTI of the observation or union of GTI if it is a stacked observation
     """
-
+    tag = "MapDataset"
     def __init__(
         self,
         model=None,
@@ -371,7 +371,9 @@ class MapDataset(Dataset):
             other_bkg = other.background_model.evaluate()
             other_bkg.data[~other.mask_safe] = 0
             bkg.coadd(other_bkg)
-            self.background_model = BackgroundModel(bkg, name=self.background_model.name)
+            self.background_model = BackgroundModel(
+                bkg, name=self.background_model.name
+            )
 
         if self.mask_safe is not None and other.mask_safe is not None:
             mask_safe = Map.from_geom(self.counts.geom, data=self.mask_safe)
@@ -675,10 +677,28 @@ class MapDataset(Dataset):
         hdulist = fits.open(str(filename))
         return cls.from_hdulist(hdulist, name=name)
 
+    def update(self, data, components, models):
+        bkg_name = data["background"]
+        model_names = data["models"]
+        for component in components["components"]:
+            if component["type"] == "BackgroundModel":
+                if component["name"] == bkg_name:
+                    if "filename" not in component:
+                        component["map"] = self.background_model.map
+                    background_model = BackgroundModel.from_dict(component)
+                    self.background_model = background_model
+
+        models = [model for model in models if model.name in model_names]
+        self.model = SkyModels(models)
+        if"likelihood" in data:
+            self.likelihood_type = data["likelihood"]
+        
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
         return {
             "name": self.name,
+            "type": self.tag,
+            "likelihood": self.likelihood_type,
             "models": self.model.names,
             "background": self.background_model.name,
             "filename": filename,
