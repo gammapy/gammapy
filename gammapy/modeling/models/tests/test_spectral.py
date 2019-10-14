@@ -393,6 +393,21 @@ def test_absorption():
     )
     desired = u.Quantity(5.140765e-13, "TeV-1 s-1 cm-2")
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
+    assert model.alpha_norm.value == 1.0
+
+    # EBL + PWL model: test if norm of EBL=0: it mean model =pwl
+    model = AbsorbedSpectralModel(
+        spectral_model=pwl, absorption=absorption, alpha_norm=0, parameter=redshift
+    )
+    assert_quantity_allclose(model(1 * u.TeV), pwl(1 * u.TeV), rtol=1e-3)
+
+    # EBL + PWL model: Test with a norm different of 1
+    model = AbsorbedSpectralModel(
+        spectral_model=pwl, absorption=absorption, alpha_norm=1.5, parameter=redshift
+    )
+    desired = u.Quantity(2.739695e-13, "TeV-1 s-1 cm-2")
+    assert model.alpha_norm.value == 1.5
+    assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
 
 
 @requires_dependency("uncertainties")

@@ -1425,9 +1425,13 @@ class FluxPointsDataset(Dataset):
 
         plot_kwargs.setdefault("color", ax.lines[-1].get_color())
         del plot_kwargs["label"]
-
+        
         if self.model.parameters.covariance is not None:
-            self.model.plot_error(ax=ax, **plot_kwargs)
+            try:
+                self.model.plot_error(ax=ax, **plot_kwargs)
+            except AttributeError:
+                log.debug("Model does not support evaluation of errors")
+                pass
 
         # format axes
         ax.set_xlim(self._e_range.to_value(self._e_unit))

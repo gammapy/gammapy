@@ -163,10 +163,12 @@ def test_absorption_io(tmpdir):
     new_model = AbsorbedSpectralModel.from_dict(model_dict)
     assert new_model.parameter == 0.5
     assert new_model.parameter_name == "redshift"
+    assert new_model.alpha_norm.name == "alpha_norm"
+    assert new_model.alpha_norm.value == 1
     assert new_model.spectral_model.tag == "PowerLawSpectralModel"
     assert_allclose(new_model.absorption.energy, dominguez.energy)
     assert_allclose(new_model.absorption.param, dominguez.param)
-    assert len(new_model.parameters.parameters) == 4
+    assert len(new_model.parameters.parameters) == 5
 
     test_absorption = Absorption(
         u.Quantity(range(3), "keV"),
