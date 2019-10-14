@@ -677,22 +677,25 @@ class MapDataset(Dataset):
         hdulist = fits.open(str(filename))
         return cls.from_hdulist(hdulist, name=name)
 
-    def update(self, data, components, models):
+    @classmethod
+    def from_dict(cls, data, components, models):
+        dataset = cls.read(data["filename"], name=data["name"])
         bkg_name = data["background"]
         model_names = data["models"]
         for component in components["components"]:
             if component["type"] == "BackgroundModel":
                 if component["name"] == bkg_name:
                     if "filename" not in component:
-                        component["map"] = self.background_model.map
+                        component["map"] = dataset.background_model.map
                     background_model = BackgroundModel.from_dict(component)
-                    self.background_model = background_model
+                    dataset.background_model = background_model
 
-        models = [model for model in models if model.name in model_names]
-        self.model = SkyModels(models)
+        models_list = [model for model in models if model.name in model_names]
+        dataset.model = SkyModels(models_list)
         if"likelihood" in data:
-            self.likelihood_type = data["likelihood"]
-        
+            dataset.likelihood_type = data["likelihood"]
+        return dataset
+    
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
         return {

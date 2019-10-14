@@ -144,9 +144,8 @@ def dict_to_datasets(data_list, components):
     datasets = []
 
     for data in data_list["datasets"]:
-        dataset = DATASETS.get_cls(data["type"]).read(
-            data["filename"], name=data["name"]
+        dataset = DATASETS.get_cls(data["type"]).from_dict(
+           data, components, models
         )
-        dataset.update(data, components, models)
         datasets.append(dataset)
     return datasets
