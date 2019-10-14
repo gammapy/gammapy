@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from functools import lru_cache
+import numpy as np
 from astropy.coordinates import Angle
 from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
@@ -13,18 +15,16 @@ from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
 from .fit import MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, BINSZ_IRF, MapDataset
 from .psf_map import make_psf_map
 
-__all__ = ["MapMakerObs", "MapMakerRing"]
+__all__ = ["MapDatasetMaker", "MapMakerRing"]
 
 log = logging.getLogger(__name__)
 
 
-class MapMakerObs:
+class MapDatasetMaker:
     """Make maps for a single IACT observation.
 
     Parameters
     ----------
-    observation : `~gammapy.data.DataStoreObservation`
-        Observation
     geom : `~gammapy.maps.WcsGeom`
         Reference image geometry in reco energy, used for counts and background maps
     offset_max : `~astropy.coordinates.Angle`
@@ -33,76 +33,269 @@ class MapMakerObs:
         Reference image geometry in true energy, used for IRF maps. It can have a coarser
         spatial bins than the counts geom.
         If none, the same as geom is assumed
-    exclusion_mask : `~gammapy.maps.Map`
-        Exclusion mask (used by some background estimators)
     migra_axis : `~gammapy.maps.MapAxis`
         Migration axis for edisp map
     rad_axis : `~gammapy.maps.MapAxis`
-        Radial axis for psf map
+        Radial axis for psf map.
+    cutout : bool
+         Whether to cutout the observation.
+    cutout_mode : {'trim', 'partial', 'strict'}
+        Mode option for cutting out the observation,
+        for details see `~astropy.nddata.utils.Cutout2D`.
     """
 
     def __init__(
         self,
-        observation,
         geom,
         offset_max,
         geom_true=None,
-        exclusion_mask=None,
         background_oversampling=None,
         migra_axis=None,
         rad_axis=None,
-        cutout=True,
+        cutout_mode="trim",
+        cutout=True
     ):
-
-        cutout_kwargs = {
-            "position": observation.pointing_radec,
-            "width": 2 * Angle(offset_max),
-            "mode": "trim",
-        }
-
-        if cutout:
-            geom = geom.cutout(**cutout_kwargs)
-            if geom_true is not None:
-                geom_true = geom_true.cutout(**cutout_kwargs)
-            if exclusion_mask is not None:
-                exclusion_mask = exclusion_mask.cutout(**cutout_kwargs)
-
-        self.observation = observation
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom.to_binsz(BINSZ_IRF)
         self.offset_max = Angle(offset_max)
-        self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling
-        self.maps = {}
         self.migra_axis = migra_axis if migra_axis else MIGRA_AXIS_DEFAULT
         self.rad_axis = rad_axis if rad_axis else RAD_AXIS_DEFAULT
+        self.cutout_mode = cutout_mode
+        self.cutout_width = 2 * self.offset_max
+        self.cutout = cutout
 
-    def _fov_mask(self, coords):
-        pointing = self.observation.pointing_radec
-        offset = coords.skycoord.separation(pointing)
-        return offset >= self.offset_max
+    def _cutout_geom(self, geom, observation):
+        if self.cutout:
+            cutout_kwargs = {
+                "position": observation.pointing_radec,
+                "width": self.cutout_width,
+                "mode": self.cutout_mode,
+            }
+            return geom.cutout(**cutout_kwargs)
+        else:
+            return geom
 
     @lazyproperty
-    def fov_mask(self):
-        return self._fov_mask(self.coords)
+    def geom_exposure(self):
+        """Exposure map geom (`Geom`)"""
+        energy_axis = self.geom_true.get_axis_by_name("energy")
+        geom_exposure = self.geom.to_image().to_cube([energy_axis])
+        return geom_exposure
 
     @lazyproperty
-    def coords(self):
-        return self.geom.get_coord()
+    def geom_psf(self):
+        """PSFMap geom (`Geom`)"""
+        energy_axis = self.geom_true.get_axis_by_name("ENERGY")
+        geom_psf = self.geom_true.to_image().to_cube([self.rad_axis, energy_axis])
+        return geom_psf
 
     @lazyproperty
-    def coords_etrue(self):
-        return self.geom_true.get_coord()
+    def geom_edisp(self):
+        """EdispMap geom (`Geom`)"""
+        energy_axis = self.geom_true.get_axis_by_name("ENERGY")
+        geom_edisp = self.geom_true.to_image().to_cube([self.migra_axis, energy_axis])
+        return geom_edisp
 
-    def run(self, selection=None):
-        """Make map dataset.
-
+    def make_counts(self, observation):
+        """Make counts map.
 
         Parameters
         ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        counts : `Map`
+            Counts map.
+        """
+        geom = self._cutout_geom(self.geom, observation)
+        counts = Map.from_geom(geom)
+        fill_map_counts(counts, observation.events)
+        return counts
+
+    def make_exposure(self, observation):
+        """Make exposure map.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        exposure : `Map`
+            Exposure map.
+        """
+        geom = self._cutout_geom(self.geom_exposure, observation)
+        exposure = make_map_exposure_true_energy(
+            pointing=observation.pointing_radec,
+            livetime=observation.observation_live_time_duration,
+            aeff=observation.aeff,
+            geom=geom,
+        )
+        return exposure
+
+    @lru_cache(maxsize=1)
+    def make_exposure_irf(self, observation):
+        """Make exposure map with irf geometry.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        exposure : `Map`
+            Exposure map.
+        """
+        geom = self._cutout_geom(self.geom_true, observation)
+        exposure = make_map_exposure_true_energy(
+            pointing=observation.pointing_radec,
+            livetime=observation.observation_live_time_duration,
+            aeff=observation.aeff,
+            geom=geom,
+        )
+        return exposure
+
+    def make_background(self, observation):
+        """Make background map.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        background : `Map`
+            Background map.
+        """
+        geom = self._cutout_geom(self.geom, observation)
+
+        bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "ALTAZ")
+        if bkg_coordsys == "ALTAZ":
+            pointing = observation.fixed_pointing_info
+        elif bkg_coordsys == "RADEC":
+            pointing = observation.pointing_radec
+        else:
+            raise ValueError(
+                f"Invalid background coordinate system: {bkg_coordsys!r}\n"
+                "Options: ALTAZ, RADEC"
+            )
+        background = make_map_background_irf(
+            pointing=pointing,
+            ontime=observation.observation_time_duration,
+            bkg=observation.bkg,
+            geom=geom,
+            oversampling=self.background_oversampling,
+        )
+        return background
+
+    def make_edisp(self, observation):
+        """Make edisp map.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        edisp : `EdispMap`
+            Edisp map.
+        """
+        geom = self._cutout_geom(self.geom_edisp, observation)
+
+        exposure = self.make_exposure_irf(observation)
+
+        edisp = make_edisp_map(
+            edisp=observation.edisp,
+            pointing=observation.pointing_radec,
+            geom=geom,
+            max_offset=self.offset_max,
+            exposure_map=exposure,
+        )
+        return edisp
+
+    def make_psf(self, observation):
+        """Make psf map.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        psf : `PSFMap`
+            Psf map.
+        """
+        psf = observation.psf
+        geom = self._cutout_geom(self.geom_psf, observation)
+
+        if isinstance(psf, EnergyDependentMultiGaussPSF):
+            psf = psf.to_psf3d(rad=self.rad_axis.center)
+
+        exposure = self.make_exposure_irf(observation)
+
+        psf = make_psf_map(
+            psf=psf,
+            pointing=observation.pointing_radec,
+            geom=geom,
+            max_offset=self.offset_max,
+            exposure_map=exposure,
+        )
+        return psf
+
+    @lru_cache(maxsize=1)
+    def make_mask_safe(self, observation):
+        """Make offset mask.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        mask : `~numpy.ndarray`
+            Mask
+        """
+        geom = self._cutout_geom(self.geom, observation)
+        offset = geom.separation(observation.pointing_radec)
+        return offset >= self.offset_max
+
+    @lru_cache(maxsize=1)
+    def make_mask_safe_irf(self, observation):
+        """Make offset mask with irf geometry.
+
+        Parameters
+        ----------
+        observation : `DataStoreObservation`
+            Observation container.
+
+        Returns
+        -------
+        mask : `~numpy.ndarray`
+            Mask
+        """
+        geom = self._cutout_geom(self.geom_true, observation)
+        offset = geom.separation(observation.pointing_radec)
+        return offset >= self.offset_max
+
+    def run(self, observation, selection=None):
+        """Make map dataset.
+
+        Parameters
+        ----------
+        observation : `~gammapy.data.DataStoreObservation`
+            Observation
         selection : list
             List of str, selecting which maps to make.
-            Available: 'counts', 'exposure', 'background'
+            Available: 'counts', 'exposure', 'background', 'psf', 'edisp'
             By default, all maps are made.
 
         Returns
@@ -113,116 +306,46 @@ class MapMakerObs:
         """
         selection = _check_selection(selection)
 
-        for name in selection:
-            getattr(self, "_make_" + name)()
+        kwargs = {}
+        kwargs["name"] = "obs_{}".format(observation.obs_id)
+        kwargs["gti"] = observation.gti
 
-        bkg = self.maps.get("background")
+        mask_safe = self.make_mask_safe(observation)
 
-        if bkg is not None:
-            background_model = BackgroundModel(bkg)
-        else:
-            background_model = None
+        # expand mask safe into 3rd dimension
+        nbin = self.geom.get_axis_by_name("energy").nbin
+        kwargs["mask_safe"] = ~mask_safe & np.ones(nbin, dtype=bool)[:, np.newaxis, np.newaxis]
 
-        dataset = MapDataset(
-            counts=self.maps.get("counts"),
-            exposure=self.maps.get("exposure"),
-            background_model=background_model,
-            psf=self.maps.get("psf"),
-            edisp=self.maps.get("edisp"),
-            gti=self.observation.gti,
-            name="obs_{}".format(self.observation.obs_id),
-            mask_safe=~self.fov_mask,
-        )
-        return dataset
+        mask_safe_irf = self.make_mask_safe_irf(observation)
 
-    def _make_counts(self):
-        counts = Map.from_geom(self.geom)
-        fill_map_counts(counts, self.observation.events)
-        if self.fov_mask is not None:
-            counts.data[..., self.fov_mask] = 0
-        self.maps["counts"] = counts
+        if "counts" in selection:
+            counts = self.make_counts(observation)
+            # TODO: remove masking out the values here and instead handle the safe mask only when
+            #  fitting and / or stacking datasets?
+            counts.data[..., mask_safe] = 0
+            kwargs["counts"] = counts
 
-    def _make_exposure(self):
-        exposure_irf = make_map_exposure_true_energy(
-            pointing=self.observation.pointing_radec,
-            livetime=self.observation.observation_live_time_duration,
-            aeff=self.observation.aeff,
-            geom=self.geom_true,
-        )
-        mask_irf = self._fov_mask(self.geom_true.to_image().get_coord())
-        exposure_irf_masked = exposure_irf.copy()
-        exposure_irf_masked.data[..., mask_irf] = 0
-        # the exposure associated with the IRFS
-        self.maps["exposure_irf"] = exposure_irf_masked
+        if "exposure" in selection:
+            exposure = self.make_exposure(observation)
+            exposure.data[..., mask_safe] = 0
+            kwargs["exposure"] = exposure
 
-        energy_axis = self.geom_true.get_axis_by_name("energy")
-        geom = self.geom.to_image().to_cube([energy_axis])
+        if "background" in selection:
+            background_map = self.make_background(observation)
+            background_map.data[..., mask_safe] = 0
+            kwargs["background_model"] = BackgroundModel(background_map)
 
-        exposure = make_map_exposure_true_energy(
-            pointing=self.observation.pointing_radec,
-            livetime=self.observation.observation_live_time_duration,
-            aeff=self.observation.aeff,
-            geom=geom,
-        )
+        if "psf" in selection:
+            psf = self.make_psf(observation)
+            psf.exposure_map.data[..., mask_safe_irf] = 0
+            kwargs["psf"] = psf
 
-        fov_mask_etrue = self._fov_mask(geom.to_image().get_coord())
-        if fov_mask_etrue is not None:
-            exposure.data[..., fov_mask_etrue] = 0
-        self.maps["exposure"] = exposure
+        if "edisp" in selection:
+            edisp = self.make_edisp(observation)
+            psf.exposure_map.data[..., mask_safe_irf] = 0
+            kwargs["edisp"] = edisp
 
-    def _make_background(self):
-        bkg_coordsys = self.observation.bkg.meta.get("FOVALIGN", "ALTAZ")
-        if bkg_coordsys == "ALTAZ":
-            pnt = self.observation.fixed_pointing_info
-        elif bkg_coordsys == "RADEC":
-            pnt = self.observation.pointing_radec
-        else:
-            raise ValueError(
-                f"Invalid background coordinate system: {bkg_coordsys!r}\n"
-                "Options: ALTAZ, RADEC"
-            )
-        background = make_map_background_irf(
-            pointing=pnt,
-            ontime=self.observation.observation_time_duration,
-            bkg=self.observation.bkg,
-            geom=self.geom,
-            oversampling=self.background_oversampling,
-        )
-        if self.fov_mask is not None:
-            background.data[..., self.fov_mask] = 0
-
-        # TODO: decide what background modeling options to support
-        # Extra things like FOV norm scale or ring would go here.
-
-        self.maps["background"] = background
-
-    def _make_edisp(self):
-        energy_axis = self.geom_true.get_axis_by_name("ENERGY")
-        geom_migra = self.geom_true.to_image().to_cube([self.migra_axis, energy_axis])
-        edisp_map = make_edisp_map(
-            edisp=self.observation.edisp,
-            pointing=self.observation.pointing_radec,
-            geom=geom_migra,
-            max_offset=self.offset_max,
-            exposure_map=self.maps["exposure_irf"],
-        )
-        self.maps["edisp"] = edisp_map
-
-    def _make_psf(self):
-        psf = self.observation.psf
-        if isinstance(psf, EnergyDependentMultiGaussPSF):
-            psf = psf.to_psf3d()
-        energy_axis = self.geom_true.get_axis_by_name("ENERGY")
-
-        geom_rad = self.geom_true.to_image().to_cube([self.rad_axis, energy_axis])
-        psf_map = make_psf_map(
-            psf=psf,
-            pointing=self.observation.pointing_radec,
-            geom=geom_rad,
-            max_offset=self.offset_max,
-            exposure_map=self.maps["exposure_irf"],
-        )
-        self.maps["psf"] = psf_map
+        return MapDataset(**kwargs)
 
 
 def _check_selection(selection):
@@ -325,11 +448,9 @@ class MapMakerRing:
         # Compute cutout geometry and slices to stack results back later
 
         # Make maps for this observation
-        return MapMakerObs(
-            observation=obs,
+        return MapDatasetMaker(
             geom=self.geom,
             offset_max=self.offset_max,
-            exclusion_mask=self.exclusion_mask,
         )
 
     @staticmethod
@@ -368,16 +489,18 @@ class MapMakerRing:
                 log.info(f"Skipping obs_id: {obs.obs_id} (no map overlap)")
                 continue
 
-            dataset = obs_maker.run(selection=["counts", "exposure", "background"])
+            dataset = obs_maker.run(obs, selection=["counts", "exposure", "background"])
             maps_obs = {}
             maps_obs["counts"] = dataset.counts
             maps_obs["exposure"] = dataset.exposure
             maps_obs["background"] = dataset.background_model.map
-            maps_obs["exclusion"] = obs_maker.exclusion_mask
+            maps_obs["exclusion"] = self.exclusion_mask.cutout(
+                position=obs.pointing_radec, width=2 * self.offset_max, mode="trim"
+                )
 
             if sum_over_axis:
                 maps_obs = self._maps_sum_over_axes(maps_obs, spectrum, keepdims)
-                maps_obs["exclusion"] = obs_maker.exclusion_mask.sum_over_axes(
+                maps_obs["exclusion"] = maps_obs["exclusion"].sum_over_axes(
                     keepdims=keepdims
                 )
                 maps_obs["exclusion"].data = (

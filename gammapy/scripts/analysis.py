@@ -9,7 +9,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
-from gammapy.cube import MapDataset, MapMakerObs
+from gammapy.cube import MapDataset, MapDatasetMaker
 from gammapy.cube.fit import BINSZ_IRF
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
@@ -251,34 +251,26 @@ class Analysis:
         stack_datasets = self.settings["datasets"]["stack-datasets"]
         log.info("Creating datasets.")
 
+        maker = MapDatasetMaker(
+            geom=geom,
+            geom_true=geom_irf,
+            offset_max=offset_max,
+        )
         if stack_datasets:
             stacked = MapDataset.create(geom=geom, geom_irf=geom_irf, name="stacked")
             for obs in self.observations:
-                dataset = self._get_dataset(obs, geom, geom_irf, offset_max)
+                dataset = maker.run(obs)
                 stacked.stack(dataset)
             self._extract_irf_kernels(stacked)
             datasets = [stacked]
         else:
             datasets = []
             for obs in self.observations:
-                dataset = self._get_dataset(obs, geom, geom_irf, offset_max)
+                dataset = maker.run(obs)
                 self._extract_irf_kernels(dataset)
                 datasets.append(dataset)
 
         self.datasets = Datasets(datasets)
-
-    @staticmethod
-    def _get_dataset(obs, geom, geom_irf, offset_max):
-        position, width = obs.pointing_radec, 2 * offset_max
-        geom_cutout = geom.cutout(position=position, width=width)
-        geom_irf_cutout = geom_irf.cutout(position=position, width=width)
-        maker = MapMakerObs(
-            observation=obs,
-            geom=geom_cutout,
-            geom_true=geom_irf_cutout,
-            offset_max=offset_max,
-        )
-        return maker.run()
 
     def _extract_irf_kernels(self, dataset):
         # TODO: remove hard-coded default value
