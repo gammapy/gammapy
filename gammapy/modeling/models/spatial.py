@@ -402,7 +402,14 @@ class ConstantSpatialModel(SpatialModel):
         self.value = Parameter("value", value, frozen=True)
 
         super().__init__([self.value])
-
+        
+    def to_dict(self):
+        #redefined to ignore frame attribute from parent class
+        data = super().to_dict()
+        data.pop("frame")
+        data["parameters"] = data.pop("parameters")
+        return data
+    
     @staticmethod
     def evaluate(lon, lat, value):
         """Evaluate model."""
