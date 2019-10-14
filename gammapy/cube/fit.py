@@ -679,6 +679,7 @@ class MapDataset(Dataset):
 
     @classmethod
     def from_dict(cls, data, components, models):
+        """Create from dicts and models list generated from YAML serialization."""
         dataset = cls.read(data["filename"], name=data["name"])
         bkg_name = data["background"]
         model_names = data["models"]

@@ -121,8 +121,11 @@ def datasets_to_dict(datasets, path, overwrite):
             if model not in unique_models:
                 unique_models.append(model)
 
-        if dataset.background_model not in unique_backgrounds:
-            unique_backgrounds.append(dataset.background_model)
+        try:
+            if dataset.background_model not in unique_backgrounds:
+                unique_backgrounds.append(dataset.background_model)
+        except (AttributeError):
+            pass
 
     datasets_dict = {"datasets": datasets_dictlist}
     components_dict = models_to_dict(unique_models + unique_backgrounds)
@@ -144,8 +147,6 @@ def dict_to_datasets(data_list, components):
     datasets = []
 
     for data in data_list["datasets"]:
-        dataset = DATASETS.get_cls(data["type"]).from_dict(
-           data, components, models
-        )
+        dataset = DATASETS.get_cls(data["type"]).from_dict(data, components, models)
         datasets.append(dataset)
     return datasets
