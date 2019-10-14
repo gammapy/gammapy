@@ -21,10 +21,10 @@ the coming releases. Having this well defined high-level interface Python API al
 procuring a way to automatically record a structured provenance of the data analysis processes undertaken
 with the high-level interface in IPython working sessions (shell and notebooks) or in Python scripts.
 
-We propose to develop a solution for an automatic capture of a structured provenance using a standard
-provenance model. This will open the door to provide the means to perform comparisons and forensic studies
-of different analysis processes, extracting relevant information to trace back the origin of results, which
-in turn should improve reproducibility and reuse by the community. The proposed contribution described
+We propose to develop a solution for an automatic and seamless capture of a structured provenance using a
+standard provenance model. This will open the door to provide the means to perform comparisons and forensic
+studies of different analysis processes, extracting relevant information to trace back the origin of results,
+which in turn should improve reproducibility and reuse by the community. The proposed contribution described
 in this PIG is a necessary first step to accomplish that ultimate goal, which would only be achieved with
 tools for provenance inspection and filtering. Those could be found as standard tools developed outside
 Gammapy or, in the worst of the cases, as a custom tool for provenance extraction and analysis proposed
@@ -74,28 +74,29 @@ Proposal
 
 We propose to develop a set of classes and methods that will automatically capture the provenance of a
 data analysis process undertaken with Gammapy high-level interface tasks. This provenance information
-will be captured only when expressly declared as a configuration parameter of the high-level interface.
+will be captured seamlessly only when expressly declared as a configuration parameter of the high-level
+interface.
 
 It will be structured using the `IVOA Provenance Data Model`_ and recorded in the same output stream used
 for the standard logging, but with a different severity level. The choice of the IVOA Provenance
 Data Model allows for interoperability with provenance information captured from *ctapipe* as well
 as with other astronomical archive services or software providing provenance information in the Virtual
-Observatory framework. In this optic, the development will be done on top of `ctapipe.core.provenance`_,
-re-using and extending its present capabilities. The information captured will relate to the execution
-environment, the overall high-level interface configuration, the workflow execution process (i.e the
-relationships among datasets and processes and the parameter values used in each process step), and the
-serialisations of the intermediate and final datasets or objects produced.
+Observatory framework and with the W3C provenance models. In this optic, the development will be done on
+top of `ctapipe.core.provenance`_, re-using its present capabilities when possible and extending it. The
+information captured will relate to the execution environment, the overall high-level interface configuration,
+the workflow execution process (i.e the relationships among datasets and processes and the parameter values
+used in each process step), and the serialisations of the intermediate and final datasets or objects produced.
 
 A simple and non-intrusive implementation strategy should be considered, with minor modifications in the
 code-base of Gammapy. Metaclass inheritance, class decoration and subclassing mechanisms applied to the
 ``Analysys`` class of the high-level interface will be explored. The code will be placed in one or a few
 python scripts inside a new folder ``provenance`` at the ``gammapy.utils`` level. The whole solution will
 be mainly based on a provenance description YAML file that will bind tasks of the high-level interface,
-their parameters allowed, datasets needed and produced, etc. with the provenance model, its specific
-semantics and the desired provenance capture granularity. In order to procure an accurate provenance
-description file, a good knowledge and understanding of the high-level interface code-base is needed.
-Needless to say that a well established and defined behaviour of the of the high-level interface tasks
-and configuration settings would be desirable before actually writing the provenance description YAML file.
+their parameters, datasets used and generated, etc. with the provenance model, its specific semantics and
+the desired provenance capture granularity. In order to procure an accurate provenance description file, a
+good knowledge and understanding of the high-level interface code-base is needed. Needless to say that a
+well established and defined behaviour of the of the high-level interface tasks and configuration settings
+would be desirable before developers actually define the provenance description YAML file.
 
 Serialisation of the captured provenance into log files will be done according to the logging configuration
 settings defined in the high-level interface. A structured format will be defined to record objects used
@@ -155,12 +156,10 @@ Alternatives
 The are other technical solutions that could be used to capture provenance or perform a structured logging
 in the context of Python scripting executions. The `ctapipe tools`_ come with provenance capture features
 implemented by `ctapipe.core.provenance`_, which capture the execution environment and input/output files.
-This PIG proposal takes the *ctapipe provenance* API as a starting point for re-use and extension of its
-present capabilities. Other Python packages that provide provenance capture are `Recipy`_ and `noWorkflow`_.
-Both provide non-intrusive implementation mechanisms and provenance inspection features, but need a relational
-database (TinyDB, SQLite) to store the information and use different different non standard fixed proprietary
-models. In the end they are not highly flexible to configure the kind of information captured and the desired
-level of granularity.
+Other Python packages that provide provenance capture are `Recipy`_ and `noWorkflow`_. Both provide non-intrusive
+implementation mechanisms and provenance inspection features, but need a relational database (TinyDB, SQLite)
+to store the information and use different different non standard fixed proprietary models. In the end they
+are not highly flexible to configure the kind of information captured and the desired level of granularity.
 
 A different approach is to record provenance as structured logs, which is the one proposed in this PIG. In
 this optic we may find as the most relevant examples `Autologging`_, `Eliot`_ and `Structlog`_. Autologging
