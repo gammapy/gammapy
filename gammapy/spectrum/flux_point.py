@@ -1175,6 +1175,43 @@ class FluxPointsDataset(Dataset):
                 " either 'chi2' or 'chi2assym'"
             )
 
+    @classmethod
+    def read(cls, filename, name="", **kwargs):
+        table = Table.read(str(filename), **kwargs)
+        return cls(model=None,
+                   data=table["dnde"],
+                   mask_fit=table["mask_fit"],
+                   mask_safe=table["mask_safe"],
+                   name=name)
+    
+    def write(self, filename, overwrite=True, **kwargs):
+        table = self.data.table.copy()
+        if self.mask_fit is None:
+            mask_fit = self.mask_safe
+        else:
+            mask_fit =  self.mask_fit
+        table["mask_fit"]= mask_fit
+        table["mask_safe"]= self.mask_safe
+        table.write(str(filename), overwrite=True, **kwargs)
+
+    @classmethod
+    def from_dict(cls, data, components, models):
+        dataset = cls.read(data["filename"])
+        model = [model for model in models if model.name in data["models"]]
+        dataset.model = model[0].spectral_model
+        dataset._likelihood = data["likelihood"]
+        return dataset
+
+    def to_dict(self, filename=""):
+        """Convert to dict for YAML serialization."""
+        return {
+            "name": self.name,
+            "type": self.tag,
+            "models": self.name,
+            "likelihood": self._likelihood,
+            "filename": filename,
+        }
+
     def __str__(self):
         str_ = f"{self.__class__.__name__}: \n"
         str_ += "\n"
