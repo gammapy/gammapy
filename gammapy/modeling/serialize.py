@@ -3,10 +3,10 @@
 from gammapy.cube.fit import MapDataset
 from gammapy.spectrum import FluxPointsDataset, SpectrumDataset
 
-from .models import BackgroundModel, SkyDiffuseCube, SkyModel, SkyModels, ModelRegistry
+from .models import BackgroundModel, SkyDiffuseCube, SkyModel, SkyModels, Registry
 
-# TODO: move this to modeling ?
-DATASETS = ModelRegistry([MapDataset, SpectrumDataset, FluxPointsDataset])
+# TODO: move this elsewhere ?
+DATASETS = Registry([MapDataset, SpectrumDataset, FluxPointsDataset])
 
 __all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
 
