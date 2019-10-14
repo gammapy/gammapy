@@ -703,13 +703,26 @@ class WcsGeom(Geom):
     def to_image(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
-        return self.__class__(self._wcs, npix, cdelt=cdelt, cutout_info=self.cutout_info)
+
+        if self.cutout_info:
+            cutout_info = self.cutout_info.copy()
+            cutout_info["parent-geom"] = cutout_info["parent-geom"].to_image()
+        else:
+            cutout_info = None
+        return self.__class__(self._wcs, npix, cdelt=cdelt, cutout_info=cutout_info)
 
     def to_cube(self, axes):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
         axes = copy.deepcopy(self.axes) + axes
-        return self.__class__(self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes, cutout_info=self.cutout_info)
+
+        if self.cutout_info:
+            cutout_info = self.cutout_info.copy()
+            cutout_info["parent-geom"] = cutout_info["parent-geom"].to_cube(axes)
+        else:
+            cutout_info = None
+
+        return self.__class__(self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes, cutout_info=cutout_info)
 
     def pad(self, pad_width):
         if np.isscalar(pad_width):
