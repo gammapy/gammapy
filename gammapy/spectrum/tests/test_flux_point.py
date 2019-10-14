@@ -307,4 +307,3 @@ class TestFluxPointFit:
 
         with mpl_plot_check():
             fp_dataset.peek(method="diff/model")
-            fp_dataset.peek(method="diff/model", plot_error=False)
