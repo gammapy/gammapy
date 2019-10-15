@@ -47,16 +47,11 @@ def compute_flux_points_ul(quantity, quantity_errp):
     """
     return 2 * quantity_errp + quantity
 
+
 class SourceCatalogObjectFermiBase(SourceCatalogObject):
     """Base class for Fermi-LAT catalogs."""
-    asso = [
-        "ASSOC1",
-        "ASSOC2",
-        "ASSOC_TEV",
-        "ASSOC_GAM1",
-        "ASSOC_GAM2",
-        "ASSOC_GAM3",
-    ]
+
+    asso = ["ASSOC1", "ASSOC2", "ASSOC_TEV", "ASSOC_GAM1", "ASSOC_GAM2", "ASSOC_GAM3"]
 
     def __str__(self):
         return self.info()
@@ -77,7 +72,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         if "basic" in ops:
             ss += self._info_basic()
         if "more" in ops:
-            ss += self._info_more()        
+            ss += self._info_more()
         if "position" in ops:
             ss += self._info_position()
             if not self.is_pointlike:
@@ -107,17 +102,17 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         try:
             ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_BAY", d["ASSOC_PROB_BAY"])
             ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_LR", d["ASSOC_PROB_LR"])
-        except(KeyError):
+        except (KeyError):
             pass
         try:
             ss += "{:<16s} : {}\n".format("Class1", d["CLASS1"])
-        except(KeyError):
+        except (KeyError):
             ss += "{:<16s} : {}\n".format("Class", d["CLASS"])
         try:
             ss += "{:<16s} : {}\n".format("Class2", d["CLASS2"])
-        except(KeyError):
+        except (KeyError):
             pass
-        
+
         tevcat_flag = d["TEVCAT_FLAG"]
         if tevcat_flag == "N":
             tevcat_message = "No TeV association"
@@ -129,11 +124,11 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
             tevcat_message = "N/A"
         ss += "{:<16s} : {}\n".format("TeVCat flag", tevcat_message)
         return ss
-    
+
     @abc.abstractmethod
     def _info_more(self):
         return "\n"
-    
+
     def _info_position(self):
         """Print position info."""
         d = self.data
@@ -196,6 +191,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog4FGL`.
     """
+
     asso = [
         "ASSOC1",
         "ASSOC2",
@@ -317,7 +313,6 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         )
 
         return ss
-
 
     def _info_lightcurve(self):
         """Print lightcurve info."""
@@ -562,7 +557,6 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         )
 
         return ss
-    
 
     def _info_spectral_fit(self):
         """Print spectral info."""
@@ -631,7 +625,6 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         )
 
         return ss
-
 
     def _info_lightcurve(self):
         """Print lightcurve info."""
@@ -980,12 +973,8 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FHL`.
     """
-    asso = [
-        "ASSOC1",
-        "ASSOC2",
-        "ASSOC_TEV",
-        "ASSOC_GAM",
-    ]
+
+    asso = ["ASSOC1", "ASSOC2", "ASSOC_TEV", "ASSOC_GAM"]
     energy_range = u.Quantity([0.01, 2], "TeV")
     """Energy range of the Fermi 1FHL source catalog"""
 
@@ -1068,12 +1057,11 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
 
         return ss
 
-
     def _info_more(self):
         """Print other info."""
         d = self.data
         ss = "\n*** Other info ***\n\n"
-        
+
         fmt = "{:<32s} : {:.3f}\n"
         ss += fmt.format("Significance (10 GeV - 2 TeV)", d["Signif_Avg"])
         ss += "{:<32s} : {:.1f}\n".format("Npred", d["Npred"])
