@@ -642,8 +642,8 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
             fmt = "{:<40s} : {:.3} +- {:.3} cm^-2 s^-1\n"
             ss += fmt.format(
                 "Integral flux peak (100 MeV - 100 GeV)",
-                d["Flux_Peak"],
-                d["Unc_Flux_Peak"],
+                d["Flux_Peak"].value,
+                d["Unc_Flux_Peak"].value,
             )
 
             # TODO: give time as UTC string, not MET
