@@ -61,4 +61,3 @@ Significance peak (100 MeV - 100 GeV)    : 36.358
 Integral flux peak (100 MeV - 100 GeV)   : 2.05e-07 1 / (cm2 s) +- 6.98e-09 1 / (cm2 s) cm^-2 s^-1
 Time peak                                : 4.76e+08 s s (Mission elapsed time)
 Peak interval                            : 3.65e+02 day
-

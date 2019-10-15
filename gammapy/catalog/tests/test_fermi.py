@@ -30,7 +30,7 @@ SOURCES_4FGL = [
     dict(
         idx=0,
         name="4FGL J0000.3-7355",
-        str_ref_file="data/4FGL J0000.3-7355.txt",
+        str_ref_file="data/4fgl_J0000.3-7355.txt",
         spec_type=PowerLawSpectralModel,
         dnde=u.Quantity(2.9476e-11, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(5.3318e-12, "cm-2 s-1 GeV-1"),
@@ -38,7 +38,7 @@ SOURCES_4FGL = [
     dict(
         idx=3,
         name="4FGL J0001.5+2113",
-        str_ref_file="data/4FGL J0001.5+2113.txt",
+        str_ref_file="data/4fgl_J0001.5+2113.txt",
         spec_type=LogParabolaSpectralModel,
         dnde=u.Quantity(2.8545e-8, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.3324e-9, "cm-2 s-1 GeV-1"),
@@ -46,7 +46,7 @@ SOURCES_4FGL = [
     dict(
         idx=7,
         name="4FGL J0002.8+6217",
-        str_ref_file="data/4FGL J0002.8+6217.txt",
+        str_ref_file="data/4fgl_J0002.8+6217.txt",
         spec_type=SuperExpCutoffPowerLaw4FGLSpectralModel,
         dnde=u.Quantity(2.084e-09, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.0885e-10, "cm-2 s-1 GeV-1"),
@@ -54,7 +54,7 @@ SOURCES_4FGL = [
     dict(
         idx=2718,
         name="4FGL J1409.1-6121e",
-        str_ref_file="data/4FGL J1409.1-6121e.txt",
+        str_ref_file="data/4fgl_J1409.1-6121e.txt",
         spec_type=LogParabolaSpectralModel,
         dnde=u.Quantity(1.3237202133031811e-12, "cm-2 s-1 MeV-1"),
         dnde_err=u.Quantity(4.513233455580648e-14, "cm-2 s-1 MeV-1"),
@@ -155,6 +155,14 @@ class TestFermi4FGLObject:
         assert_allclose(p["lon_0"].value, 312.11065673828125)
         assert_allclose(p["lat_0"].value, 0.12567082047462463)
         assert_allclose(p["r_0"].value, 0.7331369519233704)
+
+        model = self.cat["4FGL J0617.2+2234e"].spatial_model
+        assert model.tag == "GaussianSpatialModel"
+        assert model.frame == "galactic"
+        p = model.parameters
+        assert_allclose(p["lon_0"].value, 189.0477)
+        assert_allclose(p["lat_0"].value, 3.0335)
+        assert_allclose(p["sigma"].value, 0.27)
 
         model = self.cat["4FGL J1443.0-6227e"].spatial_model
         assert model.tag == "TemplateSpatialModel"

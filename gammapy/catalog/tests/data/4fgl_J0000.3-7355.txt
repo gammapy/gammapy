@@ -57,4 +57,3 @@ Lightcurve measured in the energy band: 100 MeV - 100 GeV
 Variability index : 8.665
 
 No peak measured for this source.
-

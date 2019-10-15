@@ -8,6 +8,12 @@ open("3fgl_J0001.4+2120.txt", "w").write(str(cat["3FGL J0001.4+2120"]))
 open("3fgl_J0023.4+0923.txt", "w").write(str(cat["3FGL J0023.4+0923"]))
 open("3fgl_J0835.3-4510.txt", "w").write(str(cat["3FGL J0835.3-4510"]))
 
+cat = source_catalogs["4fgl"]
+open("4fgl_J0000.3-7355.txt", "w").write(str(cat["4FGL J0000.3-7355"]))
+open("4fgl_J0001.5+2113.txt", "w").write(str(cat["4FGL J0001.5+2113"]))
+open("4fgl_J0002.8+6217.txt", "w").write(str(cat["4FGL J0002.8+6217"]))
+open("4fgl_J1409.1-6121e.txt", "w").write(str(cat["4FGL J1409.1-6121e"]))
+
 cat = source_catalogs["3fhl"]
 open("3fhl_j2301.9+5855e.txt", "w").write(str(cat["3FHL J2301.9+5855e"]))
 
@@ -24,3 +30,5 @@ cat = source_catalogs["gamma-cat"]
 open("gammacat_hess_j1813-178.txt", "w").write(str(cat["HESS J1813-178"]))
 open("gammacat_hess_j1848-018.txt", "w").write(str(cat["HESS J1848-018"]))
 open("gammacat_vela_x.txt", "w").write(str(cat["Vela X"]))
+
+files=["4FGL J0000.3-7355","4FGL J0001.5+2113","4FGL J0002.8+6217","4FGL J1409.1-6121e"]
