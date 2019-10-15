@@ -57,13 +57,12 @@ Energy flux (100 MeV - 100 GeV)               : 1.93e-11 +- 8.21e-13 erg cm-2 s-
  3000.000  10000.000   6.216e-11   1.722e-11   2.002e-11     3.673e-13     1.018e-13     1.183e-13 False         nan           nan 5.3952117
 10000.000  30000.000   7.739e-15         nan   8.847e-12     1.594e-16           nan     1.822e-13  True   1.770e-11     3.646e-13       0.0
 30000.000 300000.000   4.368e-16         nan   7.089e-12     1.312e-17           nan     2.130e-13  True   1.418e-11     4.260e-13       0.0
-
 *** Lightcurve info ***
 
 Lightcurve measured in the energy band: 100 MeV - 100 GeV
 
 Variability index : 920.677
 Significance peak (100 MeV - 100 GeV)    : 36.358
-Integral flux peak (100 MeV - 100 GeV)   : 2.05e-07 1 / (cm2 s) +- 6.98e-09 1 / (cm2 s) cm^-2 s^-1
+Integral flux peak (100 MeV - 100 GeV)   : 2.05e-07 +- 6.98e-09 cm^-2 s^-1
 Time peak                                : 4.76e+08 s s (Mission elapsed time)
 Peak interval                            : 3.65e+02 day

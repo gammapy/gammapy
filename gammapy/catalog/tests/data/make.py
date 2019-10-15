@@ -30,5 +30,3 @@ cat = source_catalogs["gamma-cat"]
 open("gammacat_hess_j1813-178.txt", "w").write(str(cat["HESS J1813-178"]))
 open("gammacat_hess_j1848-018.txt", "w").write(str(cat["HESS J1848-018"]))
 open("gammacat_vela_x.txt", "w").write(str(cat["Vela X"]))
-
-files=["4FGL J0000.3-7355","4FGL J0001.5+2113","4FGL J0002.8+6217","4FGL J1409.1-6121e"]

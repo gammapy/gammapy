@@ -49,7 +49,6 @@ Energy flux (100 MeV - 100 GeV)               : 1.36e-11 +- 2.07e-12 erg cm-2 s-
  1000.000   3000.000   1.237e-09   2.251e-10   2.343e-10     2.855e-12     5.198e-13     5.411e-13 False         nan           nan   6.02224
  3000.000  10000.000   5.781e-11   4.045e-11   4.853e-11     3.784e-13     2.648e-13     3.177e-13 False         nan           nan 1.5091934
 10000.000 100000.000   2.840e-11   1.484e-11   1.915e-11     4.317e-13     2.257e-13     2.912e-13 False         nan           nan 2.4211686
-
 *** Lightcurve info ***
 
 Lightcurve measured in the energy band: 100 MeV - 100 GeV

@@ -161,18 +161,18 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
 
     @abc.abstractmethod
     def _info_spectral_fit(self):
-        return "\n"
+        pass
 
     def _info_spectral_points(self):
         """Print spectral points."""
         ss = "\n*** Spectral points ***\n\n"
         lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
         ss += "\n".join(lines)
-        return ss + "\n"
+        return ss
 
     @abc.abstractmethod
     def _info_lightcurve(self):
-        return "\n"
+        pass
 
     @property
     def is_pointlike(self):
@@ -330,8 +330,8 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             fmt = "{:<40s} : {:.3} +- {:.3} cm^-2 s^-1\n"
             ss += fmt.format(
                 "Integral flux peak (100 MeV - 100 GeV)",
-                d["Flux_Peak"],
-                d["Unc_Flux_Peak"],
+                d["Flux_Peak"].value,
+                d["Unc_Flux_Peak"].value,
             )
 
             # TODO: give time as UTC string, not MET
@@ -1186,6 +1186,9 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
                 )
             else:
                 raise ValueError(f"Invalid morph_type: {morph_type!r}")
+
+    def _info_lightcurve(self):
+        return "\n"
 
 
 class SourceCatalog3FGL(SourceCatalog):
