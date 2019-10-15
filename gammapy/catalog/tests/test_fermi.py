@@ -30,6 +30,7 @@ SOURCES_4FGL = [
     dict(
         idx=0,
         name="4FGL J0000.3-7355",
+        str_ref_file="data/4fgl_J0000.3-7355.txt",
         spec_type=PowerLawSpectralModel,
         dnde=u.Quantity(2.9476e-11, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(5.3318e-12, "cm-2 s-1 GeV-1"),
@@ -37,6 +38,7 @@ SOURCES_4FGL = [
     dict(
         idx=3,
         name="4FGL J0001.5+2113",
+        str_ref_file="data/4fgl_J0001.5+2113.txt",
         spec_type=LogParabolaSpectralModel,
         dnde=u.Quantity(2.8545e-8, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.3324e-9, "cm-2 s-1 GeV-1"),
@@ -44,9 +46,18 @@ SOURCES_4FGL = [
     dict(
         idx=7,
         name="4FGL J0002.8+6217",
+        str_ref_file="data/4fgl_J0002.8+6217.txt",
         spec_type=SuperExpCutoffPowerLaw4FGLSpectralModel,
         dnde=u.Quantity(2.084e-09, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.0885e-10, "cm-2 s-1 GeV-1"),
+    ),
+    dict(
+        idx=2718,
+        name="4FGL J1409.1-6121e",
+        str_ref_file="data/4fgl_J1409.1-6121e.txt",
+        spec_type=LogParabolaSpectralModel,
+        dnde=u.Quantity(1.3237202133031811e-12, "cm-2 s-1 MeV-1"),
+        dnde_err=u.Quantity(4.513233455580648e-14, "cm-2 s-1 MeV-1"),
     ),
 ]
 
@@ -108,6 +119,20 @@ class TestFermi4FGLObject:
     @classmethod
     def setup_class(cls):
         cls.cat = SourceCatalog4FGL()
+        cls.source_name = "4FGL J0534.5+2200"
+        cls.source = cls.cat[cls.source_name]
+
+    def test_name(self):
+        assert self.source.name == self.source_name
+
+    def test_index(self):
+        assert self.source.index == 995
+
+    @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
+    def test_str(self, ref):
+        actual = str(self.cat[ref["idx"]])
+        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
+        assert actual == expected
 
     @requires_dependency("uncertainties")
     @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
@@ -119,6 +144,101 @@ class TestFermi4FGLObject:
         assert isinstance(model, ref["spec_type"])
         assert_quantity_allclose(dnde, ref["dnde"], rtol=1e-4)
         assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-4)
+
+    def test_spatial_model(self):
+        # TODO: check spatial parameter errors as soon as they are filled
+        model = self.cat["4FGL J0000.3-7355"].spatial_model
+        assert model.tag == "PointSpatialModel"
+        assert model.frame == "galactic"
+        p = model.parameters
+        assert_allclose(p["lon_0"].value, 307.709)
+        assert_allclose(p["lat_0"].value, -42.729538)
+
+        model = self.cat["4FGL J1409.1-6121e"].spatial_model
+        assert model.tag == "DiskSpatialModel"
+        assert model.frame == "galactic"
+        p = model.parameters
+        assert_allclose(p["lon_0"].value, 312.11065673828125)
+        assert_allclose(p["lat_0"].value, 0.12567082047462463)
+        assert_allclose(p["r_0"].value, 0.7331369519233704)
+
+        model = self.cat["4FGL J0617.2+2234e"].spatial_model
+        assert model.tag == "GaussianSpatialModel"
+        assert model.frame == "galactic"
+        p = model.parameters
+        assert_allclose(p["lon_0"].value, 189.047653)
+        assert_allclose(p["lat_0"].value, 3.033451)
+        assert_allclose(p["sigma"].value, 0.27)
+
+        model = self.cat["4FGL J1443.0-6227e"].spatial_model
+        assert model.tag == "TemplateSpatialModel"
+        assert model.frame == "fk5"
+        assert model.normalize is True
+
+    @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
+    def test_sky_model(self, ref):
+        self.cat[ref["idx"]].sky_model
+
+    def test_flux_points(self):
+        flux_points = self.source.flux_points
+
+        assert len(flux_points.table) == 7
+        assert "flux_ul" in flux_points.table.colnames
+        assert flux_points.sed_type == "flux"
+
+        desired = [
+            2.2378458e-06,
+            1.4318283e-06,
+            5.4776939e-07,
+            1.2769708e-07,
+            2.5820052e-08,
+            2.3897000e-09,
+            7.1766204e-11,
+        ]
+        assert_allclose(flux_points.table["flux"].data, desired, rtol=1e-5)
+
+    def test_flux_points_ul(self):
+        source = self.cat["4FGL J0000.3-7355"]
+        flux_points = source.flux_points
+
+        desired = [
+            4.13504750e-08,
+            3.80519616e-09,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            7.99699456e-12,
+        ]
+        assert_allclose(flux_points.table["flux_ul"].data, desired, rtol=1e-5)
+
+    def test_lightcurve(self):
+        lc = self.source.lightcurve
+        table = lc.table
+
+        assert len(table) == 8
+        assert table.colnames == [
+            "time_min",
+            "time_max",
+            "flux",
+            "flux_errp",
+            "flux_errn",
+        ]
+
+        expected = Time(54682.655277777776, format="mjd", scale="utc")
+        assert_time_allclose(lc.time_min[0], expected)
+
+        expected = Time(55047.603239293836, format="mjd", scale="utc")
+        assert_time_allclose(lc.time_max[0], expected)
+
+        assert table["flux"].unit == "cm-2 s-1"
+        assert_allclose(table["flux"][0], 2.2122326e-06, rtol=1e-3)
+
+        assert table["flux_errp"].unit == "cm-2 s-1"
+        assert_allclose(table["flux_errp"][0], 2.3099371e-08, rtol=1e-3)
+
+        assert table["flux_errn"].unit == "cm-2 s-1"
+        assert_allclose(table["flux_errn"][0], 2.3099371e-08, rtol=1e-3)
 
 
 @requires_data()

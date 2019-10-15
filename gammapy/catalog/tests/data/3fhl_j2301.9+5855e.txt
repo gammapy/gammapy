@@ -10,8 +10,16 @@ ASSOC_PROB_LR    : nan
 Class            : SNR    
 TeVCat flag      : No TeV association
 
+*** Other info ***
+
 Significance (10 GeV - 2 TeV)    : 7.974
 Npred                            : 53.1
+
+HEP Energy       : 364.828 GeV
+HEP Probability  : 0.849
+Bayesian Blocks  : 1 (not variable)
+Redshift         : nan
+NuPeak_obs       : nan Hz
 
 *** Position info ***
 
@@ -24,7 +32,9 @@ Semimajor (95%)      : nan deg
 Semiminor (95%)      : nan deg
 Position angle (95%) : nan deg
 ROI number           : 479
+
 *** Extended source information ***
+
 Model form       : Disk       
 Model semimajor  : 0.2488 deg
 Model semiminor  : 0.2488 deg
@@ -53,11 +63,3 @@ Energy flux (10 GeV - TeV)       : 1.08e-11 +- 2.9e-12 erg cm-2 s-1
  50.000  150.000   2.058e-11   7.593e-12   9.512e-12     2.471e-12     9.117e-13     1.142e-12 False         nan           nan   4.016
 150.000  500.000   4.437e-12   3.076e-12   4.877e-12     1.522e-12     1.055e-12     1.673e-12 False         nan           nan   1.791
 500.000 2000.000   6.598e-17         nan   4.626e-12     7.039e-17           nan     4.936e-12  True   9.252e-12     9.872e-12   0.000
-
-*** Other info ***
-
-HEP Energy       : 364.828 GeV
-HEP Probability  : 0.849
-Bayesian Blocks  : 1 (not variable)
-Redshift         : nan
-NuPeak_obs       : nan Hz

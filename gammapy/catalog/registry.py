@@ -5,6 +5,7 @@ from .fermi import (
     SourceCatalog2FHL,
     SourceCatalog3FGL,
     SourceCatalog3FHL,
+    SourceCatalog4FGL,
 )
 from .gammacat import SourceCatalogGammaCat
 from .hawc import SourceCatalog2HWC
@@ -35,6 +36,7 @@ class SourceCatalogRegistry:
         cats.register("hgps", SourceCatalogHGPS)
         cats.register("gamma-cat", SourceCatalogGammaCat)
         cats.register("3fgl", SourceCatalog3FGL)
+        cats.register("4fgl", SourceCatalog4FGL)
         cats.register("1fhl", SourceCatalog1FHL)
         cats.register("2fhl", SourceCatalog2FHL)
         cats.register("3fhl", SourceCatalog3FHL)

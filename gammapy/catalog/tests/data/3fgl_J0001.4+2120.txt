@@ -4,10 +4,12 @@
 Catalog row index (zero-based) : 4
 Source name          : 3FGL J0001.4+2120 
 Extended name        :                   
-Associations         : TXS 2358+209, 3EG J2359+2041
-Other names          : 
-Class                : fsrq 
-TeVCat flag          : No TeV association
+Associations     : TXS 2358+209, 3EG J2359+2041
+Class1           : fsrq 
+TeVCat flag      : No TeV association
+
+*** Other info ***
+
 Other flags          : None
 
 *** Position info ***
@@ -48,11 +50,12 @@ Energy flux (100 MeV - 100 GeV)               : 8.07e-12 +- 8.38e-13 erg cm-2 s-
  1000.000   3000.000   3.565e-10   9.341e-11   1.018e-10     7.153e-13     1.874e-13     2.042e-13 False         nan           nan 4.5168524
  3000.000  10000.000   8.414e-15         nan   1.924e-11     4.392e-17           nan     1.004e-13  True   3.849e-11     2.009e-13       0.0
 10000.000 100000.000   1.036e-14         nan   1.126e-11     9.595e-17           nan     1.043e-13  True   2.252e-11     2.087e-13       0.0
-
 *** Lightcurve info ***
 
 Lightcurve measured in the energy band: 100 MeV - 100 GeV
 
 Variability index : 130.336
-
-No peak measured for this source.
+Significance peak (100 MeV - 100 GeV)    : 8.248
+Integral flux peak (100 MeV - 100 GeV)   : 1.16e-07 +- 1.86e-08 cm^-2 s^-1
+Time peak                                : 3.01e+08 s (Mission elapsed time)
+Peak interval                            : 30.4 day

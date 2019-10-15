@@ -482,7 +482,7 @@ class TemplateSpatialModel(SpatialModel):
         m = Map.read(filename, **kwargs)
         if m.unit == "":
             m.unit = "sr-1"
-        return cls(m, normalize=normalize, filename=filename)
+        return cls(m, normalize=normalize, filename=str(filename))
 
     def evaluate(self, lon, lat, norm):
         """Evaluate model."""

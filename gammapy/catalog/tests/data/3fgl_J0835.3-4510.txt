@@ -4,10 +4,12 @@
 Catalog row index (zero-based) : 960
 Source name          : 3FGL J0835.3-4510 
 Extended name        :                   
-Associations         : PSR J0835-4510, Vela, Vela Pulsar, 1AGL J0835-4509
-Other names          : 0FGL J0835.4-4510, 1FGL J0835.3-4510, 2FGL J0835.3-4510, 1FHL J0835.3-4510
-Class                : PSR  
-TeVCat flag          : Small TeV source
+Associations     : PSR J0835-4510, Vela, Vela Pulsar, 1AGL J0835-4509
+Class1           : PSR  
+TeVCat flag      : Small TeV source
+
+*** Other info ***
+
 Other flags          : None
 
 *** Position info ***
@@ -48,7 +50,6 @@ Energy flux (100 MeV - 100 GeV)               : 8.93e-09 +- 1.73e-11 erg cm-2 s-
  1000.000   3000.000   1.070e-06   3.075e-09   3.075e-09     2.525e-09     7.256e-12     7.256e-12 False         nan           nan   711.6319
  3000.000  10000.000   2.162e-07   1.255e-09   1.255e-09     1.321e-09     7.670e-12     7.670e-12 False         nan           nan  465.89935
 10000.000 100000.000   1.138e-08   2.888e-10   2.888e-10     1.055e-10     2.676e-12     2.676e-12 False         nan           nan 111.192406
-
 *** Lightcurve info ***
 
 Lightcurve measured in the energy band: 100 MeV - 100 GeV
