@@ -87,7 +87,7 @@ def energy_axis_from_fgst_ccube(hdu):
 
 def energy_axis_from_fgst_template(hdu):
     bands = Table.read(hdu)
-    
+
     allowed_names=["Energy","ENERGY","energy"]
     for colname in bands.colnames:
         if colname in allowed_names :
