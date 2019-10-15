@@ -409,7 +409,7 @@ class ConstantSpatialModel(SpatialModel):
         data.pop("frame")
         data["parameters"] = data.pop("parameters")
         return data
-    
+
     @staticmethod
     def evaluate(lon, lat, value):
         """Evaluate model."""
