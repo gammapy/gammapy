@@ -128,6 +128,12 @@ class TestFermi4FGLObject:
     def test_index(self):
         assert self.source.index == 995
 
+    @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
+    def test_str(self, ref):
+        actual = str(self.cat[ref["idx"]])
+        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
+        assert actual == expected
+
     @requires_dependency("uncertainties")
     @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
@@ -160,8 +166,8 @@ class TestFermi4FGLObject:
         assert model.tag == "GaussianSpatialModel"
         assert model.frame == "galactic"
         p = model.parameters
-        assert_allclose(p["lon_0"].value, 189.0477)
-        assert_allclose(p["lat_0"].value, 3.0335)
+        assert_allclose(p["lon_0"].value, 189.047653)
+        assert_allclose(p["lat_0"].value, 3.033451)
         assert_allclose(p["sigma"].value, 0.27)
 
         model = self.cat["4FGL J1443.0-6227e"].spatial_model
