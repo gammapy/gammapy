@@ -6,6 +6,7 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
+from astropy.wcs import FITSFixedWarning
 from gammapy.maps import Map
 from gammapy.modeling.models import (
     DiskSpatialModel,
@@ -378,7 +379,9 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_8years/Templates/"
                 )
-                return TemplateSpatialModel.read(path / filename)
+                with warnings.catch_warnings():  # ignore FITS units warnings
+                    warnings.simplefilter("ignore", FITSFixedWarning)
+                    return TemplateSpatialModel.read(path / filename)
             elif morph_type == "2D Gaussian":
                 return GaussianSpatialModel(
                     lon_0=glon, lat_0=glat, sigma=sigma, e=e, phi=phi, frame="galactic"
