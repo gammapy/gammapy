@@ -57,5 +57,5 @@ Lightcurve measured in the energy band: 100 MeV - 100 GeV
 Variability index : 130.336
 Significance peak (100 MeV - 100 GeV)    : 8.248
 Integral flux peak (100 MeV - 100 GeV)   : 1.16e-07 +- 1.86e-08 cm^-2 s^-1
-Time peak                                : 3.01e+08 s s (Mission elapsed time)
+Time peak                                : 3.01e+08 s (Mission elapsed time)
 Peak interval                            : 30.4 day
