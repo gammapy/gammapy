@@ -1,0 +1,49 @@
+.. include:: ../../references.txt
+
+.. _pig-018:
+
+**********************
+PIG 18 - Documentation
+**********************
+
+* Author: Christoph Deil, Axel Donath, José Enrique Ruiz
+* Created: Oct 16, 2019
+* Status: draft
+* Discussion: `GH tbd`_
+
+Abstract
+========
+
+Over the past years the Gammapy package and documentation has grown organically,
+at the moment there's a lot of duplicated and missing content. We propose to
+spend significant effort to restructure and improve the Gammapy tutorial and
+documentation content now in fall 2019. This PIG outlines the status and
+proposal how to structure the documentation, including a task list what
+documentation to add, remove, move or rewrite to get to the desired state.
+
+Status
+======
+
+tbd
+
+Proposal
+========
+
+In this section we propose many changes. However, we don't consider any of them
+a blocker for the v1.0 release. We should improve as much as we can in 2019, but
+expect that some of the suggestions here will be implemented and some won't, and
+that's fine, the work can simply continue in 2020.
+
+tbd
+
+Outlook
+=======
+
+tbd
+
+Decision
+========
+
+tbd
+
+.. _GH tbd: https://github.com/gammapy/gammapy/pull/tbd
