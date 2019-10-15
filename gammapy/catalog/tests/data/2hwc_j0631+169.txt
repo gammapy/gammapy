@@ -2,15 +2,15 @@
 *** Basic info ***
 
 Catalog row index (zero-based) : 1
-Source name:    : 2HWC J0631+169
+Source name : 2HWC J0631+169
 
 *** Position info ***
 
-RA                   : 97.998 deg
-DEC                  : 16.997 deg
-GLON                 : 195.614 deg
-GLAT                 : 3.507 deg
-Position error       : 0.114 deg
+RA: 97.998 deg
+DEC: 16.997 deg
+GLON: 195.614 deg
+GLAT: 3.507 deg
+Position error: 0.114 deg
 
 *** Spectral info ***
 

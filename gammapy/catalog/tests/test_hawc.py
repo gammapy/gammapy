@@ -74,7 +74,6 @@ class TestSourceCatalogObject2HWC:
         assert_allclose(flux_err.value, 3.252178e-13, rtol=1e-3)
 
     @staticmethod
-    @requires_dependency("uncertainties")
     def test_spatial_model(cat):
         m = cat[1].spatial_model()
         # p = m.parameters

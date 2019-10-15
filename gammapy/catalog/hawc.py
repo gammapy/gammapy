@@ -50,24 +50,22 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
     def _info_basic(self):
         """Print basic info."""
-        d = self.data
-        ss = "\n*** Basic info ***\n\n"
-        ss += "Catalog row index (zero-based) : {}\n".format(d["catalog_row_index"])
-        ss += "{:<15s} : {}\n".format("Source name:", d["source_name"])
-
-        return ss
+        return (
+            f"\n*** Basic info ***\n\n"
+            f"Catalog row index (zero-based) : {self.data['catalog_row_index']}\n"
+            f"Source name : {self.data['source_name']}\n"
+        )
 
     def _info_position(self):
         """Print position info."""
-        d = self.data
-        ss = "\n*** Position info ***\n\n"
-        ss += "{:20s} : {:.3f}\n".format("RA", d["ra"])
-        ss += "{:20s} : {:.3f}\n".format("DEC", d["dec"])
-        ss += "{:20s} : {:.3f}\n".format("GLON", d["glon"])
-        ss += "{:20s} : {:.3f}\n".format("GLAT", d["glat"])
-        ss += "{:20s} : {:.3f}\n".format("Position error", d["pos_err"])
-
-        return ss
+        return (
+            f"\n*** Position info ***\n\n"
+            f"RA: {self.data['ra']:.3f}\n"
+            f"DEC: {self.data['dec']:.3f}\n"
+            f"GLON: {self.data['glon']:.3f}\n"
+            f"GLAT: {self.data['glat']:.3f}\n"
+            f"Position error: {self.data['pos_err']:.3f}\n"
+        )
 
     @staticmethod
     def _info_spectrum_one(d, idx):
@@ -100,7 +98,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
     @property
     def n_models(self):
-        """Number of measured spectra (1 or 2)."""
+        """Number of models (1 or 2)."""
         return 1 if np.isnan(self.data["spec1_dnde"]) else 2
 
     def _get_idx(self, which):
@@ -119,7 +117,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
         * ``which="point"`` -- Spectral model under the point source assumption.
         * ``which="extended"`` -- Spectral model under the extended source assumption.
-          Only available for some sources. Raise ``ValueError`` if not available.
+          Only available for some sources. Raise ValueError if not available.
         """
         idx = self._get_idx(which)
 
@@ -139,8 +137,8 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
         * ``which="point"`` - `~gammapy.modeling.models.PointSpatialModel`
-        * ``which="extended"`` - `~gammapy.modeling.models.DiskSpatialModel`
-          Only available for some sources. Raise ``ValueError`` if not available.
+        * ``which="extended"`` - `~gammapy.modeling.models.DiskSpatialModel`.
+          Only available for some sources. Raise ValueError if not available.
         """
         # TODO: set position error from self.data["pos_err"]
         idx = self._get_idx(which)
@@ -161,8 +159,8 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """Sky model (`~gammapy.modeling.models.SkyModel`).
 
         * ``which="point"`` - Sky model for point source analysis
-        * ``which="extended"`` - Sky model for extended source analysis
-          Only available for some sources. Raise ``ValueError`` if not available.
+        * ``which="extended"`` - Sky model for extended source analysis.
+          Only available for some sources. Raise ValueError if not available.
 
         According to the paper, the radius of the extended source model is only a rough estimate
         of the source size, based on the residual excess..
