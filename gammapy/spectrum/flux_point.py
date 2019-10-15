@@ -1193,11 +1193,14 @@ class FluxPointsDataset(Dataset):
         # TODO: assumes that the model is a skymodel
         # so this will work only when this change will be effective
         table = Table.read(data["filename"])
+        mask_fit = table["mask_fit"].data.astype("bool")
+        mask_safe = table["mask_safe"].data.astype("bool")
+        table.remove_columns(["mask_fit","mask_safe"])
         return cls(model=SkyModels(models_list),
                    name=data["name"],
-                   data=table["dnde"],
-                   mask_fit=table["mask_fit"],
-                   mask_safe=table["mask_safe"].data.astype("bool"),
+                   data=FluxPoints(table),
+                   mask_fit=mask_fit,
+                   mask_safe=mask_safe,
                    likelihood=data["likelihood"])
         
     def to_dict(self, filename=""):

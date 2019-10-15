@@ -263,8 +263,9 @@ def test_flux_point_dataset_serialization(tmpdir):
     Datasets([dataset]).to_yaml(respath, overwrite=True)
     datasets = Datasets.from_yaml(respath+"datasets.yaml",respath+"models.yaml")
     new_dataset = datasets.datasets[0]
-    np.assert_allclode(new_dataset.data.table["dnde"],dataset.data.table["dnde"],1e-4)
-    assert np.all(new_dataset.mask_fit==dataset.mask_fit)
+    assert_allclose(new_dataset.data.table["dnde"],dataset.data.table["dnde"],1e-4)
+    if dataset.mask_fit is None:
+        assert np.all(new_dataset.mask_fit==dataset.mask_safe)
     assert np.all(new_dataset.mask_safe==dataset.mask_safe)
     assert new_dataset.name == "test_dataset"
 
