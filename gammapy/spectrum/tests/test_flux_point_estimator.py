@@ -52,7 +52,7 @@ def simulate_map_dataset(random_state=0):
 
     skydir = SkyCoord("0 deg", "0 deg", frame="galactic")
     edges = np.logspace(-1, 2, 15) * u.TeV
-    energy_axis = MapAxis.from_edges(edges=edges, name="energy")
+    energy_axis = MapAxis.from_edges(edges=edges, name="energy", interp="log")
 
     geom = WcsGeom.create(
         skydir=skydir, width=(4, 4), binsz=0.1, axes=[energy_axis], coordsys="GAL"
@@ -161,25 +161,25 @@ class TestFluxPointsEstimator:
         fp = fpe_map_pwl.run()
 
         actual = fp.table["norm"].data
-        assert_allclose(actual, [0.97922, 0.94081, 1.074426], rtol=1e-3)
+        assert_allclose(actual, [0.963374, 0.963608, 1.01063], rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, [0.069966, 0.052617, 0.092854], rtol=1e-2)
+        assert_allclose(actual, [0.067675, 0.051997, 0.088158], rtol=1e-2)
 
         actual = fp.table["counts"].data
-        assert_allclose(actual, [[44445, 0], [1911, 0], [292, 0]])
+        assert_allclose(actual, [[44599, 0], [1922, 0], [283, 0]])
 
         actual = fp.table["norm_ul"].data
-        assert_allclose(actual, [1.121379, 1.048815, 1.270037], rtol=1e-2)
+        assert_allclose(actual, [1.100299, 1.070255, 1.196008], rtol=1e-2)
 
         actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, [16.165806, 27.121415, 22.04104], rtol=1e-2)
+        assert_allclose(actual, [16.471375, 28.415908, 22.153403], rtol=1e-2)
 
         actual = fp.table["norm_scan"][0]
         assert_allclose(actual, [0.2, 1, 5])
 
         actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
-        assert_allclose(actual, [1.536452e02, 8.762343e-02, 1.883447e03], rtol=1e-2)
+        assert_allclose(actual, [1.577119e+02, 2.990366e-01, 2.003681e+03], rtol=1e-2)
 
     @staticmethod
     @requires_dependency("iminuit")
@@ -188,19 +188,19 @@ class TestFluxPointsEstimator:
         fp = fpe_map_pwl_reoptimize.run(steps=["err", "norm-scan", "ts"])
 
         actual = fp.table["norm"].data
-        assert_allclose(actual, 0.884621, rtol=1e-3)
+        assert_allclose(actual, 0.98522, rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, 0.058005, rtol=1e-2)
+        assert_allclose(actual, 0.061189, rtol=1e-2)
 
         actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, 23.971251, rtol=1e-2)
+        assert_allclose(actual, 25.228635, rtol=1e-2)
 
         actual = fp.table["norm_scan"][0]
         assert_allclose(actual, 1)
 
         actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
-        assert_allclose(actual, 3.698882, rtol=1e-2)
+        assert_allclose(actual, 0.057452, rtol=1e-2)
 
 
 def test_no_likelihood_contribution():

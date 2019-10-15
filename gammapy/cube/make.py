@@ -475,7 +475,6 @@ class MapMakerRing:
 
         return images
 
-
     def _run(self, observations, sum_over_axis=False, spectrum=None, keepdims=False):
         selection = ["on", "exposure_on", "off", "exposure_off", "exposure"]
         maps = self._get_empty_maps(selection)
