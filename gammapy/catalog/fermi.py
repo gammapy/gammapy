@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Fermi catalog and source classes."""
+import abc
 import warnings
 import numpy as np
 import astropy.units as u
@@ -46,14 +47,16 @@ def compute_flux_points_ul(quantity, quantity_errp):
     """
     return 2 * quantity_errp + quantity
 
-
-class SourceCatalogObject4FGL(SourceCatalogObject):
-    """One source from the Fermi-LAT 4FGL catalog.
-
-    Catalog is represented by `~gammapy.catalog.SourceCatalog4FGL`.
-    """
-
-    _ebounds = u.Quantity([50, 100, 300, 1000, 3000, 10000, 30000, 300000], "MeV")
+class SourceCatalogObjectFermiBase(SourceCatalogObject):
+    """Base class for Fermi-LAT catalogs."""
+    asso = [
+        "ASSOC1",
+        "ASSOC2",
+        "ASSOC_TEV",
+        "ASSOC_GAM1",
+        "ASSOC_GAM2",
+        "ASSOC_GAM3",
+    ]
 
     def __str__(self):
         return self.info()
@@ -63,16 +66,18 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
 
         Parameters
         ----------
-        info : {'all', 'basic', 'position', 'spectral'}
+        info : {'all', 'basic', 'more', 'position', 'spectral','lightcurve'}
             Comma separated list of options
         """
         if info == "all":
-            info = "basic,position,spectral,lightcurve"
+            info = "basic,more,position,spectral,lightcurve"
 
         ss = ""
         ops = info.split(",")
         if "basic" in ops:
             ss += self._info_basic()
+        if "more" in ops:
+            ss += self._info_more()        
         if "position" in ops:
             ss += self._info_position()
             if not self.is_pointlike:
@@ -87,6 +92,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
     def _info_basic(self):
         """Print basic info."""
         d = self.data
+        keys = self.asso
         ss = "\n*** Basic info ***\n\n"
         ss += "Catalog row index (zero-based) : {}\n".format(d["catalog_row_index"])
         ss += "{:<20s} : {}\n".format("Source name", d["Source_Name"])
@@ -96,24 +102,22 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             vals = [d[_].strip() for _ in keys]
             return ", ".join([_ for _ in vals if _ != ""])
 
-        keys = [
-            "ASSOC1",
-            "ASSOC2",
-            "ASSOC_TEV",
-            "ASSOC_FGL",
-            "ASSOC_FHL",
-            "ASSOC_GAM1",
-            "ASSOC_GAM2",
-            "ASSOC_GAM3",
-        ]
         associations = get_nonentry_keys(keys)
         ss += "{:<16s} : {}\n".format("Associations", associations)
-        ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_BAY", d["ASSOC_PROB_BAY"])
-        ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_LR", d["ASSOC_PROB_LR"])
-
-        ss += "{:<16s} : {}\n".format("Class1", d["CLASS1"])
-        ss += "{:<16s} : {}\n".format("Class2", d["CLASS2"])
-
+        try:
+            ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_BAY", d["ASSOC_PROB_BAY"])
+            ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_LR", d["ASSOC_PROB_LR"])
+        except(KeyError):
+            pass
+        try:
+            ss += "{:<16s} : {}\n".format("Class1", d["CLASS1"])
+        except(KeyError):
+            ss += "{:<16s} : {}\n".format("Class", d["CLASS"])
+        try:
+            ss += "{:<16s} : {}\n".format("Class2", d["CLASS2"])
+        except(KeyError):
+            pass
+        
         tevcat_flag = d["TEVCAT_FLAG"]
         if tevcat_flag == "N":
             tevcat_message = "No TeV association"
@@ -124,8 +128,91 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
         else:
             tevcat_message = "N/A"
         ss += "{:<16s} : {}\n".format("TeVCat flag", tevcat_message)
+        return ss
+    
+    @abc.abstractmethod
+    def _info_more(self):
+        return "\n"
+    
+    def _info_position(self):
+        """Print position info."""
+        d = self.data
+        ss = "\n*** Position info ***\n\n"
+        ss += "{:<20s} : {:.3f}\n".format("RA", d["RAJ2000"])
+        ss += "{:<20s} : {:.3f}\n".format("DEC", d["DEJ2000"])
+        ss += "{:<20s} : {:.3f}\n".format("GLON", d["GLON"])
+        ss += "{:<20s} : {:.3f}\n".format("GLAT", d["GLAT"])
 
-        fmt = "\n{:<32s} : {:.3f}\n"
+        ss += "\n"
+        ss += "{:<20s} : {:.4f}\n".format("Semimajor (68%)", d["Conf_68_SemiMajor"])
+        ss += "{:<20s} : {:.4f}\n".format("Semiminor (68%)", d["Conf_68_SemiMinor"])
+        ss += "{:<20s} : {:.2f}\n".format("Position angle (68%)", d["Conf_68_PosAng"])
+        ss += "{:<20s} : {:.4f}\n".format("Semimajor (95%)", d["Conf_95_SemiMajor"])
+        ss += "{:<20s} : {:.4f}\n".format("Semiminor (95%)", d["Conf_95_SemiMinor"])
+        ss += "{:<20s} : {:.2f}\n".format("Position angle (95%)", d["Conf_95_PosAng"])
+        ss += "{:<20s} : {:.0f}\n".format("ROI number", d["ROI_num"])
+        return ss
+
+    def _info_morphology(self):
+        e = self.data_extended
+        ss = "\n*** Extended source information ***\n\n"
+        ss += "{:<16s} : {}\n".format("Model form", e["Model_Form"])
+        ss += "{:<16s} : {:.4f}\n".format("Model semimajor", e["Model_SemiMajor"])
+        ss += "{:<16s} : {:.4f}\n".format("Model semiminor", e["Model_SemiMinor"])
+        ss += "{:<16s} : {:.4f}\n".format("Position angle", e["Model_PosAng"])
+        ss += "{:<16s} : {}\n".format("Spatial function", e["Spatial_Function"])
+        ss += "{:<16s} : {}\n\n".format("Spatial filename", e["Spatial_Filename"])
+        return ss
+
+    @abc.abstractmethod
+    def _info_spectral_fit(self):
+        return "\n"
+
+    def _info_spectral_points(self):
+        """Print spectral points."""
+        ss = "\n*** Spectral points ***\n\n"
+        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
+        ss += "\n".join(lines)
+        return ss + "\n"
+
+    @abc.abstractmethod
+    def _info_lightcurve(self):
+        return "\n"
+
+    @property
+    def is_pointlike(self):
+        return self.data["Extended_Source_Name"].strip() == ""
+
+    @property
+    def sky_model(self):
+        """Source sky model (`~gammapy.modeling.models.SkyModel`)."""
+        spatial_model = self.spatial_model
+        spectral_model = self.spectral_model
+        return SkyModel(spatial_model, spectral_model, name=self.name)
+
+
+class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
+    """One source from the Fermi-LAT 4FGL catalog.
+
+    Catalog is represented by `~gammapy.catalog.SourceCatalog4FGL`.
+    """
+    asso = [
+        "ASSOC1",
+        "ASSOC2",
+        "ASSOC_TEV",
+        "ASSOC_FGL",
+        "ASSOC_FHL",
+        "ASSOC_GAM1",
+        "ASSOC_GAM2",
+        "ASSOC_GAM3",
+    ]
+    _ebounds = u.Quantity([50, 100, 300, 1000, 3000, 10000, 30000, 300000], "MeV")
+
+    def _info_more(self):
+        """Print other info."""
+        d = self.data
+        ss = "\n*** Other info ***\n\n"
+        fmt = "{:<32s} : {:.3f}\n"
         ss += fmt.format("Significance (100 MeV - 1 TeV)", d["Signif_Avg"])
         ss += "{:<32s} : {:.1f}\n".format("Npred", d["Npred"])
 
@@ -152,38 +239,10 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             12: "Highly curved spectrum; LogParabolaSpectralModel beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see "
             "Section 3.3 in catalog paper).",
         }
-        ss += "{:<20s} : {}\n".format(
+        ss += "\n{:<20s} : {}\n".format(
             "Other flags", flag_message.get(d["Flags"], "N/A")
         )
 
-        return ss
-
-    def _info_position(self):
-        """Print position info."""
-        d = self.data
-        ss = "\n*** Position info ***\n\n"
-        ss += "{:<20s} : {:.3f}\n".format("RA", d["RAJ2000"])
-        ss += "{:<20s} : {:.3f}\n".format("DEC", d["DEJ2000"])
-        ss += "{:<20s} : {:.3f}\n".format("GLON", d["GLON"])
-        ss += "{:<20s} : {:.3f}\n".format("GLAT", d["GLAT"])
-
-        ss += "\n"
-        ss += "{:<20s} : {:.4f}\n".format("Semimajor (95%)", d["Conf_95_SemiMajor"])
-        ss += "{:<20s} : {:.4f}\n".format("Semiminor (95%)", d["Conf_95_SemiMinor"])
-        ss += "{:<20s} : {:.2f}\n".format("Position angle (95%)", d["Conf_95_PosAng"])
-        ss += "{:<20s} : {:.0f}\n".format("ROI number", d["ROI_num"])
-
-        return ss
-
-    def _info_morphology(self):
-        e = self.data_extended
-        ss = "\n*** Extended source information ***\n\n"
-        ss += "{:<16s} : {}\n".format("Model form", e["Model_Form"])
-        ss += "{:<16s} : {:.4f}\n".format("Model semimajor", e["Model_SemiMajor"])
-        ss += "{:<16s} : {:.4f}\n".format("Model semiminor", e["Model_SemiMinor"])
-        ss += "{:<16s} : {:.4f}\n".format("Position angle", e["Model_PosAng"])
-        ss += "{:<16s} : {}\n".format("Spatial function", e["Spatial_Function"])
-        ss += "{:<16s} : {}\n\n".format("Spatial filename", e["Spatial_Filename"])
         return ss
 
     def _info_spectral_fit(self):
@@ -259,12 +318,6 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
 
         return ss
 
-    def _info_spectral_points(self):
-        """Print spectral points."""
-        ss = "\n*** Spectral points ***\n\n"
-        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
-        ss += "\n".join(lines)
-        return ss + "\n"
 
     def _info_lightcurve(self):
         """Print lightcurve info."""
@@ -337,17 +390,6 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
                 )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
-
-    @property
-    def sky_model(self):
-        """Source sky model (`~gammapy.modeling.models.SkyModel`)."""
-        spatial_model = self.spatial_model
-        spectral_model = self.spectral_model
-        return SkyModel(spatial_model, spectral_model, name=self.name)
-
-    @property
-    def is_pointlike(self):
-        return self.data["Extended_Source_Name"].strip() == ""
 
     @property
     def spectral_model(self):
@@ -473,7 +515,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
         return LightCurve(table)
 
 
-class SourceCatalogObject3FGL(SourceCatalogObject):
+class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
     """One source from the Fermi-LAT 3FGL catalog.
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FGL`.
@@ -489,73 +531,10 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     be consistent with previous catalogs.
     """
 
-    def __str__(self):
-        return self.info()
-
-    def info(self, info="all"):
-        """Summary info string.
-
-        Parameters
-        ----------
-        info : {'all', 'basic', 'position', 'spectral', 'lightcurve'}
-            Comma separated list of options
-        """
-        if info == "all":
-            info = "basic,position,spectral,lightcurve"
-
-        ss = ""
-        ops = info.split(",")
-        if "basic" in ops:
-            ss += self._info_basic()
-        if "position" in ops:
-            ss += self._info_position()
-        if "spectral" in ops:
-            ss += self._info_spectral_fit()
-            ss += self._info_spectral_points()
-        if "lightcurve" in ops:
-            ss += self._info_lightcurve()
-        return ss
-
-    def _info_basic(self):
-        """Print basic info."""
+    def _info_more(self):
+        """Print other info."""
         d = self.data
-        ss = "\n*** Basic info ***\n\n"
-        ss += "Catalog row index (zero-based) : {}\n".format(d["catalog_row_index"])
-        ss += "{:<20s} : {}\n".format("Source name", d["Source_Name"])
-        ss += "{:<20s} : {}\n".format("Extended name", d["Extended_Source_Name"])
-
-        def get_nonentry_keys(keys):
-            vals = [d[_].strip() for _ in keys]
-            return ", ".join([_ for _ in vals if _ != ""])
-
-        keys = [
-            "ASSOC1",
-            "ASSOC2",
-            "ASSOC_TEV",
-            "ASSOC_GAM1",
-            "ASSOC_GAM2",
-            "ASSOC_GAM3",
-        ]
-        associations = get_nonentry_keys(keys)
-        ss += "{:<20s} : {}\n".format("Associations", associations)
-
-        keys = ["0FGL_Name", "1FGL_Name", "2FGL_Name", "1FHL_Name"]
-        other_names = get_nonentry_keys(keys)
-        ss += "{:<20s} : {}\n".format("Other names", other_names)
-
-        ss += "{:<20s} : {}\n".format("Class", d["CLASS1"])
-
-        tevcat_flag = d["TEVCAT_FLAG"]
-        if tevcat_flag == "N":
-            tevcat_message = "No TeV association"
-        elif tevcat_flag == "P":
-            tevcat_message = "Small TeV source"
-        elif tevcat_flag == "E":
-            tevcat_message = "Extended TeV source (diameter > 40 arcmins)"
-        else:
-            tevcat_message = "N/A"
-        ss += "{:<20s} : {}\n".format("TeVCat flag", tevcat_message)
-
+        ss = "\n*** Other info ***\n\n"
         flag_message = {
             0: "None",
             1: "Source with TS > 35 which went to TS < 25 when changing the diffuse model. Note that sources with TS < "
@@ -583,26 +562,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         )
 
         return ss
-
-    def _info_position(self):
-        """Print position info."""
-        d = self.data
-        ss = "\n*** Position info ***\n\n"
-        ss += "{:<20s} : {:.3f}\n".format("RA", d["RAJ2000"])
-        ss += "{:<20s} : {:.3f}\n".format("DEC", d["DEJ2000"])
-        ss += "{:<20s} : {:.3f}\n".format("GLON", d["GLON"])
-        ss += "{:<20s} : {:.3f}\n".format("GLAT", d["GLAT"])
-
-        ss += "\n"
-        ss += "{:<20s} : {:.4f}\n".format("Semimajor (68%)", d["Conf_68_SemiMajor"])
-        ss += "{:<20s} : {:.4f}\n".format("Semiminor (68%)", d["Conf_68_SemiMinor"])
-        ss += "{:<20s} : {:.2f}\n".format("Position angle (68%)", d["Conf_68_PosAng"])
-        ss += "{:<20s} : {:.4f}\n".format("Semimajor (95%)", d["Conf_95_SemiMajor"])
-        ss += "{:<20s} : {:.4f}\n".format("Semiminor (95%)", d["Conf_95_SemiMinor"])
-        ss += "{:<20s} : {:.2f}\n".format("Position angle (95%)", d["Conf_95_PosAng"])
-        ss += "{:<20s} : {:.0f}\n".format("ROI number", d["ROI_num"])
-
-        return ss
+    
 
     def _info_spectral_fit(self):
         """Print spectral info."""
@@ -672,12 +632,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         return ss
 
-    def _info_spectral_points(self):
-        """Print spectral points."""
-        ss = "\n*** Spectral points ***\n\n"
-        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
-        ss += "\n".join(lines)
-        return ss + "\n"
 
     def _info_lightcurve(self):
         """Print lightcurve info."""
@@ -792,17 +746,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
                 )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
-
-    @property
-    def sky_model(self):
-        """Source sky model (`~gammapy.modeling.models.SkyModel`)."""
-        spatial_model = self.spatial_model
-        spectral_model = self.spectral_model
-        return SkyModel(spatial_model, spectral_model, name=self.name)
-
-    @property
-    def is_pointlike(self):
-        return self.data["Extended_Source_Name"].strip() == ""
 
     @property
     def flux_points(self):
@@ -1032,83 +975,21 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         return model
 
 
-class SourceCatalogObject3FHL(SourceCatalogObject):
+class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
     """One source from the Fermi-LAT 3FHL catalog.
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FHL`.
     """
-
+    asso = [
+        "ASSOC1",
+        "ASSOC2",
+        "ASSOC_TEV",
+        "ASSOC_GAM",
+    ]
     energy_range = u.Quantity([0.01, 2], "TeV")
     """Energy range of the Fermi 1FHL source catalog"""
 
     _ebounds = u.Quantity([10, 20, 50, 150, 500, 2000], "GeV")
-
-    def __str__(self):
-        return self.info()
-
-    def info(self, info="all"):
-        """Summary info string.
-
-        Parameters
-        ----------
-        info : {'all', 'basic', 'position', 'spectral'}
-            Comma separated list of options
-        """
-        if info == "all":
-            info = "basic,position,spectral,other"
-
-        ss = ""
-        ops = info.split(",")
-        if "basic" in ops:
-            ss += self._info_basic()
-        if "position" in ops:
-            ss += self._info_position()
-            if not self.is_pointlike:
-                ss += self._info_morphology()
-        if "spectral" in ops:
-            ss += self._info_spectral_fit()
-            ss += self._info_spectral_points()
-        if "other" in ops:
-            ss += self._info_other()
-
-        return ss
-
-    def _info_basic(self):
-        """Print basic info."""
-        d = self.data
-        ss = "\n*** Basic info ***\n\n"
-        ss += "Catalog row index (zero-based) : {}\n".format(d["catalog_row_index"])
-        ss += "{:<20s} : {}\n".format("Source name", d["Source_Name"])
-        ss += "{:<20s} : {}\n".format("Extended name", d["Extended_Source_Name"])
-
-        def get_nonentry_keys(keys):
-            vals = [d[_].strip() for _ in keys]
-            return ", ".join([_ for _ in vals if _ != ""])
-
-        keys = ["ASSOC1", "ASSOC2", "ASSOC_TEV", "ASSOC_GAM"]
-        associations = get_nonentry_keys(keys)
-        ss += "{:<16s} : {}\n".format("Associations", associations)
-        ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_BAY", d["ASSOC_PROB_BAY"])
-        ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_LR", d["ASSOC_PROB_LR"])
-
-        ss += "{:<16s} : {}\n".format("Class", d["CLASS"])
-
-        tevcat_flag = d["TEVCAT_FLAG"]
-        if tevcat_flag == "N":
-            tevcat_message = "No TeV association"
-        elif tevcat_flag == "P":
-            tevcat_message = "Small TeV source"
-        elif tevcat_flag == "E":
-            tevcat_message = "Extended TeV source (diameter > 40 arcmins)"
-        else:
-            tevcat_message = "N/A"
-        ss += "{:<16s} : {}\n".format("TeVCat flag", tevcat_message)
-
-        fmt = "\n{:<32s} : {:.3f}\n"
-        ss += fmt.format("Significance (10 GeV - 2 TeV)", d["Signif_Avg"])
-        ss += "{:<32s} : {:.1f}\n".format("Npred", d["Npred"])
-
-        return ss
 
     def _info_position(self):
         """Print position info."""
@@ -1126,17 +1007,6 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         ss += "{:<20s} : {:.2f}\n".format("Position angle (95%)", d["Conf_95_PosAng"])
         ss += "{:<20s} : {:.0f}\n".format("ROI number", d["ROI_num"])
 
-        return ss
-
-    def _info_morphology(self):
-        e = self.data_extended
-        ss = "*** Extended source information ***\n"
-        ss += "{:<16s} : {}\n".format("Model form", e["Model_Form"])
-        ss += "{:<16s} : {:.4f}\n".format("Model semimajor", e["Model_SemiMajor"])
-        ss += "{:<16s} : {:.4f}\n".format("Model semiminor", e["Model_SemiMinor"])
-        ss += "{:<16s} : {:.4f}\n".format("Position angle", e["Model_PosAng"])
-        ss += "{:<16s} : {}\n".format("Spatial function", e["Spatial_Function"])
-        ss += "{:<16s} : {}\n\n".format("Spatial filename", e["Spatial_Filename"])
         return ss
 
     def _info_spectral_fit(self):
@@ -1198,18 +1068,17 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
         return ss
 
-    def _info_spectral_points(self):
-        """Print spectral points."""
-        ss = "\n*** Spectral points ***\n\n"
-        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
-        ss += "\n".join(lines)
-        return ss + "\n"
 
-    def _info_other(self):
+    def _info_more(self):
         """Print other info."""
         d = self.data
         ss = "\n*** Other info ***\n\n"
-        ss += "{:<16s} : {:.3f} {}\n".format(
+        
+        fmt = "{:<32s} : {:.3f}\n"
+        ss += fmt.format("Significance (10 GeV - 2 TeV)", d["Signif_Avg"])
+        ss += "{:<32s} : {:.1f}\n".format("Npred", d["Npred"])
+
+        ss += "\n{:<16s} : {:.3f} {}\n".format(
             "HEP Energy", d["HEP_Energy"].value, d["HEP_Energy"].unit
         )
         ss += "{:<16s} : {:.3f}\n".format("HEP Probability", d["HEP_Prob"])
@@ -1329,17 +1198,6 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
                 )
             else:
                 raise ValueError(f"Invalid morph_type: {morph_type!r}")
-
-    @property
-    def sky_model(self):
-        """Source sky model (`~gammapy.modeling.models.SkyModel`)."""
-        spatial_model = self.spatial_model
-        spectral_model = self.spectral_model
-        return SkyModel(spatial_model, spectral_model, name=self.name)
-
-    @property
-    def is_pointlike(self):
-        return self.data["Extended_Source_Name"].strip() == ""
 
 
 class SourceCatalog3FGL(SourceCatalog):

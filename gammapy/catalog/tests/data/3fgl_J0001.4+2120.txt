@@ -4,10 +4,12 @@
 Catalog row index (zero-based) : 4
 Source name          : 3FGL J0001.4+2120 
 Extended name        :                   
-Associations         : TXS 2358+209, 3EG J2359+2041
-Other names          : 
-Class                : fsrq 
-TeVCat flag          : No TeV association
+Associations     : TXS 2358+209, 3EG J2359+2041
+Class1           : fsrq 
+TeVCat flag      : No TeV association
+
+*** Other info ***
+
 Other flags          : None
 
 *** Position info ***

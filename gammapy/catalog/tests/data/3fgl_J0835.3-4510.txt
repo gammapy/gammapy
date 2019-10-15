@@ -4,10 +4,12 @@
 Catalog row index (zero-based) : 960
 Source name          : 3FGL J0835.3-4510 
 Extended name        :                   
-Associations         : PSR J0835-4510, Vela, Vela Pulsar, 1AGL J0835-4509
-Other names          : 0FGL J0835.4-4510, 1FGL J0835.3-4510, 2FGL J0835.3-4510, 1FHL J0835.3-4510
-Class                : PSR  
-TeVCat flag          : Small TeV source
+Associations     : PSR J0835-4510, Vela, Vela Pulsar, 1AGL J0835-4509
+Class1           : PSR  
+TeVCat flag      : Small TeV source
+
+*** Other info ***
+
 Other flags          : None
 
 *** Position info ***

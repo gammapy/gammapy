@@ -4,10 +4,12 @@
 Catalog row index (zero-based) : 0
 Source name          : 3FGL J0000.1+6545 
 Extended name        :                   
-Associations         : 
-Other names          : 2FGL J2359.6+6543c
-Class                :      
-TeVCat flag          : No TeV association
+Associations     : 
+Class1           :      
+TeVCat flag      : No TeV association
+
+*** Other info ***
+
 Other flags          : Source-to-background ratio less than 10% in highest band in which TS > 25. Background is integrated over the 68%-confidence area (pi*r_682) or 1 square degree, whichever is smaller.
 
 *** Position info ***

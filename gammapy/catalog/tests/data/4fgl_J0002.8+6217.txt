@@ -11,8 +11,11 @@ Class1           : PSR
 Class2           :      
 TeVCat flag      : No TeV association
 
+*** Other info ***
+
 Significance (100 MeV - 1 TeV)   : 27.669
 Npred                            : 2344.5
+
 Other flags          : None
 
 *** Position info ***
@@ -22,6 +25,9 @@ DEC                  : 62.291 deg
 GLON                 : 117.320 deg
 GLAT                 : -0.051 deg
 
+Semimajor (68%)      : 0.0165 deg
+Semiminor (68%)      : 0.0158 deg
+Position angle (68%) : 3.84 deg
 Semimajor (95%)      : 0.0268 deg
 Semiminor (95%)      : 0.0256 deg
 Position angle (95%) : 3.84 deg

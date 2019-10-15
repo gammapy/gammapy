@@ -11,8 +11,11 @@ Class1           : fsrq
 Class2           :      
 TeVCat flag      : No TeV association
 
+*** Other info ***
+
 Significance (100 MeV - 1 TeV)   : 30.666
 Npred                            : 3110.9
+
 Other flags          : None
 
 *** Position info ***
@@ -22,6 +25,9 @@ DEC                  : 21.218 deg
 GLON                 : 107.649 deg
 GLAT                 : -40.168 deg
 
+Semimajor (68%)      : 0.0260 deg
+Semiminor (68%)      : 0.0240 deg
+Position angle (68%) : -60.52 deg
 Semimajor (95%)      : 0.0422 deg
 Semiminor (95%)      : 0.0389 deg
 Position angle (95%) : -60.52 deg
