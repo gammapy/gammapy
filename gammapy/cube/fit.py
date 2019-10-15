@@ -277,8 +277,9 @@ class MapDataset(Dataset):
                 if evaluator.needs_update:
                     evaluator.update(self.exposure, self.psf, self.edisp)
 
-                npred = evaluator.compute_npred()
-                npred_total.stack(npred)
+                if evaluator.contributes:
+                    npred = evaluator.compute_npred()
+                    npred_total.stack(npred)
 
         return npred_total
 
@@ -860,6 +861,7 @@ class MapEvaluator:
         self.exposure = exposure
         self.psf = psf
         self.edisp = edisp
+        self.contributes = True
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -915,11 +917,9 @@ class MapEvaluator:
                 self.exposure = exposure.cutout(
                     position=self.model.position, width=width
                 )
+                self.contributes = True
             except NoOverlapError:
-                raise ValueError(
-                    f"Position {self.model.position!r} of model component is outside the image boundaries."
-                    " Please check the starting values or position parameter boundaries of the model."
-                )
+                self.contributes = False
         else:
             self.exposure = exposure
 
