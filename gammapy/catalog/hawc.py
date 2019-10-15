@@ -2,7 +2,12 @@
 """HAWC catalogs (https://www.hawc-observatory.org)."""
 import numpy as np
 from astropy.table import Table
-from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.modeling.models import (
+    PowerLawSpectralModel,
+    SkyModel,
+    DiskSpatialModel,
+    PointSpatialModel,
+)
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -45,24 +50,22 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
     def _info_basic(self):
         """Print basic info."""
-        d = self.data
-        ss = "\n*** Basic info ***\n\n"
-        ss += "Catalog row index (zero-based) : {}\n".format(d["catalog_row_index"])
-        ss += "{:<15s} : {}\n".format("Source name:", d["source_name"])
-
-        return ss
+        return (
+            f"\n*** Basic info ***\n\n"
+            f"Catalog row index (zero-based) : {self.data['catalog_row_index']}\n"
+            f"Source name : {self.data['source_name']}\n"
+        )
 
     def _info_position(self):
         """Print position info."""
-        d = self.data
-        ss = "\n*** Position info ***\n\n"
-        ss += "{:20s} : {:.3f}\n".format("RA", d["ra"])
-        ss += "{:20s} : {:.3f}\n".format("DEC", d["dec"])
-        ss += "{:20s} : {:.3f}\n".format("GLON", d["glon"])
-        ss += "{:20s} : {:.3f}\n".format("GLAT", d["glat"])
-        ss += "{:20s} : {:.3f}\n".format("Position error", d["pos_err"])
-
-        return ss
+        return (
+            f"\n*** Position info ***\n\n"
+            f"RA: {self.data['ra']:.3f}\n"
+            f"DEC: {self.data['dec']:.3f}\n"
+            f"GLON: {self.data['glon']:.3f}\n"
+            f"GLAT: {self.data['glat']:.3f}\n"
+            f"Position error: {self.data['pos_err']:.3f}\n"
+        )
 
     @staticmethod
     def _info_spectrum_one(d, idx):
@@ -86,7 +89,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         ss = "\n*** Spectral info ***\n\n"
         ss += self._info_spectrum_one(d, 0)
 
-        if self.n_spectra == 2:
+        if self.n_models == 2:
             ss += self._info_spectrum_one(d, 1)
         else:
             ss += "No second spectrum available for this source"
@@ -94,19 +97,35 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         return ss
 
     @property
-    def n_spectra(self):
-        """Number of measured spectra (1 or 2)."""
+    def n_models(self):
+        """Number of models (1 or 2)."""
         return 1 if np.isnan(self.data["spec1_dnde"]) else 2
 
-    def _get_spectral_model(self, idx):
-        pars, errs = {}, {}
-        data = self.data
-        label = f"spec{idx}_"
+    def _get_idx(self, which):
+        if which == "point":
+            return 0
+        elif which == "extended":
+            if self.n_models == 2:
+                return 1
+            else:
+                raise ValueError(f"No extended source analysis available: {self.name}")
+        else:
+            raise ValueError(f"Invalid which: {which!r}")
 
-        pars["amplitude"] = data[label + "dnde"]
-        errs["amplitude"] = data[label + "dnde_err"]
-        pars["index"] = data[label + "index"]
-        errs["index"] = data[label + "index_err"]
+    def spectral_model(self, which="point"):
+        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
+
+        * ``which="point"`` -- Spectral model under the point source assumption.
+        * ``which="extended"`` -- Spectral model under the extended source assumption.
+          Only available for some sources. Raise ValueError if not available.
+        """
+        idx = self._get_idx(which)
+
+        pars, errs = {}, {}
+        pars["amplitude"] = self.data[f"spec{idx}_dnde"]
+        errs["amplitude"] = self.data[f"spec{idx}_dnde_err"]
+        pars["index"] = -self.data[f"spec{idx}_index"]
+        errs["index"] = self.data[f"spec{idx}_index_err"]
         pars["reference"] = "7 TeV"
 
         model = PowerLawSpectralModel(**pars)
@@ -114,27 +133,43 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
         return model
 
-    @property
-    def spectral_models(self):
-        """Spectral models (either one or two).
+    def spatial_model(self, which="point"):
+        """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
-        The HAWC catalog has one or two spectral measurements for each source.
-
-        Returns
-        -------
-        models : list
-            List of `~gammapy.modeling.models.SpectralModel`
+        * ``which="point"`` - `~gammapy.modeling.models.PointSpatialModel`
+        * ``which="extended"`` - `~gammapy.modeling.models.DiskSpatialModel`.
+          Only available for some sources. Raise ValueError if not available.
         """
-        models = [self._get_spectral_model(0)]
+        # TODO: set position error from self.data["pos_err"]
+        idx = self._get_idx(which)
 
-        if self.n_spectra == 2:
-            models.append(self._get_spectral_model(1))
+        if idx == 0:
+            return PointSpatialModel(
+                self.data["glon"], self.data["glat"], frame="galactic"
+            )
+        else:
+            return DiskSpatialModel(
+                self.data["glon"],
+                self.data["glat"],
+                self.data[f"spec{idx}_radius"],
+                frame="galactic",
+            )
 
-        return models
+    def sky_model(self, which="point"):
+        """Sky model (`~gammapy.modeling.models.SkyModel`).
 
-    # TODO: add spatial models
+        * ``which="point"`` - Sky model for point source analysis
+        * ``which="extended"`` - Sky model for extended source analysis.
+          Only available for some sources. Raise ValueError if not available.
 
-    # TODO: add sky model property
+        According to the paper, the radius of the extended source model is only a rough estimate
+        of the source size, based on the residual excess..
+        """
+        model = SkyModel(
+            self.spatial_model(which), self.spectral_model(which), name=self.name
+        )
+        # TODO: set model covariance matrix from sub covariance infos
+        return model
 
 
 class SourceCatalog2HWC(SourceCatalog):

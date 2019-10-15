@@ -2,15 +2,15 @@
 *** Basic info ***
 
 Catalog row index (zero-based) : 0
-Source name:    : 2HWC J0534+220
+Source name : 2HWC J0534+220
 
 *** Position info ***
 
-RA                   : 83.628 deg
-DEC                  : 22.024 deg
-GLON                 : 184.547 deg
-GLAT                 : -5.783 deg
-Position error       : 0.057 deg
+RA: 83.628 deg
+DEC: 22.024 deg
+GLON: 184.547 deg
+GLAT: -5.783 deg
+Position error: 0.057 deg
 
 *** Spectral info ***
 
