@@ -1175,17 +1175,15 @@ class FluxPointsDataset(Dataset):
                 " either 'chi2' or 'chi2assym'"
             )
 
-    
     def write(self, filename, overwrite=True, **kwargs):
         table = self.data.table.copy()
         if self.mask_fit is None:
             mask_fit = self.mask_safe
         else:
-            mask_fit =  self.mask_fit
-        table["mask_fit"]= mask_fit
-        table["mask_safe"]= self.mask_safe
+            mask_fit = self.mask_fit
+        table["mask_fit"] = mask_fit
+        table["mask_safe"] = self.mask_safe
         table.write(str(filename), overwrite=True, **kwargs)
-
 
     @classmethod
     def from_dict(cls, data, components, models):
@@ -1195,14 +1193,16 @@ class FluxPointsDataset(Dataset):
         table = Table.read(data["filename"])
         mask_fit = table["mask_fit"].data.astype("bool")
         mask_safe = table["mask_safe"].data.astype("bool")
-        table.remove_columns(["mask_fit","mask_safe"])
-        return cls(model=SkyModels(models_list),
-                   name=data["name"],
-                   data=FluxPoints(table),
-                   mask_fit=mask_fit,
-                   mask_safe=mask_safe,
-                   likelihood=data["likelihood"])
-        
+        table.remove_columns(["mask_fit", "mask_safe"])
+        return cls(
+            model=SkyModels(models_list),
+            name=data["name"],
+            data=FluxPoints(table),
+            mask_fit=mask_fit,
+            mask_safe=mask_safe,
+            likelihood=data["likelihood"],
+        )
+
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
         return {
