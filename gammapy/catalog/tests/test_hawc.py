@@ -4,12 +4,12 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import SourceCatalog2HWC
-from gammapy.utils.testing import requires_data, requires_dependency
 from gammapy.modeling.models import (
     DiskSpatialModel,
     PointSpatialModel,
     PowerLawSpectralModel,
 )
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")

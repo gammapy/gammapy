@@ -102,8 +102,12 @@ def make_datasets_example():
             dataset = maker.run(obs)
             stacked.stack(dataset)
 
-        stacked.psf = stacked.psf.get_psf_kernel(position=geom.center_skydir, geom=geom, max_radius="0.3 deg")
-        stacked.edisp = stacked.edisp.get_energy_dispersion(position=geom.center_skydir, e_reco=energy_axis.edges)
+        stacked.psf = stacked.psf.get_psf_kernel(
+            position=geom.center_skydir, geom=geom, max_radius="0.3 deg"
+        )
+        stacked.edisp = stacked.edisp.get_energy_dispersion(
+            position=geom.center_skydir, e_reco=energy_axis.edges
+        )
 
         stacked.name = names[idx]
         stacked.model = models[idx] + diffuse_model

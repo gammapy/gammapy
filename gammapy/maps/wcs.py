@@ -722,7 +722,9 @@ class WcsGeom(Geom):
         else:
             cutout_info = None
 
-        return self.__class__(self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes, cutout_info=cutout_info)
+        return self.__class__(
+            self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes, cutout_info=cutout_info
+        )
 
     def pad(self, pad_width):
         if np.isscalar(pad_width):
@@ -904,10 +906,12 @@ class WcsGeom(Geom):
         cutout_info = {
             "parent-geom": self,
             "parent-slices": c2d.slices_original,
-            "cutout-slices": c2d.slices_cutout
+            "cutout-slices": c2d.slices_cutout,
         }
 
-        return self._init_copy(wcs=c2d.wcs, npix=c2d.shape[::-1], cutout_info=cutout_info)
+        return self._init_copy(
+            wcs=c2d.wcs, npix=c2d.shape[::-1], cutout_info=cutout_info
+        )
 
     def region_mask(self, regions, inside=True):
         """Create a mask from a given list of regions

@@ -69,7 +69,9 @@ class MapDataset(Dataset):
     gti : '~gammapy.data.GTI'
         GTI of the observation or union of GTI if it is a stacked observation
     """
+
     tag = "MapDataset"
+
     def __init__(
         self,
         model=None,
@@ -289,7 +291,7 @@ class MapDataset(Dataset):
         rad_axis=None,
         reference_time="2000-01-01",
         name="",
-        **kwargs
+        **kwargs,
     ):
         """Creates a MapDataset object with zero filled maps
 
@@ -344,7 +346,7 @@ class MapDataset(Dataset):
             gti=gti,
             mask_safe=mask_safe,
             name=name,
-            **kwargs
+            **kwargs,
         )
 
     def stack(self, other):
@@ -368,7 +370,9 @@ class MapDataset(Dataset):
             other_bkg = other.background_model.evaluate()
             other_bkg.data[~other.mask_safe] = 0
             bkg.stack(other_bkg)
-            self.background_model = BackgroundModel(bkg, name=self.background_model.name)
+            self.background_model = BackgroundModel(
+                bkg, name=self.background_model.name
+            )
 
         if self.mask_safe is not None and other.mask_safe is not None:
             # TODO: make mask_safe a Map object
@@ -689,7 +693,7 @@ class MapDataset(Dataset):
 
         models_list = [model for model in models if model.name in model_names]
         dataset.model = SkyModels(models_list)
-        if"likelihood" in data:
+        if "likelihood" in data:
             dataset.likelihood_type = data["likelihood"]
         return dataset
 

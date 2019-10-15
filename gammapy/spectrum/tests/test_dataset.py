@@ -16,10 +16,10 @@ from gammapy.modeling.models import (
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import (
+    assert_time_allclose,
     mpl_plot_check,
     requires_data,
     requires_dependency,
-    assert_time_allclose,
 )
 from gammapy.utils.time import time_ref_to_dict
 
@@ -258,7 +258,7 @@ class TestSpectrumOnOff:
             acceptance=np.ones(elo.shape),
             acceptance_off=np.ones(elo.shape) * 10,
             name="test",
-            gti=self.gti
+            gti=self.gti,
         )
 
     def test_spectrumdatasetonoff_create(self):

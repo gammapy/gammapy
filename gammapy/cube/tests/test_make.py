@@ -5,7 +5,12 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.cube import MapDatasetMaker, MapMakerRing, RingBackgroundEstimator, MapDataset
+from gammapy.cube import (
+    MapDataset,
+    MapDatasetMaker,
+    MapMakerRing,
+    RingBackgroundEstimator,
+)
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
@@ -155,10 +160,7 @@ def test_map_maker_obs(observations):
     geom_true = geom(ebounds=[0.1, 0.5, 2.5, 10.0], binsz=1.0)
     geom_exp = geom(ebounds=[0.1, 0.5, 2.5, 10.0])
     maker_obs = MapDatasetMaker(
-        geom=geom_reco,
-        geom_true=geom_true,
-        offset_max=2.0 * u.deg,
-        cutout=False
+        geom=geom_reco, geom_true=geom_true, offset_max=2.0 * u.deg, cutout=False
     )
 
     map_dataset = maker_obs.run(observations[0])

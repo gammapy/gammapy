@@ -2,8 +2,7 @@
 """Utilities to serialize models."""
 from gammapy.cube.fit import MapDataset
 from gammapy.spectrum import FluxPointsDataset, SpectrumDataset
-
-from .models import SkyDiffuseCube, SkyModel, Registry
+from .models import Registry, SkyDiffuseCube, SkyModel
 
 # TODO: move this elsewhere ?
 DATASETS = Registry([MapDataset, SpectrumDataset, FluxPointsDataset])

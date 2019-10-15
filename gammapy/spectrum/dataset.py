@@ -53,6 +53,7 @@ class SpectrumDataset(Dataset):
 
     likelihood_type = "cash"
     tag = "SpectrumDataset"
+
     def __init__(
         self,
         model=None,
@@ -533,6 +534,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     likelihood_type = "wstat"
     tag = "SpectrumDatasetOnOff"
+
     def __init__(
         self,
         model=None,

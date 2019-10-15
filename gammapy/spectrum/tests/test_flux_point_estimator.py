@@ -179,7 +179,7 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, [0.2, 1, 5])
 
         actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
-        assert_allclose(actual, [1.577119e+02, 2.990366e-01, 2.003681e+03], rtol=1e-2)
+        assert_allclose(actual, [1.577119e02, 2.990366e-01, 2.003681e03], rtol=1e-2)
 
     @staticmethod
     @requires_dependency("iminuit")

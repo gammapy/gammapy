@@ -690,14 +690,19 @@ class WcsNDMap(WcsMap):
         """
         if self.geom == other.geom:
             parent_slices, cutout_slices = None, None
-        elif other.geom.cutout_info is not None and self.geom == other.geom.cutout_info["parent-geom"]:
+        elif (
+            other.geom.cutout_info is not None
+            and self.geom == other.geom.cutout_info["parent-geom"]
+        ):
             slices = other.geom.cutout_info["parent-slices"]
             parent_slices = Ellipsis, slices[0], slices[1]
 
             slices = other.geom.cutout_info["cutout-slices"]
             cutout_slices = Ellipsis, slices[0], slices[1]
         else:
-            raise ValueError("Can only stack equivalent maps or cutout of the same map.")
+            raise ValueError(
+                "Can only stack equivalent maps or cutout of the same map."
+            )
 
         data = other.data[cutout_slices]
 

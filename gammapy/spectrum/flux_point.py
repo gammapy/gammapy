@@ -1147,7 +1147,9 @@ class FluxPointsDataset(Dataset):
         print(result)
         print(result.parameters.to_table())
     """
+
     tag = "FluxPointsDataset"
+
     def __init__(
         self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None, name=""
     ):
@@ -1425,7 +1427,7 @@ class FluxPointsDataset(Dataset):
 
         plot_kwargs.setdefault("color", ax.lines[-1].get_color())
         del plot_kwargs["label"]
-        
+
         if self.model.parameters.covariance is not None:
             try:
                 self.model.plot_error(ax=ax, **plot_kwargs)

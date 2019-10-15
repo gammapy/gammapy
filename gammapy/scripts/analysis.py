@@ -251,11 +251,7 @@ class Analysis:
         stack_datasets = self.settings["datasets"]["stack-datasets"]
         log.info("Creating datasets.")
 
-        maker = MapDatasetMaker(
-            geom=geom,
-            geom_true=geom_irf,
-            offset_max=offset_max,
-        )
+        maker = MapDatasetMaker(geom=geom, geom_true=geom_irf, offset_max=offset_max)
         if stack_datasets:
             stacked = MapDataset.create(geom=geom, geom_irf=geom_irf, name="stacked")
             for obs in self.observations:

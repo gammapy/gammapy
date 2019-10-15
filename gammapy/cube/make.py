@@ -12,7 +12,7 @@ from .background import make_map_background_irf
 from .counts import fill_map_counts
 from .edisp_map import make_edisp_map
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
-from .fit import MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, BINSZ_IRF, MapDataset
+from .fit import BINSZ_IRF, MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, MapDataset
 from .psf_map import make_psf_map
 
 __all__ = ["MapDatasetMaker", "MapMakerRing"]
@@ -53,7 +53,7 @@ class MapDatasetMaker:
         migra_axis=None,
         rad_axis=None,
         cutout_mode="trim",
-        cutout=True
+        cutout=True,
     ):
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom.to_binsz(BINSZ_IRF)
@@ -314,7 +314,9 @@ class MapDatasetMaker:
 
         # expand mask safe into 3rd dimension
         nbin = self.geom.get_axis_by_name("energy").nbin
-        kwargs["mask_safe"] = ~mask_safe & np.ones(nbin, dtype=bool)[:, np.newaxis, np.newaxis]
+        kwargs["mask_safe"] = (
+            ~mask_safe & np.ones(nbin, dtype=bool)[:, np.newaxis, np.newaxis]
+        )
 
         mask_safe_irf = self.make_mask_safe_irf(observation)
 
@@ -448,10 +450,7 @@ class MapMakerRing:
         # Compute cutout geometry and slices to stack results back later
 
         # Make maps for this observation
-        return MapDatasetMaker(
-            geom=self.geom,
-            offset_max=self.offset_max,
-        )
+        return MapDatasetMaker(geom=self.geom, offset_max=self.offset_max)
 
     @staticmethod
     def _maps_sum_over_axes(maps, spectrum, keepdims):
@@ -495,7 +494,7 @@ class MapMakerRing:
             maps_obs["background"] = dataset.background_model.map
             maps_obs["exclusion"] = self.exclusion_mask.cutout(
                 position=obs.pointing_radec, width=2 * self.offset_max, mode="trim"
-                )
+            )
 
             if sum_over_axis:
                 maps_obs = self._maps_sum_over_axes(maps_obs, spectrum, keepdims)

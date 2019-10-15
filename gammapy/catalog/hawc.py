@@ -3,10 +3,10 @@
 import numpy as np
 from astropy.table import Table
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
-    SkyModel,
     DiskSpatialModel,
     PointSpatialModel,
+    PowerLawSpectralModel,
+    SkyModel,
 )
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
