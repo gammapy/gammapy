@@ -5,12 +5,11 @@ import astropy.units as u
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import SourceCatalog2HWC
 from gammapy.utils.testing import requires_data, requires_dependency
-from gammapy.modeling.models import DiskSpatialModel, PointSpatialModel
-
-SOURCES = [
-    {"idx": 0, "name": "2HWC J0534+220", "str_ref_file": "data/2hwc_j0534+220.txt"},
-    {"idx": 1, "name": "2HWC J0631+169", "str_ref_file": "data/2hwc_j0631+169.txt"},
-]
+from gammapy.modeling.models import (
+    DiskSpatialModel,
+    PointSpatialModel,
+    PowerLawSpectralModel,
+)
 
 
 @pytest.fixture(scope="session")
@@ -34,8 +33,19 @@ class TestSourceCatalog2HWC:
 class TestSourceCatalogObject2HWC:
     @staticmethod
     def test_data(cat):
-        source = cat[0]
-        assert source.data["source_name"] == "2HWC J0534+220"
+        assert cat[0].data["source_name"] == "2HWC J0534+220"
+        assert cat[0].n_models == 1
+
+        assert cat[1].data["source_name"] == "2HWC J0631+169"
+        assert cat[1].n_models == 2
+
+    @staticmethod
+    def test_str(cat):
+        expected = open(get_pkg_data_filename("data/2hwc_j0534+220.txt")).read()
+        assert str(cat[0]) == expected
+
+        expected = open(get_pkg_data_filename("data/2hwc_j0631+169.txt")).read()
+        assert str(cat[1]) == expected
 
     @staticmethod
     def test_position(cat):
@@ -44,27 +54,20 @@ class TestSourceCatalogObject2HWC:
         assert_allclose(position.dec.deg, 22.024, atol=1e-3)
 
     @staticmethod
-    @pytest.mark.parametrize("ref", SOURCES)
-    def test_str(cat, ref):
-        actual = str(cat[ref["idx"]])
-        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
-        assert actual == expected
+    def test_sky_model(cat):
+        model = cat[1].sky_model("extended")
+        assert model.name == "2HWC J0631+169"
+        assert isinstance(model.spectral_model, PowerLawSpectralModel)
+        assert isinstance(model.spatial_model, DiskSpatialModel)
+
+        with pytest.raises(ValueError):
+            cat[0].sky_model("extended")
 
     @staticmethod
     @requires_dependency("uncertainties")
-    def test_sky_models_one(cat):
-        source = cat[0]
-        assert source.n_models == 1
-        sky_models = source.sky_models
-        assert len(sky_models) == 1
-
-        spectral_models = [model.spectral_model for model in sky_models]
-        assert len(spectral_models) == 1
-        spatial_models = [model.spatial_model for model in sky_models]
-        assert len(spatial_models) == 1
-
-        e_min, e_max = [1, 10] * u.TeV
-        flux, flux_err = spectral_models[0].integral_error(e_min, e_max)
+    def test_spectral_model(cat):
+        m = cat[0].spectral_model()
+        flux, flux_err = m.integral_error(1 * u.TeV, 10 * u.TeV)
         assert flux.unit == "cm-2 s-1"
         assert_allclose(flux.value, 1.72699e-11, rtol=1e-3)
         assert flux_err.unit == "cm-2 s-1"
@@ -72,29 +75,26 @@ class TestSourceCatalogObject2HWC:
 
     @staticmethod
     @requires_dependency("uncertainties")
-    def test_sky_models_two(cat):
-        # This test is just to check that sources with 2 spectra also work OK.
-        source = cat[1]
-        assert source.n_models == 2
-        sky_models = source.sky_models
-        assert len(sky_models) == 2
+    def test_spatial_model(cat):
+        m = cat[1].spatial_model()
+        # p = m.parameters
 
-        spectral_models = [model.spectral_model for model in sky_models]
-        assert len(spectral_models) == 2
-        spatial_models = [model.spatial_model for model in sky_models]
-        assert len(spatial_models) == 2
+        assert isinstance(m, PointSpatialModel)
+        assert m.lon_0.unit == "deg"
+        assert_allclose(m.lon_0.value, 195.614, atol=1e-2)
+        # TODO: add assert on position error
+        # assert_allclose(p.error("lon_0"), tbd)
+        assert m.lat_0.unit == "deg"
+        assert_allclose(m.lat_0.value, 3.507, atol=1e-2)
+        assert m.frame == "galactic"
 
-        e_min, e_max = [1, 10] * u.TeV
-        flux, flux_err = spectral_models[1].integral_error(e_min, e_max)
-        assert flux.unit == "cm-2 s-1"
-        assert_allclose(flux.value, 2.856508e-12, rtol=1e-3)
-        assert flux_err.unit == "cm-2 s-1"
-        assert_allclose(flux_err.value, 4.965776e-13, rtol=1e-3)
+        m = cat[1].spatial_model("extended")
 
-        model1 = spatial_models[1]
-        assert isinstance(spatial_models[0], PointSpatialModel)
-        assert isinstance(model1, DiskSpatialModel)
-
-        assert_allclose(model1.lon_0.value, 195.614)
-        assert_allclose(model1.lat_0.value, 3.507)
-        assert_allclose(model1.r_0.value, 2.0)
+        assert isinstance(m, DiskSpatialModel)
+        assert m.lon_0.unit == "deg"
+        assert_allclose(m.lon_0.value, 195.614, atol=1e-10)
+        assert m.lat_0.unit == "deg"
+        assert_allclose(m.lat_0.value, 3.507, atol=1e-10)
+        assert m.frame == "galactic"
+        assert m.r_0.unit == "deg"
+        assert_allclose(m.r_0.value, 2.0, atol=1e-3)

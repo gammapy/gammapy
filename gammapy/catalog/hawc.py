@@ -103,15 +103,31 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """Number of measured spectra (1 or 2)."""
         return 1 if np.isnan(self.data["spec1_dnde"]) else 2
 
-    def _get_spectral_model(self, idx):
-        pars, errs = {}, {}
-        data = self.data
-        label = f"spec{idx}_"
+    def _get_idx(self, which):
+        if which == "point":
+            return 0
+        elif which == "extended":
+            if self.n_models == 2:
+                return 1
+            else:
+                raise ValueError(f"No extended source analysis available: {self.name}")
+        else:
+            raise ValueError(f"Invalid which: {which!r}")
 
-        pars["amplitude"] = data[label + "dnde"]
-        errs["amplitude"] = data[label + "dnde_err"]
-        pars["index"] = - data[label + "index"]
-        errs["index"] = data[label + "index_err"]
+    def spectral_model(self, which="point"):
+        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
+
+        * ``which="point"`` -- Spectral model under the point source assumption.
+        * ``which="extended"`` -- Spectral model under the extended source assumption.
+          Only available for some sources. Raise ``ValueError`` if not available.
+        """
+        idx = self._get_idx(which)
+
+        pars, errs = {}, {}
+        pars["amplitude"] = self.data[f"spec{idx}_dnde"]
+        errs["amplitude"] = self.data[f"spec{idx}_dnde_err"]
+        pars["index"] = -self.data[f"spec{idx}_index"]
+        errs["index"] = self.data[f"spec{idx}_index_err"]
         pars["reference"] = "7 TeV"
 
         model = PowerLawSpectralModel(**pars)
@@ -119,74 +135,43 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
         return model
 
-    @property
-    def _spectral_models(self):
-        """Spectral models (either one or two).
+    def spatial_model(self, which="point"):
+        """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
-        The HAWC catalog has one or two spectral measurements for each source.
-
-        Returns
-        -------
-        models : list
-            List of `~gammapy.modeling.models.SpectralModel`
+        * ``which="point"`` - `~gammapy.modeling.models.PointSpatialModel`
+        * ``which="extended"`` - `~gammapy.modeling.models.DiskSpatialModel`
+          Only available for some sources. Raise ``ValueError`` if not available.
         """
-        models = [self._get_spectral_model(0)]
+        # TODO: set position error from self.data["pos_err"]
+        idx = self._get_idx(which)
 
-        if self.n_models == 2:
-            models.append(self._get_spectral_model(1))
-
-        return models
-
-    def _get_spatial_model(self, idx):
-        d = self.data
-        label = f"spec{idx}_"
-
-        r_0 = d[label + "radius"]
-        if r_0 != 0.0:
-            model = DiskSpatialModel(d["glon"], d["glat"], r_0, frame="galactic")
+        if idx == 0:
+            return PointSpatialModel(
+                self.data["glon"], self.data["glat"], frame="galactic"
+            )
         else:
-            model = PointSpatialModel(d["glon"], d["glon"], frame="galactic")
+            return DiskSpatialModel(
+                self.data["glon"],
+                self.data["glat"],
+                self.data[f"spec{idx}_radius"],
+                frame="galactic",
+            )
 
+    def sky_model(self, which="point"):
+        """Sky model (`~gammapy.modeling.models.SkyModel`).
+
+        * ``which="point"`` - Sky model for point source analysis
+        * ``which="extended"`` - Sky model for extended source analysis
+          Only available for some sources. Raise ``ValueError`` if not available.
+
+        According to the paper, the radius of the extended source model is only a rough estimate
+        of the source size, based on the residual excess..
+        """
+        model = SkyModel(
+            self.spatial_model(which), self.spectral_model(which), name=self.name
+        )
+        # TODO: set model covariance matrix from sub covariance infos
         return model
-
-    @property
-    def _spatial_models(self):
-        """Spatial models (either one or two).
-
-        The HAWC catalog has one or two tested radius for each source.
-
-        Returns
-        -------
-        models : list
-            List of `~gammapy.modeling.models.SpatialModel`
-        """
-        models = [self._get_spatial_model(0)]
-
-        if self.n_models == 2:
-            models.append(self._get_spatial_model(1))
-
-        return models
-
-    @property
-    def sky_models(self):
-        """Sky models (either one or two).
-
-        The HAWC catalog has one or two models for each source.
-        The radius of secondary model is a rough estimate based on the residual excess
-        above the point source model. This radius should not be regarded as a definite
-        measurement of the source extent.
-
-        Returns
-        -------
-        models : list
-            List of `~gammapy.modeling.models.SkyModel`
-        """
-        sky_models = []
-        for km in range(self.n_models):
-            spatial_model = self._spatial_models[km]
-            spectral_model = self._spectral_models[km]
-            sky_models.append(SkyModel(spatial_model, spectral_model, name=self.name))
-        return sky_models
 
 
 class SourceCatalog2HWC(SourceCatalog):
