@@ -1147,7 +1147,7 @@ class FluxPointsDataset(Dataset):
         print(result)
         print(result.parameters.to_table())
     """
-
+    tag = "FluxPointsDataset"
     def __init__(
         self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None, name=""
     ):

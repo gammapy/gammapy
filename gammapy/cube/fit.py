@@ -69,7 +69,7 @@ class MapDataset(Dataset):
     gti : '~gammapy.data.GTI'
         GTI of the observation or union of GTI if it is a stacked observation
     """
-
+    tag = "MapDataset"
     def __init__(
         self,
         model=None,
@@ -673,10 +673,32 @@ class MapDataset(Dataset):
         hdulist = fits.open(str(filename))
         return cls.from_hdulist(hdulist, name=name)
 
+    @classmethod
+    def from_dict(cls, data, components, models):
+        """Create from dicts and models list generated from YAML serialization."""
+        dataset = cls.read(data["filename"], name=data["name"])
+        bkg_name = data["background"]
+        model_names = data["models"]
+        for component in components["components"]:
+            if component["type"] == "BackgroundModel":
+                if component["name"] == bkg_name:
+                    if "filename" not in component:
+                        component["map"] = dataset.background_model.map
+                    background_model = BackgroundModel.from_dict(component)
+                    dataset.background_model = background_model
+
+        models_list = [model for model in models if model.name in model_names]
+        dataset.model = SkyModels(models_list)
+        if"likelihood" in data:
+            dataset.likelihood_type = data["likelihood"]
+        return dataset
+
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
         return {
             "name": self.name,
+            "type": self.tag,
+            "likelihood": self.likelihood_type,
             "models": self.model.names,
             "background": self.background_model.name,
             "filename": filename,

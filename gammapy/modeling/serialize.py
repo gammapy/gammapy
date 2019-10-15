@@ -1,7 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
 from gammapy.cube.fit import MapDataset
-from .models import BackgroundModel, SkyDiffuseCube, SkyModel, SkyModels
+from gammapy.spectrum import FluxPointsDataset, SpectrumDataset
+
+from .models import SkyDiffuseCube, SkyModel, Registry
+
+# TODO: move this elsewhere ?
+DATASETS = Registry([MapDataset, SpectrumDataset, FluxPointsDataset])
 
 __all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
 
@@ -116,15 +121,18 @@ def datasets_to_dict(datasets, path, overwrite):
             if model not in unique_models:
                 unique_models.append(model)
 
-        if dataset.background_model not in unique_backgrounds:
-            unique_backgrounds.append(dataset.background_model)
+        try:
+            if dataset.background_model not in unique_backgrounds:
+                unique_backgrounds.append(dataset.background_model)
+        except (AttributeError):
+            pass
 
     datasets_dict = {"datasets": datasets_dictlist}
     components_dict = models_to_dict(unique_models + unique_backgrounds)
     return datasets_dict, components_dict
 
 
-class dict_to_datasets:
+def dict_to_datasets(data_list, components):
     """add models and backgrounds to datasets
 
     Parameters
@@ -135,25 +143,10 @@ class dict_to_datasets:
         dict describing model components
     """
 
-    def __init__(self, data_list, components):
-        self.models = dict_to_models(components)
-        self.datasets = []
+    models = dict_to_models(components)
+    datasets = []
 
-        for data in data_list["datasets"]:
-            dataset = MapDataset.read(data["filename"], name=data["name"])
-            bkg_name = data["background"]
-            model_names = data["models"]
-            self.update_dataset(dataset, components, bkg_name, model_names)
-            self.datasets.append(dataset)
-
-    def update_dataset(self, dataset, components, bkg_name, model_names):
-        for component in components["components"]:
-            if component["type"] == "BackgroundModel":
-                if component["name"] == bkg_name:
-                    if "filename" not in component:
-                        component["map"] = dataset.background_model.map
-                    background_model = BackgroundModel.from_dict(component)
-                    dataset.background_model = background_model
-
-        models = [model for model in self.models if model.name in model_names]
-        dataset.model = SkyModels(models)
+    for data in data_list["datasets"]:
+        dataset = DATASETS.get_cls(data["type"]).from_dict(data, components, models)
+        datasets.append(dataset)
+    return datasets

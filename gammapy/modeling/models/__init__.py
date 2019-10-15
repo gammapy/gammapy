@@ -8,7 +8,7 @@ from .spectral_crab import *
 from .temporal import *
 
 
-class ModelRegistry(list):
+class Registry(list):
     """Gammapy model registry class."""
 
     def get_cls(self, tag):
@@ -18,7 +18,7 @@ class ModelRegistry(list):
         raise KeyError(f"No model found with tag: {tag!r}")
 
 
-SPATIAL_MODELS = ModelRegistry(
+SPATIAL_MODELS = Registry(
     [
         ConstantSpatialModel,
         TemplateSpatialModel,
@@ -30,7 +30,7 @@ SPATIAL_MODELS = ModelRegistry(
 )
 """Built-in spatial models."""
 
-SPECTRAL_MODELS = ModelRegistry(
+SPECTRAL_MODELS = Registry(
     [
         ConstantSpectralModel,
         CompoundSpectralModel,
@@ -51,7 +51,7 @@ SPECTRAL_MODELS = ModelRegistry(
 )
 """Built-in spectral models."""
 
-TEMPORAL_MODELS = ModelRegistry(
+TEMPORAL_MODELS = Registry(
     [
         ConstantTemporalModel,
         PhaseCurveTemplateTemporalModel,
@@ -60,7 +60,7 @@ TEMPORAL_MODELS = ModelRegistry(
 )
 """Built-in temporal models."""
 
-MODELS = ModelRegistry(
+MODELS = Registry(
     SPATIAL_MODELS
     + SPECTRAL_MODELS
     + TEMPORAL_MODELS
