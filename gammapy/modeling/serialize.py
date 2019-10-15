@@ -119,7 +119,13 @@ def datasets_to_dict(datasets, path, overwrite):
         for model in dataset.model.skymodels:
             if model not in unique_models:
                 unique_models.append(model)
+
+        try:
             if dataset.background_model not in unique_backgrounds:
+                unique_backgrounds.append(dataset.background_model)
+        except (AttributeError):
+            pass
+
     datasets_dict = {"datasets": datasets_dictlist}
     components_dict = models_to_dict(unique_models + unique_backgrounds)
     return datasets_dict, components_dict
