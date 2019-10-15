@@ -336,7 +336,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
             # TODO: give time as UTC string, not MET
             ss += "{:<40s} : {:.3} s (Mission elapsed time)\n".format(
-                "Time peak", d["Time_Peak"]
+                "Time peak", d["Time_Peak"].value
             )
             peak_interval = d["Peak_Interval"].to_value("day")
             ss += "{:<40s} : {:.3} day\n".format("Peak interval", peak_interval)
@@ -648,7 +648,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
 
             # TODO: give time as UTC string, not MET
             ss += "{:<40s} : {:.3} s (Mission elapsed time)\n".format(
-                "Time peak", d["Time_Peak"]
+                "Time peak", d["Time_Peak"].value
             )
             peak_interval = d["Peak_Interval"].to_value("day")
             ss += "{:<40s} : {:.3} day\n".format("Peak interval", peak_interval)
