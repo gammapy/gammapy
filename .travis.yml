@@ -124,7 +124,7 @@ install:
           conda info;
           conda --version;
           conda build --version;
-          source activate root;
+          conda activate root;
       fi
 
     # This is needed to make matplotlib plot testing work
