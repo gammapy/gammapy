@@ -66,9 +66,9 @@ class TestSourceCatalogObject2HWC:
         e_min, e_max = [1, 10] * u.TeV
         flux, flux_err = spectral_models[0].integral_error(e_min, e_max)
         assert flux.unit == "cm-2 s-1"
-        assert_allclose(flux.value, 1.2966462620662674e-12)
+        assert_allclose(flux.value, 1.72699e-11, rtol=1e-3)
         assert flux_err.unit == "cm-2 s-1"
-        assert_allclose(flux_err.value, 1.671177271712936e-14)
+        assert_allclose(flux_err.value, 3.252178e-13, rtol=1e-3)
 
     @staticmethod
     @requires_dependency("uncertainties")
@@ -87,9 +87,9 @@ class TestSourceCatalogObject2HWC:
         e_min, e_max = [1, 10] * u.TeV
         flux, flux_err = spectral_models[1].integral_error(e_min, e_max)
         assert flux.unit == "cm-2 s-1"
-        assert_allclose(flux.value, 3.3381204455973463e-13)
+        assert_allclose(flux.value, 2.856508e-12, rtol=1e-3)
         assert flux_err.unit == "cm-2 s-1"
-        assert_allclose(flux_err.value, 4.697084075095061e-14)
+        assert_allclose(flux_err.value, 4.965776e-13, rtol=1e-3)
 
         model1 = spatial_models[1]
         assert isinstance(spatial_models[0], PointSpatialModel)
