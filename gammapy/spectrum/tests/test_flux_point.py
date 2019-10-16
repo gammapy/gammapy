@@ -264,7 +264,7 @@ def test_flux_point_dataset_serialization(tmp_path):
     model = SkyModel(spatial_model, spectral_model, name="test_model")
     dataset = FluxPointsDataset(SkyModels([model]), data, name="test_dataset")
 
-    Datasets([dataset]).to_yaml(tmp_path / "tmp_")
+    Datasets([dataset]).to_yaml(str(tmp_path / "tmp_"))
     datasets = Datasets.from_yaml(tmp_path / "tmp_datasets.yaml", tmp_path / "tmp_models.yaml")
     new_dataset = datasets.datasets[0]
     assert_allclose(new_dataset.data.table["dnde"], dataset.data.table["dnde"], 1e-4)
