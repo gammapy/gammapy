@@ -1176,17 +1176,46 @@ class FluxPointsDataset(Dataset):
             )
 
     def write(self, filename, overwrite=True, **kwargs):
+        """Write flux point dataset to file.
+
+        Parameters
+        ----------
+        filename : str
+            Filename to write to.
+        overwrite : bool
+            Overwrite existing file.
+        **kwargs : dict
+             Keyword arguments passed to `~astropy.table.Table.write`.
+        """
         table = self.data.table.copy()
         if self.mask_fit is None:
             mask_fit = self.mask_safe
         else:
             mask_fit = self.mask_fit
+
         table["mask_fit"] = mask_fit
         table["mask_safe"] = self.mask_safe
-        table.write(str(filename), overwrite=True, **kwargs)
+        table.write(str(filename), overwrite=overwrite, **kwargs)
 
     @classmethod
     def from_dict(cls, data, components, models):
+        """Create flux point dataset from dict.
+
+        Parameters
+        ----------
+        data : dict
+            Dict containing data to create dataset from.
+        components : list of dict
+            Not used.
+        models : list of `SkyModel`
+            List of model components.
+
+        Returns
+        -------
+        dataset : `FluxPointDataset`
+            Flux point datasets.
+
+        """
         models_list = [model for model in models if model.name in data["models"]]
         # TODO: assumes that the model is a skymodel
         # so this will work only when this change will be effective
