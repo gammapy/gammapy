@@ -53,6 +53,7 @@ class SpatialModel(Model):
         return self(coords.lon, coords.lat)
 
     def to_dict(self):
+        """Create dict for YAML serilisation"""
         data = super().to_dict()
         data["frame"] = self.frame
         data["parameters"] = data.pop("parameters")
@@ -403,6 +404,14 @@ class ConstantSpatialModel(SpatialModel):
 
         super().__init__([self.value])
 
+    def to_dict(self):
+        """Create dict for YAML serilisation"""
+        # redefined to ignore frame attribute from parent class
+        data = super().to_dict()
+        data.pop("frame")
+        data["parameters"] = data.pop("parameters")
+        return data
+
     @staticmethod
     def evaluate(lon, lat, value):
         """Evaluate model."""
@@ -508,6 +517,7 @@ class TemplateSpatialModel(SpatialModel):
         return init
 
     def to_dict(self):
+        """Create dict for YAML serilisation"""
         data = super().to_dict()
         data["filename"] = self.filename
         data["normalize"] = self.normalize

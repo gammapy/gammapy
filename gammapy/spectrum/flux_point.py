@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.modeling import Dataset, Datasets, Fit
-from gammapy.modeling.models import PowerLawSpectralModel, ScaleSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, ScaleSpectralModel, SkyModels
 from gammapy.utils.interpolation import interpolate_likelihood_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -1168,12 +1168,79 @@ class FluxPointsDataset(Dataset):
         self.mask_safe = mask_safe
 
         if likelihood in ["chi2", "chi2assym"]:
-            self._likelihood = likelihood
+            self.likelihood_type = likelihood
         else:
             raise ValueError(
                 "'{likelihood}' is not a valid fit statistic, please choose"
                 " either 'chi2' or 'chi2assym'"
             )
+
+    def write(self, filename, overwrite=True, **kwargs):
+        """Write flux point dataset to file.
+
+        Parameters
+        ----------
+        filename : str
+            Filename to write to.
+        overwrite : bool
+            Overwrite existing file.
+        **kwargs : dict
+             Keyword arguments passed to `~astropy.table.Table.write`.
+        """
+        table = self.data.table.copy()
+        if self.mask_fit is None:
+            mask_fit = self.mask_safe
+        else:
+            mask_fit = self.mask_fit
+
+        table["mask_fit"] = mask_fit
+        table["mask_safe"] = self.mask_safe
+        table.write(str(filename), overwrite=overwrite, **kwargs)
+
+    @classmethod
+    def from_dict(cls, data, components, models):
+        """Create flux point dataset from dict.
+
+        Parameters
+        ----------
+        data : dict
+            Dict containing data to create dataset from.
+        components : list of dict
+            Not used.
+        models : list of `SkyModel`
+            List of model components.
+
+        Returns
+        -------
+        dataset : `FluxPointDataset`
+            Flux point datasets.
+
+        """
+        models_list = [model for model in models if model.name in data["models"]]
+        # TODO: assumes that the model is a skymodel
+        # so this will work only when this change will be effective
+        table = Table.read(data["filename"])
+        mask_fit = table["mask_fit"].data.astype("bool")
+        mask_safe = table["mask_safe"].data.astype("bool")
+        table.remove_columns(["mask_fit", "mask_safe"])
+        return cls(
+            model=SkyModels(models_list),
+            name=data["name"],
+            data=FluxPoints(table),
+            mask_fit=mask_fit,
+            mask_safe=mask_safe,
+            likelihood=data["likelihood"],
+        )
+
+    def to_dict(self, filename=""):
+        """Convert to dict for YAML serialization."""
+        return {
+            "name": self.name,
+            "type": self.tag,
+            "models": self.model.names,
+            "likelihood": self.likelihood_type,
+            "filename": filename,
+        }
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}: \n"
@@ -1223,7 +1290,7 @@ class FluxPointsDataset(Dataset):
                         str_ += "\t \t {:23}:   {:.2f} {} \n".format(
                             par.name, par.value, par.unit
                         )
-            str_ += "\t{:32}:   {}\n".format("Likelihood type", self._likelihood)
+            str_ += "\t{:32}:   {}\n".format("Likelihood type", self.likelihood_type)
             str_ += "\t{:32}:   {:.2f}\n".format("Likelihood value", self.likelihood())
         return str_
 
@@ -1252,10 +1319,10 @@ class FluxPointsDataset(Dataset):
         model = self.flux_pred()
         data = self.data.table["dnde"].quantity
 
-        if self._likelihood == "chi2":
+        if self.likelihood_type == "chi2":
             sigma = self.data.table["dnde_err"].quantity
             return self._likelihood_chi2(data, model, sigma)
-        elif self._likelihood == "chi2assym":
+        elif self.likelihood_type == "chi2assym":
             sigma_n = self.data.table["dnde_errn"].quantity
             sigma_p = self.data.table["dnde_errp"].quantity
             return self._likelihood_chi2_assym(data, model, sigma_n, sigma_p)
