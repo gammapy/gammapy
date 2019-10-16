@@ -697,3 +697,11 @@ def test_datasets_stack_reduce():
 
     info_table_cum = datasets.info_table(cumulative=True)
     assert_allclose(info_table_cum["n_on"], [124, 250, 369, 459])
+
+
+def test_spectrum_dataset_on_off_to_yaml(tmpdir):
+    spectrum_datasets_on_off = make_observation_list()
+    datasets = Datasets(spectrum_datasets_on_off)
+    datasets.to_yaml(path=str(tmpdir))
+
+
