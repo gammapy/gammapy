@@ -119,8 +119,10 @@ Task list
 We suggest the following additions, removals and changes, relative to the current
 documentation (see https://docs.gammapy.org/0.14/).
 
-#. Make it easier to link from Notebooks to 
-#. ``first_steps.ipynb`` - keep as-is? Or should we start with real analyses?
+#. https://docs.gammapy.org/0.14/getting-started.html - TBD: keep as-is or change?
+#. ``first_steps.ipynb`` - keep as-is? or change to show a likelihood analysis?
+#. Where to add docs explaining package structure and general concepts,
+   and how data reduction and modeling and fitting works?
 #. Improve ``maps.ipynb`` and ``docs/maps``.
    Remove empty ``docs/map/wcsmap.rst``, move content from ``docs/maps/plotting.rst``
    and ``docs/maps/hpxmap.rst``, and most examples from ``docs/maps/index.rst`` to
@@ -141,6 +143,10 @@ documentation (see https://docs.gammapy.org/0.14/).
 #. ``fermi_lat.ipynb`` - Shorten and polish a bit.
    Reproduce some 3FHL catalog results, and compare / overplot 3FHL results to Gammapy
    (e.g. Crab or Galactic center).
+#. ``analysis_3d.ipynb``, ``analysis_3d_joint.ipynb``, ``cta_data_analysis.ipynb``
+   TBD: How many analysis notebooks, showing config and Python interface?
+   Add a new ``datasets.ipynb`` or ``mwl.ipynb`` to show how this works?
+   Split by data reduction and modeling / fitting?
 #. ``image_analysis.ipynb`` and ``image_fitting_with_sherpa.ipynb``
    Shorten and polish. Do the same analysis with both tools, results should be identical.
    This can be seen as "Gammapy for Sherpa users" or "Sherpa for Gammapy users" tutorials.
@@ -154,6 +160,12 @@ documentation (see https://docs.gammapy.org/0.14/).
    examples with CTA prod3 IRFs. Extra points if some results from papers are reproduced
    with Gammapy (e.g. sensitivity curves)
 #. ``hgps.ipynb`` - shorten and polish a bit
+#. ``pulsar_analysis.ipynb`` - TBD: needs work?
+#. ``mcmc_sampling.ipynb`` - TBD: needs work?
+#. ``background_model.ipynb`` - TBD: needs work?
+#. ``source_population_model.ipynb`` and ``docs/astro/population.rst`` - Polish
+#. ``astro_dark_matter.ipynb`` and ``docs/astro/darkmatter.rst`` - TBD: needs work?
+#. ``cwt.ipynb`` - TBD: remove? improve?
 #. If available, add tutorial notebook for event sampling, i.e. simulating data.
 #. TBD: where to describe the design with observations, datasets and data reduction?
 #. TBD: Remove or move https://docs.gammapy.org/0.14/references.html?
@@ -167,9 +179,10 @@ documentation (see https://docs.gammapy.org/0.14/).
 
 Technical improvements for docs:
 
-#. (`GH 2175`_)
-#. (`GH 172`_)
-#. (`GH 2221`_)
+#. Make it easier to link from Notebooks to 
+#. Links between notebooks and Sphinx docs (`GH 2175`_)
+#. Include examples in Sphinx docs (`GH 172`_)
+#. Review and improve inheritance and docstrings (`GH 2221`_)
 #. Sphinx HTML formatting missing colon in parameters (`GH 2164`_)
 
 This list isn't sorted by priority. We don't think it's useful to argue whether
