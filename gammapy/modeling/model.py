@@ -41,6 +41,7 @@ class Model:
         return ss
 
     def to_dict(self):
+        """Create dict for YAML serilisation"""
         return {"type": self.tag, "parameters": self.parameters.to_dict()["parameters"]}
 
     @classmethod
