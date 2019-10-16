@@ -7,6 +7,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from gammapy.data import DataStore
 from gammapy.spectrum import SpectrumDatasetMaker
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture
@@ -48,6 +49,7 @@ def spectrum_dataset_maker_crab():
     return SpectrumDatasetMaker(region=region, e_reco=e_reco, e_true=e_true)
 
 
+@requires_data()
 def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_maker_crab, observations_hess_dl3):
     datasets = []
 
@@ -65,6 +67,7 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_maker_crab, observatio
     assert_allclose(datasets[1].background.data.sum(), 1.741604, rtol=1e-5)
 
 
+@requires_data()
 def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_maker_gc, observations_cta_dc1):
     datasets = []
 
