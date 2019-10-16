@@ -88,11 +88,13 @@ def energy_axis_from_fgst_ccube(hdu):
 def energy_axis_from_fgst_template(hdu):
     bands = Table.read(hdu)
 
-    # TODO: check upper / lowercase handling
-    try:
-        nodes = bands["Energy"].data
-    except KeyError:
-        nodes = bands["ENERGY"].data
+    allowed_names = ["Energy", "ENERGY", "energy"]
+    for colname in bands.colnames:
+        if colname in allowed_names:
+            tag = colname
+            break
+            
+    nodes = bands[tag].data
 
     return [MapAxis.from_nodes(nodes=nodes, name="energy", unit="MeV", interp="log")]
 
