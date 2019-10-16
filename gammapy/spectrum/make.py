@@ -1,9 +1,10 @@
 import logging
+import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
-from gammapy.irf import EnergyDependentMultiGaussPSF, apply_containment_fraction
+from gammapy.irf import apply_containment_fraction
 from gammapy.maps import WcsGeom
 from gammapy.maps.geom import frame_to_coordsys
 from .core import CountsSpectrum
@@ -28,11 +29,6 @@ class SpectrumDatasetMaker:
         True energy binning
     containment_correction : bool
         Apply containment correction for point sources and circular on regions.
-    binsz : `~astropy.coordinates.Angle`
-        Reference map bin size.
-    width : `~astropy.coordinates.Angle`
-        Reference map width, should encompass the whole region.
-
     """
 
     def __init__(
@@ -41,15 +37,11 @@ class SpectrumDatasetMaker:
         e_reco,
         e_true=None,
         containment_correction=True,
-        binsz="0.01 deg",
-        width="0.5 deg",
     ):
         self.region = region
         self.e_reco = e_reco
         self.e_true = e_true or e_reco
         self.containment_correction = containment_correction
-        self.binsz = Angle(binsz)
-        self.width = Angle(width)
 
     # TODO: move this to a RegionGeom class
     @lazyproperty
@@ -58,21 +50,11 @@ class SpectrumDatasetMaker:
         coordsys = frame_to_coordsys(self.region.center.frame.name)
         return WcsGeom.create(
             skydir=self.region.center,
-            width=self.width,
-            binsz=self.binsz,
+            npix=(1, 1),
+            binsz=1,
             proj="TAN",
             coordsys=coordsys,
         )
-
-    @lazyproperty
-    # TODO: move this to a RegionGeom class
-    def region_solid_angle(self):
-        """Solid angle of the region"""
-        geom = self.geom_ref
-        coords = geom.get_coord()
-        solid_angle = geom.solid_angle()
-        mask = self.region.contains(coords.skycoord, wcs=geom.wcs)
-        return solid_angle[mask].sum()
 
     def make_counts(self, observation):
         """Make counts
@@ -110,6 +92,11 @@ class SpectrumDatasetMaker:
         background : `CountsSpectrum`
             Background spectrum
         """
+        if not isinstance(self.region, CircleSkyRegion):
+            raise TypeError(
+                "Background computation only supported for circular regions."
+            )
+
         offset = observation.pointing_radec.separation(self.region.center)
         energy_hi = self.e_reco[1:]
         energy_lo = self.e_reco[:-1]
@@ -120,7 +107,8 @@ class SpectrumDatasetMaker:
             fov_lon=0 * u.deg, fov_lat=offset, energy_reco=self.e_reco
         )
 
-        data *= self.region_solid_angle
+        solid_angle = 2 * np.pi * (1 - np.cos(self.region.radius)) * u.sr
+        data *= solid_angle
         data *= observation.observation_time_duration
 
         counts = CountsSpectrum(
@@ -147,14 +135,9 @@ class SpectrumDatasetMaker:
         if self.containment_correction:
             if not isinstance(self.region, CircleSkyRegion):
                 raise TypeError(
-                    "Containment correction only support for circular regions."
+                    "Containment correction only supported for circular regions."
                 )
-            psf = observation.psf
-
-            if isinstance(psf, EnergyDependentMultiGaussPSF):
-                psf = psf.to_psf3d()
-
-            table_psf = psf.to_energy_dependent_table_psf(theta=offset)
+            table_psf = observation.psf.to_energy_dependent_table_psf(theta=offset)
             aeff = apply_containment_fraction(aeff, table_psf, self.region.radius)
 
         return aeff

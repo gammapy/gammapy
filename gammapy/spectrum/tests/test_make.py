@@ -61,8 +61,8 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_maker_crab, observatio
     assert_allclose(datasets[0].livetime.value, 1581.736758)
     assert_allclose(datasets[1].livetime.value, 1572.686724)
 
-    assert_allclose(datasets[0].background.data.sum(), 1.754928, rtol=1e-5)
-    assert_allclose(datasets[1].background.data.sum(), 1.759318, rtol=1e-5)
+    assert_allclose(datasets[0].background.data.sum(), 1.737258, rtol=1e-5)
+    assert_allclose(datasets[1].background.data.sum(), 1.741604, rtol=1e-5)
 
 
 def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_maker_gc, observations_cta_dc1):
@@ -78,5 +78,5 @@ def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_maker_gc, observations
     assert_allclose(datasets[0].livetime.value, 1764.000034)
     assert_allclose(datasets[1].livetime.value, 1764.000034)
 
-    assert_allclose(datasets[0].background.data.sum(), 2.261111, rtol=1e-5)
-    assert_allclose(datasets[1].background.data.sum(), 2.186609, rtol=1e-5)
+    assert_allclose(datasets[0].background.data.sum(), 2.238345, rtol=1e-5)
+    assert_allclose(datasets[1].background.data.sum(), 2.164593, rtol=1e-5)
