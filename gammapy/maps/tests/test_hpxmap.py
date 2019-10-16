@@ -10,7 +10,6 @@ from gammapy.maps.geom import coordsys_to_frame
 from gammapy.maps.utils import fill_poisson
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
-pytest.importorskip("numpy", "1.12.0")
 pytest.importorskip("healpy")
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log")]

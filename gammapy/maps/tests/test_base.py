@@ -8,7 +8,6 @@ from astropy.units import Quantity, Unit
 from gammapy.maps import HpxGeom, HpxNDMap, Map, MapAxis, WcsGeom, WcsNDMap
 from gammapy.utils.testing import requires_dependency
 
-pytest.importorskip("numpy", "1.12.0")
 pytest.importorskip("healpy")
 
 map_axes = [

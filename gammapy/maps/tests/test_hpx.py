@@ -17,7 +17,6 @@ from gammapy.maps.hpx import (
     unravel_hpx_index,
 )
 
-pytest.importorskip("numpy", "1.13.0")
 pytest.importorskip("healpy")
 
 hpx_allsky_test_geoms = [

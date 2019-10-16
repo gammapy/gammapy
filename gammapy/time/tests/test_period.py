@@ -6,8 +6,6 @@ from astropy.stats import LombScargle
 from gammapy.time import plot_periodogram, robust_periodogram
 from gammapy.utils.testing import requires_dependency
 
-pytest.importorskip("astropy", "3.0")
-
 
 def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
     """
