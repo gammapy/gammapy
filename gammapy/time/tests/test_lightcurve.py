@@ -86,11 +86,9 @@ def test_lightcurve_properties_flux(lc):
 
 
 @pytest.mark.parametrize("format", ["fits", "ascii.ecsv", "ascii.csv"])
-def test_lightcurve_read_write(tmpdir, lc, format):
-    filename = str(tmpdir / "spam")
-
-    lc.write(filename, format=format)
-    lc = LightCurve.read(filename, format=format)
+def test_lightcurve_read_write(tmp_path, lc, format):
+    lc.write(tmp_path / "tmp", format=format)
+    lc = LightCurve.read(tmp_path / "tmp", format=format)
 
     # Check if time-related info round-trips
     time = lc.time

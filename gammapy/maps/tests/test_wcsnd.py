@@ -64,55 +64,55 @@ def test_wcsndmap_init(npix, binsz, coordsys, proj, skydir, axes):
 @pytest.mark.parametrize(
     ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsndmap_read_write(tmp_path, npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(
         npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
     )
-    filename = str(tmpdir / "map.fits")
+    path = tmp_path / "tmp.fits"
 
     m0 = WcsNDMap(geom)
     fill_poisson(m0, mu=0.5)
-    m0.write(filename, overwrite=True)
-    m1 = WcsNDMap.read(filename)
-    m2 = Map.read(filename)
-    m3 = Map.read(filename, map_type="wcs")
+    m0.write(path, overwrite=True)
+    m1 = WcsNDMap.read(path)
+    m2 = Map.read(path)
+    m3 = Map.read(path, map_type="wcs")
     assert_allclose(m0.data, m1.data)
     assert_allclose(m0.data, m2.data)
     assert_allclose(m0.data, m3.data)
 
-    m0.write(filename, sparse=True, overwrite=True)
-    m1 = WcsNDMap.read(filename)
-    m2 = Map.read(filename)
-    m3 = Map.read(filename, map_type="wcs")
+    m0.write(path, sparse=True, overwrite=True)
+    m1 = WcsNDMap.read(path)
+    m2 = Map.read(path)
+    m3 = Map.read(path, map_type="wcs")
     assert_allclose(m0.data, m1.data)
     assert_allclose(m0.data, m2.data)
     assert_allclose(m0.data, m3.data)
 
     # Specify alternate HDU name for IMAGE and BANDS table
-    m0.write(filename, hdu="IMAGE", hdu_bands="TEST", overwrite=True)
-    m1 = WcsNDMap.read(filename)
-    m2 = Map.read(filename)
-    m3 = Map.read(filename, map_type="wcs")
+    m0.write(path, hdu="IMAGE", hdu_bands="TEST", overwrite=True)
+    m1 = WcsNDMap.read(path)
+    m2 = Map.read(path)
+    m3 = Map.read(path, map_type="wcs")
 
 
-def test_wcsndmap_read_write_fgst(tmpdir):
-    filename = str(tmpdir / "map.fits")
+def test_wcsndmap_read_write_fgst(tmp_path):
+    path = tmp_path / "tmp.fits"
 
     axis = MapAxis.from_bounds(100.0, 1000.0, 4, name="energy", unit="MeV")
     geom = WcsGeom.create(npix=10, binsz=1.0, proj="AIT", coordsys="GAL", axes=[axis])
 
     # Test Counts Cube
     m = WcsNDMap(geom)
-    m.write(filename, conv="fgst-ccube", overwrite=True)
-    with fits.open(filename) as h:
+    m.write(path, conv="fgst-ccube", overwrite=True)
+    with fits.open(path) as h:
         assert "EBOUNDS" in h
 
-    m2 = Map.read(filename)
+    m2 = Map.read(path)
     assert m2.geom.axes[0].name == "energy"
 
     # Test Model Cube
-    m.write(filename, conv="fgst-template", overwrite=True)
-    with fits.open(filename) as h:
+    m.write(path, conv="fgst-template", overwrite=True)
+    with fits.open(path) as h:
         assert "ENERGIES" in h
 
 
@@ -124,7 +124,7 @@ def test_wcsndmap_read_ccube():
     assert_allclose(energy_axis.edges.min().to_value("GeV"), 10, rtol=1e-3)
 
 
-def test_wcs_nd_map_data_transpose_issue(tmpdir):
+def test_wcs_nd_map_data_transpose_issue(tmp_path):
     # Regression test for https://github.com/gammapy/gammapy/issues/1346
 
     # Our test case: a little map with WCS shape (3, 2), i.e. numpy array shape (2, 3)
@@ -142,14 +142,14 @@ def test_wcs_nd_map_data_transpose_issue(tmpdir):
     assert_equal(m.data, data)
 
     # Data should be unmodified after write / read to normal image format
-    filename = str(tmpdir / "normal.fits.gz")
-    m.write(filename)
-    assert_equal(Map.read(filename).data, data)
+    m.write(tmp_path / "normal.fits.gz")
+    m2 = Map.read(tmp_path / "normal.fits.gz")
+    assert_equal(m2.data, data)
 
     # Data should be unmodified after write / read to sparse image format
-    filename = str(tmpdir / "sparse.fits.gz")
-    m.write(filename)
-    assert_equal(Map.read(filename).data, data)
+    m.write(tmp_path / "sparse.fits.gz")
+    m2 = Map.read(tmp_path / "sparse.fits.gz")
+    assert_equal(m2.data, data)
 
 
 @pytest.mark.parametrize(

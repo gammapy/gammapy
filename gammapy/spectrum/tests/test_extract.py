@@ -140,12 +140,12 @@ class TestSpectrumExtraction:
         assert len(extraction.spectrum_observations) == 0
 
     @staticmethod
-    def test_run(tmpdir, extraction):
+    def test_run(tmp_path, extraction):
         """Test the run method and check if files are written correctly"""
         extraction.run()
-        extraction.write(outdir=str(tmpdir), overwrite=True)
+        extraction.write(outdir=tmp_path)
         testobs = SpectrumDatasetOnOff.from_ogip_files(
-            str(tmpdir / "ogip_data" / "pha_obs23523.fits")
+            tmp_path / "ogip_data/pha_obs23523.fits"
         )
         assert_quantity_allclose(
             testobs.aeff.data.data, extraction.spectrum_observations[0].aeff.data.data
@@ -159,13 +159,13 @@ class TestSpectrumExtraction:
         )
 
     @requires_dependency("sherpa")
-    def test_sherpa(self, tmpdir, extraction):
+    def test_sherpa(self, tmp_path, extraction):
         """Same as above for files to be used with sherpa"""
         import sherpa.astro.ui as sau
 
         extraction.run()
-        extraction.write(outdir=str(tmpdir), use_sherpa=True, overwrite=True)
-        sau.load_pha(str(tmpdir / "ogip_data" / "pha_obs23523.fits"))
+        extraction.write(outdir=tmp_path, use_sherpa=True)
+        sau.load_pha(str(tmp_path / "ogip_data/pha_obs23523.fits"))
         arf = sau.get_arf()
 
         actual = arf._arf._specresp

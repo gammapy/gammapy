@@ -136,13 +136,11 @@ def test_psfmap_to_from_hdulist():
     assert new_psfmap.exposure_map.geom == psfmap.exposure_map.geom
 
 
-def test_psfmap_read_write(tmpdir):
+def test_psfmap_read_write(tmp_path):
     psfmap = make_test_psfmap(0.15 * u.deg)
 
-    # test read/write
-    filename = str(tmpdir / "psfmap.fits")
-    psfmap.write(filename, overwrite=True)
-    new_psfmap = PSFMap.read(filename)
+    psfmap.write(tmp_path / "tmp.fits")
+    new_psfmap = PSFMap.read(tmp_path / "tmp.fits")
 
     assert_allclose(psfmap.psf_map.quantity, new_psfmap.psf_map.quantity)
 

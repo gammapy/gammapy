@@ -91,14 +91,13 @@ def test_edisp_map_to_from_hdulist():
     assert new_edmap.exposure_map.geom == edmap.exposure_map.geom
 
 
-def test_edisp_map_read_write(tmpdir):
-    edmap = make_edisp_map_test()
+def test_edisp_map_read_write(tmp_path):
+    edisp_map = make_edisp_map_test()
 
-    filename = str(tmpdir / "edispmap.fits")
-    edmap.write(filename, overwrite=True)
-    new_edmap = EDispMap.read(filename)
+    edisp_map.write(tmp_path / "tmp.fits")
+    new_edmap = EDispMap.read(tmp_path / "tmp.fits")
 
-    assert_allclose(edmap.edisp_map.quantity, new_edmap.edisp_map.quantity)
+    assert_allclose(edisp_map.edisp_map.quantity, new_edmap.edisp_map.quantity)
 
 
 def test_edisp_map_to_energydispersion():
@@ -108,7 +107,7 @@ def test_edisp_map_to_energydispersion():
     e_reco = np.logspace(-0.3, 0.2, 200) * u.TeV
 
     edisp = edmap.get_energy_dispersion(position, e_reco)
-    # Note that the bias and resolution are rather poorly evaluated on an EnergyDisperion object
+    # Note that the bias and resolution are rather poorly evaluated on an EnergyDispersion object
     assert_allclose(edisp.get_bias(e_true=1.0 * u.TeV), 0.0, atol=3e-2)
     assert_allclose(edisp.get_resolution(e_true=1.0 * u.TeV), 0.2, atol=3e-2)
 

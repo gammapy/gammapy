@@ -53,11 +53,9 @@ def test_background_3d_basics(bkg_3d):
     assert bkg_2d.data.data.shape == (2, 3)
 
 
-def test_background_3d_read_write(tmpdir, bkg_3d):
-    filename = str(tmpdir / "bkg3d.fits")
-    bkg_3d.to_fits().writeto(filename)
-
-    bkg_3d_2 = Background3D.read(filename)
+def test_background_3d_read_write(tmp_path, bkg_3d):
+    bkg_3d.to_fits().writeto(tmp_path / "bkg3d.fits")
+    bkg_3d_2 = Background3D.read(tmp_path / "bkg3d.fits")
 
     axis = bkg_3d_2.data.axis("energy")
     assert axis.nbin == 2
@@ -181,11 +179,9 @@ def test_background_2d_evaluate(bkg_2d):
     assert res.shape == (2,)
 
 
-def test_background_2d_read_write(tmpdir, bkg_2d):
-    filename = str(tmpdir / "bkg2d.fits")
-    bkg_2d.to_fits().writeto(filename)
-
-    bkg_2d_2 = Background2D.read(filename)
+def test_background_2d_read_write(tmp_path, bkg_2d):
+    bkg_2d.to_fits().writeto(tmp_path / "tmp.fits")
+    bkg_2d_2 = Background2D.read(tmp_path / "tmp.fits")
 
     axis = bkg_2d_2.data.axis("energy")
     assert axis.nbin == 2

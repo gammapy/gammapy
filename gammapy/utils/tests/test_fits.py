@@ -81,10 +81,9 @@ class TestSmartHDUList:
         # make sure it returns an int index all right.
         assert self.hdus.get_hdu_index(hdu="TABLE2") == 3
 
-    def test_read_write(self, tmpdir):
-        filename = str(tmpdir / "data.fits")
-        self.hdus.write(filename)
-        hdus2 = SmartHDUList.open(filename)
+    def test_read_write(self, tmp_path):
+        self.hdus.write(tmp_path / "tmp.fits")
+        hdus2 = SmartHDUList.open(tmp_path / "tmp.fits")
         assert self.hdus.names == hdus2.names
 
 
