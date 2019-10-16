@@ -88,13 +88,11 @@ def energy_axis_from_fgst_ccube(hdu):
 def energy_axis_from_fgst_template(hdu):
     bands = Table.read(hdu)
 
-    allowed_names=["Energy","ENERGY","energy"]
-    for colname in bands.colnames:
-        if colname in allowed_names :
-            tag = colname
-            break
-    nodes = bands[tag].data
-
+    # TODO: check upper / lowercase handling
+    try:
+        nodes = bands["Energy"].data
+    except KeyError:
+        nodes = bands["ENERGY"].data
 
     return [MapAxis.from_nodes(nodes=nodes, name="energy", unit="MeV", interp="log")]
 
@@ -176,6 +174,15 @@ def coordsys_to_frame(coordsys):
         return "galactic"
     else:
         raise ValueError(f"Unrecognized coordinate system: {coordsys!r}")
+
+
+def frame_to_coordsys(frame):
+    if frame in ["fk5", "fk4", "icrs"]:
+        return "CEL"
+    elif frame == "galactic":
+        return "GAL"
+    else:
+        raise ValueError(f"Unrecognized coordinate system: {frame!r}")
 
 
 # TODO: remove (or improve)
