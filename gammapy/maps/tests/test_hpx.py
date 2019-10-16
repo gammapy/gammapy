@@ -244,7 +244,7 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
     idx = geom.get_idx(flat=True)
     idx_slice = geom_slice.get_idx(flat=True)
     if geom.ndim > 2:
-        m = np.all([np.in1d(t, [1]) for t in idx[1:]], axis=0)
+        m = np.all([np.isin(t, [1]) for t in idx[1:]], axis=0)
         assert_allclose(idx_slice, (idx[0][m],))
     else:
         assert_allclose(idx_slice, idx)
@@ -260,8 +260,8 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
     idx = geom.get_idx()
     idx_slice = geom_slice.get_idx()
     if geom.ndim > 2:
-        m = np.all([np.in1d(t, [1]) for t in idx[1:]], axis=0)
-        assert_allclose(idx_slice, (idx[0].flat[m],))
+        m = np.all([np.isin(t, [1]) for t in idx[1:]], axis=0)
+        assert_allclose(idx_slice, (idx[0][m],))
     else:
         assert_allclose(idx_slice, idx)
 
