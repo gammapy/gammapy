@@ -1062,33 +1062,6 @@ class MapCoord:
             f"\tcoordsys : {self.coordsys}\n"
         )
 
-    # TODO: this is a temporary solution until we have decided how to handle
-    # quantities uniformly. This should be called after any `MapCoord.create()`
-    # to support that users can pass quantities in any Map.xxx_by_coord() method.
-    def match_axes_units(self, geom):
-        """Match the units of the non-spatial axes to a given map geometry.
-
-        Parameters
-        ----------
-        geom : `Geom`
-            Map geometry with specified units per axis.
-
-        Returns
-        -------
-        coords : `MapCoord`
-            Map coord object with matched units
-        """
-        coords = {}
-
-        for name, coord in self._data.items():
-            if name in ["lon", "lat"]:
-                coords[name] = coord
-            else:
-                ax = geom.get_axis_by_name(name)
-                coords[name] = u.Quantity(coord, ax.unit, copy=False).value
-
-        return self.__class__(coords, coordsys=self.coordsys)
-
 
 class Geom(abc.ABC):
     """Map geometry base class.
