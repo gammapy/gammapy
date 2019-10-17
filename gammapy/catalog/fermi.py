@@ -470,15 +470,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
     @property
     def lightcurve(self):
-        """Lightcurve (`~gammapy.time.LightCurve`).
-
-        Examples
-        --------
-        >>> from gammapy.catalog import source_catalogs
-        >>> source = source_catalogs['3fgl']['3FGL J0349.9-2102']
-        >>> lc = source.lightcurve
-        >>> lc.plot()
-        """
+        """Lightcurve (`~gammapy.time.LightCurve`)."""
         flux = self.data["Flux_History"]
 
         # Flux error is given as asymmetric high/low
@@ -786,15 +778,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
 
     @property
     def lightcurve(self):
-        """Lightcurve (`~gammapy.time.LightCurve`).
-
-        Examples
-        --------
-        >>> from gammapy.catalog import source_catalogs
-        >>> source = source_catalogs['3fgl']['3FGL J0349.9-2102']
-        >>> lc = source.lightcurve
-        >>> lc.plot()
-        """
+        """Lightcurve (`~gammapy.time.LightCurve`)."""
         flux = self.data["Flux_History"]
 
         # Flux error is given as asymmetric high/low

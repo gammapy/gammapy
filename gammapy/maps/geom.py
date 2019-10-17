@@ -93,7 +93,7 @@ def energy_axis_from_fgst_template(hdu):
         if colname in allowed_names:
             tag = colname
             break
-            
+
     nodes = bands[tag].data
 
     return [MapAxis.from_nodes(nodes=nodes, name="energy", unit="MeV", interp="log")]
