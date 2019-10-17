@@ -918,15 +918,9 @@ class MapCoord:
             the `~astropy.coordinates.SkyCoord` object.
         """
         skycoord = coords[0]
-        name = skycoord.frame.name
-        if name in ["icrs", "fk5"]:
-            coords = (skycoord.ra.deg, skycoord.dec.deg) + coords[1:]
-            coords = cls._from_lonlat(coords, coordsys="CEL")
-        elif name in ["galactic"]:
-            coords = (skycoord.l.deg, skycoord.b.deg) + coords[1:]
-            coords = cls._from_lonlat(coords, coordsys="GAL")
-        else:
-            raise ValueError(f"Unrecognized coordinate frame: {name!r}")
+        coordsys_skycoord = frame_to_coordsys(skycoord.frame.name)
+        coords = (skycoord.data.lon.deg, skycoord.data.lat.deg) + coords[1:]
+        coords = cls._from_lonlat(coords, coordsys=coordsys_skycoord)
 
         if coordsys is None:
             return coords
@@ -955,6 +949,8 @@ class MapCoord:
                 if k == "skycoord":
                     continue
                 coords_dict[k] = v
+            if coordsys is None:
+                coordsys = frame_to_coordsys(frame.name)
             return cls(coords_dict, coordsys=coordsys)
         else:
             raise ValueError("coords dict must contain 'lon'/'lat' or 'skycoord'.")
@@ -1061,33 +1057,6 @@ class MapCoord:
             f"\tndim     : {self.ndim}\n"
             f"\tcoordsys : {self.coordsys}\n"
         )
-
-    # TODO: this is a temporary solution until we have decided how to handle
-    # quantities uniformly. This should be called after any `MapCoord.create()`
-    # to support that users can pass quantities in any Map.xxx_by_coord() method.
-    def match_axes_units(self, geom):
-        """Match the units of the non-spatial axes to a given map geometry.
-
-        Parameters
-        ----------
-        geom : `Geom`
-            Map geometry with specified units per axis.
-
-        Returns
-        -------
-        coords : `MapCoord`
-            Map coord object with matched units
-        """
-        coords = {}
-
-        for name, coord in self._data.items():
-            if name in ["lon", "lat"]:
-                coords[name] = coord
-            else:
-                ax = geom.get_axis_by_name(name)
-                coords[name] = u.Quantity(coord, ax.unit, copy=False).value
-
-        return self.__class__(coords, coordsys=self.coordsys)
 
 
 class Geom(abc.ABC):

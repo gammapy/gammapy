@@ -135,6 +135,7 @@ def test_mapcoords_create():
     assert_allclose(coords.lat, lat)
     assert coords.coordsys == "CEL"
     assert coords.ndim == 2
+
     coords = MapCoord.create((skycoord_gal,))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
@@ -171,6 +172,7 @@ def test_mapcoords_create():
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
     assert_allclose(coords["energy"], energy)
+    assert coords.coordsys == "CEL"
     assert coords.ndim == 3
 
     # 3D dict  w/ vectors
