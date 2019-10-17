@@ -22,7 +22,7 @@ def test_compute_ts_map(input_maps):
     """Minimal test of compute_ts_image"""
     kernel = Gaussian2DKernel(5)
 
-    ts_estimator = TSMapEstimator(method="leastsq iter", n_jobs=4, threshold=1)
+    ts_estimator = TSMapEstimator(method="leastsq iter", threshold=1)
     result = ts_estimator.run(input_maps, kernel=kernel)
 
     assert "leastsq iter" in repr(ts_estimator)
@@ -39,7 +39,7 @@ def test_compute_ts_map_downsampled(input_maps):
     kernel = Gaussian2DKernel(2.5)
 
     ts_estimator = TSMapEstimator(
-        method="root brentq", n_jobs=4, error_method="conf", ul_method="conf"
+        method="root brentq", error_method="conf", ul_method="conf"
     )
     result = ts_estimator.run(input_maps, kernel=kernel, downsampling_factor=2)
 

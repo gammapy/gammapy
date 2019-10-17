@@ -194,33 +194,23 @@ has pixel coordinates ``(0, 0)`` (and not ``(1, 1)`` as shown e.g. in ds9).
 
 You should use ``origin=0`` when calling any of the pixel to world or world to pixel coordinate transformations in `astropy.wcs`.
 
-When to use C or Cython or Numba for speed
-------------------------------------------
+Performance
+-----------
 
-Most of Gammapy is written using Python and Numpy array expressions calling functions (e.g. from Scipy)
-that operate on Numpy arrays.
-This is often nice because it means that algorithms can be implemented with few lines of high-level code,
+Currently Gammapy is 99% Python and scientific Python code. Most memory used is in Numpy arrays,
+since most Gammapy and Astropy objects hold the data in Numpy arrays, and there's some fraction
+of memory in Python objects. We have 1% of Cython code, although it's not really needed in those
+cases, we could rewrite that using just Numpy.
 
-There is a very small fraction of code though (one or a few percent) where this results in code that is
-either cumbersome or too slow. E.g. to compute TS or upper limit images, one needs to do a root finding
-method with different number of iterations for each pixel ... that's impossible (or at least very
-cumbersome / hard to read) to implement with array expressions and Python loops over pixels are slow.
+In the future, we plan to benchmark and improve the performance both of our existing code
+(e.g. avoid temp copies of Numpy arrays, better algorithms), and also to introduce parallel
+execution that can take advantage of multi-core CPUs (and maybe even multiple machines).
+There's many options how to do that, e.g. using Numba, Cython, Dask, Ray, multiprocessing
+to name a few. Also, parallelism can be introduced for different tasks and at different levels,
+e.g. during data reduction, or at the dataset or model component or at the function level.
+This is planned for 2020, but really prototyping and pull requests on performance are welcome
+any time.
 
-In these cases we encourage the use of `Cython <http://cython.org/>`__ or `Numba <http://numba.pydata.org/>`__,
-or writing the core code in C and exposing it to Python via Cython.
-These are popular and simple ways to get C speed from Python.
-
-To use several CPU cores consider using the Python standard library
-`multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`__ module.
-
-Note that especially the use of Numba should be considered an experiment.
-It is a very nice, but new technology and no-one uses it in production.
-Before the Gammapy 1.0 release we will re-evaluate the status of Numba and decide whether it's
-an optional dependency we use for speed, or whether we use the much more established Cython
-(Scipy, scikit-image, Astropy, ... all use Cython).
-
-At the time of writing (April 2015), the TS map computation code uses Cython and multiprocessing
-and Numba is not used yet.
 
 Assert convention
 -----------------

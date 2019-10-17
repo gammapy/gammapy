@@ -46,8 +46,6 @@ the null hypothesis is computed using `~gammapy.stats.cash` statistics.
 To optimize the performance of the code, the fitting procedure is simplified by
 finding roots of the derivative of the fit statistics with respect to the flux
 amplitude. This approach is described in detail in Appendix A of [Stewart2009]_.
-To further improve the performance, Pythons's `multiprocessing` facility is
-used.
 
 The following example shows how to compute a TS image for Fermi-LAT 3FHL galactic
 center data:

@@ -1,9 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
-import contextlib
 import functools
 import logging
-import multiprocessing
 import warnings
 import numpy as np
 import scipy.optimize
@@ -72,7 +70,6 @@ def f_cash(x, counts, background, model):
 class TSMapEstimator:
     r"""Compute TS map using different optimization methods.
 
-
     The map is computed fitting by a single parameter amplitude fit. The fit is
     simplified by finding roots of the the derivative of the fit statistics using
     various root finding algorithms. The approach is sescribed in Appendix A
@@ -100,8 +97,6 @@ class TSMapEstimator:
         Upper limit estimation method.
     ul_sigma : int (2)
         Sigma for flux upper limits.
-    n_jobs : int
-        Number of parallel jobs to use for the computation.
     threshold : float (None)
         If the TS value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time.
@@ -135,7 +130,6 @@ class TSMapEstimator:
         error_sigma=1,
         ul_method="covar",
         ul_sigma=2,
-        n_jobs=1,
         threshold=None,
         rtol=0.001,
     ):
@@ -152,7 +146,6 @@ class TSMapEstimator:
             "error_sigma": error_sigma,
             "ul_method": ul_method,
             "ul_sigma": ul_sigma,
-            "n_jobs": n_jobs,
             "threshold": threshold,
             "rtol": rtol,
         }
@@ -336,11 +329,7 @@ class TSMapEstimator:
         x, y = np.where(mask.data)
         positions = list(zip(x, y))
 
-        with contextlib.closing(multiprocessing.Pool(processes=p["n_jobs"])) as pool:
-            log.info(f"Number of jobs to compute TS map: {p['n_jobs']}")
-            results = pool.map(wrap, positions)
-
-        pool.join()
+        results = list(map(wrap, positions))
 
         # Set TS values at given positions
         j, i = zip(*positions)
