@@ -170,23 +170,25 @@ class Datasets:
         datasets = dict_to_datasets(data_list, components)
         return cls(datasets)
 
-    def to_yaml(self, path, overwrite=False):
+    def to_yaml(self, path, prefix="", overwrite=False):
         """Serialize datasets to YAML and FITS files.
 
         Parameters
         ----------
-        path : str
+        path: `pathlib.Path`
             path to write files
+        prefix : str
+            common prefix of file names
         overwrite : bool
             overwrite datasets FITS files
         """
         from .serialize import datasets_to_dict
 
         datasets_dict, components_dict = datasets_to_dict(
-            self.datasets, path, overwrite
+            self.datasets, path, prefix, overwrite
         )
-        write_yaml(datasets_dict, path + "datasets.yaml", sort_keys=False)
-        write_yaml(components_dict, path + "models.yaml", sort_keys=False)
+        write_yaml(datasets_dict, str(path / f"{prefix}_datasets.yaml"), sort_keys=False)
+        write_yaml(components_dict, str(path / f"{prefix}_models.yaml"), sort_keys=False)
 
     def stack_reduce(self):
         """Reduce the Datasets to a unique Dataset by stacking them together.

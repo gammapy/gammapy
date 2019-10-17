@@ -106,13 +106,27 @@ def _link_shared_parameters(models):
                     shared_register[name] = param
 
 
-def datasets_to_dict(datasets, path, overwrite):
+def datasets_to_dict(datasets, path, prefix, overwrite):
+    """Convert datasets to dicts for serialization.
+
+    Parameters
+    ----------
+    datasets : `~gammapy.modeling.Datasets`
+        Datasets
+    path: `pathlib.Path`
+        path to write files
+    prefix : str
+        common prefix of file names
+    overwrite : bool
+        overwrite datasets FITS files
+    """
+
     unique_models = []
     unique_backgrounds = []
     datasets_dictlist = []
 
     for dataset in datasets:
-        filename = path + "data_" + dataset.name + ".fits"
+        filename = str(path / f"{prefix}_data_{dataset.name}.fits")
         dataset.write(filename, overwrite)
         datasets_dictlist.append(dataset.to_dict(filename=filename))
 
