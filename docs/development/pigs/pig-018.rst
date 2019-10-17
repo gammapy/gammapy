@@ -90,37 +90,27 @@ of both, but we give the following rough guidelines:
   tutorials at the top, and the API docs at the bottom. Some pages have
   significant content, which is not related to code examples in between.
   E.g. for maps, modeling or IRFs there are is a description of the design.
+- Add a Gammapy workflow overview page to the RST docs, where the general data
+  analysis concept is explained: DL3 -> Datasets -> Model -> Fitting
 
 Notebooks Overview
 ------------------
-We propose to structure and extende the notebook / tutorial content in the following way:
+We propose to structure and extend the notebook content in the following way:
 
-Analysis Intro
-~~~~~~~~~~~~~~
-- HESS DL3 data analysis 1D / 3D / joint / stacked (``hess.ipynb``) (HLI)
-- CTA 1DC simulation / analysis (``cta_data_analysis.ipynb``, ) (simulation + 2nd level API)
-- Fermi-LAT 3FHL data analysis (``fermi_lat_ipynb``) (2nd level API)
 
-Package Intro
-~~~~~~~~~~~~~
-- Gammapy workflow overview (no code, to be implemented)
+Analysis Intro (HLI)
+~~~~~~~~~~~~~~~~~~~~
+- HESS DL3 high level interface analysis 1D / 3D / joint / stacked (``hess.ipynb``)
 
-- Data access / IRFs (``gammapy.data`` / ``gammapy.irf``) (``cta_1dc_introduction.ipynb``)
-- Data selection and reduction (``gammapy.cube`` / ``gammapy.spectrum``) (to be implemented)
-- Datasets (``gammapy.modeling`` / ``gammapy.cube`` / ``gammapy.spectrum``) (to be implemented)
-- Maps (``gammapy.maps``) (``maps.ipynb``)
-- Models (``gammapy.modeling.models``) (``models.ipynb``)
-- Fitting (``gammapy.modeling``) (to be implemented)
-- Statistic (``gammapy.stats``) (to be implemented)
-
-- Source detection (``gammapy.detect``) (``detect_ts.ipynb``, ``cwt.ipynb``)
-- Source catalogs (``gammapy.catalog``) (to be implemented)
-- Dark matter models (``gammapy.astro.darkmatter``) (``astro_dark_matter.ipynb``)
-- Source population modelling (``gammapy.astro.population``) (``source_population_model.ipynb``)
+Data access
+~~~~~~~~~~~
+- HESS DL3 data (to be implemented)
+- CTA 1DC data simulation (``cta_data_analysis.ipynb``)
+- Fermi-LAT 3FHL data (``fermi_lat.ipynb``)
 
 Analysis Advanced (2nd level API)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Observation grouping (to be implemented)
+- Observation selection / grouping (to be implemented)
 - Light curve computation (``light_curve.ipynb``)
 - Phase curve computation (``pulsar_analysis.ipynb``)
 - Dark matter analysis (to be implemented)
@@ -133,9 +123,20 @@ Analysis Advanced (2nd level API)
 - Flux point fitting (``sed_fitting_gammacat_fermi.ipynb``)
 - Background model making (``background_model.ipynb``)?
 
+Subpackage Notebooks
+~~~~~~~~~~~~~~~~~~~~
+- Datasets (``gammapy.modeling`` / ``gammapy.cube`` / ``gammapy.spectrum``) (to be implemented)
+- Maps (``gammapy.maps``) (``maps.ipynb``)
+- Models (``gammapy.modeling.models``) (``models.ipynb``)
+- Fitting (``gammapy.modeling``) (to be implemented)
+- Statistic (``gammapy.stats``) (to be implemented)
+- Source detection (``gammapy.detect``) (``detect_ts.ipynb``, ``cwt.ipynb``)
+- Source catalogs (``gammapy.catalog``) (to be implemented)
 
 Extra Topics
 ~~~~~~~~~~~~
+- Dark matter models (``gammapy.astro.darkmatter``) (``astro_dark_matter.ipynb``)
+- Source population modelling (``gammapy.astro.population``) (``source_population_model.ipynb``)
 - Sherpa for Gammapy users (``image_fitting_with_sherpa.ipynb``, ``spectrum_fitting_with_sherpa.ipynb``)?
 - Astropy regions / photutils for Gammapy users (to be implemented)?
 - HGPS data inspection (``hgps.ipynb``)?
