@@ -142,7 +142,7 @@ def test_datasets_to_io(tmp_path):
     path = Path(tmp_path)
     datasets.to_yaml(path, prefix="written")
     datasets_read = Datasets.from_yaml(
-        str(path / "written_datasets.yaml"), str(path / "written_models.yaml")
+        path / "written_datasets.yaml", path / "written_models.yaml"
     )
     assert len(datasets_read.datasets) == 2
     dataset0 = datasets_read.datasets[0]

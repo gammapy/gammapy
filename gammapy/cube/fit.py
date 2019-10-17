@@ -781,7 +781,7 @@ class MapDataset(Dataset):
             "likelihood": self.likelihood_type,
             "models": self.model.names,
             "background": self.background_model.name,
-            "filename": filename,
+            "filename": str(filename),
         }
 
     def to_spectrum_dataset(self, on_region, containment_correction=False):

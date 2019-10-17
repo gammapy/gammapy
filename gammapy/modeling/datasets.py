@@ -187,8 +187,8 @@ class Datasets:
         datasets_dict, components_dict = datasets_to_dict(
             self.datasets, path, prefix, overwrite
         )
-        write_yaml(datasets_dict, str(path / f"{prefix}_datasets.yaml"), sort_keys=False)
-        write_yaml(components_dict, str(path / f"{prefix}_models.yaml"), sort_keys=False)
+        write_yaml(datasets_dict, path / f"{prefix}_datasets.yaml", sort_keys=False)
+        write_yaml(components_dict, path / f"{prefix}_models.yaml", sort_keys=False)
 
     def stack_reduce(self):
         """Reduce the Datasets to a unique Dataset by stacking them together.

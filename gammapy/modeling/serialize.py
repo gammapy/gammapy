@@ -126,7 +126,7 @@ def datasets_to_dict(datasets, path, prefix, overwrite):
     datasets_dictlist = []
 
     for dataset in datasets:
-        filename = str(path / f"{prefix}_data_{dataset.name}.fits")
+        filename = path / f"{prefix}_data_{dataset.name}.fits"
         dataset.write(filename, overwrite)
         datasets_dictlist.append(dataset.to_dict(filename=filename))
 
