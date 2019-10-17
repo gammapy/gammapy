@@ -83,35 +83,77 @@ but we did look at and think it's useful to compare other examples:
 Proposal
 ========
 
-Concept
--------
+General Concept
+---------------
 
 We propose to mostly keep the existing Gammapy documentation setup, i.e. to
-maintain some documentation in RST pages and some in Jupyter notebooks. We admit
-that there is no clear separation what content should to where, but roughly the
-idea is as follows:
+maintain part of the documentation in RST pages and another part in Jupyter
+notebooks. We admit that there is no clear separation between the content
+of both, but we give the following rough guidelines:
 
-- Most sub-package RST pages are short. We put the link to relevant hands-on
-  tutorials at the top, and the API docs at the bottom. Some pages have
-  significant content in between, e.g. for maps, modeling or IRFs there is a
-  description of the design.
 - More content is moved to Jupyter notebooks. E.g. currently the RST pages for
-  maps, modeling, catalog, detect, ... have a few examples. Those will be moved
-  to notebooks ``maps.ipynb``, ``modeling.ipynb``, ``catalog.ipynb`` and
+  maps, modeling, catalog, detect, etc. have a few code examples. Those will
+  be moved corresponding notebooks ``maps.ipynb``, ``modeling.ipynb``, ``catalog.ipynb`` and
   ``detect.ipynb``, i.e. in many cases there would be a hands-on tutorial
   introduction for each sub-package. More cross-links between IPYNB, RST and
   API docs should be created.
-- There is one tutorial notebook "CTA with Gammapy", "H.E.S.S. with Gammapy",
-  "Fermi-LAT with Gammapy" that is the starting point for users working with
-  CTA, H.E.S.S., Fermi-LAT data. In the future, similar notebooks e.g. for HAWC
-  or MAGIC or VERITAS or KM3Net or ... would be welcome. We remove
-  https://gammapy.org/cta.html and put that info (updated) at the top of the
-  "CTA with Gammapy" tutorial. Apart from that, tutorials will be organised by analysis topic,
-  not by instrument.
-- For most tutorials we use H.E.S.S. example data because it is publicly available.
-  From CTA, we only have a few simulated observations from the first data challenge,
-  which used the public prod 3 IRFs. We plan to change many tutorials to CTA once
-  public simulated or real datasets become available in the coming years.
+- Keep sub-package RST pages short and put links to relevant hands-on
+  tutorials at the top, and the API docs at the bottom. Some pages have
+  significant content, which is not related to code examples in between.
+  E.g. for maps, modeling or IRFs there are is a description of the design.
+
+Notebooks Overview
+------------------
+We propose to structure the notebook / tutorial content in the following way:
+
+
+Analysis Intro
+~~~~~~~~~~~~~~
+- HESS DL3 data analysis 1D / 3D / joint / stacked (``hess.ipynb``) (HLI)
+- CTA 1DC simulation / analysis (``cta_data_analysis.ipynb``, ) (simulation + 2nd level API)
+- Fermi-LAT 3FHL data analysis (``fermi_lat_ipynb``) (2nd level API)
+
+Package Intro
+~~~~~~~~~~~~~
+- Gammapy workflow overview (no code, to be implemented)
+
+- Data access / IRFs (``gammapy.data`` / ``gammapy.irf``) (``cta_1dc_introduction.ipynb``)
+- Data selection and reduction (``gammapy.cube`` / ``gammapy.spectrum``) (to be implemented)
+- Datasets (``gammapy.modeling`` / ``gammapy.cube`` / ``gammapy.spectrum``) (to be implemented)
+- Maps (``gammapy.maps``) (``maps.ipynb``)
+- Models (``gammapy.modeling.models``) (``models.ipynb``)
+- Fitting (``gammapy.modeling``) (to be implemented)
+- Statistic (``gammapy.stats``) (to be implemented)
+
+- Source detection (``gammapy.detect``) (``detect_ts.ipynb``, ``cwt.ipynb``)
+- Source catalogs (``gammapy.catalog``) (to be implemented)
+- Dark matter models (``gammapy.astro.darkmatter``) (``astro_dark_matter.ipynb``)
+- Source population modelling (``gammapy.astro.population``) (``source_population_model.ipynb``)
+
+Analysis Advanced (2nd level API)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Observation grouping (to be implemented)
+- Light curve computation (``light_curve.ipynb``)
+- Phase curve computation (``pulsar_analysis.ipynb``)
+- Dark matter analysis (to be implemented)
+- Image analysis (``image_analysis.ipynb``)
+- Combined instrument crab analysis using Fermi / HESS / HAWC data (to be implemented)
+- Naima model fitting (to be implemented)
+- Binned simulation 1D / 3D (``spectrum_simulation.ipynb``, ``simulate_3d.ipynb``)
+- Sensitivity computation (``cta_sensistivity.ipynb``)
+- MCMC sampling (``mcmc_sampling.ipynb``)
+- Flux point fitting (``sed_fitting_gammacat_fermi.ipynb``)
+- Background model making (``background_model.ipynb``)?
+
+
+Extra Topics
+~~~~~~~~~~~~
+- Sherpa for Gammapy users (``image_fitting_with_sherpa.ipynb``, ``spectrum_fitting_with_sherpa.ipynb``)?
+- Astropy regions / photutils for Gammapy users (to be implemented)?
+- HGPS data inspection (``hgps.ipynb``)?
+- Gammapy in a nutshell (``first_steps.ipynb``)?
+
+
 
 Task list
 ---------
