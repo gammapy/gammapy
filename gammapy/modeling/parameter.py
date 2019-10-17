@@ -5,7 +5,6 @@ import inspect
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from gammapy.utils.array import check_type
 
 __all__ = ["Parameter", "Parameters"]
 
@@ -81,7 +80,9 @@ class Parameter:
 
     @name.setter
     def name(self, val):
-        self._name = check_type(val, "str")
+        if not isinstance(val, str):
+            raise TypeError(f"Invalid type: {val}, {type(val)}")
+        self._name = val
 
     @property
     def factor(self):
@@ -151,7 +152,9 @@ class Parameter:
 
     @frozen.setter
     def frozen(self, val):
-        self._frozen = check_type(val, "bool")
+        if not isinstance(val, bool):
+            raise TypeError(f"Invalid type: {val}, {type(val)}")
+        self._frozen = val
 
     @property
     def value(self):

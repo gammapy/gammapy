@@ -53,7 +53,7 @@ class TestSourceCatalog:
         source = self.cat[0]
         assert source.data["Source_Name"] == "a"
 
-        source = self.cat[np.int(0)]
+        source = self.cat[np.int32(0)]
         assert source.data["Source_Name"] == "a"
 
         with pytest.raises(KeyError):
