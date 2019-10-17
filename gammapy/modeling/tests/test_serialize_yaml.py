@@ -11,8 +11,6 @@ from gammapy.modeling.models import MODELS, AbsorbedSpectralModel, Absorption, S
 from gammapy.modeling.serialize import dict_to_models
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
-from pathlib import Path
-
 
 @requires_data()
 def test_dict_to_skymodels():
@@ -139,10 +137,9 @@ def test_datasets_to_io(tmp_path):
         dataset1.model.skymodels[1].parameters["lon_0"].value, 0.9, atol=0.1
     )
 
-    path = Path(tmp_path)
-    datasets.to_yaml(path, prefix="written")
+    datasets.to_yaml(tmp_path, prefix="written")
     datasets_read = Datasets.from_yaml(
-        path / "written_datasets.yaml", path / "written_models.yaml"
+        tmp_path / "written_datasets.yaml", tmp_path / "written_models.yaml"
     )
     assert len(datasets_read.datasets) == 2
     dataset0 = datasets_read.datasets[0]

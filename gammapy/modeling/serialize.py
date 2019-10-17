@@ -113,14 +113,13 @@ def datasets_to_dict(datasets, path, prefix, overwrite):
     ----------
     datasets : `~gammapy.modeling.Datasets`
         Datasets
-    path: `pathlib.Path`
+    path : `pathlib.Path`
         path to write files
     prefix : str
         common prefix of file names
     overwrite : bool
         overwrite datasets FITS files
     """
-
     unique_models = []
     unique_backgrounds = []
     datasets_dictlist = []

@@ -175,7 +175,7 @@ class Datasets:
 
         Parameters
         ----------
-        path: `pathlib.Path`
+        path : `pathlib.Path`
             path to write files
         prefix : str
             common prefix of file names
