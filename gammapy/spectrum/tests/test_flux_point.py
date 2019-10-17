@@ -226,7 +226,7 @@ def test_compute_flux_points_dnde_fermi():
     fermi_3fgl = SourceCatalog3FGL()
     source = fermi_3fgl["3FGL J0835.3-4510"]
     flux_points = source.flux_points.to_sed_type(
-        "dnde", model=source.spectral_model, method="log_center", pwl_approx=True
+        "dnde", model=source.spectral_model(), method="log_center", pwl_approx=True
     )
     for column in ["dnde", "dnde_errn", "dnde_errp", "dnde_ul"]:
         actual = flux_points.table["e2" + column].quantity

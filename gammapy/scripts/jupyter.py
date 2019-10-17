@@ -70,6 +70,7 @@ def cli_jupyter_strip(ctx):
 
         for cell in rawnb.cells:
             if cell["cell_type"] == "code":
+                cell["metadata"].pop("pycharm", None)
                 cell["execution_count"] = None
                 cell["outputs"] = []
 

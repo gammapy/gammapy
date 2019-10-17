@@ -137,7 +137,7 @@ class TestSourceCatalogObjectGammaCat:
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_spectral_model(self, gammacat, ref):
         source = gammacat[ref["name"]]
-        spectral_model = source.spectral_model
+        spectral_model = source.spectral_model()
 
         assert source.data["spec_type"] == ref["spec_type"]
 
@@ -155,7 +155,7 @@ class TestSourceCatalogObjectGammaCat:
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_spectral_model_err(self, gammacat, ref):
         source = gammacat[ref["name"]]
-        spectral_model = source.spectral_model
+        spectral_model = source.spectral_model()
 
         e_min, e_max, e_inf = [1, 10, 1e10] * u.TeV
 
@@ -194,7 +194,7 @@ class TestSourceCatalogObjectGammaCat:
     def test_spatial_model(self, gammacat, ref):
         source = gammacat[ref["name"]]
 
-        spatial_model = source.spatial_model
+        spatial_model = source.spatial_model()
         assert spatial_model.frame == "galactic"
 
         # TODO: put better asserts on model properties
@@ -205,7 +205,7 @@ class TestSourceCatalogObjectGammaCat:
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_sky_model(self, gammacat, ref):
-        gammacat[ref["name"]].sky_model
+        gammacat[ref["name"]].sky_model()
 
 
 class TestGammaCatResource:

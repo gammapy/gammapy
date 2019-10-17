@@ -81,7 +81,6 @@ class SourceCatalogObjectHGPSComponent:
         """Row index of source in table (int)"""
         return self.data[self._source_index_key]
 
-    @property
     def spatial_model(self):
         """Component spatial model (`~gammapy.modeling.models.GaussianSpatialModel`)."""
         d = self.data
@@ -495,7 +494,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         pointlike = d["Spatial_Model"] == "Point-Like"
         return pointlike or has_size_ul
 
-    @property
     def spatial_model(self):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
@@ -558,7 +556,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 spectral_model_comp.parameters["amplitude"].value *= weight
                 models.append(
                     SkyModel(
-                        component.spatial_model,
+                        component.spatial_model(),
                         spectral_model_comp,
                         name=component.name,
                     )
@@ -566,9 +564,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
             return SkyModels(models)
         else:
-            spatial_model = self.spatial_model
-            spectral_model = self.spectral_model(which=which)
-            return SkyModel(spatial_model, spectral_model, name=self.name)
+            return SkyModel(
+                self.spatial_model(), self.spectral_model(which=which), name=self.name
+            )
 
     @property
     def flux_points(self):
