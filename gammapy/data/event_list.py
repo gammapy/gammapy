@@ -338,7 +338,7 @@ class EventListBase:
         if not ebounds:
             ebounds = self._default_plot_ebounds()
         spec = CountsSpectrum(energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
-        spec.fill(self.energy)
+        spec.fill_energy(self.energy)
         return spec
 
     def plot_energy(self, ax=None, ebounds=None, **kwargs):

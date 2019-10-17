@@ -181,8 +181,8 @@ class SpectrumExtraction:
             Background estimate
         """
         log.info("Fill events")
-        self._on_vector.fill(bkg.on_events)
-        self._off_vector.fill(bkg.off_events)
+        self._on_vector.fill_events(bkg.on_events)
+        self._off_vector.fill_events(bkg.off_events)
 
     def extract_irfs(self, observation, bkg):
         """Extract IRFs.

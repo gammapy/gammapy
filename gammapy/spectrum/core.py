@@ -120,21 +120,15 @@ class CountsSpectrum:
         filename = make_path(filename)
         self.to_hdulist(use_sherpa=use_sherpa).writeto(filename, **kwargs)
 
-    def fill(self, events):
-        """Fill with list of events.
+    def fill_events(self, events):
+        """Fill events (`gammapy.data.EventList`)."""
+        self.fill_energy(events.energy)
 
-        Parameters
-        ----------
-        events : `~astropy.units.Quantity`, `gammapy.data.EventList`,
-            List of event energies
-        """
-        if isinstance(events, EventList):
-            events = events.energy
-
-        energy = events.to_value(self.energy.unit)
+    def fill_energy(self, energy):
+        """Fill energy values (`~astropy.units.Quantity`)"""
+        energy = energy.to_value(self.energy.unit)
         edges = self.energy.edges.to_value(self.energy.unit)
-        binned_val = np.histogram(energy, edges)[0]
-        self.data = binned_val
+        self.data = np.histogram(energy, edges)[0]
 
     @property
     def total_counts(self):

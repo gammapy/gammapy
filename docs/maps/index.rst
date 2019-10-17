@@ -504,16 +504,15 @@ further tweak/customize the image.
 Examples
 ========
 
-Creating a Counts Cube from an FT1 File
----------------------------------------
+Creating counts cubes from event lists
+--------------------------------------
 
-This example shows how to fill a counts cube from an FT1 file:
+This example shows how to fill a counts cube from an event list:
 
 .. code:: python
 
     from gammapy.data import EventList
     from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
-
 
     energy_axis = MapAxis.from_bounds(10., 2E3, 12, interp='log', name='energy', unit='GeV')
     m = WcsNDMap.create(binsz=0.1, width=10.0, skydir=(0, 0),
@@ -524,6 +523,29 @@ This example shows how to fill a counts cube from an FT1 file:
     m.fill_by_coord({'skycoord': events.radec, 'energy': events.energy})
     m.write('ccube.fits', conv='fgst-ccube')
 
+To make a counts map, create an empty map with a geometry of your choice
+and then fill it using this function::
+
+    from gammapy.maps import Map
+    from gammapy.data import EventList
+    events = EventList.read('$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits')
+    counts = Map.create(coordsys='GAL', skydir=(0, 0), binsz=0.1, npix=(120, 100))
+    counts.fill_by_coord(events.map_coord(counts.geom))
+    counts.plot()
+
+If you have a given map already, and want to make a counts image
+with the same geometry (not using the pixel data from the original map), do this:
+
+    from gammapy.maps import Map
+    from gammapy.data import EventList
+    events = EventList.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz")
+    reference_map = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
+    counts = Map.from_geom(reference_map.geom)
+    counts.fill_by_coord(events.map_coord(counts.geom))
+    counts.smooth(3).plot()
+
+It works for IACT and Fermi-LAT events, for WCS or HEALPix map geometries,
+and also for extra axes. Especially energy axes are automatically handled correctly.
 
 Generating a Cutout of a Model Cube
 -----------------------------------

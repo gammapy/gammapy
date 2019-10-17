@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import click
-from gammapy.cube import fill_map_counts
 from gammapy.data import EventList
 from gammapy.maps import Map
 
@@ -27,7 +26,7 @@ def cli_image_bin(event_file, reference_file, out_file, overwrite):
     m_ref = Map.read(reference_file)
 
     counts_map = Map.from_geom(m_ref.geom)
-    fill_map_counts(counts_map, events)
+    counts_map.fill_events(events)
 
     log.info(f"Writing {out_file}")
     counts_map.write(out_file, overwrite=overwrite)

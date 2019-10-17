@@ -1,7 +1,7 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.irf import apply_containment_fraction
@@ -70,7 +70,7 @@ class SpectrumDatasetMaker:
         events_region = observation.events.select_region(
             self.region, wcs=self.geom_ref.wcs
         )
-        counts.fill(events_region)
+        counts.fill_events(events_region)
         return counts
 
     def make_background(self, observation):
