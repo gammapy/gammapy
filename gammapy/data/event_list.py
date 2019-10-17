@@ -7,6 +7,7 @@ from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from astropy.units import Quantity, Unit
+from gammapy.maps import MapCoord, WcsNDMap
 from gammapy.utils.energy import energy_logspace
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.regions import make_region
@@ -505,7 +506,7 @@ class EventListBase:
             except KeyError:
                 raise KeyError(f"Column not found in event list: {axis.name!r}")
 
-        return coord
+        return MapCoord.create(coord)
 
     def select_map_mask(self, mask):
         """Select events inside a mask (`EventList`).
@@ -651,8 +652,6 @@ class EventList(EventListBase):
         ax.text(0, 1, txt, fontsize=12, verticalalignment="top")
 
     def _counts_image(self):
-        from gammapy.maps import WcsNDMap
-
         opts = {
             "width": (7, 7),
             "binsz": 0.1,
