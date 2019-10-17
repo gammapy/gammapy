@@ -12,7 +12,6 @@ from gammapy.modeling.serialize import dict_to_models
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
-
 @requires_data()
 def test_dict_to_skymodels():
     filename = get_pkg_data_filename("data/examples.yaml")
@@ -138,7 +137,7 @@ def test_datasets_to_io(tmp_path):
         dataset1.model.skymodels[1].parameters["lon_0"].value, 0.9, atol=0.1
     )
 
-    datasets.to_yaml(str(tmp_path / "written_"))
+    datasets.to_yaml(tmp_path, prefix="written")
     datasets_read = Datasets.from_yaml(
         tmp_path / "written_datasets.yaml", tmp_path / "written_models.yaml"
     )

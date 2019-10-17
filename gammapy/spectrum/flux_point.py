@@ -1239,7 +1239,7 @@ class FluxPointsDataset(Dataset):
             "type": self.tag,
             "models": self.model.names,
             "likelihood": self.likelihood_type,
-            "filename": filename,
+            "filename": str(filename),
         }
 
     def __str__(self):
