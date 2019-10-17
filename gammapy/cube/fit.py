@@ -289,7 +289,6 @@ class MapDataset(Dataset):
         cls,
         geom,
         geom_exposure,
-        geom_irf,
         geom_psf,
         geom_edisp,
         reference_time="2000-01-01",
@@ -301,17 +300,28 @@ class MapDataset(Dataset):
 
         Parameters
         --------------
-        geom: geometry for the counts and background maps
-        geom_exposure: geometry for the exposure map
-        geom_irf: geometry for the IRF exposure map
-        geom_psf: geometry for the psf map
-        geom_edisp: geometry for the energy dispersion map
+        geom: `Geom`
+            geometry for the counts and background maps
+        geom_exposure: `Geom`
+            geometry for the exposure map
+        geom_irf: `Geom`
+            geometry for the IRF exposure map
+        geom_psf: `Geom`
+            geometry for the psf map
+        geom_edisp: `Geom`
+            geometry for the energy dispersion map
         reference_time: `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
             Name of the dataset.
 
+        Returns
+        --------
+        empty_maps: `MapDataset`
+        A MapDataset containing zero filled maps
         """
+
+        e_true_axis = geom_exposure.get_axis_by_name("energy")
 
         counts = Map.from_geom(geom, unit="")
 
@@ -319,16 +329,19 @@ class MapDataset(Dataset):
         background_model = BackgroundModel(background)
 
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
-        exposure_irf = Map.from_geom(geom_irf, unit="m2 s")
 
+        geom_exposure_edisp = geom_edisp.to_image().to_cube([e_true_axis])
+        exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
         migra_axis = geom_edisp.get_axis_by_name("migra")
         edisp_map = Map.from_geom(geom_edisp, unit="")
         loc = migra_axis.edges.searchsorted(1.0)
         edisp_map.data[:, loc, :, :] = 1.0
-        edisp = EDispMap(edisp_map, exposure_irf)
+        edisp = EDispMap(edisp_map, exposure_edisp)
 
+        geom_exposure_psf = geom_psf.to_image().to_cube([e_true_axis])
+        exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
         psf_map = Map.from_geom(geom_psf, unit="sr-1")
-        psf = PSFMap(psf_map, exposure_irf)
+        psf = PSFMap(psf_map, exposure_psf)
 
         gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
 

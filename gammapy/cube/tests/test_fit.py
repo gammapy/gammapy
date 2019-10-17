@@ -398,9 +398,7 @@ def test_from_geoms():
     geom_psf = wcs_irf.to_cube([rad_axis, e_true])
     geom_edisp = wcs_irf.to_cube([migra_axis, e_true])
 
-    empty_dataset = MapDataset.from_geoms(
-        geom, geom_exposure, geom_irf, geom_psf, geom_edisp
-    )
+    empty_dataset = MapDataset.from_geoms(geom, geom_exposure, geom_psf, geom_edisp)
 
     assert empty_dataset.counts.data.shape == (2, 100, 100)
 
