@@ -48,5 +48,5 @@ def fill_map_counts(counts_map, events):
     It works for IACT and Fermi-LAT events, for WCS or HEALPix map geometries,
     and also for extra axes. Especially energy axes are automatically handled correctly.
     """
-    coord = events._get_coord_from_geom(counts_map.geom)
+    coord = events.map_coord(counts_map.geom)
     counts_map.fill_by_coord(coord)

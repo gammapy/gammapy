@@ -481,19 +481,20 @@ class EventListBase:
         checker = EventListChecker(self)
         return checker.run(checks=checks)
 
-    def _get_coord_from_geom(self, geom):
-        """Return MapCoord of the EventList relative to an input geometry.
+    def map_coord(self, geom):
+        """Event map coordinates for a given geometry.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            the geom used to define the MapCoord
+            Geometry
 
         Returns
         -------
-        mapcoord : `~gammapy.Map.MapCoord`
+        coord : `~gammapy.maps.MapCoord`
+            Coordinates
         """
-        coord = dict(skycoord=self.radec)
+        coord = {"skycoord": self.radec}
 
         cols = {k.upper(): v for k, v in self.table.columns.items()}
 
@@ -507,18 +508,14 @@ class EventListBase:
         return coord
 
     def select_map_mask(self, mask):
-        """Return EventList contained in a Map mask.
+        """Select events inside a mask (`EventList`).
 
         Parameters
         ----------
         mask : `~gammapy.maps.Map`
-            the mask to be used
-
-        Returns
-        -------
-        eventlist : `~gammapy.data.EventList`
+            Mask
         """
-        coord = self._get_coord_from_geom(mask.geom)
+        coord = self.map_coord(mask.geom)
         values = mask.get_by_coord(coord)
         valid = values > 0
         return self.select_row_subset(valid)
