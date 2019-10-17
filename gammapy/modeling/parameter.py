@@ -5,7 +5,6 @@ import inspect
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from gammapy.utils.array import check_type
 
 __all__ = ["Parameter", "Parameters"]
 
@@ -81,7 +80,7 @@ class Parameter:
 
     @name.setter
     def name(self, val):
-        self._name = check_type(val, "str")
+        self._name = str(val)
 
     @property
     def factor(self):
@@ -151,7 +150,7 @@ class Parameter:
 
     @frozen.setter
     def frozen(self, val):
-        self._frozen = check_type(val, "bool")
+        self._frozen = bool(val)
 
     @property
     def value(self):

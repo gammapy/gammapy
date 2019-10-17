@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utility functions to deal with arrays and quantities."""
+import numbers
 import numpy as np
 
 __all__ = [
@@ -107,42 +108,3 @@ def symmetric_crop_pad_width(shape, new_shape):
     ywidth = (ydiff // 2, ydiff // 2)
     xwidth = (xdiff // 2, xdiff // 2)
     return ywidth, xwidth
-
-
-def check_type(val, category):
-    if category == "str":
-        return _check_str(val)
-    elif category == "number":
-        return _check_number(val)
-    elif category == "bool":
-        return _check_bool(val)
-    else:
-        raise ValueError(f"Invalid category: {category}")
-
-
-def _check_str(val):
-    if isinstance(val, str):
-        return val
-    else:
-        raise TypeError(f"Expected a string. Got: {val!r}")
-
-
-def _check_bool(val):
-    if isinstance(val, bool):
-        return val
-    else:
-        raise TypeError(f"Expected a bool. Got: {val!r}")
-
-
-def _check_number(val):
-    if _is_float(val) or _is_int(val):
-        return val
-    raise TypeError(f"Expected a number. Got: {val!r}")
-
-
-def _is_int(val):
-    return isinstance(val, (int, np.integer))
-
-
-def _is_float(val):
-    return isinstance(val, (float, np.floating))

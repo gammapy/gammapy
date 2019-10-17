@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalog and object base classes."""
 import copy
+import numbers
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
-from gammapy.utils.array import _is_int
 from gammapy.utils.table import table_from_row_data, table_row_to_dict
 
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
@@ -175,11 +175,11 @@ class SourceCatalog:
         """
         if isinstance(key, str):
             index = self.row_index(key)
-        elif _is_int(key):
+        elif isinstance(key, numbers.Integral):
             index = key
         else:
             raise TypeError(
-                f"Invalid type: {key!r}\n"
+                f"Invalid key: {key!r}, {type(key)}\n"
                 "Key must be source name string or row index integer. "
             )
 
