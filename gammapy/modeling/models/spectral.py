@@ -1459,7 +1459,7 @@ class AbsorbedSpectralModel(SpectralModel):
         self.alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
 
         super().__init__(
-            spectral_model.parameters.parameters.copy() + [par, self.alpha_norm]
+            spectral_model.parameters.parameters + [par, self.alpha_norm]
         )
 
     def evaluate(self, energy, **kwargs):
