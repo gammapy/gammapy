@@ -91,7 +91,7 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
 @pytest.mark.parametrize(
     ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsgeom_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsgeom_read_write(tmp_path, npix, binsz, coordsys, proj, skydir, axes):
     geom0 = WcsGeom.create(
         npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
     )
@@ -100,11 +100,10 @@ def test_wcsgeom_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     hdu_prim = fits.PrimaryHDU()
     hdu_prim.header.update(geom0.make_header())
 
-    filename = str(tmpdir / "wcsgeom.fits")
     hdulist = fits.HDUList([hdu_prim, hdu_bands])
-    hdulist.writeto(filename, overwrite=True)
+    hdulist.writeto(tmp_path / "tmp.fits")
 
-    with fits.open(filename) as hdulist:
+    with fits.open(tmp_path / "tmp.fits", memmap=False) as hdulist:
         geom1 = WcsGeom.from_header(hdulist[0].header, hdulist["BANDS"])
 
     assert_allclose(geom0.npix, geom1.npix)
@@ -404,7 +403,7 @@ def test_wcs_geom_equal(npix, binsz, coordsys, proj, skypos, axes, result):
 
 @pytest.mark.parametrize("node_type", ["edges", "center"])
 @pytest.mark.parametrize("interp", ["log", "lin", "sqrt"])
-def test_read_write(tmpdir, node_type, interp):
+def test_read_write(tmp_path, node_type, interp):
     # Regression test for MapAxis interp and node_type FITS serialization
     # https://github.com/gammapy/gammapy/issues/1887
     e_ax = MapAxis([1, 2], interp, "energy", node_type, "TeV")
@@ -417,9 +416,8 @@ def test_read_write(tmpdir, node_type, interp):
     assert header["INTERP2"] == interp
 
     # Check that all MapAxis properties are preserved on FITS I/O
-    filename = str(tmpdir / "geom_test.fits")
-    m.write(filename, overwrite=True)
-    m2 = Map.read(filename)
+    m.write(tmp_path / "tmp.fits", overwrite=True)
+    m2 = Map.read(tmp_path / "tmp.fits")
     assert m2.geom == m.geom
 
 

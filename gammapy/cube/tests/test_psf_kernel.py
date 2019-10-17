@@ -27,7 +27,7 @@ def test_table_psf_to_kernel_map():
     assert_allclose(ind, geom.center_pix, atol=0.5)
 
 
-def test_psf_kernel_from_gauss_read_write(tmpdir):
+def test_psf_kernel_from_gauss_read_write(tmp_path):
     sigma = 0.5 * u.deg
     binsz = 0.1 * u.deg
     geom = WcsGeom.create(binsz=binsz, npix=150, axes=[MapAxis((0, 1, 2))])
@@ -40,11 +40,9 @@ def test_psf_kernel_from_gauss_read_write(tmpdir):
     # Is there an odd number of pixels
     assert_allclose(np.array(kernel.psf_kernel_map.geom.npix) % 2, 1)
 
-    filename = str(tmpdir / "test_kernel.fits")
-    # Test read and write
-    kernel.write(filename, overwrite=True)
-    newkernel = PSFKernel.read(filename)
-    assert_allclose(kernel.psf_kernel_map.data, newkernel.psf_kernel_map.data)
+    kernel.write(tmp_path / "tmp.fits", overwrite=True)
+    kernel2 = PSFKernel.read(tmp_path / "tmp.fits")
+    assert_allclose(kernel.psf_kernel_map.data, kernel2.psf_kernel_map.data)
 
 
 def test_make_image():

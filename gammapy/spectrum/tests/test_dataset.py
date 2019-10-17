@@ -343,7 +343,7 @@ class TestSpectrumOnOff:
         with mpl_plot_check():
             dataset.plot_fit()
 
-    def test_to_from_ogip_files(self, tmpdir):
+    def test_to_from_ogip_files(self, tmp_path):
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -356,16 +356,15 @@ class TestSpectrumOnOff:
             name="test",
             gti=self.gti,
         )
-        dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
-        filename = tmpdir / "pha_obstest.fits"
-        newdataset = SpectrumDatasetOnOff.from_ogip_files(filename)
+        dataset.to_ogip_files(outdir=tmp_path)
+        newdataset = SpectrumDatasetOnOff.from_ogip_files(tmp_path / "pha_obstest.fits")
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert_allclose(self.off_counts.data, newdataset.counts_off.data)
         assert_allclose(self.edisp.pdf_matrix, newdataset.edisp.pdf_matrix)
         assert_time_allclose(newdataset.gti.time_start, dataset.gti.time_start)
 
-    def test_to_from_ogip_files_no_edisp(self, tmpdir):
+    def test_to_from_ogip_files_no_edisp(self, tmp_path):
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             aeff=self.aeff,
@@ -374,9 +373,8 @@ class TestSpectrumOnOff:
             acceptance=1,
             name="test",
         )
-        dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
-        filename = tmpdir / "pha_obstest.fits"
-        newdataset = SpectrumDatasetOnOff.from_ogip_files(filename)
+        dataset.to_ogip_files(outdir=tmp_path)
+        newdataset = SpectrumDatasetOnOff.from_ogip_files(tmp_path / "pha_obstest.fits")
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert newdataset.counts_off is None

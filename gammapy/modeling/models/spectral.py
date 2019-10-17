@@ -1176,7 +1176,7 @@ class TemplateSpectralModel(SpectralModel):
         >>> filename = '$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz'
         >>> table_model = TemplateSpectralModel.read_xspec_model(filename=filename, param=0.3)
         """
-        filename = str(make_path(filename))
+        filename = make_path(filename)
 
         # Check if parameter value is in range
         table_param = Table.read(filename, hdu="PARAMETERS")
@@ -1212,8 +1212,7 @@ class TemplateSpectralModel(SpectralModel):
         filename : str
             filename
         """
-        filename = str(make_path(filename))
-        vals = np.loadtxt(filename)
+        vals = np.loadtxt(make_path(filename))
         energy = u.Quantity(vals[:, 0], "MeV", copy=False)
         values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2 sr-1", copy=False)
         return cls(energy=energy, values=values, **kwargs)
@@ -1346,7 +1345,7 @@ class Absorption:
             File containing the model.
         """
         # Create EBL data array
-        filename = str(make_path(filename))
+        filename = make_path(filename)
         table_param = Table.read(filename, hdu="PARAMETERS")
 
         # TODO: for some reason the table contain duplicated values

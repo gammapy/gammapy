@@ -1238,7 +1238,7 @@ class SourceCatalog3FGL(SourceCatalog):
     }
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v16.fit.gz"):
-        filename = str(make_path(filename))
+        filename = make_path(filename)
 
         with warnings.catch_warnings():  # ignore FITS units warnings
             warnings.simplefilter("ignore", u.UnitsWarning)
@@ -1346,7 +1346,7 @@ class SourceCatalog4FGL(SourceCatalog):
     source_object_class = SourceCatalogObject4FGL
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v19.fit.gz"):
-        filename = str(make_path(filename))
+        filename = make_path(filename)
         table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
         table_standardise_units_inplace(table)
 
@@ -1384,7 +1384,7 @@ class SourceCatalog1FHL(SourceCatalog):
     source_object_class = SourceCatalogObject1FHL
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v07.fit.gz"):
-        filename = str(make_path(filename))
+        filename = make_path(filename)
 
         with warnings.catch_warnings():  # ignore FITS units warnings
             warnings.simplefilter("ignore", u.UnitsWarning)
@@ -1416,7 +1416,7 @@ class SourceCatalog2FHL(SourceCatalog):
     source_object_class = SourceCatalogObject2FHL
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v08.fit.gz"):
-        filename = str(make_path(filename))
+        filename = make_path(filename)
 
         with warnings.catch_warnings():  # ignore FITS units warnings
             warnings.simplefilter("ignore", u.UnitsWarning)
@@ -1457,7 +1457,7 @@ class SourceCatalog3FHL(SourceCatalog):
     }
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v13.fit.gz"):
-        filename = str(make_path(filename))
+        filename = make_path(filename)
 
         with warnings.catch_warnings():  # ignore FITS units warnings
             warnings.simplefilter("ignore", u.UnitsWarning)

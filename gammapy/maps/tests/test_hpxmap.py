@@ -10,7 +10,6 @@ from gammapy.maps.geom import coordsys_to_frame
 from gammapy.maps.utils import fill_poisson
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
-pytest.importorskip("numpy", "1.12.0")
 pytest.importorskip("healpy")
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log")]
@@ -87,16 +86,16 @@ def test_hpxmap_create(nside, nested, coordsys, region, axes, sparse):
 @pytest.mark.parametrize(
     ("nside", "nested", "coordsys", "region", "axes", "sparse"), hpx_test_geoms_sparse
 )
-def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse):
-    filename = str(tmpdir / "map.fits")
+def test_hpxmap_read_write(tmp_path, nside, nested, coordsys, region, axes, sparse):
+    path = tmp_path / "tmp.fits"
 
     m = create_map(nside, nested, coordsys, region, axes, sparse)
     fill_poisson(m, mu=0.5, random_state=0)
-    m.write(filename, sparse=sparse, overwrite=True)
+    m.write(path, sparse=sparse, overwrite=True)
 
-    m2 = HpxNDMap.read(filename)
-    m3 = HpxSparseMap.read(filename)
-    m4 = Map.read(filename, map_type="hpx")
+    m2 = HpxNDMap.read(path)
+    m3 = HpxSparseMap.read(path)
+    m4 = Map.read(path, map_type="hpx")
     if sparse:
         msk = np.isfinite(m2.data[...])
     else:
@@ -106,46 +105,46 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
     assert_allclose(m.data[...][msk], m3.data[...][msk])
     assert_allclose(m.data[...][msk], m4.data[...][msk])
 
-    m.write(filename, sparse=True, overwrite=True)
-    m2 = HpxNDMap.read(filename)
-    m3 = HpxMap.read(filename, map_type="hpx")
-    m4 = Map.read(filename, map_type="hpx")
+    m.write(path, sparse=True, overwrite=True)
+    m2 = HpxNDMap.read(path)
+    m3 = HpxMap.read(path, map_type="hpx")
+    m4 = Map.read(path, map_type="hpx")
     assert_allclose(m.data[...][msk], m2.data[...][msk])
     assert_allclose(m.data[...][msk], m3.data[...][msk])
     assert_allclose(m.data[...][msk], m4.data[...][msk])
 
     # Specify alternate HDU name for IMAGE and BANDS table
-    m.write(filename, hdu="IMAGE", hdu_bands="TEST", overwrite=True)
-    m2 = HpxNDMap.read(filename)
-    m3 = Map.read(filename)
-    m4 = Map.read(filename, map_type="hpx")
+    m.write(path, hdu="IMAGE", hdu_bands="TEST", overwrite=True)
+    m2 = HpxNDMap.read(path)
+    m3 = Map.read(path)
+    m4 = Map.read(path, map_type="hpx")
 
 
-def test_hpxmap_read_write_fgst(tmpdir):
-    filename = str(tmpdir / "map.fits")
+def test_hpxmap_read_write_fgst(tmp_path):
+    path = tmp_path / "tmp.fits"
 
     axis = MapAxis.from_bounds(100.0, 1000.0, 4, name="energy", unit="MeV")
 
     # Test Counts Cube
     m = create_map(8, False, "GAL", None, [axis], False)
-    m.write(filename, conv="fgst-ccube", overwrite=True)
-    with fits.open(filename) as h:
-        assert "SKYMAP" in h
-        assert "EBOUNDS" in h
-        assert h["SKYMAP"].header["HPX_CONV"] == "FGST-CCUBE"
-        assert h["SKYMAP"].header["TTYPE1"] == "CHANNEL1"
+    m.write(path, conv="fgst-ccube", overwrite=True)
+    with fits.open(path, memmap=False) as hdulist:
+        assert "SKYMAP" in hdulist
+        assert "EBOUNDS" in hdulist
+        assert hdulist["SKYMAP"].header["HPX_CONV"] == "FGST-CCUBE"
+        assert hdulist["SKYMAP"].header["TTYPE1"] == "CHANNEL1"
 
-    m2 = Map.read(filename)
+    m2 = Map.read(path)
 
     # Test Model Cube
-    m.write(filename, conv="fgst-template", overwrite=True)
-    with fits.open(filename) as h:
-        assert "SKYMAP" in h
-        assert "ENERGIES" in h
-        assert h["SKYMAP"].header["HPX_CONV"] == "FGST-TEMPLATE"
-        assert h["SKYMAP"].header["TTYPE1"] == "ENERGY1"
+    m.write(path, conv="fgst-template", overwrite=True)
+    with fits.open(path, memmap=False) as hdulist:
+        assert "SKYMAP" in hdulist
+        assert "ENERGIES" in hdulist
+        assert hdulist["SKYMAP"].header["HPX_CONV"] == "FGST-TEMPLATE"
+        assert hdulist["SKYMAP"].header["TTYPE1"] == "ENERGY1"
 
-    m2 = Map.read(filename)
+    m2 = Map.read(path)
 
 
 @pytest.mark.parametrize(

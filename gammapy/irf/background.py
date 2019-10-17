@@ -123,11 +123,8 @@ class Background3D:
     @classmethod
     def read(cls, filename, hdu="BACKGROUND"):
         """Read from file."""
-        filename = make_path(filename)
-        with fits.open(str(filename), memmap=False) as hdulist:
-            bkg = cls.from_hdulist(hdulist, hdu=hdu)
-
-        return bkg
+        with fits.open(make_path(filename), memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, hdu=hdu)
 
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
@@ -304,11 +301,8 @@ class Background2D:
     @classmethod
     def read(cls, filename, hdu="BACKGROUND"):
         """Read from file."""
-        filename = make_path(filename)
-        with fits.open(str(filename), memmap=False) as hdulist:
-            bkg = cls.from_hdulist(hdulist, hdu=hdu)
-
-        return bkg
+        with fits.open(make_path(filename), memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, hdu=hdu)
 
     def to_table(self):
         """Convert to `~astropy.table.Table`."""

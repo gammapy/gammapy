@@ -254,21 +254,16 @@ TEST_MODELS.append(
     )
 )
 
-# The table model imports scipy.interpolate in `__init__`,
-# so we skip it if scipy is not available
-try:
-    TEST_MODELS.append(
-        dict(
-            name="table_model",
-            model=table_model(),
-            # Values took from power law expectation
-            val_at_2TeV=u.Quantity(4 * 2.0 ** (-2.3), "cm-2 s-1 TeV-1"),
-            integral_1_10TeV=u.Quantity(2.9227116204223784, "cm-2 s-1"),
-            eflux_1_10TeV=u.Quantity(6.650836884969039, "TeV cm-2 s-1"),
-        )
+TEST_MODELS.append(
+    dict(
+        name="table_model",
+        model=table_model(),
+        # Values took from power law expectation
+        val_at_2TeV=u.Quantity(4 * 2.0 ** (-2.3), "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(2.9227116204223784, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(6.650836884969039, "TeV cm-2 s-1"),
     )
-except ImportError:
-    pass
+)
 
 
 @requires_dependency("uncertainties")

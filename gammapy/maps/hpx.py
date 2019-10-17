@@ -706,7 +706,7 @@ class HpxGeom(Geom):
 
         if self._rmap is not None:
             retval = np.full(idx.size, -1, "i")
-            m = np.in1d(idx.flat, self._ipix)
+            m = np.isin(idx.flat, self._ipix)
             retval[m] = np.searchsorted(self._ipix, idx.flat[m])
             retval = retval.reshape(idx.shape)
         else:
@@ -1058,11 +1058,7 @@ class HpxGeom(Geom):
         idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
 
         for _ in range(pad_width):
-            # Mask of neighbors that are not contained in the geometry
-            # TODO: change this to numpy.isin when we require Numpy 1.13+
-            # Here and everywhere in Gamampy -> search for "isin"
-            # see https://github.com/gammapy/gammapy/pull/1371
-            mask_edge = np.in1d(idx_nb, idx_r, invert=True).reshape(idx_nb.shape)
+            mask_edge = np.isin(idx_nb, idx_r, invert=True)
             idx_edge = idx_nb[mask_edge]
             idx_edge = np.unique(idx_edge)
             idx_r = np.sort(np.concatenate((idx_r, idx_edge)))
@@ -1093,8 +1089,7 @@ class HpxGeom(Geom):
         for _ in range(crop_width):
             # Mask of pixels that have at least one neighbor not
             # contained in the geometry
-            mask_edge = np.in1d(idx_nb, idx_r, invert=True)
-            mask_edge = np.any(mask_edge, axis=0)
+            mask_edge = np.any(np.isin(idx_nb, idx_r, invert=True), axis=0)
             idx_r = idx_r[~mask_edge]
             idx_nb = idx_nb[:, ~mask_edge]
 

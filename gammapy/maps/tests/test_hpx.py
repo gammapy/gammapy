@@ -17,7 +17,6 @@ from gammapy.maps.hpx import (
     unravel_hpx_index,
 )
 
-pytest.importorskip("numpy", "1.13.0")
 pytest.importorskip("healpy")
 
 hpx_allsky_test_geoms = [
@@ -245,7 +244,7 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
     idx = geom.get_idx(flat=True)
     idx_slice = geom_slice.get_idx(flat=True)
     if geom.ndim > 2:
-        m = np.all([np.in1d(t, [1]) for t in idx[1:]], axis=0)
+        m = np.all([np.isin(t, [1]) for t in idx[1:]], axis=0)
         assert_allclose(idx_slice, (idx[0][m],))
     else:
         assert_allclose(idx_slice, idx)
@@ -261,8 +260,8 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
     idx = geom.get_idx()
     idx_slice = geom_slice.get_idx()
     if geom.ndim > 2:
-        m = np.all([np.in1d(t, [1]) for t in idx[1:]], axis=0)
-        assert_allclose(idx_slice, (idx[0].flat[m],))
+        m = np.all([np.isin(t, [1]) for t in idx[1:]], axis=0)
+        assert_allclose(idx_slice, (idx[0][m],))
     else:
         assert_allclose(idx_slice, idx)
 
@@ -668,18 +667,17 @@ def test_hpxgeom_from_header():
 @pytest.mark.parametrize(
     ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
 )
-def test_hpxgeom_read_write(tmpdir, nside, nested, coordsys, region, axes):
+def test_hpxgeom_read_write(tmp_path, nside, nested, coordsys, region, axes):
     geom0 = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
     hdu_bands = geom0.make_bands_hdu(hdu="BANDS")
     hdu_prim = fits.PrimaryHDU()
     hdu_prim.header.update(geom0.make_header())
 
-    filename = str(tmpdir / "hpxgeom.fits")
     hdulist = fits.HDUList([hdu_prim, hdu_bands])
-    hdulist.writeto(filename, overwrite=True)
+    hdulist.writeto(tmp_path / "tmp.fits")
 
-    hdulist = fits.open(filename)
-    geom1 = HpxGeom.from_header(hdulist[0].header, hdulist["BANDS"])
+    with fits.open(tmp_path / "tmp.fits", memmap=False) as hdulist:
+        geom1 = HpxGeom.from_header(hdulist[0].header, hdulist["BANDS"])
 
     assert_allclose(geom0.nside, geom1.nside)
     assert_allclose(geom0.npix, geom1.npix)

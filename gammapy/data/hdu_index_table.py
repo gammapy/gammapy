@@ -59,7 +59,7 @@ class HDULocation:
 
     def get_hdu(self):
         """Get HDU."""
-        filename = str(self.path(abs_path=True))
+        filename = self.path(abs_path=True)
         # Here we're intentionally not calling `with fits.open`
         # because we don't want the file to remain open.
         hdu_list = fits.open(filename, memmap=False)
@@ -146,7 +146,7 @@ class HDUIndexTable(Table):
             Filename
         """
         filename = make_path(filename)
-        table = super().read(str(filename), **kwargs)
+        table = super().read(filename, **kwargs)
         table.meta["BASE_DIR"] = filename.parent.as_posix()
 
         return table

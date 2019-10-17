@@ -86,11 +86,9 @@ def test_lightcurve_properties_flux(lc):
 
 
 @pytest.mark.parametrize("format", ["fits", "ascii.ecsv", "ascii.csv"])
-def test_lightcurve_read_write(tmpdir, lc, format):
-    filename = str(tmpdir / "spam")
-
-    lc.write(filename, format=format)
-    lc = LightCurve.read(filename, format=format)
+def test_lightcurve_read_write(tmp_path, lc, format):
+    lc.write(tmp_path / "tmp", format=format)
+    lc = LightCurve.read(tmp_path / "tmp", format=format)
 
     # Check if time-related info round-trips
     time = lc.time
@@ -133,27 +131,22 @@ def test_lightcurve_plot_flux_ul(lc, flux_unit):
     assert_allclose(ful, [np.nan, 3.6e-11])
 
 
-@requires_dependency("matplotlib")
-@pytest.mark.parametrize(
-    "time_format, output",
-    [
-        ("mjd", ([55198.0, 55202.5], ([1.0, 3.5], [1.0, 3.5]))),
-        (
-            "iso",
-            (
-                [datetime.datetime(2010, 1, 2), datetime.datetime(2010, 1, 6, 12)],
-                (
-                    [datetime.timedelta(1), datetime.timedelta(3.5)],
-                    [datetime.timedelta(1), datetime.timedelta(3.5)],
-                ),
-            ),
-        ),
-    ],
-)
-def test_lightcurve_plot_time(lc, time_format, output):
-    t, terr = lc._get_times_and_errors(time_format)
-    assert np.array_equal(t, output[0])
-    assert np.array_equal(terr, output[1])
+def test_lightcurve_plot_time(lc):
+    t, terr = lc._get_times_and_errors("mjd")
+    assert np.array_equal(t, [55198.0, 55202.5])
+    assert np.array_equal(terr, [[1.0, 3.5], [1.0, 3.5]])
+
+    t, terr = lc._get_times_and_errors("iso")
+    assert np.array_equal(
+        t, [datetime.datetime(2010, 1, 2), datetime.datetime(2010, 1, 6, 12)]
+    )
+    assert np.array_equal(
+        terr,
+        [
+            [datetime.timedelta(1), datetime.timedelta(3.5)],
+            [datetime.timedelta(1), datetime.timedelta(3.5)],
+        ],
+    )
 
 
 def get_spectrum_datasets():

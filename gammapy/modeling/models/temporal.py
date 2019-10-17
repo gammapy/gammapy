@@ -117,7 +117,7 @@ class PhaseCurveTemplateTemporalModel(TemporalModel):
         from gammapy.utils.scripts import make_path
         from gammapy.modeling.models import PhaseCurveTemplateTemporalModel
         filename = make_path('$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits')
-        table = Table.read(str(filename))
+        table = Table.read(filename)
         phase_curve = PhaseCurveTemplateTemporalModel(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
 
     Use it to compute a phase and evaluate the phase curve model for a given time:
@@ -302,9 +302,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         TODO: This doesn't read the XML part of the model yet.
         """
-        path = make_path(path)
-        table = Table.read(str(path))
-        return cls(table)
+        return cls(Table.read(make_path(path)))
 
     @lazyproperty
     def _interpolator(self):

@@ -76,16 +76,11 @@ class PSFKing:
         filename : str
             File name
         """
-        filename = str(make_path(filename))
         # TODO: implement it so that HDUCLASS is used
         # http://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html
 
-        table = Table.read(filename, hdu=hdu)
+        table = Table.read(make_path(filename), hdu=hdu)
         return cls.from_table(table)
-
-        # hdu_list = fits.open(filename)
-        # hdu = hdu_list[hdu]
-        # return cls.from_fits(hdu)
 
     @classmethod
     def from_table(cls, table):

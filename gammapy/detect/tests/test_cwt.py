@@ -241,14 +241,13 @@ class TestCWTData:
         assert_equal(diff.support_3d.data.sum(), 0)
         assert_allclose(diff.model.data.sum(), 20.4132906267)
 
-    def test_io(self, tmpdir):
-        filename = str(tmpdir / "test-cwt.fits")
-        self.cwt_data.write(filename=filename, overwrite=True)
-        approx = Map.read(filename, hdu="APPROX")
+    def test_io(self, tmp_path):
+        self.cwt_data.write(tmp_path / "tmp.fits")
+        approx = Map.read(tmp_path / "tmp.fits", hdu="APPROX")
         assert_allclose(approx.data[100, 100], self.cwt_data._approx[100, 100])
         assert_allclose(approx.data[36, 63], self.cwt_data._approx[36, 63])
 
-        transform_2d = Map.read(filename, hdu="TRANSFORM_2D")
+        transform_2d = Map.read(tmp_path / "tmp.fits", hdu="TRANSFORM_2D")
         assert_allclose(
             transform_2d.data[100, 100], self.cwt_data.transform_2d.data[100, 100]
         )

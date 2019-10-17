@@ -30,8 +30,7 @@ class ObservationTable(Table):
         filename : `pathlib.Path`, str
             Filename
         """
-        filename = make_path(filename)
-        return super().read(str(filename), **kwargs)
+        return super().read(make_path(filename), **kwargs)
 
     @property
     def pointing_radec(self):

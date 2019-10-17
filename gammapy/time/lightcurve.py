@@ -94,8 +94,7 @@ class LightCurve:
         kwargs : dict
             Keyword arguments passed to `astropy.table.Table.read`.
         """
-        filename = make_path(filename)
-        table = Table.read(str(filename), **kwargs)
+        table = Table.read(make_path(filename), **kwargs)
         return cls(table=table)
 
     def write(self, filename, **kwargs):
@@ -108,8 +107,7 @@ class LightCurve:
         kwargs : dict
             Keyword arguments passed to `astropy.table.Table.write`.
         """
-        filename = make_path(filename)
-        self.table.write(str(filename), **kwargs)
+        self.table.write(make_path(filename), **kwargs)
 
     def compute_fvar(self):
         r"""Calculate the fractional excess variance.
@@ -200,9 +198,9 @@ class LightCurve:
         if ax is None:
             ax = plt.gca()
 
+        x, xerr = self._get_times_and_errors(time_format)
         y, yerr = self._get_fluxes_and_errors(flux_unit)
         is_ul, yul = self._get_flux_uls(flux_unit)
-        x, xerr = self._get_times_and_errors(time_format)
 
         # length of the ul arrow
         ul_arr = (
@@ -312,8 +310,6 @@ class LightCurve:
             Tuple of time error values or `~datetime.timedelta` instances if
             'iso' is chosen as time format
         """
-        from matplotlib.dates import num2timedelta
-
         x = self.time
 
         try:
@@ -321,16 +317,14 @@ class LightCurve:
         except KeyError:
             xn, xp = x - x, x - x
 
-        # convert to given time format
         if time_format == "iso":
             x = x.datetime
-            # TODO: In astropy version >3.1 the TimeDelta.to_datetime() method
-            # should start working, for now i will use num2timedelta.
-            xn = np.asarray(num2timedelta(xn.to("d").value))
-            xp = np.asarray(num2timedelta(xp.to("d").value))
+            xn = xn.to_datetime()
+            xp = xp.to_datetime()
         elif time_format == "mjd":
             x = x.mjd
-            xn, xp = xn.to("d").value, xp.to("d").value
+            xn = xn.to("d").value
+            xp = xp.to("d").value
         else:
             raise ValueError(f"Invalid time_format: {time_format}")
 

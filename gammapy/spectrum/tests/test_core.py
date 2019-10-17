@@ -43,10 +43,9 @@ class TestCountsSpectrum:
         with mpl_plot_check():
             self.spec.peek()
 
-    def test_io(self, tmpdir):
-        filename = tmpdir / "test.fits"
-        self.spec.write(filename)
-        spec2 = CountsSpectrum.read(filename)
+    def test_io(self, tmp_path):
+        self.spec.write(tmp_path / "tmp.fits")
+        spec2 = CountsSpectrum.read(tmp_path / "tmp.fits")
         assert_quantity_allclose(spec2.energy.edges, self.bins)
 
     def test_downsample(self):

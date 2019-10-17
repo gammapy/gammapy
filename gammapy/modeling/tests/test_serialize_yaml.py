@@ -14,7 +14,7 @@ from gammapy.utils.testing import requires_data
 
 
 @requires_data()
-def test_dict_to_skymodels(tmpdir):
+def test_dict_to_skymodels():
     filename = get_pkg_data_filename("data/examples.yaml")
     models_data = read_yaml(filename)
 
@@ -84,14 +84,14 @@ def test_dict_to_skymodels(tmpdir):
 
 
 @requires_data()
-def test_sky_models_io(tmpdir):
+def test_sky_models_io(tmp_path):
     # TODO: maybe change to a test case where we create a model programatically?
     filename = get_pkg_data_filename("data/examples.yaml")
     models = SkyModels.from_yaml(filename)
 
-    filename = str(tmpdir / "io_example.yaml")
-    models.to_yaml(filename)
-    models = SkyModels.from_yaml(filename)
+    models.to_yaml(tmp_path / "tmp.yaml")
+    models = SkyModels.from_yaml(tmp_path / "tmp.yaml")
+
     assert_allclose(models.parameters["lat_0"].min, -90.0)
 
     # TODO: not sure if we should just round-trip, or if we should
@@ -100,7 +100,7 @@ def test_sky_models_io(tmpdir):
 
 
 @requires_data()
-def test_datasets_to_io(tmpdir):
+def test_datasets_to_io(tmp_path):
     filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
     filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
 
@@ -138,9 +138,10 @@ def test_datasets_to_io(tmpdir):
         dataset1.model.skymodels[1].parameters["lon_0"].value, 0.9, atol=0.1
     )
 
-    path = str(tmpdir / "/written_")
-    datasets.to_yaml(path, overwrite=True)
-    datasets_read = Datasets.from_yaml(path + "datasets.yaml", path + "models.yaml")
+    datasets.to_yaml(str(tmp_path / "written_"))
+    datasets_read = Datasets.from_yaml(
+        tmp_path / "written_datasets.yaml", tmp_path / "written_models.yaml"
+    )
     assert len(datasets_read.datasets) == 2
     dataset0 = datasets_read.datasets[0]
     assert dataset0.counts.data.sum() == 6824
@@ -151,7 +152,7 @@ def test_datasets_to_io(tmpdir):
 
 
 @requires_data()
-def test_absorption_io(tmpdir):
+def test_absorption_io(tmp_path):
     dominguez = Absorption.read_builtin("dominguez")
     model = AbsorbedSpectralModel(
         spectral_model=Model.create("PowerLawSpectralModel"),
@@ -182,11 +183,13 @@ def test_absorption_io(tmpdir):
         parameter_name="redshift",
     )
     model_dict = model.to_dict()
-    write_yaml(model_dict, tmpdir / "written.yaml")
-    read_yaml(tmpdir / "written.yaml")
     new_model = AbsorbedSpectralModel.from_dict(model_dict)
+
     assert_allclose(new_model.absorption.energy, test_absorption.energy)
     assert_allclose(new_model.absorption.param, test_absorption.param)
+
+    write_yaml(model_dict, tmp_path / "tmp.yaml")
+    read_yaml(tmp_path / "tmp.yaml")
 
 
 def make_all_models():

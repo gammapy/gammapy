@@ -4,7 +4,6 @@ from astropy.coordinates import AltAz, CartesianRepresentation, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
-from astropy.version import version as astropy_version
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
@@ -50,7 +49,7 @@ class FixedPointingInfo:
             Pointing info object
         """
         filename = make_path(filename)
-        table = Table.read(str(filename), hdu=hdu)
+        table = Table.read(filename, hdu=hdu)
         return cls(meta=table.meta)
 
     @lazyproperty
@@ -143,7 +142,7 @@ class PointingInfo:
             Pointing info object
         """
         filename = make_path(filename)
-        table = Table.read(str(filename), hdu=hdu)
+        table = Table.read(filename, hdu=hdu)
         return cls(table=table)
 
     def __str__(self):
@@ -232,12 +231,6 @@ class PointingInfo:
         z_new = scipy.interpolate.interp1d(t, xyz.z)(t_new)
         xyz_new = CartesianRepresentation(x_new, y_new, z_new)
         altaz_frame = AltAz(obstime=time, location=self.location)
-
-        # FIXME: an API change in Astropy in 3.1 broke this
-        # See https://github.com/gammapy/gammapy/pull/1906
-        if astropy_version >= "3.1":
-            kwargs = {"representation_type": "unitspherical"}
-        else:
-            kwargs = {"representation": "unitspherical"}
-
-        return SkyCoord(xyz_new, frame=altaz_frame, unit="deg", **kwargs)
+        return SkyCoord(
+            xyz_new, frame=altaz_frame, unit="deg", representation_type="unitspherical"
+        )

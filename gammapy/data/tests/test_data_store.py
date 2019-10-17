@@ -78,17 +78,12 @@ def test_datastore_get_observations(data_store):
 
 
 @requires_data()
-def test_datastore_subset(tmpdir, data_store):
-    """Test creating a datastore as subset of another datastore"""
-    selected_obs = data_store.obs_table.select_obs_id([23523, 23592])
-    storedir = tmpdir / "substore"
-    data_store.copy_obs(selected_obs, storedir)
-    obs_id = [23523, 23592]
-    data_store.copy_obs(obs_id, storedir, overwrite=True)
+def test_datastore_copy_obs(tmp_path, data_store):
+    data_store.copy_obs([23523, 23592], tmp_path, overwrite=True)
 
-    substore = DataStore.from_dir(storedir)
+    substore = DataStore.from_dir(tmp_path)
 
-    assert str(substore.hdu_table.base_dir) == str(storedir)
+    assert str(substore.hdu_table.base_dir) == str(tmp_path)
     assert len(substore.obs_table) == 2
 
     desired = data_store.obs(23523)
@@ -96,11 +91,13 @@ def test_datastore_subset(tmpdir, data_store):
 
     assert str(actual.events.table) == str(desired.events.table)
 
-    # Copy only certain HDU classes
-    storedir = tmpdir / "substore2"
-    data_store.copy_obs(obs_id, storedir, hdu_class=["events"])
 
-    substore = DataStore.from_dir(storedir)
+@requires_data()
+def test_datastore_copy_obs_subset(tmp_path, data_store):
+    # Copy only certain HDU classes
+    data_store.copy_obs([23523, 23592], tmp_path, hdu_class=["events"])
+
+    substore = DataStore.from_dir(tmp_path)
     assert len(substore.hdu_table) == 2
 
 

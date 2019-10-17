@@ -69,12 +69,11 @@ class TestEnergyDispersion:
         resolution = self.edisp.get_resolution(3.34 * u.TeV)
         assert_allclose(resolution, self.resolution, atol=1e-2)
 
-    def test_io(self, tmpdir):
+    def test_io(self, tmp_path):
         indices = np.array([[1, 3, 6], [3, 3, 2]])
         desired = self.edisp.pdf_matrix[indices]
-        writename = str(tmpdir / "rmf_test.fits")
-        self.edisp.write(writename)
-        edisp2 = EnergyDispersion.read(writename)
+        self.edisp.write(tmp_path / "tmp.fits")
+        edisp2 = EnergyDispersion.read(tmp_path / "tmp.fits")
         actual = edisp2.pdf_matrix[indices]
         assert_allclose(actual, desired)
 

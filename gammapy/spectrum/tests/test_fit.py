@@ -171,7 +171,7 @@ class TestSpectralFit:
         assert_allclose(pars["amplitude"].value, 5.191e-11, rtol=1e-3)
 
     @requires_dependency("sherpa")
-    def test_sherpa_fit(self, tmpdir):
+    def test_sherpa_fit(self, tmp_path):
         # this is to make sure that the written PHA files work with sherpa
         import sherpa.astro.ui as sau
         from sherpa.models import PowLaw1D
@@ -183,10 +183,9 @@ class TestSpectralFit:
         logging.getLogger("sherpa").setLevel("ERROR")
 
         for obs in self.obs_list:
-            obs.to_ogip_files(str(tmpdir), use_sherpa=True)
+            obs.to_ogip_files(tmp_path, use_sherpa=True)
 
-        filename = tmpdir / "pha_obs23523.fits"
-        sau.load_pha(str(filename))
+        sau.load_pha(str(tmp_path / "pha_obs23523.fits"))
         sau.set_stat("wstat")
         model = PowLaw1D("powlaw1d.default")
         model.ref = 1e9

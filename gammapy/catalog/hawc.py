@@ -199,8 +199,7 @@ class SourceCatalog2HWC(SourceCatalog):
     source_object_class = SourceCatalogObject2HWC
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/2HWC.ecsv"):
-        filename = str(make_path(filename))
-        table = Table.read(filename, format="ascii.ecsv")
+        table = Table.read(make_path(filename), format="ascii.ecsv")
 
         source_name_key = "source_name"
 

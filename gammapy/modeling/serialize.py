@@ -141,7 +141,6 @@ def dict_to_datasets(data_list, components):
     components : dict
         dict describing model components
     """
-
     models = dict_to_models(components)
     datasets = []
 

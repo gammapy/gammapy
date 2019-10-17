@@ -6,7 +6,7 @@ from astropy.coordinates import Angle
 from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
 from gammapy.irf import EnergyDependentMultiGaussPSF
-from gammapy.maps import Map, WcsGeom
+from gammapy.maps import Map
 from gammapy.modeling.models import BackgroundModel
 from .background import make_map_background_irf
 from .counts import fill_map_counts

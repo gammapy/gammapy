@@ -79,17 +79,10 @@ class TestEnergyDependentMultiGaussPSF:
 
         assert psf.info() == info_str
 
-    def test_write(self, tmpdir, psf):
-        # Write it back to disk
-        filename = str(tmpdir / "multigauss_psf_test.fits")
-        psf.write(filename)
+    def test_write(self, tmp_path, psf):
+        psf.write(tmp_path / "tmp.fits")
 
-        # Verify checksum
-        with fits.open(filename) as hdu_list:
-            # TODO: replace this assert with something else.
-            # For unknown reasons this verify_checksum fails non-deterministically
-            # see e.g. https://travis-ci.org/gammapy/gammapy/jobs/31056341#L1162
-            # assert hdu_list[1].verify_checksum() == 1
+        with fits.open(tmp_path / "tmp.fits", memmap=False) as hdu_list:
             assert len(hdu_list) == 2
 
     def test_to_table_psf(self, psf):

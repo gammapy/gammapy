@@ -164,10 +164,10 @@ class FluxPoints:
         """
         filename = make_path(filename)
         try:
-            table = Table.read(str(filename), **kwargs)
+            table = Table.read(filename, **kwargs)
         except IORegistryError:
             kwargs.setdefault("format", "ascii.ecsv")
-            table = Table.read(str(filename), **kwargs)
+            table = Table.read(filename, **kwargs)
 
         if "SED_TYPE" not in table.meta.keys():
             sed_type = cls._guess_sed_type(table)
@@ -187,10 +187,10 @@ class FluxPoints:
         """
         filename = make_path(filename)
         try:
-            self.table.write(str(filename), **kwargs)
+            self.table.write(filename, **kwargs)
         except IORegistryError:
             kwargs.setdefault("format", "ascii.ecsv")
-            self.table.write(str(filename), **kwargs)
+            self.table.write(filename, **kwargs)
 
     @classmethod
     def stack(cls, flux_points):
@@ -1195,7 +1195,7 @@ class FluxPointsDataset(Dataset):
 
         table["mask_fit"] = mask_fit
         table["mask_safe"] = self.mask_safe
-        table.write(str(filename), overwrite=overwrite, **kwargs)
+        table.write(filename, overwrite=overwrite, **kwargs)
 
     @classmethod
     def from_dict(cls, data, components, models):
@@ -1500,7 +1500,6 @@ class FluxPointsDataset(Dataset):
                 self.model.plot_error(ax=ax, **plot_kwargs)
             except AttributeError:
                 log.debug("Model does not support evaluation of errors")
-                pass
 
         # format axes
         ax.set_xlim(self._e_range.to_value(self._e_unit))

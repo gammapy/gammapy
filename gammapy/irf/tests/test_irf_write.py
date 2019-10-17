@@ -96,8 +96,8 @@ class TestIRFWrite:
         hdu = self.bkg.to_fits()
         assert_allclose(hdu.data[hdu.header["TTYPE7"]][0], self.bkg.data.data.value)
 
-    def test_writeread(self, tmpdir):
-        filename = str(tmpdir / "testirf.fits")
+    def test_writeread(self, tmp_path):
+        path = tmp_path / "tmp.fits"
         fits.HDUList(
             [
                 fits.PrimaryHDU(),
@@ -105,13 +105,13 @@ class TestIRFWrite:
                 self.edisp.to_fits(),
                 self.bkg.to_fits(),
             ]
-        ).writeto(filename)
+        ).writeto(path)
 
-        read_aeff = EffectiveAreaTable2D.read(filename=filename, hdu="EFFECTIVE AREA")
+        read_aeff = EffectiveAreaTable2D.read(path, hdu="EFFECTIVE AREA")
         assert_allclose(read_aeff.data.data, self.aeff_data)
 
-        read_edisp = EnergyDispersion2D.read(filename=filename, hdu="ENERGY DISPERSION")
+        read_edisp = EnergyDispersion2D.read(path, hdu="ENERGY DISPERSION")
         assert_allclose(read_edisp.data.data, self.edisp_data)
 
-        read_bkg = Background3D.read(filename=filename, hdu="BACKGROUND")
+        read_bkg = Background3D.read(path, hdu="BACKGROUND")
         assert_allclose(read_bkg.data.data, self.bkg_data)

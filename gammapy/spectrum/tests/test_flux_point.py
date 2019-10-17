@@ -5,13 +5,13 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
 from gammapy.catalog.fermi import SourceCatalog3FGL
-from gammapy.modeling import Fit, Datasets
+from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
-    SpectralModel,
     ConstantSpatialModel,
+    PowerLawSpectralModel,
     SkyModel,
     SkyModels,
+    SpectralModel,
 )
 from gammapy.spectrum import FluxPoints, FluxPointsDataset
 from gammapy.utils.testing import (
@@ -188,16 +188,14 @@ class TestFluxPoints:
             desired = 399430.975 * u.MeV
             assert_quantity_allclose(actual.sum(), desired)
 
-    def test_write_fits(self, tmpdir, flux_points):
-        filename = tmpdir / "flux_points.fits"
-        flux_points.write(filename)
-        actual = FluxPoints.read(filename)
+    def test_write_fits(self, tmp_path, flux_points):
+        flux_points.write(tmp_path / "tmp.fits")
+        actual = FluxPoints.read(tmp_path / "tmp.fits")
         assert str(flux_points) == str(actual)
 
-    def test_write_ecsv(self, tmpdir, flux_points):
-        filename = tmpdir / "flux_points.ecsv"
-        flux_points.write(filename)
-        actual = FluxPoints.read(filename)
+    def test_write_ecsv(self, tmp_path, flux_points):
+        flux_points.write(tmp_path / "flux_points.ecsv")
+        actual = FluxPoints.read(tmp_path / "flux_points.ecsv")
         assert str(flux_points) == str(actual)
 
     def test_drop_ul(self, flux_points):
@@ -254,11 +252,11 @@ def dataset():
 
 
 @requires_data()
-def test_flux_point_dataset_serialization(tmpdir):
+def test_flux_point_dataset_serialization(tmp_path):
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     data = FluxPoints.read(path)
     data.table["e_ref"] = data.e_ref.to("TeV")
-    #    TODO: remove duplicate definition this once model is redefine as skymodel
+    # TODO: remove duplicate definition this once model is redefine as skymodel
     spatial_model = ConstantSpatialModel()
     spectral_model = PowerLawSpectralModel(
         index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
@@ -266,9 +264,10 @@ def test_flux_point_dataset_serialization(tmpdir):
     model = SkyModel(spatial_model, spectral_model, name="test_model")
     dataset = FluxPointsDataset(SkyModels([model]), data, name="test_dataset")
 
-    respath = str(tmpdir / "/written_")
-    Datasets([dataset]).to_yaml(respath, overwrite=True)
-    datasets = Datasets.from_yaml(respath + "datasets.yaml", respath + "models.yaml")
+    Datasets([dataset]).to_yaml(str(tmp_path / "tmp_"))
+    datasets = Datasets.from_yaml(
+        tmp_path / "tmp_datasets.yaml", tmp_path / "tmp_models.yaml"
+    )
     new_dataset = datasets.datasets[0]
     assert_allclose(new_dataset.data.table["dnde"], dataset.data.table["dnde"], 1e-4)
     if dataset.mask_fit is None:

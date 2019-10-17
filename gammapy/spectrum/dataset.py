@@ -936,10 +936,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         hdulist = fits.HDUList([fits.PrimaryHDU(), hdu, self._ebounds_hdu(use_sherpa)])
 
         if self.gti is not None:
-            gti_hdu = self.gti.to_hdulist()
-            hdulist += gti_hdu
+            hdu = fits.BinTableHDU(self.gti.table, name="GTI")
+            hdulist.append(hdu)
 
-        hdulist.writeto(str(outdir / phafile), overwrite=overwrite)
+        hdulist.writeto(outdir / phafile, overwrite=overwrite)
 
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
 
@@ -957,11 +957,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             hdulist = fits.HDUList(
                 [fits.PrimaryHDU(), hdu, self._ebounds_hdu(use_sherpa)]
             )
-            hdulist.writeto(str(outdir / bkgfile), overwrite=overwrite)
+            hdulist.writeto(outdir / bkgfile, overwrite=overwrite)
 
         if self.edisp is not None:
             self.edisp.write(
-                str(outdir / rmffile), overwrite=overwrite, use_sherpa=use_sherpa
+                outdir / rmffile, overwrite=overwrite, use_sherpa=use_sherpa
             )
 
     def _ebounds_hdu(self, use_sherpa):
@@ -1007,7 +1007,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         filename = make_path(filename)
         dirname = filename.parent
 
-        with fits.open(str(filename), memmap=False) as hdulist:
+        with fits.open(filename, memmap=False) as hdulist:
             data = _read_ogip_hdulist(hdulist)
 
         counts = CountsSpectrum(
@@ -1018,16 +1018,14 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         try:
             rmffile = phafile.replace("pha", "rmf")
-            energy_dispersion = EnergyDispersion.read(str(dirname / rmffile))
+            energy_dispersion = EnergyDispersion.read(dirname / rmffile)
         except OSError:
             # TODO : Add logger and echo warning
             energy_dispersion = None
 
         try:
             bkgfile = phafile.replace("pha", "bkg")
-            filename = str(dirname / bkgfile)
-
-            with fits.open(str(filename), memmap=False) as hdulist:
+            with fits.open(dirname / bkgfile, memmap=False) as hdulist:
                 data_bkg = _read_ogip_hdulist(hdulist)
                 counts_off = CountsSpectrum(
                     energy_hi=data_bkg["energy_hi"],
@@ -1041,7 +1039,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             counts_off, acceptance_off = None, None
 
         arffile = phafile.replace("pha", "arf")
-        aeff = EffectiveAreaTable.read(str(dirname / arffile))
+        aeff = EffectiveAreaTable.read(dirname / arffile)
 
         mask_safe = np.logical_not(data["quality"])
 
@@ -1089,7 +1087,7 @@ def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS", hdu3="GTI"):
     emax = ebounds["E_MAX"].quantity
 
     if hdu3 in hdulist:
-        gti = GTI.from_hdulist(hdulist, hdu3)
+        gti = GTI(Table.read(hdulist[hdu3]))
     else:
         gti = None
 

@@ -78,7 +78,7 @@ class TestEffectiveAreaTable:
     @staticmethod
     @requires_dependency("matplotlib")
     @requires_data()
-    def test_EffectiveAreaTable(tmpdir, aeff):
+    def test_EffectiveAreaTable(tmp_path, aeff):
         arf = aeff.to_effective_area_table(offset=0.3 * u.deg)
 
         assert_quantity_allclose(arf.data.evaluate(), arf.data.data)
@@ -86,9 +86,8 @@ class TestEffectiveAreaTable:
         with mpl_plot_check():
             arf.plot()
 
-        filename = str(tmpdir / "effarea_test.fits")
-        arf.write(filename)
-        arf2 = EffectiveAreaTable.read(filename)
+        arf.write(tmp_path / "tmp.fits")
+        arf2 = EffectiveAreaTable.read(tmp_path / "tmp.fits")
 
         assert_quantity_allclose(arf.data.evaluate(), arf2.data.evaluate())
 

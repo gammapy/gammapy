@@ -50,7 +50,7 @@ def execute_notebook(path, kernel="python3", loglevel=30):
     completed_process = subprocess.run(cmd)
     t = time.time() - t
     if completed_process.returncode:
-        log.error("Error executing file {}".format(str(path)))
+        log.error(f"Error executing file: {path}")
         return False
     else:
         log.info(f"   ... Executing duration: {t:.1f} seconds")
@@ -74,7 +74,7 @@ def cli_jupyter_strip(ctx):
                 cell["outputs"] = []
 
         nbformat.write(rawnb, str(path))
-        log.info("Strip output cells in notebook: {}".format(str(path)))
+        log.info(f"Strip output cells in notebook: {path}")
 
 
 @click.command(name="black")
@@ -89,7 +89,7 @@ def cli_jupyter_black(ctx):
         blacknb.blackformat()
         rawnb = blacknb.rawnb
         nbformat.write(rawnb, str(path))
-        log.info("Applied black to notebook: {}".format(str(path)))
+        log.info(f"Applied black to notebook: {path}")
 
 
 class BlackNotebook:
@@ -157,7 +157,7 @@ def notebook_test(path, kernel="python3"):
     """Execute and parse a Jupyter notebook exposing broken cells."""
     import nbformat
 
-    log.info("   ... EXECUTING {}".format(str(path)))
+    log.info(f"   ... EXECUTING: {path}")
     passed = execute_notebook(path, kernel)
     rawnb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
     report = ""
@@ -208,7 +208,7 @@ class environment:
             if abspath.is_file():
                 datapath = abspath.parent.parent / "datasets"
             os.environ["GAMMAPY_DATA"] = str(datapath)
-            log.info("Setting GAMMAPY_DATA={}".format(os.environ["GAMMAPY_DATA"]))
+            log.info(f"Setting GAMMAPY_DATA={datapath}")
 
     def __exit__(self, type, value, traceback):
         if self.tutor:

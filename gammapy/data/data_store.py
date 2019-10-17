@@ -111,13 +111,13 @@ class DataStore:
         if not hdu_table_filename.exists():
             raise OSError(f"File not found: {hdu_table_filename}")
         log.debug(f"Reading {hdu_table_filename}")
-        hdu_table = HDUIndexTable.read(str(hdu_table_filename), format="fits")
+        hdu_table = HDUIndexTable.read(hdu_table_filename, format="fits")
         hdu_table.meta["BASE_DIR"] = str(base_dir)
 
         if not obs_table_filename.exists():
             raise OSError(f"File not found: {obs_table_filename}")
         log.debug(f"Reading {obs_table_filename}")
-        obs_table = ObservationTable.read(str(obs_table_filename), format="fits")
+        obs_table = ObservationTable.read(obs_table_filename, format="fits")
 
         return cls(hdu_table=hdu_table, obs_table=obs_table)
 
@@ -282,9 +282,11 @@ class DataStore:
         overwrite : bool
             Overwrite
         """
-        # TODO : Does rsync give any benefits here?
-
         outdir = make_path(outdir)
+
+        if not outdir.is_dir():
+            raise OSError(f"Not a directory: outdir={outdir}")
+
         if isinstance(obs_id, ObservationTable):
             obs_id = obs_id["OBS_ID"].data
 
@@ -303,17 +305,19 @@ class DataStore:
             loc = subhdutable.location_info(idx)
             targetdir = outdir / loc.file_dir
             targetdir.mkdir(exist_ok=True, parents=True)
-            cmd = ["cp", "-v"] if verbose else ["cp"]
+            cmd = ["cp"]
+            if verbose:
+                cmd += ["-v"]
             if not overwrite:
                 cmd += ["-n"]
             cmd += [str(loc.path()), str(targetdir)]
             subprocess.run(cmd)
 
-        filename = str(outdir / self.DEFAULT_HDU_TABLE)
+        filename = outdir / self.DEFAULT_HDU_TABLE
         subhdutable.write(filename, format="fits", overwrite=overwrite)
 
-        filename = str(outdir / self.DEFAULT_OBS_TABLE)
-        subobstable.write(filename, format="fits", overwrite=overwrite)
+        filename = outdir / self.DEFAULT_OBS_TABLE
+        subobstable.write(str(filename), format="fits", overwrite=overwrite)
 
     def check(self, checks="all"):
         """Check index tables and data files.
@@ -426,7 +430,7 @@ class DataStoreMaker:
     @staticmethod
     def read_events_info(path):
         log.debug(f"Reading {path}")
-        with fits.open(str(path)) as hdu_list:
+        with fits.open(path, memmap=False) as hdu_list:
             header = hdu_list["EVENTS"].header
 
         na_int, na_str = -1, "NOT AVAILABLE"

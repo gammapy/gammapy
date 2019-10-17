@@ -181,8 +181,7 @@ class Map(abc.ABC):
         map_out : `Map`
             Map object
         """
-        filename = str(make_path(filename))
-        with fits.open(filename, memmap=False) as hdulist:
+        with fits.open(make_path(filename), memmap=False) as hdulist:
             return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
 
     @staticmethod

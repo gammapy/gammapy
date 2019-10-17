@@ -1,13 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from pathlib import Path
 import pytest
 from gammapy.scripts.main import cli
 from gammapy.utils.testing import requires_dependency, run_cli
-
-
-@pytest.fixture(scope="session")
-def files_dir(tmpdir_factory):
-    return str(tmpdir_factory.mktemp("tmpdwn"))
 
 
 @pytest.fixture(scope="session")
@@ -24,80 +18,83 @@ def config():
 
 def test_cli_download_help():
     result = run_cli(cli, ["download", "--help"])
+
     assert "Usage" in result.output
 
 
 @requires_dependency("parfive")
 @pytest.mark.remote_data
-def test_cli_download_datasets(files_dir, config):
+def test_cli_download_datasets(tmp_path, config):
     args = [
         "download",
         "datasets",
         f"--src={config['dataset']}",
-        f"--out={files_dir}",
+        f"--out={tmp_path}",
         f"--release={config['release']}",
     ]
     result = run_cli(cli, args)
-    assert (Path(files_dir) / config["dataset"]).exists()
+
+    assert (tmp_path / config["dataset"]).exists()
     assert "GAMMAPY_DATA" in result.output
 
 
 @requires_dependency("parfive")
 @pytest.mark.remote_data
-def test_cli_download_notebooks(files_dir, config):
-    option_out = f"--out={files_dir}"
-    option_src = "--src={}".format(config["notebook"])
-    option_release = "--release={}".format(config["release"])
-    filename = "{}.ipynb".format(config["notebook"])
-    dirname = "notebooks-{}".format(config["release"])
-
-    args = ["download", "notebooks", option_src, option_out, option_release]
+def test_cli_download_notebooks(tmp_path, config):
+    args = [
+        "download",
+        "notebooks",
+        f"--src={config['notebook']}",
+        f"--out={tmp_path}",
+        f"--release={config['release']}",
+    ]
     run_cli(cli, args)
-    assert (Path(files_dir) / config["envfilename"]).exists()
-    # assert (Path(files_dir) / dirname / "images" / config["imagefile"]).exists()
-    assert (Path(files_dir) / dirname / filename).exists()
+
+    assert (tmp_path / config["envfilename"]).exists()
+    path = tmp_path / f"notebooks-{config['release']}/{config['notebook']}.ipynb"
+    assert path.exists()
 
 
 @requires_dependency("parfive")
 @pytest.mark.remote_data
-def test_cli_download_scripts(files_dir, config):
-    option_out = f"--out={files_dir}"
-    option_src = "--src={}".format(config["script"])
-    option_release = "--release={}".format(config["release"])
-    filename = "{}.py".format(config["script"])
-    dirname = "scripts-{}".format(config["release"])
-
-    args = ["download", "scripts", option_src, option_out, option_release]
+def test_cli_download_scripts(tmp_path, config):
+    args = [
+        "download",
+        "scripts",
+        f"--src={config['script']}",
+        f"--out={tmp_path}",
+        f"--release={config['release']}",
+    ]
     run_cli(cli, args)
-    assert (Path(files_dir) / config["envfilename"]).exists()
-    assert (Path(files_dir) / dirname / filename).exists()
+
+    assert (tmp_path / config["envfilename"]).exists()
+    assert (tmp_path / f"scripts-{config['release']}/{config['script']}.py").exists()
 
 
 @requires_dependency("parfive")
 @pytest.mark.remote_data
-def test_cli_download_tutorials(files_dir, config):
-    option_out = f"--out={files_dir}"
-    nboption_src = "--src={}".format(config["notebook"])
-    scoption_src = "--src={}".format(config["script"])
-    option_release = "--release={}".format(config["release"])
+def test_cli_download_tutorials(tmp_path, config):
+    option_out = f"--out={tmp_path}"
+    nboption_src = f"--src={config['notebook']}"
+    scoption_src = f"--src={config['script']}"
+    option_release = f"--release={config['release']}"
     dsdirname = "datasets"
-    nbdirname = "notebooks-{}".format(config["release"])
-    scdirname = "scripts-{}".format(config["release"])
-    nbfilename = "{}.ipynb".format(config["notebook"])
-    scfilename = "{}.py".format(config["script"])
+    nbdirname = f"notebooks-{config['release']}"
+    scdirname = f"scripts-{config['release']}"
+    nbfilename = f"{config['notebook']}.ipynb"
+    scfilename = f"{config['script']}.py"
 
     args = ["download", "tutorials", nboption_src, option_out, option_release]
     result = run_cli(cli, args)
-    assert (Path(files_dir) / config["envfilename"]).exists()
-    assert (Path(files_dir) / nbdirname / nbfilename).exists()
-    # assert (Path(files_dir) / nbdirname / "images" / config["imagefile"]).exists()
-    assert (Path(files_dir) / dsdirname / config["dataset"]).exists()
+    assert (tmp_path / config["envfilename"]).exists()
+    assert (tmp_path / nbdirname / nbfilename).exists()
+    assert (tmp_path / dsdirname / config["dataset"]).exists()
     assert "GAMMAPY_DATA" in result.output
     assert "jupyter lab" in result.output
 
     args = ["download", "tutorials", scoption_src, option_out, option_release]
     result = run_cli(cli, args)
-    assert (Path(files_dir) / config["envfilename"]).exists()
-    assert (Path(files_dir) / scdirname / scfilename).exists()
+    assert (tmp_path / config["envfilename"]).exists()
+    assert (tmp_path / scdirname / scfilename).exists()
     assert "GAMMAPY_DATA" in result.output
     assert "jupyter lab" in result.output

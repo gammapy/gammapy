@@ -194,7 +194,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
 
 
 @requires_data()
-def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
+def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset = get_map_dataset(sky_model, geom, geom_etrue)
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit
@@ -225,9 +225,9 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
 
     assert actual == desired
 
-    dataset.write(tmpdir / "test.fits")
+    dataset.write(tmp_path / "test.fits")
 
-    dataset_new = MapDataset.read(tmpdir / "test.fits")
+    dataset_new = MapDataset.read(tmp_path / "test.fits")
     assert dataset_new.model is None
     assert dataset_new.mask.dtype == bool
 

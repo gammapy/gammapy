@@ -61,10 +61,9 @@ def test_psf_3d_containment_radius(psf_3d):
 
 
 @requires_data()
-def test_psf_3d_write(psf_3d, tmpdir):
-    filename = str(tmpdir / "temp.fits")
-    psf_3d.write(filename)
-    psf_3d = PSF3D.read(filename)
+def test_psf_3d_write(psf_3d, tmp_path):
+    psf_3d.write(tmp_path / "tmp.fits")
+    psf_3d = PSF3D.read(tmp_path / "tmp.fits")
 
     assert_allclose(psf_3d.energy_lo[0].value, 0.02)
 

@@ -82,8 +82,7 @@ class CountsSpectrum:
     @classmethod
     def read(cls, filename, hdu1="COUNTS", hdu2="EBOUNDS"):
         """Read from file."""
-        filename = make_path(filename)
-        with fits.open(str(filename), memmap=False) as hdulist:
+        with fits.open(make_path(filename), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
 
     def to_table(self):
@@ -119,7 +118,7 @@ class CountsSpectrum:
     def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
         filename = make_path(filename)
-        self.to_hdulist(use_sherpa=use_sherpa).writeto(str(filename), **kwargs)
+        self.to_hdulist(use_sherpa=use_sherpa).writeto(filename, **kwargs)
 
     def fill(self, events):
         """Fill with list of events.

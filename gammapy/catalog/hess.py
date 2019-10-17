@@ -641,11 +641,12 @@ class SourceCatalogHGPS(SourceCatalog):
 
     source_object_class = SourceCatalogObjectHGPS
 
-    def __init__(self, filename=None, hdu="HGPS_SOURCES"):
-        if not filename:
-            filename = "$GAMMAPY_DATA/catalogs/hgps_catalog_v1.fits.gz"
-
-        filename = str(make_path(filename))
+    def __init__(
+        self,
+        filename="$GAMMAPY_DATA/catalogs/hgps_catalog_v1.fits.gz",
+        hdu="HGPS_SOURCES",
+    ):
+        filename = make_path(filename)
         table = Table.read(filename, hdu=hdu)
 
         source_name_alias = ("Identified_Object",)
