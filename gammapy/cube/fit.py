@@ -318,7 +318,7 @@ class MapDataset(Dataset):
         Returns
         --------
         empty_maps: `MapDataset`
-        A MapDataset containing zero filled maps
+            A MapDataset containing zero filled maps
         """
 
         e_true_axis = geom_exposure.get_axis_by_name("energy")
