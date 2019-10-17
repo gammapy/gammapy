@@ -50,7 +50,9 @@ def spectrum_dataset_maker_crab():
 
 
 @requires_data()
-def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_maker_crab, observations_hess_dl3):
+def test_spectrum_dataset_maker_hess_dl3(
+    spectrum_dataset_maker_crab, observations_hess_dl3
+):
     datasets = []
 
     for obs in observations_hess_dl3:
@@ -68,7 +70,9 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_maker_crab, observatio
 
 
 @requires_data()
-def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_maker_gc, observations_cta_dc1):
+def test_spectrum_dataset_maker_hess_cta(
+    spectrum_dataset_maker_gc, observations_cta_dc1
+):
     datasets = []
 
     for obs in observations_cta_dc1:

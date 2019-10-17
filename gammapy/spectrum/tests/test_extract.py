@@ -177,4 +177,3 @@ class TestSpectrumExtraction:
         extraction.compute_energy_threshold(method_lo="area_max", area_percent_lo=10)
         actual = extraction.spectrum_observations[0].energy_range[0]
         assert_quantity_allclose(actual, 0.8799225 * u.TeV, rtol=1e-3)
-

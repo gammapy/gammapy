@@ -9,13 +9,18 @@ __all__ = ["SourceCatalogSNRcat", "SourceCatalogObjectSNRcat"]
 
 
 class SourceCatalogObjectSNRcat(SourceCatalogObject):
-    """One source from the SNRcat catalog."""
+    """One source from the SNRcat catalog.
 
-    pass
+    Catalog is represented by `~gammapy.catalog.SourceCatalogSNRcat`.
+    """
+
+    # TODO: add methods to get position and shape (like for the other cats)
 
 
 class SourceCatalogSNRcat(SourceCatalog):
     """SNRcat supernova remnant catalog.
+
+    One source is represented by `SourceCatalogObjectSNRcat`.
 
     `SNRcat <http://www.physics.umanitoba.ca/snr/SNRcat/>`__
     is a census of high-energy observations of Galactic supernova remnants.

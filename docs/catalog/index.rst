@@ -12,28 +12,23 @@ Introduction
 `gammapy.catalog` provides utilities to work with source catalogs in general,
 and catalogs relevant for gamma-ray astronomy specifically.
 
-If you just want to browse catalog information, you can visit
-http://gamma-sky.net .
+Support for the following catalogs is available:
 
-Available catalogs
-------------------
-
-Support for the following catalogs is available::
-
-    Source catalog registry:
-       name                       description                      sources
-    --------- ---------------------------------------------------- -------
-         hgps H.E.S.S. Galactic plane survey (HGPS) source catalog      78
-    gamma-cat                 An open catalog of gamma-ray sources     166
-         3fgl                      LAT 4-year point source catalog    3034
-         1fhl      First Fermi-LAT Catalog of Sources above 10 GeV     514
-         2fhl                LAT second high-energy source catalog     360
-         3fhl                 LAT third high-energy source catalog    1556
-         2hwc               2HWC catalog from the HAWC observatory      40
+* ``hgps`` / `SourceCatalogHGPS` - H.E.S.S. Galactic plane survey (HGPS)
+* ``gamma-cat`` /  / `SourceCatalogGammaCat` - An open catalog of gamma-ray sources
+* ``3fgl`` / `SourceCatalog3FGL` - LAT 4-year point source catalog
+* ``4fgl`` / `SourceCatalog4FGL` - LAT 8-year point source catalog
+* ``1fhl`` / `SourceCatalog1FHL` - First Fermi-LAT Catalog of Sources above 10 GeV
+* ``2fhl`` / `SourceCatalog2FHL` - LAT second high-energy source catalog
+* ``3fhl`` / `SourceCatalog3FHL` - LAT third high-energy source catalog
+* ``2hwc`` / `SourceCatalog2HWC` - 2HWC catalog from the HAWC observatory
+* ``snrcat`` / `SourceCatalogSNRcat` - SNRcat supernova remnant catalog
 
 More catalogs can be added to ``gammapy.catalog``, and users can also add
 support for their favourite catalog in their Python script or package, by
 following the examples how the built-in catalogs are implemented.
+
+Some catalogs can be interactively explored at http://gamma-sky.net .
 
 How it works
 ------------
@@ -71,26 +66,27 @@ Getting Started
 
 Let's start by checking which catalogs are available::
 
-    >>> from gammapy.catalog import source_catalogs
-    >>> source_catalogs.info()
-    Source catalog registry:
-    Name Description Loaded
-    ---- ----------- ------
-    3fgl description     no
-    2fhl description     no
+    >>> from gammapy.catalog import SOURCE_CATALOGS
+    >>> list(SOURCE_CATALOGS)
+    ['gamma-cat', 'hgps', '2hwc', '3fgl', '4fgl', '1fhl', '2fhl', '3fhl', 'snrcat']
 
-You can access ``source_catalogs`` like a dict, i.e. load catalogs by name::
+The ``SOURCE_CATALOG`` dict maps names to classes, so you have to call the class
+to instantiate a catalog object::
 
-    >>> catalog = source_catalogs['3fgl']
-    >>> catalog.table # To access the underlying astropy.table.Table
+    >>> SOURCE_CATALOGS['3fgl']
+    <class 'gammapy.catalog.fermi.SourceCatalog3FGL'>
+    >>> SOURCE_CATALOGS['3fgl']()
+    <gammapy.catalog.fermi.SourceCatalog3FGL object at 0x1006fa198>
 
-Note that importing ``source_catalogs`` did not load catalogs from disk, they
-are lazy-loaded on access via ``[name]`` and then cached for the duration of
-your Python session.
+Alternatively, you can also import and call the class directly::
 
-You can get an object representing one source of interest by source name or by
-row index::
+    >>> from gammapy.catalog import SourceCatalog3FGL
+    >>> catalog = SourceCatalog3FGL()
 
+Usually you create a catalog object, which loads the catalog from disk once,
+and then index into it to get source objects representing a given source::
+
+    >>> catalog = SOURCE_CATALOGS["3fgl"]()
     >>> source = catalog['3FGL J0004.7-4740']  # access by source name
     >>> source = catalog[15]  # access by row index
 
@@ -106,6 +102,13 @@ attribute::
 
 TODO: continue here describing how to access spectra, finder charts, ... once
 that's implemented.
+
+.. code-block:: python
+
+    from gammapy.catalog import SOURCE_CATALOGS
+    source = SOURCE_CATALOGS['3fgl']()['3FGL J0349.9-2102']
+    lc = source.lightcurve
+    lc.plot()
 
 Using `gammapy.catalog`
 =======================
