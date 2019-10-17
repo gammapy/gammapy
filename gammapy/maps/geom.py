@@ -918,15 +918,9 @@ class MapCoord:
             the `~astropy.coordinates.SkyCoord` object.
         """
         skycoord = coords[0]
-        name = skycoord.frame.name
-        if name in ["icrs", "fk5"]:
-            coords = (skycoord.ra.deg, skycoord.dec.deg) + coords[1:]
-            coords = cls._from_lonlat(coords, coordsys="CEL")
-        elif name in ["galactic"]:
-            coords = (skycoord.l.deg, skycoord.b.deg) + coords[1:]
-            coords = cls._from_lonlat(coords, coordsys="GAL")
-        else:
-            raise ValueError(f"Unrecognized coordinate frame: {name!r}")
+        coordsys_skycoord = frame_to_coordsys(skycoord.frame.name)
+        coords = (skycoord.data.lon.deg, skycoord.data.lat.deg) + coords[1:]
+        coords = cls._from_lonlat(coords, coordsys=coordsys_skycoord)
 
         if coordsys is None:
             return coords
@@ -955,6 +949,8 @@ class MapCoord:
                 if k == "skycoord":
                     continue
                 coords_dict[k] = v
+            if coordsys is None:
+                coordsys = frame_to_coordsys(frame.name)
             return cls(coords_dict, coordsys=coordsys)
         else:
             raise ValueError("coords dict must contain 'lon'/'lat' or 'skycoord'.")
