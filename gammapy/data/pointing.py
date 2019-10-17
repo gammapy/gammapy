@@ -49,7 +49,7 @@ class FixedPointingInfo:
             Pointing info object
         """
         filename = make_path(filename)
-        table = Table.read(str(filename), hdu=hdu)
+        table = Table.read(filename, hdu=hdu)
         return cls(meta=table.meta)
 
     @lazyproperty
@@ -142,7 +142,7 @@ class PointingInfo:
             Pointing info object
         """
         filename = make_path(filename)
-        table = Table.read(str(filename), hdu=hdu)
+        table = Table.read(filename, hdu=hdu)
         return cls(table=table)
 
     def __str__(self):

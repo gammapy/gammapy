@@ -256,7 +256,7 @@ class SmartHDUList:
         filename : str
             Filename
         """
-        filename = str(make_path(filename))
+        filename = make_path(filename)
         memmap = kwargs.pop("memmap", False)
         hdu_list = fits.open(filename, memmap=memmap, **kwargs)
         return cls(hdu_list)
@@ -274,8 +274,7 @@ class SmartHDUList:
         filename : str
             Filename
         """
-        filename = str(make_path(filename))
-        self.hdu_list.writeto(filename, **kwargs)
+        self.hdu_list.writeto(make_path(filename), **kwargs)
 
     @property
     def names(self):
@@ -312,13 +311,6 @@ class SmartHDUList:
             raise ValueError(
                 "Must give either `hdu` or `hdu_type`. Got `None` for both."
             )
-
-        # if (hdu_key is not None) and (hdu_type is not None):
-        #     raise ValueError(
-        #         'Must give either `hdu` or `hdu_type`.'
-        #         ' Got a value for both: hdu={} and hdu_type={}'
-        #         ''.format(hdu_key, hdu_type)
-        #     )
 
         if hdu_key is not None:
             idx = self.hdu_list.index_of(hdu_key)

@@ -95,8 +95,8 @@ example dataset used above. It makes use of the Sherpa `datastack module
     from sherpa.astro import datastack
     from sherpa.models import PowLaw1D
 
-    pha1 = str(Path(os.environ["GAMMAPY_DATA"]) / "joint-crab" / "spectra" / "hess" / "pha_obs23592.fits")
-    pha2 = str(Path(os.environ["GAMMAPY_DATA"]) / "joint-crab" / "spectra" / "hess" / "pha_obs23523.fits")
+    pha1 = str(Path(os.environ["GAMMAPY_DATA"]) / "joint-crab/spectra/hess/pha_obs23592.fits")
+    pha2 = str(Path(os.environ["GAMMAPY_DATA"]) / "joint-crab/spectra/hess/pha_obs23523.fits")
     phalist = ','.join([pha1, pha2])
 
     ds = datastack.DataStack()

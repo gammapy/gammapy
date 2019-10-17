@@ -114,8 +114,7 @@ class PSF3D:
         hdu : str
             HDU name
         """
-        filename = str(make_path(filename))
-        table = Table.read(filename, hdu=hdu)
+        table = Table.read(make_path(filename), hdu=hdu)
         return cls.from_table(table)
 
     @classmethod

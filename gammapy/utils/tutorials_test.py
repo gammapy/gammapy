@@ -46,16 +46,12 @@ def main():
     # setup
     path_temp = Path("temp")
     path_empty_nbs = Path("tutorials")
-    shutil.rmtree(str(path_temp), ignore_errors=True)
-    shutil.copytree(str(path_empty_nbs), str(path_temp))
+    shutil.rmtree(path_temp, ignore_errors=True)
+    shutil.copytree(path_empty_nbs, path_temp)
 
     for notebook in get_notebooks():
         if requirement_missing(notebook):
-            log.info(
-                "Skipping notebook {} because requirement is missing.".format(
-                    notebook["name"]
-                )
-            )
+            log.info(f"Skipping notebook (requirement missing): {notebook['name']}")
             continue
 
         filename = notebook["name"] + ".ipynb"
@@ -65,7 +61,7 @@ def main():
             passed = False
 
     # tear down
-    shutil.rmtree(str(path_temp), ignore_errors=True)
+    shutil.rmtree(path_temp, ignore_errors=True)
 
     if not passed:
         sys.exit("Some tests failed. Existing now.")

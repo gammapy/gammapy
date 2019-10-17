@@ -4,6 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
+from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.cube.edisp_map import EDispMap
@@ -594,7 +595,7 @@ class MapDataset(Dataset):
             hdulist += mask_fit_map.to_hdulist(hdu="mask_fit")[exclude_primary]
 
         if self.gti is not None:
-            hdulist += self.gti.to_hdulist()
+            hdulist.append(fits.BinTableHDU(self.gti.table, name="GTI"))
 
         return hdulist
 
@@ -642,7 +643,7 @@ class MapDataset(Dataset):
             init_kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
 
         if "GTI" in hdulist:
-            gti = GTI.from_hdulist(hdulist, hdu="GTI")
+            gti = GTI(Table.read(hdulist, hdu="GTI"))
             init_kwargs["gti"] = gti
         return cls(**init_kwargs)
 
@@ -656,9 +657,7 @@ class MapDataset(Dataset):
         overwrite : bool
             Overwrite file if it exists.
         """
-        filename = make_path(filename)
-        hdulist = self.to_hdulist()
-        hdulist.writeto(str(filename), overwrite=overwrite)
+        self.to_hdulist().writeto(make_path(filename), overwrite=overwrite)
 
     @classmethod
     def read(cls, filename, name=""):
@@ -674,9 +673,8 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset.
         """
-        filename = make_path(filename)
-        hdulist = fits.open(str(filename))
-        return cls.from_hdulist(hdulist, name=name)
+        with fits.open(make_path(filename), memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, name=name)
 
     @classmethod
     def from_dict(cls, data, components, models):

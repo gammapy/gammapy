@@ -5,13 +5,13 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
 from gammapy.catalog.fermi import SourceCatalog3FGL
-from gammapy.modeling import Fit, Datasets
+from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
-    SpectralModel,
     ConstantSpatialModel,
+    PowerLawSpectralModel,
     SkyModel,
     SkyModels,
+    SpectralModel,
 )
 from gammapy.spectrum import FluxPoints, FluxPointsDataset
 from gammapy.utils.testing import (
@@ -265,7 +265,9 @@ def test_flux_point_dataset_serialization(tmp_path):
     dataset = FluxPointsDataset(SkyModels([model]), data, name="test_dataset")
 
     Datasets([dataset]).to_yaml(str(tmp_path / "tmp_"))
-    datasets = Datasets.from_yaml(tmp_path / "tmp_datasets.yaml", tmp_path / "tmp_models.yaml")
+    datasets = Datasets.from_yaml(
+        tmp_path / "tmp_datasets.yaml", tmp_path / "tmp_models.yaml"
+    )
     new_dataset = datasets.datasets[0]
     assert_allclose(new_dataset.data.table["dnde"], dataset.data.table["dnde"], 1e-4)
     if dataset.mask_fit is None:

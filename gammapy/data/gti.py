@@ -83,17 +83,6 @@ class GTI:
         return cls(table)
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu="GTI"):
-        """Create from `~astropy.io.fits.HDUList`."""
-        gti = Table.read(hdulist[hdu])
-        return cls(gti)
-
-    def to_hdulist(self):
-        """Convert to `~astropy.io.fits.HDUList`."""
-        hdu = fits.BinTableHDU(self.table, name="GTI")
-        return fits.HDUList([hdu])
-
-    @classmethod
     def read(cls, filename, hdu="GTI"):
         """Read from FITS file.
 
@@ -105,15 +94,12 @@ class GTI:
             hdu name. Default GTI.
         """
         filename = make_path(filename)
-        with fits.open(str(filename), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, hdu)
+        table = Table.read(filename, hdu=hdu)
+        return cls(table)
 
     def write(self, filename, **kwargs):
         """Write to file."""
-        filename = make_path(filename)
-        hdulist = fits.HDUList([fits.PrimaryHDU()])
-        hdulist += self.to_hdulist()
-        hdulist.writeto(str(filename), **kwargs)
+        self.table.write(make_path(filename), **kwargs)
 
     def __str__(self):
         return (

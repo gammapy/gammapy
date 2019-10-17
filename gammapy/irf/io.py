@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from gammapy.utils.scripts import make_path
 from .background import Background3D
 from .effective_area import EffectiveAreaTable2D
 from .energy_dispersion import EnergyDispersion2D
@@ -41,8 +40,6 @@ def load_cta_irfs(filename):
         cta_irf = load_cta_irfs("$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits")
         print(cta_irf['aeff'])
     """
-    filename = str(make_path(filename))
-
     aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
     bkg = Background3D.read(filename, hdu="BACKGROUND")
     edisp = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")

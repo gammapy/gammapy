@@ -9,6 +9,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
+from gammapy.utils.scripts import make_path
 
 log = logging.getLogger(__name__)
 
@@ -448,6 +449,9 @@ class TemplateSpatialModel(SpatialModel):
         if (map.data < 0).any():
             log.warning("Diffuse map has negative values. Check and fix this!")
 
+        if filename is not None:
+            filename = str(make_path(filename))
+
         self.map = map
         self.normalize = normalize
         if normalize:
@@ -491,7 +495,7 @@ class TemplateSpatialModel(SpatialModel):
         m = Map.read(filename, **kwargs)
         if m.unit == "":
             m.unit = "sr-1"
-        return cls(m, normalize=normalize, filename=str(filename))
+        return cls(m, normalize=normalize, filename=filename)
 
     def evaluate(self, lon, lat, norm):
         """Evaluate model."""

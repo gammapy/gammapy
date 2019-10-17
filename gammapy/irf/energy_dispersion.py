@@ -290,11 +290,8 @@ class EnergyDispersion:
         hdu2 : str, optional
             HDU containing the energy axis information, default, EBOUNDS
         """
-        filename = make_path(filename)
-        with fits.open(str(filename), memmap=False) as hdulist:
-            edisp = cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
-
-        return edisp
+        with fits.open(make_path(filename), memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
 
     def to_hdulist(self, use_sherpa=False, **kwargs):
         """Convert RMF to FITS HDU list format.
@@ -420,7 +417,7 @@ class EnergyDispersion:
     def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
         filename = make_path(filename)
-        self.to_hdulist(use_sherpa=use_sherpa).writeto(str(filename), **kwargs)
+        self.to_hdulist(use_sherpa=use_sherpa).writeto(filename, **kwargs)
 
     def get_resolution(self, e_true):
         """Get energy resolution for a given true energy.
@@ -860,11 +857,8 @@ class EnergyDispersion2D:
         filename : str
             File name
         """
-        filename = make_path(filename)
-        with fits.open(str(filename), memmap=False) as hdulist:
-            edisp = cls.from_hdulist(hdulist, hdu)
-
-        return edisp
+        with fits.open(make_path(filename), memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, hdu)
 
     def to_energy_dispersion(self, offset, e_true=None, e_reco=None):
         """Detector response R(Delta E_reco, Delta E_true)

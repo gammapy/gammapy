@@ -91,6 +91,7 @@ def test_datastore_copy_obs(tmp_path, data_store):
 
     assert str(actual.events.table) == str(desired.events.table)
 
+
 @requires_data()
 def test_datastore_copy_obs_subset(tmp_path, data_store):
     # Copy only certain HDU classes

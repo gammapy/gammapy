@@ -103,7 +103,7 @@ def test_wcsgeom_read_write(tmp_path, npix, binsz, coordsys, proj, skydir, axes)
     hdulist = fits.HDUList([hdu_prim, hdu_bands])
     hdulist.writeto(tmp_path / "tmp.fits")
 
-    with fits.open(tmp_path / "tmp.fits") as hdulist:
+    with fits.open(tmp_path / "tmp.fits", memmap=False) as hdulist:
         geom1 = WcsGeom.from_header(hdulist[0].header, hdulist["BANDS"])
 
     assert_allclose(geom0.npix, geom1.npix)

@@ -128,21 +128,21 @@ def test_hpxmap_read_write_fgst(tmp_path):
     # Test Counts Cube
     m = create_map(8, False, "GAL", None, [axis], False)
     m.write(path, conv="fgst-ccube", overwrite=True)
-    with fits.open(path) as h:
-        assert "SKYMAP" in h
-        assert "EBOUNDS" in h
-        assert h["SKYMAP"].header["HPX_CONV"] == "FGST-CCUBE"
-        assert h["SKYMAP"].header["TTYPE1"] == "CHANNEL1"
+    with fits.open(path, memmap=False) as hdulist:
+        assert "SKYMAP" in hdulist
+        assert "EBOUNDS" in hdulist
+        assert hdulist["SKYMAP"].header["HPX_CONV"] == "FGST-CCUBE"
+        assert hdulist["SKYMAP"].header["TTYPE1"] == "CHANNEL1"
 
     m2 = Map.read(path)
 
     # Test Model Cube
     m.write(path, conv="fgst-template", overwrite=True)
-    with fits.open(path) as h:
-        assert "SKYMAP" in h
-        assert "ENERGIES" in h
-        assert h["SKYMAP"].header["HPX_CONV"] == "FGST-TEMPLATE"
-        assert h["SKYMAP"].header["TTYPE1"] == "ENERGY1"
+    with fits.open(path, memmap=False) as hdulist:
+        assert "SKYMAP" in hdulist
+        assert "ENERGIES" in hdulist
+        assert hdulist["SKYMAP"].header["HPX_CONV"] == "FGST-TEMPLATE"
+        assert hdulist["SKYMAP"].header["TTYPE1"] == "ENERGY1"
 
     m2 = Map.read(path)
 

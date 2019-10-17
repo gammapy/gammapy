@@ -94,8 +94,7 @@ class LightCurve:
         kwargs : dict
             Keyword arguments passed to `astropy.table.Table.read`.
         """
-        filename = make_path(filename)
-        table = Table.read(str(filename), **kwargs)
+        table = Table.read(make_path(filename), **kwargs)
         return cls(table=table)
 
     def write(self, filename, **kwargs):
@@ -108,8 +107,7 @@ class LightCurve:
         kwargs : dict
             Keyword arguments passed to `astropy.table.Table.write`.
         """
-        filename = make_path(filename)
-        self.table.write(str(filename), **kwargs)
+        self.table.write(make_path(filename), **kwargs)
 
     def compute_fvar(self):
         r"""Calculate the fractional excess variance.

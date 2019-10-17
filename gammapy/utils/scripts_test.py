@@ -33,7 +33,7 @@ def requirement_missing(script):
 
 def script_test(path):
     """Check if example Python script is broken."""
-    log.info("   ... EXECUTING {}".format(str(path)))
+    log.info(f"   ... EXECUTING {path}")
 
     cmd = [sys.executable, str(path)]
     cp = subprocess.run(cmd, stderr=subprocess.PIPE)
@@ -60,7 +60,7 @@ def main():
 
     for script in get_scripts():
         if requirement_missing(script):
-            log.info("Skipping script (missing requirement): {}".format(script["name"]))
+            log.info(f"Skipping script (missing requirement): {script['name']}")
             continue
 
         filename = script["name"] + ".py"

@@ -307,7 +307,7 @@ class DataStore:
             targetdir.mkdir(exist_ok=True, parents=True)
             cmd = ["cp"]
             if verbose:
-                cmd += ['-v']
+                cmd += ["-v"]
             if not overwrite:
                 cmd += ["-n"]
             cmd += [str(loc.path()), str(targetdir)]

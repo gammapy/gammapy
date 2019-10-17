@@ -455,9 +455,8 @@ class SourceCatalogGammaCat(SourceCatalog):
     source_object_class = SourceCatalogObjectGammaCat
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/gammacat/gammacat.fits.gz"):
-        filename = str(make_path(filename))
+        filename = make_path(filename)
         table = Table.read(filename, hdu=1)
-        self.filename = filename
 
         source_name_key = "common_name"
         source_name_alias = ("other_names", "gamma_names")

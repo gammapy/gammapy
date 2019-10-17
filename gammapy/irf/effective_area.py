@@ -185,16 +185,14 @@ class EffectiveAreaTable:
     def read(cls, filename, hdu="SPECRESP"):
         """Read from file."""
         filename = make_path(filename)
-        with fits.open(str(filename), memmap=False) as hdulist:
+        with fits.open(filename, memmap=False) as hdulist:
             try:
-                aeff = cls.from_hdulist(hdulist, hdu=hdu)
+                return cls.from_hdulist(hdulist, hdu=hdu)
             except KeyError:
                 raise ValueError(
                     f"File {filename} contains no HDU {hdu!r}\n"
                     f"Available: {[_.name for _ in hdulist]}"
                 )
-
-        return aeff
 
     def to_table(self):
         """Convert to `~astropy.table.Table` in ARF format.
@@ -229,7 +227,7 @@ class EffectiveAreaTable:
     def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
         filename = make_path(filename)
-        self.to_hdulist(use_sherpa=use_sherpa).writeto(str(filename), **kwargs)
+        self.to_hdulist(use_sherpa=use_sherpa).writeto(filename, **kwargs)
 
     def evaluate_fill_nan(self, **kwargs):
         """Modified evaluate function.
@@ -418,11 +416,8 @@ class EffectiveAreaTable2D:
     @classmethod
     def read(cls, filename, hdu="EFFECTIVE AREA"):
         """Read from file."""
-        filename = make_path(filename)
-        with fits.open(str(filename), memmap=False) as hdulist:
-            aeff = cls.from_hdulist(hdulist, hdu=hdu)
-
-        return aeff
+        with fits.open(make_path(filename), memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, hdu=hdu)
 
     def to_effective_area_table(self, offset, energy=None):
         """Evaluate at a given offset and return `~gammapy.irf.EffectiveAreaTable`.

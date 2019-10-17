@@ -464,25 +464,6 @@ File and directory path handling
 
 In Gammapy use `pathlib.Path` objects to handle file and directory paths.
 
-.. code-block:: python
-
-    from pathlib import Path
-
-    dir = Path('folder/subfolder')
-    filename = dir / 'filename.fits'
-    dir.mkdir(exist_ok=True)
-    table.write(str(filename))
-
-Note how the ``/`` operator makes it easy to construct paths
-(as opposed to repeated calls to the string-handling function ``os.path.join``)
-and how methods on ``Path`` objects provide a nicer interface to most
-of the functionality from ``os.path`` (``mkdir`` in this example).
-
-One gotcha is that many functions (such as ``table.write`` in this example)
-expect ``str`` objects and refuse to work with ``Path`` objects, so you have
-to explicitly convert to ``str(path)``.
-
-
 Bundled gammapy.extern code
 ---------------------------
 

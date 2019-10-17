@@ -78,7 +78,7 @@ class EventListBase:
         """
         filename = make_path(filename)
         kwargs.setdefault("hdu", "EVENTS")
-        table = Table.read(str(filename), **kwargs)
+        table = Table.read(filename, **kwargs)
         return cls(table=table)
 
     @classmethod

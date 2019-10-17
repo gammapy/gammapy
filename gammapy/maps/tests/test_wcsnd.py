@@ -104,16 +104,16 @@ def test_wcsndmap_read_write_fgst(tmp_path):
     # Test Counts Cube
     m = WcsNDMap(geom)
     m.write(path, conv="fgst-ccube", overwrite=True)
-    with fits.open(path) as h:
-        assert "EBOUNDS" in h
+    with fits.open(path, memmap=False) as hdulist:
+        assert "EBOUNDS" in hdulist
 
     m2 = Map.read(path)
     assert m2.geom.axes[0].name == "energy"
 
     # Test Model Cube
     m.write(path, conv="fgst-template", overwrite=True)
-    with fits.open(path) as h:
-        assert "ENERGIES" in h
+    with fits.open(path, memmap=False) as hdulist:
+        assert "ENERGIES" in hdulist
 
 
 @requires_data()

@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 class TablePSF:
-    r"""Radially-symmetric table PSF.
+    """Radially-symmetric table PSF.
 
     Parameters
     ----------
@@ -347,11 +347,8 @@ class EnergyDependentTablePSF:
         filename : str
             File name
         """
-        filename = str(make_path(filename))
-        with fits.open(filename, memmap=False) as hdulist:
-            psf = cls.from_fits(hdulist)
-
-        return psf
+        with fits.open(make_path(filename), memmap=False) as hdulist:
+            return cls.from_fits(hdulist)
 
     def write(self, *args, **kwargs):
         """Write to FITS file.

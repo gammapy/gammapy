@@ -676,8 +676,8 @@ def test_hpxgeom_read_write(tmp_path, nside, nested, coordsys, region, axes):
     hdulist = fits.HDUList([hdu_prim, hdu_bands])
     hdulist.writeto(tmp_path / "tmp.fits")
 
-    hdulist = fits.open(tmp_path / "tmp.fits")
-    geom1 = HpxGeom.from_header(hdulist[0].header, hdulist["BANDS"])
+    with fits.open(tmp_path / "tmp.fits", memmap=False) as hdulist:
+        geom1 = HpxGeom.from_header(hdulist[0].header, hdulist["BANDS"])
 
     assert_allclose(geom0.nside, geom1.nside)
     assert_allclose(geom0.npix, geom1.npix)

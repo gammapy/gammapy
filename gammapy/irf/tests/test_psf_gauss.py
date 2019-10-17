@@ -80,10 +80,9 @@ class TestEnergyDependentMultiGaussPSF:
         assert psf.info() == info_str
 
     def test_write(self, tmp_path, psf):
-        path = tmp_path / "multigauss_psf_test.fits"
-        psf.write(path)
+        psf.write(tmp_path / "tmp.fits")
 
-        with fits.open(path) as hdu_list:
+        with fits.open(tmp_path / "tmp.fits", memmap=False) as hdu_list:
             assert len(hdu_list) == 2
 
     def test_to_table_psf(self, psf):
