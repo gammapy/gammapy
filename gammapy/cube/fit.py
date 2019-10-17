@@ -285,6 +285,81 @@ class MapDataset(Dataset):
         return npred_total
 
     @classmethod
+    def from_geoms(
+        cls,
+        geom,
+        geom_exposure,
+        geom_psf,
+        geom_edisp,
+        reference_time="2000-01-01",
+        name="",
+        **kwargs,
+    ):
+        """
+        Create a MapDataset object with zero filled maps according to the specified geometries
+
+        Parameters
+        --------------
+        geom: `Geom`
+            geometry for the counts and background maps
+        geom_exposure: `Geom`
+            geometry for the exposure map
+        geom_irf: `Geom`
+            geometry for the IRF exposure map
+        geom_psf: `Geom`
+            geometry for the psf map
+        geom_edisp: `Geom`
+            geometry for the energy dispersion map
+        reference_time: `~astropy.time.Time`
+            the reference time to use in GTI definition
+        name : str
+            Name of the dataset.
+
+        Returns
+        --------
+        empty_maps: `MapDataset`
+            A MapDataset containing zero filled maps
+        """
+
+        e_true_axis = geom_exposure.get_axis_by_name("energy")
+
+        counts = Map.from_geom(geom, unit="")
+
+        background = Map.from_geom(geom, unit="")
+        background_model = BackgroundModel(background)
+
+        exposure = Map.from_geom(geom_exposure, unit="m2 s")
+
+        geom_exposure_edisp = geom_edisp.to_image().to_cube([e_true_axis])
+        exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
+        migra_axis = geom_edisp.get_axis_by_name("migra")
+        edisp_map = Map.from_geom(geom_edisp, unit="")
+        loc = migra_axis.edges.searchsorted(1.0)
+        edisp_map.data[:, loc, :, :] = 1.0
+        edisp = EDispMap(edisp_map, exposure_edisp)
+
+        geom_exposure_psf = geom_psf.to_image().to_cube([e_true_axis])
+        exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
+        psf_map = Map.from_geom(geom_psf, unit="sr-1")
+        psf = PSFMap(psf_map, exposure_psf)
+
+        gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
+
+        mask_safe = np.zeros(geom.data_shape, dtype=bool)
+
+        return cls(
+            counts=counts,
+            exposure=exposure,
+            psf=psf,
+            edisp=edisp,
+            background_model=background_model,
+            gti=gti,
+            mask_safe=mask_safe,
+            name=name,
+            **kwargs,
+        )
+
+    @classmethod
     def create(
         cls,
         geom,
@@ -307,6 +382,8 @@ class MapDataset(Dataset):
             Migration axis for the energy dispersion map
         rad_axis: `~gammapy.maps.MapAxis`
             Rad axis for the psf map
+        reference_time: `~astropy.time.Time`
+            the reference time to use in GTI definition
         name : str
             Name of the dataset.
         """

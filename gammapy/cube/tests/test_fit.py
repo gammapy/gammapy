@@ -380,6 +380,40 @@ def test_create(geom, geom_etrue):
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
 
+def test_from_geoms():
+
+    migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    e_reco = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
+    )
+    e_true = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 4), name="energy", unit=u.TeV, interp="log"
+    )
+    wcs = WcsGeom.create(binsz=0.02, width=(2, 2))
+    wcs_irf = WcsGeom.create(binsz=0.1, width=(2.5, 2.5))
+    geom = wcs.to_cube([e_reco])
+    geom_exposure = wcs.to_cube([e_true])
+    geom_irf = wcs_irf.to_cube([e_true])
+    geom_psf = wcs_irf.to_cube([rad_axis, e_true])
+    geom_edisp = wcs_irf.to_cube([migra_axis, e_true])
+
+    empty_dataset = MapDataset.from_geoms(geom, geom_exposure, geom_psf, geom_edisp)
+
+    assert empty_dataset.counts.data.shape == (2, 100, 100)
+
+    assert empty_dataset.exposure.data.shape == (3, 100, 100)
+
+    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 25, 25)
+    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 25, 25)
+
+    assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 25, 25)
+    assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 25, 25)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 1875)
+
+    assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
+
+
 @requires_data()
 def test_stack(geom, geom_etrue):
 
