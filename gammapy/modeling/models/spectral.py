@@ -1458,9 +1458,7 @@ class AbsorbedSpectralModel(SpectralModel):
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
         self.alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
 
-        super().__init__(
-            spectral_model.parameters.parameters + [par, self.alpha_norm]
-        )
+        super().__init__(spectral_model.parameters.parameters + [par, self.alpha_norm])
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""

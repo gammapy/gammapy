@@ -7,6 +7,7 @@ from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from astropy.units import Quantity, Unit
+from gammapy.maps import MapCoord, WcsNDMap
 from gammapy.utils.energy import energy_logspace
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.regions import make_region
@@ -338,7 +339,7 @@ class EventListBase:
         if not ebounds:
             ebounds = self._default_plot_ebounds()
         spec = CountsSpectrum(energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
-        spec.fill(self.energy)
+        spec.fill_energy(self.energy)
         return spec
 
     def plot_energy(self, ax=None, ebounds=None, **kwargs):
@@ -481,19 +482,20 @@ class EventListBase:
         checker = EventListChecker(self)
         return checker.run(checks=checks)
 
-    def _get_coord_from_geom(self, geom):
-        """Return MapCoord of the EventList relative to an input geometry.
+    def map_coord(self, geom):
+        """Event map coordinates for a given geometry.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            the geom used to define the MapCoord
+            Geometry
 
         Returns
         -------
-        mapcoord : `~gammapy.Map.MapCoord`
+        coord : `~gammapy.maps.MapCoord`
+            Coordinates
         """
-        coord = dict(skycoord=self.radec)
+        coord = {"skycoord": self.radec}
 
         cols = {k.upper(): v for k, v in self.table.columns.items()}
 
@@ -504,21 +506,17 @@ class EventListBase:
             except KeyError:
                 raise KeyError(f"Column not found in event list: {axis.name!r}")
 
-        return coord
+        return MapCoord.create(coord)
 
     def select_map_mask(self, mask):
-        """Return EventList contained in a Map mask.
+        """Select events inside a mask (`EventList`).
 
         Parameters
         ----------
         mask : `~gammapy.maps.Map`
-            the mask to be used
-
-        Returns
-        -------
-        eventlist : `~gammapy.data.EventList`
+            Mask
         """
-        coord = self._get_coord_from_geom(mask.geom)
+        coord = self.map_coord(mask.geom)
         values = mask.get_by_coord(coord)
         valid = values > 0
         return self.select_row_subset(valid)
@@ -654,8 +652,6 @@ class EventList(EventListBase):
         ax.text(0, 1, txt, fontsize=12, verticalalignment="top")
 
     def _counts_image(self):
-        from gammapy.maps import WcsNDMap
-
         opts = {
             "width": (7, 7),
             "binsz": 0.1,

@@ -9,7 +9,6 @@ from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map
 from gammapy.modeling.models import BackgroundModel
 from .background import make_map_background_irf
-from .counts import fill_map_counts
 from .edisp_map import make_edisp_map
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
 from .fit import BINSZ_IRF, MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, MapDataset
@@ -112,7 +111,7 @@ class MapDatasetMaker:
         """
         geom = self._cutout_geom(self.geom, observation)
         counts = Map.from_geom(geom)
-        fill_map_counts(counts, observation.events)
+        counts.fill_events(observation.events)
         return counts
 
     def make_exposure(self, observation):

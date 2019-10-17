@@ -771,6 +771,10 @@ class Map(abc.ABC):
         """
         pass
 
+    def fill_events(self, events):
+        """Fill event coordinates (`~gammapy.data.EventList`)."""
+        self.fill_by_coord(events.map_coord(self.geom))
+
     def fill_by_coord(self, coords, weights=None):
         """Fill pixels at ``coords`` with given ``weights``.
 
