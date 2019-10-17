@@ -285,6 +285,68 @@ class MapDataset(Dataset):
         return npred_total
 
     @classmethod
+    def from_geoms(
+        cls,
+        geom,
+        geom_exposure,
+        geom_irf,
+        geom_psf,
+        geom_edisp,
+        reference_time="2000-01-01",
+        name="",
+        **kwargs,
+    ):
+        """
+        Create a MapDataset object with zero filled maps according to the specified geometries
+
+        Parameters
+        --------------
+        geom: geometry for the counts and background maps
+        geom_exposure: geometry for the exposure map
+        geom_irf: geometry for the IRF exposure map
+        geom_psf: geometry for the psf map
+        geom_edisp: geometry for the energy dispersion map
+        reference_time: `~astropy.time.Time`
+            the reference time to use in GTI definition
+        name : str
+            Name of the dataset.
+
+        """
+
+        counts = Map.from_geom(geom, unit="")
+
+        background = Map.from_geom(geom, unit="")
+        background_model = BackgroundModel(background)
+
+        exposure = Map.from_geom(geom_exposure, unit="m2 s")
+        exposure_irf = Map.from_geom(geom_irf, unit="m2 s")
+
+        migra_axis = geom_edisp.get_axis_by_name("migra")
+        edisp_map = Map.from_geom(geom_edisp, unit="")
+        loc = migra_axis.edges.searchsorted(1.0)
+        edisp_map.data[:, loc, :, :] = 1.0
+        edisp = EDispMap(edisp_map, exposure_irf)
+
+        psf_map = Map.from_geom(geom_psf, unit="sr-1")
+        psf = PSFMap(psf_map, exposure_irf)
+
+        gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
+
+        mask_safe = np.zeros(geom.data_shape, dtype=bool)
+
+        return cls(
+            counts=counts,
+            exposure=exposure,
+            psf=psf,
+            edisp=edisp,
+            background_model=background_model,
+            gti=gti,
+            mask_safe=mask_safe,
+            name=name,
+            **kwargs,
+        )
+
+    @classmethod
     def create(
         cls,
         geom,
@@ -307,6 +369,8 @@ class MapDataset(Dataset):
             Migration axis for the energy dispersion map
         rad_axis: `~gammapy.maps.MapAxis`
             Rad axis for the psf map
+        reference_time: `~astropy.time.Time`
+            the reference time to use in GTI definition
         name : str
             Name of the dataset.
         """
