@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from gammapy.data import DataStore
-from gammapy.spectrum import SpectrumDatasetMaker
+from gammapy.spectrum import SpectrumDatasetMaker, SafeMaskMaker
 from gammapy.utils.testing import requires_data
 
 
@@ -49,6 +49,11 @@ def spectrum_dataset_maker_crab():
     return SpectrumDatasetMaker(region=region, e_reco=e_reco, e_true=e_true)
 
 
+@pytest.fixture()
+def safe_mask_maker():
+    return SafeMaskMaker()
+
+
 @requires_data()
 def test_spectrum_dataset_maker_hess_dl3(
     spectrum_dataset_maker_crab, observations_hess_dl3
@@ -87,3 +92,20 @@ def test_spectrum_dataset_maker_hess_cta(
 
     assert_allclose(datasets[0].background.data.sum(), 2.238345, rtol=1e-5)
     assert_allclose(datasets[1].background.data.sum(), 2.164593, rtol=1e-5)
+
+
+def test_safe_mask_maker(spectrum_dataset_maker_crab, safe_mask_maker, observations_hess_dl3):
+
+    obs = observations_hess_dl3[0]
+    dataset = spectrum_dataset_maker_crab.run(obs)
+    dataset = safe_mask_maker.run(dataset, obs)
+    assert_allclose(dataset.energy_range[0].value, 1)
+    assert dataset.energy_range[0].unit == "TeV"
+
+    mask_safe = safe_mask_maker.make_mask_energy_aeff_max(dataset)
+    assert mask_safe.sum() == 4
+
+    mask_safe = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
+    assert mask_safe.sum() == 3
+
+
