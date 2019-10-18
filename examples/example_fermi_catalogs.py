@@ -1,38 +1,21 @@
 """Example to show how to plot spectrum of Fermi/LAT sources.
 """
 import matplotlib.pyplot as plt
-from gammapy.catalog import (
-    SourceCatalog1FHL,
-    SourceCatalog2FHL,
-    SourceCatalog3FGL,
-    SourceCatalog3FHL,
-)
+from gammapy.catalog import SourceCatalog2FHL, SourceCatalog3FGL, SourceCatalog3FHL
 
 
 def plot_source_spectrum(source, label, color):
     opts = dict(energy_power=2, flux_unit="erg-1 cm-2 s-1")
-    source.spectral_model.plot(
-        energy_range=source.energy_range, label=label, color=color, **opts
-    )
-    source.spectral_model.plot_error(
-        energy_range=source.energy_range, facecolor=color, **opts
-    )
-    source.flux_points.plot(sed_type="dnde", color=color, **opts)
+    spec = source.spectral_model()
+    spec.plot(energy_range=source.energy_range, label=label, color=color, **opts)
+    spec.plot_error(energy_range=source.energy_range, facecolor=color, **opts)
+    source.flux_points.to_sed_type("dnde").plot(color=color, **opts)
 
 
 def plot_source_spectra(name):
-    plot_source_spectrum(
-        source=SourceCatalog3FGL()[name], label="Fermi 3FGL", color="r"
-    )
-    plot_source_spectrum(
-        source=SourceCatalog2FHL()[name], label="Fermi 2FHL", color="g"
-    )
-    plot_source_spectrum(
-        source=SourceCatalog1FHL()[name], label="Fermi 1FHL", color="c"
-    )
-    plot_source_spectrum(
-        source=SourceCatalog3FHL()[name], label="Fermi 3FHL", color="b"
-    )
+    plot_source_spectrum(source=SourceCatalog3FGL()[name], label="3FGL", color="r")
+    plot_source_spectrum(source=SourceCatalog2FHL()[name], label="2FHL", color="g")
+    plot_source_spectrum(source=SourceCatalog3FHL()[name], label="3FHL", color="b")
 
     ax = plt.gca()
     ax.set_ylim(1.0e-12, 7.0e-11)

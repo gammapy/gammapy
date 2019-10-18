@@ -505,7 +505,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
     _ebounds = u.Quantity([100, 300, 1000, 3000, 10000, 100000], "MeV")
     _ebounds_suffix = ["100_300", "300_1000", "1000_3000", "3000_10000", "10000_100000"]
     energy_range = u.Quantity([100, 100000], "MeV")
-    """Energy range of the catalog.
+    """Energy range used for the catalog.
 
     Paper says that analysis uses data up to 300 GeV,
     but results are all quoted up to 100 GeV only to
@@ -809,7 +809,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
     _ebounds = u.Quantity([50, 171, 585, 2000], "GeV")
     _ebounds_suffix = ["50_171", "171_585", "585_2000"]
     energy_range = u.Quantity([0.05, 2], "TeV")
-    """Energy range of the Fermi 2FHL source catalog"""
+    """Energy range used for the catalog."""
 
     def __str__(self):
         return self.info()
@@ -881,7 +881,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
 
     asso = ["ASSOC1", "ASSOC2", "ASSOC_TEV", "ASSOC_GAM"]
     energy_range = u.Quantity([0.01, 2], "TeV")
-    """Energy range of the Fermi 1FHL source catalog"""
+    """Energy range used for the catalog."""
 
     _ebounds = u.Quantity([10, 20, 50, 150, 500, 2000], "GeV")
 
