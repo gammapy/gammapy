@@ -217,7 +217,7 @@ class SafeMaskMaker:
     """
 
     def __init__(
-        self, methods=["aeff-default"], aeff_percent=10, bias_percent=10
+        self, methods=("aeff-default",), aeff_percent=10, bias_percent=10
     ):
         self.methods = methods
         self.aeff_percent = aeff_percent
@@ -246,8 +246,7 @@ class SafeMaskMaker:
             log.warning(f"No thresholds defined for obs {observation}")
             e_min, e_max = None, None
 
-        mask_safe = dataset.counts.energy_mask(emin=e_min, emax=e_max)
-        return mask_safe
+        return dataset.counts.energy_mask(emin=e_min, emax=e_max)
 
     def make_mask_energy_aeff_max(self, dataset):
         """Make safe energy mask from aeff max.
@@ -264,8 +263,7 @@ class SafeMaskMaker:
         """
         aeff_thres = self.aeff_percent / 100 * dataset.aeff.max_area
         e_min = dataset.aeff.find_energy(aeff_thres)
-        mask_safe = dataset.counts.energy_mask(emin=e_min)
-        return mask_safe
+        return dataset.counts.energy_mask(emin=e_min)
 
     def make_mask_energy_edisp_bias(self, dataset):
         """Make safe energy mask from aeff max.
@@ -281,8 +279,7 @@ class SafeMaskMaker:
             Safe data range mask.
         """
         e_min = dataset.edisp.get_bias_energy(self.bias_percent / 100)
-        mask_safe = dataset.counts.energy_mask(emin=e_min)
-        return mask_safe
+        return dataset.counts.energy_mask(emin=e_min)
 
     def run(self, dataset, observation):
         """Make safe data range mask.

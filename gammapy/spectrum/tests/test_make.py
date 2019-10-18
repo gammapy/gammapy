@@ -49,11 +49,6 @@ def spectrum_dataset_maker_crab():
     return SpectrumDatasetMaker(region=region, e_reco=e_reco, e_true=e_true)
 
 
-@pytest.fixture()
-def safe_mask_maker():
-    return SafeMaskMaker()
-
-
 @requires_data()
 def test_spectrum_dataset_maker_hess_dl3(
     spectrum_dataset_maker_crab, observations_hess_dl3
@@ -94,7 +89,9 @@ def test_spectrum_dataset_maker_hess_cta(
     assert_allclose(datasets[1].background.data.sum(), 2.164593, rtol=1e-5)
 
 
-def test_safe_mask_maker(spectrum_dataset_maker_crab, safe_mask_maker, observations_hess_dl3):
+@requires_data()
+def test_safe_mask_maker(spectrum_dataset_maker_crab, observations_hess_dl3):
+    safe_mask_maker = SafeMaskMaker()
 
     obs = observations_hess_dl3[0]
     dataset = spectrum_dataset_maker_crab.run(obs)
