@@ -9,8 +9,11 @@ from gammapy.maps.geom import frame_to_coordsys
 from .background_estimate import BackgroundEstimate
 from .dataset import SpectrumDatasetOnOff
 
-
-__all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundEstimator", "ReflectedRegionsBackgroundMaker"]
+__all__ = [
+    "ReflectedRegionsFinder",
+    "ReflectedRegionsBackgroundEstimator",
+    "ReflectedRegionsBackgroundMaker",
+]
 
 log = logging.getLogger(__name__)
 
@@ -438,6 +441,7 @@ class ReflectedRegionsBackgroundMaker:
     binsz : `~astropy.coordinates.Angle`
         Bin size of the reference map used for region finding. Default : 0.01 deg
     """
+
     def __init__(
         self,
         region,
@@ -500,6 +504,9 @@ class ReflectedRegionsBackgroundMaker:
 
         counts_off = dataset.counts.copy()
         counts_off.fill_events(events_off)
+
+        # TODO: temporarily attach the region info to the CountsSpectrum.
+        #  but CountsSpectrum should be modified to hold this info anyway.
         counts_off.regions = regions
         return counts_off
 

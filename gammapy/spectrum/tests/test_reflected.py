@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
-from numpy.testing import assert_allclose
 from regions import (
     CircleSkyRegion,
     EllipseAnnulusSkyRegion,
@@ -12,13 +12,13 @@ from regions import (
 )
 from gammapy.data import DataStore
 from gammapy.maps import WcsGeom, WcsNDMap
-from gammapy.spectrum import ReflectedRegionsFinder, ReflectedRegionsBackgroundMaker
+from gammapy.spectrum import ReflectedRegionsBackgroundMaker, ReflectedRegionsFinder
+from gammapy.spectrum.make import SpectrumDatasetMaker
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_data,
 )
-from gammapy.spectrum.make import SpectrumDatasetMaker
 
 
 @pytest.fixture(scope="session")
@@ -57,7 +57,10 @@ def spectrum_dataset_maker(on_region):
 
 @pytest.fixture()
 def reflected_bkg_maker(on_region, exclusion_mask):
-    return ReflectedRegionsBackgroundMaker(region=on_region, exclusion_mask=exclusion_mask)
+    return ReflectedRegionsBackgroundMaker(
+        region=on_region, exclusion_mask=exclusion_mask
+    )
+
 
 region_finder_param = [
     (SkyCoord(83.2, 22.5, unit="deg"), 15, Angle("82.592 deg"), 17, 17),
@@ -175,4 +178,3 @@ def test_reflected_bkg_maker(spectrum_dataset_maker, reflected_bkg_maker, observ
 
     assert_allclose(len(datasets[0].counts_off.regions), 11)
     assert_allclose(len(datasets[1].counts_off.regions), 11)
-
