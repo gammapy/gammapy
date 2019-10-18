@@ -77,9 +77,11 @@ class CountsSpectrum:
     @classmethod
     def from_hdulist(cls, hdulist, hdu1="COUNTS", hdu2="EBOUNDS"):
         """Read from HDU list in OGIP format."""
-        counts_table = Table.read(hdulist[hdu1])
-        counts = counts_table["COUNTS"].data
+        table = Table.read(hdulist[hdu1])
+        counts = table["COUNTS"].data
         ebounds = ebounds_to_energy_axis(hdulist[hdu2])
+
+        # TODO: add region serilisation
         return cls(data=counts, energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
 
     @classmethod
@@ -98,8 +100,7 @@ class CountsSpectrum:
 
         names = ["CHANNEL", "COUNTS"]
         meta = {"name": "COUNTS"}
-        if self.region:
-            meta["region"] = 
+
         return Table([channel, counts], names=names, meta=meta)
 
     def to_hdulist(self, use_sherpa=False):
