@@ -1,0 +1,38 @@
+
+*** Basic info ***
+
+Catalog row index (zero-based) : 221
+Source name          : 2FHL J1445.1-0329
+Associations     : RBS 1424, 3FGL J1445.0-0328
+ASSOC_PROB_BAY   : 0.997
+ASSOC_PROB_LR    : 0.944
+Class            : bll
+
+*** Other info ***
+
+Test statistic (50 GeV - 2 TeV)  : 28.530
+
+*** Position info ***
+
+RA                   : 221.282 deg
+DEC                  : -3.494 deg
+GLON                 : 349.199 deg
+GLAT                 : 48.891 deg
+
+Error on position (68%) : 0.0563 deg
+ROI number           : 68
+
+*** Spectral fit info ***
+
+Power-law spectral index         : 2.770 +- 0.810
+Integral flux (50 GeV - 2 TeV)   : 2.05e-11 +- 9.3e-12 cm-2 s-1
+Energy flux (50 GeV - 2 TeV)     : 3.56e-12 +- 2.18e-12 erg cm-2 s-1
+
+*** Spectral points ***
+
+ e_min   e_max       flux     flux_errn   flux_errp  is_ul   flux_ul  
+  GeV     GeV    1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)       1 / (cm2 s)
+------- -------- ----------- ----------- ----------- ----- -----------
+ 50.000  171.000   1.831e-11   7.166e-12   9.314e-12 False         nan
+171.000  585.000   8.906e-16         nan   5.473e-12  True   1.095e-11
+585.000 2000.000   1.017e-16         nan   6.759e-12  True   1.352e-11

@@ -1,0 +1,47 @@
+
+*** Basic info ***
+
+Catalog row index (zero-based) : 134
+Source name          : 2FHL J0822.6-4250e
+Associations     : Puppis A, 3FGL J0822.6-4250e, 1FHL J0822.6-4250e
+ASSOC_PROB_BAY   : nan
+ASSOC_PROB_LR    : nan
+Class            : snr
+
+*** Other info ***
+
+Test statistic (50 GeV - 2 TeV)  : 63.870
+
+*** Position info ***
+
+RA                   : 125.660 deg
+DEC                  : -42.840 deg
+GLON                 : 260.317 deg
+GLAT                 : -3.276 deg
+
+Error on position (68%) : 0.0000 deg
+ROI number           : 33
+
+*** Extended source information ***
+
+Model form       : Disk
+Model semimajor  : 0.3700 deg
+Model semiminor  : 0.3700 deg
+Position angle   : 0.0000 deg
+Spatial filename : PuppisA.fits
+
+
+*** Spectral fit info ***
+
+Power-law spectral index         : 4.120 +- 0.840
+Integral flux (50 GeV - 2 TeV)   : 6.87e-11 +- 1.67e-11 cm-2 s-1
+Energy flux (50 GeV - 2 TeV)     : 8.09e-12 +- 2.27e-12 erg cm-2 s-1
+
+*** Spectral points ***
+
+ e_min   e_max       flux     flux_errn   flux_errp  is_ul   flux_ul  
+  GeV     GeV    1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)       1 / (cm2 s)
+------- -------- ----------- ----------- ----------- ----- -----------
+ 50.000  171.000   4.233e-11   9.625e-12   1.104e-11 False         nan
+171.000  585.000   1.330e-16         nan   5.867e-12  True   1.173e-11
+585.000 2000.000   4.808e-18         nan   7.717e-12  True   1.543e-11

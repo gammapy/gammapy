@@ -14,6 +14,10 @@ open("4fgl_J0001.5+2113.txt", "w").write(str(cat["4FGL J0001.5+2113"]))
 open("4fgl_J0002.8+6217.txt", "w").write(str(cat["4FGL J0002.8+6217"]))
 open("4fgl_J1409.1-6121e.txt", "w").write(str(cat["4FGL J1409.1-6121e"]))
 
+cat = SOURCE_CATALOGS["2fhl"]()
+open("2fhl_j1445.1-0329.txt", "w").write(str(cat["2FHL J1445.1-0329"]))
+open("2fhl_j0822.6-4250e.txt", "w").write(str(cat["2FHL J0822.6-4250e"]))
+
 cat = SOURCE_CATALOGS["3fhl"]()
 open("3fhl_j2301.9+5855e.txt", "w").write(str(cat["3FHL J2301.9+5855e"]))
 
