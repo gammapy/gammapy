@@ -165,7 +165,6 @@ def bad_on_region(exclusion_mask, on_region):
 
 @requires_data()
 def test_reflected_bkg_maker(spectrum_dataset_maker, reflected_bkg_maker, observations):
-
     datasets = []
 
     for obs in observations:

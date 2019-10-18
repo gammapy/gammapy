@@ -49,7 +49,7 @@ class ReflectedRegionsFinder:
     exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
         Exclusion mask
     binsz : `~astropy.coordinates.Angle`
-        Bin size of the reference map used for region finding. Default : 0.01 deg
+        Bin size of the reference map used for region finding.
 
     Examples
     --------
@@ -137,9 +137,9 @@ class ReflectedRegionsFinder:
         center : `~astropy.coordinates.SkyCoord`
             Rotation point
         binsz : `~astropy.coordinates.Angle`
-            Reference map bin size. Default : 0.01 deg
+            Reference map bin size.
         min_width : `~astropy.coordinates.Angle`
-            Minimal map width. Default : 0.3 deg
+            Minimal map width.
 
         Returns
         -------
@@ -270,7 +270,7 @@ class ReflectedRegionsBackgroundEstimator:
     observations : `~gammapy.data.Observations`
         Observations to process
     binsz : `~astropy.coordinates.Angle`
-        Optional, bin size of the maps used to compute the regions, Default '0.01 deg'
+        Optional, bin size of the maps used to compute the regions.
     kwargs : dict
         Forwarded to `~gammapy.spectrum.ReflectedRegionsFinder`
     """
@@ -350,9 +350,9 @@ class ReflectedRegionsBackgroundEstimator:
         cmap : `~matplotlib.colors.ListedColormap`, optional
             Color map to use
         idx : int, optional
-            Observations to include in the plot, default: all
+            Observations to include in the plot.
         add_legend : boolean, optional
-            Enable/disable legend in the plot, default: False
+            Enable/disable legend in the plot.
         """
         import matplotlib.pyplot as plt
 
@@ -439,7 +439,7 @@ class ReflectedRegionsBackgroundMaker:
     exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
         Exclusion mask
     binsz : `~astropy.coordinates.Angle`
-        Bin size of the reference map used for region finding. Default : 0.01 deg
+        Bin size of the reference map used for region finding.
     """
 
     def __init__(
@@ -461,7 +461,7 @@ class ReflectedRegionsBackgroundMaker:
         self.max_region_number = max_region_number
 
     def _get_finder(self, observation):
-        finder = ReflectedRegionsFinder(
+        return ReflectedRegionsFinder(
             binsz=self.binsz,
             exclusion_mask=self.exclusion_mask,
             center=observation.pointing_radec,
@@ -471,7 +471,6 @@ class ReflectedRegionsBackgroundMaker:
             max_region_number=self.max_region_number,
             angle_increment=self.angle_increment,
         )
-        return finder
 
     def make_counts_off(self, dataset, observation):
         """Make off counts.
@@ -524,7 +523,6 @@ class ReflectedRegionsBackgroundMaker:
         -------
         dataset_on_off : `SpectrumDatasetOnOff`
             On off dataset.
-
         """
         counts_off = self.make_counts_off(dataset, observation)
 
