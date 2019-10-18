@@ -360,22 +360,29 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
 
 def test_create(geom, geom_etrue):
     # tests empty datasets created
-
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    e_reco = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
+    )
+    e_true = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 4), name="energy", unit=u.TeV, interp="log"
+    )
+    geom = WcsGeom.create(binsz=0.02, width=(2, 2), axes=[e_reco])
+    empty_dataset = MapDataset.create(
+        geom=geom, energy_axis_true=e_true, migra_axis=migra_axis, rad_axis=rad_axis
+    )
 
-    empty_dataset = MapDataset.create(geom, geom_etrue, migra_axis, rad_axis)
+    assert empty_dataset.counts.data.shape == (2, 100, 100)
 
-    assert_allclose(empty_dataset.counts.data.sum(), 0.0)
-    assert_allclose(empty_dataset.background_model.map.data.sum(), 0.0)
+    assert empty_dataset.exposure.data.shape == (3, 100, 100)
 
-    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 100, 100)
-    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 100, 100)
+    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 12, 12)
+    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 12, 12)
 
-    assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 100, 100)
-    assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 100, 100)
-
-    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 30000)
+    assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 12, 12)
+    assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 12, 12)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 432)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
@@ -394,7 +401,6 @@ def test_from_geoms():
     wcs_irf = WcsGeom.create(binsz=0.1, width=(2.5, 2.5))
     geom = wcs.to_cube([e_reco])
     geom_exposure = wcs.to_cube([e_true])
-    geom_irf = wcs_irf.to_cube([e_true])
     geom_psf = wcs_irf.to_cube([rad_axis, e_true])
     geom_edisp = wcs_irf.to_cube([migra_axis, e_true])
 
