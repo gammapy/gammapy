@@ -100,7 +100,7 @@ both, but we give the following rough guidelines:
   significant content, which is not related to code examples in between. E.g.
   for maps, modeling or IRFs there are is a description of the design.
 - Add a Gammapy overview page to the RST docs, where the general data
-  analysis concept is explained: DL3 -> Datasets -> Model -> Fitting This page
+  analysis concepts are explained (DL3, Datasets, Model, Fitting). This page
   would be similar to the description of Gammapy in the paper that we also plan
   to write now, and the same figures would be used for both.
 
@@ -123,31 +123,36 @@ Tutorial notebooks
 First analysis
 ~~~~~~~~~~~~~~
 
-- HESS DL3 high level interface analysis 1D / 3D / joint / stacked (``hess.ipynb``)
+- Config-driven 1D and 3D analysis of Crab (evolution of current ``hess.ipynb``, renamed)
+- A second notebook, with focus on extended source analysis,
+  maybe showing the lower-level API with customisation options for background modeling?
 
 What data can I analyse?
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+The idea is to have one "starting page" for people from CTA, HESS and Fermi,
+and possibly other instruments in the future.
+
 - Observations and Datasets (to be implemented)
-- HESS DL3 data (to be implemented)
-- CTA 1DC data simulation (``cta_data_analysis.ipynb``)
-- Fermi-LAT 3FHL data (``fermi_lat.ipynb``)
+- HESS, mention DR1, show what the IRFs look like (to be implemented)
+- CTA, mention prod3 and DC1, show what the IRFs look like  (``cta_data_analysis.ipynb``)
+  Remove https://gammapy.org/cta.html (very few, and outdated infos).
+  Better to have one starting page for CTA users instead of two
+- Fermi-LAT, show how to create map and spectrum dataset using 3FHL example (``fermi_lat.ipynb``)
 
 What analyses can I do?
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-- Observation selection / grouping (to be implemented)
-- Light curve computation (``light_curve.ipynb``)
-- Phase curve computation (``pulsar_analysis.ipynb``)
-- Dark matter analysis (to be implemented)
-- Image analysis (``image_analysis.ipynb``)
-- Combined instrument crab analysis using Fermi / HESS / HAWC data (to be implemented)
-- Naima model fitting (to be implemented)
-- Binned simulation 1D / 3D (``spectrum_simulation.ipynb``, ``simulate_3d.ipynb``)
-- Sensitivity computation (``cta_sensistivity.ipynb``)
-- MCMC sampling (``mcmc_sampling.ipynb``)
+- IACT data selection and grouping
+- IACT 3D cube analysis (data reduction and fitting)
+- IACT 2D image analysis (``image_analysis.ipynb``)
+- IACT 1D spectrum analysis (data reduction and fitting)
+- IACT light curve computation (``light_curve.ipynb``)
 - Flux point fitting (``sed_fitting_gammacat_fermi.ipynb``)
-- Background model making (``background_model.ipynb``)?
+- Binned simulation 1D / 3D (``spectrum_simulation.ipynb`` and ``simulate_3d.ipynb`` combined)
+- Binned sensitivity computation (``cta_sensistivity.ipynb``)
+- Naima model fitting (to be implemented)
+- Joint Crab analysis using Fermi +  HESS + some flux poitns (to be implemented)
 
 Gammapy package
 ~~~~~~~~~~~~~~~
@@ -156,22 +161,34 @@ For many Gammapy sub-packages, we plan to have a corresponding notebook
 that is a hands-on, executable tutorial introduction that complements the
 description and API docs on the sub-package RST page.
 
+- Overview (short section with one example for each sub-package, hands-on, an evolution of the current ``getting_started.ipynb``)
 - Maps (``gammapy.maps``) (``maps.ipynb``)
 - Models (``gammapy.modeling.models``) (``models.ipynb``)
 - Fitting (``gammapy.modeling``) (to be implemented)
-- Stats (``gammapy.stats``) (to be implemented)
+- Statistics (``gammapy.stats``) (to be implemented, explains about likelihood, TS values, significance, ...)
 - Source detection (``gammapy.detect``) (``detect_ts.ipynb``, ``cwt.ipynb``)
 - Source catalogs (``gammapy.catalog``) (to be implemented)
 
 Extra Topics
 ~~~~~~~~~~~~
 
-- Gammapy in a nutshell (``first_steps.ipynb``)?
-- Astropy regions / photutils for Gammapy users (to be implemented)?
+More specialised, in some cases lower quality, will have to discuss what to improve
+and what to remove (to be brought back later, in 2020, when quality is better).
+
+- MCMC sampling (``mcmc_sampling.ipynb``)
 - Dark matter models (``gammapy.astro.darkmatter``) (``astro_dark_matter.ipynb``)
+- Dark matter analysis (to be implemented)
+- Pulsar analysis (``pulsar_analysis.ipynb``)
 - Source population modelling (``gammapy.astro.population``) (``source_population_model.ipynb``)
+- Background model making (``background_model.ipynb``)
 - Sherpa for Gammapy users (``image_fitting_with_sherpa.ipynb``, ``spectrum_fitting_with_sherpa.ipynb``)?
-- HGPS data inspection (``hgps.ipynb``)?
+- HGPS data (``hgps.ipynb``)
+
+Basics
+~~~~~~
+
+Leave the basics section (https://docs.gammapy.org/0.14/tutorials.html#basics)
+at the end of the tutorials page, pretty much as-is.
 
 Alternatives
 ============
@@ -207,6 +224,23 @@ structure for the Gammapy package that support CTA as well as possible, and that
 makes it easy for CTAO to choose and adapt Gammapy as prototype of the CTA
 science tools and evolve and maintain it. This PIG doesn't propose a solution
 for this, that's for later.
+
+Implementation
+==============
+
+Implementing this PIG is a lot of work, roughly 2 months of full-time work. We
+suggest that, after the PIG is accepted, one coordinator spends a few days to do
+quick additions / removals / renames / rearrrangements, so that the structure of
+the RST and IPYNB files we want is in place. Then the coordinator makes a wiki
+page with a list of 20-30 tasks that should be done (each 1-2 days of work, not
+longer) and asks for help. Each task is usually to edit one notebook or RST
+page, and needs one author and one reviewer. It is then up to those two people
+to coordinate their work: they can open a Github issue to discuss, or they can
+just do a phone call or meet. Eventually there is a pull request and it's in a
+state where both are happy, and it's merged in.
+
+Documentation is a great way for new people to learn and contribute - please
+help!
 
 Decision
 ========
