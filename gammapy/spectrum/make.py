@@ -10,6 +10,8 @@ from gammapy.maps.geom import frame_to_coordsys
 from .core import CountsSpectrum
 from .dataset import SpectrumDataset
 
+__all__ = ["SpectrumDatasetMaker"]
+
 log = logging.getLogger(__name__)
 
 

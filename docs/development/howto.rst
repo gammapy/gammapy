@@ -106,7 +106,7 @@ What checks and conversions should I do for inputs?
 ---------------------------------------------------
 
 In Gammapy we assume that
-`"we're all consenting adults" <https://mail.python.org/pipermail/tutor/2003-October/025932.html>`_,
+`"we're all consenting adults" <https://mail.python.org/pipermail/tutor/2003-October/025932.html>`__,
 which means that when you write a function you should write it like this:
 
 .. code-block:: python
@@ -400,7 +400,7 @@ See ``gammapy/scripts/find_obs.py`` as an example.
 Command line tools using click
 ------------------------------
 
-Command line tools that use the `click <http://click.pocoo.org/>`_ module should disable
+Command line tools that use the `click <http://click.pocoo.org/>`__ module should disable
 the unicode literals warnings to clean up the output of the tool:
 
 .. code-block:: python
@@ -761,7 +761,7 @@ Since notebooks are evolving with Gammapy features and documentation, the differ
 versions of the notebooks are linked to the versioned Binder environments. In this
 sense, it is important to publish as stable docs those built with stable release
 versions of Gammapy so the links to Binder in the tutorials point to stable tagged
-Binder environments in the `gammapy-webpage` repository.
+Binder environments in the ``gammapy-webpage`` repository.
 
 Documentation guidelines
 ------------------------
@@ -772,7 +772,7 @@ We mostly follow the :ref:`Astropy documentation guidelines <astropy:documentati
 which are based on the `Numpy docstring standard`_,
 which is what most scientific Python packages use.
 
-.. _restructured text (RST) : http://sphinx-doc.org/rest.html
+.. _restructured text (RST): http://sphinx-doc.org/rest.html
 .. _Sphinx: http://sphinx-doc.org/
 .. _Numpy docstring standard: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
 
@@ -849,11 +849,10 @@ Class attributes
 
 Class attributes (data members) and properties are currently a bit of a mess.
 Attributes are listed in an *Attributes* section because I've listed them in a class-level
-docstring attributes section.
+docstring attributes section as recommended
+`here <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#class-docstring>`__.
 Properties are listed in separate *Attributes summary* and *Attributes Documentation*
 sections, which is confusing to users ("what's the difference between attributes and properties?").
-
-.. __: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#class-docstring
 
 One solution is to always use properties, but that can get very verbose if we have to write
 so many getters and setters. We could start using descriptors.
@@ -878,7 +877,9 @@ Sphinx directive to generate that link::
 
 More info on Sphinx roles is `here <http://www.sphinx-doc.org/en/stable/markup/inline.html>`__
 
-Alternatively you can also link to the notebooks providing its filename with .html file extension and the relative path to the ``notebooks`` folder. This folder is created at the root of the ``docs`` folder in the process of documentation building.
+Alternatively you can also link to the notebooks providing its filename with .html file extension
+and the relative path to the ``notebooks`` folder. This folder is created at the root of the ``docs``
+folder in the process of documentation building.
 
 Example: `First steps with Gammapy <../notebooks/first_steps.html>`__
 
