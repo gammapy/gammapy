@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
+from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import (
@@ -10,12 +12,12 @@ from regions import (
 )
 from gammapy.data import DataStore
 from gammapy.maps import WcsGeom, WcsNDMap
-from gammapy.spectrum import ReflectedRegionsBackgroundEstimator, ReflectedRegionsFinder
+from gammapy.spectrum import ReflectedRegionsBackgroundMaker, ReflectedRegionsFinder
+from gammapy.spectrum.make import SpectrumDatasetMaker
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_data,
-    requires_dependency,
 )
 
 
@@ -46,17 +48,18 @@ def observations():
     return datastore.get_observations(obs_ids)
 
 
-@pytest.fixture(scope="session")
-def bkg_estimator(observations, exclusion_mask, on_region):
-    """Example background estimator for testing."""
-    maker = ReflectedRegionsBackgroundEstimator(
-        observations=observations,
-        on_region=on_region,
-        exclusion_mask=exclusion_mask,
-        min_distance_input="0.2 deg",
+@pytest.fixture()
+def spectrum_dataset_maker(on_region):
+    e_reco = np.logspace(0, 2, 5) * u.TeV
+    e_true = np.logspace(-0.5, 2, 11) * u.TeV
+    return SpectrumDatasetMaker(region=on_region, e_reco=e_reco, e_true=e_true)
+
+
+@pytest.fixture()
+def reflected_bkg_maker(on_region, exclusion_mask):
+    return ReflectedRegionsBackgroundMaker(
+        region=on_region, exclusion_mask=exclusion_mask
     )
-    maker.run()
-    return maker
 
 
 region_finder_param = [
@@ -161,16 +164,16 @@ def bad_on_region(exclusion_mask, on_region):
 
 
 @requires_data()
-class TestReflectedRegionBackgroundEstimator:
-    def test_basic(self, bkg_estimator):
-        assert "ReflectedRegionsBackgroundEstimator" in str(bkg_estimator)
+def test_reflected_bkg_maker(spectrum_dataset_maker, reflected_bkg_maker, observations):
+    datasets = []
 
-    def test_run(self, bkg_estimator):
-        assert len(bkg_estimator.result[1].off_region) == 11
-        assert "Reflected" in str(bkg_estimator.result[1])
+    for obs in observations:
+        dataset = spectrum_dataset_maker.run(obs, selection=["counts"])
+        dataset_on_off = reflected_bkg_maker.run(dataset, obs)
+        datasets.append(dataset_on_off)
 
-    @requires_dependency("matplotlib")
-    def test_plot(self, bkg_estimator):
-        with mpl_plot_check():
-            bkg_estimator.plot(idx=1, add_legend=True)
-            bkg_estimator.plot(idx=[0, 1])
+    assert_allclose(datasets[0].counts_off.data.sum(), 76)
+    assert_allclose(datasets[1].counts_off.data.sum(), 60)
+
+    assert_allclose(len(datasets[0].counts_off.regions), 11)
+    assert_allclose(len(datasets[1].counts_off.regions), 11)
