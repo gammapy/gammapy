@@ -38,7 +38,9 @@ def geom(ebounds, binsz=0.5):
         {
             # Default, same e_true and reco
             "geom": geom(ebounds=[0.1, 1, 10]),
-            "e_true": MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log"),
+            "e_true": MapAxis.from_edges(
+                [0.1, 1, 10], name="energy", unit="TeV", interp="log"
+            ),
             "counts": 34366,
             "exposure": 9.995376e08,
             "exposure_image": 7.921993e10,
@@ -49,7 +51,9 @@ def geom(ebounds, binsz=0.5):
         {
             # Test single energy bin
             "geom": geom(ebounds=[0.1, 10]),
-            "e_true": MapAxis.from_edges([0.1, 10], name="energy", unit="TeV", interp="log"),
+            "e_true": MapAxis.from_edges(
+                [0.1, 10], name="energy", unit="TeV", interp="log"
+            ),
             "counts": 34366,
             "exposure": 5.843302e08,
             "exposure_image": 1.16866e11,
@@ -60,7 +64,9 @@ def geom(ebounds, binsz=0.5):
         {
             # Test single energy bin with exclusion mask
             "geom": geom(ebounds=[0.1, 10]),
-            "e_true": MapAxis.from_edges([0.1, 10], name="energy", unit="TeV", interp="log"),
+            "e_true": MapAxis.from_edges(
+                [0.1, 10], name="energy", unit="TeV", interp="log"
+            ),
             "exclusion_mask": Map.from_geom(geom(ebounds=[0.1, 10])),
             "counts": 34366,
             "exposure": 5.843302e08,
@@ -72,7 +78,9 @@ def geom(ebounds, binsz=0.5):
         {
             # Test for different e_true and e_reco bins
             "geom": geom(ebounds=[0.1, 1, 10]),
-            "e_true": MapAxis.from_edges([0.1, 0.5, 2.5, 10.0], name="energy", unit="TeV", interp="log"),
+            "e_true": MapAxis.from_edges(
+                [0.1, 0.5, 2.5, 10.0], name="energy", unit="TeV", interp="log"
+            ),
             "counts": 34366,
             "exposure": 9.951827e08,
             "exposure_image": 6.492968e10,
@@ -84,7 +92,9 @@ def geom(ebounds, binsz=0.5):
         {
             # Test for different e_true and e_reco bins
             "geom": geom(ebounds=[0.1, 1, 10]),
-            "e_true": MapAxis.from_edges([0.1, 0.5, 2.5, 10.0], name="energy", unit="TeV", interp="log"),
+            "e_true": MapAxis.from_edges(
+                [0.1, 0.5, 2.5, 10.0], name="energy", unit="TeV", interp="log"
+            ),
             "counts": 34366,
             "exposure": 9.951827e08,
             "exposure_image": 6.492968e10,
@@ -97,10 +107,12 @@ def geom(ebounds, binsz=0.5):
 )
 def test_map_maker(pars, observations):
 
-    stacked = MapDataset.create(geom=pars["geom"],
-                                energy_axis_true=pars["e_true"],
-                                binsz_irf=pars["binsz_irf"],
-                                margin_irf=pars["margin_irf"])
+    stacked = MapDataset.create(
+        geom=pars["geom"],
+        energy_axis_true=pars["e_true"],
+        binsz_irf=pars["binsz_irf"],
+        margin_irf=pars["margin_irf"],
+    )
 
     for obs in observations:
         maker = MapDatasetMaker(
@@ -169,7 +181,9 @@ def test_map_maker_obs(observations):
     # Test for different spatial geoms and etrue, ereco bins
 
     geom_reco = geom(ebounds=[0.1, 1, 10])
-    e_true = MapAxis.from_edges([0.1, 0.5, 2.5, 10.0], name="energy", unit="TeV", interp="log")
+    e_true = MapAxis.from_edges(
+        [0.1, 0.5, 2.5, 10.0], name="energy", unit="TeV", interp="log"
+    )
     geom_exp = geom(ebounds=[0.1, 0.5, 2.5, 10.0])
     maker_obs = MapDatasetMaker(
         geom=geom_reco,
@@ -177,7 +191,7 @@ def test_map_maker_obs(observations):
         binsz_irf=1.0,
         margin_irf=1.0,
         offset_max=2.0 * u.deg,
-        cutout=False
+        cutout=False,
     )
 
     map_dataset = maker_obs.run(observations[0])

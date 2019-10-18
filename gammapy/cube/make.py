@@ -18,7 +18,7 @@ from .fit import (
     MIGRA_AXIS_DEFAULT,
     RAD_AXIS_DEFAULT,
     ENERGY_AXIS_DEFAULT,
-    MapDataset
+    MapDataset,
 )
 from .psf_map import make_psf_map
 
