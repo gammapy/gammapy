@@ -6,7 +6,6 @@ from astropy import units as u
 from astropy.time import Time
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import (
-    SourceCatalog1FHL,
     SourceCatalog2FHL,
     SourceCatalog3FGL,
     SourceCatalog3FHL,
@@ -379,42 +378,6 @@ class TestFermi3FGLObject:
 
 
 @requires_data()
-class TestFermi1FHLObject:
-    @classmethod
-    def setup_class(cls):
-        cls.cat = SourceCatalog1FHL()
-        # Use 1FHL J0534.5+2201 (Crab) as a test source
-        cls.source_name = "1FHL J0534.5+2201"
-        cls.source = cls.cat[cls.source_name]
-
-    def test_name(self):
-        assert self.source.name == self.source_name
-
-    def test_position(self):
-        position = self.source.position
-        assert_allclose(position.ra.deg, 83.628098, atol=1e-3)
-        assert_allclose(position.dec.deg, 22.0191, atol=1e-3)
-
-    def test_spectral_model(self):
-        model = self.source.spectral_model()
-        energy = u.Quantity(100, "GeV")
-        desired = u.Quantity(4.7717464131e-12, "cm-2 GeV-1 s-1")
-        assert_quantity_allclose(model(energy), desired)
-
-    def test_flux_points(self):
-        # test flux point on  PKS 2155-304
-        src = self.cat["1FHL J0153.1+7515"]
-        flux_points = src.flux_points
-        actual = flux_points.table["flux"]
-        desired = [5.523017e-11, 0, 0] * u.Unit("cm-2 s-1")
-        assert_quantity_allclose(actual, desired)
-
-        actual = flux_points.table["flux_ul"]
-        desired = [np.nan, 4.163177e-11, 2.599397e-11] * u.Unit("cm-2 s-1")
-        assert_quantity_allclose(actual, desired, rtol=1e-5)
-
-
-@requires_data()
 class TestFermi2FHLObject:
     @classmethod
     def setup_class(cls):
@@ -548,29 +511,6 @@ class TestSourceCatalog3FGL:
 
         selection = self.cat.select_source_class("PSR")
         assert len(selection.table) == 143
-
-
-@requires_data()
-class TestSourceCatalog1FHL:
-    @classmethod
-    def setup_class(cls):
-        cls.cat = SourceCatalog1FHL()
-
-    def test_main_table(self):
-        assert len(self.cat.table) == 514
-
-    def test_extended_sources(self):
-        table = self.cat.extended_sources_table
-        assert len(table) == 18
-
-    def test_crab_alias(self):
-        for name in [
-            "Crab",
-            "1FHL J0534.5+2201",
-            "2FGL J0534.5+2201",
-            "PSR J0534+2200",
-        ]:
-            assert self.cat[name].index == 116
 
 
 @requires_data()

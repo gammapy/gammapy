@@ -18,7 +18,6 @@ Support for the following catalogs is available:
 * ``gamma-cat`` /  / `SourceCatalogGammaCat` - An open catalog of gamma-ray sources
 * ``3fgl`` / `SourceCatalog3FGL` - LAT 4-year point source catalog
 * ``4fgl`` / `SourceCatalog4FGL` - LAT 8-year point source catalog
-* ``1fhl`` / `SourceCatalog1FHL` - First Fermi-LAT Catalog of Sources above 10 GeV
 * ``2fhl`` / `SourceCatalog2FHL` - LAT second high-energy source catalog
 * ``3fhl`` / `SourceCatalog3FHL` - LAT third high-energy source catalog
 * ``2hwc`` / `SourceCatalog2HWC` - 2HWC catalog from the HAWC observatory
@@ -68,7 +67,7 @@ Let's start by checking which catalogs are available::
 
     >>> from gammapy.catalog import SOURCE_CATALOGS
     >>> list(SOURCE_CATALOGS)
-    ['gamma-cat', 'hgps', '2hwc', '3fgl', '4fgl', '1fhl', '2fhl', '3fhl', 'snrcat']
+    ['gamma-cat', 'hgps', '2hwc', '3fgl', '4fgl', '2fhl', '3fhl', 'snrcat']
 
 The ``SOURCE_CATALOG`` dict maps names to classes, so you have to call the class
 to instantiate a catalog object::
