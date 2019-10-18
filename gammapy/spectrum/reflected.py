@@ -536,6 +536,7 @@ class ReflectedRegionsBackgroundMaker:
             livetime=dataset.livetime,
             edisp=dataset.edisp,
             aeff=dataset.aeff,
+            acceptance=1,
             acceptance_off=len(counts_off.regions),
             mask_safe=dataset.mask_safe,
             mask_fit=dataset.mask_fit,
