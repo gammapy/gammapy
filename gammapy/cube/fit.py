@@ -36,8 +36,8 @@ MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
 ENERGY_AXIS_DEFAULT = MapAxis.from_edges(
     np.logspace(-2.0, 2.5, 109), name="energy", unit=u.TeV, interp="log"
 )
-BINSZ_IRF = 0.2
-BINSZ_IRF_DEFAULT = BINSZ_IRF
+
+BINSZ_IRF_DEFAULT = 0.2
 MARGIN_IRF_DEFAULT = 0.5
 # TODO: Choose optimal binnings depending on IRFs
 
