@@ -30,12 +30,10 @@ from .core import SourceCatalog, SourceCatalogObject
 __all__ = [
     "SourceCatalogObject4FGL",
     "SourceCatalogObject3FGL",
-    "SourceCatalogObject1FHL",
     "SourceCatalogObject2FHL",
     "SourceCatalogObject3FHL",
     "SourceCatalog4FGL",
     "SourceCatalog3FGL",
-    "SourceCatalog1FHL",
     "SourceCatalog2FHL",
     "SourceCatalog3FHL",
 ]
@@ -802,73 +800,6 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         return LightCurve(table)
 
 
-class SourceCatalogObject1FHL(SourceCatalogObject):
-    """One source from the Fermi-LAT 1FHL catalog.
-
-    Catalog is represented by `~gammapy.catalog.SourceCatalog1FHL`.
-    """
-
-    _ebounds = u.Quantity([10, 30, 100, 500], "GeV")
-    _ebounds_suffix = ["10_30", "30_100", "100_500"]
-    energy_range = u.Quantity([0.01, 0.5], "TeV")
-    """Energy range of the Fermi 1FHL source catalog"""
-
-    def __str__(self):
-        return self.info()
-
-    def info(self):
-        """Print summary info."""
-        # TODO: can we share code with 3FGL summary function?
-        d = self.data
-
-        ss = "Source: {}\n".format(d["Source_Name"])
-        ss += "\n"
-
-        ss += "RA (J2000)  : {}\n".format(d["RAJ2000"])
-        ss += "Dec (J2000) : {}\n".format(d["DEJ2000"])
-        ss += "GLON        : {}\n".format(d["GLON"])
-        ss += "GLAT        : {}\n".format(d["GLAT"])
-        ss += "\n"
-
-        return ss
-
-    def _get_flux_values(self, prefix, unit="cm-2 s-1"):
-        values = [self.data[prefix + _ + "GeV"] for _ in self._ebounds_suffix]
-        return u.Quantity(values, unit)
-
-    @property
-    def flux_points(self):
-        """Integral flux points (`~gammapy.spectrum.FluxPoints`)."""
-        table = Table()
-        table.meta["SED_TYPE"] = "flux"
-        table["e_min"] = self._ebounds[:-1]
-        table["e_max"] = self._ebounds[1:]
-        table["flux"] = self._get_flux_values("Flux")
-        flux_err = self._get_flux_values("Unc_Flux")
-        table["flux_errn"] = np.abs(flux_err[:, 0])
-        table["flux_errp"] = flux_err[:, 1]
-
-        # handle upper limits
-        is_ul = np.isnan(table["flux_errn"])
-        table["is_ul"] = is_ul
-        table["flux_ul"] = np.nan * flux_err.unit
-        flux_ul = compute_flux_points_ul(table["flux"], table["flux_errp"])
-        table["flux_ul"][is_ul] = flux_ul[is_ul]
-        return FluxPoints(table)
-
-    def spectral_model(self):
-        """Best fit spectral model `~gammapy.modeling.models.SpectralModel`."""
-        pars, errs = {}, {}
-        pars["amplitude"] = self.data["Flux"]
-        pars["emin"], pars["emax"] = self.energy_range
-        pars["index"] = self.data["Spectral_Index"]
-        errs["amplitude"] = self.data["Unc_Flux"]
-        errs["index"] = self.data["Unc_Spectral_Index"]
-        model = PowerLaw2SpectralModel(**pars)
-        model.parameters.set_parameter_errors(errs)
-        return model
-
-
 class SourceCatalogObject2FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 2FHL catalog.
 
@@ -1331,38 +1262,6 @@ class SourceCatalog4FGL(SourceCatalog):
             "ASSOC1",
             "ASSOC2",
         )
-        super().__init__(
-            table=table,
-            source_name_key=source_name_key,
-            source_name_alias=source_name_alias,
-        )
-
-        self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
-
-
-class SourceCatalog1FHL(SourceCatalog):
-    """Fermi-LAT 1FHL source catalog.
-
-    Reference: https://ui.adsabs.harvard.edu/abs/2013ApJS..209...34A
-
-    One source is represented by `~gammapy.catalog.SourceCatalogObject1FHL`.
-    """
-
-    name = "1fhl"
-    description = "First Fermi-LAT Catalog of Sources above 10 GeV"
-    source_object_class = SourceCatalogObject1FHL
-
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v07.fit.gz"):
-        filename = make_path(filename)
-
-        with warnings.catch_warnings():  # ignore FITS units warnings
-            warnings.simplefilter("ignore", u.UnitsWarning)
-            table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
-
-        table_standardise_units_inplace(table)
-
-        source_name_key = "Source_Name"
-        source_name_alias = ("ASSOC1", "ASSOC2", "ASSOC_TEV", "ASSOC_GAM")
         super().__init__(
             table=table,
             source_name_key=source_name_key,
