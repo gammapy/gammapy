@@ -217,9 +217,9 @@ class SafeMaskMaker:
     """
 
     def __init__(
-        self, methods=("aeff-default",), aeff_percent=10, bias_percent=10
+        self, methods="aeff-default", aeff_percent=10, bias_percent=10
     ):
-        self.methods = methods
+        self.methods = list(methods)
         self.aeff_percent = aeff_percent
         self.bias_percent = bias_percent
 
