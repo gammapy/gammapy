@@ -165,11 +165,9 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         According to the paper, the radius of the extended source model is only a rough estimate
         of the source size, based on the residual excess..
         """
-        model = SkyModel(
+        return SkyModel(
             self.spatial_model(which), self.spectral_model(which), name=self.name
         )
-        # TODO: set model covariance matrix from sub covariance infos
-        return model
 
 
 class SourceCatalog2HWC(SourceCatalog):

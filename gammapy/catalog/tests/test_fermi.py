@@ -137,7 +137,7 @@ class TestFermi4FGLObject:
     @requires_dependency("uncertainties")
     @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
-        model = self.cat[ref["idx"]].spectral_model
+        model = self.cat[ref["idx"]].spectral_model()
 
         e_ref = model.reference.quantity
         dnde, dnde_err = model.evaluate_error(e_ref)
@@ -147,14 +147,14 @@ class TestFermi4FGLObject:
 
     def test_spatial_model(self):
         # TODO: check spatial parameter errors as soon as they are filled
-        model = self.cat["4FGL J0000.3-7355"].spatial_model
+        model = self.cat["4FGL J0000.3-7355"].spatial_model()
         assert model.tag == "PointSpatialModel"
         assert model.frame == "galactic"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 307.709)
         assert_allclose(p["lat_0"].value, -42.729538)
 
-        model = self.cat["4FGL J1409.1-6121e"].spatial_model
+        model = self.cat["4FGL J1409.1-6121e"].spatial_model()
         assert model.tag == "DiskSpatialModel"
         assert model.frame == "galactic"
         p = model.parameters
@@ -162,7 +162,7 @@ class TestFermi4FGLObject:
         assert_allclose(p["lat_0"].value, 0.12567082047462463)
         assert_allclose(p["r_0"].value, 0.7331369519233704)
 
-        model = self.cat["4FGL J0617.2+2234e"].spatial_model
+        model = self.cat["4FGL J0617.2+2234e"].spatial_model()
         assert model.tag == "GaussianSpatialModel"
         assert model.frame == "galactic"
         p = model.parameters
@@ -170,7 +170,7 @@ class TestFermi4FGLObject:
         assert_allclose(p["lat_0"].value, 3.033451)
         assert_allclose(p["sigma"].value, 0.27)
 
-        model = self.cat["4FGL J1443.0-6227e"].spatial_model
+        model = self.cat["4FGL J1443.0-6227e"].spatial_model()
         assert model.tag == "TemplateSpatialModel"
         assert model.frame == "fk5"
         assert model.normalize is True
@@ -281,7 +281,7 @@ class TestFermi3FGLObject:
     @requires_dependency("uncertainties")
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
-        model = self.cat[ref["idx"]].spectral_model
+        model = self.cat[ref["idx"]].spectral_model()
 
         dnde, dnde_err = model.evaluate_error(1 * u.GeV)
 
@@ -291,14 +291,14 @@ class TestFermi3FGLObject:
 
     def test_spatial_model(self):
         # TODO: check spatial parameter errors as soon as they are filled
-        model = self.cat[0].spatial_model
+        model = self.cat[0].spatial_model()
         assert model.tag == "PointSpatialModel"
         assert model.frame == "galactic"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 117.693878)
         assert_allclose(p["lat_0"].value, 3.402958)
 
-        model = self.cat[122].spatial_model
+        model = self.cat[122].spatial_model()
         assert model.tag == "GaussianSpatialModel"
         assert model.frame == "galactic"
         p = model.parameters
@@ -306,7 +306,7 @@ class TestFermi3FGLObject:
         assert_allclose(p["lat_0"].value, -44.41674)
         assert_allclose(p["sigma"].value, 1.35)
 
-        model = self.cat[955].spatial_model
+        model = self.cat[955].spatial_model()
         assert model.tag == "DiskSpatialModel"
         assert model.frame == "galactic"
         p = model.parameters
@@ -314,14 +314,14 @@ class TestFermi3FGLObject:
         assert_allclose(p["lat_0"].value, -3.105928)
         assert_allclose(p["r_0"].value, 0.91)
 
-        model = self.cat[602].spatial_model
+        model = self.cat[602].spatial_model()
         assert model.tag == "TemplateSpatialModel"
         assert model.frame == "fk5"
         assert model.normalize is True
 
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
     def test_sky_model(self, ref):
-        self.cat[ref["idx"]].sky_model
+        self.cat[ref["idx"]].sky_model()
 
     def test_flux_points(self):
         flux_points = self.source.flux_points
@@ -396,7 +396,7 @@ class TestFermi1FHLObject:
         assert_allclose(position.dec.deg, 22.0191, atol=1e-3)
 
     def test_spectral_model(self):
-        model = self.source.spectral_model
+        model = self.source.spectral_model()
         energy = u.Quantity(100, "GeV")
         desired = u.Quantity(4.7717464131e-12, "cm-2 GeV-1 s-1")
         assert_quantity_allclose(model(energy), desired)
@@ -432,7 +432,7 @@ class TestFermi2FHLObject:
         assert_allclose(position.dec.deg, 22.0215, atol=1e-3)
 
     def test_spectral_model(self):
-        model = self.source.spectral_model
+        model = self.source.spectral_model()
         energy = u.Quantity(100, "GeV")
         desired = u.Quantity(6.8700477298e-12, "cm-2 GeV-1 s-1")
         assert_quantity_allclose(model(energy), desired)
@@ -489,7 +489,7 @@ class TestFermi3FHLObject:
     @requires_dependency("uncertainties")
     @pytest.mark.parametrize("ref", SOURCES_3FHL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
-        model = self.cat[ref["idx"]].spectral_model
+        model = self.cat[ref["idx"]].spectral_model()
 
         dnde, dnde_err = model.evaluate_error(100 * u.GeV)
 
@@ -499,12 +499,12 @@ class TestFermi3FHLObject:
 
     @pytest.mark.parametrize("ref", SOURCES_3FHL, ids=lambda _: _["name"])
     def test_spatial_model(self, ref):
-        model = self.cat[ref["idx"]].spatial_model
+        model = self.cat[ref["idx"]].spatial_model()
         assert model.frame == "galactic"
 
     @pytest.mark.parametrize("ref", SOURCES_3FHL, ids=lambda _: _["name"])
     def test_sky_model(self, ref):
-        self.cat[ref["idx"]].sky_model
+        self.cat[ref["idx"]].sky_model()
 
     def test_flux_points(self):
         flux_points = self.source.flux_points

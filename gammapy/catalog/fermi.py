@@ -179,12 +179,9 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
     def is_pointlike(self):
         return self.data["Extended_Source_Name"].strip() == ""
 
-    @property
     def sky_model(self):
-        """Source sky model (`~gammapy.modeling.models.SkyModel`)."""
-        spatial_model = self.spatial_model
-        spectral_model = self.spectral_model
-        return SkyModel(spatial_model, spectral_model, name=self.name)
+        """Sky model (`~gammapy.modeling.models.SkyModel`)."""
+        return SkyModel(self.spatial_model(), self.spectral_model(), name=self.name)
 
 
 class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
@@ -348,11 +345,8 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
         return ss
 
-    @property
     def spatial_model(self):
-        """
-        Source spatial model (`~gammapy.modeling.models.SpatialModel`).
-        """
+        """Spatial model (`~gammapy.modeling.models.SpatialModel`)."""
         d = self.data
 
         pars = {}
@@ -389,7 +383,6 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
 
-    @property
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         spec_type = self.data["SpectrumType"].strip()
@@ -654,7 +647,6 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
 
         return ss
 
-    @property
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         spec_type = self.data["SpectrumType"].strip()
@@ -696,11 +688,8 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         model.parameters.set_parameter_errors(errs)
         return model
 
-    @property
     def spatial_model(self):
-        """
-        Source spatial model (`~gammapy.modeling.models.SpatialModel`).
-        """
+        """Spatial model (`~gammapy.modeling.models.SpatialModel`)."""
         d = self.data
 
         pars = {}
@@ -867,7 +856,6 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         table["flux_ul"][is_ul] = flux_ul[is_ul]
         return FluxPoints(table)
 
-    @property
     def spectral_model(self):
         """Best fit spectral model `~gammapy.modeling.models.SpectralModel`."""
         pars, errs = {}, {}
@@ -939,7 +927,6 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         table["flux_ul"][is_ul] = flux_ul[is_ul]
         return FluxPoints(table)
 
-    @property
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         pars, errs = {}, {}
@@ -1074,7 +1061,6 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
 
         return ss
 
-    @property
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         d = self.data
@@ -1137,7 +1123,6 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         table["sqrt_ts"] = self.data["Sqrt_TS_Band"]
         return FluxPoints(table)
 
-    @property
     def spatial_model(self):
         """Source spatial model (`~gammapy.modeling.models.SpatialModel`)."""
         d = self.data
