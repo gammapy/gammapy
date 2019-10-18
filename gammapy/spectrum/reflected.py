@@ -526,19 +526,17 @@ class ReflectedRegionsBackgroundMaker:
             On off dataset.
 
         """
-        kwargs = {}
-
-        kwargs["counts"] = dataset.counts
-        kwargs["gti"] = dataset.gti
-        kwargs["name"] = dataset.name
-        kwargs["mask_safe"] = dataset.mask_safe
-        kwargs["mask_fit"] = dataset.mask_fit
-        kwargs["aeff"] = dataset.aeff
-        kwargs["livetime"] = dataset.livetime
-        kwargs["edisp"] = dataset.edisp
-
         counts_off = self.make_counts_off(dataset, observation)
-        kwargs["acceptance"] = 1
-        kwargs["acceptance_off"] = len(counts_off.regions)
-        kwargs["counts_off"] = counts_off
-        return SpectrumDatasetOnOff(**kwargs)
+
+        return SpectrumDatasetOnOff(
+            counts=dataset.counts,
+            counts_off=counts_off,
+            gti=dataset.gti,
+            name=dataset.name,
+            livetime=dataset.livetime,
+            edisp=dataset.edisp,
+            aeff=dataset.aeff,
+            acceptance_off=len(counts_off.regions),
+            mask_safe=dataset.mask_safe,
+            mask_fit=dataset.mask_fit,
+        )
