@@ -12,7 +12,7 @@ from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, apply_containment_fraction
-from gammapy.maps import Map, MapAxis
+from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
 from gammapy.spectrum import SpectrumDataset
@@ -33,7 +33,12 @@ RAD_AXIS_DEFAULT = MapAxis.from_bounds(
 MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
     0.2, 5, nbin=48, node_type="edges", name="migra"
 )
+ENERGY_AXIS_DEFAULT = MapAxis.from_edges(
+    np.logspace(-2.0, 2.5, 109), name="energy", unit=u.TeV, interp="log"
+)
 BINSZ_IRF = 0.2
+BINSZ_IRF_DEFAULT = BINSZ_IRF
+MARGIN_IRF_DEFAULT = 0.5
 # TODO: Choose optimal binnings depending on IRFs
 
 
@@ -363,9 +368,11 @@ class MapDataset(Dataset):
     def create(
         cls,
         geom,
-        geom_irf=None,
+        energy_axis_true=None,
         migra_axis=None,
         rad_axis=None,
+        binsz_irf=None,
+        margin_irf=None,
         reference_time="2000-01-01",
         name="",
         **kwargs,
@@ -376,54 +383,54 @@ class MapDataset(Dataset):
         ----------
         geom: `~gammapy.maps.WcsGeom`
             Reference target geometry in reco energy, used for counts and background maps
-        geom_irf: `~gammapy.maps.WcsGeom`
-            Reference image geometry in true energy, used for IRF maps.
+        energy_axis_true: `~gammapy.maps.MapAxis`
+            True energy axis used for IRF maps
         migra_axis: `~gammapy.maps.MapAxis`
             Migration axis for the energy dispersion map
         rad_axis: `~gammapy.maps.MapAxis`
             Rad axis for the psf map
+        binsz_irf_maps: float
+            IRF Map pixel size in degrees.
+        margin_irf: float
+            IRF map margin size in degrees
         reference_time: `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
             Name of the dataset.
+
+        Returns
+        --------
+        empty_maps: `MapDataset`
+            A MapDataset containing zero filled maps
         """
-        geom_irf = geom_irf or geom.to_binsz(BINSZ_IRF)
+
         migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
         rad_axis = rad_axis or RAD_AXIS_DEFAULT
+        energy_axis_true = energy_axis_true or ENERGY_AXIS_DEFAULT
+        binsz_irf = binsz_irf or BINSZ_IRF_DEFAULT
+        margin_irf = margin_irf or MARGIN_IRF_DEFAULT
+        margin_irf = margin_irf * u.deg
 
-        counts = Map.from_geom(geom, unit="")
+        wcs = geom.to_image()
+        geom_exposure = wcs.to_cube([energy_axis_true])
 
-        background = Map.from_geom(geom, unit="")
-        background_model = BackgroundModel(background)
+        wcs_irf = WcsGeom.create(
+            binsz=binsz_irf,
+            width=wcs.width + margin_irf,
+            skydir=wcs.center_skydir,
+            proj=wcs.projection,
+            coordsys=wcs.coordsys,
+        )
 
-        energy_axis = geom_irf.get_axis_by_name("ENERGY")
+        geom_psf = wcs_irf.to_cube([rad_axis, energy_axis_true])
+        geom_edisp = wcs_irf.to_cube([migra_axis, energy_axis_true])
 
-        exposure_geom = geom.to_image().to_cube([energy_axis])
-        exposure = Map.from_geom(exposure_geom, unit="m2 s")
-        exposure_irf = Map.from_geom(geom_irf, unit="m2 s")
-
-        mask_safe = np.zeros(geom.data_shape, dtype=bool)
-
-        gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
-
-        geom_migra = geom_irf.to_image().to_cube([migra_axis, energy_axis])
-        edisp_map = Map.from_geom(geom_migra, unit="")
-        loc = migra_axis.edges.searchsorted(1.0)
-        edisp_map.data[:, loc, :, :] = 1.0
-        edisp = EDispMap(edisp_map, exposure_irf)
-
-        geom_rad = geom_irf.to_image().to_cube([rad_axis, energy_axis])
-        psf_map = Map.from_geom(geom_rad, unit="sr-1")
-        psf = PSFMap(psf_map, exposure_irf)
-
-        return cls(
-            counts=counts,
-            exposure=exposure,
-            psf=psf,
-            edisp=edisp,
-            background_model=background_model,
-            gti=gti,
-            mask_safe=mask_safe,
+        return cls.from_geoms(
+            geom,
+            geom_exposure,
+            geom_psf,
+            geom_edisp,
+            reference_time=reference_time,
             name=name,
             **kwargs,
         )
