@@ -12,6 +12,8 @@ from .dataset import SpectrumDataset
 
 log = logging.getLogger(__name__)
 
+__all__ = ["SpectrumDatasetMaker", "SafeMaskMaker"]
+
 
 class SpectrumDatasetMaker:
     """Make spectrum for a single IACT observation.
