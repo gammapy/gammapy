@@ -10,7 +10,7 @@ from regions import CircleSkyRegion
 import jsonschema
 import yaml
 from gammapy.cube import MapDataset, MapDatasetMaker
-from gammapy.cube.fit import BINSZ_IRF
+from gammapy.cube.fit import BINSZ_IRF_DEFAULT
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
@@ -245,7 +245,7 @@ class Analysis:
         if "geom-irf" in self.settings["datasets"]:
             geom_irf = self._create_geometry(self.settings["datasets"]["geom-irf"])
         else:
-            geom_irf = geom.to_binsz(binsz=BINSZ_IRF)
+            geom_irf = geom.to_binsz(binsz=BINSZ_IRF_DEFAULT)
 
         offset_max = Angle(self.settings["datasets"]["offset-max"])
         stack_datasets = self.settings["datasets"]["stack-datasets"]
