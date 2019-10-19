@@ -39,7 +39,7 @@ download`` as the way that users download versioned tutorial notebooks and examp
 datasets in a reproducible conda environment (see `pig-004`_, `ADASS XVIII proceedings`_).
 
 Currently there are a 18 tutorial notebooks plus 7 listed as "extra topics").
-Between the notebooks there is a lot of duplicated content, but on the other
+Among the notebooks there is a lot of duplicated content, but on the other
 hand there is also still a lot of missing documentation. E.g. recently
 implemented large changes in Gammapy such as `pig-012`_ and `pig-016`_
 are not completely documented yet. In addition to the Jupyter notebook
@@ -54,7 +54,7 @@ content, and sometimes at the end a summary, exercises or links to other
 documentation. The sub-package RST pages usually have the following structure,
 following the Astropy docs: Introduction (overview description), Getting Started
 (first examples), Using (links to tutorials and sometimes sub-pages), API
-reference
+reference.
 
 We will not discuss how other projects structure their documentation, but we did
 look at and think it's useful to compare and contrast to figure out a good
@@ -69,6 +69,7 @@ documentation for Gammapy:
 - https://fermi.gsfc.nasa.gov/ssc/data/analysis/
 - https://fermipy.readthedocs.io
 - http://cta.irap.omp.eu/ctools
+- https://cta-observatory.github.io/ctapipe
 - https://www.djangoproject.com/ and https://docs.djangoproject.com
 
 Generally one has to be aware that Gammapy is both a flexible and extensible
@@ -92,14 +93,14 @@ both, but we give the following rough guidelines:
 
 - More content should be moved to Jupyter notebooks. E.g. currently the RST pages for
   maps, modeling, catalog, detect, etc. have a few code examples. Those should
-  be moved corresponding notebooks ``maps.ipynb``, ``modeling.ipynb``,
+  be moved to corresponding notebooks ``maps.ipynb``, ``modeling.ipynb``,
   ``catalog.ipynb`` and ``detect.ipynb``, i.e. in many cases there would be a
   hands-on tutorial introduction for each sub-package. More cross-links between
   IPYNB, RST and API docs should be created.
 - Keep sub-package RST pages short and put links to relevant hands-on
   tutorials at the top, and the API docs at the bottom. Some pages have
   significant content, which is not related to code examples in between. E.g.
-  for maps, modeling or IRFs there are is a description of the design.
+  for maps, modeling or IRFs there is a description of the design.
 - Add a Gammapy overview page to the RST docs, where the general data
   analysis concepts are explained (DL3, Datasets, Model, Fitting). This page
   would be similar to the description of Gammapy in the paper that we also plan
@@ -112,7 +113,7 @@ When a user visits https://docs.gammapy.org, they see the "Getting started"
 heading. First we have Installation, then a Getting Started page (which we could
 rename to First Steps), then the Tutorials. We suggest to add an Overview page
 to that section before the tutorials, that's a 10 minute read and non-hands-on
-introducion to Gammapy, but there tell people that they can skip to the hands-on
+introduction to Gammapy, but there tell people that they can skip to the hands-on
 tutorial notebooks and come back to that page later if they prefer.
 Then we would have a tutorials overview page similar to
 https://docs.gammapy.org/0.14/tutorials.html but with some tutorials
@@ -162,7 +163,8 @@ For many Gammapy sub-packages, we plan to have a corresponding notebook
 that is a hands-on, executable tutorial introduction that complements the
 description and API docs on the sub-package RST page.
 
-- Overview (short section with one example for each sub-package, hands-on, an evolution of the current ``getting_started.ipynb``)
+- Overview (short section with one example for each sub-package, hands-on, an evolution of the
+current ``getting_started.ipynb``)
 - Maps (``gammapy.maps``) (``maps.ipynb``)
 - Models (``gammapy.modeling.models``) (``models.ipynb``)
 - Fitting (``gammapy.modeling``) (to be implemented)
@@ -231,7 +233,7 @@ Implementation
 
 Implementing this PIG is a lot of work, roughly 2 months of full-time work. We
 suggest that, after the PIG is accepted, one coordinator spends a few days to do
-quick additions / removals / renames / rearrrangements, so that the structure of
+quick additions / removals / renames / rearrangements, so that the structure of
 the RST and IPYNB files we want is in place. Then the coordinator makes a wiki
 page with a list of 20-30 tasks that should be done (each 1-2 days of work, not
 longer) and asks for help. Each task is usually to edit one notebook or RST
