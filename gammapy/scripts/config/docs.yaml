@@ -54,7 +54,6 @@ datasets:
             hdu: IMAGE
     containment_correction: true
     # geometry settings
-    # note that there may be different values for geom and geom-irf
     geom:
         # on region in spectrum extraction
         region:
@@ -69,6 +68,17 @@ datasets:
         width: [5, 5]           # width of the map in degrees
         # additional axes other than spatial
         # example values for energy axis
+        axes:
+            - name: energy
+              lo_bnd: 0.01
+              hi_bnd: 100
+              nbin: 73
+              unit: TeV
+              interp: log
+    geom-irf:
+        # geom values for the IRF
+        margin: 0.05            # IRF map pixel size in degrees
+        binsz: 0.02             # IRF map pixel size in degrees
         axes:
             - name: energy
               lo_bnd: 0.01

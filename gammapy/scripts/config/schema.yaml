@@ -100,7 +100,13 @@ properties:
             geom:
                 "$ref": "#/definitions/map_geom"
             geom-irf:
-                "$ref": "#/definitions/map_geom"
+                margin: {type: number}
+                binsz: {type: number}
+                axes:
+                    type: array
+                    additionalProperties: false
+                    items:
+                        "$ref": "#/definitions/map_axis"
         required: [dataset-type, geom, stack-datasets]
         allOf:
             - if:

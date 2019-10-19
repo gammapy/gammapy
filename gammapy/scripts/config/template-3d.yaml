@@ -31,11 +31,8 @@ datasets:
               node_type: edges
               unit: TeV
     geom-irf:
-        skydir: [83.633, 22.014]
-        width: [5, 5]
+        margin: 0.5
         binsz: 0.2
-        coordsys: CEL
-        proj: TAN
         axes:
             - name: energy
               hi_bnd: 10
