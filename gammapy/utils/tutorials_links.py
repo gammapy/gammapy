@@ -8,7 +8,8 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 PATH_NBS = Path("docs/_static/notebooks")
-PATH_HTM = Path("docs/_build/html/notebooks")
+PATH_DOC = Path("docs/_build/html/")
+PATH_HTM = PATH_DOC / "notebooks"
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
 
 # fetch url_docs from setup.cfg
@@ -40,6 +41,12 @@ def make_api_links(file_path, start_link):
             anchor_path = f"{url_path}.{submodules[2]}"
             file_module = f"api/{url_path}.html#{anchor_path}"
         else:
+            continue
+
+        # check broken link
+        path_module = PATH_DOC / file_module
+        if not path_module.is_file() and start_link == url_docs:
+            log.warning(f"{str(path_module)} does not exist in {file_path}.")
             continue
 
         # replace with link
