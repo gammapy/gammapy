@@ -91,16 +91,6 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
 
 .. _dev-check_html_links:
 
-Check HTML links
-----------------
-
-To check for broken external links from the Sphinx documentation:
-
-.. code-block:: bash
-
-   $ python setup.py install
-   $ cd docs; make linkcheck
-
 
 What checks and conversions should I do for inputs?
 ---------------------------------------------------
@@ -210,7 +200,6 @@ to name a few. Also, parallelism can be introduced for different tasks and at di
 e.g. during data reduction, or at the dataset or model component or at the function level.
 This is planned for 2020, but really prototyping and pull requests on performance are welcome
 any time.
-
 
 Assert convention
 -----------------
@@ -524,7 +513,6 @@ TODO: we have some classes (aeff2d and edisp2d) that pre-compute an interpolator
 In those cases the ``interp_kwargs`` would have to be exposed e.g. also on the ``read`` and other constructors.
 Do we want / need that?
 
-
 Locate origin of warnings
 -------------------------
 
@@ -549,7 +537,6 @@ putting this in ``docs/conf.py`` can also help sometimes::
         log.write(warnings.formatwarning(message, category, filename, lineno, line))
 
     warnings.showwarning = warn_with_traceback
-
 
 Object text repr, str and info
 ------------------------------
@@ -719,50 +706,6 @@ and have an coherent I/O interface, mainly in `~gammapy.irf`.
 Also, consult :ref:`interpolation-extrapolation` if you are not sure how to
 setup your interpolator.
 
-Sphinx docs build
------------------
-
-Generating the HTML docs for Gammapy is straight-forward::
-
-    make docs-all
-    make docs-show
-
-Generating the PDF docs is more complex.
-This should work::
-
-    python setup.py build_docs -b latex
-    cd docs/_build/latex
-    makeindex -s python.ist gammapy.idx
-    pdflatex -interaction=nonstopmode gammapy.tex
-    open gammapy.pdf
-
-You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
-
-Jupyter notebooks stripped of output cells are present in the ``tutorials`` folder.
-They are by default tested, executed, and copied to the ``docs/notebooks`` and
-``docs/_static/notebooks`` folders during the process of generating HTML docs. This
-triggers its conversion to Sphinx formatted HTML files and ``.py`` scripts. The Sphinx
-formatted versions of the notebooks provide links to the raw ``.ipynb`` Jupyter files
-and ``.py`` script versions stored in ``docs/_static/notebooks`` folder.
-
-Once the documentation built you can optimize the speed of re-building processes,
-for example in case you are modifying or creating new docs and you would like to check
-these changes are displayed nicely. For that purpose, if your modified RST file
-does not contain links to notebooks, you may run ``make docs-all nbs=False`` so
-that notebooks are not executed during the docs build.
-
-In the case one single notebook is modified or added to the documentation, you can
-execute the build doc process with the ``src`` parameter with value the name of the
-considered notebook. i.e. ``make docs-all src=tutorials/my-notebook.ipynb``
-
-Each *fixed-text* Sphinx formatted notebook present in the documentation has its
-own link pointing to its specific Binder space in the `gammapy-webpage` repository.
-Since notebooks are evolving with Gammapy features and documentation, the different
-versions of the notebooks are linked to the versioned Binder environments. In this
-sense, it is important to publish as stable docs those built with stable release
-versions of Gammapy so the links to Binder in the tutorials point to stable tagged
-Binder environments in the ``gammapy-webpage`` repository.
-
 Documentation guidelines
 ------------------------
 
@@ -859,23 +802,97 @@ so many getters and setters. We could start using descriptors.
 
 TODO: make a decision on this and describe the issue / solution here.
 
-Link to a notebook from the docs
+Sphinx docs build
+-----------------
+
+Generating the HTML docs for Gammapy is straight-forward::
+
+    make docs-all
+    make docs-show
+
+Generating the PDF docs is more complex.
+This should work::
+
+    python setup.py build_docs -b latex
+    cd docs/_build/latex
+    makeindex -s python.ist gammapy.idx
+    pdflatex -interaction=nonstopmode gammapy.tex
+    open gammapy.pdf
+
+You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
+
+Jupyter notebooks stripped of output cells are present in the ``tutorials`` folder.
+They are by default tested, executed, and copied to the ``docs/notebooks`` and
+``docs/_static/notebooks`` folders during the process of generating HTML docs. This
+triggers its conversion to Sphinx formatted HTML files and ``.py`` scripts. The Sphinx
+formatted versions of the notebooks provide links to the raw ``.ipynb`` Jupyter files
+and ``.py`` script versions stored in ``docs/_static/notebooks`` folder.
+
+Once the documentation built you can optimize the speed of re-building processes,
+for example in case you are modifying or creating new docs and you would like to check
+these changes are displayed nicely. For that purpose, if your modified RST file
+does not contain links to notebooks, you may run ``make docs-all nbs=False`` so
+that notebooks are not executed during the docs build.
+
+In the case one single notebook is modified or added to the documentation, you can
+execute the build doc process with the ``src`` parameter with value the name of the
+considered notebook. i.e. ``make docs-all src=tutorials/my-notebook.ipynb``
+
+Each *fixed-text* Sphinx formatted notebook present in the documentation has its
+own link pointing to its specific Binder space in the ``gammapy-webpage`` repository.
+Since notebooks are evolving with Gammapy features and documentation, the different
+versions of the notebooks are linked to the versioned Binder environments. In this
+sense, it is important to publish as stable docs those built with stable release
+versions of Gammapy so the links to Binder in the tutorials point to stable tagged
+Binder environments in the ``gammapy-webpage`` repository.
+
+Dealing with links and notebooks
 --------------------------------
 
 Jupyter notebooks stored in the ``tutorials`` folder and are copied to the ``notebooks`` folder
 during the process of Sphinx building documentation. They are converted to HTML files using
 `nb_sphinx <http://nbsphinx.readthedocs.io/>`__ Sphinx extension that provides a source parser
-for .ipynb files. From docstrings and high-level docs in Gammapy you can link to these
-*fixed-text* formatted versions providing its filename with .html file extension
-and the relative path to the ``notebooks`` folder. This folder is created at the root of the ``docs``
-folder in the process of documentation building.
+for ``.ipynb`` files.
 
-Example: `First steps with Gammapy <../notebooks/first_steps.html>`__
+Links to notebooks
+++++++++++++++++++
 
-Sphinx directive to generate that link::
+From docstrings and RST documentation files in Gammapy you can link to the built fixed-text HTML formatted
+versions of the notebooks and subsections providing its filename with the ``.ipynb`` file extension
+and the relative path to the ``notebooks`` folder. This folder is created and populated with notebooks
+at the root of the ``docs`` folder in the process of documentation building::
 
-    `First steps with Gammapy <../notebooks/first_steps.html>`__
+    `Maps in first steps with Gammapy <../notebooks/first_steps.ipynb#Maps>`__
 
+Links within notebooks
+++++++++++++++++++++++
+
+From MD cells in notebooks you can link to other notebooks, as well as to RST documentation files,
+and subsections using the markdown syntax to declare links to resources, as shown in the examples below::
+
+    * [Maps in first steps with Gammapy]/(first_steps.ipynb#Maps)
+    * [Help!]/(../getting-started.rst#help)
+
+You can also link to the Gammapy API reference documentation using the same Sphinx syntax that is used
+when writing RST files. All links to the API reference classes and methods should start with ``~gammapy.``
+and enclosed within quotation marks. This syntax will be translated into relative links to the API in the
+HTML formatted versions of the notebooks, and to absolute links pointing to the on-line Gammapy documentation
+in the ```*.ipynb`` notebook files available to download. During the documentation building process a warning
+will be raised for each detected broken link to the API.
+
+Examples:
+
+* `gammapy.maps`
+* `gammapy.maps.Geom`
+* `gammapy.maps.Geom.is_image`
+* `gammapy.maps.Geom.is_image()`
+
+The example links above could be created within MD cells in notebooks with the syntax below::
+
+    * `~gammapy.maps`
+    * `~gammapy.maps.Geom`
+    * `~gammapy.maps.Geom.is_image`
+    * `~gammapy.maps.Geom.is_image()`
 
 Include images from gammapy-extra into the docs
 -----------------------------------------------
@@ -889,6 +906,16 @@ use the ``gp-image`` directive instead of the usual Sphinx ``image`` directive l
         :scale: 100%
 
 More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__
+
+Check broken links
+------------------
+
+To check for broken external links from the Sphinx documentation:
+
+.. code-block:: bash
+
+   $ python setup.py install
+   $ cd docs; make linkcheck
 
 Coordinate and axis names
 -------------------------
@@ -949,7 +976,6 @@ Notes:
   is only a prototype. So if CTA chooses something else, probably we will follow
   suite and do one more backward-incompatible change at some point to align with CTA.
 
-
 Testing of plotting functions
 -----------------------------
 
@@ -966,7 +992,6 @@ rendering of the plot, which can rasie errore as well. Here is a short example:
     def test_plot():
         with mpl_plot_check():
             plt.plot([1., 2., 3., 4., 5.])
-
 
 With this approach we make sure that the plotting code is at least executed once
 and runs completely (up to saving the plot to file) without errors. In future we
