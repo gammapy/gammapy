@@ -55,7 +55,6 @@ def make_api_links(file_path, start_link):
             label_api = label_api.replace("~", "")
             replace_api = f"[[{label_api}]({link_api})]"
         txt = txt.replace(str_api, replace_api)
-        print(replace_api)
     file_path.write_text(txt, encoding="utf-8")
 
 
