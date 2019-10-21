@@ -299,28 +299,25 @@ class MapDataset(Dataset):
         Create a MapDataset object with zero filled maps according to the specified geometries
 
         Parameters
-        --------------
-        geom: `Geom`
+        ----------
+        geom : `Geom`
             geometry for the counts and background maps
-        geom_exposure: `Geom`
+        geom_exposure : `Geom`
             geometry for the exposure map
-        geom_irf: `Geom`
-            geometry for the IRF exposure map
-        geom_psf: `Geom`
+        geom_psf : `Geom`
             geometry for the psf map
-        geom_edisp: `Geom`
+        geom_edisp : `Geom`
             geometry for the energy dispersion map
-        reference_time: `~astropy.time.Time`
+        reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
             Name of the dataset.
 
         Returns
-        --------
-        empty_maps: `MapDataset`
+        -------
+        empty_maps : `MapDataset`
             A MapDataset containing zero filled maps
         """
-
         e_true_axis = geom_exposure.get_axis_by_name("energy")
 
         counts = Map.from_geom(geom, unit="")

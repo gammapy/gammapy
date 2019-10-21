@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from gammapy.data import DataStore
-from gammapy.spectrum import SpectrumDatasetMaker, SafeMaskMaker
+from gammapy.spectrum import SafeMaskMaker, SpectrumDatasetMaker
 from gammapy.utils.testing import requires_data
 
 

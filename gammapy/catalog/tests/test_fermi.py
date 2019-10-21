@@ -14,8 +14,8 @@ from gammapy.catalog import (
 from gammapy.modeling.models import (
     ExpCutoffPowerLaw3FGLSpectralModel,
     LogParabolaSpectralModel,
-    PowerLawSpectralModel,
     PowerLaw2SpectralModel,
+    PowerLawSpectralModel,
     SuperExpCutoffPowerLaw3FGLSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
 )

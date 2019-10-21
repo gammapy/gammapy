@@ -7,8 +7,8 @@ from regions import PixCoord
 from gammapy.maps import Map, WcsGeom, WcsNDMap
 from gammapy.maps.geom import frame_to_coordsys
 from .background_estimate import BackgroundEstimate
-from .dataset import SpectrumDatasetOnOff
 from .core import CountsSpectrum
+from .dataset import SpectrumDatasetOnOff
 
 __all__ = [
     "ReflectedRegionsFinder",
@@ -503,10 +503,7 @@ class ReflectedRegionsBackgroundMaker:
         events_off = observation.events.select_region(region_union, wcs)
 
         edges = dataset.counts.energy.edges
-        counts_off = CountsSpectrum(
-            energy_hi=edges[1:],
-            energy_lo=edges[:-1],
-        )
+        counts_off = CountsSpectrum(energy_hi=edges[1:], energy_lo=edges[:-1])
         counts_off.fill_events(events_off)
 
         # TODO: temporarily attach the region info to the CountsSpectrum.

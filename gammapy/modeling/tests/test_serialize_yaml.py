@@ -12,6 +12,7 @@ from gammapy.modeling.serialize import dict_to_models
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
+
 @requires_data()
 def test_dict_to_skymodels():
     filename = get_pkg_data_filename("data/examples.yaml")

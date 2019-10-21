@@ -5,7 +5,6 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.data import EventList
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
