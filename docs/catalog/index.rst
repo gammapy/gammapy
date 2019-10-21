@@ -114,9 +114,9 @@ Using `gammapy.catalog`
 
 For more advanced use cases please go to the tutorial notebooks:
 
-* :gp-notebook:`hgps`
-* :gp-notebook:`first_steps`
-* :gp-notebook:`sed_fitting_gammacat_fermi`
+* `hgps.html <../notebooks/hgps.html>`__
+* `first_steps.html <../notebooks/first_steps.html>`__
+* `sed_fitting_gammacat_fermi.html <../notebooks/sed_fitting_gammacat_fermi.html>`__
 
 The following pages describe ``gammapy.catalog`` in more detail:
 

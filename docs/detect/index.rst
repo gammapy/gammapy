@@ -108,7 +108,7 @@ Using `gammapy.detect`
 
 :ref:`tutorials` that show examples using ``gammapy.detect``:
 
-* :gp-notebook:`detect_ts`
+* `detect_ts.html <../notebooks/detect_ts.html>`__
 
 Reference/API
 =============

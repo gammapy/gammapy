@@ -76,9 +76,9 @@ Using `gammapy.spectrum`
 
 For more advanced use cases please go to the tutorial notebooks:
 
-* :gp-notebook:`spectrum_simulation` - simulate and fit 1D spectra using
+* `spectrum_simulation.html <../notebooks/spectrum_simulation.html>`__ - simulate and fit 1D spectra using
   pre-defined or a user-defined model.
-* :gp-notebook:`spectrum_analysis` - spectral analysis starting from event
+* `spectrum_analysis.html <../notebooks/spectrum_analysis.html>`__ - spectral analysis starting from event
   lists and field-of-view IRFs.
 
 The following pages describe ``gammapy.spectrum`` in more detail:

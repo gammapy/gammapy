@@ -866,18 +866,7 @@ Jupyter notebooks stored in the ``tutorials`` folder and are copied to the ``not
 during the process of Sphinx building documentation. They are converted to HTML files using
 `nb_sphinx <http://nbsphinx.readthedocs.io/>`__ Sphinx extension that provides a source parser
 for .ipynb files. From docstrings and high-level docs in Gammapy you can link to these
-*fixed-text* formatted versions using the ``gp-notebook`` Sphinx role providing
-**only the filename**.
-
-Example: :gp-notebook:`analysis_3d`
-
-Sphinx directive to generate that link::
-
-      :gp-notebook:`analysis_3d`
-
-More info on Sphinx roles is `here <http://www.sphinx-doc.org/en/stable/markup/inline.html>`__
-
-Alternatively you can also link to the notebooks providing its filename with .html file extension
+*fixed-text* formatted versions providing its filename with .html file extension
 and the relative path to the ``notebooks`` folder. This folder is created at the root of the ``docs``
 folder in the process of documentation building.
 
@@ -891,11 +880,8 @@ Sphinx directive to generate that link::
 Include images from gammapy-extra into the docs
 -----------------------------------------------
 
-Similar to the ``gp-notebook`` role, Gammapy has a ``gp-image`` directive.
-
-To include an image from ``gammapy-extra/figures/``, use the ``gp-image`` directive
-instead of the usual Sphinx ``image`` directive like this:
-
+Gammapy has a ``gp-image`` directive to include an image from ``gammapy-extra/figures/``,
+use the ``gp-image`` directive instead of the usual Sphinx ``image`` directive like this:
 
 .. code-block:: rst
 

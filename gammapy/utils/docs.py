@@ -93,24 +93,6 @@ class DocsImage(Image):
         return super().run()
 
 
-def LinkNotebook(name, rawtext, notebook, lineno, inliner, options={}, content=[]):
-    """Link to a notebook"""
-    # check if file exists in local notebooks folder
-    nbfolder = Path("notebooks")
-    nbfilename = notebook + ".ipynb"
-    nbfile = nbfolder / nbfilename
-
-    if not nbfile.is_file():
-        msg = inliner.reporter.error(f"Unknown notebook {notebook}", line=lineno)
-        prb = inliner.problematic(rawtext, rawtext, msg)
-        return [prb], [msg]
-    else:
-        refuri = inliner.document.settings._source
-        app = inliner.document.settings.env.app
-        node = make_link_node(rawtext, app, refuri, notebook, options)
-        return [node], []
-
-
 def make_link_node(rawtext, app, refuri, notebook, options):
     # base = 'https://github.com/gammapy/gammapy/tree/master/notebooks/'
     # base = 'https://nbviewer.jupyter.org/github/gammapy/gammapy/blob/master/notebooks/'
@@ -136,7 +118,6 @@ def gammapy_sphinx_ext_activate():
 
     # Register our directives and roles with Sphinx
     register_directive("gp-image", DocsImage)
-    roles.register_local_role("gp-notebook", LinkNotebook)
     register_directive("gp-howto-hli", HowtoHLI)
 
 

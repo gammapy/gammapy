@@ -21,7 +21,7 @@ class DataStore:
     The data selection and access happens using an observation
     and an HDU index file as described at :ref:`gadf:iact-storage`.
 
-    For a usage example see :gp-notebook:`cta_1dc_introduction`
+    For a usage example see `cta_1dc_introduction.html <../notebooks/cta_1dc_introduction.html>`__
 
     Parameters
     ----------

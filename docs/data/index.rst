@@ -47,8 +47,8 @@ Using `gammapy.data`
 
 Gammapy tutorial notebooks that show examples using ``gammapy.data``:
 
-* :gp-notebook:`cta_1dc_introduction`
-* :gp-notebook:`fermi_lat`
+* `cta_1dc_introduction.html <../notebooks/cta_1dc_introduction.html>`__
+* `fermi_lat.html <../notebooks/fermi_lat.html>`__
 
 Reference/API
 =============

@@ -13,7 +13,7 @@ class SensitivityEstimator:
 
     Uses a 1D spectral analysis and on / off measurement.
 
-    For a usage example see :gp-notebook:`cta_sensitivity`
+    For a usage example see `cta_sensitivity.html <../notebooks/cta_sensitivity.html>`__
 
     Parameters
     ----------

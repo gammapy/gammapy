@@ -15,7 +15,7 @@ class MapPanelPlotter:
     Given a `~matplotlib.pyplot.Figure` object this class creates axes objects
     using `~matplotlib.gridspec.GridSpec` and plots a given sky map onto these.
 
-    For a usage example see :gp-notebook:`hgps` (at the end).
+    For a usage example see `hgps.html <../notebooks/hgps.html>`__ (at the end).
 
     Parameters
     ----------
