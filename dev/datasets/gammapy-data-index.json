@@ -556,6 +556,12 @@
     "hashmd5": "a6fed48ebd0bf917049dc54a509e5b25"
    },
    {
+    "path": "catalogs/fermi/Extended_archive_v15/Templates/RXJ1713.7-3946.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/Extended_archive_v15/Templates/RXJ1713.7-3946.fits",
+    "filesize": 20160,
+    "hashmd5": "3cc2dc521fdaa85450f4fcfa453d5843"
+   },
+   {
     "path": "catalogs/fermi/Extended_archive_v15/Templates/W51C.fits",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/Extended_archive_v15/Templates/W51C.fits",
     "filesize": 8640,
@@ -2958,8 +2964,8 @@
    {
     "path": "tests/models/gc_example_datasets.yaml",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/gc_example_datasets.yaml",
-    "filesize": 306,
-    "hashmd5": "7928cebfdc8873be5bdb5e7e0bb2ad2c"
+    "filesize": 344,
+    "hashmd5": "cf743fa5d5f06c8ebfd81d8a72c0f9c9"
    },
    {
     "path": "tests/models/gc_example_models.yaml",
