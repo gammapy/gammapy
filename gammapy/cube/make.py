@@ -66,12 +66,11 @@ class MapDatasetMaker:
 
     def _cutout_geom(self, geom, observation):
         if self.cutout:
-            cutout_kwargs = {
-                "position": observation.pointing_radec,
-                "width": self.cutout_width,
-                "mode": self.cutout_mode,
-            }
-            return geom.cutout(**cutout_kwargs)
+            return geom.cutout(
+                position=observation.pointing_radec,
+                width=self.cutout_width,
+                mode=self.cutout_mode,
+            )
         else:
             return geom
 
@@ -305,19 +304,16 @@ class MapDatasetMaker:
         """
         selection = _check_selection(selection)
 
-        kwargs = {}
-        kwargs["name"] = "obs_{}".format(observation.obs_id)
-        kwargs["gti"] = observation.gti
-
         mask_safe = self.make_mask_safe(observation)
-
-        # expand mask safe into 3rd dimension
         nbin = self.geom.get_axis_by_name("energy").nbin
-        kwargs["mask_safe"] = (
-            ~mask_safe & np.ones(nbin, dtype=bool)[:, np.newaxis, np.newaxis]
-        )
-
+        mask_safe_3d = ~mask_safe & np.ones(nbin, dtype=bool)[:, np.newaxis, np.newaxis]
         mask_safe_irf = self.make_mask_safe_irf(observation)
+
+        kwargs = {
+            "name": f"obs_{observation.obs_id}",
+            "gti": observation.gti,
+            "mask_safe": mask_safe_3d,
+        }
 
         if "counts" in selection:
             counts = self.make_counts(observation)

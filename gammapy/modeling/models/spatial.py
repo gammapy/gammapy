@@ -32,10 +32,7 @@ class SpatialModel(Model):
 
     def __call__(self, lon, lat):
         """Call evaluate method"""
-        kwargs = dict()
-        for par in self.parameters.parameters:
-            kwargs[par.name] = par.quantity
-
+        kwargs = {par.name: par.quantity for par in self.parameters}
         return self.evaluate(lon, lat, **kwargs)
 
     @property

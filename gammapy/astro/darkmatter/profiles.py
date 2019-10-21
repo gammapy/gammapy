@@ -26,10 +26,7 @@ class DMProfile(abc.ABC):
 
     def __call__(self, radius):
         """Call evaluate method of derived classes."""
-        kwargs = dict()
-        for par in self.parameters.parameters:
-            kwargs[par.name] = par.quantity
-
+        kwargs = {par.name: par.quantity for par in self.parameters}
         return self.evaluate(radius, **kwargs)
 
     def scale_to_local_density(self):

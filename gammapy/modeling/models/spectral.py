@@ -540,7 +540,7 @@ class PowerLawSpectralModel(SpectralModel):
         """
         emin = self._convert_energy(emin)
         emax = self._convert_energy(emax)
-        kwargs = {p.name: p.quantity for p in self.parameters.parameters}
+        kwargs = {par.name: par.quantity for par in self.parameters}
         return self.evaluate_integral(emin=emin, emax=emax, **kwargs)
 
     def integral_error(self, emin, emax, **kwargs):
@@ -592,7 +592,7 @@ class PowerLawSpectralModel(SpectralModel):
         """
         emin = self._convert_energy(emin)
         emax = self._convert_energy(emax)
-        kwargs = {p.name: p.quantity for p in self.parameters.parameters}
+        kwargs = {par.name: par.quantity for par in self.parameters}
         return self.evaluate_energy_flux(emin=emin, emax=emax, **kwargs)
 
     def energy_flux_error(self, emin, emax, **kwargs):

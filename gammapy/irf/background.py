@@ -61,7 +61,6 @@ class Background3D:
         meta=None,
         interp_kwargs=None,
     ):
-
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
@@ -247,7 +246,6 @@ class Background2D:
         meta=None,
         interp_kwargs=None,
     ):
-
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 

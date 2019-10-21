@@ -687,39 +687,40 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset.
         """
-        init_kwargs = {}
-        init_kwargs["name"] = name
+        kwargs = {"name": name}
+
         if "COUNTS" in hdulist:
-            init_kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
+            kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
 
         if "EXPOSURE" in hdulist:
-            init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
+            kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
 
         if "BACKGROUND" in hdulist:
             background_map = Map.from_hdulist(hdulist, hdu="background")
-            init_kwargs["background_model"] = BackgroundModel(background_map)
+            kwargs["background_model"] = BackgroundModel(background_map)
 
         if "EDISP_MATRIX" in hdulist:
-            init_kwargs["edisp"] = EnergyDispersion.from_hdulist(
+            kwargs["edisp"] = EnergyDispersion.from_hdulist(
                 hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
             )
 
         if "PSF_KERNEL" in hdulist:
             psf_map = Map.from_hdulist(hdulist, hdu="psf_kernel")
-            init_kwargs["psf"] = PSFKernel(psf_map)
+            kwargs["psf"] = PSFKernel(psf_map)
 
         if "MASK_SAFE" in hdulist:
             mask_safe_map = Map.from_hdulist(hdulist, hdu="mask_safe")
-            init_kwargs["mask_safe"] = mask_safe_map.data.astype(bool)
+            kwargs["mask_safe"] = mask_safe_map.data.astype(bool)
 
         if "MASK_FIT" in hdulist:
             mask_fit_map = Map.from_hdulist(hdulist, hdu="mask_fit")
-            init_kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
+            kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
 
         if "GTI" in hdulist:
             gti = GTI(Table.read(hdulist, hdu="GTI"))
-            init_kwargs["gti"] = gti
-        return cls(**init_kwargs)
+            kwargs["gti"] = gti
+
+        return cls(**kwargs)
 
     def write(self, filename, overwrite=False):
         """Write map dataset to file.

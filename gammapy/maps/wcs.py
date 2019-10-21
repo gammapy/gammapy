@@ -786,7 +786,7 @@ class WcsGeom(Geom):
             return self._init_copy(axes=axes)
 
     def to_binsz(self, binsz):
-        """Change pixel size of the geometry
+        """Change pixel size of the geometry.
 
         Parameters
         ----------
@@ -798,14 +798,14 @@ class WcsGeom(Geom):
         geom : `WcsGeom`
             Geometry with new pixel size.
         """
-        kwargs = {}
-        kwargs["skydir"] = self.center_skydir
-        kwargs["binsz"] = binsz
-        kwargs["width"] = self.width
-        kwargs["proj"] = self.projection
-        kwargs["coordsys"] = self.coordsys
-        kwargs["axes"] = copy.deepcopy(self.axes)
-        return self.create(**kwargs)
+        return self.create(
+            skydir=self.center_skydir,
+            binsz=binsz,
+            width=self.width,
+            proj=self.projection,
+            coordsys=self.coordsys,
+            axes=copy.deepcopy(self.axes),
+        )
 
     @lru_cache()
     def solid_angle(self):

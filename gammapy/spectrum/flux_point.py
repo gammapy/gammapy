@@ -885,7 +885,7 @@ class FluxPointsEstimator:
 
     def _energy_mask(self, e_group):
         energy_mask = np.zeros(self.datasets.datasets[0].data_shape)
-        energy_mask[e_group["idx_min"] : e_group["idx_max"] + 1] = 1
+        energy_mask[e_group["idx_min"]: e_group["idx_max"] + 1] = 1
         return energy_mask.astype(bool)
 
     def estimate_flux_point(self, e_group, steps="all"):
@@ -1474,10 +1474,11 @@ class FluxPointsDataset(Dataset):
         fp_kwargs = {} if fp_kwargs is None else fp_kwargs
         model_kwargs = {} if model_kwargs is None else model_kwargs
 
-        kwargs = {}
-        kwargs.setdefault("flux_unit", "erg-1 cm-2 s-1")
-        kwargs.setdefault("energy_unit", "TeV")
-        kwargs.setdefault("energy_power", 2)
+        kwargs = {
+            "flux_unit": "erg-1 cm-2 s-1",
+            "energy_unit": "TeV",
+            "energy_power": 2,
+        }
 
         # plot flux points
         plot_kwargs = kwargs.copy()
