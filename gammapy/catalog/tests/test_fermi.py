@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
     ExpCutoffPowerLaw3FGLSpectralModel,
     LogParabolaSpectralModel,
     PowerLawSpectralModel,
+    PowerLaw2SpectralModel,
     SuperExpCutoffPowerLaw3FGLSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
 )
@@ -92,6 +93,25 @@ SOURCES_3FGL = [
         spec_type=SuperExpCutoffPowerLaw3FGLSpectralModel,
         dnde=u.Quantity(1.6547128794756733e-06, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.6621504e-11, "cm-2 s-1 MeV-1"),
+    ),
+]
+
+SOURCES_2FHL = [
+    dict(
+        idx=221,
+        name="2FHL J1445.1-0329",
+        str_ref_file="data/2fhl_j1445.1-0329.txt",
+        spec_type=PowerLaw2SpectralModel,
+        dnde=u.Quantity(1.065463448091757e-10, "cm-2 s-1 TeV-1"),
+        dnde_err=u.Quantity(4.9691205387540815e-11, "cm-2 s-1 TeV-1"),
+    ),
+    dict(
+        idx=134,
+        name="2FHL J0822.6-4250e",
+        str_ref_file="data/2fhl_j0822.6-4250e.txt",
+        spec_type=LogParabolaSpectralModel,
+        dnde=u.Quantity(2.46548351696472e-10, "cm-2 s-1 TeV-1"),
+        dnde_err=u.Quantity(9.771755529198772e-11, "cm-2 s-1 TeV-1"),
     ),
 ]
 
@@ -394,6 +414,12 @@ class TestFermi2FHLObject:
         assert_allclose(position.ra.deg, 83.634102, atol=1e-3)
         assert_allclose(position.dec.deg, 22.0215, atol=1e-3)
 
+    @pytest.mark.parametrize("ref", SOURCES_2FHL, ids=lambda _: _["name"])
+    def test_str(self, ref):
+        actual = str(self.cat[ref["idx"]])
+        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
+        assert actual == expected
+
     def test_spectral_model(self):
         model = self.source.spectral_model()
         energy = u.Quantity(100, "GeV")
@@ -411,6 +437,39 @@ class TestFermi2FHLObject:
         actual = flux_points.table["flux_ul"]
         desired = [np.nan, np.nan, 1.294092e-11] * u.Unit("cm-2 s-1")
         assert_quantity_allclose(actual, desired, rtol=1e-3)
+
+    def test_spatial_model(self):
+        # TODO: check spatial parameter errors as soon as they are filled
+        model = self.cat[221].spatial_model()
+        assert model.tag == "PointSpatialModel"
+        assert model.frame == "galactic"
+        p = model.parameters
+        assert_allclose(p["lon_0"].value, 349.19931, rtol=1e-5)
+        assert_allclose(p["lat_0"].value, 48.891277, rtol=1e-5)
+
+        model = self.cat[97].spatial_model()
+        assert model.tag == "GaussianSpatialModel"
+        assert model.frame == "galactic"
+        p = model.parameters
+        assert_allclose(p["lon_0"].value, 189.048653, rtol=1e-5)
+        assert_allclose(p["lat_0"].value, 3.033451, rtol=1e-5)
+        assert_allclose(p["sigma"].value, 0.27)
+
+        model = self.cat[134].spatial_model()
+        assert model.tag == "DiskSpatialModel"
+        assert model.frame == "galactic"
+        p = model.parameters
+        assert_allclose(p["lon_0"].value, 260.317, rtol=1e-5)
+        assert_allclose(p["lat_0"].value, -3.276471, rtol=1e-5)
+        assert_allclose(p["r_0"].value, 0.37)
+
+        model = self.cat[256].spatial_model()
+        assert model.tag == "TemplateSpatialModel"
+        assert model.frame == "fk5"
+        assert model.normalize is True
+        # TODO: have to check the extended template used for RX J1713,
+        # for now I guess it's the same than for 3FGL
+        # and added a copy with the name given by 2FHL in gammapy-extra
 
 
 @requires_data()

@@ -201,11 +201,16 @@ class SourceCatalog:
         data = table_row_to_dict(self.table[index])
         data[self._source_index_key] = index
 
-        try:
+        if "Extended_Source_Name" in data:
             name_extended = data["Extended_Source_Name"].strip()
+        elif "Source_Name" in data:
+            name_extended = data["Source_Name"].strip()
+        else:
+            name_extended = None
+        try:
             idx = self._lookup_extended_source_idx[name_extended]
             data_extended = table_row_to_dict(self.extended_sources_table[idx])
-        except KeyError:
+        except (KeyError, AttributeError):
             data_extended = None
 
         source = self.source_object_class(data, data_extended)
