@@ -36,7 +36,7 @@ try:
 except KeyError:
     HAS_GP_DATA = False
 
-log = logging.getLogger("__name__")
+log = logging.getLogger(__name__)
 
 
 class HowtoHLI(Include):

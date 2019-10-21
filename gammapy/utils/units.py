@@ -5,7 +5,7 @@ import astropy.units as u
 
 __all__ = ["standardise_unit", "unit_from_fits_image_hdu"]
 
-log = logging.getLogger("__name__")
+log = logging.getLogger(__name__)
 
 
 def standardise_unit(unit):
