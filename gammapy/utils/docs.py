@@ -21,8 +21,6 @@ import re
 from distutils.util import strtobool
 from pathlib import Path
 import nbformat
-from docutils import nodes
-from docutils.parsers.rst import roles
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst.directives.body import CodeBlock
 from docutils.parsers.rst.directives.images import Image
@@ -91,20 +89,6 @@ class DocsImage(Image):
             self.options["alt"] = self.arguments[1] if len(self.arguments) > 1 else ""
 
         return super().run()
-
-
-def make_link_node(rawtext, app, refuri, notebook, options):
-    # base = 'https://github.com/gammapy/gammapy/tree/master/notebooks/'
-    # base = 'https://nbviewer.jupyter.org/github/gammapy/gammapy/blob/master/notebooks/'
-
-    relpath = refuri.split(str(Path("/docs")))[1]
-    foldersplit = relpath.split(os.sep)
-    base = ((".." + os.sep) * (len(foldersplit) - 2)) + "notebooks" + os.sep
-    full_name = notebook + ".html"
-    ref = base + full_name
-    roles.set_classes(options)
-    node = nodes.reference(rawtext, full_name, refuri=ref, **options)
-    return node
 
 
 def gammapy_sphinx_ext_activate():
