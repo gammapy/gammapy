@@ -4,6 +4,7 @@ import logging
 import re
 from configparser import ConfigParser
 from pathlib import Path
+from gammapy import __version__
 
 log = logging.getLogger(__name__)
 
@@ -17,6 +18,11 @@ conf = ConfigParser()
 conf.read(PATH_CFG / "setup.cfg")
 setup_cfg = dict(conf.items("metadata"))
 url_docs = setup_cfg["url_docs"]
+
+# release number in absolute links
+release_number_docs = __version__
+if "dev" in __version__:
+    release_number_docs = "dev"
 
 
 def make_api_links(file_path, start_link):
@@ -64,6 +70,20 @@ def make_api_links(file_path, start_link):
             label_api = label_api.replace("~", "")
             replace_api = f"[[{label_api}]({link_api})]"
         txt = txt.replace(str_api, replace_api)
+
+        # modif absolute links to rst/html doc files
+        if start_link == url_docs:
+            url_docs_release = url_docs.replace("dev", release_number_docs)
+            txt = txt.replace(url_docs, url_docs_release)
+        else:
+            repl = r"..\/\1rst\2"
+            txt = re.sub(
+                pattern=url_docs + r"(.*?)html(\)|#)",
+                repl=repl,
+                string=txt,
+                flags=re.M | re.I,
+            )
+
     file_path.write_text(txt, encoding="utf-8")
 
 

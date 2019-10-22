@@ -17,7 +17,6 @@ Here's some good resources with working examples:
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
 import os
-import re
 from distutils.util import strtobool
 from pathlib import Path
 import nbformat
@@ -111,11 +110,9 @@ def parse_notebooks(folder, url_docs):
     to other files in the documentation. Adds a box to the sphinx formatted
     notebooks with info and links to the *.ipynb and *.py files.
     """
+    release_number_binder = __version__
     if "dev" in __version__:
         release_number_binder = "master"
-        release_number_docs = "dev"
-    else:
-        release_number_docs = release_number_binder = __version__
 
     DOWNLOAD_CELL = """
 <div class="alert alert-info">
@@ -159,22 +156,6 @@ def parse_notebooks(folder, url_docs):
                                         "text/latex"
                                     ].replace("$", "$$")
                 nbformat.write(rawnb, str(nbpath))
-
-        # modif links to rst /html doc files
-        txt = nbpath.read_text(encoding="utf-8")
-        if str(folder) == "notebooks":
-            repl = r"..\/\1rst\2"
-            txt = re.sub(
-                pattern=url_docs + r"(.*?)html(\)|#)",
-                repl=repl,
-                string=txt,
-                flags=re.M | re.I,
-            )
-        else:
-            url_docs_release = url_docs.replace("dev", release_number_docs)
-            txt = txt.replace(url_docs, url_docs_release)
-
-        nbpath.write_text(txt, encoding="utf-8")
 
 
 def gammapy_sphinx_notebooks(setup_cfg):
