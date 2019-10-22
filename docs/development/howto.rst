@@ -949,31 +949,41 @@ Links within notebooks
 ++++++++++++++++++++++
 
 From MD cells in notebooks you can link to other notebooks, as well as to RST documentation files,
-and subsections using the markdown syntax to declare links to resources, as shown in the examples below::
+and subsections using the markdown syntax to declare links to resources, as shown in the examples below:
 
-    * [Maps in first steps with Gammapy]/(first_steps.ipynb#Maps)
-    * [Help!]/(../getting-started.rst#help)
+.. code-block:: rst
+
+    - [Maps in first steps with Gammapy](first_steps.ipynb#Maps)
+    - [Help!](../getting-started.rst#help)
 
 You can also link to the Gammapy API reference documentation using the same Sphinx syntax that is used
 when writing RST files. All links to the API reference classes and methods should start with ``~gammapy.``
 and enclosed within quotation marks. This syntax will be translated into relative links to the API in the
 HTML formatted versions of the notebooks, and to absolute links pointing to the on-line Gammapy documentation
-in the ``*.ipynb`` notebook files available to download. During the documentation building process a warning
+in the ``.ipynb`` notebook files available to download. During the documentation building process a warning
 will be raised for each detected broken link to the API.
 
 Examples:
 
-* `gammapy.maps`
-* `gammapy.maps.Geom`
-* `gammapy.maps.Geom.is_image`
-* `gammapy.maps.Geom.is_image()`
+- `gammapy.maps`
+- `gammapy.maps.Geom`
+- `gammapy.maps.Geom.is_image`
+- `gammapy.maps.Geom.is_image()`
 
-The example links above could be created within MD cells in notebooks with the syntax below::
+The example links above could be created within MD cells in notebooks with the syntax below:
 
-    * `~gammapy.maps`
-    * `~gammapy.maps.Geom`
-    * `~gammapy.maps.Geom.is_image`
-    * `~gammapy.maps.Geom.is_image()`
+.. code-block:: rst
+
+    - `~gammapy.maps`
+    - `~gammapy.maps.Geom`
+    - `~gammapy.maps.Geom.is_image`
+    - `~gammapy.maps.Geom.is_image()`
+
+When building the documentation of a release, the links declared in the MD cells as absolute links pointing
+to the ``dev`` version of the on-line Gammapy documentation will be transformed to relative links in the built
+HTML formatted notebooks and to absolute links pointing to that specific released version of the on-line docs
+in the downloadable ``.ipynb`` files.
+
 
 Include images from gammapy-extra into the docs
 -----------------------------------------------
