@@ -29,12 +29,12 @@ def make_api_links(file_path, start_link):
 
     for module in re_api.findall(txt):
 
-        # build file module
+        # build target file module
         submodules = module.split(".")
         if len(submodules) == 1:
             file_module = f"{module}/index.html"
         elif len(submodules) == 2:
-            file_module = f"api/gammapy.{module}.html"
+            file_module = f"api/gammapy.{module}.html#module-gammapy.{module}"
         elif len(submodules) == 3:
             submodules[2] = submodules[2].replace("()", "")
             url_path = f"gammapy.{submodules[0]}.{submodules[1]}"
@@ -44,9 +44,11 @@ def make_api_links(file_path, start_link):
             continue
 
         # check broken link
-        path_module = PATH_DOC / file_module
-        if not path_module.is_file() and start_link == url_docs:
-            log.warning(f"{str(path_module)} does not exist in {file_path}.")
+        search_file = re.sub(r"(#.*)$", "", file_module)
+        search_path = PATH_DOC / search_file
+        if not search_path.is_file():
+            if start_link == url_docs:
+                log.warning(f"{str(search_path)} does not exist in {file_path}.")
             continue
 
         # replace with link
