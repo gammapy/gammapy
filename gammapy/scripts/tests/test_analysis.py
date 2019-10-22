@@ -240,7 +240,6 @@ def test_help():
 def test_analysis_3d_no_geom_irf():
     config = AnalysisConfig.from_template("3d")
     analysis = Analysis(config)
-    del analysis.settings["datasets"]["geom-irf"]
     analysis.get_observations()
     analysis.get_datasets()
 

@@ -245,13 +245,11 @@ class Analysis:
             binsz_irf=None,
             margin_irf=None
         )
-        if "geom-irf" in self.settings["datasets"]:
-            settings_irf = self.settings["datasets"]["geom-irf"]
-            for axis_params in settings_irf.get("axes", []):
-                if axis_params["name"] == "energy":
-                    geom_irf["energy_axis_true"] = MapAxis.from_bounds(**axis_params)
-            geom_irf["binsz_irf"] = settings_irf.get("binsz", None)
-            geom_irf["margin_irf"] = settings_irf.get("margin", None)
+        if "energy-axis-true" in self.settings["datasets"]:
+            axis_params = self.settings["datasets"]["energy-axis-true"]
+            geom_irf["energy_axis_true"] = MapAxis.from_bounds(**axis_params)
+        geom_irf["binsz_irf"] = self.settings["datasets"].get("binsz", None)
+        geom_irf["margin_irf"] = self.settings["datasets"].get("margin", None)
 
         offset_max = Angle(self.settings["datasets"]["offset-max"])
         stack_datasets = self.settings["datasets"]["stack-datasets"]

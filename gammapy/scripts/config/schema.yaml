@@ -99,14 +99,11 @@ properties:
             psf-kernel-radius: {type: number}
             geom:
                 "$ref": "#/definitions/map_geom"
-            geom-irf:
-                margin: {type: number}
-                binsz: {type: number}
-                axes:
-                    type: array
-                    additionalProperties: false
-                    items:
-                        "$ref": "#/definitions/map_axis"
+            energy-axis-true:
+                "$ref": "#/definitions/map_axis"
+            binsz-irf: {type: number}
+            margin-irf: {type: number}
+
         required: [dataset-type, geom, stack-datasets]
         allOf:
             - if:

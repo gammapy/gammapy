@@ -30,17 +30,17 @@ datasets:
               interp: log
               node_type: edges
               unit: TeV
-    geom-irf:
-        margin: 0.5
-        binsz: 0.2
-        axes:
-            - name: energy
-              hi_bnd: 10
-              lo_bnd: 1
-              nbin: 11
-              interp: log
-              node_type: center
-              unit: TeV
+    energy-axis-true:
+        name: energy
+        hi_bnd: 10
+        lo_bnd: 1
+        nbin: 5
+        interp: log
+        node_type: edges
+        unit: TeV
+    binsz-irf: 0.2
+    margin-irf: 0.5
+
 
 fit: {}
 
