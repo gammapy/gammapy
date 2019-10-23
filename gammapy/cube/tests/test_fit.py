@@ -459,20 +459,6 @@ def test_stack(geom, geom_etrue):
     assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
     assert_allclose(dataset1.mask_safe.data.sum(), 20000)
 
-def get_acceptance(geom_etrue):
-    filename = (
-        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-    )
-    aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
-
-    exposure_map = make_map_exposure_true_energy(
-        pointing=SkyCoord(1, 0.5, unit="deg", frame="galactic"),
-        livetime="1 hour",
-        aeff=aeff,
-        geom=geom_etrue,
-    )
-    return exposure_map
-
 @pytest.fixture
 def images():
     """Load some `counts`, `counts_off`, `acceptance_on`, `acceptance_off" images"""
