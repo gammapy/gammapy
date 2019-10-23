@@ -13,7 +13,7 @@ from gammapy.utils.scripts import make_path
 
 __all__ = ["CountsSpectrum", "SpectrumEvaluator"]
 
-log = logging.getLogger("__name__")
+log = logging.getLogger(__name__)
 
 
 class CountsSpectrum:

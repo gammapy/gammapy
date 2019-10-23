@@ -54,7 +54,6 @@ datasets:
             hdu: IMAGE
     containment_correction: true
     # geometry settings
-    # note that there may be different values for geom and geom-irf
     geom:
         # on region in spectrum extraction
         region:
@@ -76,6 +75,15 @@ datasets:
               nbin: 73
               unit: TeV
               interp: log
+    energy-axis-true:
+        name: energy
+        lo_bnd: 0.01
+        hi_bnd: 100
+        nbin: 73
+        unit: TeV
+        interp: log
+    binsz-irf: 0.02             # IRF map pixel size in degrees
+    margin-irf: 0.05            # IRF map pixel size in degrees
 
 # Section: fit
 # Fitting process

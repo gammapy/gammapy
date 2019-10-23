@@ -7,8 +7,14 @@ from regions import PixCoord
 from gammapy.maps import Map, WcsGeom, WcsNDMap
 from gammapy.maps.geom import frame_to_coordsys
 from .background_estimate import BackgroundEstimate
+from .dataset import SpectrumDatasetOnOff
+from .core import CountsSpectrum
 
-__all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundEstimator"]
+__all__ = [
+    "ReflectedRegionsFinder",
+    "ReflectedRegionsBackgroundEstimator",
+    "ReflectedRegionsBackgroundMaker",
+]
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +50,7 @@ class ReflectedRegionsFinder:
     exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
         Exclusion mask
     binsz : `~astropy.coordinates.Angle`
-        Bin size of the reference map used for region finding. Default : 0.01 deg
+        Bin size of the reference map used for region finding.
 
     Examples
     --------
@@ -132,9 +138,9 @@ class ReflectedRegionsFinder:
         center : `~astropy.coordinates.SkyCoord`
             Rotation point
         binsz : `~astropy.coordinates.Angle`
-            Reference map bin size. Default : 0.01 deg
+            Reference map bin size.
         min_width : `~astropy.coordinates.Angle`
-            Minimal map width. Default : 0.3 deg
+            Minimal map width.
 
         Returns
         -------
@@ -265,7 +271,7 @@ class ReflectedRegionsBackgroundEstimator:
     observations : `~gammapy.data.Observations`
         Observations to process
     binsz : `~astropy.coordinates.Angle`
-        Optional, bin size of the maps used to compute the regions, Default '0.01 deg'
+        Optional, bin size of the maps used to compute the regions.
     kwargs : dict
         Forwarded to `~gammapy.spectrum.ReflectedRegionsFinder`
     """
@@ -345,9 +351,9 @@ class ReflectedRegionsBackgroundEstimator:
         cmap : `~matplotlib.colors.ListedColormap`, optional
             Color map to use
         idx : int, optional
-            Observations to include in the plot, default: all
+            Observations to include in the plot.
         add_legend : boolean, optional
-            Enable/disable legend in the plot, default: False
+            Enable/disable legend in the plot.
         """
         import matplotlib.pyplot as plt
 
@@ -414,3 +420,126 @@ class ReflectedRegionsBackgroundEstimator:
             ax.legend(handles=handles)
 
         return fig, ax, cbar
+
+
+class ReflectedRegionsBackgroundMaker:
+    """Reflected regions background maker.
+
+    Parameters
+    ----------
+    region: `~regions.SkyRegion`
+        On region to compute off regions for.
+    angle_increment : `~astropy.coordinates.Angle`, optional
+        Rotation angle applied when a region falls in an excluded region.
+    min_distance : `~astropy.coordinates.Angle`, optional
+        Minimal distance between two consecutive reflected regions
+    min_distance_input : `~astropy.coordinates.Angle`, optional
+        Minimal distance from input region
+    max_region_number : int, optional
+        Maximum number of regions to use
+    exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
+        Exclusion mask
+    binsz : `~astropy.coordinates.Angle`
+        Bin size of the reference map used for region finding.
+    """
+
+    def __init__(
+        self,
+        region,
+        angle_increment="0.1 rad",
+        min_distance="0 rad",
+        min_distance_input="0.1 rad",
+        max_region_number=10000,
+        exclusion_mask=None,
+        binsz="0.01 deg",
+    ):
+        self.region = region
+        self.binsz = binsz
+        self.exclusion_mask = exclusion_mask
+        self.angle_increment = Angle(angle_increment)
+        self.min_distance = Angle(min_distance)
+        self.min_distance_input = Angle(min_distance_input)
+        self.max_region_number = max_region_number
+
+    def _get_finder(self, observation):
+        return ReflectedRegionsFinder(
+            binsz=self.binsz,
+            exclusion_mask=self.exclusion_mask,
+            center=observation.pointing_radec,
+            region=self.region,
+            min_distance=self.min_distance,
+            min_distance_input=self.min_distance_input,
+            max_region_number=self.max_region_number,
+            angle_increment=self.angle_increment,
+        )
+
+    def make_counts_off(self, dataset, observation):
+        """Make off counts.
+
+        Parameters
+        ----------
+        dataset : `SpectrumDataset`
+            Spectrum dataset.
+        observation : `DatastoreObservation`
+            Data store observation.
+
+
+        Returns
+        -------
+        counts_off : `CountsSpectrum`
+            Off counts.
+        """
+        finder = self._get_finder(observation)
+
+        finder.run()
+        regions = finder.reflected_regions
+
+        region_union = regions[0]
+
+        for region in regions[1:]:
+            region_union = region_union.union(region)
+
+        wcs = finder.reference_map.geom.wcs
+        events_off = observation.events.select_region(region_union, wcs)
+
+        edges = dataset.counts.energy.edges
+        counts_off = CountsSpectrum(
+            energy_hi=edges[1:],
+            energy_lo=edges[:-1],
+        )
+        counts_off.fill_events(events_off)
+
+        # TODO: temporarily attach the region info to the CountsSpectrum.
+        #  but CountsSpectrum should be modified to hold this info anyway.
+        counts_off.regions = regions
+        return counts_off
+
+    def run(self, dataset, observation):
+        """Run reflected regions background maker
+
+        Parameters
+        ----------
+        dataset : `SpectrumDataset`
+            Spectrum dataset.
+        observation : `DatastoreObservation`
+            Data store observation.
+
+        Returns
+        -------
+        dataset_on_off : `SpectrumDatasetOnOff`
+            On off dataset.
+        """
+        counts_off = self.make_counts_off(dataset, observation)
+
+        return SpectrumDatasetOnOff(
+            counts=dataset.counts,
+            counts_off=counts_off,
+            gti=dataset.gti,
+            name=dataset.name,
+            livetime=dataset.livetime,
+            edisp=dataset.edisp,
+            aeff=dataset.aeff,
+            acceptance_off=len(counts_off.regions),
+            mask_safe=dataset.mask_safe,
+            mask_fit=dataset.mask_fit,
+        )
