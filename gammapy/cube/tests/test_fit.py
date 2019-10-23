@@ -645,4 +645,4 @@ def test_stack_onoff(images):
     assert_allclose(dataset1.acceptance.data.sum(), dataset1.data_shape[0] * dataset1.data_shape[1])
     assert_allclose(np.nansum(dataset1.acceptance_off.data), np.nansum(dataset1.acceptance.data / dataset1.alpha.data))
     assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
->>>>>>> Added MapDatasetOnOff and some tests
+
