@@ -37,30 +37,43 @@ def make_api_links(file_path, file_type):
 
     for module in re_api.findall(txt):
 
-        # build target file module
+        # end urls
+        alt_links = []
         submodules = module.split(".")
         if len(submodules) == 1:
-            file_module = f"{module}/index.html"
+            target = submodules[0]
+            alt_links.append(f"{target}/index.html")
         elif len(submodules) == 2:
-            file_module = f"api/gammapy.{module}.html#module-gammapy.{module}"
+            target = f"{submodules[0]}.{submodules[1]}"
+            alt_links.append(f"api/gammapy.{target}.html#gammapy.{target}")
+            alt_links.append(f"{submodules[0]}/index.html#module-gammapy.{target}")
+            alt_links.append(f"{submodules[0]}/{submodules[1]}index.html#module-gammapy.{target}")
         elif len(submodules) == 3:
-            submodules[2] = submodules[2].replace("()", "")
-            url_path = f"gammapy.{submodules[0]}.{submodules[1]}"
-            anchor_path = f"{url_path}.{submodules[2]}"
-            file_module = f"api/{url_path}.html#{anchor_path}"
+            target = f"{submodules[0]}.{submodules[1]}"
+            alt_links.append(f"api/gammapy.{target}.html#gammapy.{target}.{submodules[2]}")
+            alt_links.append(f"api/gammapy.{target}.{submodules[2]}.html#gammapy.{target}.{submodules[2]}")
+        elif len(submodules) == 4:
+            target = f"{submodules[0]}.{submodules[1]}.{submodules[2]}"
+            alt_links.append(f"api/gammapy.{target}.html#gammapy.{target}.{submodules[3]}")
         else:
             continue
 
-        # check broken link
-        search_file = re.sub(r"(#.*)$", "", file_module)
-        search_path = PATH_DOC / search_file
-        if not search_path.is_file():
+        # broken link
+        broken = True
+        for link in alt_links:
+            search_file = re.sub(r"(#.*)$", "", link)
+            search_path = PATH_DOC / search_file
+            if search_path.is_file():
+                link_api = f"{start_link}{link}"
+                link_api = link_api.replace("()", "")
+                broken = False
+                break
+        if broken:
             if file_type == "ipynb":
                 log.warning(f"{str(search_path)} does not exist in {file_path}.")
             continue
 
-        # replace with link
-        link_api = f"{start_link}{file_module}"
+        # replace syntax with link
         str_api = f'<span class="pre">~gammapy.{module}</span>'
         label_api = str_api.replace('<span class="pre">', "")
         label_api = label_api.replace("</span>", "")
