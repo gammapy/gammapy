@@ -309,7 +309,7 @@ class WcsNDMap(WcsMap):
             kwargs["constant_values"] = cval
 
         pad_width = [(t, t) for t in pad_width]
-        data = np.pad(self.data, pad_width[::-1], mode)
+        data = np.pad(self.data, pad_width[::-1], mode, **kwargs)
         return self._init_copy(geom=geom, data=data)
 
     def _pad_coadd(self, geom, pad_width, mode, cval, order):
