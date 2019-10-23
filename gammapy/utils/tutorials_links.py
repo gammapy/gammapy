@@ -25,11 +25,13 @@ if "dev" in __version__:
     release_number_docs = "dev"
 
 
-def make_api_links(file_path, start_link):
+def make_api_links(file_path, file_type):
     """Build links to automodapi documentation."""
 
+    start_link = "../"
     re_api = re.compile(r'<span class="pre">~gammapy\.(.*?)</span>')
-    if start_link == url_docs:
+    if file_type == "ipynb":
+        start_link = url_docs
         re_api = re.compile(r"`~gammapy\.(.*?)`")
     txt = file_path.read_text(encoding="utf-8")
 
@@ -53,7 +55,7 @@ def make_api_links(file_path, start_link):
         search_file = re.sub(r"(#.*)$", "", file_module)
         search_path = PATH_DOC / search_file
         if not search_path.is_file():
-            if start_link == url_docs:
+            if file_type == "ipynb":
                 log.warning(f"{str(search_path)} does not exist in {file_path}.")
             continue
 
@@ -64,25 +66,25 @@ def make_api_links(file_path, start_link):
         label_api = label_api.replace("</span>", "")
         label_api = label_api.replace("~", "")
         replace_api = f"<a href='{link_api}'>{label_api}</a>"
-        if start_link == url_docs:
+        if file_type == "ipynb":
             str_api = f"`~gammapy.{module}`"
             label_api = str_api.replace("`", "")
             label_api = label_api.replace("~", "")
             replace_api = f"[[{label_api}]({link_api})]"
         txt = txt.replace(str_api, replace_api)
 
-        # modif absolute links to rst/html doc files
-        if start_link == url_docs:
-            url_docs_release = url_docs.replace("dev", release_number_docs)
-            txt = txt.replace(url_docs, url_docs_release)
-        else:
-            repl = r"..\/\1html\2"
-            txt = re.sub(
-                pattern=url_docs + r"(.*?)html(\)|#)",
-                repl=repl,
-                string=txt,
-                flags=re.M | re.I,
-            )
+    # modif absolute links to rst/html doc files
+    if file_type == "ipynb":
+        url_docs_release = url_docs.replace("dev", release_number_docs)
+        txt = txt.replace(url_docs, url_docs_release)
+    else:
+        repl = r"..\/\1html\2"
+        txt = re.sub(
+            pattern=url_docs + r"(.*?)html(\)|#)",
+            repl=repl,
+            string=txt,
+            flags=re.M | re.I,
+        )
 
     file_path.write_text(txt, encoding="utf-8")
 
@@ -91,9 +93,9 @@ def main():
     logging.basicConfig(level=logging.INFO)
     log.info("Building API links in notebooks.")
     for nb_path in list(PATH_NBS.glob("*.ipynb")):
-        make_api_links(nb_path, url_docs)
+        make_api_links(nb_path, file_type="ipynb")
     for html_path in list(PATH_HTM.glob("*.html")):
-        make_api_links(html_path, "../")
+        make_api_links(html_path, file_type="html")
 
 
 if __name__ == "__main__":
