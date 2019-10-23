@@ -33,9 +33,6 @@ RAD_AXIS_DEFAULT = MapAxis.from_bounds(
 MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
     0.2, 5, nbin=48, node_type="edges", name="migra"
 )
-ENERGY_AXIS_DEFAULT = MapAxis.from_edges(
-    np.logspace(-2.0, 2.5, 109), name="energy", unit=u.TeV, interp="log"
-)
 
 BINSZ_IRF_DEFAULT = 0.2
 MARGIN_IRF_DEFAULT = 0.5
@@ -406,7 +403,7 @@ class MapDataset(Dataset):
 
         migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
         rad_axis = rad_axis or RAD_AXIS_DEFAULT
-        energy_axis_true = energy_axis_true or ENERGY_AXIS_DEFAULT
+        energy_axis_true = energy_axis_true or geom.get_axis_by_name("energy")
         binsz_irf = binsz_irf or BINSZ_IRF_DEFAULT
         margin_irf = margin_irf or MARGIN_IRF_DEFAULT
         margin_irf = margin_irf * u.deg

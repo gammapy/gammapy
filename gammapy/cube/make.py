@@ -17,7 +17,6 @@ from .fit import (
     MARGIN_IRF_DEFAULT,
     MIGRA_AXIS_DEFAULT,
     RAD_AXIS_DEFAULT,
-    ENERGY_AXIS_DEFAULT,
     MapDataset,
 )
 from .psf_map import make_psf_map
@@ -72,7 +71,7 @@ class MapDatasetMaker:
         self.background_oversampling = background_oversampling
         self.migra_axis = migra_axis if migra_axis else MIGRA_AXIS_DEFAULT
         self.rad_axis = rad_axis if rad_axis else RAD_AXIS_DEFAULT
-        self.energy_axis_true = energy_axis_true or ENERGY_AXIS_DEFAULT
+        self.energy_axis_true = energy_axis_true or geom.get_axis_by_name("energy")
         self.binsz_irf = binsz_irf or BINSZ_IRF_DEFAULT
 
         self.margin_irf = margin_irf or MARGIN_IRF_DEFAULT
@@ -94,7 +93,7 @@ class MapDatasetMaker:
             return geom
 
     @lazyproperty
-    def wcs_irf(self):
+    def geom_image_irf(self):
         """Spatial geometry of IRF Maps (`Geom`)"""
         wcs = self.geom.to_image()
         return WcsGeom.create(
@@ -106,9 +105,9 @@ class MapDatasetMaker:
         )
 
     @lazyproperty
-    def geom_irf(self):
+    def geom_exposure_irf(self):
         """Geom of Exposure map associated with IRFs (`Geom`)"""
-        return self.wcs_irf.to_cube([self.energy_axis_true])
+        return self.geom_image_irf.to_cube([self.energy_axis_true])
 
     @lazyproperty
     def geom_exposure(self):
@@ -119,13 +118,15 @@ class MapDatasetMaker:
     @lazyproperty
     def geom_psf(self):
         """PSFMap geom (`Geom`)"""
-        geom_psf = self.wcs_irf.to_cube([self.rad_axis, self.energy_axis_true])
+        geom_psf = self.geom_image_irf.to_cube([self.rad_axis, self.energy_axis_true])
         return geom_psf
 
     @lazyproperty
     def geom_edisp(self):
         """EdispMap geom (`Geom`)"""
-        geom_edisp = self.wcs_irf.to_cube([self.migra_axis, self.energy_axis_true])
+        geom_edisp = self.geom_image_irf.to_cube(
+            [self.migra_axis, self.energy_axis_true]
+        )
         return geom_edisp
 
     def make_counts(self, observation):
@@ -183,7 +184,7 @@ class MapDatasetMaker:
             Exposure map.
         """
 
-        geom = self._cutout_geom(self.geom_irf, observation)
+        geom = self._cutout_geom(self.geom_exposure_irf, observation)
         exposure = make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
             livetime=observation.observation_live_time_duration,
@@ -314,7 +315,7 @@ class MapDatasetMaker:
         mask : `~numpy.ndarray`
             Mask
         """
-        geom = self._cutout_geom(self.geom_irf, observation)
+        geom = self._cutout_geom(self.geom_exposure_irf, observation)
         offset = geom.separation(observation.pointing_radec)
         return offset >= self.offset_max
 
