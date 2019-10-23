@@ -412,6 +412,15 @@ def test_wcsndmap_pad(npix, binsz, coordsys, proj, skydir, axes):
     m.pad(1, mode="interp")
 
 
+def test_wcsndmap_pad_cval():
+    geom = WcsGeom.create(npix=(5, 5))
+    m = WcsNDMap.from_geom(geom)
+
+    cval = 1.1
+    m_padded = m.pad(1, mode="constant", cval=cval)
+    assert_allclose(m_padded.data[0, 0], cval)
+
+
 @pytest.mark.parametrize(
     ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
 )
