@@ -251,7 +251,6 @@ class Analysis:
         geom_irf["binsz_irf"] = self.settings["datasets"].get("binsz", None)
         geom_irf["margin_irf"] = self.settings["datasets"].get("margin", None)
 
-
         offset_max = Angle(self.settings["datasets"]["offset-max"])
         stack_datasets = self.settings["datasets"]["stack-datasets"]
         log.info("Creating datasets.")

@@ -408,19 +408,19 @@ class MapDataset(Dataset):
         margin_irf = margin_irf or MARGIN_IRF_DEFAULT
         margin_irf = margin_irf * u.deg
 
-        wcs = geom.to_image()
-        geom_exposure = wcs.to_cube([energy_axis_true])
+        geom_image = geom.to_image()
+        geom_exposure = geom_image.to_cube([energy_axis_true])
 
-        wcs_irf = WcsGeom.create(
+        geom_irf = WcsGeom.create(
             binsz=binsz_irf,
-            width=wcs.width + margin_irf,
-            skydir=wcs.center_skydir,
-            proj=wcs.projection,
-            coordsys=wcs.coordsys,
+            width=geom_image.width + margin_irf,
+            skydir=geom_image.center_skydir,
+            proj=geom_image.projection,
+            coordsys=geom_image.coordsys,
         )
 
-        geom_psf = wcs_irf.to_cube([rad_axis, energy_axis_true])
-        geom_edisp = wcs_irf.to_cube([migra_axis, energy_axis_true])
+        geom_psf = geom_irf.to_cube([rad_axis, energy_axis_true])
+        geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
 
         return cls.from_geoms(
             geom,
