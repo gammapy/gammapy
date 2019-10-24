@@ -735,6 +735,5 @@ class WcsNDMap(WcsMap):
         # TODO: pix_to_coord should return a MapCoord object
         axes_names = ["lon", "lat"] + [ax.name for ax in self.geom.axes]
         cdict = OrderedDict(zip(axes_names, coords))
-        cdict["energy"] *= self.geom.get_axis_by_name("energy").unit
 
         return MapCoord.create(cdict, coordsys=self.geom.coordsys)
