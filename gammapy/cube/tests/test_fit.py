@@ -5,14 +5,19 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.cube import MapDataset, MapDatasetOnOff, PSFKernel, make_map_exposure_true_energy
+from gammapy.cube import (
+    MapDataset,
+    MapDatasetOnOff,
+    PSFKernel,
+    make_map_exposure_true_energy,
+)
 from gammapy.data import GTI
 from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     EnergyDispersion,
 )
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     BackgroundModel,
@@ -459,28 +464,31 @@ def test_stack(geom, geom_etrue):
     assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
     assert_allclose(dataset1.mask_safe.data.sum(), 20000)
 
+
 @pytest.fixture
 def images():
     """Load some `counts`, `counts_off`, `acceptance_on`, `acceptance_off" images"""
-    filename = "$/GAMMAPY_DATA/tests/unbundled/hess/survey/hess_survey_snippet.fits.gz"
+    filename = "$GAMMAPY_DATA/tests/unbundled/hess/survey/hess_survey_snippet.fits.gz"
 
     images = {}
     images.update({"counts": WcsNDMap.read(filename, hdu="ON")})
     images.update({"counts_off": WcsNDMap.read(filename, hdu="OFF")})
     images.update({"acceptance": WcsNDMap.read(filename, hdu="ONEXPOSURE")})
     images.update({"acceptance_off": WcsNDMap.read(filename, hdu="OFFEXPOSURE")})
+    images.update({"exposure": WcsNDMap.read(filename, hdu="EXPGAMMAMAP")})
 
     return images
+
 
 def get_map_dataset_onoff(images, **kwargs):
     """Returns a MapDatasetOnOff"""
 
     return MapDatasetOnOff(
         model=None,
-        counts=images["on"],
-        counts_off=images["off"],
-        acceptance=images["exposure_on"],
-        acceptance_off=images["exposure_off"],
+        counts=images["counts"],
+        counts_off=images["counts_off"],
+        acceptance=images["acceptance"],
+        acceptance_off=images["acceptance_off"],
         exposure=images["exposure"],
         psf=None,
         edisp=None,
@@ -488,6 +496,7 @@ def get_map_dataset_onoff(images, **kwargs):
         mask_safe=None,
         **kwargs
     )
+
 
 @requires_data()
 def test_map_dataset_onoff_fits_io(images, tmp_path):
@@ -556,14 +565,11 @@ def test_map_dataset_onoff_fits_io(images, tmp_path):
     )
 
 
-def test_create_onoff(images):
+def test_create_onoff(geom, geom_etrue):
     # tests empty datasets created
 
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
-
-    geom = images["on"].geom
-    geom_etrue = images["on"].geom
 
     empty_dataset = MapDatasetOnOff.create(geom, geom_etrue, migra_axis, rad_axis)
 
@@ -582,9 +588,11 @@ def test_create_onoff(images):
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
+
 def test_map_dataset_onoff_str(images):
     dataset = get_map_dataset_onoff(images)
-    assert "MapDataset" in str(dataset)
+    assert "MapDatasetOnOff" in str(dataset)
+
 
 def test_from_geoms_onoff(images):
 
@@ -628,7 +636,12 @@ def test_stack_onoff(images):
     dataset1.stack(dataset2)
     assert_allclose(dataset1.counts.data.sum(), 2 * dataset2.counts.data.sum())
     assert_allclose(dataset1.counts_off.data.sum(), 2 * dataset2.counts_off.data.sum())
-    assert_allclose(dataset1.acceptance.data.sum(), dataset1.data_shape[0] * dataset1.data_shape[1])
-    assert_allclose(np.nansum(dataset1.acceptance_off.data), np.nansum(dataset1.acceptance.data / dataset1.alpha.data))
+    assert_allclose(
+        dataset1.acceptance.data.sum(), dataset1.data_shape[0] * dataset1.data_shape[1]
+    )
+    assert_allclose(
+        np.nansum(dataset1.acceptance_off.data),
+        np.nansum(dataset1.acceptance.data / dataset1.alpha.data),
+    )
     assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
 

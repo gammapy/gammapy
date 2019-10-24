@@ -900,6 +900,7 @@ class MapDataset(Dataset):
             name=self.name,
         )
 
+
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
 
@@ -912,9 +913,9 @@ class MapDatasetOnOff(MapDataset):
     counts_off : `~gammapy.maps.WcsNDMap`
         Ring-convolved counts cube
     acceptance : `~gammapy.maps.WcsNDMap` or float
-        Background from the IRFs
+        Acceptance from the IRFs
     acceptance_off : `~gammapy.maps.WcsNDMap` or float
-        Ring-convolved background from the IRFs
+        Acceptance off
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
     mask_fit : `~numpy.ndarray`
@@ -923,6 +924,8 @@ class MapDatasetOnOff(MapDataset):
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
+    background_model : `~gammapy.modeling.models.BackgroundModel`
+        Background model to use for the fit.
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
         The "local" mode evaluates the model components on smaller grids to save computation time.
@@ -934,6 +937,7 @@ class MapDatasetOnOff(MapDataset):
     gti : '~gammapy.data.GTI'
         GTI of the observation or union of GTI if it is a stacked observation
     """
+
     likelihood_type = "wstat"
     tag = "MapDatasetOnOff"
 
@@ -948,6 +952,7 @@ class MapDatasetOnOff(MapDataset):
         mask_fit=None,
         psf=None,
         edisp=None,
+        background_model=None,
         name="",
         evaluation_mode="local",
         mask_safe=None,
@@ -969,6 +974,7 @@ class MapDatasetOnOff(MapDataset):
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
         self.exposure = exposure
+        self.background_model = None
         self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
@@ -982,91 +988,22 @@ class MapDatasetOnOff(MapDataset):
         self.gti = gti
 
     def __str__(self):
-        str_ = f"{self.__class__.__name__}\n"
-        str_ += "\n"
+        str_ = super().__str__()
 
-        str_ += "\t{:32}: {} \n\n".format("Name", self.name)
+        counts_off = np.nan
+        if self.counts_off is not None:
+            counts_off = np.sum(self.counts_off.data)
+        str_ += "\t{:32}: {:.0f} \n".format("Total counts_off", counts_off)
 
-        counts = np.nan
-        if self.counts is not None:
-            counts = np.sum(self.counts.data)
-        str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
+        acceptance = np.nan
+        if self.acceptance is not None:
+            acceptance = np.sum(self.acceptance.data)
+        str_ += "\t{:32}: {:.0f} \n".format("Acceptance", acceptance)
 
-        npred = np.nan
-        if self.model is not None:
-            npred = np.sum(self.npred_sig().data)
-        str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
-
-        exposure_min, exposure_max, exposure_unit = np.nan, np.nan, ""
-        if self.exposure is not None:
-            exposure_min = np.min(self.exposure.data[self.exposure.data > 0])
-            exposure_max = np.max(self.exposure.data)
-            exposure_unit = self.exposure.unit
-
-        str_ += "\t{:32}: {:.2e} {}\n".format(
-            "Exposure min", exposure_min, exposure_unit
-        )
-        str_ += "\t{:32}: {:.2e} {}\n\n".format(
-            "Exposure max", exposure_max, exposure_unit
-        )
-
-        # data section
-        n_bins = 0
-        if self.counts is not None:
-            n_bins = self.counts.data.size
-        str_ += "\t{:32}: {} \n".format("Number of total bins", n_bins)
-
-        n_fit_bins = 0
-        if self.mask is not None:
-            n_fit_bins = np.sum(self.mask)
-        str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
-
-        # likelihood section
-        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.likelihood_type)
-
-        stat = np.nan
-        if self.model is not None:
-            stat = self.likelihood()
-        str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
-
-        # model section
-        n_models = 0
-        if self.model is not None:
-            n_models = len(self.model.skymodels)
-        str_ += "\t{:32}: {} \n".format("Number of models", n_models)
-
-        str_ += "\t{:32}: {}\n".format(
-            "Number of parameters", len(self.parameters.parameters)
-        )
-        str_ += "\t{:32}: {}\n\n".format(
-            "Number of free parameters", len(self.parameters.free_parameters)
-        )
-
-        components = []
-
-        if self.model is not None:
-            components += self.model.skymodels
-
-        for idx, model in enumerate(components):
-            str_ += f"\tComponent {idx}: \n"
-            str_ += "\t\t{:28}: {}\n".format("Name", model.name)
-            str_ += "\t\t{:28}: {}\n".format("Type", model.__class__.__name__)
-
-            if isinstance(model, SkyModel):
-                str_ += "\t\t{:28}: {}\n".format(
-                    "Spatial  model type", model.spatial_model.__class__.__name__
-                )
-                str_ += "\t\t{:28}: {}\n".format(
-                    "Spectral model type", model.spectral_model.__class__.__name__
-                )
-
-            str_ += "\t\tParameters:\n"
-
-            info = str(model.parameters)
-            lines = info.split("\n")
-            str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
-
-            str_ += "\n\n"
+        acceptance_off = np.nan
+        if self.acceptance_off is not None:
+            acceptance_off = np.sum(self.acceptance_off.data)
+        str_ += "\t{:32}: {:.0f} \n".format("Acceptance off", acceptance_off)
 
         return str_.expandtabs(tabsize=4)
 
@@ -1100,26 +1037,9 @@ class MapDatasetOnOff(MapDataset):
         excess = self.counts.data - self.background.data
         return excess
 
-    def npred_sig(self):
-        """Predicted counts from source model (`~gammapy.maps.Map`)."""
-        npred_total = Map.from_geom(self._geom, dtype=float)
-
-        if self.model:
-            for evaluator in self._evaluators:
-                # if the model component drifts out of its support the evaluator has
-                # has to be updated
-                if evaluator.needs_update:
-                    evaluator.update(self.exposure, self.psf, self.edisp)
-
-                if evaluator.contributes:
-                    npred = evaluator.compute_npred()
-                    npred_total.stack(npred)
-
-        return npred_total
-
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
-        mu_sig = self.npred_sig().data
+        mu_sig = self.npred().data
         on_stat_ = wstat(
             n_on=self.counts.data,
             n_off=self.counts_off.data,
@@ -1166,7 +1086,9 @@ class MapDatasetOnOff(MapDataset):
 
         maps = {}
         for name in ["counts", "counts_off", "acceptance", "acceptance_off"]:
-            maps.update({name : Map.from_geom(geom, unit="")})
+            maps.update({name: Map.from_geom(geom, unit="")})
+
+        exposure = Map.from_geom(geom_exposure, unit="m2 s")
 
         geom_exposure_edisp = geom_edisp.to_image().to_cube([e_true_axis])
         exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
@@ -1230,43 +1152,17 @@ class MapDatasetOnOff(MapDataset):
         geom_irf = geom_irf or geom.to_binsz(BINSZ_IRF)
         migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
         rad_axis = rad_axis or RAD_AXIS_DEFAULT
-
-        maps = {}
-        for name in ["counts", "counts_off", "acceptance", "acceptance_off"]:
-            maps.update({name : Map.from_geom(geom, unit="")})
-
         energy_axis = geom_irf.get_axis_by_name("ENERGY")
 
-        exposure_geom = geom.to_image().to_cube([energy_axis])
-        exposure = Map.from_geom(exposure_geom, unit="m2 s")
-        exposure_irf = Map.from_geom(geom_irf, unit="m2 s")
+        geom_exposure = geom.to_image().to_cube([energy_axis])
+        geom_psf = geom_irf.to_image().to_cube([rad_axis, energy_axis])
+        geom_edisp = geom_irf.to_image().to_cube([migra_axis, energy_axis])
 
-        mask_safe = np.zeros(geom.data_shape, dtype=bool)
-
-        gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
-
-        geom_migra = geom_irf.to_image().to_cube([migra_axis, energy_axis])
-        edisp_map = Map.from_geom(geom_migra, unit="")
-        loc = migra_axis.edges.searchsorted(1.0)
-        edisp_map.data[:, loc, :, :] = 1.0
-        edisp = EDispMap(edisp_map, exposure_irf)
-
-        geom_rad = geom_irf.to_image().to_cube([rad_axis, energy_axis])
-        psf_map = Map.from_geom(geom_rad, unit="sr-1")
-        psf = PSFMap(psf_map, exposure_irf)
-
-        return cls(
-            counts=maps["counts"],
-            counts_off=maps["counts_off"],
-            acceptance=maps["acceptance"],
-            acceptance_off=maps["acceptance_off"],
-            exposure=exposure,
-            psf=psf,
-            edisp=edisp,
-            gti=gti,
-            mask_safe=mask_safe,
-            name=name,
-            **kwargs,
+        return cls.from_geoms(
+            geom=geom,
+            geom_exposure=geom_exposure,
+            geom_psf=geom_psf,
+            geom_edisp=geom_edisp,
         )
 
     def stack(self, other):
@@ -1284,52 +1180,26 @@ class MapDatasetOnOff(MapDataset):
         other: `~gammapy.cube.MapDatasetOnOff`
             Dataset to be stacked with this one.
         """
-        if self.counts and other.counts:
-            self.counts.data[~self.mask_safe] = 0
-            self.counts.stack(other.counts, weights=other.mask_safe)
+        super(MapDatasetOnOff, self).stack(other)
 
         if self.alpha and other.alpha and self.counts_off and other.counts_off:
-            self.acceptance_off.data = 1 / (self.alpha.data *  self.counts_off.data + other.alpha.data *  other.counts_off.data)
+            self.acceptance_off.data = 1 / (
+                self.alpha.data * self.counts_off.data
+                + other.alpha.data * other.counts_off.data
+            )
             self.acceptance.data = np.ones(self.data_shape)
 
         if self.counts_off and other.counts_off:
             self.counts_off.data[~self.mask_safe] = 0
             self.counts_off.stack(other.counts_off, weights=other.mask_safe)
-
-        if self.counts_off and other.counts_off:
             self.acceptance_off *= self.counts_off
-
-        if self.exposure and other.exposure:
-            self.exposure.stack(other.exposure)
-
-        if self.mask_safe is not None and other.mask_safe is not None:
-            # TODO: make mask_safe a Map object
-            mask_safe = Map.from_geom(self.counts.geom, data=self.mask_safe)
-            mask_safe_other = Map.from_geom(other.counts.geom, data=other.mask_safe)
-            mask_safe.stack(mask_safe_other)
-            self.mask_safe = mask_safe.data
-
-        if self.psf and other.psf:
-            if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
-                self.psf.stack(other.psf)
-            else:
-                raise ValueError("Stacking of PSF kernels not supported")
-
-        if self.edisp and other.edisp:
-            if isinstance(self.edisp, EDispMap) and isinstance(other.edisp, EDispMap):
-                self.edisp.stack(other.edisp)
-            else:
-                raise ValueError("Stacking of edisp kernels not supported")
-
-        if self.gti and other.gti:
-            self.gti = self.gti.stack(other.gti).union()
 
     def likelihood(self):
         """Total likelihood given the current model parameters."""
         return Dataset.likelihood(self)
 
-    def fake(self, random_state="random-seed"):
-        """Simulate fake counts for the current model and reduced IRFs.
+    def fake(self, background_model, random_state="random-seed"):
+        """Simulate fake counts (on and off) for the current model and reduced IRFs.
 
         This method overwrites the counts defined on the dataset object.
 
@@ -1340,9 +1210,17 @@ class MapDatasetOnOff(MapDataset):
                 Passed to `~gammapy.utils.random.get_random_state`.
         """
         random_state = get_random_state(random_state)
-        npred = self.npred_sig()
+        npred = self.npred()
         npred.data = random_state.poisson(npred.data)
-        self.counts = npred
+
+        npred_bkg = background_model.copy()
+        npred_bkg.data = random_state.poisson(npred_bkg.data)
+
+        self.counts = npred + npred_bkg
+
+        npred_off = background_model / self.alpha
+        npred_off.data = random_state.poisson(npred_off.data)
+        self.counts_off = npred_off
 
     def to_hdulist(self):
         """Convert map dataset to list of HDUs.
@@ -1352,13 +1230,8 @@ class MapDatasetOnOff(MapDataset):
         hdulist : `~astropy.io.fits.HDUList`
             Map dataset list of HDUs.
         """
-        # TODO: what todo about the model and background model parameters?
+        hdulist = super().to_hdulist()
         exclude_primary = slice(1, None)
-
-        hdu_primary = fits.PrimaryHDU()
-        hdulist = fits.HDUList([hdu_primary])
-        if self.counts is not None:
-            hdulist += self.counts.to_hdulist(hdu="counts")[exclude_primary]
 
         if self.counts_off is not None:
             hdulist += self.counts.to_hdulist(hdu="counts_off")[exclude_primary]
@@ -1368,42 +1241,6 @@ class MapDatasetOnOff(MapDataset):
 
         if self.acceptance_off is not None:
             hdulist += self.counts.to_hdulist(hdu="acceptance_off")[exclude_primary]
-
-        if self.exposure is not None:
-            hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
-
-        if self.edisp is not None:
-            if isinstance(self.edisp, EnergyDispersion):
-                hdus = self.edisp.to_hdulist()
-                hdus["MATRIX"].name = "edisp_matrix"
-                hdus["EBOUNDS"].name = "edisp_matrix_ebounds"
-                hdulist.append(hdus["EDISP_MATRIX"])
-                hdulist.append(hdus["EDISP_MATRIX_EBOUNDS"])
-            else:
-                hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")[exclude_primary]
-
-        if self.psf is not None:
-            if isinstance(self.psf, PSFKernel):
-                hdulist += self.psf.psf_kernel_map.to_hdulist(hdu="psf_kernel")[
-                    exclude_primary
-                ]
-            else:
-                hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
-
-        if self.mask_safe is not None:
-            mask_safe_map = Map.from_geom(
-                self.counts.geom, data=self.mask_safe.astype(int)
-            )
-            hdulist += mask_safe_map.to_hdulist(hdu="mask_safe")[exclude_primary]
-
-        if self.mask_fit is not None:
-            mask_fit_map = Map.from_geom(
-                self.counts.geom, data=self.mask_fit.astype(int)
-            )
-            hdulist += mask_fit_map.to_hdulist(hdu="mask_fit")[exclude_primary]
-
-        if self.gti is not None:
-            hdulist.append(fits.BinTableHDU(self.gti.table, name="GTI"))
 
         return hdulist
 
@@ -1433,7 +1270,9 @@ class MapDatasetOnOff(MapDataset):
             init_kwargs["acceptance"] = Map.from_hdulist(hdulist, hdu="acceptance")
 
         if "ACCEPTANCE_OFF" in hdulist:
-            init_kwargs["acceptance_off"] = Map.from_hdulist(hdulist, hdu="acceptance_off")
+            init_kwargs["acceptance_off"] = Map.from_hdulist(
+                hdulist, hdu="acceptance_off"
+            )
 
         if "EXPOSURE" in hdulist:
             init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
@@ -1459,62 +1298,6 @@ class MapDatasetOnOff(MapDataset):
             gti = GTI(Table.read(hdulist, hdu="GTI"))
             init_kwargs["gti"] = gti
         return cls(**init_kwargs)
-
-    def write(self, filename, overwrite=False):
-        """Write map dataset to file.
-
-        Parameters
-        ----------
-        filename : str
-            Filename to write to.
-        overwrite : bool
-            Overwrite file if it exists.
-        """
-        self.to_hdulist().writeto(make_path(filename), overwrite=overwrite)
-
-    @classmethod
-    def read(cls, filename, name=""):
-        """Read map dataset from file.
-
-        Parameters
-        ----------
-        filename : str
-            Filename to read from.
-
-        Returns
-        -------
-        dataset : `MapDataset`
-            Map dataset.
-        """
-        with fits.open(make_path(filename), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, name=name)
-
-    @classmethod
-    def from_dict(cls, data, components, models):
-        """Create from dicts and models list generated from YAML serialization."""
-        dataset = cls.read(data["filename"], name=data["name"])
-        model_names = data["models"]
-        for component in components["components"]:
-            if component["type"] == "BackgroundModel":
-                if component["name"] == bkg_name:
-                    if "filename" not in component:
-                        component["map"] = dataset.background_model.map
-                    background_model = BackgroundModel.from_dict(component)
-                    dataset.background_model = background_model
-
-        models_list = [model for model in models if model.name in model_names]
-        dataset.model = SkyModels(models_list)
-        return dataset
-
-    def to_dict(self, filename=""):
-        """Convert to dict for YAML serialization."""
-        return {
-            "name": self.name,
-            "type": self.tag,
-            "likelihood": self.likelihood_type,
-            "models": self.model.names,
-            "filename": str(filename),
-        }
 
 
 class MapEvaluator:
