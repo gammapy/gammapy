@@ -10,7 +10,6 @@ from regions import CircleSkyRegion
 import jsonschema
 import yaml
 from gammapy.cube import MapDataset, MapDatasetMaker
-from gammapy.cube.fit import BINSZ_IRF
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
@@ -225,35 +224,40 @@ class Analysis:
     @staticmethod
     def _create_geometry(params):
         """Create the geometry."""
-        # TODO: handled in jsonschema validation class
         geom_params = copy.deepcopy(params)
-
         axes = []
-        for axis_params in geom_params.get("axes", []):
+        for axis_params in params.get("axes", []):
             ax = MapAxis.from_bounds(**axis_params)
             axes.append(ax)
-
         geom_params["axes"] = axes
-        geom_params["skydir"] = tuple(geom_params["skydir"])
+        if "skydir" in geom_params:
+            geom_params["skydir"] = tuple(geom_params["skydir"])
         return WcsGeom.create(**geom_params)
 
     def _map_making(self):
         """Make maps and datasets for 3d analysis."""
         log.info("Creating geometry.")
+
         geom = self._create_geometry(self.settings["datasets"]["geom"])
 
-        if "geom-irf" in self.settings["datasets"]:
-            geom_irf = self._create_geometry(self.settings["datasets"]["geom-irf"])
-        else:
-            geom_irf = geom.to_binsz(binsz=BINSZ_IRF)
+        geom_irf = dict(
+            energy_axis_true=None,
+            binsz_irf=None,
+            margin_irf=None
+        )
+        if "energy-axis-true" in self.settings["datasets"]:
+            axis_params = self.settings["datasets"]["energy-axis-true"]
+            geom_irf["energy_axis_true"] = MapAxis.from_bounds(**axis_params)
+        geom_irf["binsz_irf"] = self.settings["datasets"].get("binsz", None)
+        geom_irf["margin_irf"] = self.settings["datasets"].get("margin", None)
 
         offset_max = Angle(self.settings["datasets"]["offset-max"])
         stack_datasets = self.settings["datasets"]["stack-datasets"]
         log.info("Creating datasets.")
 
-        maker = MapDatasetMaker(geom=geom, geom_true=geom_irf, offset_max=offset_max)
+        maker = MapDatasetMaker(geom=geom, offset_max=offset_max, **geom_irf)
         if stack_datasets:
-            stacked = MapDataset.create(geom=geom, geom_irf=geom_irf, name="stacked")
+            stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
             for obs in self.observations:
                 dataset = maker.run(obs)
                 stacked.stack(dataset)

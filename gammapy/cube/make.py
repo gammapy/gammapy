@@ -2,16 +2,23 @@
 import logging
 from functools import lru_cache
 import numpy as np
+import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
 from gammapy.irf import EnergyDependentMultiGaussPSF
-from gammapy.maps import Map
+from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import BackgroundModel
 from .background import make_map_background_irf
 from .edisp_map import make_edisp_map
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
-from .fit import BINSZ_IRF, MIGRA_AXIS_DEFAULT, RAD_AXIS_DEFAULT, MapDataset
+from .fit import (
+    BINSZ_IRF_DEFAULT,
+    MARGIN_IRF_DEFAULT,
+    MIGRA_AXIS_DEFAULT,
+    RAD_AXIS_DEFAULT,
+    MapDataset,
+)
 from .psf_map import make_psf_map
 
 __all__ = ["MapDatasetMaker", "MapMakerRing"]
@@ -28,14 +35,16 @@ class MapDatasetMaker:
         Reference image geometry in reco energy, used for counts and background maps
     offset_max : `~astropy.coordinates.Angle`
         Maximum offset angle
-    geom_true : `~gammapy.maps.WcsGeom`
-        Reference image geometry in true energy, used for IRF maps. It can have a coarser
-        spatial bins than the counts geom.
-        If none, the same as geom is assumed
+    energy_axis_true: `~gammapy.maps.MapAxis`
+        True energy axis used for IRF maps
     migra_axis : `~gammapy.maps.MapAxis`
         Migration axis for edisp map
     rad_axis : `~gammapy.maps.MapAxis`
         Radial axis for psf map.
+    binsz_irf: float
+        IRF Map pixel size in degrees.
+    margin_irf: float
+        IRF map margin size in degrees
     cutout : bool
          Whether to cutout the observation.
     cutout_mode : {'trim', 'partial', 'strict'}
@@ -47,19 +56,27 @@ class MapDatasetMaker:
         self,
         geom,
         offset_max,
-        geom_true=None,
         background_oversampling=None,
+        energy_axis_true=None,
         migra_axis=None,
         rad_axis=None,
+        binsz_irf=None,
+        margin_irf=None,
         cutout_mode="trim",
         cutout=True,
     ):
+
         self.geom = geom
-        self.geom_true = geom_true if geom_true else geom.to_binsz(BINSZ_IRF)
         self.offset_max = Angle(offset_max)
         self.background_oversampling = background_oversampling
         self.migra_axis = migra_axis if migra_axis else MIGRA_AXIS_DEFAULT
         self.rad_axis = rad_axis if rad_axis else RAD_AXIS_DEFAULT
+        self.energy_axis_true = energy_axis_true or geom.get_axis_by_name("energy")
+        self.binsz_irf = binsz_irf or BINSZ_IRF_DEFAULT
+
+        self.margin_irf = margin_irf or MARGIN_IRF_DEFAULT
+        self.margin_irf = self.margin_irf * u.deg
+
         self.cutout_mode = cutout_mode
         self.cutout_width = 2 * self.offset_max
         self.cutout = cutout
@@ -75,24 +92,40 @@ class MapDatasetMaker:
             return geom
 
     @lazyproperty
+    def geom_image_irf(self):
+        """Spatial geometry of IRF Maps (`Geom`)"""
+        wcs = self.geom.to_image()
+        return WcsGeom.create(
+            binsz=self.binsz_irf,
+            width=wcs.width + self.margin_irf,
+            skydir=wcs.center_skydir,
+            proj=wcs.projection,
+            coordsys=wcs.coordsys,
+        )
+
+    @lazyproperty
+    def geom_exposure_irf(self):
+        """Geom of Exposure map associated with IRFs (`Geom`)"""
+        return self.geom_image_irf.to_cube([self.energy_axis_true])
+
+    @lazyproperty
     def geom_exposure(self):
         """Exposure map geom (`Geom`)"""
-        energy_axis = self.geom_true.get_axis_by_name("energy")
-        geom_exposure = self.geom.to_image().to_cube([energy_axis])
+        geom_exposure = self.geom.to_image().to_cube([self.energy_axis_true])
         return geom_exposure
 
     @lazyproperty
     def geom_psf(self):
         """PSFMap geom (`Geom`)"""
-        energy_axis = self.geom_true.get_axis_by_name("ENERGY")
-        geom_psf = self.geom_true.to_image().to_cube([self.rad_axis, energy_axis])
+        geom_psf = self.geom_image_irf.to_cube([self.rad_axis, self.energy_axis_true])
         return geom_psf
 
     @lazyproperty
     def geom_edisp(self):
         """EdispMap geom (`Geom`)"""
-        energy_axis = self.geom_true.get_axis_by_name("ENERGY")
-        geom_edisp = self.geom_true.to_image().to_cube([self.migra_axis, energy_axis])
+        geom_edisp = self.geom_image_irf.to_cube(
+            [self.migra_axis, self.energy_axis_true]
+        )
         return geom_edisp
 
     def make_counts(self, observation):
@@ -149,7 +182,8 @@ class MapDatasetMaker:
         exposure : `Map`
             Exposure map.
         """
-        geom = self._cutout_geom(self.geom_true, observation)
+
+        geom = self._cutout_geom(self.geom_exposure_irf, observation)
         exposure = make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
             livetime=observation.observation_live_time_duration,
@@ -280,7 +314,7 @@ class MapDatasetMaker:
         mask : `~numpy.ndarray`
             Mask
         """
-        geom = self._cutout_geom(self.geom_true, observation)
+        geom = self._cutout_geom(self.geom_exposure_irf, observation)
         offset = geom.separation(observation.pointing_radec)
         return offset >= self.offset_max
 
