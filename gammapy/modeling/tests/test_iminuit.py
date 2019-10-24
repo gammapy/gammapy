@@ -107,7 +107,9 @@ def test_iminuit_limits(pars):
 
 def test_migrad_opts(pars):
     ds = MyDataset(pars)
-    factors, info, minuit = optimize_iminuit(function=ds.fcn, parameters=pars, migrad_opts={"ncall": 20})
+    factors, info, minuit = optimize_iminuit(
+        function=ds.fcn, parameters=pars, migrad_opts={"ncall": 20}
+    )
     assert info["nfev"] == 20
 
 

@@ -47,14 +47,22 @@ def make_api_links(file_path, file_type):
             target = f"{submodules[0]}.{submodules[1]}"
             alt_links.append(f"api/gammapy.{target}.html#gammapy.{target}")
             alt_links.append(f"{submodules[0]}/index.html#module-gammapy.{target}")
-            alt_links.append(f"{submodules[0]}/{submodules[1]}index.html#module-gammapy.{target}")
+            alt_links.append(
+                f"{submodules[0]}/{submodules[1]}index.html#module-gammapy.{target}"
+            )
         elif len(submodules) == 3:
             target = f"{submodules[0]}.{submodules[1]}"
-            alt_links.append(f"api/gammapy.{target}.html#gammapy.{target}.{submodules[2]}")
-            alt_links.append(f"api/gammapy.{target}.{submodules[2]}.html#gammapy.{target}.{submodules[2]}")
+            alt_links.append(
+                f"api/gammapy.{target}.html#gammapy.{target}.{submodules[2]}"
+            )
+            alt_links.append(
+                f"api/gammapy.{target}.{submodules[2]}.html#gammapy.{target}.{submodules[2]}"
+            )
         elif len(submodules) == 4:
             target = f"{submodules[0]}.{submodules[1]}.{submodules[2]}"
-            alt_links.append(f"api/gammapy.{target}.html#gammapy.{target}.{submodules[3]}")
+            alt_links.append(
+                f"api/gammapy.{target}.html#gammapy.{target}.{submodules[3]}"
+            )
         else:
             continue
 
