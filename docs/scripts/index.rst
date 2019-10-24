@@ -256,7 +256,7 @@ Using the high-level interface
 
 Gammapy tutorial notebooks that show examples using the high-level interface:
 
-* :gp-notebook:`hess`
+* `hess.html <../notebooks/hess.html>`__
 
 Command line tools
 ==================

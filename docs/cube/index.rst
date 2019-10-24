@@ -28,9 +28,9 @@ Using `gammapy.cube`
 
 Gammapy tutorial notebooks that show examples using ``gammapy.cube``:
 
-* :gp-notebook:`analysis_3d`
-* :gp-notebook:`simulate_3d`
-* :gp-notebook:`fermi_lat`
+* `analysis_3d.html <../notebooks/analysis_3d.html>`__
+* `simulate_3d.html <../notebooks/simulate_3d.html>`__
+* `fermi_lat.html <../notebooks/fermi_lat.html>`__
 
 Reference/API
 =============

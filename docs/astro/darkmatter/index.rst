@@ -107,7 +107,7 @@ Using `gammapy.spectrum`
 
 For use cases please go to the tutorial notebooks:
 
-* :gp-notebook:`astro_dark_matter`
+* `astro_dark_matter.html <../../notebooks/astro_dark_matter.html>`__
 
 Reference/API
 =============

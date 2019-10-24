@@ -569,10 +569,10 @@ Using `gammapy.maps`
 
 :ref:`tutorials` that show examples using ``gammapy.maps``:
 
-* :gp-notebook:`maps`
-* :gp-notebook:`analysis_3d`
-* :gp-notebook:`simulate_3d`
-* :gp-notebook:`fermi_lat`
+* `maps.html <../notebooks/maps.html>`__
+* `analysis_3d.html <../notebooks/analysis_3d.html>`__
+* `simulate_3d.html <../notebooks/simulate_3d.html>`__
+* `fermi_lat.html <../notebooks/fermi_lat.html>`__
 
 More detailed documentation on the WCS and HPX classes in `gammapy.maps` can be
 found in the following sub-pages:

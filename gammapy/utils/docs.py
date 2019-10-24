@@ -17,12 +17,9 @@ Here's some good resources with working examples:
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
 import os
-import re
 from distutils.util import strtobool
 from pathlib import Path
 import nbformat
-from docutils import nodes
-from docutils.parsers.rst import roles
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst.directives.body import CodeBlock
 from docutils.parsers.rst.directives.images import Image
@@ -38,7 +35,7 @@ try:
 except KeyError:
     HAS_GP_DATA = False
 
-log = logging.getLogger("__name__")
+log = logging.getLogger(__name__)
 
 
 class HowtoHLI(Include):
@@ -93,38 +90,6 @@ class DocsImage(Image):
         return super().run()
 
 
-def LinkNotebook(name, rawtext, notebook, lineno, inliner, options={}, content=[]):
-    """Link to a notebook"""
-    # check if file exists in local notebooks folder
-    nbfolder = Path("notebooks")
-    nbfilename = notebook + ".ipynb"
-    nbfile = nbfolder / nbfilename
-
-    if not nbfile.is_file():
-        msg = inliner.reporter.error(f"Unknown notebook {notebook}", line=lineno)
-        prb = inliner.problematic(rawtext, rawtext, msg)
-        return [prb], [msg]
-    else:
-        refuri = inliner.document.settings._source
-        app = inliner.document.settings.env.app
-        node = make_link_node(rawtext, app, refuri, notebook, options)
-        return [node], []
-
-
-def make_link_node(rawtext, app, refuri, notebook, options):
-    # base = 'https://github.com/gammapy/gammapy/tree/master/notebooks/'
-    # base = 'https://nbviewer.jupyter.org/github/gammapy/gammapy/blob/master/notebooks/'
-
-    relpath = refuri.split(str(Path("/docs")))[1]
-    foldersplit = relpath.split(os.sep)
-    base = ((".." + os.sep) * (len(foldersplit) - 2)) + "notebooks" + os.sep
-    full_name = notebook + ".html"
-    ref = base + full_name
-    roles.set_classes(options)
-    node = nodes.reference(rawtext, full_name, refuri=ref, **options)
-    return node
-
-
 def gammapy_sphinx_ext_activate():
     if HAS_GP_DATA:
         log.info(f"*** Found GAMMAPY_DATA = {gammapy_data_path}")
@@ -136,7 +101,6 @@ def gammapy_sphinx_ext_activate():
 
     # Register our directives and roles with Sphinx
     register_directive("gp-image", DocsImage)
-    roles.register_local_role("gp-notebook", LinkNotebook)
     register_directive("gp-howto-hli", HowtoHLI)
 
 
@@ -146,11 +110,9 @@ def parse_notebooks(folder, url_docs):
     to other files in the documentation. Adds a box to the sphinx formatted
     notebooks with info and links to the *.ipynb and *.py files.
     """
+    release_number_binder = __version__
     if "dev" in __version__:
         release_number_binder = "master"
-        release_number_docs = "dev"
-    else:
-        release_number_docs = release_number_binder = __version__
 
     DOWNLOAD_CELL = """
 <div class="alert alert-info">
@@ -194,22 +156,6 @@ def parse_notebooks(folder, url_docs):
                                         "text/latex"
                                     ].replace("$", "$$")
                 nbformat.write(rawnb, str(nbpath))
-
-        # modif links to rst /html doc files
-        txt = nbpath.read_text(encoding="utf-8")
-        if str(folder) == "notebooks":
-            repl = r"..\/\1rst\2"
-            txt = re.sub(
-                pattern=url_docs + r"(.*?)html(\)|#)",
-                repl=repl,
-                string=txt,
-                flags=re.M | re.I,
-            )
-        else:
-            url_docs_release = url_docs.replace("dev", release_number_docs)
-            txt = txt.replace(url_docs, url_docs_release)
-
-        nbpath.write_text(txt, encoding="utf-8")
 
 
 def gammapy_sphinx_notebooks(setup_cfg):
