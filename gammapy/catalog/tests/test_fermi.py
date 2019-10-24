@@ -175,18 +175,18 @@ class TestFermi4FGLObject:
 
         model = self.cat["4FGL J1409.1-6121e"].spatial_model()
         assert model.tag == "DiskSpatialModel"
-        assert model.frame == "galactic"
+        assert model.frame == "icrs"
         p = model.parameters
-        assert_allclose(p["lon_0"].value, 312.11065673828125)
-        assert_allclose(p["lat_0"].value, 0.12567082047462463)
+        assert_allclose(p["lon_0"].value, 212.294006)
+        assert_allclose(p["lat_0"].value, -61.353001)
         assert_allclose(p["r_0"].value, 0.7331369519233704)
 
         model = self.cat["4FGL J0617.2+2234e"].spatial_model()
         assert model.tag == "GaussianSpatialModel"
-        assert model.frame == "galactic"
+        assert model.frame == "icrs"
         p = model.parameters
-        assert_allclose(p["lon_0"].value, 189.047653)
-        assert_allclose(p["lat_0"].value, 3.033451)
+        assert_allclose(p["lon_0"].value, 94.309998)
+        assert_allclose(p["lat_0"].value, 22.58)
         assert_allclose(p["sigma"].value, 0.27)
 
         model = self.cat["4FGL J1443.0-6227e"].spatial_model()
@@ -319,18 +319,18 @@ class TestFermi3FGLObject:
 
         model = self.cat[122].spatial_model()
         assert model.tag == "GaussianSpatialModel"
-        assert model.frame == "galactic"
+        assert model.frame == "icrs"
         p = model.parameters
-        assert_allclose(p["lon_0"].value, 302.145142)
-        assert_allclose(p["lat_0"].value, -44.41674)
+        assert_allclose(p["lon_0"].value, 14.75)
+        assert_allclose(p["lat_0"].value, -72.699997)
         assert_allclose(p["sigma"].value, 1.35)
 
         model = self.cat[955].spatial_model()
         assert model.tag == "DiskSpatialModel"
-        assert model.frame == "galactic"
+        assert model.frame == "icrs"
         p = model.parameters
-        assert_allclose(p["lon_0"].value, 263.33252)
-        assert_allclose(p["lat_0"].value, -3.105928)
+        assert_allclose(p["lon_0"].value, 128.287201)
+        assert_allclose(p["lat_0"].value, -45.190102)
         assert_allclose(p["r_0"].value, 0.91)
 
         model = self.cat[602].spatial_model()
@@ -449,18 +449,18 @@ class TestFermi2FHLObject:
 
         model = self.cat[97].spatial_model()
         assert model.tag == "GaussianSpatialModel"
-        assert model.frame == "galactic"
+        assert model.frame == "icrs"
         p = model.parameters
-        assert_allclose(p["lon_0"].value, 189.048653, rtol=1e-5)
-        assert_allclose(p["lat_0"].value, 3.033451, rtol=1e-5)
+        assert_allclose(p["lon_0"].value, 94.309998, rtol=1e-5)
+        assert_allclose(p["lat_0"].value, 22.58, rtol=1e-5)
         assert_allclose(p["sigma"].value, 0.27)
 
         model = self.cat[134].spatial_model()
         assert model.tag == "DiskSpatialModel"
-        assert model.frame == "galactic"
+        assert model.frame == "icrs"
         p = model.parameters
-        assert_allclose(p["lon_0"].value, 260.317, rtol=1e-5)
-        assert_allclose(p["lat_0"].value, -3.276471, rtol=1e-5)
+        assert_allclose(p["lon_0"].value, 125.660004, rtol=1e-5)
+        assert_allclose(p["lat_0"].value, -42.84, rtol=1e-5)
         assert_allclose(p["r_0"].value, 0.37)
 
         model = self.cat[256].spatial_model()

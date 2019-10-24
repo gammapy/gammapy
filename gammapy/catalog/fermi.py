@@ -358,6 +358,8 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         pars = {}
         glon = d["GLON"]
         glat = d["GLAT"]
+        ra = d["RAJ2000"]
+        dec = d["DEJ2000"]
 
         if self.is_pointlike:
             pars["lon_0"] = glon
@@ -372,7 +374,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             if morph_type == "Disk":
                 r_0 = de["Model_SemiMajor"].to("deg")
                 return DiskSpatialModel(
-                    lon_0=glon, lat_0=glat, r_0=r_0, e=e, phi=phi, frame="galactic"
+                    lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
                 filename = de["Spatial_Filename"].strip()
@@ -384,7 +386,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                     return TemplateSpatialModel.read(path / filename)
             elif morph_type == "2D Gaussian":
                 return GaussianSpatialModel(
-                    lon_0=glon, lat_0=glat, sigma=sigma, e=e, phi=phi, frame="galactic"
+                    lon_0=ra, lat_0=dec, sigma=sigma, e=e, phi=phi, frame="icrs"
                 )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
@@ -701,6 +703,8 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         pars = {}
         glon = d["GLON"]
         glat = d["GLAT"]
+        ra = d["RAJ2000"]
+        dec = d["DEJ2000"]
 
         if self.is_pointlike:
             pars["lon_0"] = glon
@@ -715,7 +719,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
             if morph_type == "Disk":
                 r_0 = de["Model_SemiMajor"].to("deg")
                 return DiskSpatialModel(
-                    lon_0=glon, lat_0=glat, r_0=r_0, e=e, phi=phi, frame="galactic"
+                    lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
                 filename = de["Spatial_Filename"].strip()
@@ -725,7 +729,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
                 return TemplateSpatialModel.read(path / filename)
             elif morph_type == "2D Gaussian":
                 return GaussianSpatialModel(
-                    lon_0=glon, lat_0=glat, sigma=sigma, e=e, phi=phi, frame="galactic"
+                    lon_0=ra, lat_0=dec, sigma=sigma, e=e, phi=phi, frame="icrs"
                 )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
@@ -880,6 +884,8 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         pars = {}
         glon = d["GLON"]
         glat = d["GLAT"]
+        ra = d["RAJ2000"]
+        dec = d["DEJ2000"]
 
         if self.is_pointlike:
             pars["lon_0"] = glon
@@ -894,7 +900,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
             if morph_type in ["Disk", "Elliptical Disk"]:
                 r_0 = de["Model_SemiMajor"].to("deg")
                 return DiskSpatialModel(
-                    lon_0=glon, lat_0=glat, r_0=r_0, e=e, phi=phi, frame="galactic"
+                    lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
                 filename = de["Spatial_Filename"].strip()
@@ -904,7 +910,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
                 return TemplateSpatialModel.read(path / filename)
             elif morph_type in ["2D Gaussian", "Elliptical 2D Gaussian"]:
                 return GaussianSpatialModel(
-                    lon_0=glon, lat_0=glat, sigma=sigma, e=e, phi=phi, frame="galactic"
+                    lon_0=ra, lat_0=dec, sigma=sigma, e=e, phi=phi, frame="icrs"
                 )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
@@ -1139,6 +1145,8 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         pars = {}
         glon = d["GLON"]
         glat = d["GLAT"]
+        ra = d["RAJ2000"]
+        dec = d["DEJ2000"]
 
         if self.is_pointlike:
             pars["lon_0"] = glon
@@ -1153,7 +1161,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
             if morph_type == "RadialDisk":
                 r_0 = de["Model_SemiMajor"].to("deg")
                 return DiskSpatialModel(
-                    lon_0=glon, lat_0=glat, r_0=r_0, e=e, phi=phi, frame="galactic"
+                    lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["SpatialMap"]:
                 filename = de["Spatial_Filename"].strip()
@@ -1163,7 +1171,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
                 return TemplateSpatialModel.read(path / filename)
             elif morph_type == "RadialGauss":
                 return GaussianSpatialModel(
-                    lon_0=glon, lat_0=glat, sigma=sigma, e=e, phi=phi, frame="galactic"
+                    lon_0=ra, lat_0=dec, sigma=sigma, e=e, phi=phi, frame="icrs"
                 )
             else:
                 raise ValueError(f"Invalid morph_type: {morph_type!r}")
