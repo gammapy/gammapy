@@ -510,24 +510,12 @@ def test_map_dataset_onoff_fits_io(images, tmp_path):
     desired = [
         "PRIMARY",
         "COUNTS",
-        "COUNTS_BANDS",
-        "COUNTS_OFF",
-        "COUNTS_OFF_BANDS",
-        "ACCEPTANCE",
-        "ACCEPTANCE_BANDS",
-        "ACCEPTANCE_OFF",
-        "ACCEPTANCE_OFF_BANDS",
         "EXPOSURE",
-        "EXPOSURE_BANDS",
-        "EDISP_MATRIX",
-        "EDISP_MATRIX_EBOUNDS",
-        "PSF_KERNEL",
-        "PSF_KERNEL_BANDS",
         "MASK_SAFE",
-        "MASK_SAFE_BANDS",
-        "MASK_FIT",
-        "MASK_FIT_BANDS",
         "GTI",
+        "COUNTS_OFF",
+        "ACCEPTANCE",
+        "ACCEPTANCE_OFF",
     ]
 
     assert actual == desired
@@ -542,24 +530,12 @@ def test_map_dataset_onoff_fits_io(images, tmp_path):
     assert_allclose(dataset.counts_off.data, dataset_new.counts_off.data)
     assert_allclose(dataset.acceptance.data, dataset_new.acceptance.data)
     assert_allclose(dataset.acceptance_off.data, dataset_new.acceptance_off.data)
-    assert_allclose(dataset.edisp.data.data.value, dataset_new.edisp.data.data.value)
-    assert_allclose(dataset.psf.data, dataset_new.psf.data)
     assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
-    assert_allclose(dataset.mask_fit, dataset_new.mask_fit)
     assert_allclose(dataset.mask_safe, dataset_new.mask_safe)
 
     assert dataset.counts.geom == dataset_new.counts.geom
     assert dataset.exposure.geom == dataset_new.exposure.geom
 
-    assert_allclose(
-        dataset.edisp.e_true.edges.value, dataset_new.edisp.e_true.edges.value
-    )
-    assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
-
-    assert_allclose(
-        dataset.edisp.e_reco.edges.value, dataset_new.edisp.e_reco.edges.value
-    )
-    assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
     assert_allclose(
         dataset.gti.time_sum.to_value("s"), dataset_new.gti.time_sum.to_value("s")
     )
@@ -629,19 +605,19 @@ def test_from_geoms_onoff(images):
 
 @requires_data()
 def test_stack_onoff(images):
-
     dataset1 = get_map_dataset_onoff(images)
     dataset2 = get_map_dataset_onoff(images)
 
-    dataset1.stack(dataset2)
-    assert_allclose(dataset1.counts.data.sum(), 2 * dataset2.counts.data.sum())
-    assert_allclose(dataset1.counts_off.data.sum(), 2 * dataset2.counts_off.data.sum())
+    stacked = dataset1.copy()
+
+    stacked.stack(dataset2)
+    assert_allclose(stacked.counts.data.sum(), 2 * dataset2.counts.data.sum())
+    assert_allclose(stacked.counts_off.data.sum(), 2 * dataset2.counts_off.data.sum())
     assert_allclose(
-        dataset1.acceptance.data.sum(), dataset1.data_shape[0] * dataset1.data_shape[1]
+        stacked.acceptance.data.sum(), dataset1.data_shape[0] * dataset1.data_shape[1]
     )
     assert_allclose(
-        np.nansum(dataset1.acceptance_off.data),
-        np.nansum(dataset1.acceptance.data / dataset1.alpha.data),
+        np.nansum(stacked.acceptance_off.data),
+        np.nansum(dataset1.acceptance_off.data / dataset1.alpha.data),
     )
     assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
-

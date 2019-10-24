@@ -1180,7 +1180,7 @@ class MapDatasetOnOff(MapDataset):
         other: `~gammapy.cube.MapDatasetOnOff`
             Dataset to be stacked with this one.
         """
-        super(MapDatasetOnOff, self).stack(other)
+        super().stack(other)
 
         if self.alpha and other.alpha and self.counts_off and other.counts_off:
             self.acceptance_off.data = 1 / (
@@ -1192,7 +1192,6 @@ class MapDatasetOnOff(MapDataset):
         if self.counts_off and other.counts_off:
             self.counts_off.data[~self.mask_safe] = 0
             self.counts_off.stack(other.counts_off, weights=other.mask_safe)
-            self.acceptance_off *= self.counts_off
 
     def likelihood(self):
         """Total likelihood given the current model parameters."""
@@ -1234,13 +1233,13 @@ class MapDatasetOnOff(MapDataset):
         exclude_primary = slice(1, None)
 
         if self.counts_off is not None:
-            hdulist += self.counts.to_hdulist(hdu="counts_off")[exclude_primary]
+            hdulist += self.counts_off.to_hdulist(hdu="counts_off")[exclude_primary]
 
         if self.acceptance is not None:
-            hdulist += self.counts.to_hdulist(hdu="acceptance")[exclude_primary]
+            hdulist += self.acceptance.to_hdulist(hdu="acceptance")[exclude_primary]
 
         if self.acceptance_off is not None:
-            hdulist += self.counts.to_hdulist(hdu="acceptance_off")[exclude_primary]
+            hdulist += self.acceptance_off.to_hdulist(hdu="acceptance_off")[exclude_primary]
 
         return hdulist
 
