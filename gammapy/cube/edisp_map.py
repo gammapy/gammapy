@@ -4,7 +4,8 @@ import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
 from gammapy.irf import EnergyDispersion
-from gammapy.maps import Map
+from gammapy.maps import Map, MapCoord
+from gammapy.utils.random import InverseCDFSampler, get_random_state
 
 __all__ = ["make_edisp_map", "EDispMap"]
 
@@ -328,29 +329,43 @@ class EDispMap:
         """Copy EDispMap"""
         return deepcopy(self)
 
-    @classmethod
-    def from_geom(cls, geom):
-        """Create edisp map from geom.
-
-        By default a diagonal edisp matrix is created.
+    def sample_coord(self, map_coord, random_state=0):
+        """ Apply the energy dispersion corrections on the coordinates of a set of simulated events.
 
         Parameters
         ----------
-        geom : `Geom`
-            Edisp map geometry.
+        map_coord : `~gammapy.maps.MapCoord` object.
+            Sequence of coordinates and energies of sampled events.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
 
         Returns
         -------
-        edisp_map : `EDispMap`
-            Energy dispersion map.
+        corr_energies : `~gammapy.maps.MapCoord` object.
+            Sequence of Edisp-corrected coordinates of the input map_coord map.
         """
-        energy_true_axis = geom.get_axis_by_name("energy")
 
-        geom_exposure_edisp = geom.to_image().to_cube([energy_true_axis])
-        exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
+        random_state = get_random_state(random_state)
 
-        migra_axis = geom.get_axis_by_name("migra")
-        edisp_map = Map.from_geom(geom, unit="")
-        loc = migra_axis.edges.searchsorted(1.0)
-        edisp_map.data[:, loc, :, :] = 1.0
-        return cls(edisp_map, exposure_edisp)
+        coord = {
+            "lon": map_coord.lon.reshape(-1, 1),
+            "lat": map_coord.lat.reshape(-1, 1),
+            "energy": map_coord["energy"].reshape(-1, 1),
+            "migra": (
+                self.edisp_map.geom.axes[0].center * self.edisp_map.geom.axes[0].unit
+            ),
+        }
+
+        pdf_edisp = self.edisp_map.interp_by_coord(coord)
+
+        sample_edisp = InverseCDFSampler(pdf_edisp, axis=1)
+        pix_edisp = sample_edisp.sample_axis()
+        e_corr = self.edisp_map.geom.axes[0].pix_to_coord(pix_edisp)
+
+        corr_energies = MapCoord(
+            {"lon": map_coord.lon, "lat": map_coord.lat, "energy": e_corr}
+        )
+
+        return corr_energies
+>>>>>>> Add sample_coord in EDispMap

@@ -1,12 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.table import Table
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
 from gammapy.cube import EDispMap, make_edisp_map, make_map_exposure_true_energy
 from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
-from gammapy.maps import MapAxis, WcsGeom
+from gammapy.maps import MapAxis, MapCoord, WcsGeom
 
 
 def fake_aeff2d(area=1e6 * u.m ** 2):
@@ -121,3 +122,18 @@ def test_edisp_map_stacking():
     edmap_stack.stack(edmap2)
     assert_allclose(edmap_stack.edisp_map.data, edmap1.edisp_map.data)
     assert_allclose(edmap_stack.exposure_map.data, edmap1.exposure_map.data * 3)
+
+
+def test_sample_coord():
+    edisp_map = make_edisp_map_test()
+    coords = MapCoord(
+        {"lon": [0, 0] * u.deg, "lat": [0, 0.5] * u.deg, "energy": [1, 3] * u.TeV}
+    )
+
+    coords_corrected = edisp_map.sample_coord(map_coord=coords)
+
+    events = Table()
+    events["ENERGY_CORR"] = coords_corrected["energy"]
+
+    assert len(events) == 2
+    assert_allclose(events["ENERGY_CORR"].data, [0.9961658, 1.11269299], rtol=1e-5)
