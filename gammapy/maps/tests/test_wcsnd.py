@@ -652,3 +652,7 @@ def test_map_sampling():
     assert_allclose(events["RA_TRUE"].data, [266.307081, 266.442255], rtol=1e-5)
     assert_allclose(events["DEC_TRUE"].data, [-28.753408, -28.742696], rtol=1e-5)
     assert_allclose(events["ENERGY_TRUE"].data, [2.755397, 1.72316], rtol=1e-5)
+
+    assert coords["lon"].unit == "deg"
+    assert coords["lat"].unit == "deg"
+    assert coords["energy"].unit == "TeV"
