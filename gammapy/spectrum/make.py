@@ -181,7 +181,7 @@ class SpectrumDatasetMaker:
             selection = ["counts", "background", "aeff", "edisp"]
 
         kwargs = {
-            "name": f"obs_{observation.obs_id}",
+            "name": f"{observation.obs_id}",
             "gti": observation.gti,
             "livetime": observation.observation_live_time_duration,
         }

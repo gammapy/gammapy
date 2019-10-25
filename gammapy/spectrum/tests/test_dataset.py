@@ -357,7 +357,7 @@ class TestSpectrumOnOff:
             gti=self.gti,
         )
         dataset.to_ogip_files(outdir=tmp_path)
-        newdataset = SpectrumDatasetOnOff.from_ogip_files(tmp_path / "pha_test.fits")
+        newdataset = SpectrumDatasetOnOff.from_ogip_files(tmp_path / "pha_obstest.fits")
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert_allclose(self.off_counts.data, newdataset.counts_off.data)
@@ -374,7 +374,7 @@ class TestSpectrumOnOff:
             name="test",
         )
         dataset.to_ogip_files(outdir=tmp_path)
-        newdataset = SpectrumDatasetOnOff.from_ogip_files(tmp_path / "pha_test.fits")
+        newdataset = SpectrumDatasetOnOff.from_ogip_files(tmp_path / "pha_obstest.fits")
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert newdataset.counts_off is None

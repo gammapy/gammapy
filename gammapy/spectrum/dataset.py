@@ -913,7 +913,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         outdir = Path.cwd() if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
-        phafile = f"pha_{self.name}.fits"
+        phafile = f"pha_obs{self.name}.fits"
 
         bkgfile = phafile.replace("pha", "bkg")
         arffile = phafile.replace("pha", "arf")
