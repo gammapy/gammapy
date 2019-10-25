@@ -234,9 +234,10 @@ class Parameter:
 
 
 class Parameters:
-    """List of `Parameter`.
+    """Parameters container.
 
-    Holds covariance matrix.
+    - List of `Parameter` objects.
+    - Covariance matrix.
 
     Parameters
     ----------
@@ -287,11 +288,6 @@ class Parameters:
     def free_parameters(self):
         """List of free parameters"""
         return [par for par in self.parameters if not par.frozen]
-
-    # TODO: replace this with a better API to update parameters
-    @parameters.setter
-    def parameters(self, vals):
-        self._parameters = vals
 
     @property
     def names(self):
