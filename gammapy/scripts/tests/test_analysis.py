@@ -192,7 +192,7 @@ def test_analysis_3d():
     analysis.get_flux_points()
 
     assert len(analysis.datasets.datasets) == 1
-    assert len(analysis.fit_result.parameters.parameters) == 8
+    assert len(analysis.fit_result.parameters) == 8
     res = analysis.fit_result.parameters
     assert res[3].unit == "cm-2 s-1 TeV-1"
     assert len(analysis.flux_points.data.table) == 2

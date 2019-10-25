@@ -143,7 +143,7 @@ class SpectrumDataset(Dataset):
 
         n_pars, n_free_pars = 0, 0
         if self.model is not None:
-            n_pars = len(self.model.parameters.parameters)
+            n_pars = len(self.model.parameters)
             n_free_pars = len(self.parameters.free_parameters)
 
         str_ += "\t{:32}: {}\n".format("Number of parameters", n_pars)
@@ -166,7 +166,7 @@ class SpectrumDataset(Dataset):
     def model(self, model):
         self._model = model
         if model is not None:
-            self._parameters = Parameters(self._model.parameters.parameters)
+            self._parameters = self._model.parameters
             self._predictor = SpectrumEvaluator(
                 model=self.model,
                 livetime=self.livetime,

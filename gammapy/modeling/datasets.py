@@ -91,11 +91,7 @@ class Datasets:
 
     @property
     def parameters(self):
-        # join parameter lists
-        parameters = []
-        for dataset in self.datasets:
-            parameters += dataset.parameters.parameters
-        return Parameters(parameters)
+        return Parameters.stack(_.parameters for _ in self.datasets)
 
     @property
     def names(self):

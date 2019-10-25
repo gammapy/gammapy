@@ -1265,13 +1265,13 @@ class FluxPointsDataset(Dataset):
                 "Model Name", self.model.__class__.__name__
             )
             str_ += "\t{:32}:   {}\n".format(
-                "N parameters", len(self.parameters.parameters)
+                "N parameters", len(self.parameters)
             )
             str_ += "\t{:32}:   {}\n".format(
                 "N free parameters", len(self.parameters.free_parameters)
             )
             str_ += "\tList of parameters\n"
-            for par in self.parameters.parameters:
+            for par in self.parameters:
                 if par.frozen:
                     if par.name == "amplitude":
                         str_ += "\t \t {:14} (Frozen):   {:.2e} {} \n".format(

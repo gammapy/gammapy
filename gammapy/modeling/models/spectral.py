@@ -1241,7 +1241,7 @@ class TemplateSpectralModel(SpectralModel):
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
         init = cls(energy=energy, values=values)
         init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters.parameters:
+        for parameter in init.parameters:
             setattr(init, parameter.name, parameter)
         return init
 
@@ -1455,8 +1455,10 @@ class AbsorbedSpectralModel(SpectralModel):
         max_ = self.absorption.param.max()
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
         self.alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
-
-        super().__init__(spectral_model.parameters.parameters + [par, self.alpha_norm])
+        absorption_parameters = Parameters([par, self.alpha_norm])
+        super().__init__(
+            Parameters.stack([spectral_model.parameters, absorption_parameters])
+        )
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""
@@ -1496,7 +1498,7 @@ class AbsorbedSpectralModel(SpectralModel):
             parameter_name=data["absorption_parameter"]["name"],
         )
         init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters.parameters:
+        for parameter in init.parameters:
             setattr(init, parameter.name, parameter)
         return init
 

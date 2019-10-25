@@ -172,10 +172,9 @@ class SkyModel(SkyModelBase):
 
         self._spectral_model = spectral_model
 
-        parameters = (
-            spatial_model.parameters.parameters + spectral_model.parameters.parameters
+        super().__init__(
+            Parameters.stack([spatial_model.parameters, spectral_model.parameters])
         )
-        super().__init__(parameters)
 
     @property
     def spatial_model(self):
@@ -191,10 +190,7 @@ class SkyModel(SkyModelBase):
     def spectral_model(self, model):
         """`~gammapy.modeling.models.SpectralModel`"""
         self._spectral_model = model
-        self._parameters = Parameters(
-            self.spatial_model.parameters.parameters
-            + self.spectral_model.parameters.parameters
-        )
+        self._parameters = Parameters.stack([self.spatial_model.parameters, self.spectral_model.parameters])
 
     @property
     def position(self):
@@ -417,7 +413,7 @@ class SkyDiffuseCube(SkyModelBase):
     def from_dict(cls, data):
         init = cls.read(data["filename"])
         init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters.parameters:
+        for parameter in init.parameters:
             setattr(init, parameter.name, parameter)
         return init
 
@@ -509,6 +505,6 @@ class BackgroundModel(Model):
 
         init = cls(map=map, name=data["name"])
         init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters.parameters:
+        for parameter in init.parameters:
             setattr(init, parameter.name, parameter)
         return init

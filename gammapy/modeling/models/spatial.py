@@ -513,7 +513,7 @@ class TemplateSpatialModel(SpatialModel):
     def from_dict(cls, data):
         init = cls.read(data["filename"], normalize=data.get("normalize", True))
         init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters.parameters:
+        for parameter in init.parameters:
             setattr(init, parameter.name, parameter)
         return init
 

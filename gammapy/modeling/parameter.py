@@ -242,6 +242,18 @@ class Parameters:
         self.covariance = covariance
         self.apply_autoscale = apply_autoscale
 
+    @classmethod
+    def stack(cls, parameters_list):
+        pars = []
+        for parameters in parameters_list:
+            for par in parameters:
+                pars.append(par)
+        # TODO: stack covariance
+        covariance = None
+        # TODO: remove autoscale attribute somehow?
+        apply_autoscale = True
+        return cls(pars, covariance, apply_autoscale)
+
     @staticmethod
     def _filter_unique_parameters(parameters):
         """Filter unique parameters from a list of parameters"""
@@ -318,6 +330,9 @@ class Parameters:
         """Access parameter by name or index"""
         idx = self._get_idx(name)
         return self.parameters[idx]
+
+    def __len__(self):
+        return len(self.parameters)
 
     def to_dict(self):
         data = dict(parameters=[], covariance=None)
