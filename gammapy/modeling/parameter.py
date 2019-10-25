@@ -2,8 +2,9 @@
 """Model parameter classes."""
 import copy
 import itertools
-
 import numpy as np
+import scipy.stats
+import scipy.linalg
 from astropy import units as u
 from astropy.table import Table
 
@@ -239,19 +240,54 @@ class Parameters:
     def __init__(self, parameters=None, covariance=None, apply_autoscale=True):
         if parameters is None:
             parameters = []
+        # elif isinstance(parameters, Parameters):
+        #     apply_autoscale = parameters.apply_autoscale
+        #     covariance = parameters.covariance if covariance is None else covariance
+        #     parameters = list(parameters)
+        # else:
+        #     # Handle any sequence of Parameter objects (list, tuple, generator)
+        #     parameters = list(parameters)
 
+        # TODO: remove unique filtering on __init__
         self._parameters = self._filter_unique_parameters(parameters)
         self.covariance = covariance
+        # TODO: remove autoscale attribute somehow?
         self.apply_autoscale = apply_autoscale
+
+    @classmethod
+    def from_values(cls, values=None, covariance=None):
+        """Create `Parameters` from values.
+
+        TODO: document.
+        """
+        parameters = [
+            Parameter(f"par_{idx}", value) for idx, value in enumerate(values)
+        ]
+        return cls(parameters, covariance)
+
+    @property
+    def values(self):
+        """Parameter values (`numpy.ndarray`)."""
+        return np.array([_.value for _ in self._parameters], dtype=np.float64)
+
+    # TODO: add `values` setter, using array interface. Adapt callers to this!
+
+    # TODO: use this, as in https://github.com/cdeil/multinorm/blob/master/multinorm.py
+    @property
+    def scipy_mvn(self):
+        return scipy.stats.multivariate_normal(
+            self.values, self.covariance, allow_singular=True
+        )
 
     @classmethod
     def stack(cls, parameters_list):
         pars = itertools.chain(*parameters_list)
-        # TODO: stack covariance
+
+        # TODO: Fix covariance stacking!
+        # covariances = [Parameters(_)._any_covariance for _ in parameters_list]
+        # covariance = scipy.linalg.block_diag(*covariances)
         covariance = None
-        # TODO: remove autoscale attribute somehow?
-        apply_autoscale = True
-        return cls(pars, covariance, apply_autoscale)
+        return cls(pars, covariance)
 
     @staticmethod
     def _filter_unique_parameters(parameters):
@@ -264,10 +300,13 @@ class Parameters:
 
         return unique_parameters
 
-    def _init_covariance(self):
-        if self.covariance is None:
-            shape = (len(self._parameters), len(self._parameters))
-            self.covariance = np.zeros(shape)
+    @property
+    def _empty_covariance(self):
+        return np.zeros((len(self), len(self)))
+
+    @property
+    def _any_covariance(self):
+        return self._empty_covariance if self.covariance is None else self.covariance
 
     def copy(self):
         """A deep copy"""
@@ -332,7 +371,7 @@ class Parameters:
         if self.covariance is None:
             t["error"] = np.nan
         else:
-            t["error"] = [self.error(idx) for idx in range(len(self._parameters))]
+            t["error"] = [self.error(idx) for idx in range(len(self))]
 
         t["unit"] = [p.unit.to_string("fits") for p in self._parameters]
         t["min"] = [p.min for p in self._parameters]
@@ -441,7 +480,8 @@ class Parameters:
         err : float or Quantity
             Parameter error
         """
-        self._init_covariance()
+        if self.covariance is None:
+            self.covariance = self._empty_covariance
 
         idx = self._get_idx(parname)
         err = u.Quantity(err, self[idx].unit).value
@@ -477,8 +517,7 @@ class Parameters:
 
     def _expand_factor_matrix(self, matrix):
         """Expand covariance matrix with zeros for frozen parameters"""
-        shape = (len(self._parameters), len(self._parameters))
-        matrix_expanded = np.zeros(shape)
+        matrix_expanded = self._empty_covariance
         mask = np.array([par.frozen for par in self._parameters])
         free_parameters = ~(mask | mask[:, np.newaxis])
         matrix_expanded[free_parameters] = matrix.ravel()
@@ -489,7 +528,8 @@ class Parameters:
 
         Used in the optimizer interface.
         """
-        if not np.sqrt(matrix.size) == len(self._parameters):
+        # FIXME: this is weird to do sqrt(size). Simplify
+        if not np.sqrt(matrix.size) == len(self):
             matrix = self._expand_factor_matrix(matrix)
 
         self.covariance = self._scale_matrix * matrix

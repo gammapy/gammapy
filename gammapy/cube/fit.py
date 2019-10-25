@@ -173,9 +173,7 @@ class MapDataset(Dataset):
             n_models = len(self.model.skymodels)
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
 
-        str_ += "\t{:32}: {}\n".format(
-            "Number of parameters", len(self.parameters)
-        )
+        str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.parameters))
         str_ += "\t{:32}: {}\n\n".format(
             "Number of free parameters", len(self.parameters.free_parameters)
         )

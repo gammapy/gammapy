@@ -1264,9 +1264,7 @@ class FluxPointsDataset(Dataset):
             str_ += "\t{:32}:   {}\n".format(
                 "Model Name", self.model.__class__.__name__
             )
-            str_ += "\t{:32}:   {}\n".format(
-                "N parameters", len(self.parameters)
-            )
+            str_ += "\t{:32}:   {}\n".format("N parameters", len(self.parameters))
             str_ += "\t{:32}:   {}\n".format(
                 "N free parameters", len(self.parameters.free_parameters)
             )

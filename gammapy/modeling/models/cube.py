@@ -190,7 +190,9 @@ class SkyModel(SkyModelBase):
     def spectral_model(self, model):
         """`~gammapy.modeling.models.SpectralModel`"""
         self._spectral_model = model
-        self._parameters = Parameters.stack([self.spatial_model.parameters, self.spectral_model.parameters])
+        self._parameters = Parameters.stack(
+            [self.spatial_model.parameters, self.spectral_model.parameters]
+        )
 
     @property
     def position(self):
