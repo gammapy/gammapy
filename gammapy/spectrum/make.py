@@ -35,7 +35,7 @@ class SpectrumDatasetMaker:
         Apply containment correction for point sources and circular on regions.
     """
 
-    def __init__(self, region, e_reco, e_true=None, containment_correction=True):
+    def __init__(self, region, e_reco, e_true=None, containment_correction=False):
         self.region = region
         self.e_reco = e_reco
         self.e_true = e_true or e_reco
