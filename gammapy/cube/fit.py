@@ -1197,18 +1197,17 @@ class MapDatasetOnOff(MapDataset):
         if not self._is_stackable() or not other._is_stackable():
             raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
 
-        if self.alpha and other.alpha and self.counts_off and other.counts_off:
-            # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
-            tmp_factor = (self.alpha * self.counts_off).copy()
-            tmp_factor.data[~self.mask_safe] = 0
-            tmp_factor.stack(other.alpha * other.counts_off, weights=other.mask_safe)
+        # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
+        tmp_factor = (self.alpha * self.counts_off).copy()
+        tmp_factor.data[~self.mask_safe] = 0
+        tmp_factor.stack(other.alpha * other.counts_off, weights=other.mask_safe)
 
-            # Stack the off counts (in place)
-            self.counts_off.data[~self.mask_safe] = 0
-            self.counts_off.stack(other.counts_off, weights=other.mask_safe)
+        # Stack the off counts (in place)
+        self.counts_off.data[~self.mask_safe] = 0
+        self.counts_off.stack(other.counts_off, weights=other.mask_safe)
 
-            self.acceptance_off = self.counts_off / tmp_factor
-            self.acceptance.data = np.ones(self.data_shape)
+        self.acceptance_off = self.counts_off / tmp_factor
+        self.acceptance.data = np.ones(self.data_shape)
 
         super().stack(other)
 
