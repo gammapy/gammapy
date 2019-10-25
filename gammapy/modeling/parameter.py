@@ -1,21 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Model parameter classes."""
 import copy
-import inspect
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
 __all__ = ["Parameter", "Parameters"]
-
-
-def get_default_args(func):
-    signature = inspect.signature(func)
-    return {
-        k: v.default
-        for k, v in signature.parameters.items()
-        if v.default is not inspect.Parameter.empty
-    }
 
 
 class Parameter:
@@ -185,21 +175,14 @@ class Parameter:
 
     def to_dict(self):
         """Convert to dict."""
-        data = {
+        return {
             "name": self.name,
             "value": self.value,
             "unit": self.unit.to_string("fits"),
+            "min": self.min,
+            "max": self.max,
+            "frozen": self.frozen,
         }
-
-        defaults = get_default_args(self.__init__)
-
-        for attr in ["frozen", "min", "max"]:
-            value = getattr(self, attr)
-            default = defaults[attr]
-            if value != default and value is not default:
-                data[attr] = value
-
-        return data
 
     def autoscale(self, method="scale10"):
         """Autoscale the parameters.
