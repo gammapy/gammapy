@@ -18,7 +18,7 @@ class SpectralModel(Model):
 
     def __call__(self, energy):
         kwargs = {}
-        for par in self.parameters.parameters:
+        for par in self.parameters:
             quantity = par.quantity
             if quantity.unit.physical_type == "energy":
                 quantity = quantity.to(energy.unit)
@@ -431,31 +431,29 @@ class CompoundSpectralModel(SpectralModel):
         self.model1 = model1
         self.model2 = model2
         self.operator = operator
-        parameters = (
-            self.model1.parameters.parameters + self.model2.parameters.parameters
+        super().__init__(
+            Parameters.stack([self.model1.parameters, self.model2.parameters])
         )
-        super().__init__(parameters)
-
-    # TODO: Think about how to deal with covariance matrix
 
     def __str__(self):
-        ss = self.__class__.__name__
-        ss += f"\n    Component 1 : {self.model1}"
-        ss += f"\n    Component 2 : {self.model2}"
-        ss += f"\n    Operator : {self.operator}"
-        return ss
+        return (
+            f"{self.__class__.__name__}\n"
+            f"    Component 1 : {self.model1}\n"
+            f"    Component 2 : {self.model2}\n"
+            f"    Operator : {self.operator}\n"
+        )
 
     def __call__(self, energy):
         val1 = self.model1(energy)
         val2 = self.model2(energy)
-
         return self.operator(val1, val2)
 
     def to_dict(self):
-        retval = dict()
-        retval["model1"] = self.model1.to_dict()
-        retval["model2"] = self.model2.to_dict()
-        retval["operator"] = self.operator
+        return {
+            "model1": self.model1.to_dict(),
+            "model2": self.model2.to_dict(),
+            "operator": self.operator,
+        }
 
 
 class PowerLawSpectralModel(SpectralModel):
