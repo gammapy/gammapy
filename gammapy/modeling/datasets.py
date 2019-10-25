@@ -91,7 +91,7 @@ class Datasets:
 
     @property
     def parameters(self):
-        return Parameters.stack(_.parameters for _ in self.datasets)
+        return Parameters.from_stack(_.parameters for _ in self.datasets)
 
     @property
     def names(self):

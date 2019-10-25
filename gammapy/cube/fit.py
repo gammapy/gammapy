@@ -244,7 +244,7 @@ class MapDataset(Dataset):
         if self.background_model:
             parameters_list.append(self.background_model.parameters)
 
-        return Parameters.stack(parameters_list)
+        return Parameters.from_stack(parameters_list)
 
     @property
     def _geom(self):

@@ -431,9 +431,7 @@ class CompoundSpectralModel(SpectralModel):
         self.model1 = model1
         self.model2 = model2
         self.operator = operator
-        super().__init__(
-            Parameters.stack([self.model1.parameters, self.model2.parameters])
-        )
+        super().__init__(self.model1.parameters + self.model2.parameters)
 
     def __str__(self):
         return (
@@ -1454,9 +1452,7 @@ class AbsorbedSpectralModel(SpectralModel):
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
         self.alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
         absorption_parameters = Parameters([par, self.alpha_norm])
-        super().__init__(
-            Parameters.stack([spectral_model.parameters, absorption_parameters])
-        )
+        super().__init__(spectral_model.parameters + absorption_parameters)
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""

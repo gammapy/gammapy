@@ -280,7 +280,11 @@ class Parameters:
         )
 
     @classmethod
-    def stack(cls, parameters_list):
+    def from_stack(cls, parameters_list):
+        """Create `Parameters` by stacking smaller `Parameters`.
+
+        TODO: document
+        """
         pars = itertools.chain(*parameters_list)
 
         # TODO: Fix covariance stacking!
@@ -353,6 +357,12 @@ class Parameters:
 
     def __len__(self):
         return len(self._parameters)
+
+    def __add__(self, other):
+        if isinstance(other, Parameters):
+            return Parameters.from_stack([self, other])
+        else:
+            raise TypeError(f"Invalid type: {other!r}")
 
     def to_dict(self):
         data = dict(parameters=[], covariance=None)
