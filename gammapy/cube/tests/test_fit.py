@@ -604,20 +604,22 @@ def test_from_geoms_onoff(images):
 
 
 @requires_data()
-def test_stack_onoff(images):
-    dataset1 = get_map_dataset_onoff(images)
-    dataset2 = get_map_dataset_onoff(images)
+def test_stack_onoff(images, geom_image):
+    dataset = get_map_dataset_onoff(images)
+    stacked = dataset.copy()
 
-    stacked = dataset1.copy()
+    stacked.stack(dataset)
 
-    stacked.stack(dataset2)
-    assert_allclose(stacked.counts.data.sum(), 2 * dataset2.counts.data.sum())
-    assert_allclose(stacked.counts_off.data.sum(), 2 * dataset2.counts_off.data.sum())
+    assert_allclose(stacked.counts.data.sum(), 2 * dataset.counts.data.sum())
+    assert_allclose(stacked.counts_off.data.sum(), 2 * dataset.counts_off.data.sum())
     assert_allclose(
-        stacked.acceptance.data.sum(), dataset1.data_shape[0] * dataset1.data_shape[1]
+        stacked.acceptance.data.sum(), dataset.data_shape[0] * dataset.data_shape[1]
     )
     assert_allclose(
         np.nansum(stacked.acceptance_off.data),
-        np.nansum(dataset1.acceptance_off.data / dataset1.alpha.data),
+        np.nansum(
+            dataset.counts_off.data / (dataset.counts_off.data * dataset.alpha.data)
+        ),
     )
+
     assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)

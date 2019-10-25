@@ -436,13 +436,13 @@ class MapDataset(Dataset):
         other: `~gammapy.cube.MapDataset`
             Map dataset to be stacked with this one.
         """
+
         if self.counts and other.counts:
             self.counts.data[~self.mask_safe.data] = 0
             self.counts.stack(other.counts, weights=other.mask_safe.data)
 
         if self.exposure and other.exposure:
             self.exposure.stack(other.exposure)
-
         if self.background_model and other.background_model:
             bkg = self.background_model.evaluate()
             bkg.data[~self.mask_safe.data] = 0
@@ -1165,6 +1165,17 @@ class MapDatasetOnOff(MapDataset):
             geom_edisp=geom_edisp,
         )
 
+    def _is_stackable(self):
+        """Check if the Dataset contains enough information to be stacked"""
+        if (
+            self.acceptance_off is None
+            or self.acceptance is None
+            or self.counts_off is None
+        ):
+            return False
+        else:
+            return True
+
     def stack(self, other):
         """Stack another MapDatasetOnOff in place.
 
@@ -1180,18 +1191,26 @@ class MapDatasetOnOff(MapDataset):
         other: `~gammapy.cube.MapDatasetOnOff`
             Dataset to be stacked with this one.
         """
-        super().stack(other)
+        if not isinstance(other, MapDatasetOnOff):
+            raise TypeError("Incompatible types for MapDatasetOnOff stacking")
+
+        if not self._is_stackable() or not other._is_stackable():
+            raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
 
         if self.alpha and other.alpha and self.counts_off and other.counts_off:
-            self.acceptance_off.data = 1 / (
-                self.alpha.data * self.counts_off.data
-                + other.alpha.data * other.counts_off.data
-            )
-            self.acceptance.data = np.ones(self.data_shape)
+            # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
+            tmp_factor = (self.alpha * self.counts_off).copy()
+            tmp_factor.data[~self.mask_safe] = 0
+            tmp_factor.stack(other.alpha * other.counts_off, weights=other.mask_safe)
 
-        if self.counts_off and other.counts_off:
+            # Stack the off counts (in place)
             self.counts_off.data[~self.mask_safe] = 0
             self.counts_off.stack(other.counts_off, weights=other.mask_safe)
+
+            self.acceptance_off = self.counts_off / tmp_factor
+            self.acceptance.data = np.ones(self.data_shape)
+
+        super().stack(other)
 
     def likelihood(self):
         """Total likelihood given the current model parameters."""
@@ -1239,7 +1258,9 @@ class MapDatasetOnOff(MapDataset):
             hdulist += self.acceptance.to_hdulist(hdu="acceptance")[exclude_primary]
 
         if self.acceptance_off is not None:
-            hdulist += self.acceptance_off.to_hdulist(hdu="acceptance_off")[exclude_primary]
+            hdulist += self.acceptance_off.to_hdulist(hdu="acceptance_off")[
+                exclude_primary
+            ]
 
         return hdulist
 
