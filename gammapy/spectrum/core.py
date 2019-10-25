@@ -229,14 +229,14 @@ class CountsSpectrum:
             Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
         """
         import matplotlib.pyplot as plt
+        from matplotlib.collections import PatchCollection
 
         ax = plt.gca() or ax
-
         regions = compound_region_to_list(self.region)
-        for region in regions:
-            patch = region.to_pixel(wcs=ax.wcs).as_artist(**kwargs)
-            ax.add_patch(patch)
+        artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
 
+        patches = PatchCollection(artists, **kwargs)
+        ax.add_collection(patches)
         return ax
 
     def peek(self, figsize=(5, 10)):
