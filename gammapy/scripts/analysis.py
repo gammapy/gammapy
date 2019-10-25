@@ -240,11 +240,7 @@ class Analysis:
 
         geom = self._create_geometry(self.settings["datasets"]["geom"])
 
-        geom_irf = dict(
-            energy_axis_true=None,
-            binsz_irf=None,
-            margin_irf=None
-        )
+        geom_irf = dict(energy_axis_true=None, binsz_irf=None, margin_irf=None)
         if "energy-axis-true" in self.settings["datasets"]:
             axis_params = self.settings["datasets"]["energy-axis-true"]
             geom_irf["energy_axis_true"] = MapAxis.from_bounds(**axis_params)

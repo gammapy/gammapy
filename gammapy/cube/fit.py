@@ -371,33 +371,32 @@ class MapDataset(Dataset):
         name="",
         **kwargs,
     ):
-        """Creates a MapDataset object with zero filled maps
+        """Create a MapDataset object with zero filled maps.
 
         Parameters
         ----------
-        geom: `~gammapy.maps.WcsGeom`
+        geom : `~gammapy.maps.WcsGeom`
             Reference target geometry in reco energy, used for counts and background maps
-        energy_axis_true: `~gammapy.maps.MapAxis`
+        energy_axis_true : `~gammapy.maps.MapAxis`
             True energy axis used for IRF maps
-        migra_axis: `~gammapy.maps.MapAxis`
+        migra_axis : `~gammapy.maps.MapAxis`
             Migration axis for the energy dispersion map
-        rad_axis: `~gammapy.maps.MapAxis`
+        rad_axis : `~gammapy.maps.MapAxis`
             Rad axis for the psf map
-        binsz_irf_maps: float
+        binsz_irf : float
             IRF Map pixel size in degrees.
-        margin_irf: float
+        margin_irf : float
             IRF map margin size in degrees
-        reference_time: `~astropy.time.Time`
+        reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
             Name of the dataset.
 
         Returns
-        --------
-        empty_maps: `MapDataset`
+        -------
+        empty_maps : `MapDataset`
             A MapDataset containing zero filled maps
         """
-
         migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
         rad_axis = rad_axis or RAD_AXIS_DEFAULT
         energy_axis_true = energy_axis_true or geom.get_axis_by_name("energy")
