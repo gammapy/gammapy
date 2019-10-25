@@ -411,11 +411,9 @@ class SkyDiffuseCube(SkyModelBase):
 
     @classmethod
     def from_dict(cls, data):
-        init = cls.read(data["filename"])
-        init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters:
-            setattr(init, parameter.name, parameter)
-        return init
+        model = cls.read(data["filename"])
+        model._update_from_dict(data)
+        return model
 
     def to_dict(self):
         data = super().to_dict()
@@ -503,8 +501,6 @@ class BackgroundModel(Model):
         else:
             raise ValueError("Requires either filename or `Map` object")
 
-        init = cls(map=map, name=data["name"])
-        init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters:
-            setattr(init, parameter.name, parameter)
-        return init
+        model = cls(map=map, name=data["name"])
+        model._update_from_dict(data)
+        return model

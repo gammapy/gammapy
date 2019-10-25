@@ -55,11 +55,14 @@ class Model:
         if "frame" in data:
             params["frame"] = data["frame"]
 
-        init = cls(**params)
-        init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters.parameters:
-            setattr(init, parameter.name, parameter)
-        return init
+        model = cls(**params)
+        model._update_from_dict(data)
+        return model
+
+    def _update_from_dict(self, data):
+        self.parameters = Parameters.from_dict(data)
+        for parameter in self.parameters.parameters:
+            setattr(self, parameter.name, parameter)
 
     @staticmethod
     def create(tag, *args, **kwargs):

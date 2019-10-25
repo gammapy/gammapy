@@ -1239,11 +1239,9 @@ class TemplateSpectralModel(SpectralModel):
     def from_dict(cls, data):
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
-        init = cls(energy=energy, values=values)
-        init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters:
-            setattr(init, parameter.name, parameter)
-        return init
+        model = cls(energy=energy, values=values)
+        model._update_from_dict(data)
+        return model
 
 
 class ScaleSpectralModel(SpectralModel):
@@ -1491,16 +1489,14 @@ class AbsorbedSpectralModel(SpectralModel):
         from gammapy.modeling.models import SPECTRAL_MODELS
 
         model_class = SPECTRAL_MODELS.get_cls(data["base_model"]["type"])
-        init = cls(
+        model = cls(
             spectral_model=model_class.from_dict(data["base_model"]),
             absorption=Absorption.from_dict(data["absorption"]),
             parameter=data["absorption_parameter"]["value"],
             parameter_name=data["absorption_parameter"]["name"],
         )
-        init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters:
-            setattr(init, parameter.name, parameter)
-        return init
+        model._update_from_dict(data)
+        return model
 
 
 class NaimaSpectralModel(SpectralModel):
