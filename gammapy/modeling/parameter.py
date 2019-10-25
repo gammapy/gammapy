@@ -284,25 +284,6 @@ class Parameters:
         """List of parameter names"""
         return [par.name for par in self._parameters]
 
-    def __str__(self):
-        str_ = self.__class__.__name__ + "\n\n"
-
-        for par in self._parameters:
-            if par.name == "amplitude":
-                line = "\t{:12} {:11}: {:.2e} {} {}\n"
-            else:
-                line = "\t{:12} {:11}: {:.3f} {} {}\n"
-
-            frozen = "(frozen)" if par.frozen else ""
-            try:
-                error = "+/- {:.2f}".format(self.get_error(par))
-            except AttributeError:
-                error = ""
-
-            str_ += line.format(par.name, frozen, par.value, error, par.unit)
-
-        return str_
-
     def _get_idx(self, val):
         """Get position index for a given parameter.
 
