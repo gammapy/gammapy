@@ -61,7 +61,7 @@ class Model:
 
     def _update_from_dict(self, data):
         self.parameters = Parameters.from_dict(data)
-        for parameter in self.parameters.parameters:
+        for parameter in self.parameters:
             setattr(self, parameter.name, parameter)
 
     @staticmethod
