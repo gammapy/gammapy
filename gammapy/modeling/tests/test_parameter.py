@@ -105,6 +105,13 @@ def test_parameters_basics(pars):
     assert_allclose(pars.error("spam"), 0.1)
     assert_allclose(pars.error(1), 10)
 
+def test_parameters_stack():
+    a = Parameter("a", 1)
+    b = Parameter("b", 2)
+    c = Parameter("c", 3)
+    pars = Parameters.stack([[a], [], [b, c]])
+    assert pars.names == ["a", "b", "c"]
+
 
 def test_parameters_getitem(pars):
     assert pars[1].name == "ham"

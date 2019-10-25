@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Model parameter classes."""
 import copy
+import itertools
+
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
@@ -244,10 +246,7 @@ class Parameters:
 
     @classmethod
     def stack(cls, parameters_list):
-        pars = []
-        for parameters in parameters_list:
-            for par in parameters:
-                pars.append(par)
+        pars = itertools.chain(*parameters_list)
         # TODO: stack covariance
         covariance = None
         # TODO: remove autoscale attribute somehow?
