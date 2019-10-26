@@ -240,19 +240,17 @@ class Parameters:
     def __init__(self, parameters=None, covariance=None, apply_autoscale=True):
         if parameters is None:
             parameters = []
-        # elif isinstance(parameters, Parameters):
-        #     apply_autoscale = parameters.apply_autoscale
-        #     covariance = parameters.covariance if covariance is None else covariance
-        #     parameters = list(parameters)
-        # else:
-        #     # Handle any sequence of Parameter objects (list, tuple, generator)
-        #     parameters = list(parameters)
+        else:
+            parameters = list(parameters)
 
-        # TODO: remove unique filtering on __init__
-        self._parameters = self._filter_unique_parameters(parameters)
+        self._parameters = parameters
         self.covariance = covariance
         # TODO: remove autoscale attribute somehow?
         self.apply_autoscale = apply_autoscale
+
+        # TODO: move unique parameter filtering out of __init__, add covar handling
+        self._parameters = self.unique_parameters
+
 
     @classmethod
     def from_values(cls, values=None, covariance=None):
@@ -293,17 +291,6 @@ class Parameters:
         covariance = None
         return cls(pars, covariance)
 
-    @staticmethod
-    def _filter_unique_parameters(parameters):
-        """Filter unique parameters from a list of parameters"""
-        unique_parameters = []
-
-        for par in parameters:
-            if par not in unique_parameters:
-                unique_parameters.append(par)
-
-        return unique_parameters
-
     @property
     def _empty_covariance(self):
         return np.zeros((len(self), len(self)))
@@ -320,6 +307,11 @@ class Parameters:
     def free_parameters(self):
         """List of free parameters"""
         return [par for par in self._parameters if not par.frozen]
+
+    @property
+    def unique_parameters(self):
+        """List of unique parameters"""
+        return list(dict.fromkeys(self._parameters))
 
     @property
     def names(self):
