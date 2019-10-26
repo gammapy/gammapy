@@ -56,9 +56,10 @@ class SpatialModel(Model):
         data["frame"] = self.frame
         data["parameters"] = data.pop("parameters")
         return data
-    
-    def get_contour(self, fmax=0.5, geom=None, binsz=0.04, width=16.): 
+
+    def get_contour(self, fmax=0.5, geom=None, binsz=0.04, width=16.0):
         from matplotlib import pyplot as plt
+
         """Get spatial model countour at a given value.
         
         Parameters
@@ -85,25 +86,31 @@ class SpatialModel(Model):
             )
         if geom is not None and width is not None:
             geom = geom.cutout(position=self.position.galactic, width=width)
-            
-        values=self.evaluate_geom(geom).value
+
+        values = self.evaluate_geom(geom).value
         plt.ioff()
         fig = plt.figure()
-        cs = plt.contour(range(geom.data_shape[0]),range(geom.data_shape[1]),values,[fmax*values.max()])
+        cs = plt.contour(
+            range(geom.data_shape[0]),
+            range(geom.data_shape[1]),
+            values,
+            [fmax * values.max()],
+        )
         plt.close(fig)
         plt.ion()
 
         vertices = []
-        ds9_text=""
+        ds9_text = ""
         for pp in cs.collections[0].get_paths():
             ds9_text += "galactic;polygon("
             for v in pp.vertices:
-                v_coord=geom.pix_to_coord(v)
-                vertices.append([v_coord[0].value,v_coord[1].value])
+                v_coord = geom.pix_to_coord(v)
+                vertices.append([v_coord[0].value, v_coord[1].value])
                 ds9_text += "{:.4f},{:.4f},".format(v_coord[0].value, v_coord[1].value)
-            ds9_text+=") # fill=0\n"
+            ds9_text += ") # fill=0\n"
         return np.array(vertices), ds9_text
-    
+
+
 class PointSpatialModel(SpatialModel):
     r"""Point Source.
 

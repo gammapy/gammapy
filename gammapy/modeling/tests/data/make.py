@@ -23,6 +23,7 @@ from gammapy.modeling.models import (
 DATA_PATH = Path("./")
 from gammapy.modeling.serialize import models_to_reg
 
+
 def make_example_2():
     spatial = GaussianSpatialModel("0 deg", "0 deg", "1 deg")
     model = SkyModel(spatial, PowerLawSpectralModel())
@@ -121,15 +122,16 @@ def make_datasets_example():
 
     datasets.to_yaml("$GAMMAPY_DATA/tests/models", prefix="gc_example_", overwrite=True)
 
-def make_region_file():
-    model1=DiskSpatialModel(0*u.deg,0*u.deg,1*u.deg,0.8,30*u.deg,frame="galactic")
-    model2=GaussianSpatialModel(5*u.deg,1*u.deg,0.3*u.deg,frame="galactic")
 
-    vertices1, text1 = model1.get_contour()
-    vertices2, text2 = model2.get_contour()
+def make_region_file():
+    model1 = DiskSpatialModel(
+        0 * u.deg, 0 * u.deg, 1 * u.deg, 0.8, 30 * u.deg, frame="galactic"
+    )
+    model2 = GaussianSpatialModel(5 * u.deg, 1 * u.deg, 0.3 * u.deg, frame="galactic")
     filename = Path("contours.reg")
-    models_to_reg([model1,model2],filename)
-    
+    models_to_reg([model1, model2], filename)
+
+
 if __name__ == "__main__":
     make_example_2()
     make_datasets_example()
