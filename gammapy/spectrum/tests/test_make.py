@@ -6,7 +6,11 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from gammapy.data import DataStore, ObservationStats
-from gammapy.spectrum import SafeMaskMaker, SpectrumDatasetMaker, ReflectedRegionsBackgroundMaker
+from gammapy.spectrum import (
+    SafeMaskMaker,
+    SpectrumDatasetMaker,
+    ReflectedRegionsBackgroundMaker,
+)
 from gammapy.utils.testing import requires_data, assert_quantity_allclose
 from gammapy.maps import WcsGeom, WcsNDMap
 
@@ -73,11 +77,8 @@ def reflected_regions_bkg_maker():
     exclusion_mask = WcsNDMap(geom, data=mask)
 
     return ReflectedRegionsBackgroundMaker(
-        region=region,
-        exclusion_mask=exclusion_mask,
-        min_distance_input="0.2 deg",
+        region=region, exclusion_mask=exclusion_mask, min_distance_input="0.2 deg"
     )
-
 
 
 @requires_data()
@@ -156,12 +157,7 @@ class TestSpectrumMakerChain:
         [
             (
                 dict(containment_correction=False),
-                dict(
-                    n_on=192,
-                    sigma=21.1404,
-                    aeff=580254.9 * u.m ** 2,
-                    edisp=0.236176,
-                ),
+                dict(n_on=192, sigma=21.1404, aeff=580254.9 * u.m ** 2, edisp=0.236176),
             ),
             (
                 dict(containment_correction=True),
@@ -174,13 +170,23 @@ class TestSpectrumMakerChain:
             ),
         ],
     )
-    def test_extract(pars, results, observations_hess_dl3, spectrum_dataset_maker_crab_fine_bins, reflected_regions_bkg_maker):
+    def test_extract(
+        pars,
+        results,
+        observations_hess_dl3,
+        spectrum_dataset_maker_crab_fine_bins,
+        reflected_regions_bkg_maker,
+    ):
         """Test quantitative output for various configs"""
         safe_mask_maker = SafeMaskMaker()
 
         obs = observations_hess_dl3[0]
-        spectrum_dataset_maker_crab_fine_bins.containment_correction = pars["containment_correction"]
-        dataset = spectrum_dataset_maker_crab_fine_bins.run(obs, selection=["counts", "aeff", "edisp"])
+        spectrum_dataset_maker_crab_fine_bins.containment_correction = pars[
+            "containment_correction"
+        ]
+        dataset = spectrum_dataset_maker_crab_fine_bins.run(
+            obs, selection=["counts", "aeff", "edisp"]
+        )
         dataset = reflected_regions_bkg_maker.run(dataset, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
@@ -205,12 +211,16 @@ class TestSpectrumMakerChain:
         assert_allclose(gti_dataset["START"], gti_obs["START"])
         assert_allclose(gti_dataset["STOP"], gti_obs["STOP"])
 
-    def test_compute_energy_threshold(self, spectrum_dataset_maker_crab_fine_bins, observations_hess_dl3):
+    def test_compute_energy_threshold(
+        self, spectrum_dataset_maker_crab_fine_bins, observations_hess_dl3
+    ):
         safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 
         obs = observations_hess_dl3[0]
         spectrum_dataset_maker_crab_fine_bins.containment_correction = True
-        dataset = spectrum_dataset_maker_crab_fine_bins.run(obs, selection=["counts", "aeff", "edisp"])
+        dataset = spectrum_dataset_maker_crab_fine_bins.run(
+            obs, selection=["counts", "aeff", "edisp"]
+        )
         dataset = safe_mask_maker.run(dataset, obs)
 
         actual = dataset.energy_range[0]

@@ -21,7 +21,7 @@ from gammapy.spectrum import (
     FluxPointsEstimator,
     SpectrumDatasetMaker,
     SafeMaskMaker,
-    ReflectedRegionsBackgroundMaker
+    ReflectedRegionsBackgroundMaker,
 )
 from gammapy.utils.scripts import make_path, read_yaml
 
@@ -327,9 +327,7 @@ class Analysis:
             exclusion_region = Map.read(filename, **map_hdu)
             bkg_maker_config["exclusion_mask"] = exclusion_region
         if background["background_estimator"] == "reflected":
-            reflected_bkg_maker = ReflectedRegionsBackgroundMaker(
-                **bkg_maker_config
-            )
+            reflected_bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
         else:
             # TODO: raise error?
             log.info("Background estimation only for reflected regions method.")
