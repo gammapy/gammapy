@@ -7,8 +7,28 @@ from .models import Registry, SkyDiffuseCube, SkyModel
 # TODO: move this elsewhere ?
 DATASETS = Registry([MapDataset, SpectrumDataset, FluxPointsDataset])
 
-__all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
+__all__ = ["models_to_reg","models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
 
+
+def models_to_reg(models, filename, fmax=0.5):
+    """create ds9 region file from a list of model countours
+        
+    Parameters
+    ----------
+    models : list
+        Python list of SpatialModel objects
+    fmax : float
+        Countour value relative to maximun value
+    filename : `pathlib.Path`
+        path to write files
+    """
+    
+    ds9_text="global color=blue \n"
+    for model in models:
+        vertices , text = model.get_contour(fmax)
+        ds9_text += text
+    with open(filename, "w") as text_file:
+        text_file.write(ds9_text)
 
 def models_to_dict(models):
     """Convert list of models to dict.

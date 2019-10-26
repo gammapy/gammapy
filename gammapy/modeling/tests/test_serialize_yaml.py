@@ -1,17 +1,38 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from  filecmp import cmp
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
-from gammapy.maps import Map, MapAxis
+from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Model
-from gammapy.modeling.models import MODELS, AbsorbedSpectralModel, Absorption, SkyModels
-from gammapy.modeling.serialize import dict_to_models
+from gammapy.modeling.models import MODELS, AbsorbedSpectralModel, Absorption, SkyModels,DiskSpatialModel,GaussianSpatialModel
+from gammapy.modeling.serialize import dict_to_models, models_to_reg
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
+
+@requires_data()
+def test_models_to_reg(tmpdir):
+    model1=DiskSpatialModel(0*u.deg,0*u.deg,1*u.deg,0.8,30*u.deg,frame="galactic")
+    model2=GaussianSpatialModel(5*u.deg,1*u.deg,0.3*u.deg,frame="galactic")
+    
+    geom = WcsGeom.create(
+        skydir=model2.position.galactic,
+        binsz=0.02,
+        width=6.,
+        coordsys="GAL",
+        proj="CAR",
+    )
+    vertices, text = model2.get_contour()
+    vertices2, text2 = model2.get_contour(geom,width=4)
+    assert text == text2
+    assert_allclose(vertices,vertices2)
+    filename = tmpdir / "contours.reg"
+    models_to_reg([model1,model2],filename)
+    assert cmp(filename, "data/contours.reg")
 
 @requires_data()
 def test_dict_to_skymodels():

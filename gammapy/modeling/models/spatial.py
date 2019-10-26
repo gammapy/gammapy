@@ -7,7 +7,7 @@ import scipy.special
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
-from gammapy.maps import Map
+from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Model, Parameter, Parameters
 from gammapy.utils.scripts import make_path
 
@@ -56,8 +56,54 @@ class SpatialModel(Model):
         data["frame"] = self.frame
         data["parameters"] = data.pop("parameters")
         return data
+    
+    def get_contour(self, fmax=0.5, geom=None, binsz=0.04, width=16.): 
+        from matplotlib import pyplot as plt
+        """Get spatial model countour at a given value.
+        
+        Parameters
+        ----------
+        fmax : float
+            Countour value relative to maximun value
+        geom : `~gammapy.maps.Geom`
+            Geometry to evaluate the model
+            (if None the parameters width and binsz are used to defined geom)
+        width : float
+            Map width in degree
+            If geom is not None, width is used for cutout
+        binsz : float
+            Pixel size in degree
+            If geom is not None, unused
+        """
+        if geom is None:
+            geom = WcsGeom.create(
+                skydir=self.position.galactic,
+                binsz=binsz,
+                width=width,
+                coordsys="GAL",
+                proj="CAR",
+            )
+        if geom is not None and width is not None:
+            geom = geom.cutout(position=self.position.galactic, width=width)
+            
+        values=self.evaluate_geom(geom).value
+        plt.ioff()
+        fig = plt.figure()
+        cs = plt.contour(range(geom.data_shape[0]),range(geom.data_shape[1]),values,[fmax*values.max()])
+        plt.close(fig)
+        plt.ion()
 
-
+        vertices = []
+        ds9_text=""
+        for pp in cs.collections[0].get_paths():
+            ds9_text += "galactic;polygon("
+            for v in pp.vertices:
+                v_coord=geom.pix_to_coord(v)
+                vertices.append([v_coord[0].value,v_coord[1].value])
+                ds9_text += "{:.4f},{:.4f},".format(v_coord[0].value, v_coord[1].value)
+            ds9_text+=") # fill=0\n"
+        return np.array(vertices), ds9_text
+    
 class PointSpatialModel(SpatialModel):
     r"""Point Source.
 
