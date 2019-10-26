@@ -232,12 +232,9 @@ class Parameters:
     covariance : `~numpy.ndarray`, optional
         Parameters covariance matrix.
         Order of values as specified by `parameters`.
-    apply_autoscale : bool, optional
-        Flag for optimizers, if True parameters are autoscaled before the fit,
-        see `~gammapy.modeling.Parameter.autoscale`
     """
 
-    def __init__(self, parameters=None, covariance=None, apply_autoscale=True):
+    def __init__(self, parameters=None, covariance=None):
         if parameters is None:
             parameters = []
         else:
@@ -245,8 +242,6 @@ class Parameters:
 
         self._parameters = parameters
         self.covariance = covariance
-        # TODO: remove autoscale attribute somehow?
-        self.apply_autoscale = apply_autoscale
 
         # TODO: move unique parameter filtering out of __init__, add covar handling
         self._parameters = self.unique_parameters
