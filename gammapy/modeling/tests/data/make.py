@@ -57,7 +57,7 @@ def make_datasets_example():
     names = ["gc", "g09"]
     models = []
 
-    for ind, (lon, lat) in enumerate(sources_coords):
+    for idx, (lon, lat) in enumerate(sources_coords):
         spatial_model = PointSpatialModel(
             lon_0=lon * u.deg, lat_0=lat * u.deg, frame="galactic"
         )
@@ -68,19 +68,16 @@ def make_datasets_example():
             lambda_=0.1 / u.TeV,
         )
         model_ecpl = SkyModel(
-            spatial_model=spatial_model, spectral_model=spectral_model, name=names[ind]
+            spatial_model=spatial_model, spectral_model=spectral_model, name=names[idx]
         )
         models.append(model_ecpl)
 
     # test to link a spectral parameter
     params0 = models[0].spectral_model.parameters
     params1 = models[1].spectral_model.parameters
-    ind = params0.parameters.index(params0["reference"])
-    params0.parameters[ind] = params1["reference"]
-
+    params0.link("reference", params1["reference"])
     # update the sky model
-    ind = models[0].parameters.parameters.index(models[0].parameters["reference"])
-    models[0].parameters.parameters[ind] = params1["reference"]
+    models[0].parameters.link("reference", params1["reference"])
 
     obs_ids = [110380, 111140, 111159]
     data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
@@ -121,8 +118,7 @@ def make_datasets_example():
     print("expo sum : ", dataset0.exposure.data.sum())
     print("bkg0 sum : ", dataset0.background_model.evaluate().data.sum())
 
-    path = "$GAMMAPY_DATA/tests/models/gc_example_"
-    datasets.to_yaml(path, overwrite=True)
+    datasets.to_yaml("$GAMMAPY_DATA/tests/models", prefix="gc_example_", overwrite=True)
 
 
 if __name__ == "__main__":

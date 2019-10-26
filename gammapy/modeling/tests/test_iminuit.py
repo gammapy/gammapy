@@ -54,7 +54,6 @@ def test_iminuit_basic(pars):
 def test_iminuit_stepsize(pars):
     ds = MyDataset(pars)
 
-    pars.apply_autoscale = False
     pars.covariance = np.diag([0.2, 3e4, 4e-6]) ** 2
 
     factors, info, minuit = optimize_iminuit(function=ds.fcn, parameters=pars)

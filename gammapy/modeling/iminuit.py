@@ -158,17 +158,10 @@ def make_minuit_par_kwargs(parameters):
         max_ = None if np.isnan(par.factor_max) else par.factor_max
         kwargs[f"limit_{name}"] = (min_, max_)
 
-        if parameters.covariance is not None:
-            error = parameters.error(par) / par.scale
-        elif parameters.apply_autoscale:
+        if parameters.covariance is None:
             error = 1
         else:
-            error = 1
-            log.warning(
-                "Neither covariance matrix set nor auto-scaling of parameters activated."
-                "Assuming stepsize of 1, which could lead to convergence problems of the "
-                "Minuit optimizer."
-            )
+            error = parameters.error(par) / par.scale
 
         kwargs[f"error_{name}"] = error
 

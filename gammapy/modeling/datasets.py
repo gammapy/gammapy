@@ -3,7 +3,7 @@ import abc
 import copy
 from collections import Counter
 import numpy as np
-from gammapy.utils.scripts import read_yaml, write_yaml
+from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 from .parameter import Parameters
 
 __all__ = ["Dataset", "Datasets"]
@@ -91,11 +91,7 @@ class Datasets:
 
     @property
     def parameters(self):
-        # join parameter lists
-        parameters = []
-        for dataset in self.datasets:
-            parameters += dataset.parameters.parameters
-        return Parameters(parameters)
+        return Parameters.from_stack(_.parameters for _ in self.datasets)
 
     @property
     def names(self):
@@ -183,6 +179,8 @@ class Datasets:
             overwrite datasets FITS files
         """
         from .serialize import datasets_to_dict
+
+        path = make_path(path)
 
         datasets_dict, components_dict = datasets_to_dict(
             self.datasets, path, prefix, overwrite

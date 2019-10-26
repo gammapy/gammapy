@@ -106,6 +106,26 @@ def test_parameters_basics(pars):
     assert_allclose(pars.error(1), 10)
 
 
+def test_parameters_from_stack():
+    a = Parameter("a", 1)
+    b = Parameter("b", 2)
+    c = Parameter("c", 3)
+    pars = Parameters.from_stack([[a], [], [b, c]])
+    assert pars.names == ["a", "b", "c"]
+
+    pars = Parameters([a, b]) + Parameters([]) + Parameters([c])
+    assert pars.names == ["a", "b", "c"]
+
+    pars1 = Parameters.from_values([1, 2], covariance=np.full((2, 2), 2))
+    pars2 = Parameters.from_values([3, 4, 5], covariance=np.full((3, 3), 3))
+    pars = pars1 + pars2
+
+    assert_allclose(pars.values, [1, 2, 3, 4, 5])
+    # FIXME: covar stacking is broken ATM
+    # assert_allclose(pars.covariance[0], [2, 2, 0, 0, 0])
+    # assert_allclose(pars.covariance[4], [0, 0, 3, 3, 3])
+
+
 def test_parameters_getitem(pars):
     assert pars[1].name == "ham"
     assert pars["ham"].name == "ham"
@@ -129,15 +149,6 @@ def test_parameters_to_table(pars):
     table = pars.to_table()
     assert len(table) == 2
     assert len(table.columns) == 7
-
-
-def test_parameters_covariance_to_table(pars):
-    with pytest.raises(ValueError):
-        pars.covariance_to_table()
-
-    pars.set_error("ham", 10)
-    table = pars.covariance_to_table()
-    assert_allclose(table["ham"][1], 100)
 
 
 def test_parameters_set_parameter_factors(pars):

@@ -1,21 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Model parameter classes."""
 import copy
-import inspect
+import itertools
 import numpy as np
+import scipy.linalg
+import scipy.stats
 from astropy import units as u
 from astropy.table import Table
 
 __all__ = ["Parameter", "Parameters"]
-
-
-def get_default_args(func):
-    signature = inspect.signature(func)
-    return {
-        k: v.default
-        for k, v in signature.parameters.items()
-        if v.default is not inspect.Parameter.empty
-    }
 
 
 class Parameter:
@@ -185,21 +178,14 @@ class Parameter:
 
     def to_dict(self):
         """Convert to dict."""
-        data = {
+        return {
             "name": self.name,
             "value": self.value,
             "unit": self.unit.to_string("fits"),
+            "min": self.min,
+            "max": self.max,
+            "frozen": self.frozen,
         }
-
-        defaults = get_default_args(self.__init__)
-
-        for attr in ["frozen", "min", "max"]:
-            value = getattr(self, attr)
-            default = defaults[attr]
-            if value != default and value is not default:
-                data[attr] = value
-
-        return data
 
     def autoscale(self, method="scale10"):
         """Autoscale the parameters.
@@ -234,9 +220,10 @@ class Parameter:
 
 
 class Parameters:
-    """List of `Parameter`.
+    """Parameters container.
 
-    Holds covariance matrix.
+    - List of `Parameter` objects.
+    - Covariance matrix.
 
     Parameters
     ----------
@@ -245,77 +232,85 @@ class Parameters:
     covariance : `~numpy.ndarray`, optional
         Parameters covariance matrix.
         Order of values as specified by `parameters`.
-    apply_autoscale : bool, optional
-        Flag for optimizers, if True parameters are autoscaled before the fit,
-        see `~gammapy.modeling.Parameter.autoscale`
     """
 
-    def __init__(self, parameters=None, covariance=None, apply_autoscale=True):
+    def __init__(self, parameters=None, covariance=None):
         if parameters is None:
             parameters = []
+        else:
+            parameters = list(parameters)
 
-        self._parameters = self._filter_unique_parameters(parameters)
+        self._parameters = parameters
         self.covariance = covariance
-        self.apply_autoscale = apply_autoscale
 
-    @staticmethod
-    def _filter_unique_parameters(parameters):
-        """Filter unique parameters from a list of parameters"""
-        unique_parameters = []
+        # TODO: move unique parameter filtering out of __init__, add covar handling
+        self._parameters = self.unique_parameters
 
-        for par in parameters:
-            if par not in unique_parameters:
-                unique_parameters.append(par)
+    @classmethod
+    def from_values(cls, values=None, covariance=None):
+        """Create `Parameters` from values.
 
-        return unique_parameters
+        TODO: document.
+        """
+        parameters = [
+            Parameter(f"par_{idx}", value) for idx, value in enumerate(values)
+        ]
+        return cls(parameters, covariance)
 
-    def _init_covariance(self):
-        if self.covariance is None:
-            shape = (len(self.parameters), len(self.parameters))
-            self.covariance = np.zeros(shape)
+    @property
+    def values(self):
+        """Parameter values (`numpy.ndarray`)."""
+        return np.array([_.value for _ in self._parameters], dtype=np.float64)
+
+    # TODO: add `values` setter, using array interface. Adapt callers to this!
+
+    # TODO: use this, as in https://github.com/cdeil/multinorm/blob/master/multinorm.py
+    @property
+    def scipy_mvn(self):
+        return scipy.stats.multivariate_normal(
+            self.values, self.covariance, allow_singular=True
+        )
+
+    @classmethod
+    def from_stack(cls, parameters_list):
+        """Create `Parameters` by stacking smaller `Parameters`.
+
+        TODO: document
+        """
+        pars = itertools.chain(*parameters_list)
+
+        # TODO: Fix covariance stacking!
+        # covariances = [Parameters(_)._any_covariance for _ in parameters_list]
+        # covariance = scipy.linalg.block_diag(*covariances)
+        covariance = None
+        return cls(pars, covariance)
+
+    @property
+    def _empty_covariance(self):
+        return np.zeros((len(self), len(self)))
+
+    @property
+    def _any_covariance(self):
+        return self._empty_covariance if self.covariance is None else self.covariance
 
     def copy(self):
         """A deep copy"""
         return copy.deepcopy(self)
 
     @property
-    def parameters(self):
-        """List of `Parameter`."""
-        return self._parameters
-
-    @property
     def free_parameters(self):
         """List of free parameters"""
-        return [par for par in self.parameters if not par.frozen]
+        return [par for par in self._parameters if not par.frozen]
 
-    # TODO: replace this with a better API to update parameters
-    @parameters.setter
-    def parameters(self, vals):
-        self._parameters = vals
+    @property
+    def unique_parameters(self):
+        """List of unique parameters"""
+        return list(dict.fromkeys(self._parameters))
 
     @property
     def names(self):
         """List of parameter names"""
-        return [par.name for par in self.parameters]
-
-    def __str__(self):
-        str_ = self.__class__.__name__ + "\n\n"
-
-        for par in self.parameters:
-            if par.name == "amplitude":
-                line = "\t{:12} {:11}: {:.2e} {} {}\n"
-            else:
-                line = "\t{:12} {:11}: {:.3f} {} {}\n"
-
-            frozen = "(frozen)" if par.frozen else ""
-            try:
-                error = "+/- {:.2f}".format(self.get_error(par))
-            except AttributeError:
-                error = ""
-
-            str_ += line.format(par.name, frozen, par.value, error, par.unit)
-
-        return str_
+        return [par.name for par in self._parameters]
 
     def _get_idx(self, val):
         """Get position index for a given parameter.
@@ -326,9 +321,9 @@ class Parameters:
         if isinstance(val, int):
             return val
         elif isinstance(val, Parameter):
-            return self.parameters.index(val)
+            return self._parameters.index(val)
         elif isinstance(val, str):
-            for idx, par in enumerate(self.parameters):
+            for idx, par in enumerate(self._parameters):
                 if val == par.name:
                     return idx
             raise IndexError(f"No parameter: {val!r}")
@@ -338,11 +333,26 @@ class Parameters:
     def __getitem__(self, name):
         """Access parameter by name or index"""
         idx = self._get_idx(name)
-        return self.parameters[idx]
+        return self._parameters[idx]
+
+    # TODO: think about a better API for this, add docs.
+    def link(self, par, other_par):
+        """Create link to other parameter"""
+        idx = self._get_idx(par)
+        self._parameters[idx] = other_par
+
+    def __len__(self):
+        return len(self._parameters)
+
+    def __add__(self, other):
+        if isinstance(other, Parameters):
+            return Parameters.from_stack([self, other])
+        else:
+            raise TypeError(f"Invalid type: {other!r}")
 
     def to_dict(self):
         data = dict(parameters=[], covariance=None)
-        for par in self.parameters:
+        for par in self._parameters:
             data["parameters"].append(par.to_dict())
         if self.covariance is not None:
             data["covariance"] = self.covariance.tolist()
@@ -352,17 +362,17 @@ class Parameters:
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
         t = Table()
-        t["name"] = [p.name for p in self.parameters]
-        t["value"] = [p.value for p in self.parameters]
+        t["name"] = [p.name for p in self._parameters]
+        t["value"] = [p.value for p in self._parameters]
         if self.covariance is None:
             t["error"] = np.nan
         else:
-            t["error"] = [self.error(idx) for idx in range(len(self.parameters))]
+            t["error"] = [self.error(idx) for idx in range(len(self))]
 
-        t["unit"] = [p.unit.to_string("fits") for p in self.parameters]
-        t["min"] = [p.min for p in self.parameters]
-        t["max"] = [p.max for p in self.parameters]
-        t["frozen"] = [p.frozen for p in self.parameters]
+        t["unit"] = [p.unit.to_string("fits") for p in self._parameters]
+        t["min"] = [p.min for p in self._parameters]
+        t["max"] = [p.max for p in self._parameters]
+        t["frozen"] = [p.frozen for p in self._parameters]
 
         for name in ["value", "error", "min", "max"]:
             t[name].format = ".3e"
@@ -390,25 +400,12 @@ class Parameters:
 
         return cls(parameters=parameters, covariance=covariance)
 
-    def covariance_to_table(self):
-        """Convert covariance matrix to `~astropy.table.Table`."""
-        if self.covariance is None:
-            raise ValueError("No covariance available")
-
-        table = Table()
-        table["name"] = self.names
-        for idx, par in enumerate(self.parameters):
-            vals = self.covariance[idx]
-            table[par.name] = vals
-            table[par.name].format = ".3e"
-        return table
-
     @property
     def _ufloats(self):
         """Return dict of ufloats with covariance."""
         from uncertainties import correlated_values
 
-        values = [_.value for _ in self.parameters]
+        values = [_.value for _ in self._parameters]
 
         try:
             # convert existing parameters to ufloats
@@ -417,7 +414,7 @@ class Parameters:
             raise ValueError("Covariance matrix not set.")
 
         upars = {}
-        for par, upar in zip(self.parameters, uarray):
+        for par, upar in zip(self._parameters, uarray):
             upars[par.name] = upar
 
         return upars
@@ -432,7 +429,7 @@ class Parameters:
             Dict of parameter errors.
         """
         diag = []
-        for par in self.parameters:
+        for par in self._parameters:
             error = errors.get(par.name, 0)
             error = u.Quantity(error, par.unit).value
             diag.append(error)
@@ -466,7 +463,8 @@ class Parameters:
         err : float or Quantity
             Parameter error
         """
-        self._init_covariance()
+        if self.covariance is None:
+            self.covariance = self._empty_covariance
 
         idx = self._get_idx(parname)
         err = u.Quantity(err, self[idx].unit).value
@@ -490,21 +488,20 @@ class Parameters:
         Used in the optimizer interface.
         """
         idx = 0
-        for parameter in self.parameters:
+        for parameter in self._parameters:
             if not parameter.frozen:
                 parameter.factor = factors[idx]
                 idx += 1
 
     @property
     def _scale_matrix(self):
-        scales = [par.scale for par in self.parameters]
+        scales = [par.scale for par in self._parameters]
         return np.outer(scales, scales)
 
     def _expand_factor_matrix(self, matrix):
         """Expand covariance matrix with zeros for frozen parameters"""
-        shape = (len(self.parameters), len(self.parameters))
-        matrix_expanded = np.zeros(shape)
-        mask = np.array([par.frozen for par in self.parameters])
+        matrix_expanded = self._empty_covariance
+        mask = np.array([par.frozen for par in self._parameters])
         free_parameters = ~(mask | mask[:, np.newaxis])
         matrix_expanded[free_parameters] = matrix.ravel()
         return matrix_expanded
@@ -514,7 +511,8 @@ class Parameters:
 
         Used in the optimizer interface.
         """
-        if not np.sqrt(matrix.size) == len(self.parameters):
+        # FIXME: this is weird to do sqrt(size). Simplify
+        if not np.sqrt(matrix.size) == len(self):
             matrix = self._expand_factor_matrix(matrix)
 
         self.covariance = self._scale_matrix * matrix
@@ -529,7 +527,7 @@ class Parameters:
         method : {'factor1', 'scale10'}
             Method to apply
         """
-        for par in self.parameters:
+        for par in self._parameters:
             par.autoscale(method)
 
     @property
@@ -553,13 +551,13 @@ class Parameters:
 
     def freeze_all(self):
         """Freeze all parameters"""
-        for par in self.parameters:
+        for par in self._parameters:
             par.frozen = True
 
 
 class restore_parameters_values:
     def __init__(self, parameters):
-        self.parameters = parameters
+        self._parameters = parameters
         self.values = [_.value for _ in parameters]
         self.frozen = [_.frozen for _ in parameters]
 
@@ -567,6 +565,6 @@ class restore_parameters_values:
         pass
 
     def __exit__(self, type, value, traceback):
-        for value, par, frozen in zip(self.values, self.parameters, self.frozen):
+        for value, par, frozen in zip(self.values, self._parameters, self.frozen):
             par.value = value
             par.frozen = frozen

@@ -90,17 +90,14 @@ def _link_shared_parameters(models):
             if "@" in name:
                 if name in shared_register:
                     new_param = shared_register[name]
-                    ind = model.parameters.names.index(name)
-                    model.parameters.parameters[ind] = new_param
+                    model.parameters.link(name, new_param)
                     if isinstance(model, SkyModel):
                         spatial_params = model.spatial_model.parameters
                         spectral_params = model.spectral_model.parameters
                         if name in spatial_params.names:
-                            ind = spatial_params.names.index(name)
-                            spatial_params.parameters[ind] = new_param
+                            spatial_params.link(name, new_param)
                         elif name in spectral_params.names:
-                            ind = spectral_params.names.index(name)
-                            spectral_params.parameters[ind] = new_param
+                            spectral_params.link(name, new_param)
                 else:
                     param.name = name.split("@")[0]
                     shared_register[name] = param

@@ -511,11 +511,9 @@ class TemplateSpatialModel(SpatialModel):
 
     @classmethod
     def from_dict(cls, data):
-        init = cls.read(data["filename"], normalize=data.get("normalize", True))
-        init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters.parameters:
-            setattr(init, parameter.name, parameter)
-        return init
+        model = cls.read(data["filename"], normalize=data.get("normalize", True))
+        model._update_from_dict(data)
+        return model
 
     def to_dict(self):
         """Create dict for YAML serilisation"""

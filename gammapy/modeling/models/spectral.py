@@ -18,7 +18,7 @@ class SpectralModel(Model):
 
     def __call__(self, energy):
         kwargs = {}
-        for par in self.parameters.parameters:
+        for par in self.parameters:
             quantity = par.quantity
             if quantity.unit.physical_type == "energy":
                 quantity = quantity.to(energy.unit)
@@ -431,31 +431,27 @@ class CompoundSpectralModel(SpectralModel):
         self.model1 = model1
         self.model2 = model2
         self.operator = operator
-        parameters = (
-            self.model1.parameters.parameters + self.model2.parameters.parameters
-        )
-        super().__init__(parameters)
-
-    # TODO: Think about how to deal with covariance matrix
+        super().__init__(self.model1.parameters + self.model2.parameters)
 
     def __str__(self):
-        ss = self.__class__.__name__
-        ss += f"\n    Component 1 : {self.model1}"
-        ss += f"\n    Component 2 : {self.model2}"
-        ss += f"\n    Operator : {self.operator}"
-        return ss
+        return (
+            f"{self.__class__.__name__}\n"
+            f"    Component 1 : {self.model1}\n"
+            f"    Component 2 : {self.model2}\n"
+            f"    Operator : {self.operator}\n"
+        )
 
     def __call__(self, energy):
         val1 = self.model1(energy)
         val2 = self.model2(energy)
-
         return self.operator(val1, val2)
 
     def to_dict(self):
-        retval = dict()
-        retval["model1"] = self.model1.to_dict()
-        retval["model2"] = self.model2.to_dict()
-        retval["operator"] = self.operator
+        return {
+            "model1": self.model1.to_dict(),
+            "model2": self.model2.to_dict(),
+            "operator": self.operator,
+        }
 
 
 class PowerLawSpectralModel(SpectralModel):
@@ -1241,11 +1237,9 @@ class TemplateSpectralModel(SpectralModel):
     def from_dict(cls, data):
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
-        init = cls(energy=energy, values=values)
-        init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters.parameters:
-            setattr(init, parameter.name, parameter)
-        return init
+        model = cls(energy=energy, values=values)
+        model._update_from_dict(data)
+        return model
 
 
 class ScaleSpectralModel(SpectralModel):
@@ -1457,8 +1451,8 @@ class AbsorbedSpectralModel(SpectralModel):
         max_ = self.absorption.param.max()
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
         self.alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
-
-        super().__init__(spectral_model.parameters.parameters + [par, self.alpha_norm])
+        absorption_parameters = Parameters([par, self.alpha_norm])
+        super().__init__(spectral_model.parameters + absorption_parameters)
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""
@@ -1491,16 +1485,14 @@ class AbsorbedSpectralModel(SpectralModel):
         from gammapy.modeling.models import SPECTRAL_MODELS
 
         model_class = SPECTRAL_MODELS.get_cls(data["base_model"]["type"])
-        init = cls(
+        model = cls(
             spectral_model=model_class.from_dict(data["base_model"]),
             absorption=Absorption.from_dict(data["absorption"]),
             parameter=data["absorption_parameter"]["value"],
             parameter_name=data["absorption_parameter"]["name"],
         )
-        init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters.parameters:
-            setattr(init, parameter.name, parameter)
-        return init
+        model._update_from_dict(data)
+        return model
 
 
 class NaimaSpectralModel(SpectralModel):

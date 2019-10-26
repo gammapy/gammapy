@@ -149,7 +149,8 @@ class Fit:
         """
         parameters = self._parameters
 
-        if parameters.apply_autoscale:
+        # TODO: expose options if / when to scale? On the Fit class?
+        if parameters.covariance is None:
             parameters.autoscale()
 
         compute = registry.get("optimize", backend)

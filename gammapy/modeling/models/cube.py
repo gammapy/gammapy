@@ -94,15 +94,11 @@ class SkyModels:
         return out
 
     def __str__(self):
-        str_ = self.__class__.__name__ + "\n\n"
+        str_ = f"{self.__class__.__name__}\n\n"
 
         for idx, skymodel in enumerate(self.skymodels):
             str_ += f"Component {idx}: {skymodel}\n\n\t\n\n"
 
-        if self.parameters.covariance is not None:
-            str_ += "\n\nCovariance: \n\n\t"
-            covariance = self.parameters.covariance_to_table()
-            str_ += "\n\t".join(covariance.pformat())
         return str_
 
     def __iadd__(self, skymodel):
@@ -172,10 +168,7 @@ class SkyModel(SkyModelBase):
 
         self._spectral_model = spectral_model
 
-        parameters = (
-            spatial_model.parameters.parameters + spectral_model.parameters.parameters
-        )
-        super().__init__(parameters)
+        super().__init__(spatial_model.parameters + spectral_model.parameters)
 
     @property
     def spatial_model(self):
@@ -191,9 +184,8 @@ class SkyModel(SkyModelBase):
     def spectral_model(self, model):
         """`~gammapy.modeling.models.SpectralModel`"""
         self._spectral_model = model
-        self._parameters = Parameters(
-            self.spatial_model.parameters.parameters
-            + self.spectral_model.parameters.parameters
+        self._parameters = (
+            self.spatial_model.parameters + self.spectral_model.parameters
         )
 
     @property
@@ -415,11 +407,9 @@ class SkyDiffuseCube(SkyModelBase):
 
     @classmethod
     def from_dict(cls, data):
-        init = cls.read(data["filename"])
-        init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters.parameters:
-            setattr(init, parameter.name, parameter)
-        return init
+        model = cls.read(data["filename"])
+        model._update_from_dict(data)
+        return model
 
     def to_dict(self):
         data = super().to_dict()
@@ -507,8 +497,6 @@ class BackgroundModel(Model):
         else:
             raise ValueError("Requires either filename or `Map` object")
 
-        init = cls(map=map, name=data["name"])
-        init.parameters = Parameters.from_dict(data)
-        for parameter in init.parameters.parameters:
-            setattr(init, parameter.name, parameter)
-        return init
+        model = cls(map=map, name=data["name"])
+        model._update_from_dict(data)
+        return model

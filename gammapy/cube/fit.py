@@ -173,9 +173,7 @@ class MapDataset(Dataset):
             n_models = len(self.model.skymodels)
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
 
-        str_ += "\t{:32}: {}\n".format(
-            "Number of parameters", len(self.parameters.parameters)
-        )
+        str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.parameters))
         str_ += "\t{:32}: {}\n\n".format(
             "Number of free parameters", len(self.parameters.free_parameters)
         )
@@ -238,15 +236,15 @@ class MapDataset(Dataset):
     @property
     def parameters(self):
         """List of parameters (`~gammapy.modeling.Parameters`)"""
-        parameters = []
+        parameters_list = []
 
         if self.model:
-            parameters += self.model.parameters.parameters
+            parameters_list.append(self.model.parameters)
 
         if self.background_model:
-            parameters += self.background_model.parameters.parameters
+            parameters_list.append(self.background_model.parameters)
 
-        return Parameters(parameters)
+        return Parameters.from_stack(parameters_list)
 
     @property
     def _geom(self):

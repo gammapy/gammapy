@@ -107,7 +107,7 @@ def test_datasets_to_io(tmp_path):
     datasets = Datasets.from_yaml(filedata, filemodel)
 
     assert len(datasets.datasets) == 2
-    assert len(datasets.parameters.parameters) == 20
+    assert len(datasets.parameters) == 20
 
     dataset0 = datasets.datasets[0]
     assert dataset0.counts.data.sum() == 6824
@@ -169,7 +169,7 @@ def test_absorption_io(tmp_path):
     assert new_model.spectral_model.tag == "PowerLawSpectralModel"
     assert_allclose(new_model.absorption.energy, dominguez.energy)
     assert_allclose(new_model.absorption.param, dominguez.param)
-    assert len(new_model.parameters.parameters) == 5
+    assert len(new_model.parameters) == 5
 
     test_absorption = Absorption(
         u.Quantity(range(3), "keV"),
