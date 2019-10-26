@@ -3,8 +3,8 @@
 import copy
 import itertools
 import numpy as np
-import scipy.stats
 import scipy.linalg
+import scipy.stats
 from astropy import units as u
 from astropy.table import Table
 
@@ -246,7 +246,6 @@ class Parameters:
         # TODO: move unique parameter filtering out of __init__, add covar handling
         self._parameters = self.unique_parameters
 
-
     @classmethod
     def from_values(cls, values=None, covariance=None):
         """Create `Parameters` from values.
@@ -400,19 +399,6 @@ class Parameters:
             covariance = None
 
         return cls(parameters=parameters, covariance=covariance)
-
-    def covariance_to_table(self):
-        """Convert covariance matrix to `~astropy.table.Table`."""
-        if self.covariance is None:
-            raise ValueError("No covariance available")
-
-        table = Table()
-        table["name"] = self.names
-        for idx, par in enumerate(self._parameters):
-            vals = self.covariance[idx]
-            table[par.name] = vals
-            table[par.name].format = ".3e"
-        return table
 
     @property
     def _ufloats(self):

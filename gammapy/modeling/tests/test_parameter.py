@@ -151,15 +151,6 @@ def test_parameters_to_table(pars):
     assert len(table.columns) == 7
 
 
-def test_parameters_covariance_to_table(pars):
-    with pytest.raises(ValueError):
-        pars.covariance_to_table()
-
-    pars.set_error("ham", 10)
-    table = pars.covariance_to_table()
-    assert_allclose(table["ham"][1], 100)
-
-
 def test_parameters_set_parameter_factors(pars):
     pars.set_parameter_factors([77, 78])
     assert_allclose(pars["spam"].factor, 77)

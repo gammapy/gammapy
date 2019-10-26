@@ -3,7 +3,7 @@ import abc
 import copy
 from collections import Counter
 import numpy as np
-from gammapy.utils.scripts import read_yaml, write_yaml, make_path
+from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 from .parameter import Parameters
 
 __all__ = ["Dataset", "Datasets"]

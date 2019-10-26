@@ -28,17 +28,7 @@ class Model:
         return copy.deepcopy(self)
 
     def __str__(self):
-        ss = self.__class__.__name__
-        ss += "\n\nParameters: \n\n\t"
-
-        table = self.parameters.to_table()
-        ss += "\n\t".join(table.pformat())
-
-        if self.parameters.covariance is not None:
-            ss += "\n\nCovariance: \n\n\t"
-            covariance = self.parameters.covariance_to_table()
-            ss += "\n\t".join(covariance.pformat())
-        return ss
+        return f"{self.__class__.__name__}\n\n" f"{self.parameters.to_table()}"
 
     def to_dict(self):
         """Create dict for YAML serilisation"""
