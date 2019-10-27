@@ -63,7 +63,9 @@ class SpatialModel(Model):
             self.position_error = DiskSpatialModel(
                 self.lon_0, self.lat_0, r_0=err[1] * u.deg, e=e, phi=phi
             )
-
+        # TODO: add test once we have a method to set the sub-covariance matrix
+        # in the spatial model automatically after fit    
+        
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
         coords = geom.get_coord(coordsys=self.frame)
