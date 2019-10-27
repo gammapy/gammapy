@@ -203,6 +203,13 @@ class TestSourceCatalogObjectGammaCat:
 
         assert source.is_pointlike == ref["is_pointlike"]
 
+        model = gammacat["HESS J1634-472"].spatial_model()
+        pos_err = model.position_error
+        semiminor = pos_err.r_0.value * (1 - pos_err.e.value ** 2.0) ** 0.5
+        assert_allclose(pos_err.r_0.value, 0.044721, rtol=1e-4)
+        assert_allclose(semiminor, 0.044721, rtol=1e-4)
+        assert_allclose(pos_err.phi.value, 0.0)
+
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_sky_model(self, gammacat, ref):
         gammacat[ref["name"]].sky_model()

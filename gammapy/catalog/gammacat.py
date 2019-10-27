@@ -332,7 +332,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         glat = d["glat"]
 
         if morph_type == "point":
-            return PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
+            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
         elif morph_type == "gauss":
             # TODO: add infos back once model support elongation
             # pars['x_stddev'] = d['morph_sigma']
@@ -342,11 +342,11 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             # if not np.isnan(d['morph_pa']):
             #     # TODO: handle reference frame for rotation angle
             #     pars['theta'] = Angle(d['morph_pa'], 'deg').rad
-            return GaussianSpatialModel(
+            model = GaussianSpatialModel(
                 lon_0=glon, lat_0=glat, sigma=d["morph_sigma"], frame="galactic"
             )
         elif morph_type == "shell":
-            return ShellSpatialModel(
+            model = ShellSpatialModel(
                 lon_0=glon,
                 lat_0=glat,
                 # TODO: probably we shouldn't guess a shell width here!
@@ -358,9 +358,11 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             raise NoDataAvailableError(f"No spatial model available: {self.name}")
         else:
             raise NotImplementedError(f"Unknown spatial model: {morph_type!r}")
-        model.position_error = DiskSpatialModel(
-            lon_0=glon, lat_0=glat, r_0=d["pos_err"].to("deg"), frame="galactic"
-        )
+        if not np.isnan(d["pos_err"]):
+            model.position_error = DiskSpatialModel(
+                lon_0=glon, lat_0=glat, r_0=d["pos_err"].to("deg"), frame="galactic"
+            )
+        return model
 
     def sky_model(self):
         """Source sky model (`~gammapy.modeling.models.SkyModel`)."""

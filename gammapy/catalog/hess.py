@@ -108,7 +108,8 @@ class SourceCatalogObjectHGPSComponent:
         model.parameters.set_parameter_errors(
             dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"])
         )
-        _set_position_error(d, model)
+        if not np.isnan(d["GLON_Err"]):
+            _set_position_error(d, model)
         return model
 
 

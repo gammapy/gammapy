@@ -192,6 +192,15 @@ class TestSourceCatalogObjectHGPS:
         }
 
     @staticmethod
+    def test_position_error(cat):
+        model = cat["HESS J1729-345"].spatial_model()
+        pos_err = model.position_error
+        semiminor = pos_err.r_0.value * (1 - pos_err.e.value ** 2.0) ** 0.5
+        assert_allclose(pos_err.r_0.value, 0.0414315, rtol=1e-4)
+        assert_allclose(semiminor, 0.0344351, rtol=1e-4)
+        assert_allclose(pos_err.phi.value, 90.0)
+
+    @staticmethod
     def test_sky_model_point(cat):
         model = cat["HESS J1826-148"].sky_model()
         p = model.parameters

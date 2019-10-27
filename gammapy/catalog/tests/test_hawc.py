@@ -97,3 +97,10 @@ class TestSourceCatalogObject2HWC:
         assert m.frame == "galactic"
         assert m.r_0.unit == "deg"
         assert_allclose(m.r_0.value, 2.0, atol=1e-3)
+
+        model = cat["2HWC J0534+220"].spatial_model()
+        pos_err = model.position_error
+        semiminor = pos_err.r_0.value * (1 - pos_err.e.value ** 2.0) ** 0.5
+        assert_allclose(pos_err.r_0.value, 0.057, rtol=1e-4)
+        assert_allclose(semiminor, 0.057, rtol=1e-4)
+        assert_allclose(pos_err.phi.value, 0.0)

@@ -187,13 +187,16 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
 
     def _set_position_error(self, model):
         d = self.data
+        phi = d["Conf_95_PosAng"].to("deg")
+        if np.isnan(phi):
+            phi = 0.0 * u.deg
         e = (1 - (d["Conf_95_SemiMinor"] / d["Conf_95_SemiMajor"]) ** 2.0) ** 0.5
         model.position_error = DiskSpatialModel(
             lon_0=d["RAJ2000"],
             lat_0=d["DEJ2000"],
             r_0=d["Conf_95_SemiMajor"].to("deg"),
             e=e,
-            phi=d["Conf_95_PosAng"].to("deg"),
+            phi=phi,
             frame="icrs",
         )
 

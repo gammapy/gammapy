@@ -165,13 +165,17 @@ class TestFermi4FGLObject:
         assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-4)
 
     def test_spatial_model(self):
-        # TODO: check spatial parameter errors as soon as they are filled
         model = self.cat["4FGL J0000.3-7355"].spatial_model()
         assert model.tag == "PointSpatialModel"
         assert model.frame == "galactic"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 307.709)
         assert_allclose(p["lat_0"].value, -42.729538)
+        pos_err = model.position_error
+        semiminor = pos_err.r_0.value * (1 - pos_err.e.value ** 2.0) ** 0.5
+        assert_allclose(pos_err.r_0.value, 0.0525)
+        assert_allclose(semiminor, 0.051)
+        assert_allclose(pos_err.phi.value, -62.7)
 
         model = self.cat["4FGL J1409.1-6121e"].spatial_model()
         assert model.tag == "DiskSpatialModel"
@@ -309,7 +313,6 @@ class TestFermi3FGLObject:
         assert_quantity_allclose(dnde_err, ref["dnde_err"])
 
     def test_spatial_model(self):
-        # TODO: check spatial parameter errors as soon as they are filled
         model = self.cat[0].spatial_model()
         assert model.tag == "PointSpatialModel"
         assert model.frame == "galactic"
@@ -337,6 +340,13 @@ class TestFermi3FGLObject:
         assert model.tag == "TemplateSpatialModel"
         assert model.frame == "fk5"
         assert model.normalize is True
+
+        model = self.cat["3FGL J0000.2-3738"].spatial_model()
+        pos_err = model.position_error
+        semiminor = pos_err.r_0.value * (1 - pos_err.e.value ** 2.0) ** 0.5
+        assert_allclose(pos_err.r_0.value, 0.0731)
+        assert_allclose(semiminor, 0.0676)
+        assert_allclose(pos_err.phi.value, -88.55)
 
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
     def test_sky_model(self, ref):
@@ -439,13 +449,19 @@ class TestFermi2FHLObject:
         assert_quantity_allclose(actual, desired, rtol=1e-3)
 
     def test_spatial_model(self):
-        # TODO: check spatial parameter errors as soon as they are filled
         model = self.cat[221].spatial_model()
         assert model.tag == "PointSpatialModel"
         assert model.frame == "galactic"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 349.19931, rtol=1e-5)
         assert_allclose(p["lat_0"].value, 48.891277, rtol=1e-5)
+
+        model = self.cat["2FHL J1304.5-4353"].spatial_model()
+        pos_err = model.position_error
+        semiminor = pos_err.r_0.value * (1 - pos_err.e.value ** 2.0) ** 0.5
+        assert_allclose(pos_err.r_0.value, 0.041987, rtol=1e-4)
+        assert_allclose(semiminor, 0.041987, rtol=1e-4)
+        assert_allclose(pos_err.phi.value, 0.0)
 
         model = self.cat[97].spatial_model()
         assert model.tag == "GaussianSpatialModel"
@@ -523,6 +539,13 @@ class TestFermi3FHLObject:
     def test_spatial_model(self, ref):
         model = self.cat[ref["idx"]].spatial_model()
         assert model.frame == "galactic"
+
+        model = self.cat["3FHL J0002.1-6728"].spatial_model()
+        pos_err = model.position_error
+        semiminor = pos_err.r_0.value * (1 - pos_err.e.value ** 2.0) ** 0.5
+        assert_allclose(pos_err.r_0.value, 0.035713, rtol=1e-4)
+        assert_allclose(semiminor, 0.035713, rtol=1e-4)
+        assert_allclose(pos_err.phi.value, 0.0)
 
     @pytest.mark.parametrize("ref", SOURCES_3FHL, ids=lambda _: _["name"])
     def test_sky_model(self, ref):
