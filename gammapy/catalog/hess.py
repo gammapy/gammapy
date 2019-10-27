@@ -39,7 +39,7 @@ FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
 
 
 def _set_position_error(d, model):
-    lon_err = (d["GLON_Err"].to("deg") * np.cos(d["GLAT"])).value
+    lon_err = (d["GLON_Err"].to("deg") / np.cos(d["GLAT"])).value
     lat_err = d["GLAT_Err"].to("deg").value
     pos_err = np.sort([lon_err, lat_err])
     phi = 90 * u.deg * (lat_err > lon_err)
