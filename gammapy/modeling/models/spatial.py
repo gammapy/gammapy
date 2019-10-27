@@ -79,11 +79,8 @@ class SpatialModel(Model):
         return data
 
     def get_contour(self, fmax=0.5, geom=None, binsz=0.04, width=16.0):
-        from matplotlib import pyplot as plt
-        from matplotlib import path
-
         """Get spatial model countour at a given value.
-
+            
         Parameters
         ----------
         fmax : float
@@ -97,7 +94,10 @@ class SpatialModel(Model):
         binsz : float
             Pixel size in degree
             If geom is not None, unused
-       """
+        """
+        from matplotlib import pyplot as plt
+        from matplotlib import path
+
         if geom is None:
             geom = WcsGeom.create(
                 skydir=self.position.galactic,
