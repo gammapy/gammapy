@@ -80,7 +80,7 @@ class SpatialModel(Model):
 
     def get_contour(self, fmax=0.5, geom=None, binsz=0.04, width=16.0):
         """Get spatial model countour at a given value.
-            
+
         Parameters
         ----------
         fmax : float
