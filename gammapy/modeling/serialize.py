@@ -16,23 +16,25 @@ __all__ = [
 ]
 
 
-def models_to_reg(models, filename, fmax=0.5):
+def models_to_reg(models, filename, **kwargs):
     """create ds9 region file from a list of model countours
         
     Parameters
     ----------
     models : list
         Python list of SpatialModel objects
-    fmax : float
-        Countour value relative to maximun value
     filename : `pathlib.Path`
         path to write files
+    **kwargs : dict
+         Arguments of `gammapy.modeling.models.SpatialModel.get_contour()`
+
     """
 
     ds9_text = "global color=blue \n"
     for model in models:
-        vertices, text = model.get_contour(fmax)
-        ds9_text += text
+        if model is not None:
+            vertices, text = model.get_contour(**kwargs)
+            ds9_text += text
     with open(filename, "w") as text_file:
         text_file.write(ds9_text)
 

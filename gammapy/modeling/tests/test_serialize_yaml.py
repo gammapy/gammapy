@@ -35,7 +35,7 @@ def test_models_to_reg(tmpdir):
         coordsys="GAL",
         proj="CAR",
     )
-    vertices2, text2 = model2.get_contour(geom=geom, width=4)
+    path_list, text2 = model2.get_contour(geom=geom, width=4)
     vertices = np.array(
         [
             [5.10000381, 0.62521684],
@@ -57,7 +57,7 @@ def test_models_to_reg(tmpdir):
             [5.10000381, 0.62521684],
         ]
     )
-    assert_allclose(vertices2, vertices)
+    assert_allclose(path_list[0].vertices, vertices)
     filename = tmpdir / "contours.reg"
     fileref = get_pkg_data_filename("data/contours.reg")
     models_to_reg([model1, model2], filename)

@@ -185,6 +185,18 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
     def is_pointlike(self):
         return self.data["Extended_Source_Name"].strip() == ""
 
+    def _set_position_error(self, model):
+        d = self.data
+        e = (1 - (d["Conf_95_SemiMinor"] / d["Conf_95_SemiMajor"]) ** 2.0) ** 0.5
+        model.position_error = DiskSpatialModel(
+            lon_0=d["RAJ2000"],
+            lat_0=d["DEJ2000"],
+            r_0=d["Conf_95_SemiMajor"].to("deg"),
+            e=e,
+            phi=d["Conf_95_PosAng"].to("deg"),
+            frame="icrs",
+        )
+
     def sky_model(self):
         """Sky model (`~gammapy.modeling.models.SkyModel`)."""
         return SkyModel(self.spatial_model(), self.spectral_model(), name=self.name)
@@ -364,7 +376,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         if self.is_pointlike:
             pars["lon_0"] = glon
             pars["lat_0"] = glat
-            return PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
+            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
@@ -373,7 +385,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             phi = de["Model_PosAng"].to("deg")
             if morph_type == "Disk":
                 r_0 = de["Model_SemiMajor"].to("deg")
-                return DiskSpatialModel(
+                model = DiskSpatialModel(
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
@@ -383,13 +395,17 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 )
                 with warnings.catch_warnings():  # ignore FITS units warnings
                     warnings.simplefilter("ignore", FITSFixedWarning)
-                    return TemplateSpatialModel.read(path / filename)
+                model = TemplateSpatialModel.read(path / filename)
             elif morph_type == "2D Gaussian":
-                return GaussianSpatialModel(
+                model = GaussianSpatialModel(
                     lon_0=ra, lat_0=dec, sigma=sigma, e=e, phi=phi, frame="icrs"
                 )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
+
+        if not np.isnan(d["Conf_95_SemiMajor"]):
+            self._set_position_error(model)
+        return model
 
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
@@ -709,7 +725,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         if self.is_pointlike:
             pars["lon_0"] = glon
             pars["lat_0"] = glat
-            return PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
+            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
@@ -718,7 +734,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
             phi = de["Model_PosAng"].to("deg")
             if morph_type == "Disk":
                 r_0 = de["Model_SemiMajor"].to("deg")
-                return DiskSpatialModel(
+                model = DiskSpatialModel(
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
@@ -726,13 +742,16 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v15/Templates/"
                 )
-                return TemplateSpatialModel.read(path / filename)
+                model = TemplateSpatialModel.read(path / filename)
             elif morph_type == "2D Gaussian":
-                return GaussianSpatialModel(
+                model = GaussianSpatialModel(
                     lon_0=ra, lat_0=dec, sigma=sigma, e=e, phi=phi, frame="icrs"
                 )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
+        if not np.isnan(d["Conf_95_SemiMajor"]):
+            self._set_position_error(model)
+        return model
 
     @property
     def flux_points(self):
@@ -890,7 +909,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         if self.is_pointlike:
             pars["lon_0"] = glon
             pars["lat_0"] = glat
-            return PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
+            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
@@ -899,7 +918,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
             phi = de["Model_PosAng"].to("deg")
             if morph_type in ["Disk", "Elliptical Disk"]:
                 r_0 = de["Model_SemiMajor"].to("deg")
-                return DiskSpatialModel(
+                model = DiskSpatialModel(
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
@@ -909,11 +928,24 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
                 )
                 return TemplateSpatialModel.read(path / filename)
             elif morph_type in ["2D Gaussian", "Elliptical 2D Gaussian"]:
-                return GaussianSpatialModel(
+                model = GaussianSpatialModel(
                     lon_0=ra, lat_0=dec, sigma=sigma, e=e, phi=phi, frame="icrs"
                 )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
+
+        if not np.isnan(d["Pos_err_68"]):
+            self._set_position_error(model)
+        return model
+
+    def _set_position_error(self, model):
+        d = self.data
+        model.position_error = DiskSpatialModel(
+            lon_0=d["RAJ2000"],
+            lat_0=d["DEJ2000"],
+            r_0=d["Pos_err_68"].to("deg"),
+            frame="icrs",
+        )
 
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
@@ -1151,7 +1183,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         if self.is_pointlike:
             pars["lon_0"] = glon
             pars["lat_0"] = glat
-            return PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
+            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
         else:
             de = self.data_extended
             morph_type = de["Spatial_Function"].strip()
@@ -1160,7 +1192,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
             phi = de["Model_PosAng"].to("deg")
             if morph_type == "RadialDisk":
                 r_0 = de["Model_SemiMajor"].to("deg")
-                return DiskSpatialModel(
+                model = DiskSpatialModel(
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["SpatialMap"]:
@@ -1168,13 +1200,16 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/"
                 )
-                return TemplateSpatialModel.read(path / filename)
+                model = TemplateSpatialModel.read(path / filename)
             elif morph_type == "RadialGauss":
-                return GaussianSpatialModel(
+                model = GaussianSpatialModel(
                     lon_0=ra, lat_0=dec, sigma=sigma, e=e, phi=phi, frame="icrs"
                 )
             else:
                 raise ValueError(f"Invalid morph_type: {morph_type!r}")
+        if not np.isnan(d["Conf_95_SemiMajor"]):
+            self._set_position_error(model)
+        return model
 
     def _info_lightcurve(self):
         return "\n"

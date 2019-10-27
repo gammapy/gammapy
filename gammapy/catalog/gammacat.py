@@ -19,6 +19,7 @@ from gammapy.modeling.models import (
     ShellSpatialModel,
     SkyModel,
     SkyModels,
+    DiskSpatialModel,
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.scripts import make_path
@@ -357,6 +358,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             raise NoDataAvailableError(f"No spatial model available: {self.name}")
         else:
             raise NotImplementedError(f"Unknown spatial model: {morph_type!r}")
+        model.position_error = DiskSpatialModel(
+            lon_0=glon, lat_0=glat, r_0=d["pos_err"].to("deg"), frame="galactic"
+        )
 
     def sky_model(self):
         """Source sky model (`~gammapy.modeling.models.SkyModel`)."""

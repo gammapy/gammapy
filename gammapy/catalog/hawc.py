@@ -140,20 +140,26 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         * ``which="extended"`` - `~gammapy.modeling.models.DiskSpatialModel`.
           Only available for some sources. Raise ValueError if not available.
         """
-        # TODO: set position error from self.data["pos_err"]
         idx = self._get_idx(which)
 
         if idx == 0:
-            return PointSpatialModel(
+            model = PointSpatialModel(
                 self.data["glon"], self.data["glat"], frame="galactic"
             )
         else:
-            return DiskSpatialModel(
+            model = DiskSpatialModel(
                 self.data["glon"],
                 self.data["glat"],
                 self.data[f"spec{idx}_radius"],
                 frame="galactic",
             )
+        model.position_error = DiskSpatialModel(
+            lon_0=self.data["glon"],
+            lat_0=self.data["glat"],
+            r_0=self.data["pos_err"].to("deg"),
+            frame="galactic",
+        )
+        return model
 
     def sky_model(self, which="point"):
         """Sky model (`~gammapy.modeling.models.SkyModel`).

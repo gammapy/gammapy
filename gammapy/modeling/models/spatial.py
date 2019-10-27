@@ -45,6 +45,25 @@ class SpatialModel(Model):
         except IndexError:
             raise ValueError("Model does not have a defined center position")
 
+    position_error = None
+
+    def update_position_error(self):
+        """Set position error from covariance matrix"""
+        if self.parameters.covariance is None:
+            print("Covariance not set")
+        else:
+            lon_err = (
+                self.parameters["lon_0"].error.quantity.to("deg")
+                / np.cos(self.lat_0.quantity)
+            ).value
+            lat_err = self.parameters["lat_0"].error.quantity.value
+            err = np.sort([lon_err.value, lat_err])
+            phi = 90 * u.deg * (lat_err > lon_err)
+            e = (1 - (err[0] / err[1]) ** 2.0) ** 0.5
+            self.position_error = DiskSpatialModel(
+                self.lon_0, self.lat_0, r_0=err[1] * u.deg, e=e, phi=phi
+            )
+
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
         coords = geom.get_coord(coordsys=self.frame)
@@ -59,6 +78,7 @@ class SpatialModel(Model):
 
     def get_contour(self, fmax=0.5, geom=None, binsz=0.04, width=16.0):
         from matplotlib import pyplot as plt
+        from matplotlib import path
 
         """Get spatial model countour at a given value.
         
@@ -99,16 +119,40 @@ class SpatialModel(Model):
         plt.close(fig)
         plt.ion()
 
-        vertices = []
-        ds9_text = ""
+        paths = []
         for pp in cs.collections[0].get_paths():
-            ds9_text += "galactic;polygon("
+            vertices = []
             for v in pp.vertices:
                 v_coord = geom.pix_to_coord(v)
                 vertices.append([v_coord[0].value, v_coord[1].value])
-                ds9_text += "{:.4f},{:.4f},".format(v_coord[0].value, v_coord[1].value)
-            ds9_text += ") # fill=0\n"
-        return np.array(vertices), ds9_text
+            vertices = np.array(vertices)
+            mask = vertices[:, 0] > 180.0
+            if vertices[:, 0].max() - vertices[:, 0].min() > 180:
+                vertices[:, 0][mask] -= 360.0
+            # so path.contains_points should work at center/anticenter
+            paths.append(path.Path(vertices))
+
+        # for DiskSpatialModel return ds9 ellipse to save display memory
+        if self.tag == "DiskSpatialModel":
+            ds9_text = (
+                self.frame
+                + ";ellipse({:.4f},{:.4f},{:.4f},{:.4f},{:.4f})".format(
+                    self.lon_0.quantity.value,
+                    self.lat_0.quantity.value,
+                    self.r_0.quantity.value * (1 - self.e.quantity.value ** 2) ** 0.5,
+                    self.r_0.quantity.value,
+                    self.phi.quantity.value,
+                )
+                + "# fill=0\n"
+            )
+        else:
+            ds9_text = ""
+            for pp in paths:
+                ds9_text += "galactic;polygon("
+                for v in pp.vertices:
+                    ds9_text += "{:.4f},{:.4f},".format(v[0], v[1])
+                ds9_text += ") # fill=0\n"
+        return paths, ds9_text
 
 
 class PointSpatialModel(SpatialModel):
