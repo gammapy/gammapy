@@ -35,7 +35,7 @@ def test_models_to_reg(tmpdir):
         coordsys="GAL",
         proj="CAR",
     )
-    path_list, text2 = model2.get_contour(geom=geom, width=4)
+    path_list, _ = model2.get_contour(geom=geom, width=4)
     vertices = np.array(
         [
             [5.10000381, 0.62521684],

@@ -18,7 +18,7 @@ __all__ = [
 
 def models_to_reg(models, filename, **kwargs):
     """create ds9 region file from a list of model countours
-        
+
     Parameters
     ----------
     models : list
@@ -33,7 +33,7 @@ def models_to_reg(models, filename, **kwargs):
     ds9_text = "global color=blue \n"
     for model in models:
         if model is not None:
-            vertices, text = model.get_contour(**kwargs)
+            _, text = model.get_contour(**kwargs)
             ds9_text += text
     with open(filename, "w") as text_file:
         text_file.write(ds9_text)

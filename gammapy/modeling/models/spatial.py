@@ -64,8 +64,8 @@ class SpatialModel(Model):
                 self.lon_0, self.lat_0, r_0=err[1] * u.deg, e=e, phi=phi
             )
         # TODO: add test once we have a method to set the sub-covariance matrix
-        # in the spatial model automatically after fit    
-        
+        # in the spatial model automatically after fit
+
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
         coords = geom.get_coord(coordsys=self.frame)
@@ -83,7 +83,7 @@ class SpatialModel(Model):
         from matplotlib import path
 
         """Get spatial model countour at a given value.
-        
+
         Parameters
         ----------
         fmax : float
@@ -97,7 +97,7 @@ class SpatialModel(Model):
         binsz : float
             Pixel size in degree
             If geom is not None, unused
-        """
+       """
         if geom is None:
             geom = WcsGeom.create(
                 skydir=self.position.galactic,
