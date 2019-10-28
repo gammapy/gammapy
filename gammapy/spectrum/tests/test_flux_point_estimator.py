@@ -161,25 +161,25 @@ class TestFluxPointsEstimator:
         fp = fpe_map_pwl.run()
 
         actual = fp.table["norm"].data
-        assert_allclose(actual, [0.963374, 0.963608, 1.01063], rtol=1e-3)
+        assert_allclose(actual, [0.953499, 0.939298, 0.916759], rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, [0.067675, 0.051997, 0.088158], rtol=1e-2)
+        assert_allclose(actual, [0.067226, 0.051343, 0.084163], rtol=1e-2)
 
         actual = fp.table["counts"].data
-        assert_allclose(actual, [[44599, 0], [1922, 0], [283, 0]])
+        assert_allclose(actual, [[44498, 0], [1931, 0], [273, 0]])
 
         actual = fp.table["norm_ul"].data
-        assert_allclose(actual, [1.100299, 1.070255, 1.196008], rtol=1e-2)
+        assert_allclose(actual, [1.090041, 1.04463 , 1.094956], rtol=1e-2)
 
         actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, [16.471375, 28.415908, 22.153403], rtol=1e-2)
+        assert_allclose(actual, [16.401681, 28.0265  , 20.654943], rtol=1e-2)
 
         actual = fp.table["norm_scan"][0]
         assert_allclose(actual, [0.2, 1, 5])
 
         actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
-        assert_allclose(actual, [1.577119e02, 2.990366e-01, 2.003681e03], rtol=1e-2)
+        assert_allclose(actual, [1.555231e+02, 4.734243e-01, 2.045164e+03], rtol=1e-2)
 
     @staticmethod
     @requires_dependency("iminuit")
@@ -188,19 +188,19 @@ class TestFluxPointsEstimator:
         fp = fpe_map_pwl_reoptimize.run(steps=["err", "norm-scan", "ts"])
 
         actual = fp.table["norm"].data
-        assert_allclose(actual, 0.98522, rtol=1e-3)
+        assert_allclose(actual,0.904058, rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, 0.061189, rtol=1e-2)
+        assert_allclose(actual, 0.059177, rtol=1e-2)
 
         actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, 25.228635, rtol=1e-2)
+        assert_allclose(actual, 24.686177, rtol=1e-2)
 
         actual = fp.table["norm_scan"][0]
         assert_allclose(actual, 1)
 
         actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
-        assert_allclose(actual, 0.057452, rtol=1e-2)
+        assert_allclose(actual, 2.484034, rtol=1e-2)
 
 
 def test_no_likelihood_contribution():
