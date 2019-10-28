@@ -50,7 +50,7 @@ class MapDataset(Dataset):
         Counts cube
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
-    mask_fit : `~numpy.ndarray`
+    mask_fit : `~gammapy.maps.WcsNDMap`
         Mask to apply to the likelihood for fitting.
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
@@ -62,12 +62,11 @@ class MapDataset(Dataset):
         Likelihood function to use for the fit.
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
-
         The "local" mode evaluates the model components on smaller grids to save computation time.
         This mode is recommended for local optimization algorithms.
         The "global" evaluation mode evaluates the model components on the full map.
         This mode is recommended for global optimization algorithms.
-    mask_safe : `~numpy.ndarray`
+    mask_safe : `~gammapy.maps.WcsNDMap`
         Mask defining the safe data range.
     gti : '~gammapy.data.GTI'
         GTI of the observation or union of GTI if it is a stacked observation
@@ -90,7 +89,9 @@ class MapDataset(Dataset):
         mask_safe=None,
         gti=None,
     ):
-        if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
+        if mask_fit is not None and mask_fit.data.dtype != np.dtype("bool"):
+            raise ValueError("mask data must have dtype bool")
+        if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
         self.evaluation_mode = evaluation_mode
@@ -156,7 +157,7 @@ class MapDataset(Dataset):
 
         n_fit_bins = 0
         if self.mask is not None:
-            n_fit_bins = np.sum(self.mask)
+            n_fit_bins = np.sum(self.mask.data)
         str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
 
         # likelihood section
@@ -344,7 +345,8 @@ class MapDataset(Dataset):
 
         gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
 
-        mask_safe = np.zeros(geom.data_shape, dtype=bool)
+        mask_data = np.zeros(geom.data_shape, dtype=bool)
+        mask_safe = Map.from_geom(geom, data=mask_data, unit="")
 
         return cls(
             counts=counts,
@@ -438,28 +440,24 @@ class MapDataset(Dataset):
             Map dataset to be stacked with this one.
         """
         if self.counts and other.counts:
-            self.counts.data[~self.mask_safe] = 0
-            self.counts.stack(other.counts, weights=other.mask_safe)
+            self.counts.data[~self.mask_safe.data] = 0
+            self.counts.stack(other.counts, weights=other.mask_safe.data)
 
         if self.exposure and other.exposure:
             self.exposure.stack(other.exposure)
 
         if self.background_model and other.background_model:
             bkg = self.background_model.evaluate()
-            bkg.data[~self.mask_safe] = 0
+            bkg.data[~self.mask_safe.data] = 0
             other_bkg = other.background_model.evaluate()
-            other_bkg.data[~other.mask_safe] = 0
+            other_bkg.data[~other.mask_safe.data] = 0
             bkg.stack(other_bkg)
             self.background_model = BackgroundModel(
                 bkg, name=self.background_model.name
             )
 
         if self.mask_safe is not None and other.mask_safe is not None:
-            # TODO: make mask_safe a Map object
-            mask_safe = Map.from_geom(self.counts.geom, data=self.mask_safe)
-            mask_safe_other = Map.from_geom(other.counts.geom, data=other.mask_safe)
-            mask_safe.stack(mask_safe_other)
-            self.mask_safe = mask_safe.data
+            self.mask_safe.stack(other.mask_safe)
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
@@ -598,7 +596,7 @@ class MapDataset(Dataset):
         counts, npred = self._counts_data, self.npred().data
 
         if self.mask is not None:
-            return self._stat_sum(counts[self.mask], npred[self.mask])
+            return self._stat_sum(counts[self.mask.data], npred[self.mask.data])
         else:
             return self._stat_sum(counts.ravel(), npred.ravel())
 
@@ -661,16 +659,14 @@ class MapDataset(Dataset):
                 hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
 
         if self.mask_safe is not None:
-            mask_safe_map = Map.from_geom(
-                self.counts.geom, data=self.mask_safe.astype(int)
-            )
-            hdulist += mask_safe_map.to_hdulist(hdu="mask_safe")[exclude_primary]
+            mask_safe_int = self.mask_safe
+            mask_safe_int.data = mask_safe_int.data.astype(int)
+            hdulist += mask_safe_int.to_hdulist(hdu="mask_safe")[exclude_primary]
 
         if self.mask_fit is not None:
-            mask_fit_map = Map.from_geom(
-                self.counts.geom, data=self.mask_fit.astype(int)
-            )
-            hdulist += mask_fit_map.to_hdulist(hdu="mask_fit")[exclude_primary]
+            mask_fit_int = self.mask_fit
+            mask_fit_int.data = mask_fit_int.data.astype(int)
+            hdulist += mask_fit_int.to_hdulist(hdu="mask_fit")[exclude_primary]
 
         if self.gti is not None:
             hdulist.append(fits.BinTableHDU(self.gti.table, name="GTI"))
@@ -713,12 +709,14 @@ class MapDataset(Dataset):
             kwargs["psf"] = PSFKernel(psf_map)
 
         if "MASK_SAFE" in hdulist:
-            mask_safe_map = Map.from_hdulist(hdulist, hdu="mask_safe")
-            kwargs["mask_safe"] = mask_safe_map.data.astype(bool)
+            mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe")
+            mask_safe.data = mask_safe.data.astype(bool)
+            kwargs["mask_safe"] = mask_safe
 
         if "MASK_FIT" in hdulist:
-            mask_fit_map = Map.from_hdulist(hdulist, hdu="mask_fit")
-            kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
+            mask_fit = Map.from_hdulist(hdulist, hdu="mask_fit")
+            mask_fit.data = mask_fit.data.astype(bool)
+            kwargs["mask_fit"] = mask_fit
 
         if "GTI" in hdulist:
             gti = GTI(Table.read(hdulist, hdu="GTI"))

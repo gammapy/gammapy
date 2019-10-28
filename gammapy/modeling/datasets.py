@@ -5,6 +5,7 @@ from collections import Counter
 import numpy as np
 from gammapy.utils.scripts import read_yaml, write_yaml
 from .parameter import Parameters
+from ..maps import WcsNDMap
 
 __all__ = ["Dataset", "Datasets"]
 
@@ -30,12 +31,20 @@ class Dataset(abc.ABC):
     @property
     def mask(self):
         """Combined fit and safe mask"""
-        if self.mask_safe is not None and self.mask_fit is not None:
-            mask = self.mask_safe & self.mask_fit
-        elif self.mask_fit is not None:
-            mask = self.mask_fit
-        elif self.mask_safe is not None:
-            mask = self.mask_safe
+        mask_safe = (
+            self.mask_safe.data
+            if isinstance(self.mask_safe, WcsNDMap)
+            else self.mask_safe
+        )
+        mask_fit = (
+            self.mask_fit.data if isinstance(self.mask_fit, WcsNDMap) else self.mask_fit
+        )
+        if mask_safe is not None and mask_fit is not None:
+            mask = mask_safe & mask_fit
+        elif mask_fit is not None:
+            mask = mask_fit
+        elif mask_safe is not None:
+            mask = mask_safe
         else:
             mask = None
         return mask
