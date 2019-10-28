@@ -331,3 +331,23 @@ class PSFMap:
     def copy(self):
         """Copy PSFMap"""
         return deepcopy(self)
+
+    @classmethod
+    def from_geom(cls, geom):
+        """Create psf map from geom.
+
+        Parameters
+        ----------
+        geom : `Geom`
+            PSF map geometry.
+
+        Returns
+        -------
+        psf_map : `PSFMap`
+            Point spread function map.
+        """
+        energy_true_axis = geom.get_axis_by_name("energy")
+        geom_exposure_psf = geom.to_image().to_cube([energy_true_axis])
+        exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
+        psf_map = Map.from_geom(geom, unit="sr-1")
+        return cls(psf_map, exposure_psf)

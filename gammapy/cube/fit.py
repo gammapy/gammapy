@@ -319,21 +319,14 @@ class MapDataset(Dataset):
         empty_maps : `MapDataset`
             A MapDataset containing zero filled maps
         """
-        e_true_axis = geom_exposure.get_axis_by_name("energy")
-
         counts = Map.from_geom(geom, unit="")
 
         background = Map.from_geom(geom, unit="")
         background_model = BackgroundModel(background)
 
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
-
         edisp = EDispMap.from_geom(geom_edisp)
-
-        geom_exposure_psf = geom_psf.to_image().to_cube([e_true_axis])
-        exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
-        psf_map = Map.from_geom(geom_psf, unit="sr-1")
-        psf = PSFMap(psf_map, exposure_psf)
+        psf = PSFMap.from_geom(geom_psf)
 
         gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
 
@@ -1071,19 +1064,13 @@ class MapDatasetOnOff(MapDataset):
         empty_maps : `MapDatasetOnOff`
             A MapDatasetOnOff containing zero filled maps
         """
-        e_true_axis = geom_exposure.get_axis_by_name("energy")
-
         maps = {}
         for name in ["counts", "counts_off", "acceptance", "acceptance_off"]:
-            maps.update({name: Map.from_geom(geom, unit="")})
+            maps[name] = Map.from_geom(geom, unit="")
 
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
         edisp = EDispMap.from_geom(geom_edisp)
-
-        geom_exposure_psf = geom_psf.to_image().to_cube([e_true_axis])
-        exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
-        psf_map = Map.from_geom(geom_psf, unit="sr-1")
-        psf = PSFMap(psf_map, exposure_psf)
+        psf = PSFMap.from_geom(geom_psf)
 
         gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
 
