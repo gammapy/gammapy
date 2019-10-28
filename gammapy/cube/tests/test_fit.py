@@ -482,6 +482,9 @@ def images():
 
 def get_map_dataset_onoff(images, **kwargs):
     """Returns a MapDatasetOnOff"""
+    mask_geom = images["counts"].geom
+    mask_data = np.ones(images["counts"].data.shape)
+    mask_safe = Map.from_geom(mask_geom, data=mask_data)
 
     return MapDatasetOnOff(
         model=None,
@@ -493,7 +496,7 @@ def get_map_dataset_onoff(images, **kwargs):
         psf=None,
         edisp=None,
         mask_fit=None,
-        mask_safe=None,
+        mask_safe=mask_safe,
         **kwargs
     )
 
@@ -621,5 +624,19 @@ def test_stack_onoff(images, geom_image):
             dataset.counts_off.data / (dataset.counts_off.data * dataset.alpha.data)
         ),
     )
+    assert_allclose(stacked.exposure.data, 2.0 * dataset.exposure.data)
 
-    assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
+    # Test stacking of cutouts
+    dataset = MapDatasetOnOff.create(geom_image)
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+    dataset.gti = gti
+
+    geom_cutout = geom_image.cutout(position=geom_image.center_skydir, width=1 * u.deg)
+    dataset_cutout = dataset.create(geom_cutout)
+
+    dataset.stack(dataset_cutout)
+
+    assert_allclose(dataset.counts.data.sum(), dataset_cutout.counts.data.sum())
+    assert_allclose(dataset.counts_off.data.sum(), dataset_cutout.counts_off.data.sum())
+    assert_allclose(dataset.alpha.data.sum(), dataset_cutout.alpha.data.sum())
+    assert_allclose(dataset.exposure.data.sum(), dataset_cutout.exposure.data.sum())

@@ -980,10 +980,6 @@ class MapDatasetOnOff(MapDataset):
         self.edisp = edisp
         self.model = model
         self.name = name
-
-        if mask_safe is None:
-            mask_safe = np.ones(self.data_shape, dtype=bool)
-
         self.mask_safe = mask_safe
         self.gti = gti
 
@@ -1149,7 +1145,7 @@ class MapDatasetOnOff(MapDataset):
         name : str
             Name of the dataset.
         """
-        geom_irf = geom_irf or geom.to_binsz(BINSZ_IRF)
+        geom_irf = geom_irf or geom.to_binsz(BINSZ_IRF_DEFAULT)
         migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
         rad_axis = rad_axis or RAD_AXIS_DEFAULT
         energy_axis = geom_irf.get_axis_by_name("ENERGY")
@@ -1199,12 +1195,12 @@ class MapDatasetOnOff(MapDataset):
 
         # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
         tmp_factor = (self.alpha * self.counts_off).copy()
-        tmp_factor.data[~self.mask_safe] = 0
-        tmp_factor.stack(other.alpha * other.counts_off, weights=other.mask_safe)
+        tmp_factor.data[~self.mask_safe.data] = 0
+        tmp_factor.stack(other.alpha * other.counts_off, weights=other.mask_safe.data)
 
         # Stack the off counts (in place)
-        self.counts_off.data[~self.mask_safe] = 0
-        self.counts_off.stack(other.counts_off, weights=other.mask_safe)
+        self.counts_off.data[~self.mask_safe.data] = 0
+        self.counts_off.stack(other.counts_off, weights=other.mask_safe.data)
 
         self.acceptance_off = self.counts_off / tmp_factor
         self.acceptance.data = np.ones(self.data_shape)
