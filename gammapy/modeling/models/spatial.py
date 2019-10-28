@@ -246,8 +246,8 @@ class GaussianSpatialModel(SpatialModel):
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
-            height=minor_axis,
-            width=self.sigma.quantity,
+            height=2*minor_axis,
+            width=2*self.sigma.quantity,
             angle=self.phi.quantity,
         )
 
@@ -365,8 +365,8 @@ class DiskSpatialModel(SpatialModel):
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
-            height=minor_axis,
-            width=self.r_0.quantity,
+            height=2*minor_axis,
+            width=2*self.r_0.quantity,
             angle=self.phi.quantity,
         )
 
@@ -440,14 +440,11 @@ class ShellSpatialModel(SpatialModel):
         return norm * value
 
     @property
-    def to_region(self):
-        r_out = self.radius.quantity + self.width.quantity
+    def CircleAnnulusSkyRegion(self):
         return EllipseAnnulusSkyRegion(
             center=self.position,
-            inner_width=self.radius.quantity,
-            outer_width=r_out,
-            inner_height=self.radius.quantity,
-            outer_height=r_out,
+            inner_radius=self.radius.quantity,
+            outer_radius=self.radius.quantity + self.width.quantity,
             angle=self.phi.quantity,
         )
 
