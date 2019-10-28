@@ -38,23 +38,6 @@ FLUX_TO_CRAB = 100 / 2.26e-11
 FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
 
 
-def _set_position_error(d, model):
-    lon_err = (d["GLON_Err"].to("deg") / np.cos(d["GLAT"])).value
-    lat_err = d["GLAT_Err"].to("deg").value
-    pos_err = np.sort([lon_err, lat_err])
-    phi = 90 * u.deg * (lat_err > lon_err)
-    e = (1 - (pos_err[0] / pos_err[1]) ** 2.0) ** 0.5
-    model.position_error = DiskSpatialModel(
-        lon_0=d["GLON"],
-        lat_0=d["GLAT"],
-        r_0=pos_err[1] * u.deg,
-        e=e,
-        phi=phi,
-        frame="galactic",
-    )
-    return model
-
-
 class SourceCatalogObjectHGPSComponent:
     """One Gaussian component from the HGPS catalog.
 
@@ -105,11 +88,10 @@ class SourceCatalogObjectHGPSComponent:
         model = GaussianSpatialModel(
             lon_0=d["GLON"], lat_0=d["GLAT"], sigma=d["Size"], frame="galactic"
         )
-        model.parameters.set_parameter_errors(
-            dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"])
-        )
         if not np.isnan(d["GLON_Err"]):
-            _set_position_error(d, model)
+            model.parameters.set_parameter_errors(
+                dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"])
+            )
         return model
 
 
@@ -536,7 +518,10 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             model = GaussianSpatialModel(
                 lon_0=glon, lat_0=glat, sigma=d["Size"], frame="galactic"
             )
-            model.parameters.set_parameter_errors(dict(sigma=d["Size_Err"]))
+            if not np.isnan(d["GLON_Err"]):
+                model.parameters.set_parameter_errors(
+                    dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"])
+                )
         elif spatial_type in {"2-gaussian", "3-gaussian"}:
             raise ValueError("For Gaussian or Multi-Gaussian models, use sky_model()!")
         elif spatial_type == "shell":
@@ -548,13 +533,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             model = ShellSpatialModel(
                 lon_0=glon, lat_0=glat, width=width, radius=radius, frame="galactic"
             )
-            model.parameters.set_parameter_errors(dict(radius=d["Size_Err"]))
+            if not np.isnan(d["GLON_Err"]):
+                model.parameters.set_parameter_errors(
+                    dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], radius=d["Size_Err"])
+                )
         else:
             raise ValueError(f"Not a valid spatial model: {spatial_type}")
-        model.parameters.set_parameter_errors(
-            dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"])
-        )
-        _set_position_error(d, model)
         return model
 
     def sky_model(self, which="best"):

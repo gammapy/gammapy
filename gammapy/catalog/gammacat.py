@@ -359,7 +359,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         else:
             raise NotImplementedError(f"Unknown spatial model: {morph_type!r}")
         if not np.isnan(d["pos_err"]):
-            model.position_error = DiskSpatialModel(
+            model._position_error = DiskSpatialModel(
                 lon_0=glon, lat_0=glat, r_0=d["pos_err"].to("deg"), frame="galactic"
             )
         return model

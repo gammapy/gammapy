@@ -52,26 +52,36 @@ class SpatialModel(Model):
         except IndexError:
             raise ValueError("Model does not have a defined center position")
 
-    position_error = None
+    _position_error = None
 
-    def update_position_error(self):
+    @property
+    def position_error(self):
         """Set position error from covariance matrix"""
         if self.parameters.covariance is None:
-            print("Covariance not set")
+            return self._position_error
         else:
-            lon_err = (
-                self.parameters["lon_0"].error.quantity.to("deg")
-                / np.cos(self.lat_0.quantity)
-            ).value
-            lat_err = self.parameters["lat_0"].error.quantity.value
-            err = np.sort([lon_err.value, lat_err])
-            phi = 90 * u.deg * (lat_err > lon_err)
+            pars = self.parameters
+            ind = [pars._get_idx("lon_0"), pars._get_idx("lat_0")]
+            sub_covar = pars.covariance[ind, :][:, ind]
+            sub_covar[0, 0] *= np.cos(self.lat_0.quantity).value ** 2.0
+            sub_covar[0, 1] *= np.cos(self.lat_0.quantity).value
+            sub_covar[1, 0] *= np.cos(self.lat_0.quantity).value
+            eig_vals, eig_vecs = np.linalg.eig(sub_covar)
+            lon_err, lat_err = np.sqrt(eig_vals)
+            y_vec = eig_vecs[:, 0]
+            phi = (np.arctan2(y_vec[1], y_vec[0]) * u.rad).to("deg")
+            err = np.sort([lon_err, lat_err])
             e = (1 - (err[0] / err[1]) ** 2.0) ** 0.5
-            self.position_error = DiskSpatialModel(
-                self.lon_0, self.lat_0, r_0=err[1] * u.deg, e=e, phi=phi
+            if err[1] == lon_err:
+                phi += 90 * u.deg
+            return DiskSpatialModel(
+                self.lon_0.quantity,
+                self.lat_0.quantity,
+                r_0=err[1] * u.deg,
+                e=e,
+                phi=phi,
+                frame=self.frame,
             )
-        # TODO: add test once we have a method to set the sub-covariance matrix
-        # in the spatial model automatically after fit
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
@@ -246,8 +256,8 @@ class GaussianSpatialModel(SpatialModel):
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2*minor_axis,
-            width=2*self.sigma.quantity,
+            height=2 * self.sigma.quantity,
+            width=2 * minor_axis,
             angle=self.phi.quantity,
         )
 
@@ -365,8 +375,8 @@ class DiskSpatialModel(SpatialModel):
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2*minor_axis,
-            width=2*self.r_0.quantity,
+            height=2 * self.r_0.quantity,
+            width=2 * minor_axis,
             angle=self.phi.quantity,
         )
 

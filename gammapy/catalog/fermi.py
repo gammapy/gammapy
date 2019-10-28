@@ -191,7 +191,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         if np.isnan(phi):
             phi = 0.0 * u.deg
         e = (1 - (d["Conf_95_SemiMinor"] / d["Conf_95_SemiMajor"]) ** 2.0) ** 0.5
-        model.position_error = DiskSpatialModel(
+        model._position_error = DiskSpatialModel(
             lon_0=d["RAJ2000"],
             lat_0=d["DEJ2000"],
             r_0=d["Conf_95_SemiMajor"].to("deg"),
@@ -943,7 +943,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
 
     def _set_position_error(self, model):
         d = self.data
-        model.position_error = DiskSpatialModel(
+        model._position_error = DiskSpatialModel(
             lon_0=d["RAJ2000"],
             lat_0=d["DEJ2000"],
             r_0=d["Pos_err_68"].to("deg"),

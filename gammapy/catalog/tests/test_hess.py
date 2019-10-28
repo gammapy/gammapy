@@ -198,6 +198,13 @@ class TestSourceCatalogObjectHGPS:
         semiminor = pos_err.r_0.value * (1 - pos_err.e.value ** 2.0) ** 0.5
         assert_allclose(pos_err.r_0.value, 0.0414315, rtol=1e-4)
         assert_allclose(semiminor, 0.0344351, rtol=1e-4)
+        assert_allclose(pos_err.phi.value, 0.0)
+
+        model = cat["HESS J1858+020"].spatial_model()
+        pos_err = model.position_error
+        semiminor = pos_err.r_0.value * (1 - pos_err.e.value ** 2.0) ** 0.5
+        assert_allclose(pos_err.r_0.value, 0.0222614, rtol=1e-4)
+        assert_allclose(semiminor, 0.0145084, rtol=1e-4)
         assert_allclose(pos_err.phi.value, 90.0)
 
     @staticmethod

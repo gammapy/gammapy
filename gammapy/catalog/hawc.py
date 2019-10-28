@@ -153,7 +153,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
                 self.data[f"spec{idx}_radius"],
                 frame="galactic",
             )
-        model.position_error = DiskSpatialModel(
+        model._position_error = DiskSpatialModel(
             lon_0=self.data["glon"],
             lat_0=self.data["glat"],
             r_0=self.data["pos_err"].to("deg"),
