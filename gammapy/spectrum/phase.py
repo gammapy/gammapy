@@ -3,16 +3,11 @@ import numpy as np
 from gammapy.data import EventList
 from .background_estimate import BackgroundEstimate
 
-__all__ = ["PhaseBackgroundEstimator"]
+__all__ = ["PhaseBackgroundMaker"]
 
 
-class PhaseBackgroundEstimator:
+class PhaseBackgroundMaker:
     """Background estimation with on and off phases.
-
-    This class is responsible for creating a
-    `~gammapy.spectrum.BackgroundEstimate` by counting events
-    in the on-phase-zone and off-phase-zone in an ON-region,
-    given an observation, an on_region, an on-phase-zone, an off-phase-zone.
 
     TODO: For a usage example see future notebook.
 
@@ -21,46 +16,82 @@ class PhaseBackgroundEstimator:
 
     Parameters
     ----------
-    on_region : `~regions.CircleSkyRegion`
+    region : `~regions.CircleSkyRegion`
         Target region in the sky
-    observations : `~gammapy.data.Observations`
-        Observations to process
     on_phase : `tuple` or list of tuples
         on-phase defined by the two edges of each interval (edges are excluded)
     off_phase : `tuple` or list of tuples
         off-phase defined by the two edges of each interval (edges are excluded)
     """
 
-    def __init__(self, on_region, on_phase, off_phase, observations):
-        self.on_region = on_region
-        self.observations = observations
-        self.on_phase = np.atleast_2d(on_phase)
-        self.off_phase = np.atleast_2d(off_phase)
-        self.result = None
+    def __init__(self, region, on_phase, off_phase):
+        self.region = region
+        self.on_phase = self._check_intervals(on_phase)
+        self.off_phase = self._check_intervals(off_phase)
 
     def __str__(self):
         s = self.__class__.__name__
-        s += f"\n{self.on_region}"
+        s += f"\n{self.region}"
         s += f"\n{self.on_phase}"
         s += f"\n{self.off_phase}"
-        s += f"\n{self.observations}"
         return s
 
-    def run(self):
-        """Run all steps."""
-        result = []
-        for obs in self.observations:
-            temp = self.process(obs=obs)
-            result.append(temp)
+    def make_counts_off(self, dataset, observation):
+        """Make off counts.
 
-        self.result = result
+        Parameters
+        ----------
+        dataset : `SpectrumDataset`
+            Input dataset.
+        observation : `DatastoreObservation`
+            Data store observation.
 
-    @staticmethod
-    def filter_events(events, tuple_phase_zone):
-        """Select events depending on their phases."""
-        p = events.table["PHASE"]
-        mask = (tuple_phase_zone[0] < p) & (p < tuple_phase_zone[1])
-        return events.select_row_subset(mask)
+        Returns
+        -------
+        counts_off : `CountsSpectrum`
+            Off counts.
+        """
+        events = observation.events.select_region(self.region)
+        events_off = events.select_parameter(parameter="PHASE", interval=self.off_phase)
+
+        edges = dataset.counts.energy.edges
+        counts_off = CountsSpectrum(energy_hi=edges[1:], energy_lo=edges[:-1])
+        counts_off.fill_events(events_off)
+        return counts_off
+
+    def run(self, dataset, observation):
+        """Run all steps.
+
+        Parameters
+        ----------
+        dataset : `SpectrumDataset`
+            Input dataset.
+        observation : `DataStoreObservation`
+            Data store observation.
+
+        Returns
+        -------
+        dataset_on_off : `SpectrumDatasetOnOff`
+            On off dataset.
+        """
+        counts_off = self.make_counts_off(dataset, observation)
+        acceptance = np.sum([_[1] - _[0] for _ in self.on_phase])
+        acceptance_off = np.sum([_[1] - _[0] for _ in self.off_phase])
+
+        return SpectrumDatasetOnOff(
+            counts=dataset.counts,
+            counts_off=counts_off,
+            gti=dataset.gti,
+            name=dataset.name,
+            livetime=dataset.livetime,
+            edisp=dataset.edisp,
+            aeff=dataset.aeff,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            mask_safe=dataset.mask_safe,
+            mask_fit=dataset.mask_fit,
+        )
+
 
     @staticmethod
     def _check_intervals(intervals):
@@ -71,37 +102,3 @@ class PhaseBackgroundEstimator:
                 intervals.append([phase_interval[0], 1])
                 intervals.append([0, phase_interval[1]])
         return intervals
-
-    def process(self, obs):
-        """Estimate background for one observation."""
-        all_events = obs.events.select_region(self.on_region)
-
-        self.on_phase = self._check_intervals(self.on_phase)
-        self.off_phase = self._check_intervals(self.off_phase)
-
-        # Loop over all ON- and OFF- phase intervals to filter the ON- and OFF- events
-        list_on_events = [
-            self.filter_events(all_events, each_on_phase)
-            for each_on_phase in self.on_phase
-        ]
-        list_off_events = [
-            self.filter_events(all_events, each_off_phase)
-            for each_off_phase in self.off_phase
-        ]
-
-        # Loop over all ON- and OFF- phase intervals to compute the normalization factors a_on and a_off
-        a_on = np.sum([_[1] - _[0] for _ in self.on_phase])
-        a_off = np.sum([_[1] - _[0] for _ in self.off_phase])
-
-        on_events = EventList.stack(list_on_events)
-        off_events = EventList.stack(list_off_events)
-
-        return BackgroundEstimate(
-            on_region=self.on_region,
-            on_events=on_events,
-            off_region=None,
-            off_events=off_events,
-            a_on=a_on,
-            a_off=a_off,
-            method="Phase Bkg Estimator",
-        )
