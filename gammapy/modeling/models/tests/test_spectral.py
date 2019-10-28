@@ -31,13 +31,10 @@ def table_model():
     energy_edges = energy_logspace(0.1 * u.TeV, 100 * u.TeV, 1000)
     energy = np.sqrt(energy_edges[:-1] * energy_edges[1:])
 
-    index = 2.3 * u.Unit("")
-    amplitude = 4 / u.cm ** 2 / u.s / u.TeV
-    reference = 1 * u.TeV
-    pl = PowerLawSpectralModel(index, amplitude, reference)
-    flux = pl(energy)
+    model = PowerLawSpectralModel(index=2.3, amplitude="4 cm-2 s-1 TeV-1", reference="1 TeV")
+    dnde = model(energy)
 
-    return TemplateSpectralModel(energy, flux, 1 * u.Unit(""))
+    return TemplateSpectralModel(energy, dnde, 1)
 
 
 TEST_MODELS = [

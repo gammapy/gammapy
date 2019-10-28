@@ -46,14 +46,14 @@ class Parameter:
         Frozen? (used in fitting)
     """
 
-    __slots__ = ["_name", "_factor", "_scale", "_unit", "_min", "_max", "_frozen"]
-
     def __init__(
         self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False
     ):
         self.name = name
         self.scale = scale
 
+        # TODO: move this to a setter method that can be called from `__set__` also!
+        # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
         if isinstance(factor, u.Quantity) or isinstance(factor, str):
             val = u.Quantity(factor)
             self.value = val.value
@@ -65,6 +65,22 @@ class Parameter:
         self.min = min
         self.max = max
         self.frozen = frozen
+
+    # TODO: refactor __init__ and try to get rid of this:
+    # For now needed to be able for test_cosmic_ray_spectrum
+    # UnitConversionError: '1 / (m2 s sr TeV)' and '1 / (cm2 s TeV)' are not convertible
+    def _update_from_any(self, value):
+        q = u.Quantity(value)
+        self.value = q.value
+        self.unit = q.unit
+
+    # def __get__(self, instance, owner):
+    #     if instance is None:
+    #         return self
+    #     return instance.__dict__[self.name]
+    #
+    # def __set__(self, instance, value):
+    #     instance.__dict__[self.name] = value
 
     @property
     def name(self):
@@ -175,6 +191,10 @@ class Parameter:
             f"factor={self.factor!r}, scale={self.scale!r}, unit={self.unit!r}, "
             f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r})"
         )
+
+    def copy(self):
+        """A deep copy"""
+        return copy.deepcopy(self)
 
     def to_dict(self):
         """Convert to dict."""

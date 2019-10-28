@@ -406,12 +406,8 @@ class ConstantSpectralModel(SpectralModel):
         :math:`k`
     """
 
-    __slots__ = ["const"]
     tag = "ConstantSpectralModel"
-
-    def __init__(self, const):
-        self.const = Parameter("const", const)
-        super().__init__([self.const])
+    const = Parameter("const", "1e-12 cm-2 s-1 TeV-1")
 
     @staticmethod
     def evaluate(energy, const):
@@ -431,7 +427,11 @@ class CompoundSpectralModel(SpectralModel):
         self.model1 = model1
         self.model2 = model2
         self.operator = operator
-        super().__init__(self.model1.parameters + self.model2.parameters)
+        super().__init__()
+
+    @property
+    def parameters(self):
+        return self.model1.parameters + self.model2.parameters
 
     def __str__(self):
         return (
@@ -470,15 +470,10 @@ class PowerLawSpectralModel(SpectralModel):
         :math:`E_0`
     """
 
-    __slots__ = ["index", "amplitude", "reference"]
     tag = "PowerLawSpectralModel"
-
-    def __init__(self, index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"):
-        self.index = Parameter("index", index)
-        self.amplitude = Parameter("amplitude", amplitude)
-        self.reference = Parameter("reference", reference, frozen=True)
-
-        super().__init__([self.index, self.amplitude, self.reference])
+    index = Parameter("index", 2.0)
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    reference = Parameter("reference", "1 TeV", frozen=True)
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference):
@@ -674,18 +669,12 @@ class PowerLaw2SpectralModel(SpectralModel):
     emax : `~astropy.units.Quantity`
         Upper energy limit :math:`E_{0, max}`.
     """
-
-    __slots__ = ["index", "amplitude", "emin", "emax"]
     tag = "PowerLaw2SpectralModel"
 
-    def __init__(
-        self, amplitude="1e-12 cm-2 s-1", index=2, emin="0.1 TeV", emax="100 TeV"
-    ):
-        self.amplitude = Parameter("amplitude", amplitude)
-        self.index = Parameter("index", index)
-        self.emin = Parameter("emin", emin, frozen=True)
-        self.emax = Parameter("emax", emax, frozen=True)
-        super().__init__([self.index, self.amplitude, self.emin, self.emax])
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1")
+    index = Parameter("index", 2)
+    emin = Parameter("emin", "0.1 TeV", frozen=True)
+    emax = Parameter("emax", "100 TeV", frozen=True)
 
     @staticmethod
     def evaluate(energy, amplitude, index, emin, emax):
@@ -792,21 +781,12 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         :math:`\lambda`
     """
 
-    __slots__ = ["index", "amplitude", "reference", "lambda_"]
     tag = "ExpCutoffPowerLawSpectralModel"
 
-    def __init__(
-        self,
-        index=1.5,
-        amplitude="1e-12 cm-2 s-1 TeV-1",
-        reference="1 TeV",
-        lambda_="0.1 TeV-1",
-    ):
-        self.index = Parameter("index", index)
-        self.amplitude = Parameter("amplitude", amplitude)
-        self.reference = Parameter("reference", reference, frozen=True)
-        self.lambda_ = Parameter("lambda_", lambda_)
-        super().__init__([self.index, self.amplitude, self.reference, self.lambda_])
+    index = Parameter("index", 1.5)
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    reference = Parameter("reference", "1 TeV", frozen=True)
+    lambda_ = Parameter("lambda_", "0.1 TeV-1")
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference, lambda_):
@@ -860,21 +840,11 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
         :math:`E_{C}`
     """
 
-    __slots__ = ["index", "amplitude", "reference", "ecut"]
     tag = "ExpCutoffPowerLaw3FGLSpectralModel"
-
-    def __init__(
-        self,
-        index=1.5,
-        amplitude="1e-12 cm-2 s-1 TeV-1",
-        reference="1 TeV",
-        ecut="10 TeV",
-    ):
-        self.index = Parameter("index", index)
-        self.amplitude = Parameter("amplitude", amplitude)
-        self.reference = Parameter("reference", reference, frozen=True)
-        self.ecut = Parameter("ecut", ecut)
-        super().__init__([self.index, self.amplitude, self.reference, self.ecut])
+    index = Parameter("index", 1.5)
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    reference = Parameter("reference", "1 TeV", frozen=True)
+    ecut = Parameter("ecut", "10 TeV")
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference, ecut):
@@ -912,25 +882,12 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
         :math:`E_{C}`
     """
 
-    __slots__ = ["index_1", "index_2", "amplitude", "reference", "ecut"]
     tag = "SuperExpCutoffPowerLaw3FGLSpectralModel"
-
-    def __init__(
-        self,
-        index_1=1.5,
-        index_2=2,
-        amplitude="1e-12 cm-2 s-1 TeV-1",
-        reference="1 TeV",
-        ecut="10 TeV",
-    ):
-        self.index_1 = Parameter("index_1", index_1)
-        self.index_2 = Parameter("index_2", index_2)
-        self.amplitude = Parameter("amplitude", amplitude)
-        self.reference = Parameter("reference", reference, frozen=True)
-        self.ecut = Parameter("ecut", ecut)
-        super().__init__(
-            [self.index_1, self.index_2, self.amplitude, self.reference, self.ecut]
-        )
+    index_1 = Parameter("index_1", 1.5)
+    index_2 = Parameter("index_2", 2)
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    reference = Parameter("reference", "1 TeV", frozen=True)
+    ecut = Parameter("ecut", "10 TeV")
 
     @staticmethod
     def evaluate(energy, amplitude, reference, ecut, index_1, index_2):
@@ -974,25 +931,12 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         internally assumes unit of :math:`[E_0]` power :math:`-\Gamma_2`
     """
 
-    __slots__ = ["index_1", "index_2", "amplitude", "reference", "expfactor"]
     tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
-
-    def __init__(
-        self,
-        index_1=1.5,
-        index_2=2,
-        amplitude="1e-12 cm-2 s-1 TeV-1",
-        reference="1 TeV",
-        expfactor="1e-2",
-    ):
-        self.index_1 = Parameter("index_1", index_1)
-        self.index_2 = Parameter("index_2", index_2)
-        self.amplitude = Parameter("amplitude", amplitude)
-        self.reference = Parameter("reference", reference, frozen=True)
-        self.expfactor = Parameter("expfactor", expfactor)
-        super().__init__(
-            [self.index_1, self.index_2, self.amplitude, self.reference, self.expfactor]
-        )
+    index_1 = Parameter("index_1", 1.5)
+    index_2 = Parameter("index_2", 2)
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    reference = Parameter("reference", "1 TeV", frozen=True)
+    expfactor = Parameter("expfactor", "1e-2")
 
     @staticmethod
     def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
@@ -1041,17 +985,11 @@ class LogParabolaSpectralModel(SpectralModel):
         :math:`\beta`
     """
 
-    __slots__ = ["amplitude", "reference", "alpha", "beta"]
     tag = "LogParabolaSpectralModel"
-
-    def __init__(
-        self, amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2, beta=1
-    ):
-        self.amplitude = Parameter("amplitude", amplitude)
-        self.reference = Parameter("reference", reference, frozen=True)
-        self.alpha = Parameter("alpha", alpha)
-        self.beta = Parameter("beta", beta)
-        super().__init__([self.amplitude, self.reference, self.alpha, self.beta])
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    reference = Parameter("reference", "10 TeV", frozen=True)
+    alpha = Parameter("alpha", 2)
+    beta = Parameter("beta", 1)
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta):
@@ -1101,7 +1039,7 @@ class TemplateSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    energy : `~astropy.units.Quantity` array
+    energy : `~astropy.units.Quantity`
         Array of energies at which the model values are given
     values : array
         Array with the values of the model at energies ``energy``.
@@ -1117,23 +1055,21 @@ class TemplateSpectralModel(SpectralModel):
         Meta information, meta['filename'] will be used for serialization
     """
 
-    __slots__ = ["energy", "values", "norm", "meta", "_evaluate"]
     tag = "TemplateSpectralModel"
+    norm = Parameter("norm", 1, unit="")
+    tilt = Parameter("tilt", 0, unit="", frozen=True)
+    reference = Parameter("reference", "1 TeV", frozen=True)
 
     def __init__(
         self,
         energy,
         values,
-        norm=1,
-        tilt=0,
-        reference="1 TeV",
+        norm=norm.value,
+        tilt=tilt.value,
+        reference=reference.value,
         interp_kwargs=None,
         meta=None,
     ):
-        self.norm = Parameter("norm", norm, unit="")
-        self.tilt = Parameter("tilt", tilt, unit="", frozen=True)
-        self.reference = Parameter("reference", reference, frozen=True)
-
         self.energy = energy
         self.values = values
         self.meta = dict() if meta is None else meta
@@ -1145,7 +1081,7 @@ class TemplateSpectralModel(SpectralModel):
             points=(energy,), values=values, **interp_kwargs
         )
 
-        super().__init__([self.norm, self.tilt, self.reference])
+        super().__init__(norm=norm, tilt=tilt, reference=reference)
 
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
@@ -1253,13 +1189,12 @@ class ScaleSpectralModel(SpectralModel):
         Multiplicative norm factor for the model value.
     """
 
-    __slots__ = ["norm", "model"]
     tag = "ScaleSpectralModel"
+    norm = Parameter("norm", 1, unit="")
 
-    def __init__(self, model, norm=1):
-        self.norm = Parameter("norm", norm, unit="")
+    def __init__(self, model, norm=norm.value):
         self.model = model
-        super().__init__([self.norm])
+        super().__init__(norm=norm)
 
     def evaluate(self, energy, norm):
         return norm * self.model(energy)
@@ -1432,7 +1367,6 @@ class AbsorbedSpectralModel(SpectralModel):
         Norm of the EBL model
     """
 
-    __slots__ = ["spectral_model", "absorption", "parameter", "parameter_name"]
     tag = "AbsorbedSpectralModel"
 
     def __init__(
@@ -1603,15 +1537,9 @@ class GaussianSpectralModel(SpectralModel):
     """
 
     tag = "GaussianSpectralModel"
-
-    def __init__(
-        self, norm=1e-12 * u.Unit("cm-2 s-1"), mean=1 * u.TeV, sigma=2 * u.TeV
-    ):
-        self.norm = Parameter("norm", norm)
-        self.mean = Parameter("mean", mean)
-        self.sigma = Parameter("sigma", sigma)
-
-        super().__init__([self.norm, self.mean, self.sigma])
+    norm = Parameter("norm", 1e-12 * u.Unit("cm-2 s-1"))
+    mean = Parameter("mean", 1 * u.TeV)
+    sigma = Parameter("sigma", 2 * u.TeV)
 
     @staticmethod
     def evaluate(energy, norm, mean, sigma):
@@ -1697,13 +1625,9 @@ class LogGaussianSpectralModel(SpectralModel):
     """
 
     tag = "LogGaussianSpectralModel"
-
-    def __init__(self, norm=1e-12 * u.Unit("cm-2 s-1"), mean=1 * u.TeV, sigma=2):
-        self.norm = Parameter("norm", norm)
-        self.mean = Parameter("mean", mean)
-        self.sigma = Parameter("sigma", sigma)
-
-        super().__init__([self.norm, self.mean, self.sigma])
+    norm = Parameter("norm", 1e-12 * u.Unit("cm-2 s-1"))
+    mean = Parameter("mean", 1 * u.TeV)
+    sigma = Parameter("sigma", 2)
 
     @staticmethod
     def evaluate(energy, norm, mean, sigma):
