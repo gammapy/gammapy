@@ -328,13 +328,7 @@ class MapDataset(Dataset):
 
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
 
-        geom_exposure_edisp = geom_edisp.to_image().to_cube([e_true_axis])
-        exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
-        migra_axis = geom_edisp.get_axis_by_name("migra")
-        edisp_map = Map.from_geom(geom_edisp, unit="")
-        loc = migra_axis.edges.searchsorted(1.0)
-        edisp_map.data[:, loc, :, :] = 1.0
-        edisp = EDispMap(edisp_map, exposure_edisp)
+        edisp = EDispMap.from_geom(geom_edisp)
 
         geom_exposure_psf = geom_psf.to_image().to_cube([e_true_axis])
         exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
@@ -1084,14 +1078,7 @@ class MapDatasetOnOff(MapDataset):
             maps.update({name: Map.from_geom(geom, unit="")})
 
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
-
-        geom_exposure_edisp = geom_edisp.to_image().to_cube([e_true_axis])
-        exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
-        migra_axis = geom_edisp.get_axis_by_name("migra")
-        edisp_map = Map.from_geom(geom_edisp, unit="")
-        loc = migra_axis.edges.searchsorted(1.0)
-        edisp_map.data[:, loc, :, :] = 1.0
-        edisp = EDispMap(edisp_map, exposure_edisp)
+        edisp = EDispMap.from_geom(geom_edisp)
 
         geom_exposure_psf = geom_psf.to_image().to_cube([e_true_axis])
         exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
