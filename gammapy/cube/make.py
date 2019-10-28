@@ -293,7 +293,7 @@ class MapDatasetMaker:
 
         Returns
         -------
-        mask : `~numpy.ndarray`
+        mask : `Map`
             Mask
         """
         geom = self._cutout_geom(self.geom.to_image(), observation)
@@ -312,7 +312,7 @@ class MapDatasetMaker:
 
         Returns
         -------
-        mask : `~numpy.ndarray`
+        mask : `Map`
             Mask
         """
         geom = self._cutout_geom(self.geom_exposure_irf.to_image(), observation)
