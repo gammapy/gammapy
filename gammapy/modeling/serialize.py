@@ -3,6 +3,7 @@
 from gammapy.cube.fit import MapDataset
 from gammapy.spectrum import FluxPointsDataset, SpectrumDataset
 from .models import Registry, SkyDiffuseCube, SkyModel
+from regions import write_ds9
 
 # TODO: move this elsewhere ?
 DATASETS = Registry([MapDataset, SpectrumDataset, FluxPointsDataset])
@@ -25,18 +26,13 @@ def models_to_reg(models, filename, **kwargs):
         Python list of SpatialModel objects
     filename : `pathlib.Path`
         path to write files
-    **kwargs : dict
-         Arguments of `gammapy.modeling.models.SpatialModel.get_contour()`
-
     """
-
-    ds9_text = "global color=blue \n"
+    regions = []
     for model in models:
-        if model is not None:
-            _, text = model.get_contour(**kwargs)
-            ds9_text += text
-    with open(filename, "w") as text_file:
-        text_file.write(ds9_text)
+        region = model.to_region
+        if region is not None:
+            regions.append(model.to_region)
+    write_ds9(regions, filename, coordsys="galactic", fmt=".4f", radunit="deg")
 
 
 def models_to_dict(models):

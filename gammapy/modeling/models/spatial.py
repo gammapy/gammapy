@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Spatial models."""
+import abc
 import logging
 import numpy as np
 import scipy.integrate
@@ -7,8 +8,14 @@ import scipy.special
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
-from gammapy.maps import Map, WcsGeom
-from gammapy.modeling import Model, Parameter, Parameters
+from regions import (
+    PointSkyRegion,
+    EllipseSkyRegion,
+    EllipseAnnulusSkyRegion,
+    RectangleSkyRegion,
+)
+from gammapy.maps import Map
+from gammapy.modeling import Model, Parameter
 from gammapy.utils.scripts import make_path
 
 log = logging.getLogger(__name__)
@@ -78,83 +85,9 @@ class SpatialModel(Model):
         data["parameters"] = data.pop("parameters")
         return data
 
-    def get_contour(self, fmax=0.5, geom=None, binsz=0.04, width=16.0):
-        """Get spatial model countour at a given value.
-
-        Parameters
-        ----------
-        fmax : float
-            Countour value relative to maximun value
-        geom : `~gammapy.maps.Geom`
-            Geometry to evaluate the model
-            (if None the parameters width and binsz are used to defined geom)
-        width : float
-            Map width in degree
-            If geom is not None, width is used for cutout
-        binsz : float
-            Pixel size in degree
-            If geom is not None, unused
-        """
-        from matplotlib import pyplot as plt
-        from matplotlib import path
-
-        if geom is None:
-            geom = WcsGeom.create(
-                skydir=self.position.galactic,
-                binsz=binsz,
-                width=width,
-                coordsys="GAL",
-                proj="CAR",
-            )
-        if geom is not None and width is not None:
-            geom = geom.cutout(position=self.position.galactic, width=width)
-
-        values = self.evaluate_geom(geom).value
-        plt.ioff()
-        fig = plt.figure()
-        cs = plt.contour(
-            range(geom.data_shape[0]),
-            range(geom.data_shape[1]),
-            values,
-            [fmax * values.max()],
-        )
-        plt.close(fig)
-        plt.ion()
-
-        paths = []
-        for pp in cs.collections[0].get_paths():
-            vertices = []
-            for v in pp.vertices:
-                v_coord = geom.pix_to_coord(v)
-                vertices.append([v_coord[0].value, v_coord[1].value])
-            vertices = np.array(vertices)
-            mask = vertices[:, 0] > 180.0
-            if vertices[:, 0].max() - vertices[:, 0].min() > 180:
-                vertices[:, 0][mask] -= 360.0
-            # so path.contains_points should work at center/anticenter
-            paths.append(path.Path(vertices))
-
-        # for DiskSpatialModel return ds9 ellipse to save display memory
-        if self.tag == "DiskSpatialModel":
-            ds9_text = (
-                self.frame
-                + ";ellipse({:.4f},{:.4f},{:.4f},{:.4f},{:.4f})".format(
-                    self.lon_0.quantity.value,
-                    self.lat_0.quantity.value,
-                    self.r_0.quantity.value * (1 - self.e.quantity.value ** 2) ** 0.5,
-                    self.r_0.quantity.value,
-                    self.phi.quantity.value,
-                )
-                + "# fill=0\n"
-            )
-        else:
-            ds9_text = ""
-            for pp in paths:
-                ds9_text += "galactic;polygon("
-                for v in pp.vertices:
-                    ds9_text += "{:.4f},{:.4f},".format(v[0], v[1])
-                ds9_text += ") # fill=0\n"
-        return paths, ds9_text
+    @abc.abstractmethod
+    def to_region(self):
+        pass
 
 
 class PointSpatialModel(SpatialModel):
@@ -205,6 +138,10 @@ class PointSpatialModel(SpatialModel):
         x0, y0 = self.position.to_pixel(geom.wcs)
         w = self._grid_weights(x, y, x0, y0)
         return w / geom.solid_angle()
+
+    @property
+    def to_region(self):
+        return PointSkyRegion(center=self.position)
 
 
 class GaussianSpatialModel(SpatialModel):
@@ -303,6 +240,16 @@ class GaussianSpatialModel(SpatialModel):
 
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
+
+    @property
+    def to_region(self):
+        minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
+        return EllipseSkyRegion(
+            center=self.position,
+            height=minor_axis,
+            width=self.sigma.quantity,
+            angle=self.phi.quantity,
+        )
 
 
 class DiskSpatialModel(SpatialModel):
@@ -413,6 +360,16 @@ class DiskSpatialModel(SpatialModel):
         in_ellipse = DiskSpatialModel._evaluate_smooth_edge(sep - sigma_eff, edge)
         return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
 
+    @property
+    def to_region(self):
+        minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
+        return EllipseSkyRegion(
+            center=self.position,
+            height=minor_axis,
+            width=self.r_0.quantity,
+            angle=self.phi.quantity,
+        )
+
 
 class ShellSpatialModel(SpatialModel):
     r"""Shell model.
@@ -481,6 +438,18 @@ class ShellSpatialModel(SpatialModel):
             value[sep > radius_out] = 0
 
         return norm * value
+
+    @property
+    def to_region(self):
+        r_out = self.radius.quantity + self.width.quantity
+        return EllipseAnnulusSkyRegion(
+            center=self.position,
+            inner_width=self.radius.quantity,
+            outer_width=r_out,
+            inner_height=self.radius.quantity,
+            outer_height=r_out,
+            angle=self.phi.quantity,
+        )
 
 
 class ConstantSpatialModel(SpatialModel):
@@ -620,3 +589,12 @@ class TemplateSpatialModel(SpatialModel):
         data["filename"] = self.filename
         data["normalize"] = self.normalize
         return data
+
+    @property
+    def to_region(self):
+        return RectangleSkyRegion(
+            center=self.position,
+            width=self.map.geom.width[0][0],
+            height=self.map.geom.width[1][0],
+            angle=0 * u.deg,
+        )

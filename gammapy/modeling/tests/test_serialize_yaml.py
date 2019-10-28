@@ -27,37 +27,6 @@ def test_models_to_reg(tmpdir):
         0 * u.deg, 0 * u.deg, 1 * u.deg, 0.8, 30 * u.deg, frame="galactic"
     )
     model2 = GaussianSpatialModel(5 * u.deg, 1 * u.deg, 0.3 * u.deg, frame="galactic")
-
-    geom = WcsGeom.create(
-        skydir=model2.position.galactic,
-        binsz=0.2,
-        width=6.0,
-        coordsys="GAL",
-        proj="CAR",
-    )
-    path_list, _ = model2.get_contour(geom=geom, width=4)
-    vertices = np.array(
-        [
-            [5.10000381, 0.62521684],
-            [4.89999619, 0.62521684],
-            [4.77725551, 0.69999244],
-            [4.69997466, 0.77725537],
-            [4.62517269, 0.89997861],
-            [4.62514985, 1.0999786],
-            [4.69993394, 1.22271721],
-            [4.77721479, 1.29999244],
-            [4.89997335, 1.37478012],
-            [5.10002665, 1.37478012],
-            [5.22278521, 1.29999244],
-            [5.30006606, 1.22271721],
-            [5.37485015, 1.0999786],
-            [5.37482731, 0.89997861],
-            [5.30002534, 0.77725537],
-            [5.22274449, 0.69999244],
-            [5.10000381, 0.62521684],
-        ]
-    )
-    assert_allclose(path_list[0].vertices, vertices)
     filename = tmpdir / "contours.reg"
     fileref = get_pkg_data_filename("data/contours.reg")
     models_to_reg([model1, model2], filename)
