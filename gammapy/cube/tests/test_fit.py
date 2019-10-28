@@ -117,6 +117,7 @@ def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, **kwargs):
     center = sky_model.spatial_model.position
     circle = CircleSkyRegion(center=center, radius=1 * u.deg)
     mask_fit = background_model.map.geom.region_mask([circle])
+    mask_fit = Map.from_geom(geom, data=mask_fit)
 
     return MapDataset(
         model=sky_model,
@@ -238,8 +239,8 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     assert_allclose(dataset.edisp.data.data.value, dataset_new.edisp.data.data.value)
     assert_allclose(dataset.psf.data, dataset_new.psf.data)
     assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
-    assert_allclose(dataset.mask_fit, dataset_new.mask_fit)
-    assert_allclose(dataset.mask_safe, dataset_new.mask_safe)
+    assert_allclose(dataset.mask_fit.data, dataset_new.mask_fit.data)
+    assert_allclose(dataset.mask_safe.data, dataset_new.mask_safe.data)
 
     assert dataset.counts.geom == dataset_new.counts.geom
     assert dataset.exposure.geom == dataset_new.exposure.geom
@@ -307,8 +308,8 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     # test mask_safe evaluation
     mask_safe = geom.energy_mask(emin=1 * u.TeV)
-    dataset_1.mask_safe = mask_safe
-    dataset_2.mask_safe = mask_safe
+    dataset_1.mask_safe = Map.from_geom(geom, data=mask_safe)
+    dataset_2.mask_safe = Map.from_geom(geom, data=mask_safe)
 
     stat = fit.datasets.likelihood()
     assert_allclose(stat, 6425.389198)
@@ -430,6 +431,7 @@ def test_stack(geom, geom_etrue):
     c_map1.quantity = 0.3 * np.ones(c_map1.data.shape)
     mask1 = np.ones(m.data.shape, dtype=bool)
     mask1[0][0][0:10] = False
+    mask1 = Map.from_geom(geom, data=mask1)
 
     dataset1 = MapDataset(
         counts=c_map1,
@@ -443,6 +445,7 @@ def test_stack(geom, geom_etrue):
     background_model2 = BackgroundModel(m, norm=0.5)
     mask2 = np.ones(m.data.shape, dtype=bool)
     mask2[0][3] = False
+    mask2 = Map.from_geom(geom, data=mask2)
 
     dataset2 = MapDataset(
         counts=c_map2,
@@ -454,4 +457,4 @@ def test_stack(geom, geom_etrue):
     assert_allclose(dataset1.counts.data.sum(), 7987)
     assert_allclose(dataset1.background_model.map.data.sum(), 5988)
     assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
-    assert_allclose(dataset1.mask_safe.sum(), 20000)
+    assert_allclose(dataset1.mask_safe.data.sum(), 20000)

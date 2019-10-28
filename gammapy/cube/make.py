@@ -293,12 +293,13 @@ class MapDatasetMaker:
 
         Returns
         -------
-        mask : `~numpy.ndarray`
+        mask : `Map`
             Mask
         """
-        geom = self._cutout_geom(self.geom, observation)
+        geom = self._cutout_geom(self.geom.to_image(), observation)
         offset = geom.separation(observation.pointing_radec)
-        return offset >= self.offset_max
+        data = offset >= self.offset_max
+        return Map.from_geom(geom, data=data)
 
     @lru_cache(maxsize=1)
     def make_mask_safe_irf(self, observation):
@@ -311,12 +312,13 @@ class MapDatasetMaker:
 
         Returns
         -------
-        mask : `~numpy.ndarray`
+        mask : `Map`
             Mask
         """
-        geom = self._cutout_geom(self.geom_exposure_irf, observation)
+        geom = self._cutout_geom(self.geom_exposure_irf.to_image(), observation)
         offset = geom.separation(observation.pointing_radec)
-        return offset >= self.offset_max
+        data = offset >= self.offset_max
+        return Map.from_geom(geom, data=data)
 
     def run(self, observation, selection=None):
         """Make map dataset.
@@ -339,41 +341,47 @@ class MapDatasetMaker:
         selection = _check_selection(selection)
 
         mask_safe = self.make_mask_safe(observation)
-        nbin = self.geom.get_axis_by_name("energy").nbin
-        mask_safe_3d = ~mask_safe & np.ones(nbin, dtype=bool)[:, np.newaxis, np.newaxis]
+        energy_axis = self.geom.get_axis_by_name("energy")
+        mask_safe_3d = (
+            ~mask_safe.data
+            & np.ones(energy_axis.nbin, dtype=bool)[:, np.newaxis, np.newaxis]
+        )
+        mask_map = Map.from_geom(
+            mask_safe.geom.to_cube([energy_axis]), data=mask_safe_3d
+        )
         mask_safe_irf = self.make_mask_safe_irf(observation)
 
         kwargs = {
             "name": f"obs_{observation.obs_id}",
             "gti": observation.gti,
-            "mask_safe": mask_safe_3d,
+            "mask_safe": mask_map,
         }
 
         if "counts" in selection:
             counts = self.make_counts(observation)
             # TODO: remove masking out the values here and instead handle the safe mask only when
             #  fitting and / or stacking datasets?
-            counts.data[..., mask_safe] = 0
+            counts.data[..., mask_safe.data] = 0
             kwargs["counts"] = counts
 
         if "exposure" in selection:
             exposure = self.make_exposure(observation)
-            exposure.data[..., mask_safe] = 0
+            exposure.data[..., mask_safe.data] = 0
             kwargs["exposure"] = exposure
 
         if "background" in selection:
             background_map = self.make_background(observation)
-            background_map.data[..., mask_safe] = 0
+            background_map.data[..., mask_safe.data] = 0
             kwargs["background_model"] = BackgroundModel(background_map)
 
         if "psf" in selection:
             psf = self.make_psf(observation)
-            psf.exposure_map.data[..., mask_safe_irf] = 0
+            psf.exposure_map.data[..., mask_safe_irf.data] = 0
             kwargs["psf"] = psf
 
         if "edisp" in selection:
             edisp = self.make_edisp(observation)
-            psf.exposure_map.data[..., mask_safe_irf] = 0
+            psf.exposure_map.data[..., mask_safe_irf.data] = 0
             kwargs["edisp"] = edisp
 
         return MapDataset(**kwargs)
