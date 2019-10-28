@@ -343,8 +343,7 @@ class MapDataset(Dataset):
 
         gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
 
-        mask_data = np.zeros(geom.data_shape, dtype=bool)
-        mask_safe = Map.from_geom(geom, data=mask_data, unit="")
+        mask_safe = Map.from_geom(geom, unit="", dtype=bool)
 
         return cls(
             counts=counts,
@@ -1101,7 +1100,7 @@ class MapDatasetOnOff(MapDataset):
 
         gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
 
-        mask_safe = np.zeros(geom.data_shape, dtype=bool)
+        mask_safe = Map.from_geom(geom, dtype=bool)
 
         return cls(
             counts=maps["counts"],

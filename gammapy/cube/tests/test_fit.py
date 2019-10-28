@@ -483,7 +483,7 @@ def images():
 def get_map_dataset_onoff(images, **kwargs):
     """Returns a MapDatasetOnOff"""
     mask_geom = images["counts"].geom
-    mask_data = np.ones(images["counts"].data.shape)
+    mask_data = np.ones(images["counts"].data.shape, dtype=bool)
     mask_safe = Map.from_geom(mask_geom, data=mask_data)
 
     return MapDatasetOnOff(
