@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.cube import MapDataset, PSFKernel, make_map_exposure_true_energy
+from gammapy.cube import MapDataset, MapDatasetOnOff, PSFKernel, make_map_exposure_true_energy
 from gammapy.data import GTI
 from gammapy.irf import (
     EffectiveAreaTable2D,
@@ -96,7 +96,7 @@ def sky_model():
 
 
 def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, **kwargs):
-    """This computes the total npred"""
+    """Returns a MapDatasets"""
     # define background model
     m = Map.from_geom(geom)
     m.quantity = 0.2 * np.ones(m.data.shape)
@@ -458,3 +458,191 @@ def test_stack(geom, geom_etrue):
     assert_allclose(dataset1.background_model.map.data.sum(), 5988)
     assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
     assert_allclose(dataset1.mask_safe.data.sum(), 20000)
+
+def get_acceptance(geom_etrue):
+    filename = (
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
+
+    exposure_map = make_map_exposure_true_energy(
+        pointing=SkyCoord(1, 0.5, unit="deg", frame="galactic"),
+        livetime="1 hour",
+        aeff=aeff,
+        geom=geom_etrue,
+    )
+    return exposure_map
+
+@pytest.fixture
+def images():
+    """Load some `counts`, `counts_off`, `acceptance_on`, `acceptance_off" images"""
+    filename = "$/GAMMAPY_DATA/tests/unbundled/hess/survey/hess_survey_snippet.fits.gz"
+
+    images = {}
+    images.update({"counts": WcsNDMap.read(filename, hdu="ON")})
+    images.update({"counts_off": WcsNDMap.read(filename, hdu="OFF")})
+    images.update({"acceptance": WcsNDMap.read(filename, hdu="ONEXPOSURE")})
+    images.update({"acceptance_off": WcsNDMap.read(filename, hdu="OFFEXPOSURE")})
+
+    return images
+
+def get_map_dataset_onoff(images, **kwargs):
+    """Returns a MapDatasetOnOff"""
+
+    return MapDatasetOnOff(
+        model=None,
+        counts=images["on"],
+        counts_off=images["off"],
+        acceptance=images["exposure_on"],
+        acceptance_off=images["exposure_off"],
+        exposure=images["exposure"],
+        psf=None,
+        edisp=None,
+        mask_fit=None,
+        mask_safe=None,
+        **kwargs
+    )
+
+@requires_data()
+def test_map_dataset_onoff_fits_io(images, tmp_path):
+    dataset = get_map_dataset_onoff(images)
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+    dataset.gti = gti
+
+    hdulist = dataset.to_hdulist()
+    actual = [hdu.name for hdu in hdulist]
+
+    desired = [
+        "PRIMARY",
+        "COUNTS",
+        "COUNTS_BANDS",
+        "COUNTS_OFF",
+        "COUNTS_OFF_BANDS",
+        "ACCEPTANCE",
+        "ACCEPTANCE_BANDS",
+        "ACCEPTANCE_OFF",
+        "ACCEPTANCE_OFF_BANDS",
+        "EXPOSURE",
+        "EXPOSURE_BANDS",
+        "EDISP_MATRIX",
+        "EDISP_MATRIX_EBOUNDS",
+        "PSF_KERNEL",
+        "PSF_KERNEL_BANDS",
+        "MASK_SAFE",
+        "MASK_SAFE_BANDS",
+        "MASK_FIT",
+        "MASK_FIT_BANDS",
+        "GTI",
+    ]
+
+    assert actual == desired
+
+    dataset.write(tmp_path / "test.fits")
+
+    dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits")
+    assert dataset_new.model is None
+    assert dataset_new.mask.dtype == bool
+
+    assert_allclose(dataset.counts.data, dataset_new.counts.data)
+    assert_allclose(dataset.counts_off.data, dataset_new.counts_off.data)
+    assert_allclose(dataset.acceptance.data, dataset_new.acceptance.data)
+    assert_allclose(dataset.acceptance_off.data, dataset_new.acceptance_off.data)
+    assert_allclose(dataset.edisp.data.data.value, dataset_new.edisp.data.data.value)
+    assert_allclose(dataset.psf.data, dataset_new.psf.data)
+    assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
+    assert_allclose(dataset.mask_fit, dataset_new.mask_fit)
+    assert_allclose(dataset.mask_safe, dataset_new.mask_safe)
+
+    assert dataset.counts.geom == dataset_new.counts.geom
+    assert dataset.exposure.geom == dataset_new.exposure.geom
+
+    assert_allclose(
+        dataset.edisp.e_true.edges.value, dataset_new.edisp.e_true.edges.value
+    )
+    assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
+
+    assert_allclose(
+        dataset.edisp.e_reco.edges.value, dataset_new.edisp.e_reco.edges.value
+    )
+    assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
+    assert_allclose(
+        dataset.gti.time_sum.to_value("s"), dataset_new.gti.time_sum.to_value("s")
+    )
+
+
+def test_create_onoff(images):
+    # tests empty datasets created
+
+    migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+
+    geom = images["on"].geom
+    geom_etrue = images["on"].geom
+
+    empty_dataset = MapDatasetOnOff.create(geom, geom_etrue, migra_axis, rad_axis)
+
+    assert_allclose(empty_dataset.counts.data.sum(), 0.0)
+    assert_allclose(empty_dataset.counts_off.data.sum(), 0.0)
+    assert_allclose(empty_dataset.acceptance.data.sum(), 0.0)
+    assert_allclose(empty_dataset.acceptance_off.data.sum(), 0.0)
+
+    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 100, 100)
+    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 100, 100)
+
+    assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 100, 100)
+    assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 100, 100)
+
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 30000)
+
+    assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
+
+def test_map_dataset_onoff_str(images):
+    dataset = get_map_dataset_onoff(images)
+    assert "MapDataset" in str(dataset)
+
+def test_from_geoms_onoff(images):
+
+    migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    e_reco = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
+    )
+    e_true = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 4), name="energy", unit=u.TeV, interp="log"
+    )
+    wcs = WcsGeom.create(binsz=0.02, width=(2, 2))
+    wcs_irf = WcsGeom.create(binsz=0.1, width=(2.5, 2.5))
+    geom = wcs.to_cube([e_reco])
+    geom_exposure = wcs.to_cube([e_true])
+    geom_psf = wcs_irf.to_cube([rad_axis, e_true])
+    geom_edisp = wcs_irf.to_cube([migra_axis, e_true])
+
+    empty_dataset = MapDataset.from_geoms(geom, geom_exposure, geom_psf, geom_edisp)
+
+    assert empty_dataset.counts.data.shape == (2, 100, 100)
+
+    assert empty_dataset.exposure.data.shape == (3, 100, 100)
+
+    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 25, 25)
+    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 25, 25)
+
+    assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 25, 25)
+    assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 25, 25)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 1875)
+
+    assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
+
+
+@requires_data()
+def test_stack_onoff(images):
+
+    dataset1 = get_map_dataset_onoff(images)
+    dataset2 = get_map_dataset_onoff(images)
+
+    dataset1.stack(dataset2)
+    assert_allclose(dataset1.counts.data.sum(), 2 * dataset2.counts.data.sum())
+    assert_allclose(dataset1.counts_off.data.sum(), 2 * dataset2.counts_off.data.sum())
+    assert_allclose(dataset1.acceptance.data.sum(), dataset1.data_shape[0] * dataset1.data_shape[1])
+    assert_allclose(np.nansum(dataset1.acceptance_off.data), np.nansum(dataset1.acceptance.data / dataset1.alpha.data))
+    assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
+>>>>>>> Added MapDatasetOnOff and some tests
