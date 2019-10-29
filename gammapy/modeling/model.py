@@ -31,10 +31,11 @@ class Model:
             # TODO: refactor __init__ and try to get rid of this:
             # For now needed to be able for test_cosmic_ray_spectrum
             # UnitConversionError: '1 / (m2 s sr TeV)' and '1 / (cm2 s TeV)' are not convertible
-            self._parameters[name].quantity = u.Quantity(value)
-            # q = u.Quantity(value)
-            # self._parameters[name].value = q.value
-            # self._parameters[name].unit = q.unit
+            # or here: https://github.com/gammapy/gammapy/blob/a658474cee257508330420e220a2bed8c5b915e4/gammapy/spectrum/tests/test_fit.py#L24
+            # self._parameters[name].quantity = u.Quantity(value)
+            q = u.Quantity(value)
+            self._parameters[name].value = q.value
+            self._parameters[name].unit = q.unit
 
     def __init_subclass__(cls, **kwargs):
         # Add parameters list on the model sub-class (not instances)

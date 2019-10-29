@@ -554,18 +554,6 @@ class TestSpectralFit:
         assert_allclose(pars.error("amplitude"), 6.423e-12, rtol=1e-3)
         pars.to_table()
 
-    def test_compound(self):
-        model = self.pwl * 2
-        self.set_model(model)
-        fit = Fit(self.obs_list[0])
-        fit.run()
-        pars = fit.datasets.parameters
-
-        assert_allclose(pars["index"].value, 2.8166, rtol=1e-3)
-        p = pars["amplitude"]
-        assert p.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(p.value, 5.0714e-12, rtol=1e-3)
-
     def test_ecpl_fit(self):
         self.set_model(self.ecpl)
         fit = Fit(self.obs_list[0])
