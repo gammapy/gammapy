@@ -573,7 +573,7 @@ def test_map_dataset_onoff_str(images):
     assert "MapDatasetOnOff" in str(dataset)
 
 
-def test_from_geoms_onoff(images):
+def test_from_geoms_onoff():
 
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
