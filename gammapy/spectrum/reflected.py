@@ -6,6 +6,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import PixCoord
 from gammapy.maps import Map, WcsGeom, WcsNDMap
 from gammapy.maps.geom import frame_to_coordsys
+from gammapy.utils.regions import list_to_compound_region, compound_region_to_list
 from .background_estimate import BackgroundEstimate
 from .core import CountsSpectrum
 from .dataset import SpectrumDatasetOnOff
@@ -322,9 +323,7 @@ class ReflectedRegionsBackgroundEstimator:
         if a_off == 0:
             off_events = obs.events.select_row_subset([])
         else:
-            off_regions = off_region[0]
-            for reg in off_region[1:]:
-                off_regions = off_regions.union(reg)
+            off_regions = list_to_compound_region(off_region)
             off_events = obs.events.select_region(off_regions, wcs)
 
         log.info(f"Found {a_off} reflected regions for the Obs #{obs.obs_id}")
@@ -490,25 +489,20 @@ class ReflectedRegionsBackgroundMaker:
             Off counts.
         """
         finder = self._get_finder(observation)
-
         finder.run()
-        regions = finder.reflected_regions
 
-        region_union = regions[0]
-
-        for region in regions[1:]:
-            region_union = region_union.union(region)
+        region_union = list_to_compound_region(finder.reflected_regions)
 
         wcs = finder.reference_map.geom.wcs
         events_off = observation.events.select_region(region_union, wcs)
 
         edges = dataset.counts.energy.edges
-        counts_off = CountsSpectrum(energy_hi=edges[1:], energy_lo=edges[:-1])
+        counts_off = CountsSpectrum(
+            energy_hi=edges[1:],
+            energy_lo=edges[:-1],
+            region=region_union
+        )
         counts_off.fill_events(events_off)
-
-        # TODO: temporarily attach the region info to the CountsSpectrum.
-        #  but CountsSpectrum should be modified to hold this info anyway.
-        counts_off.regions = regions
         return counts_off
 
     def run(self, dataset, observation):
@@ -527,6 +521,7 @@ class ReflectedRegionsBackgroundMaker:
             On off dataset.
         """
         counts_off = self.make_counts_off(dataset, observation)
+        acceptance_off = len(compound_region_to_list(counts_off.region))
 
         return SpectrumDatasetOnOff(
             counts=dataset.counts,
@@ -537,7 +532,7 @@ class ReflectedRegionsBackgroundMaker:
             edisp=dataset.edisp,
             aeff=dataset.aeff,
             acceptance=1,
-            acceptance_off=len(counts_off.regions),
+            acceptance_off=acceptance_off,
             mask_safe=dataset.mask_safe,
             mask_fit=dataset.mask_fit,
         )

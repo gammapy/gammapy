@@ -19,6 +19,7 @@ from gammapy.utils.testing import (
     mpl_plot_check,
     requires_data,
 )
+from gammapy.utils.regions import compound_region_to_list
 
 
 @pytest.fixture(scope="session")
@@ -175,5 +176,7 @@ def test_reflected_bkg_maker(spectrum_dataset_maker, reflected_bkg_maker, observ
     assert_allclose(datasets[0].counts_off.data.sum(), 76)
     assert_allclose(datasets[1].counts_off.data.sum(), 60)
 
-    assert_allclose(len(datasets[0].counts_off.regions), 11)
-    assert_allclose(len(datasets[1].counts_off.regions), 11)
+    regions_0 = compound_region_to_list(datasets[0].counts_off.region)
+    regions_1 = compound_region_to_list(datasets[1].counts_off.region)
+    assert_allclose(len(regions_0), 11)
+    assert_allclose(len(regions_1), 11)

@@ -70,7 +70,7 @@ class SpectrumDatasetMaker:
         energy_hi = self.e_reco[1:]
         energy_lo = self.e_reco[:-1]
 
-        counts = CountsSpectrum(energy_hi=energy_hi, energy_lo=energy_lo)
+        counts = CountsSpectrum(energy_hi=energy_hi, energy_lo=energy_lo, region=self.region)
         events_region = observation.events.select_region(
             self.region, wcs=self.geom_ref.wcs
         )
@@ -181,7 +181,7 @@ class SpectrumDatasetMaker:
             selection = ["counts", "background", "aeff", "edisp"]
 
         kwargs = {
-            "name": f"obs_{observation.obs_id}",
+            "name": f"{observation.obs_id}",
             "gti": observation.gti,
             "livetime": observation.observation_live_time_duration,
         }

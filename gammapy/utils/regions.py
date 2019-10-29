@@ -16,7 +16,8 @@ TODO: before Gammapy v1.0, discuss what to do about ``gammapy.utils.regions``.
 Options: keep as-is, hide from the docs, or to remove it completely
 (if the functionality is available in ``astropy-regions`` directly.
 """
-from regions import CircleSkyRegion, DS9Parser, PixelRegion, Region, SkyRegion
+import operator
+from regions import CircleSkyRegion, DS9Parser, PixelRegion, Region, SkyRegion, CompoundSkyRegion
 
 __all__ = ["make_region", "make_pixel_region"]
 
@@ -99,6 +100,58 @@ def make_pixel_region(region, wcs=None):
         return region
     else:
         raise TypeError(f"Invalid type: {region!r}")
+
+
+def compound_region_to_list(region):
+    """Create list of regions from compound regions.
+
+    Parameters
+    ----------
+    regions : `~regions.CompoundSkyRegion` or `~regions.SkyRegion`
+        Compound sky region
+
+    Returns
+    -------
+    regions : list of `~regions.SkyRegion`
+        List of regions.
+    """
+    regions = []
+
+    if isinstance(region, CompoundSkyRegion):
+        if region.operator is operator.or_:
+            regions_1 = compound_region_to_list(region.region1)
+            regions.extend(regions_1)
+
+            regions_2 = compound_region_to_list(region.region2)
+            regions.extend(regions_2)
+        else:
+            raise ValueError("Only union operator supported")
+    else:
+        return [region]
+
+    return regions
+
+
+def list_to_compound_region(regions):
+    """Create compound region from list of regions, by creating the union.
+
+    Parameters
+    ----------
+    regions : list of `~regions.SkyRegion`
+        List of regions.
+
+    Returns
+    -------
+    compound : `~regions.CompoundSkyRegion`
+        Compound sky region
+    """
+
+    region_union = regions[0]
+
+    for region in regions[1:]:
+        region_union = region_union.union(region)
+
+    return region_union
 
 
 class SphericalCircleSkyRegion(CircleSkyRegion):

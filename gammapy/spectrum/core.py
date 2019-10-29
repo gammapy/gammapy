@@ -9,6 +9,7 @@ from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
 from gammapy.utils.scripts import make_path
+from gammapy.utils.regions import compound_region_to_list
 
 __all__ = ["CountsSpectrum", "SpectrumEvaluator"]
 
@@ -28,6 +29,8 @@ class CountsSpectrum:
         Spectrum data.
     unit : str or `~astropy.units.Unit`
         Data unit
+    region : `~regions.SkyRegion`
+        Region the spectrum is defined for.
 
     Examples
     --------
@@ -48,7 +51,7 @@ class CountsSpectrum:
         spec.plot(show_poisson_errors=True)
     """
 
-    def __init__(self, energy_lo, energy_hi, data=None, unit=""):
+    def __init__(self, energy_lo, energy_hi, data=None, unit="", region=None):
         e_edges = edges_from_lo_hi(energy_lo, energy_hi)
         self.energy = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
@@ -60,6 +63,7 @@ class CountsSpectrum:
             raise ValueError("Incompatible data and energy axis size.")
 
         self.unit = u.Unit(unit)
+        self.region = region
 
     @property
     def quantity(self):
@@ -73,9 +77,11 @@ class CountsSpectrum:
     @classmethod
     def from_hdulist(cls, hdulist, hdu1="COUNTS", hdu2="EBOUNDS"):
         """Read from HDU list in OGIP format."""
-        counts_table = Table.read(hdulist[hdu1])
-        counts = counts_table["COUNTS"].data
+        table = Table.read(hdulist[hdu1])
+        counts = table["COUNTS"].data
         ebounds = ebounds_to_energy_axis(hdulist[hdu2])
+
+        # TODO: add region serilisation
         return cls(data=counts, energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
 
     @classmethod
@@ -94,6 +100,7 @@ class CountsSpectrum:
 
         names = ["CHANNEL", "COUNTS"]
         meta = {"name": "COUNTS"}
+
         return Table([channel, counts], names=names, meta=meta)
 
     def to_hdulist(self, use_sherpa=False):
@@ -209,6 +216,27 @@ class CountsSpectrum:
         ax.set_xlabel(f"Energy [{energy_unit}]")
         ax.set_ylabel("Counts")
         ax.set_xscale("log")
+        return ax
+
+    def plot_region(self, ax=None, **kwargs):
+        """Plot region
+
+        Parameters
+        ----------
+        ax : `~astropy.vizualisation.WCSAxes`
+            Axes to plot on.
+        **kwargs : dict
+            Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.collections import PatchCollection
+
+        ax = plt.gca() or ax
+        regions = compound_region_to_list(self.region)
+        artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
+
+        patches = PatchCollection(artists, **kwargs)
+        ax.add_collection(patches)
         return ax
 
     def peek(self, figsize=(5, 10)):
