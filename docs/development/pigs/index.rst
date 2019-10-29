@@ -25,6 +25,7 @@ label`_ .
     pig-007
     pig-009
     pig-010
+    pig-011
     pig-012
     pig-013
     pig-016
