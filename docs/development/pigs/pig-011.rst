@@ -6,10 +6,9 @@
 PIG 11 - Light curves
 *********************
 
-* Author: Régis Terrier, Christoph Deil, Axel Donath, David Fidalgo, Atreyee Sinha
+* Author: Régis Terrier, Axel Donath, David Fidalgo, Atreyee Sinha
 * Created: July 2, 2018
-* Accepted:
-* Status: draft
+* Status: Withdrawn
 * Discussion: `GH 1451`_
 
 Abstract
@@ -267,7 +266,11 @@ Task list
 Decision
 ========
 
-tbd
+Withdrawn.
+
+The authors have decided to withdraw the PIG. A significant part of the implementation
+is already there. Besides, the recent additions of the high level interface and of the new Maker scheme
+change the scope of the discussion.
 
 .. _GH 1451: https://github.com/gammapy/gammapy/pull/1451
 .. _good time interval: http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/rates/ogip_93_003/ogip_93_003.html#tth_sEc6.3
