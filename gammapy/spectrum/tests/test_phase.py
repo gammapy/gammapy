@@ -56,7 +56,7 @@ def test_run(observations, phase_bkg_maker, spectrum_dataset_maker):
     assert_allclose(dataset_on_off.acceptance, 0.1)
     assert_allclose(dataset_on_off.acceptance_off, 0.3)
 
-    assert_allclose(dataset_on_off.counts.data.sum(), 178)
+    assert_allclose(dataset_on_off.counts.data.sum(), 28)
     assert_allclose(dataset_on_off.counts_off.data.sum(), 57)
 
 

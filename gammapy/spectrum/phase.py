@@ -17,8 +17,6 @@ class PhaseBackgroundMaker:
 
     Parameters
     ----------
-    region : `~regions.CircleSkyRegion`
-        Target region in the sky
     on_phase : `tuple` or list of tuples
         on-phase defined by the two edges of each interval (edges are excluded)
     off_phase : `tuple` or list of tuples
@@ -32,10 +30,24 @@ class PhaseBackgroundMaker:
 
     def __str__(self):
         s = self.__class__.__name__
-        s += f"\n{self.region}"
         s += f"\n{self.on_phase}"
         s += f"\n{self.off_phase}"
         return s
+
+    def _make_counts(self, dataset, observation, phases):
+        events = observation.events.select_region(self.region)
+
+        event_lists = []
+        for interval in phases:
+            events = events.select_parameter(parameter="PHASE", band=interval)
+            event_lists.append(events)
+
+        events_off = EventList.stack(event_lists)
+
+        edges = dataset.counts.energy.edges
+        counts = CountsSpectrum(energy_hi=edges[1:], energy_lo=edges[:-1])
+        counts.fill_events(events_off)
+        return counts
 
     def make_counts_off(self, dataset, observation):
         """Make off counts.
@@ -52,19 +64,24 @@ class PhaseBackgroundMaker:
         counts_off : `CountsSpectrum`
             Off counts.
         """
-        events = observation.events.select_region(self.region)
+        return self._make_counts(dataset, observation, self.off_phase)
 
-        event_lists = []
-        for interval in self.off_phase:
-            events = events.select_parameter(parameter="PHASE", band=interval)
-            event_lists.append(events)
+    def make_counts(self, dataset, observation):
+        """Make off counts.
 
-        events_off = EventList.stack(event_lists)
+        Parameters
+        ----------
+        dataset : `SpectrumDataset`
+            Input dataset.
+        observation : `DatastoreObservation`
+            Data store observation.
 
-        edges = dataset.counts.energy.edges
-        counts_off = CountsSpectrum(energy_hi=edges[1:], energy_lo=edges[:-1])
-        counts_off.fill_events(events_off)
-        return counts_off
+        Returns
+        -------
+        counts_off : `CountsSpectrum`
+            Off counts.
+        """
+        return self._make_counts(dataset, observation, self.on_phase)
 
     def run(self, dataset, observation):
         """Run all steps.
@@ -82,11 +99,12 @@ class PhaseBackgroundMaker:
             On off dataset.
         """
         counts_off = self.make_counts_off(dataset, observation)
+        counts = self.make_counts(dataset, observation)
         acceptance = np.sum([_[1] - _[0] for _ in self.on_phase])
         acceptance_off = np.sum([_[1] - _[0] for _ in self.off_phase])
 
         return SpectrumDatasetOnOff(
-            counts=dataset.counts,
+            counts=counts,
             counts_off=counts_off,
             gti=dataset.gti,
             name=dataset.name,
