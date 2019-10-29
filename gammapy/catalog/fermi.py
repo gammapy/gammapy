@@ -188,13 +188,17 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
 
     def _set_position_error(self, model):
         d = self.data
-        phi = d["Conf_95_PosAng"].to("deg")
+        if "Conf_68_PosAng" in d:
+            percent="68"
+        else:
+            percent="95"
+        phi = d["Conf_"+percent+"_PosAng"].to("deg")
         if np.isnan(phi):
             phi = 0.0 * u.deg
         model._position_error = EllipseSkyRegion(
             center=model.position,
-            height=2 * d["Conf_95_SemiMajor"].to("deg"),
-            width=2 * d["Conf_95_SemiMinor"].to("deg"),
+            height=2 * d["Conf_"+percent+"_SemiMajor"].to("deg"),
+            width=2 * d["Conf_"+percent+"_SemiMinor"].to("deg"),
             angle=phi,
         )
 

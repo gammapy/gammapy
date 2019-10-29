@@ -173,8 +173,8 @@ class TestFermi4FGLObject:
         assert_allclose(p["lat_0"].value, -73.921997)
         pos_err = model.position_error
         assert_allclose(pos_err.angle.value, -62.7)
-        assert_allclose(0.5 * pos_err.height.value, 0.0525, rtol=1e-4)
-        assert_allclose(0.5 * pos_err.width.value, 0.051, rtol=1e-4)
+        assert_allclose(0.5 * pos_err.height.value, 0.032378, rtol=1e-4)
+        assert_allclose(0.5 * pos_err.width.value, 0.031453, rtol=1e-4)
         assert_allclose(model.position.ra.value, pos_err.center.ra.value)
         assert_allclose(model.position.dec.value, pos_err.center.dec.value)
 
@@ -345,8 +345,8 @@ class TestFermi3FGLObject:
         model = self.cat["3FGL J0000.2-3738"].spatial_model()
         pos_err = model.position_error
         assert_allclose(pos_err.angle.value, -88.55)
-        assert_allclose(0.5 * pos_err.height.value, 0.0731, rtol=1e-4)
-        assert_allclose(0.5 * pos_err.width.value, 0.0676, rtol=1e-4)
+        assert_allclose(0.5 * pos_err.height.value, 0.045083, rtol=1e-4)
+        assert_allclose(0.5 * pos_err.width.value, 0.041691, rtol=1e-4)
         assert_allclose(model.position.ra.value, pos_err.center.ra.value)
         assert_allclose(model.position.dec.value, pos_err.center.dec.value)
 
