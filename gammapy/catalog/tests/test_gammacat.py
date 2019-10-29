@@ -206,7 +206,6 @@ class TestSourceCatalogObjectGammaCat:
         model = gammacat["HESS J1634-472"].spatial_model()
         pos_err = model.position_error
         assert_allclose(pos_err.radius.value, 0.044721, rtol=1e-4)
-        assert_allclose(pos_err.angle.value, 0.0)
         assert_allclose(model.position.l.value, pos_err.center.l.value)
         assert_allclose(model.position.b.value, pos_err.center.b.value)
 
