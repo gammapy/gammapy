@@ -1064,9 +1064,9 @@ class TemplateSpectralModel(SpectralModel):
         self,
         energy,
         values,
-        norm=norm.value,
-        tilt=tilt.value,
-        reference=reference.value,
+        norm=norm.quantity,
+        tilt=tilt.quantity,
+        reference=reference.quantity,
         interp_kwargs=None,
         meta=None,
     ):
@@ -1192,7 +1192,7 @@ class ScaleSpectralModel(SpectralModel):
     tag = "ScaleSpectralModel"
     norm = Parameter("norm", 1, unit="")
 
-    def __init__(self, model, norm=norm.value):
+    def __init__(self, model, norm=norm.quantity):
         self.model = model
         super().__init__(norm=norm)
 

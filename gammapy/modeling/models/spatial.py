@@ -516,7 +516,7 @@ class TemplateSpatialModel(SpatialModel):
     def __init__(
         self,
         map,
-        norm=norm.value,
+        norm=norm.quantity,
         meta=None,
         normalize=True,
         interp_kwargs=None,

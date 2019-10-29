@@ -167,7 +167,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
 
     scale = Parameter("scale", 1)
 
-    def __init__(self, mass, channel, scale=scale.value, jfactor=1, z=0, k=2):
+    def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2):
         self.k = k
         self.z = z
         self.mass = mass

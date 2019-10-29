@@ -299,9 +299,9 @@ class SkyDiffuseCube(SkyModelBase):
     def __init__(
         self,
         map,
-        norm=norm.value,
-        tilt=tilt.value,
-        reference=reference.value,
+        norm=norm.quantity,
+        tilt=tilt.quantity,
+        reference=reference.quantity,
         meta=None,
         interp_kwargs=None,
         name="diffuse",
@@ -435,7 +435,7 @@ class BackgroundModel(Model):
     reference = Parameter("reference", "1 TeV", frozen=True)
 
     def __init__(
-        self, map, norm=norm.value, tilt=tilt.value, reference=reference.value, name="background", filename=None
+        self, map, norm=norm.quantity, tilt=tilt.quantity, reference=reference.quantity, name="background", filename=None
     ):
         axis = map.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":
