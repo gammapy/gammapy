@@ -60,11 +60,12 @@ class SpatialModel(Model):
         if self.parameters.covariance is None:
             return self._position_error
         pars = self.parameters
-        ind = [pars._get_idx("lon_0"), pars._get_idx("lat_0")]
-        sub_covar = pars.covariance[ind, :][:, ind]
-        sub_covar[0, 0] *= np.cos(self.lat_0.quantity).value ** 2.0
-        sub_covar[0, 1] *= np.cos(self.lat_0.quantity).value
-        sub_covar[1, 0] *= np.cos(self.lat_0.quantity).value
+        idx = [pars._get_idx("lon_0"), pars._get_idx("lat_0")]
+        sub_covar = pars.covariance[idx, :][:, idx]
+        cos_lat = self.lat_0.quantity.to_value("rad")
+        sub_covar[0, 0] *= np.cos(cos_lat) ** 2.0
+        sub_covar[0, 1] *= np.cos(cos_lat)
+        sub_covar[1, 0] *= np.cos(cos_lat)
         eig_vals, eig_vecs = np.linalg.eig(sub_covar)
         lon_err, lat_err = np.sqrt(eig_vals)
         y_vec = eig_vecs[:, 0]
@@ -72,11 +73,13 @@ class SpatialModel(Model):
         err = np.sort([lon_err, lat_err])
         if err[1] == lon_err:
             phi += 90 * u.deg
+            height = 2 * err[1] * pars["lon_0"].unit
+            width = 2 * err[0] * pars["lat_0"].unit
+        else:
+            height = 2 * err[1] * pars["lat_0"].unit
+            width = 2 * err[0] * pars["lon_0"].unit
         return EllipseSkyRegion(
-            center=self.position,
-            height=2 * err[1] * u.deg,
-            width=2 * err[0] * u.deg,
-            angle=phi,
+            center=self.position, height=height, width=width, angle=phi
         )
 
     def evaluate_geom(self, geom):
