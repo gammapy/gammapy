@@ -297,8 +297,8 @@ class TestSpectrumOnOff:
         assert self.dataset.data_shape == self.on_counts.data.shape
 
     def test_npred_no_edisp(self):
-        const = 1 / u.TeV / u.cm ** 2 / u.s
-        model = ConstantSpectralModel(const)
+        const = 1 * u.Unit("cm-2 s-1 TeV-1")
+        model = ConstantSpectralModel(const=const)
         livetime = 1 * u.s
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,

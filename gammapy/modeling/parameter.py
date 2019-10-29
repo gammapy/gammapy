@@ -66,21 +66,17 @@ class Parameter:
         self.max = max
         self.frozen = frozen
 
-    # TODO: refactor __init__ and try to get rid of this:
-    # For now needed to be able for test_cosmic_ray_spectrum
-    # UnitConversionError: '1 / (m2 s sr TeV)' and '1 / (cm2 s TeV)' are not convertible
-    def _update_from_any(self, value):
-        q = u.Quantity(value)
-        self.value = q.value
-        self.unit = q.unit
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return instance.__dict__[self.name]
 
-    # def __get__(self, instance, owner):
-    #     if instance is None:
-    #         return self
-    #     return instance.__dict__[self.name]
-    #
-    # def __set__(self, instance, value):
-    #     instance.__dict__[self.name] = value
+    def __set__(self, instance, value):
+        if isinstance(value, Parameter):
+            instance.__dict__[self.name] = value
+        else:
+            par = instance.__dict__[self.name]
+            raise TypeError(f"Cannot assign {value!r} to parameter {par!r}")
 
     @property
     def name(self):

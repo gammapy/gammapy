@@ -1,27 +1,29 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 from numpy.testing import assert_allclose
-from gammapy.modeling import Model, Parameter, Parameters
+import astropy.units as u
+from gammapy.modeling import Model, Parameter
 
 
 class MyModel(Model):
     """Simple model example"""
-    x = Parameter("x", 1)
+    x = Parameter("x", 1, "cm")
     y = Parameter("y", 2)
 
 
 # TODO: change example to also hold parameters?
 class CoModel(Model):
     """Compound model example"""
-    norm = Parameter("norm", 99)
+    norm = Parameter("norm", 42, "cm")
 
-    def __init__(self, m1, m2):
+    def __init__(self, m1, m2, norm=norm.quantity):
         self.m1 = m1
         self.m2 = m2
-        super().__init__()
+        super().__init__(norm=norm)
 
     @property
     def parameters(self):
-        return self.parameters + self.m1.parameters + self.m2.parameters
+        return self._parameters + self.m1.parameters + self.m2.parameters
 
 
 def test_model_class():
@@ -41,6 +43,23 @@ def test_model_init():
     m = MyModel(x=99)
     assert m.x.value == 99
     assert m.y.value == 2
+
+
+def test_model_parameter():
+    m = MyModel(x="99 cm")
+    assert isinstance(m.x, Parameter)
+    assert m.x.value == 99
+    assert m.x.unit == "cm"
+
+    with pytest.raises(TypeError):
+        m.x = 99
+
+    with pytest.raises(TypeError):
+        m.x = 99 * u.cm
+
+    # Assigning a parameter should work
+    m.x = m.x.copy()
+    assert isinstance(m.x, Parameter)
 
 
 def test_model_copy():
@@ -65,6 +84,6 @@ def test_compound_model():
     m1 = MyModel()
     m2 = MyModel(x=10, y=20)
     m = CoModel(m1, m2)
-    assert len(m.parameters) == 4
-    assert m.parameters.names == ["x", "y", "x", "y"]
-    assert_allclose(m.parameters.values, [1, 2, 10, 20])
+    assert len(m.parameters) == 5
+    assert m.parameters.names == ["norm", "x", "y", "x", "y"]
+    assert_allclose(m.parameters.values, [42, 1, 2, 10, 20])
