@@ -196,11 +196,11 @@ def make_all_models():
     """Make an instance of each model, for testing."""
     yield Model.create("ConstantSpatialModel")
     yield Model.create("TemplateSpatialModel", map=Map.create(npix=(10, 20)))
-    yield Model.create("DiskSpatialModel", lon_0="1d", lat_0="2d", r_0="3d")
-    yield Model.create("GaussianSpatialModel", lon_0="1d", lat_0="2d", sigma="3d")
-    yield Model.create("PointSpatialModel", lon_0="1d", lat_0="2d")
+    yield Model.create("DiskSpatialModel", lon_0="1 deg", lat_0="2 deg", r_0="3 deg")
+    yield Model.create("GaussianSpatialModel", lon_0="1 deg", lat_0="2 deg", sigma="3 deg")
+    yield Model.create("PointSpatialModel", lon_0="1 deg", lat_0="2 deg")
     yield Model.create(
-        "ShellSpatialModel", lon_0="1d", lat_0="2d", radius="3d", width="4d"
+        "ShellSpatialModel", lon_0="1 deg", lat_0="2 deg", radius="3 deg", width="4 deg"
     )
     yield Model.create(
         "ConstantSpectralModel", const="99 cm"

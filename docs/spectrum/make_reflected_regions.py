@@ -10,7 +10,7 @@ from gammapy.spectrum import ReflectedRegionsFinder
 exclusion_mask = WcsNDMap.create(npix=(801, 701), binsz=0.01, skydir=(83.6, 23.0))
 
 coords = exclusion_mask.geom.get_coord().skycoord
-mask = (Angle("23d") < coords.dec) & (coords.dec < Angle("24d"))
+mask = (Angle("23 deg") < coords.dec) & (coords.dec < Angle("24 deg"))
 exclusion_mask.data = np.invert(mask)
 
 pos = SkyCoord(83.633, 22.014, unit="deg")
