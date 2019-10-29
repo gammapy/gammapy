@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from gammapy.data import EventList
-from .background_estimate import BackgroundEstimate
+from .core import CountsSpectrum
+from .dataset import SpectrumDatasetOnOff
 
 __all__ = ["PhaseBackgroundMaker"]
 
@@ -52,7 +53,13 @@ class PhaseBackgroundMaker:
             Off counts.
         """
         events = observation.events.select_region(self.region)
-        events_off = events.select_parameter(parameter="PHASE", interval=self.off_phase)
+
+        event_lists = []
+        for interval in self.off_phase:
+            events = events.select_parameter(parameter="PHASE", band=interval)
+            event_lists.append(events)
+
+        events_off = EventList.stack(event_lists)
 
         edges = dataset.counts.energy.edges
         counts_off = CountsSpectrum(energy_hi=edges[1:], energy_lo=edges[:-1])
@@ -92,10 +99,12 @@ class PhaseBackgroundMaker:
             mask_fit=dataset.mask_fit,
         )
 
-
     @staticmethod
     def _check_intervals(intervals):
         """Split phase intervals that go beyond phase 1"""
+        if isinstance(intervals, tuple):
+            intervals = [intervals]
+
         for phase_interval in intervals:
             if phase_interval[0] > phase_interval[1]:
                 intervals.remove(phase_interval)
