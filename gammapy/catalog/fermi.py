@@ -7,6 +7,7 @@ import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
 from astropy.wcs import FITSFixedWarning
+from regions import CircleSkyRegion, EllipseSkyRegion
 from gammapy.maps import Map
 from gammapy.modeling.models import (
     DiskSpatialModel,
@@ -190,14 +191,11 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         phi = d["Conf_95_PosAng"].to("deg")
         if np.isnan(phi):
             phi = 0.0 * u.deg
-        e = (1 - (d["Conf_95_SemiMinor"] / d["Conf_95_SemiMajor"]) ** 2.0) ** 0.5
-        model._position_error = DiskSpatialModel(
-            lon_0=d["RAJ2000"],
-            lat_0=d["DEJ2000"],
-            r_0=d["Conf_95_SemiMajor"].to("deg"),
-            e=e,
-            phi=phi,
-            frame="icrs",
+        model._position_error = EllipseSkyRegion(
+            center=model.position,
+            height=2 * d["Conf_95_SemiMajor"].to("deg"),
+            width=2 * d["Conf_95_SemiMinor"].to("deg"),
+            angle=phi,
         )
 
     def sky_model(self):
@@ -369,17 +367,11 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
     def spatial_model(self):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`)."""
         d = self.data
-
-        pars = {}
-        glon = d["GLON"]
-        glat = d["GLAT"]
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
 
         if self.is_pointlike:
-            pars["lon_0"] = glon
-            pars["lat_0"] = glat
-            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
+            model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
@@ -718,17 +710,11 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
     def spatial_model(self):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`)."""
         d = self.data
-
-        pars = {}
-        glon = d["GLON"]
-        glat = d["GLAT"]
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
 
         if self.is_pointlike:
-            pars["lon_0"] = glon
-            pars["lat_0"] = glat
-            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
+            model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
@@ -902,17 +888,11 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
     def spatial_model(self):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`)."""
         d = self.data
-
-        pars = {}
-        glon = d["GLON"]
-        glat = d["GLAT"]
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
 
         if self.is_pointlike:
-            pars["lon_0"] = glon
-            pars["lat_0"] = glat
-            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
+            model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
@@ -938,17 +918,10 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
 
         if not np.isnan(d["Pos_err_68"]):
-            self._set_position_error(model)
+            model._position_error = CircleSkyRegion(
+                center=model.position, radius=self.data["Pos_err_68"].to("deg")
+            )
         return model
-
-    def _set_position_error(self, model):
-        d = self.data
-        model._position_error = DiskSpatialModel(
-            lon_0=d["RAJ2000"],
-            lat_0=d["DEJ2000"],
-            r_0=d["Pos_err_68"].to("deg"),
-            frame="icrs",
-        )
 
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
@@ -1176,17 +1149,11 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
     def spatial_model(self):
         """Source spatial model (`~gammapy.modeling.models.SpatialModel`)."""
         d = self.data
-
-        pars = {}
-        glon = d["GLON"]
-        glat = d["GLAT"]
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
 
         if self.is_pointlike:
-            pars["lon_0"] = glon
-            pars["lat_0"] = glat
-            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
+            model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
         else:
             de = self.data_extended
             morph_type = de["Spatial_Function"].strip()

@@ -19,9 +19,9 @@ from gammapy.modeling.models import (
     SkyModel,
     SkyModels,
 )
+from gammapy.modeling.serialize import regions_to_reg
 
 DATA_PATH = Path("./")
-from gammapy.modeling.serialize import models_to_reg
 
 
 def make_example_2():
@@ -129,7 +129,7 @@ def make_region_file():
     )
     model2 = GaussianSpatialModel(5 * u.deg, 1 * u.deg, 0.3 * u.deg, frame="galactic")
     filename = Path("contours.reg")
-    models_to_reg([model1, model2], filename)
+    regions_to_reg([model1.to_region, model2.to_region], filename)
 
 
 if __name__ == "__main__":

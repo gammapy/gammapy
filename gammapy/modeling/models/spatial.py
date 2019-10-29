@@ -11,7 +11,7 @@ from astropy.coordinates.angle_utilities import angular_separation, position_ang
 from regions import (
     PointSkyRegion,
     EllipseSkyRegion,
-    EllipseAnnulusSkyRegion,
+    CircleAnnulusSkyRegion,
     RectangleSkyRegion,
 )
 from gammapy.maps import Map
@@ -71,16 +71,13 @@ class SpatialModel(Model):
             y_vec = eig_vecs[:, 0]
             phi = (np.arctan2(y_vec[1], y_vec[0]) * u.rad).to("deg")
             err = np.sort([lon_err, lat_err])
-            e = (1 - (err[0] / err[1]) ** 2.0) ** 0.5
             if err[1] == lon_err:
                 phi += 90 * u.deg
-            return DiskSpatialModel(
-                self.lon_0.quantity,
-                self.lat_0.quantity,
-                r_0=err[1] * u.deg,
-                e=e,
-                phi=phi,
-                frame=self.frame,
+            return EllipseSkyRegion(
+            center=self.position,
+            height=2*err[1] * u.deg,
+            width=2*err[0] * u.deg,
+            angle=phi,
             )
 
     def evaluate_geom(self, geom):
@@ -97,6 +94,7 @@ class SpatialModel(Model):
 
     @abc.abstractmethod
     def to_region(self):
+        """Return model as a `~regions.SkyRegion`."""
         pass
 
 
@@ -151,6 +149,7 @@ class PointSpatialModel(SpatialModel):
 
     @property
     def to_region(self):
+        """Return model as a `~regions.PointSkyRegion`."""
         return PointSkyRegion(center=self.position)
 
 
@@ -253,6 +252,7 @@ class GaussianSpatialModel(SpatialModel):
 
     @property
     def to_region(self):
+        """Return model as a `~regions.EllipseSkyRegion`."""
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
@@ -372,6 +372,7 @@ class DiskSpatialModel(SpatialModel):
 
     @property
     def to_region(self):
+        """Return model as a `~regions.EllipseSkyRegion`."""
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
@@ -450,8 +451,9 @@ class ShellSpatialModel(SpatialModel):
         return norm * value
 
     @property
-    def CircleAnnulusSkyRegion(self):
-        return EllipseAnnulusSkyRegion(
+    def to_region(self):
+        """Return model as a `~regions.CircleAnnulusSkyRegion`."""
+        return CircleAnnulusSkyRegion(
             center=self.position,
             inner_radius=self.radius.quantity,
             outer_radius=self.radius.quantity + self.width.quantity,
@@ -599,6 +601,7 @@ class TemplateSpatialModel(SpatialModel):
 
     @property
     def to_region(self):
+        """Return model as a `~regions.RectangleSkyRegion`."""
         return RectangleSkyRegion(
             center=self.position,
             width=self.map.geom.width[0][0],

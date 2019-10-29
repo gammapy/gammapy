@@ -10,6 +10,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
+from regions import CircleSkyRegion
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     GaussianSpatialModel,
@@ -19,7 +20,6 @@ from gammapy.modeling.models import (
     ShellSpatialModel,
     SkyModel,
     SkyModels,
-    DiskSpatialModel,
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.scripts import make_path
@@ -359,8 +359,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         else:
             raise NotImplementedError(f"Unknown spatial model: {morph_type!r}")
         if not np.isnan(d["pos_err"]):
-            model._position_error = DiskSpatialModel(
-                lon_0=glon, lat_0=glat, r_0=d["pos_err"].to("deg"), frame="galactic"
+            model._position_error = CircleSkyRegion(
+                center=model.position, radius=d["pos_err"].to("deg")
             )
         return model
 

@@ -16,7 +16,7 @@ from gammapy.modeling.models import (
     DiskSpatialModel,
     GaussianSpatialModel,
 )
-from gammapy.modeling.serialize import dict_to_models, models_to_reg
+from gammapy.modeling.serialize import dict_to_models, regions_to_reg
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
@@ -29,7 +29,7 @@ def test_models_to_reg(tmpdir):
     model2 = GaussianSpatialModel(5 * u.deg, 1 * u.deg, 0.3 * u.deg, frame="galactic")
     filename = tmpdir / "contours.reg"
     fileref = get_pkg_data_filename("data/contours.reg")
-    models_to_reg([model1, model2], filename)
+    regions_to_reg([model1.to_region, model2.to_region], filename)
     assert cmp(filename, fileref)
 
 

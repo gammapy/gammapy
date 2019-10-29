@@ -205,10 +205,10 @@ class TestSourceCatalogObjectGammaCat:
 
         model = gammacat["HESS J1634-472"].spatial_model()
         pos_err = model.position_error
-        semiminor = pos_err.r_0.value * (1 - pos_err.e.value ** 2.0) ** 0.5
-        assert_allclose(pos_err.r_0.value, 0.044721, rtol=1e-4)
-        assert_allclose(semiminor, 0.044721, rtol=1e-4)
-        assert_allclose(pos_err.phi.value, 0.0)
+        assert_allclose(pos_err.radius.value, 0.044721, rtol=1e-4)
+        assert_allclose(pos_err.angle.value, 0.0)
+        assert_allclose(model.position.l.value, pos_err.center.l.value)
+        assert_allclose(model.position.b.value, pos_err.center.b.value)
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_sky_model(self, gammacat, ref):

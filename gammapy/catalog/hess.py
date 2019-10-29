@@ -8,7 +8,6 @@ from astropy.table import Table
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     GaussianSpatialModel,
-    DiskSpatialModel,
     PointSpatialModel,
     PowerLawSpectralModel,
     ShellSpatialModel,

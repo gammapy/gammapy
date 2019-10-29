@@ -10,6 +10,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
+from regions import CircleSkyRegion
 
 __all__ = ["SourceCatalog2HWC", "SourceCatalogObject2HWC"]
 
@@ -153,11 +154,8 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
                 self.data[f"spec{idx}_radius"],
                 frame="galactic",
             )
-        model._position_error = DiskSpatialModel(
-            lon_0=self.data["glon"],
-            lat_0=self.data["glat"],
-            r_0=self.data["pos_err"].to("deg"),
-            frame="galactic",
+        model._position_error = CircleSkyRegion(
+            center=model.position, radius=self.data["pos_err"].to("deg")
         )
         return model
 

@@ -9,7 +9,7 @@ from regions import write_ds9
 DATASETS = Registry([MapDataset, SpectrumDataset, FluxPointsDataset])
 
 __all__ = [
-    "models_to_reg",
+    "regions_to_reg",
     "models_to_dict",
     "dict_to_models",
     "dict_to_datasets",
@@ -17,22 +17,21 @@ __all__ = [
 ]
 
 
-def models_to_reg(models, filename, **kwargs):
+def regions_to_reg(regions, filename, **kwargs):
     """create ds9 region file from a list of model countours
 
     Parameters
     ----------
-    models : list
-        Python list of SpatialModel objects
+    models : 'regions.SkyRegion`
+        Python list of SkyRegion objects
     filename : `pathlib.Path`
         path to write files
     """
-    regions = []
-    for model in models:
-        region = model.to_region
+    out = []
+    for region in regions:
         if region is not None:
-            regions.append(model.to_region)
-    write_ds9(regions, filename, coordsys="galactic", fmt=".4f", radunit="deg")
+            out.append(region)
+    write_ds9(out, filename, coordsys="galactic", fmt=".4f", radunit="deg")
 
 
 def models_to_dict(models):
