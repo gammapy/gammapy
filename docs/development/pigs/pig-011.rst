@@ -106,7 +106,7 @@ While we could provide helper functions to prepare the time bins. ``astropy.time
 is relatively easy to use, so that a user would execute code similar to the following
 example:
 
-.. code ::
+::
 
     from astropy.time import Time
     time_start = Time("2006-07-29 20:00:00.000")
@@ -168,7 +168,7 @@ After creating the ``Datasets``, the user would first define the model to be use
 and freeze its parameters. Then we would apply it to the various ``Dataset`` objects
 before calling the ``LightCurveEstimator``:
 
-.. code ::
+::
 
     sky_model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     sky_model.parameters["index"].frozen = True
@@ -199,7 +199,7 @@ chi-square test, fractional variance estimation.
 
 Example usage:
 
-.. code ::
+::
 
     lightcurve.plot('amplitude')
 
@@ -210,7 +210,7 @@ The ``LightCurve`` object should be able to rpovide some rebinning functionaliti
 In particular, it stores the fit statistic scan, it should be possible to perform
 minimal significance rebinning:
 
-.. code ::
+::
 
     simple_rebin_lc = lightcurve.rebin(factor=2)
     # or
@@ -226,7 +226,7 @@ Time bins
 To work with time bins, we could also rely on ``astropy.timeseries`` if we force the dependency to astropy v>3.2.
 This would look like:
 
-.. code ::
+::
 
     from astropy.timeseries import BinnedTimeSeries
     times = BinnedTimeSeries(time_bin_start="2006-07-29 20:00:00.000",
