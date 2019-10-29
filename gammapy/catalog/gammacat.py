@@ -358,10 +358,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             raise NoDataAvailableError(f"No spatial model available: {self.name}")
         else:
             raise NotImplementedError(f"Unknown spatial model: {morph_type!r}")
-        if not np.isnan(d["pos_err"]):
-            model._position_error = CircleSkyRegion(
-                center=model.position, radius=d["pos_err"].to("deg")
-            )
+        model._position_error = CircleSkyRegion(
+            center=model.position, radius=d["pos_err"].to("deg")
+        )
         return model
 
     def sky_model(self):

@@ -1,36 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from filecmp import cmp
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Datasets, Model
-from gammapy.modeling.models import (
-    MODELS,
-    AbsorbedSpectralModel,
-    Absorption,
-    SkyModels,
-    DiskSpatialModel,
-    GaussianSpatialModel,
-)
-from gammapy.modeling.serialize import dict_to_models, regions_to_reg
+from gammapy.modeling.models import MODELS, AbsorbedSpectralModel, Absorption, SkyModels
+from gammapy.modeling.serialize import dict_to_models
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
-
-
-@requires_data()
-def test_models_to_reg(tmpdir):
-    model1 = DiskSpatialModel(
-        0 * u.deg, 0 * u.deg, 1 * u.deg, 0.8, 30 * u.deg, frame="galactic"
-    )
-    model2 = GaussianSpatialModel(5 * u.deg, 1 * u.deg, 0.3 * u.deg, frame="galactic")
-    filename = tmpdir / "contours.reg"
-    fileref = get_pkg_data_filename("data/contours.reg")
-    regions_to_reg([model1.to_region, model2.to_region], filename)
-    assert cmp(filename, fileref)
 
 
 @requires_data()

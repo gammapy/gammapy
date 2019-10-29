@@ -5,6 +5,8 @@ import logging
 import numpy as np
 import scipy.integrate
 import scipy.special
+from astropy.wcs import WCS
+from astropy.io import fits
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
@@ -12,7 +14,7 @@ from regions import (
     PointSkyRegion,
     EllipseSkyRegion,
     CircleAnnulusSkyRegion,
-    RectangleSkyRegion,
+    PolygonSkyRegion,
 )
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter
@@ -59,26 +61,25 @@ class SpatialModel(Model):
         """Set position error from covariance matrix"""
         if self.parameters.covariance is None:
             return self._position_error
-        else:
-            pars = self.parameters
-            ind = [pars._get_idx("lon_0"), pars._get_idx("lat_0")]
-            sub_covar = pars.covariance[ind, :][:, ind]
-            sub_covar[0, 0] *= np.cos(self.lat_0.quantity).value ** 2.0
-            sub_covar[0, 1] *= np.cos(self.lat_0.quantity).value
-            sub_covar[1, 0] *= np.cos(self.lat_0.quantity).value
-            eig_vals, eig_vecs = np.linalg.eig(sub_covar)
-            lon_err, lat_err = np.sqrt(eig_vals)
-            y_vec = eig_vecs[:, 0]
-            phi = (np.arctan2(y_vec[1], y_vec[0]) * u.rad).to("deg")
-            err = np.sort([lon_err, lat_err])
-            if err[1] == lon_err:
-                phi += 90 * u.deg
-            return EllipseSkyRegion(
+        pars = self.parameters
+        ind = [pars._get_idx("lon_0"), pars._get_idx("lat_0")]
+        sub_covar = pars.covariance[ind, :][:, ind]
+        sub_covar[0, 0] *= np.cos(self.lat_0.quantity).value ** 2.0
+        sub_covar[0, 1] *= np.cos(self.lat_0.quantity).value
+        sub_covar[1, 0] *= np.cos(self.lat_0.quantity).value
+        eig_vals, eig_vecs = np.linalg.eig(sub_covar)
+        lon_err, lat_err = np.sqrt(eig_vals)
+        y_vec = eig_vecs[:, 0]
+        phi = (np.arctan2(y_vec[1], y_vec[0]) * u.rad).to("deg")
+        err = np.sort([lon_err, lat_err])
+        if err[1] == lon_err:
+            phi += 90 * u.deg
+        return EllipseSkyRegion(
             center=self.position,
-            height=2*err[1] * u.deg,
-            width=2*err[0] * u.deg,
+            height=2 * err[1] * u.deg,
+            width=2 * err[0] * u.deg,
             angle=phi,
-            )
+        )
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
@@ -94,7 +95,7 @@ class SpatialModel(Model):
 
     @abc.abstractmethod
     def to_region(self):
-        """Return model as a `~regions.SkyRegion`."""
+        """Return model outline as a `~regions.SkyRegion`."""
         pass
 
 
@@ -149,7 +150,7 @@ class PointSpatialModel(SpatialModel):
 
     @property
     def to_region(self):
-        """Return model as a `~regions.PointSkyRegion`."""
+        """Return model outline as a `~regions.PointSkyRegion`."""
         return PointSkyRegion(center=self.position)
 
 
@@ -252,7 +253,7 @@ class GaussianSpatialModel(SpatialModel):
 
     @property
     def to_region(self):
-        """Return model as a `~regions.EllipseSkyRegion`."""
+        """Return model outline as a `~regions.EllipseSkyRegion`."""
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
@@ -372,7 +373,7 @@ class DiskSpatialModel(SpatialModel):
 
     @property
     def to_region(self):
-        """Return model as a `~regions.EllipseSkyRegion`."""
+        """Return model outline as a `~regions.EllipseSkyRegion`."""
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
@@ -452,7 +453,7 @@ class ShellSpatialModel(SpatialModel):
 
     @property
     def to_region(self):
-        """Return model as a `~regions.CircleAnnulusSkyRegion`."""
+        """Return model outline as a `~regions.CircleAnnulusSkyRegion`."""
         return CircleAnnulusSkyRegion(
             center=self.position,
             inner_radius=self.radius.quantity,
@@ -601,10 +602,9 @@ class TemplateSpatialModel(SpatialModel):
 
     @property
     def to_region(self):
-        """Return model as a `~regions.RectangleSkyRegion`."""
-        return RectangleSkyRegion(
-            center=self.position,
-            width=self.map.geom.width[0][0],
-            height=self.map.geom.width[1][0],
-            angle=0 * u.deg,
+        """Return model outline as a `~regions.RectangleSkyRegion`."""
+        header = fits.open(self.filename)[0].header
+        footprint = WCS(header).calc_footprint()
+        return PolygonSkyRegion(
+            vertices=SkyCoord(footprint, unit="deg", frame=self.frame)
         )

@@ -3,35 +3,16 @@
 from gammapy.cube.fit import MapDataset
 from gammapy.spectrum import FluxPointsDataset, SpectrumDataset
 from .models import Registry, SkyDiffuseCube, SkyModel
-from regions import write_ds9
 
 # TODO: move this elsewhere ?
 DATASETS = Registry([MapDataset, SpectrumDataset, FluxPointsDataset])
 
 __all__ = [
-    "regions_to_reg",
     "models_to_dict",
     "dict_to_models",
     "dict_to_datasets",
     "datasets_to_dict",
 ]
-
-
-def regions_to_reg(regions, filename, **kwargs):
-    """create ds9 region file from a list of model countours
-
-    Parameters
-    ----------
-    models : 'regions.SkyRegion`
-        Python list of SkyRegion objects
-    filename : `pathlib.Path`
-        path to write files
-    """
-    out = []
-    for region in regions:
-        if region is not None:
-            out.append(region)
-    write_ds9(out, filename, coordsys="galactic", fmt=".4f", radunit="deg")
 
 
 def models_to_dict(models):

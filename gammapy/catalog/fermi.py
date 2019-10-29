@@ -397,9 +397,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
-
-        if not np.isnan(d["Conf_95_SemiMajor"]):
-            self._set_position_error(model)
+        self._set_position_error(model)
         return model
 
     def spectral_model(self):
@@ -738,8 +736,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
                 )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
-        if not np.isnan(d["Conf_95_SemiMajor"]):
-            self._set_position_error(model)
+        self._set_position_error(model)
         return model
 
     @property
@@ -917,10 +914,9 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
 
-        if not np.isnan(d["Pos_err_68"]):
-            model._position_error = CircleSkyRegion(
-                center=model.position, radius=self.data["Pos_err_68"].to("deg")
-            )
+        model._position_error = CircleSkyRegion(
+            center=model.position, radius=self.data["Pos_err_68"].to("deg")
+        )
         return model
 
     def spectral_model(self):
@@ -1177,8 +1173,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
                 )
             else:
                 raise ValueError(f"Invalid morph_type: {morph_type!r}")
-        if not np.isnan(d["Conf_95_SemiMajor"]):
-            self._set_position_error(model)
+        self._set_position_error(model)
         return model
 
     def _info_lightcurve(self):
