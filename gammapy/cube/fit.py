@@ -16,12 +16,12 @@ from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
 from gammapy.spectrum import SpectrumDataset
-from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
+from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
 from .exposure import _map_spectrum_weight
 
-__all__ = ["MapEvaluator", "MapDataset"]
+__all__ = ["MapEvaluator", "MapDataset", "MapDatasetOnOff"]
 
 log = logging.getLogger(__name__)
 
@@ -319,32 +319,18 @@ class MapDataset(Dataset):
         empty_maps : `MapDataset`
             A MapDataset containing zero filled maps
         """
-        e_true_axis = geom_exposure.get_axis_by_name("energy")
-
         counts = Map.from_geom(geom, unit="")
 
         background = Map.from_geom(geom, unit="")
         background_model = BackgroundModel(background)
 
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
-
-        geom_exposure_edisp = geom_edisp.to_image().to_cube([e_true_axis])
-        exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
-        migra_axis = geom_edisp.get_axis_by_name("migra")
-        edisp_map = Map.from_geom(geom_edisp, unit="")
-        loc = migra_axis.edges.searchsorted(1.0)
-        edisp_map.data[:, loc, :, :] = 1.0
-        edisp = EDispMap(edisp_map, exposure_edisp)
-
-        geom_exposure_psf = geom_psf.to_image().to_cube([e_true_axis])
-        exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
-        psf_map = Map.from_geom(geom_psf, unit="sr-1")
-        psf = PSFMap(psf_map, exposure_psf)
+        edisp = EDispMap.from_geom(geom_edisp)
+        psf = PSFMap.from_geom(geom_psf)
 
         gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
 
-        mask_data = np.zeros(geom.data_shape, dtype=bool)
-        mask_safe = Map.from_geom(geom, data=mask_data, unit="")
+        mask_safe = Map.from_geom(geom, unit="", dtype=bool)
 
         return cls(
             counts=counts,
@@ -436,13 +422,13 @@ class MapDataset(Dataset):
         other: `~gammapy.cube.MapDataset`
             Map dataset to be stacked with this one.
         """
+
         if self.counts and other.counts:
             self.counts.data[~self.mask_safe.data] = 0
             self.counts.stack(other.counts, weights=other.mask_safe.data)
 
         if self.exposure and other.exposure:
             self.exposure.stack(other.exposure)
-
         if self.background_model and other.background_model:
             bkg = self.background_model.evaluate()
             bkg.data[~self.mask_safe.data] = 0
@@ -899,6 +885,407 @@ class MapDataset(Dataset):
             gti=self.gti,
             name=self.name,
         )
+
+
+class MapDatasetOnOff(MapDataset):
+    """Map dataset for on-off likelihood fitting.
+
+    Parameters
+    ----------
+    model : `~gammapy.modeling.models.SkyModel` or `~gammapy.modeling.models.SkyModels`
+        Source sky models.
+    counts : `~gammapy.maps.WcsNDMap`
+        Counts cube
+    counts_off : `~gammapy.maps.WcsNDMap`
+        Ring-convolved counts cube
+    acceptance : `~gammapy.maps.WcsNDMap` or float
+        Acceptance from the IRFs
+    acceptance_off : `~gammapy.maps.WcsNDMap` or float
+        Acceptance off
+    exposure : `~gammapy.maps.WcsNDMap`
+        Exposure cube
+    mask_fit : `~numpy.ndarray`
+        Mask to apply to the likelihood for fitting.
+    psf : `~gammapy.cube.PSFKernel`
+        PSF kernel
+    edisp : `~gammapy.irf.EnergyDispersion`
+        Energy dispersion
+    background_model : `~gammapy.modeling.models.BackgroundModel`
+        Background model to use for the fit.
+    evaluation_mode : {"local", "global"}
+        Model evaluation mode.
+        The "local" mode evaluates the model components on smaller grids to save computation time.
+        This mode is recommended for local optimization algorithms.
+        The "global" evaluation mode evaluates the model components on the full map.
+        This mode is recommended for global optimization algorithms.
+    mask_safe : `~numpy.ndarray`
+        Mask defining the safe data range.
+    gti : '~gammapy.data.GTI'
+        GTI of the observation or union of GTI if it is a stacked observation
+    """
+
+    likelihood_type = "wstat"
+    tag = "MapDatasetOnOff"
+
+    def __init__(
+        self,
+        model=None,
+        counts=None,
+        counts_off=None,
+        acceptance=None,
+        acceptance_off=None,
+        exposure=None,
+        mask_fit=None,
+        psf=None,
+        edisp=None,
+        background_model=None,
+        name="",
+        evaluation_mode="local",
+        mask_safe=None,
+        gti=None,
+    ):
+        if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
+            raise ValueError("mask data must have dtype bool")
+
+        self.evaluation_mode = evaluation_mode
+        self.counts = counts
+        self.counts_off = counts_off
+
+        if np.isscalar(acceptance):
+            acceptance = np.ones(self.data_shape) * acceptance
+
+        if np.isscalar(acceptance_off):
+            acceptance_off = np.ones(self.data_shape) * acceptance_off
+
+        self.acceptance = acceptance
+        self.acceptance_off = acceptance_off
+        self.exposure = exposure
+        self.background_model = None
+        self.mask_fit = mask_fit
+        self.psf = psf
+        self.edisp = edisp
+        self.model = model
+        self.name = name
+        self.mask_safe = mask_safe
+        self.gti = gti
+
+    def __str__(self):
+        str_ = super().__str__()
+
+        counts_off = np.nan
+        if self.counts_off is not None:
+            counts_off = np.sum(self.counts_off.data)
+        str_ += "\t{:32}: {:.0f} \n".format("Total counts_off", counts_off)
+
+        acceptance = np.nan
+        if self.acceptance is not None:
+            acceptance = np.sum(self.acceptance.data)
+        str_ += "\t{:32}: {:.0f} \n".format("Acceptance", acceptance)
+
+        acceptance_off = np.nan
+        if self.acceptance_off is not None:
+            acceptance_off = np.sum(self.acceptance_off.data)
+        str_ += "\t{:32}: {:.0f} \n".format("Acceptance off", acceptance_off)
+
+        return str_.expandtabs(tabsize=4)
+
+    @property
+    def parameters(self):
+        """List of parameters (`~gammapy.modeling.Parameters`)"""
+        parameters = []
+
+        if self.model:
+            parameters += self.model.parameters.parameters
+
+        return Parameters(parameters)
+
+    @property
+    def alpha(self):
+        """Exposure ratio between signal and background regions"""
+        return self.acceptance / self.acceptance_off
+
+    @property
+    def background(self):
+        """Predicted background in the on region.
+
+        Notice that this definition is valid under the assumption of cash statistic.
+        """
+        background = self.alpha * self.counts_off
+        return background
+
+    @property
+    def excess(self):
+        """Excess (counts - alpha * counts_off)"""
+        excess = self.counts.data - self.background.data
+        return excess
+
+    def likelihood_per_bin(self):
+        """Likelihood per bin given the current model parameters"""
+        mu_sig = self.npred().data
+        on_stat_ = wstat(
+            n_on=self.counts.data,
+            n_off=self.counts_off.data,
+            alpha=list(self.alpha.data),
+            mu_sig=mu_sig,
+        )
+        return np.nan_to_num(on_stat_)
+
+    @classmethod
+    def from_geoms(
+        cls,
+        geom,
+        geom_exposure,
+        geom_psf,
+        geom_edisp,
+        reference_time="2000-01-01",
+        name="",
+        **kwargs,
+    ):
+        """
+        Create a MapDatasetOnOff object with zero filled maps according to the specified geometries
+
+        Parameters
+        ----------
+        geom : `Geom`
+            geometry for the counts, counts_off, acceptance and acceptance_off maps
+        geom_exposure : `Geom`
+            geometry for the exposure map
+        geom_psf : `Geom`
+            geometry for the psf map
+        geom_edisp : `Geom`
+            geometry for the energy dispersion map
+        reference_time : `~astropy.time.Time`
+            the reference time to use in GTI definition
+        name : str
+            Name of the dataset.
+
+        Returns
+        -------
+        empty_maps : `MapDatasetOnOff`
+            A MapDatasetOnOff containing zero filled maps
+        """
+        maps = {}
+        for name in ["counts", "counts_off", "acceptance", "acceptance_off"]:
+            maps[name] = Map.from_geom(geom, unit="")
+
+        exposure = Map.from_geom(geom_exposure, unit="m2 s")
+        edisp = EDispMap.from_geom(geom_edisp)
+        psf = PSFMap.from_geom(geom_psf)
+
+        gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
+
+        mask_safe = Map.from_geom(geom, dtype=bool)
+
+        return cls(
+            counts=maps["counts"],
+            counts_off=maps["counts_off"],
+            acceptance=maps["acceptance"],
+            acceptance_off=maps["acceptance_off"],
+            exposure=exposure,
+            psf=psf,
+            edisp=edisp,
+            gti=gti,
+            mask_safe=mask_safe,
+            name=name,
+            **kwargs,
+        )
+
+    @classmethod
+    def create(
+        cls,
+        geom,
+        geom_irf=None,
+        migra_axis=None,
+        rad_axis=None,
+        reference_time="2000-01-01",
+        name="",
+        **kwargs,
+    ):
+        """Creates a MapDataset object with zero filled maps
+
+        Parameters
+        ----------
+        geom: `~gammapy.maps.WcsGeom`
+            Reference target geometry in reco energy, used for counts and background maps
+        geom_irf: `~gammapy.maps.WcsGeom`
+            Reference image geometry in true energy, used for IRF maps.
+        migra_axis: `~gammapy.maps.MapAxis`
+            Migration axis for the energy dispersion map
+        rad_axis: `~gammapy.maps.MapAxis`
+            Rad axis for the psf map
+        reference_time: `~astropy.time.Time`
+            the reference time to use in GTI definition
+        name : str
+            Name of the dataset.
+        """
+        geom_irf = geom_irf or geom.to_binsz(BINSZ_IRF_DEFAULT)
+        migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
+        rad_axis = rad_axis or RAD_AXIS_DEFAULT
+        energy_axis = geom_irf.get_axis_by_name("ENERGY")
+
+        geom_exposure = geom.to_image().to_cube([energy_axis])
+        geom_psf = geom_irf.to_image().to_cube([rad_axis, energy_axis])
+        geom_edisp = geom_irf.to_image().to_cube([migra_axis, energy_axis])
+
+        return cls.from_geoms(
+            geom=geom,
+            geom_exposure=geom_exposure,
+            geom_psf=geom_psf,
+            geom_edisp=geom_edisp,
+        )
+
+    def _is_stackable(self):
+        """Check if the Dataset contains enough information to be stacked"""
+        if (
+            self.acceptance_off is None
+            or self.acceptance is None
+            or self.counts_off is None
+        ):
+            return False
+        else:
+            return True
+
+    def stack(self, other):
+        """Stack another MapDatasetOnOff in place.
+
+        The `acceptance` of the stacked dataset is normalized to 1, and the stacked `acceptance_off`
+        is scaled so that:
+
+        .. math::
+            \alpha_\text{stacked} = \frac{1}{a_\text{off}} = \frac{\alpha_1\text{OFF}_1
+            + \alpha_2\text{OFF}_2}{\text{OFF}_1 + OFF_2}
+
+        Parameters
+        ----------
+        other: `~gammapy.cube.MapDatasetOnOff`
+            Dataset to be stacked with this one.
+        """
+        if not isinstance(other, MapDatasetOnOff):
+            raise TypeError("Incompatible types for MapDatasetOnOff stacking")
+
+        if not self._is_stackable() or not other._is_stackable():
+            raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
+
+        # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
+        tmp_factor = (self.alpha * self.counts_off).copy()
+        tmp_factor.data[~self.mask_safe.data] = 0
+        tmp_factor.stack(other.alpha * other.counts_off, weights=other.mask_safe.data)
+
+        # Stack the off counts (in place)
+        self.counts_off.data[~self.mask_safe.data] = 0
+        self.counts_off.stack(other.counts_off, weights=other.mask_safe.data)
+
+        self.acceptance_off = self.counts_off / tmp_factor
+        self.acceptance.data = np.ones(self.data_shape)
+
+        super().stack(other)
+
+    def likelihood(self):
+        """Total likelihood given the current model parameters."""
+        return Dataset.likelihood(self)
+
+    def fake(self, background_model, random_state="random-seed"):
+        """Simulate fake counts (on and off) for the current model and reduced IRFs.
+
+        This method overwrites the counts defined on the dataset object.
+
+        Parameters
+        ----------
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+                Defines random number generator initialisation.
+                Passed to `~gammapy.utils.random.get_random_state`.
+        """
+        random_state = get_random_state(random_state)
+        npred = self.npred()
+        npred.data = random_state.poisson(npred.data)
+
+        npred_bkg = background_model.copy()
+        npred_bkg.data = random_state.poisson(npred_bkg.data)
+
+        self.counts = npred + npred_bkg
+
+        npred_off = background_model / self.alpha
+        npred_off.data = random_state.poisson(npred_off.data)
+        self.counts_off = npred_off
+
+    def to_hdulist(self):
+        """Convert map dataset to list of HDUs.
+
+        Returns
+        -------
+        hdulist : `~astropy.io.fits.HDUList`
+            Map dataset list of HDUs.
+        """
+        hdulist = super().to_hdulist()
+        exclude_primary = slice(1, None)
+
+        if self.counts_off is not None:
+            hdulist += self.counts_off.to_hdulist(hdu="counts_off")[exclude_primary]
+
+        if self.acceptance is not None:
+            hdulist += self.acceptance.to_hdulist(hdu="acceptance")[exclude_primary]
+
+        if self.acceptance_off is not None:
+            hdulist += self.acceptance_off.to_hdulist(hdu="acceptance_off")[
+                exclude_primary
+            ]
+
+        return hdulist
+
+    @classmethod
+    def from_hdulist(cls, hdulist, name=""):
+        """Create map dataset from list of HDUs.
+
+        Parameters
+        ----------
+        hdulist : `~astropy.io.fits.HDUList`
+            List of HDUs.
+
+        Returns
+        -------
+        dataset : `MapDataset`
+            Map dataset.
+        """
+        init_kwargs = {}
+        init_kwargs["name"] = name
+        if "COUNTS" in hdulist:
+            init_kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
+
+        if "COUNTS_OFF" in hdulist:
+            init_kwargs["counts_off"] = Map.from_hdulist(hdulist, hdu="counts_off")
+
+        if "ACCEPTANCE" in hdulist:
+            init_kwargs["acceptance"] = Map.from_hdulist(hdulist, hdu="acceptance")
+
+        if "ACCEPTANCE_OFF" in hdulist:
+            init_kwargs["acceptance_off"] = Map.from_hdulist(
+                hdulist, hdu="acceptance_off"
+            )
+
+        if "EXPOSURE" in hdulist:
+            init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
+
+        if "EDISP_MATRIX" in hdulist:
+            init_kwargs["edisp"] = EnergyDispersion.from_hdulist(
+                hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
+            )
+
+        if "PSF_KERNEL" in hdulist:
+            psf_map = Map.from_hdulist(hdulist, hdu="psf_kernel")
+            init_kwargs["psf"] = PSFKernel(psf_map)
+
+        if "MASK_SAFE" in hdulist:
+            mask_safe_map = Map.from_hdulist(hdulist, hdu="mask_safe")
+            init_kwargs["mask_safe"] = mask_safe_map.data.astype(bool)
+
+        if "MASK_FIT" in hdulist:
+            mask_fit_map = Map.from_hdulist(hdulist, hdu="mask_fit")
+            init_kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
+
+        if "GTI" in hdulist:
+            gti = GTI(Table.read(hdulist, hdu="GTI"))
+            init_kwargs["gti"] = gti
+        return cls(**init_kwargs)
 
 
 class MapEvaluator:

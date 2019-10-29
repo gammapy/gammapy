@@ -204,7 +204,7 @@ def get_wstat_gof_terms(n_on, n_off):
 
     See :ref:`wstat`.
     """
-    term = np.zeros(len(n_on))
+    term = np.zeros(n_on.shape)
 
     # suppress zero division warnings, they are corrected below
     with np.errstate(divide="ignore", invalid="ignore"):

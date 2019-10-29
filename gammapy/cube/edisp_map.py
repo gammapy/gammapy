@@ -327,3 +327,30 @@ class EDispMap:
     def copy(self):
         """Copy EDispMap"""
         return deepcopy(self)
+
+    @classmethod
+    def from_geom(cls, geom):
+        """Create edisp map from geom.
+
+        By default a diagonal edisp matrix is created.
+
+        Parameters
+        ----------
+        geom : `Geom`
+            Edisp map geometry.
+
+        Returns
+        -------
+        edisp_map : `EDispMap`
+            Energy dispersion map.
+        """
+        energy_true_axis = geom.get_axis_by_name("energy")
+
+        geom_exposure_edisp = geom.to_image().to_cube([energy_true_axis])
+        exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
+
+        migra_axis = geom.get_axis_by_name("migra")
+        edisp_map = Map.from_geom(geom, unit="")
+        loc = migra_axis.edges.searchsorted(1.0)
+        edisp_map.data[:, loc, :, :] = 1.0
+        return cls(edisp_map, exposure_edisp)
