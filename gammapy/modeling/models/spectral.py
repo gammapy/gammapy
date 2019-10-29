@@ -26,15 +26,6 @@ class SpectralModel(Model):
 
         return self.evaluate(energy, **kwargs)
 
-    def __mul__(self, model):
-        if not isinstance(model, SpectralModel):
-            model = ConstantSpectralModel(const=model)
-        return CompoundSpectralModel(self, model, operator.mul)
-
-    def __rmul__(self, model):
-        # This is needed to support e.g. 5 * model
-        return self.__mul__(model)
-
     def __add__(self, model):
         if not isinstance(model, SpectralModel):
             model = ConstantSpectralModel(const=model)
@@ -50,14 +41,6 @@ class SpectralModel(Model):
 
     def __rsub__(self, model):
         return self.__sub__(model)
-
-    def __truediv__(self, model):
-        if not isinstance(model, SpectralModel):
-            model = ConstantSpectralModel(const=model)
-        return CompoundSpectralModel(self, model, operator.truediv)
-
-    def __rtruediv__(self, model):
-        return self.__div__(model)
 
     def _parse_uarray(self, uarray):
         from uncertainties import unumpy

@@ -202,9 +202,7 @@ def make_all_models():
     yield Model.create(
         "ShellSpatialModel", lon_0="1 deg", lat_0="2 deg", radius="3 deg", width="4 deg"
     )
-    yield Model.create(
-        "ConstantSpectralModel", const="99 cm"
-    )  # TODO: add unit validation?
+    yield Model.create("ConstantSpectralModel", const="99 cm-2 s-1 TeV-1")
     # TODO: yield Model.create("CompoundSpectralModel")
     yield Model.create("PowerLawSpectralModel")
     yield Model.create("PowerLaw2SpectralModel")

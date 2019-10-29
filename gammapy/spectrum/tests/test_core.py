@@ -65,14 +65,6 @@ def get_test_cases():
     e_reco = Quantity(np.logspace(-1, 2, 100), "TeV")
     return [
         dict(
-            model=PowerLawSpectralModel(amplitude="1e2 TeV-1"), e_true=e_true, npred=999
-        ),
-        dict(
-            model=PowerLaw2SpectralModel(amplitude="1", emin="0.1 TeV", emax="100 TeV"),
-            e_true=e_true,
-            npred=1,
-        ),
-        dict(
             model=PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1"),
             aeff=EffectiveAreaTable.from_parametrization(e_true),
             livetime="10 h",

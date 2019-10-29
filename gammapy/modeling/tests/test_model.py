@@ -40,9 +40,22 @@ def test_model_init():
     assert m.y is m.parameters[1]
     assert m.parameters is not MyModel.default_parameters
 
-    m = MyModel(x=99)
+    m = MyModel(x="99 cm")
     assert m.x.value == 99
     assert m.y.value == 2
+
+    # Currently we always convert to the default unit of a parameter
+    # TODO: discuss if this is the behaviour we want, or if we instead
+    # should change to the user-set unit, as long as it's compatible
+    m = MyModel(x=99*u.m)
+    assert_allclose(m.x.value, 9900)
+    assert m.x.unit == "cm"
+
+    with pytest.raises(u.UnitConversionError):
+        MyModel(x=99)
+
+    with pytest.raises(u.UnitConversionError):
+        MyModel(x=99 * u.s)
 
 
 def test_model_parameter():
@@ -58,9 +71,10 @@ def test_model_parameter():
         m.x = 99 * u.cm
 
     # Assigning a parameter should work
-    m.x = m.x.copy()
+    m.x = MyModel.x.copy()
     assert isinstance(m.x, Parameter)
-
+    # model.parameters should be in sync with attributes
+    assert m.x is m.parameters["x"]
 
 def test_model_copy():
     m = MyModel()
@@ -82,7 +96,7 @@ def test_model_create():
 
 def test_compound_model():
     m1 = MyModel()
-    m2 = MyModel(x=10, y=20)
+    m2 = MyModel(x=10*u.cm, y=20)
     m = CoModel(m1, m2)
     assert len(m.parameters) == 5
     assert m.parameters.names == ["norm", "x", "y", "x", "y"]
