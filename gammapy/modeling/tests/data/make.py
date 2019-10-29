@@ -12,14 +12,12 @@ from gammapy.modeling import Datasets
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     GaussianSpatialModel,
-    DiskSpatialModel,
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyDiffuseCube,
     SkyModel,
     SkyModels,
 )
-from gammapy.modeling.serialize import regions_to_reg
 
 DATA_PATH = Path("./")
 
@@ -123,16 +121,6 @@ def make_datasets_example():
     datasets.to_yaml("$GAMMAPY_DATA/tests/models", prefix="gc_example_", overwrite=True)
 
 
-def make_region_file():
-    model1 = DiskSpatialModel(
-        0 * u.deg, 0 * u.deg, 1 * u.deg, 0.8, 30 * u.deg, frame="galactic"
-    )
-    model2 = GaussianSpatialModel(5 * u.deg, 1 * u.deg, 0.3 * u.deg, frame="galactic")
-    filename = Path("contours.reg")
-    regions_to_reg([model1.to_region, model2.to_region], filename)
-
-
 if __name__ == "__main__":
     make_example_2()
     make_datasets_example()
-    make_region_file()

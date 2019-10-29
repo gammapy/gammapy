@@ -1,4 +1,0 @@
-# Region file format: DS9 astropy/regions
-galactic
-ellipse(0.0000,0.0000,0.6000,1.0000,30.0000)
-ellipse(5.0000,1.0000,0.3000,0.3000,0.0000)

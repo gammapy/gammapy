@@ -603,8 +603,7 @@ class TemplateSpatialModel(SpatialModel):
     @property
     def to_region(self):
         """Return model outline as a `~regions.RectangleSkyRegion`."""
-        header = fits.open(self.filename)[0].header
-        footprint = WCS(header).calc_footprint()
+        footprint = self.map.geom.wcs.calc_footprint()
         return PolygonSkyRegion(
             vertices=SkyCoord(footprint, unit="deg", frame=self.frame)
         )
