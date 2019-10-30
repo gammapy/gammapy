@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord
 from astropy.units import Unit
 from gammapy.cube import PSFMap, make_map_exposure_true_energy, make_psf_map
 from gammapy.irf import PSF3D, EffectiveAreaTable2D
-from gammapy.maps import MapAxis, WcsGeom
+from gammapy.maps import MapAxis, MapCoord, WcsGeom
 
 
 def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
@@ -182,3 +182,32 @@ def test_psfmap_stacking():
 
 
 # TODO: add a test comparing make_mean_psf and PSFMap.stack for a set of observations in an Observations
+
+
+def test_sample_coord():
+    psf_map = make_test_psfmap(0.1 * u.deg, shape="gauss")
+
+    coords_in = MapCoord(
+        {"lon": [0, 0] * u.deg, "lat": [0, 0.5] * u.deg, "energy": [1, 3] * u.TeV},
+        coordsys="CEL",
+    )
+
+    coords = psf_map.sample_coord(map_coord=coords_in)
+    assert coords.coordsys == "CEL"
+    assert len(coords.lon) == 2
+    assert_allclose(coords.lon, [3.599708e02, 7.749678e-02], rtol=1e-3)
+    assert_allclose(coords.lat, [-0.055216, 0.439184], rtol=1e-3)
+
+
+def test_sample_coord_gauss():
+    psf_map = make_test_psfmap(0.1 * u.deg, shape="gauss")
+
+    lon, lat = np.zeros(10000) * u.deg, np.zeros(10000) * u.deg
+    energy = np.ones(10000) * u.TeV
+    coords_in = MapCoord.create(
+        {"lon": lon, "lat": lat, "energy": energy}, coordsys="CEL"
+    )
+    coords = psf_map.sample_coord(coords_in)
+
+    assert_allclose(np.mean(coords.skycoord.data.lon.wrap_at("180d").deg), 0, atol=1e-3)
+    assert_allclose(np.mean(coords.lat), 0, atol=1e-3)

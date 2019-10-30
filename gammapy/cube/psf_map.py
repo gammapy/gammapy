@@ -5,7 +5,8 @@ import astropy.io.fits as fits
 import astropy.units as u
 from astropy.coordinates import Angle
 from gammapy.irf import EnergyDependentTablePSF
-from gammapy.maps import Map
+from gammapy.maps import Map, MapCoord
+from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .psf_kernel import PSFKernel
 
 __all__ = ["make_psf_map", "PSFMap"]
@@ -351,3 +352,44 @@ class PSFMap:
         exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
         psf_map = Map.from_geom(geom, unit="sr-1")
         return cls(psf_map, exposure_psf)
+
+    def sample_coord(self, map_coord, random_state=0):
+        """Apply PSF corrections on the coordinates of a set of simulated events.
+
+        Parameters
+        ----------
+        map_coord : `~gammapy.maps.MapCoord` object.
+            Sequence of coordinates and energies of sampled events.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        corr_coord : `~gammapy.maps.MapCoord` object.
+            Sequence of PSF-corrected coordinates of the input map_coord map.
+        """
+
+        random_state = get_random_state(random_state)
+        rad_axis = self.psf_map.geom.get_axis_by_name("theta")
+
+        coord = {
+            "skycoord": map_coord.skycoord.reshape(-1, 1),
+            "energy": map_coord["energy"].reshape(-1, 1),
+            "theta": rad_axis.center,
+        }
+
+        pdf = self.psf_map.interp_by_coord(coord)
+
+        sample_pdf = InverseCDFSampler(pdf, axis=1, random_state=random_state)
+        pix_coord = sample_pdf.sample_axis()
+        separation = rad_axis.pix_to_coord(pix_coord)
+
+        position_angle = random_state.uniform(360, size=len(map_coord.lon)) * u.deg
+
+        event_positions = map_coord.skycoord.directional_offset_by(
+            position_angle=position_angle, separation=separation
+        )
+        return MapCoord.create(
+            {"skycoord": event_positions, "energy": map_coord["energy"]}
+        )
