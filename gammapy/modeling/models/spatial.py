@@ -501,10 +501,11 @@ class ConstantSpatialModel(SpatialModel):
         """Evaluate model."""
         return value
 
-    def to_region(self, **kwargs):
+    @staticmethod
+    def to_region(**kwargs):
         """Return model outline as a (`~regions.EllipseRegion`)."""
         return EllipseSkyRegion(
-            center=self.position, height=np.nan, width=np.nan, angle=np.nan
+            center=np.nan, height=np.nan, width=np.nan, angle=np.nan
         )
 
 
