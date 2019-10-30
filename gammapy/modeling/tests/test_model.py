@@ -7,6 +7,7 @@ from gammapy.modeling import Model, Parameter
 
 class MyModel(Model):
     """Simple model example"""
+
     x = Parameter("x", 1, "cm")
     y = Parameter("y", 2)
 
@@ -14,6 +15,7 @@ class MyModel(Model):
 # TODO: change example to also hold parameters?
 class CoModel(Model):
     """Compound model example"""
+
     norm = Parameter("norm", 42, "cm")
 
     def __init__(self, m1, m2, norm=norm.quantity):
@@ -25,6 +27,7 @@ class CoModel(Model):
     def parameters(self):
         return self._parameters + self.m1.parameters + self.m2.parameters
 
+
 class WrapperModel(Model):
     """Wrapper compound model.
 
@@ -35,15 +38,13 @@ class WrapperModel(Model):
 
     def __init__(self, m1, a=1, y=99):
         self.m1 = m1
-        parameters = [
-            Parameter("a", a),
-            Parameter("y", y),
-        ]
+        parameters = [Parameter("a", a), Parameter("y", y)]
         super()._init_from_parameters(parameters)
 
     @property
     def parameters(self):
         return self._parameters + self.m1.parameters
+
 
 def test_model_class():
     assert isinstance(MyModel.parameters, property)
@@ -66,7 +67,7 @@ def test_model_init():
     # Currently we always convert to the default unit of a parameter
     # TODO: discuss if this is the behaviour we want, or if we instead
     # should change to the user-set unit, as long as it's compatible
-    m = MyModel(x=99*u.m)
+    m = MyModel(x=99 * u.m)
     assert_allclose(m.x.value, 9900)
     assert m.x.unit == "cm"
 
@@ -76,6 +77,7 @@ def test_model_init():
     with pytest.raises(u.UnitConversionError):
         MyModel(x=99 * u.s)
 
+
 def test_wrapper_model():
     outer = MyModel()
     m = WrapperModel(outer)
@@ -84,6 +86,7 @@ def test_wrapper_model():
     assert m.y.value == 99
 
     assert m.parameters.names == ["a", "y", "x", "y"]
+
 
 def test_model_parameter():
     m = MyModel(x="99 cm")
@@ -97,6 +100,7 @@ def test_model_parameter():
     with pytest.raises(TypeError):
         m.x = 99 * u.cm
 
+
 # TODO: implement parameter linking. Not working ATM!
 @pytest.mark.xfail()
 def test_model_parameter_link():
@@ -108,6 +112,7 @@ def test_model_parameter_link():
     assert m.x is par
     # model.parameters should be in sync with attributes
     assert m.x is m.parameters["x"]
+
 
 def test_model_copy():
     m = MyModel()
@@ -129,7 +134,7 @@ def test_model_create():
 
 def test_compound_model():
     m1 = MyModel()
-    m2 = MyModel(x=10*u.cm, y=20)
+    m2 = MyModel(x=10 * u.cm, y=20)
     m = CoModel(m1, m2)
     assert len(m.parameters) == 5
     assert m.parameters.names == ["norm", "x", "y", "x", "y"]

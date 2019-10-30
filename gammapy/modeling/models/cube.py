@@ -166,6 +166,7 @@ class SkyModel(SkyModelBase):
     @spatial_model.setter
     def spatial_model(self, model):
         from .spatial import SpatialModel
+
         if not isinstance(model, SpatialModel):
             raise TypeError(f"Invalid type: {model!r}")
         self._spatial_model = model
@@ -178,6 +179,7 @@ class SkyModel(SkyModelBase):
     @spectral_model.setter
     def spectral_model(self, model):
         from .spectral import SpectralModel
+
         if not isinstance(model, SpectralModel):
             raise TypeError(f"Invalid type: {model!r}")
         self._spectral_model = model
@@ -435,7 +437,13 @@ class BackgroundModel(Model):
     reference = Parameter("reference", "1 TeV", frozen=True)
 
     def __init__(
-        self, map, norm=norm.quantity, tilt=tilt.quantity, reference=reference.quantity, name="background", filename=None
+        self,
+        map,
+        norm=norm.quantity,
+        tilt=tilt.quantity,
+        reference=reference.quantity,
+        name="background",
+        filename=None,
     ):
         axis = map.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":

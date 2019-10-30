@@ -5,36 +5,11 @@ import astropy.units as u
 from gammapy.modeling.models import create_cosmic_ray_spectral_model
 
 COSMIC_RAY_SPECTRA = [
-    {
-        "name": "proton",
-        "dnde": 1.856522e-05,
-        "flux": 7.096247e-05,
-        "index": 2.70,
-    },
-    {
-        "name": "N",
-        "dnde": 1.449504e-05,
-        "flux": 5.509215e-05,
-        "index": 2.64,
-    },
-    {
-        "name": "Si",
-        "dnde": 5.646618e-06,
-        "flux": 2.149887e-05,
-        "index": 2.66,
-    },
-    {
-        "name": "Fe",
-        "dnde": 2.720231e-06,
-        "flux": 1.03305e-05,
-        "index": 2.63,
-    },
-    {
-        "name": "electron",
-        "dnde": 1.013671e-08,
-        "flux": 4.691975e-08,
-        "index": 3.428318,
-    },
+    {"name": "proton", "dnde": 1.856522e-05, "flux": 7.096247e-05, "index": 2.70},
+    {"name": "N", "dnde": 1.449504e-05, "flux": 5.509215e-05, "index": 2.64},
+    {"name": "Si", "dnde": 5.646618e-06, "flux": 2.149887e-05, "index": 2.66},
+    {"name": "Fe", "dnde": 2.720231e-06, "flux": 1.03305e-05, "index": 2.63},
+    {"name": "electron", "dnde": 1.013671e-08, "flux": 4.691975e-08, "index": 3.428318},
 ]
 
 

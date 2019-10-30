@@ -21,10 +21,10 @@ class TestFit:
         self.nbins = 30
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
         self.source_model = PowerLawSpectralModel(
-            index=2, amplitude=1e5 * u.Unit('cm-2 s-1 TeV-1'), reference=0.1 * u.TeV
+            index=2, amplitude=1e5 * u.Unit("cm-2 s-1 TeV-1"), reference=0.1 * u.TeV
         )
         bkg_model = PowerLawSpectralModel(
-            index=3, amplitude=1e4 * u.Unit('cm-2 s-1 TeV-1'), reference=0.1 * u.TeV
+            index=3, amplitude=1e4 * u.Unit("cm-2 s-1 TeV-1"), reference=0.1 * u.TeV
         )
 
         self.alpha = 0.1
@@ -51,7 +51,12 @@ class TestFit:
 
     def test_cash(self):
         """Simple CASH fit to the on vector"""
-        dataset = SpectrumDataset(model=self.source_model, counts=self.src, aeff=self.aeff, livetime=self.src.livetime)
+        dataset = SpectrumDataset(
+            model=self.source_model,
+            counts=self.src,
+            aeff=self.aeff,
+            livetime=self.src.livetime,
+        )
 
         npred = dataset.npred().data
         assert_allclose(npred[5], 660.5171, rtol=1e-5)

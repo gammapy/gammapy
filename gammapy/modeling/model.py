@@ -28,14 +28,7 @@ class Model:
                     f"Invalid argument: {name!r}. Parameter names are: {self.parameters.names}"
                 )
 
-            # TODO: refactor __init__ and try to get rid of this:
-            # For now needed to be able for test_cosmic_ray_spectrum
-            # UnitConversionError: '1 / (m2 s sr TeV)' and '1 / (cm2 s TeV)' are not convertible
-            # or here: https://github.com/gammapy/gammapy/blob/a658474cee257508330420e220a2bed8c5b915e4/gammapy/spectrum/tests/test_fit.py#L24
             self._parameters[name].quantity = u.Quantity(value)
-            # q = u.Quantity(value)
-            # self._parameters[name].value = q.value
-            # self._parameters[name].unit = q.unit
 
     def __init_subclass__(cls, **kwargs):
         # Add parameters list on the model sub-class (not instances)
@@ -60,12 +53,6 @@ class Model:
     def parameters(self):
         """Parameters (`~gammapy.modeling.Parameters`)"""
         return self._parameters
-
-    # TODO: do we need to allow setting a new parameters object on a model!?
-    # Try to avoid it.
-    # @parameters.setter
-    # def parameters(self, parameters):
-    #     self._parameters = parameters
 
     def copy(self):
         """A deep copy."""

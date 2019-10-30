@@ -203,7 +203,9 @@ def make_all_models():
     yield Model.create("ConstantSpatialModel")
     yield Model.create("TemplateSpatialModel", map=Map.create(npix=(10, 20)))
     yield Model.create("DiskSpatialModel", lon_0="1 deg", lat_0="2 deg", r_0="3 deg")
-    yield Model.create("GaussianSpatialModel", lon_0="1 deg", lat_0="2 deg", sigma="3 deg")
+    yield Model.create(
+        "GaussianSpatialModel", lon_0="1 deg", lat_0="2 deg", sigma="3 deg"
+    )
     yield Model.create("PointSpatialModel", lon_0="1 deg", lat_0="2 deg")
     yield Model.create(
         "ShellSpatialModel", lon_0="1 deg", lat_0="2 deg", radius="3 deg", width="4 deg"

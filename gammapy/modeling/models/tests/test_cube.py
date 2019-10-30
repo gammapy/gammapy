@@ -406,7 +406,9 @@ def test_sky_point_source():
     )
     exposure.data = np.ones_like(exposure.data)
 
-    spatial_model = PointSpatialModel(lon_0=100.06 * u.deg, lat_0=70.03 * u.deg, frame="icrs")
+    spatial_model = PointSpatialModel(
+        lon_0=100.06 * u.deg, lat_0=70.03 * u.deg, frame="icrs"
+    )
     # Create a spectral model with integral flux of 1 cm-2 s-1 in this energy band
     spectral_model = ConstantSpectralModel(const="1 cm-2 s-1 TeV-1")
     spectral_model.const.value /= spectral_model.integral(1 * u.TeV, 10 * u.TeV).value

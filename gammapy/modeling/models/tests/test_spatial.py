@@ -63,7 +63,9 @@ def test_sky_gaussian():
     lon = coords.lon
     lat = coords.lat
     sigma = 3 * u.deg
-    model_1 = GaussianSpatialModel(lon_0=2 * u.deg, lat_0=2 * u.deg, sigma=sigma, e=0.8, phi=30 * u.deg)
+    model_1 = GaussianSpatialModel(
+        lon_0=2 * u.deg, lat_0=2 * u.deg, sigma=sigma, e=0.8, phi=30 * u.deg
+    )
     vals_1 = model_1(lon, lat)
     assert vals_1.unit == "sr-1"
     assert_allclose(np.sum(vals_1 * solid_angle), 1, rtol=1.0e-3)
@@ -76,7 +78,9 @@ def test_sky_gaussian():
     sigma = 4 * u.deg
     semi_minor = 2 * u.deg
     e = np.sqrt(1 - (semi_minor / sigma) ** 2)
-    model_2 = GaussianSpatialModel(lon_0=0 * u.deg, lat_0=0 * u.deg, sigma=sigma, e=e, phi=0 * u.deg)
+    model_2 = GaussianSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, sigma=sigma, e=e, phi=0 * u.deg
+    )
     val_0 = model_2(0 * u.deg, 0 * u.deg)
     val_major = model_2(0 * u.deg, 4 * u.deg)
     val_minor = model_2(2 * u.deg, 0 * u.deg)
@@ -88,7 +92,9 @@ def test_sky_gaussian():
     assert_allclose(ratio_minor, np.exp(0.5))
 
     # check the rotation
-    model_3 = GaussianSpatialModel(lon_0=0 * u.deg, lat_0=0 * u.deg, sigma=sigma, e=e, phi=90 * u.deg)
+    model_3 = GaussianSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, sigma=sigma, e=e, phi=90 * u.deg
+    )
     val_minor_rotated = model_3(0 * u.deg, 2 * u.deg)
     ratio_minor_rotated = val_0 / val_minor_rotated
     assert_allclose(ratio_minor_rotated, np.exp(0.5))
@@ -119,7 +125,9 @@ def test_sky_disk():
     lon = coords.lon
     lat = coords.lat
     r_0 = 10 * u.deg
-    model_1 = DiskSpatialModel(lon_0=2 * u.deg, lat_0=2 * u.deg, r_0=r_0, e=0.4, phi=30 * u.deg)
+    model_1 = DiskSpatialModel(
+        lon_0=2 * u.deg, lat_0=2 * u.deg, r_0=r_0, e=0.4, phi=30 * u.deg
+    )
     vals_1 = model_1(lon, lat)
     assert vals_1.unit == "sr-1"
     assert_allclose(np.sum(vals_1 * solid_angle), 1, rtol=1.0e-3)

@@ -415,7 +415,11 @@ def test_ecpl_integrate():
 def test_pwl_pivot_energy():
     pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 cm-2 s-1 TeV-1")
 
-    pwl.parameters.covariance = [[0.0318377 ** 2, 6.56889442e-14, 0], [6.56889442e-14, 0, 0], [0, 0, 0]]
+    pwl.parameters.covariance = [
+        [0.0318377 ** 2, 6.56889442e-14, 0],
+        [6.56889442e-14, 0, 0],
+        [0, 0, 0],
+    ]
 
     assert_quantity_allclose(pwl.pivot_energy, 3.3540034240210987 * u.TeV)
 
