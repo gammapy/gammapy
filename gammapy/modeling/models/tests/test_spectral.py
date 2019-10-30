@@ -354,7 +354,6 @@ def test_absorption():
     model = AbsorbedSpectralModel(
         spectral_model=pwl, absorption=absorption, parameter=redshift
     )
-    breakpoint()
 
     desired = u.Quantity(5.140765e-13, "TeV-1 s-1 cm-2")
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)

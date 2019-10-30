@@ -160,8 +160,14 @@ def test_absorption_io(tmp_path):
         parameter=0.5,
         parameter_name="redshift",
     )
+    assert len(model.parameters) == 5
+
     model_dict = model.to_dict()
+    parnames = [_["name"] for _ in model_dict["parameters"]]
+    assert parnames == ["redshift", "alpha_norm"]
+
     new_model = AbsorbedSpectralModel.from_dict(model_dict)
+
     assert new_model.parameter == 0.5
     assert new_model.parameter_name == "redshift"
     assert new_model.alpha_norm.name == "alpha_norm"

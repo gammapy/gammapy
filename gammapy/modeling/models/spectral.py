@@ -1400,7 +1400,7 @@ class AbsorbedSpectralModel(SpectralModel):
                 "name": self.parameter_name,
                 "value": self.parameter,
             },
-            "parameters": self.parameters.to_dict()["parameters"],
+            "parameters": self._parameters.to_dict()["parameters"],
         }
 
     @classmethod
