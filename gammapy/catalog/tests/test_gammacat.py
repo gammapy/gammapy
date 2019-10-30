@@ -13,6 +13,7 @@ from gammapy.utils.testing import (
     requires_data,
     requires_dependency,
 )
+from gammapy.utils.gauss import Gauss2DPDF
 
 SOURCES = [
     {
@@ -202,6 +203,14 @@ class TestSourceCatalogObjectGammaCat:
         assert spatial_model.__class__.__name__ == ref["spatial_model"]
 
         assert source.is_pointlike == ref["is_pointlike"]
+
+        model = gammacat["HESS J1634-472"].spatial_model()
+        pos_err = model.position_error
+        scale_r95 = Gauss2DPDF().containment_radius(0.95)
+        assert_allclose(pos_err.height.value, 2 * 0.044721 * scale_r95, rtol=1e-4)
+        assert_allclose(pos_err.width.value, 2 * 0.044721 * scale_r95, rtol=1e-4)
+        assert_allclose(model.position.l.value, pos_err.center.l.value)
+        assert_allclose(model.position.b.value, pos_err.center.b.value)
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_sky_model(self, gammacat, ref):

@@ -434,6 +434,9 @@ class Parameters:
             error = u.Quantity(error, par.unit).value
             diag.append(error)
         self.covariance = np.diag(np.power(diag, 2))
+        # TODO: this assume no correlation between errors
+        # from catalog values we could compute cov_ij = corr_ij*err_i*err_j
+        # with corr_ij = np.corrcoef(err_i[:Nsources]), err_j[:Nsources])[0, 1] ?
 
     # TODO: this is a temporary solution until we have a better way
     # to handle covariance matrices via a class
