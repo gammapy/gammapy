@@ -430,6 +430,7 @@ class MapDataset(Dataset):
         if self.exposure and other.exposure:
             self.exposure.stack(other.exposure)
         if self.background_model and other.background_model:
+
             bkg = self.background_model.evaluate()
             bkg.data[~self.mask_safe.data] = 0
             other_bkg = other.background_model.evaluate()
@@ -867,10 +868,19 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset containing images.
         """
+        self.counts.data[~self.mask_safe.data] = 0
+        self.background_model.evaluate().data[~self.mask_safe.data] = 0
+
         counts = self.counts.sum_over_axes(keepdims=keepdims)
         exposure = _map_spectrum_weight(self.exposure, spectrum)
         exposure = exposure.sum_over_axes(keepdims=keepdims)
         background = self.background_model.evaluate().sum_over_axes(keepdims=keepdims)
+
+        slices_num = self.mask_safe.geom.get_axis_by_name("ENERGY").nbin
+        mask_safe_image = self.mask_safe.slice_by_idx({"energy": 0})
+        for idx in range(1, slices_num):
+            mask_slice = self.mask_safe.slice_by_idx({"energy": idx})
+            mask_safe_image = mask_safe_image or mask_slice
 
         # TODO: add edisp and psf
         edisp = None
@@ -880,6 +890,7 @@ class MapDataset(Dataset):
             counts=counts,
             exposure=exposure,
             background_model=BackgroundModel(background),
+            mask_safe=mask_safe_image,
             edisp=edisp,
             psf=psf,
             gti=self.gti,
