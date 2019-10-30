@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI, ObservationStats
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
-from gammapy.modeling import Dataset, Parameters
+from gammapy.modeling import Dataset
 from gammapy.stats import cash, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state

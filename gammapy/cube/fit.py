@@ -68,7 +68,7 @@ class MapDataset(Dataset):
         This mode is recommended for global optimization algorithms.
     mask_safe : `~gammapy.maps.WcsNDMap`
         Mask defining the safe data range.
-    gti : '~gammapy.data.GTI'
+    gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
     """
 
@@ -920,7 +920,7 @@ class MapDatasetOnOff(MapDataset):
         This mode is recommended for global optimization algorithms.
     mask_safe : `~numpy.ndarray`
         Mask defining the safe data range.
-    gti : '~gammapy.data.GTI'
+    gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
     """
 
@@ -1146,19 +1146,20 @@ class MapDatasetOnOff(MapDataset):
             return True
 
     def stack(self, other):
-        """Stack another MapDatasetOnOff in place.
+        r"""Stack another dataset in place.
 
-        The `acceptance` of the stacked dataset is normalized to 1, and the stacked `acceptance_off`
-        is scaled so that:
+        The ``acceptance`` of the stacked dataset is normalized to 1,
+        and the stacked ``acceptance_off`` is scaled so that:
 
         .. math::
-            \alpha_\text{stacked} = \frac{1}{a_\text{off}} = \frac{\alpha_1\text{OFF}_1
-            + \alpha_2\text{OFF}_2}{\text{OFF}_1 + OFF_2}
+            \alpha_\text{stacked} =
+            \frac{1}{a_\text{off}} =
+            \frac{\alpha_1\text{OFF}_1 + \alpha_2\text{OFF}_2}{\text{OFF}_1 + OFF_2}
 
         Parameters
         ----------
-        other: `~gammapy.cube.MapDatasetOnOff`
-            Dataset to be stacked with this one.
+        other : `MapDatasetOnOff`
+            Other dataset
         """
         if not isinstance(other, MapDatasetOnOff):
             raise TypeError("Incompatible types for MapDatasetOnOff stacking")
