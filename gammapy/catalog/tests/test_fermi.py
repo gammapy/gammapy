@@ -461,8 +461,7 @@ class TestFermi2FHLObject:
 
         model = self.cat["2FHL J1304.5-4353"].spatial_model()
         pos_err = model.position_error
-        gauss2D = Gauss2DPDF()
-        scale = gauss2D.containment_radius(0.95) / gauss2D.containment_radius(0.68)
+        scale = Gauss2DPDF().containment_radius(0.95) / Gauss2DPDF().containment_radius(0.68)
         assert_allclose(pos_err.height.value, 2 * 0.041987 * scale, rtol=1e-4)
         assert_allclose(pos_err.width.value, 2 * 0.041987 * scale, rtol=1e-4)
         assert_allclose(model.position.ra.value, pos_err.center.ra.value)

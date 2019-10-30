@@ -52,6 +52,7 @@ class SpatialModel(Model):
         except IndexError:
             raise ValueError("Model does not have a defined center position")
 
+    # TODO: get rid of this!
     _phi_0 = 0.0
 
     @property
@@ -81,8 +82,7 @@ class SpatialModel(Model):
         y_vec = eig_vecs[:, 0]
         phi = (np.arctan2(y_vec[1], y_vec[0]) * u.rad).to("deg") + self.phi_0
         err = np.sort([lon_err, lat_err])
-        gauss2D = Gauss2DPDF()
-        scale_r95 = gauss2D.containment_radius(0.95) / gauss2D.sigma
+        scale_r95 = Gauss2DPDF().containment_radius(0.95)
         err *= scale_r95
         if err[1] == lon_err * scale_r95:
             phi += 90 * u.deg
@@ -158,7 +158,7 @@ class PointSpatialModel(SpatialModel):
         return w / geom.solid_angle()
 
     def to_region(self, **kwargs):
-        """Return model outline as a (`~regions.PointSkyRegion`)."""
+        """Model outline (`~regions.PointSkyRegion`)."""
         return PointSkyRegion(center=self.position, **kwargs)
 
 
@@ -260,7 +260,7 @@ class GaussianSpatialModel(SpatialModel):
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
 
     def to_region(self, **kwargs):
-        """Return model outline as a (`~regions.EllipseSkyRegion`)."""
+        """Model outline (`~regions.EllipseSkyRegion`)."""
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
@@ -380,7 +380,7 @@ class DiskSpatialModel(SpatialModel):
         return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
 
     def to_region(self, **kwargs):
-        """Return model outline as a (`~regions.EllipseSkyRegion`)."""
+        """Model outline (`~regions.EllipseSkyRegion`)."""
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
@@ -460,7 +460,7 @@ class ShellSpatialModel(SpatialModel):
         return norm * value
 
     def to_region(self, **kwargs):
-        """Return model outline as a (`~regions.CircleAnnulusSkyRegion`)."""
+        """Model outline (`~regions.CircleAnnulusSkyRegion`)."""
         return CircleAnnulusSkyRegion(
             center=self.position,
             inner_radius=self.radius.quantity,
@@ -503,9 +503,9 @@ class ConstantSpatialModel(SpatialModel):
 
     @staticmethod
     def to_region(**kwargs):
-        """Return model outline as a (`~regions.EllipseRegion`)."""
+        """Model outline (`~regions.EllipseSkyRegion`)."""
         return EllipseSkyRegion(
-            center=np.nan, height=np.nan, width=np.nan, angle=np.nan
+            center=np.nan, height=np.nan, width=np.nan, angle=np.nan, **kwargs
         )
 
 
@@ -616,7 +616,7 @@ class TemplateSpatialModel(SpatialModel):
         return data
 
     def to_region(self, **kwargs):
-        """Return model outline as a (`~regions.PolygonSkyRegion`)."""
+        """Model outline (`~regions.PolygonSkyRegion`)."""
         footprint = self.map.geom.wcs.calc_footprint()
         return PolygonSkyRegion(
             vertices=SkyCoord(footprint, unit="deg", frame=self.frame, **kwargs)

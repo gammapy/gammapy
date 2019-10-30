@@ -203,8 +203,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         if np.isnan(phi_0):
             phi_0 = 0.0 * u.deg
 
-        gauss2D = Gauss2DPDF()
-        scale_1sigma = gauss2D.containment_radius(percent) / gauss2D.sigma
+        scale_1sigma = Gauss2DPDF().containment_radius(percent)
         lat_err = semi_major.to("deg") / scale_1sigma
         lon_err = semi_minor.to("deg") / scale_1sigma / np.cos(d["DEJ2000"].to("rad"))
         model.parameters.set_parameter_errors(dict(lon_0=lon_err, lat_0=lat_err))

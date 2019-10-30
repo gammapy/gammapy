@@ -194,9 +194,7 @@ class TestSourceCatalogObjectHGPS:
 
     @staticmethod
     def test_position_error(cat):
-
-        gauss2D = Gauss2DPDF()
-        scale_r95 = gauss2D.containment_radius(0.95) / gauss2D.sigma
+        scale_r95 = Gauss2DPDF().containment_radius(0.95)
 
         model = cat["HESS J1729-345"].spatial_model()
         pos_err = model.position_error

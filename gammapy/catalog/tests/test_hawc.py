@@ -101,8 +101,7 @@ class TestSourceCatalogObject2HWC:
 
         model = cat["2HWC J0534+220"].spatial_model()
         pos_err = model.position_error
-        gauss2D = Gauss2DPDF()
-        scale_r95 = gauss2D.containment_radius(0.95) / gauss2D.sigma
+        scale_r95 = Gauss2DPDF().containment_radius(0.95)
         assert_allclose(pos_err.height.value, 2 * 0.057 * scale_r95, rtol=1e-4)
         assert_allclose(pos_err.width.value, 2 * 0.057 * scale_r95, rtol=1e-4)
         assert_allclose(model.position.l.value, pos_err.center.l.value)

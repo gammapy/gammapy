@@ -87,10 +87,9 @@ class SourceCatalogObjectHGPSComponent:
         model = GaussianSpatialModel(
             lon_0=d["GLON"], lat_0=d["GLAT"], sigma=d["Size"], frame="galactic"
         )
-        if not np.isnan(d["GLON_Err"]):
-            model.parameters.set_parameter_errors(
-                dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"])
-            )
+        model.parameters.set_parameter_errors(
+            dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"])
+        )
         return model
 
 
@@ -517,10 +516,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             model = GaussianSpatialModel(
                 lon_0=glon, lat_0=glat, sigma=d["Size"], frame="galactic"
             )
-            if not np.isnan(d["GLON_Err"]):
-                model.parameters.set_parameter_errors(
-                    dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"])
-                )
+            model.parameters.set_parameter_errors(
+                dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"])
+            )
         elif spatial_type in {"2-gaussian", "3-gaussian"}:
             raise ValueError("For Gaussian or Multi-Gaussian models, use sky_model()!")
         elif spatial_type == "shell":
@@ -532,10 +530,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             model = ShellSpatialModel(
                 lon_0=glon, lat_0=glat, width=width, radius=radius, frame="galactic"
             )
-            if not np.isnan(d["GLON_Err"]):
-                model.parameters.set_parameter_errors(
-                    dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], radius=d["Size_Err"])
-                )
+            model.parameters.set_parameter_errors(
+                dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], radius=d["Size_Err"])
+            )
         else:
             raise ValueError(f"Not a valid spatial model: {spatial_type}")
         return model
