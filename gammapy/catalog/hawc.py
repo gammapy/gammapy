@@ -10,7 +10,6 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
-from regions import CircleSkyRegion
 
 __all__ = ["SourceCatalog2HWC", "SourceCatalogObject2HWC"]
 

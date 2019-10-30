@@ -10,7 +10,6 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from regions import CircleSkyRegion
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     GaussianSpatialModel,

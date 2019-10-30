@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Spatial models."""
-import abc
 import logging
 import numpy as np
 import scipy.integrate
@@ -504,7 +503,7 @@ class ConstantSpatialModel(SpatialModel):
 
     def to_region(self):
         """Return model outline as a `~regions.SkyRegion`."""
-        return None
+        pass
 
 
 class TemplateSpatialModel(SpatialModel):
