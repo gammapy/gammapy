@@ -1445,34 +1445,33 @@ class NaimaSpectralModel(SpectralModel):
 
     tag = "NaimaSpectralModel"
 
-    # TODO: prevent users from setting new attributes after init
     def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
         import naima
 
         self.radiative_model = radiative_model
         self._particle_distribution = self.radiative_model.particle_distribution
-        self.distance = Parameter("distance", distance, frozen=True)
+        self.distance = u.Quantity(distance)
         self.seed = seed
 
-        # This ensures the support of naima.models.TemplateSpectralModel
         if isinstance(self._particle_distribution, naima.models.TableModel):
             param_names = ["amplitude"]
         else:
             param_names = self._particle_distribution.param_names
 
         parameters = []
+
         for name in param_names:
             value = getattr(self._particle_distribution, name)
-            setattr(self, name, Parameter(name, value))
-            parameters.append(getattr(self, name))
+            parameter = Parameter(name, value)
+            parameters.append(parameter)
 
         # In case of a synchrotron radiative model, append B to the fittable parameters
         if "B" in self.radiative_model.param_names:
-            B = getattr(self.radiative_model, "B")
-            setattr(self, "B", Parameter("B", B))
-            parameters.append(getattr(self, "B"))
+            value = getattr(self.radiative_model, "B")
+            parameter = Parameter("B", value)
+            parameters.append(parameter)
 
-        super().__init__(parameters)
+        super()._init_from_parameters(parameters)
 
     def evaluate_error(self, energy):
         # This method will need to be overridden here, since the radiative models in naima don't
@@ -1486,19 +1485,16 @@ class NaimaSpectralModel(SpectralModel):
         for name, value in kwargs.items():
             setattr(self._particle_distribution, name, value)
 
-        distance = self.distance.quantity
-
         # Flattening the input energy list and later reshaping the flux list
         # prevents some radiative models from displaying broadcasting problems.
         if self.seed is None:
-            dnde = self.radiative_model.flux(energy.flatten(), distance=distance)
+            dnde = self.radiative_model.flux(energy.flatten(), distance=self.distance)
         else:
             dnde = self.radiative_model.flux(
-                energy.flatten(), seed=self.seed, distance=distance
+                energy.flatten(), seed=self.seed, distance=self.distance
             )
 
         dnde = dnde.reshape(energy.shape)
-
         unit = 1 / (energy.unit * u.cm ** 2 * u.s)
         return dnde.to(unit)
 

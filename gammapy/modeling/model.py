@@ -43,6 +43,20 @@ class Model:
             [_ for _ in cls.__dict__.values() if isinstance(_, Parameter)]
         )
 
+    @classmethod
+    def _init_from_parameters(self, parameters):
+        """Create model from list of parameters.
+
+        This should be called for models that generate
+        the parameters dynamically in ``__init__``,
+        like the ``NaimaSpectralModel``
+        """
+        parameters = Parameters(parameters)
+        self._parameters = parameters
+        for parameter in parameters:
+            setattr(self, parameter.name, parameter)
+        return self
+
     @property
     def parameters(self):
         """Parameters (`~gammapy.modeling.Parameters`)"""
