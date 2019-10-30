@@ -109,7 +109,6 @@ def test_parameters_copy(pars):
     pars2 = pars.copy()
     assert pars is not pars2
     assert pars[0] is not pars2[0]
-    assert repr(pars[0]) == repr(pars2[0])
 
 def test_parameters_from_stack():
     a = Parameter("a", 1)

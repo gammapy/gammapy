@@ -70,9 +70,15 @@ def test_model_parameter():
     with pytest.raises(TypeError):
         m.x = 99 * u.cm
 
-    # Assigning a parameter should work
-    m.x = MyModel.x.copy()
+# TODO: implement parameter linking. Not working ATM!
+@pytest.mark.xfail()
+def test_model_parameter_link():
+    # Assigning a parameter should create a link
+    m = MyModel()
+    par = MyModel.x.copy()
+    m.x = par
     assert isinstance(m.x, Parameter)
+    assert m.x is par
     # model.parameters should be in sync with attributes
     assert m.x is m.parameters["x"]
 

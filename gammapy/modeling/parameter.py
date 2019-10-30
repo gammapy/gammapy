@@ -74,6 +74,9 @@ class Parameter:
     def __set__(self, instance, value):
         if isinstance(value, Parameter):
             instance.__dict__[self.name] = value
+            # TODO: create the link in the parameters list
+            # par = instance.__dict__[self.name]
+            # instance.__dict__["_parameters"].link(par, value)
         else:
             par = instance.__dict__[self.name]
             raise TypeError(f"Cannot assign {value!r} to parameter {par!r}")
@@ -185,7 +188,7 @@ class Parameter:
         return (
             f"{self.__class__.__name__}(name={self.name!r}, value={self.value!r}, "
             f"factor={self.factor!r}, scale={self.scale!r}, unit={self.unit!r}, "
-            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r})"
+            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r}, id={hex(id(self))})"
         )
 
     def copy(self):
