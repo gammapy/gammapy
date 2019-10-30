@@ -25,6 +25,25 @@ class CoModel(Model):
     def parameters(self):
         return self._parameters + self.m1.parameters + self.m2.parameters
 
+class WrapperModel(Model):
+    """Wrapper compound model.
+
+    Dynamically generated parameters in `__init__`,
+    and a parameter name conflict with the wrapped
+    model, both have a parameter called "y".
+    """
+
+    def __init__(self, m1, a=1, y=1):
+        self.m1 = m1
+        parameters = [
+            Parameter("a", a),
+            Parameter("y", y),
+        ]
+        super()._init_from_parameters(parameters)
+
+    @property
+    def parameters(self):
+        return self._parameters + self.m1.parameters
 
 def test_model_class():
     assert isinstance(MyModel.parameters, property)
@@ -57,6 +76,11 @@ def test_model_init():
     with pytest.raises(u.UnitConversionError):
         MyModel(x=99 * u.s)
 
+def test_wrapper_model():
+    outer = MyModel()
+    m = WrapperModel(outer)
+
+    assert m.parameters.names == ["a", "y", "x", "y"]
 
 def test_model_parameter():
     m = MyModel(x="99 cm")

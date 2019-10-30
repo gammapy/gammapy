@@ -55,7 +55,6 @@ class Model:
         self._parameters = parameters
         for parameter in parameters:
             setattr(self, parameter.name, parameter)
-        return self
 
     @property
     def parameters(self):
