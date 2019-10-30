@@ -330,7 +330,7 @@ class EDispMap:
         return deepcopy(self)
 
     def sample_coord(self, map_coord, random_state=0):
-        """ Apply the energy dispersion corrections on the coordinates of a set of simulated events.
+        """Apply the energy dispersion corrections on the coordinates of a set of simulated events.
 
         Parameters
         ----------
@@ -342,30 +342,27 @@ class EDispMap:
 
         Returns
         -------
-        corr_energies : `~gammapy.maps.MapCoord` object.
+        `~gammapy.maps.MapCoord` object.
             Sequence of Edisp-corrected coordinates of the input map_coord map.
         """
 
         random_state = get_random_state(random_state)
+        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
 
         coord = {
-            "lon": map_coord.lon.reshape(-1, 1),
-            "lat": map_coord.lat.reshape(-1, 1),
+            "skycoord": map_coord.skycoord.reshape(-1, 1),
             "energy": map_coord["energy"].reshape(-1, 1),
-            "migra": (
-                self.edisp_map.geom.axes[0].center * self.edisp_map.geom.axes[0].unit
-            ),
+            "migra": migra_axis.center,
         }
 
         pdf_edisp = self.edisp_map.interp_by_coord(coord)
 
-        sample_edisp = InverseCDFSampler(pdf_edisp, axis=1)
+        sample_edisp = InverseCDFSampler(pdf_edisp, axis=1, random_state=random_state)
         pix_edisp = sample_edisp.sample_axis()
-        e_corr = self.edisp_map.geom.axes[0].pix_to_coord(pix_edisp)
+        e_corr = migra_axis.pix_to_coord(pix_edisp)
 
         corr_energies = MapCoord(
             {"lon": map_coord.lon, "lat": map_coord.lat, "energy": e_corr}
         )
 
         return corr_energies
->>>>>>> Add sample_coord in EDispMap
