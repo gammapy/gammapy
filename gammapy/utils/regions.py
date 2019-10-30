@@ -17,7 +17,14 @@ Options: keep as-is, hide from the docs, or to remove it completely
 (if the functionality is available in ``astropy-regions`` directly.
 """
 import operator
-from regions import CircleSkyRegion, DS9Parser, PixelRegion, Region, SkyRegion, CompoundSkyRegion
+from regions import (
+    CircleSkyRegion,
+    CompoundSkyRegion,
+    DS9Parser,
+    PixelRegion,
+    Region,
+    SkyRegion,
+)
 
 __all__ = ["make_region", "make_pixel_region"]
 

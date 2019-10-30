@@ -170,16 +170,16 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, [[44498, 0], [1931, 0], [273, 0]])
 
         actual = fp.table["norm_ul"].data
-        assert_allclose(actual, [1.090041, 1.04463 , 1.094956], rtol=1e-2)
+        assert_allclose(actual, [1.090041, 1.04463, 1.094956], rtol=1e-2)
 
         actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, [16.401681, 28.0265  , 20.654943], rtol=1e-2)
+        assert_allclose(actual, [16.401681, 28.0265, 20.654943], rtol=1e-2)
 
         actual = fp.table["norm_scan"][0]
         assert_allclose(actual, [0.2, 1, 5])
 
         actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
-        assert_allclose(actual, [1.555231e+02, 4.734243e-01, 2.045164e+03], rtol=1e-2)
+        assert_allclose(actual, [1.555231e02, 4.734243e-01, 2.045164e03], rtol=1e-2)
 
     @staticmethod
     @requires_dependency("iminuit")
@@ -188,7 +188,7 @@ class TestFluxPointsEstimator:
         fp = fpe_map_pwl_reoptimize.run(steps=["err", "norm-scan", "ts"])
 
         actual = fp.table["norm"].data
-        assert_allclose(actual,0.904058, rtol=1e-3)
+        assert_allclose(actual, 0.904058, rtol=1e-3)
 
         actual = fp.table["norm_err"].data
         assert_allclose(actual, 0.059177, rtol=1e-2)

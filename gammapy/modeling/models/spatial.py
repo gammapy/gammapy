@@ -8,15 +8,15 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
 from regions import (
-    PointSkyRegion,
-    EllipseSkyRegion,
     CircleAnnulusSkyRegion,
+    EllipseSkyRegion,
+    PointSkyRegion,
     PolygonSkyRegion,
 )
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter
-from gammapy.utils.scripts import make_path
 from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.utils.scripts import make_path
 
 log = logging.getLogger(__name__)
 

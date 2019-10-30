@@ -8,12 +8,12 @@ from gammapy.catalog import (
     GammaCatResourceIndex,
     SourceCatalogGammaCat,
 )
+from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     requires_data,
     requires_dependency,
 )
-from gammapy.utils.gauss import Gauss2DPDF
 
 SOURCES = [
     {

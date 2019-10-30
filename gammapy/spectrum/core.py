@@ -8,8 +8,8 @@ from astropy.table import Table
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
-from gammapy.utils.scripts import make_path
 from gammapy.utils.regions import compound_region_to_list
+from gammapy.utils.scripts import make_path
 
 __all__ = ["CountsSpectrum", "SpectrumEvaluator"]
 

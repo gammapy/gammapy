@@ -237,9 +237,9 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(lightcurve.table["ref_eflux"], [4.60517e-11, 4.60517e-11])
     assert_allclose(lightcurve.table["ref_e2dnde"], [1e-11, 1e-11])
     assert_allclose(
-        lightcurve.table["loglike"], [-86845.74348 , -90386.086642], rtol=1e-5
+        lightcurve.table["loglike"], [-86845.74348, -90386.086642], rtol=1e-5
     )
     assert_allclose(lightcurve.table["norm_err"], [0.041529, 0.041785], rtol=1e-3)
     assert_allclose(lightcurve.table["counts"], [46702, 47508])
     assert_allclose(lightcurve.table["sqrt_ts"], [54.503321, 54.296488], atol=0.01)
-    assert_allclose(lightcurve.table["ts"], [2970.61202 , 2948.108572], atol=0.01)
+    assert_allclose(lightcurve.table["ts"], [2970.61202, 2948.108572], atol=0.01)

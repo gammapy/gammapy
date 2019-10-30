@@ -6,7 +6,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import PixCoord
 from gammapy.maps import Map, WcsGeom, WcsNDMap
 from gammapy.maps.geom import frame_to_coordsys
-from gammapy.utils.regions import list_to_compound_region, compound_region_to_list
+from gammapy.utils.regions import compound_region_to_list, list_to_compound_region
 from .background_estimate import BackgroundEstimate
 from .core import CountsSpectrum
 from .dataset import SpectrumDatasetOnOff
@@ -498,9 +498,7 @@ class ReflectedRegionsBackgroundMaker:
 
         edges = dataset.counts.energy.edges
         counts_off = CountsSpectrum(
-            energy_hi=edges[1:],
-            energy_lo=edges[:-1],
-            region=region_union
+            energy_hi=edges[1:], energy_lo=edges[:-1], region=region_union
         )
         counts_off.fill_events(events_off)
         return counts_off

@@ -567,6 +567,7 @@ def test_create_onoff(geom, geom_etrue):
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
+
 @requires_data()
 def test_map_dataset_onoff_str(images):
     dataset = get_map_dataset_onoff(images)

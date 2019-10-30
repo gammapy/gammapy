@@ -2,8 +2,8 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
+from astropy.coordinates import Angle, SkyCoord
 from gammapy.data import DataStore
 from gammapy.spectrum import PhaseBackgroundMaker, SpectrumDatasetMaker
 from gammapy.utils.regions import SphericalCircleSkyRegion
@@ -28,10 +28,7 @@ def observations():
 @pytest.fixture(scope="session")
 def phase_bkg_maker(on_region):
     """Example background estimator for testing."""
-    return PhaseBackgroundMaker(
-        on_phase=(0.5, 0.6),
-        off_phase=(0.7, 1),
-    )
+    return PhaseBackgroundMaker(on_phase=(0.5, 0.6), off_phase=(0.7, 1))
 
 
 @pytest.fixture()

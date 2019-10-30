@@ -6,13 +6,13 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from gammapy.data import DataStore, ObservationStats
+from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.spectrum import (
+    ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
     SpectrumDatasetMaker,
-    ReflectedRegionsBackgroundMaker,
 )
-from gammapy.utils.testing import requires_data, assert_quantity_allclose
-from gammapy.maps import WcsGeom, WcsNDMap
+from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
 @pytest.fixture

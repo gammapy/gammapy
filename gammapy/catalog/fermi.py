@@ -23,9 +23,9 @@ from gammapy.modeling.models import (
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.time import LightCurve
+from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_inplace
-from gammapy.utils.gauss import Gauss2DPDF
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [

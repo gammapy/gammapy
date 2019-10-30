@@ -19,9 +19,9 @@ from gammapy.modeling.serialize import dict_to_models
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
-    SpectrumDatasetMaker,
-    SafeMaskMaker,
     ReflectedRegionsBackgroundMaker,
+    SafeMaskMaker,
+    SpectrumDatasetMaker,
 )
 from gammapy.utils.scripts import make_path, read_yaml
 

@@ -4,8 +4,8 @@ import copy
 from collections import Counter
 import numpy as np
 from gammapy.utils.scripts import make_path, read_yaml, write_yaml
-from .parameter import Parameters
 from ..maps import WcsNDMap
+from .parameter import Parameters
 
 __all__ = ["Dataset", "Datasets"]
 

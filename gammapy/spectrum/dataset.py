@@ -13,7 +13,11 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
 from .core import CountsSpectrum, SpectrumEvaluator
 
-__all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "plot_spectrum_datasets_off_regions"]
+__all__ = [
+    "SpectrumDatasetOnOff",
+    "SpectrumDataset",
+    "plot_spectrum_datasets_off_regions",
+]
 
 
 class SpectrumDataset(Dataset):
@@ -1130,8 +1134,8 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None):
 
     ax = plt.gca() or ax
 
-    color_cycle = plt.rcParams['axes.prop_cycle']
-    colors = color_cycle.by_key()['color']
+    color_cycle = plt.rcParams["axes.prop_cycle"]
+    colors = color_cycle.by_key()["color"]
     handles = []
 
     for color, dataset in zip(colors, datasets):

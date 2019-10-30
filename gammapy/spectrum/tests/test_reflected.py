@@ -14,12 +14,12 @@ from gammapy.data import DataStore
 from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.spectrum import ReflectedRegionsBackgroundMaker, ReflectedRegionsFinder
 from gammapy.spectrum.make import SpectrumDatasetMaker
+from gammapy.utils.regions import compound_region_to_list
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_data,
 )
-from gammapy.utils.regions import compound_region_to_list
 
 
 @pytest.fixture(scope="session")
