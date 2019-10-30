@@ -7,7 +7,6 @@ import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
 from astropy.wcs import FITSFixedWarning
-from regions import CircleSkyRegion, EllipseSkyRegion
 from gammapy.maps import Map
 from gammapy.modeling.models import (
     DiskSpatialModel,
@@ -26,6 +25,7 @@ from gammapy.spectrum import FluxPoints
 from gammapy.time import LightCurve
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_inplace
+from gammapy.utils.gauss import Gauss2DPDF
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -186,21 +186,21 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
     def is_pointlike(self):
         return self.data["Extended_Source_Name"].strip() == ""
 
-    def _set_position_error(self, model):
+    def _set_spatial_errors(self, model):
         d = self.data
-        if "Conf_68_PosAng" in d:
-            percent="68"
-        else:
-            percent="95"
-        phi = d["Conf_"+percent+"_PosAng"].to("deg")
-        if np.isnan(phi):
-            phi = 0.0 * u.deg
-        model._position_error = EllipseSkyRegion(
-            center=model.position,
-            height=2 * d["Conf_"+percent+"_SemiMajor"].to("deg"),
-            width=2 * d["Conf_"+percent+"_SemiMinor"].to("deg"),
-            angle=phi,
+        phi_0 = d["Conf_95_PosAng"].to("deg")
+        if np.isnan(phi_0):
+            phi_0 = 0.0 * u.deg
+        gauss2D = Gauss2DPDF()
+        scale_1sigma = gauss2D.containment_radius(0.95) / gauss2D.sigma
+        lat_err = d["Conf_95_SemiMajor"].to("deg") / scale_1sigma
+        lon_err = (
+            d["Conf_95_SemiMinor"].to("deg")
+            / scale_1sigma
+            / np.cos(d["DEJ2000"].to("rad"))
         )
+        model.parameters.set_parameter_errors(dict(lon_0=lon_err, lat_0=lat_err))
+        model.phi_0 = phi_0
 
     def sky_model(self):
         """Sky model (`~gammapy.modeling.models.SkyModel`)."""
@@ -401,7 +401,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
-        self._set_position_error(model)
+        self._set_spatial_errors(model)
         return model
 
     def spectral_model(self):
@@ -740,7 +740,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
                 )
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
-        self._set_position_error(model)
+        self._set_spatial_errors(model)
         return model
 
     @property
@@ -918,10 +918,18 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
             else:
                 raise ValueError(f"Invalid spatial model: {morph_type!r}")
 
-        model._position_error = CircleSkyRegion(
-            center=model.position, radius=self.data["Pos_err_68"].to("deg")
-        )
+        self._set_spatial_errors(model)
         return model
+
+    def _set_spatial_errors(self, model):
+        d = self.data
+        gauss2D = Gauss2DPDF()
+        scale_1sigma = gauss2D.containment_radius(0.68) / gauss2D.sigma
+        lat_err = d["Pos_err_68"].to("deg") / scale_1sigma
+        lon_err = (
+            d["Pos_err_68"].to("deg") / scale_1sigma / np.cos(d["DEJ2000"].to("rad"))
+        )
+        model.parameters.set_parameter_errors(dict(lon_0=lon_err, lat_0=lat_err))
 
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
@@ -1177,7 +1185,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
                 )
             else:
                 raise ValueError(f"Invalid morph_type: {morph_type!r}")
-        self._set_position_error(model)
+        self._set_spatial_errors(model)
         return model
 
     def _info_lightcurve(self):

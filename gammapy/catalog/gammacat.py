@@ -358,9 +358,11 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             raise NoDataAvailableError(f"No spatial model available: {self.name}")
         else:
             raise NotImplementedError(f"Unknown spatial model: {morph_type!r}")
-        model._position_error = CircleSkyRegion(
-            center=model.position, radius=d["pos_err"].to("deg")
-        )
+
+        lat_err = self.data["pos_err"].to("deg")
+        lon_err = self.data["pos_err"].to("deg") / np.cos(self.data["glat"].to("rad"))
+        model.parameters.set_parameter_errors(dict(lon_0=lon_err, lat_0=lat_err))
+        # TODO: check if pos_err is really 1sigma
         return model
 
     def sky_model(self):

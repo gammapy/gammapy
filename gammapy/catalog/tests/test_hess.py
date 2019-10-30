@@ -18,6 +18,7 @@ from gammapy.utils.testing import (
     requires_data,
     requires_dependency,
 )
+from gammapy.utils.gauss import Gauss2DPDF
 
 SOURCES = [
     {"idx": 33, "name": "HESS J1713-397", "str_ref_file": "data/hess_j1713-397.txt"},
@@ -193,19 +194,23 @@ class TestSourceCatalogObjectHGPS:
 
     @staticmethod
     def test_position_error(cat):
+
+        gauss2D = Gauss2DPDF()
+        scale_r95 = gauss2D.containment_radius(0.95) / gauss2D.sigma
+
         model = cat["HESS J1729-345"].spatial_model()
         pos_err = model.position_error
         assert_allclose(pos_err.angle.value, 0.0)
-        assert_allclose(pos_err.height.value, 2 * 0.0414315, rtol=1e-4)
-        assert_allclose(pos_err.width.value, 2 * 0.0344351, rtol=1e-4)
+        assert_allclose(pos_err.height.value, 2 * 0.0414315 * scale_r95, rtol=1e-4)
+        assert_allclose(pos_err.width.value, 2 * 0.0344351 * scale_r95, rtol=1e-4)
         assert_allclose(model.position.l.value, pos_err.center.l.value)
         assert_allclose(model.position.b.value, pos_err.center.b.value)
 
         model = cat["HESS J1858+020"].spatial_model()
         pos_err = model.position_error
         assert_allclose(pos_err.angle.value, 90.0)
-        assert_allclose(pos_err.height.value, 2 * 0.0222614, rtol=1e-4)
-        assert_allclose(pos_err.width.value, 2 * 0.0145084, rtol=1e-4)
+        assert_allclose(pos_err.height.value, 2 * 0.0222614 * scale_r95, rtol=1e-4)
+        assert_allclose(pos_err.width.value, 2 * 0.0145084 * scale_r95, rtol=1e-4)
         assert_allclose(model.position.l.value, pos_err.center.l.value)
         assert_allclose(model.position.b.value, pos_err.center.b.value)
 

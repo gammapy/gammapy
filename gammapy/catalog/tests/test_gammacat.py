@@ -13,6 +13,7 @@ from gammapy.utils.testing import (
     requires_data,
     requires_dependency,
 )
+from gammapy.utils.gauss import Gauss2DPDF
 
 SOURCES = [
     {
@@ -205,7 +206,10 @@ class TestSourceCatalogObjectGammaCat:
 
         model = gammacat["HESS J1634-472"].spatial_model()
         pos_err = model.position_error
-        assert_allclose(pos_err.radius.value, 0.044721, rtol=1e-4)
+        gauss2D = Gauss2DPDF()
+        scale_r95 = gauss2D.containment_radius(0.95) / gauss2D.sigma
+        assert_allclose(pos_err.height.value, 2 * 0.044721 * scale_r95, rtol=1e-4)
+        assert_allclose(pos_err.width.value, 2 * 0.044721 * scale_r95, rtol=1e-4)
         assert_allclose(model.position.l.value, pos_err.center.l.value)
         assert_allclose(model.position.b.value, pos_err.center.b.value)
 

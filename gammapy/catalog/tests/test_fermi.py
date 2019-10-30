@@ -25,6 +25,7 @@ from gammapy.utils.testing import (
     requires_data,
     requires_dependency,
 )
+from gammapy.utils.gauss import Gauss2DPDF
 
 SOURCES_4FGL = [
     dict(
@@ -173,8 +174,8 @@ class TestFermi4FGLObject:
         assert_allclose(p["lat_0"].value, -73.921997)
         pos_err = model.position_error
         assert_allclose(pos_err.angle.value, -62.7)
-        assert_allclose(0.5 * pos_err.height.value, 0.032378, rtol=1e-4)
-        assert_allclose(0.5 * pos_err.width.value, 0.031453, rtol=1e-4)
+        assert_allclose(0.5 * pos_err.height.value, 0.0525, rtol=1e-4)
+        assert_allclose(0.5 * pos_err.width.value, 0.051, rtol=1e-4)
         assert_allclose(model.position.ra.value, pos_err.center.ra.value)
         assert_allclose(model.position.dec.value, pos_err.center.dec.value)
 
@@ -345,8 +346,8 @@ class TestFermi3FGLObject:
         model = self.cat["3FGL J0000.2-3738"].spatial_model()
         pos_err = model.position_error
         assert_allclose(pos_err.angle.value, -88.55)
-        assert_allclose(0.5 * pos_err.height.value, 0.045083, rtol=1e-4)
-        assert_allclose(0.5 * pos_err.width.value, 0.041691, rtol=1e-4)
+        assert_allclose(0.5 * pos_err.height.value, 0.0731, rtol=1e-4)
+        assert_allclose(0.5 * pos_err.width.value, 0.0676, rtol=1e-4)
         assert_allclose(model.position.ra.value, pos_err.center.ra.value)
         assert_allclose(model.position.dec.value, pos_err.center.dec.value)
 
@@ -460,7 +461,10 @@ class TestFermi2FHLObject:
 
         model = self.cat["2FHL J1304.5-4353"].spatial_model()
         pos_err = model.position_error
-        assert_allclose(pos_err.radius.value, 0.041987, rtol=1e-4)
+        gauss2D = Gauss2DPDF()
+        scale = gauss2D.containment_radius(0.95) / gauss2D.containment_radius(0.68)
+        assert_allclose(pos_err.height.value, 2 * 0.041987 * scale, rtol=1e-4)
+        assert_allclose(pos_err.width.value, 2 * 0.041987 * scale, rtol=1e-4)
         assert_allclose(model.position.ra.value, pos_err.center.ra.value)
         assert_allclose(model.position.dec.value, pos_err.center.dec.value)
 
@@ -543,7 +547,6 @@ class TestFermi3FHLObject:
 
         model = self.cat["3FHL J0002.1-6728"].spatial_model()
         pos_err = model.position_error
-        assert_allclose(pos_err.angle.value, 0.0)
         assert_allclose(0.5 * pos_err.height.value, 0.035713, rtol=1e-4)
         assert_allclose(0.5 * pos_err.width.value, 0.035713, rtol=1e-4)
         assert_allclose(model.position.ra.value, pos_err.center.ra.value)
