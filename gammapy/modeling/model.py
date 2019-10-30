@@ -43,7 +43,6 @@ class Model:
             [_ for _ in cls.__dict__.values() if isinstance(_, Parameter)]
         )
 
-    @classmethod
     def _init_from_parameters(self, parameters):
         """Create model from list of parameters.
 
@@ -51,6 +50,7 @@ class Model:
         the parameters dynamically in ``__init__``,
         like the ``NaimaSpectralModel``
         """
+        # TODO: should we pass through `Parameters` here? Why?
         parameters = Parameters(parameters)
         self._parameters = parameters
         for parameter in parameters:

@@ -33,7 +33,7 @@ class WrapperModel(Model):
     model, both have a parameter called "y".
     """
 
-    def __init__(self, m1, a=1, y=1):
+    def __init__(self, m1, a=1, y=99):
         self.m1 = m1
         parameters = [
             Parameter("a", a),
@@ -79,6 +79,9 @@ def test_model_init():
 def test_wrapper_model():
     outer = MyModel()
     m = WrapperModel(outer)
+
+    assert isinstance(m.a, Parameter)
+    assert m.y.value == 99
 
     assert m.parameters.names == ["a", "y", "x", "y"]
 

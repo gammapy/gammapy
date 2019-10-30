@@ -1366,10 +1366,16 @@ class AbsorbedSpectralModel(SpectralModel):
         self.parameter_name = parameter_name
         min_ = self.absorption.param.min()
         max_ = self.absorption.param.max()
+
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
-        self.alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
-        absorption_parameters = Parameters([par, self.alpha_norm])
-        super().__init__(spectral_model.parameters + absorption_parameters)
+        alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
+        parameters = Parameters([par, alpha_norm])
+
+        super()._init_from_parameters(parameters)
+
+    @property
+    def parameters(self):
+        return self._parameters + self.spectral_model.parameters
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""

@@ -338,8 +338,6 @@ def test_table_model_from_file():
         absorption_z03.plot(energy_range=(0.03, 10), energy_unit=u.TeV, flux_unit="")
 
 
-# FIXME: broken in #2494
-pytest.mark.xfail()
 @requires_data()
 def test_absorption():
     # absorption values for given redshift
@@ -356,6 +354,8 @@ def test_absorption():
     model = AbsorbedSpectralModel(
         spectral_model=pwl, absorption=absorption, parameter=redshift
     )
+    breakpoint()
+
     desired = u.Quantity(5.140765e-13, "TeV-1 s-1 cm-2")
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
     assert model.alpha_norm.value == 1.0
