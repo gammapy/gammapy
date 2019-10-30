@@ -166,6 +166,11 @@ class EffectiveAreaTable:
         return cls(energy_lo=energy[:-1], energy_hi=energy[1:], data=data)
 
     @classmethod
+    def _from_constant(cls, energy, value):
+        data = np.ones((len(energy) - 1)) * u.Quantity(value)
+        return cls(energy_lo=energy[:-1], energy_hi=energy[1:], data=data)
+
+    @classmethod
     def from_table(cls, table):
         """Create from `~astropy.table.Table` in ARF format.
 
