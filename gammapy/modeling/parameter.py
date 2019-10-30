@@ -260,10 +260,25 @@ class Parameters:
             parameters = list(parameters)
 
         self._parameters = parameters
-        self.covariance = covariance
+        self._covariance = covariance
 
         # TODO: move unique parameter filtering out of __init__, add covar handling
         self._parameters = self.unique_parameters
+
+    @property
+    def covariance(self):
+        """Covariance matrix (`numpy.ndarray`)."""
+        return self._covariance
+
+    @covariance.setter
+    def covariance(self, value):
+        value = np.asanyarray(value)
+
+        shape = len(self), len(self)
+        if value.shape != shape:
+            raise ValueError(f"Invalid shape: {value.shape}, expected {shape}")
+
+        self._covariance = value
 
     @classmethod
     def from_values(cls, values=None, covariance=None):
