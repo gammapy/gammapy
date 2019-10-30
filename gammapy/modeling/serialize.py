@@ -7,12 +7,7 @@ from .models import Registry, SkyDiffuseCube, SkyModel
 # TODO: move this elsewhere ?
 DATASETS = Registry([MapDataset, SpectrumDataset, FluxPointsDataset])
 
-__all__ = [
-    "models_to_dict",
-    "dict_to_models",
-    "dict_to_datasets",
-    "datasets_to_dict",
-]
+__all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
 
 
 def models_to_dict(models):

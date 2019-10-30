@@ -188,17 +188,25 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
 
     def _set_spatial_errors(self, model):
         d = self.data
-        phi_0 = d["Conf_95_PosAng"].to("deg")
+
+        if "Pos_err_68" in d:
+            percent = 0.68
+            semi_minor = d["Pos_err_68"]
+            semi_major = d["Pos_err_68"]
+            phi_0 = 0.0
+        else:
+            percent = 0.95
+            semi_minor = d["Conf_95_SemiMinor"]
+            semi_major = d["Conf_95_SemiMajor"]
+            phi_0 = d["Conf_95_PosAng"].to("deg")
+
         if np.isnan(phi_0):
             phi_0 = 0.0 * u.deg
+
         gauss2D = Gauss2DPDF()
-        scale_1sigma = gauss2D.containment_radius(0.95) / gauss2D.sigma
-        lat_err = d["Conf_95_SemiMajor"].to("deg") / scale_1sigma
-        lon_err = (
-            d["Conf_95_SemiMinor"].to("deg")
-            / scale_1sigma
-            / np.cos(d["DEJ2000"].to("rad"))
-        )
+        scale_1sigma = gauss2D.containment_radius(percent) / gauss2D.sigma
+        lat_err = semi_major.to("deg") / scale_1sigma
+        lon_err = semi_minor.to("deg") / scale_1sigma / np.cos(d["DEJ2000"].to("rad"))
         model.parameters.set_parameter_errors(dict(lon_0=lon_err, lat_0=lat_err))
         model.phi_0 = phi_0
 
@@ -920,16 +928,6 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
 
         self._set_spatial_errors(model)
         return model
-
-    def _set_spatial_errors(self, model):
-        d = self.data
-        gauss2D = Gauss2DPDF()
-        scale_1sigma = gauss2D.containment_radius(0.68) / gauss2D.sigma
-        lat_err = d["Pos_err_68"].to("deg") / scale_1sigma
-        lon_err = (
-            d["Pos_err_68"].to("deg") / scale_1sigma / np.cos(d["DEJ2000"].to("rad"))
-        )
-        model.parameters.set_parameter_errors(dict(lon_0=lon_err, lat_0=lat_err))
 
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
