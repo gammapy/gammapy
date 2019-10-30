@@ -23,8 +23,7 @@ class PhaseBackgroundMaker:
         off-phase defined by the two edges of each interval (edges are excluded)
     """
 
-    def __init__(self, region, on_phase, off_phase):
-        self.region = region
+    def __init__(self, on_phase, off_phase):
         self.on_phase = self._check_intervals(on_phase)
         self.off_phase = self._check_intervals(off_phase)
 
@@ -34,8 +33,9 @@ class PhaseBackgroundMaker:
         s += f"\n{self.off_phase}"
         return s
 
-    def _make_counts(self, dataset, observation, phases):
-        events = observation.events.select_region(self.region)
+    @staticmethod
+    def _make_counts(dataset, observation, phases):
+        events = observation.events.select_region(dataset.counts.region)
 
         event_lists = []
         for interval in phases:

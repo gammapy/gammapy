@@ -29,7 +29,6 @@ def observations():
 def phase_bkg_maker(on_region):
     """Example background estimator for testing."""
     return PhaseBackgroundMaker(
-        region=on_region,
         on_phase=(0.5, 0.6),
         off_phase=(0.7, 1),
     )
