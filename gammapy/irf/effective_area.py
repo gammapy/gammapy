@@ -122,7 +122,7 @@ class EffectiveAreaTable:
 
     @classmethod
     def from_parametrization(cls, energy, instrument="HESS"):
-        r"""Get parametrized effective area.
+        r"""Create parametrized effective area.
 
         Parametrizations of the effective areas of different Cherenkov
         telescopes taken from Appendix B of Abramowski et al. (2010), see
@@ -166,7 +166,16 @@ class EffectiveAreaTable:
         return cls(energy_lo=energy[:-1], energy_hi=energy[1:], data=data)
 
     @classmethod
-    def _from_constant(cls, energy, value):
+    def from_constant(cls, energy, value):
+        """Create constant value effective area.
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energy binning, analytic function is evaluated at log centers
+        value : `~astropy.units.Quantity`
+            Effective area
+        """
         data = np.ones((len(energy) - 1)) * u.Quantity(value)
         return cls(energy_lo=energy[:-1], energy_hi=energy[1:], data=data)
 

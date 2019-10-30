@@ -36,7 +36,7 @@ class TestFit:
         )
 
         self.src.livetime = 1 * u.s
-        self.aeff = EffectiveAreaTable._from_constant(binning, "1 cm2")
+        self.aeff = EffectiveAreaTable.from_constant(binning, "1 cm2")
 
         npred_bkg = bkg_model.integral(binning[:-1], binning[1:]).value
 

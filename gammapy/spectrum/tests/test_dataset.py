@@ -37,7 +37,7 @@ class TestSpectrumDataset:
         )
 
         self.livetime = 100 * u.s
-        aeff = EffectiveAreaTable._from_constant(binning, "1 cm2")
+        aeff = EffectiveAreaTable.from_constant(binning, "1 cm2")
 
         bkg_rate = np.ones(self.nbins) / u.s
         bkg_expected = (bkg_rate * self.livetime).to_value("")
@@ -552,7 +552,7 @@ def make_observation_list():
     off_vector2 = CountsSpectrum(
         energy_lo=energy[:-1], energy_hi=energy[1:], data=dataoff_2
     )
-    aeff = EffectiveAreaTable._from_constant(energy, "1 cm2")
+    aeff = EffectiveAreaTable.from_constant(energy, "1 cm2")
     edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
 
     time_ref = Time("2010-01-01")
