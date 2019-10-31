@@ -3,7 +3,7 @@
 0.15 (unreleased)
 -----------------
 
-- Planned for October 2019
+- Planned for Nov 2019
 
 .. _gammapy_0p14_release:
 
@@ -52,7 +52,6 @@ At the same time the versions of the required dependencies were updated to
 Numpy 1.16, Scipy 1.2, Astropy 3.2, Regions 0.5, Pyyaml 5.1, Click 7.0 and
 Jsonschema 3.0.
 
-
 **Contributors:**
 
 In alphabetical order by first name:
@@ -74,7 +73,6 @@ Pull Requests
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy v0.14 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.14>`__.
-
 
 - [#2412] Remove model XML serialization (Quentin Remy)
 - [#2404] Clean up spectral model names (Christoph Deil)
@@ -120,7 +118,6 @@ See the complete `Gammapy v0.14 merged pull requests list on Github <https://git
 - [#2218] PIG 13 - Gammapy dependencies and distribution (Christoph Deil)
 - [#2136] PIG 9 - Event sampling (Fabio Pintore)
 
-
 .. _gammapy_0p13_release:
 
 0.13 (Jul 26, 2019)
@@ -133,7 +130,6 @@ Summary
 - 15 contributors
 - 2 months of work
 - 72 pull requests (not all listed below)
-
 
 **What's new**
 
@@ -232,7 +228,6 @@ See the complete `Gammapy v0.13 merged pull requests list on Github <https://git
 - [#2129] PIG 10 - Regions (Christoph Deil)
 - [#2089] Improve ``ReflectedRegionsFinder`` class (Bruno Khelifi)
 
-
 .. _PIG 10: https://docs.gammapy.org/dev/development/pigs/pig-010.html
 
 .. _gammapy_0p12_release:
@@ -271,7 +266,6 @@ models we introduced a new parameter defining the slope of the edge of these mod
 If you would like to know how to adapt your old spectral analysis scripts to Gammapy
 v0.12, please checkout the updated tutorial notebooks (https://docs.gammapy.org/0.12/tutorials.html)
 and `get in contact with us <https://gammapy.org/contact.html>`__ anytime if you need help.
-
 
 **Contributors:**
 
