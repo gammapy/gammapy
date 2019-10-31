@@ -25,7 +25,7 @@ be found in [Berge2007]_
 
 The extraction of the ON and OFF events from the `~gammapy.data.EventList` of a
 set of observations is performed by the
-`ReflectedRegionsBackgroundEstimator`. The latter uses the
+`ReflectedRegionsBackgroundMaker`. The latter uses the
 `~gammapy.spectrum.ReflectedRegionsFinder` to create reflected regions for a
 given circular on region and exclusion mask.
 
@@ -61,7 +61,7 @@ Using the reflected background estimator
 
 In practice, the user does not usually need to directly interact with the
 `~gammapy.spectrum.ReflectedRegionsFinder`. This actually is done via the
-`~gammapy.spectrum.ReflectedRegionsBackgroundEstimator`, which extracts the ON
+`~gammapy.spectrum.ReflectedRegionsBackgroundMaker`, which extracts the ON
 and OFF events for an `~gammapy.data.Observations` object. The last example
 shows how to run it on a few observations with a rectangular region.
 
@@ -69,7 +69,7 @@ shows how to run it on a few observations with a rectangular region.
     :include-source:
 
 The following notebook shows an example using
-`~gammapy.spectrum.ReflectedRegionsBackgroundEstimator` to perform a spectral
+`~gammapy.spectrum.ReflectedRegionsBackgroundMaker` to perform a spectral
 extraction and fitting:
 
 * `spectrum_analysis.html <../notebooks/spectrum_analysis.html>`__
