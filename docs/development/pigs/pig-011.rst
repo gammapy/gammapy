@@ -7,8 +7,9 @@ PIG 11 - Light curves
 *********************
 
 * Author: Régis Terrier, Axel Donath, David Fidalgo, Atreyee Sinha
-* Created: July 2, 2018
-* Status: Withdrawn: Oct 29, 2019
+* Created: Jul 2, 2018
+* Withdrawn: Oct 29, 2019
+* Status: withdrawn
 * Discussion: `GH 1451`_
 
 Abstract

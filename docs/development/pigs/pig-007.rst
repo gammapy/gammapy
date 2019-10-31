@@ -7,9 +7,9 @@ PIG 7 - Models
 **************
 
 * Author: Axel Donath (editor), Christoph Deil & Regis Terrier
-* Created: Dec 17th, 2018
-* Accepted:
-* Status: withdrawn: Oct 7, 2019
+* Created: Dec 17, 2018
+* Withdrawn: Oct 7, 2019
+* Status: withdrawn
 * Discussion: `GH_1971`_
 
 

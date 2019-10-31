@@ -7,8 +7,8 @@ PIG 16 - Gammapy package structure
 **********************************
 
 * Author: Christoph Deil, Axel Donath, Régis Terrier
-* Created: July 5, 2019
-* Accepted: August 18, 2019
+* Created: Jul 5, 2019
+* Accepted: Aug 18, 2019
 * Status: accepted
 * Discussion: `GH 2274`_
 

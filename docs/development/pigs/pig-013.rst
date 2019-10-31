@@ -7,7 +7,7 @@ PIG 13 - Gammapy dependencies and distribution
 **********************************************
 
 * Author: Christoph Deil, Axel Donath, Régis Terrier, Brigitta Sipocz
-* Created: June 6, 2019
+* Created: Jun 6, 2019
 * Accepted: Sep 9, 2019
 * Status: accepted
 * Discussion: `GH 2218`_

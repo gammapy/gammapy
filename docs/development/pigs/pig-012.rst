@@ -7,8 +7,8 @@ PIG 12 - High-level interface
 *****************************
 
 * Author: José Enrique Ruiz, Christoph Deil, Axel Donath, Regis Terrier, Lars Mohrmann
-* Created: June 6, 2019
-* Accepted: August 19, 2019
+* Created: Jun 6, 2019
+* Accepted: Aug 19, 2019
 * Status: accepted
 * Discussion: `GH 2219`_
 

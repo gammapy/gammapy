@@ -8,7 +8,7 @@ PIG 10 - Regions
 
 * Author: Christoph Deil, Axel Donath, Régis Terrier
 * Created: May 3, 2019
-* Accepted: June 17, 2019
+* Accepted: Jun 17, 2019
 * Status: accepted
 * Discussion: `GH 2129`_
 

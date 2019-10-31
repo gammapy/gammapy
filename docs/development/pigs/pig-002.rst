@@ -11,8 +11,8 @@ The case of image and cube analysis
 -----------------------------------
 
 * Author: Régis Terrier & Christoph Deil
-* Created: January 12, 2018
-* Accepted: July 27, 2018
+* Created: Jan 12, 2018
+* Accepted: Jul 27, 2018
 * Status: accepted
 * Discussion: `GH 1277`_
 

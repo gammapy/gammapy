@@ -7,8 +7,8 @@ PIG 1 - PIG purpose and guidelines
 **********************************
 
 * Author: Christoph Deil
-* Created: December 20, 2017
-* Accepted: January 9, 2018
+* Created: Dec 20, 2017
+* Accepted: Jan 9, 2018
 * Status: accepted
 * Discussion: `GH 1239`_
 
