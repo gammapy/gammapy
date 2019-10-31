@@ -855,7 +855,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         e_min, e_max = self.energy_range
 
-        fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=figsize)
+        _, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=figsize)
 
         ax1.set_title("Counts")
         energy_unit = "TeV"
@@ -1053,7 +1053,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             gti=data["gti"],
         )
 
-    def info_dict(self, in_safe_energy_range=False):
+    def info_dict(self, in_safe_energy_range=True):
         """Info dict with summary statistics, summed over energy
 
         Parameters
