@@ -35,7 +35,7 @@ allows modeling and fitting of Naima models within Gammapy (e.g. using CTA, H.E.
 TOOD: give more and better examples.
 
 Other Ideas
-===========
+-----------
 
 Below some examples what "How to" entries could be, taken
 from https://github.com/gammapy/gammapy/pull/2463#issuecomment-544126183
@@ -43,22 +43,21 @@ from https://github.com/gammapy/gammapy/pull/2463#issuecomment-544126183
 See also https://github.com/gammapy/gammapy/pull/2463#issuecomment-545309352
 for links to examples what other projects put as HOWTO or FAQ.
 
-
 Modeling
---------
+++++++++
 
 - How to test the spectral and/or spatial model?
 - How to calculate lower/upper limits for a spectral parameter?
 
 SED
----
++++
 
 - How to calculate integral/differential flux and upper limits?
 - How to calculate spectral points and residuals?
 - How to plot the SED with errors?
 
 Source Detection
-----------------
+++++++++++++++++
 
 - How to build and display the on region?
 - How to get the significance?
@@ -66,7 +65,7 @@ Source Detection
 - How to get background counts?
 
 2D Morphology
--------------
++++++++++++++
 
 - How to define/get position and spatial dimensions at different energy thresholds?
 - How to calculate surface brightness or radial profile in within a specific mask/region?
@@ -74,6 +73,6 @@ Source Detection
 - How to overlay significance and excess on maps?
 
 Light Curves
-------------
+++++++++++++
 
 - How to do analysis of light curves and upper limits
