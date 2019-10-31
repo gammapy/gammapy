@@ -2,8 +2,8 @@
 
 .. _tutorials:
 
-Tutorial notebooks
-==================
+Tutorials
+=========
 
 This page lists the Gammapy tutorials that are available as `Jupyter`_ notebooks.
 
