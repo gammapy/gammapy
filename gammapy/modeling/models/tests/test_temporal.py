@@ -112,8 +112,7 @@ def test_time_sampling():
 
 
 def test_constant_temporal_model_sample():
-    norm = 10.0
-    temporal_model = ConstantTemporalModel(norm)
+    temporal_model = ConstantTemporalModel(norm=10.0)
 
     t_ref = "2010-01-01T00:00:00"
     t_min = "2010-01-01T00:00:00"
@@ -130,8 +129,7 @@ def test_constant_temporal_model_sample():
 
 
 def test_constant_temporal_model_evaluate_norm_at_time():
-    norm = 10.0
-    temporal_model = ConstantTemporalModel(norm)
+    temporal_model = ConstantTemporalModel(norm=10.0)
     val = temporal_model.evaluate_norm_at_time(46300)
     assert_allclose(val, 10.0, rtol=1e-5)
 

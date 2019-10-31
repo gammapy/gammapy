@@ -624,7 +624,7 @@ def get_npred_map():
     )
 
     spatial_model = GaussianSpatialModel(
-        "0 deg", "0 deg", sigma="0.2 deg", frame="galactic"
+        lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic"
     )
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)

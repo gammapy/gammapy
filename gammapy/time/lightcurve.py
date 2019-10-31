@@ -323,8 +323,8 @@ class LightCurve:
             xp = xp.to_datetime()
         elif time_format == "mjd":
             x = x.mjd
-            xn = xn.to("d").value
-            xp = xp.to("d").value
+            xn = xn.to("day").value
+            xp = xp.to("day").value
         else:
             raise ValueError(f"Invalid time_format: {time_format}")
 

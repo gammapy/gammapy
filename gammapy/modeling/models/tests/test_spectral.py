@@ -31,13 +31,12 @@ def table_model():
     energy_edges = energy_logspace(0.1 * u.TeV, 100 * u.TeV, 1000)
     energy = np.sqrt(energy_edges[:-1] * energy_edges[1:])
 
-    index = 2.3 * u.Unit("")
-    amplitude = 4 / u.cm ** 2 / u.s / u.TeV
-    reference = 1 * u.TeV
-    pl = PowerLawSpectralModel(index, amplitude, reference)
-    flux = pl(energy)
+    model = PowerLawSpectralModel(
+        index=2.3, amplitude="4 cm-2 s-1 TeV-1", reference="1 TeV"
+    )
+    dnde = model(energy)
 
-    return TemplateSpectralModel(energy, flux, 1 * u.Unit(""))
+    return TemplateSpectralModel(energy, dnde, 1)
 
 
 TEST_MODELS = [
@@ -194,25 +193,6 @@ TEST_MODELS = [
 ]
 
 # Add compound models
-TEST_MODELS.append(
-    dict(
-        name="compound1",
-        model=TEST_MODELS[0]["model"] * 5,
-        val_at_2TeV=TEST_MODELS[0]["val_at_2TeV"] * 5,
-        integral_1_10TeV=TEST_MODELS[0]["integral_1_10TeV"] * 5,
-        eflux_1_10TeV=TEST_MODELS[0]["eflux_1_10TeV"] * 5,
-    )
-)
-
-TEST_MODELS.append(
-    dict(
-        name="compound2",
-        model=5 * TEST_MODELS[0]["model"],
-        val_at_2TeV=TEST_MODELS[0]["val_at_2TeV"] * 5,
-        integral_1_10TeV=TEST_MODELS[0]["integral_1_10TeV"] * 5,
-        eflux_1_10TeV=TEST_MODELS[0]["eflux_1_10TeV"] * 5,
-    )
-)
 
 TEST_MODELS.append(
     dict(
@@ -231,16 +211,6 @@ TEST_MODELS.append(
         val_at_2TeV=0.9 * TEST_MODELS[0]["val_at_2TeV"],
         integral_1_10TeV=2.1919819216346936 * u.Unit("cm-2 s-1"),
         eflux_1_10TeV=2.6322140512045697 * u.Unit("TeV cm-2 s-1"),
-    )
-)
-
-TEST_MODELS.append(
-    dict(
-        name="compound5",
-        model=TEST_MODELS[0]["model"] - TEST_MODELS[0]["model"] / 2.0,
-        val_at_2TeV=0.5 * TEST_MODELS[0]["val_at_2TeV"],
-        integral_1_10TeV=TEST_MODELS[0]["integral_1_10TeV"] * 0.5,
-        eflux_1_10TeV=TEST_MODELS[0]["eflux_1_10TeV"] * 0.5,
     )
 )
 
@@ -329,14 +299,12 @@ def test_model_unit():
 @requires_dependency("matplotlib")
 @requires_dependency("uncertainties")
 def test_model_plot():
-    pars, errs = {}, {}
-    pars["amplitude"] = 1e-12 * u.Unit("TeV-1 cm-2 s-1")
-    pars["reference"] = 1 * u.Unit("TeV")
-    pars["index"] = 2 * u.Unit("")
-    errs["amplitude"] = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
-
-    pwl = PowerLawSpectralModel(**pars)
-    pwl.parameters.set_parameter_errors(errs)
+    pwl = PowerLawSpectralModel(
+        amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
+    )
+    pwl.parameters.set_parameter_errors(
+        {"amplitude": 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")}
+    )
     with mpl_plot_check():
         pwl.plot((1 * u.TeV, 10 * u.TeV))
 
@@ -386,6 +354,7 @@ def test_absorption():
     model = AbsorbedSpectralModel(
         spectral_model=pwl, absorption=absorption, parameter=redshift
     )
+
     desired = u.Quantity(5.140765e-13, "TeV-1 s-1 cm-2")
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
     assert model.alpha_norm.value == 1.0
@@ -407,14 +376,12 @@ def test_absorption():
 
 @requires_dependency("uncertainties")
 def test_pwl_index_2_error():
-    pars, errs = {}, {}
-    pars["amplitude"] = 1e-12 * u.Unit("TeV-1 cm-2 s-1")
-    pars["reference"] = 1 * u.Unit("TeV")
-    pars["index"] = 2 * u.Unit("")
-    errs["amplitude"] = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
-
-    pwl = PowerLawSpectralModel(**pars)
-    pwl.parameters.set_parameter_errors(errs)
+    pwl = PowerLawSpectralModel(
+        amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
+    )
+    pwl.parameters.set_parameter_errors(
+        {"amplitude": 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")}
+    )
 
     val, val_err = pwl.evaluate_error(1 * u.TeV)
     assert_quantity_allclose(val, 1e-12 * u.Unit("TeV-1 cm-2 s-1"))
@@ -429,15 +396,6 @@ def test_pwl_index_2_error():
     assert_quantity_allclose(eflux_err, 0.2302585e-12 * u.Unit("TeV cm-2 s-1"))
 
 
-@requires_data()
-def test_fermi_isotropic():
-    filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
-    model = TemplateSpectralModel.read_fermi_isotropic_model(filename)
-    assert_quantity_allclose(
-        model(50 * u.GeV), 1.463 * u.Unit("1e-13 MeV-1 cm-2 s-1 sr-1"), rtol=1e-3
-    )
-
-
 def test_ecpl_integrate():
     # regression test to check the numerical integration for small energy bins
     ecpl = ExpCutoffPowerLawSpectralModel()
@@ -446,11 +404,13 @@ def test_ecpl_integrate():
 
 
 def test_pwl_pivot_energy():
-    pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 TeV-1 cm-1 s-1")
+    pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 cm-2 s-1 TeV-1")
 
-    pwl.parameters.covariance = np.array(
-        [[0.0318377 ** 2, 6.56889442e-14, 0], [6.56889442e-14, 0, 0], [0, 0, 0]]
-    )
+    pwl.parameters.covariance = [
+        [0.0318377 ** 2, 6.56889442e-14, 0],
+        [6.56889442e-14, 0, 0],
+        [0, 0, 0],
+    ]
 
     assert_quantity_allclose(pwl.pivot_energy, 3.3540034240210987 * u.TeV)
 

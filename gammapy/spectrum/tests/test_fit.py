@@ -13,7 +13,7 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
-@requires_dependency("sherpa")
+@requires_dependency("iminuit")
 class TestFit:
     """Test fit on counts spectra without any IRFs"""
 
@@ -21,23 +21,24 @@ class TestFit:
         self.nbins = 30
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
         self.source_model = PowerLawSpectralModel(
-            index=2, amplitude=1e5 / u.TeV, reference=0.1 * u.TeV
+            index=2, amplitude=1e5 * u.Unit("cm-2 s-1 TeV-1"), reference=0.1 * u.TeV
         )
-        self.bkg_model = PowerLawSpectralModel(
-            index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV
+        bkg_model = PowerLawSpectralModel(
+            index=3, amplitude=1e4 * u.Unit("cm-2 s-1 TeV-1"), reference=0.1 * u.TeV
         )
 
         self.alpha = 0.1
         random_state = get_random_state(23)
-        npred = self.source_model.integral(binning[:-1], binning[1:])
+        npred = self.source_model.integral(binning[:-1], binning[1:]).value
         source_counts = random_state.poisson(npred)
         self.src = CountsSpectrum(
             energy_lo=binning[:-1], energy_hi=binning[1:], data=source_counts
         )
-        # Currently it's necessary to specify a lifetime
-        self.src.livetime = 1 * u.s
 
-        npred_bkg = self.bkg_model.integral(binning[:-1], binning[1:])
+        self.src.livetime = 1 * u.s
+        self.aeff = EffectiveAreaTable.from_constant(binning, "1 cm2")
+
+        npred_bkg = bkg_model.integral(binning[:-1], binning[1:]).value
 
         bkg_counts = random_state.poisson(npred_bkg)
         off_counts = random_state.poisson(npred_bkg * 1.0 / self.alpha)
@@ -50,7 +51,12 @@ class TestFit:
 
     def test_cash(self):
         """Simple CASH fit to the on vector"""
-        dataset = SpectrumDataset(model=self.source_model, counts=self.src)
+        dataset = SpectrumDataset(
+            model=self.source_model,
+            counts=self.src,
+            aeff=self.aeff,
+            livetime=self.src.livetime,
+        )
 
         npred = dataset.npred().data
         assert_allclose(npred[5], 660.5171, rtol=1e-5)
@@ -68,6 +74,30 @@ class TestFit:
         assert_allclose(pars["index"].value, 1.995525, rtol=1e-3)
         assert_allclose(pars["amplitude"].value, 100245.9, rtol=1e-3)
 
+    def test_wstat(self):
+        """WStat with on source and background spectrum"""
+        on_vector = self.src.copy()
+        on_vector.data += self.bkg.data
+        obs = SpectrumDatasetOnOff(
+            counts=on_vector,
+            counts_off=self.off,
+            aeff=self.aeff,
+            livetime=self.src.livetime,
+            acceptance=1,
+            acceptance_off=1 / self.alpha,
+        )
+        obs.model = self.source_model
+
+        self.source_model.parameters.index = 1.12
+
+        fit = Fit(obs)
+        result = fit.run()
+        pars = self.source_model.parameters
+
+        assert_allclose(pars["index"].value, 1.997342, rtol=1e-3)
+        assert_allclose(pars["amplitude"].value, 100245.187067, rtol=1e-3)
+        assert_allclose(result.total_stat, 30.022316, rtol=1e-3)
+
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
         dataset = SpectrumDatasetOnOff(
@@ -84,6 +114,8 @@ class TestFit:
     def test_likelihood_profile(self):
         dataset = SpectrumDataset(
             model=self.source_model,
+            aeff=self.aeff,
+            livetime=self.src.livetime,
             counts=self.src,
             mask_safe=np.ones(self.src.energy.nbin, dtype=bool),
         )

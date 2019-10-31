@@ -69,7 +69,7 @@ def test_map_spectrum_weight():
     axis = MapAxis.from_edges([0.1, 10, 1000], unit="TeV", name="energy")
     expo_map = WcsNDMap.create(npix=10, binsz=1, axes=[axis], unit="m2 s")
     expo_map.data += 1
-    spectrum = ConstantSpectralModel(42)
+    spectrum = ConstantSpectralModel(const="42 cm-2 s-1 TeV-1")
 
     weighted_expo = _map_spectrum_weight(expo_map, spectrum)
 

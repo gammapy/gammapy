@@ -162,20 +162,19 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
 
-    __slots__ = ["mass", "channel", "scale", "jfactor", "z", "k", "primary_flux"]
-
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
     """Thermally averaged annihilation cross-section"""
 
-    def __init__(self, mass, channel, scale=1, jfactor=1, z=0, k=2):
-        self.scale = Parameter("scale", scale)
+    scale = Parameter("scale", 1)
+
+    def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2):
         self.k = k
         self.z = z
         self.mass = mass
         self.channel = channel
         self.jfactor = jfactor
         self.primary_flux = PrimaryFlux(mass, channel=self.channel).table_model
-        super().__init__([self.scale])
+        super().__init__(scale=scale)
 
     def evaluate(self, energy, scale):
         """Evaluate dark matter annihilation model."""

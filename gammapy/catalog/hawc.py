@@ -144,13 +144,13 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
         if idx == 0:
             model = PointSpatialModel(
-                self.data["glon"], self.data["glat"], frame="galactic"
+                lon_0=self.data["glon"], lat_0=self.data["glat"], frame="galactic"
             )
         else:
             model = DiskSpatialModel(
-                self.data["glon"],
-                self.data["glat"],
-                self.data[f"spec{idx}_radius"],
+                lon_0=self.data["glon"],
+                lat_0=self.data["glat"],
+                r_0=self.data[f"spec{idx}_radius"],
                 frame="galactic",
             )
 

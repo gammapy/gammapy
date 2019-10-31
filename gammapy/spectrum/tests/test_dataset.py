@@ -33,22 +33,22 @@ class TestSpectrumDataset:
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
 
         self.source_model = PowerLawSpectralModel(
-            index=2.1, amplitude=1e5 / u.TeV / u.s, reference=0.1 * u.TeV
+            index=2.1, amplitude=1e5 * u.Unit("cm-2 s-1 TeV-1"), reference=0.1 * u.TeV
         )
 
         self.livetime = 100 * u.s
+        aeff = EffectiveAreaTable.from_constant(binning, "1 cm2")
 
         bkg_rate = np.ones(self.nbins) / u.s
-        bkg_expected = bkg_rate * self.livetime
+        bkg_expected = (bkg_rate * self.livetime).to_value("")
 
         self.bkg = CountsSpectrum(
             energy_lo=binning[:-1], energy_hi=binning[1:], data=bkg_expected
         )
 
         random_state = get_random_state(23)
-        self.npred = (
-            self.source_model.integral(binning[:-1], binning[1:]) * self.livetime
-        )
+        flux = self.source_model.integral(binning[:-1], binning[1:])
+        self.npred = (flux * aeff.data.data[0] * self.livetime).to_value("")
         self.npred += bkg_expected
         source_counts = random_state.poisson(self.npred)
 
@@ -58,6 +58,7 @@ class TestSpectrumDataset:
         self.dataset = SpectrumDataset(
             model=self.source_model,
             counts=self.src,
+            aeff=aeff,
             livetime=self.livetime,
             background=self.bkg,
         )
@@ -297,8 +298,8 @@ class TestSpectrumOnOff:
         assert self.dataset.data_shape == self.on_counts.data.shape
 
     def test_npred_no_edisp(self):
-        const = 1 / u.TeV / u.cm ** 2 / u.s
-        model = ConstantSpectralModel(const)
+        const = 1 * u.Unit("cm-2 s-1 TeV-1")
+        model = ConstantSpectralModel(const=const)
         livetime = 1 * u.s
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
@@ -456,64 +457,6 @@ class TestSpectrumOnOff:
         assert info_dict["name"] == "test"
 
 
-@requires_dependency("iminuit")
-class TestSimpleFit:
-    """Test fit on counts spectra without any IRFs"""
-
-    def setup(self):
-        self.nbins = 30
-        binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
-        self.source_model = PowerLawSpectralModel(
-            index=2, amplitude=1e5 / u.TeV, reference=0.1 * u.TeV
-        )
-        self.bkg_model = PowerLawSpectralModel(
-            index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV
-        )
-
-        self.alpha = 0.1
-        random_state = get_random_state(23)
-        npred = self.source_model.integral(binning[:-1], binning[1:])
-        source_counts = random_state.poisson(npred)
-        self.src = CountsSpectrum(
-            energy_lo=binning[:-1], energy_hi=binning[1:], data=source_counts
-        )
-        # Currently it's necessary to specify a lifetime
-        self.src.livetime = 1 * u.s
-
-        npred_bkg = self.bkg_model.integral(binning[:-1], binning[1:])
-
-        bkg_counts = random_state.poisson(npred_bkg)
-        off_counts = random_state.poisson(npred_bkg * 1.0 / self.alpha)
-        self.bkg = CountsSpectrum(
-            energy_lo=binning[:-1], energy_hi=binning[1:], data=bkg_counts
-        )
-        self.off = CountsSpectrum(
-            energy_lo=binning[:-1], energy_hi=binning[1:], data=off_counts
-        )
-
-    def test_wstat(self):
-        """WStat with on source and background spectrum"""
-        on_vector = self.src.copy()
-        on_vector.data += self.bkg.data
-        obs = SpectrumDatasetOnOff(
-            counts=on_vector,
-            counts_off=self.off,
-            acceptance=1,
-            acceptance_off=1 / self.alpha,
-        )
-        obs.model = self.source_model
-
-        self.source_model.parameters.index = 1.12
-
-        fit = Fit(obs)
-        result = fit.run()
-        pars = self.source_model.parameters
-
-        assert_allclose(pars["index"].value, 1.997342, rtol=1e-3)
-        assert_allclose(pars["amplitude"].value, 100245.187067, rtol=1e-3)
-        assert_allclose(result.total_stat, 30.022316, rtol=1e-3)
-
-
 @requires_data()
 @requires_dependency("iminuit")
 class TestSpectralFit:
@@ -567,18 +510,6 @@ class TestSpectralFit:
         assert_allclose(pars.error("index"), 0.1496, rtol=1e-3)
         assert_allclose(pars.error("amplitude"), 6.423e-12, rtol=1e-3)
         pars.to_table()
-
-    def test_compound(self):
-        model = self.pwl * 2
-        self.set_model(model)
-        fit = Fit(self.obs_list[0])
-        fit.run()
-        pars = fit.datasets.parameters
-
-        assert_allclose(pars["index"].value, 2.8166, rtol=1e-3)
-        p = pars["amplitude"]
-        assert p.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(p.value, 5.0714e-12, rtol=1e-3)
 
     def test_ecpl_fit(self):
         self.set_model(self.ecpl)
@@ -635,9 +566,7 @@ def make_observation_list():
     off_vector2 = CountsSpectrum(
         energy_lo=energy[:-1], energy_hi=energy[1:], data=dataoff_2
     )
-    aeff = EffectiveAreaTable(
-        energy_lo=energy[:-1], energy_hi=energy[1:], data=np.ones(nbin) * 1e5 * u.m ** 2
-    )
+    aeff = EffectiveAreaTable.from_constant(energy, "1 cm2")
     edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
 
     time_ref = Time("2010-01-01")

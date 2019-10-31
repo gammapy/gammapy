@@ -46,14 +46,14 @@ class Parameter:
         Frozen? (used in fitting)
     """
 
-    __slots__ = ["_name", "_factor", "_scale", "_unit", "_min", "_max", "_frozen"]
-
     def __init__(
         self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False
     ):
         self.name = name
         self.scale = scale
 
+        # TODO: move this to a setter method that can be called from `__set__` also!
+        # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
         if isinstance(factor, u.Quantity) or isinstance(factor, str):
             val = u.Quantity(factor)
             self.value = val.value
@@ -65,6 +65,21 @@ class Parameter:
         self.min = min
         self.max = max
         self.frozen = frozen
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return instance.__dict__[self.name]
+
+    def __set__(self, instance, value):
+        if isinstance(value, Parameter):
+            instance.__dict__[self.name] = value
+            # TODO: create the link in the parameters list
+            # par = instance.__dict__[self.name]
+            # instance.__dict__["_parameters"].link(par, value)
+        else:
+            par = instance.__dict__[self.name]
+            raise TypeError(f"Cannot assign {value!r} to parameter {par!r}")
 
     @property
     def name(self):
@@ -173,8 +188,12 @@ class Parameter:
         return (
             f"{self.__class__.__name__}(name={self.name!r}, value={self.value!r}, "
             f"factor={self.factor!r}, scale={self.scale!r}, unit={self.unit!r}, "
-            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r})"
+            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r}, id={hex(id(self))})"
         )
+
+    def copy(self):
+        """A deep copy"""
+        return copy.deepcopy(self)
 
     def to_dict(self):
         """Convert to dict."""
@@ -241,10 +260,25 @@ class Parameters:
             parameters = list(parameters)
 
         self._parameters = parameters
-        self.covariance = covariance
+        self._covariance = covariance
 
         # TODO: move unique parameter filtering out of __init__, add covar handling
         self._parameters = self.unique_parameters
+
+    @property
+    def covariance(self):
+        """Covariance matrix (`numpy.ndarray`)."""
+        return self._covariance
+
+    @covariance.setter
+    def covariance(self, value):
+        value = np.asanyarray(value)
+
+        shape = len(self), len(self)
+        if value.shape != shape:
+            raise ValueError(f"Invalid shape: {value.shape}, expected {shape}")
+
+        self._covariance = value
 
     @classmethod
     def from_values(cls, values=None, covariance=None):

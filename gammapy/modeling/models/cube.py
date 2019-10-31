@@ -6,7 +6,7 @@ import numpy as np
 import astropy.units as u
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
-from gammapy.utils.scripts import read_yaml, write_yaml
+from gammapy.utils.scripts import read_yaml, write_yaml, make_path
 
 
 class SkyModelBase(Model):
@@ -43,7 +43,6 @@ class SkyModels:
     """
 
     frame = None
-    __slots__ = ["skymodels"]
 
     def __init__(self, skymodels):
         existing_names = []
@@ -145,35 +144,32 @@ class SkyModel(SkyModelBase):
     """
 
     tag = "SkyModel"
-    __slots__ = ["name", "_spatial_model", "_spectral_model"]
 
     def __init__(self, spatial_model, spectral_model, name="source"):
-        from gammapy.modeling.models import SpatialModel, SpectralModel
-
         self.name = name
+        self.spatial_model = spatial_model
+        self.spectral_model = spectral_model
+        super().__init__()
 
-        if not isinstance(spatial_model, SpatialModel):
-            raise ValueError(
-                f"Spatial model must be instance / subclass "
-                f" of `SpatialModel` and not {spatial_model.__class__.__name__}."
-            )
+        # TODO: this hack is needed for compound models to work
+        self.__dict__.pop("_parameters")
 
-        self._spatial_model = spatial_model
-
-        if not isinstance(spectral_model, SpectralModel):
-            raise ValueError(
-                f"Spectral model model must be instance / subclass "
-                f"of `SpectralModel` and not {spatial_model.__class__.__name__}."
-            )
-
-        self._spectral_model = spectral_model
-
-        super().__init__(spatial_model.parameters + spectral_model.parameters)
+    @property
+    def parameters(self):
+        return self.spatial_model.parameters + self.spectral_model.parameters
 
     @property
     def spatial_model(self):
         """`~gammapy.modeling.models.SpatialModel`"""
         return self._spatial_model
+
+    @spatial_model.setter
+    def spatial_model(self, model):
+        from .spatial import SpatialModel
+
+        if not isinstance(model, SpatialModel):
+            raise TypeError(f"Invalid type: {model!r}")
+        self._spatial_model = model
 
     @property
     def spectral_model(self):
@@ -182,11 +178,11 @@ class SkyModel(SkyModelBase):
 
     @spectral_model.setter
     def spectral_model(self, model):
-        """`~gammapy.modeling.models.SpectralModel`"""
+        from .spectral import SpectralModel
+
+        if not isinstance(model, SpectralModel):
+            raise TypeError(f"Invalid type: {model!r}")
         self._spectral_model = model
-        self._parameters = (
-            self.spatial_model.parameters + self.spectral_model.parameters
-        )
 
     @property
     def position(self):
@@ -277,8 +273,8 @@ class SkyModel(SkyModelBase):
 class SkyDiffuseCube(SkyModelBase):
     """Cube sky map template model (3D).
 
-    This is for a 3D map with an energy axis. Use `~gammapy.modeling.models.TemplateSpatialModel`
-    for 2D maps.
+    This is for a 3D map with an energy axis.
+    Use `~gammapy.modeling.models.TemplateSpatialModel` for 2D maps.
 
     Parameters
     ----------
@@ -295,18 +291,19 @@ class SkyDiffuseCube(SkyModelBase):
     interp_kwargs : dict
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
-
     """
 
     tag = "SkyDiffuseCube"
-    __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
+    norm = Parameter("norm", 1)
+    tilt = Parameter("tilt", 0, unit="", frozen=True)
+    reference = Parameter("reference", "1 TeV", frozen=True)
 
     def __init__(
         self,
         map,
-        norm=1,
-        tilt=0,
-        reference="1 TeV",
+        norm=norm.quantity,
+        tilt=tilt.quantity,
+        reference=reference.quantity,
         meta=None,
         interp_kwargs=None,
         name="diffuse",
@@ -319,9 +316,6 @@ class SkyDiffuseCube(SkyModelBase):
             raise ValueError('Need a map with energy axis node_type="center"')
 
         self.map = map
-        self.norm = Parameter("norm", norm)
-        self.tilt = Parameter("tilt", tilt, unit="", frozen=True)
-        self.reference = Parameter("reference", reference, frozen=True)
         self.meta = {} if meta is None else meta
         self.filename = filename
 
@@ -335,7 +329,7 @@ class SkyDiffuseCube(SkyModelBase):
         self._cached_value = None
         self._cached_coordinates = (None, None, None)
 
-        super().__init__([self.norm, self.tilt, self.reference])
+        super().__init__(norm=norm, tilt=tilt, reference=reference)
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -360,8 +354,7 @@ class SkyDiffuseCube(SkyModelBase):
             "lat": lat.to_value("deg"),
             "energy": energy,
         }
-        val = self.map.interp_by_coord(coord, **self._interp_kwargs)
-        return val
+        return self.map.interp_by_coord(coord, **self._interp_kwargs)
 
     def evaluate(self, lon, lat, energy):
         """Evaluate model."""
@@ -398,8 +391,7 @@ class SkyDiffuseCube(SkyModelBase):
     @property
     def evaluation_radius(self):
         """`~astropy.coordinates.Angle`"""
-        radius = np.max(self.map.geom.width) / 2.0
-        return radius
+        return np.max(self.map.geom.width) / 2.0
 
     @property
     def frame(self):
@@ -440,22 +432,27 @@ class BackgroundModel(Model):
     """
 
     tag = "BackgroundModel"
-    __slots__ = ["map", "norm", "tilt", "reference", "name", "filename"]
+    norm = Parameter("norm", 1, unit="", min=0)
+    tilt = Parameter("tilt", 0, unit="", frozen=True)
+    reference = Parameter("reference", "1 TeV", frozen=True)
 
     def __init__(
-        self, map, norm=1, tilt=0, reference="1 TeV", name="background", filename=None
+        self,
+        map,
+        norm=norm.quantity,
+        tilt=tilt.quantity,
+        reference=reference.quantity,
+        name="background",
+        filename=None,
     ):
         axis = map.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":
             raise ValueError('Need an integrated map, energy axis node_type="edges"')
 
         self.map = map
-        self.norm = Parameter("norm", norm, unit="", min=0)
-        self.tilt = Parameter("tilt", tilt, unit="", frozen=True)
-        self.reference = Parameter("reference", reference, frozen=True)
         self.name = name
         self.filename = filename
-        super().__init__([self.norm, self.tilt, self.reference])
+        super().__init__(norm=norm, tilt=tilt, reference=reference)
 
     @property
     def energy_center(self):
@@ -500,3 +497,32 @@ class BackgroundModel(Model):
         model = cls(map=map, name=data["name"])
         model._update_from_dict(data)
         return model
+
+
+def create_fermi_isotropic_diffuse_model(filename, **kwargs):
+    """Read Fermi isotropic diffuse model.
+
+    See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`_
+
+    Parameters
+    ----------
+    filename : str
+        filename
+    kwargs : dict
+        Keyword arguments forwarded to `TemplateSpectralModel`
+
+    Returns
+    -------
+    diffuse_model : `SkyModel`
+        Fermi isotropic diffuse sky model.
+    """
+    from .spectral import TemplateSpectralModel
+    from .spatial import ConstantSpatialModel
+
+    vals = np.loadtxt(make_path(filename))
+    energy = u.Quantity(vals[:, 0], "MeV", copy=False)
+    values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2", copy=False)
+
+    spatial_model = ConstantSpatialModel()
+    spectral_model = TemplateSpectralModel(energy=energy, values=values, **kwargs)
+    return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model, name="fermi-diffuse-iso")

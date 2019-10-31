@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import astropy.units as u
-from .parameter import Parameters
+from .parameter import Parameter, Parameters
 
 __all__ = ["Model"]
 
@@ -9,29 +9,60 @@ __all__ = ["Model"]
 class Model:
     """Model base class."""
 
-    __slots__ = ["_parameters"]
+    def __init__(self, **kwargs):
+        # Copy default parameters from the class to the instance
+        self._parameters = self.__class__.default_parameters.copy()
+        for parameter in self._parameters:
+            if parameter.name in self.__dict__:
+                raise ValueError(
+                    f"Invalid parameter name: {parameter.name!r}."
+                    f"Attribute exists already: {getattr(self, parameter.name)!r}"
+                )
 
-    def __init__(self, params=None):
-        self._parameters = Parameters(params)
+            setattr(self, parameter.name, parameter)
+
+        # Update parameter information from kwargs
+        for name, value in kwargs.items():
+            if name not in self.parameters.names:
+                raise ValueError(
+                    f"Invalid argument: {name!r}. Parameter names are: {self.parameters.names}"
+                )
+
+            self._parameters[name].quantity = u.Quantity(value)
+
+    def __init_subclass__(cls, **kwargs):
+        # Add parameters list on the model sub-class (not instances)
+        cls.default_parameters = Parameters(
+            [_ for _ in cls.__dict__.values() if isinstance(_, Parameter)]
+        )
+
+    def _init_from_parameters(self, parameters):
+        """Create model from list of parameters.
+
+        This should be called for models that generate
+        the parameters dynamically in ``__init__``,
+        like the ``NaimaSpectralModel``
+        """
+        # TODO: should we pass through `Parameters` here? Why?
+        parameters = Parameters(parameters)
+        self._parameters = parameters
+        for parameter in parameters:
+            setattr(self, parameter.name, parameter)
 
     @property
     def parameters(self):
         """Parameters (`~gammapy.modeling.Parameters`)"""
         return self._parameters
 
-    @parameters.setter
-    def parameters(self, parameters):
-        self._parameters = parameters
-
     def copy(self):
         """A deep copy."""
         return copy.deepcopy(self)
 
     def __str__(self):
-        return f"{self.__class__.__name__}\n\n" f"{self.parameters.to_table()}"
+        return f"{self.__class__.__name__}\n\n{self.parameters.to_table()}"
 
     def to_dict(self):
-        """Create dict for YAML serilisation"""
+        """Create dict for YAML serialisation"""
         return {"type": self.tag, "parameters": self.parameters.to_dict()["parameters"]}
 
     @classmethod
@@ -49,8 +80,9 @@ class Model:
         model._update_from_dict(data)
         return model
 
+    # TODO: try to get rid of this
     def _update_from_dict(self, data):
-        self.parameters = Parameters.from_dict(data)
+        self._parameters = Parameters.from_dict(data)
         for parameter in self.parameters:
             setattr(self, parameter.name, parameter)
 

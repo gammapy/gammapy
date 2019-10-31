@@ -1,39 +1,15 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.modeling.models import create_cosmic_ray_spectral_model
-from gammapy.utils.testing import assert_quantity_allclose
 
 COSMIC_RAY_SPECTRA = [
-    dict(
-        name="proton",
-        dnde=u.Quantity(0.014773732960138994, "m-2 s-1 TeV-1 sr-1"),
-        flux=u.Quantity(0.056470139673467444, "m-2 s-1 sr-1"),
-        index=2.70,
-    ),
-    dict(
-        name="N",
-        dnde=u.Quantity(0.0115347902543466, "m-2 s-1 TeV-1 sr-1"),
-        flux=u.Quantity(0.043840936324311894, "m-2 s-1 sr-1"),
-        index=2.64,
-    ),
-    dict(
-        name="Si",
-        dnde=u.Quantity(0.0044934359085944935, "m-2 s-1 TeV-1 sr-1"),
-        flux=u.Quantity(0.017108254587645998, "m-2 s-1 sr-1"),
-        index=2.66,
-    ),
-    dict(
-        name="Fe",
-        dnde=u.Quantity(0.0021646909913177995, "m-2 s-1 TeV-1 sr-1"),
-        flux=u.Quantity(0.008220752990527653, "m-2 s-1 sr-1"),
-        index=2.63,
-    ),
-    dict(
-        name="electron",
-        dnde=u.Quantity(8.0665368e-06, "m-2 s-1 TeV-1 sr-1"),
-        flux=u.Quantity(3.733755e-05, "m-2 s-1 sr-1"),
-        index=3.428318,
-    ),
+    {"name": "proton", "dnde": 1.856522e-05, "flux": 7.096247e-05, "index": 2.70},
+    {"name": "N", "dnde": 1.449504e-05, "flux": 5.509215e-05, "index": 2.64},
+    {"name": "Si", "dnde": 5.646618e-06, "flux": 2.149887e-05, "index": 2.66},
+    {"name": "Fe", "dnde": 2.720231e-06, "flux": 1.03305e-05, "index": 2.63},
+    {"name": "electron", "dnde": 1.013671e-08, "flux": 4.691975e-08, "index": 3.428318},
 ]
 
 
@@ -42,15 +18,13 @@ def test_cosmic_ray_spectrum(spec):
     cr_spectrum = create_cosmic_ray_spectral_model(particle=spec["name"])
 
     dnde = cr_spectrum(2 * u.TeV)
-    assert_quantity_allclose(dnde, spec["dnde"])
+    assert_allclose(dnde.value, spec["dnde"], rtol=1e-3)
+    assert dnde.unit == "cm-2 s-1 TeV-1"
 
     flux = cr_spectrum.integral(1 * u.TeV, 1e3 * u.TeV)
-    assert_quantity_allclose(flux, spec["flux"])
+    assert_allclose(flux.value, spec["flux"], rtol=1e-3)
+    assert flux.unit == "cm-2 s-1"
 
     index = cr_spectrum.spectral_index(2 * u.TeV)
-    assert_quantity_allclose(index, spec["index"], rtol=1e-5)
-
-
-def test_invalid_format():
-    with pytest.raises(ValueError):
-        create_cosmic_ray_spectral_model("spam")
+    assert_allclose(index.value, spec["index"], rtol=1e-3)
+    assert index.unit == ""

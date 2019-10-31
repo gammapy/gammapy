@@ -434,7 +434,7 @@ class EnergyDependentTablePSF:
         e_min, e_max = energy_band
         energy = energy_logspace(emin=e_min, emax=e_max, nbins=n_bins)
 
-        weights = (spectrum * exposure)(energy)
+        weights = spectrum(energy) * exposure(energy)
         weights /= weights.sum()
 
         psf_value = self.evaluate(energy=energy)

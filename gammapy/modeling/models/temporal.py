@@ -27,11 +27,7 @@ class ConstantTemporalModel(TemporalModel):
     """
 
     tag = "ConstantTemporalModel"
-
-    def __init__(self, norm):
-        self.norm = Parameter("norm", norm)
-
-        super().__init__([self.norm])
+    norm = Parameter("norm", 1)
 
     def evaluate_norm_at_time(self, time):
         """Evaluate for a given time.
@@ -128,18 +124,17 @@ class PhaseCurveTemplateTemporalModel(TemporalModel):
     0.49059393580053845
     """
 
-    __slots__ = ["table", "time_0", "phase_0", "f0", "f1", "f2"]
     tag = "PhaseCurveTemplateTemporalModel"
+    # TODO: allow parameters without default?
+    time_0 = Parameter("time_0", 0)
+    phase_0 = Parameter("phase_0", 0)
+    f0 = Parameter("f0", 0)
+    f1 = Parameter("f1", 0)
+    f2 = Parameter("f2", 0)
 
     def __init__(self, table, time_0, phase_0, f0, f1=0, f2=0):
         self.table = table
-        self.time_0 = Parameter("time_0", time_0)
-        self.phase_0 = Parameter("phase_0", phase_0)
-        self.f0 = Parameter("f0", f0)
-        self.f1 = Parameter("f1", f1)
-        self.f2 = Parameter("f2", f2)
-
-        super().__init__([self.time_0, self.phase_0, self.f0, self.f1, self.f2])
+        super().__init__(time_0=time_0, phase_0=phase_0, f0=f0, f1=f1, f2=f2)
 
     def phase(self, time):
         """Evaluate phase for a given time.

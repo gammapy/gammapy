@@ -37,6 +37,12 @@ def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
 class SpatialModel(Model):
     """Spatial model base class."""
 
+    def __init__(self, **kwargs):
+        frame = kwargs.pop("frame", "icrs")
+        super().__init__(**kwargs)
+        if not hasattr(self, "frame"):
+            self.frame = frame
+
     def __call__(self, lon, lat):
         """Call evaluate method"""
         kwargs = {par.name: par.quantity for par in self.parameters}
@@ -45,12 +51,9 @@ class SpatialModel(Model):
     @property
     def position(self):
         """Spatial model center position"""
-        try:
-            lon = self.lon_0.quantity
-            lat = self.lat_0.quantity
-            return SkyCoord(lon, lat, frame=self.frame)
-        except IndexError:
-            raise ValueError("Model does not have a defined center position")
+        lon = self.lon_0.quantity
+        lat = self.lat_0.quantity
+        return SkyCoord(lon, lat, frame=self.frame)
 
     # TODO: get rid of this!
     _phi_0 = 0.0
@@ -125,14 +128,8 @@ class PointSpatialModel(SpatialModel):
     """
 
     tag = "PointSpatialModel"
-    __slots__ = ["frame", "lon_0", "lat_0"]
-
-    def __init__(self, lon_0, lat_0, frame="icrs"):
-        self.frame = frame
-        self.lon_0 = Parameter("lon_0", Angle(lon_0))
-        self.lat_0 = Parameter("lat_0", Angle(lat_0), min=-90, max=90)
-
-        super().__init__([self.lon_0, self.lat_0])
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
 
     @property
     def evaluation_radius(self):
@@ -223,18 +220,13 @@ class GaussianSpatialModel(SpatialModel):
         Center position coordinate frame
     """
 
-    __slots__ = ["frame", "lon_0", "lat_0", "sigma", "e", "phi"]
     tag = "GaussianSpatialModel"
 
-    def __init__(self, lon_0, lat_0, sigma, e=0, phi="0 deg", frame="icrs"):
-        self.frame = frame
-        self.lon_0 = Parameter("lon_0", Angle(lon_0))
-        self.lat_0 = Parameter("lat_0", Angle(lat_0), min=-90, max=90)
-        self.sigma = Parameter("sigma", Angle(sigma), min=0)
-        self.e = Parameter("e", e, min=0, max=1, frozen=True)
-        self.phi = Parameter("phi", Angle(phi), frozen=True)
-
-        super().__init__([self.lon_0, self.lat_0, self.sigma, self.e, self.phi])
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+    sigma = Parameter("sigma", "1 deg", min=0)
+    e = Parameter("e", 0, min=0, max=1, frozen=True)
+    phi = Parameter("phi", "0 deg", frozen=True)
 
     @property
     def evaluation_radius(self):
@@ -316,22 +308,13 @@ class DiskSpatialModel(SpatialModel):
         Center position coordinate frame
     """
 
-    __slots__ = ["frame", "lon_0", "lat_0", "r_0", "e", "phi", "_offset_by"]
     tag = "DiskSpatialModel"
-
-    def __init__(
-        self, lon_0, lat_0, r_0, e=0, phi="0 deg", edge="0.01 deg", frame="icrs"
-    ):
-        self.frame = frame
-        self.lon_0 = Parameter("lon_0", Angle(lon_0))
-        self.lat_0 = Parameter("lat_0", Angle(lat_0), min=-90, max=90)
-        self.r_0 = Parameter("r_0", Angle(r_0), min=0)
-        self.e = Parameter("e", e, min=0, max=1, frozen=True)
-        self.phi = Parameter("phi", Angle(phi), frozen=True)
-        self.edge = Parameter("edge", Angle(edge), frozen=True, min=0.01)
-        super().__init__(
-            [self.lon_0, self.lat_0, self.r_0, self.e, self.phi, self.edge]
-        )
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+    r_0 = Parameter("r_0", "1 deg", min=0)
+    e = Parameter("e", 0, min=0, max=1, frozen=True)
+    phi = Parameter("phi", "0 deg", frozen=True)
+    edge = Parameter("edge", "0.01 deg", frozen=True, min=0.01)
 
     @property
     def evaluation_radius(self):
@@ -424,17 +407,11 @@ class ShellSpatialModel(SpatialModel):
         Center position coordinate frame
     """
 
-    __slots__ = ["frame", "lon_0", "lat_0", "radius", "width"]
     tag = "ShellSpatialModel"
-
-    def __init__(self, lon_0, lat_0, radius, width, frame="icrs"):
-        self.frame = frame
-        self.lon_0 = Parameter("lon_0", Angle(lon_0))
-        self.lat_0 = Parameter("lat_0", Angle(lat_0), min=-90, max=90)
-        self.radius = Parameter("radius", Angle(radius))
-        self.width = Parameter("width", Angle(width))
-
-        super().__init__([self.lon_0, self.lat_0, self.radius, self.width])
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+    radius = Parameter("radius", "1 deg")
+    width = Parameter("width", "1 deg")
 
     @property
     def evaluation_radius(self):
@@ -481,14 +458,11 @@ class ConstantSpatialModel(SpatialModel):
         Value
     """
 
-    frame = None
     tag = "ConstantSpatialModel"
+    value = Parameter("value", "1 sr-1", frozen=True)
+
+    frame = "icrs"
     evaluation_radius = None
-
-    def __init__(self, value=1):
-        self.value = Parameter("value", value, frozen=True)
-
-        super().__init__([self.value])
 
     def to_dict(self):
         """Create dict for YAML serilisation"""
@@ -536,11 +510,17 @@ class TemplateSpatialModel(SpatialModel):
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
     """
 
-    __slots__ = ["map", "norm", "meta", "normalize", "_interp_kwargs", "filename"]
     tag = "TemplateSpatialModel"
+    norm = Parameter("norm", 1)
 
     def __init__(
-        self, map, norm=1, meta=None, normalize=True, interp_kwargs=None, filename=None
+        self,
+        map,
+        norm=norm.quantity,
+        meta=None,
+        normalize=True,
+        interp_kwargs=None,
+        filename=None,
     ):
         if (map.data < 0).any():
             log.warning("Diffuse map has negative values. Check and fix this!")
@@ -556,14 +536,13 @@ class TemplateSpatialModel(SpatialModel):
             data /= self.map.geom.solid_angle().to_value("sr")
             self.map = self.map.copy(data=data, unit="sr-1")
 
-        self.norm = Parameter("norm", norm)
         self.meta = dict() if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("interp", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
         self.filename = filename
-        super().__init__([self.norm])
+        super().__init__(norm=norm)
 
     @property
     def evaluation_radius(self):
