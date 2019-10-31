@@ -10,10 +10,7 @@ from gammapy.utils.regions import compound_region_to_list, list_to_compound_regi
 from .core import CountsSpectrum
 from .dataset import SpectrumDatasetOnOff
 
-__all__ = [
-    "ReflectedRegionsFinder",
-    "ReflectedRegionsBackgroundMaker",
-]
+__all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundMaker"]
 
 log = logging.getLogger(__name__)
 

@@ -652,6 +652,7 @@ class PowerLaw2SpectralModel(SpectralModel):
     emax : `~astropy.units.Quantity`
         Upper energy limit :math:`E_{0, max}`.
     """
+
     tag = "PowerLaw2SpectralModel"
 
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1")

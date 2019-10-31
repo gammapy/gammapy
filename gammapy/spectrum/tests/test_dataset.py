@@ -691,7 +691,7 @@ def test_datasets_stack_reduce():
     assert_allclose(stacked.livetime.to_value("s"), 6313.8116406202325)
 
     info_table = datasets.info_table()
-    assert_allclose(info_table["n_on"], [124, 126, 119,  90])
+    assert_allclose(info_table["n_on"], [124, 126, 119, 90])
 
     info_table_cum = datasets.info_table(cumulative=True)
     assert_allclose(info_table_cum["n_on"], [124, 250, 369, 459])

@@ -3,6 +3,12 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.wcs import WCS
+from regions import (
+    CircleAnnulusSkyRegion,
+    EllipseSkyRegion,
+    PointSkyRegion,
+    PolygonSkyRegion,
+)
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpatialModel,
@@ -13,12 +19,6 @@ from gammapy.modeling.models import (
     TemplateSpatialModel,
 )
 from gammapy.utils.testing import requires_data
-from regions import (
-    CircleAnnulusSkyRegion,
-    EllipseSkyRegion,
-    PointSkyRegion,
-    PolygonSkyRegion,
-)
 
 
 def test_sky_point_source():

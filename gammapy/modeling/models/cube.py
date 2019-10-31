@@ -6,7 +6,7 @@ import numpy as np
 import astropy.units as u
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
-from gammapy.utils.scripts import read_yaml, write_yaml, make_path
+from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 
 
 class SkyModelBase(Model):
@@ -525,4 +525,8 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
 
     spatial_model = ConstantSpatialModel()
     spectral_model = TemplateSpectralModel(energy=energy, values=values, **kwargs)
-    return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model, name="fermi-diffuse-iso")
+    return SkyModel(
+        spatial_model=spatial_model,
+        spectral_model=spectral_model,
+        name="fermi-diffuse-iso",
+    )

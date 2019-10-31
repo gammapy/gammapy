@@ -5,11 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.units import Quantity
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
-from gammapy.modeling.models import (
-    PowerLaw2SpectralModel,
-    PowerLawSpectralModel,
-    TemplateSpectralModel,
-)
+from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
 from gammapy.spectrum import CountsSpectrum, SpectrumEvaluator
 from gammapy.utils.energy import energy_logspace
 from gammapy.utils.testing import (

@@ -7,11 +7,10 @@ from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 from gammapy.modeling import Dataset
-from gammapy.stats import cash, wstat
+from gammapy.stats import cash, significance_on_off, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
-from gammapy.stats import significance_on_off
 from .core import CountsSpectrum, SpectrumEvaluator
 
 __all__ = [
@@ -1089,7 +1088,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         info["significance"] = significance_on_off(
             self.counts.data[mask].sum(),
             self.counts_off.data[mask].sum(),
-            self.alpha[0]
+            self.alpha[0],
         )
 
         info["background_rate"] = info["background"] / info["livetime"]

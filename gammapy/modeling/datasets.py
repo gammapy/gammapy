@@ -233,7 +233,7 @@ class Datasets:
             Info table.
         """
         if not self.is_all_same_type:
-            raise ValueError("Info table only supported if dataset are all of the same type.")
+            raise ValueError("Info table not supported for mixed dataset type.")
 
         stacked = self.datasets[0].copy()
 
