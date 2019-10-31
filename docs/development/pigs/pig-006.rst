@@ -1,31 +1,37 @@
 .. _pig-006:
 
-*******************************************
-PIG 6 - CTA observation handling in Gammapy
-*******************************************
+********************************
+PIG 6 - CTA observation handling
+********************************
 
 * Author: David Fidalgo, Christoph Deil, Régis Terrier et al
-* Created: October 10, 2018
-* Accepted: --
-* Status: Being discussed
-* Discussion: --
+* Created: Oct 10, 2018
+* Withdrawn: Oct 31, 2019
+* Status: withdrawn
+* Discussion: `GH 1877`_
 
 Abstract
 ========
 
-In this PIG we want to outline an improvement of the CTA observation handling in Gammapy.
-The current handling has some limitations and misses some key features, like selecting a given time interval and performing an analysis on it.
-We also want to start using GTI to compute the observation time, instead of relying on header information.
-Since specifics of the final data format of CTA are still unclear, this PIG does not aim for a final implementation of CTA observation handling, nor the handling of all types of data from various instruments foreseen for Gammapy in the future.
-Instead it focuses on trying to resolve current limitations when analyzing IACT data, namely an analysis of time or phase selected observations, as well as an analysis of an observation stored solely in memory or given in ctool's XML format (see the `third section <3. What others have>`_).
-This PIG emerged at the Coding Spring in Madrid 2018.
+In this PIG we want to outline an improvement of the CTA observation handling in
+Gammapy. The current handling has some limitations and misses some key features,
+like selecting a given time interval and performing an analysis on it. We also
+want to start using GTI to compute the observation time, instead of relying on
+header information. Since specifics of the final data format of CTA are still
+unclear, this PIG does not aim for a final implementation of CTA observation
+handling, nor the handling of all types of data from various instruments
+foreseen for Gammapy in the future. Instead it focuses on trying to resolve
+current limitations when analyzing IACT data, namely an analysis of time or
+phase selected observations, as well as an analysis of an observation stored
+solely in memory or given in ctool's XML format. This PIG emerged at the Coding
+Spring in Madrid 2018.
 
 Some terminology
 ================
 
-This terminology and the definition of the terms will probably change or be expanded once the final data format of
-CTA is decided.
-For now we will use following definitions to go forward in Gammapy:
+This terminology and the definition of the terms will probably change or be
+expanded once the final data format of CTA is decided. For now we will use
+following definitions to go forward in Gammapy:
 
 - **GTI (good time interval)**:
    - time intervals for which the instrument was on
@@ -45,18 +51,26 @@ For now we will use following definitions to go forward in Gammapy:
    - the repository where the observations and IRFs are stored
    - it has a manifest connecting all observation files and their IRFs
 
-1. Background / What we have right now
-======================================
+Background / What we have right now
+===================================
 
-In the current implementation we use the `~gammapy.data.DataStore` class to connect to an *observation library* that consists of two fits files, the *observation index table* and the *HDU index table* (see `this data storing scheme <https://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/index.html>`_).
-The `~gammapy.data.DataStoreObservation` is a proxy object to the `~gammapy.data.DataStore` and points to a single *observation* in the *observation library*.
-The `~gammapy.data.DataStoreObservation` never holds on to the observation data in memory and only reads it when explicitly accessed (`.events`, `.gti`, `.aeff`, etc.).
-However, it does some caching of meta data.
-Recently a new observation class `gammapy.data.ObservationCTA` was added that is capable of storing all observation data in memory.
-However, with the new scheme proposed further down, this class becomes superfluous and can again be removed.
+In the current implementation we use the `~gammapy.data.DataStore` class to
+connect to an *observation library* that consists of two fits files, the
+*observation index table* and the *HDU index table* (see `gadf`_). The
+`~gammapy.data.DataStoreObservation` is a proxy object to the
+`~gammapy.data.DataStore` and points to a single *observation* in the
+*observation library*. The `~gammapy.data.DataStoreObservation` never holds on
+to the observation data in memory and only reads it when explicitly accessed
+(`.events`, `.gti`, `.aeff`, etc.). However, it does some caching of meta data.
+Recently a new observation class `gammapy.data.ObservationCTA` was added that is
+capable of storing all observation data in memory. However, with the new scheme
+proposed further down, this class becomes superfluous and can again be removed.
 
-Normally the user starts an analysis with the creation of a `~gammapy.data.DataStore` object from which she/he extracts an `~gammapy.data.ObservationList` providing *obs_ids*.
-All analysis classes take as input an `~gammapy.data.ObservationList`, which is basically a python list of `~gammapy.data.DataStoreObservation`.
+Normally the user starts an analysis with the creation of a
+`~gammapy.data.DataStore` object from which she/he extracts an
+`~gammapy.data.ObservationList` providing *obs_ids*. All analysis classes take
+as input an `~gammapy.data.ObservationList`, which is basically a python list of
+`~gammapy.data.DataStoreObservation`.
 
 Limitations
 -----------
@@ -67,8 +81,8 @@ Limitations
 * We do not support event selections before starting the analysis steps, such as event type selection, phase selection or time selection.
 * It is cumbersome to write a copy of an observation (possibly modified) back to disk
 
-2. Objectives
-=============
+Objectives
+==========
 
 * Users should be able to run an analysis (1D and 3D) on a given time interval, independent of the time intervals of the single observations.
 * We should support event selections before starting the analysis steps (event phase, event type, ...) and possibly allow for custom selections, e.g. `MC_ID` in the current CTA 1DC.
@@ -93,29 +107,45 @@ Use cases / scenarios
 - Create an observation *from scratch* and write it to disk with Index files
 - Read in an observation from an *observation library* given in ctool's XML format
 
-3. What others have
-===================
+What others have
+================
 
-With *Fermi-LAT*, you always have `gtselect` and `gtmktime` at the start to `prepare your data <https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/data_preparation.html>`_).
-Following analysis steps partly rely on "data sub space" DSS header keys for processing, which are stored in the output fits files of the `gtselect` and `gtmktime` step.
+With *Fermi-LAT*, you always have `gtselect` and `gtmktime` at the start to
+`prepare your data
+<https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/data_preparation.html>`_).
+Following analysis steps partly rely on "data sub space" DSS header keys for
+processing, which are stored in the output fits files of the `gtselect` and
+`gtmktime` step.
 
-In *ctools*, every analysis starts with an "observation definition file" in XML format.
-One can then `select observations <http://cta.irap.omp.eu/ctools/users/tutorials/1dc/first_select_obs.html>`_ with `csobsselect`, creating a new observation definition file.
-A selection based on events is achieved `by running <http://cta.irap.omp.eu/ctools/users/reference_manual/ctselect.html#ctselectctselect>`_ `ctselect`.
+In *ctools*, every analysis starts with an "observation definition file" in XML
+format. One can then `select observations
+<http://cta.irap.omp.eu/ctools/users/tutorials/1dc/first_select_obs.html>`_ with
+`csobsselect`, creating a new observation definition file. A selection based on
+events is achieved `by running
+<http://cta.irap.omp.eu/ctools/users/reference_manual/ctselect.html#ctselectctselect>`_
+`ctselect`.
 
-4. Proposal
-===========
+Proposal
+========
 
 General idea and class diagram
 ------------------------------
-The general idea is to have an `Observations` class that is the starting point of all analyses and is passed on to the analysis classes of the 1D and 3D analysis (effectively it replaces the `ObservationList` class).
-The user should only have to interact with this class, which makes it an **interface** to the other classes described in the following (`Observation` and `DataStore`), and therefore mainly consists of *convenient functions*.
-The `Observations` class holds a list of `Observation` objects.
 
-The `Observation` class is essentially a **proxy class** to the *data store* classes.
-In addition an `Observation` object will also hold an `ObservationFilter` object, which is used to **orchestrate the filtering** of the data, mainly the event list.
-The filtering is applied *on-the-fly* when accessing the observation data.
-In this way we avoid storing the modified observation data in memory, which is important for the last use case specified above.
+The general idea is to have an `Observations` class that is the starting point
+of all analyses and is passed on to the analysis classes of the 1D and 3D
+analysis (effectively it replaces the `ObservationList` class). The user should
+only have to interact with this class, which makes it an **interface** to the
+other classes described in the following (`Observation` and `DataStore`), and
+therefore mainly consists of *convenient functions*. The `Observations` class
+holds a list of `Observation` objects.
+
+The `Observation` class is essentially a **proxy class** to the *data store*
+classes. In addition an `Observation` object will also hold an
+`ObservationFilter` object, which is used to **orchestrate the filtering** of
+the data, mainly the event list. The filtering is applied *on-the-fly* when
+accessing the observation data. In this way we avoid storing the modified
+observation data in memory, which is important for the last use case specified
+above.
 
 The different **data store** classes are (this still needs to be discussed in more detail):
 
@@ -126,15 +156,15 @@ The different **data store** classes are (this still needs to be discussed in mo
 
 All *data store* classes inherit from a **parent** `DataStore` class that names the necessary methods, which have to be implemented by the Child classes.
 
-The new scheme proposed is illustrated by the class diagram below.
-The attributes and methods of the classes are not fully worked out and are merely suggestive.
-
-.. Some more specifics of the classes and their methods are outlined `in this notebook <https://github.com/gammapy/gammapy-extra/blob/master/experiments/data.ipynb>`_).
+The new scheme proposed is illustrated by the class diagram below. The
+attributes and methods of the classes are not fully worked out and are merely
+suggestive.
 
 Implementation road map
 -----------------------
 
-We will outline the road map in form of scenarios that we want to achieve along the way and that can be implemented ideally with a few PRs.
+We will outline the road map in form of scenarios that we want to achieve along
+the way and that can be implemented ideally with a few PRs.
 
 We split the implementation in two big steps:
 
@@ -178,9 +208,16 @@ We split the implementation in two big steps:
 
     | **PRs**: Add `select_time` method to the `Observations` class;
     
-6. ...
 
 Proposed class diagram
 ----------------------
 
-.. image:: https://github.com/dcfidalgo/gammapy/blob/pig-006/docs/development/pigs/pig6_class_diagram.png
+.. image:: pig6_class_diagram.png
+   :alt: Class diagram
+
+Decision
+--------
+
+tbd
+
+.. _GH 1877: https://github.com/gammapy/gammapy/pull/1877
