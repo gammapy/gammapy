@@ -10,7 +10,7 @@ PIG 9 - Event Sampling
 * Created: May 03, 2019
 * Accepted: Aug 30, 2019
 * Status: accepted
-* Discussion: `GH_2136`_
+* Discussion: `GH 2136`_
 
 Abstract
 ========
@@ -145,7 +145,7 @@ sampled events.
 We propose to add a ``Map.sample(n_events=, random_state=)`` method in
 ``~gammapy.maps.Map`` that will be the core of the sampling process. The
 ``sample`` is based on the ``~gammapy.utils.random.InverseCDFSampler`` class
-described in `GH_2229`_ . The output will be an ``~astropy.table.Table`` with
+described in `GH 2229`_ . The output will be an ``~astropy.table.Table`` with
 columns: ``RA_TRUE``, ``DEC_TRUE`` and ``ENERGY_TRUE`` .
 
 Then, the time will be sampled independently using the temporal information
@@ -235,11 +235,13 @@ This is a proposal for a list of tasks to implement the proposed changes:
 Decision
 ========
 
-The PIG was discussed extensively in `GH_2136`_, the weekly Gammapy developer
+The PIG was discussed extensively in `GH 2136`_, the weekly Gammapy developer
 calls and coding sprint in person. After the deadline for final review expired
 on August 20, all remaining comments were addressed and the PIG was accepted on
 August 30, 2019.
 
+.. _GH 2136: https://github.com/gammapy/gammapy/pull/2136
+.. _GH 2229: https://github.com/gammapy/gammapy/pull/2229
 .. _rejection sampling in Python: https://wiseodd.github.io/techblog/2015/10/21/rejection-sampling/
 .. _Prototype: https://github.com/fabiopintore/notebooks-public/blob/master/gammapy-event-sampling/prototype.ipynb
 .. _inverseCDF: https://en.wikipedia.org/wiki/Inverse_transform_sampling
@@ -248,5 +250,3 @@ August 30, 2019.
 .. _three-D: https://docs.gammapy.org/0.11/notebooks/simulate_3d.html
 .. _astrisim: http://www.iasf-milano.inaf.it/~giuliani/astrisim/
 .. _rej_sampl: https://en.wikipedia.org/wiki/Rejection_sampling
-.. _GH_2136: https://github.com/gammapy/gammapy/pull/2136
-.. _GH_2229: https://github.com/gammapy/gammapy/pull/2229

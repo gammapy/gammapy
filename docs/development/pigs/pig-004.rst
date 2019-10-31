@@ -88,7 +88,7 @@ notebooks.
 
 To solve the versioning issue for datasets, we propose to only use stable
 example datasets. Examples are `gammapy-fermi-lat-data`_ or
-`gammapy-extra/datasets/cta-1dc`_ or the upcoming `HESS DL3 DR1`_ or
+``gammapy-extra/datasets/cta-1dc`` or the upcoming `HESS DL3 DR1`_ or
 ``joint-crab`` datasets. Datasets can be in ``gammapy-extra`` or at any other
 URL, but even if they are in ``gammapy-extra``, they should not be ''live''
 datasets. If an issue is found or something is improved, a separate new dataset
@@ -149,13 +149,6 @@ solution works well so far and does solve the notebook and dataset issues that
 motivated the work. It was finally approved during the Gammapy coding sprint on
 Oct 4, 2018.
 
-.. _gammapy: https://github.com/gammapy/gammapy
-.. _gammapy-extra: https://github.com/gammapy/gammapy-extra
-.. _gammapy-fermi-lat-data: https://github.com/gammapy/gammapy-fermi-lat-data
-.. _gammapy-extra/datasets/cta-1dc: https://github.com/gammapy/gammapy-extra/tree/master/datasets/cta-1dc
-.. _HESS DL3 DR1: https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/
-.. _nbstripout: https://github.com/kynan/nbstripout
-
 .. _GH 1419: https://github.com/gammapy/gammapy/pull/1419
 .. _GH 1369: https://github.com/gammapy/gammapy/pull/1369
 .. _GH 1237: https://github.com/gammapy/gammapy/issues/1237
@@ -164,3 +157,8 @@ Oct 4, 2018.
 .. _GH 431: https://github.com/gammapy/gammapy/pull/431
 .. _GH 405: https://github.com/gammapy/gammapy/issues/405
 .. _GH 228: https://github.com/gammapy/gammapy/issues/288
+.. _gammapy: https://github.com/gammapy/gammapy
+.. _gammapy-extra: https://github.com/gammapy/gammapy-extra
+.. _gammapy-fermi-lat-data: https://github.com/gammapy/gammapy-fermi-lat-data
+.. _HESS DL3 DR1: https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/
+.. _nbstripout: https://github.com/kynan/nbstripout

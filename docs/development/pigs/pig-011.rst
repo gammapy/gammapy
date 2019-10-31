@@ -32,9 +32,9 @@ For this purpose, we propose to introduce two new classes to perform the data
 reduction first and then then the fitting. The time dependent data reduction
 could be a specific case of the high level pipeline, when a list of time bins is
 passed with the configuration ``dict``. The data fitting should be performed by
-the new :class:``LightCurveEstimator`` class, which  should essentially be a
-wrapper around the ``gammapy.spectrum.FluxPointEstimator`` class that does the
-same thing for spectrum and map datasets.
+the new ``LightCurveEstimator`` class, which  should essentially be a wrapper
+around the ``FluxPointEstimator`` class that does the same thing for spectrum
+and map datasets.
 
 Introduction
 ============
@@ -66,16 +66,15 @@ complex task which we do not cover here.
 Background / What we have now
 -----------------------------
 
-The current :class:``gammapy.time.LightCurveEstimator`` class assumes that a
-part of the data reduction process has already been applied at it takes as input a
-:class:``gammapy.spectrum.SpectrumExtraction`` instance for which a list of
-:class:``gammapy.background.BackgroundEstimate`` is required. Apart from the time
-intervals, the user also has to provide a ``gammapy.spectrum.SpectralModel`` that
-is used to compute the expected counts in a time bin and to scale the integral
-flux with respect to the excess events found in that time bin. The parameters of
-the spectral model are generally obtained via a spectral fit to the whole data
-sample. A tutorial notebook of this approach can be found `here
-<http://docs.gammapy.org/dev/notebooks/light_curve.html>`_.
+The current ``gammapy.time.LightCurveEstimator`` class assumes that a part of
+the data reduction process has already been applied at it takes as input a
+``gammapy.spectrum.SpectrumExtraction`` instance for which a list of
+``gammapy.background.BackgroundEstimate`` is required. Apart from the time
+intervals, the user also has to provide a ``gammapy.spectrum.SpectralModel``
+that is used to compute the expected counts in a time bin and to scale the
+integral flux with respect to the excess events found in that time bin. The
+parameters of the spectral model are generally obtained via a spectral fit to
+the whole data sample. See `current lightcurve tutorial`_.
 
 Drawbacks of this approach: no clear separation of the data reduction and
 modeling steps, and only 1D On-Off spectral analysis is supported and lacks
@@ -161,7 +160,7 @@ is fitted while other parameters are usually, but not necessarily, fixed.
 
 The fitting is very similar to the extraction of ``FluxPoints`` in the spectral
 analysis and does not strongly depend on the type of ``Datasets`` considered.
-The new :class:``LightCurveEstimator`` class should therefore be able to take as
+The new ``LightCurveEstimator`` class should therefore be able to take as
 input both ``SpectrumDatasetOnOff`` and ``MapDataset``, in a similar fashion as
 the current ``FluxPointEstimator``.
 
@@ -274,4 +273,4 @@ interface and of the new Maker scheme change the scope of the discussion.
 
 .. _GH 1451: https://github.com/gammapy/gammapy/pull/1451
 .. _good time interval: http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/rates/ogip_93_003/ogip_93_003.html#tth_sEc6.3
-
+.. _current lightcurve tutorial: https://docs.gammapy.org/0.14/notebooks/light_curve.html
