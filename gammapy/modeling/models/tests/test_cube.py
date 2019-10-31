@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
     SkyDiffuseCube,
     SkyModel,
     SkyModels,
+    create_fermi_isotropic_diffuse_model,
 )
 from gammapy.utils.testing import requires_data
 
@@ -425,3 +426,15 @@ def test_sky_point_source():
     assert_allclose(flux, expected, atol=0.01)
 
     assert_allclose(flux.sum(), 1)
+
+
+@requires_data()
+def test_fermi_isotropic():
+    filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
+    model = create_fermi_isotropic_diffuse_model(filename)
+    coords = {"lon": 0 * u.deg, "lat": 0 * u.deg, "energy": 50 * u.GeV}
+
+    flux = model(**coords)
+
+    assert_allclose(flux.value, 1.463e-13, rtol=1e-3)
+    assert flux.unit == "MeV-1 cm-2 s-1 sr-1"

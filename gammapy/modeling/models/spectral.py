@@ -1116,22 +1116,6 @@ class TemplateSpectralModel(SpectralModel):
         kwargs.setdefault("interp_kwargs", {"values_scale": "lin"})
         return cls(energy=energy, values=values, **kwargs)
 
-    @classmethod
-    def read_fermi_isotropic_model(cls, filename, **kwargs):
-        """Read Fermi isotropic diffuse model.
-
-        See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`_
-
-        Parameters
-        ----------
-        filename : str
-            filename
-        """
-        vals = np.loadtxt(make_path(filename))
-        energy = u.Quantity(vals[:, 0], "MeV", copy=False)
-        values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2 sr-1", copy=False)
-        return cls(energy=energy, values=values, **kwargs)
-
     def evaluate(self, energy, norm, tilt, reference):
         """Evaluate the model (static function)."""
         values = self._evaluate((energy,), clip=True)

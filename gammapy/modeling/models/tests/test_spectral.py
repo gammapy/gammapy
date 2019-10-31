@@ -396,15 +396,6 @@ def test_pwl_index_2_error():
     assert_quantity_allclose(eflux_err, 0.2302585e-12 * u.Unit("TeV cm-2 s-1"))
 
 
-@requires_data()
-def test_fermi_isotropic():
-    filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
-    model = TemplateSpectralModel.read_fermi_isotropic_model(filename)
-    assert_quantity_allclose(
-        model(50 * u.GeV), 1.463 * u.Unit("1e-13 MeV-1 cm-2 s-1 sr-1"), rtol=1e-3
-    )
-
-
 def test_ecpl_integrate():
     # regression test to check the numerical integration for small energy bins
     ecpl = ExpCutoffPowerLawSpectralModel()

@@ -6,7 +6,7 @@ import numpy as np
 import astropy.units as u
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
-from gammapy.utils.scripts import read_yaml, write_yaml
+from gammapy.utils.scripts import read_yaml, write_yaml, make_path
 
 
 class SkyModelBase(Model):
@@ -497,3 +497,32 @@ class BackgroundModel(Model):
         model = cls(map=map, name=data["name"])
         model._update_from_dict(data)
         return model
+
+
+def create_fermi_isotropic_diffuse_model(filename, **kwargs):
+    """Read Fermi isotropic diffuse model.
+
+    See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`_
+
+    Parameters
+    ----------
+    filename : str
+        filename
+    kwargs : dict
+        Keyword arguments forwarded to `TemplateSpectralModel`
+
+    Returns
+    -------
+    diffuse_model : `SkyModel`
+        Fermi isotropic diffuse sky model.
+    """
+    from .spectral import TemplateSpectralModel
+    from .spatial import ConstantSpatialModel
+
+    vals = np.loadtxt(make_path(filename))
+    energy = u.Quantity(vals[:, 0], "MeV", copy=False)
+    values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2", copy=False)
+
+    spatial_model = ConstantSpatialModel()
+    spectral_model = TemplateSpectralModel(energy=energy, values=values, **kwargs)
+    return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model, name="fermi-diffuse-iso")
