@@ -216,6 +216,8 @@ running some Python code, use IPython like this:
 
     $ ipython -i example.py
 
+For examples how to run Gammapy analyses from Python scripts, see :ref:`tutorials_scripts`.
+
 Command line
 ++++++++++++
 
