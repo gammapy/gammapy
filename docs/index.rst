@@ -20,6 +20,7 @@ or request a feature, or need help with anything Gammapy-related.
     :caption: Getting Started
     :maxdepth: 1
 
+    overview
     install/index
     getting-started
     tutorials
