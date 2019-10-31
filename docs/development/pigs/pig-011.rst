@@ -21,20 +21,20 @@ result of a series of fits of the source flux in each time bin. Lightcurve
 extraction covers therefore both the data reduction and the data modeling steps.
 The lightcurve estimation will therefore have these two steps.
 
-Here, we propose to perform the data reduction step in each of the time bins
-and store the result in the form of a ``Datasets`` (``MapDataset`` or
-``SpectrumOnOffDataset`` depending on the selected approach).
-Each individual ``Dataset`` is then modeled and fitted to extract the
-source flux and its errors in each time bin. The result is then stored in a
-``LightCurve`` object which contains a ``Table`` of the fit results.
+Here, we propose to perform the data reduction step in each of the time bins and
+store the result in the form of a ``Datasets`` (``MapDataset`` or
+``SpectrumOnOffDataset`` depending on the selected approach). Each individual
+``Dataset`` is then modeled and fitted to extract the source flux and its errors
+in each time bin. The result is then stored in a ``LightCurve`` object which
+contains a ``Table`` of the fit results.
 
 For this purpose, we propose to introduce two new classes to perform the data
 reduction first and then then the fitting. The time dependent data reduction
-could be a specific case of the high level pipeline, when a list of time bins
-is passed with the configuration ``dict``. The data fitting should be performed
-by the new :class:``LightCurveEstimator`` class, which  should essentially be a
-wrapper around the ``gammapy.spectrum.FluxPointEstimator`` class that does the same
-thing for spectrum and map datasets.
+could be a specific case of the high level pipeline, when a list of time bins is
+passed with the configuration ``dict``. The data fitting should be performed by
+the new :class:``LightCurveEstimator`` class, which  should essentially be a
+wrapper around the ``gammapy.spectrum.FluxPointEstimator`` class that does the
+same thing for spectrum and map datasets.
 
 Introduction
 ============
@@ -42,25 +42,26 @@ Introduction
 Lightcurves in gamma-ray astronomy
 ----------------------------------
 
-In photon counting experiments, lightcurves are often simply obtained by counting
-events in a given energy range in a set of time bins. In ground based gamma-ray
-astronomy, things are usually more complex.
+In photon counting experiments, lightcurves are often simply obtained by
+counting events in a given energy range in a set of time bins. In ground based
+gamma-ray astronomy, things are usually more complex.
 
-The response and the instrumental background of the instruments can strongly vary
-over time on a night scale, e.g. because the source elevation changes or on longer time
-scales given the possible changes of the atmosphere transparency or the instrument
-efficiency.
+The response and the instrumental background of the instruments can strongly
+vary over time on a night scale, e.g. because the source elevation changes or on
+longer time scales given the possible changes of the atmosphere transparency or
+the instrument efficiency.
 
-Another complexity comes from the astrophysical background which can often pollute a source
-and needs to be properly removed to extract the intrinsic source flux at any given time.
+Another complexity comes from the astrophysical background which can often
+pollute a source and needs to be properly removed to extract the intrinsic
+source flux at any given time.
 
-For these reasons, gamma-ray lightcurve are usually the results of a fit of model on
-the data performed on a number of time bins to extract the source flux in these time
-bins.
+For these reasons, gamma-ray lightcurve are usually the results of a fit of
+model on the data performed on a number of time bins to extract the source flux
+in these time bins.
 
-This is more limited than e.g. time resolved spectral analysis. Although the latter share
-many similarities with the lightcurve extraction, it is a more complex task which
-we do not cover here.
+This is more limited than e.g. time resolved spectral analysis. Although the
+latter share many similarities with the lightcurve extraction, it is a more
+complex task which we do not cover here.
 
 Background / What we have now
 -----------------------------
@@ -76,10 +77,9 @@ the spectral model are generally obtained via a spectral fit to the whole data
 sample. A tutorial notebook of this approach can be found `here
 <http://docs.gammapy.org/dev/notebooks/light_curve.html>`_.
 
-Drawbacks of this approach are:
- * there is no clear separation of the data reduction and modeling steps
- * only 1D On-Off spectral analysis is supported and lacks supports for ``MapDataset`` based analysis.
-
+Drawbacks of this approach: no clear separation of the data reduction and
+modeling steps, and only 1D On-Off spectral analysis is supported and lacks
+supports for ``MapDataset`` based analysis.
 
 Proposal
 ========
@@ -87,25 +87,26 @@ Proposal
 General organization of the new approach
 ----------------------------------------
 
-The approach will be split into 3 main phases:
- * Time bin preparation
- * Data reduction in time bins to produce a list of ``Dataset``
- * Light curve estimation to fit a model on the resulting ``Datasets``
+The approach will be split into 3 main phases: 
+* Time bin preparation
+* Data reduction in time bins to produce a list of ``Dataset``
+* Light curve estimation to fit a model on the resulting ``Datasets``
 
-The end product should contain enough information to perform some rebinning and apply
-high level timing techniques without rerunning the whole data reduction and fitting steps.
+The end product should contain enough information to perform some rebinning and
+apply high level timing techniques without rerunning the whole data reduction
+and fitting steps.
 
 Time bin preparation
 --------------------
 
 Independently of the actual data reduction technique chosen, the user should
-first provide a list/table of time intervals for which she/he
-wants to compute the source flux. The computation of this list/table will be
-done outside of the light curve estimation class.
+first provide a list/table of time intervals for which she/he wants to compute
+the source flux. The computation of this list/table will be done outside of the
+light curve estimation class.
 
-While we could provide helper functions to prepare the time bins. ``astropy.time.Time``
-is relatively easy to use, so that a user would execute code similar to the following
-example:
+While we could provide helper functions to prepare the time bins.
+``astropy.time.Time`` is relatively easy to use, so that a user would execute
+code similar to the following example:
 
 ::
 
@@ -118,56 +119,55 @@ example:
     for tmin, tmax in zip(times, times[1:]):
         time_bins.append((tmin,tmax))
 
-
 Data reduction
 --------------
 
 Once the time bins are determined, the user will have to select the relevant
 ``Observations`` from the ``Datastore``. The ``Observations`` are then filtered
-and grouped according to the time bins using the ``ObservationFilter`` and passed
-to the light curve extraction function or class.
-The latter could take a ``geom`` or a ``region`` argument that will define the data
-reduction geometry (and in particular, if the data reduction is 3D or 1D). In the
-absence, of a ``RegionGeom`` we could simply expect a reco energy and true energy
-``MapAxis``.
+and grouped according to the time bins using the ``ObservationFilter`` and
+passed to the light curve extraction function or class. The latter could take a
+``geom`` or a ``region`` argument that will define the data reduction geometry
+(and in particular, if the data reduction is 3D or 1D). In the absence, of a
+``RegionGeom`` we could simply expect a reco energy and true energy ``MapAxis``.
 
-We do not detail possible approaches in the current PIG. These should be re-evaluated
-in the more general context of data reduction. Some examples, using the current
-data reduction approach will be exposed to users in a dedicated notebook.
+We do not detail possible approaches in the current PIG. These should be
+re-evaluated in the more general context of data reduction. Some examples, using
+the current data reduction approach will be exposed to users in a dedicated
+notebook.
 
-Both approaches will result in a list of ``Datasets`` consisting of ``MapDataset``
-or ``SpectrumDatasetOnOff`` with identical geometries for each time bin.
+Both approaches will result in a list of ``Datasets`` consisting of
+``MapDataset`` or ``SpectrumDatasetOnOff`` with identical geometries for each
+time bin.
 
-In order to properly assign times to any ``Dataset``, the latter must therefore carry
-the time information. Minimally, this can be done with a meta information such as
-``time_start`` and ``time_stop``. This does not give a full idea of the coverage
-of time bin though. Ideally, the ``Dataset`` should track the ``GTI`` table of
-the filtered ``Eventlist`` that were used for its production. It can be stored on the
-``Dataset`` itself and be serialized independently or be added as an extension to
-the serialized ``count`` data container (a ``CountsSpectrum`` or ``Map``), as is
-done for OGIP spectra. In order to stack several ``Dataset`` objects it is necessary
-to be able to combine ``GTI`` tables. While a simple stacking of tables is enough
-in many cases, the situation of overlapping time intervals should be considered and
-a proper ``GTI.union()`` should be introduced (a functionality recurrent in HEA
-software see e.g. ftools `mgtime)``
-
+In order to properly assign times to any ``Dataset``, the latter must therefore
+carry the time information. Minimally, this can be done with a meta information
+such as ``time_start`` and ``time_stop``. This does not give a full idea of the
+coverage of time bin though. Ideally, the ``Dataset`` should track the ``GTI``
+table of the filtered ``Eventlist`` that were used for its production. It can be
+stored on the ``Dataset`` itself and be serialized independently or be added as
+an extension to the serialized ``count`` data container (a ``CountsSpectrum`` or
+``Map``), as is done for OGIP spectra. In order to stack several ``Dataset``
+objects it is necessary to be able to combine ``GTI`` tables. While a simple
+stacking of tables is enough in many cases, the situation of overlapping time
+intervals should be considered and a proper ``GTI.union()`` should be introduced
+(a functionality recurrent in HEA software see e.g. ftools ``mgtime``)
 
 Data Fitting
 ------------
 
-The data fitting is the step were the ``Datasets`` are converted into a lightcurve
-based on a model of the emission. The amplitude of the source model is fitted while
-other parameters are usually, but not necessarily, fixed.
+The data fitting is the step were the ``Datasets`` are converted into a
+lightcurve based on a model of the emission. The amplitude of the source model
+is fitted while other parameters are usually, but not necessarily, fixed.
 
-The fitting is very similar to the extraction of ``FluxPoints`` in the spectral analysis
-and does not strongly depend on the type of ``Datasets`` considered. The new
-:class:``LightCurveEstimator`` class should therefore be able to take as input both
-``SpectrumDatasetOnOff`` and ``MapDataset``, in a similar fashion as the current
-``FluxPointEstimator``.
+The fitting is very similar to the extraction of ``FluxPoints`` in the spectral
+analysis and does not strongly depend on the type of ``Datasets`` considered.
+The new :class:``LightCurveEstimator`` class should therefore be able to take as
+input both ``SpectrumDatasetOnOff`` and ``MapDataset``, in a similar fashion as
+the current ``FluxPointEstimator``.
 
-After creating the ``Datasets``, the user would first define the model to be used
-and freeze its parameters. Then we would apply it to the various ``Dataset`` objects
-before calling the ``LightCurveEstimator``:
+After creating the ``Datasets``, the user would first define the model to be
+used and freeze its parameters. Then we would apply it to the various
+``Dataset`` objects before calling the ``LightCurveEstimator``:
 
 ::
 
@@ -182,21 +182,22 @@ before calling the ``LightCurveEstimator``:
     lc_estimator = LightCurveEstimator(datasets)
     lightcurve = lc.run()
 
-To help, the user deal with model parameters some helper function could be introduced
-to freeze all parameters of a model. Another possibility is to assume that all parameters
-are fixed except the `amplitude` in the ``LightCurveEstimator.run()`` method, or pass as
-arguments the names of the parameters to leave free.
+To help, the user deal with model parameters some helper function could be
+introduced to freeze all parameters of a model. Another possibility is to assume
+that all parameters are fixed except the `amplitude` in the
+``LightCurveEstimator.run()`` method, or pass as arguments the names of the
+parameters to leave free.
 
 Storing the results and further studies
 ---------------------------------------
 
 The results are returned as a ``gammapy.time.LightCurve`` instance (the current
-container class for light curves) that, so far, essentially holds the integrated flux +
-errors and the time_min/time_max of each time bin. There are many other quantities
-which could be stored, such as the energy range of the flux, the number of excess
-events in the time bin considered, etc.
-The current container class already provides some methods to study variability, such as
-chi-square test, fractional variance estimation.
+container class for light curves) that, so far, essentially holds the integrated
+flux + errors and the time_min/time_max of each time bin. There are many other
+quantities which could be stored, such as the energy range of the flux, the
+number of excess events in the time bin considered, etc. The current container
+class already provides some methods to study variability, such as chi-square
+test, fractional variance estimation.
 
 Example usage:
 
@@ -207,9 +208,9 @@ Example usage:
     # Get fractional variance
     print(lightcurve.fvar('amplitude'))
 
-The ``LightCurve`` object should be able to rpovide some rebinning functionalities.
-In particular, it stores the fit statistic scan, it should be possible to perform
-minimal significance rebinning:
+The ``LightCurve`` object should be able to rpovide some rebinning
+functionalities. In particular, it stores the fit statistic scan, it should be
+possible to perform minimal significance rebinning:
 
 ::
 
@@ -224,8 +225,8 @@ Discussion / Alternatives
 Time bins
 ---------
 
-To work with time bins, we could also rely on ``astropy.timeseries`` if we force the dependency to astropy v>3.2.
-This would look like:
+To work with time bins, we could also rely on ``astropy.timeseries`` if we force
+the dependency to astropy v>3.2. This would look like:
 
 ::
 
@@ -244,11 +245,11 @@ instead of a single object.
 Lightcurve
 ----------
 
-The ``Lightcurve`` contains  an ``astropy.table.Table`` object. It could
-be improved by using the ``astropy_timeseries.BinnedTimeSeries`` object which
-itself inherits from ``QTable`` and provides support for row selection with time,
-rebinning and more complex methods for detailed timing studies such as Lomb-Scargle
-periodograms.
+The ``Lightcurve`` contains  an ``astropy.table.Table`` object. It could be
+improved by using the ``astropy_timeseries.BinnedTimeSeries`` object which
+itself inherits from ``QTable`` and provides support for row selection with
+time, rebinning and more complex methods for detailed timing studies such as
+Lomb-Scargle periodograms.
 
 
 Task list
@@ -267,11 +268,9 @@ Task list
 Decision
 ========
 
-Withdrawn.
-
-The authors have decided to withdraw the PIG. A significant part of the implementation
-is already there. Besides, the recent additions of the high level interface and of the new Maker scheme
-change the scope of the discussion.
+The authors have decided to withdraw the PIG. A significant part of the
+implementation is already there. Besides, the recent additions of the high level
+interface and of the new Maker scheme change the scope of the discussion.
 
 .. _GH 1451: https://github.com/gammapy/gammapy/pull/1451
 .. _good time interval: http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/rates/ogip_93_003/ogip_93_003.html#tth_sEc6.3

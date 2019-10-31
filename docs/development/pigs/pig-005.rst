@@ -6,7 +6,7 @@
 PIG 5 - Gammapy 1.0 Roadmap
 ***************************
 
-* Author: Axel Donath (editor), Régis Terrier & Christoph Deil
+* Author: Axel Donath, Régis Terrier & Christoph Deil
 * Created: Sep 28, 2018
 * Accepted: Jan 31, 2019
 * Status: accepted

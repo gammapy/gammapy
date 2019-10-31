@@ -6,38 +6,40 @@
 PIG 7 - Models
 **************
 
-* Author: Axel Donath (editor), Christoph Deil & Regis Terrier
+* Author: Axel Donath, Christoph Deil & Regis Terrier
 * Created: Dec 17, 2018
 * Withdrawn: Oct 7, 2019
 * Status: withdrawn
-* Discussion: `GH_1971`_
-
+* Discussion: `GH 1971`_
 
 Introduction
 ============
+
 One of the most important features of Gammapy is the modeling of gamma-ray data
-by parametric models. This includes the modeling of source spectra by spectral models,
-the modeling of source morphologies by spatial models, the modeling of light curves
-or phase curves with temporal models and combinations thereof. Instrument specific
-characteristics, such as PSF, energy resolution, effective area and background
-are also considered as part of the model framework. Models are used both in interactive analysis,
-as well as scripted or command line based analyses. For this reason they must
-implement an easy to use API as well as serialization to disk.
-Gammapy should provide a variety of built-in models, allow to combine existing
-models using limited arithmetics and offer the possibility for users to easily
-implement custom models. A lot of development work has already put into the modeling
-framework of Gammapy. This PIG outlines the missing development work on the model
-framework for Gammapy v1.0.
+by parametric models. This includes the modeling of source spectra by spectral
+models, the modeling of source morphologies by spatial models, the modeling of
+light curves or phase curves with temporal models and combinations thereof.
+Instrument specific characteristics, such as PSF, energy resolution, effective
+area and background are also considered as part of the model framework. Models
+are used both in interactive analysis, as well as scripted or command line based
+analyses. For this reason they must implement an easy to use API as well as
+serialization to disk. Gammapy should provide a variety of built-in models,
+allow to combine existing models using limited arithmetics and offer the
+possibility for users to easily implement custom models. A lot of development
+work has already put into the modeling framework of Gammapy. This PIG outlines
+the missing development work on the model framework for Gammapy v1.0.
 
 Proposal
 ========
 
 Introduce naming scheme for models
 ----------------------------------
+
 Currently Gammapy implements mainly four categories of models: spectral models,
-morphology or spatial models, combined spectral and spatial models (``SkyModel``)
-and lightcurve or phase models. We propose a uniform naming scheme for these model
-classes, based on the prefixes ``Spectral...``, ``Spatial...``, ``Temporal``:
+morphology or spatial models, combined spectral and spatial models
+(``SkyModel``) and lightcurve or phase models. We propose a uniform naming
+scheme for these model classes, based on the prefixes ``Spectral...``,
+``Spatial...``, ``Temporal``:
 
 +-----------------+----------------------------------------------+----------------------+----------------------+-----------------------------+
 |   Base class    | Template class                               | IRF folded class     |Background class      | Model classes               |
@@ -59,25 +61,27 @@ The current class names are given in parentheses. Optional model classes, where
 the need is unclear are marked with a question mark.
 
 Parametric models are named after their parametrization, such as ``Powerlaw`` or
-``Gaussian``. In case the name is not unique (e.g. for a gaussian spectral and spatial
-model, the corresponding prefix should be used, such as ``SpectralGaussian`` or
-``SpatialGaussian`` or ``SpatialConstant`` and ``SpectralConstant``).
+``Gaussian``. In case the name is not unique (e.g. for a gaussian spectral and
+spatial model, the corresponding prefix should be used, such as
+``SpectralGaussian`` or ``SpatialGaussian`` or ``SpatialConstant`` and
+``SpectralConstant``).
 
-In addition there is the ``SourceModels``  class to represent a sum of ``SourceModel``
-objects.
+In addition there is the ``SourceModels``  class to represent a sum of
+``SourceModel`` objects.
 
 Unify calling interface for models
 ----------------------------------
 
 For model evaluation we would like to have a nice user interface, that supports
-``Quantity`` and ``SkyCoord`` objects on the one hand and a performance oriented and
-flexible interface for efficient evaluation for model fitting. The latter
-We propose a unified implementation scheme for ``__call__`` and ``.evaluate()``
-for all parametric models.
+``Quantity`` and ``SkyCoord`` objects on the one hand and a performance oriented
+and flexible interface for efficient evaluation for model fitting. The latter We
+propose a unified implementation scheme for ``__call__`` and ``.evaluate()`` for
+all parametric models.
 
 The actual arthmetics of the model is defined in ``.evaluate()`` and should be
 implemented using numpy expressions only. This ensure compatibility with all the
-possible higher level callers that use ``Quantity``, ``SkyCoords`` or autograd tools.
+possible higher level callers that use ``Quantity``, ``SkyCoords`` or autograd
+tools.
 
 ::
 
@@ -115,31 +119,35 @@ model base classe's ``__call__`` method:
         value = self.evaluate(lon, lat, **pars)
         return value
 
-Model evaluation for fitting will be first implement using the ``__call__`` interface.
-In case we find performance issue related to ``Quantity`` and ``SkyCoord`` handling
-or need auto differentiation tools such as ``autograd``, we can later implement
-a more efficient interface relying directly on ``Model.evaluate()``.
-
+Model evaluation for fitting will be first implement using the ``__call__``
+interface. In case we find performance issue related to ``Quantity`` and
+``SkyCoord`` handling or need auto differentiation tools such as ``autograd``,
+we can later implement a more efficient interface relying directly on
+``Model.evaluate()``.
 
 Introduction of background models
 ---------------------------------
-For any kind of IACTs analysis hadronic background models are required, which model
-the residual hadronic (gamma-like) background emission from templates provided by
-DL3 or by generic parametric models. The background template differ from source
-templates, because they are defined in reconstructed spatial and energy coordinates.
-We propose the introduction of the following two model classes:
 
-``BackgroundModel``
-~~~~~~~~~~~~~~~~~~~
+For any kind of IACTs analysis hadronic background models are required, which
+model the residual hadronic (gamma-like) background emission from templates
+provided by DL3 or by generic parametric models. The background template differ
+from source templates, because they are defined in reconstructed spatial and
+energy coordinates. We propose the introduction of the following two model
+classes:
+
+BackgroundModel
+~~~~~~~~~~~~~~~
+
 Base class for all background models.
 
-``BackgroundIRFModel``
-~~~~~~~~~~~~~~~~~~~~~~
+BackgroundIRFModel
+~~~~~~~~~~~~~~~~~~
+
 Class to represent a template background model. It is initialized with a
 background map template and introduces additional background parameters to
 adjust the spectral shape and amplitude. This model can only be evaluated on a
-fixed grid, defined by the input map. The model is interpolated in the preparation
-step. No IRFs are applied.
+fixed grid, defined by the input map. The model is interpolated in the
+preparation step. No IRFs are applied.
 
 ::
 
@@ -150,9 +158,9 @@ step. No IRFs are applied.
     npred = background.evaluate()
 
 
-
 Introduction of "forward folded" models
 ---------------------------------------
+
 To combine parametric model components with their correspoding instrument response
 functions, such as PSF, energy dispersion and exposure, we propose the introduction
 of "forward folded" models. These take a fixed data grid, typically defined by the
@@ -160,10 +168,12 @@ exposure map, on which the model is evaluated. After application of instrument
 reponse functions, the number of prediced counts is returned by the ``.evaluate()``
 method. We propose to introduce the following classes:
 
-``SpectralIRFModel``
-~~~~~~~~~~~~~~~~~~~~
+SpectralIRFModel
+~~~~~~~~~~~~~~~~
+
 A "forward folded" spectral model, that applies energy dispersion and effective
-area to a ``SpectralModel``. It corresponds in functionality to the current ``CountsPredictor``.
+area to a ``SpectralModel``. It corresponds in functionality to the current
+``CountsPredictor``.
 
 ::
 
@@ -174,22 +184,24 @@ area to a ``SpectralModel``. It corresponds in functionality to the current ``Co
     npred = spectral_irf_model.evaluate()
 
 
-``(SpatialIRFModel)``
-~~~~~~~~~~~~~~~~~~~~~
+SpatialIRFModel
+~~~~~~~~~~~~~~~
+
 A convolved model, that applies the PSF and exposure to a ``SpatialModel``. The
 need for this model is not clear, as we might solve the use case of morphology
 fitting by a combined spatial and spectral analysis with one energy bin.
 
-``SourceIRFModel``
-~~~~~~~~~~~~~~~~~~
-A "forward folded" source model, that applies IRFs to a ``SourceModel``
-instance and returns an integrated quantity corresponding to predicted counts. It
-can only be evaluated on a fixed grid, which is defined on initialization by the
-exposure map. In addition it takes reduced PSF and EDISP objects. In functionality
-it corresponds to the current ``MapEvaluator``, but with the model parameters attached
-and the background handling removed. Additional "hidden" IRF parameters e.g. to propagate
-systematics could be optionally introduced later. This class will replace the current
-``MapEvaluator``.
+SourceIRFModel
+~~~~~~~~~~~~~~
+
+A "forward folded" source model, that applies IRFs to a ``SourceModel`` instance
+and returns an integrated quantity corresponding to predicted counts. It can
+only be evaluated on a fixed grid, which is defined on initialization by the
+exposure map. In addition it takes reduced PSF and EDISP objects. In
+functionality it corresponds to the current ``MapEvaluator``, but with the model
+parameters attached and the background handling removed. Additional "hidden" IRF
+parameters e.g. to propagate systematics could be optionally introduced later.
+This class will replace the current ``MapEvaluator``.
 
 ::
 
@@ -199,19 +211,19 @@ systematics could be optionally introduced later. This class will replace the cu
     source_irf_model = SourceIRFModel(model, exposure=exposure, edisp=edisp, psf=psf)
     npred = source_irf_model.evaluate()
 
+Improve SourceModels class
+--------------------------
 
-Improve ``SourceModels`` class
-------------------------------
 The existing ``CompoundSkyModel`` is a nice very generic abstraction to support
 any kind of arithmetics between ``SkyModel`` objects, but the number of use
-cases for other operators, except for "+" is very limited and
-can always be achieved by implementing a custom model. Serilization and component handling
-of this hierarchical model component structure is intrinsically difficult. For
-this reason we propose to first support and improve the existing ``SourceModels`` that
-implements an easier to handle flat hierarchy for model components. Support for
-arbitrary model arithmetics can be introduced, if needed, after Gammapy v1.0. We
-propose to remove the ``CompoundSourceModel`` and reimplement the ``+`` operator using
-the ``SourceModels`` class.
+cases for other operators, except for "+" is very limited and can always be
+achieved by implementing a custom model. Serilization and component handling of
+this hierarchical model component structure is intrinsically difficult. For this
+reason we propose to first support and improve the existing ``SourceModels``
+that implements an easier to handle flat hierarchy for model components. Support
+for arbitrary model arithmetics can be introduced, if needed, after Gammapy
+v1.0. We propose to remove the ``CompoundSourceModel`` and reimplement the ``+``
+operator using the ``SourceModels`` class.
 
 ::
 
@@ -229,13 +241,13 @@ the ``SourceModels`` class.
 
 Possibly remove the ``SpectralCompoundModel`` for consistency.
 
-
 Introduction of model name attributes
 -------------------------------------
-The ``SourceModel`` class should be improved to support model component names. This
-way the ``SourceModels`` object can be improved to access model components by name,
-as well as the XML serialization (which supports names) becomes complete.
-The following example should work:
+
+The ``SourceModel`` class should be improved to support model component names.
+This way the ``SourceModels`` object can be improved to access model components
+by name, as well as the XML serialization (which supports names) becomes
+complete. The following example should work:
 
 ::
 
@@ -256,18 +268,18 @@ The following example should work:
     del model["source_2"]
 
 This is also simplifies the parameter access in the fitting back-end, because
-parameter names become unique. E.g. no need for cryptic ``par_00X_`` parameter names
-in the minuit backend, which simplifies debugging and interaction by the user with
-methods such as ``Fit.likelihood_profile()`` or ``Fit.confidence()``, where parameter
-identifiers must be given.
-
+parameter names become unique. E.g. no need for cryptic ``par_00X_`` parameter
+names in the minuit backend, which simplifies debugging and interaction by the
+user with methods such as ``Fit.likelihood_profile()`` or ``Fit.confidence()``,
+where parameter identifiers must be given.
 
 Improve and implement model serilization
 ----------------------------------------
+
 Serialization of models is an important feature for standard analyses. In
 ``gammapy.utils.serialization`` there is a prototype implementation of XML
-serialization for ``SourceModels``, We propose to fix this existing XML serilization
-prototype so that the following easily works:
+serialization for ``SourceModels``, We propose to fix this existing XML
+serilization prototype so that the following easily works:
 
 ::
 
@@ -278,10 +290,9 @@ prototype so that the following easily works:
 
     model.write("model.xml")
 
-
-In addition we propose to implement an additional YAML serialization format, which
-results in human-readable model configuration files. Once available the YAML format
-should be the preferred serialization:
+In addition we propose to implement an additional YAML serialization format,
+which results in human-readable model configuration files. Once available the
+YAML format should be the preferred serialization:
 
 ::
 
@@ -290,15 +301,15 @@ should be the preferred serialization:
 
     model.write("model.yaml")
 
-The two file formats should be handled automatically in ``SourceModel.read()`` and
-``SourceModel.write()``.
-
+The two file formats should be handled automatically in ``SourceModel.read()``
+and ``SourceModel.write()``.
 
 Improve spatial models
 ----------------------
 
 Implement sky coordinate handling
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Implement support for coordinate systems. Add an interface for ``SkyCoord``, by
 introducing a ``SpatialModel.skycood`` attribute.
 
@@ -322,13 +333,12 @@ introducing a ``SpatialModel.skycood`` attribute.
     # maybe override evaluation for efficient evaluation for fitting
     values = point_source(lon, lat)
 
-
 Implement default parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 For spectral models Gammapy has defined default parameters, which simplifes the
 interactive usage of the models. From this experience we propose to introduce
 default parameters for ``SpatialModel`` as well as ``SourceModel``.
-
 
 ::
 
@@ -338,9 +348,9 @@ default parameters for ``SpatialModel`` as well as ``SourceModel``.
     shell = Shell()
     print(shell)
 
-
 Implement evaluation region specifications
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 For efficient evaluation of model components, we propose that ``SpatialModel``
 classes declare a circular region ``.evaluation_radius``, they are evaluated on.
 
@@ -353,12 +363,13 @@ classes declare a circular region ``.evaluation_radius``, they are evaluated on.
 
 The ``.evaluation_radius`` should be a property of the model, that is computed
 depending of the model parameter, that determines the spatial extension of the
-model. The handling of ``PointSource`` and additional evaluation margins, which depend
-on the pixel size, is done in the step, where the model component is evaluated.
-
+model. The handling of ``PointSource`` and additional evaluation margins, which
+depend on the pixel size, is done in the step, where the model component is
+evaluated.
 
 Expose model parameters as attributes
 -------------------------------------
+
 To simplify the interactive handling of model instances, model parameters should
 be exposed as attribues on the model, so that the following works:
 
@@ -371,35 +382,25 @@ be exposed as attribues on the model, so that the following works:
     pwl.amplitude.value = "1e-12 cm-2 s-1 TeV-1"
 
     # instead of
-
     pwl.parameters["amplitude"].value = "1e-12 cm-2 s-1 TeV-1"
 
 The attributes should be auto-generated in the ``Model`` base class, based on the
 list of parameters defined by the model.
 
-
 Add new parametric models
 -------------------------
+
 We propose to implement the following parametric models:
 
-``SkyGaussianElongated``
-~~~~~~~~~~~~~~~~~~~~~~~~
-Non radial-symmetric Gaussian. In planar approximation...
-
-``SkyDiskElongated``
-~~~~~~~~~~~~~~~~~~~~
-Non radial-symmetric disk. In planar approximation...
-
-``SpectralGaussian``
-~~~~~~~~~~~~~~~~~~~~
-Spectral Gaussian model. ``LogGaussian``?
-
+- SkyGaussianElongated: Non radial-symmetric Gaussian. In planar approximation...
+- SkyDiskElongated: Non radial-symmetric disk. In planar approximation...
+- SpectralGaussian: Spectral Gaussian model. ``LogGaussian``?
 
 Task list
 =========
 
-This is a proposal for a list of pull requests implementing the proposed changes,
-ordered by priority:
+This is a proposal for a list of pull requests implementing the proposed
+changes, ordered by priority:
 
 1. Implement a ``BackgroundModel`` base class and a ``BackgroundIRFModel`` class. Use
    the ``BackgroundIRFModel`` object in the current ``MapEvaluator``. Join the background
@@ -438,18 +439,19 @@ ordered by priority:
 12. Rename existing ``CountsPredictor`` to ``SpectralIRFModel`` and unify API with
     ``SourceIRFModel`` as much as possible. (**v0.XX**)
 
-
 Alternatives
 ============
-The proposed model names are open for discussion. Instead of ``Spectral...``, ``Spatial...``
-and ``Source...`` one could also use the suffixes ``...1D``, ``...2D`` or ``...3D``.
-Instead of ``...Template`` one could use ``...TableModel``.
 
-The ``...IRFModel`` class are basically evaluating models on given coordinate grids
-and correspond in functionality to the current ``MapEvaluator``. A naming scheme
-based on ``ModelEvaluator`` seems a good alternative proposal. This would include
-a ``SpectralEvaluator`` and a ``SourceEvaluator`` and ``BackgroundEvaluator`` class.
+The proposed model names are open for discussion. Instead of ``Spectral...``,
+``Spatial...`` and ``Source...`` one could also use the suffixes ``...1D``,
+``...2D`` or ``...3D``. Instead of ``...Template`` one could use
+``...TableModel``.
 
+The ``...IRFModel`` class are basically evaluating models on given coordinate
+grids and correspond in functionality to the current ``MapEvaluator``. A naming
+scheme based on ``ModelEvaluator`` seems a good alternative proposal. This would
+include a ``SpectralEvaluator`` and a ``SourceEvaluator`` and
+``BackgroundEvaluator`` class.
 
 Decision
 ========
@@ -457,7 +459,6 @@ Decision
 The authors decided to withdraw the PIG. Most of the proposed changes have been
 discussed and implemented independently.
 
-
 .. _gammapy: https://github.com/gammapy/gammapy
 .. _gammapy-web: https://github.com/gammapy/gammapy-webpage
-.. _GH_1971: https://github.com/gammapy/gammapy/pull/1971
+.. _GH 1971: https://github.com/gammapy/gammapy/pull/1971

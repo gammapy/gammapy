@@ -125,18 +125,18 @@ following the v0.10 release.
 
 The motivation for this is that in 2019 we will have to re-organise the Gammapy
 sub-packages and move and edit most files as we work towards Gammapy v1.0 in
-fall 2019 (see :ref:`pig-005`). So it seems unlikely that ``git
-cherry-pick`` would work at all to backport bugfixes. Instead, the strategy
-would be to manually re-apply important bug fixes (mostly to ``gammapy.maps``,
-hopefully not many) in the ``v0.10.x`` branch.
+fall 2019 (see :ref:`pig-005`). So it seems unlikely that ``git cherry-pick``
+would work at all to backport bugfixes. Instead, the strategy would be to
+manually re-apply important bug fixes (mostly to ``gammapy.maps``, hopefully not
+many) in the ``v0.10.x`` branch.
 
 Decision
 ========
 
-This suggestion was extensively discussed in 2017 and 2018 with Gammapy users and developers.
-This proposal and PIG was widely announced (mailing list, Slack) and we didn't get a single
-request to extend Python 2 support longer than mentioned here. Approved on Nov 30, 2018
-by Gammapy coordination committee.
+This suggestion was extensively discussed in 2017 and 2018 with Gammapy users
+and developers. This proposal and PIG was widely announced (mailing list, Slack)
+and we didn't get a single request to extend Python 2 support longer than
+mentioned here. Approved on Nov 30, 2018 by Gammapy coordination committee.
 
 .. _GH 1278: https://github.com/gammapy/gammapy/pull/1278
 .. _Numpy statement: https://docs.scipy.org/doc/numpy-1.14.1/neps/dropping-python2.7-proposal.html

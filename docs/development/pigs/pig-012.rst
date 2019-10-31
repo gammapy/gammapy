@@ -15,68 +15,78 @@ PIG 12 - High-level interface
 Abstract
 ========
 
-The high-level interface is one of the projects considered in the `Gammapy roadmap`_ for 
-Gammapy v1.0. It should be easy to use and allow users to do the most common analysis tasks
-and workflows quickly. It would be built on top of the existing Gammapy code-base, first 
-on it's own, but likely starting to develop it would inform improvements in code organisation 
-throughout Gammapy.
+The high-level interface is one of the projects considered in the Gammapy
+roadmap for Gammapy v1.0 (see :ref:`pig-003`). It should be easy to use and
+allow users to do the most common analysis tasks and workflows quickly. It would
+be built on top of the existing Gammapy code-base, first on it's own, but likely
+starting to develop it would inform improvements in code organisation throughout
+Gammapy.
 
-Achieving a stable high-level interface should allow us to continue improving the Gammapy 
-code-base without breaking user-defined workflows or recipes made that would have been made 
-with this high-level interface. 
+Achieving a stable high-level interface should allow us to continue improving
+the Gammapy code-base without breaking user-defined workflows or recipes made
+that would have been made with this high-level interface. 
 
-We propose to develop a high-level interface Python API, similar to Fermipy or HAP in HESS,
-based on a single ``Analysis`` class communicating with a set of tool classes, and that supports
-config-file driven analysis of the main IACT source analysis use cases.
+We propose to develop a high-level interface Python API, similar to Fermipy or
+HAP in HESS, based on a single ``Analysis`` class communicating with a set of
+tool classes, and that supports config-file driven analysis of the main IACT
+source analysis use cases.
 
 What we have
 ============
 
-We have been using `Click`_ to develop a very small set of tools for an embryonic
-`Gammapy command line interface`_. Among the existing tools (``gammapy image``, ``gammapy info``, 
-``gammapy download``, ``gammapy jupyter``), only `gammapy image`_ can be considered as 
-potentially needed in a data analysis process. It actually creates a counts image from an 
-event-list file and an image that serves as a reference geometry. Hence, we have a code
-set-up in ``gammapy.scripts``, that we will not use it for the moment to expose the 
-high-level interface API, but to develop a very small set of specific command line tools 
-identified (i.e. perform long-time processing tasks, see *Command line tools* section below)
+We have been using `Click`_ to develop a very small set of tools for an
+embryonic `Gammapy command line interface`_. Among the existing tools (``gammapy
+image``, ``gammapy info``, ``gammapy download``, ``gammapy jupyter``), only
+`gammapy image`_ can be considered as potentially needed in a data analysis
+process. It actually creates a counts image from an event-list file and an image
+that serves as a reference geometry. Hence, we have a code set-up in
+``gammapy.scripts``, that we will not use it for the moment to expose the
+high-level interface API, but to develop a very small set of specific command
+line tools identified (i.e. perform long-time processing tasks, see *Command
+line tools* section below)
 
-We have a set of `Jupyter notebooks`_ as examples of tutorials and recipes demonstrating the
-use of Gammapy. These notebooks are continuously tested and are one of the pillars of the 
-user documentation. We could check most of the use cases are covered by the high-level 
-interface with the help of these notebooks. We will have to translate most of them to use the
-high-level interface, but we could also use them as a basis for experimental automated 
-workflows driven by parametrized notebooks executed with  `papermill`_. (see *Outlook* 
-section below) Moreover, some Python scripts have been added recently to perform `benchmarks`_
-of Gammapy, surely we could rewrite some of all of these benchmarks to use the high-level interface. 
+We have a set of `Jupyter notebooks`_ as examples of tutorials and recipes
+demonstrating the use of Gammapy. These notebooks are continuously tested and
+are one of the pillars of the user documentation. We could check most of the use
+cases are covered by the high-level interface with the help of these notebooks.
+We will have to translate most of them to use the high-level interface, but we
+could also use them as a basis for experimental automated workflows driven by
+parametrized notebooks executed with  `papermill`_. (see *Outlook* section
+below) Moreover, some Python scripts have been added recently to perform
+`benchmarks`_ of Gammapy, surely we could rewrite some of all of these
+benchmarks to use the high-level interface. 
 
-We also have some *high-level analysis* classes in the API that concatenate several atomic 
-actions and provide rough estimated results for more complex processes. (i.e. 
-`SpectrumAnalysisIACT`_, `LightCurveEstimator`_) These classes would serve as a basis to 
-design and prototype some of the tools of the high-level interface.
+We also have some *high-level analysis* classes in the API that concatenate
+several atomic actions and provide rough estimated results for more complex
+processes. (i.e. `SpectrumAnalysisIACT`_, `LightCurveEstimator`_) These classes
+would serve as a basis to design and prototype some of the tools of the
+high-level interface.
 
 
 Proposal
 ========
 
-We will develop a high-level interface Python API which uses a params-values configuration file 
-defined by the user. This API would be used in Python scripts, notebooks or in IPython sessions
-to perform simple and most common IACT analysis.
+We will develop a high-level interface Python API which uses a params-values
+configuration file defined by the user. This API would be used in Python
+scripts, notebooks or in IPython sessions to perform simple and most common IACT
+analysis.
 
 We see then two main options on how to use the High Level Interface API:
 
 - Within an IPython session or notebook, mostly dealing with a manager object to perform specific tasks in an **interactive** analysis process
 - In a Python script or notebook, declaring the orchestration of the tasks with a manager object for an **automatized** process
 
-This high-level interface API is similar to what it is done in `Fermipy`_ or HAP in HESS, including
-also the options to save and recover session states, as well as serialization of intermediate data
-products and logging. It is flexible enough to allow the user to work with the API at any stage of the
-analysis process, and not only from the start to the very end or in automatized process.
+This high-level interface API is similar to what it is done in `Fermipy`_ or HAP
+in HESS, including also the options to save and recover session states, as well
+as serialization of intermediate data products and logging. It is flexible
+enough to allow the user to work with the API at any stage of the analysis
+process, and not only from the start to the very end or in automatized process.
 
 **Use cases**
 
-The use cases covered are in the scope of a single analysis and model, not parametrized variations in a 
-multidimensional grid space of variables, and within a single region (e.g. 10 deg region with 5 sources).
+The use cases covered are in the scope of a single analysis and model, not
+parametrized variations in a multidimensional grid space of variables, and
+within a single region (e.g. 10 deg region with 5 sources).
 
 The main use cases for analysis to be covered are:
 
@@ -93,25 +103,28 @@ Including the main methods for data reduction, modeling and fitting:
 - Diagnostics (residuals, significance, TS)
 - Spectral flux points
 
-Making a SED may be the final part of the analysis, as many SED methods require the full model and 
-all energy data.
+Making a SED may be the final part of the analysis, as many SED methods require
+the full model and all energy data.
 
 **Configuration file**
 
-The configuration file will be in YAML format exposing the parameters and values needed for each one 
-of the tasks involved in the analysis process. To generate the config file, we could add a 
-``gammapy analysis config`` command line tool which dumps the config file with all lines commented
-out, and the users can then uncomment and fill in the parameters and values they care about. As an 
-alternative users could copy & paste from a config file example in the docs. We will develop a 
-schema and validate / give good error messages on read.
+The configuration file will be in YAML format exposing the parameters and values
+needed for each one of the tasks involved in the analysis process. To generate
+the config file, we could add a ``gammapy analysis config`` command line tool
+which dumps the config file with all lines commented out, and the users can then
+uncomment and fill in the parameters and values they care about. As an
+alternative users could copy & paste from a config file example in the docs. We
+will develop a schema and validate / give good error messages on read.
 
-We roughly sketch below an example of a prototype configuration file in YAML format, just to illustrate
-how a structured schema could expose most of the parameter/values needed in a data analysis process.
-The configuration file should be explicit enough for the users to understand which parameters
-to edit in order to define a specific configuration for an analysis session or workflow, and should use
-units for quantities where it makes sense, e.g. "angle: 3 deg" instead of "angle: 3". The final
-schema for this configuration file will be achieved iteratively during the development of the high-level
-interface and later on eventual improvements, also taking user feedback into account.
+We roughly sketch below an example of a prototype configuration file in YAML
+format, just to illustrate how a structured schema could expose most of the
+parameter/values needed in a data analysis process. The configuration file
+should be explicit enough for the users to understand which parameters to edit
+in order to define a specific configuration for an analysis session or workflow,
+and should use units for quantities where it makes sense, e.g. "angle: 3 deg"
+instead of "angle: 3". The final schema for this configuration file will be
+achieved iteratively during the development of the high-level interface and
+later on eventual improvements, also taking user feedback into account.
 
 Prototype configuration file.
 
@@ -164,30 +177,37 @@ Prototype configuration file.
 
 **API design**
 
-The design of the high-level interface API is driven by the use cases considered, the different
-tools (tasks) identified and their responsibilities, as well as the need of a main ``Analysis``
-session object that drives and orchestrates internally the different tools involved, their inputs
-and products. The ``Analysis`` session object will be initialized with a configuration file (see *prototype
-configuration file* above) and will be the responsible to instantiate and run the different tools
-classes (see *session workflow* below). The tools are middle  management agents (e.g. MapMaker,
-ReflectedBgEstimator, ...) responsible to perform the different tasks identified in the use cases covered.
+The design of the high-level interface API is driven by the use cases
+considered, the different tools (tasks) identified and their responsibilities,
+as well as the need of a main ``Analysis`` session object that drives and
+orchestrates internally the different tools involved, their inputs and products.
+The ``Analysis`` session object will be initialized with a configuration file
+(see *prototype configuration file* above) and will be the responsible to
+instantiate and run the different tools classes (see *session workflow* below).
+The tools are middle  management agents (e.g. MapMaker, ReflectedBgEstimator,
+...) responsible to perform the different tasks identified in the use cases
+covered.
 
-The ``Analysis`` session object will provide access to every object involved and data structure produced
-during the session. ``Analysis`` methods calls will produce and modify datasets (i.e. models, maps,..),
-but in between method calls advanced users can do a lot of custom processing by their own with scripting
+The ``Analysis`` session object will provide access to every object involved and
+data structure produced during the session. ``Analysis`` methods calls will
+produce and modify datasets (i.e. models, maps,..), but in between method calls
+advanced users can do a lot of custom processing by their own with scripting
 using the Gammapy Python toolbox.
 
-The code of the ``Analysis`` class as well as any other eventual class needed will be placed in ``gammapy.scripts``.
-This module will contain also the set of different command line tools provided, where some small cleaning
-and refactoring may be needed (i.e. remove ``gammapy image`` command line tool)
+The code of the ``Analysis`` class as well as any other eventual class needed
+will be placed in ``gammapy.scripts``. This module will contain also the set of
+different command line tools provided, where some small cleaning and refactoring
+may be needed (i.e. remove ``gammapy image`` command line tool)
 
 **Serialisation**
 
-There will be the possibility to save and recover session states with their associated data products. The user 
-could also choose in the configuration file, with the help of a boolean parameter, to work with serialised 
-intermediate products delivered by the tools instead of in memory. The state serialisation will be a mix of YAML 
-(i.e. models, state) and FITS files (i.e. maps), where the delegated tools should know how to serialise and 
-read themselves. The solution to address serialization of different datasets by the different tools is not in 
+There will be the possibility to save and recover session states with their
+associated data products. The user could also choose in the configuration file,
+with the help of a boolean parameter, to work with serialised intermediate
+products delivered by the tools instead of in memory. The state serialisation
+will be a mix of YAML (i.e. models, state) and FITS files (i.e. maps), where the
+delegated tools should know how to serialise and read themselves. The solution
+to address serialization of different datasets by the different tools is not in
 the scope of this PIG. 
 
 **Session workflow**
@@ -198,7 +218,8 @@ the scope of this PIG.
         $ cd analysis
         $ edit gammapy_analysis_config.yaml
         
-Then the user would type ``ipython``, ``juypter notebook`` or write a script with the code below.
+Then the user would type ``ipython``, ``juypter notebook`` or write a script
+with the code below.
 
 ::
 
@@ -230,70 +251,79 @@ Then the user would type ``ipython``, ``juypter notebook`` or write a script wit
 
 **Command line tools**
 
-In addition to ``gammapy analysis config``, we will have a ``gammapy analysis data_reduction``
-and a ``gammapy analysis optimise`` which perform the long processing tasks from the terminal 
-outside an ipython session or jupyter notebook, using all the information from the config 
-file and/or saved state.
+In addition to ``gammapy analysis config``, we will have a ``gammapy analysis
+data_reduction`` and a ``gammapy analysis optimise`` which perform the long
+processing tasks from the terminal outside an ipython session or jupyter
+notebook, using all the information from the config file and/or saved state.
 
 - ``gammapy analysis config``: dumps a template configuration file
 - ``gammapy analysis data_reduction``: performs a data reduction process
 - ``gammapy analysis optimise``: performs a model fitting process
- 
- 
+
 Outlook
 =======
 
-Some of the use cases not covered by this high-level interface API are the following:
+Some of the use cases not covered by this high-level interface API are the
+following:
 
 - Generation of simulated events and/or counts
 - Iterative source detection methods
 - Complex or memory eager processing on lightcurves
 
-These use cases can be actually addressed using Gammapy as a Python toolbox, though in the 
-near future some of them could be incorporated progressively to the high-level interface. 
-For example, making a lightcurve could be part of one Analysis (like it is in Fermi), or 
-could be done at higher-level, creating Analysis instances and running them for each time bin.
-This exercise of pro/con is left to the `PIG on Light Curves`_. We could expect that restructuring
-all of Gammapy to be tools based with good tool chains and config handling will be eventually
+These use cases can be actually addressed using Gammapy as a Python toolbox,
+though in the near future some of them could be incorporated progressively to
+the high-level interface. For example, making a lightcurve could be part of one
+Analysis (like it is in Fermi), or could be done at higher-level, creating
+Analysis instances and running them for each time bin. This exercise of pro/con
+is left to the :ref:`pig-006`. We could expect that restructuring all of Gammapy
+to be tools based with good tool chains and config handling will be eventually
 achieved after a certain time if we define a solid high-level interface API.
 
-We could explore the use of `papermill`_ to run workflows defined in a notebook using the values of
-the parameter-value configuration file defined for the high-level interface API. The notebooks could
-be provided as skeleton-templates for specific use cases or built by the user. This option 
-would provide a rich-text formatted report of the analysis process execution.
+We could explore the use of `papermill`_ to run workflows defined in a notebook
+using the values of the parameter-value configuration file defined for the
+high-level interface API. The notebooks could be provided as skeleton-templates
+for specific use cases or built by the user. This option would provide a
+rich-text formatted report of the analysis process execution.
 
-One extra dimension that arises from the development of this high-level interface API is the possibility
-to capture data provenance as structured logs of tasks executions in a session or in an automated workflow. 
-Capturing provenance in this way is more useful if we also provide the means for it to be easily queried
-and inspected in multiple ways, allowing also forensic studies of the research analysis process as well 
-as improving reproducibility and reuse by the community. This work will be the scope of another PIG.
-
+One extra dimension that arises from the development of this high-level
+interface API is the possibility to capture data provenance as structured logs
+of tasks executions in a session or in an automated workflow. Capturing
+provenance in this way is more useful if we also provide the means for it to be
+easily queried and inspected in multiple ways, allowing also forensic studies of
+the research analysis process as well as improving reproducibility and reuse by
+the community. This work will be the scope of another PIG.
 
 Alternatives
 ============
 
-A different approach to this high-level interface API is that of command line tools executed from the 
-terminal, what  `Fermitools`_ and `ctools`_ do, where each tool is simple/atomic enough to allow users
-to inspect the output results before taking a decision on how to run and set the parameter values for
-the next tool. A similar approach could be done with the Gammapy high-level interface API, but inside
-a notebook or IPython session.
+A different approach to this high-level interface API is that of command line
+tools executed from the terminal, what  `Fermitools`_ and `ctools`_ do, where
+each tool is simple/atomic enough to allow users to inspect the output results
+before taking a decision on how to run and set the parameter values for the next
+tool. A similar approach could be done with the Gammapy high-level interface
+API, but inside a notebook or IPython session.
 
-Concerning the code implementation, `ctapipe tools`_ provides a solution based on Python traitlets,
-acting as an extensible framework to easily transform Python classes into command line tools.
-We will explore the adoption of this approach after Gammapy v1.0 since it requires a considerable
-effort on refactoring of the Gammapy code-base.
+Concerning the code implementation, `ctapipe tools`_ provides a solution based
+on Python traitlets, acting as an extensible framework to easily transform
+Python classes into command line tools. We will explore the adoption of this
+approach after Gammapy v1.0 since it requires a considerable effort on
+refactoring of the Gammapy code-base.
 
-Another config-file based solution is what is implemented in `Enrico`_. It performs basic orchestrated
-analysis workflows using a set of input parameters that the user provides via a configuration file. 
-The user may be guided in the declaration of values for the config file using an assistant command line
-tool for config-file building, which asks for parameter values providing also defaults. This is done in 
-`Enrico`_ with  ``enrico_config`` and ``enrico_xml``, where each workflow is set-up and then run with its 
-own command line tool. In our case, we define the workflow steps in a simple Python script and declare 
-parameter-value pairs in a configuration file. The Python script is then executed to run the workflow. 
+Another config-file based solution is what is implemented in `Enrico`_. It
+performs basic orchestrated analysis workflows using a set of input parameters
+that the user provides via a configuration file. The user may be guided in the
+declaration of values for the config file using an assistant command line tool
+for config-file building, which asks for parameter values providing also
+defaults. This is done in `Enrico`_ with  ``enrico_config`` and ``enrico_xml``,
+where each workflow is set-up and then run with its own command line tool. In
+our case, we define the workflow steps in a simple Python script and declare
+parameter-value pairs in a configuration file. The Python script is then
+executed to run the workflow. 
 
-Also Python scripts and/or notebook files could be generated with an assistant command line tool. Then, 
-the user could edit and tweak the config files, scripts or notebooks. There isn't much precedence for this
-workflow in science, but a lot of dev-ops and programming tools work like that, it is a standard technique.
+Also Python scripts and/or notebook files could be generated with an assistant
+command line tool. Then, the user could edit and tweak the config files, scripts
+or notebooks. There isn't much precedence for this workflow in science, but a
+lot of dev-ops and programming tools work like that, it is a standard technique.
 One random example of such a tool is the `Angular CLI`_, or `cookiecutter`_. 
 
 Task list
@@ -319,11 +349,12 @@ Extra features (command line tools)
 Decision
 ========
 
-The PIG has benn discussed at the Gammapy coding sprint in July 2019. A final review announced on the Gammapy and CC mailing lists provided additional comments that were addressed in `GH 2219`_. The PIG was accepted on August 19, 2019.
-
+The PIG has benn discussed at the Gammapy coding sprint in July 2019. A final
+review announced on the Gammapy and CC mailing lists provided additional
+comments that were addressed in `GH 2219`_. The PIG was accepted on August 19,
+2019.
 
 .. _GH 2219: https://github.com/gammapy/gammapy/pull/2219
-.. _Gammapy roadmap: https://docs.gammapy.org/0.12/development/pigs/pig-005.html#high-level-interface
 .. _Gammapy command line interface: https://docs.gammapy.org/0.12/scripts/index.html
 .. _gammapy image: https://docs.gammapy.org/0.12/scripts/index.html#example
 .. _Enrico: https://enrico.readthedocs.io/en/latest/configfile.html
@@ -336,5 +367,4 @@ The PIG has benn discussed at the Gammapy coding sprint in July 2019. A final re
 .. _LightCurveEstimator: https://docs.gammapy.org/0.12/api/gammapy.time.LightCurveEstimator.html
 .. _benchmarks: https://github.com/gammapy/gammapy-benchmarks
 .. _ctapipe tools: https://cta-observatory.github.io/ctapipe/ctapipe_api/tools/index.html
-.. _PIG on Light Curves: https://github.com/gammapy/gammapy/pull/1451
 

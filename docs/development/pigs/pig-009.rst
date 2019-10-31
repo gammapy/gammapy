@@ -15,62 +15,64 @@ PIG 9 - Event Sampling
 Abstract
 ========
 
-An event sampler for gamma events is an important part of the science tools
-of the future Cherenkov Telescope Array (CTA) observatory. It will allow users
-to simulate observations of sources with different spectral, morphological and 
-temporal properties and predict the performance of CTA on the simulated events 
-e.g. to support observation proposals or study the sensitivity of future 
-observations. For this reason, we propose to implement a framework for event 
+An event sampler for gamma events is an important part of the science tools of
+the future Cherenkov Telescope Array (CTA) observatory. It will allow users to
+simulate observations of sources with different spectral, morphological and
+temporal properties and predict the performance of CTA on the simulated events
+e.g. to support observation proposals or study the sensitivity of future
+observations. For this reason, we propose to implement a framework for event
 simulation in Gammapy.
 
 The proposed framework consists of individual building blocks, represented by
-classes and methods, that can be chained together to achieve a full simulation of an event
-list corresponding to a given observation. This includes the simulation of source
-events, background events, effects of instrument response functions (IRF) and
-arrival times. As underlying method for the actual event sampling we propose to
-use inverse cumulative distribution function (CDF) sampling (inverseCDF_) with finely 
-binned discrete source and background. Temporal models will be also taken into account
-and time will be sampled separately in a 1D analysis, assuming that the temporal 
-dependency of the input source models factorizes.
-
+classes and methods, that can be chained together to achieve a full simulation
+of an event list corresponding to a given observation. This includes the
+simulation of source events, background events, effects of instrument response
+functions (IRF) and arrival times. As underlying method for the actual event
+sampling we propose to use inverse cumulative distribution function (CDF)
+sampling (inverseCDF_) with finely binned discrete source and background.
+Temporal models will be also taken into account and time will be sampled
+separately in a 1D analysis, assuming that the temporal dependency of the input
+source models factorizes.
 
 Sampling methods
-====================
-Inverse CDF sampling (inverseCDF_) is an established method to sample from discrete
-probability mass functions. It is used by ``ASTRIsim`` (astrisim_), the event simulator 
-of the AGILE collaboration. However it is not the method of choice for other existing 
-event samplers such as the the Fermi-LAT Science Tools (gtobsim) and CTOOLS (ctobssim). 
-The latter uses a combination of analytical sampling for models, where a solution is 
-known (e.g. power-laws) and the rejection sampling method (rej_sampl_), where the sampling 
-has to be done numerically (see an example here gammalib_).
+================
+
+Inverse CDF sampling (inverseCDF_) is an established method to sample from
+discrete probability mass functions. It is used by ``ASTRIsim`` (astrisim_), the
+event simulator of the AGILE collaboration. However it is not the method of
+choice for other existing event samplers such as the the Fermi-LAT Science Tools
+(gtobsim) and CTOOLS (ctobssim). The latter uses a combination of analytical
+sampling for models, where a solution is known (e.g. power-laws) and the
+rejection sampling method (rej_sampl_), where the sampling has to be done
+numerically (see an example here gammalib_).
 
 As rejection sampling can directly sample from continuous probability density
 functions, it is expected to yield very precise results. However an enveloping
-distribution is needed, which should be adapted to the target distribution
-to be efficient (see also `rejection sampling in Python`_ for an example implementation),
-otherwise a lot of computation time is spend in rejecting drawn samples.
+distribution is needed, which should be adapted to the target distribution to be
+efficient (see also `rejection sampling in Python`_ for an example
+implementation), otherwise a lot of computation time is spend in rejecting drawn
+samples.
 
-For this reason we favour the inverse CDF sampling method, as a simple to implement
-and general sampling method.
-The precision of the inverse CDF sampling method can be controlled by the resolution
-of the input probability mass function (PMF) and is in practice only limited by the
-available memory. We will study the required bin-size of the PMFs to reach sufficient
-precision. If we find the inverse CDF sampling method to be not precise enough, it is 
-still possible to achieve better precision adopting the rejection sampling. This will 
+For this reason we favour the inverse CDF sampling method, as a simple to
+implement and general sampling method. The precision of the inverse CDF sampling
+method can be controlled by the resolution of the input probability mass
+function (PMF) and is in practice only limited by the available memory. We will
+study the required bin-size of the PMFs to reach sufficient precision. If we
+find the inverse CDF sampling method to be not precise enough, it is still
+possible to achieve better precision adopting the rejection sampling. This will
 not have a strong impact on the structure of the event-sampler.
-
 
 Proposal
 ========
 
-We propose to include in ``gammapy.cube`` an high level interface (HLI) class, labelled as
-``MapDatasetEventSampler`` or ``MapDataset.sample`` method. This class handles the complete
-event sampling process, including the corrections related to the IRF and source temporal
-variability, for a given GTI / observation.
+We propose to include in ``gammapy.cube`` an high level interface (HLI) class,
+labelled as ``MapDatasetEventSampler`` or ``MapDataset.sample`` method. This
+class handles the complete event sampling process, including the corrections
+related to the IRF and source temporal variability, for a given GTI /
+observation.
 
-The dataset will be computed using the standard data reduction procedure of Gammapy, as
-illustrated in the following example:
-
+The dataset will be computed using the standard data reduction procedure of
+Gammapy, as illustrated in the following example:
 
 ::
 
@@ -84,17 +86,18 @@ illustrated in the following example:
     events.write()
 
 
-After data reduction, the Dataset object should contain all the needed information,
-such as the pointing sky coordinates, the GTI, and the setup of all the models (spectra, 
-spatial morphology, temporal model) for any given source, and it is passed 
-as input parameter to the ``MapDatasetEventSampler``. It is important to note that the 
-``MapDataset`` object can store information for more than one source. Then, a ``.sample`` method 
-will draw the sampled events and will provide an output ``~astropy.table.Table`` object. The 
-latter will containt the reconstructed sky positions, energies, times, and an ``EVENT_ID`` and 
-``MC_ID``. ``EVENT_ID`` is a unique number or a string to identify the sampled event, while 
-``MC_ID`` is a unique ID (number or string) to identify the model component the event was sampled
-from. The ``MapDatasetSampler`` should also fill the mandatory header information for event list 
-files decribed on `gamma-astro-data-formats`_.
+After data reduction, the Dataset object should contain all the needed
+information, such as the pointing sky coordinates, the GTI, and the setup of all
+the models (spectra, spatial morphology, temporal model) for any given source,
+and it is passed as input parameter to the ``MapDatasetEventSampler``. It is
+important to note that the ``MapDataset`` object can store information for more
+than one source. Then, a ``.sample`` method will draw the sampled events and
+will provide an output ``~astropy.table.Table`` object. The latter will containt
+the reconstructed sky positions, energies, times, and an ``EVENT_ID`` and
+``MC_ID``. ``EVENT_ID`` is a unique number or a string to identify the sampled
+event, while ``MC_ID`` is a unique ID (number or string) to identify the model
+component the event was sampled from. The ``MapDatasetSampler`` should also fill
+the mandatory header information for event list files decribed on `gadf`_.
 
 MapDatasetEventSampler
 ----------------------
@@ -129,91 +132,97 @@ The general design of the ``sample`` method is as follows:
        return EventList(events_total)
     
 
-In more detail, ``sample`` starts a loop over the sources stored into the ``MapDataset`` 
-model. Then, for each source, the ``src.compute_npred`` method will calculate the predicted 
-number of source counts ``npred``. In particular, it is important to note that 
-``npred = exposure * flux``, where ``exposure`` is defined as ``effective_area * exposure_time``.
-``npred`` is therefore calculated irrespective of the energy dispersion and of PSF.
-Then, ``npred`` will be the input of the ``npred.sample`` method. The latter uses a Poisson 
-distribution, with mean equal to the predicted counts, to estimate the random number of sampled 
-events.
-
-We propose to add a ``Map.sample(n_events=, random_state=)`` method in ``~gammapy.maps.Map``
-that will be the core of the sampling process. The ``sample`` is based on the 
-``~gammapy.utils.random.InverseCDFSampler`` class described in `GH_2229`_ . The output
-will be an ``~astropy.table.Table`` with columns: ``RA_TRUE``, ``DEC_TRUE`` and ``ENERGY_TRUE`` .
-
-Then, the time will be sampled independently using the temporal information stored into 
-the ``MapDataset`` model for each source of interest. This will be done through a 
-``.sample(n_events=, random_state=)`` method that we propose to add
-to ``~gammapy.time.models.LightCurveTableModel`` and ``~gammapy.time.models.PhaseCurveTableModel``.
-This method will take as input the GTIs (i.e. one Tstart and Tstop) in the ``MapDataset``
-object. Also in this case the ``InverseCDFSampler``
-class is the machine used to sample the time of the events. In the case the temporal 
-model is not provided, the time is uniformly sampled in the time range ``t_min`` and ``t_max``.
-To define a light-curve per model component, the current ``SkyModel`` class will be
-extended by a ``SkyModel(..., temporal_model=)``.
-
-The IRF correction can now be applied to sampled events. We propose to add a 
-``.sample(events=)`` method in both ``~gammapy.cube.PSFMap`` and ``~gammapy.cube.EdispMap``.
-The method interpolates the "correct" IRF at the position of a given event and
-applies it. In more detail, the method calculates the psf and the energy dispersion at
-the events true positions and true energies, which are given in input as an ``~astropy.table.Table`` object.
-The IRFs are assumed to be constant and not time-dependent. The output will be an ``~astropy.table.Table``
-with the new columns ``RA``, ``DEC`` and ``ENERGY``, which are the reconstructed event energies and 
-positions.
-
-Finally, the times and the energies/coordinates of the events will be merged into a 
-single ``~astropy.table.Table`` with the columns:``RA``, ``DEC`` and ``ENERGY`` and ``TIME`` .
- 
-The ``MapDatasetEventSampler`` can be used to sample background events using the 
-``Map.sample(n_events=, random_state=)`` as well. The time of the events is sampled
-assuming a constant event rate. Finally, the IRF corrections are not applied to background
+In more detail, ``sample`` starts a loop over the sources stored into the
+``MapDataset`` model. Then, for each source, the ``src.compute_npred`` method
+will calculate the predicted number of source counts ``npred``. In particular,
+it is important to note that ``npred = exposure * flux``, where ``exposure`` is
+defined as ``effective_area * exposure_time``. ``npred`` is therefore calculated
+irrespective of the energy dispersion and of PSF. Then, ``npred`` will be the
+input of the ``npred.sample`` method. The latter uses a Poisson distribution,
+with mean equal to the predicted counts, to estimate the random number of
 sampled events.
 
+We propose to add a ``Map.sample(n_events=, random_state=)`` method in
+``~gammapy.maps.Map`` that will be the core of the sampling process. The
+``sample`` is based on the ``~gammapy.utils.random.InverseCDFSampler`` class
+described in `GH_2229`_ . The output will be an ``~astropy.table.Table`` with
+columns: ``RA_TRUE``, ``DEC_TRUE`` and ``ENERGY_TRUE`` .
+
+Then, the time will be sampled independently using the temporal information
+stored into the ``MapDataset`` model for each source of interest. This will be
+done through a ``.sample(n_events=, random_state=)`` method that we propose to
+add to ``~gammapy.time.models.LightCurveTableModel`` and
+``~gammapy.time.models.PhaseCurveTableModel``. This method will take as input
+the GTIs (i.e. one Tstart and Tstop) in the ``MapDataset`` object. Also in this
+case the ``InverseCDFSampler`` class is the machine used to sample the time of
+the events. In the case the temporal model is not provided, the time is
+uniformly sampled in the time range ``t_min`` and ``t_max``. To define a
+light-curve per model component, the current ``SkyModel`` class will be extended
+by a ``SkyModel(..., temporal_model=)``.
+
+The IRF correction can now be applied to sampled events. We propose to add a
+``.sample(events=)`` method in both ``~gammapy.cube.PSFMap`` and
+``~gammapy.cube.EdispMap``. The method interpolates the "correct" IRF at the
+position of a given event and applies it. In more detail, the method calculates
+the psf and the energy dispersion at the events true positions and true
+energies, which are given in input as an ``~astropy.table.Table`` object. The
+IRFs are assumed to be constant and not time-dependent. The output will be an
+``~astropy.table.Table`` with the new columns ``RA``, ``DEC`` and ``ENERGY``,
+which are the reconstructed event energies and positions.
+
+Finally, the times and the energies/coordinates of the events will be merged
+into a single ``~astropy.table.Table`` with the columns:``RA``, ``DEC`` and
+``ENERGY`` and ``TIME`` .
+ 
+The ``MapDatasetEventSampler`` can be used to sample background events using the
+``Map.sample(n_events=, random_state=)`` as well. The time of the events is
+sampled assuming a constant event rate. Finally, the IRF corrections are not
+applied to background sampled events.
 
 Performance and precision evaluation
 ====================================
+
 To evaluate the precision and performance of the described framework we propose
 to implement a prototype for a simulation / fitting pipeline. Starting from a
-selection of spatial, spectral and temporal models, data are simulated and fitted
-multiple times to derive distributions and pull-distributions of the reconstructed
-model parameters. This pipeline should also monitor the required cpu and memory usage.
-This first prototype can be used to evaluate the optimal bin-size (with the best 
-compromise between performance and precision) for the simulations and to verify 
-the over-all correctness of the simulated data. This will be valid for a set of 
-input maps and IRFs. Later this prototype can be developed further into a full 
-simulation / fitting continuous integration system.
-
+selection of spatial, spectral and temporal models, data are simulated and
+fitted multiple times to derive distributions and pull-distributions of the
+reconstructed model parameters. This pipeline should also monitor the required
+cpu and memory usage. This first prototype can be used to evaluate the optimal
+bin-size (with the best compromise between performance and precision) for the
+simulations and to verify the over-all correctness of the simulated data. This
+will be valid for a set of input maps and IRFs. Later this prototype can be
+developed further into a full simulation / fitting continuous integration
+system.
 
 Alternatives / Outlook
 ======================
-So far Gammapy only supports binned likelihood analysis and technically most use-
-cases for the event sampling could be solved with binned simulations. A binned
-simulation can be basically achieved by a call to ``numpy.random.poisson()`` based
-on the predicted number of counts map. This is conceptionally simpler as well as
-computationally more efficient than a sampling of event lists. In ``Gammapy`` a similar
-dataset simulation is already implemented in ``Dataset.fake()``, although this has a
-limited number of use cases than an event sampler.
-However, to support the full data access and data reduction process for simulations, 
-event lists are required. In future Gammapy possibly also supports event based analysis methods
-(unbinned likelihood, but also e.g. clustering algorithms), that also require event
-lists. For this reason binned simulations cannot present a full equivalent
-solution to event sampling.
 
-The question of the API to simulate multiple observations from e.g. an ``ObservationTable``
-or a list of ``GTIs`` as it is needed for simulating data for the CTA data challenge
-is not addressed in this PIG. For the scope of this PIG, the fundamental class 
-``MapDatasetEventSampler`` to simulate events corresponding to a given observation 
-and/or single GTI is in place.
+So far Gammapy only supports binned likelihood analysis and technically most
+use- cases for the event sampling could be solved with binned simulations. A
+binned simulation can be basically achieved by a call to
+``numpy.random.poisson()`` based on the predicted number of counts map. This is
+conceptionally simpler as well as computationally more efficient than a sampling
+of event lists. In ``Gammapy`` a similar dataset simulation is already
+implemented in ``Dataset.fake()``, although this has a limited number of use
+cases than an event sampler. However, to support the full data access and data
+reduction process for simulations, event lists are required. In future Gammapy
+possibly also supports event based analysis methods (unbinned likelihood, but
+also e.g. clustering algorithms), that also require event lists. For this reason
+binned simulations cannot present a full equivalent solution to event sampling.
+
+The question of the API to simulate multiple observations from e.g. an
+``ObservationTable`` or a list of ``GTIs`` as it is needed for simulating data
+for the CTA data challenge is not addressed in this PIG. For the scope of this
+PIG, the fundamental class ``MapDatasetEventSampler`` to simulate events
+corresponding to a given observation and/or single GTI is in place.
 
 The proposed Event Sampler will not provide, for each event, the corresponding
-``DETX`` and ``DETY`` position. These will be added in a future development of the 
-simulator.
-
+``DETX`` and ``DETY`` position. These will be added in a future development of
+the simulator.
 
 Task list
 =========
+
 This is a proposal for a list of tasks to implement the proposed changes:
 
  1. Implement the ``sample`` method in ``gammapy.maps.Map`` and add tests.
@@ -223,24 +232,21 @@ This is a proposal for a list of tasks to implement the proposed changes:
  5. Introduce the ``MapDatasetEventSampler`` into ``gammapy.cube.`` and add tests.
  6. Add tutorials for event simulations of different kinds of sources.
 
-
 Decision
 ========
 
-The PIG was discussed extensively in `GH_2136`_, the weekly Gammapy developer calls
-and coding sprint in person. After the deadline for final review expired on August 20,
-all remaining comments were addressed and the PIG was accepted on August 30, 2019.
+The PIG was discussed extensively in `GH_2136`_, the weekly Gammapy developer
+calls and coding sprint in person. After the deadline for final review expired
+on August 20, all remaining comments were addressed and the PIG was accepted on
+August 30, 2019.
 
-
-
-.. _`rejection sampling in Python`: https://wiseodd.github.io/techblog/2015/10/21/rejection-sampling/
+.. _rejection sampling in Python: https://wiseodd.github.io/techblog/2015/10/21/rejection-sampling/
 .. _Prototype: https://github.com/fabiopintore/notebooks-public/blob/master/gammapy-event-sampling/prototype.ipynb
 .. _inverseCDF: https://en.wikipedia.org/wiki/Inverse_transform_sampling
 .. _here: https://stackoverflow.com/questions/21100716/fast-arbitrary-distribution-random-sampling/21101584#21101584
 .. _spec: https://docs.gammapy.org/0.11/api/gammapy.spectrum.SpectrumSimulation.html
 .. _three-D: https://docs.gammapy.org/0.11/notebooks/simulate_3d.html
 .. _astrisim: http://www.iasf-milano.inaf.it/~giuliani/astrisim/
-.. _gamma-astro-data-formats: https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
 .. _rej_sampl: https://en.wikipedia.org/wiki/Rejection_sampling
 .. _GH_2136: https://github.com/gammapy/gammapy/pull/2136
 .. _GH_2229: https://github.com/gammapy/gammapy/pull/2229
