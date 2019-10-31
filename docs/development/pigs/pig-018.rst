@@ -163,8 +163,7 @@ For many Gammapy sub-packages, we plan to have a corresponding notebook
 that is a hands-on, executable tutorial introduction that complements the
 description and API docs on the sub-package RST page.
 
-- Overview (short section with one example for each sub-package, hands-on, an evolution of the
-current ``getting_started.ipynb``)
+- Overview (short section with one example for each sub-package, hands-on, an evolution of the current ``getting_started.ipynb``)
 - Maps (``gammapy.maps``) (``maps.ipynb``)
 - Models (``gammapy.modeling.models``) (``models.ipynb``)
 - Fitting (``gammapy.modeling``) (to be implemented)
