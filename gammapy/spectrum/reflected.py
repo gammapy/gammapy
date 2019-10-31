@@ -30,7 +30,7 @@ class ReflectedRegionsFinder:
 
     If you want to make a
     background estimate for an IACT observation using the reflected regions
-    method, see also `~gammapy.spectrum.ReflectedRegionsBackgroundEstimator`
+    method, see also `~gammapy.spectrum.ReflectedRegionsBackgroundMaker`
 
     Parameters
     ----------
