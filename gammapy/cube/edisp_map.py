@@ -342,10 +342,9 @@ class EDispMap:
 
         Returns
         -------
-        `~gammapy.maps.MapCoord` object.
+        `~gammapy.maps.MapCoord`.
             Sequence of Edisp-corrected coordinates of the input map_coord map.
         """
-
         random_state = get_random_state(random_state)
         migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
 
@@ -359,10 +358,6 @@ class EDispMap:
 
         sample_edisp = InverseCDFSampler(pdf_edisp, axis=1, random_state=random_state)
         pix_edisp = sample_edisp.sample_axis()
-        e_corr = migra_axis.pix_to_coord(pix_edisp)
+        energy_reco = migra_axis.pix_to_coord(pix_edisp)
 
-        corr_energies = MapCoord(
-            {"lon": map_coord.lon, "lat": map_coord.lat, "energy": e_corr}
-        )
-
-        return corr_energies
+        return MapCoord.create({"skycoord": map_coord.skycoord, "energy": energy_reco})
