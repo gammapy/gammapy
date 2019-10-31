@@ -87,6 +87,21 @@ Sensitivity:
 
 - `Compute the CTA sensitivity <notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
 
+.. _tutorials_scripts:
+
+Scripts
+-------
+
+TODO: show a few examples how to use Gammapy from Python scripts.
+
+::
+
+    cd $GAMMAPY_DATA/../scripts-0.13
+    python cta_1dc_survey_map.py
+
+- TODO: Make a CTA 1DC survey counts map
+- TODO: some other long-running analysis or simulation
+
 .. _tutorials_extras:
 
 Extra topics
