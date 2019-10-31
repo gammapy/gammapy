@@ -24,6 +24,7 @@ or request a feature, or need help with anything Gammapy-related.
     install/index
     getting-started
     tutorials
+    howto
     references
     changelog
 
