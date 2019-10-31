@@ -213,7 +213,14 @@ Proposed class diagram
 Decision
 --------
 
-tbd
+This PIG was written in fall 2018. It was intended as a design document and work
+plan, but didn't reach a state where it was complete and ready for review. Then
+the original author left astronomy, and the other developers continued
+throughout 2019 without using the PIG. We now feel that withdrawing the PIG is
+the best course of action, making room for new pull requests and PIGs in the
+future to improve CTA observation handling in Gammapy. It's not a "solved
+problem", instead it will be an intense focus of work in Gammmapy and CTA in the
+coming years.
 
 .. _GH 1877: https://github.com/gammapy/gammapy/pull/1877
 .. _absorbed into the IRFs: https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/issues/62#issuecomment-428221596
