@@ -11,6 +11,7 @@ from gammapy.stats import cash, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
+from gammapy.stats import significance_on_off
 from .core import CountsSpectrum, SpectrumEvaluator
 
 __all__ = [
@@ -1062,10 +1063,24 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     # TODO: decide on a design for dataset info tables / dicts and make it part
     #  of the public API
-    def _info_dict(self, in_safe_energy_range=False):
-        """Info dict"""
+    def info_dict(self, in_safe_energy_range=False):
+        """Info dict with summary statistics, summed over energy
+
+        Parameters
+        ----------
+        in_safe_energy_range : bool
+            Whether to sum only in the safe energy range
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info.
+        """
         info = dict()
         mask = self.mask_safe if in_safe_energy_range else slice(None)
+
+        info["name"] = self.name
+        info["livetime"] = self.livetime
 
         # TODO: handle energy dependent a_on / a_off
         info["a_on"] = self.acceptance[0]
@@ -1078,8 +1093,17 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             info["n_off"] = 0
             info["a_off"] = 1
 
-        info["livetime"] = self.livetime
-        info["name"] = self.name
+        info["alpha"] = self.alpha[0]
+        info["background"] = self.background.data[mask].sum()
+        info["excess"] = self.excess.data[mask].sum()
+        info["significance"] = significance_on_off(
+            self.counts.data[mask].sum(),
+            self.counts_off.data[mask].sum(),
+            self.alpha[0]
+        )
+
+        info["background_rate"] = info["background"] / info["livetime"]
+        info["gamma_rate"] = info["excess"] / info["livetime"]
         return info
 
 
