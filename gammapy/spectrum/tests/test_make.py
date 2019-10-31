@@ -67,17 +67,13 @@ def spectrum_dataset_maker_crab_fine_bins():
 @pytest.fixture
 def reflected_regions_bkg_maker():
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
-    radius = Angle(0.11, "deg")
-    region = CircleSkyRegion(pos, radius)
-
-    pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     exclusion_region = CircleSkyRegion(pos, Angle(0.3, "deg"))
     geom = WcsGeom.create(skydir=pos, binsz=0.02, width=10.0)
     mask = geom.region_mask([exclusion_region], inside=False)
     exclusion_mask = WcsNDMap(geom, data=mask)
 
     return ReflectedRegionsBackgroundMaker(
-        region=region, exclusion_mask=exclusion_mask, min_distance_input="0.2 deg"
+        exclusion_mask=exclusion_mask, min_distance_input="0.2 deg"
     )
 
 

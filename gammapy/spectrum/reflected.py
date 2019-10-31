@@ -259,8 +259,6 @@ class ReflectedRegionsBackgroundMaker:
 
     Parameters
     ----------
-    region: `~regions.SkyRegion`
-        On region to compute off regions for.
     angle_increment : `~astropy.coordinates.Angle`, optional
         Rotation angle applied when a region falls in an excluded region.
     min_distance : `~astropy.coordinates.Angle`, optional
@@ -277,7 +275,6 @@ class ReflectedRegionsBackgroundMaker:
 
     def __init__(
         self,
-        region,
         angle_increment="0.1 rad",
         min_distance="0 rad",
         min_distance_input="0.1 rad",
@@ -285,7 +282,6 @@ class ReflectedRegionsBackgroundMaker:
         exclusion_mask=None,
         binsz="0.01 deg",
     ):
-        self.region = region
         self.binsz = binsz
         self.exclusion_mask = exclusion_mask
         self.angle_increment = Angle(angle_increment)
@@ -293,12 +289,12 @@ class ReflectedRegionsBackgroundMaker:
         self.min_distance_input = Angle(min_distance_input)
         self.max_region_number = max_region_number
 
-    def _get_finder(self, observation):
+    def _get_finder(self, dataset, observation):
         return ReflectedRegionsFinder(
             binsz=self.binsz,
             exclusion_mask=self.exclusion_mask,
             center=observation.pointing_radec,
-            region=self.region,
+            region=dataset.counts.region,
             min_distance=self.min_distance,
             min_distance_input=self.min_distance_input,
             max_region_number=self.max_region_number,
@@ -321,7 +317,7 @@ class ReflectedRegionsBackgroundMaker:
         counts_off : `CountsSpectrum`
             Off counts.
         """
-        finder = self._get_finder(observation)
+        finder = self._get_finder(dataset, observation)
         finder.run()
 
         region_union = list_to_compound_region(finder.reflected_regions)

@@ -58,9 +58,7 @@ def spectrum_dataset_maker(on_region):
 
 @pytest.fixture()
 def reflected_bkg_maker(on_region, exclusion_mask):
-    return ReflectedRegionsBackgroundMaker(
-        region=on_region, exclusion_mask=exclusion_mask
-    )
+    return ReflectedRegionsBackgroundMaker(exclusion_mask=exclusion_mask)
 
 
 region_finder_param = [
