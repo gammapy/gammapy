@@ -68,7 +68,10 @@ class SpatialModel(Model):
         """Get 95% containment position error as (`~regions.EllipseSkyRegion`)"""
         if self.parameters.covariance is None:
             return EllipseSkyRegion(
-                center=self.position, height=np.nan, width=np.nan, angle=np.nan
+                center=self.position,
+                height=np.nan * u.deg,
+                width=np.nan * u.deg,
+                angle=np.nan * u.deg,
             )
         pars = self.parameters
         idx = [pars._get_idx("lon_0"), pars._get_idx("lat_0")]
@@ -465,7 +468,6 @@ class ShellSpatialModel(SpatialModel):
             center=self.position,
             inner_radius=self.radius.quantity,
             outer_radius=self.radius.quantity + self.width.quantity,
-            angle=self.phi.quantity,
             **kwargs
         )
 
@@ -505,7 +507,11 @@ class ConstantSpatialModel(SpatialModel):
     def to_region(**kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
         return EllipseSkyRegion(
-            center=np.nan, height=np.nan, width=np.nan, angle=np.nan, **kwargs
+            center=SkyCoord(np.nan * u.deg, np.nan * u.deg),
+            height=np.nan * u.deg,
+            width=np.nan * u.deg,
+            angle=np.nan * u.deg,
+            **kwargs
         )
 
 

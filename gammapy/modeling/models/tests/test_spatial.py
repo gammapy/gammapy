@@ -13,6 +13,12 @@ from gammapy.modeling.models import (
     TemplateSpatialModel,
 )
 from gammapy.utils.testing import requires_data
+from regions import (
+    CircleAnnulusSkyRegion,
+    EllipseSkyRegion,
+    PointSkyRegion,
+    PolygonSkyRegion,
+)
 
 
 def test_sky_point_source():
@@ -30,6 +36,8 @@ def test_sky_point_source():
     val = model.evaluate_geom(geom)
     assert val.unit == "sr-1"
     assert_allclose(np.sum(val * geom.solid_angle()), 1)
+
+    assert isinstance(model.to_region(), PointSkyRegion)
 
 
 def test_sky_gaussian():
@@ -84,6 +92,8 @@ def test_sky_gaussian():
     val_minor_rotated = model_3(0 * u.deg, 2 * u.deg)
     ratio_minor_rotated = val_0 / val_minor_rotated
     assert_allclose(ratio_minor_rotated, np.exp(0.5))
+
+    assert isinstance(model.to_region(), EllipseSkyRegion)
 
 
 def test_sky_disk():
@@ -141,6 +151,8 @@ def test_sky_disk():
     solid_angle = 2 * np.pi * (1 - np.cos(5 * u.deg))
     assert_allclose(np.max(vals_disk).value * solid_angle, 1)
 
+    assert isinstance(model.to_region(), EllipseSkyRegion)
+
 
 def test_sky_disk_edge():
     r_0 = 2 * u.deg
@@ -170,6 +182,7 @@ def test_sky_shell():
     radius = model.evaluation_radius
     assert radius.unit == "deg"
     assert_allclose(radius.value, rad.value + width.value)
+    assert isinstance(model.to_region(), CircleAnnulusSkyRegion)
 
 
 def test_sky_diffuse_constant():
@@ -181,6 +194,7 @@ def test_sky_diffuse_constant():
     assert_allclose(val.value, 42)
     radius = model.evaluation_radius
     assert radius is None
+    assert isinstance(model.to_region(), EllipseSkyRegion)
 
 
 @requires_data()
@@ -197,6 +211,7 @@ def test_sky_diffuse_map():
     assert radius.unit == "deg"
     assert_allclose(radius.value, 0.64, rtol=1.0e-2)
     assert model.frame == "fk5"
+    assert isinstance(model.to_region(), PolygonSkyRegion)
 
 
 @requires_data()
