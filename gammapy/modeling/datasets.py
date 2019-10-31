@@ -4,6 +4,7 @@ import copy
 from collections import Counter
 import numpy as np
 from gammapy.utils.scripts import make_path, read_yaml, write_yaml
+from gammapy.utils.table import table_from_row_data
 from ..maps import WcsNDMap
 from .parameter import Parameters
 
@@ -217,6 +218,37 @@ class Datasets:
         for ds in self.datasets[1:]:
             dataset.stack(ds)
         return dataset
+
+    def info_table(self, cumulative=False):
+        """Get info table for datasets.
+
+        Parameters
+        ----------
+        cumulative : bool
+            Cumulate info across all observations
+
+        Returns
+        -------
+        info_table : `~astropy.table.Table`
+            Info table.
+        """
+        if not self.is_all_same_type:
+            raise ValueError("Info table only supported if dataset are all of the same type.")
+
+        stacked = self.datasets[0].copy()
+
+        rows = [stacked.info_dict()]
+
+        for dataset in self.datasets[1:]:
+            if cumulative:
+                stacked.stack(dataset)
+                row = stacked.info_dict()
+            else:
+                row = dataset.info_dict()
+
+            rows.append(row)
+
+        return table_from_row_data(rows=rows)
 
     def __getitem__(self, item):
         if isinstance(item, str):

@@ -4,16 +4,14 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import PixCoord
-from gammapy.maps import Map, WcsGeom, WcsNDMap
+from gammapy.maps import WcsNDMap
 from gammapy.maps.geom import frame_to_coordsys
 from gammapy.utils.regions import compound_region_to_list, list_to_compound_region
-from .background_estimate import BackgroundEstimate
 from .core import CountsSpectrum
 from .dataset import SpectrumDatasetOnOff
 
 __all__ = [
     "ReflectedRegionsFinder",
-    "ReflectedRegionsBackgroundEstimator",
     "ReflectedRegionsBackgroundMaker",
 ]
 
@@ -32,7 +30,7 @@ class ReflectedRegionsFinder:
 
     If you want to make a
     background estimate for an IACT observation using the reflected regions
-    method, see also `~gammapy.spectrum.ReflectedRegionsBackgroundEstimator`
+    method, see also `~gammapy.spectrum.ReflectedRegionsBackgroundMaker`
 
     Parameters
     ----------
@@ -256,178 +254,11 @@ class ReflectedRegionsFinder:
         return fig, ax
 
 
-class ReflectedRegionsBackgroundEstimator:
-    """Reflected Regions background estimator.
-
-    This class is responsible for creating a
-    `~gammapy.spectrum.BackgroundEstimate` by placing reflected regions given
-    a target region and an observation.
-
-    For a usage example see `spectrum_analysis.html <../notebooks/spectrum_analysis.html>`__
-
-    Parameters
-    ----------
-    on_region : `~regions.SkyRegion`
-        Target region with any shape, except `~region.PolygonSkyRegion`
-    observations : `~gammapy.data.Observations`
-        Observations to process
-    binsz : `~astropy.coordinates.Angle`
-        Optional, bin size of the maps used to compute the regions.
-    kwargs : dict
-        Forwarded to `~gammapy.spectrum.ReflectedRegionsFinder`
-    """
-
-    def __init__(self, on_region, observations, binsz=0.01 * u.deg, **kwargs):
-        self.on_region = on_region
-        self.observations = observations
-
-        self.binsz = binsz
-
-        self.finder = ReflectedRegionsFinder(
-            region=on_region, center=None, binsz=Angle(self.binsz), **kwargs
-        )
-
-        self.exclusion_mask = kwargs.get("exclusion_mask")
-        self.result = None
-
-    def __str__(self):
-        s = self.__class__.__name__
-        s += f"\n{self.on_region}"
-        s += f"\n{self.observations}"
-        s += f"\n{self.finder}"
-        return s
-
-    def run(self):
-        """Run all steps."""
-        log.debug("Computing reflected regions")
-        result = []
-        for obs in self.observations:
-            temp = self.process(obs)
-            result.append(temp)
-
-        self.result = result
-
-    def process(self, obs):
-        """Estimate background for one observation."""
-        log.debug(f"Processing observation {obs}")
-        self.finder.center = obs.pointing_radec
-
-        self.finder.run()
-        wcs = self.finder.reference_map.geom.wcs
-        on_events = obs.events.select_region(self.on_region, wcs)
-        a_on = 1
-
-        off_region = self.finder.reflected_regions
-        a_off = len(off_region)
-
-        if a_off == 0:
-            off_events = obs.events.select_row_subset([])
-        else:
-            off_regions = list_to_compound_region(off_region)
-            off_events = obs.events.select_region(off_regions, wcs)
-
-        log.info(f"Found {a_off} reflected regions for the Obs #{obs.obs_id}")
-
-        return BackgroundEstimate(
-            on_region=self.on_region,
-            on_events=on_events,
-            off_region=off_region,
-            off_events=off_events,
-            a_on=a_on,
-            a_off=a_off,
-            method="Reflected Regions",
-        )
-
-    def plot(self, fig=None, ax=None, cmap=None, idx=None, add_legend=False):
-        """Standard debug plot.
-
-        Parameters
-        ----------
-        fig : `~matplotlib.figure.Figure`
-            Top level container of the figure
-        ax : `~matplotlib.axes.Axes`
-            Axes of the figure
-        cmap : `~matplotlib.colors.ListedColormap`, optional
-            Color map to use
-        idx : int, optional
-            Observations to include in the plot.
-        add_legend : boolean, optional
-            Enable/disable legend in the plot.
-        """
-        import matplotlib.pyplot as plt
-
-        if "ra" in self.on_region.center.representation_component_names:
-            coordsys = "CEL"
-        else:
-            coordsys = "GAL"
-
-        pnt_radec = SkyCoord([_.pointing_radec for _ in self.observations.list])
-        width = np.max(5 * self.on_region.center.separation(pnt_radec).to_value("deg"))
-
-        geom = WcsGeom.create(
-            skydir=self.on_region.center,
-            binsz=self.binsz,
-            width=width,
-            coordsys=coordsys,
-            proj="TAN",
-        )
-        plot_map = Map.from_geom(geom)
-
-        if fig is None:
-            fig = plt.figure(figsize=(7, 7))
-
-        if self.exclusion_mask is not None:
-            coords = geom.get_coord()
-            vals = self.exclusion_mask.get_by_coord(coords)
-            plot_map.data += vals
-        else:
-            plot_map.data += 1.0
-
-        fig, ax, cbar = plot_map.plot(fig=fig, ax=ax, vmin=0, vmax=1)
-
-        on_patch = self.on_region.to_pixel(wcs=geom.wcs).as_artist(edgecolor="red")
-        ax.add_patch(on_patch)
-
-        result = self.result
-        obs_list = list(self.observations)
-        if idx is not None:
-            obs_list = np.asarray(self.observations)[idx]
-            obs_list = np.atleast_1d(obs_list)
-            result = np.asarray(self.result)[idx]
-            result = np.atleast_1d(result)
-
-        cmap = cmap or plt.get_cmap("viridis")
-        colors = cmap(np.linspace(0, 1, len(self.observations)))
-
-        handles = []
-        for idx_ in np.arange(len(obs_list)):
-            obs = obs_list[idx_]
-
-            off_regions = result[idx_].off_region
-            for off in off_regions:
-                off_patch = off.to_pixel(wcs=geom.wcs).as_artist(
-                    alpha=0.8, edgecolor=colors[idx_], label=f"Obs {obs.obs_id}"
-                )
-                handle = ax.add_patch(off_patch)
-            if off_regions:
-                handles.append(handle)
-
-            xx, yy = obs.pointing_radec.to_pixel(geom.wcs)
-            ax.plot(xx, yy, marker="+", color=colors[idx_], markersize=20, linewidth=5)
-
-        if add_legend:
-            ax.legend(handles=handles)
-
-        return fig, ax, cbar
-
-
 class ReflectedRegionsBackgroundMaker:
     """Reflected regions background maker.
 
     Parameters
     ----------
-    region: `~regions.SkyRegion`
-        On region to compute off regions for.
     angle_increment : `~astropy.coordinates.Angle`, optional
         Rotation angle applied when a region falls in an excluded region.
     min_distance : `~astropy.coordinates.Angle`, optional
@@ -444,7 +275,6 @@ class ReflectedRegionsBackgroundMaker:
 
     def __init__(
         self,
-        region,
         angle_increment="0.1 rad",
         min_distance="0 rad",
         min_distance_input="0.1 rad",
@@ -452,7 +282,6 @@ class ReflectedRegionsBackgroundMaker:
         exclusion_mask=None,
         binsz="0.01 deg",
     ):
-        self.region = region
         self.binsz = binsz
         self.exclusion_mask = exclusion_mask
         self.angle_increment = Angle(angle_increment)
@@ -460,12 +289,12 @@ class ReflectedRegionsBackgroundMaker:
         self.min_distance_input = Angle(min_distance_input)
         self.max_region_number = max_region_number
 
-    def _get_finder(self, observation):
+    def _get_finder(self, dataset, observation):
         return ReflectedRegionsFinder(
             binsz=self.binsz,
             exclusion_mask=self.exclusion_mask,
             center=observation.pointing_radec,
-            region=self.region,
+            region=dataset.counts.region,
             min_distance=self.min_distance,
             min_distance_input=self.min_distance_input,
             max_region_number=self.max_region_number,
@@ -488,7 +317,7 @@ class ReflectedRegionsBackgroundMaker:
         counts_off : `CountsSpectrum`
             Off counts.
         """
-        finder = self._get_finder(observation)
+        finder = self._get_finder(dataset, observation)
         finder.run()
 
         region_union = list_to_compound_region(finder.reflected_regions)

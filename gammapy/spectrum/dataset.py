@@ -4,13 +4,14 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.data import GTI, ObservationStats
+from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 from gammapy.modeling import Dataset
 from gammapy.stats import cash, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
+from gammapy.stats import significance_on_off
 from .core import CountsSpectrum, SpectrumEvaluator
 
 __all__ = [
@@ -848,13 +849,13 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         # of GTIs
         self.livetime += other.livetime
 
-    def peek(self, figsize=(10, 10)):
+    def peek(self, figsize=(16, 4)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
 
         e_min, e_max = self.energy_range
 
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, figsize=figsize)
+        _, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=figsize)
 
         ax1.set_title("Counts")
         energy_unit = "TeV"
@@ -882,17 +883,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.aeff.plot(ax=ax2, show_energy=(e_min, e_max))
         ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
 
-        ax3.axis("off")
-
-        if self.counts_off is not None:
-            info = self._info_dict(in_safe_energy_range=True)
-            info["obs_id"] = info.pop("name")
-            stats = ObservationStats(**info)
-            ax3.text(0, 0.2, f"{stats}", fontsize=12)
-
-        ax4.set_title("Energy Dispersion")
+        ax3.set_title("Energy Dispersion")
         if self.edisp is not None:
-            self.edisp.plot_matrix(ax=ax4)
+            self.edisp.plot_matrix(ax=ax3)
 
         # TODO: optimize layout
         plt.subplots_adjust(wspace=0.3)
@@ -1060,26 +1053,47 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             gti=data["gti"],
         )
 
-    # TODO: decide on a design for dataset info tables / dicts and make it part
-    #  of the public API
-    def _info_dict(self, in_safe_energy_range=False):
-        """Info dict"""
+    def info_dict(self, in_safe_energy_range=True):
+        """Info dict with summary statistics, summed over energy
+
+        Parameters
+        ----------
+        in_safe_energy_range : bool
+            Whether to sum only in the safe energy range
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info.
+        """
         info = dict()
         mask = self.mask_safe if in_safe_energy_range else slice(None)
 
+        info["name"] = self.name
+        info["livetime"] = self.livetime.copy()
+
         # TODO: handle energy dependent a_on / a_off
-        info["a_on"] = self.acceptance[0]
+        info["a_on"] = self.acceptance[0].copy()
         info["n_on"] = self.counts.data[mask].sum()
 
         if self.counts_off is not None:
             info["n_off"] = self.counts_off.data[mask].sum()
-            info["a_off"] = self.acceptance_off[0]
+            info["a_off"] = self.acceptance_off[0].copy()
         else:
             info["n_off"] = 0
             info["a_off"] = 1
 
-        info["livetime"] = self.livetime
-        info["name"] = self.name
+        info["alpha"] = self.alpha[0].copy()
+        info["background"] = self.background.data[mask].sum()
+        info["excess"] = self.excess.data[mask].sum()
+        info["significance"] = significance_on_off(
+            self.counts.data[mask].sum(),
+            self.counts_off.data[mask].sum(),
+            self.alpha[0]
+        )
+
+        info["background_rate"] = info["background"] / info["livetime"]
+        info["gamma_rate"] = info["excess"] / info["livetime"]
         return info
 
 

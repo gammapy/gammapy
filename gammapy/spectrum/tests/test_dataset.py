@@ -441,6 +441,20 @@ class TestSpectrumOnOff:
         assert dataset.counts_off.data.sum() == 39
         assert dataset.counts.data.sum() == 5
 
+    def test_info_dict(self):
+        info_dict = self.dataset.info_dict()
+
+        assert_allclose(info_dict["n_on"], 3)
+        assert_allclose(info_dict["n_off"], 40)
+        assert_allclose(info_dict["a_on"], 1)
+        assert_allclose(info_dict["a_off"], 10)
+
+        assert_allclose(info_dict["alpha"], 0.1)
+        assert_allclose(info_dict["excess"], -1)
+        assert_allclose(info_dict["livetime"].value, 1e3)
+
+        assert info_dict["name"] == "test"
+
 
 @requires_dependency("iminuit")
 class TestSimpleFit:
@@ -746,3 +760,9 @@ def test_datasets_stack_reduce():
     datasets = Datasets(dataset_list)
     stacked = datasets.stack_reduce()
     assert_allclose(stacked.livetime.to_value("s"), 6313.8116406202325)
+
+    info_table = datasets.info_table()
+    assert_allclose(info_table["n_on"], [124, 126, 119,  90])
+
+    info_table_cum = datasets.info_table(cumulative=True)
+    assert_allclose(info_table_cum["n_on"], [124, 250, 369, 459])

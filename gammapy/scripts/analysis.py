@@ -316,7 +316,7 @@ class Analysis:
         maker_config["region"] = on_region
 
         dataset_maker = SpectrumDatasetMaker(**maker_config)
-        bkg_maker_config = {"region": on_region}
+        bkg_maker_config = {}
         background = self.settings["datasets"]["background"]
 
         if "exclusion_mask" in background:
