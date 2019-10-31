@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
-from gammapy.data import DataStore, ObservationStats
+from gammapy.data import DataStore
 from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.spectrum import (
     ReflectedRegionsBackgroundMaker,
@@ -197,14 +197,10 @@ class TestSpectrumMakerChain:
         assert_quantity_allclose(edisp_actual, results["edisp"], rtol=1e-3)
 
         # TODO: Introduce assert_stats_allclose
-        info = dataset._info_dict()
-        info["obs_id"] = info.pop("name")
-        stats = ObservationStats(**info)
-        n_on_actual = stats.n_on
-        sigma_actual = stats.sigma
+        info = dataset.info_dict()
 
-        assert n_on_actual == results["n_on"]
-        assert_allclose(sigma_actual, results["sigma"], atol=1e-2)
+        assert info["n_on"] == results["n_on"]
+        assert_allclose(info["significance"], results["sigma"], atol=1e-2)
 
         gti_obs = obs.gti.table
         gti_dataset = dataset.gti.table
