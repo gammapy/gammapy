@@ -1053,8 +1053,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             gti=data["gti"],
         )
 
-    # TODO: decide on a design for dataset info tables / dicts and make it part
-    #  of the public API
     def info_dict(self, in_safe_energy_range=False):
         """Info dict with summary statistics, summed over energy
 

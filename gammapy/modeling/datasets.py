@@ -237,9 +237,7 @@ class Datasets:
 
         stacked = self.datasets[0].copy()
 
-        rows = [
-            stacked.info_dict()
-        ]
+        rows = [stacked.info_dict()]
 
         for dataset in self.datasets[1:]:
             if cumulative:
