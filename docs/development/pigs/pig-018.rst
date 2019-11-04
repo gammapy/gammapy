@@ -131,19 +131,24 @@ tutorial notebooks and come back to that page later if they prefer.
 
 Installation
 ~~~~~~~~~~~~
-Kept as it is.
+Keep as it is.
 
 First steps
 ~~~~~~~~~~~
-Kept as it is.
+Keep as it is.
 
 Tutorials
 ~~~~~~~~~
-The tutorial notebooks will be reorganised in the following groups and files.
+The tutorials will be reorganised in the following groups (items) and individual notebooks (sub-items).
 
 - First analysis
    + Config-driven 1D and 3D analysis of Crab (evolution of current ``hess.ipynb`` that could be renamed)
    + Extended source analysis, also showing the lower-level API with customisation options for background modeling (to be implemented)
+
+The group below will be a "starting page" for people from CTA, HESS and Fermi, and
+possibly other instruments in the future. We could remove https://gammapy.org/cta.html
+(very few, and outdated infos), since it is better to have one starting page for CTA users instead
+of two.
 
 - What data can I analyse?
    + Observations and Datasets (to be implemented)
@@ -151,13 +156,8 @@ The tutorial notebooks will be reorganised in the following groups and files.
    + HESS, mention DR1, show what the IRFs look like (to be implemented)
    + Fermi-LAT, show how to create map and spectrum dataset using 3FHL example (``fermi_lat.ipynb``)
 
-The idea is to have one "starting page" for people from CTA, HESS and Fermi, and
-possibly other instruments in the future. We could remove https://gammapy.org/cta.html
-(very few, and outdated infos), since it is better to have one starting page for CTA users instead
-of two.
-
 - What analyses can I do?
-   + IACT data selection and grouping
+   + IACT data selection and grouping (to be implemented)
    + IACT 3D cube analysis (data reduction and fitting)
    + IACT 2D image analysis (``image_analysis.ipynb``)
    + IACT 1D spectrum analysis (data reduction and fitting)
@@ -169,6 +169,11 @@ of two.
    + Naima model fitting (to be implemented)
    + Joint Crab analysis using Fermi +  HESS + some flux poitns (to be implemented)
 
+For many Gammapy sub-packages, we plan to have a corresponding notebook
+that is a hands-on, executable tutorial introduction that complements the
+description and API docs on the sub-package RST page. These notebooks are
+listed in the group below.
+
 - Gammapy package
    + Overview (short section with one example for each sub-package, hands-on, an evolution of the current ``getting_started.ipynb``)
    + Maps (``gammapy.maps``) (``maps.ipynb``)
@@ -178,11 +183,7 @@ of two.
    + Source detection (``gammapy.detect``) (``detect_ts.ipynb``, ``cwt.ipynb``)
    + Source catalogs (``gammapy.catalog``) (to be implemented)
 
-For many Gammapy sub-packages, we plan to have a corresponding notebook
-that is a hands-on, executable tutorial introduction that complements the
-description and API docs on the sub-package RST page.
-
-- Scripts
+- **Scripts**
 
 tbd
 
@@ -198,7 +199,7 @@ tbd
 
 More specialised notebooks, and in some cases of lower quality.
 
-- Basics
+- **Basics**
 
 Leave the basics section at the end of the tutorials page, pretty much as-is.
 
@@ -208,11 +209,11 @@ tbd
 
 Reference
 ~~~~~~~~~
-Kept as it is and extend the Glossary.
+Keep as it is and extend the Glossary.
 
 Changelog
 ~~~~~~~~~
-Kept as it is.
+Keep as it is.
 
 
 Alternatives
