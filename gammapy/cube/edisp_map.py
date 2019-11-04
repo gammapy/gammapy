@@ -358,7 +358,7 @@ class EDispMap:
 
     def sample_coord(self, map_coord, random_state=0):
         """Apply the energy dispersion corrections on the coordinates of a set of simulated events.
-        
+
         Parameters
         ----------
         map_coord : `~gammapy.maps.MapCoord` object.
@@ -366,7 +366,7 @@ class EDispMap:
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
-        
+
         Returns
         -------
         `~gammapy.maps.MapCoord`.
