@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.stats import LombScargle
+from astropy.timeseries import LombScargle
 from gammapy.time import plot_periodogram, robust_periodogram
 from gammapy.utils.testing import requires_dependency
 

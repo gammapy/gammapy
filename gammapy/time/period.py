@@ -22,7 +22,7 @@ def robust_periodogram(time, flux, flux_err=None, periods=None, loss="linear", s
     For an introduction to the false alarm probability of periodogram peaks, see :ref:`stats-lombscargle`.
 
     The periodogram is biased by measurement errors, high order modes and sampling of the light curve.
-    To evaluate the impact of the sampling, compute the spectral window function with the `astropy.stats.LombScargle`-class.
+    To evaluate the impact of the sampling, compute the spectral window function with the `astropy.timeseries.LombScargle` class.
 
     The function returns a dictionary with the following content:
 

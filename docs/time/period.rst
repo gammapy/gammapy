@@ -9,7 +9,7 @@ Introduction
 curves of :math:`\gamma`-ray sources. The period detection is implemented in the
 scope of the Lomb-Scargle periodogram, a method that detects periods in unevenly
 sampled time series typical for :math:`\gamma`-ray observations. We refer to the
-`astropy.stats.LombScargle`-class and documentation within for an introduction
+`astropy.timeseries.LombScargle`-class and documentation within for an introduction
 to the Lomb-Scargle algorithm, interpretation and usage [1]_.
 
 With `~gammapy.time.robust_periodogram`, the analysis is extended to a more
@@ -27,7 +27,7 @@ for outliers [2]_. The location of the highest periodogram peak is assumed to be
 the period of an intrinsic periodic behaviour.
 
 The result's significance can be estimated in terms of a false alarm probability
-(FAP) with the respective function of the `astropy.stats.LombScargle`-class. It
+(FAP) with the respective function of the `astropy.timeseries.LombScargle`-class. It
 computes the probability of the highest periodogram peak being observed by
 chance if the underlying light curve would consist of Gaussian white-noise only.
 
@@ -107,12 +107,12 @@ on the data set and needs to be optimised by the user.
 
 If the loss function ``linear`` is used, `~gammapy.time.robust_periodogram` is
 performed with an ordinary linear least square regression. It is then identical
-to `astropy.stats.LombScargle` and ``scale`` can be set arbitrarily. This is the
+to `astropy.timeseries.LombScargle` and ``scale`` can be set arbitrarily. This is the
 default setting.
 
 .. code-block:: python
 
-    >>> from astropy.stats import LombScargle
+    >>> from astropy.timeseries import LombScargle
     >>> periods = np.linspace(1.1, 10, 90)
     >>> periodogram = robust_periodogram(time, flux, periods=periods)
     >>> LSP = LombScargle(time, flux).power(1. / periods)
@@ -133,7 +133,7 @@ with the ``Baluev``-method:
 
 .. code-block:: python
 
-    >>> from astropy.stats.lombscargle import _statistics
+    >>> from astropy.timeseries.lombscargle import _statistics
     >>> periods = np.linspace(0.1, 10, 100)
     >>> periodogram = robust_periodogram(time, flux, periods=periods)
     >>> fap = _statistics.false_alarm_probability(
@@ -144,7 +144,7 @@ with the ``Baluev``-method:
     0.0
 
 If other loss functions than ``linear`` are used, using the ``Bootstrap``-method
-is not recommended, because it internally calls `astropy.stats.LombScargle`
+is not recommended, because it internally calls `astropy.timeseries.LombScargle`
 (linear least square regression) which is not identical to non-linear robust
 periodogram.
 
@@ -203,7 +203,7 @@ The periodogram has many spurious peaks, which are due to several factors:
 3. Sampling biases the periodogram and leads to failure modes.
    Its impact can be qualified by the spectral window function.
    This is the periodogram of the observation window and can be computed
-   by setting ``flux`` and ``flux err`` to one and running `astropy.stats.LombScargle`.
+   by setting ``flux`` and ``flux err`` to one and running `astropy.timeseries.LombScargle`.
 
    .. gp-image:: time/example_spectral_window_function.png
        :width: 100%
@@ -222,7 +222,7 @@ The periodogram has many spurious peaks, which are due to several factors:
    the periodogram at :math:`P_{{alias}} = 0.794`.
 
 .. [1] Astropy docs, Lomb-Scargle Periodograms,
-   `Link <http://docs.astropy.org/en/stable/stats/lombscargle.html>`__
+   `Link <http://docs.astropy.org/en/stable/timeseries/lombscargle.html>`__
 .. [2] Scipy docs, scipy.optimize.least_squares
    `Link <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.least_squares.html>`__
 .. [3] Astropy docs, Utilities for computing periodogram statistics.
