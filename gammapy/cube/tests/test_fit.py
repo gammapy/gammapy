@@ -199,6 +199,26 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
     assert spectrum_dataset.edisp.e_true.nbin == 3
 
 
+def test_to_image(geom):
+    ebounds = np.logspace(-1.0, 1.0, 3)
+    axis = MapAxis.from_edges(ebounds, name="energy", unit=u.TeV, interp="log")
+    geom = WcsGeom.create(
+        skydir=(0, 0), binsz=0.5, width=(1, 1), coordsys="CEL", axes=[axis]
+    )
+    dataset = MapDataset.create(geom)
+
+    # Check map_safe handling
+    data = np.array([[[False, True], [True, True]], [[False, False], [True, True]]])
+    dataset.mask_safe = WcsNDMap.from_geom(geom=geom, data=data)
+
+    dataset_im = dataset.to_image()
+
+    assert dataset_im.mask_safe.data.dtype == bool
+
+    desired = np.array([[False, True], [True, True]])
+    assert (dataset_im.mask_safe.data == desired).all()
+
+
 @requires_data()
 def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset = get_map_dataset(sky_model, geom, geom_etrue)

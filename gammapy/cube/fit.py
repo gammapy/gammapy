@@ -12,7 +12,7 @@ from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, apply_containment_fraction
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
 from gammapy.spectrum import SpectrumDataset
@@ -430,6 +430,7 @@ class MapDataset(Dataset):
         if self.exposure and other.exposure:
             self.exposure.stack(other.exposure)
         if self.background_model and other.background_model:
+
             bkg = self.background_model.evaluate()
             bkg.data[~self.mask_safe.data] = 0
             other_bkg = other.background_model.evaluate()
@@ -867,10 +868,20 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset containing images.
         """
-        counts = self.counts.sum_over_axes(keepdims=keepdims)
+        counts = self.counts.copy()
+        background = self.background_model.evaluate().copy()
+
+        counts *= self.mask_safe
+        background *= self.mask_safe
+
+        counts = counts.sum_over_axes(keepdims=keepdims)
         exposure = _map_spectrum_weight(self.exposure, spectrum)
         exposure = exposure.sum_over_axes(keepdims=keepdims)
-        background = self.background_model.evaluate().sum_over_axes(keepdims=keepdims)
+        background = background.sum_over_axes(keepdims=keepdims)
+
+        idx = self.mask_safe.geom.get_axis_index_by_name("ENERGY")
+        data = np.logical_or.reduce(self.mask_safe.data, axis=idx)
+        mask_image = WcsNDMap(geom=self.mask_safe.geom.to_image(), data=data)
 
         # TODO: add edisp and psf
         edisp = None
@@ -880,6 +891,7 @@ class MapDataset(Dataset):
             counts=counts,
             exposure=exposure,
             background_model=BackgroundModel(background),
+            mask_safe=mask_image,
             edisp=edisp,
             psf=psf,
             gti=self.gti,
