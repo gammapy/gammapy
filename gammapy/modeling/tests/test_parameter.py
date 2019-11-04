@@ -131,6 +131,15 @@ def test_parameters_from_stack():
     # assert_allclose(pars.covariance[0], [2, 2, 0, 0, 0])
     # assert_allclose(pars.covariance[4], [0, 0, 3, 3, 3])
 
+def test_unique_parameters():
+    a = Parameter("a", 1)
+    b = Parameter("b", 2)
+    c = Parameter("c", 3)
+    parameters = Parameters([a, b, a, c])
+    assert parameters.names == ["a", "b", "a", "c"]
+    parameters_unique = parameters.unique_parameters
+    assert parameters_unique.names == ["a", "b", "c"]
+
 
 def test_parameters_getitem(pars):
     assert pars[1].name == "ham"

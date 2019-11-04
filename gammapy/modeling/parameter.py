@@ -262,9 +262,6 @@ class Parameters:
         self._parameters = parameters
         self._covariance = covariance
 
-        # TODO: move unique parameter filtering out of __init__, add covar handling
-        self._parameters = self.unique_parameters
-
     @property
     def covariance(self):
         """Covariance matrix (`numpy.ndarray`)."""
@@ -338,8 +335,8 @@ class Parameters:
 
     @property
     def unique_parameters(self):
-        """List of unique parameters"""
-        return list(dict.fromkeys(self._parameters))
+        """Unique parameters (`Parameters`)."""
+        return self.__class__(dict.fromkeys(self._parameters))
 
     @property
     def names(self):
