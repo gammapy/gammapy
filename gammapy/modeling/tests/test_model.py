@@ -12,7 +12,6 @@ class MyModel(Model):
     y = Parameter("y", 2)
 
 
-# TODO: change example to also hold parameters?
 class CoModel(Model):
     """Compound model example"""
 

@@ -101,7 +101,13 @@ class Datasets:
 
     @property
     def parameters(self):
-        return Parameters.from_stack(_.parameters for _ in self.datasets)
+        """Unique parameters (`~gammapy.modeling.Parameters`).
+
+        Duplicate parameter objects have been removed.
+        The order of the unique parameters remains.
+        """
+        parameters = Parameters.from_stack(_.parameters for _ in self.datasets)
+        return parameters.unique_parameters
 
     @property
     def names(self):
