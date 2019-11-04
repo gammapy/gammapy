@@ -86,9 +86,6 @@ class TestSourceCatalogObjectHGPS:
         assert "Component HGPSC 083:" in ss
 
     @staticmethod
-    @pytest.mark.skipif(
-        astropy.__version__ <= "3.2", reason="table formatting differences"
-    )
     @pytest.mark.parametrize("ref", SOURCES)
     def test_str(cat, ref):
         actual = str(cat[ref["idx"]])
