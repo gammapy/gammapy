@@ -74,21 +74,6 @@ class TestSourceCatalogObjectHGPS:
         return cat["HESS J1843-033"]
 
     @staticmethod
-    @pytest.mark.slow
-    def test_all_sources(cat):
-        """Check that properties and methods work for all sources,
-        i.e. don't raise an error."""
-        for source in cat:
-            str(source)
-            source.energy_range
-            source.spectral_model_type
-            source.spectral_model()
-            source.spatial_model_type
-            source.is_pointlike
-            source.sky_model()
-            source.flux_points
-
-    @staticmethod
     def test_basics(source):
         assert source.name == "HESS J1843-033"
         assert source.index == 64
@@ -349,3 +334,18 @@ class TestSourceCatalogLargeScaleHGPS:
         )
         assert_quantity_allclose(self.model.peak_latitude(glon), 1 * u.deg)
         assert_quantity_allclose(self.model.width(glon), 0.3 * u.deg)
+
+
+if __name__ == "__main__":
+    # Check all sources
+    cat = SourceCatalogHGPS()
+    for source in cat:
+        print(source.index, source.name)
+        str(source)
+        source.energy_range
+        source.spectral_model_type
+        source.spectral_model()
+        source.spatial_model_type
+        source.is_pointlike
+        source.sky_model()
+        source.flux_points
