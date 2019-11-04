@@ -8,7 +8,7 @@ PIG 18 - Documentation
 
 * Author: Christoph Deil, Axel Donath, José Enrique Ruiz
 * Created: Oct 16, 2019
-* Status: draft
+* Status: accepted
 * Discussion: `GH 2463`_
 
 Abstract
@@ -185,7 +185,9 @@ listed in the group below.
 
 - **Scripts**
 
-tbd
+This group will contain a few examples on how to use Gammapy from Python scripts (i.e. make a CTA 1DC
+survey counts map or some other long-running analysis or simulations). The Python scripts could be provided
+as links and also in ``gammapy download``, as it is the case with the notebooks.
 
 - Extra topics
    + MCMC sampling (``mcmc_sampling.ipynb``)
@@ -205,7 +207,10 @@ Leave the basics section at the end of the tutorials page, pretty much as-is.
 
 HowTo
 ~~~~~
-tbd
+We suggest to add a HowTo RST file with short entries explaining how to do something specific in Gammapy.
+Probably each HOWTO should be a short section with just 1-2 sentences and links to tutorials, specific sections
+of the tutorials, to the API docs, or if it should be small mini-tutorials with code snippets, they could
+possibly go on sub-pages. The `HowTo documentation page`_ shows a preliminary version of the content of this page.
 
 Reference
 ~~~~~~~~~
@@ -271,7 +276,12 @@ related with the on-going development of the PIG.
 Decision
 ========
 
-tbd
+The PIG was extensively discussed in dedicated and also weekly developers calls during
+the second half of October 2019, as well as in `GH 2463`_. The authors agreed on not to
+proceed with an official review and circulation, since there's basically agreement on
+what to do and some of the work related with this PIG will be based on iteration over
+specific text and content for each of the notebooks and RST pages, not explicitly needed
+here. Therefore the PIG was accepted on November 5, 2019.
 
 .. _GH 172: https://github.com/gammapy/gammapy/issues/172
 .. _GH 241: https://github.com/gammapy/gammapy/issues/241
@@ -304,3 +314,4 @@ tbd
 .. _Jupytext: https://jupytext.readthedocs.io
 .. _Documentation Github project: https://github.com/gammapy/gammapy/projects/1
 .. _Maintain Github project: https://github.com/gammapy/gammapy/projects/16
+.. _HowTo documentation page: https://docs.gammapy.org/dev/howto.html
