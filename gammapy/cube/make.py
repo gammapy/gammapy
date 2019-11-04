@@ -439,8 +439,8 @@ class MapMakerRing:
         from gammapy.data import DataStore
 
         # Create observation list
-        data_store = DataStore.from_file(
-            "$GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz"
+        data_store = DataStore.from_dir(
+            "$GAMMAPY_DATA/hess-dl3-dr1/"
         )
         data_sel = data_store.obs_table["TARGET_NAME"] == "MSH 15-52"
         obs_table = data_store.obs_table[data_sel]

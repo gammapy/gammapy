@@ -1644,20 +1644,26 @@
    {
     "path": "hess-dl3-dr1/hdu-index.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/hdu-index.fits.gz",
-    "filesize": 4743,
-    "hashmd5": "2b0187105a7184e13a6d8d164aefed9d"
+    "filesize": 5230,
+    "hashmd5": "8041ab9767c00ea32ab8d8ed2b8fa03f"
+   },
+   {
+    "path": "hess-dl3-dr1/test.py",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/test.py",
+    "filesize": 926,
+    "hashmd5": "818e96917b956c801fe1a9db29414022"
    },
    {
     "path": "hess-dl3-dr1/README.md",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/README.md",
-    "filesize": 441,
-    "hashmd5": "7760b7885c5a40aaa6724a2fec680074"
+    "filesize": 684,
+    "hashmd5": "32f5975f738551fa80bb37df2d8f0d02"
    },
    {
-    "path": "hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz",
-    "filesize": 18471,
-    "hashmd5": "546a39caf484951bda5b179ab7ff101d"
+    "path": "hess-dl3-dr1/make.py",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/make.py",
+    "filesize": 2608,
+    "hashmd5": "a624cfcb294d70731dbfb33b4f3b877b"
    },
    {
     "path": "hess-dl3-dr1/README.txt",
@@ -1674,632 +1680,632 @@
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033798.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033798.fits.gz",
-    "filesize": 405547,
-    "hashmd5": "690c670af315ff7f14db546ee1a35d52"
+    "filesize": 572633,
+    "hashmd5": "47a5998f4ee515f2552368f5eb34e6fb"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033788.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033788.fits.gz",
-    "filesize": 382034,
-    "hashmd5": "5c3afe07f4a0b4102c33f1c00069e40a"
+    "filesize": 539227,
+    "hashmd5": "82e30cc16709cd02efc9fdc204c0c3f2"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_027121.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_027121.fits.gz",
-    "filesize": 370720,
-    "hashmd5": "668d9bb33916e227fa5cf542c8c190b0"
+    "filesize": 536228,
+    "hashmd5": "104eab1fc4935b81c57431410b581e37"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020561.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020561.fits.gz",
-    "filesize": 467404,
-    "hashmd5": "17feaf5bdac6a4f19b1324ecd623add5"
+    "filesize": 634331,
+    "hashmd5": "2a26c4e77ed63ff8e15b76ddea9023c0"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020324.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020324.fits.gz",
-    "filesize": 495757,
-    "hashmd5": "45788f2a464a2e3990c1334a03690996"
+    "filesize": 659824,
+    "hashmd5": "cd51bd5cb3df288ae358cd79f30a0135"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020346.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020346.fits.gz",
-    "filesize": 486878,
-    "hashmd5": "8ffda6a4dd1b3b1869563df12e56b635"
+    "filesize": 650913,
+    "hashmd5": "fe01cd76e1bcb044d6ba85f7c7b98078"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_021851.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_021851.fits.gz",
-    "filesize": 382851,
-    "hashmd5": "5167c01adf4db87a061011e45ff30be0"
+    "filesize": 539205,
+    "hashmd5": "09080554060ad222ee2352595f973f19"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020900.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020900.fits.gz",
-    "filesize": 491910,
-    "hashmd5": "c5788b5c96bb60f7f1d584c7df99eccd"
+    "filesize": 659063,
+    "hashmd5": "bfa072df7d74020960baa6fd8c8a6c86"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033791.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033791.fits.gz",
-    "filesize": 437348,
-    "hashmd5": "46c711186c30faf749fd22a6112e219b"
+    "filesize": 604425,
+    "hashmd5": "b7183345521aba049ff9ef8db1f38030"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020302.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020302.fits.gz",
-    "filesize": 476289,
-    "hashmd5": "fa17b1f8c5a512b443a215b67f0f7d3f"
+    "filesize": 640318,
+    "hashmd5": "2649a7d67799c16410f9a7d831c595ba"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020151.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020151.fits.gz",
-    "filesize": 456233,
-    "hashmd5": "164a01659771762a6d588b27d5c7b98f"
+    "filesize": 620141,
+    "hashmd5": "a2272d8a7cb093b3d98140571f28bae0"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_047802.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_047802.fits.gz",
-    "filesize": 361129,
-    "hashmd5": "8fcc342dd60dca8a2cb0ba24db8d30a4"
+    "filesize": 524477,
+    "hashmd5": "530de706e574b114f5a3cf9b062d6859"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033800.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033800.fits.gz",
-    "filesize": 361927,
-    "hashmd5": "7a964e071220faac15cc074236b49b35"
+    "filesize": 525372,
+    "hashmd5": "ad4373ffb55ed7cb81815deecda90b50"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023736.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023736.fits.gz",
-    "filesize": 357819,
-    "hashmd5": "0c03c4c356dc641c2a4e146efef4d8c1"
+    "filesize": 510540,
+    "hashmd5": "4c0b01d84153c350841dd6682e78dc05"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_022022.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_022022.fits.gz",
-    "filesize": 321198,
-    "hashmd5": "760cc3f94af83d3ea848c188dbf75fb7"
+    "filesize": 479333,
+    "hashmd5": "a8d040c895d7b952843aac19ee9daf8e"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033790.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033790.fits.gz",
-    "filesize": 434430,
-    "hashmd5": "a23a54de1fe2a7d0dce31b1acfbcf019"
+    "filesize": 601307,
+    "hashmd5": "7d9a197e9b7fa0e7580de123a960989c"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020303.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020303.fits.gz",
-    "filesize": 476018,
-    "hashmd5": "51fc0ee85ecf40dc24c692ab7cbf4551"
+    "filesize": 640104,
+    "hashmd5": "3ff02d8833338fa9992d5f62eb99327a"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_047803.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_047803.fits.gz",
-    "filesize": 366539,
-    "hashmd5": "cd97e90b299a152beed2772f9a726da9"
+    "filesize": 533120,
+    "hashmd5": "217056f50690ace16a6528f46c7c3442"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033801.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033801.fits.gz",
-    "filesize": 350168,
-    "hashmd5": "365b6fbaae95e23806f434209e50a2b2"
+    "filesize": 507088,
+    "hashmd5": "1ff180aa4ff752139283b1861bf8e466"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023635.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023635.fits.gz",
-    "filesize": 408512,
-    "hashmd5": "eb4c397216e0615d3c834e01b3df4e25"
+    "filesize": 575723,
+    "hashmd5": "5c645147fc3c1c38fe944913f8eb2076"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020368.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020368.fits.gz",
-    "filesize": 457756,
-    "hashmd5": "f6a3b3f3b06940103656f05460c9763c"
+    "filesize": 621670,
+    "hashmd5": "734ab15443c98eb9573ebef9f3f7867c"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033789.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033789.fits.gz",
-    "filesize": 422135,
-    "hashmd5": "1b582b6d234cea7dd28f1f8afd682478"
+    "filesize": 585867,
+    "hashmd5": "be7af3e3c342ac3ddd083386f43ee5ab"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033799.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033799.fits.gz",
-    "filesize": 387015,
-    "hashmd5": "c85377230bd19bc7a438e09d9dfac110"
+    "filesize": 553752,
+    "hashmd5": "a3e7cc49ec8b6ed37c963c0b5c29ddc3"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020325.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020325.fits.gz",
-    "filesize": 496151,
-    "hashmd5": "4e699813c10598dbb9bd9f5f8b734f41"
+    "filesize": 660167,
+    "hashmd5": "d744e4fccb9bef199753d1bc41d91a62"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029072.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029072.fits.gz",
-    "filesize": 349627,
-    "hashmd5": "95d3661ef90c2044593588c419bf8849"
+    "filesize": 516059,
+    "hashmd5": "2d768b262274cf9ac7bc718f2227baae"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029024.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029024.fits.gz",
-    "filesize": 389673,
-    "hashmd5": "9630ecae9457dfa0bd744c4ed62d4994"
+    "filesize": 554693,
+    "hashmd5": "6bffd5c6141cd7074e268f57a3862137"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_026850.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_026850.fits.gz",
-    "filesize": 410359,
-    "hashmd5": "851c116067243f818ce143a7180e857a"
+    "filesize": 575620,
+    "hashmd5": "ebad06491d0bcb69f5c6c9e40006b75b"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020301.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020301.fits.gz",
-    "filesize": 472595,
-    "hashmd5": "85557bf770a81e44658801dc374e3eb0"
+    "filesize": 636783,
+    "hashmd5": "df2c38f9fd4908c36408b1012a90a647"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033792.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033792.fits.gz",
-    "filesize": 434672,
-    "hashmd5": "b7e2fab3eeac2bcf3f72266dee84cca2"
+    "filesize": 601842,
+    "hashmd5": "ecbeaf2a7fdbe2e7009ea28835cda835"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_027987.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_027987.fits.gz",
-    "filesize": 402069,
-    "hashmd5": "b4bb019c65d9b4dfc25cc27effd0aec1"
+    "filesize": 568566,
+    "hashmd5": "446225bc952801baf14848a14e935fc9"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020397.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020397.fits.gz",
-    "filesize": 540376,
-    "hashmd5": "2d503526310c708b81019d49a5cadb1a"
+    "filesize": 707272,
+    "hashmd5": "a4991eca27ddf25827646a64ee026e39"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020519.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020519.fits.gz",
-    "filesize": 509469,
-    "hashmd5": "2bf6bd3f33132507d93a93a81923b76d"
+    "filesize": 676791,
+    "hashmd5": "cbd003475340da563e11e7af06cb9da9"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz",
-    "filesize": 367936,
-    "hashmd5": "c93214a1df337b61a45b09490cd6a194"
+    "filesize": 522418,
+    "hashmd5": "6c22e9b732c8dcc402f781c052c7527b"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_047827.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_047827.fits.gz",
-    "filesize": 355084,
-    "hashmd5": "efac37c8fb050c0d0ea54f035eddb96f"
+    "filesize": 519018,
+    "hashmd5": "48f24bbe200ab9c38a6cf817d762f39e"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029118.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029118.fits.gz",
-    "filesize": 337791,
-    "hashmd5": "c7abad240f39755d4c5cc4636043601e"
+    "filesize": 504442,
+    "hashmd5": "ed3aeafe3b9ef9a2eb288ca8c57aef13"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020345.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020345.fits.gz",
-    "filesize": 490316,
-    "hashmd5": "b453322b8e205d2a9dee3a8b0769059e"
+    "filesize": 654817,
+    "hashmd5": "def375ace7d5e37b292c655fe946eb12"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020327.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020327.fits.gz",
-    "filesize": 562301,
-    "hashmd5": "dc399b9560e42202ac95c04e91429113"
+    "filesize": 729323,
+    "hashmd5": "b3329e87618dbae2ba3d6999e7267589"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_025511.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_025511.fits.gz",
-    "filesize": 353130,
-    "hashmd5": "10459e0e3ef7e21400a533ef7578ed08"
+    "filesize": 520929,
+    "hashmd5": "9686f40bd57e5e5fcec2d5e5d5d6228e"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_021613.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_021613.fits.gz",
-    "filesize": 457889,
-    "hashmd5": "58983584881149016b187a318637b07f"
+    "filesize": 624838,
+    "hashmd5": "40d0d0d904d91dee13a64963c1a4013c"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020344.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020344.fits.gz",
-    "filesize": 494053,
-    "hashmd5": "37e357defa29eb5bb59b2e87cc6c8984"
+    "filesize": 658082,
+    "hashmd5": "d55c9c1c12bf738485271553c60e15fd"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020326.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020326.fits.gz",
-    "filesize": 560481,
-    "hashmd5": "451f59598f4963e4e303d1ad51b79370"
+    "filesize": 727305,
+    "hashmd5": "6a264244bebb5572378a8d7207c5f3d9"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_025345.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_025345.fits.gz",
-    "filesize": 407067,
-    "hashmd5": "5dc5aab3c1fd4b82fa8f65b66e5b2858"
+    "filesize": 574222,
+    "hashmd5": "6e7154dff8b227b98cd73bf4622cd711"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023559.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023559.fits.gz",
-    "filesize": 369597,
-    "hashmd5": "a9f102c9e01d64e5bf482f6ac7b3afe7"
+    "filesize": 526028,
+    "hashmd5": "c0be8eddee2b81573f835adcb6bbd555"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_021807.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_021807.fits.gz",
-    "filesize": 429920,
-    "hashmd5": "d325b8e250bdce48a9c53db7c3cf0087"
+    "filesize": 595843,
+    "hashmd5": "f1f2bbd098e2454e0a0e1ab5d1309e9b"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033793.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033793.fits.gz",
-    "filesize": 432879,
-    "hashmd5": "2085d2238ad1e47c12dcece636d21f6b"
+    "filesize": 599133,
+    "hashmd5": "9b67de3419487d19b926c5ff87d43fb2"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023592.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023592.fits.gz",
-    "filesize": 362968,
-    "hashmd5": "62643c238c9d3b6f160a3a1da431ff8d"
+    "filesize": 517549,
+    "hashmd5": "31ada70a02d0eebbb107b341cf08ab53"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020396.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020396.fits.gz",
-    "filesize": 551489,
-    "hashmd5": "0a5be1f0dbe6215e11baaae7bd8cb49e"
+    "filesize": 718253,
+    "hashmd5": "5cb3c868b43befd40de48c427978d9f4"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020518.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020518.fits.gz",
-    "filesize": 518466,
-    "hashmd5": "ab699bc84c87c53176c671c6554740b9"
+    "filesize": 685579,
+    "hashmd5": "dc591e81fb6796d6baaf7617ff6e6629"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_022997.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_022997.fits.gz",
-    "filesize": 422512,
-    "hashmd5": "ff8e68114f25b32c9c5bb1bc8d6e8722"
+    "filesize": 589811,
+    "hashmd5": "574306b89e0c3c4e7d3624900a13867f"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_026964.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_026964.fits.gz",
-    "filesize": 401461,
-    "hashmd5": "a88425b984da3cd04cba2015f795fe62"
+    "filesize": 568294,
+    "hashmd5": "094d4d92cd6c435f218d02d1714e021e"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029433.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029433.fits.gz",
-    "filesize": 325804,
-    "hashmd5": "85354f2fadaa5ece879e933251dcad39"
+    "filesize": 478919,
+    "hashmd5": "e25d5178f754a7b1a8b74e842c8139a4"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029177.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029177.fits.gz",
-    "filesize": 371785,
-    "hashmd5": "355e8ce7bf3c9ba3e8f3398b97b0a9c2"
+    "filesize": 539364,
+    "hashmd5": "fe8cce5ba320720a2f5e92ae46670081"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023040.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023040.fits.gz",
-    "filesize": 429911,
-    "hashmd5": "769c827a6f80234e43b74bccb43765cb"
+    "filesize": 597077,
+    "hashmd5": "478c6b8ac90e148c2250bfe472bc6852"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023573.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023573.fits.gz",
-    "filesize": 442932,
-    "hashmd5": "aaf72f5d1e46b72324c6d77405c480ed"
+    "filesize": 609511,
+    "hashmd5": "02a3d540cb39467c36a53fdf5b328193"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033796.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033796.fits.gz",
-    "filesize": 430631,
-    "hashmd5": "f77bdb7c8e6dee715332eda9ce08b99f"
+    "filesize": 597036,
+    "hashmd5": "337406df10a4b5ec7b32906973e5d277"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020367.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020367.fits.gz",
-    "filesize": 457041,
-    "hashmd5": "fdfe4e07a45fe522bc4512bffc882167"
+    "filesize": 620807,
+    "hashmd5": "343a41600c54412cf1b9bf9b172784d1"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023143.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023143.fits.gz",
-    "filesize": 432599,
-    "hashmd5": "49991e598866bac322cd3162eb370ecd"
+    "filesize": 599612,
+    "hashmd5": "2708483a6377029336545d6225cbc59a"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_021824.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_021824.fits.gz",
-    "filesize": 462755,
-    "hashmd5": "73ab0c04452b1ac79278539455b6cdfd"
+    "filesize": 629810,
+    "hashmd5": "58d54549605bb10cf2cb74177ee42f9d"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020323.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020323.fits.gz",
-    "filesize": 505180,
-    "hashmd5": "94bb2e6fffdba22fce55dab0623eede2"
+    "filesize": 669369,
+    "hashmd5": "bf9b3651f61577e85ca0743f88974daa"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_026077.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_026077.fits.gz",
-    "filesize": 347134,
-    "hashmd5": "9ca7e82bd23ed194e900d3fdebca28db"
+    "filesize": 510164,
+    "hashmd5": "cb71425331bc3458737f1041338111f4"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023651.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023651.fits.gz",
-    "filesize": 402724,
-    "hashmd5": "df06bb000d0ea0f7d877fe71ef0ecb40"
+    "filesize": 566669,
+    "hashmd5": "24a90cbf94e220638ab2bbfba9ea35da"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020421.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020421.fits.gz",
-    "filesize": 549730,
-    "hashmd5": "3accb7418e4b83963ddf49ae1485cf1f"
+    "filesize": 716681,
+    "hashmd5": "469679f1fd44334d82b6514018ae06e6"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_026791.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_026791.fits.gz",
-    "filesize": 302006,
-    "hashmd5": "61c5c3855e621d890b8e11f61a23e62f"
+    "filesize": 456067,
+    "hashmd5": "79f501c7cc5a64b6639373c6b8f8f226"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029556.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029556.fits.gz",
-    "filesize": 395150,
-    "hashmd5": "abe6026e2a0daf9deb472c53049d8a11"
+    "filesize": 562762,
+    "hashmd5": "ea4eb4fcad32e59ad83c58b062e6b283"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020350.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020350.fits.gz",
-    "filesize": 545017,
-    "hashmd5": "dd6ae256a0acf22fa2957daea193b8f4"
+    "filesize": 712473,
+    "hashmd5": "2dd5b04775b2110f89fbbffa47f41dd4"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029487.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029487.fits.gz",
-    "filesize": 385068,
-    "hashmd5": "150c2ffc5de7a89811fe1db487641aac"
+    "filesize": 550331,
+    "hashmd5": "85507efc26b278fa35de8b32a0396c93"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020322.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020322.fits.gz",
-    "filesize": 497577,
-    "hashmd5": "13932866d2d6769021b226b2665ebc36"
+    "filesize": 661749,
+    "hashmd5": "ed2e1a6d4d6d05796a706addd9d6db47"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023246.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023246.fits.gz",
-    "filesize": 348347,
-    "hashmd5": "418bfdf55bc942b2e82009e62a52c70c"
+    "filesize": 516177,
+    "hashmd5": "de4c0c8335d3d97c290f736af5645501"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023526.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023526.fits.gz",
-    "filesize": 368558,
-    "hashmd5": "918c14f7a7d42e4d45ec7a79906b525f"
+    "filesize": 524967,
+    "hashmd5": "142f766ac0c7ba4ca1fe0749869ce592"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020734.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020734.fits.gz",
-    "filesize": 468058,
-    "hashmd5": "8734976abaad4b8f3a3ea5961b75159d"
+    "filesize": 632200,
+    "hashmd5": "5de98ef8b0f45ef68644d1b86e90ba19"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020275.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020275.fits.gz",
-    "filesize": 453339,
-    "hashmd5": "5ed6f4d9389ab9bf88a58579f027ee02"
+    "filesize": 617436,
+    "hashmd5": "6339a508bedc6b4fe09ec0c5a92b596f"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023077.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023077.fits.gz",
-    "filesize": 369687,
-    "hashmd5": "0b228cc6298f11b855e281f8d812ebf4"
+    "filesize": 536721,
+    "hashmd5": "62b8859a8688d4bcbc79878929b37301"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_025443.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_025443.fits.gz",
-    "filesize": 403712,
-    "hashmd5": "00b252d0db47ec3bbe09ca27be45be6d"
+    "filesize": 571433,
+    "hashmd5": "99c1c4a1c4da7a2937ff7080645cda50"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_028341.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_028341.fits.gz",
-    "filesize": 381619,
-    "hashmd5": "b880e8ab6368243fc335c594cb6e4f2b"
+    "filesize": 549414,
+    "hashmd5": "7ee54df596cadc2b71847f7fc843ee26"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020349.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020349.fits.gz",
-    "filesize": 545695,
-    "hashmd5": "b6a5a795f349f1a203ffc46cdb9b3dff"
+    "filesize": 712857,
+    "hashmd5": "6dd61fafbae8e86814de69800937db3a"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_047804.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_047804.fits.gz",
-    "filesize": 372575,
-    "hashmd5": "6faa56e297a38dd22051121dd8b41e2c"
+    "filesize": 539539,
+    "hashmd5": "402309d638b9ddd894eed813339dbf9c"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_028981.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_028981.fits.gz",
-    "filesize": 363048,
-    "hashmd5": "c37bfb14c344a917ee9a73dfde7d1b1f"
+    "filesize": 530802,
+    "hashmd5": "8cf530c3307ccb781b8ac4658a858b27"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020366.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020366.fits.gz",
-    "filesize": 467487,
-    "hashmd5": "81b95d596b153ac1285d0f9794c51b89"
+    "filesize": 631710,
+    "hashmd5": "3849ac03a122d80fbe218285016e9176"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033797.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033797.fits.gz",
-    "filesize": 421969,
-    "hashmd5": "50843c3b1e6854801d75987e174262c6"
+    "filesize": 588862,
+    "hashmd5": "64f6881782dd19af61bca2e27e9f4423"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033787.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033787.fits.gz",
-    "filesize": 351564,
-    "hashmd5": "dc965b9c7d0d5e06d82e85de5e27865c"
+    "filesize": 504999,
+    "hashmd5": "600541521d39e327d04a0eefbb4ee72b"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_026827.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_026827.fits.gz",
-    "filesize": 344874,
-    "hashmd5": "3ada0b15a2d9aff03b573904fb4e7aab"
+    "filesize": 501570,
+    "hashmd5": "9deff24c0e71e2a41c87f18f11ef7508"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029526.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029526.fits.gz",
-    "filesize": 334612,
-    "hashmd5": "ff9ed6ffb0fda557ba63e56363e93e88"
+    "filesize": 479577,
+    "hashmd5": "cb28f47a486edac87a6a7fdecf98b139"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020283.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020283.fits.gz",
-    "filesize": 397220,
-    "hashmd5": "e242b434b10f3f360c48c0773cf8c12b"
+    "filesize": 561500,
+    "hashmd5": "b0770dfc2467e20aaf9d4fd2d90a817b"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020517.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020517.fits.gz",
-    "filesize": 520800,
-    "hashmd5": "1774bf07da9bdb0dde89a49a96a3ae52"
+    "filesize": 687783,
+    "hashmd5": "1c7074ea471645261385a774d4638100"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020422.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020422.fits.gz",
-    "filesize": 546706,
-    "hashmd5": "37b2566804eb9fe5ce125ea1e49784b8"
+    "filesize": 714000,
+    "hashmd5": "eab11bf96bab7ef0f9370dd66eb43b0b"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020898.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020898.fits.gz",
-    "filesize": 485829,
-    "hashmd5": "aad61e769a19f33f792e4bbfb069c083"
+    "filesize": 652604,
+    "hashmd5": "522b7eb864c8ebc3e420a1c2d722aae2"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_028967.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_028967.fits.gz",
-    "filesize": 373767,
-    "hashmd5": "58c995d3e06b1bc02a3be503c4fcd683"
+    "filesize": 541208,
+    "hashmd5": "ac82a15b66d5adab72f728e37b9bf69a"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020137.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020137.fits.gz",
-    "filesize": 350779,
-    "hashmd5": "d413e089dcd1b0677f558af9398f7198"
+    "filesize": 514852,
+    "hashmd5": "1ba7504cf078558e65f89154589c30f1"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020339.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020339.fits.gz",
-    "filesize": 554547,
-    "hashmd5": "3ad95bfd6363a0f4fcd1ff255fa9e5ae"
+    "filesize": 721226,
+    "hashmd5": "96d64cfad2a009712ed5993a6c550271"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_027939.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_027939.fits.gz",
-    "filesize": 416825,
-    "hashmd5": "1e844e5b906e3d3deb3b735c801abbbb"
+    "filesize": 584350,
+    "hashmd5": "24af3345ba809bfe2e470261dd1a6d3a"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_027044.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_027044.fits.gz",
-    "filesize": 412864,
-    "hashmd5": "dc4252f88663d5abb0ac8b8883f12454"
+    "filesize": 579864,
+    "hashmd5": "ff64e716a0670668b7b73d34a3df86c7"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020521.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020521.fits.gz",
-    "filesize": 505478,
-    "hashmd5": "bb99c38a4f82ef021da9f13076147d0c"
+    "filesize": 672342,
+    "hashmd5": "9f8eb5053215d92674830ca66b64398f"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_047829.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_047829.fits.gz",
-    "filesize": 373467,
-    "hashmd5": "c463c6307fe9ddcecfffffda32b269f9"
+    "filesize": 540430,
+    "hashmd5": "25b19a4080af64445e5e41bef50778b9"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033795.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033795.fits.gz",
-    "filesize": 429335,
-    "hashmd5": "2759525d121609bab56367d718f44d4b"
+    "filesize": 595392,
+    "hashmd5": "8dd3e667973d49ac69bed2d3d7752a01"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029683.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_029683.fits.gz",
-    "filesize": 346856,
-    "hashmd5": "ac54a73c3f2459c68fc9a3f2b5880cac"
+    "filesize": 500322,
+    "hashmd5": "add0b97c3ded5cd809e024a0155e056c"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_022593.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_022593.fits.gz",
-    "filesize": 402718,
-    "hashmd5": "a69832b0fe7880928dc0ee0fc2d238e4"
+    "filesize": 566251,
+    "hashmd5": "6841676ea7b1ae6a5aed15ba4edb280d"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz",
-    "filesize": 465864,
-    "hashmd5": "1c7661ddbb607139d08e70a87955a963"
+    "filesize": 630275,
+    "hashmd5": "000a1fddf93ef5d2348ae525acdd6c99"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033794.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_033794.fits.gz",
-    "filesize": 437539,
-    "hashmd5": "e15e2dd5a589730bbccde73e334424bf"
+    "filesize": 604278,
+    "hashmd5": "3375ef356b32a9461e4bbd70097e1ff6"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_047828.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_047828.fits.gz",
-    "filesize": 365356,
-    "hashmd5": "f03536de686cb725eb97e42f886b6baf"
+    "filesize": 532155,
+    "hashmd5": "a6dff73830229ffc52c15286c9253e0f"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020365.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020365.fits.gz",
-    "filesize": 462851,
-    "hashmd5": "f48142712d282e3fa10ce0d8dc1f8c3c"
+    "filesize": 626775,
+    "hashmd5": "53e2dea966a0e5c5d45539cfa1a33c1d"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_021753.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_021753.fits.gz",
-    "filesize": 433996,
-    "hashmd5": "41074cb2a9360dc49a1dc10d54580300"
+    "filesize": 601014,
+    "hashmd5": "83d13254830878890d4922e352ad886c"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020343.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020343.fits.gz",
-    "filesize": 490982,
-    "hashmd5": "1edcb9386dcb9dcaf1c9f938d05d1947"
+    "filesize": 655348,
+    "hashmd5": "d1b48e4770578138d6701a8ba162ca5c"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020915.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020915.fits.gz",
-    "filesize": 452715,
-    "hashmd5": "b8aa9d0c18d479b144e1a41ae141a975"
+    "filesize": 619874,
+    "hashmd5": "188f6bbca8a74eb2d505dea84154f605"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020282.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020282.fits.gz",
-    "filesize": 462875,
-    "hashmd5": "ab4bd82248b162fdab9114ff0facc4d3"
+    "filesize": 626686,
+    "hashmd5": "85004da7b17fc7ee3571c186946dee54"
    },
    {
     "path": "hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020899.fits.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020899.fits.gz",
-    "filesize": 497317,
-    "hashmd5": "41be4fe937134d9db3c92b04fc8d18e1"
+    "filesize": 664353,
+    "hashmd5": "cf61b0388caf3bbdf9441ced303317eb"
    }
   ]
  },

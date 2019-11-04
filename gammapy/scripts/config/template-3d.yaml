@@ -5,7 +5,7 @@ general:
     outdir: .
 
 observations:
-    datastore: $GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz
+    datastore: $GAMMAPY_DATA/hess-dl3-dr1/
     filters:
         - filter_type: par_value
           value_param: Crab

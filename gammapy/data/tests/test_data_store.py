@@ -42,7 +42,7 @@ def test_datastore_from_dir():
 
 @requires_data()
 def test_datastore_from_file():
-    filename = "$GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz"
+    filename = "$GAMMAPY_DATA/hess-dl3-dr1/hdu-index.fits.gz"
     data_store = DataStore.from_file(filename)
     obs = data_store.obs(obs_id=23523)
     # Check that things can be loaded:

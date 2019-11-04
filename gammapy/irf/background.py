@@ -386,8 +386,8 @@ class Background2D:
 
         ax = plt.gca() if ax is None else ax
 
-        x = self.data.axis("energy").edges
-        y = self.data.axis("offset").edges
+        x = self.data.axis("energy").edges.to_value("TeV")
+        y = self.data.axis("offset").edges.to_value("deg")
         z = self.data.data.T.value
 
         kwargs.setdefault("cmap", "GnBu")
@@ -395,10 +395,10 @@ class Background2D:
 
         caxes = ax.pcolormesh(x, y, z, norm=LogNorm(), **kwargs)
         ax.set_xscale("log")
-        ax.set_ylabel(f"Offset ({y.unit})")
-        ax.set_xlabel(f"Energy ({x.unit})")
+        ax.set_ylabel(f"Offset (deg)")
+        ax.set_xlabel(f"Energy (TeV)")
 
-        xmin, xmax = x.value.min(), x.value.max()
+        xmin, xmax = x.min(), x.max()
         ax.set_xlim(xmin, xmax)
 
         if add_cbar:

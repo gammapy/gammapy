@@ -87,11 +87,6 @@ def test_hdu_index_table_hd_hap():
     msg = "No entry available with OBS_ID = 42"
     assert str(excinfo.value) == msg
 
-    with pytest.raises(IndexError) as excinfo:
-        hdu_index.hdu_location(obs_id=23523, hdu_type="bkg")
-    msg = "No HDU found matching: OBS_ID = 23523, HDU_TYPE = bkg, HDU_CLASS = None"
-    assert str(excinfo.value) == msg
-
     with pytest.raises(ValueError) as excinfo:
         hdu_index.hdu_location(obs_id=23523)
     msg = "You have to specify `hdu_type` or `hdu_class`."
