@@ -18,8 +18,8 @@ from gammapy.utils.testing import assert_quantity_allclose, requires_data
 @pytest.fixture
 def observations_hess_dl3():
     """HESS DL3 observation list."""
-    datastore = DataStore.from_file(
-        "$GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz"
+    datastore = DataStore.from_dir(
+        "$GAMMAPY_DATA/hess-dl3-dr1/"
     )
     obs_ids = [23523, 23526]
     return datastore.get_observations(obs_ids)
@@ -93,8 +93,8 @@ def test_spectrum_dataset_maker_hess_dl3(
     assert_allclose(datasets[0].livetime.value, 1581.736758)
     assert_allclose(datasets[1].livetime.value, 1572.686724)
 
-    assert_allclose(datasets[0].background.data.sum(), 1.737258, rtol=1e-5)
-    assert_allclose(datasets[1].background.data.sum(), 1.741604, rtol=1e-5)
+    assert_allclose(datasets[0].background.data.sum(), 7.74732, rtol=1e-5)
+    assert_allclose(datasets[1].background.data.sum(), 6.118879, rtol=1e-5)
 
 
 @requires_data()
