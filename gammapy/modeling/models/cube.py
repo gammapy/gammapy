@@ -41,9 +41,6 @@ class SkyModels:
     skymodels : list of `~gammapy.modeling.models.SkyModel`
         Sky models
     """
-
-    frame = None
-
     def __init__(self, skymodels):
         existing_names = []
 

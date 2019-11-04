@@ -868,11 +868,8 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset containing images.
         """
-        counts = self.counts.copy()
-        background = self.background_model.evaluate().copy()
-
-        counts *= self.mask_safe
-        background *= self.mask_safe
+        counts = self.counts * self.mask_safe
+        background = self.background_model.evaluate() * self.mask_safe
 
         counts = counts.sum_over_axes(keepdims=keepdims)
         exposure = _map_spectrum_weight(self.exposure, spectrum)
