@@ -4,7 +4,8 @@ import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
 from gammapy.irf import EnergyDispersion
-from gammapy.maps import Map
+from gammapy.maps import Map, MapCoord
+from gammapy.utils.random import InverseCDFSampler, get_random_state
 
 __all__ = ["make_edisp_map", "EDispMap"]
 
@@ -354,3 +355,36 @@ class EDispMap:
         loc = migra_axis.edges.searchsorted(1.0)
         edisp_map.data[:, loc, :, :] = 1.0
         return cls(edisp_map, exposure_edisp)
+
+    def sample_coord(self, map_coord, random_state=0):
+        """Apply the energy dispersion corrections on the coordinates of a set of simulated events.
+
+        Parameters
+        ----------
+        map_coord : `~gammapy.maps.MapCoord` object.
+            Sequence of coordinates and energies of sampled events.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        `~gammapy.maps.MapCoord`.
+            Sequence of Edisp-corrected coordinates of the input map_coord map.
+        """
+        random_state = get_random_state(random_state)
+        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
+
+        coord = {
+            "skycoord": map_coord.skycoord.reshape(-1, 1),
+            "energy": map_coord["energy"].reshape(-1, 1),
+            "migra": migra_axis.center,
+        }
+
+        pdf_edisp = self.edisp_map.interp_by_coord(coord)
+
+        sample_edisp = InverseCDFSampler(pdf_edisp, axis=1, random_state=random_state)
+        pix_edisp = sample_edisp.sample_axis()
+        energy_reco = migra_axis.pix_to_coord(pix_edisp)
+
+        return MapCoord.create({"skycoord": map_coord.skycoord, "energy": energy_reco})
