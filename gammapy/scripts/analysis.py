@@ -64,6 +64,7 @@ class Analysis:
             raise ValueError("Dict or `AnalysiConfig` object required.")
 
         self._set_logging()
+        self.datastore = None
         self.observations = None
         self.datasets = None
         self.model = None
@@ -87,9 +88,9 @@ class Analysis:
         log.info("Fetching observations.")
         datastore_path = make_path(self.settings["observations"]["datastore"])
         if datastore_path.is_file():
-            datastore = DataStore().from_file(datastore_path)
+            self.datastore = DataStore().from_file(datastore_path)
         elif datastore_path.is_dir():
-            datastore = DataStore().from_dir(datastore_path)
+            self.datastore = DataStore().from_dir(datastore_path)
         else:
             raise FileNotFoundError(f"Datastore {datastore_path} not found.")
         ids = set()
@@ -108,17 +109,17 @@ class Analysis:
                 selection["type"] = "par_box"
                 selection["value_range"] = Angle(criteria["value_range"])
             if selection["type"] == "sky_circle" or selection["type"].endswith("_box"):
-                selected_obs = datastore.obs_table.select_observations(selection)
+                selected_obs = self.datastore.obs_table.select_observations(selection)
             if selection["type"] == "par_value":
                 mask = (
-                    datastore.obs_table[criteria["variable"]] == criteria["value_param"]
+                    self.datastore.obs_table[criteria["variable"]] == criteria["value_param"]
                 )
-                selected_obs = datastore.obs_table[mask]
+                selected_obs = self.datastore.obs_table[mask]
             if selection["type"] == "ids":
-                obs_list = datastore.get_observations(criteria["obs_ids"])
+                obs_list = self.datastore.get_observations(criteria["obs_ids"])
                 selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
             if selection["type"] == "all":
-                obs_list = datastore.get_observations()
+                obs_list = self.datastore.get_observations()
                 selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
 
             if len(selected_obs):
