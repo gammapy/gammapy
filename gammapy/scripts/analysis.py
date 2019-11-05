@@ -65,9 +65,7 @@ class Analysis:
 
         self._set_logging()
         self.observations = None
-        self.background_estimator = None
         self.datasets = None
-        self.extraction = None
         self.model = None
         self.fit = None
         self.fit_result = None
