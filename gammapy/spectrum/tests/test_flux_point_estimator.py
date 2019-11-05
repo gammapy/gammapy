@@ -238,4 +238,8 @@ def test_mask_shape():
     dataset_2.model = model
 
     fpe = FluxPointsEstimator(datasets=[dataset_2, dataset_1], e_edges=[1, 10] * u.TeV, source="source")
-    fpe.run()
+
+    with pytest.raises(ValueError) as excinfo:
+        fpe.run()
+    assert "No dataset contributes" in str(excinfo.value)
+

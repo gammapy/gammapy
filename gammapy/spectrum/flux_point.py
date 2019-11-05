@@ -883,9 +883,9 @@ class FluxPointsEstimator:
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         return FluxPoints(table).to_sed_type("dnde")
 
-    def _energy_mask(self, e_group):
-        energy_mask = np.zeros(self.datasets.datasets[0].data_shape)
-        energy_mask[e_group["idx_min"] : e_group["idx_max"] + 1] = 1
+    def _energy_mask(self, e_group, dataset):
+        energy_mask = np.zeros(dataset.data_shape)
+        energy_mask[e_group["idx_min"]: e_group["idx_max"] + 1] = 1
         return energy_mask.astype(bool)
 
     def estimate_flux_point(self, e_group, steps="all"):
@@ -927,7 +927,7 @@ class FluxPointsEstimator:
         contribute_to_likelihood = False
 
         for dataset in self.datasets.datasets:
-            dataset.mask_fit = self._energy_mask(e_group)
+            dataset.mask_fit = self._energy_mask(e_group=e_group, dataset=dataset)
             mask = dataset.mask_fit
 
             if dataset.mask_safe is not None:
