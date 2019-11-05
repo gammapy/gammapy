@@ -93,7 +93,7 @@ class Analysis:
             self.datastore = DataStore().from_dir(datastore_path)
         else:
             raise FileNotFoundError(f"Datastore {datastore_path} not found.")
-        ids = set()
+        ids = []
         selection = dict()
         for criteria in self.settings["observations"]["filters"]:
             selected_obs = ObservationTable()
@@ -124,10 +124,12 @@ class Analysis:
 
             if len(selected_obs):
                 if "exclude" in criteria and criteria["exclude"]:
-                    ids.difference_update(selected_obs["OBS_ID"].tolist())
+                    exclude = selected_obs["OBS_ID"].tolist()
+                    selection = np.isin(ids, exclude)
+                    ids = list(np.array(ids)[~selection])
                 else:
-                    ids.update(selected_obs["OBS_ID"].tolist())
-        self.observations = datastore.get_observations(ids, skip_missing=True)
+                    ids.extend(selected_obs["OBS_ID"].tolist())
+        self.observations = self.datastore.get_observations(ids, skip_missing=True)
         for obs in self.observations.list:
             log.info(obs)
 
