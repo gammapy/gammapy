@@ -25,7 +25,7 @@ rectangle = RectangleSkyRegion(
 )
 
 
-bkg_maker = ReflectedRegionsBackgroundMaker(region=rectangle, min_distance=0.1 * u.rad)
+bkg_maker = ReflectedRegionsBackgroundMaker(min_distance=0.1 * u.rad)
 
 dataset_maker = SpectrumDatasetMaker(
     region=rectangle, e_reco=np.logspace(-1, 2, 30) * u.TeV
