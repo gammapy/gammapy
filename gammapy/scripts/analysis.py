@@ -187,7 +187,7 @@ class Analysis:
 
         for ds in self.datasets.datasets:
             # TODO: fit_range handled in jsonschema validation class
-            if "fit_range" in self.settings["fit"]:
+            if "fit" in self.settings and "fit_range" in self.settings["fit"]:
                 e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
                 e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
                 if isinstance(ds, MapDataset):
@@ -251,11 +251,10 @@ class Analysis:
         geom_irf["margin_irf"] = self.settings["datasets"].get("margin", None)
 
         offset_max = Angle(self.settings["datasets"]["offset-max"])
-        stack_datasets = self.settings["datasets"]["stack-datasets"]
         log.info("Creating datasets.")
 
         maker = MapDatasetMaker(geom=geom, offset_max=offset_max, **geom_irf)
-        if stack_datasets:
+        if self.settings["datasets"]["stack-datasets"]:
             stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
             for obs in self.observations:
                 dataset = maker.run(obs)
