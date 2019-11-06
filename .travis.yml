@@ -64,7 +64,7 @@ matrix:
         # Main test, used for coverage
         - stage: Initial tests
           env: TEST_COVERAGE=true CMD='make test-cov'
-               PIP_DEPENDENCIES="$PIP_DEPENDENCIES pytest-cov"
+               PIP_DEPENDENCIES="$PIP_DEPENDENCIES pytest-cov codecov"
 
         # MacOS X tests
         - os: osx
@@ -160,9 +160,5 @@ script:
 
 after_success:
     - if $TEST_COVERAGE; then
-          pip install coveralls;
-          coveralls;
-          # See https://github.com/codecov/example-python
-          pip install codecov;
           codecov;
       fi
