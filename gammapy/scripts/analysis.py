@@ -112,7 +112,8 @@ class Analysis:
                 selected_obs = self.datastore.obs_table.select_observations(selection)
             if selection["type"] == "par_value":
                 mask = (
-                    self.datastore.obs_table[criteria["variable"]] == criteria["value_param"]
+                    self.datastore.obs_table[criteria["variable"]]
+                    == criteria["value_param"]
                 )
                 selected_obs = self.datastore.obs_table[mask]
             if selection["type"] == "ids":

@@ -131,6 +131,7 @@ def test_parameters_from_stack():
     # assert_allclose(pars.covariance[0], [2, 2, 0, 0, 0])
     # assert_allclose(pars.covariance[4], [0, 0, 3, 3, 3])
 
+
 def test_unique_parameters():
     a = Parameter("a", 1)
     b = Parameter("b", 2)

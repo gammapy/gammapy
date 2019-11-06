@@ -18,9 +18,7 @@ from gammapy.utils.testing import assert_quantity_allclose, requires_data
 @pytest.fixture
 def observations_hess_dl3():
     """HESS DL3 observation list."""
-    datastore = DataStore.from_dir(
-        "$GAMMAPY_DATA/hess-dl3-dr1/"
-    )
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids = [23523, 23526]
     return datastore.get_observations(obs_ids)
 

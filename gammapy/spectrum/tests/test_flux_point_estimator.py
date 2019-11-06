@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import simulate_dataset, MapDataset
+from gammapy.cube import MapDataset, simulate_dataset
 from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -230,16 +230,16 @@ def test_mask_shape():
     dataset_2.edisp = None
 
     model = SkyModel(
-        spectral_model=PowerLawSpectralModel(),
-        spatial_model=GaussianSpatialModel(),
+        spectral_model=PowerLawSpectralModel(), spatial_model=GaussianSpatialModel()
     )
 
     dataset_1.model = model
     dataset_2.model = model
 
-    fpe = FluxPointsEstimator(datasets=[dataset_2, dataset_1], e_edges=[1, 10] * u.TeV, source="source")
+    fpe = FluxPointsEstimator(
+        datasets=[dataset_2, dataset_1], e_edges=[1, 10] * u.TeV, source="source"
+    )
 
     with pytest.raises(ValueError) as excinfo:
         fpe.run()
     assert "No dataset contributes" in str(excinfo.value)
-
