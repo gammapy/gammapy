@@ -78,7 +78,7 @@ class SigmaVEstimator:
     Parameters
     ----------
     dataset : `~gammapy.spectrum.dataset.SpectrumDatasetOnOff`
-        Simulated dark matter annihilation spectrum dataset.
+        Simulated dark matter annihilation spectrum OnOff dataset.
     masses : list of `~astropy.units.Quantity`
         List of particle masses where the values of :math:`\sigma\nu` will be calculated.
     channels : list of strings allowed in `~gammapy.astro.darkmatter.PrimaryFlux`
@@ -99,11 +99,14 @@ class SigmaVEstimator:
         logging.basicConfig()
         logging.getLogger("gammapy.astro.darkmatter.utils").setLevel("INFO")
 
-        # Create annihilation model
+        # Define annihilation model
         JFAC = 3.41e19 * u.Unit("GeV2 cm-5")
         flux_model = DarkMatterAnnihilationSpectralModel(mass=5000*u.GeV, channel="b", jfactor=JFAC)
 
-        # Create an empty SpectrumDataSetOnOff dataset
+        # Define a background model for the off counts as a CountsSpectrum
+        bkg = CountsSpectrum(energy_min, energy_max, data=offcounts)
+
+        # Define an empty SpectrumDataSetOnOff dataset
         dataset = SpectrumDatasetOnOff(
             aeff=aeff,
             edisp=edisp,
@@ -116,8 +119,19 @@ class SigmaVEstimator:
         # Define channels and masses to run estimator
         channels = ["b", "t", "Z"]
         masses = [70, 200, 500, 5000, 10000, 50000, 100000]*u.GeV
+
+        # Define nuissance parameters
+        nuissance = dict(
+            j=JFAC,
+            jobs=JFAC,
+            sigmaj=0.1*JFAC
+        )
+
+        # Instantiate the estimator
         estimator = SigmaVEstimator(dataset, masses, channels, background_model=bkg, jfactor=JFAC)
-        result = estimator.run(likelihood_profile_opts=dict(bounds=(0, 500), nvalues=100))
+
+        # Run the estimator
+        result = estimator.run(10, nuissance=nuissance, likelihood_profile_opts=dict(bounds=(0, 500), nvalues=100))
     """
 
     RATIO = 2.71
