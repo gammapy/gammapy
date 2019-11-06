@@ -204,6 +204,26 @@ class DatasetFermi3FHLGC(DownloadDataset):
         str(basepath / "gll_iem_v06_gc.fits.gz"),
     ]
 
+class DatasetFermi3FHLcrab(DownloadDataset):
+
+    name = "fermi-3fhl-crab"
+    description = "Prepared Fermi-LAT 3FHL dataset of the Crab Nebula region"
+    base_url = "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master"
+    local_repo = Path(os.environ["GAMMAPY_FERMI_LAT_DATA"])
+    basepath = Path("3fhl") / "crab"
+
+    followLinks = "Others"
+    pathlist = [
+        str(basepath / "Fermi-LAT-3FHL_data_Fermi-LAT.fits"),
+        str(basepath / "Fermi-LAT-3FHL_datasets.yaml"),
+        str(basepath / "Fermi-LAT-3FHL_models.yaml"),
+    ]
+
+
+class DatasetHAWCcrab(DownloadDataset):
+    name = "hawc_crab"
+    description = "tbd"
+
 
 class DownloadDatasetIndex:
     path = Path(__file__).parent / "gammapy-data-index.json"
@@ -218,6 +238,8 @@ class DownloadDatasetIndex:
         DatasetEBL,
         DatasetGammaCat,
         DatasetFermi3FHLGC,
+        DatasetFermi3FHLcrab,
+        DatasetHAWCcrab,
         DatasetTests,
         DatasetFigures,
     ]

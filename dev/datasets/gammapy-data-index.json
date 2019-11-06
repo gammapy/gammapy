@@ -2706,6 +2706,48 @@
   ]
  },
  {
+  "name": "fermi-3fhl-crab",
+  "description": "Prepared Fermi-LAT 3FHL dataset of the Crab Nebula region",
+  "files": [
+   {
+    "path": "fermi-3fhl-crab/Fermi-LAT-3FHL_data_Fermi-LAT.fits",
+    "url": "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master/3fhl/crab/Fermi-LAT-3FHL_data_Fermi-LAT.fits",
+    "filesize": 391680,
+    "hashmd5": "3ca12b9f8f8100a9c8254566c5054e71"
+   },
+   {
+    "path": "fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml",
+    "url": "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master/3fhl/crab/Fermi-LAT-3FHL_datasets.yaml",
+    "filesize": 222,
+    "hashmd5": "f4e9cbde47212e3ae195735c5e836df5"
+   },
+   {
+    "path": "fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml",
+    "url": "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master/3fhl/crab/Fermi-LAT-3FHL_models.yaml",
+    "filesize": 1251,
+    "hashmd5": "23336c63661ac35291b4a3a95f5c73df"
+   }
+  ]
+ },
+ {
+  "name": "hawc_crab",
+  "description": "tbd",
+  "files": [
+   {
+    "path": "hawc_crab/HAWC19_flux_points.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hawc_crab/HAWC19_flux_points.fits",
+    "filesize": 8640,
+    "hashmd5": "afa06335c5a3e559b2ff0e73d254315f"
+   },
+   {
+    "path": "hawc_crab/prepare.py",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/hawc_crab/prepare.py",
+    "filesize": 1222,
+    "hashmd5": "d13cdc457ff979e7a86b9c2d740659bb"
+   }
+  ]
+ },
+ {
   "name": "tests",
   "description": "tbd",
   "files": [
