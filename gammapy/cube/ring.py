@@ -5,14 +5,15 @@ import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.maps import scale_cube
+from gammapy.cube.fit import MapDatasetOnOff
 
-__all__ = ["AdaptiveRingBackgroundEstimator", "RingBackgroundEstimator"]
+__all__ = ["AdaptiveRingBackgroundMaker", "RingBackgroundMaker"]
 
 
-class AdaptiveRingBackgroundEstimator:
+class AdaptiveRingBackgroundMaker:
     """Adaptive ring background algorithm.
 
-    This algorithm extends the `RingBackgroundEstimator` method by adapting the
+    This algorithm extends the `RingBackgroundMaker` method by adapting the
     size of the ring to achieve a minimum on / off exposure ratio (alpha) in regions
     where the area to estimate the background from is limited.
 
@@ -33,31 +34,9 @@ class AdaptiveRingBackgroundEstimator:
     method : {'fixed_width', 'fixed_r_in'}
         Adaptive ring method.
 
-    Examples
-    --------
-    Example using `AdaptiveRingBackgroundEstimator`::
-
-        from gammapy.maps import Map
-        from gammapy.cube import AdaptiveRingBackgroundEstimator
-
-        filename = '$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz'
-        images = {
-            'counts': Map.read(filename, hdu='counts'),
-            'exposure_on': Map.read(filename, hdu='exposure'),
-            'exclusion': Map.read(filename, hdu='exclusion'),
-        }
-
-        adaptive_ring_bkg = AdaptiveRingBackgroundEstimator(
-            r_in='0.22 deg',
-            r_out_max='0.8 deg',
-            width='0.1 deg',
-        )
-        results = adaptive_ring_bkg.run(images)
-        results['background'].plot()
-
     See Also
     --------
-    RingBackgroundEstimator, gammapy.detect.KernelBackgroundEstimator
+    RingBackgroundMaker, gammapy.detect.KernelBackgroundMaker
     """
 
     def __init__(
@@ -131,54 +110,20 @@ class AdaptiveRingBackgroundEstimator:
 
     @staticmethod
     def _alpha_approx_cube(cubes):
-        """Compute alpha as on_exposure / off_exposure.
-
-        Where off_exposure < 0, alpha is set to infinity.
+        """Compute alpha as acceptance / acceptance_off.
+        Where acceptance_off < 0, alpha is set to infinity.
         """
-        exposure_on = cubes["exposure_on"]
-        exposure_off = cubes["exposure_off"]
-        alpha_approx = np.where(exposure_off > 0, exposure_on / exposure_off, np.inf)
+        acceptance = cubes["acceptance"]
+        acceptance_off = cubes["acceptance_off"]
+        with np.errstate(divide="ignore", invalid="ignore"):
+            alpha_approx = np.where(
+                acceptance_off > 0, acceptance / acceptance_off, np.inf
+            )
+
         return alpha_approx
 
-    @staticmethod
-    def _exposure_off_cube(exposure_on, exclusion, kernels):
-        """Compute off exposure cube.
-
-        The on exposure is convolved with different
-        ring kernels and stacking the data along the third dimension.
-        """
-        exposure = exposure_on.data
-        exclusion = exclusion.data
-        return scale_cube(exposure * exclusion, kernels)
-
-    def _exposure_on_cube(self, exposure_on, kernels):
-        """Compute on exposure cube.
-
-        Calculated by convolving the on exposure with a tophat
-        of radius theta, and stacking all images along the third dimension.
-        """
-        scale = exposure_on.geom.pixel_scales[0].to("deg")
-        theta = self.parameters["theta"] * scale
-
-        tophat = Tophat2DKernel(theta.value)
-        tophat.normalize("peak")
-        exposure_on = exposure_on.convolve(tophat.array)
-        exposure_on_cube = np.repeat(
-            exposure_on.data[:, :, np.newaxis], len(kernels), axis=2
-        )
-        return exposure_on_cube
-
-    @staticmethod
-    def _off_cube(counts, exclusion, kernels):
-        """Compute off cube.
-
-        Calculated by convolving the raw counts with different ring kernels
-        and stacking the data along the third dimension.
-        """
-        return scale_cube(counts.data * exclusion.data, kernels)
-
-    def _reduce_cubes(self, cubes):
-        """Compute off and off exposure map.
+    def _reduce_cubes(self, cubes, dataset):
+        """Compute off and off acceptance map.
 
         Calulated by reducing the cubes. The data is
         iterated along the third axis (i.e. increasing ring sizes), the value
@@ -186,67 +131,118 @@ class AdaptiveRingBackgroundEstimator:
         """
         threshold = self._parameters["threshold_alpha"]
 
-        alpha_approx_cube = cubes["alpha_approx"]
-        off_cube = cubes["off"]
-        exposure_off_cube = cubes["exposure_off"]
+        alpha_approx_cube = self._alpha_approx_cube(cubes)
+        counts_off_cube = cubes["counts_off"]
+        acceptance_off_cube = cubes["acceptance_off"]
+        acceptance_cube = cubes["acceptance"]
 
         shape = alpha_approx_cube.shape[:2]
-        off = np.tile(np.nan, shape)
-        exposure_off = np.tile(np.nan, shape)
+        counts_off = np.tile(np.nan, shape)
+        acceptance_off = np.tile(np.nan, shape)
+        acceptance = np.tile(np.nan, shape)
 
         for idx in np.arange(alpha_approx_cube.shape[-1]):
-            mask = (alpha_approx_cube[:, :, idx] <= threshold) & np.isnan(off)
-            off[mask] = off_cube[:, :, idx][mask]
-            exposure_off[mask] = exposure_off_cube[:, :, idx][mask]
+            mask = (alpha_approx_cube[:, :, idx] <= threshold) & np.isnan(counts_off)
+            counts_off[mask] = counts_off_cube[:, :, idx][mask]
+            acceptance_off[mask] = acceptance_off_cube[:, :, idx][mask]
+            acceptance[mask] = acceptance_cube[:, :, idx][mask]
 
-        return exposure_off, off
+        counts = dataset.counts
+        acceptance = counts.copy(data=acceptance[np.newaxis, Ellipsis])
+        acceptance_off = counts.copy(data=acceptance_off[np.newaxis, Ellipsis])
+        counts_off = counts.copy(data=counts_off[np.newaxis, Ellipsis])
 
-    def run(self, images):
-        """Run adaptive ring background algorithm.
+        return acceptance, acceptance_off, counts_off
+
+    def make_cubes(self, dataset, exclusion):
+        """Make acceptance, off acceptance, off counts cubes
 
         Parameters
         ----------
-        images : dict of `~gammapy.maps.WcsNDMap`
-            Input sky maps.
+        dataset : `~gammapy.cube.fit.MapDataset`
+            Input map dataset.
+        exclusion : `~gammapy.maps.WcsNDMap`
+            Exclusion mask for regions with known gamma-ray emission.
 
         Returns
         -------
-        result : dict of `~gammapy.maps.WcsNDMap`
-            Result sky maps.
+        cubes : dict of `~gammapy.maps.WcsNDMap`
+            Dictionary containing `counts_off`, `acceptance` and `acceptance_off` cubes.
         """
-        required = ["counts", "background", "exclusion"]
-        counts, exposure_on, exclusion = [images[_] for _ in required]
 
-        if not counts.geom.is_image:
-            raise ValueError("Only 2D maps are supported")
-
+        counts = dataset.counts
+        background = dataset.background_model.map
         kernels = self.kernels(counts)
-        cubes = {
-            "exposure_on": self._exposure_on_cube(exposure_on, kernels),
-            "exposure_off": self._exposure_off_cube(exposure_on, exclusion, kernels),
-            "off": self._off_cube(counts, exclusion, kernels),
-        }
-        cubes["alpha_approx"] = self._alpha_approx_cube(cubes)
 
-        exposure_off, off = self._reduce_cubes(cubes)
-        alpha = exposure_on.data / exposure_off
+        cubes = {}
+        cubes["counts_off"] = scale_cube(
+            (counts.data * exclusion.data)[0, Ellipsis], kernels
+        )
+        cubes["acceptance_off"] = scale_cube(
+            (background.data * exclusion.data)[0, Ellipsis], kernels
+        )
 
-        # set data outside fov to zero
-        not_has_exposure = ~(exposure_on.data > 0)
-        for data in [alpha, off, exposure_off]:
-            data[not_has_exposure] = 0
+        scale = background.geom.pixel_scales[0].to("deg")
+        theta = self.parameters["theta"] * scale
+        tophat = Tophat2DKernel(theta.value)
+        tophat.normalize("peak")
+        acceptance = background.convolve(tophat.array)
+        acceptance_data = acceptance.data[0, Ellipsis]
+        cubes["acceptance"] = np.repeat(
+            acceptance_data[Ellipsis, np.newaxis], len(kernels), axis=2
+        )
 
-        background = alpha * off
+        return cubes
 
-        return {
-            "exposure_off": counts.copy(data=exposure_off),
-            "off": counts.copy(data=off),
-            "alpha": counts.copy(data=alpha),
-            "background_ring": counts.copy(data=background),
-        }
+    def run(self, dataset, exclusion):
+        """Run adaptive ring background maker
+
+        Parameters
+        ----------
+        dataset : `~gammapy.cube.fit.MapDataset`
+            Input map dataset.
+        exclusion : `~gammapy.maps.WcsNDMap`
+            Exclusion mask for regions with known gamma-ray emission.
+
+        Returns
+        -------
+        dataset_on_off : `~gammapy.cube.fit.MapDatasetOnOff`
+            On off dataset.
+        """
+        cubes = self.make_cubes(dataset, exclusion)
+        acceptance, acceptance_off, counts_off = self._reduce_cubes(cubes, dataset)
+
+        not_has_off_acceptance = acceptance_off.data <= 0
+        acceptance_off.data[not_has_off_acceptance] = np.nan
+
+        fft_noise_threshold = 1e-6
+        not_has_acceptance = acceptance.data <= fft_noise_threshold
+        counts_off.data[not_has_acceptance] = 0
+        acceptance_off.data[not_has_acceptance] = 0
+        acceptance.data[not_has_acceptance] = 0
+
+        mask_safe = dataset.counts.copy(
+            data=np.ones(dataset.counts.geom.data_shape, dtype=bool)
+        )
+
+        return MapDatasetOnOff(
+            counts=dataset.counts,
+            counts_off=counts_off,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            exposure=dataset.exposure,
+            mask_fit=dataset.mask_fit,
+            psf=dataset.psf,
+            edisp=dataset.edisp,
+            background_model=None,
+            name=dataset.name,
+            evaluation_mode="local",
+            mask_safe=mask_safe,
+            gti=dataset.gti,
+        )
 
 
-class RingBackgroundEstimator:
+class RingBackgroundMaker:
     """Ring background method for cartesian coordinates.
 
     - Step 1: apply exclusion mask
@@ -258,24 +254,6 @@ class RingBackgroundEstimator:
         Inner ring radius
     width : `~astropy.units.Quantity`
         Ring width
-
-    Examples
-    --------
-    Example using `RingBackgroundEstimator`::
-
-        from gammapy.maps import Map
-        from gammapy.cube import RingBackgroundEstimator
-
-        filename = '$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz'
-        images = {
-            'counts': Map.read(filename, hdu='counts'),
-            'exposure_on': Map.read(filename, hdu='exposure'),
-            'exclusion': Map.read(filename, hdu='exclusion'),
-        }
-
-        ring_bkg = RingBackgroundEstimator(r_in='0.35 deg', width='0.3 deg')
-        results = ring_bkg.run(images)
-        results['background'].plot()
 
     See Also
     --------
@@ -313,51 +291,81 @@ class RingBackgroundEstimator:
         ring.normalize("peak")
         return ring
 
-    def run(self, images):
-        """Run ring background algorithm.
-
-        Required Maps: {required}
+    def make_maps_off(self, dataset, exclusion):
+        """Make off maps
 
         Parameters
         ----------
-        images : dict of `~gammapy.maps.WcsNDMap`
-            Input sky maps.
+        dataset : `~gammapy.cube.fit.MapDataset`
+            Input map dataset.
+        exclusion : `~gammapy.maps.WcsNDMap`
+            Exclusion mask for regions with known gamma-ray emission.
 
         Returns
         -------
-        result : dict of `~gammapy.maps.WcsNDMap`
-            Result sky maps
+        maps_off : dict of `~gammapy.maps.WcsNDMap`
+            Dictionary containing `counts_off` and `acceptance_off` maps.
         """
-        required = ["counts", "background", "exclusion"]
+        counts = dataset.counts
+        background = dataset.background_model.map
 
-        counts, background, exclusion = [images[_] for _ in required]
-
-        result = {}
+        maps_off = {}
         ring = self.kernel(counts)
 
         counts_excluded = counts * exclusion
-
-        result["off"] = counts_excluded.convolve(ring.array)
+        maps_off["counts_off"] = counts_excluded.convolve(ring.array)
 
         background_excluded = background * exclusion
+        maps_off["acceptance_off"] = background_excluded.convolve(ring.array)
 
-        result["exposure_off"] = background_excluded.convolve(ring.array)
+        # set pixels, where ring is too small to NaN
+        not_has_off_acceptance = maps_off["acceptance_off"].data <= 0
+        maps_off["acceptance_off"].data[not_has_off_acceptance] = np.nan
 
-        with np.errstate(divide="ignore", invalid="ignore"):
-            # set pixels, where ring is too small to NaN
-            not_has_off_exposure = result["exposure_off"].data <= 0
-            result["exposure_off"].data[not_has_off_exposure] = np.nan
+        not_has_acceptance = background.data <= 0
+        maps_off["counts_off"].data[not_has_acceptance] = 0
+        maps_off["acceptance_off"].data[not_has_acceptance] = 0
 
-            not_has_exposure = background.data <= 0
-            result["off"].data[not_has_exposure] = 0
-            result["exposure_off"].data[not_has_exposure] = 0
+        return maps_off
 
-            result["alpha"] = background / result["exposure_off"]
-            result["alpha"].data[not_has_exposure] = 0
+    def run(self, dataset, exclusion):
+        """Run ring background maker
 
-        result["background_ring"] = result["alpha"] * result["off"]
+        Parameters
+        ----------
+        dataset : `~gammapy.cube.fit.MapDataset`
+            Input map dataset.
+        exclusion : `~gammapy.maps.WcsNDMap`
+            Exclusion mask for regions with known gamma-ray emission.
 
-        return result
+        Returns
+        -------
+        dataset_on_off : `~gammapy.cube.fit.MapDatasetOnOff`
+            On off dataset.
+        """
+        maps_off = self.make_maps_off(dataset, exclusion)
+        acceptance = dataset.background_model.map
+        acceptance.data[acceptance.data <= 0] = 0
+
+        mask_safe = dataset.counts.copy(
+            data=np.ones(dataset.counts.geom.data_shape, dtype=bool)
+        )
+
+        return MapDatasetOnOff(
+            counts=dataset.counts,
+            counts_off=maps_off["counts_off"],
+            acceptance=acceptance,
+            acceptance_off=maps_off["acceptance_off"],
+            exposure=dataset.exposure,
+            mask_fit=dataset.mask_fit,
+            psf=dataset.psf,
+            edisp=dataset.edisp,
+            background_model=None,
+            name=dataset.name,
+            evaluation_mode="local",
+            mask_safe=mask_safe,
+            gti=dataset.gti,
+        )
 
     def __str__(self):
         return (
