@@ -57,13 +57,6 @@ class EventListBase:
     """
 
     def __init__(self, table):
-
-        # TODO: remove this temp fix once we drop support for `hess-hd-hap-prod2`
-        # There the unit wasn't set correctly in the FITS table, so this hack is needed.
-        if "ENERGY" in table.colnames:
-            if not table["ENERGY"].unit:
-                table["ENERGY"].unit = "TeV"
-
         self.table = table
 
     @classmethod
