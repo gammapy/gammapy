@@ -30,10 +30,6 @@ Status shields
 * .. image:: https://codecov.io/gh/gammapy/gammapy/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/gammapy/gammapy
 
-* .. image:: https://landscape.io/github/gammapy/gammapy/master/landscape.png
-    :target: https://landscape.io/github/gammapy/gammapy/master
-    :alt: Landscape
-
 * .. image:: https://img.shields.io/lgtm/alerts/g/gammapy/gammapy.svg?logo=lgtm&logoWidth=18
     :target: https://lgtm.com/projects/g/gammapy/gammapy/alerts/
     :alt: LGTM
