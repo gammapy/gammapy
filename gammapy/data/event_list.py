@@ -148,8 +148,7 @@ class EventListBase:
 
     @property
     def radec(self):
-        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
-        """
+        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         lon, lat = self.table["RA"], self.table["DEC"]
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
@@ -160,50 +159,6 @@ class EventListBase:
         Always computed from RA / DEC using Astropy.
         """
         return self.radec.galactic
-
-    @property
-    def observation_live_time_duration(self):
-        """Live-time duration in seconds (`~astropy.units.Quantity`).
-
-        The dead-time-corrected observation time.
-
-        - In Fermi-LAT it is automatically provided in the header of the event list.
-        - In IACTs is computed as ``t_live = t_observation * (1 - f_dead)``
-
-        where ``f_dead`` is the dead-time fraction.
-        """
-        return Quantity(self.table.meta["LIVETIME"], "second")
-
-    @property
-    def observation_dead_time_fraction(self):
-        """Dead-time fraction (float).
-
-        Defined as dead-time over observation time.
-
-        Dead-time is defined as the time during the observation
-        where the detector didn't record events:
-        https://en.wikipedia.org/wiki/Dead_time
-        https://ui.adsabs.harvard.edu/abs/2004APh....22..285F
-
-        The dead-time fraction is used in the live-time computation,
-        which in turn is used in the exposure and flux computation.
-        """
-        return 1 - self.table.meta["DEADC"]
-
-    @property
-    def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        info = self.table.meta
-        lon, lat = info["RA_PNT"], info["DEC_PNT"]
-        return SkyCoord(lon, lat, unit="deg", frame="icrs")
-
-    @property
-    def offset(self):
-        """Event offset from the array pointing position (`~astropy.coordinates.Angle`)."""
-        position = self.radec
-        center = self.pointing_radec
-        offset = center.separation(position)
-        return Angle(offset, unit="deg")
 
     @property
     def energy(self):
@@ -556,6 +511,19 @@ class EventList(EventListBase):
         The wall time, including dead-time.
         """
         return Quantity(self.table.meta["ONTIME"], "second")
+
+    @property
+    def observation_live_time_duration(self):
+        """Live-time duration in seconds (`~astropy.units.Quantity`).
+
+        The dead-time-corrected observation time.
+
+        - In Fermi-LAT it is automatically provided in the header of the event list.
+        - In IACTs is computed as ``t_live = t_observation * (1 - f_dead)``
+
+        where ``f_dead`` is the dead-time fraction.
+        """
+        return Quantity(self.table.meta["LIVETIME"], "second")
 
     @property
     def observation_dead_time_fraction(self):
