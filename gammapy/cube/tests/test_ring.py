@@ -2,94 +2,109 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy import units as u
-from gammapy.cube import AdaptiveRingBackgroundEstimator, RingBackgroundEstimator
-from gammapy.maps import WcsNDMap
+from regions import CircleSkyRegion
+from astropy.coordinates import Angle, SkyCoord
+from gammapy.cube import AdaptiveRingBackgroundMaker, RingBackgroundMaker
+from gammapy.maps import WcsNDMap, WcsGeom, MapAxis
+from gammapy.cube.make import MapDatasetMaker
+from gammapy.utils.testing import requires_data
+from gammapy.data import DataStore
 
 
-@pytest.fixture
-def images():
-    fov = 2.5 * u.deg
-
-    m_ref = WcsNDMap.create(binsz=0.05, npix=201, dtype=float)
-    m_ref.data += 1.0
-    coords = m_ref.geom.get_coord().skycoord
-    center = m_ref.geom.center_skydir
-    mask = coords.separation(center) < fov
-
-    images = dict()
-    images["counts"] = m_ref.copy(data=np.zeros_like(m_ref.data) + 2.0)
-    images["counts"].data *= mask
-
-    images["background"] = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.0)
-    images["background"].data *= mask
-
-    exclusion = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.0)
-    exclusion.data[90:110, 90:110] = 0
-    images["exclusion"] = exclusion
-    return images
+@pytest.fixture(scope="session")
+def exclusion_region():
+    """Example mask for testing."""
+    pos = SkyCoord(83.633, 22.014, unit="deg", frame="icrs")
+    return CircleSkyRegion(pos, Angle(0.15, "deg"))
 
 
-def test_ring_background_estimator(images):
-    ring = RingBackgroundEstimator(0.35 * u.deg, 0.3 * u.deg)
-
-    result = ring.run(images)
-
-    in_fov = images["background"].data > 0
-
-    assert_allclose(result["background_ring"].data[in_fov], 2.0)
-    assert_allclose(result["alpha"].data[in_fov].mean(), 0.003488538457592745)
-    assert_allclose(result["exposure_off"].data[in_fov].mean(), 305.1268970794541)
-    assert_allclose(result["off"].data[in_fov].mean(), 610.2537941589082)
-
-    assert_allclose(result["off"].data[~in_fov], 0.0)
-    assert_allclose(result["exposure_off"].data[~in_fov], 0.0)
-    assert_allclose(result["alpha"].data[~in_fov], 0.0)
+@pytest.fixture(scope="session")
+def observations():
+    """Example observation list for testing."""
+    datastore = DataStore.from_file(
+        "$GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz"
+    )
+    obs_ids = [23523, 23526]
+    return datastore.get_observations(obs_ids)
 
 
-class TestAdaptiveRingBackgroundEstimator:
-    def setup(self):
-        self.images = {}
-        self.images["counts"] = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
-        self.images["counts"].data += 1.0
-        self.images["background"] = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
-        self.images["background"].data += 1e10
-        exclusion = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
-        exclusion.data += 1
-        exclusion.data[40:60, 40:60] = 0
-        self.images["exclusion"] = exclusion
+@pytest.fixture()
+def map_dataset_maker():
+    energy_axis = MapAxis.from_edges(
+        np.logspace(0, 1.0, 5), unit="TeV", name="ENERGY", interp="log"
+    )
+    geom = WcsGeom.create(
+        skydir=SkyCoord(83.633, 22.014, unit="deg"),
+        binsz=0.02,
+        width=(10, 10),
+        coordsys="GAL",
+        proj="CAR",
+        axes=[energy_axis],
+    )
+    return MapDatasetMaker(geom=geom, offset_max="2 deg")
 
-    def test_run_const_width(self):
-        ring = AdaptiveRingBackgroundEstimator(
-            r_in=0.22 * u.deg, r_out_max=0.8 * u.deg, width=0.1 * u.deg
-        )
-        result = ring.run(self.images)
 
-        assert_allclose(result["background_ring"].data[50, 50], 1)
-        assert_allclose(result["alpha"].data[50, 50], 0.002638522427440632)
-        assert_allclose(result["exposure_off"].data[50, 50], 379 * 1e10)
-        assert_allclose(result["off"].data[50, 50], 379)
+def adaptive_ring_bkg_maker(method):
+    return AdaptiveRingBackgroundMaker(
+        r_in="0.2 deg",
+        width="0.3 deg",
+        r_out_max="2 deg",
+        stepsize="0.2 deg",
+        method=method,
+    )
 
-        assert_allclose(result["background_ring"].data[0, 0], 1)
-        assert_allclose(result["alpha"].data[0, 0], 0.008928571428571418)
-        assert_allclose(result["exposure_off"].data[0, 0], 112 * 1e10)
-        assert_allclose(result["off"].data[0, 0], 112)
 
-    def test_run_const_r_in(self):
-        ring = AdaptiveRingBackgroundEstimator(
-            r_in=0.22 * u.deg,
-            r_out_max=0.8 * u.deg,
-            width=0.1 * u.deg,
-            method="fixed_r_in",
-        )
-        result = ring.run(self.images)
+@requires_data()
+def test_ring_bkg_maker(map_dataset_maker, observations, exclusion_region):
+    ring_bkg_maker = RingBackgroundMaker(r_in="0.2 deg", width="0.3 deg")
+    datasets = []
 
-        assert_allclose(result["background_ring"].data[50, 50], 1)
-        assert_allclose(result["alpha"].data[50, 50], 0.002638522427440632)
-        assert_allclose(result["exposure_off"].data[50, 50], 379 * 1e10)
-        assert_allclose(result["off"].data[50, 50], 379)
+    for obs in observations:
+        dataset = map_dataset_maker.run(obs)
+        dataset = dataset.to_image()
 
-        assert_allclose(result["background_ring"].data[0, 0], 1)
-        assert_allclose(result["alpha"].data[0, 0], 0.008928571428571418)
-        assert_allclose(result["exposure_off"].data[0, 0], 112 * 1e10)
-        assert_allclose(result["off"].data[0, 0], 112)
+        geom_cutout = dataset.counts.geom
+        exclusion = WcsNDMap.from_geom(geom_cutout)
+        exclusion.data = exclusion.geom.region_mask([exclusion_region], inside=False)
+
+        dataset_on_off = ring_bkg_maker.run(dataset, exclusion)
+        datasets.append(dataset_on_off)
+
+    assert_allclose(datasets[0].counts_off.data.sum(), 2511417.0)
+    assert_allclose(datasets[1].counts_off.data.sum(), 2143577.0)
+    assert_allclose(datasets[0].acceptance_off.data.sum(), 698869.8)
+    assert_allclose(datasets[1].acceptance_off.data.sum(), 697233.6)
+
+    assert_allclose(datasets[0].alpha.data[0][100][100], 0.000668635)
+    assert_allclose(datasets[0].exposure.data[0][100][100], 639038346.7895743)
+
+
+@requires_data()
+def test_adaptive_ring_bkg_maker(map_dataset_maker, observations, exclusion_region):
+    datasets = {}
+
+    for method in ["fixed_width", "fixed_r_in"]:
+        datasets.update({method: []})
+        for obs in observations:
+            dataset = map_dataset_maker.run(obs)
+            dataset = dataset.to_image()
+
+            geom_cutout = dataset.counts.geom
+            exclusion = WcsNDMap.from_geom(geom_cutout)
+            exclusion.data = exclusion.geom.region_mask(
+                [exclusion_region], inside=False
+            )
+
+            dataset_on_off = adaptive_ring_bkg_maker(method).run(dataset, exclusion)
+            datasets[method].append(dataset_on_off)
+
+    assert_allclose(datasets["fixed_r_in"][0].counts_off.data.sum(), 2511417.0)
+    assert_allclose(datasets["fixed_width"][0].counts_off.data.sum(), 2511417.0)
+    assert_allclose(datasets["fixed_r_in"][1].counts_off.data.sum(), 2143577.0)
+    assert_allclose(datasets["fixed_r_in"][0].acceptance_off.data.sum(), 698869.8)
+    assert_allclose(datasets["fixed_width"][1].acceptance_off.data.sum(), 697233.6)
+
+    assert_allclose(datasets["fixed_r_in"][0].alpha.data[0][100][100], 0.000668635)
+    assert_allclose(
+        datasets["fixed_width"][0].exposure.data[0][100][100], 639038346.7895743
+    )
