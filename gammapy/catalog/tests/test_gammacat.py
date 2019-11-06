@@ -129,10 +129,10 @@ class TestSourceCatalogObjectGammaCat:
     def test_data_python_dict(self, gammacat):
         source = gammacat[0]
         data = source._data_python_dict
-        assert type(data["ra"]) == float
+        assert isinstance(data["ra"], float)
         assert data["ra"] == 1.649999976158142
-        assert type(data["sed_e_min"]) == list
-        assert type(data["sed_e_min"][0]) == float
+        assert isinstance(data["sed_e_min"], list)
+        assert isinstance(data["sed_e_min"][0], float)
         assert_allclose(data["sed_e_min"][0], 0.5600000023841858)
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])

@@ -289,8 +289,6 @@ def test_select_sky_regions():
 
 
 def test_create_gti():
-    """Test the `~gammapy.data.ObservationTable.create_gti()` method.
-    """
     date_start = Time("2012-01-01T00:30:00")
     date_end = Time("2012-01-01T02:30:00")
     random_state = np.random.RandomState(seed=0)
@@ -304,7 +302,7 @@ def test_create_gti():
     time_start = met_ref + Quantity(obs_table[0]["TSTART"].astype("float64"), "second")
     time_stop = met_ref + Quantity(obs_table[0]["TSTOP"].astype("float64"), "second")
 
-    assert type(gti) == GTI
+    assert isinstance(gti, GTI)
     assert_time_allclose(gti.time_start, time_start)
     assert_time_allclose(gti.time_stop, time_stop)
     assert_quantity_allclose(
