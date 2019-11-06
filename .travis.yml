@@ -162,4 +162,7 @@ after_success:
     - if $TEST_COVERAGE; then
           pip install coveralls;
           coveralls;
+          # See https://github.com/codecov/example-python
+          pip install codecov;
+          codecov;
       fi
