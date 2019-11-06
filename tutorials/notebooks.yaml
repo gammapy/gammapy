@@ -124,3 +124,7 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_simulation.ipynb
   datasets:
     - cta-1dc
+- name: joint_1d_3d_analysis
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/joint_1d_3d_analysis.ipynb
+  datasets:
+    - crab-3datasets

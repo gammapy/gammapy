@@ -41,6 +41,7 @@ Notebooks
    notebooks/cta_sensitivity.ipynb
    notebooks/spectrum_simulation.ipynb
    notebooks/image_analysis.ipynb
+   notebooks/joint_1d_3d_analysis.ipynb
 
 
 For a quick introduction to Gammapy, go here:
@@ -64,6 +65,7 @@ To get started with H.E.S.S. data analysis see here:
 - `Joint 3D analysis <notebooks/analysis_3d_joint.html>`__ | *analysis_3d_joint.ipynb*
 - `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
 - `Fermi-LAT data with Gammapy <notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
+- `Joint 3D and 1D analysis <notebooks/joint_1d_3d_analysis.html>`__ | *joint_1d_3d_analysis.ipynb*
 
 2-dimensional sky image analysis:
 
