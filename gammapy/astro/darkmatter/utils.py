@@ -166,6 +166,7 @@ class SigmaVEstimator:
     def run(
         self,
         runs,
+        nuissance=None,
         likelihood_profile_opts=dict(bounds=100, nvalues=50),
         optimize_opts=None,
         covariance_opts=None,
@@ -176,6 +177,8 @@ class SigmaVEstimator:
         ----------
         runs: int
             Number of runs where to perform the fitting
+        nuissance: dict
+            Dictionary with nuissance parameters
         likelihood_profile_opts : dict
             Options passed to `~gammapy.utils.fitting.Fit.likelihood_profile`.
         optimize_opts : dict
@@ -274,6 +277,7 @@ class SigmaVEstimator:
         ch,
         run,
         mass,
+        nuissance=None,
         likelihood_profile_opts=None,
         optimize_opts=None,
         covariance_opts=None,
