@@ -57,13 +57,6 @@ class EventListBase:
     """
 
     def __init__(self, table):
-
-        # TODO: remove this temp fix once we drop support for `hess-hd-hap-prod2`
-        # There the unit wasn't set correctly in the FITS table, so this hack is needed.
-        if "ENERGY" in table.colnames:
-            if not table["ENERGY"].unit:
-                table["ENERGY"].unit = "TeV"
-
         self.table = table
 
     @classmethod
@@ -148,8 +141,7 @@ class EventListBase:
 
     @property
     def radec(self):
-        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
-        """
+        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         lon, lat = self.table["RA"], self.table["DEC"]
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
@@ -160,50 +152,6 @@ class EventListBase:
         Always computed from RA / DEC using Astropy.
         """
         return self.radec.galactic
-
-    @property
-    def observation_live_time_duration(self):
-        """Live-time duration in seconds (`~astropy.units.Quantity`).
-
-        The dead-time-corrected observation time.
-
-        - In Fermi-LAT it is automatically provided in the header of the event list.
-        - In IACTs is computed as ``t_live = t_observation * (1 - f_dead)``
-
-        where ``f_dead`` is the dead-time fraction.
-        """
-        return Quantity(self.table.meta["LIVETIME"], "second")
-
-    @property
-    def observation_dead_time_fraction(self):
-        """Dead-time fraction (float).
-
-        Defined as dead-time over observation time.
-
-        Dead-time is defined as the time during the observation
-        where the detector didn't record events:
-        https://en.wikipedia.org/wiki/Dead_time
-        https://ui.adsabs.harvard.edu/abs/2004APh....22..285F
-
-        The dead-time fraction is used in the live-time computation,
-        which in turn is used in the exposure and flux computation.
-        """
-        return 1 - self.table.meta["DEADC"]
-
-    @property
-    def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        info = self.table.meta
-        lon, lat = info["RA_PNT"], info["DEC_PNT"]
-        return SkyCoord(lon, lat, unit="deg", frame="icrs")
-
-    @property
-    def offset(self):
-        """Event offset from the array pointing position (`~astropy.coordinates.Angle`)."""
-        position = self.radec
-        center = self.pointing_radec
-        offset = center.separation(position)
-        return Angle(offset, unit="deg")
 
     @property
     def energy(self):
@@ -457,22 +405,21 @@ class EventListBase:
         import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
 
-        # TODO: remove hard coded energy and offset unit
         ax = plt.gca() if ax is None else ax
 
         energy_bounds = self._default_plot_ebounds().to_value("TeV")
         offset_bounds = np.linspace(0, 4, 30)
 
         counts = np.histogram2d(
-            x=self.energy.to_value("TeV"),
-            y=self.offset.to_value("deg"),
+            x=self.energy.value,
+            y=self.offset.value,
             bins=(energy_bounds, offset_bounds),
         )[0]
 
         ax.pcolormesh(energy_bounds, offset_bounds, counts.T, norm=LogNorm())
         ax.set_xscale("log")
-        ax.set_xlabel("Energy (TeV)")
-        ax.set_ylabel("Offset (deg)")
+        ax.set_xlabel(f"Energy ({self.energy.unit})")
+        ax.set_ylabel(f"Offset ({self.offset.unit})")
 
     def check(self, checks="all"):
         """Run checks.
@@ -556,6 +503,19 @@ class EventList(EventListBase):
         The wall time, including dead-time.
         """
         return Quantity(self.table.meta["ONTIME"], "second")
+
+    @property
+    def observation_live_time_duration(self):
+        """Live-time duration in seconds (`~astropy.units.Quantity`).
+
+        The dead-time-corrected observation time.
+
+        - In Fermi-LAT it is automatically provided in the header of the event list.
+        - In IACTs is computed as ``t_live = t_observation * (1 - f_dead)``
+
+        where ``f_dead`` is the dead-time fraction.
+        """
+        return Quantity(self.table.meta["LIVETIME"], "second")
 
     @property
     def observation_dead_time_fraction(self):

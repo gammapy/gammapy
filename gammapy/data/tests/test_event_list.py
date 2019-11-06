@@ -1,6 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
-import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -13,28 +11,22 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 
 @requires_data()
 class TestEventListBase:
-    def setup(self):
-        filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
-        self.events = EventListBase.read(filename)
-
-    @pytest.mark.parametrize(
-        "parameter, band", [("ENERGY", (0.8 * u.TeV, 5.0 * u.TeV))]
-    )
-    def test_select_parameter(self, parameter, band):
-        selected_events = self.events.select_parameter(parameter, band)
-        assert np.all(
-            (selected_events.table[parameter].quantity >= band[0])
-            & (selected_events.table[parameter].quantity < band[1])
+    def setup_class(self):
+        self.events = EventListBase.read(
+            "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
         )
+
+    def test_select_parameter(self):
+        events = self.events.select_parameter("ENERGY", (0.8 * u.TeV, 5.0 * u.TeV))
+        assert len(events.table) == 2716
 
 
 @requires_data()
 class TestEventListHESS:
-    def setup(self):
-        filename = (
+    def setup_class(self):
+        self.events = EventList.read(
             "$GAMMAPY_DATA/tests/unbundled/hess/run_0023037_hard_eventlist.fits.gz"
         )
-        self.events = EventList.read(filename)
 
     def test_basics(self):
         assert "EventList" in str(self.events)
@@ -51,6 +43,20 @@ class TestEventListHESS:
         assert f"{lon:1.5f}" == "16.50022 deg"
         assert f"{lat:1.5f}" == "-23.27178 deg"
         assert f"{height:1.5f}" == "1835.00000 m"
+
+    def test_observation_time_duration(self):
+        dt = self.events.observation_time_duration
+        assert dt.unit == "s"
+        assert_allclose(dt.value, 1577)
+
+    def test_observation_live_time_duration(self):
+        dt = self.events.observation_live_time_duration
+        assert dt.unit == "s"
+        assert_allclose(dt.value, 1510.959106)
+
+    def test_observation_dead_time_fraction(self):
+        deadc = self.events.observation_dead_time_fraction
+        assert_allclose(deadc, 0.035763, rtol=1e-3)
 
     def test_altaz(self):
         altaz = self.events.altaz
@@ -100,9 +106,10 @@ class TestEventListHESS:
 
 @requires_data()
 class TestEventListFermi:
-    def setup(self):
-        filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
-        self.events = EventListLAT.read(filename)
+    def setup_class(self):
+        self.events = EventListLAT.read(
+            "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
+        )
 
     def test_basics(self):
         assert "EventList" in str(self.events)
@@ -116,7 +123,7 @@ class TestEventListFermi:
 
 @requires_data()
 class TestEventListChecker:
-    def setup(self):
+    def setup_class(self):
         self.event_list = EventList.read(
             "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_111140.fits"
         )
@@ -127,13 +134,13 @@ class TestEventListChecker:
 
 
 class TestEventSelection:
-    def setup(self):
-        ra = [0.0, 0.0, 0.0, 10.0] * u.deg
-        dec = [0.0, 0.9, 10.0, 10.0] * u.deg
-        energy = [1.0, 1.5, 1.5, 10.0] * u.TeV
+    def setup_class(self):
+        table = Table()
+        table["RA"] = [0.0, 0.0, 0.0, 10.0] * u.deg
+        table["DEC"] = [0.0, 0.9, 10.0, 10.0] * u.deg
+        table["ENERGY"] = [1.0, 1.5, 1.5, 10.0] * u.TeV
 
-        evt_table = Table([ra, dec, energy], names=["RA", "DEC", "ENERGY"])
-        self.evt_list = EventListBase(evt_table)
+        self.events = EventListBase(table)
 
         center1 = SkyCoord(0.0, 0.0, frame="icrs", unit="deg")
         on_region1 = CircleSkyRegion(center1, radius=1.0 * u.deg)
@@ -143,15 +150,15 @@ class TestEventSelection:
 
     def test_region_select(self):
         geom = WcsGeom.create(skydir=(0, 0), binsz=0.2, width=4.0 * u.deg, proj="TAN")
-        new_list = self.evt_list.select_region(self.on_regions[0], geom.wcs)
+        new_list = self.events.select_region(self.on_regions[0], geom.wcs)
         assert len(new_list.table) == 2
 
         union_region = self.on_regions[0].union(self.on_regions[1])
-        new_list = self.evt_list.select_region(union_region, geom.wcs)
+        new_list = self.events.select_region(union_region, geom.wcs)
         assert len(new_list.table) == 3
 
         region_string = "fk5;box(0,10, 0.25, 0.15)"
-        new_list = self.evt_list.select_region(region_string, geom.wcs)
+        new_list = self.events.select_region(region_string, geom.wcs)
         assert len(new_list.table) == 1
 
     def test_map_select(self):
@@ -162,5 +169,5 @@ class TestEventSelection:
 
         mask_data = geom.region_mask(regions=[self.on_regions[0]], inside=True)
         mask = Map.from_geom(geom, data=mask_data)
-        new_list = self.evt_list.select_map_mask(mask)
+        new_list = self.events.select_map_mask(mask)
         assert len(new_list.table) == 2
