@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to compute J-factor maps."""
 import astropy.units as u
-from astropy.units import Quantity
 from gammapy.modeling.models import AbsorbedSpectralModel
 from gammapy.modeling import Fit
 from gammapy.utils.table import table_from_row_data
@@ -149,7 +148,6 @@ class SigmaVEstimator:
         jfactor=1,
     ):
 
-
         self.dataset = dataset
         self.masses = masses
         self.channels = channels
@@ -167,10 +165,10 @@ class SigmaVEstimator:
         self.result = dict(mean={}, runs={})
         for ch in self.channels:
             self.result["mean"][ch] = None
-            self.result["runs"][ch] = []
+            self.result["runs"][ch] = {}
             self.sigmas[ch] = {}
             for mass in self.masses:
-                self.sigmas[ch][mass.value] = []
+                self.sigmas[ch][mass.value] = {}
 
     def run(
         self,
@@ -185,9 +183,9 @@ class SigmaVEstimator:
         Parameters
         ----------
         runs: int
-            Number of runs where to perform the fitting
+            Number of runs where to perform the fitting.
         nuissance: dict
-            Dictionary with nuissance parameters
+            Dictionary with nuissance parameters.
         likelihood_profile_opts : dict
             Options passed to `~gammapy.utils.fitting.Fit.likelihood_profile`.
         optimize_opts : dict
@@ -198,30 +196,29 @@ class SigmaVEstimator:
         Returns
         -------
         result : dict
-            Nested dict of channels with results in `~astropy.table.Table` objects for each channel.
-            result['mean'] provides mean values for sigma v vs. mass.
-            result['runs'] provides sigma v vs. mass. and profile likelihood for each channel and run.
+            result['mean'] provides mean and std values for sigma v vs. mass for each channel.
+            result['runs'] provides a table of sigma v vs. mass and likelihood profiles for each run and channel.
         """
         likelihood_profile_opts["parameter"] = "sv"
 
         for run in range(runs):
             log.info(f"Run: {run}")
             self.dataset.fake(background_model=self.background)
-            # TODO: Fit of null flux to fake -> take L0
-            #
-            #
 
             # loop in channels and masses
             valid = self._loops(run, nuissance, likelihood_profile_opts, optimize_opts, covariance_opts)
+            # if the value of sv<=0 or does not reach self.RATIO
+            # skip the run and continue with the next one
             if not valid:
                 continue
 
-        # calculate means
+        # calculate means / stds
         for ch in self.channels:
             table_rows = []
             for mass in self.masses:
                 row = {}
-                npsigmas = np.array(self.sigmas[ch][mass.value], dtype=np.float)
+                listsigmas = [i for i in self.sigmas[ch][mass.value].values()]
+                npsigmas = np.array(listsigmas, dtype=np.float)
                 sigma_mean = np.nanmean(npsigmas)
                 sigma_std = np.nanstd(npsigmas)
                 row["mass"] = mass
@@ -249,10 +246,8 @@ class SigmaVEstimator:
                     optimize_opts=optimize_opts,
                     covariance_opts=covariance_opts,
                 )
-                # if the value of sv<=0 or does not reach ΔL=2.71
-                # skip the run and continue with the next one
                 if fit_result["sigma_v"] is None:
-                    self._make_bad_run_row(fit_result)
+                    self._make_bad_run_row(run, fit_result)
                     return False
 
                 row = {
@@ -263,15 +258,16 @@ class SigmaVEstimator:
                     "likeprofile": fit_result["likeprofile"]
                 }
                 table_rows.append(row)
-                self.sigmas[ch][mass.value].append(row["sigma_v"])
+                self.sigmas[ch][mass.value][run] = row["sigma_v"]
                 log.info(f"Sigma v:{row['sigma_v']}")
 
             table = table_from_row_data(rows=table_rows)
             table["sigma_v"].unit = self.XSECTION.unit
-            self.result["runs"][ch].append(table)
+            self.result["runs"][ch][run] = table
         return True
 
-    def _make_bad_run_row(self, fit_result):
+    def _make_bad_run_row(self, run, fit_result):
+        """Add the likelihood profile for a bad run."""
         for ch in self.channels:
             table_rows = []
             for mass in self.masses:
@@ -283,8 +279,9 @@ class SigmaVEstimator:
                     "likeprofile": fit_result["likeprofile"]
                 }
                 table_rows.append(row)
+                self.sigmas[ch][mass.value][run] = None
             table = table_from_row_data(rows=table_rows)
-            self.result["runs"][ch].append(table)
+            self.result["runs"][ch][run] = table
 
     def _set_model_dataset(self, ch, mass):
         """Set model to fit in dataset."""
@@ -311,31 +308,48 @@ class SigmaVEstimator:
         covariance_opts=None,
     ):
         """Fit dataset to model and calculate parameter value for upper limit."""
+
+        # TODO
+        # fit to the realization for each value of `j` nuissance parameter in a range of ± 5 `sigmaj`
+        #
+        #
         fit = Fit(dataset_loop)
         fit_result = fit.run(optimize_opts, covariance_opts)
         likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
-        sv_best = fit_result.parameters["sv"].value
-        likemin = dataset_loop.likelihood()
+
+        # TODO
+        # choose likelihood profile giving the minimum value for the likelihood
+        #
+        #
         profile = likeprofile
 
-        # consider sv value in the physical region > 0
+        # TODO
+        # Check L - L<sub>0</sub> ≤ 25
+        # raise detection
+        #
+
+        # consider sv value in the physical region
+        sv_best = fit_result.parameters["sv"].value
         if sv_best < 0:
             sv_best = 0
-            likemin = interp1d(likeprofile["values"], likeprofile["likelihood"], kind="quadratic")(0)
+
+        max_like_difference = 0
+        if max(profile["values"] > 0):
+            # likemin = dataset_loop.likelihood()
+            likemin = interp1d(likeprofile["values"], likeprofile["likelihood"], kind="quadratic")(sv_best)
+            #-
             idx = np.min(np.argwhere(likeprofile["values"] > 0))
             filtered_x_values = likeprofile["values"][likeprofile["values"] > 0]
             filtered_y_values = likeprofile["likelihood"][idx:]
-            profile["values"] = np.concatenate((np.array([0]), filtered_x_values))
-            profile["likelihood"] = np.concatenate(
-                (np.array([likemin]), filtered_y_values)
-            )
-        max_like_difference = np.max(profile["likelihood"]) - likemin - self.RATIO
+            profile["values"] = np.concatenate((np.array([sv_best]), filtered_x_values))
+            profile["likelihood"] = np.concatenate((np.array([likemin]), filtered_y_values))
+            max_like_difference = np.max(profile["likelihood"]) - likemin - self.RATIO
 
         try:
+            assert (np.max(profile["values"]) > 0), "Values for jfactor found outside the physical region"
             assert max_like_difference > 0, "Wider range needed in likelihood profile"
-            assert (
-                np.max(profile["values"]) > 0
-            ), "Values for jfactor found outside the physical region"
+
+            # find the value of the scale parameter `sv` reaching self.RATIO
             sv_ul = brentq(
                 interp1d(
                     profile["values"],
@@ -352,7 +366,8 @@ class SigmaVEstimator:
             sigma_v = None
             sv_best = None
             sv_ul = None
-            log.warning(f"Channel: {ch} - Run: {run} - Mass: {mass}")
+            log.warning(f"Skipping Run: {run}")
+            log.warning(f"Channel: {ch} - Mass: {mass}")
             log.warning(ex)
 
         res = dict(
