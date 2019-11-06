@@ -128,21 +128,21 @@ def test_map_maker(pars, observations):
 
     background = stacked.background_model.map
     assert background.unit == ""
-    assert_allclose(background.data.sum(), pars["background"], rtol=1e-5)
+    assert_allclose(background.data.sum(), pars["background"], rtol=1e-4)
 
     image_dataset = stacked.to_image()
 
     counts = image_dataset.counts
     assert counts.unit == ""
-    assert_allclose(counts.data.sum(), pars["counts"], rtol=1e-5)
+    assert_allclose(counts.data.sum(), pars["counts"], rtol=1e-4)
 
     exposure = image_dataset.exposure
     assert exposure.unit == "m2 s"
-    assert_allclose(exposure.data.sum(), pars["exposure_image"], rtol=3e-3)
+    assert_allclose(exposure.data.sum(), pars["exposure_image"], rtol=1e-3)
 
     background = image_dataset.background_model.map
     assert background.unit == ""
-    assert_allclose(background.data.sum(), pars["background"], rtol=1e-5)
+    assert_allclose(background.data.sum(), pars["background"], rtol=1e-4)
 
 
 @requires_data()
