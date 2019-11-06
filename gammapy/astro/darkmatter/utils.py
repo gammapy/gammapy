@@ -90,9 +90,6 @@ class SigmaVEstimator:
         Integrated J-Factor
         Needed when `~gammapy.image.models.SkyPointSource` spatial model is used.
         Default value 1.
-    xsection: `~astropy.units.Quantity` (optional)
-        Thermally averaged annihilation cross-section.
-        Default value declared in `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`.
 
     Examples
     --------
@@ -126,6 +123,9 @@ class SigmaVEstimator:
     RATIO = 2.71
     """Value for the likelihood ratio criteria - set to 2.71 by default."""
 
+    XSECTION = DarkMatterAnnihilationSpectralModel.THERMAL_RELIC_CROSS_SECTION
+    """Value for the thermal relic cross section."""
+
     def __init__(
         self,
         dataset,
@@ -133,8 +133,8 @@ class SigmaVEstimator:
         channels,
         background_model,
         jfactor=1,
-        xsection=None,
     ):
+
 
         self.dataset = dataset
         self.masses = masses
@@ -148,9 +148,6 @@ class SigmaVEstimator:
         self.z = dm_params_container.z
         self.k = dm_params_container.k
 
-        if not xsection:
-            xsection = DarkMatterAnnihilationSpectralModel.THERMAL_RELIC_CROSS_SECTION
-        self.xsection = xsection
 
     def run(
         self,
@@ -304,7 +301,7 @@ class SigmaVEstimator:
                 maxiter=100,
                 rtol=1e-5,
             )
-            sigma_v = sv_ul * self.xsection
+            sigma_v = sv_ul * self.XSECTION
         except Exception as ex:
             sigma_v = None
             sv_best = None
