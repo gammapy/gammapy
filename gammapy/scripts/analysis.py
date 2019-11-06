@@ -64,10 +64,9 @@ class Analysis:
             raise ValueError("Dict or `AnalysiConfig` object required.")
 
         self._set_logging()
+        self.datastore = None
         self.observations = None
-        self.background_estimator = None
         self.datasets = None
-        self.extraction = None
         self.model = None
         self.fit = None
         self.fit_result = None
@@ -89,12 +88,12 @@ class Analysis:
         log.info("Fetching observations.")
         datastore_path = make_path(self.settings["observations"]["datastore"])
         if datastore_path.is_file():
-            datastore = DataStore().from_file(datastore_path)
+            self.datastore = DataStore().from_file(datastore_path)
         elif datastore_path.is_dir():
-            datastore = DataStore().from_dir(datastore_path)
+            self.datastore = DataStore().from_dir(datastore_path)
         else:
             raise FileNotFoundError(f"Datastore {datastore_path} not found.")
-        ids = set()
+        ids = []
         selection = dict()
         for criteria in self.settings["observations"]["filters"]:
             selected_obs = ObservationTable()
@@ -110,25 +109,27 @@ class Analysis:
                 selection["type"] = "par_box"
                 selection["value_range"] = Angle(criteria["value_range"])
             if selection["type"] == "sky_circle" or selection["type"].endswith("_box"):
-                selected_obs = datastore.obs_table.select_observations(selection)
+                selected_obs = self.datastore.obs_table.select_observations(selection)
             if selection["type"] == "par_value":
                 mask = (
-                    datastore.obs_table[criteria["variable"]] == criteria["value_param"]
+                    self.datastore.obs_table[criteria["variable"]] == criteria["value_param"]
                 )
-                selected_obs = datastore.obs_table[mask]
+                selected_obs = self.datastore.obs_table[mask]
             if selection["type"] == "ids":
-                obs_list = datastore.get_observations(criteria["obs_ids"])
+                obs_list = self.datastore.get_observations(criteria["obs_ids"])
                 selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
             if selection["type"] == "all":
-                obs_list = datastore.get_observations()
+                obs_list = self.datastore.get_observations()
                 selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
 
             if len(selected_obs):
                 if "exclude" in criteria and criteria["exclude"]:
-                    ids.difference_update(selected_obs["OBS_ID"].tolist())
+                    exclude = selected_obs["OBS_ID"].tolist()
+                    selection = np.isin(ids, exclude)
+                    ids = list(np.array(ids)[~selection])
                 else:
-                    ids.update(selected_obs["OBS_ID"].tolist())
-        self.observations = datastore.get_observations(ids, skip_missing=True)
+                    ids.extend(selected_obs["OBS_ID"].tolist())
+        self.observations = self.datastore.get_observations(ids, skip_missing=True)
         for obs in self.observations.list:
             log.info(obs)
 
@@ -186,7 +187,7 @@ class Analysis:
 
         for ds in self.datasets.datasets:
             # TODO: fit_range handled in jsonschema validation class
-            if "fit_range" in self.settings["fit"]:
+            if "fit" in self.settings and "fit_range" in self.settings["fit"]:
                 e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
                 e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
                 if isinstance(ds, MapDataset):
@@ -250,11 +251,10 @@ class Analysis:
         geom_irf["margin_irf"] = self.settings["datasets"].get("margin", None)
 
         offset_max = Angle(self.settings["datasets"]["offset-max"])
-        stack_datasets = self.settings["datasets"]["stack-datasets"]
         log.info("Creating datasets.")
 
         maker = MapDatasetMaker(geom=geom, offset_max=offset_max, **geom_irf)
-        if stack_datasets:
+        if self.settings["datasets"]["stack-datasets"]:
             stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
             for obs in self.observations:
                 dataset = maker.run(obs)

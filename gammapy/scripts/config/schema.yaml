@@ -158,7 +158,7 @@ then:
                 geom:
                     required: [region, axes]
 
-required: [general, observations, datasets, fit]
+required: [general, observations, datasets]
 
 definitions:
 
