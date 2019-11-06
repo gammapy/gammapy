@@ -162,6 +162,15 @@ class SigmaVEstimator:
         self.z = dm_params_container.z
         self.k = dm_params_container.k
 
+        # initialization of data containers
+        self.sigmas = {}
+        self.result = dict(mean={}, runs={})
+        for ch in self.channels:
+            self.result["mean"][ch] = None
+            self.result["runs"][ch] = []
+            self.sigmas[ch] = {}
+            for mass in self.masses:
+                self.sigmas[ch][mass.value] = []
 
     def run(
         self,
@@ -195,68 +204,87 @@ class SigmaVEstimator:
         """
         likelihood_profile_opts["parameter"] = "sv"
 
-        # initialization of data containers
-        sigmas = {}
-        result = dict(mean={}, runs={})
-        for ch in self.channels:
-            result["mean"][ch] = None
-            result["runs"][ch] = []
-            sigmas[ch] = {}
-            for mass in self.masses:
-                sigmas[ch][mass.value] = []
-        sigma_unit = ""
-
         for run in range(runs):
             log.info(f"Run: {run}")
             self.dataset.fake(background_model=self.background)
-            for ch in self.channels:
-                log.info(f"Channel: {ch}")
-                table_rows = []
-                for mass in self.masses:
-                    log.info(f"Mass: {mass}")
-                    row = {}
-                    DarkMatterAnnihilationSpectralModel.THERMAL_RELIC_CROSS_SECTION = self.xsection
-                    dataset_loop = self._set_model_dataset(ch, mass)
-                    fit_result = self._fit_dataset(
-                        dataset_loop,
-                        ch,
-                        run,
-                        mass,
-                        likelihood_profile_opts=likelihood_profile_opts,
-                        optimize_opts=optimize_opts,
-                        covariance_opts=covariance_opts,
-                    )
-                    row["mass"] = mass
-                    if isinstance(fit_result["sigma_v"], Quantity):
-                        row["sigma_v"] = fit_result["sigma_v"].value
-                        sigma_unit = fit_result["sigma_v"].unit
-                    else:
-                        row["sigma_v"] = fit_result["sigma_v"]
-                    row["sv_best"] = fit_result["sv_best"]
-                    row["sv_ul"] = fit_result["sv_ul"]
-                    row["likeprofile"] = fit_result["likeprofile"]
-                    table_rows.append(row)
-                    sigmas[ch][mass.value].append(row["sigma_v"])
-                    log.info(f"Sigma v:{row['sigma_v']}")
-                table = table_from_row_data(rows=table_rows)
-                table["sigma_v"].unit = sigma_unit
-                result["runs"][ch].append(table)
+            # TODO: Fit of null flux to fake -> take L0
+            #
+            #
 
-        # calculate mean results
+            # loop in channels and masses
+            valid = self._loops(run, nuissance, likelihood_profile_opts, optimize_opts, covariance_opts)
+            if not valid:
+                continue
+
+        # calculate means
         for ch in self.channels:
             table_rows = []
             for mass in self.masses:
                 row = {}
-                npsigmas = np.array(sigmas[ch][mass.value], dtype=np.float)
+                npsigmas = np.array(self.sigmas[ch][mass.value], dtype=np.float)
                 sigma_mean = np.nanmean(npsigmas)
                 sigma_std = np.nanstd(npsigmas)
                 row["mass"] = mass
-                row["sigma_v"] = sigma_mean * sigma_unit
-                row["std"] = sigma_std * sigma_unit
+                row["sigma_v"] = sigma_mean * self.XSECTION.unit
+                row["std"] = sigma_std * self.XSECTION.unit
                 table_rows.append(row)
             table = table_from_row_data(rows=table_rows)
-            result["mean"][ch] = table
-        return result
+            self.result["mean"][ch] = table
+        return self.result
+
+    def _loops(self, run, nuissance, likelihood_profile_opts, optimize_opts, covariance_opts):
+        for ch in self.channels:
+            log.info(f"Channel: {ch}")
+            table_rows = []
+            for mass in self.masses:
+                log.info(f"Mass: {mass}")
+                dataset_loop = self._set_model_dataset(ch, mass)
+                fit_result = self._fit_dataset(
+                    dataset_loop,
+                    ch,
+                    run,
+                    mass,
+                    nuissance=nuissance,
+                    likelihood_profile_opts=likelihood_profile_opts,
+                    optimize_opts=optimize_opts,
+                    covariance_opts=covariance_opts,
+                )
+                # if the value of sv<=0 or does not reach ΔL=2.71
+                # skip the run and continue with the next one
+                if fit_result["sigma_v"] is None:
+                    self._make_bad_run_row(fit_result)
+                    return False
+
+                row = {
+                    "mass": mass,
+                    "sigma_v": fit_result["sigma_v"].value,
+                    "sv_best": fit_result["sv_best"],
+                    "sv_ul": fit_result["sv_ul"],
+                    "likeprofile": fit_result["likeprofile"]
+                }
+                table_rows.append(row)
+                self.sigmas[ch][mass.value].append(row["sigma_v"])
+                log.info(f"Sigma v:{row['sigma_v']}")
+
+            table = table_from_row_data(rows=table_rows)
+            table["sigma_v"].unit = self.XSECTION.unit
+            self.result["runs"][ch].append(table)
+        return True
+
+    def _make_bad_run_row(self, fit_result):
+        for ch in self.channels:
+            table_rows = []
+            for mass in self.masses:
+                row = {
+                    "mass": mass,
+                    "sigma_v": None,
+                    "sv_best": None,
+                    "sv_ul": None,
+                    "likeprofile": fit_result["likeprofile"]
+                }
+                table_rows.append(row)
+            table = table_from_row_data(rows=table_rows)
+            self.result["runs"][ch].append(table)
 
     def _set_model_dataset(self, ch, mass):
         """Set model to fit in dataset."""
