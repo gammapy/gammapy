@@ -160,5 +160,5 @@ script:
 
 after_success:
     - if $TEST_COVERAGE; then
-          codecov;
+          codecov -X gcov;
       fi
