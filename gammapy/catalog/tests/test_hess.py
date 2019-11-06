@@ -3,7 +3,6 @@ import collections
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-import astropy
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
@@ -335,8 +334,7 @@ class TestSourceCatalogLargeScaleHGPS:
 
 if __name__ == "__main__":
     # Check all sources
-    cat = SourceCatalogHGPS()
-    for source in cat:
+    for source in SourceCatalogHGPS():
         print(source.index, source.name)
         str(source)
         source.energy_range

@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import Angle
 from regions import PixCoord
 from gammapy.maps import WcsNDMap
 from gammapy.maps.geom import frame_to_coordsys
