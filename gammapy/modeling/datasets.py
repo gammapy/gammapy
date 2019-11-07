@@ -135,6 +135,28 @@ class Datasets:
         ref_shape = self.datasets[0].data_shape
         is_ref_shape = [dataset.data_shape == ref_shape for dataset in self.datasets]
         return np.all(is_ref_shape)
+    
+    @property
+    def _model_list(self):
+        from gammapy.modeling.models import SkyModels, SkyModel
+        from gammapy.cube.fit import MapDataset
+        model_list = []
+        for dataset in self.datasets:
+            if dataset.model is not None:
+                if isinstance(dataset.model, SkyModels):
+                    for model in dataset.model.skymodels:
+                        if isinstance(model, SkyModel):
+                            model_list.append(model.spatial_model)
+                            model_list.append(model.spectral_model)
+                        else:
+                            model_list.append(model)
+                else:
+                    model_list.append(dataset.model)
+            if isinstance(dataset, MapDataset):
+                if dataset.background_model is not None:
+                    model_list.append(dataset.background_model)
+
+        return model_list
 
     def likelihood(self):
         """Compute joint likelihood"""

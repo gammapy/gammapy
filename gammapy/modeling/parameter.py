@@ -306,7 +306,10 @@ class Parameters:
     def from_stack(cls, parameters_list):
         """Create `Parameters` by stacking smaller `Parameters`.
 
-        TODO: document
+        Parameters
+        ----------
+        parname : list
+            List of `Parameters`
         """
         pars = itertools.chain(*parameters_list)
         parameters = cls(pars)
@@ -314,7 +317,7 @@ class Parameters:
         covariance = np.zeros((npars, npars))
         parameters.covariance = covariance
         for _ in parameters_list:
-            parameters.set_subcovar_from_parameters(_)
+            parameters.set_subcovariance(_)
         return parameters
 
     @property
@@ -589,18 +592,7 @@ class Parameters:
         for par in self._parameters:
             par.frozen = True
 
-    def get_subcovar(self, names):
-        """Get sub-covariance matrix by parameter names.
-
-        Parameters
-        ----------
-        names : list
-           List of string
-        """
-        idx = [self._get_idx(name) for name in names]
-        return self.covariance[idx, :][:, idx]
-
-    def set_subcovar_from_parameters(self, parameters):
+    def set_subcovariance(self, parameters):
         """Set sub-covariance matrix from a parent or child `~gammapy.modeling.Parameters`."""
         if len(self.unique_parameters) < len(parameters.unique_parameters):
             ind = [

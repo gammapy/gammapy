@@ -95,8 +95,6 @@ class Fit:
         fit_result : `FitResult`
             Results
         """
-        from gammapy.modeling.models import SkyModels
-
         if optimize_opts is None:
             optimize_opts = {}
         optimize_result = self.optimize(**optimize_opts)
@@ -116,15 +114,8 @@ class Fit:
         optimize_result._success = optimize_result.success and covariance_result.success
 
         # set sub-covariance matrix for each model
-        for dataset in self.datasets.datasets:
-            if isinstance(dataset.model, SkyModels):
-                for model in dataset.model.skymodels:
-                    pars = model.parameters
-                    pars.set_subcovar_from_parameters(self._parameters)
-                    model.spatial_model.parameters.set_subcovar_from_parameters(pars)
-                    model.spectral_model.parameters.set_subcovar_from_parameters(pars)
-            else:
-                dataset.model.parameters.set_subcovar_from_parameters(self._parameters)
+        for model in self.datasets._model_list:
+            model.parameters.set_subcovariance(self._parameters)
 
         return optimize_result
 
