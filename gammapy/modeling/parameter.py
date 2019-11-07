@@ -588,6 +588,34 @@ class Parameters:
         for par in self._parameters:
             par.frozen = True
 
+    def get_subcovar(self, names):
+        """Get sub-covariance matrix by parameter names.
+
+        Parameters
+        ----------
+        names : list
+           List of string
+        """
+        idx = [self._get_idx(name) for name in names]
+        return self.covariance[idx, :][:, idx]
+
+    def set_subcovar_from_parameters(self, parameters):
+        """Set sub-covariance matrix from a parent or child `~gammapy.modeling.Parameters`."""
+        if len(self.unique_parameters) < len(parameters.unique_parameters):
+            ind = [
+                kp
+                for kp, param in enumerate(parameters.unique_parameters)
+                if param in self.unique_parameters
+            ]
+            self.covariance = parameters.covariance[np.ix_(ind, ind)]
+        else:
+            ind = [
+                kp
+                for kp, param in enumerate(self.unique_parameters)
+                if param in parameters.unique_parameters
+            ]
+            self.covariance[np.ix_(ind, ind)] = parameters.covariance
+
 
 class restore_parameters_values:
     def __init__(self, parameters):
