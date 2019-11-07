@@ -258,7 +258,7 @@ class SigmaVEstimator:
                     "sigma_v": fit_result["sigma_v"].value,
                     "sv_best": fit_result["sv_best"],
                     "sv_ul": fit_result["sv_ul"],
-                    "likeprofile": fit_result["likeprofile"]
+                    "likeprofile": fit_result["likeprofile"],
                 }
                 table_rows.append(row)
                 self.sigmas[ch][mass.value][run] = row["sigma_v"]
@@ -279,7 +279,7 @@ class SigmaVEstimator:
                     "sigma_v": None,
                     "sv_best": None,
                     "sv_ul": None,
-                    "likeprofile": fit_result["likeprofile"]
+                    "likeprofile": fit_result["likeprofile"],
                 }
                 table_rows.append(row)
                 self.sigmas[ch][mass.value][run] = None
@@ -323,18 +323,18 @@ class SigmaVEstimator:
             unit = dataset_loop.nuissance["j"].unit
 
             for ji in np.linspace(jlo, jhi, dataset_loop.nuissance["steps"]):
-                dataset_loop.nuissance["j"] = (ji * unit)
+                dataset_loop.nuissance["j"] = ji * unit
                 ifit = Fit(dataset_loop)
                 resfits.append(ifit.run())
-                likes.append(dataset_loop.likelihood())
+                ilike = dataset_loop.likelihood()
+                likes.append(ilike)
                 profiles.append(ifit.likelihood_profile(**likelihood_profile_opts))
-
+                log.debug(f"J: {ji:.2e} \t Min Likelihood: {ilike}")
             # TODO
             # choose likelihood profile giving the minimum value for the likelihood
             #
             likeprofile = profiles[0]
             fit_result = resfits[0]
-            #
 
         else:
             fit = Fit(dataset_loop)
@@ -346,6 +346,7 @@ class SigmaVEstimator:
         # consider sv value in the physical region
         sv_best = fit_result.parameters["sv"].value
         if sv_best < 0:
+            log.debug(f"Negative value for best sv found: {sv_best}")
             sv_best = 0
 
         max_like_detection = 0
@@ -368,6 +369,11 @@ class SigmaVEstimator:
                 fill_value="extrapolate",
             )(0)
             max_like_detection = likemin - likezero
+
+            log.debug(f"Min Likelihood: {likemin}")
+            log.debug(f"SvMax: {np.max(halfprofile['values'])}")
+            log.debug(f"DeltaLMax: {max_like_difference:.4f} \t| Max:  {np.max(halfprofile['likelihood'])}")
+            log.debug(f"DeltaLZero: {max_like_detection:.4f} \t| Zero: {likezero}")
 
         try:
             assert (np.max(halfprofile["values"]) > 0), "Values for jfactor found outside the physical region"
@@ -415,7 +421,7 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
                 "jobs": None,
                 "sigmaj": None,
                 "width": None,
-                "steps": None
+                "steps": None,
             }
         self.nuissance = nuissance
 
@@ -461,7 +467,11 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
         exp_up = (np.log10(self.nuissance["j"].value) - np.log10(self.nuissance["jobs"].value)) ** 2
         exp_down = 2 * (np.log(self.nuissance["sigmaj"].value) ** 2)
         up = np.exp(-1 * exp_up / exp_down)
-        down = np.log(10) * self.nuissance["jobs"].value \
-               * np.sqrt(2 * np.pi) * np.log10(self.nuissance["sigmaj"].value)
+        down = (
+            np.log(10)
+            * self.nuissance["jobs"].value
+            * np.sqrt(2 * np.pi)
+            * np.log10(self.nuissance["sigmaj"].value)
+        )
         res = up / down
         return -2 * np.log(res)
