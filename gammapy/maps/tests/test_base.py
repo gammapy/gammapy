@@ -199,10 +199,6 @@ def test_map_properties():
 
     m = Map.create(npix=(2, 1))
 
-    assert isinstance(m.geom, WcsGeom)
-    m.geom = m.geom
-    assert isinstance(m.geom, WcsGeom)
-
     assert isinstance(m.unit, u.CompositeUnit)
     assert m.unit == ""
     m.unit = "cm-2 s-1"

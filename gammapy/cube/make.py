@@ -381,7 +381,7 @@ class MapDatasetMaker:
 
         if "edisp" in selection:
             edisp = self.make_edisp(observation)
-            psf.exposure_map.data[..., mask_safe_irf.data] = 0
+            edisp.exposure_map.data[..., mask_safe_irf.data] = 0
             kwargs["edisp"] = edisp
 
         return MapDataset(**kwargs)

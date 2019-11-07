@@ -32,7 +32,7 @@ class Map(abc.ABC):
     """
 
     def __init__(self, geom, data, meta=None, unit=""):
-        self.geom = geom
+        self._geom = geom
         self.data = data
         self.unit = unit
 
@@ -58,10 +58,6 @@ class Map(abc.ABC):
     def geom(self):
         """Map geometry (`~gammapy.maps.Geom`)"""
         return self._geom
-
-    @geom.setter
-    def geom(self, val):
-        self._geom = val
 
     @property
     def data(self):
