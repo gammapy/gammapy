@@ -299,24 +299,6 @@ class EffectiveAreaTable:
         aeff_spectrum = TemplateSpectralModel(energy, self.data.data)
         return aeff_spectrum.inverse(aeff, emin=emin, emax=emax)
 
-    def to_sherpa(self, name):
-        """Convert to `~sherpa.astro.data.DataARF`
-
-        Parameters
-        ----------
-        name : str
-            Instance name
-        """
-        from sherpa.astro.data import DataARF
-
-        table = self.to_table()
-        return DataARF(
-            name=name,
-            energ_lo=table["ENERG_LO"].quantity.to_value("keV"),
-            energ_hi=table["ENERG_HI"].quantity.to_value("keV"),
-            specresp=table["SPECRESP"].quantity.to_value("cm2"),
-        )
-
 
 class EffectiveAreaTable2D:
     """2D effective area table.
