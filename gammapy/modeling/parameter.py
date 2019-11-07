@@ -594,20 +594,22 @@ class Parameters:
 
     def set_subcovariance(self, parameters):
         """Set sub-covariance matrix from a parent or child `~gammapy.modeling.Parameters`."""
-        if len(self.unique_parameters) < len(parameters.unique_parameters):
-            ind = [
-                kp
-                for kp, param in enumerate(parameters.unique_parameters)
-                if param in self.unique_parameters
-            ]
-            self.covariance = parameters.covariance[np.ix_(ind, ind)]
-        else:
-            ind = [
-                kp
-                for kp, param in enumerate(self.unique_parameters)
-                if param in parameters.unique_parameters
-            ]
-            self.covariance[np.ix_(ind, ind)] = parameters.covariance
+        if parameters.covariance is not None:
+            if len(self.unique_parameters) <= len(parameters.unique_parameters):
+                    ind = [
+                        kp
+                        for kp, param in enumerate(parameters.unique_parameters)
+                        if param in self.unique_parameters
+                    ]
+                    self.covariance = parameters.covariance[np.ix_(ind, ind)]
+            else:
+                if self.covariance is not None: 
+                    ind = [
+                        kp
+                        for kp, param in enumerate(self.unique_parameters)
+                        if param in parameters.unique_parameters
+                    ]
+                    self.covariance[np.ix_(ind, ind)] = parameters.covariance
 
 
 class restore_parameters_values:
