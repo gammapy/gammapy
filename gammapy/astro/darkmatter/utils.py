@@ -312,31 +312,36 @@ class SigmaVEstimator:
     ):
         """Fit dataset to model and calculate parameter value for upper limit."""
 
-        if nuissance:
-            # TODO
-            # fit to the realization for each value of `j` nuissance parameter in a range of ± 5 `sigmaj`
-            #
-            #
         if nuissance and dataset_loop.check_nuissance():
+            # fit to the realization for each value of j nuissance parameter in a range of sigmaj
+            resfits = []
+            likes = []
+            profiles = []
+            widthsigma = dataset_loop.nuissance["width"] * dataset_loop.nuissance["sigmaj"].value
+            jlo = dataset_loop.nuissance["jobs"].value - widthsigma
+            jhi = dataset_loop.nuissance["jobs"].value + widthsigma
+            unit = dataset_loop.nuissance["j"].unit
+
+            for ji in np.linspace(jlo, jhi, dataset_loop.nuissance["steps"]):
+                dataset_loop.nuissance["j"] = (ji * unit)
+                ifit = Fit(dataset_loop)
+                resfits.append(ifit.run())
+                likes.append(dataset_loop.likelihood())
+                profiles.append(ifit.likelihood_profile(**likelihood_profile_opts))
+
             # TODO
             # choose likelihood profile giving the minimum value for the likelihood
             #
+            likeprofile = profiles[0]
+            fit_result = resfits[0]
             #
-            fit = Fit(dataset_loop)
-            fit_result = fit.run(optimize_opts, covariance_opts)
-            likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
+
         else:
             fit = Fit(dataset_loop)
             fit_result = fit.run(optimize_opts, covariance_opts)
             likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
 
-        profile = likeprofile
-
-        # TODO
-        # Check L - L<sub>0</sub> ≤ 25
-        # raise detection
-        #
-        #
+        halfprofile = likeprofile
 
         # consider sv value in the physical region
         sv_best = fit_result.parameters["sv"].value
@@ -344,30 +349,36 @@ class SigmaVEstimator:
             sv_best = 0
 
         max_like_difference = 0
-        if max(profile["values"] > 0):
+        if max(halfprofile["values"] > 0):
             # likemin = dataset_loop.likelihood()
             likemin = interp1d(likeprofile["values"], likeprofile["likelihood"], kind="quadratic")(sv_best)
             # -
             idx = np.min(np.argwhere(likeprofile["values"] > 0))
             filtered_x_values = likeprofile["values"][likeprofile["values"] > 0]
             filtered_y_values = likeprofile["likelihood"][idx:]
-            profile["values"] = np.concatenate((np.array([sv_best]), filtered_x_values))
-            profile["likelihood"] = np.concatenate((np.array([likemin]), filtered_y_values))
-            max_like_difference = np.max(profile["likelihood"]) - likemin - self.RATIO
+            halfprofile["values"] = np.concatenate((np.array([sv_best]), filtered_x_values))
+            halfprofile["likelihood"] = np.concatenate((np.array([likemin]), filtered_y_values))
+            max_like_difference = np.max(halfprofile["likelihood"]) - likemin - self.RATIO
+
+            # TODO
+            # Check L - L<sub>0</sub> ≤ 25
+            # raise detection
+            #
+            #
 
         try:
-            assert (np.max(profile["values"]) > 0), "Values for jfactor found outside the physical region"
+            assert (np.max(halfprofile["values"]) > 0), "Values for jfactor found outside the physical region"
             assert max_like_difference > 0, "Wider range needed in likelihood profile"
 
             # find the value of the scale parameter `sv` reaching self.RATIO
             sv_ul = brentq(
                 interp1d(
-                    profile["values"],
-                    profile["likelihood"] - likemin - self.RATIO,
+                    halfprofile["values"],
+                    halfprofile["likelihood"] - likemin - self.RATIO,
                     kind="quadratic",
                 ),
                 sv_best,
-                np.max(profile["values"]),
+                np.max(halfprofile["values"]),
                 maxiter=100,
                 rtol=1e-5,
             )
