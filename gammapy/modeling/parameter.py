@@ -309,12 +309,13 @@ class Parameters:
         TODO: document
         """
         pars = itertools.chain(*parameters_list)
-
-        # TODO: Fix covariance stacking!
-        # covariances = [Parameters(_)._any_covariance for _ in parameters_list]
-        # covariance = scipy.linalg.block_diag(*covariances)
-        covariance = None
-        return cls(pars, covariance)
+        parameters = cls(pars)
+        npars = len(parameters)
+        covariance = np.zeros((npars, npars))
+        parameters.covariance = covariance
+        for _ in parameters_list:
+            parameters.set_subcovar_from_parameters(_)
+        return parameters
 
     @property
     def _empty_covariance(self):
