@@ -186,3 +186,19 @@ def test_parameters_autoscale():
     pars.autoscale()
     assert_allclose(pars[0].factor, 2)
     assert_allclose(pars[0].scale, 10)
+    
+
+def test_subcovar():
+    pars_0 = Parameters([Parameter("a", 10),Parameter("b", 20),Parameter("c", 30)])
+    pars_1 = Parameters(list(pars_0.unique_parameters)[:2])
+    pars_0.covariance = np.array([[3, 4, 5], [7, 8, 9], [10, 11, 12]])
+
+    assert np.all(pars_0.get_subcovar(["a","b"]) ==  np.array([[3, 4], [7, 8]]))
+    assert np.all(pars_0.get_subcovar(["c"]) == np.array([12]))
+    pars_1.set_subcovar_from_parameters(pars_0)
+    assert np.all(pars_1.covariance == np.array([[3, 4], [7, 8]]))
+    
+    pars_1.covariance = np.array([[5, 6], [7, 8]])
+    pars_0.set_subcovar_from_parameters(pars_1)
+    assert np.all(pars_0.get_subcovar(["a","b"]) ==  np.array([[5, 6], [7, 8]]))
+
