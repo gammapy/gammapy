@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to compute J-factor maps."""
 import astropy.units as u
+from astropy.units.quantity import Quantity
 from gammapy.modeling.models import AbsorbedSpectralModel
 from gammapy.modeling import Fit
 from gammapy.spectrum import SpectrumDatasetOnOff
@@ -316,6 +317,7 @@ class SigmaVEstimator:
             # fit to the realization for each value of `j` nuissance parameter in a range of ± 5 `sigmaj`
             #
             #
+        if nuissance and dataset_loop.check_nuissance():
             # TODO
             # choose likelihood profile giving the minimum value for the likelihood
             #
@@ -394,26 +396,57 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
         super().__init__(**kwargs)
         if nuissance is None:
             nuissance = {
-                "j": 0 * u.Unit("GeV2 cm-5"),
-                "jobs": 0 * u.Unit("GeV2 cm-5"),
-                "sigmaj": 0 * u.Unit("GeV2 cm-5")
+                "j": None,
+                "jobs": None,
+                "sigmaj": None,
+                "width": None,
+                "steps": None
             }
         self.nuissance = nuissance
 
+    @property
+    def nuissance(self):
+        return self._nuissance
+
+    @nuissance.setter
+    def nuissance(self, nuissance):
+        if "width" not in nuissance:
+            nuissance["width"] = 5
+        if "steps" not in nuissance:
+            nuissance["steps"] = 15
+        self._nuissance = nuissance
+
+    def check_nuissance(self):
+        if not isinstance(self.nuissance["j"], Quantity):
+            return False
+        if not isinstance(self.nuissance["jobs"], Quantity):
+            return False
+        if not isinstance(self.nuissance["sigmaj"], Quantity):
+            return False
+        if not self.nuissance["j"].value:
+            return False
+        if not self.nuissance["jobs"].value:
+            return False
+        if not self.nuissance["sigmaj"].value:
+            return False
+        if not self.nuissance["width"]:
+            return False
+        if not self.nuissance["steps"]:
+            return False
+        return True
+
     def likelihood(self):
         wstat = super().likelihood()
-        liketotal = wstat + self.jnuissance()
+        liketotal = wstat
+        if self.check_nuissance():
+            liketotal += self.jnuissance()
         return liketotal
 
     def jnuissance(self):
-        if self.nuissance["j"].value and self.nuissance["jobs"].value and self.nuissance["sigmaj"].value:
-            exp_up = (np.log10(self.nuissance["j"].value) - np.log10(self.nuissance["jobs"].value)) ** 2
-            exp_down = 2 * (np.log(self.nuissance["sigmaj"].value) ** 2)
-            up = np.exp(-1 * exp_up / exp_down)
-            down = np.log(10) * self.nuissance["jobs"].value \
-                   * np.sqrt(2 * np.pi) * np.log10(self.nuissance["sigmaj"].value)
-            res = up / down
-            return -2 * np.log(res)
-        else:
-            return 0
-
+        exp_up = (np.log10(self.nuissance["j"].value) - np.log10(self.nuissance["jobs"].value)) ** 2
+        exp_down = 2 * (np.log(self.nuissance["sigmaj"].value) ** 2)
+        up = np.exp(-1 * exp_up / exp_down)
+        down = np.log(10) * self.nuissance["jobs"].value \
+               * np.sqrt(2 * np.pi) * np.log10(self.nuissance["sigmaj"].value)
+        res = up / down
+        return -2 * np.log(res)
