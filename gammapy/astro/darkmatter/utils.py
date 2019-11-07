@@ -3,6 +3,7 @@
 import astropy.units as u
 from gammapy.modeling.models import AbsorbedSpectralModel
 from gammapy.modeling import Fit
+from gammapy.spectrum import SpectrumDatasetOnOff
 from gammapy.utils.table import table_from_row_data
 from gammapy.astro.darkmatter import DarkMatterAnnihilationSpectralModel
 from scipy.optimize import brentq
@@ -105,8 +106,8 @@ class SigmaVEstimator:
         # Define a background model for the off counts as a CountsSpectrum
         bkg = CountsSpectrum(energy_min, energy_max, data=offcounts)
 
-        # Define an empty SpectrumDataSetOnOff dataset
-        dataset = SpectrumDatasetOnOff(
+        # Define a DMDatasetOnOff dataset
+        dataset = DMDatasetOnOff(
             aeff=aeff,
             edisp=edisp,
             model=flux_model,
@@ -119,18 +120,19 @@ class SigmaVEstimator:
         channels = ["b", "t", "Z"]
         masses = [70, 200, 500, 5000, 10000, 50000, 100000]*u.GeV
 
-        # Define nuissance parameters
+        # Define nuissance parameters and attach them to the dataset
         nuissance = dict(
             j=JFAC,
             jobs=JFAC,
             sigmaj=0.1*JFAC
         )
+        dataset.nuissance = nuissance
 
         # Instantiate the estimator
         estimator = SigmaVEstimator(dataset, masses, channels, background_model=bkg, jfactor=JFAC)
 
         # Run the estimator
-        result = estimator.run(10, nuissance=nuissance, likelihood_profile_opts=dict(bounds=(0, 500), nvalues=100))
+        result = estimator.run(10, nuissance=True, likelihood_profile_opts=dict(bounds=(0, 500), nvalues=100))
     """
 
     RATIO = 2.71
@@ -173,7 +175,7 @@ class SigmaVEstimator:
     def run(
         self,
         runs,
-        nuissance=None,
+        nuissance=False,
         likelihood_profile_opts=dict(bounds=100, nvalues=50),
         optimize_opts=None,
         covariance_opts=None,
@@ -184,8 +186,8 @@ class SigmaVEstimator:
         ----------
         runs: int
             Number of runs where to perform the fitting.
-        nuissance: dict
-            Dictionary with nuissance parameters.
+        nuissance: bool
+            Flag to perform fitting with nuissance parameters. Default False.
         likelihood_profile_opts : dict
             Options passed to `~gammapy.utils.fitting.Fit.likelihood_profile`.
         optimize_opts : dict
@@ -238,10 +240,10 @@ class SigmaVEstimator:
                 dataset_loop = self._set_model_dataset(ch, mass)
                 fit_result = self._fit_dataset(
                     dataset_loop,
-                    ch,
+                    nuissance,
                     run,
+                    ch,
                     mass,
-                    nuissance=nuissance,
                     likelihood_profile_opts=likelihood_profile_opts,
                     optimize_opts=optimize_opts,
                     covariance_opts=covariance_opts,
@@ -299,33 +301,39 @@ class SigmaVEstimator:
     def _fit_dataset(
         self,
         dataset_loop,
-        ch,
+        nuissance,
         run,
+        ch,
         mass,
-        nuissance=None,
         likelihood_profile_opts=None,
         optimize_opts=None,
         covariance_opts=None,
     ):
         """Fit dataset to model and calculate parameter value for upper limit."""
 
-        # TODO
-        # fit to the realization for each value of `j` nuissance parameter in a range of ± 5 `sigmaj`
-        #
-        #
-        fit = Fit(dataset_loop)
-        fit_result = fit.run(optimize_opts, covariance_opts)
-        likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
+        if nuissance:
+            # TODO
+            # fit to the realization for each value of `j` nuissance parameter in a range of ± 5 `sigmaj`
+            #
+            #
+            # TODO
+            # choose likelihood profile giving the minimum value for the likelihood
+            #
+            #
+            fit = Fit(dataset_loop)
+            fit_result = fit.run(optimize_opts, covariance_opts)
+            likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
+        else:
+            fit = Fit(dataset_loop)
+            fit_result = fit.run(optimize_opts, covariance_opts)
+            likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
 
-        # TODO
-        # choose likelihood profile giving the minimum value for the likelihood
-        #
-        #
         profile = likeprofile
 
         # TODO
         # Check L - L<sub>0</sub> ≤ 25
         # raise detection
+        #
         #
 
         # consider sv value in the physical region
@@ -337,7 +345,7 @@ class SigmaVEstimator:
         if max(profile["values"] > 0):
             # likemin = dataset_loop.likelihood()
             likemin = interp1d(likeprofile["values"], likeprofile["likelihood"], kind="quadratic")(sv_best)
-            #-
+            # -
             idx = np.min(np.argwhere(likeprofile["values"] > 0))
             filtered_x_values = likeprofile["values"][likeprofile["values"] > 0]
             filtered_y_values = likeprofile["likelihood"][idx:]
@@ -377,3 +385,35 @@ class SigmaVEstimator:
             likeprofile=likeprofile,
         )
         return res
+
+
+class DMDatasetOnOff(SpectrumDatasetOnOff):
+    """Dark matter dataset OnOff with nuissance parameters and likelihood."""
+
+    def __init__(self, nuissance=None, **kwargs):
+        super().__init__(**kwargs)
+        if nuissance is None:
+            nuissance = {
+                "j": 0 * u.Unit("GeV2 cm-5"),
+                "jobs": 0 * u.Unit("GeV2 cm-5"),
+                "sigmaj": 0 * u.Unit("GeV2 cm-5")
+            }
+        self.nuissance = nuissance
+
+    def likelihood(self):
+        wstat = super().likelihood()
+        liketotal = wstat + self.jnuissance()
+        return liketotal
+
+    def jnuissance(self):
+        if self.nuissance["j"].value and self.nuissance["jobs"].value and self.nuissance["sigmaj"].value:
+            exp_up = (np.log10(self.nuissance["j"].value) - np.log10(self.nuissance["jobs"].value)) ** 2
+            exp_down = 2 * (np.log(self.nuissance["sigmaj"].value) ** 2)
+            up = np.exp(-1 * exp_up / exp_down)
+            down = np.log(10) * self.nuissance["jobs"].value \
+                   * np.sqrt(2 * np.pi) * np.log10(self.nuissance["sigmaj"].value)
+            res = up / down
+            return -2 * np.log(res)
+        else:
+            return 0
+
