@@ -11,6 +11,7 @@ from scipy.optimize import brentq
 from scipy.interpolate import interp1d
 import numpy as np
 import logging
+import copy
 
 __all__ = ["JFactory", "SigmaVEstimator"]
 
@@ -74,7 +75,8 @@ class SigmaVEstimator:
     masses. For each fit, the value of the scale parameter (in the range of the physical region >=0)
     that makes the likelihood ratio :math:`-2\lambda_P = RATIO` is multiplied by the thermal relic cross
     section, and subsequently taken as the estimated value of :math:`\sigma\nu`. The value of :math:`RATIO`
-    is set by default to 2.71 and may be modified as an attribute of this `SigmaVEstimator` class.
+    is set by default to 2.71. This process is performed for a given number of runs so to have better statistics.
+    Nuissance parameters may be also introduced.
 
     Parameters
     ----------
@@ -317,6 +319,7 @@ class SigmaVEstimator:
             resfits = []
             likes = []
             profiles = []
+            js = []
             widthsigma = dataset_loop.nuissance["width"] * dataset_loop.nuissance["sigmaj"].value
             jlo = dataset_loop.nuissance["jobs"].value - widthsigma
             jhi = dataset_loop.nuissance["jobs"].value + widthsigma
@@ -325,36 +328,35 @@ class SigmaVEstimator:
             for ji in np.linspace(jlo, jhi, dataset_loop.nuissance["steps"]):
                 dataset_loop.nuissance["j"] = ji * unit
                 ifit = Fit(dataset_loop)
+                js.append(ji)
                 resfits.append(ifit.run())
                 ilike = dataset_loop.likelihood()
                 likes.append(ilike)
                 profiles.append(ifit.likelihood_profile(**likelihood_profile_opts))
                 log.debug(f"J: {ji:.2e} \t Min Likelihood: {ilike}")
-            # TODO
             # choose likelihood profile giving the minimum value for the likelihood
-            #
-            likeprofile = profiles[0]
-            fit_result = resfits[0]
-
+            likemin = min(likes)
+            idx = likes.index(likemin)
+            likeprofile = profiles[idx]
+            fit_result = resfits[idx]
+            log.debug(f"J best: {js[idx]}")
         else:
             fit = Fit(dataset_loop)
             fit_result = fit.run(optimize_opts, covariance_opts)
             likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
-
-        halfprofile = likeprofile
+            likemin = dataset_loop.likelihood()
+        halfprofile = copy.deepcopy(likeprofile)
 
         # consider sv value in the physical region
         sv_best = fit_result.parameters["sv"].value
+        log.debug(f"SvBest found: {sv_best}")
         if sv_best < 0:
-            log.debug(f"Negative value for best sv found: {sv_best}")
             sv_best = 0
+            likemin = interp1d(likeprofile["values"], likeprofile["likelihood"], kind="quadratic")(0)
 
         max_like_detection = 0
         max_like_difference = 0
         if max(halfprofile["values"] > 0):
-            # likemin = dataset_loop.likelihood()
-            likemin = interp1d(likeprofile["values"], likeprofile["likelihood"], kind="quadratic")(sv_best)
-            # -
             idx = np.min(np.argwhere(likeprofile["values"] > 0))
             filtered_x_values = likeprofile["values"][likeprofile["values"] > 0]
             filtered_y_values = likeprofile["likelihood"][idx:]
@@ -368,9 +370,10 @@ class SigmaVEstimator:
                 kind="quadratic",
                 fill_value="extrapolate",
             )(0)
-            max_like_detection = likemin - likezero
+            max_like_detection = likezero - likemin
 
             log.debug(f"Min Likelihood: {likemin}")
+            log.debug(f"SvBest: {sv_best}")
             log.debug(f"SvMax: {np.max(halfprofile['values'])}")
             log.debug(f"DeltaLMax: {max_like_difference:.4f} \t| Max:  {np.max(halfprofile['likelihood'])}")
             log.debug(f"DeltaLZero: {max_like_detection:.4f} \t| Zero: {likezero}")
@@ -378,7 +381,7 @@ class SigmaVEstimator:
         try:
             assert (np.max(halfprofile["values"]) > 0), "Values for jfactor found outside the physical region"
             assert max_like_difference > 0, "Wider range needed in likelihood profile"
-            assert abs(max_like_detection) <= 25, "Detection found"
+            assert max_like_detection <= 25, "Detection found"
 
             # find the value of the scale parameter `sv` reaching self.RATIO
             sv_ul = brentq(
