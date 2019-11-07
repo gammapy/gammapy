@@ -596,14 +596,14 @@ class Parameters:
         """Set sub-covariance matrix from a parent or child `~gammapy.modeling.Parameters`."""
         if parameters.covariance is not None:
             if len(self.unique_parameters) <= len(parameters.unique_parameters):
-                    ind = [
-                        kp
-                        for kp, param in enumerate(parameters.unique_parameters)
-                        if param in self.unique_parameters
-                    ]
-                    self.covariance = parameters.covariance[np.ix_(ind, ind)]
+                ind = [
+                    kp
+                    for kp, param in enumerate(parameters.unique_parameters)
+                    if param in self.unique_parameters
+                ]
+                self.covariance = parameters.covariance[np.ix_(ind, ind)]
             else:
-                if self.covariance is not None: 
+                if self.covariance is not None:
                     ind = [
                         kp
                         for kp, param in enumerate(self.unique_parameters)

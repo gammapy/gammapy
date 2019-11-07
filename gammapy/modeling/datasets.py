@@ -135,7 +135,7 @@ class Datasets:
         ref_shape = self.datasets[0].data_shape
         is_ref_shape = [dataset.data_shape == ref_shape for dataset in self.datasets]
         return np.all(is_ref_shape)
-    
+
     @property
     def _model_list(self):
         from gammapy.modeling.models import SkyModels, SkyModel
