@@ -536,52 +536,6 @@ class EnergyDispersion:
 
         return var / norm
 
-    def to_sherpa(self, name):
-        """Convert to `sherpa.astro.data.DataRMF`.
-
-        Parameters
-        ----------
-        name : str
-            Instance name
-        """
-        from sherpa.astro.data import DataRMF
-        from sherpa.utils import SherpaUInt, SherpaFloat
-
-        # Need to modify RMF data
-        # see https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L727
-
-        table = self.to_table()
-        n_grp = table["N_GRP"].data.astype(SherpaUInt)
-        f_chan = table["F_CHAN"].data
-        n_chan = table["N_CHAN"].data
-        matrix = table["MATRIX"].data
-
-        good = n_grp > 0
-        matrix = matrix[good]
-        matrix = np.concatenate([row for row in matrix])
-        matrix = matrix.astype(SherpaFloat)
-
-        good = n_grp > 0
-        f_chan = f_chan[good]
-        f_chan = np.concatenate([row for row in f_chan]).astype(SherpaUInt)
-        n_chan = n_chan[good]
-        n_chan = np.concatenate([row for row in n_chan]).astype(SherpaUInt)
-
-        energy = self.e_reco.edges.to_value("keV")
-        return DataRMF(
-            name=name,
-            energ_lo=table["ENERG_LO"].quantity.to_value("keV").astype(SherpaFloat),
-            energ_hi=table["ENERG_HI"].quantity.to_value("keV").astype(SherpaFloat),
-            matrix=matrix,
-            n_grp=n_grp,
-            n_chan=n_chan,
-            f_chan=f_chan,
-            detchans=self.e_reco.nbin,
-            e_min=energy[:-1],
-            e_max=energy[1:],
-            offset=0,
-        )
-
     def plot_matrix(self, ax=None, show_energy=None, add_cbar=False, **kwargs):
         """Plot PDF matrix.
 
