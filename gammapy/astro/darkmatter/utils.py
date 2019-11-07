@@ -348,6 +348,7 @@ class SigmaVEstimator:
         if sv_best < 0:
             sv_best = 0
 
+        max_like_detection = 0
         max_like_difference = 0
         if max(halfprofile["values"] > 0):
             # likemin = dataset_loop.likelihood()
@@ -358,17 +359,20 @@ class SigmaVEstimator:
             filtered_y_values = likeprofile["likelihood"][idx:]
             halfprofile["values"] = np.concatenate((np.array([sv_best]), filtered_x_values))
             halfprofile["likelihood"] = np.concatenate((np.array([likemin]), filtered_y_values))
-            max_like_difference = np.max(halfprofile["likelihood"]) - likemin - self.RATIO
-
-            # TODO
-            # Check L - L<sub>0</sub> ≤ 25
-            # raise detection
-            #
-            #
+            max_like_difference = (np.max(halfprofile["likelihood"]) - likemin - self.RATIO)
+            # detection
+            likezero = interp1d(
+                likeprofile["values"],
+                likeprofile["likelihood"],
+                kind="quadratic",
+                fill_value="extrapolate",
+            )(0)
+            max_like_detection = likemin - likezero
 
         try:
             assert (np.max(halfprofile["values"]) > 0), "Values for jfactor found outside the physical region"
             assert max_like_difference > 0, "Wider range needed in likelihood profile"
+            assert abs(max_like_detection) <= 25, "Detection found"
 
             # find the value of the scale parameter `sv` reaching self.RATIO
             sv_ul = brentq(
