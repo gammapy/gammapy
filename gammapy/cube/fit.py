@@ -633,7 +633,7 @@ class MapDataset(Dataset):
                 hdulist.append(hdus["EDISP_MATRIX_EBOUNDS"])
             else:
                 hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")[exclude_primary]
-                hdulist += self.edisp.exposure_map.to_hdulist(hdu="exp_edisp")[
+                hdulist += self.edisp.exposure_map.to_hdulist(hdu="edisp_exposure")[
                     exclude_primary
                 ]
 
@@ -644,7 +644,7 @@ class MapDataset(Dataset):
                 ]
             else:
                 hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
-                hdulist += self.psf.exposure_map.to_hdulist(hdu="exp_psf")[
+                hdulist += self.psf.exposure_map.to_hdulist(hdu="psf_exposure")[
                     exclude_primary
                 ]
 
@@ -695,7 +695,7 @@ class MapDataset(Dataset):
             )
         if "EDISP" in hdulist:
             edisp_map = Map.from_hdulist(hdulist, hdu="edisp")
-            exposure_map = Map.from_hdulist(hdulist, hdu="exp_edisp")
+            exposure_map = Map.from_hdulist(hdulist, hdu="edisp_exposure")
             kwargs["edisp"] = EDispMap(edisp_map, exposure_map)
 
         if "PSF_KERNEL" in hdulist:
@@ -703,7 +703,7 @@ class MapDataset(Dataset):
             kwargs["psf"] = PSFKernel(psf_map)
         if "PSF" in hdulist:
             psf_map = Map.from_hdulist(hdulist, hdu="psf")
-            exposure_map = Map.from_hdulist(hdulist, hdu="exp_psf")
+            exposure_map = Map.from_hdulist(hdulist, hdu="psf_exposure")
             kwargs["psf"] = PSFMap(psf_map, exposure_map)
 
         if "MASK_SAFE" in hdulist:

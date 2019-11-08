@@ -284,6 +284,18 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
         dataset.gti.time_sum.to_value("s"), dataset_new.gti.time_sum.to_value("s")
     )
 
+    # To test io of psf and edisp map
+    stacked = MapDataset.create(geom)
+    stacked.write("test.fits", overwrite=True)
+    stacked1 = MapDataset.read("test.fits")
+    assert stacked1.psf.psf_map is not None
+    assert stacked1.psf.exposure_map is not None
+    assert stacked1.edisp.edisp_map is not None
+    assert stacked1.edisp.exposure_map is not None
+
+    assert_allclose(stacked1.psf.psf_map, stacked.psf.psf_map)
+    assert_allclose(stacked1.edisp.edisp_map, stacked.edisp.edisp_map)
+
 
 @requires_dependency("iminuit")
 @requires_dependency("matplotlib")
