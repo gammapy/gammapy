@@ -77,7 +77,7 @@ class SpatialModel(Model):
                 angle=np.nan * u.deg,
             )
         pars = self.parameters
-        sub_covar = pars.get_covariance(["lon_0", "lat_0"])
+        sub_covar = pars.get_subcovariance(["lon_0", "lat_0"])[0]
         cos_lat = np.cos(self.lat_0.quantity.to_value("rad"))
         sub_covar[0, 0] *= cos_lat ** 2.0
         sub_covar[0, 1] *= cos_lat

@@ -312,7 +312,7 @@ class Parameters:
             List of `Parameters`
         """
         pars = itertools.chain(*parameters_list)
-        parameters = cls(pars)
+        parameters = cls(pars).unique_parameters
         npars = len(parameters)
         covariance = np.zeros((npars, npars))
         parameters.covariance = covariance
