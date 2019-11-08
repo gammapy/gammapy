@@ -592,24 +592,27 @@ class Parameters:
         for par in self._parameters:
             par.frozen = True
 
+    def get_subcovariance(self, parameters):
+        """Get sub-covariance matrix from a parent `~gammapy.modeling.Parameters`."""
+        if type(parameters) is list and type(parameters[0]) is str:
+            idx = [self._get_idx(name) for name in parameters]
+        else:
+            aself = np.asarray(self.unique_parameters)
+            apars = np.asarray(parameters.unique_parameters)
+            idx = np.nonzero(apars[:, None] == aself)[1]
+        return self.covariance[np.ix_(idx, idx)], idx
+
     def set_subcovariance(self, parameters):
         """Set sub-covariance matrix from a parent or child `~gammapy.modeling.Parameters`."""
+        npars = len(parameters)
+        nself = len(self)
         if parameters.covariance is not None:
-            if len(self.unique_parameters) <= len(parameters.unique_parameters):
-                ind = [
-                    kp
-                    for kp, param in enumerate(parameters.unique_parameters)
-                    if param in self.unique_parameters
-                ]
-                self.covariance = parameters.covariance[np.ix_(ind, ind)]
+            if nself <= npars:
+                self.covariance, _ = parameters.get_subcovariance(self)
             else:
                 if self.covariance is not None:
-                    ind = [
-                        kp
-                        for kp, param in enumerate(self.unique_parameters)
-                        if param in parameters.unique_parameters
-                    ]
-                    self.covariance[np.ix_(ind, ind)] = parameters.covariance
+                    _, idx = self.get_subcovariance(parameters)
+                    self.covariance[np.ix_(idx, idx)] = parameters.covariance
 
 
 class restore_parameters_values:

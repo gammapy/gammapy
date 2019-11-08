@@ -140,6 +140,7 @@ class Datasets:
     def _model_list(self):
         from gammapy.modeling.models import SkyModels, SkyModel
         from gammapy.cube.fit import MapDataset
+
         model_list = []
         for dataset in self.datasets:
             if hasattr(dataset, "model") and dataset.model is not None:

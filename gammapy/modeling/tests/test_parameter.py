@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from gammapy.modeling import Parameter, Parameters
 
 
@@ -125,9 +125,8 @@ def test_parameters_from_stack():
     pars = pars1 + pars2
 
     assert_allclose(pars.values, [1, 2, 3, 4, 5])
-    # FIXME: covar stacking is broken ATM
-    # assert_allclose(pars.covariance[0], [2, 2, 0, 0, 0])
-    # assert_allclose(pars.covariance[4], [0, 0, 3, 3, 3])
+    assert_allclose(pars.covariance[0], [2, 2, 0, 0, 0])
+    assert_allclose(pars.covariance[4], [0, 0, 3, 3, 3])
 
 
 def test_unique_parameters():
@@ -187,13 +186,18 @@ def test_parameters_autoscale():
 
 
 def test_subcovar():
-    pars_0 = Parameters([Parameter("a", 10), Parameter("b", 20), Parameter("c", 30)])
-    pars_1 = Parameters(list(pars_0.unique_parameters)[:2])
-    pars_0.covariance = np.array([[3, 4, 5], [7, 8, 9], [10, 11, 12]])
+
+    a = Parameter("a", 10)
+    b = Parameter("b", 20)
+    pars_0 = Parameters([a, b, Parameter("c", 30)])
+    pars_1 = Parameters([a, b])
+    pars_0.covariance = np.array([[2, 3, 4], [6, 7, 8], [10, 11, 12]])
+    assert_equal(pars_0.get_subcovariance(["a", "b"])[0], np.array([[2, 3], [6, 7]]))
+    assert_equal(pars_0.get_subcovariance(["c"])[0], np.array([[12]]))
 
     pars_1.set_subcovariance(pars_0)
-    assert np.all(pars_1.covariance == np.array([[3, 4], [7, 8]]))
+    assert_equal(pars_1.covariance, np.array([[2, 3], [6, 7]]))
 
-    pars_1.covariance = np.array([[5, 6], [7, 8]])
+    pars_1.covariance = np.array([[25, 26], [27, 28]])
     pars_0.set_subcovariance(pars_1)
-    assert np.all(pars_0.covariance == np.array([[5, 6, 5], [7, 8, 9], [10, 11, 12]]))
+    assert_equal(pars_0.covariance, np.array([[25, 26, 4], [27, 28, 8], [10, 11, 12]]))
