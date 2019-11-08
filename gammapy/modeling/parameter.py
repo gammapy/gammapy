@@ -304,20 +304,24 @@ class Parameters:
 
     @classmethod
     def from_stack(cls, parameters_list):
-        """Create `Parameters` by stacking smaller `Parameters`.
+        """Create `Parameters` by stacking a list of other `Parameters` objects.
 
         Parameters
         ----------
-        parname : list
-            List of `Parameters`
+        parameters_list : list of `Parameters`
+            List of `Parameters` objects
         """
         pars = itertools.chain(*parameters_list)
-        parameters = cls(pars).unique_parameters
-        npars = len(parameters)
-        covariance = np.zeros((npars, npars))
-        parameters.covariance = covariance
-        for _ in parameters_list:
-            parameters.set_subcovariance(_)
+        parameters = cls(pars)
+
+        if np.any([pars.covariance is not None for pars in parameters_list]):
+            npars = len(parameters)
+            parameters.covariance = np.zeros((npars, npars))
+
+            for pars in parameters_list:
+                if pars.covariance is not None:
+                    parameters.set_subcovariance(pars)
+
         return parameters
 
     @property
