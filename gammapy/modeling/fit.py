@@ -77,7 +77,7 @@ class Fit:
 
     @lazyproperty
     def _parameters(self):
-        return self.datasets.parameters
+        return self.datasets.parameters.unique_parameters
 
     def run(self, optimize_opts=None, covariance_opts=None):
         """
@@ -112,10 +112,6 @@ class Fit:
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
         optimize_result._success = optimize_result.success and covariance_result.success
-
-        # set sub-covariance matrix for each model
-        for model in self.datasets._model_list:
-            model.parameters.set_subcovariance(self._parameters)
 
         return optimize_result
 
