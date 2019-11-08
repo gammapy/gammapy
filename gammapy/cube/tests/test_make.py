@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.cube import MapDataset, MapDatasetMaker, MapMakerRing, RingBackgroundMaker
+from gammapy.cube import MapDataset, MapDatasetMaker, RingBackgroundMaker
 from gammapy.cube.fit import MapDatasetOnOff
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
@@ -143,27 +143,25 @@ def test_map_maker(pars, observations):
 
 @requires_data()
 def test_map_maker_ring(observations):
-    geomd = geom(ebounds=[0.1, 1, 10])
+    geomd = geom(ebounds=[0.1, 10])
     map_dataset_maker = MapDatasetMaker(geom=geomd, offset_max="2 deg")
-    ring_bkg = RingBackgroundMaker(r_in="0.5 deg", width="0.4 deg")
-
-    axis = geomd.get_axis_by_name("energy")
-    geom_squashed = geomd.to_image().to_cube([axis.squash()])
-    stacked = MapDatasetOnOff.create(geom_squashed)
+    stacked = MapDatasetOnOff.create(geomd)
 
     regions = CircleSkyRegion(
         SkyCoord(0, 0, unit="deg", frame="galactic"), radius=0.5 * u.deg
+    )
+    exclusion = Map.from_geom(geomd)
+    exclusion.data = exclusion.geom.region_mask([regions], inside=False)
+
+    ring_bkg = RingBackgroundMaker(
+        r_in="0.5 deg", width="0.4 deg", exclusion_mask=exclusion
     )
 
     for obs in observations:
         dataset = map_dataset_maker.run(obs)
         dataset = dataset.to_image()
 
-        geom_cutout = dataset.counts.geom
-        exclusion = Map.from_geom(geom_cutout)
-        exclusion.data = exclusion.geom.region_mask([regions], inside=False)
-
-        dataset_on_off = ring_bkg.run(dataset, exclusion)
+        dataset_on_off = ring_bkg.run(dataset)
         stacked.stack(dataset_on_off)
 
     assert_allclose(np.nansum(stacked.counts.data), 34366, rtol=1e-2)

@@ -36,7 +36,7 @@ class AdaptiveRingBackgroundMaker:
 
     See Also
     --------
-    RingBackgroundMaker, gammapy.detect.KernelBackgroundMaker
+    RingBackgroundMaker, gammapy.detect.KernelBackgroundEstimator
     """
 
     def __init__(
@@ -48,7 +48,9 @@ class AdaptiveRingBackgroundMaker:
         threshold_alpha=0.1,
         theta="0.22 deg",
         method="fixed_width",
+        exclusion_mask=None,
     ):
+        self.exclusion_mask = exclusion_mask
         stepsize = Angle(stepsize)
         theta = Angle(theta)
 
@@ -154,7 +156,7 @@ class AdaptiveRingBackgroundMaker:
 
         return acceptance, acceptance_off, counts_off
 
-    def make_cubes(self, dataset, exclusion):
+    def make_cubes(self, dataset):
         """Make acceptance, off acceptance, off counts cubes
 
         Parameters
@@ -173,6 +175,19 @@ class AdaptiveRingBackgroundMaker:
         counts = dataset.counts
         background = dataset.background_model.map
         kernels = self.kernels(counts)
+        exclusion = self.exclusion_mask
+
+        if (
+            exclusion is not None
+            and exclusion.geom.data_shape != counts.geom.data_shape
+        ):
+            # Reproject the exclusion mask to the cutout geom
+            cutout_coord = counts.geom.get_coord()
+            reproj_exclusion = counts.copy(data=np.zeros(cutout_coord.shape))
+            reproj_exclusion.fill_by_coord(
+                cutout_coord, exclusion.get_by_coord(cutout_coord)
+            )
+            exclusion = reproj_exclusion
 
         cubes = {}
         cubes["counts_off"] = scale_cube(
@@ -194,7 +209,7 @@ class AdaptiveRingBackgroundMaker:
 
         return cubes
 
-    def run(self, dataset, exclusion):
+    def run(self, dataset):
         """Run adaptive ring background maker
 
         Parameters
@@ -209,7 +224,7 @@ class AdaptiveRingBackgroundMaker:
         dataset_on_off : `~gammapy.cube.fit.MapDatasetOnOff`
             On off dataset.
         """
-        cubes = self.make_cubes(dataset, exclusion)
+        cubes = self.make_cubes(dataset)
         acceptance, acceptance_off, counts_off = self._reduce_cubes(cubes, dataset)
 
         not_has_off_acceptance = acceptance_off.data <= 0
@@ -217,6 +232,7 @@ class AdaptiveRingBackgroundMaker:
 
         fft_noise_threshold = 1e-6
         not_has_acceptance = acceptance.data <= fft_noise_threshold
+
         counts_off.data[not_has_acceptance] = 0
         acceptance_off.data[not_has_acceptance] = 0
         acceptance.data[not_has_acceptance] = 0
@@ -231,9 +247,7 @@ class AdaptiveRingBackgroundMaker:
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             exposure=dataset.exposure,
-            mask_fit=dataset.mask_fit,
             psf=dataset.psf,
-            edisp=dataset.edisp,
             background_model=None,
             name=dataset.name,
             evaluation_mode="local",
@@ -260,7 +274,8 @@ class RingBackgroundMaker:
     gammapy.detect.KernelBackgroundEstimator, AdaptiveRingBackgroundEstimator
     """
 
-    def __init__(self, r_in, width):
+    def __init__(self, r_in, width, exclusion_mask=None):
+        self.exclusion_mask = exclusion_mask
         self._parameters = {"r_in": Angle(r_in), "width": Angle(width)}
 
     @property
@@ -291,7 +306,7 @@ class RingBackgroundMaker:
         ring.normalize("peak")
         return ring
 
-    def make_maps_off(self, dataset, exclusion):
+    def make_maps_off(self, dataset):
         """Make off maps
 
         Parameters
@@ -308,6 +323,19 @@ class RingBackgroundMaker:
         """
         counts = dataset.counts
         background = dataset.background_model.map
+        exclusion = self.exclusion_mask
+
+        if (
+            exclusion is not None
+            and exclusion.geom.data_shape != counts.geom.data_shape
+        ):
+            # Reproject the exclusion mask to the cutout geom
+            cutout_coord = counts.geom.get_coord()
+            reproj_exclusion = counts.copy(data=np.zeros(cutout_coord.shape))
+            reproj_exclusion.fill_by_coord(
+                cutout_coord, exclusion.get_by_coord(cutout_coord)
+            )
+            exclusion = reproj_exclusion
 
         maps_off = {}
         ring = self.kernel(counts)
@@ -328,7 +356,7 @@ class RingBackgroundMaker:
 
         return maps_off
 
-    def run(self, dataset, exclusion):
+    def run(self, dataset):
         """Run ring background maker
 
         Parameters
@@ -343,7 +371,7 @@ class RingBackgroundMaker:
         dataset_on_off : `~gammapy.cube.fit.MapDatasetOnOff`
             On off dataset.
         """
-        maps_off = self.make_maps_off(dataset, exclusion)
+        maps_off = self.make_maps_off(dataset)
         acceptance = dataset.background_model.map
         acceptance.data[acceptance.data <= 0] = 0
 
@@ -357,9 +385,7 @@ class RingBackgroundMaker:
             acceptance=acceptance,
             acceptance_off=maps_off["acceptance_off"],
             exposure=dataset.exposure,
-            mask_fit=dataset.mask_fit,
             psf=dataset.psf,
-            edisp=dataset.edisp,
             background_model=None,
             name=dataset.name,
             evaluation_mode="local",
@@ -372,4 +398,5 @@ class RingBackgroundMaker:
             "RingBackground parameters: \n"
             f"r_in : {self.parameters['r_in']}\n"
             f"width: {self.parameters['width']}\n"
+            f"Exclusion mask: {self.exclusion_mask}"
         )
