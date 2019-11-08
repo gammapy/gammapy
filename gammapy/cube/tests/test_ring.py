@@ -63,10 +63,10 @@ def test_ring_bkg_maker(map_dataset_maker, observations, exclusion_mask):
 
     assert_allclose(datasets[0].counts_off.data.sum(), 2511417.0)
     assert_allclose(datasets[1].counts_off.data.sum(), 2143577.0)
-    assert_allclose(datasets[0].acceptance_off.data.sum(), 686236.1)
-    assert_allclose(datasets[1].acceptance_off.data.sum(), 684627.44)
-    assert_allclose(datasets[0].alpha.data[0][100][100], 0.000402089920)
-    assert_allclose(datasets[0].exposure.data[0][100][100], 8.062544e08)
+    assert_allclose(datasets[0].acceptance_off.data.sum(), 2960680.)
+    assert_allclose(datasets[1].acceptance_off.data.sum(), 2364657.2)
+    assert_allclose(datasets[0].alpha.data[0][100][100], 0.00063745599)
+    assert_allclose(datasets[0].exposure.data[0][100][100], 806254444.8480084)
 
 
 @pytest.mark.parametrize(
@@ -76,32 +76,32 @@ def test_ring_bkg_maker(map_dataset_maker, observations, exclusion_mask):
             "obs_idx": 0,
             "method": "fixed_r_in",
             "counts_off": 2511417.0,
-            "acceptance_off": 686236.102242,
-            "alpha": 0.00040208992,
+            "acceptance_off": 2960679.91214,
+            "alpha": 0.000637456020,
             "exposure": 806254444.8480084,
         },
         {
             "obs_idx": 0,
             "method": "fixed_width",
             "counts_off": 2511417.0,
-            "acceptance_off": 686236.102242,
-            "alpha": 0.00040208992,
+            "acceptance_off": 2960679.91214,
+            "alpha": 0.000637456020,
             "exposure": 806254444.8480084,
         },
         {
             "obs_idx": 1,
             "method": "fixed_r_in",
             "counts_off": 2143577.0,
-            "acceptance_off": 684627.4335880268,
-            "alpha": 0.000328803213,
+            "acceptance_off": 2364657.352647,
+            "alpha": 0.00061841976,
             "exposure": 779613265.2688407,
         },
         {
             "obs_idx": 1,
             "method": "fixed_width",
             "counts_off": 2143577.0,
-            "acceptance_off": 684627.4335880268,
-            "alpha": 0.000328803213,
+            "acceptance_off": 2364657.352647,
+            "alpha": 0.00061841976,
             "exposure": 779613265.2688407,
         },
     ],
