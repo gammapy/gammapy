@@ -10,7 +10,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
-from gammapy.cube import MapDataset, MapDatasetMaker
+from gammapy.cube import MapDataset, MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
@@ -20,7 +20,6 @@ from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
     ReflectedRegionsBackgroundMaker,
-    SafeMaskMaker,
     SpectrumDatasetMaker,
 )
 from gammapy.utils.scripts import make_path, read_yaml
