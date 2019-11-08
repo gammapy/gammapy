@@ -594,7 +594,7 @@ class Parameters:
 
     def get_subcovariance(self, parameters):
         """Get sub-covariance matrix from a parent `~gammapy.modeling.Parameters`."""
-        if type(parameters) is list and type(parameters[0]) is str:
+        if isinstance(parameters, list) and isinstance(parameters[0], str):
             idx = [self._get_idx(name) for name in parameters]
         else:
             aself = np.asarray(self.unique_parameters)

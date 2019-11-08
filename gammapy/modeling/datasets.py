@@ -136,6 +136,8 @@ class Datasets:
         is_ref_shape = [dataset.data_shape == ref_shape for dataset in self.datasets]
         return np.all(is_ref_shape)
 
+    # TODO: have to improve with have less tests and isinstance checks
+    # also should be not private (then add docs)
     @property
     def _model_list(self):
         from gammapy.modeling.models import SkyModels, SkyModel
