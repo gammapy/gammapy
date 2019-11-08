@@ -185,19 +185,30 @@ def test_parameters_autoscale():
     assert_allclose(pars[0].scale, 10)
 
 
-def test_subcovar():
-
+def test_get_subcovariance():
     a = Parameter("a", 10)
     b = Parameter("b", 20)
-    pars_0 = Parameters([a, b, Parameter("c", 30)])
-    pars_1 = Parameters([a, b])
+    c = Parameter("c", 30)
+
+    pars_0 = Parameters([a, b, c])
     pars_0.covariance = np.array([[2, 3, 4], [6, 7, 8], [10, 11, 12]])
-    assert_equal(pars_0.get_subcovariance(["a", "b"])[0], np.array([[2, 3], [6, 7]]))
-    assert_equal(pars_0.get_subcovariance(["c"])[0], np.array([[12]]))
 
-    pars_1.set_subcovariance(pars_0)
-    assert_equal(pars_1.covariance, np.array([[2, 3], [6, 7]]))
+    pars_1 = Parameters([a, b])
 
-    pars_1.covariance = np.array([[25, 26], [27, 28]])
+    assert_equal(pars_0.get_subcovariance(pars_1), np.array([[2, 3], [6, 7]]))
+    assert_equal(pars_0.get_subcovariance([c]), np.array([[12]]))
+
+
+def test_set_subcovariance():
+    a = Parameter("a", 10)
+    b = Parameter("b", 20)
+    c = Parameter("c", 30)
+
+    pars_0 = Parameters([a, c, b])
+    pars_0.covariance = np.zeros((3, 3))
+
+    pars_1 = Parameters([a, b])
+    pars_1.covariance = np.array([[2, 3], [6, 7]])
+
     pars_0.set_subcovariance(pars_1)
-    assert_equal(pars_0.covariance, np.array([[25, 26, 4], [27, 28, 8], [10, 11, 12]]))
+    assert_equal(pars_0.covariance, np.array([[2, 0, 3], [0, 0, 0], [6, 0, 7]]))
