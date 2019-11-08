@@ -107,7 +107,7 @@ class Datasets:
         The order of the unique parameters remains.
         """
         parameters = Parameters.from_stack(_.parameters for _ in self.datasets)
-        return parameters
+        return parameters.unique_parameters
 
     @property
     def names(self):

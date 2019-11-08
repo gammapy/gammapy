@@ -77,7 +77,7 @@ class Fit:
 
     @lazyproperty
     def _parameters(self):
-        return self.datasets.parameters.unique_parameters
+        return self.datasets.parameters
 
     def run(self, optimize_opts=None, covariance_opts=None):
         """

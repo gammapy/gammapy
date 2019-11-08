@@ -78,7 +78,7 @@ def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
     # TODO: this is ugly - design something better for translating to MINUIT parameter names.
     # Maybe a wrapper class MinuitParameters?
     parameter = parameters[parameter]
-    idx = parameters.free_parameters.index(parameter)
+    idx = parameters.free_parameters._get_idx(parameter)
     var = _make_parname(idx, parameter)
 
     message, success = "Minos terminated successfully.", True
@@ -100,11 +100,11 @@ def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
 
 def mncontour(minuit, parameters, x, y, numpoints, sigma):
     par_x = parameters[x]
-    idx_x = parameters.free_parameters.index(par_x)
+    idx_x = parameters.free_parameters._get_idx(par_x)
     x = _make_parname(idx_x, par_x)
 
     par_y = parameters[y]
-    idx_y = parameters.free_parameters.index(par_y)
+    idx_y = parameters.free_parameters._get_idx(par_y)
     y = _make_parname(idx_y, par_y)
 
     x_info, y_info, contour = minuit.mncontour(x, y, numpoints, sigma)

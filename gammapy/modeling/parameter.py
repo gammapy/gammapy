@@ -339,7 +339,7 @@ class Parameters:
     @property
     def free_parameters(self):
         """List of free parameters"""
-        return [par for par in self._parameters if not par.frozen]
+        return self.__class__([par for par in self._parameters if not par.frozen])
 
     @property
     def unique_parameters(self):
