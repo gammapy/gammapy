@@ -230,9 +230,7 @@ class AdaptiveRingBackgroundMaker:
             acceptance_off=acceptance_off,
             exposure=dataset.exposure,
             psf=dataset.psf,
-            background_model=None,
             name=dataset.name,
-            evaluation_mode="local",
             mask_safe=mask_safe,
             gti=dataset.gti,
         )
@@ -350,9 +348,7 @@ class RingBackgroundMaker:
             acceptance_off=maps_off["acceptance_off"],
             exposure=dataset.exposure,
             psf=dataset.psf,
-            background_model=None,
             name=dataset.name,
-            evaluation_mode="local",
             mask_safe=mask_safe,
             gti=dataset.gti,
         )
