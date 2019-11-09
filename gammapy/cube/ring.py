@@ -166,10 +166,14 @@ class AdaptiveRingBackgroundMaker:
         background = dataset.background_model.map
         kernels = self.kernels(counts)
 
-        # reproject exclusion mask
-        coords = counts.geom.get_coord()
-        data = self.exclusion_mask.get_by_coord(coords)
-        exclusion = Map.from_geom(geom=counts.geom, data=data)
+        if self.exclusion_mask is not None:
+            # reproject exclusion mask
+            coords = counts.geom.get_coord()
+            data = self.exclusion_mask.get_by_coord(coords)
+            exclusion = Map.from_geom(geom=counts.geom, data=data)
+        else:
+            data = np.ones(counts.geom.data_shape, dtype=bool)
+            exclusion = Map.from_geom(geom=counts.geom, data=data)
 
         cubes = {}
         cubes["counts_off"] = scale_cube(
@@ -286,10 +290,15 @@ class RingBackgroundMaker:
         counts = dataset.counts
         background = dataset.background_model.map
 
-        # reproject exclusion mask
-        coords = counts.geom.get_coord()
-        data = self.exclusion_mask.get_by_coord(coords)
-        exclusion = Map.from_geom(geom=counts.geom, data=data)
+        if self.exclusion_mask is not None:
+            # reproject exclusion mask
+            coords = counts.geom.get_coord()
+            data = self.exclusion_mask.get_by_coord(coords)
+            exclusion = Map.from_geom(geom=counts.geom, data=data)
+        else:
+            data = np.ones(counts.geom.data_shape, dtype=bool)
+            exclusion = Map.from_geom(geom=counts.geom, data=data)
+
 
         maps_off = {}
         ring = self.kernel(counts)

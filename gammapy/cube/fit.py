@@ -1011,10 +1011,9 @@ class MapDatasetOnOff(MapDataset):
     @property
     def alpha(self):
         """Exposure ratio between signal and background regions"""
-        tmp = self.acceptance / self.acceptance_off
-        mask = np.where(np.isnan(tmp.data))
-        tmp.data[mask] = 0
-        return tmp
+        alpha = self.acceptance / self.acceptance_off
+        alpha.data = np.nan_to_num(alpha.data)
+        return alpha
 
     @property
     def background(self):
