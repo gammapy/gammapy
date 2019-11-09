@@ -51,26 +51,17 @@ class AdaptiveRingBackgroundMaker:
         exclusion_mask=None,
     ):
         self.exclusion_mask = exclusion_mask
-        stepsize = Angle(stepsize)
-        theta = Angle(theta)
 
         if method not in ["fixed_width", "fixed_r_in"]:
             raise ValueError("Not a valid adaptive ring method.")
 
-        self._parameters = {
-            "r_in": Angle(r_in),
-            "r_out_max": Angle(r_out_max),
-            "width": Angle(width),
-            "stepsize": Angle(stepsize),
-            "threshold_alpha": threshold_alpha,
-            "theta": Angle(theta),
-            "method": method,
-        }
-
-    @property
-    def parameters(self):
-        """Parameter dict."""
-        return self._parameters
+        self.r_in = Angle(r_in)
+        self.r_out_max = Angle(r_out_max)
+        self.width = Angle(width)
+        self.stepsize = Angle(stepsize)
+        self.threshold_alpha = threshold_alpha
+        self.theta = Angle(theta)
+        self.method = method
 
     def kernels(self, image):
         """Ring kernels according to the specified method.
@@ -85,22 +76,20 @@ class AdaptiveRingBackgroundMaker:
         kernels : list
             List of `~astropy.convolution.Ring2DKernel`
         """
-        p = self.parameters
-
         scale = image.geom.pixel_scales[0]
-        r_in = (p["r_in"] / scale).to_value("")
-        r_out_max = (p["r_out_max"] / scale).to_value("")
-        width = (p["width"] / scale).to_value("")
-        stepsize = (p["stepsize"] / scale).to_value("")
+        r_in = (self.r_in / scale).to_value("")
+        r_out_max = (self.r_out_max / scale).to_value("")
+        width = (self.width / scale).to_value("")
+        stepsize = (self.stepsize / scale).to_value("")
 
-        if p["method"] == "fixed_width":
+        if self.method == "fixed_width":
             r_ins = np.arange(r_in, (r_out_max - width), stepsize)
             widths = [width]
-        elif p["method"] == "fixed_r_in":
+        elif self.method == "fixed_r_in":
             widths = np.arange(width, (r_out_max - r_in), stepsize)
             r_ins = [r_in]
         else:
-            raise ValueError(f"Invalid method: {p['method']!r}")
+            raise ValueError(f"Invalid method: {self.method!r}")
 
         kernels = []
         for r_in, width in itertools.product(r_ins, widths):
@@ -131,7 +120,7 @@ class AdaptiveRingBackgroundMaker:
         iterated along the third axis (i.e. increasing ring sizes), the value
         with the first approximate alpha < threshold is taken.
         """
-        threshold = self._parameters["threshold_alpha"]
+        threshold = self.threshold_alpha
 
         alpha_approx_cube = self._alpha_approx_cube(cubes)
         counts_off_cube = cubes["counts_off"]
@@ -198,7 +187,7 @@ class AdaptiveRingBackgroundMaker:
         )
 
         scale = background.geom.pixel_scales[0].to("deg")
-        theta = self.parameters["theta"] * scale
+        theta = self.theta * scale
         tophat = Tophat2DKernel(theta.value)
         tophat.normalize("peak")
         acceptance = background.convolve(tophat.array)
@@ -276,12 +265,8 @@ class RingBackgroundMaker:
 
     def __init__(self, r_in, width, exclusion_mask=None):
         self.exclusion_mask = exclusion_mask
-        self._parameters = {"r_in": Angle(r_in), "width": Angle(width)}
-
-    @property
-    def parameters(self):
-        """dict of parameters"""
-        return self._parameters
+        self.r_in = Angle(r_in)
+        self.width = Angle(width)
 
     def kernel(self, image):
         """Ring kernel.
@@ -296,11 +281,9 @@ class RingBackgroundMaker:
         ring : `~astropy.convolution.Ring2DKernel`
             Ring kernel.
         """
-        p = self.parameters
-
         scale = image.geom.pixel_scales[0].to("deg")
-        r_in = p["r_in"].to("deg") / scale
-        width = p["width"].to("deg") / scale
+        r_in = self.r_in.to("deg") / scale
+        width = self.width.to("deg") / scale
 
         ring = Ring2DKernel(r_in.value, width.value)
         ring.normalize("peak")
