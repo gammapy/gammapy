@@ -891,8 +891,8 @@ class MapDataset(Dataset):
         background = background.sum_over_axes(keepdims=keepdims)
 
         idx = self.mask_safe.geom.get_axis_index_by_name("ENERGY")
-        data = np.logical_or.reduce(self.mask_safe.data, axis=idx)
-        mask_image = WcsNDMap(geom=self.mask_safe.geom.to_image(), data=data)
+        data = np.logical_or.reduce(self.mask_safe.data, axis=idx, keepdims=keepdims)
+        mask_image = WcsNDMap(geom=counts.geom, data=data)
 
         # TODO: add edisp and psf
         edisp = None
@@ -1025,7 +1025,9 @@ class MapDatasetOnOff(MapDataset):
     @property
     def alpha(self):
         """Exposure ratio between signal and background regions"""
-        return self.acceptance / self.acceptance_off
+        alpha = self.acceptance / self.acceptance_off
+        alpha.data = np.nan_to_num(alpha.data)
+        return alpha
 
     @property
     def background(self):
