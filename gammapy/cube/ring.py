@@ -4,7 +4,7 @@ import itertools
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.maps import scale_cube
+from gammapy.maps import scale_cube, Map
 from gammapy.cube.fit import MapDatasetOnOff
 
 __all__ = ["AdaptiveRingBackgroundMaker", "RingBackgroundMaker"]
@@ -33,6 +33,9 @@ class AdaptiveRingBackgroundMaker:
         Integration radius used for alpha computation.
     method : {'fixed_width', 'fixed_r_in'}
         Adaptive ring method.
+    exclusion : `~gammapy.maps.WcsNDMap`
+        Exclusion mask for regions with known gamma-ray emission.
+
 
     See Also
     --------
@@ -152,8 +155,6 @@ class AdaptiveRingBackgroundMaker:
         ----------
         dataset : `~gammapy.cube.fit.MapDataset`
             Input map dataset.
-        exclusion : `~gammapy.maps.WcsNDMap`
-            Exclusion mask for regions with known gamma-ray emission.
 
         Returns
         -------
@@ -164,19 +165,11 @@ class AdaptiveRingBackgroundMaker:
         counts = dataset.counts
         background = dataset.background_model.map
         kernels = self.kernels(counts)
-        exclusion = self.exclusion_mask
 
-        if (
-            exclusion is not None
-            and exclusion.geom.data_shape != counts.geom.data_shape
-        ):
-            # Reproject the exclusion mask to the cutout geom
-            cutout_coord = counts.geom.get_coord()
-            reproj_exclusion = counts.copy(data=np.zeros(cutout_coord.shape))
-            reproj_exclusion.fill_by_coord(
-                cutout_coord, exclusion.get_by_coord(cutout_coord)
-            )
-            exclusion = reproj_exclusion
+        # reproject exclusion mask
+        coords = counts.geom.get_coord()
+        data = self.exclusion_mask.get_by_coord(coords)
+        exclusion = Map.from_geom(geom=counts.geom, data=data)
 
         cubes = {}
         cubes["counts_off"] = scale_cube(
@@ -296,8 +289,6 @@ class RingBackgroundMaker:
         ----------
         dataset : `~gammapy.cube.fit.MapDataset`
             Input map dataset.
-        exclusion : `~gammapy.maps.WcsNDMap`
-            Exclusion mask for regions with known gamma-ray emission.
 
         Returns
         -------
@@ -306,19 +297,11 @@ class RingBackgroundMaker:
         """
         counts = dataset.counts
         background = dataset.background_model.map
-        exclusion = self.exclusion_mask
 
-        if (
-            exclusion is not None
-            and exclusion.geom.data_shape != counts.geom.data_shape
-        ):
-            # Reproject the exclusion mask to the cutout geom
-            cutout_coord = counts.geom.get_coord()
-            reproj_exclusion = counts.copy(data=np.zeros(cutout_coord.shape))
-            reproj_exclusion.fill_by_coord(
-                cutout_coord, exclusion.get_by_coord(cutout_coord)
-            )
-            exclusion = reproj_exclusion
+        # reproject exclusion mask
+        coords = counts.geom.get_coord()
+        data = self.exclusion_mask.get_by_coord(coords)
+        exclusion = Map.from_geom(geom=counts.geom, data=data)
 
         maps_off = {}
         ring = self.kernel(counts)
@@ -346,8 +329,6 @@ class RingBackgroundMaker:
         ----------
         dataset : `~gammapy.cube.fit.MapDataset`
             Input map dataset.
-        exclusion : `~gammapy.maps.WcsNDMap`
-            Exclusion mask for regions with known gamma-ray emission.
 
         Returns
         -------
