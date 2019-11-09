@@ -209,19 +209,9 @@ class AdaptiveRingBackgroundMaker:
         cubes = self.make_cubes(dataset)
         acceptance, acceptance_off, counts_off = self._reduce_cubes(cubes, dataset)
 
+        mask_safe = dataset.mask_safe.copy()
         not_has_off_acceptance = acceptance_off.data <= 0
-        acceptance_off.data[not_has_off_acceptance] = np.nan
-
-        fft_noise_threshold = 1e-6
-        not_has_acceptance = acceptance.data <= fft_noise_threshold
-
-        counts_off.data[not_has_acceptance] = 0
-        acceptance_off.data[not_has_acceptance] = 0
-        acceptance.data[not_has_acceptance] = 0
-
-        mask_safe = dataset.counts.copy(
-            data=np.ones(dataset.counts.geom.data_shape, dtype=bool)
-        )
+        mask_safe.data[not_has_off_acceptance] = 0
 
         return MapDatasetOnOff(
             counts=dataset.counts,
@@ -310,14 +300,6 @@ class RingBackgroundMaker:
         background_excluded = background * exclusion
         maps_off["acceptance_off"] = background_excluded.convolve(ring.array)
 
-        # set pixels, where ring is too small to NaN
-        not_has_off_acceptance = maps_off["acceptance_off"].data <= 0
-        maps_off["acceptance_off"].data[not_has_off_acceptance] = np.nan
-
-        not_has_acceptance = background.data <= 0
-        maps_off["counts_off"].data[not_has_acceptance] = 0
-        maps_off["acceptance_off"].data[not_has_acceptance] = 0
-
         return maps_off
 
     def run(self, dataset):
@@ -335,11 +317,10 @@ class RingBackgroundMaker:
         """
         maps_off = self.make_maps_off(dataset)
         acceptance = dataset.background_model.map
-        acceptance.data[acceptance.data <= 0] = 0
 
-        mask_safe = dataset.counts.copy(
-            data=np.ones(dataset.counts.geom.data_shape, dtype=bool)
-        )
+        mask_safe = dataset.mask_safe.copy()
+        not_has_off_acceptance = maps_off["acceptance_off"].data <= 0
+        mask_safe.data[not_has_off_acceptance] = 0
 
         return MapDatasetOnOff(
             counts=dataset.counts,
@@ -349,7 +330,7 @@ class RingBackgroundMaker:
             exposure=dataset.exposure,
             psf=dataset.psf,
             name=dataset.name,
-            mask_safe=mask_safe,
+            mask_safe=dataset.mask_safe,
             gti=dataset.gti,
         )
 

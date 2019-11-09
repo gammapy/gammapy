@@ -61,10 +61,11 @@ def test_ring_bkg_maker(map_dataset_maker, observations, exclusion_mask):
         dataset_on_off = ring_bkg_maker.run(dataset)
         datasets.append(dataset_on_off)
 
-    assert_allclose(datasets[0].counts_off.data.sum(), 2511417.0)
-    assert_allclose(datasets[1].counts_off.data.sum(), 2143577.0)
-    assert_allclose(datasets[0].acceptance_off.data.sum(), 2960680.)
-    assert_allclose(datasets[1].acceptance_off.data.sum(), 2364657.2)
+    mask = dataset.mask_safe
+    assert_allclose(datasets[0].counts_off.data[mask].sum(), 2511333)
+    assert_allclose(datasets[1].counts_off.data[mask].sum(), 2143577.0)
+    assert_allclose(datasets[0].acceptance_off.data[mask].sum(), 2961300)
+    assert_allclose(datasets[1].acceptance_off.data[mask].sum(), 2364657.2)
     assert_allclose(datasets[0].alpha.data[0][100][100], 0.00063745599)
     assert_allclose(datasets[0].exposure.data[0][100][100], 806254444.8480084)
 
@@ -122,7 +123,8 @@ def test_adaptive_ring_bkg_maker(pars, map_dataset_maker, observations, exclusio
     dataset = dataset.to_image()
     dataset_on_off = adaptive_ring_bkg_maker.run(dataset)
 
-    assert_allclose(dataset_on_off.counts_off.data.sum(), pars["counts_off"])
-    assert_allclose(dataset_on_off.acceptance_off.data.sum(), pars["acceptance_off"])
+    mask = dataset.mask_safe
+    assert_allclose(dataset_on_off.counts_off.data[mask].sum(), pars["counts_off"])
+    assert_allclose(dataset_on_off.acceptance_off.data[mask].sum(), pars["acceptance_off"])
     assert_allclose(dataset_on_off.alpha.data[0][100][100], pars["alpha"])
     assert_allclose(dataset_on_off.exposure.data[0][100][100], pars["exposure"])
