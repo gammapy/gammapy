@@ -8,7 +8,6 @@ from .fermi import (
 from .gammacat import SourceCatalogGammaCat
 from .hawc import SourceCatalog2HWC
 from .hess import SourceCatalogHGPS
-from .snrcat import SourceCatalogSNRcat
 
 __all__ = ["SOURCE_CATALOGS"]
 
@@ -20,6 +19,5 @@ SOURCE_CATALOGS = {
     "4fgl": SourceCatalog4FGL,
     "2fhl": SourceCatalog2FHL,
     "3fhl": SourceCatalog3FHL,
-    "snrcat": SourceCatalogSNRcat,
 }
 """Registry of source catalogs in Gammapy."""

@@ -21,7 +21,6 @@ Support for the following catalogs is available:
 * ``2fhl`` / `SourceCatalog2FHL` - LAT second high-energy source catalog
 * ``3fhl`` / `SourceCatalog3FHL` - LAT third high-energy source catalog
 * ``2hwc`` / `SourceCatalog2HWC` - 2HWC catalog from the HAWC observatory
-* ``snrcat`` / `SourceCatalogSNRcat` - SNRcat supernova remnant catalog
 
 More catalogs can be added to ``gammapy.catalog``, and users can also add
 support for their favourite catalog in their Python script or package, by
@@ -67,7 +66,7 @@ Let's start by checking which catalogs are available::
 
     >>> from gammapy.catalog import SOURCE_CATALOGS
     >>> list(SOURCE_CATALOGS)
-    ['gamma-cat', 'hgps', '2hwc', '3fgl', '4fgl', '2fhl', '3fhl', 'snrcat']
+    ['gamma-cat', 'hgps', '2hwc', '3fgl', '4fgl', '2fhl', '3fhl']
 
 The ``SOURCE_CATALOG`` dict maps names to classes, so you have to call the class
 to instantiate a catalog object::
