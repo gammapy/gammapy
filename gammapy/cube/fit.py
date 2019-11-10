@@ -769,6 +769,7 @@ class MapDataset(Dataset):
         dataset.model = SkyModels(models_list)
         if "likelihood" in data:
             dataset.likelihood_type = data["likelihood"]
+
         return dataset
 
     def to_dict(self, filename=""):
@@ -1035,14 +1036,12 @@ class MapDatasetOnOff(MapDataset):
 
         Notice that this definition is valid under the assumption of cash statistic.
         """
-        background = self.alpha * self.counts_off
-        return background
+        return self.alpha * self.counts_off
 
     @property
     def excess(self):
         """Excess (counts - alpha * counts_off)"""
-        excess = self.counts.data - self.background.data
-        return excess
+        return self.counts.data - self.background.data
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""

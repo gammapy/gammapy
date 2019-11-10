@@ -96,7 +96,6 @@ def geom(ebounds, binsz=0.5):
     ],
 )
 def test_map_maker(pars, observations):
-
     stacked = MapDataset.create(
         geom=pars["geom"],
         energy_axis_true=pars["e_true"],

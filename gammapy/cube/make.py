@@ -4,14 +4,13 @@ from functools import lru_cache
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
-from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import BackgroundModel
 from .background import make_map_background_irf
 from .edisp_map import make_edisp_map
-from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
+from .exposure import make_map_exposure_true_energy
 from .fit import (
     BINSZ_IRF_DEFAULT,
     MARGIN_IRF_DEFAULT,
@@ -65,7 +64,6 @@ class MapDatasetMaker:
         cutout_mode="trim",
         cutout=True,
     ):
-
         self.geom = geom
         self.offset_max = Angle(offset_max)
         self.background_oversampling = background_oversampling
@@ -123,10 +121,9 @@ class MapDatasetMaker:
     @lazyproperty
     def geom_edisp(self):
         """EdispMap geom (`Geom`)"""
-        geom_edisp = self.geom_image_irf.to_cube(
+        return self.geom_image_irf.to_cube(
             [self.migra_axis, self.energy_axis_true]
         )
-        return geom_edisp
 
     def make_counts(self, observation):
         """Make counts map.
@@ -160,13 +157,12 @@ class MapDatasetMaker:
             Exposure map.
         """
         geom = self._cutout_geom(self.geom_exposure, observation)
-        exposure = make_map_exposure_true_energy(
+        return make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
             livetime=observation.observation_live_time_duration,
             aeff=observation.aeff,
             geom=geom,
         )
-        return exposure
 
     @lru_cache(maxsize=1)
     def make_exposure_irf(self, observation):
@@ -182,15 +178,13 @@ class MapDatasetMaker:
         exposure : `Map`
             Exposure map.
         """
-
         geom = self._cutout_geom(self.geom_exposure_irf, observation)
-        exposure = make_map_exposure_true_energy(
+        return make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
             livetime=observation.observation_live_time_duration,
             aeff=observation.aeff,
             geom=geom,
         )
-        return exposure
 
     def make_background(self, observation):
         """Make background map.
@@ -217,14 +211,14 @@ class MapDatasetMaker:
                 f"Invalid background coordinate system: {bkg_coordsys!r}\n"
                 "Options: ALTAZ, RADEC"
             )
-        background = make_map_background_irf(
+
+        return make_map_background_irf(
             pointing=pointing,
             ontime=observation.observation_time_duration,
             bkg=observation.bkg,
             geom=geom,
             oversampling=self.background_oversampling,
         )
-        return background
 
     def make_edisp(self, observation):
         """Make edisp map.
@@ -243,14 +237,13 @@ class MapDatasetMaker:
 
         exposure = self.make_exposure_irf(observation)
 
-        edisp = make_edisp_map(
+        return make_edisp_map(
             edisp=observation.edisp,
             pointing=observation.pointing_radec,
             geom=geom,
             max_offset=self.offset_max,
             exposure_map=exposure,
         )
-        return edisp
 
     def make_psf(self, observation):
         """Make psf map.
@@ -273,14 +266,13 @@ class MapDatasetMaker:
 
         exposure = self.make_exposure_irf(observation)
 
-        psf = make_psf_map(
+        return make_psf_map(
             psf=psf,
             pointing=observation.pointing_radec,
             geom=geom,
             max_offset=self.offset_max,
             exposure_map=exposure,
         )
-        return psf
 
     @lru_cache(maxsize=1)
     def make_mask_safe(self, observation):
@@ -336,7 +328,6 @@ class MapDatasetMaker:
         -------
         dataset : `MapDataset`
             Map dataset.
-
         """
         selection = _check_selection(selection)
 
