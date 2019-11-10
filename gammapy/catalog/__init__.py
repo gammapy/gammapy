@@ -6,4 +6,3 @@ from .gammacat import *
 from .hawc import *
 from .hess import *
 from .registry import *
-from .snrcat import *
