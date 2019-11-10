@@ -304,17 +304,25 @@ class Parameters:
 
     @classmethod
     def from_stack(cls, parameters_list):
-        """Create `Parameters` by stacking smaller `Parameters`.
+        """Create `Parameters` by stacking a list of other `Parameters` objects.
 
-        TODO: document
+        Parameters
+        ----------
+        parameters_list : list of `Parameters`
+            List of `Parameters` objects
         """
         pars = itertools.chain(*parameters_list)
+        parameters = cls(pars)
 
-        # TODO: Fix covariance stacking!
-        # covariances = [Parameters(_)._any_covariance for _ in parameters_list]
-        # covariance = scipy.linalg.block_diag(*covariances)
-        covariance = None
-        return cls(pars, covariance)
+        if np.any([pars.covariance is not None for pars in parameters_list]):
+            npars = len(parameters)
+            parameters.covariance = np.zeros((npars, npars))
+
+            for pars in parameters_list:
+                if pars.covariance is not None:
+                    parameters.set_subcovariance(pars)
+
+        return parameters
 
     @property
     def _empty_covariance(self):
@@ -331,7 +339,7 @@ class Parameters:
     @property
     def free_parameters(self):
         """List of free parameters"""
-        return [par for par in self._parameters if not par.frozen]
+        return self.__class__([par for par in self._parameters if not par.frozen])
 
     @property
     def unique_parameters(self):
@@ -587,6 +595,34 @@ class Parameters:
         """Freeze all parameters"""
         for par in self._parameters:
             par.frozen = True
+
+    def get_subcovariance(self, parameters):
+        """Get sub-covariance matrix
+
+        Parameters
+        ----------
+        parameters : `Parameters`
+            Sub list of parameters.
+
+        Returns
+        -------
+        covariance : `~numpy.ndarray`
+            Sub-covariance.
+        """
+        idx = [self._get_idx(par) for par in parameters]
+        return self.covariance[np.ix_(idx, idx)]
+
+    def set_subcovariance(self, parameters):
+        """Set sub-covariance matrix
+
+        Parameters
+        ----------
+        parameters : `Parameters`
+            Sub list of parameters.
+
+        """
+        idx = [self._get_idx(par) for par in parameters]
+        self.covariance[np.ix_(idx, idx)] = parameters.covariance
 
 
 class restore_parameters_values:

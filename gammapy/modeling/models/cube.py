@@ -57,11 +57,7 @@ class SkyModels:
 
     @property
     def parameters(self):
-        parameters = []
-        for skymodel in self.skymodels:
-            for p in skymodel.parameters:
-                parameters.append(p)
-        return Parameters(parameters)
+        return Parameters.from_stack([_.parameters for _ in self.skymodels])
 
     @property
     def names(self):
