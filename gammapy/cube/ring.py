@@ -4,8 +4,8 @@ import itertools
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.maps import scale_cube, Map
 from gammapy.cube.fit import MapDatasetOnOff
+from gammapy.maps import Map, scale_cube
 
 __all__ = ["AdaptiveRingBackgroundMaker", "RingBackgroundMaker"]
 
@@ -33,9 +33,8 @@ class AdaptiveRingBackgroundMaker:
         Integration radius used for alpha computation.
     method : {'fixed_width', 'fixed_r_in'}
         Adaptive ring method.
-    exclusion : `~gammapy.maps.WcsNDMap`
-        Exclusion mask for regions with known gamma-ray emission.
-
+    exclusion_mask : `~gammapy.maps.WcsNDMap`
+        Exclusion mask
 
     See Also
     --------
@@ -53,8 +52,6 @@ class AdaptiveRingBackgroundMaker:
         method="fixed_width",
         exclusion_mask=None,
     ):
-        self.exclusion_mask = exclusion_mask
-
         if method not in ["fixed_width", "fixed_r_in"]:
             raise ValueError("Not a valid adaptive ring method.")
 
@@ -65,6 +62,7 @@ class AdaptiveRingBackgroundMaker:
         self.threshold_alpha = threshold_alpha
         self.theta = Angle(theta)
         self.method = method
+        self.exclusion_mask = exclusion_mask
 
     def kernels(self, image):
         """Ring kernels according to the specified method.
@@ -242,6 +240,8 @@ class RingBackgroundMaker:
         Inner ring radius
     width : `~astropy.units.Quantity`
         Ring width
+    exclusion_mask : `~gammapy.maps.WcsNDMap`
+        Exclusion mask
 
     See Also
     --------
@@ -249,9 +249,9 @@ class RingBackgroundMaker:
     """
 
     def __init__(self, r_in, width, exclusion_mask=None):
-        self.exclusion_mask = exclusion_mask
         self.r_in = Angle(r_in)
         self.width = Angle(width)
+        self.exclusion_mask = exclusion_mask
 
     def kernel(self, image):
         """Ring kernel.
@@ -298,7 +298,6 @@ class RingBackgroundMaker:
         else:
             data = np.ones(counts.geom.data_shape, dtype=bool)
             exclusion = Map.from_geom(geom=counts.geom, data=data)
-
 
         maps_off = {}
         ring = self.kernel(counts)

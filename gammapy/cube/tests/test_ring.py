@@ -1,14 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import numpy as np
 from numpy.testing import assert_allclose
-from regions import CircleSkyRegion
 from astropy.coordinates import Angle, SkyCoord
+from regions import CircleSkyRegion
 from gammapy.cube import AdaptiveRingBackgroundMaker, RingBackgroundMaker
-from gammapy.maps import WcsNDMap, WcsGeom, MapAxis
 from gammapy.cube.make import MapDatasetMaker
-from gammapy.utils.testing import requires_data
 from gammapy.data import DataStore
+from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")
@@ -125,6 +124,8 @@ def test_adaptive_ring_bkg_maker(pars, map_dataset_maker, observations, exclusio
 
     mask = dataset.mask_safe
     assert_allclose(dataset_on_off.counts_off.data[mask].sum(), pars["counts_off"])
-    assert_allclose(dataset_on_off.acceptance_off.data[mask].sum(), pars["acceptance_off"])
+    assert_allclose(
+        dataset_on_off.acceptance_off.data[mask].sum(), pars["acceptance_off"]
+    )
     assert_allclose(dataset_on_off.alpha.data[0][100][100], pars["alpha"])
     assert_allclose(dataset_on_off.exposure.data[0][100][100], pars["exposure"])
