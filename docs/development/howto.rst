@@ -383,8 +383,6 @@ This option is then processed at the end of ``main`` using this helper function:
 This sets up the root logger with the log level and format (the format isn't configurable
 for the command line scripts at the moment).
 
-See ``gammapy/scripts/find_obs.py`` as an example.
-
 
 Command line tools using click
 ------------------------------
