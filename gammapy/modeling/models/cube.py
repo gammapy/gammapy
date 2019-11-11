@@ -12,15 +12,13 @@ from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 class SkyModelBase(Model):
     """Sky model base class"""
 
-    def __add__(self, skymodel):
-        skymodels = [self]
-        if isinstance(skymodel, SkyModels):
-            skymodels += skymodel.skymodels
-        elif isinstance(skymodel, (SkyModel, SkyDiffuseCube)):
-            skymodels += [skymodel]
+    def __add__(self, other):
+        if isinstance(other, (SkyModels, list)):
+            return SkyModels([self, *other])
+        elif isinstance(other, (SkyModel, SkyDiffuseCube)):
+            return SkyModels([self, other])
         else:
-            raise NotImplementedError
-        return SkyModels(skymodels)
+            raise TypeError(f"Invalid type: {other!r}")
 
     def __radd__(self, model):
         return self.__add__(model)
@@ -43,11 +41,11 @@ class SkyModels:
     """
 
     def __init__(self, skymodels):
-        self.skymodels = skymodels
+        self._skymodels = skymodels
 
     @property
     def parameters(self):
-        return Parameters.from_stack([_.parameters for _ in self.skymodels])
+        return Parameters.from_stack([_.parameters for _ in self._skymodels])
 
     @classmethod
     def from_yaml(cls, filename):
@@ -62,44 +60,44 @@ class SkyModels:
         """Write to YAML file."""
         from gammapy.modeling.serialize import models_to_dict
 
-        components_dict = models_to_dict(self.skymodels)
+        components_dict = models_to_dict(self._skymodels)
         write_yaml(components_dict, filename, sort_keys=False)
 
     def evaluate(self, lon, lat, energy):
-        out = self.skymodels[0].evaluate(lon, lat, energy)
-        for skymodel in self.skymodels[1:]:
+        out = self._skymodels[0].evaluate(lon, lat, energy)
+        for skymodel in self._skymodels[1:]:
             out += skymodel.evaluate(lon, lat, energy)
         return out
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"
 
-        for idx, skymodel in enumerate(self.skymodels):
+        for idx, skymodel in enumerate(self):
             str_ += f"Component {idx}: {skymodel}\n\n\t\n\n"
 
         return str_
 
-    def __add__(self, skymodel):
-        skymodels = self.skymodels.copy()
-        if isinstance(skymodel, SkyModels):
-            skymodels += skymodel.skymodels
-        elif isinstance(skymodel, (SkyModel, SkyDiffuseCube)):
-            skymodels += [skymodel]
+    def __add__(self, other):
+        if isinstance(other, (SkyModels, list)):
+            return SkyModels([*self, *other])
+        elif isinstance(other, (SkyModel, SkyDiffuseCube)):
+            return SkyModels([*self, other])
         else:
-            raise NotImplementedError
-        return SkyModels(skymodels)
+            raise TypeError(f"Invalid type: {other!r}")
 
     def __getitem__(self, val):
         if isinstance(val, int):
-            return self.skymodels[val]
+            return self._skymodels[val]
         elif isinstance(val, str):
-            for idx, model in enumerate(self.skymodels):
+            for idx, model in enumerate(self._skymodels):
                 if val == model.name:
-                    return self.skymodels[idx]
+                    return self._skymodels[idx]
             raise IndexError(f"No model: {val!r}")
         else:
             raise TypeError(f"Invalid type: {type(val)!r}")
 
+    def __len__(self):
+        return len(self._skymodels)
 
 class SkyModel(SkyModelBase):
     """Sky model component.

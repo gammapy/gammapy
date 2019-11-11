@@ -171,7 +171,7 @@ class MapDataset(Dataset):
         # model section
         n_models = 0
         if self.model is not None:
-            n_models = len(self.model.skymodels)
+            n_models = len(self.model)
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
 
         str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.parameters))
@@ -182,7 +182,7 @@ class MapDataset(Dataset):
         components = []
 
         if self.model is not None:
-            components += self.model.skymodels
+            components += self.model
 
         if self.background_model is not None:
             components += [self.background_model]
@@ -225,7 +225,7 @@ class MapDataset(Dataset):
         if model is not None:
             evaluators = []
 
-            for component in model.skymodels:
+            for component in model:
                 evaluator = MapEvaluator(
                     component, evaluation_mode=self.evaluation_mode
                 )

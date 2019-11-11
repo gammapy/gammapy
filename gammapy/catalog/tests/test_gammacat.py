@@ -103,12 +103,11 @@ class TestSourceCatalogGammaCat:
             assert cat[name].name == name
 
     def test_to_sky_models(self, gammacat):
-        sources = gammacat.to_sky_models()
-        source = sources.skymodels[0]
+        models = gammacat.to_sky_models()
 
-        assert len(sources.skymodels) == 74
-        assert source.name == "CTA 1"
-        assert_allclose(source.spectral_model.parameters["index"].value, 2.2)
+        assert len(models) == 74
+        assert models[0].name == "CTA 1"
+        assert_allclose(models[0].spectral_model.parameters["index"].value, 2.2)
 
 
 @requires_data()

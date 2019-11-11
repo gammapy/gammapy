@@ -115,29 +115,29 @@ def test_sky_model_init():
 
 
 def test_skymodel_addition(sky_model, sky_models, sky_models_2, diffuse_model):
-    result = sky_model + sky_model.copy()
-    assert isinstance(result, SkyModels)
-    assert len(result.skymodels) == 2
+    models = sky_model + sky_model.copy()
+    assert isinstance(models, SkyModels)
+    assert len(models) == 2
 
-    result = sky_model + sky_models
-    assert isinstance(result, SkyModels)
-    assert len(result.skymodels) == 3
+    models = sky_model + sky_models
+    assert isinstance(models, SkyModels)
+    assert len(models) == 3
 
-    result = sky_models + sky_model
-    assert isinstance(result, SkyModels)
-    assert len(result.skymodels) == 3
+    models = sky_models + sky_model
+    assert isinstance(models, SkyModels)
+    assert len(models) == 3
 
-    result = sky_models + diffuse_model
-    assert isinstance(result, SkyModels)
-    assert len(result.skymodels) == 3
+    models = sky_models + diffuse_model
+    assert isinstance(models, SkyModels)
+    assert len(models) == 3
 
-    result = sky_models + sky_models_2
-    assert isinstance(result, SkyModels)
-    assert len(result.skymodels) == 4
+    models = sky_models + sky_models_2
+    assert isinstance(models, SkyModels)
+    assert len(models) == 4
 
-    result = sky_model + sky_models
-    assert isinstance(result, SkyModels)
-    assert len(result.skymodels) == 3
+    models = sky_model + sky_models
+    assert isinstance(models, SkyModels)
+    assert len(models) == 3
 
 
 def test_background_model(background):
@@ -169,7 +169,7 @@ class TestSkyModels:
 
         # Check that model parameters are references to the parts
         p1 = sky_models.parameters["lon_0"]
-        p2 = sky_models.skymodels[0].parameters["lon_0"]
+        p2 = sky_models[0].parameters["lon_0"]
         assert p1 is p2
 
     @staticmethod
