@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _HLI:
+.. _analysis:
 
 *******************************
 analysis - High-level interface
@@ -8,7 +8,7 @@ analysis - High-level interface
 
 .. currentmodule:: gammapy.analysis
 
-.. _HLI_intro:
+.. _analysis_intro:
 
 Introduction
 ============
@@ -21,7 +21,7 @@ interface could also be used to automatise processes driven by parameters declar
 in a configuration file in YAML format. Hence, it also provides you with different
 configuration templates to address the most common analysis use cases identified.
 
-.. _HLI_start:
+.. _analysis_start:
 
 Getting started
 ===============
