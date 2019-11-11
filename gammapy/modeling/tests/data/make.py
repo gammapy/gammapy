@@ -112,7 +112,7 @@ def make_datasets_example():
 
     datasets = Datasets(datasets_list)
 
-    dataset0 = datasets.datasets[0]
+    dataset0 = datasets[0]
     print("dataset0")
     print("counts sum : ", dataset0.counts.data.sum())
     print("expo sum : ", dataset0.exposure.data.sum())

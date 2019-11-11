@@ -1019,7 +1019,7 @@ class MapDatasetOnOff(MapDataset):
         parameters = []
 
         if self.model:
-            parameters += self.model.parameters.parameters
+            parameters += self.model.parameters
 
         return Parameters(parameters)
 

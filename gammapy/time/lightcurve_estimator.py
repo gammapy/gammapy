@@ -61,7 +61,7 @@ class LightCurveEstimator:
                 " of the same type and data shape."
             )
 
-        dataset = self.datasets.datasets[0]
+        dataset = self.datasets[0]
 
         if isinstance(dataset, SpectrumDatasetOnOff):
             model = dataset.model
@@ -88,7 +88,7 @@ class LightCurveEstimator:
 
     def _set_scale_model(self):
         # set the model on all datasets
-        for dataset in self.datasets.datasets:
+        for dataset in self.datasets:
             if isinstance(dataset, SpectrumDatasetOnOff):
                 dataset.model = self.model
             else:
@@ -132,7 +132,7 @@ class LightCurveEstimator:
         self.e_max = e_max
 
         rows = []
-        for dataset in self.datasets.datasets:
+        for dataset in self.datasets:
             row = {
                 "time_min": dataset.counts.meta["t_start"].mjd,
                 "time_max": dataset.counts.meta["t_stop"].mjd,

@@ -268,7 +268,7 @@ def test_flux_point_dataset_serialization(tmp_path):
     datasets = Datasets.from_yaml(
         tmp_path / "tmp_datasets.yaml", tmp_path / "tmp_models.yaml"
     )
-    new_dataset = datasets.datasets[0]
+    new_dataset = datasets[0]
     assert_allclose(new_dataset.data.table["dnde"], dataset.data.table["dnde"], 1e-4)
     if dataset.mask_fit is None:
         assert np.all(new_dataset.mask_fit == dataset.mask_safe)
@@ -332,7 +332,7 @@ class TestFluxPointFit:
     @staticmethod
     @requires_dependency("matplotlib")
     def test_fp_dataset_peek(fit):
-        fp_dataset = fit.datasets.datasets[0]
+        fp_dataset = fit.datasets[0]
 
         with mpl_plot_check():
             fp_dataset.peek(method="diff/model")

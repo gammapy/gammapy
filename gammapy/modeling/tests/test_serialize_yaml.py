@@ -106,10 +106,10 @@ def test_datasets_to_io(tmp_path):
 
     datasets = Datasets.from_yaml(filedata, filemodel)
 
-    assert len(datasets.datasets) == 2
+    assert len(datasets) == 2
     assert len(datasets.parameters) == 20
 
-    dataset0 = datasets.datasets[0]
+    dataset0 = datasets[0]
     assert dataset0.counts.data.sum() == 6824
     assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
     assert dataset0.psf is not None
@@ -119,7 +119,7 @@ def test_datasets_to_io(tmp_path):
 
     assert dataset0.background_model.name == "background_irf_gc"
 
-    dataset1 = datasets.datasets[1]
+    dataset1 = datasets[1]
     assert dataset1.background_model.name == "background_irf_g09"
 
     assert dataset0.model["gll_iem_v06_cutout"] == dataset1.model["gll_iem_v06_cutout"]
@@ -140,8 +140,8 @@ def test_datasets_to_io(tmp_path):
     datasets_read = Datasets.from_yaml(
         tmp_path / "written_datasets.yaml", tmp_path / "written_models.yaml"
     )
-    assert len(datasets_read.datasets) == 2
-    dataset0 = datasets_read.datasets[0]
+    assert len(datasets_read) == 2
+    dataset0 = datasets_read[0]
     assert dataset0.counts.data.sum() == 6824
     assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
     assert dataset0.psf is not None

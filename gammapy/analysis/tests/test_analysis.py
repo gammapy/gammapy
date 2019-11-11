@@ -151,7 +151,7 @@ def test_analysis_1d(config_analysis_data):
     analysis.run_fit()
     analysis.get_flux_points()
 
-    assert len(analysis.datasets.datasets) == 2
+    assert len(analysis.datasets) == 2
     assert len(analysis.flux_points.data.table) == 4
     dnde = analysis.flux_points.data.table["dnde"].quantity
     assert dnde.unit == "cm-2 s-1 TeV-1"
@@ -171,7 +171,7 @@ def test_analysis_1d_stacked():
     analysis.set_model(filename=MODEL_FILE)
     analysis.run_fit()
 
-    assert len(analysis.datasets.datasets) == 1
+    assert len(analysis.datasets) == 1
     assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 404)
     pars = analysis.fit_result.parameters
 
@@ -191,7 +191,7 @@ def test_analysis_3d():
     analysis.run_fit()
     analysis.get_flux_points()
 
-    assert len(analysis.datasets.datasets) == 1
+    assert len(analysis.datasets) == 1
     assert len(analysis.fit_result.parameters) == 8
     res = analysis.fit_result.parameters
     assert res[3].unit == "cm-2 s-1 TeV-1"
@@ -211,7 +211,7 @@ def test_analysis_3d_joint_datasets():
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    assert len(analysis.datasets.datasets) == 4
+    assert len(analysis.datasets) == 4
 
 
 def test_validate_astropy_quantities():
@@ -243,7 +243,7 @@ def test_analysis_3d_no_geom_irf():
     analysis.get_observations()
     analysis.get_datasets()
 
-    assert len(analysis.datasets.datasets) == 1
+    assert len(analysis.datasets) == 1
 
 
 @requires_dependency("iminuit")

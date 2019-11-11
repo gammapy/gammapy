@@ -170,7 +170,7 @@ class Analysis:
         else:
             return False
         # TODO: Deal with multiple components
-        for dataset in self.datasets.datasets:
+        for dataset in self.datasets:
             if isinstance(dataset, MapDataset):
                 dataset.model = self.model
             else:
@@ -184,7 +184,7 @@ class Analysis:
         if not self._validate_fitting_settings():
             return False
 
-        for ds in self.datasets.datasets:
+        for ds in self.datasets:
             # TODO: fit_range handled in jsonschema validation class
             if "fit" in self.settings and "fit_range" in self.settings["fit"]:
                 e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
@@ -359,7 +359,7 @@ class Analysis:
             return False
 
     def _validate_set_model(self):
-        if self.datasets and self.datasets.datasets:
+        if self.datasets and len(self.datasets) != 0:
             self.config.validate()
             return True
         else:
