@@ -134,9 +134,7 @@ def test_datasets_to_io(tmp_path):
         is dataset1.model[1].parameters["reference"]
     )
 
-    assert_allclose(
-        dataset1.model[1].parameters["lon_0"].value, 0.9, atol=0.1
-    )
+    assert_allclose(dataset1.model[1].parameters["lon_0"].value, 0.9, atol=0.1)
 
     datasets.to_yaml(tmp_path, prefix="written")
     datasets_read = Datasets.from_yaml(

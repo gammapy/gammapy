@@ -99,6 +99,7 @@ class SkyModels:
     def __len__(self):
         return len(self._skymodels)
 
+
 class SkyModel(SkyModelBase):
     """Sky model component.
 
