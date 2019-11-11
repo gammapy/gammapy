@@ -6,172 +6,138 @@
 PIG 14 - Uncertainty estimation
 *******************************
 
-* Author: tbd
+* Author: Christoph Deil, Axel Donath, Quentin Rémy
 * Created: June 20, 2019
 * Status: draft
 * Discussion: `GH 2255`_
 
-Help!
-=====
-
-We are looking for an author for this PIG and lead for this task. Please comment
-on Github or get in touch via Slack!
-
-The goal is to arrive at an agreed solution by July 2019, and to implement it in
-Gammapy v0.14 in September 2019, i.e. you should have an interest in this topic
-and some time in the coming months to work on this.
-
 Abstract
 ========
 
-The purpose of this PIG is to discuss and decide how to estimate uncertainties
-in Gammapy. It is unclear what we can achieve in the coming months, i.e. the
-scope of the PIG is unclear at this point. However, there are a few clear issues
-and immediate questions that we need to figure out and agree on a solution.
+Currently Gammapy uses the `uncertainties`_ package to do error propagation for
+differential and integral flux of spectral models. This is cumbersome since
+``uncertainties`` doesn't support ``astropy.units.Quantity`` (which we currently
+use in spectral model evaluation), and doesn't work at all for some spectral
+models, since ``uncertainties`` uses autodiff and needs explicit support for any
+Numpy, Scipy, Astropy, ... function involved.
 
-There is "PIG 7: Models" (`GH 1971`_), but it is already very large and
-currently doesn't include any information on the covariance matrix or sampling
-and error estimation, and thus it might be useful to work out a good solution
-here in this new PIG, which should be seen as a companion PIG for the aspect of
-covariance and uncertainty handling in modeling in Gammapy.
+We propose to replace this with a custom uncertainty propagation implementation
+using finite differences. This will be less precise and slower than
+``uncertainties``, but it will work for any derived quantity and code that we
+call.
 
-Questions
-=========
+We also propose to add support for a second method to propagate uncertainty from
+fit parameters to derived quantities, based on parameter samples. This is the
+standard technique in MCMC Bayesian analyses, but it can be used as well for
+normal likelihood analyses.
 
-Below I put a few preliminary thoughts on the following questions:
+Introduction
+============
 
-* Should we use the uncertainties package?
-* How should the covariance matrix be handled in modeling?
-* How should samples be handled in modeling?
+In Gammapy, ``gammapy.modeling`` and specifically the ``gammapy.modeling.Fit``
+class support likelihood fitting to determine best-fit parameters, and to obtain
+a covariance matrix that represents parameter uncertainties and correlations.
+Parameter standard errors are obtained as the square root of the elements on the
+diagonal of the covariance matrix (see e.g. `The interpretation of errors`_).
+Asymmetric errors and confidence intervals can be obtained via likelihood
+profile shape analysis, using methods on the ``gammapy.modeling.Fit` class,
+partially re-implementing, partially calling the methods available in Minuit or
+Sherpa (see e.g. `Fitting and Estimating Parameter Confidence Limits with
+Sherpa`_).
 
-Roughly the scope of this PIG is to try and figure out the best short-term
-solution to these questions, and to outline how to implement the solution, i.e.
-how much work it involves.
+However, often one is interested not directly in a model parameter, but instead
+in a derived quantity that depends on multiple model parameters. Typical
+examples are that users want to compute errors or confidence intervals on
+quantities like differential or integral flux at or above certain energies, or
+location or extension of sources, from spectral and spatial model fits.
 
-It is likely that either 2-3 people will work on these three topics, or the
-scope of the PIG will be reduced. The first question is the most pressing, the
-other two are very much related, but could be postponed to 2020 and Gammapy v2.0
-developments.
+Here we will discuss two standard techniques to compute such uncertaintes:
 
-Should we use the uncertainties package?
-----------------------------------------
+1. Differentials (see `Wikipedia - Propagation of uncertainty`_ or `uncertainties`_)
+2. Monte carlo (MC) samples (see `mcerp`_ or `astropy.uncertainty`_)
 
-Currently we use the `uncertainties`_ package to implement the
-``SpectralModel.evaluate_error`` and ``SpectralModel.integral_error`` method for
-many spectral models. This is an important feature for gamma-ray astronomy,
-because it's used to draw spectral error bands (a.k.a. butterflies) or to
-compute errors on derived quantities like integral or energy fluxes, which are
-needed for publications.
+If you're not familiar with the techniques, here's a few references:
 
-This is great when it works, ``uncertainties`` does analytical (aka fast and
-accurate) computations based on the parameter values and covariance matrix from
-a spectral model fit, to propagate the uncertainty to the quantity of interest.
+- `Error estimation in astronomy: A guide`_
+- `Frequentism and Bayesianism: A Python-driven Primer`_
 
-However, it doesn't always work currently and users are stuck: `GH 1046`_, `GH
-2007`_, `GH 2190`_. Now, it's likely that we could make this work by extending
-``uncertainties`` and make it work for our functions and these cases, it's not
-really clear yet what's going on in those cases. We probably could improve how
-we use ``uncertaintes``, or we could replace it with something else.
+In Gammapy we currently use the `uncertainties`_ package to propagate errors to
+differential fluxes ``spectral_model.evaluate_error`` and integral fluxes
+``spectral_model.integral_error``. It is using autodiff to compute differentials
+of derived quantities wrt. model parameters, which is accurate and fast where it
+works. However, ``uncertainties`` doesn't support ``astropy.units.Quantity``,
+making the current spectral model flux evaluation very convoluted, and it
+doesn't work at all for some spectral models, which has been a frequent
+complaint by users (see `GH 1046`_, `GH 2007`_, `GH 2190`_).
 
-If we keep using ``uncertainties``, we need to figure out how to make these
-extra cases work, and decide on the API and coding pattern to use. Currently we
-take ``uncertainties`` objects as input in the ``evaluate_error`` and
-``integral_error`` methods. Maybe we should change that and use
-``uncertainties`` only as an implementation detail, but not as input or output
-to these methods?
-
-The alternative is to implement Gaussian error propagation ourselves. That's
-what's done in the H.E.S.S. software or in ``ctbutterfly`` in ``ctools``. I
-think in both cases this is partly using analytical derivatives, and partly
-numerical derivatives?
-
-We could also always change to samples for error propagation, calling
-``numpy.multivariate_normal`` on the covariance matrix, and then use e.g.
-``numpy.percentile`` to get error intervals. That's what we did in `joint_crab
-fit_errorbands.py`_. This has the advantage that it's a general solution, works
-for classical fitting and Bayesian sampling, and any model, e.g. also spatial
-models. It can be more precise (taking non-linearities in the transformation to
-the quantity of interest such as a source flux or extension measure into
-account), but it does have the big drawback that it's slower than what
-``uncertainties`` does, and it's random number based and thus noisy.
-
-How should the covariance matrix be handled in modeling?
---------------------------------------------------------
-
-Currently we have the `gammapy.utils.fitting.Parameters`_ class, which handles
-both the parameters, and (optionally) the covariance matrix.
-
-We were never sure if handling the covariance matrix on that object is a good
-idea. Sherpa and Astropy doesn't do that. We should either change the design and
-remove the covariance matrix there, or improve the ``Parameters`` class.
-
-The `MultiNorm`_ class was written to work with the `joint_crab results`_. It's
-a prototype that features the common operations like slicing or projecting out
-sub-matrices, or has things like plotting error ellipses built-in. `MultiNorm`_
-is a small wrapper class around `scipy.stats.multivariate_normal`_, which
-contains stable numerical linear algebra methods for these operations,
-especially when the inverse covariance matrix is involved. We probably should
-integrate that functionality in ``gammapy.utils.fitting``, otherwise 99% of
-users will not manage or bother to compute correct error ellipses, something
-that is sometimes needed for papers.
-
-A common task is to extract sub-covariance matrices for sub-model parts. E.g.
-after doing a 3D analysis with multiple spatial and spetral model and background
-model components, one wants to compute the uncertainty of a given spectral model
-of a source. This is currently very cumbersome and error-prone, users have to
-manually slice out and work with this covariance sub-matrix. The task here is to
-design an API to make this convenient, e.g. we could add a method on
-``Parameters`` that takes a model object and then constructs a ``slice`` or
-boolean ``mask`` to select the parameters of interest, or this method could also
-live on the model objects.
-
-How should samples be handled in modeling?
-------------------------------------------
-
-There are two common ways to compute uncertainties: one is to use the covariance
-matrix (and maximumum likelihood parameter vector), the other is to use
-parameter samples. Samples are most commonly computed using MCMC and used in
-Bayesian analysis, but can also be used as a general method for error
-propagation after classical likelihood fitting.
-
-The `MCMC Gammapy tutorial`_ shows an example how to do an MCMC sampling based
-analysis with Gammapy at the moment - to better support this kind of analysis
-support for this should be added to the ``gammapy.utils.fitting`` framework. The
-most important question is where samples should be stored and what methods and
-API do we offer to compute and analyse samples?
-
-As mentioned above already, the `joint_crab results`_ are an example how to
-sample based on the covariance matrix to do error propagation to compute
-spectral error bands - support for this could be added to Gammapy with limited
-effort.
-
-The task here is to look at these prototype examples, as well as how `mcerp`_
-and `astropy.uncertainty`_ (and maybe 3ML?) work, and then to make a proposal
-what to add in ``gammapy.utils.fitting``. Or the conclusion of that
-investigation could also be "not possible to make it better quickly, postpone
-this to 2020 and Gammapy 2.0".
+The MC sample method is most commonly used for Bayesian analysis, where the
+model fit directly results in a sample set that represents the parameter
+posterior probability distribution. A prototype example for that kind of
+analysis has been implemented in the `MCMC Gammapy tutorial`_ notebook. However,
+the MC sample error propagation technique can be applied in classical
+frequentist statistical analysis as well, if one considers it a numerical
+technique to avoid having to compute differentials, and instead samples a
+multivariate normal according to the best-fit parameters and covariance matrix,
+and then propagates the samples. One can scale the covariance matrix to only
+sample near the best-fit parameters and thus should be able to reproduce the
+differential method (within sampling noise).
 
 Proposal
 ========
 
-tbd
+We propose to change the ``SpectralModel.evaluate_error`` implementation to a
+custom differential based error propagation, as shown in the  `Gammapy
+uncertainty propagation prototype notebook`_. This allows us to completely
+remove the use of `uncertainties`_ within Gammapy, and to simplify the spectral
+model evaluation code. This will be a bit slower and less accurate than the
+current method, but it is a "black box" technique that will work for any
+spectral method or code that we call.
 
-Task list
-=========
+In the future we think that using an autodiff solution could be useful, not just
+for error propagation, but also for likelihood optimisation. It's unlikely that
+we'd use `uncertainties`_ though, rather we'd probably use `autograd`_ or `jax`_
+or even Tensorflow or PyTorch or Chainer or some other modern array computing
+package that supports autograd. So we think removing ``uncertainties`` now and
+cleaning up or model evaluation code is a good step, even if we want to change
+to some other framework later.
 
-tbd
+We also propose to add a method to generate parameter samples from the best-fit
+parameters and covariance, and to support MC error propagation. See  `Gammapy
+uncertainty propagation prototype notebook`_. This second part could be done
+before or after the v1.0 release, it's independent of the first proposed change.
+The first step would be to add a test and improve the code of MC sampling
+interface (see `GH 2304`_). Then probably we should add a ``Distribution``
+object from `astropy.uncertainty`_ to ``Parameter`` or to a new ``FitMC`` class
+to store samples from MC analysis, or multinormal samples from the covariance
+matrix. And then possibly support for such objects in model evaluation and
+derived quantities. Another option could be to add support for "model sets" as
+in ``astropy.modeling`` to support arrays of parameter values within one model
+object, or to directly change ``gammapy.modeling`` to be based on
+``astropy.modeling``. As you can see, this second part of the proposal is a wish
+that Gammapy support MC sample based error propagation, the implementation is
+something to be prototyped and worked out in the future (could be now and for
+v1.0, or any time later).
 
 Alternatives
 ============
 
-tbd
+- Support only sample-based uncertainty propagation (like e.g. PyMC or 3ML)
+- Support only differential uncertainty propagation (like e.g. Minuit)
+- Keep everything as-is, use `uncertainties`_
+- Change to another autograd package like ``autograd`` or ``jax``
 
 Decision
 ========
 
 tbd
 
-.. _uncertainties: https://pythonhosted.org/uncertainties/
+.. _The interpretation of errors: http://lmu.web.psi.ch/docu/manuals/software_manuals/minuit2/mnerror.pdf
+.. _Fitting and Estimating Parameter Confidence Limits with Sherpa: http://conference.scipy.org/proceedings/scipy2011/pdfs/brefsdal.pdf
+.. _Wikipedia - Propagation of uncertainty: https://en.wikipedia.org/wiki/Propagation_of_uncertainty
+.. _Frequentism and Bayesianism: A Python-driven Primer: https://arxiv.org/pdf/1411.5018.pdf
+.. _Error estimation in astronomy: A guide: https://arxiv.org/pdf/1009.2755.pdf
+
+.. _Gammapy uncertainty propagation prototype notebook: https://nbviewer.jupyter.org/gist/cdeil/27383e9d13125b9ba0c7784d620eda6f
 .. _joint_crab fit_errorbands.py: https://github.com/open-gamma-ray-astro/joint-crab/blob/master/joint_crab/fit_errorbands.py
 .. _joint_crab results: https://nbviewer.jupyter.org/github/open-gamma-ray-astro/joint-crab/blob/master/2_results.ipynb
 .. _gammapy.utils.fitting.Parameters: https://docs.gammapy.org/0.12/api/gammapy.utils.fitting.Parameters.html
@@ -180,6 +146,8 @@ tbd
 .. _MCMC Gammapy tutorial: https://docs.gammapy.org/0.12/notebooks/mcmc_sampling.html
 .. _mcerp: https://pypi.org/project/mcerp/
 .. _astropy.uncertainty: https://docs.astropy.org/en/stable/uncertainty/index.html
+.. _autograd: https://github.com/HIPS/autograd
+.. _jax: https://github.com/google/jax
 
 .. _GH 1046: https://github.com/gammapy/gammapy/issues/1046
 .. _GH 1971: https://github.com/gammapy/gammapy/pull/1971
@@ -187,3 +155,4 @@ tbd
 .. _GH 2190: https://github.com/gammapy/gammapy/issues/2190
 .. _GH 2218: https://github.com/gammapy/gammapy/issues/2218
 .. _GH 2255: https://github.com/gammapy/gammapy/pull/2255
+.. _GH 2304: https://github.com/gammapy/gammapy/pull/2304
