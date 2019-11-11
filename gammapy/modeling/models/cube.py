@@ -43,16 +43,6 @@ class SkyModels:
     """
 
     def __init__(self, skymodels):
-        existing_names = []
-
-        for model in skymodels:
-            if model.name in existing_names:
-                raise ValueError(
-                    f"SkyModel already exists: {model.name}\n"
-                    f"Please choose another name."
-                )
-            existing_names.append(model.name)
-
         self.skymodels = skymodels
 
     @property
