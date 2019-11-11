@@ -49,11 +49,6 @@ class SkyModels:
     def parameters(self):
         return Parameters.from_stack([_.parameters for _ in self.skymodels])
 
-    @property
-    def names(self):
-        """Sky model names"""
-        return [_.name for _ in self.skymodels]
-
     @classmethod
     def from_yaml(cls, filename):
         """Write to YAML file."""
@@ -84,15 +79,6 @@ class SkyModels:
 
         return str_
 
-    def __iadd__(self, skymodel):
-        if isinstance(skymodel, SkyModels):
-            self.skymodels += skymodel.skymodels
-        elif isinstance(skymodel, (SkyModel, SkyDiffuseCube)):
-            self.skymodels += [skymodel]
-        else:
-            raise NotImplementedError
-        return self
-
     def __add__(self, skymodel):
         skymodels = self.skymodels.copy()
         if isinstance(skymodel, SkyModels):
@@ -103,9 +89,16 @@ class SkyModels:
             raise NotImplementedError
         return SkyModels(skymodels)
 
-    def __getitem__(self, item):
-        idx = self.names.index(item)
-        return self.skymodels[idx]
+    def __getitem__(self, val):
+        if isinstance(val, int):
+            return self.skymodels[val]
+        elif isinstance(val, str):
+            for idx, model in enumerate(self.skymodels):
+                if val == model.name:
+                    return self.skymodels[idx]
+            raise IndexError(f"No model: {val!r}")
+        else:
+            raise TypeError(f"Invalid type: {type(val)!r}")
 
 
 class SkyModel(SkyModelBase):

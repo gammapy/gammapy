@@ -778,7 +778,7 @@ class MapDataset(Dataset):
             "name": self.name,
             "type": self.tag,
             "likelihood": self.likelihood_type,
-            "models": self.model.names,
+            "models": [_.name for _ in self.model],
             "background": self.background_model.name,
             "filename": str(filename),
         }

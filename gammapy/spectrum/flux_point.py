@@ -1237,7 +1237,7 @@ class FluxPointsDataset(Dataset):
         return {
             "name": self.name,
             "type": self.tag,
-            "models": self.model.names,
+            "models": [_.name for _ in self.model],
             "likelihood": self.likelihood_type,
             "filename": str(filename),
         }

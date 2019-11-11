@@ -197,10 +197,8 @@ class TestSkyModels:
         model = sky_models["source-3"]
         assert model.name == "source-3"
 
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(IndexError):
             sky_models["spam"]
-
-        assert "'spam' is not in list" == str(excinfo.value)
 
 
 class TestSkyModel:
