@@ -127,7 +127,8 @@ class SigmaVEstimator:
         nuissance = dict(
             j=JFAC,
             jobs=JFAC,
-            sigmaj=0.1*JFAC
+            sigmaj=0.1*JFAC,
+            sigmatau=0.01
         )
         dataset.nuissance = nuissance
 
@@ -423,6 +424,7 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
                 "j": None,
                 "jobs": None,
                 "sigmaj": None,
+                "sigmatau": None,
                 "width": None,
                 "steps": None,
             }
@@ -434,6 +436,16 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
 
     @nuissance.setter
     def nuissance(self, nuissance):
+        if not isinstance(nuissance, dict):
+            raise TypeError(f"Invalid type: {nuissance}, {type(nuissance)}")
+        if "j" not in nuissance:
+            nuissance["j"] = None
+        if "jobs" not in nuissance:
+            nuissance["jobs"] = None
+        if "sigmaj" not in nuissance:
+            nuissance["sigmaj"] = None
+        if "sigmatau" not in nuissance:
+            nuissance["sigmatau"] = None
         if "width" not in nuissance:
             nuissance["width"] = 5
         if "steps" not in nuissance:
@@ -442,16 +454,25 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
 
     def check_nuissance(self):
         if not isinstance(self.nuissance["j"], Quantity):
+            log.warning("Units for j nuissance parameter missing.")
             return False
         if not isinstance(self.nuissance["jobs"], Quantity):
+            log.warning("Units for jobs nuissance parameter missing.")
             return False
         if not isinstance(self.nuissance["sigmaj"], Quantity):
+            log.warning("Units for sigmaj nuissance parameter missing.")
             return False
         if not self.nuissance["j"].value:
+            log.warning("Value for j nuissance parameter missing.")
             return False
         if not self.nuissance["jobs"].value:
+            log.warning("Value for jobs nuissance parameter missing.")
             return False
         if not self.nuissance["sigmaj"].value:
+            log.warning("Value for sigmaj nuissance parameter missing.")
+            return False
+        if not self.nuissance["sigmatau"]:
+            log.warning("Value for sigmatau nuissance parameter missing.")
             return False
         if not self.nuissance["width"]:
             return False
@@ -463,7 +484,7 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
         wstat = super().likelihood()
         liketotal = wstat
         if self.check_nuissance():
-            liketotal += self.jnuissance()
+            liketotal += self.jnuissance() + self.gnuissance()
         return liketotal
 
     def jnuissance(self):
@@ -477,4 +498,8 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
             * np.log10(self.nuissance["sigmaj"].value)
         )
         res = up / down
+        return -2 * np.log(res)
+
+    def gnuissance(self):
+        res = 1 / (np.sqrt(2* np.pi) * self.nuissance["sigmatau"])
         return -2 * np.log(res)
