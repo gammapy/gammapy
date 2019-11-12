@@ -78,7 +78,7 @@ class TestFit:
         """WStat with on source and background spectrum"""
         on_vector = self.src.copy()
         on_vector.data += self.bkg.data
-        obs = SpectrumDatasetOnOff(
+        dataset = SpectrumDatasetOnOff(
             counts=on_vector,
             counts_off=self.off,
             aeff=self.aeff,
@@ -86,11 +86,11 @@ class TestFit:
             acceptance=1,
             acceptance_off=1 / self.alpha,
         )
-        obs.model = self.source_model
+        dataset.model = self.source_model
 
         self.source_model.parameters.index = 1.12
 
-        fit = Fit(obs)
+        fit = Fit([dataset])
         result = fit.run()
         pars = self.source_model.parameters
 

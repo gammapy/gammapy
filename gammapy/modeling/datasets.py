@@ -85,18 +85,21 @@ class Dataset(abc.ABC):
 
 
 class Datasets:
-    """Join multiple datasets.
+    """Dataset collection.
 
     Parameters
     ----------
     datasets : `Dataset` or list of `Dataset`
-        List of `Dataset` objects ot be joined.
+        Datasets
     """
 
     def __init__(self, datasets):
-        if not isinstance(datasets, list):
-            datasets = [datasets]
-        self._datasets = datasets
+        if isinstance(datasets, Datasets):
+            self._datasets = list(datasets)
+        elif isinstance(datasets, list):
+            self._datasets = datasets
+        else:
+            raise TypeError(f"Invalid type: {datasets!r}")
 
     @property
     def parameters(self):

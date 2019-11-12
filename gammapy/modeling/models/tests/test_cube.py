@@ -173,18 +173,6 @@ class TestSkyModels:
         assert p1 is p2
 
     @staticmethod
-    def test_evaluate(sky_models):
-        lon = 3 * u.deg * np.ones(shape=(3, 4))
-        lat = 4 * u.deg * np.ones(shape=(3, 4))
-        energy = [1, 1, 1, 1, 1] * u.TeV
-
-        q = sky_models.evaluate(lon, lat, energy[:, np.newaxis, np.newaxis])
-
-        assert q.unit == "cm-2 s-1 TeV-1 sr-1"
-        assert q.shape == (5, 3, 4)
-        assert_allclose(q.to_value("cm-2 s-1 TeV-1 deg-2"), 3.53758465e-13)
-
-    @staticmethod
     def test_str(sky_models):
         assert "Component 0" in str(sky_models)
         assert "Component 1" in str(sky_models)

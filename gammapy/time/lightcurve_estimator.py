@@ -49,13 +49,9 @@ class LightCurveEstimator:
         sigma_ul=2,
         reoptimize=False,
     ):
+        self.datasets = Datasets(datasets)
 
-        if not isinstance(datasets, Datasets):
-            datasets = Datasets(datasets)
-
-        self.datasets = datasets
-
-        if not datasets.is_all_same_type and datasets.is_all_same_shape:
+        if not self.datasets.is_all_same_type and self.datasets.is_all_same_shape:
             raise ValueError(
                 "Light Curve estimation requires a list of datasets"
                 " of the same type and data shape."
@@ -165,7 +161,7 @@ class LightCurveEstimator:
         result : dict
             Dict with results for the flux point.
         """
-        self.fit = Fit(dataset)
+        self.fit = Fit([dataset])
 
         result = {
             "e_ref": self.e_ref,
