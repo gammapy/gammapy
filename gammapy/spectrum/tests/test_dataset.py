@@ -464,7 +464,7 @@ class TestSpectralFit:
 
     def setup(self):
         path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
-        self.obs_list = Datasets(
+        self.datasets = Datasets(
             [
                 SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits"),
                 SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits"),
@@ -483,11 +483,11 @@ class TestSpectralFit:
         )
 
         # Example fit for one observation
-        self.obs_list[0].model = self.pwl
-        self.fit = Fit([self.obs_list[0]])
+        self.datasets[0].model = self.pwl
+        self.fit = Fit([self.datasets[0]])
 
     def set_model(self, model):
-        for obs in self.obs_list:
+        for obs in self.datasets:
             obs.model = model
 
     @requires_dependency("iminuit")
@@ -496,13 +496,13 @@ class TestSpectralFit:
         result = self.fit.run()
         pars = self.fit.datasets.parameters
 
-        assert self.pwl is self.obs_list[0].model
+        assert self.pwl is self.datasets[0].model
 
         assert_allclose(result.total_stat, 38.343, rtol=1e-3)
         assert_allclose(pars["index"].value, 2.817, rtol=1e-3)
         assert pars["amplitude"].unit == "cm-2 s-1 TeV-1"
         assert_allclose(pars["amplitude"].value, 5.142e-11, rtol=1e-3)
-        assert_allclose(self.obs_list[0].npred().data[60], 0.6102, rtol=1e-3)
+        assert_allclose(self.datasets[0].npred().data[60], 0.6102, rtol=1e-3)
         pars.to_table()
 
     def test_basic_errors(self):
@@ -516,7 +516,7 @@ class TestSpectralFit:
 
     def test_ecpl_fit(self):
         self.set_model(self.ecpl)
-        fit = Fit([self.obs_list[0]])
+        fit = Fit([self.datasets[0]])
         fit.run()
 
         actual = fit.datasets.parameters["lambda_"].quantity
@@ -525,7 +525,7 @@ class TestSpectralFit:
 
     def test_joint_fit(self):
         self.set_model(self.pwl)
-        fit = Fit(self.obs_list)
+        fit = Fit(self.datasets)
         fit.run()
         actual = fit.datasets.parameters["index"].value
         assert_allclose(actual, 2.7806, rtol=1e-3)
