@@ -202,6 +202,12 @@
     "hashmd5": "f7d066c1724dff84661d88c813834903"
    },
    {
+    "path": "catalogs/fermi/gll_psch_v09.fit.gz",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/gll_psch_v09.fit.gz",
+    "filesize": 521889,
+    "hashmd5": "0fc06485f80ac4970bb7aafd8672b2a2"
+   },
+   {
     "path": "catalogs/fermi/gll_psch_v07.fit.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/gll_psch_v07.fit.gz",
     "filesize": 73253,

@@ -1192,7 +1192,8 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
 class SourceCatalog3FGL(SourceCatalog):
     """Fermi-LAT 3FGL source catalog.
 
-    Reference: https://ui.adsabs.harvard.edu/#abs/2015ApJS..218...23A
+    - https://ui.adsabs.harvard.edu/#abs/2015ApJS..218...23A
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/4yr_catalog/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject3FGL`.
     """
@@ -1328,8 +1329,6 @@ class SourceCatalog3FGL(SourceCatalog):
 class SourceCatalog4FGL(SourceCatalog):
     """Fermi-LAT 4FGL source catalog.
 
-    References:
-
     - https://arxiv.org/abs/1902.10045
     - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/8yr_catalog/
 
@@ -1369,7 +1368,8 @@ class SourceCatalog4FGL(SourceCatalog):
 class SourceCatalog2FHL(SourceCatalog):
     """Fermi-LAT 2FHL source catalog.
 
-    Reference: https://ui.adsabs.harvard.edu/abs/2016ApJS..222....5A
+    - https://ui.adsabs.harvard.edu/abs/2016ApJS..222....5A
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/2FHL/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject2FHL`.
     """
@@ -1378,7 +1378,7 @@ class SourceCatalog2FHL(SourceCatalog):
     description = "LAT second high-energy source catalog"
     source_object_class = SourceCatalogObject2FHL
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v08.fit.gz"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v09.fit.gz"):
         filename = make_path(filename)
 
         with warnings.catch_warnings():  # ignore FITS units warnings
@@ -1395,7 +1395,6 @@ class SourceCatalog2FHL(SourceCatalog):
             source_name_alias=source_name_alias,
         )
 
-        self.counts_image = Map.read(filename, hdu="Count Map")
         self.extended_sources_table = Table.read(filename, hdu="Extended Sources")
         self.rois = Table.read(filename, hdu="ROIs")
 
@@ -1403,7 +1402,8 @@ class SourceCatalog2FHL(SourceCatalog):
 class SourceCatalog3FHL(SourceCatalog):
     """Fermi-LAT 3FHL source catalog.
 
-    Reference: https://ui.adsabs.harvard.edu/abs/2017ApJS..232...18A
+    - https://ui.adsabs.harvard.edu/abs/2017ApJS..232...18A
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/3FHL/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject3FHL`.
     """

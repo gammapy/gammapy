@@ -27,7 +27,7 @@ ROI number           : 33
 Model form       : Disk
 Model semimajor  : 0.3700 deg
 Model semiminor  : 0.3700 deg
-Position angle   : 0.0000 deg
+Position angle   : 90.0000 deg
 Spatial filename : PuppisA.fits
 
 

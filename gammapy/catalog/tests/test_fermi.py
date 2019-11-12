@@ -615,12 +615,7 @@ class TestSourceCatalog2FHL:
         assert len(table) == 25
 
     def test_crab_alias(self):
-        for name in [
-            "Crab",
-            "3FGL J0534.5+2201i",
-            "1FHL J0534.5+2201",
-            "TeV J0534+2200",
-        ]:
+        for name in ["Crab", "3FGL J0534.5+2201i", "1FHL J0534.5+2201"]:
             assert self.cat[name].index == 85
 
 
