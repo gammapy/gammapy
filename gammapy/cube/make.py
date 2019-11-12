@@ -79,6 +79,9 @@ class MapDatasetMaker:
         self.cutout_width = 2 * self.offset_max
         self.cutout = cutout
 
+        # define cached methods
+        self.make_exposure_irf = lru_cache(maxsize=1)(self.make_exposure_irf)
+
     def _cutout_geom(self, geom, observation):
         if self.cutout:
             return geom.cutout(
@@ -162,7 +165,6 @@ class MapDatasetMaker:
             geom=geom,
         )
 
-    @lru_cache(maxsize=1)
     def make_exposure_irf(self, observation):
         """Make exposure map with irf geometry.
 
@@ -272,7 +274,6 @@ class MapDatasetMaker:
             exposure_map=exposure,
         )
 
-    @lru_cache(maxsize=1)
     def make_mask_safe(self, observation):
         """Make offset mask.
 
@@ -291,7 +292,6 @@ class MapDatasetMaker:
         data = offset >= self.offset_max
         return Map.from_geom(geom, data=data)
 
-    @lru_cache(maxsize=1)
     def make_mask_safe_irf(self, observation):
         """Make offset mask with irf geometry.
 

@@ -208,6 +208,12 @@ class WcsGeom(Geom):
         self._crpix = crpix
         self._cutout_info = cutout_info
 
+        # define cached methods
+        self.get_coord = lru_cache()(self.get_coord)
+        self.solid_angle = lru_cache()(self.solid_angle)
+        self.bin_volume = lru_cache()(self.bin_volume)
+        self.to_image = lru_cache()(self.to_image)
+
     @property
     def data_shape(self):
         """Shape of the Numpy data array matching this geometry."""
@@ -546,7 +552,6 @@ class WcsGeom(Geom):
         else:
             return int(self.npix[0][idx]), int(self.npix[1][idx])
 
-    @lru_cache()
     def get_idx(self, idx=None, flat=False):
         pix = self.get_pix(idx=idx, mode="center")
         if flat:
@@ -573,7 +578,6 @@ class WcsGeom(Geom):
         pix = np.meshgrid(*pix[::-1], indexing="ij")[::-1]
         return pix
 
-    @lru_cache()
     def get_pix(self, idx=None, mode="center"):
         """Get map pix coordinates from the geometry.
 
@@ -594,7 +598,6 @@ class WcsGeom(Geom):
             _[~m] = INVALID_INDEX.float
         return pix
 
-    @lru_cache()
     def get_coord(self, idx=None, flat=False, mode="center", coordsys=None):
         """Get map coordinates from the geometry.
 
@@ -699,7 +702,6 @@ class WcsGeom(Geom):
         idx = self.coord_to_idx(coords)
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
-    @lru_cache()
     def to_image(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
@@ -807,7 +809,6 @@ class WcsGeom(Geom):
             axes=copy.deepcopy(self.axes),
         )
 
-    @lru_cache()
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
 
@@ -845,7 +846,6 @@ class WcsGeom(Geom):
 
         return u.Quantity(area_low_right + area_up_left, "sr", copy=False)
 
-    @lru_cache()
     def bin_volume(self):
         """Bin volume (`~astropy.units.Quantity`)"""
         bin_volume = self.to_image().solid_angle()
