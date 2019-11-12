@@ -6,7 +6,7 @@
 PIG 14 - Uncertainty estimation
 *******************************
 
-* Author: Christoph Deil, Axel Donath, Quentin Rémy
+* Author: Christoph Deil, Axel Donath, Quentin Rémy, Fabio Acero
 * Created: June 20, 2019
 * Status: draft
 * Discussion: `GH 2255`_
@@ -15,16 +15,17 @@ Abstract
 ========
 
 Currently Gammapy uses the `uncertainties`_ package to do error propagation for
-differential and integral flux of spectral models. This is cumbersome since
-``uncertainties`` doesn't support ``astropy.units.Quantity`` (which we currently
-use in spectral model evaluation), and doesn't work at all for some spectral
-models, since ``uncertainties`` uses autodiff and needs explicit support for any
-Numpy, Scipy, Astropy, ... function involved.
+differential and integral flux of spectral models, e.g. to compute spectral
+model error bands. This is cumbersome since ``uncertainties`` doesn't support
+``astropy.units.Quantity`` (which we currently use in spectral model
+evaluation), and doesn't work at all for some spectral models (e.g. EBL
+absorption and Naima), since ``uncertainties`` uses autodiff and needs explicit
+support for any Numpy, Scipy, Astropy, ... function involved.
 
 We propose to replace this with a custom uncertainty propagation implementation
 using finite differences. This will be less precise and slower than
 ``uncertainties``, but it will work for any derived quantity and code that we
-call.
+call, and any spectral model.
 
 We also propose to add support for a second method to propagate uncertainty from
 fit parameters to derived quantities, based on parameter samples. This is the
@@ -63,12 +64,16 @@ If you're not familiar with the techniques, here's a few references:
 
 In Gammapy we currently use the `uncertainties`_ package to propagate errors to
 differential fluxes ``spectral_model.evaluate_error`` and integral fluxes
-``spectral_model.integral_error``. It is using autodiff to compute differentials
-of derived quantities wrt. model parameters, which is accurate and fast where it
-works. However, ``uncertainties`` doesn't support ``astropy.units.Quantity``,
-making the current spectral model flux evaluation very convoluted, and it
-doesn't work at all for some spectral models, which has been a frequent
-complaint by users (see `GH 1046`_, `GH 2007`_, `GH 2190`_).
+``spectral_model.integral_error``. The ``evaluate_error`` method is called for
+an array of energies in ``plot_error``, which is used to compute and plot
+spectral model error bands (see e.g. the `SED fitting tutorial`_) It is using
+autodiff to compute differentials of derived quantities wrt. model parameters,
+which is accurate and fast where it works. However, ``uncertainties`` doesn't
+support ``astropy.units.Quantity``, making the current spectral model flux
+evaluation very convoluted, and it doesn't work at all for some spectral models,
+namely non-analytical models like EBL absoption or Naima cosmic ray spectral
+models, which has been a frequent complaint by users (see `GH 1046`_, `GH
+2007`_, `GH 2190`_).
 
 The MC sample method is most commonly used for Bayesian analysis, where the
 model fit directly results in a sample set that represents the parameter
@@ -137,7 +142,7 @@ tbd
 .. _Frequentism and Bayesianism: A Python-driven Primer: https://arxiv.org/pdf/1411.5018.pdf
 .. _Error estimation in astronomy: A guide: https://arxiv.org/pdf/1009.2755.pdf
 
-.. _Gammapy uncertainty propagation prototype notebook: https://nbviewer.jupyter.org/gist/cdeil/27383e9d13125b9ba0c7784d620eda6f
+.. _Gammapy uncertainty propagation prototype notebook: https://github.com/gammapy/gammapy-extra/blob/master/experiments/uncertainty_estimation_prototype.ipynb
 .. _joint_crab fit_errorbands.py: https://github.com/open-gamma-ray-astro/joint-crab/blob/master/joint_crab/fit_errorbands.py
 .. _joint_crab results: https://nbviewer.jupyter.org/github/open-gamma-ray-astro/joint-crab/blob/master/2_results.ipynb
 .. _gammapy.utils.fitting.Parameters: https://docs.gammapy.org/0.12/api/gammapy.utils.fitting.Parameters.html
@@ -148,6 +153,7 @@ tbd
 .. _astropy.uncertainty: https://docs.astropy.org/en/stable/uncertainty/index.html
 .. _autograd: https://github.com/HIPS/autograd
 .. _jax: https://github.com/google/jax
+.. _SED fitting tutorial: https://docs.gammapy.org/0.14/notebooks/sed_fitting_gammacat_fermi.html
 
 .. _GH 1046: https://github.com/gammapy/gammapy/issues/1046
 .. _GH 1971: https://github.com/gammapy/gammapy/pull/1971
