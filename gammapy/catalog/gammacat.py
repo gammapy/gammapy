@@ -86,10 +86,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += "Catalog row index (zero-based) : {}\n".format(d["catalog_row_index"])
         ss += "{:<15s} : {}\n".format("Common name", d["common_name"])
 
-        # ss += '{:<15s} : {}\n'.format('Gamma names', d['gamma_names'])
-        # ss += '{:<15s} : {}\n'.format('Fermi names', d['fermi_names'])
-        # ss += '{:<15s} : {}\n'.format('Other names', d['other_names'])
-
         def get_nonentry_keys(keys):
             vals = [d[_].strip() for _ in keys]
             return ",".join([_ for _ in vals if _ != ""])
