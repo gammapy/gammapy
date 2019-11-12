@@ -251,9 +251,26 @@ def test_wcsgeom_get_coord():
     assert_allclose(coord.lat[0, 0].value, -1.5)
     assert coord.lat[0, 0].unit == "deg"
 
-    coord_cached = geom.get_coord(mode="edges")
-    # test coord caching
-    assert id(coord) == id(coord_cached)
+
+def test_wcsgeom_instance_cache():
+    geom_1 = WcsGeom.create(npix=(3, 3))
+    geom_2 = WcsGeom.create(npix=(3, 3))
+
+    coord_1, coord_2 = geom_1.get_coord(), geom_2.get_coord()
+
+    assert geom_1.get_coord.cache_info().misses == 1
+    assert geom_2.get_coord.cache_info().misses == 1
+
+    coord_1_cached, coord_2_cached = geom_1.get_coord(), geom_2.get_coord()
+
+    assert geom_1.get_coord.cache_info().hits == 1
+    assert geom_2.get_coord.cache_info().hits == 1
+
+    assert geom_1.get_coord.cache_info().currsize == 1
+    assert geom_2.get_coord.cache_info().currsize == 1
+
+    assert id(coord_1) == id(coord_1_cached)
+    assert id(coord_2) == id(coord_2_cached)
 
 
 def test_wcsgeom_get_pix_coords():
