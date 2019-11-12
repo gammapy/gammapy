@@ -121,9 +121,7 @@ class MapDatasetMaker:
     @lazyproperty
     def geom_edisp(self):
         """EdispMap geom (`Geom`)"""
-        return self.geom_image_irf.to_cube(
-            [self.migra_axis, self.energy_axis_true]
-        )
+        return self.geom_image_irf.to_cube([self.migra_axis, self.energy_axis_true])
 
     def make_counts(self, observation):
         """Make counts map.

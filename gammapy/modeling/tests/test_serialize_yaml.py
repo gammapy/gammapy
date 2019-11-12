@@ -106,10 +106,10 @@ def test_datasets_to_io(tmp_path):
 
     datasets = Datasets.from_yaml(filedata, filemodel)
 
-    assert len(datasets.datasets) == 2
+    assert len(datasets) == 2
     assert len(datasets.parameters) == 20
 
-    dataset0 = datasets.datasets[0]
+    dataset0 = datasets[0]
     assert dataset0.counts.data.sum() == 6824
     assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
     assert dataset0.psf is not None
@@ -119,31 +119,29 @@ def test_datasets_to_io(tmp_path):
 
     assert dataset0.background_model.name == "background_irf_gc"
 
-    dataset1 = datasets.datasets[1]
+    dataset1 = datasets[1]
     assert dataset1.background_model.name == "background_irf_g09"
 
     assert dataset0.model["gll_iem_v06_cutout"] == dataset1.model["gll_iem_v06_cutout"]
 
     assert isinstance(dataset0.model, SkyModels)
-    assert len(dataset0.model.skymodels) == 2
-    assert dataset0.model.skymodels[0].name == "gc"
-    assert dataset0.model.skymodels[1].name == "gll_iem_v06_cutout"
+    assert len(dataset0.model) == 2
+    assert dataset0.model[0].name == "gc"
+    assert dataset0.model[1].name == "gll_iem_v06_cutout"
 
     assert (
-        dataset0.model.skymodels[0].parameters["reference"]
-        is dataset1.model.skymodels[1].parameters["reference"]
+        dataset0.model[0].parameters["reference"]
+        is dataset1.model[1].parameters["reference"]
     )
 
-    assert_allclose(
-        dataset1.model.skymodels[1].parameters["lon_0"].value, 0.9, atol=0.1
-    )
+    assert_allclose(dataset1.model[1].parameters["lon_0"].value, 0.9, atol=0.1)
 
     datasets.to_yaml(tmp_path, prefix="written")
     datasets_read = Datasets.from_yaml(
         tmp_path / "written_datasets.yaml", tmp_path / "written_models.yaml"
     )
-    assert len(datasets_read.datasets) == 2
-    dataset0 = datasets_read.datasets[0]
+    assert len(datasets_read) == 2
+    dataset0 = datasets_read[0]
     assert dataset0.counts.data.sum() == 6824
     assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
     assert dataset0.psf is not None

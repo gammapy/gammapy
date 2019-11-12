@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
 import copy
-from collections import Counter
 import numpy as np
 from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
@@ -106,52 +105,33 @@ class Datasets:
         Duplicate parameter objects have been removed.
         The order of the unique parameters remains.
         """
-        parameters = Parameters.from_stack(_.parameters for _ in self.datasets)
+        parameters = Parameters.from_stack(_.parameters for _ in self)
         return parameters.unique_parameters
-
-    @property
-    def names(self):
-        """List of dataset names"""
-        return [_.name for _ in self.datasets]
-
-    @property
-    def datasets(self):
-        """List of datasets"""
-        return self._datasets
-
-    @property
-    def types(self):
-        """Types of the contained datasets"""
-        return [type(dataset).__name__ for dataset in self.datasets]
 
     @property
     def is_all_same_type(self):
         """Whether all contained datasets are of the same type"""
-        return np.all(np.array(self.types) == self.types[0])
+        return len(set(_.__class__ for _ in self)) == 1
 
     @property
     def is_all_same_shape(self):
         """Whether all contained datasets have the same data shape"""
-        ref_shape = self.datasets[0].data_shape
-        is_ref_shape = [dataset.data_shape == ref_shape for dataset in self.datasets]
-        return np.all(is_ref_shape)
+        return len(set(_.data_shape for _ in self)) == 1
 
     def likelihood(self):
         """Compute joint likelihood"""
         total_likelihood = 0
         # TODO: add parallel evaluation of likelihoods
-        for dataset in self.datasets:
+        for dataset in self:
             total_likelihood += dataset.likelihood()
         return total_likelihood
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n"
-        str_ += "--------\n\n"
+        str_ += "--------\n"
 
-        counter = Counter(self.types)
-
-        for key, value in counter.items():
-            str_ += f"\t{key}: {value} \n"
+        for dataset in self:
+            str_ += f"{dataset}\n"
 
         return str_
 
@@ -198,9 +178,7 @@ class Datasets:
 
         path = make_path(path)
 
-        datasets_dict, components_dict = datasets_to_dict(
-            self.datasets, path, prefix, overwrite
-        )
+        datasets_dict, components_dict = datasets_to_dict(self, path, prefix, overwrite)
         write_yaml(datasets_dict, path / f"{prefix}_datasets.yaml", sort_keys=False)
         write_yaml(components_dict, path / f"{prefix}_models.yaml", sort_keys=False)
 
@@ -220,8 +198,8 @@ class Datasets:
                 "Stacking impossible: all Datasets contained are not of a unique type."
             )
 
-        dataset = self.datasets[0].copy()
-        for ds in self.datasets[1:]:
+        dataset = self[0].copy()
+        for ds in self[1:]:
             dataset.stack(ds)
         return dataset
 
@@ -241,11 +219,11 @@ class Datasets:
         if not self.is_all_same_type:
             raise ValueError("Info table not supported for mixed dataset type.")
 
-        stacked = self.datasets[0].copy()
+        stacked = self[0].copy()
 
         rows = [stacked.info_dict()]
 
-        for dataset in self.datasets[1:]:
+        for dataset in self[1:]:
             if cumulative:
                 stacked.stack(dataset)
                 row = stacked.info_dict()
@@ -256,7 +234,16 @@ class Datasets:
 
         return table_from_row_data(rows=rows)
 
-    def __getitem__(self, item):
-        if isinstance(item, str):
-            item = self.names.index(item)
-        return self.datasets[item]
+    def __getitem__(self, val):
+        if isinstance(val, (int, slice)):
+            return self._datasets[val]
+        elif isinstance(val, str):
+            for idx, dataset in enumerate(self._datasets):
+                if val == dataset.name:
+                    return self._datasets[idx]
+            raise IndexError(f"No dataset: {val!r}")
+        else:
+            raise TypeError(f"Invalid type: {type(val)!r}")
+
+    def __len__(self):
+        return len(self._datasets)

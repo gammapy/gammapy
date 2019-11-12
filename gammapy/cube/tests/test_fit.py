@@ -353,7 +353,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     # test model evaluation outside image
 
-    dataset_1.model.skymodels[0].spatial_model.lon_0.value = 150
+    dataset_1.model[0].spatial_model.lon_0.value = 150
     dataset_1.npred()
     assert not dataset_1._evaluators[0].contributes
 

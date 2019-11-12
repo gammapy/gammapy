@@ -212,15 +212,15 @@ class TestSourceCatalogObjectHGPS:
 
     @staticmethod
     def test_sky_model_gaussian2(cat):
-        model = cat["HESS J1843-033"].sky_model()
+        models = cat["HESS J1843-033"].sky_model()
 
-        p = model.skymodels[0].parameters
+        p = models[0].parameters
         assert_allclose(p["amplitude"].value, 4.259815e-13, rtol=1e-5)
         assert_allclose(p["lon_0"].value, 29.047216415405273)
         assert_allclose(p["lat_0"].value, 0.24389676749706268)
         assert_allclose(p["sigma"].value, 0.12499100714921951)
 
-        p = model.skymodels[1].parameters
+        p = models[1].parameters
         assert_allclose(p["amplitude"].value, 4.880365e-13, rtol=1e-5)
         assert_allclose(p["lon_0"].value, 28.77037811279297)
         assert_allclose(p["lat_0"].value, -0.0727819949388504)
@@ -228,21 +228,21 @@ class TestSourceCatalogObjectHGPS:
 
     @staticmethod
     def test_sky_model_gaussian3(cat):
-        model = cat["HESS J1825-137"].sky_model()
+        models = cat["HESS J1825-137"].sky_model()
 
-        p = model.skymodels[0].parameters
+        p = models[0].parameters
         assert_allclose(p["amplitude"].value, 1.8952104218765842e-11)
         assert_allclose(p["lon_0"].value, 16.988601684570312)
         assert_allclose(p["lat_0"].value, -0.4913068115711212)
         assert_allclose(p["sigma"].value, 0.47650089859962463)
 
-        p = model.skymodels[1].parameters
+        p = models[1].parameters
         assert_allclose(p["amplitude"].value, 4.4639763971527836e-11)
         assert_allclose(p["lon_0"].value, 17.71169090270996)
         assert_allclose(p["lat_0"].value, -0.6598004102706909)
         assert_allclose(p["sigma"].value, 0.3910967707633972)
 
-        p = model.skymodels[2].parameters
+        p = models[2].parameters
         assert_allclose(p["amplitude"].value, 5.870712920658374e-12)
         assert_allclose(p["lon_0"].value, 17.840524673461914)
         assert_allclose(p["lat_0"].value, -0.7057178020477295)
