@@ -397,7 +397,7 @@ class SafeMaskMaker:
 
     Parameters
     ----------
-    methods : {"aeff-default", "aeff-max", "edisp-bias"}
+    methods : {"aeff-default", "aeff-max", "edisp-bias", "offset-max"}
         Method to use for the safe energy range. Can be a
         list with a combination of those. Resulting masks
         are combined with logical `and`. "aeff-default"
@@ -411,10 +411,30 @@ class SafeMaskMaker:
         energy threshold for method "edisp-bias"
     """
 
-    def __init__(self, methods="aeff-default", aeff_percent=10, bias_percent=10):
+    def __init__(self, methods="aeff-default", aeff_percent=10, bias_percent=10, offset_max="3 deg"):
         self.methods = list(methods)
         self.aeff_percent = aeff_percent
         self.bias_percent = bias_percent
+        self.offset_max = Angle(offset_max)
+
+    def make_mask_offset_max(self, dataset, observation):
+        """Make maximum offset mask.
+
+        Parameters
+        ----------
+        dataset : Dataset`
+            Dataset to compute mask for.
+        observation: `DataStoreObservation`
+            Observation to compute mask for.
+
+        Returns
+        -------
+        mask_safe : `~numpy.ndarray`
+            Maximum offset mask.
+
+        """
+        separation = dataset.counts.geom.separation(observation.pointing_radec)
+        return separation < self.offset_max
 
     @staticmethod
     def make_mask_energy_aeff_default(dataset, observation):
@@ -490,6 +510,9 @@ class SafeMaskMaker:
             Dataset with defined safe range mask.
         """
         mask_safe = np.ones(dataset.data_shape, dtype=bool)
+
+        if "offset-max" in self.methods:
+            mask_safe &= self.make_mask_offset_max(dataset, observation)
 
         if "aeff-default" in self.methods:
             mask_safe &= self.make_mask_energy_aeff_default(dataset, observation)
