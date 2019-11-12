@@ -4,7 +4,7 @@
 Catalog row index (zero-based) : 2718
 Source name          : 4FGL J1409.1-6121e
 Extended name        : FGES J1409.1-6121 
-Associations     : 3FHL J1409.1-6121e, J1407-6136c
+Associations     : 3FGL J1405.4-6119, 3FHL J1409.1-6121e, J1407-6136c
 ASSOC_PROB_BAY   : nan
 ASSOC_PROB_LR    : nan
 Class1           :      
