@@ -40,10 +40,7 @@ class TestSourceCatalog:
         with pytest.raises(IndexError):
             self.cat.source_name(index=99)
 
-        # This seems to raise IndexError or ValueError with
-        # different Astropy versions, so we just check for
-        # any exception here
-        with pytest.raises(Exception):
+        with pytest.raises(IndexError):
             self.cat.source_name("invalid")
 
     def test_getitem(self):

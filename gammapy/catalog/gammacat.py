@@ -34,6 +34,7 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+
 class SourceCatalogObjectGammaCat(SourceCatalogObject):
     """One object from the gamma-cat source catalog.
 
@@ -206,10 +207,10 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 "TeV",
             )
             ss += "{:<15s} : {:.3}\n".format("reference", d["spec_ecpl_e_ref"])
-
+        elif spec_type == "none":
+            pass
         else:
-            # raise ValueError('Spectral model printout not implemented: {}'.format(spec))
-            ss += "\nSpectral model printout not yet implemented.\n"
+            raise ValueError(f"Invalid spec_type: {spec_type}")
 
         ss += "\n{:<20s} : ({:.3}, {:.3}) TeV\n".format(
             "Energy range", d["spec_erange_min"].value, d["spec_erange_max"].value
@@ -253,11 +254,12 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += "{:<25s} : {}\n".format("Number of spectral points", d["sed_n_points"])
         ss += "{:<25s} : {}\n\n".format("Number of upper limits", d["sed_n_ul"])
 
-        try:
-            lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
-            ss += "\n".join(lines)
-        except LookupError:
+        flux_points = self.flux_points
+        if flux_points is None:
             ss += "\nNo spectral points available for this source."
+        else:
+            lines = flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
+            ss += "\n".join(lines)
 
         return ss + "\n"
 
