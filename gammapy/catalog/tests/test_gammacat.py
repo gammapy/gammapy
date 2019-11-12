@@ -102,13 +102,6 @@ class TestSourceCatalogGammaCat:
             cat.table.sort(sort_key)
             assert cat[name].name == name
 
-    def test_to_sky_models(self, gammacat):
-        models = gammacat.to_sky_models()
-
-        assert len(models) == 74
-        assert models[0].name == "CTA 1"
-        assert_allclose(models[0].spectral_model.parameters["index"].value, 2.2)
-
 
 @requires_data()
 class TestSourceCatalogObjectGammaCat:
