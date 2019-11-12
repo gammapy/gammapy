@@ -44,6 +44,7 @@ or request a feature, or need help with anything Gammapy-related.
 
     stats/index
     utils/index
+    analysis/index
     scripts/index
 
     catalog/index

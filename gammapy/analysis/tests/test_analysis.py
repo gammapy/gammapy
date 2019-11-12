@@ -4,7 +4,7 @@ import pytest
 from numpy.testing import assert_allclose
 import yaml
 from gammapy.modeling.models import SkyModels
-from gammapy.scripts import Analysis, AnalysisConfig
+from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.utils.testing import requires_data, requires_dependency
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"

@@ -47,7 +47,7 @@ class Analysis:
     parameters passed as a nested dictionary at the moment of instantiation. In that case these
     parameters will overwrite the default values of those present in the configuration file.
 
-    For more info see  :ref:`HLI`.
+    For more info see  :ref:`analysis`.
 
     Parameters
     ----------
