@@ -130,8 +130,8 @@ class Datasets:
         str_ = self.__class__.__name__ + "\n"
         str_ += "--------\n"
 
-        for dataset in self:
-            str_ += f"{dataset}\n"
+        for idx, dataset in enumerate(self):
+            str_ += f"idx={idx}, id={hex(id(dataset))!r}, name={dataset.name!r}\n"
 
         return str_
 
