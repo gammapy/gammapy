@@ -95,5 +95,5 @@ models.parameters.set_error(
     spectral_model_2.amplitude, 1e-12 * u.Unit("cm-2 s-1 TeV-1")
 )
 
-fit = Fit(dataset)
+fit = Fit([dataset])
 fit.run()
