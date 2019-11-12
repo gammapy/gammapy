@@ -36,7 +36,7 @@ class MyDataset:
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_run(backend):
     dataset = MyDataset()
-    fit = Fit(dataset)
+    fit = Fit([dataset])
     result = fit.run(
         optimize_opts={"backend": backend}, covariance_opts={"backend": backend}
     )
@@ -61,7 +61,7 @@ def test_run(backend):
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
 def test_optimize(backend):
     dataset = MyDataset()
-    fit = Fit(dataset)
+    fit = Fit([dataset])
     result = fit.optimize(backend=backend)
     pars = dataset.parameters
 
@@ -81,7 +81,7 @@ def test_optimize(backend):
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_confidence(backend):
     dataset = MyDataset()
-    fit = Fit(dataset)
+    fit = Fit([dataset])
     fit.optimize(backend=backend)
     result = fit.confidence("x")
 
@@ -97,7 +97,7 @@ def test_confidence(backend):
 def test_confidence_frozen(backend):
     dataset = MyDataset()
     dataset.parameters["x"].frozen = True
-    fit = Fit(dataset)
+    fit = Fit([dataset])
     fit.optimize(backend=backend)
     result = fit.confidence("y")
 
@@ -108,7 +108,7 @@ def test_confidence_frozen(backend):
 
 def test_likelihood_profile():
     dataset = MyDataset()
-    fit = Fit(dataset)
+    fit = Fit([dataset])
     fit.run()
     result = fit.likelihood_profile("x", nvalues=3)
 
@@ -121,7 +121,7 @@ def test_likelihood_profile():
 
 def test_likelihood_profile_reoptimize():
     dataset = MyDataset()
-    fit = Fit(dataset)
+    fit = Fit([dataset])
     fit.run()
 
     dataset.parameters["y"].value = 0
@@ -134,7 +134,7 @@ def test_likelihood_profile_reoptimize():
 def test_minos_contour():
     dataset = MyDataset()
     dataset.parameters["x"].frozen = True
-    fit = Fit(dataset)
+    fit = Fit([dataset])
     fit.optimize(backend="minuit")
     result = fit.minos_contour("y", "z")
 

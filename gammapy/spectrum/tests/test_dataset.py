@@ -73,7 +73,7 @@ class TestSpectrumDataset:
 
     def test_cash(self):
         """Simple CASH fit to the on vector"""
-        fit = Fit(self.dataset)
+        fit = Fit([self.dataset])
         result = fit.run()
 
         assert result.success
@@ -464,9 +464,12 @@ class TestSpectralFit:
 
     def setup(self):
         path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
-        obs1 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits")
-        obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
-        self.obs_list = [obs1, obs2]
+        self.obs_list = Datasets(
+            [
+                SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits"),
+                SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits"),
+            ]
+        )
 
         self.pwl = PowerLawSpectralModel(
             index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
@@ -481,7 +484,7 @@ class TestSpectralFit:
 
         # Example fit for one observation
         self.obs_list[0].model = self.pwl
-        self.fit = Fit(self.obs_list[0])
+        self.fit = Fit([self.obs_list[0]])
 
     def set_model(self, model):
         for obs in self.obs_list:
@@ -513,7 +516,7 @@ class TestSpectralFit:
 
     def test_ecpl_fit(self):
         self.set_model(self.ecpl)
-        fit = Fit(self.obs_list[0])
+        fit = Fit([self.obs_list[0]])
         fit.run()
 
         actual = fit.datasets.parameters["lambda_"].quantity

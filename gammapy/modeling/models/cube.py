@@ -32,15 +32,18 @@ class SkyModelBase(Model):
 
 
 class SkyModels:
-    """Collection of `~gammapy.modeling.models.SkyModel`
+    """Sky model collection.
 
     Parameters
     ----------
-    skymodels : list of `~gammapy.modeling.models.SkyModel`
+    skymodels : list of `SkyModel`
         Sky models
     """
 
     def __init__(self, skymodels):
+        if not isinstance(skymodels, list):
+            raise TypeError(f"Not a list: {skymodels!r}")
+
         self._skymodels = skymodels
 
     @property

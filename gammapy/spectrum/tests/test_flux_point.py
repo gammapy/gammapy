@@ -236,7 +236,7 @@ def test_compute_flux_points_dnde_fermi():
 
 @pytest.fixture()
 def fit(dataset):
-    return Fit(dataset)
+    return Fit([dataset])
 
 
 @pytest.fixture()

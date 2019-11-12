@@ -375,7 +375,7 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
     sky_model.parameters["sigma"].value = 0.21
     dataset.background_model.parameters["norm"].frozen = True
 
-    fit = Fit(dataset)
+    fit = Fit([dataset])
     result = fit.run()
 
     assert result.success
@@ -426,7 +426,6 @@ def test_create(geom, geom_etrue):
 
 
 def test_from_geoms():
-
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
     e_reco = MapAxis.from_edges(
@@ -460,7 +459,6 @@ def test_from_geoms():
 
 @requires_data()
 def test_stack(geom, geom_etrue):
-
     m = Map.from_geom(geom)
     m.quantity = 0.2 * np.ones(m.data.shape)
     background_model1 = BackgroundModel(m)

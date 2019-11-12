@@ -65,15 +65,12 @@ class Fit:
 
     Parameters
     ----------
-    datasets : `Dataset`, list of `Dataset` or `Datasets`
-        Dataset or joint datasets to be fitted.
+    datasets : `Datasets`
+        Datasets
     """
 
     def __init__(self, datasets):
-        if not isinstance(datasets, Datasets):
-            datasets = Datasets(datasets)
-
-        self.datasets = datasets
+        self.datasets = Datasets(datasets)
 
     @lazyproperty
     def _parameters(self):
