@@ -178,10 +178,7 @@ class SourceCatalog:
         elif isinstance(key, numbers.Integral):
             index = key
         else:
-            raise TypeError(
-                f"Invalid key: {key!r}, {type(key)}\n"
-                "Key must be source name string or row index integer. "
-            )
+            raise TypeError(f"Invalid key: {key!r}, {type(key)}\n")
 
         return self._make_source_object(index)
 
@@ -245,10 +242,7 @@ class SourceCatalog:
 
 
 def _skycoord_from_table(table):
-    try:
-        keys = table.colnames
-    except AttributeError:
-        keys = list(table.keys())
+    keys = table.colnames
 
     if {"RAJ2000", "DEJ2000"}.issubset(keys):
         lon, lat, frame = "RAJ2000", "DEJ2000", "icrs"
@@ -256,10 +250,6 @@ def _skycoord_from_table(table):
         lon, lat, frame = "RA", "DEC", "icrs"
     elif {"ra", "dec"}.issubset(keys):
         lon, lat, frame = "ra", "dec", "icrs"
-    elif {"GLON", "GLAT"}.issubset(keys):
-        lon, lat, frame = "GLON", "GLAT", "galactic"
-    elif {"glon", "glat"}.issubset(keys):
-        lon, lat, frame = "glon", "glat", "galactic"
     else:
         raise KeyError("No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.")
 

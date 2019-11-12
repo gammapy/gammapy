@@ -463,7 +463,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         table["flux_errn"] = np.abs(flux_err[:, 0])
         table["flux_errp"] = flux_err[:, 1]
 
-        nuFnu = self._get_flux_values("nuFnu", "erg cm-2 s-1")
+        nuFnu = self._get_flux_values("nuFnu_Band", "erg cm-2 s-1")
         table["e2dnde"] = nuFnu
         table["e2dnde_errn"] = np.abs(nuFnu * flux_err[:, 0] / flux)
         table["e2dnde_errp"] = nuFnu * flux_err[:, 1] / flux
@@ -1340,7 +1340,7 @@ class SourceCatalog4FGL(SourceCatalog):
     description = "LAT 8-year point source catalog"
     source_object_class = SourceCatalogObject4FGL
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v19.fit.gz"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz"):
         filename = make_path(filename)
         table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
         table_standardise_units_inplace(table)

@@ -473,7 +473,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             errs["lambda_"] = data["Lambda_Spec_ECPL_Err"]
             model = ExpCutoffPowerLawSpectralModel(**pars)
         else:
-            raise ValueError(f"Invalid spectral model: {spec_type}")
+            raise ValueError(f"Invalid spec_type: {spec_type}")
 
         model.parameters.set_parameter_errors(errs)
         return model
@@ -534,7 +534,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], radius=d["Size_Err"])
             )
         else:
-            raise ValueError(f"Not a valid spatial model: {spatial_type}")
+            raise ValueError(f"Invalid spatial_type: {spatial_type}")
+
         return model
 
     def sky_model(self, which="best"):

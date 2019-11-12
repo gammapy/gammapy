@@ -226,6 +226,12 @@
     "hashmd5": "ac56115c72199a6686cb03616226d234"
    },
    {
+    "path": "catalogs/fermi/gll_psc_v20.fit.gz",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/gll_psc_v20.fit.gz",
+    "filesize": 6362843,
+    "hashmd5": "c65ca6ae4df4210bb766f02720233166"
+   },
+   {
     "path": "catalogs/fermi/gll_psch_v08.fit.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/gll_psch_v08.fit.gz",
     "filesize": 205855,
@@ -2718,8 +2724,8 @@
    {
     "path": "fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml",
     "url": "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master/3fhl/crab/Fermi-LAT-3FHL_datasets.yaml",
-    "filesize": 222,
-    "hashmd5": "f4e9cbde47212e3ae195735c5e836df5"
+    "filesize": 194,
+    "hashmd5": "1ff54afe526639b88aaddb57a8dadeea"
    },
    {
     "path": "fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml",

@@ -35,14 +35,6 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-class NoDataAvailableError(LookupError):
-    """Generic error used in Gammapy, when some data isn't available."""
-
-
-class GammaCatNotFoundError(OSError):
-    """The gamma-cat repo is not available."""
-
-
 class SourceCatalogObjectGammaCat(SourceCatalogObject):
     """One object from the gamma-cat source catalog.
 
@@ -85,10 +77,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss = "\n*** Basic info ***\n\n"
         ss += "Catalog row index (zero-based) : {}\n".format(d["catalog_row_index"])
         ss += "{:<15s} : {}\n".format("Common name", d["common_name"])
-
-        # ss += '{:<15s} : {}\n'.format('Gamma names', d['gamma_names'])
-        # ss += '{:<15s} : {}\n'.format('Fermi names', d['fermi_names'])
-        # ss += '{:<15s} : {}\n'.format('Other names', d['other_names'])
 
         def get_nonentry_keys(keys):
             vals = [d[_].strip() for _ in keys]
@@ -219,10 +207,10 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 "TeV",
             )
             ss += "{:<15s} : {:.3}\n".format("reference", d["spec_ecpl_e_ref"])
-
+        elif spec_type == "none":
+            pass
         else:
-            # raise ValueError('Spectral model printout not implemented: {}'.format(spec))
-            ss += "\nSpectral model printout not yet implemented.\n"
+            raise ValueError(f"Invalid spec_type: {spec_type}")
 
         ss += "\n{:<20s} : ({:.3}, {:.3}) TeV\n".format(
             "Energy range", d["spec_erange_min"].value, d["spec_erange_max"].value
@@ -266,11 +254,12 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += "{:<25s} : {}\n".format("Number of spectral points", d["sed_n_points"])
         ss += "{:<25s} : {}\n\n".format("Number of upper limits", d["sed_n_ul"])
 
-        try:
-            lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
-            ss += "\n".join(lines)
-        except NoDataAvailableError:
+        flux_points = self.flux_points
+        if flux_points is None:
             ss += "\nNo spectral points available for this source."
+        else:
+            lines = flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
+            ss += "\n".join(lines)
 
         return ss + "\n"
 
@@ -311,6 +300,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             pars["lambda_"] = 1.0 / data["spec_ecpl_e_cut"]
             errs["lambda_"] = data["spec_ecpl_e_cut_err"] / data["spec_ecpl_e_cut"] ** 2
             pars["reference"] = data["spec_ecpl_e_ref"]
+        elif spec_type == "none":
+            return None
         else:
             raise ValueError(f"Invalid spec_type: {spec_type}")
 
@@ -354,9 +345,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 frame="galactic",
             )
         elif morph_type == "none":
-            raise NoDataAvailableError(f"No spatial model available: {self.name}")
+            return None
         else:
-            raise NotImplementedError(f"Unknown spatial model: {morph_type!r}")
+            raise ValueError(f"Invalid morph_type: {morph_type!r}")
 
         lat_err = self.data["pos_err"].to("deg")
         lon_err = self.data["pos_err"].to("deg") / np.cos(self.data["glat"].to("rad"))
@@ -388,7 +379,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         valid = np.isfinite(d["sed_e_ref"].value)
 
         if valid.sum() == 0:
-            raise NoDataAvailableError(f"No flux points available: {self.name}")
+            return None
 
         table["e_ref"] = d["sed_e_ref"]
         table["e_min"] = d["sed_e_min"]
@@ -466,25 +457,6 @@ class SourceCatalogGammaCat(SourceCatalog):
             source_name_key=source_name_key,
             source_name_alias=source_name_alias,
         )
-
-    def to_sky_models(self):
-        """Convert to a `~gammapy.modeling.models.SkyModels`.
-
-        TODO: add an option whether to skip or raise on missing models or data.
-        """
-        source_list = []
-
-        for source_idx in range(len(self.table)):
-            source = self[source_idx]
-            try:
-                source_list.append(source.sky_model())
-            except NoDataAvailableError:
-                log.warning(
-                    f"Skipping source {source.name} (missing data in gamma-cat)"
-                )
-                continue
-
-        return SkyModels(source_list)
 
 
 class GammaCatDataCollection:
