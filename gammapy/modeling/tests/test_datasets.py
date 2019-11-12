@@ -22,7 +22,7 @@ class TestDatasets:
 
     @staticmethod
     def test_str(datasets):
-        assert "MyDataset: 2" in str(datasets)
+        assert "Datasets" in str(datasets)
 
     @staticmethod
     def test_getitem(datasets):

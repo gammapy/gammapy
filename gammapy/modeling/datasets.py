@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
 import copy
-from collections import Counter
 import numpy as np
 from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
@@ -110,26 +109,14 @@ class Datasets:
         return parameters.unique_parameters
 
     @property
-    def names(self):
-        """List of dataset names"""
-        return [_.name for _ in self]
-
-    @property
-    def types(self):
-        """Types of the contained datasets"""
-        return [type(dataset).__name__ for dataset in self]
-
-    @property
     def is_all_same_type(self):
         """Whether all contained datasets are of the same type"""
-        return np.all(np.array(self.types) == self.types[0])
+        return len(set(_.__class__ for _ in self)) == 1
 
     @property
     def is_all_same_shape(self):
         """Whether all contained datasets have the same data shape"""
-        ref_shape = self._datasets[0].data_shape
-        is_ref_shape = [dataset.data_shape == ref_shape for dataset in self]
-        return np.all(is_ref_shape)
+        return len(set(_.data_shape for _ in self)) == 1
 
     def likelihood(self):
         """Compute joint likelihood"""
@@ -141,12 +128,10 @@ class Datasets:
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n"
-        str_ += "--------\n\n"
+        str_ += "--------\n"
 
-        counter = Counter(self.types)
-
-        for key, value in counter.items():
-            str_ += f"\t{key}: {value} \n"
+        for dataset in self:
+            str_ += f"{dataset}\n"
 
         return str_
 
