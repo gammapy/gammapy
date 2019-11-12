@@ -355,10 +355,19 @@ class SafeMaskMaker:
     bias_percent : float
         Percentage of the energy bias to be used as lower
         energy threshold for method "edisp-bias"
+    offset_max : str or `~astropy.units.Quantity`
+        Maximum offset cut.
     """
+    available_methods = {"aeff-default", "aeff-max", "edisp-bias", "offset-max"}
 
-    def __init__(self, methods="aeff-default", aeff_percent=10, bias_percent=10, offset_max="3 deg"):
-        self.methods = list(methods)
+    def __init__(self, methods=("aeff-default",), aeff_percent=10, bias_percent=10, offset_max="3 deg"):
+        methods = set(methods)
+
+        if not methods.issubset(self.available_methods):
+            difference = methods.difference(self.available_methods)
+            raise ValueError(f"{difference} is not a valid method.")
+
+        self.methods = methods
         self.aeff_percent = aeff_percent
         self.bias_percent = bias_percent
         self.offset_max = Angle(offset_max)
