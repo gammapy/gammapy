@@ -11,8 +11,11 @@ def datasets():
 
 
 def test_datasets_init(datasets):
-    # Passing existing Datasets should work
-    d = Datasets(datasets)
+    # Passing a Python list of `Dataset` objects should work
+    Datasets(list(datasets))
+
+    # Passing an existing `Datasets` object should work
+    Datasets(datasets)
 
 
 def test_datasets_types(datasets):
