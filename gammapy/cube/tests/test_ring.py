@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from gammapy.cube import AdaptiveRingBackgroundMaker, RingBackgroundMaker
-from gammapy.cube.make import MapDatasetMaker
+from gammapy.cube.make import MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
 from gammapy.utils.testing import requires_data
@@ -51,10 +51,12 @@ def test_ring_bkg_maker(map_dataset_maker, observations, exclusion_mask):
     ring_bkg_maker = RingBackgroundMaker(
         r_in="0.2 deg", width="0.3 deg", exclusion_mask=exclusion_mask
     )
+    safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
     datasets = []
 
     for obs in observations:
         dataset = map_dataset_maker.run(obs)
+        dataset = safe_mask_maker.run(dataset, obs)
         dataset = dataset.to_image()
 
         dataset_on_off = ring_bkg_maker.run(dataset)
@@ -116,9 +118,12 @@ def test_adaptive_ring_bkg_maker(pars, map_dataset_maker, observations, exclusio
         exclusion_mask=exclusion_mask,
         method=pars["method"],
     )
+    safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
 
     obs = observations[pars["obs_idx"]]
     dataset = map_dataset_maker.run(obs)
+    dataset = safe_mask_maker.run(dataset, obs)
+
     dataset = dataset.to_image()
     dataset_on_off = adaptive_ring_bkg_maker.run(dataset)
 
