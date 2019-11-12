@@ -63,12 +63,6 @@ class SkyModels:
         components_dict = models_to_dict(self._skymodels)
         write_yaml(components_dict, filename, sort_keys=False)
 
-    def evaluate(self, lon, lat, energy):
-        out = self._skymodels[0].evaluate(lon, lat, energy)
-        for skymodel in self._skymodels[1:]:
-            out += skymodel.evaluate(lon, lat, energy)
-        return out
-
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"
 
