@@ -425,17 +425,22 @@ class MapDataset(Dataset):
 
         if self.counts and other.counts:
             self.counts.data[~self.mask_safe.data] = 0
-            self.counts.stack(other.counts, weights=other.mask_safe.data)
+            self.counts.stack(other.counts, weights=other.mask_safe)
 
         if self.exposure and other.exposure:
-            self.exposure.stack(other.exposure)
-        if self.background_model and other.background_model:
+            # TODO: apply energy dependent mask to exposure
+            mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or)
+            self.exposure.data[..., ~mask_image.data] = 0
 
+            mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
+            self.exposure.stack(other.exposure, weights=mask_image_other)
+
+        if self.background_model and other.background_model:
             bkg = self.background_model.evaluate()
             bkg.data[~self.mask_safe.data] = 0
             other_bkg = other.background_model.evaluate()
-            other_bkg.data[~other.mask_safe.data] = 0
-            bkg.stack(other_bkg)
+            bkg.stack(other_bkg, weights=other.mask_safe)
+
             self.background_model = BackgroundModel(
                 bkg, name=self.background_model.name
             )
@@ -891,9 +896,7 @@ class MapDataset(Dataset):
         exposure = exposure.sum_over_axes(keepdims=keepdims)
         background = background.sum_over_axes(keepdims=keepdims)
 
-        idx = self.mask_safe.geom.get_axis_index_by_name("ENERGY")
-        data = np.logical_or.reduce(self.mask_safe.data, axis=idx, keepdims=keepdims)
-        mask_image = WcsNDMap(geom=counts.geom, data=data)
+        mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=keepdims)
 
         # TODO: add edisp and psf
         edisp = None
