@@ -330,17 +330,3 @@ class TestSourceCatalogLargeScaleHGPS:
         )
         assert_quantity_allclose(self.model.peak_latitude(glon), 1 * u.deg)
         assert_quantity_allclose(self.model.width(glon), 0.3 * u.deg)
-
-
-if __name__ == "__main__":
-    # Check all sources
-    for source in SourceCatalogHGPS():
-        print(source.index, source.name)
-        str(source)
-        source.energy_range
-        source.spectral_model_type
-        source.spectral_model()
-        source.spatial_model_type
-        source.is_pointlike
-        source.sky_model()
-        source.flux_points
