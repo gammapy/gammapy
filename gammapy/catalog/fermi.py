@@ -186,6 +186,9 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
     def is_pointlike(self):
         return self.data["Extended_Source_Name"].strip() == ""
 
+    # FIXME: this should be renamed `set_position_error`,
+    # and `phi_0` isn't filled correctly, other parameters missing
+    # see https://github.com/gammapy/gammapy/pull/2533#issuecomment-553329049
     def _set_spatial_errors(self, model):
         d = self.data
 
@@ -206,8 +209,10 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         scale_1sigma = Gauss2DPDF().containment_radius(percent)
         lat_err = semi_major.to("deg") / scale_1sigma
         lon_err = semi_minor.to("deg") / scale_1sigma / np.cos(d["DEJ2000"].to("rad"))
-        model.parameters.set_parameter_errors(dict(lon_0=lon_err, lat_0=lat_err))
-        model.phi_0 = phi_0
+
+        if model.tag != "TemplateSpatialModel":
+            model.parameters.set_error(lon_0=lon_err, lat_0=lat_err)
+            model.phi_0 = phi_0
 
     def sky_model(self):
         """Sky model (`~gammapy.modeling.models.SkyModel`)."""
@@ -401,7 +406,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 )
                 with warnings.catch_warnings():  # ignore FITS units warnings
                     warnings.simplefilter("ignore", FITSFixedWarning)
-                model = TemplateSpatialModel.read(path / filename)
+                    model = TemplateSpatialModel.read(path / filename)
             elif morph_type == "2D Gaussian":
                 model = GaussianSpatialModel(
                     lon_0=ra, lat_0=dec, sigma=sigma, e=e, phi=phi, frame="icrs"
@@ -445,7 +450,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
-        model.parameters.set_parameter_errors(errs)
+        model.parameters.set_error(**errs)
         return model
 
     @property
@@ -713,7 +718,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
-        model.parameters.set_parameter_errors(errs)
+        model.parameters.set_error(**errs)
         return model
 
     def spatial_model(self):
@@ -939,7 +944,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         errs["index"] = self.data["Unc_Spectral_Index"]
 
         model = PowerLaw2SpectralModel(**pars)
-        model.parameters.set_parameter_errors(errs)
+        model.parameters.set_error(**errs)
         return model
 
     @property
@@ -1112,7 +1117,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
-        model.parameters.set_parameter_errors(errs)
+        model.parameters.set_error(**errs)
         return model
 
     @property

@@ -36,9 +36,7 @@ def test_integrate_spectrum_ecpl():
         reference=1 * u.TeV,
         lambda_=0.1 / u.TeV,
     )
-    ecpl.parameters.set_parameter_errors(
-        {"index": 0.2, "amplitude": 1e-13 * u.Unit("cm-2 s-1 TeV-1")}
-    )
+    ecpl.parameters.set_error(index=0.2, amplitude=1e-13 * u.Unit("cm-2 s-1 TeV-1"))
     emin, emax = 1 * u.TeV, 1e10 * u.TeV
     res = ecpl.integral_error(emin, emax)
 
