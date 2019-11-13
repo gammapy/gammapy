@@ -8,7 +8,7 @@
 <!-- What is the motivation for this pull request? -->
 <!-- Briefly: what changes are done here? -->
 <!-- If this is to address a Github issue, metion it's number to create a link -->
-<!-- Example: This PR is to fix issue #42
+<!-- Example: This PR is to fix issue #42 -->
 
 This pull request ...
 
