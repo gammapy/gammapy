@@ -458,27 +458,6 @@ class Parameters:
 
         return upars
 
-    # TODO: deprecate or remove this?
-    def set_parameter_errors(self, errors):
-        """Set uncorrelated parameters errors.
-
-        Parameters
-        ----------
-        errors : dict of `~astropy.units.Quantity`
-            Dict of parameter errors.
-        """
-        diag = []
-        for par in self._parameters:
-            error = errors.get(par.name, 0)
-            error = u.Quantity(error, par.unit).value
-            diag.append(error)
-        self.covariance = np.diag(np.power(diag, 2))
-        # TODO: this assume no correlation between errors
-        # from catalog values we could compute cov_ij = corr_ij*err_i*err_j
-        # with corr_ij = np.corrcoef(err_i[:Nsources]), err_j[:Nsources])[0, 1] ?
-
-    # TODO: this is a temporary solution until we have a better way
-    # to handle covariance matrices via a class
     def error(self, parname):
         """Get parameter error.
 
@@ -493,24 +472,31 @@ class Parameters:
         idx = self._get_idx(parname)
         return np.sqrt(self.covariance[idx, idx])
 
-    # TODO: this is a temporary solution until we have a better way
-    # to handle covariance matrices via a class
-    def set_error(self, parname, err):
-        """Set parameter error.
+    def set_error(self, **kwargs):
+        """Set errors on parameters.
 
-        Parameters
-        ----------
-        parname : str, int
-            Parameter name or index
-        err : float or Quantity
-            Parameter error
+        Pass parameter errors as keyword arguments,
+        similar to how parameter values are passed
+        in other places.
+
+        Usually parameter errors come via a fit and a
+        covariance matrix. This method is only used to
+        make models from previously published results,
+        e.g. in ``gammapy.catalog``.
+
+        Examples
+        --------
+        >>> from gammapy.modeling.models import PowerLawSpectralModel
+        >>> model = PowerLawSpectralModel(amplitude="4.2e-11 cm-2 s-1 TeV-1", index=2.7)
+        >>> model.parameters.set_error(amplitude="0.6-11 cm-2 s-1 TeV-1", index=0.2)
         """
         if self.covariance is None:
             self.covariance = self._empty_covariance
 
-        idx = self._get_idx(parname)
-        err = u.Quantity(err, self[idx].unit).value
-        self.covariance[idx, idx] = err ** 2
+        for key, error in kwargs.items():
+            idx = self._get_idx(key)
+            error = u.Quantity(error, self[idx].unit).value
+            self.covariance[idx, idx] = error ** 2
 
     @property
     def correlation(self):

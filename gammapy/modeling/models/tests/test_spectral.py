@@ -302,9 +302,7 @@ def test_model_plot():
     pwl = PowerLawSpectralModel(
         amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
     )
-    pwl.parameters.set_parameter_errors(
-        {"amplitude": 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")}
-    )
+    pwl.parameters.set_error(amplitude=0.1e-12 * u.Unit("TeV-1 cm-2 s-1"))
     with mpl_plot_check():
         pwl.plot((1 * u.TeV, 10 * u.TeV))
 
@@ -379,9 +377,7 @@ def test_pwl_index_2_error():
     pwl = PowerLawSpectralModel(
         amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
     )
-    pwl.parameters.set_parameter_errors(
-        {"amplitude": 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")}
-    )
+    pwl.parameters.set_error(amplitude=1e-13 * u.Unit("TeV-1 cm-2 s-1"))
 
     val, val_err = pwl.evaluate_error(1 * u.TeV)
     assert_quantity_allclose(val, 1e-12 * u.Unit("TeV-1 cm-2 s-1"))

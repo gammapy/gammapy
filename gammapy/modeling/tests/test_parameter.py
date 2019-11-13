@@ -98,8 +98,8 @@ def pars():
 
 def test_parameters_basics(pars):
     # This applies a unit transformation
-    pars.set_parameter_errors({"ham": "10000 GeV"})
-    pars.set_error(0, 0.1)
+    pars.set_error(ham="10000 GeV")
+    pars.set_error(spam=0.1)
     assert_allclose(pars.covariance, [[1e-2, 0], [0, 100]])
     assert_allclose(pars.correlation, [[1, 0], [0, 1]])
     assert_allclose(pars.error("spam"), 0.1)
@@ -158,7 +158,7 @@ def test_parameters_getitem(pars):
 
 
 def test_parameters_to_table(pars):
-    pars.set_error("ham", 1e-10 / 3)
+    pars.set_error(ham=1e-10)
     table = pars.to_table()
     assert len(table) == 2
     assert len(table.columns) == 7

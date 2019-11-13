@@ -206,7 +206,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         scale_1sigma = Gauss2DPDF().containment_radius(percent)
         lat_err = semi_major.to("deg") / scale_1sigma
         lon_err = semi_minor.to("deg") / scale_1sigma / np.cos(d["DEJ2000"].to("rad"))
-        model.parameters.set_parameter_errors(dict(lon_0=lon_err, lat_0=lat_err))
+        model.parameters.set_error(lon_0=lon_err, lat_0=lat_err)
         model.phi_0 = phi_0
 
     def sky_model(self):
@@ -445,7 +445,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
-        model.parameters.set_parameter_errors(errs)
+        model.parameters.set_error(**errs)
         return model
 
     @property
@@ -713,7 +713,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
-        model.parameters.set_parameter_errors(errs)
+        model.parameters.set_error(**errs)
         return model
 
     def spatial_model(self):
@@ -939,7 +939,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         errs["index"] = self.data["Unc_Spectral_Index"]
 
         model = PowerLaw2SpectralModel(**pars)
-        model.parameters.set_parameter_errors(errs)
+        model.parameters.set_error(**errs)
         return model
 
     @property
@@ -1112,7 +1112,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
-        model.parameters.set_parameter_errors(errs)
+        model.parameters.set_error(**errs)
         return model
 
     @property
