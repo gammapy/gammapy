@@ -150,10 +150,6 @@ def add_subcommands():
 
     cli.add_command(cli_check)
 
-    from .image_bin import cli_image_bin
-
-    cli_image.add_command(cli_image_bin)
-
     from .download import cli_download_notebooks
 
     cli_download.add_command(cli_download_notebooks)
