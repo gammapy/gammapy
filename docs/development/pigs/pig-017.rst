@@ -6,17 +6,17 @@
 PIG 17 - Provenance capture
 ***************************
 
-* Author: José Enrique Ruiz, Mathieu Servillat, lead developers welcome...
+* Author: José Enrique Ruiz, Mathieu Servillat
 * Created: October 15, 2019
 * Accepted:
 * Status: Draft
-* Discussion:
+* Discussion: `GH 2458`_
 
 Abstract
 ========
 
 Gammapy v0.14 has delivered a first version of a `High-level interface`_ that intends to provide the
-main basic features proposed in `PIG12`_. It is expected that all of these features will be addressed in
+main basic features proposed in :ref:`pig-012`. It is expected that all of these features will be addressed in
 the coming releases. Having this well defined high-level interface Python API allow us to think on
 procuring a way to automatically record a structured provenance of the data analysis processes undertaken
 with the high-level interface in IPython working sessions (shell and notebooks) or in Python scripts.
@@ -89,7 +89,7 @@ used in each process step), and the serialisations of the intermediate and final
 
 A simple and non-intrusive implementation strategy should be considered, with minor modifications in the
 code-base of Gammapy. Metaclass inheritance, class decoration and subclassing mechanisms applied to the
-``Analysys`` class of the high-level interface will be explored. The code will be placed in one or a few
+``Analysis`` class of the high-level interface will be explored. The code will be placed in one or a few
 python scripts inside a new folder ``provenance`` at the ``gammapy.utils`` level. The whole solution will
 be mainly based on a provenance description YAML file that will bind tasks of the high-level interface,
 their parameters, datasets used and generated, etc. with the provenance model, its specific semantics and
@@ -111,9 +111,7 @@ All the configuration settings and parameter values may be accessed via the ``An
 moment of the execution of each task. Captured tasks, datasets and hashable objects in general need a unique
 identifier that could be generated with MD5 hashing. The intermediate and final datasets and objects produced
 will be saved into the local disk if this option is enabled as a configuration parameter, and links to the
-serialisations of these objects will be recorded accordingly in the provenance log file. Finally, it is
-advisable to proceed with a general cleaning of the Gammapy code-base so to replace ``print()`` functions
-with the standard Python ``logging`` mechanism used.
+serialisations of these objects will be recorded accordingly in the provenance log file.
 
 Outlook
 =======
@@ -175,7 +173,6 @@ offered by these APIs.
 Task list
 =========
 
-- General cleaning of Gammapy code-base to replace ``print()`` functions with standard Python ``logging``.
 - Define a syntax for the description provenance file and agree on a level of provenance granularity captured.
 - Define a structured format for logging as time-stamped messages in a log file and/or in output stream.
 - Prototype a non-intrusive solution to capture provenance with high-level interface tasks.
@@ -190,7 +187,6 @@ TBD
 
 
 .. _High-level interface: https://docs.gammapy.org/0.14/scripts/index.html
-.. _PIG12: https://docs.gammapy.org/0.14/development/pigs/pig-012.html
 .. _PROV-Overview: https://www.w3.org/TR/prov-overview/
 .. _PROV-DM: https://www.w3.org/TR/2013/REC-prov-dm-20130430/
 .. _IVOA Provenance Data Model: http://www.ivoa.net/documents/ProvenanceDM/20190719/index.html
@@ -215,3 +211,4 @@ TBD
 .. _RAVE: https://www.rave-survey.org/project
 .. _Pollux: http://pollux.graal.univ-montp2.fr
 .. _JSON Schema: https://json-schema.org
+.. _GH 2458: https://github.com/gammapy/gammapy/pull/2458
