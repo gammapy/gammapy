@@ -46,6 +46,8 @@ observations:
 datasets:
     dataset-type: SpectrumDatasetOnOff   # also MapDataset
     stack-datasets: false
+    offset-max: 2.5 deg
+    psf-kernel-radius: 0.3 deg
     # parameters for the estimation of the background if SpectrumDatasetOnOff
     background:
         background_estimator: reflected

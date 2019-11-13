@@ -137,6 +137,7 @@ class Analysis:
         """Produce reduced datasets."""
         if not self._validate_reduction_settings():
             return False
+
         if self.settings["datasets"]["dataset-type"] == "SpectrumDatasetOnOff":
             self._spectrum_extraction()
         elif self.settings["datasets"]["dataset-type"] == "MapDataset":
@@ -158,6 +159,7 @@ class Analysis:
         """
         if not self._validate_set_model():
             return False
+
         log.info(f"Reading model.")
         if isinstance(model, str):
             model = yaml.safe_load(model)
@@ -168,6 +170,7 @@ class Analysis:
             self.model = SkyModels.from_yaml(filepath)
         else:
             return False
+
         # TODO: Deal with multiple components
         for dataset in self.datasets:
             if isinstance(dataset, MapDataset):
@@ -333,6 +336,7 @@ class Analysis:
         else:
             # TODO: raise error?
             log.info("Background estimation only for reflected regions method.")
+            return False
 
         safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "aeff-max"])
 
