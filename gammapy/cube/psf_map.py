@@ -42,14 +42,14 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     energy = energy_axis.center
 
     rad_axis = geom.get_axis_by_name("theta")
-    rad = Angle(rad_axis.center, unit=rad_axis.unit)
+    rad = rad_axis.center
 
     # Compute separations with pointing position
-    separations = pointing.separation(geom.to_image().get_coord().skycoord)
-    valid = np.where(separations < max_offset)
+    offset = geom.separation(pointing)
+    valid = np.where(offset < max_offset)
 
     # Compute PSF values
-    psf_values = psf.evaluate(offset=separations[valid], energy=energy, rad=rad)
+    psf_values = psf.evaluate(offset=offset[valid], energy=energy, rad=rad)
 
     # Re-order axes to be consistent with expected geometry
     psf_values = np.transpose(psf_values, axes=(2, 0, 1))

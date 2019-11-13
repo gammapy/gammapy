@@ -43,12 +43,12 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
     migra = migra_axis.center
 
     # Compute separations with pointing position
-    separations = pointing.separation(geom.to_image().get_coord().skycoord)
-    valid = np.where(separations < max_offset)
+    offset = geom.separation(pointing)
+    valid = np.where(offset < max_offset)
 
     # Compute EDisp values
     edisp_values = edisp.data.evaluate(
-        offset=separations[valid],
+        offset=offset[valid],
         e_true=energy[:, np.newaxis],
         migra=migra[:, np.newaxis, np.newaxis],
     )
