@@ -8,24 +8,24 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 
 @pytest.fixture(scope="session")
 def psf_3d():
-    filename = "$GAMMAPY_DATA/tests/psf_table_023523.fits.gz"
-    return PSF3D.read(filename)
+    filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    return PSF3D.read(filename, hdu="PSF")
 
 
 @requires_data()
 def test_psf_3d_basics(psf_3d):
-    assert_allclose(psf_3d.rad_lo[-1].value, 0.6704476475715637)
-    assert psf_3d.rad_lo.shape == (900,)
+    assert_allclose(psf_3d.rad_lo[-1].value, 0.659048, rtol=1e-5)
+    assert psf_3d.rad_lo.shape == (144,)
     assert psf_3d.rad_lo.unit == "deg"
 
-    assert_allclose(psf_3d.energy_lo[0].value, 0.02)
-    assert psf_3d.energy_lo.shape == (18,)
+    assert_allclose(psf_3d.energy_lo[0].value, 0.01)
+    assert psf_3d.energy_lo.shape == (32,)
     assert psf_3d.energy_lo.unit == "TeV"
 
-    assert psf_3d.psf_value.shape == (900, 6, 18)
+    assert psf_3d.psf_value.shape == (144, 6, 32)
     assert psf_3d.psf_value.unit == "sr-1"
 
-    assert_allclose(psf_3d.energy_thresh_lo.value, 0.1)
+    assert_allclose(psf_3d.energy_thresh_lo.value, 0.01)
     assert psf_3d.energy_lo.unit == "TeV"
 
     assert "PSF3D" in psf_3d.info()
@@ -34,7 +34,7 @@ def test_psf_3d_basics(psf_3d):
 @requires_data()
 def test_psf_3d_evaluate(psf_3d):
     q = psf_3d.evaluate(energy="1 TeV", offset="0.3 deg", rad="0.1 deg")
-    assert_allclose(q.value, 21417.213824)
+    assert_allclose(q.value, 25889.505886)
     # TODO: is this the shape we want here?
     assert q.shape == (1, 1, 1)
     assert q.unit == "sr-1"
@@ -43,29 +43,29 @@ def test_psf_3d_evaluate(psf_3d):
 @requires_data()
 def test_to_energy_dependent_table_psf(psf_3d):
     psf = psf_3d.to_energy_dependent_table_psf()
-    assert psf.psf_value.shape == (18, 900)
+    assert psf.psf_value.shape == (32, 144)
     radius = psf.table_psf_at_energy("1 TeV").containment_radius(0.68).deg
-    assert_allclose(radius, 0.172435, atol=1e-4)
+    assert_allclose(radius, 0.124733, atol=1e-4)
 
 
 @requires_data()
 def test_psf_3d_containment_radius(psf_3d):
     q = psf_3d.containment_radius(energy="1 TeV")
-    assert_allclose(q.value, 0.171025, rtol=1e-2)
+    assert_allclose(q.value, 0.124733, rtol=1e-2)
     assert q.isscalar
     assert q.unit == "deg"
 
     q = psf_3d.containment_radius(energy=[1, 3] * u.TeV)
-    assert_allclose(q.value, [0.172447, 0.159405], rtol=1e-2)
+    assert_allclose(q.value, [0.124733, 0.13762], rtol=1e-2)
     assert q.shape == (2,)
 
 
 @requires_data()
 def test_psf_3d_write(psf_3d, tmp_path):
     psf_3d.write(tmp_path / "tmp.fits")
-    psf_3d = PSF3D.read(tmp_path / "tmp.fits")
+    psf_3d = PSF3D.read(tmp_path / "tmp.fits", hdu=1)
 
-    assert_allclose(psf_3d.energy_lo[0].value, 0.02)
+    assert_allclose(psf_3d.energy_lo[0].value, 0.01)
 
 
 @requires_data()
