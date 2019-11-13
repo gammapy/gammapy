@@ -427,6 +427,7 @@ class SourceCatalogGammaCat(SourceCatalog):
     --------
     Load the catalog data:
 
+    >>> import astropy.units as u
     >>> from gammapy.catalog import SourceCatalogGammaCat
     >>> cat = SourceCatalogGammaCat()
 
@@ -436,8 +437,9 @@ class SourceCatalogGammaCat(SourceCatalog):
 
     Access source spectral data and plot it:
 
-    >>> source.spectral_model.plot()
-    >>> source.spectral_model.plot_error()
+    >>> energy_range = [1, 10] * u.TeV
+    >>> source.spectral_model().plot(energy_range)
+    >>> source.spectral_model().plot_error(energy_range)
     >>> source.flux_points.plot()
     """
 
