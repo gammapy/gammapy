@@ -568,9 +568,8 @@ def test_convolve_pixel_scale_error():
 
     kernel = PSFKernel.from_gauss(kgeom, sigma=0.1 * u.deg, max_radius=1.5 * u.deg)
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ValueError):
         m.convolve(kernel)
-    assert "Pixel size of kernel and map not compatible." == str(excinfo.value)
 
 
 @requires_dependency("matplotlib")

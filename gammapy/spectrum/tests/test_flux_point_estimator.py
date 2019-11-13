@@ -212,9 +212,8 @@ def test_no_likelihood_contribution():
 
     fpe = FluxPointsEstimator([dataset], e_edges=[1, 10] * u.TeV)
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ValueError):
         fpe.run()
-    assert "No dataset contributes" in str(excinfo.value)
 
 
 def test_mask_shape():
@@ -240,6 +239,5 @@ def test_mask_shape():
         datasets=[dataset_2, dataset_1], e_edges=[1, 10] * u.TeV, source="source"
     )
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ValueError):
         fpe.run()
-    assert "No dataset contributes" in str(excinfo.value)
