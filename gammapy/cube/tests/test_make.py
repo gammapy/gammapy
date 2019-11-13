@@ -108,6 +108,8 @@ def test_map_maker(pars, observations):
         energy_axis_true=pars["e_true"],
         offset_max="2 deg",
         background_oversampling=pars.get("background_oversampling"),
+        binsz_irf=pars["binsz_irf"],
+        margin_irf=pars["margin_irf"],
     )
     safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
 
