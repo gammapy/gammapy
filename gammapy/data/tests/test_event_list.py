@@ -25,53 +25,55 @@ class TestEventListBase:
 class TestEventListHESS:
     def setup_class(self):
         self.events = EventList.read(
-            "$GAMMAPY_DATA/tests/unbundled/hess/run_0023037_hard_eventlist.fits.gz"
+            "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
         )
 
     def test_basics(self):
         assert "EventList" in str(self.events)
 
-        assert len(self.events.table) == 49
-        assert self.events.time[0].iso == "2004-10-14 00:08:39.214"
-        assert self.events.radec[0].to_string() == "82.7068 19.8186"
-        assert self.events.galactic[0].to_string(precision=2) == "185.96 -7.69"
-        assert self.events.altaz[0].to_string() == "46.5793 30.8799"
-        assert_allclose(self.events.offset[0].value, 1.904497742652893, rtol=1e-5)
-        assert f"{self.events.energy[0]:1.5f}" == "11.64355 TeV"
+        assert len(self.events.table) == 11243
+        assert self.events.time[0].iso == "2004-03-26 02:57:47.004"
+        assert self.events.radec[0].to_string() == "229.239 -58.3417"
+        assert self.events.galactic[0].to_string(precision=2) == "321.07 -0.69"
+        assert self.events.altaz[0].to_string() == "193.338 53.258"
+        assert_allclose(self.events.offset[0].value, 0.54000974, rtol=1e-5)
+
+        energy = self.events.energy[0]
+        assert energy.unit == "TeV"
+        assert_allclose(energy.value, 0.55890286)
 
         lon, lat, height = self.events.observatory_earth_location.to_geodetic()
-        assert f"{lon:1.5f}" == "16.50022 deg"
-        assert f"{lat:1.5f}" == "-23.27178 deg"
-        assert f"{height:1.5f}" == "1835.00000 m"
+        assert lon.unit == "deg"
+        assert_allclose(lon.value, 16.5002222222222)
+        assert lat.unit == "deg"
+        assert_allclose(lat.value, -23.2717777777778)
+        assert height.unit == "m"
+        assert_allclose(height.value, 1835)
 
     def test_observation_time_duration(self):
         dt = self.events.observation_time_duration
         assert dt.unit == "s"
-        assert_allclose(dt.value, 1577)
+        assert_allclose(dt.value, 1682)
 
     def test_observation_live_time_duration(self):
         dt = self.events.observation_live_time_duration
         assert dt.unit == "s"
-        assert_allclose(dt.value, 1510.959106)
+        assert_allclose(dt.value, 1521.026855)
 
     def test_observation_dead_time_fraction(self):
         deadc = self.events.observation_dead_time_fraction
-        assert_allclose(deadc, 0.035763, rtol=1e-3)
+        assert_allclose(deadc, 0.095703, rtol=1e-3)
 
     def test_altaz(self):
         altaz = self.events.altaz
-        assert_allclose(altaz[0].az.deg, 46.579258, atol=1e-3)
-        assert_allclose(altaz[0].alt.deg, 30.879939, atol=1e-3)
-
-        altaz = self.events.altaz_from_table
-        assert_allclose(altaz[0].az.deg, 46.205875, atol=1e-3)
-        assert_allclose(altaz[0].alt.deg, 31.200132, atol=1e-3)
+        assert_allclose(altaz[0].az.deg, 193.337965, atol=1e-3)
+        assert_allclose(altaz[0].alt.deg, 53.258024, atol=1e-3)
         # TODO: add asserts for frame properties
 
     def test_stack(self):
-        event_lists = [self.events] * 3
+        event_lists = [self.events] * 2
         stacked_list = EventList.stack(event_lists)
-        assert len(stacked_list.table) == 49 * 3
+        assert len(stacked_list.table) == 11243 * 2
 
     @requires_dependency("matplotlib")
     def test_plot_time(self):
