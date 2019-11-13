@@ -414,7 +414,13 @@ class SafeMaskMaker:
             log.warning(f"No thresholds defined for obs {observation}")
             e_min, e_max = None, None
 
-        return dataset.counts.energy_mask(emin=e_min, emax=e_max)
+        # TODO: introduce RegionNDMap and simplify the code below
+        try:
+            mask = dataset.counts.energy_mask(emin=e_min, emax=e_max)
+        except AttributeError:
+            mask = dataset.counts.geom.energy_mask(emin=e_min, emax=e_max)
+
+        return mask
 
     def make_mask_energy_aeff_max(self, dataset):
         """Make safe energy mask from aeff max.
@@ -429,6 +435,9 @@ class SafeMaskMaker:
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
+        if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
+            raise NotImplementedError("'aeff-max' method currently only supported for spectral datasets")
+
         aeff_thres = self.aeff_percent / 100 * dataset.aeff.max_area
         e_min = dataset.aeff.find_energy(aeff_thres)
         return dataset.counts.energy_mask(emin=e_min)
@@ -446,6 +455,9 @@ class SafeMaskMaker:
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
+        if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
+            raise NotImplementedError("'edisp-bias' method currently only supported for spectral datasets")
+
         e_min = dataset.edisp.get_bias_energy(self.bias_percent / 100)
         return dataset.counts.energy_mask(emin=e_min)
 

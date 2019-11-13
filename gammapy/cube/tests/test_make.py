@@ -202,3 +202,33 @@ def test_map_maker_obs(observations):
     assert map_dataset.psf.exposure_map.data.shape == (3, 1, 6, 11)
     assert_allclose(map_dataset.gti.time_delta, 1800.0 * u.s)
     assert map_dataset.name == "obs_110380"
+
+
+def test_safe_mask_maker(observations):
+    obs = observations[0]
+
+    axis = MapAxis.from_edges([0.1, 1, 10], name="energy", interp="log", unit="TeV")
+    geom = WcsGeom.create(npix=(11, 11), axes=[axis], skydir=obs.pointing_radec)
+
+    dataset_maker = MapDatasetMaker(geom=geom, offset_max="3 deg")
+    safe_mask_maker = SafeMaskMaker(offset_max="3 deg")
+    dataset = dataset_maker.run(obs)
+
+    mask_offset = safe_mask_maker.make_mask_offset_max(dataset=dataset, observation=obs)
+    assert_allclose(mask_offset.sum(), 109)
+
+    mask_energy_aeff_default = safe_mask_maker.make_mask_energy_aeff_default(dataset=dataset, observation=obs)
+    assert_allclose(mask_energy_aeff_default.sum(), 242)
+
+    with pytest.raises(NotImplementedError) as excinfo:
+        safe_mask_maker.make_mask_energy_edisp_bias(dataset)
+
+    assert "only supported" in str(excinfo.value)
+
+    with pytest.raises(NotImplementedError) as excinfo:
+        safe_mask_maker.make_mask_energy_edisp_bias(dataset)
+
+    assert "only supported" in str(excinfo.value)
+
+
+
