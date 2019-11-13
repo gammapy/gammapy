@@ -1,7 +1,6 @@
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-import matplotlib.pyplot as plt
 from gammapy.cube import MapDataset, make_map_exposure_true_energy
 from gammapy.irf import EffectiveAreaTable2D
 from gammapy.maps import MapAxis, WcsGeom
@@ -65,35 +64,10 @@ exposure_map = make_map_exposure_true_energy(
 dataset = MapDataset(model=models, exposure=exposure_map)
 npred = dataset.npred()
 
-fig, ax, cbar = npred.sum_over_axes().plot(add_cbar=True)
-ax.scatter(
-    [lon_0_1, lon_0_2, pointing.galactic.l.degree],
-    [lat_0_1, lat_0_2, pointing.galactic.b.degree],
-    transform=ax.get_transform("galactic"),
-    marker="+",
-    color="cyan",
-)
-# plt.show()
-plt.clf()
-
 dataset.fake()
 
-dataset.counts.sum_over_axes().plot()
-# plt.show()
-plt.clf()
-
-models.parameters.set_error(spatial_model_1.lon_0, 0.1 * u.deg)
-models.parameters.set_error(spatial_model_1.lat_0, 0.1 * u.deg)
-
-models.parameters.set_error(spatial_model_2.lon_0, 0.1 * u.deg)
-models.parameters.set_error(spatial_model_1.lat_0, 0.1 * u.deg)
-
-models.parameters.set_error(
-    spectral_model_1.amplitude, 1e-12 * u.Unit("cm-2 s-1 TeV-1")
-)
-models.parameters.set_error(
-    spectral_model_2.amplitude, 1e-12 * u.Unit("cm-2 s-1 TeV-1")
-)
-
 fit = Fit([dataset])
-fit.run()
+results = fit.run()
+
+print(results)
+print(models)
