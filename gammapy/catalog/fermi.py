@@ -401,7 +401,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 )
                 with warnings.catch_warnings():  # ignore FITS units warnings
                     warnings.simplefilter("ignore", FITSFixedWarning)
-                model = TemplateSpatialModel.read(path / filename)
+                    model = TemplateSpatialModel.read(path / filename)
             elif morph_type == "2D Gaussian":
                 model = GaussianSpatialModel(
                     lon_0=ra, lat_0=dec, sigma=sigma, e=e, phi=phi, frame="icrs"
