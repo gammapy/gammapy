@@ -2884,12 +2884,6 @@
     "hashmd5": "7f2b2e7e963faf6464224434fbe474b3"
    },
    {
-    "path": "tests/unbundled/hess/run_0023037_hard_eventlist.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/unbundled/hess/run_0023037_hard_eventlist.fits.gz",
-    "filesize": 7622,
-    "hashmd5": "529d15b10d8961d77f9ca2e4d9294a5e"
-   },
-   {
     "path": "tests/unbundled/hess/README.rst",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/unbundled/hess/README.rst",
     "filesize": 407,
