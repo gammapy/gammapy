@@ -7,7 +7,6 @@ import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
 from astropy.wcs import FITSFixedWarning
-from gammapy.maps import Map
 from gammapy.modeling.models import (
     DiskSpatialModel,
     ExpCutoffPowerLaw3FGLSpectralModel,

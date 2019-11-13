@@ -18,7 +18,6 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     ShellSpatialModel,
     SkyModel,
-    SkyModels,
 )
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.scripts import make_path
