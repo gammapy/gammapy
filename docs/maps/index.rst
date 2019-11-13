@@ -287,6 +287,25 @@ However when using the named axis interface the axis name string (e.g. as given
 by `MapAxis.name`) must match the name given in the method argument.  The two
 spatial axes must always be named ``lon`` and ``lat``.
 
+.. _node_types:
+
+Differential and integral maps
+------------------------------
+
+`gammapy.maps` supports both differential and integral maps, representing
+differential values at specific coordinates, or integral values within bins.
+This is achieved by specifying the ``node_type`` of a ``MapAxis``. Quantities
+defined at bin centers should have a node_type of "center", and quantities
+integrated in bins should have node_type of "edges". Interpolation is defined
+only for differential quantities.
+
+For the specific case of the energy axis, conventionally, true energies are have
+node_type "center" (usually used for IRFs and exposure) whereas the
+reconstructed energy axis has node_type "edges" (usually used for counts and
+background). Model evaluations are first computed on differential bins, and then
+multiplied by the bin volumes to finally return integrated maps, so the output
+predicted counts maps are integral with node_type "edges".
+
 .. _mapcoord:
 
 MapCoord
