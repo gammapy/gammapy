@@ -688,10 +688,7 @@ class WcsNDMap(WcsMap):
         """
         if self.geom == other.geom:
             parent_slices, cutout_slices = None, None
-        elif (
-            other.geom.cutout_info is not None
-            and self.geom == other.geom.cutout_info["parent-geom"]
-        ):
+        elif self.geom.is_aligned(other.geom):
             slices = other.geom.cutout_info["parent-slices"]
             parent_slices = Ellipsis, slices[0], slices[1]
 
