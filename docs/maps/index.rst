@@ -290,26 +290,22 @@ spatial axes must always be named ``lon`` and ``lat``.
 
 .. _node_types:
 
-Differential and Integral Maps
----------------------------------
+Differential and integral maps
+------------------------------
 
-`gammapy.maps` supports the implementation of both differential and integral maps, ie,
-whether the values are defined at specific co-ordinates or by an integral between
- intervals, respectively. This is achieved by specifying the `node_type` of a `MapAxis`.
-Quantities defined at bin centers should have `node_type = center`, whereas quantities integrated
-between two values should have `node_type = edges`. Physically, interpolation is defined only
-for differential quantities. For the specific case of the energy axis,
-conventionally, true energies are have `node_type = center` whereas the reconstructed energy axis has
-`node_type = edges`.
+`gammapy.maps` supports both differential and integral maps, representing
+differential values at specific coordinates, or integral values within bins.
+This is achieved by specifying the ``node_type`` of a ``MapAxis``. Quantities
+defined at bin centers should have a node_type of "center", and quantities
+integrated in bins should have node_type of "edges". Interpolation is defined
+only for differential quantities.
 
-*Thus, for the most commonly used maps, `counts` and `background` maps,
-which are histograms between two energy bins,
-are always computed in reconstructed energy space  and are `node_type = edges`.
-*On the other hand, the IRFs are usually computed as a function of true energies,
-and thus, `PSF` and exposure maps should be node centered.
-*Model evaluations are first
-computed on differential bins, and then multiplied by the bin volumes to
-finally return integrated maps.
+For the specific case of the energy axis, conventionally, true energies are have
+node_type "center" (usually used for IRFs and exposure) whereas the
+reconstructed energy axis has node_type "edges" (usually used for counts and
+background). Model evaluations are first computed on differential bins, and then
+multiplied by the bin volumes to finally return integrated maps, so the output
+predicted counts maps are integral with node_type "edges".
 
 .. _mapcoord:
 
