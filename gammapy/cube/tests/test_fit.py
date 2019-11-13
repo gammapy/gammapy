@@ -499,15 +499,13 @@ def test_stack(geom, geom_etrue):
 def images():
     """Load some `counts`, `counts_off`, `acceptance_on`, `acceptance_off" images"""
     filename = "$GAMMAPY_DATA/tests/unbundled/hess/survey/hess_survey_snippet.fits.gz"
-
-    images = {}
-    images.update({"counts": WcsNDMap.read(filename, hdu="ON")})
-    images.update({"counts_off": WcsNDMap.read(filename, hdu="OFF")})
-    images.update({"acceptance": WcsNDMap.read(filename, hdu="ONEXPOSURE")})
-    images.update({"acceptance_off": WcsNDMap.read(filename, hdu="OFFEXPOSURE")})
-    images.update({"exposure": WcsNDMap.read(filename, hdu="EXPGAMMAMAP")})
-
-    return images
+    return {
+        "counts": WcsNDMap.read(filename, hdu="ON"),
+        "counts_off": WcsNDMap.read(filename, hdu="OFF"),
+        "acceptance": WcsNDMap.read(filename, hdu="ONEXPOSURE"),
+        "acceptance_off": WcsNDMap.read(filename, hdu="OFFEXPOSURE"),
+        "exposure": WcsNDMap.read(filename, hdu="EXPGAMMAMAP"),
+    }
 
 
 def get_map_dataset_onoff(images, **kwargs):
