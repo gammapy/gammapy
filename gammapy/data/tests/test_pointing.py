@@ -9,7 +9,7 @@ from gammapy.utils.testing import assert_time_allclose, requires_data
 class TestFixedPointingInfo:
     @classmethod
     def setup_class(cls):
-        filename = "$GAMMAPY_DATA/tests/hess_event_list.fits"
+        filename = "$GAMMAPY_DATA/tests/pointing_table.fits.gz"
         cls.fpi = FixedPointingInfo.read(filename)
 
     def test_location(self):
@@ -53,7 +53,7 @@ class TestFixedPointingInfo:
 class TestPointingInfo:
     @classmethod
     def setup_class(cls):
-        filename = "$GAMMAPY_DATA/tests/hess_event_list.fits"
+        filename = "$GAMMAPY_DATA/tests/pointing_table.fits.gz"
         cls.pointing_info = PointingInfo.read(filename)
 
     def test_str(self):

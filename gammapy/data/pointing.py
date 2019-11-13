@@ -24,7 +24,7 @@ class FixedPointingInfo:
     Examples
     --------
     >>> from gammapy.data import PointingInfo
-    >>> path = '$GAMMAPY_DATA/tests/hess_event_list.fits'
+    >>> path = '$GAMMAPY_DATA/tests/pointing_table.fits.gz'
     >>> pointing_info = PointingInfo.read(path)
     >>> print(pointing_info)
     """
@@ -118,7 +118,7 @@ class PointingInfo:
     Examples
     --------
     >>> from gammapy.data import PointingInfo
-    >>> pointing_info = PointingInfo.read('$GAMMAPY_DATA/tests/hess_event_list.fits')
+    >>> pointing_info = PointingInfo.read('$GAMMAPY_DATA/tests/pointing_table.fits.gz')
     >>> print(pointing_info)
     """
 

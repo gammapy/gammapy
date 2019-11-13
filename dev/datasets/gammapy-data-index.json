@@ -2662,10 +2662,10 @@
     "hashmd5": "fe0444d0c51306c4626840e744127da6"
    },
    {
-    "path": "tests/hess_event_list.fits",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/hess_event_list.fits",
-    "filesize": 1238400,
-    "hashmd5": "6d3de88c6d6b5f5d6ecaf9ae3e2666d1"
+    "path": "tests/pointing_table.fits.gz",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/pointing_table.fits.gz",
+    "filesize": 999284,
+    "hashmd5": "9efaebe942886a2d7e4112764a347b22"
    },
    {
     "path": "tests/models/gc_example_data_g09.fits",
