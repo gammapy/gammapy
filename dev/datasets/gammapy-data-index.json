@@ -2662,12 +2662,6 @@
     "hashmd5": "fe0444d0c51306c4626840e744127da6"
    },
    {
-    "path": "tests/psf_table_023523.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/psf_table_023523.fits.gz",
-    "filesize": 273506,
-    "hashmd5": "3ea3a042ceebb05a22ddc1b090f16be5"
-   },
-   {
     "path": "tests/hess_event_list.fits",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/hess_event_list.fits",
     "filesize": 1238400,
