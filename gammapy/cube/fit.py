@@ -450,6 +450,7 @@ class MapDataset(Dataset):
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
+                mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or)
                 self.psf.stack(other.psf)
             else:
                 raise ValueError("Stacking of PSF kernels not supported")
@@ -1115,50 +1116,6 @@ class MapDatasetOnOff(MapDataset):
             mask_safe=mask_safe,
             name=name,
             **kwargs,
-        )
-
-    @classmethod
-    def create(
-        cls,
-        geom,
-        geom_irf=None,
-        migra_axis=None,
-        rad_axis=None,
-        reference_time="2000-01-01",
-        name="",
-        **kwargs,
-    ):
-        """Creates a MapDataset object with zero filled maps
-
-        Parameters
-        ----------
-        geom: `~gammapy.maps.WcsGeom`
-            Reference target geometry in reco energy, used for counts and background maps
-        geom_irf: `~gammapy.maps.WcsGeom`
-            Reference image geometry in true energy, used for IRF maps.
-        migra_axis: `~gammapy.maps.MapAxis`
-            Migration axis for the energy dispersion map
-        rad_axis: `~gammapy.maps.MapAxis`
-            Rad axis for the psf map
-        reference_time: `~astropy.time.Time`
-            the reference time to use in GTI definition
-        name : str
-            Name of the dataset.
-        """
-        geom_irf = geom_irf or geom.to_binsz(BINSZ_IRF_DEFAULT)
-        migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
-        rad_axis = rad_axis or RAD_AXIS_DEFAULT
-        energy_axis = geom_irf.get_axis_by_name("ENERGY")
-
-        geom_exposure = geom.to_image().to_cube([energy_axis])
-        geom_psf = geom_irf.to_image().to_cube([rad_axis, energy_axis])
-        geom_edisp = geom_irf.to_image().to_cube([migra_axis, energy_axis])
-
-        return cls.from_geoms(
-            geom=geom,
-            geom_exposure=geom_exposure,
-            geom_psf=geom_psf,
-            geom_edisp=geom_edisp,
         )
 
     def _is_stackable(self):
