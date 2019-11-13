@@ -311,18 +311,25 @@ class EDispMap:
         if self.exposure_map is None or other.exposure_map is None:
             raise ValueError("Missing exposure map for PSFMap.stack")
 
-        geom_image = other.edisp_map.geom.to_image()
-        coords = geom_image.get_coord()
+        cutout_info = other.edisp_map.geom.cutout_info
 
-        # compute indices in the map to stack in
-        idx_x, idx_y = self.edisp_map.geom.to_image().coord_to_idx(coords)
-        slice_ = (Ellipsis, idx_y, idx_x)
+        if cutout_info is not None:
+            slices = cutout_info["parent-slices"]
+            parent_slices = Ellipsis, slices[0], slices[1]
 
-        self.edisp_map.data[slice_] *= self.exposure_map.data[slice_]
-        self.edisp_map.data[slice_] += other.edisp_map.data * other.exposure_map.data
-        self.exposure_map.data[slice_] += other.exposure_map.data
+            slices = cutout_info["cutout-slices"]
+            cutout_slices = Ellipsis, slices[0], slices[1]
+        else:
+            parent_slices, cutout_slices = None, None
+
+        self.edisp_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
+        self.edisp_map.data[parent_slices] += (other.edisp_map.data * other.exposure_map.data)[cutout_slices]
+
+        # stack exposure map
+        self.exposure_map.stack(other.exposure_map)
+
         with np.errstate(invalid="ignore"):
-            self.edisp_map.data[slice_] /= self.exposure_map.data[slice_]
+            self.edisp_map.data[parent_slices] /= self.exposure_map.data[parent_slices]
             self.edisp_map.data = np.nan_to_num(self.edisp_map.data)
 
     def copy(self):
