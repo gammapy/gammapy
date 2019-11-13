@@ -94,11 +94,10 @@ class TestEnergyDispersion:
 
 @requires_data()
 class TestEnergyDispersion2D:
-    def setup(self):
-        # TODO: use from_gauss method to create know edisp (see below)
-        # At the moment only 1 test uses it (test_get_response)
-        filename = "$GAMMAPY_DATA/tests/irf/hess/pa/hess_edisp_2d_023523.fits.gz"
-        self.edisp = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
+    @classmethod
+    def setup_class(cls):
+        filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+        cls.edisp = EnergyDispersion2D.read(filename, hdu="EDISP")
 
         # Make a test case
         e_true = np.logspace(-1.0, 2.0, 51) * u.TeV
@@ -106,25 +105,12 @@ class TestEnergyDispersion2D:
         offset = np.linspace(0.0, 2.5, 5) * u.deg
         sigma = 0.15 / (e_true[:-1] / (1 * u.TeV)).value ** 0.3
         bias = 1e-3 * (e_true[:-1] - 1 * u.TeV).value
-        self.edisp2 = EnergyDispersion2D.from_gauss(e_true, migra, bias, sigma, offset)
+        cls.edisp2 = EnergyDispersion2D.from_gauss(e_true, migra, bias, sigma, offset)
 
     def test_str(self):
         assert "EnergyDispersion2D" in str(self.edisp)
 
     def test_evaluation(self):
-        # TODO: Move to tests for NDDataArray
-        # Check that nodes are evaluated correctly
-        e_node = 12
-        off_node = 3
-        m_node = 5
-        offset = self.edisp.data.axis("offset").center[off_node]
-        energy = self.edisp.data.axis("e_true").center[e_node]
-        migra = self.edisp.data.axis("migra").center[m_node]
-        actual = self.edisp.data.evaluate(offset=offset, e_true=energy, migra=migra)
-        desired = self.edisp.data.data[e_node, m_node, off_node]
-        assert_allclose(actual, desired, rtol=1e-06)
-        assert_allclose(actual, 0.09388659149, rtol=1e-06)
-
         # Check output shape
         energy = [1, 2] * u.TeV
         migra = np.array([0.98, 0.97, 0.7])
