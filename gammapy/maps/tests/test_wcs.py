@@ -242,10 +242,7 @@ def test_cutout():
 
 
 def test_cutout_info():
-    geom = WcsGeom.create(
-        skydir=(0, 0),
-        npix=10,
-    )
+    geom = WcsGeom.create(skydir=(0, 0), npix=10)
     position = SkyCoord(0, 0, unit="deg")
     cutout_geom = geom.cutout(position=position, width="2 deg")
     assert cutout_geom.cutout_info["parent-slices"][0].start == 3
