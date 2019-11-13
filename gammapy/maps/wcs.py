@@ -19,7 +19,7 @@ from .geom import (
     pix_tuple_to_idx,
     skycoord_to_lonlat,
 )
-from .utils import INVALID_INDEX
+from .utils import INVALID_INDEX, slice_to_str, str_to_slice
 
 __all__ = ["WcsGeom"]
 
@@ -500,7 +500,18 @@ class WcsGeom(Geom):
             npix = (header["NAXIS1"], header["NAXIS2"])
             cdelt = None
 
-        return cls(wcs, npix, cdelt=cdelt, axes=axes)
+        if "PSLICE1" in header:
+            cutout_info = {}
+            cutout_info["parent-slices"] = (
+                str_to_slice(header["PSLICE2"]), str_to_slice(header["PSLICE1"])
+            )
+            cutout_info["cutout-slices"] = (
+                str_to_slice(header["CSLICE2"]), str_to_slice(header["CSLICE1"])
+            )
+        else:
+            cutout_info = None
+
+        return cls(wcs, npix, cdelt=cdelt, axes=axes, cutout_info=cutout_info)
 
     def _make_bands_cols(self, hdu=None, conv=None):
 
@@ -543,6 +554,16 @@ class WcsGeom(Geom):
         for ax in self.axes:
             shape += f",{ax.nbin}"
         header["WCSSHAPE"] = f"({shape})"
+
+        if self.cutout_info is not None:
+            slices_parent = self.cutout_info["parent-slices"]
+            slices_cutout = self.cutout_info["cutout-slices"]
+
+            header["PSLICE1"] = (slice_to_str(slices_parent[1]), "Parent slice")
+            header["PSLICE2"] = (slice_to_str(slices_parent[0]), "Parent slice")
+            header["CSLICE1"] = (slice_to_str(slices_cutout[1]), "Cutout slice")
+            header["CSLICE2"] = (slice_to_str(slices_cutout[0]), "Cutout slice")
+
         return header
 
     def get_image_shape(self, idx):
