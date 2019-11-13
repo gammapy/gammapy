@@ -19,7 +19,7 @@ from .geom import (
     pix_tuple_to_idx,
     skycoord_to_lonlat,
 )
-from .utils import INVALID_INDEX
+from .utils import INVALID_INDEX, slice_to_str, str_to_slice
 
 __all__ = ["WcsGeom"]
 
@@ -500,7 +500,18 @@ class WcsGeom(Geom):
             npix = (header["NAXIS1"], header["NAXIS2"])
             cdelt = None
 
-        return cls(wcs, npix, cdelt=cdelt, axes=axes)
+        if "PSLICE1" in header:
+            cutout_info = {}
+            cutout_info["parent-slices"] = (
+                str_to_slice(header["PSLICE2"]), str_to_slice(header["PSLICE1"])
+            )
+            cutout_info["cutout-slices"] = (
+                str_to_slice(header["CSLICE2"]), str_to_slice(header["CSLICE1"])
+            )
+        else:
+            cutout_info = None
+
+        return cls(wcs, npix, cdelt=cdelt, axes=axes, cutout_info=cutout_info)
 
     def _make_bands_cols(self, hdu=None, conv=None):
 
@@ -543,6 +554,16 @@ class WcsGeom(Geom):
         for ax in self.axes:
             shape += f",{ax.nbin}"
         header["WCSSHAPE"] = f"({shape})"
+
+        if self.cutout_info is not None:
+            slices_parent = self.cutout_info["parent-slices"]
+            slices_cutout = self.cutout_info["cutout-slices"]
+
+            header["PSLICE1"] = (slice_to_str(slices_parent[1]), "Parent slice")
+            header["PSLICE2"] = (slice_to_str(slices_parent[0]), "Parent slice")
+            header["CSLICE1"] = (slice_to_str(slices_cutout[1]), "Cutout slice")
+            header["CSLICE2"] = (slice_to_str(slices_cutout[0]), "Cutout slice")
+
         return header
 
     def get_image_shape(self, idx):
@@ -705,27 +726,14 @@ class WcsGeom(Geom):
     def to_image(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
-
-        if self.cutout_info:
-            cutout_info = self.cutout_info.copy()
-            cutout_info["parent-geom"] = cutout_info["parent-geom"].to_image()
-        else:
-            cutout_info = None
-        return self.__class__(self._wcs, npix, cdelt=cdelt, cutout_info=cutout_info)
+        return self.__class__(self._wcs, npix, cdelt=cdelt, cutout_info=self.cutout_info)
 
     def to_cube(self, axes):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
         axes = copy.deepcopy(self.axes) + axes
-
-        if self.cutout_info:
-            cutout_info = self.cutout_info.copy()
-            cutout_info["parent-geom"] = cutout_info["parent-geom"].to_cube(axes)
-        else:
-            cutout_info = None
-
         return self.__class__(
-            self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes, cutout_info=cutout_info
+            self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes, cutout_info=self.cutout_info
         )
 
     def pad(self, pad_width):
@@ -904,7 +912,6 @@ class WcsGeom(Geom):
         )
 
         cutout_info = {
-            "parent-geom": self,
             "parent-slices": c2d.slices_original,
             "cutout-slices": c2d.slices_cutout,
         }
@@ -991,6 +998,28 @@ class WcsGeom(Geom):
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
             f"\twidth      : {self.width[0][0]:.1f} x {self.width[1][0]:.1f}\n"
         )
+
+    def is_aligned(self, other, tolerance=1e-6):
+        """Check if WCS and extra axes are aligned.
+
+        Parameters
+        ----------
+        other : `WcsGeom`
+            Other geom.
+        tolerance : float
+            Tolerance for the comparison.
+
+        Returns
+        -------
+        aligned : bool
+            Whether geometries are aligned
+        """
+        for axis, otheraxis in zip(self.axes, other.axes):
+            if axis != otheraxis:
+                return False
+
+        # check WCS consistency with a priori tolerance of 1e-6
+        return self.wcs.wcs.compare(other.wcs.wcs, cmp=2, tolerance=tolerance)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):

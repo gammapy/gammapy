@@ -157,3 +157,13 @@ def edges_from_lo_hi(edges_lo, edges_hi):
     except AttributeError:
         edges = np.insert(edges, len(edges), edges_hi[-1])
     return edges
+
+
+def slice_to_str(slice_):
+    return f"{slice_.start}:{slice_.stop}"
+
+
+def str_to_slice(slice_str):
+    start, stop = slice_str.split(":")
+    return slice(int(start), int(stop))
+
