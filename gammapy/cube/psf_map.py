@@ -307,26 +307,29 @@ class PSFMap:
         other : `~gammapy.cube.PSFMap`
             the psfmap to be stacked with this one.
 
-        Returns
-        -------
-        new : `~gammapy.cube.PSFMap`
-            the stacked psfmap
         """
         if self.exposure_map is None or other.exposure_map is None:
             raise ValueError("Missing exposure map for PSFMap.stack")
 
-        geom_image = other.psf_map.geom.to_image()
-        coords = geom_image.get_coord()
+        cutout_info = other.psf_map.geom.cutout_info
 
-        # compute indices in the map to stack in
-        idx_x, idx_y = self.psf_map.geom.to_image().coord_to_idx(coords)
-        slice_ = (Ellipsis, idx_y, idx_x)
+        if cutout_info is not None:
+            slices = cutout_info["parent-slices"]
+            parent_slices = Ellipsis, slices[0], slices[1]
 
-        self.psf_map.data[slice_] *= self.exposure_map.data[slice_]
-        self.psf_map.data[slice_] += other.psf_map.data * other.exposure_map.data
-        self.exposure_map.data[slice_] += other.exposure_map.data
+            slices = cutout_info["cutout-slices"]
+            cutout_slices = Ellipsis, slices[0], slices[1]
+        else:
+            parent_slices, cutout_slices = None, None
+
+        self.psf_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
+        self.psf_map.data[parent_slices] += (other.psf_map.data * other.exposure_map.data)[cutout_slices]
+
+        # stack exposure map
+        self.exposure_map.stack(other.exposure_map)
+
         with np.errstate(invalid="ignore"):
-            self.psf_map.data[slice_] /= self.exposure_map.data[slice_]
+            self.psf_map.data[parent_slices] /= self.exposure_map.data[parent_slices]
             self.psf_map.data = np.nan_to_num(self.psf_map.data)
 
     def copy(self):
