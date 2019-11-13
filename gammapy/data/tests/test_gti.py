@@ -11,26 +11,24 @@ from gammapy.utils.time import time_ref_to_dict
 
 @requires_data()
 def test_gti_hess():
-    filename = "$GAMMAPY_DATA/tests/unbundled/hess/run_0023037_hard_eventlist.fits.gz"
-    gti = GTI.read(filename)
+    gti = GTI.read("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz")
     assert "GTI" in str(gti)
     assert len(gti.table) == 1
 
     assert gti.time_delta[0].unit == "s"
-    assert_allclose(gti.time_delta[0].value, 1568.00000)
-    assert_allclose(gti.time_sum.value, 1568.00000)
+    assert_allclose(gti.time_delta[0].value, 1682)
+    assert_allclose(gti.time_sum.value, 1682)
 
-    expected = Time(53292.00592592593, format="mjd", scale="tt")
+    expected = Time(53090.123451203704, format="mjd", scale="tt")
     assert_time_allclose(gti.time_start[0], expected)
 
-    expected = Time(53292.02407407408, format="mjd", scale="tt")
+    expected = Time(53090.14291879629, format="mjd", scale="tt")
     assert_time_allclose(gti.time_stop[0], expected)
 
 
 @requires_data()
 def test_gti_fermi():
-    filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
-    gti = GTI.read(filename)
+    gti = GTI.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz")
     assert "GTI" in str(gti)
     assert len(gti.table) == 39042
 
@@ -76,8 +74,7 @@ def test_gti_fermi():
     ],
 )
 def test_select_time(time_interval, expected_length, expected_times):
-    filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
-    gti = GTI.read(filename)
+    gti = GTI.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz")
 
     gti_selected = gti.select_time(time_interval)
 
