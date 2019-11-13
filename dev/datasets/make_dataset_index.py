@@ -97,11 +97,6 @@ class DatasetCatalogs(DownloadDataset):
     description = "tbd"
 
 
-class DatasetFermi2FHL(DownloadDataset):
-    name = "fermi_2fhl"
-    description = "tbd"
-
-
 class DatasetFermi3FHL(DownloadDataset):
     name = "fermi_3fhl"
     description = "tbd"
