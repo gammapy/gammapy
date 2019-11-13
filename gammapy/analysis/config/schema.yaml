@@ -143,6 +143,12 @@ properties:
             fp_binning:
                 "$ref": "#/definitions/map_axis"
 
+    detection:
+        type: object
+        additionalProperties: false
+        properties:
+            threshold: {type: number}
+
 if:
     properties:
         datasets:
