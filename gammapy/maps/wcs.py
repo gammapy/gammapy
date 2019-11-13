@@ -726,27 +726,14 @@ class WcsGeom(Geom):
     def to_image(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
-
-        if self.cutout_info:
-            cutout_info = self.cutout_info.copy()
-            cutout_info["parent-geom"] = cutout_info["parent-geom"].to_image()
-        else:
-            cutout_info = None
-        return self.__class__(self._wcs, npix, cdelt=cdelt, cutout_info=cutout_info)
+        return self.__class__(self._wcs, npix, cdelt=cdelt, cutout_info=self.cutout_info)
 
     def to_cube(self, axes):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
         axes = copy.deepcopy(self.axes) + axes
-
-        if self.cutout_info:
-            cutout_info = self.cutout_info.copy()
-            cutout_info["parent-geom"] = cutout_info["parent-geom"].to_cube(axes)
-        else:
-            cutout_info = None
-
         return self.__class__(
-            self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes, cutout_info=cutout_info
+            self._wcs.deepcopy(), npix, cdelt=cdelt, axes=axes, cutout_info=self.cutout_info
         )
 
     def pad(self, pad_width):
@@ -925,7 +912,6 @@ class WcsGeom(Geom):
         )
 
         cutout_info = {
-            "parent-geom": self,
             "parent-slices": c2d.slices_original,
             "cutout-slices": c2d.slices_cutout,
         }
@@ -1012,6 +998,28 @@ class WcsGeom(Geom):
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
             f"\twidth      : {self.width[0][0]:.1f} x {self.width[1][0]:.1f}\n"
         )
+
+    def is_aligned(self, other, tolerance=1e-6):
+        """Check if WCS and extra axes are aligned.
+
+        Parameters
+        ----------
+        other : `WcsGeom`
+            Other geom.
+        tolerance : float
+            Tolerance for the comparison.
+
+        Returns
+        -------
+        aligned : bool
+            Whether geometries are aligned
+        """
+        for axis, otheraxis in zip(self.axes, other.axes):
+            if axis != otheraxis:
+                return False
+
+        # check WCS consistency with a priori tolerance of 1e-6
+        return self.wcs.wcs.compare(other.wcs.wcs, cmp=2, tolerance=tolerance)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
