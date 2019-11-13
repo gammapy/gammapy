@@ -186,6 +186,9 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
     def is_pointlike(self):
         return self.data["Extended_Source_Name"].strip() == ""
 
+    # FIXME: this should be renamed `set_position_error`,
+    # and `phi_0` isn't filled correctly, other parameters missing
+    # see https://github.com/gammapy/gammapy/pull/2533#issuecomment-553329049
     def _set_spatial_errors(self, model):
         d = self.data
 
@@ -206,8 +209,10 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         scale_1sigma = Gauss2DPDF().containment_radius(percent)
         lat_err = semi_major.to("deg") / scale_1sigma
         lon_err = semi_minor.to("deg") / scale_1sigma / np.cos(d["DEJ2000"].to("rad"))
-        model.parameters.set_error(lon_0=lon_err, lat_0=lat_err)
-        model.phi_0 = phi_0
+
+        if model.tag != "TemplateSpatialModel":
+            model.parameters.set_error(lon_0=lon_err, lat_0=lat_err)
+            model.phi_0 = phi_0
 
     def sky_model(self):
         """Sky model (`~gammapy.modeling.models.SkyModel`)."""
