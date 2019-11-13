@@ -82,52 +82,10 @@
   "description": "tbd",
   "files": [
    {
-    "path": "catalogs/2014PASA...31...42G_table2.reg",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/2014PASA...31...42G_table2.reg",
-    "filesize": 3364,
-    "hashmd5": "20cb648b0835d46db6a6182ff6d3ab03"
-   },
-   {
-    "path": "catalogs/ATNF_v1.51.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/ATNF_v1.51.fits.gz",
-    "filesize": 344565,
-    "hashmd5": "dc2d2c951e68cc420b180503c90ec2a3"
-   },
-   {
-    "path": "catalogs/Green_2014-05.reg",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/Green_2014-05.reg",
-    "filesize": 43474,
-    "hashmd5": "6fd5775833de09a4144410151ccad248"
-   },
-   {
-    "path": "catalogs/ATNF_v1.51.reg",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/ATNF_v1.51.reg",
-    "filesize": 378595,
-    "hashmd5": "2f638f9c3df59d8042e1d82a6ae3c658"
-   },
-   {
     "path": "catalogs/2HWC.ecsv",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/2HWC.ecsv",
     "filesize": 7113,
     "hashmd5": "869634db5af53014eedd68f0db937c0e"
-   },
-   {
-    "path": "catalogs/make_2014PASA...31...42G_table2.py",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/make_2014PASA...31...42G_table2.py",
-    "filesize": 1478,
-    "hashmd5": "6123d5d9e706297c8a0ed65fad20c674"
-   },
-   {
-    "path": "catalogs/2014PASA...31...42G_table2.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/2014PASA...31...42G_table2.fits.gz",
-    "filesize": 1905,
-    "hashmd5": "2ef7de05015a57ef679555f6f4d361d2"
-   },
-   {
-    "path": "catalogs/make_snrcat.py",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/make_snrcat.py",
-    "filesize": 578,
-    "hashmd5": "a95225774358b805349ac2dcf4a394df"
    },
    {
     "path": "catalogs/make_2hwc.py",
@@ -142,40 +100,10 @@
     "hashmd5": "75aa4e1c8c7f7a404f798eaf1406d80f"
    },
    {
-    "path": "catalogs/make_region_files.py",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/make_region_files.py",
-    "filesize": 887,
-    "hashmd5": "dab41fcbedd730a93ac7819a6b8d549b"
-   },
-   {
-    "path": "catalogs/make_green.py",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/make_green.py",
-    "filesize": 2697,
-    "hashmd5": "c37a4792c09b0f9219ed0cef6afc1443"
-   },
-   {
-    "path": "catalogs/2014PASA...31...42G_table2.csv",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/2014PASA...31...42G_table2.csv",
-    "filesize": 1493,
-    "hashmd5": "0cdb18601964826a82d10432f4641b05"
-   },
-   {
-    "path": "catalogs/Green_2014-05.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/Green_2014-05.fits.gz",
-    "filesize": 13050,
-    "hashmd5": "1b9f06696d0ae083c80e174a0c9347a7"
-   },
-   {
     "path": "catalogs/README.rst",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/README.rst",
     "filesize": 779,
     "hashmd5": "595c59cd2eead3d5fcf87dc86363dae2"
-   },
-   {
-    "path": "catalogs/snrcat.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/snrcat.fits.gz",
-    "filesize": 35787,
-    "hashmd5": "8f3e75f5aedbb3f4a1ab784ce9eb87b0"
    },
    {
     "path": "catalogs/hgps_catalog_v1.fits.gz",
@@ -184,46 +112,10 @@
     "hashmd5": "be68a10cfcf1fa64f7488da957475b0f"
    },
    {
-    "path": "catalogs/ATNF_v1.54.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/ATNF_v1.54.fits.gz",
-    "filesize": 333844,
-    "hashmd5": "13c8fc60c772298c8ef266cd12383f86"
-   },
-   {
-    "path": "catalogs/green_snrcat_check.ipynb",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/green_snrcat_check.ipynb",
-    "filesize": 110959,
-    "hashmd5": "bf8fa38ef36619f99903ee3a39de7bf6"
-   },
-   {
-    "path": "catalogs/make_atnf.py",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/make_atnf.py",
-    "filesize": 5046,
-    "hashmd5": "f7d066c1724dff84661d88c813834903"
-   },
-   {
     "path": "catalogs/fermi/gll_psch_v09.fit.gz",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/gll_psch_v09.fit.gz",
     "filesize": 521889,
     "hashmd5": "0fc06485f80ac4970bb7aafd8672b2a2"
-   },
-   {
-    "path": "catalogs/fermi/gll_psch_v07.fit.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/gll_psch_v07.fit.gz",
-    "filesize": 73253,
-    "hashmd5": "b0471fe06a96141f22407878e24bac64"
-   },
-   {
-    "path": "catalogs/fermi/gll_psc_v19.fit.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/gll_psc_v19.fit.gz",
-    "filesize": 2969858,
-    "hashmd5": "31f4fb79c3ee240cfd7de6bbe3cb825a"
-   },
-   {
-    "path": "catalogs/fermi/gll_iem_v05_rev1_cutout.fits",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/gll_iem_v05_rev1_cutout.fits",
-    "filesize": 3121920,
-    "hashmd5": "fd5298745a3cfd94a9524ae0bf571638"
    },
    {
     "path": "catalogs/fermi/gll_psch_v13.fit.gz",
