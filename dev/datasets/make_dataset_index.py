@@ -102,11 +102,6 @@ class DatasetFermi3FHL(DownloadDataset):
     description = "tbd"
 
 
-class DatasetFermiSurvey(DownloadDataset):
-    name = "fermi_survey"
-    description = "tbd"
-
-
 class DatasetHESSDL3DR1(DownloadDataset):
     name = "hess-dl3-dr1"
     description = "tbd"
