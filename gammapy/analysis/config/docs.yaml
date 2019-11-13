@@ -104,3 +104,8 @@ flux-points:
         unit: TeV
         interp: log
         node_type: edges
+
+# Section: detection
+# Threshold for source detection on a TS map
+detection:
+    threshold: 8
