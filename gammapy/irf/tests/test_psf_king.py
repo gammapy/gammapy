@@ -8,7 +8,7 @@ from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 @pytest.fixture(scope="session")
 def psf_king():
-    return PSFKing.read("$GAMMAPY_DATA/tests/irf/hess/hess_psf_king_023523.fits.gz")
+    return PSFKing.read("$GAMMAPY_DATA/tests/hess_psf_king_023523.fits.gz")
 
 
 @requires_data()

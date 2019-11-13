@@ -2668,6 +2668,18 @@
     "hashmd5": "9efaebe942886a2d7e4112764a347b22"
    },
    {
+    "path": "tests/README.md",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/README.md",
+    "filesize": 155,
+    "hashmd5": "01f54cdf3f0f41f7cc2da6fb9707f24e"
+   },
+   {
+    "path": "tests/hess_psf_king_023523.fits.gz",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/hess_psf_king_023523.fits.gz",
+    "filesize": 1935,
+    "hashmd5": "d5374ccd22a7644bbc8da4387daa6e54"
+   },
+   {
     "path": "tests/models/gc_example_data_g09.fits",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/gc_example_data_g09.fits",
     "filesize": 60480,
@@ -2738,72 +2750,6 @@
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/light_curve/lightcrv_PKSB1222+216.fits",
     "filesize": 48960,
     "hashmd5": "de1018e14e03b1f89f3734437cebbf89"
-   },
-   {
-    "path": "tests/irf/hess/hess_psf_king_023523.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/irf/hess/hess_psf_king_023523.fits.gz",
-    "filesize": 1935,
-    "hashmd5": "d5374ccd22a7644bbc8da4387daa6e54"
-   },
-   {
-    "path": "tests/irf/hess/README.rst",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/irf/hess/README.rst",
-    "filesize": 447,
-    "hashmd5": "7fe0fb2a64882d3d3475958595c129dd"
-   },
-   {
-    "path": "tests/irf/hess/ogip/run_rmf60741.fits",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/irf/hess/ogip/run_rmf60741.fits",
-    "filesize": 40320,
-    "hashmd5": "97b37c7c465da3bc832ea780a87cff39"
-   },
-   {
-    "path": "tests/irf/hess/ogip/run_arf60741.fits",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/irf/hess/ogip/run_arf60741.fits",
-    "filesize": 11520,
-    "hashmd5": "9dc00a067c55577e1ecad4f854de2f87"
-   },
-   {
-    "path": "tests/irf/hess/pa/hess_aeff_2d_023523.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/irf/hess/pa/hess_aeff_2d_023523.fits.gz",
-    "filesize": 1359,
-    "hashmd5": "3ec50960fa81b0285790e09c7d6ec036"
-   },
-   {
-    "path": "tests/irf/hess/pa/ctskymap.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/irf/hess/pa/ctskymap.fits.gz",
-    "filesize": 4292,
-    "hashmd5": "ea384acdd189e1109fee5fe4049be467"
-   },
-   {
-    "path": "tests/irf/hess/pa/hess_edisp_2d_023523.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/irf/hess/pa/hess_edisp_2d_023523.fits.gz",
-    "filesize": 15084,
-    "hashmd5": "baa473f5669410f5452a054a16363a5c"
-   },
-   {
-    "path": "tests/irf/hess/pa/hess_psf_king_023523.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/irf/hess/pa/hess_psf_king_023523.fits.gz",
-    "filesize": 1511,
-    "hashmd5": "d719f6916e08cebf258acf9e932eaa39"
-   },
-   {
-    "path": "tests/irf/hess/pa/make.py",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/irf/hess/pa/make.py",
-    "filesize": 617,
-    "hashmd5": "70bdad658758f2959991fb762f207de8"
-   },
-   {
-    "path": "tests/irf/hess/pa/hess_bkg_offruns_023523.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/irf/hess/pa/hess_bkg_offruns_023523.fits.gz",
-    "filesize": 239772,
-    "hashmd5": "5017ece9f7bba2b5802dacb39694685d"
-   },
-   {
-    "path": "tests/irf/hess/pa/hess_events_023523.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/irf/hess/pa/hess_events_023523.fits.gz",
-    "filesize": 59678,
-    "hashmd5": "62bfbaa4569f9dccf41507fb036e7f7c"
    },
    {
     "path": "tests/spectrum/total_spectrum_stats_reference.yaml",
