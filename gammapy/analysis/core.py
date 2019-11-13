@@ -34,6 +34,7 @@ DOCS_FILE = CONFIG_PATH / "docs.yaml"
 ANALYSIS_TEMPLATES = {
     "basic": "template-basic.yaml",
     "1d": "template-1d.yaml",
+    "2d": "template-2d.yaml",
     "3d": "template-3d.yaml",
 }
 
