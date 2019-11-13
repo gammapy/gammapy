@@ -640,27 +640,14 @@ class EnergyDispersion2D:
 
     >>> from gammapy.irf import EnergyDispersion2D
     >>> from gammapy.utils.energy import energy_logspace
-    >>> filename = '$GAMMAPY_DATA/tests/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
-    >>> edisp2d = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
-    >>> print(edisp2d)
-    EnergyDispersion2D
-    NDDataArray summary info
-    e_true         : size =    15, min =  0.125 TeV, max = 80.000 TeV
-    migra          : size =   100, min =  0.051, max = 10.051
-    offset         : size =     6, min =  0.125 deg, max =  2.500 deg
-    Data           : size =  9000, min =  0.000, max =  3.405
+    >>> filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz'
+    >>> edisp2d = EnergyDispersion2D.read(filename, hdu="EDISP")
 
     Create energy dispersion matrix (`~gammapy.irf.EnergyDispersion`)
     for a given field of view offset and energy binning:
 
-    >>> energy = energy_logspace(0.1,20,60, 'TeV')
+    >>> energy = energy_logspace(0.1, 20, 60, 'TeV')
     >>> edisp = edisp2d.to_energy_dispersion(offset='1.2 deg', e_reco=energy, e_true=energy)
-    >>> print(edisp)
-    EnergyDispersion
-    NDDataArray summary info
-    e_true         : size =    60, min =  0.105 TeV, max = 19.136 TeV
-    e_reco         : size =    60, min =  0.105 TeV, max = 19.136 TeV
-    Data           : size =  3600, min =  0.000, max =  0.266
 
     See Also
     --------
