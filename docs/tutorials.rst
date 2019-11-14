@@ -63,28 +63,26 @@ Notebooks
 - `CTA data analysis with Gammapy <notebooks/cta_data_analysis.html>`__ | *cta_data_analysis.ipynb*
 - `3D analysis <notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
 - `Joint 3D analysis <notebooks/analysis_3d_joint.html>`__ | *analysis_3d_joint.ipynb*
-- `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
 - `Joint 3D and 1D analysis <notebooks/joint_1d_3d_analysis.html>`__ | *joint_1d_3d_analysis.ipynb*
 
 *2-dim sky image analysis*
 
 - `CTA 2D source fitting with Gammapy <notebooks/image_analysis.html>`__ (DC 1 example) | *image_analysis.ipynb*
-- `CTA 2D source fitting with Sherpa <notebooks/image_fitting_with_sherpa.html>`__ | *image_fitting_with_sherpa.ipynb*
 - `Source detection <notebooks/detect.html>`__ | *detect.ipynb*
 
 *1-dim spectral analysis*
 
-- `Spectral simulation with Gammapy <notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
 - `Spectral analysis with Gammapy  <notebooks/spectrum_analysis.html>`__ (H.E.S.S. data example) | *spectrum_analysis.ipynb*
-- `Fitting Gammapy spectra with sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
 - `Flux point fitting with Gammapy <notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
 
 *Time-dependent analysis*
 
 - `Light curves <notebooks/light_curve.html>`__ | *light_curve.ipynb*
 
-**Sensitivity**
+**Simulations, Sensitivity, Observability**
 
+- `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
+- `Spectral simulation with Gammapy <notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
 - `Compute the CTA sensitivity <notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
 
 **Gammapy package**
@@ -132,6 +130,8 @@ These notebooks contain examples on some more specialised functionality in Gamma
 - `Make template background model <notebooks/background_model.html>`__ | *background_model.ipynb*
 - `MCMC sampling of Gammapy models using the emcee package <notebooks/mcmc_sampling.html>`__ | *mcmc_sampling.ipynb*
 - `Pulsar analysis with Gammapy <notebooks/pulsar_analysis.html>`__ | *pulsar_analysis.ipynb*
+- `2D image fitting with Sherpa <notebooks/image_fitting_with_sherpa.html>`__ | *image_fitting_with_sherpa.ipynb*
+- `1D spectrum fitting with Sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
 
 .. _tutorials_basics:
 
