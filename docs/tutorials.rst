@@ -44,35 +44,36 @@ Notebooks
    notebooks/joint_1d_3d_analysis.ipynb
 
 
-For a quick introduction to Gammapy, go here:
+**Getting started**
 
 - `First steps with Gammapy <notebooks/first_steps.html>`__  | *first_steps.ipynb*
 - `First analysis <notebooks/first_analysis.html>`__ | *first_analysis.ipynb*
 - `Maps <notebooks/maps.html>`__  | *maps.ipynb*
 - `Models <notebooks/models.html>`__  | *models.ipynb*
 
-Interested to do a first analysis of simulated CTA data?
+**What data can I analyse?**
 
 - `CTA first data challenge (1DC) with Gammapy <notebooks/cta_1dc_introduction.html>`__ | *cta_1dc_introduction.ipynb*
+- `Fermi-LAT data with Gammapy <notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
+
+**Analyses**
+
+3-dim sky cube analysis:
+
 - `CTA data analysis with Gammapy <notebooks/cta_data_analysis.html>`__ | *cta_data_analysis.ipynb*
-
-
-3-dimensional cube analysis:
-
 - `3D analysis <notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
 - `Joint 3D analysis <notebooks/analysis_3d_joint.html>`__ | *analysis_3d_joint.ipynb*
 - `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
-- `Fermi-LAT data with Gammapy <notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
 - `Joint 3D and 1D analysis <notebooks/joint_1d_3d_analysis.html>`__ | *joint_1d_3d_analysis.ipynb*
 
-2-dimensional sky image analysis:
+2-dim sky image analysis:
 
 - `Source detection with Gammapy <notebooks/detect_ts.html>`__ (Fermi-LAT data example) | *detect_ts.ipynb*
 - `CTA 2D source fitting with Gammapy <notebooks/image_analysis.html>`__ (DC 1 example) | *image_analysis.ipynb*
 - `CTA 2D source fitting with Sherpa <notebooks/image_fitting_with_sherpa.html>`__ | *image_fitting_with_sherpa.ipynb*
 
 
-1-dimensional spectral analysis:
+1-dim spectral analysis:
 
 - `Spectral simulation with Gammapy <notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
 - `Spectral analysis with Gammapy  <notebooks/spectrum_analysis.html>`__ (H.E.S.S. data example) | *spectrum_analysis.ipynb*
