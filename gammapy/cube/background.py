@@ -71,7 +71,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
         energy_reco=energies[:, np.newaxis, np.newaxis],
     )
 
-    d_omega = geom.solid_angle()
+    d_omega = geom.to_image().solid_angle()
     data = (bkg_de * d_omega * ontime).to_value("")
     bkg_map = WcsNDMap(geom, data=data)
 

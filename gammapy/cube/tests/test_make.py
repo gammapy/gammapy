@@ -206,6 +206,7 @@ def test_map_maker_obs(observations):
     assert map_dataset.name == "obs_110380"
 
 
+@requires_data()
 def test_safe_mask_maker(observations):
     obs = observations[0]
 
