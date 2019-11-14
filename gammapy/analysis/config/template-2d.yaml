@@ -33,6 +33,7 @@ datasets:
 fit: {}
 
 detection:
-    threshold: 8
+    threshold: 15
+    map: sqrt_ts
 
 

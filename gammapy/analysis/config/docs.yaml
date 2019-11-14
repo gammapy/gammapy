@@ -109,3 +109,4 @@ flux-points:
 # Threshold for source detection on a TS map
 detection:
     threshold: 8
+    map: flux                 # also sqrt_ts, niter

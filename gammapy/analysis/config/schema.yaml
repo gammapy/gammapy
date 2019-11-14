@@ -148,6 +148,8 @@ properties:
         additionalProperties: false
         properties:
             threshold: {type: number}
+            map:
+                enum: [sqrt_ts, flux, niter]
 
 if:
     properties:
