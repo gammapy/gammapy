@@ -26,7 +26,7 @@ Notebooks
    notebooks/overview.ipynb
    notebooks/maps.ipynb
    notebooks/models.ipynb
-   notebooks/cta_1dc_introduction.ipynb
+   notebooks/cta.ipynb
    notebooks/hess.ipynb
    notebooks/fermi_lat.ipynb
    notebooks/cta_data_analysis.ipynb
@@ -57,9 +57,9 @@ Notebooks
 
 **What data can I analyse?**
 
-- `CTA first data challenge (1DC) with Gammapy <notebooks/cta_1dc_introduction.html>`__ | *cta_1dc_introduction.ipynb*
-- `H.E.S.S. data with Gammapy <notebooks/hess.html>`__ |  *hess.ipynb*
-- `Fermi-LAT data with Gammapy <notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
+- `CTA with Gammapy <notebooks/cta.html>`__ | *cta.ipynb*
+- `H.E.S.S. with Gammapy <notebooks/hess.html>`__ |  *hess.ipynb*
+- `Fermi-LAT with Gammapy <notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
 
 **Analyses**
 
