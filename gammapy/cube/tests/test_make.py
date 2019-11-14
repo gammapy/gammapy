@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.cube import MapDataset, MapDatasetMaker, RingBackgroundMaker
+from gammapy.cube import MapDataset, MapDatasetMaker, RingBackgroundMaker, SafeMaskMaker
 from gammapy.cube.fit import MapDatasetOnOff
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
@@ -103,14 +103,19 @@ def test_map_maker(pars, observations):
         margin_irf=pars["margin_irf"],
     )
 
+    maker = MapDatasetMaker(
+        geom=pars["geom"],
+        energy_axis_true=pars["e_true"],
+        offset_max="2 deg",
+        background_oversampling=pars.get("background_oversampling"),
+        binsz_irf=pars["binsz_irf"],
+        margin_irf=pars["margin_irf"],
+    )
+    safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
+
     for obs in observations:
-        maker = MapDatasetMaker(
-            geom=pars["geom"],
-            energy_axis_true=pars["e_true"],
-            offset_max="2 deg",
-            background_oversampling=pars.get("background_oversampling"),
-        )
         dataset = maker.run(obs)
+        dataset = safe_mask_maker.run(dataset, obs)
         stacked.stack(dataset)
 
     counts = stacked.counts
@@ -144,6 +149,8 @@ def test_map_maker(pars, observations):
 def test_map_maker_ring(observations):
     geomd = geom(ebounds=[0.1, 10])
     map_dataset_maker = MapDatasetMaker(geom=geomd, offset_max="2 deg")
+    safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
+
     stacked = MapDatasetOnOff.create(geomd)
 
     regions = CircleSkyRegion(
@@ -158,6 +165,8 @@ def test_map_maker_ring(observations):
 
     for obs in observations:
         dataset = map_dataset_maker.run(obs)
+        dataset = safe_mask_maker.run(dataset, obs)
+
         dataset = dataset.to_image()
 
         dataset_on_off = ring_bkg.run(dataset)
@@ -195,3 +204,34 @@ def test_map_maker_obs(observations):
     assert map_dataset.psf.exposure_map.data.shape == (3, 1, 6, 11)
     assert_allclose(map_dataset.gti.time_delta, 1800.0 * u.s)
     assert map_dataset.name == "obs_110380"
+
+
+@requires_data()
+def test_safe_mask_maker(observations):
+    obs = observations[0]
+
+    axis = MapAxis.from_edges([0.1, 1, 10], name="energy", interp="log", unit="TeV")
+    geom = WcsGeom.create(npix=(11, 11), axes=[axis], skydir=obs.pointing_radec)
+
+    dataset_maker = MapDatasetMaker(geom=geom, offset_max="3 deg")
+    safe_mask_maker = SafeMaskMaker(offset_max="3 deg")
+    dataset = dataset_maker.run(obs)
+
+    mask_offset = safe_mask_maker.make_mask_offset_max(dataset=dataset, observation=obs)
+    assert_allclose(mask_offset.sum(), 109)
+
+    mask_energy_aeff_default = safe_mask_maker.make_mask_energy_aeff_default(dataset=dataset, observation=obs)
+    assert_allclose(mask_energy_aeff_default.sum(), 242)
+
+    with pytest.raises(NotImplementedError) as excinfo:
+        safe_mask_maker.make_mask_energy_edisp_bias(dataset)
+
+    assert "only supported" in str(excinfo.value)
+
+    with pytest.raises(NotImplementedError) as excinfo:
+        safe_mask_maker.make_mask_energy_edisp_bias(dataset)
+
+    assert "only supported" in str(excinfo.value)
+
+
+

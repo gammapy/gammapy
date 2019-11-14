@@ -10,7 +10,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
-from gammapy.cube import MapDataset, MapDatasetMaker
+from gammapy.cube import MapDataset, MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
@@ -20,7 +20,6 @@ from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
     ReflectedRegionsBackgroundMaker,
-    SafeMaskMaker,
     SpectrumDatasetMaker,
 )
 from gammapy.utils.scripts import make_path, read_yaml
@@ -253,10 +252,13 @@ class Analysis:
         log.info("Creating datasets.")
 
         maker = MapDatasetMaker(geom=geom, offset_max=offset_max, **geom_irf)
+        maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=offset_max)
+
         if self.settings["datasets"]["stack-datasets"]:
             stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
             for obs in self.observations:
                 dataset = maker.run(obs)
+                dataset = maker_safe_mask.run(dataset, obs)
                 stacked.stack(dataset)
             self._extract_irf_kernels(stacked)
             datasets = [stacked]
@@ -264,6 +266,7 @@ class Analysis:
             datasets = []
             for obs in self.observations:
                 dataset = maker.run(obs)
+                dataset = maker_safe_mask.run(dataset, obs)
                 self._extract_irf_kernels(dataset)
                 datasets.append(dataset)
 

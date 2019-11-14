@@ -425,17 +425,22 @@ class MapDataset(Dataset):
 
         if self.counts and other.counts:
             self.counts.data[~self.mask_safe.data] = 0
-            self.counts.stack(other.counts, weights=other.mask_safe.data)
+            self.counts.stack(other.counts, weights=other.mask_safe)
 
         if self.exposure and other.exposure:
-            self.exposure.stack(other.exposure)
-        if self.background_model and other.background_model:
+            # TODO: apply energy dependent mask to exposure
+            mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or)
+            self.exposure.data[..., ~mask_image.data] = 0
 
+            mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
+            self.exposure.stack(other.exposure, weights=mask_image_other)
+
+        if self.background_model and other.background_model:
             bkg = self.background_model.evaluate()
             bkg.data[~self.mask_safe.data] = 0
             other_bkg = other.background_model.evaluate()
-            other_bkg.data[~other.mask_safe.data] = 0
-            bkg.stack(other_bkg)
+            bkg.stack(other_bkg, weights=other.mask_safe)
+
             self.background_model = BackgroundModel(
                 bkg, name=self.background_model.name
             )
@@ -445,6 +450,7 @@ class MapDataset(Dataset):
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
+                mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or)
                 self.psf.stack(other.psf)
             else:
                 raise ValueError("Stacking of PSF kernels not supported")
@@ -891,9 +897,7 @@ class MapDataset(Dataset):
         exposure = exposure.sum_over_axes(keepdims=keepdims)
         background = background.sum_over_axes(keepdims=keepdims)
 
-        idx = self.mask_safe.geom.get_axis_index_by_name("ENERGY")
-        data = np.logical_or.reduce(self.mask_safe.data, axis=idx, keepdims=keepdims)
-        mask_image = WcsNDMap(geom=counts.geom, data=data)
+        mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=keepdims)
 
         # TODO: add edisp and psf
         edisp = None
@@ -1112,50 +1116,6 @@ class MapDatasetOnOff(MapDataset):
             mask_safe=mask_safe,
             name=name,
             **kwargs,
-        )
-
-    @classmethod
-    def create(
-        cls,
-        geom,
-        geom_irf=None,
-        migra_axis=None,
-        rad_axis=None,
-        reference_time="2000-01-01",
-        name="",
-        **kwargs,
-    ):
-        """Creates a MapDataset object with zero filled maps
-
-        Parameters
-        ----------
-        geom: `~gammapy.maps.WcsGeom`
-            Reference target geometry in reco energy, used for counts and background maps
-        geom_irf: `~gammapy.maps.WcsGeom`
-            Reference image geometry in true energy, used for IRF maps.
-        migra_axis: `~gammapy.maps.MapAxis`
-            Migration axis for the energy dispersion map
-        rad_axis: `~gammapy.maps.MapAxis`
-            Rad axis for the psf map
-        reference_time: `~astropy.time.Time`
-            the reference time to use in GTI definition
-        name : str
-            Name of the dataset.
-        """
-        geom_irf = geom_irf or geom.to_binsz(BINSZ_IRF_DEFAULT)
-        migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
-        rad_axis = rad_axis or RAD_AXIS_DEFAULT
-        energy_axis = geom_irf.get_axis_by_name("ENERGY")
-
-        geom_exposure = geom.to_image().to_cube([energy_axis])
-        geom_psf = geom_irf.to_image().to_cube([rad_axis, energy_axis])
-        geom_edisp = geom_irf.to_image().to_cube([migra_axis, energy_axis])
-
-        return cls.from_geoms(
-            geom=geom,
-            geom_exposure=geom_exposure,
-            geom_psf=geom_psf,
-            geom_edisp=geom_edisp,
         )
 
     def _is_stackable(self):

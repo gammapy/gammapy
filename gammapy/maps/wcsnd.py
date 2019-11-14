@@ -220,12 +220,30 @@ class WcsNDMap(WcsMap):
         map_out : WcsNDMap
             Map with non-spatial axes summed over
         """
+        return self.reduce_over_axes(func=np.add, keepdims=keepdims)
+
+    def reduce_over_axes(self, func, keepdims=False):
+        """Reduce map over all non spatial axes
+
+        Parameters
+        ----------
+        func : ~numpy.ufunc
+            Function to use for reducing the data.
+        keepdims : bool, optional
+            If this is set to true, the axes which are summed over are left in
+            the map with a single bin
+
+        Returns
+        -------
+        map_out : WcsNDMap
+            Map with non-spatial axes reduced
+        """
         axis = tuple(range(self.data.ndim - 2))
         geom = self.geom.to_image()
         if keepdims:
             for ax in self.geom.axes:
                 geom = geom.to_cube([ax.squash()])
-        data = np.nansum(self.data, axis=axis, keepdims=keepdims)
+        data = func.reduce(self.data, axis=axis, keepdims=keepdims, where=~np.isnan(self.data))
         # TODO: summing over the axis can change the unit, handle this correctly
         return self._init_copy(geom=geom, data=data)
 
@@ -702,7 +720,7 @@ class WcsNDMap(WcsMap):
         data = other.data[cutout_slices]
 
         if weights is not None:
-            data = data * weights
+            data = data * weights.data
 
         self.data[parent_slices] += data
 

@@ -6,10 +6,10 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from gammapy.data import DataStore
+from gammapy.cube import SafeMaskMaker
 from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.spectrum import (
     ReflectedRegionsBackgroundMaker,
-    SafeMaskMaker,
     SpectrumDatasetMaker,
 )
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
@@ -151,13 +151,13 @@ class TestSpectrumMakerChain:
         [
             (
                 dict(containment_correction=False),
-                dict(n_on=192, sigma=21.1404, aeff=580254.9 * u.m ** 2, edisp=0.236176),
+                dict(n_on=125, sigma=18.953014, aeff=580254.9 * u.m ** 2, edisp=0.236176),
             ),
             (
                 dict(containment_correction=True),
                 dict(
-                    n_on=192,
-                    sigma=21.1404,
+                    n_on=125,
+                    sigma=18.953014,
                     aeff=361924.746081 * u.m ** 2,
                     edisp=0.236176,
                 ),

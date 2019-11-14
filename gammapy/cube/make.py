@@ -17,10 +17,11 @@ from .fit import (
     MIGRA_AXIS_DEFAULT,
     RAD_AXIS_DEFAULT,
     MapDataset,
+    MapDatasetOnOff
 )
 from .psf_map import make_psf_map
 
-__all__ = ["MapDatasetMaker"]
+__all__ = ["MapDatasetMaker", "SafeMaskMaker"]
 
 log = logging.getLogger(__name__)
 
@@ -274,42 +275,6 @@ class MapDatasetMaker:
             exposure_map=exposure,
         )
 
-    def make_mask_safe(self, observation):
-        """Make offset mask.
-
-        Parameters
-        ----------
-        observation : `DataStoreObservation`
-            Observation container.
-
-        Returns
-        -------
-        mask : `Map`
-            Mask
-        """
-        geom = self._cutout_geom(self.geom.to_image(), observation)
-        offset = geom.separation(observation.pointing_radec)
-        data = offset >= self.offset_max
-        return Map.from_geom(geom, data=data)
-
-    def make_mask_safe_irf(self, observation):
-        """Make offset mask with irf geometry.
-
-        Parameters
-        ----------
-        observation : `DataStoreObservation`
-            Observation container.
-
-        Returns
-        -------
-        mask : `Map`
-            Mask
-        """
-        geom = self._cutout_geom(self.geom_exposure_irf.to_image(), observation)
-        offset = geom.separation(observation.pointing_radec)
-        data = offset >= self.offset_max
-        return Map.from_geom(geom, data=data)
-
     def run(self, observation, selection=None):
         """Make map dataset.
 
@@ -329,48 +294,29 @@ class MapDatasetMaker:
         """
         selection = _check_selection(selection)
 
-        mask_safe = self.make_mask_safe(observation)
-        energy_axis = self.geom.get_axis_by_name("energy")
-        mask_safe_3d = (
-            ~mask_safe.data
-            & np.ones(energy_axis.nbin, dtype=bool)[:, np.newaxis, np.newaxis]
-        )
-        mask_map = Map.from_geom(
-            mask_safe.geom.to_cube([energy_axis]), data=mask_safe_3d
-        )
-        mask_safe_irf = self.make_mask_safe_irf(observation)
-
         kwargs = {
             "name": f"obs_{observation.obs_id}",
             "gti": observation.gti,
-            "mask_safe": mask_map,
         }
 
         if "counts" in selection:
             counts = self.make_counts(observation)
-            # TODO: remove masking out the values here and instead handle the safe mask only when
-            #  fitting and / or stacking datasets?
-            counts.data[..., mask_safe.data] = 0
             kwargs["counts"] = counts
 
         if "exposure" in selection:
             exposure = self.make_exposure(observation)
-            exposure.data[..., mask_safe.data] = 0
             kwargs["exposure"] = exposure
 
         if "background" in selection:
             background_map = self.make_background(observation)
-            background_map.data[..., mask_safe.data] = 0
             kwargs["background_model"] = BackgroundModel(background_map)
 
         if "psf" in selection:
             psf = self.make_psf(observation)
-            psf.exposure_map.data[..., mask_safe_irf.data] = 0
             kwargs["psf"] = psf
 
         if "edisp" in selection:
             edisp = self.make_edisp(observation)
-            edisp.exposure_map.data[..., mask_safe_irf.data] = 0
             kwargs["edisp"] = edisp
 
         return MapDataset(**kwargs)
@@ -390,3 +336,162 @@ def _check_selection(selection):
             raise ValueError(f"Selection not available: {name!r}")
 
     return selection
+
+
+class SafeMaskMaker:
+    """Make safe data range mask for a given observation.
+
+    Parameters
+    ----------
+    methods : {"aeff-default", "aeff-max", "edisp-bias", "offset-max"}
+        Method to use for the safe energy range. Can be a
+        list with a combination of those. Resulting masks
+        are combined with logical `and`. "aeff-default"
+        uses the energy ranged specified in the DL3 data
+        files, if available.
+    aeff_percent : float
+        Percentage of the maximal effective area to be used
+        as lower energy threshold for method "aeff-max".
+    bias_percent : float
+        Percentage of the energy bias to be used as lower
+        energy threshold for method "edisp-bias"
+    offset_max : str or `~astropy.units.Quantity`
+        Maximum offset cut.
+    """
+    available_methods = {"aeff-default", "aeff-max", "edisp-bias", "offset-max"}
+
+    def __init__(self, methods=("aeff-default",), aeff_percent=10, bias_percent=10, offset_max="3 deg"):
+        methods = set(methods)
+
+        if not methods.issubset(self.available_methods):
+            difference = methods.difference(self.available_methods)
+            raise ValueError(f"{difference} is not a valid method.")
+
+        self.methods = methods
+        self.aeff_percent = aeff_percent
+        self.bias_percent = bias_percent
+        self.offset_max = Angle(offset_max)
+
+    def make_mask_offset_max(self, dataset, observation):
+        """Make maximum offset mask.
+
+        Parameters
+        ----------
+        dataset : Dataset`
+            Dataset to compute mask for.
+        observation: `DataStoreObservation`
+            Observation to compute mask for.
+
+        Returns
+        -------
+        mask_safe : `~numpy.ndarray`
+            Maximum offset mask.
+
+        """
+        separation = dataset.counts.geom.separation(observation.pointing_radec)
+        return separation < self.offset_max
+
+    @staticmethod
+    def make_mask_energy_aeff_default(dataset, observation):
+        """Make safe energy mask from aeff default.
+
+        Parameters
+        ----------
+        dataset : `Dataset`
+            Dataset to compute mask for.
+        observation: `DataStoreObservation`
+            Observation to compute mask for.
+
+        Returns
+        -------
+        mask_safe : `~numpy.ndarray`
+            Safe data range mask.
+        """
+        try:
+            e_max = observation.aeff.high_threshold
+            e_min = observation.aeff.low_threshold
+        except KeyError:
+            log.warning(f"No thresholds defined for obs {observation}")
+            e_min, e_max = None, None
+
+        # TODO: introduce RegionNDMap and simplify the code below
+        try:
+            mask = dataset.counts.energy_mask(emin=e_min, emax=e_max)
+        except AttributeError:
+            mask = dataset.counts.geom.energy_mask(emin=e_min, emax=e_max)
+
+        return mask
+
+    def make_mask_energy_aeff_max(self, dataset):
+        """Make safe energy mask from aeff max.
+
+        Parameters
+        ----------
+        dataset : `SpectrumDataset` or `SpectrumDatasetOnOff`
+            Dataset to compute mask for.
+
+        Returns
+        -------
+        mask_safe : `~numpy.ndarray`
+            Safe data range mask.
+        """
+        if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
+            raise NotImplementedError("'aeff-max' method currently only supported for spectral datasets")
+
+        aeff_thres = self.aeff_percent / 100 * dataset.aeff.max_area
+        e_min = dataset.aeff.find_energy(aeff_thres)
+        return dataset.counts.energy_mask(emin=e_min)
+
+    def make_mask_energy_edisp_bias(self, dataset):
+        """Make safe energy mask from aeff max.
+
+        Parameters
+        ----------
+        dataset : `SpectrumDataset` or `SpectrumDatasetOnOff`
+            Dataset to compute mask for.
+
+        Returns
+        -------
+        mask_safe : `~numpy.ndarray`
+            Safe data range mask.
+        """
+        if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
+            raise NotImplementedError("'edisp-bias' method currently only supported for spectral datasets")
+
+        e_min = dataset.edisp.get_bias_energy(self.bias_percent / 100)
+        return dataset.counts.energy_mask(emin=e_min)
+
+    def run(self, dataset, observation):
+        """Make safe data range mask.
+
+        Parameters
+        ----------
+        dataset : `Dataset`
+            Dataset to compute mask for.
+        observation: `DataStoreObservation`
+            Observation to compute mask for.
+
+        Returns
+        -------
+        dataset : `Dataset`
+            Dataset with defined safe range mask.
+        """
+        mask_safe = np.ones(dataset.data_shape, dtype=bool)
+
+        if "offset-max" in self.methods:
+            mask_safe &= self.make_mask_offset_max(dataset, observation)
+
+        if "aeff-default" in self.methods:
+            mask_safe &= self.make_mask_energy_aeff_default(dataset, observation)
+
+        if "aeff-max" in self.methods:
+            mask_safe &= self.make_mask_energy_aeff_max(dataset)
+
+        if "edisp-bias" in self.methods:
+            mask_safe &= self.make_mask_energy_edisp_bias(dataset)
+
+        if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
+            mask_safe = Map.from_geom(dataset.counts.geom, data=mask_safe)
+
+        dataset.mask_safe = mask_safe
+        return dataset
