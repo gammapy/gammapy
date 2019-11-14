@@ -348,7 +348,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.mask_safe = Map.from_geom(geom, data=mask_safe)
     dataset_2.mask_safe = Map.from_geom(geom, data=mask_safe)
 
-    stat = fit.datasets.likelihood()
+    stat = fit.datasets.stat_sum()
     assert_allclose(stat, 6425.389198)
 
     # test model evaluation outside image

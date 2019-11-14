@@ -111,7 +111,7 @@ class TestFit:
         assert_allclose(e_max.value, 10)
         assert_allclose(e_min.value, 0.1)
 
-    def test_likelihood_profile(self):
+    def test_stat_profile(self):
         dataset = SpectrumDataset(
             model=self.source_model,
             aeff=self.aeff,
@@ -123,8 +123,8 @@ class TestFit:
         result = fit.run()
         true_idx = result.parameters["index"].value
         values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
-        profile = fit.likelihood_profile("index", values=values)
-        actual = values[np.argmin(profile["likelihood"])]
+        profile = fit.stat_profile("index", values=values)
+        actual = values[np.argmin(profile["stat"])]
         assert_allclose(actual, true_idx, rtol=0.01)
 
 

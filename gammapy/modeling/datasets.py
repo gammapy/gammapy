@@ -120,13 +120,13 @@ class Datasets:
         """Whether all contained datasets have the same data shape"""
         return len(set(_.data_shape for _ in self)) == 1
 
-    def likelihood(self):
+    def stat_sum(self):
         """Compute joint likelihood"""
-        total_likelihood = 0
+        stat_sum = 0
         # TODO: add parallel evaluation of likelihoods
         for dataset in self:
-            total_likelihood += dataset.likelihood()
-        return total_likelihood
+            stat_sum += dataset.stat_sum()
+        return stat_sum
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n"

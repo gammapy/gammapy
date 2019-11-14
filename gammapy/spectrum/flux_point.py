@@ -6,7 +6,7 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.modeling import Dataset, Datasets, Fit
 from gammapy.modeling.models import PowerLawSpectralModel, ScaleSpectralModel, SkyModels
-from gammapy.utils.interpolation import interpolate_likelihood_profile
+from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
 from .dataset import SpectrumDatasetOnOff
@@ -640,7 +640,7 @@ class FluxPoints:
         ax.set_ylabel(f"{self.sed_type} ({y_unit})")
         return ax
 
-    def plot_likelihood(
+    def plot_stat_profiles(
         self,
         ax=None,
         energy_unit="TeV",
@@ -649,7 +649,7 @@ class FluxPoints:
         y_unit=None,
         **kwargs,
     ):
-        """Plot likelihood SED profiles as a density plot..
+        """Plot fit statistic SED profiles as a density plot.
 
         Parameters
         ----------
@@ -658,7 +658,7 @@ class FluxPoints:
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
         y_values : `astropy.units.Quantity`
-            Array of y-values to use for the likelihood profile evaluation.
+            Array of y-values to use for the fit statistic profile evaluation.
         y_unit : str or `astropy.units.Unit`
             Unit to use for the y-axis.
         add_cbar : bool
@@ -690,7 +690,7 @@ class FluxPoints:
 
         x = self.e_edges.to(energy_unit)
 
-        # Compute likelihood "image" one energy bin at a time
+        # Compute fit statistic "image" one energy bin at a time
         # by interpolating e2dnde at the log bin centers
         z = np.empty((len(self.table), len(y_values)))
         for idx, row in enumerate(self.table):
@@ -698,7 +698,7 @@ class FluxPoints:
             norm = (y_values / y_ref).to_value("")
             norm_scan = row["norm_scan"]
             dloglike_scan = row["dloglike_scan"] - row["loglike"]
-            interp = interpolate_likelihood_profile(norm_scan, dloglike_scan)
+            interp = interpolate_profile(norm_scan, dloglike_scan)
             z[idx] = interp((norm,))
 
         kwargs.setdefault("vmax", 0)
@@ -716,7 +716,7 @@ class FluxPoints:
         ax.set_ylabel(f"{self.sed_type} ({y_values.unit})")
 
         if add_cbar:
-            label = "delta log-likelihood"
+            label = "fit statistic difference"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
@@ -749,13 +749,13 @@ class FluxPointsEstimator:
     source : str
         For which source in the model to compute the flux points.
     norm_min : float
-        Minimum value for the norm used for the likelihood profile evaluation.
+        Minimum value for the norm used for the fit statistic profile evaluation.
     norm_max : float
-        Maximum value for the norm used for the likelihood profile evaluation.
+        Maximum value for the norm used for the fit statistic profile evaluation.
     norm_n_values : int
-        Number of norm values used for the likelihood profile.
+        Number of norm values used for the fit statistic profile.
     norm_values : `numpy.ndarray`
-        Array of norm values to be used for the likelihood profile.
+        Array of norm values to be used for the fit statistic profile.
     sigma : int
         Sigma to use for asymmetric error computation.
     sigma_ul : int
@@ -902,7 +902,7 @@ class FluxPointsEstimator:
                 * "errn-errp": estimate asymmetric errors.
                 * "ul": estimate upper limits.
                 * "ts": estimate ts and sqrt(ts) values.
-                * "norm-scan": estimate likelihood profiles.
+                * "norm-scan": estimate fit statistic profiles.
 
             By default all steps are executed.
 
@@ -924,7 +924,7 @@ class FluxPointsEstimator:
             "ref_eflux": self.ref_model.energy_flux(e_min, e_max),
             "ref_e2dnde": self.ref_model(e_ref) * e_ref ** 2,
         }
-        contribute_to_likelihood = False
+        contribute_to_stat = False
 
         for dataset in self.datasets:
             dataset.mask_fit = self._energy_mask(e_group=e_group, dataset=dataset)
@@ -933,15 +933,13 @@ class FluxPointsEstimator:
             if dataset.mask_safe is not None:
                 mask &= dataset.mask_safe
 
-            contribute_to_likelihood |= mask.any()
+            contribute_to_stat |= mask.any()
 
-        if not contribute_to_likelihood:
+        if not contribute_to_stat:
             raise ValueError(
-                "No dataset contributes to the likelihood between"
-                " {e_min:.3f} and {e_max:.3f}. Please adapt the "
-                "flux point energy edges or check the dataset masks.".format(
-                    e_min=e_min, e_max=e_max
-                )
+                f"No dataset contributes to the fit statistic between"
+                f" {e_min:.3f} and {e_max:.3f}. Please adapt the "
+                f"flux point energy edges or check the dataset masks."
             )
 
         with self.datasets.parameters.restore_values:
@@ -1033,7 +1031,7 @@ class FluxPointsEstimator:
         """
         norm = self.model.norm
 
-        # TODO: the minuit backend has convergence problems when the likelihood is not
+        # TODO: the minuit backend has convergence problems when the fit statistic is not
         #  of parabolic shape, which is the case, when there are zero counts in the
         #  energy bin. For this case we change to the scipy backend.
         counts = self.estimate_counts()["counts"]
@@ -1058,7 +1056,7 @@ class FluxPointsEstimator:
         result : dict
             Dict with ts and sqrt(ts) for the flux point.
         """
-        loglike = self.datasets.stat_sum()
+        stat = self.datasets.stat_sum()
 
         # store best fit amplitude, set amplitude of fit model to zero
         self.model.norm.value = 0
@@ -1067,25 +1065,25 @@ class FluxPointsEstimator:
         if self.reoptimize:
             _ = self.fit.optimize()
 
-        loglike_null = self.datasets.stat_sum()
+        stat_null = self.datasets.stat_sum()
 
         # compute sqrt TS
-        ts = np.abs(loglike_null - loglike)
+        ts = np.abs(stat_null - stat)
         sqrt_ts = np.sqrt(ts)
         return {"sqrt_ts": sqrt_ts, "ts": ts}
 
     def estimate_norm_scan(self):
-        """Estimate likelihood profile for the norm parameter.
+        """Estimate fit statistic profile for the norm parameter.
 
         Returns
         -------
         result : dict
             Dict with norm_scan and dloglike_scan for the flux point.
         """
-        result = self.fit.likelihood_profile(
+        result = self.fit.stat_profile(
             self.model.norm, values=self.norm_values, reoptimize=self.reoptimize
         )
-        dloglike_scan = result["likelihood"]
+        dloglike_scan = result["stat"]
         return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
 
     def estimate_norm(self):
@@ -1094,7 +1092,7 @@ class FluxPointsEstimator:
         Returns
         -------
         result : dict
-            Dict with "norm" and "loglike" for the flux point.
+            Dict with "norm" and "stat" for the flux point.
         """
         # start optimization with norm=1
         self.model.norm.value = 1.0
@@ -1107,7 +1105,7 @@ class FluxPointsEstimator:
         else:
             norm = np.nan
 
-        return {"norm": norm, "loglike": result.total_stat, "success": result.success}
+        return {"norm": norm, "stat": result.total_stat, "success": result.success}
 
 
 class FluxPointsDataset(Dataset):
@@ -1121,7 +1119,7 @@ class FluxPointsDataset(Dataset):
     data : `~gammapy.spectrum.FluxPoints`
         Flux points.
     mask_fit : `numpy.ndarray`
-        Mask to apply to the likelihood for fitting.
+        Mask to apply for fitting
     likelihood : {"chi2", "chi2assym"}
         Likelihood function to use for the fit.
     mask_safe : `numpy.ndarray`
@@ -1171,8 +1169,8 @@ class FluxPointsDataset(Dataset):
             self.likelihood_type = likelihood
         else:
             raise ValueError(
-                "'{likelihood}' is not a valid fit statistic, please choose"
-                " either 'chi2' or 'chi2assym'"
+                f"Invalid likelihood: {likelihood!r}."
+                " Choose either 'chi2' or 'chi2assym'."
             )
 
     def write(self, filename, overwrite=True, **kwargs):
@@ -1297,35 +1295,35 @@ class FluxPointsDataset(Dataset):
         return self.data.e_ref.shape
 
     @staticmethod
-    def _likelihood_chi2(data, model, sigma):
+    def _stat_chi2(data, model, sigma):
         return ((data - model) / sigma).to_value("") ** 2
 
     @staticmethod
-    def _likelihood_chi2_assym(data, model, sigma_n, sigma_p):
+    def _stat_chi2_assym(data, model, sigma_n, sigma_p):
         """Assymetric chi2 statistics for a list of flux points and model."""
         is_p = model > data
         sigma = sigma_n
         sigma[is_p] = sigma_p[is_p]
-        return FluxPointsDataset._likelihood_chi2(data, model, sigma)
+        return FluxPointsDataset._stat_chi2(data, model, sigma)
 
     def flux_pred(self):
         """Compute predicted flux."""
         return self.model(self.data.e_ref)
 
     def stat_array(self):
-        """Likelihood per bin given the current model parameters."""
+        """Fit statistic array."""
         model = self.flux_pred()
         data = self.data.table["dnde"].quantity
 
         if self.likelihood_type == "chi2":
             sigma = self.data.table["dnde_err"].quantity
-            return self._likelihood_chi2(data, model, sigma)
+            return self._stat_chi2(data, model, sigma)
         elif self.likelihood_type == "chi2assym":
             sigma_n = self.data.table["dnde_errn"].quantity
             sigma_p = self.data.table["dnde_errp"].quantity
-            return self._likelihood_chi2_assym(data, model, sigma_n, sigma_p)
+            return self._stat_chi2_assym(data, model, sigma_n, sigma_p)
         else:
-            # TODO: add likelihood profiles
+            # TODO: add fit statistic profiles
             pass
 
     def residuals(self, method="diff"):

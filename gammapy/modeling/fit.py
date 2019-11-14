@@ -152,10 +152,10 @@ class Fit:
 
         compute = registry.get("optimize", backend)
         # TODO: change this calling interface!
-        # probably should pass a likelihood, which has a model, which has parameters
+        # probably should pass a fit statistic, which has a model, which has parameters
         # and return something simpler, not a tuple of three things
         factors, info, optimizer = compute(
-            parameters=parameters, function=self.datasets.likelihood, **kwargs
+            parameters=parameters, function=self.datasets.stat_sum, **kwargs
         )
 
         # TODO: Change to a stateless interface for minuit also, or if we must support
@@ -170,7 +170,7 @@ class Fit:
 
         return OptimizeResult(
             parameters=parameters,
-            total_stat=self.datasets.likelihood(),
+            total_stat=self.datasets.stat_sum(),
             backend=backend,
             method=kwargs.get("method", backend),
             **info,
@@ -204,7 +204,7 @@ class Fit:
                     raise RuntimeError("To use minuit, you must first optimize.")
             else:
                 method = ""
-                covariance_factors, info = compute(parameters, self.datasets.likelihood)
+                covariance_factors, info = compute(parameters, self.datasets.stat_sum)
 
         parameters.set_covariance_factors(covariance_factors)
 
@@ -266,7 +266,7 @@ class Fit:
                 result = compute(
                     parameters,
                     parameter,
-                    self.datasets.likelihood,
+                    self.datasets.stat_sum,
                     sigma,
                     reoptimize,
                     **kwargs,
@@ -276,7 +276,7 @@ class Fit:
         result["errn"] *= parameter.scale
         return result
 
-    def likelihood_profile(
+    def stat_profile(
         self,
         parameter,
         values=None,
@@ -285,10 +285,10 @@ class Fit:
         reoptimize=False,
         optimize_opts=None,
     ):
-        """Compute likelihood profile.
+        """Compute fit statistic profile.
 
         The method used is to vary one parameter, keeping all others fixed.
-        So this is taking a "slice" or "scan" of the likelihood.
+        So this is taking a "slice" or "scan" of the fit statistic.
 
         See also: `Fit.minos_profile`.
 
@@ -297,7 +297,7 @@ class Fit:
         parameter : `~gammapy.modeling.Parameter`
             Parameter of interest
         values : `~astropy.units.Quantity` (optional)
-            Parameter values to evaluate the likelihood for.
+            Parameter values to evaluate the fit statistic for.
         bounds : int or tuple of float
             When an `int` is passed the bounds are computed from `bounds * sigma`
             from the best fit value of the parameter, where `sigma` corresponds to
@@ -307,12 +307,12 @@ class Fit:
         nvalues : int
             Number of parameter grid points to use.
         reoptimize : bool
-            Re-optimize other parameters, when computing the likelihood profile.
+            Re-optimize other parameters, when computing the fit statistic profile.
 
         Returns
         -------
         results : dict
-            Dictionary with keys "values" and "likelihood".
+            Dictionary with keys "values" and "stat".
         """
         parameters = self._parameters
         parameter = parameters[parameter]
@@ -329,7 +329,7 @@ class Fit:
 
             values = np.linspace(parmin, parmax, nvalues)
 
-        likelihood = []
+        stats = []
         with parameters.restore_values:
             for value in values:
                 parameter.value = value
@@ -338,16 +338,16 @@ class Fit:
                     result = self.optimize(**optimize_opts)
                     stat = result.total_stat
                 else:
-                    stat = self.datasets.likelihood()
-                likelihood.append(stat)
+                    stat = self.datasets.stat_sum()
+                stats.append(stat)
 
-        return {"values": values, "likelihood": np.array(likelihood)}
+        return {"values": values, "stat": np.array(stats)}
 
-    def likelihood_contour(self):
-        """Compute likelihood contour.
+    def stat_contour(self):
+        """Compute fit statistic contour.
 
         The method used is to vary two parameters, keeping all others fixed.
-        So this is taking a "slice" or "scan" of the likelihood.
+        So this is taking a "slice" or "scan" of the fit statistic.
 
         See also: `Fit.minos_contour`
 
@@ -367,10 +367,10 @@ class Fit:
         Calls ``iminuit.Minuit.mncontour``.
 
         This is a contouring algorithm for a 2D function
-        which is not simply the likelihood function.
+        which is not simply the fit statistic function.
         That 2D function is given at each point ``(par_1, par_2)``
         by re-optimising all other free parameters,
-        and taking the likelihood at that point.
+        and taking the fit statistic at that point.
 
         Very compute-intensive and slow.
 
