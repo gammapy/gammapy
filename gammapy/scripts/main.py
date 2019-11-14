@@ -102,7 +102,7 @@ def cli_download(ctx):  # noqa: D301
     $ gammapy download notebooks
     $ gammapy download datasets
     $ gammapy download tutorials --release 0.8
-    $ gammapy download notebooks --src first_steps
+    $ gammapy download notebooks --src overview
     $ gammapy download datasets --src fermi-3fhl-gc --out localfolder/
     """
 
