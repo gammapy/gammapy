@@ -31,7 +31,7 @@ Notebooks
    notebooks/analysis_3d.ipynb
    notebooks/analysis_3d_joint.ipynb
    notebooks/simulate_3d.ipynb
-   notebooks/detect_ts.ipynb
+   notebooks/detect.ipynb
    notebooks/image_fitting_with_sherpa.ipynb
    notebooks/spectrum_analysis.ipynb
    notebooks/spectrum_fitting_with_sherpa.ipynb
