@@ -145,7 +145,7 @@ class FluxPoints:
             if column.startswith(("dnde", "eflux", "flux", "e2dnde", "ref")):
                 table[column].format = ".3e"
             elif column.startswith(
-                ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "loglike")
+                ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "stat")
             ):
                 table[column].format = ".3f"
 
@@ -697,7 +697,7 @@ class FluxPoints:
             y_ref = self.table["ref_" + self.sed_type].quantity[idx]
             norm = (y_values / y_ref).to_value("")
             norm_scan = row["norm_scan"]
-            dloglike_scan = row["dloglike_scan"] - row["loglike"]
+            dloglike_scan = row["dloglike_scan"] - row["stat"]
             interp = interpolate_profile(norm_scan, dloglike_scan)
             z[idx] = interp((norm,))
 
