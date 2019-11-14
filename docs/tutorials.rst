@@ -45,6 +45,7 @@ Notebooks
    notebooks/maps.ipynb
    notebooks/modeling.ipynb
    notebooks/models.ipynb
+   notebooks/catalog.ipynb
 
 **Getting started**
 
@@ -92,7 +93,7 @@ Notebooks
 - `Maps <notebooks/maps.html>`__  | *maps.ipynb*
 - `Modeling and Fitting <notebooks/models.html>`__  | *modeling.ipynb*
 - `Models Gallery <notebooks/models.html>`__  | *models.ipynb*
-
+- `Source catalogs <notebooks/catalog.html>`__  | *catalog.ipynb*
 
 .. _tutorials_scripts:
 

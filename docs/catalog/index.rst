@@ -103,18 +103,16 @@ that's implemented.
 
 .. code-block:: python
 
-    from gammapy.catalog import SOURCE_CATALOGS
-    source = SOURCE_CATALOGS['3fgl']()['3FGL J0349.9-2102']
-    lc = source.lightcurve
-    lc.plot()
+
 
 Using `gammapy.catalog`
 =======================
 
-For more advanced use cases please go to the tutorial notebooks:
+:ref:`tutorials` that show examples using ``gammapy.catalog``:
 
+* `Source catalogs <../notebooks/catalog.html>`__
+* `Overview <../notebooks/overview.html>`__
 * `hgps.html <../notebooks/hgps.html>`__
-* `overview.html <../notebooks/overview.html>`__
 * `sed_fitting_gammacat_fermi.html <../notebooks/sed_fitting_gammacat_fermi.html>`__
 
 The following pages describe ``gammapy.catalog`` in more detail:
