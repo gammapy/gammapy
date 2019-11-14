@@ -12,6 +12,7 @@ import jsonschema
 import yaml
 from gammapy.cube import MapDataset, MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore, ObservationTable
+from gammapy.detect import TSMapEstimator, find_peaks
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import SkyModels
@@ -71,6 +72,9 @@ class Analysis:
         self.fit = None
         self.fit_result = None
         self.flux_points = None
+        self.TSmaps = None
+        self.detections = None
+        self.detection_map = None
 
     @property
     def config(self):
@@ -226,6 +230,33 @@ class Analysis:
         self.flux_points = FluxPointsDataset(data=fp, model=model)
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
+
+    def detect(self):
+        """Produce TSMaps and table of detections."""
+
+        if not self._validate_detect_settings():
+            return False
+
+        log.info("Proceeding to source detection.")
+        ds = self.datasets["stacked"]
+        spectrum = None
+        if ds.model:
+            if len(ds.model) > 1:
+                raise ValueError("Cannot run source detection multiple spectral models")
+            spectrum = ds.model[0].spectral_model
+        maps = ds.to_image(spectrum=spectrum)
+        maps.counts = maps.counts.sum_over_axes()
+        maps.exposure = maps.exposure.sum_over_axes()
+        maps.background_model.map = maps.background_model.map.sum_over_axes()
+        position = ds.counts.geom.center_skydir
+        energy = ds.counts.geom.get_axis_by_name("energy").center
+        exposure = ds.exposure.get_by_coord({"skycoord": position, "energy": energy})
+        psf2D = ds.psf.make_image(exposures=exposure)
+        maps = {"counts": maps.counts, "background": maps.background_model.map, "exposure": maps.exposure}
+        estimator = TSMapEstimator()
+        self.TSmaps = estimator.run(maps, psf2D.data)
+        self.detection_map = self.TSmaps[self.settings["detection"]["map"]]
+        self.detections = find_peaks(self.detection_map, threshold=self.settings["detection"]["threshold"])
 
     @staticmethod
     def _create_geometry(params):
@@ -400,6 +431,30 @@ class Analysis:
             log.info("Flux points calculation cannot be done.")
         return valid
 
+    def _validate_detect_settings(self):
+        """Validate settings before proceeding to 2D source detection."""
+        valid = True
+        if self.datasets and len(self.datasets) != 0:
+            valid = self.config.validate()
+        else:
+            log.info("No datasets reduced.")
+            valid = False
+        if not self.settings["datasets"]["stack-datasets"]:
+            log.info("Source detection should be done on stacked datasets.")
+            valid = False
+        if "detection" not in self.settings:
+            log.info("No parameters found for source detection.")
+            valid = False
+        else:
+            if "threshold" not in self.settings["detection"]:
+                log.info("Check your threshold parameter.")
+                valid = False
+            if "map" not in self.settings["detection"]:
+                log.info("Check your maps parameter.")
+                valid = False
+        if not valid:
+            log.info("Source detection cannot be done.")
+        return valid
 
 class AnalysisConfig:
     """Analysis configuration.
