@@ -175,9 +175,10 @@ It can be created from an existing FITS file:
 Fitting
 -------
 
-For examples how to fit models to data please check out the following tutorials:
+:ref:`tutorials` that show examples using ``gammapy.modeling``:
 
-- `models.html <../notebooks/models.html>`__
+- `Modeling and Fitting <../notebooks/modeling.html>`__
+- `Model Gallery <../notebooks/models.html>`__
 - `analysis_3d.html <../notebooks/analysis_3d.html>`__
 - `spectrum_analysis.html <../notebooks/spectrum_analysis.html>`__
 
