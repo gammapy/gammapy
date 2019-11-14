@@ -32,7 +32,6 @@ Notebooks
    notebooks/analysis_3d_joint.ipynb
    notebooks/simulate_3d.ipynb
    notebooks/detect.ipynb
-   notebooks/image_fitting_with_sherpa.ipynb
    notebooks/spectrum_analysis.ipynb
    notebooks/spectrum_fitting_with_sherpa.ipynb
    notebooks/sed_fitting_gammacat_fermi.ipynb
@@ -132,7 +131,6 @@ These notebooks contain examples on some more specialised functionality in Gamma
 - `Make template background model <notebooks/background_model.html>`__ | *background_model.ipynb*
 - `MCMC sampling of Gammapy models using the emcee package <notebooks/mcmc_sampling.html>`__ | *mcmc_sampling.ipynb*
 - `Pulsar analysis with Gammapy <notebooks/pulsar_analysis.html>`__ | *pulsar_analysis.ipynb*
-- `2D image fitting with Sherpa <notebooks/image_fitting_with_sherpa.html>`__ | *image_fitting_with_sherpa.ipynb*
 - `1D spectrum fitting with Sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
 
 .. _tutorials_basics:
