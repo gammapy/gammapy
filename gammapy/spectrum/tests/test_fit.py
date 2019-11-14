@@ -61,7 +61,7 @@ class TestFit:
         npred = dataset.npred().data
         assert_allclose(npred[5], 660.5171, rtol=1e-5)
 
-        stat_val = dataset.likelihood()
+        stat_val = dataset.stat_sum()
         assert_allclose(stat_val, -107346.5291, rtol=1e-5)
 
         self.source_model.parameters["index"].value = 1.12

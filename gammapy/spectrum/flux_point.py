@@ -1058,7 +1058,7 @@ class FluxPointsEstimator:
         result : dict
             Dict with ts and sqrt(ts) for the flux point.
         """
-        loglike = self.datasets.likelihood()
+        loglike = self.datasets.stat_sum()
 
         # store best fit amplitude, set amplitude of fit model to zero
         self.model.norm.value = 0
@@ -1067,7 +1067,7 @@ class FluxPointsEstimator:
         if self.reoptimize:
             _ = self.fit.optimize()
 
-        loglike_null = self.datasets.likelihood()
+        loglike_null = self.datasets.stat_sum()
 
         # compute sqrt TS
         ts = np.abs(loglike_null - loglike)
@@ -1289,7 +1289,7 @@ class FluxPointsDataset(Dataset):
                             par.name, par.value, par.unit
                         )
             str_ += "\t{:32}:   {}\n".format("Likelihood type", self.likelihood_type)
-            str_ += "\t{:32}:   {:.2f}\n".format("Likelihood value", self.likelihood())
+            str_ += "\t{:32}:   {:.2f}\n".format("Likelihood value", self.stat_sum())
         return str_
 
     def data_shape(self):

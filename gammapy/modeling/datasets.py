@@ -49,9 +49,8 @@ class Dataset(abc.ABC):
             mask = None
         return mask
 
-    def likelihood(self):
-        """Total likelihood given the current model parameters.
-        """
+    def stat_sum(self):
+        """Total statistic given the current model parameters."""
         stat = self.likelihood_per_bin()
 
         if self.mask is not None:

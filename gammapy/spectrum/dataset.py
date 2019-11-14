@@ -142,7 +142,7 @@ class SpectrumDataset(Dataset):
 
         stat = np.nan
         if self.model is not None:
-            stat = self.likelihood()
+            stat = self.stat_sum()
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
         n_pars, n_free_pars = 0, 0
