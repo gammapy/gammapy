@@ -116,11 +116,6 @@
   requires: iminuit
   datasets:
     - hess-dl3-dr1
-- name: spectrum_fitting_with_sherpa
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_fitting_with_sherpa.ipynb
-  requires: sherpa
-  datasets:
-    - joint-crab
 - name: spectrum_simulation
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_simulation.ipynb
   datasets:
