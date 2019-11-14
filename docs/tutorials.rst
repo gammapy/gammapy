@@ -69,13 +69,13 @@ Notebooks
 
 *2-dim sky image analysis*
 
-- `CTA 2D source fitting with Gammapy <notebooks/image_analysis.html>`__ (DC 1 example) | *image_analysis.ipynb*
+- `2D map analysis <notebooks/image_analysis.html>`__ | *image_analysis.ipynb*
 - `Source detection <notebooks/detect.html>`__ | *detect.ipynb*
 
 *1-dim spectral analysis*
 
-- `Spectral analysis with Gammapy  <notebooks/spectrum_analysis.html>`__ (H.E.S.S. data example) | *spectrum_analysis.ipynb*
-- `Flux point fitting with Gammapy <notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
+- `Spectral analysis  <notebooks/spectrum_analysis.html>`__ | *spectrum_analysis.ipynb*
+- `Flux point fitting <notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
 
 *Time-dependent analysis*
 
@@ -83,15 +83,15 @@ Notebooks
 
 **Simulations, Sensitivity, Observability**
 
-- `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
-- `Spectral simulation with Gammapy <notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
-- `Compute the CTA sensitivity <notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
+- `3D map simulation <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
+- `1D spectrum simulation <notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
+- `Point source sensitivity <notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
 
 **Gammapy package**
 
 - `Overview <notebooks/overview.html>`__  | *overview.ipynb*
 - `Maps <notebooks/maps.html>`__  | *maps.ipynb*
-- `Modeling and Fitting <notebooks/models.html>`__  | *modeling.ipynb*
+- `Modeling and Fitting <notebooks/modeling.html>`__  | *modeling.ipynb*
 - `Models Gallery <notebooks/models.html>`__  | *models.ipynb*
 - `Source catalogs <notebooks/catalog.html>`__  | *catalog.ipynb*
 
@@ -127,7 +127,7 @@ Extra topics
 These notebooks contain examples on some more specialised functionality in Gammapy.
 
 - `H.E.S.S. Galactic plane survey (HGPS) data <notebooks/hgps.html>`__ | *hgps.ipynb*
-- `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
+- `Astrophysical source population modeling <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
 - `Dark matter spatial and spectral models <notebooks/astro_dark_matter.html>`__ | *astro_dark_matter.ipynb*
 - `Make template background model <notebooks/background_model.html>`__ | *background_model.ipynb*
 - `MCMC sampling of Gammapy models using the emcee package <notebooks/mcmc_sampling.html>`__ | *mcmc_sampling.ipynb*
