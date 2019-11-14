@@ -22,6 +22,7 @@ Notebooks
 .. toctree::
    :hidden:
 
+   notebooks/first_analysis.ipynb
    notebooks/first_steps.ipynb
    notebooks/maps.ipynb
    notebooks/models.ipynb
@@ -30,7 +31,6 @@ Notebooks
    notebooks/analysis_3d.ipynb
    notebooks/analysis_3d_joint.ipynb
    notebooks/simulate_3d.ipynb
-   notebooks/hess.ipynb
    notebooks/detect_ts.ipynb
    notebooks/image_fitting_with_sherpa.ipynb
    notebooks/spectrum_analysis.ipynb
@@ -47,6 +47,7 @@ Notebooks
 For a quick introduction to Gammapy, go here:
 
 - `First steps with Gammapy <notebooks/first_steps.html>`__  | *first_steps.ipynb*
+- `First analysis <notebooks/first_analysis.html>`__ | *first_analysis.ipynb*
 - `Maps <notebooks/maps.html>`__  | *maps.ipynb*
 - `Models <notebooks/models.html>`__  | *models.ipynb*
 
@@ -55,9 +56,6 @@ Interested to do a first analysis of simulated CTA data?
 - `CTA first data challenge (1DC) with Gammapy <notebooks/cta_1dc_introduction.html>`__ | *cta_1dc_introduction.ipynb*
 - `CTA data analysis with Gammapy <notebooks/cta_data_analysis.html>`__ | *cta_data_analysis.ipynb*
 
-To get started with H.E.S.S. data analysis see here:
-
-- `H.E.S.S. with Gammapy <notebooks/hess.html>`__ | *hess.ipynb*
 
 3-dimensional cube analysis:
 
