@@ -72,11 +72,6 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/image_analysis.ipynb
   datasets:
     - cta-1dc
-- name: image_fitting_with_sherpa
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/image_fitting_with_sherpa.ipynb
-  requires: sherpa
-  datasets:
-    - cta-1dc
 - name: maps
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/maps.ipynb
   datasets:
@@ -121,11 +116,6 @@
   requires: iminuit
   datasets:
     - hess-dl3-dr1
-- name: spectrum_fitting_with_sherpa
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_fitting_with_sherpa.ipynb
-  requires: sherpa
-  datasets:
-    - joint-crab
 - name: spectrum_simulation
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_simulation.ipynb
   datasets:
