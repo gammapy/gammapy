@@ -22,7 +22,8 @@ Notebooks
 .. toctree::
    :hidden:
 
-   notebooks/analysis1.ipynb
+   notebooks/analysis_1.ipynb
+   notebooks/analysis_2.ipynb
    notebooks/overview.ipynb
    notebooks/maps.ipynb
    notebooks/models.ipynb
@@ -44,10 +45,10 @@ Notebooks
    notebooks/image_analysis.ipynb
    notebooks/joint_1d_3d_analysis.ipynb
 
-
 **Getting started**
 
 - `First analysis <notebooks/analysis_1.html>`__ | *analysis_1.ipynb*
+- `Second analysis <notebooks/analysis_2.html>`__ | *analysis_2.ipynb*
 
 **What data can I analyse?**
 

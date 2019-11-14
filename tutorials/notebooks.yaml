@@ -54,8 +54,12 @@
     - images
     - catalogs
     - ebl
-- name: analysis1
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/analysis1.ipynb
+- name: analysis_1
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/analysis_1.ipynb
+  datasets:
+    - hess-dl3-dr1
+- name: analysis_2
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/analysis_2.ipynb
   datasets:
     - hess-dl3-dr1
 - name: hess
