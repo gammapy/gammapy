@@ -12,7 +12,7 @@ from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, apply_containment_fraction
-from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
 from gammapy.spectrum import SpectrumDataset
@@ -897,7 +897,9 @@ class MapDataset(Dataset):
         exposure = exposure.sum_over_axes(keepdims=keepdims)
         background = background.sum_over_axes(keepdims=keepdims)
 
-        mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=keepdims)
+        mask_image = self.mask_safe.reduce_over_axes(
+            func=np.logical_or, keepdims=keepdims
+        )
 
         # TODO: add edisp and psf
         edisp = None

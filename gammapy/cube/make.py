@@ -17,7 +17,7 @@ from .fit import (
     MIGRA_AXIS_DEFAULT,
     RAD_AXIS_DEFAULT,
     MapDataset,
-    MapDatasetOnOff
+    MapDatasetOnOff,
 )
 from .psf_map import make_psf_map
 
@@ -294,10 +294,7 @@ class MapDatasetMaker:
         """
         selection = _check_selection(selection)
 
-        kwargs = {
-            "name": f"obs_{observation.obs_id}",
-            "gti": observation.gti,
-        }
+        kwargs = {"name": f"obs_{observation.obs_id}", "gti": observation.gti}
 
         if "counts" in selection:
             counts = self.make_counts(observation)
@@ -358,9 +355,16 @@ class SafeMaskMaker:
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
     """
+
     available_methods = {"aeff-default", "aeff-max", "edisp-bias", "offset-max"}
 
-    def __init__(self, methods=("aeff-default",), aeff_percent=10, bias_percent=10, offset_max="3 deg"):
+    def __init__(
+        self,
+        methods=("aeff-default",),
+        aeff_percent=10,
+        bias_percent=10,
+        offset_max="3 deg",
+    ):
         methods = set(methods)
 
         if not methods.issubset(self.available_methods):
@@ -436,7 +440,9 @@ class SafeMaskMaker:
             Safe data range mask.
         """
         if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
-            raise NotImplementedError("'aeff-max' method currently only supported for spectral datasets")
+            raise NotImplementedError(
+                "'aeff-max' method currently only supported for spectral datasets"
+            )
 
         aeff_thres = self.aeff_percent / 100 * dataset.aeff.max_area
         e_min = dataset.aeff.find_energy(aeff_thres)
@@ -456,7 +462,9 @@ class SafeMaskMaker:
             Safe data range mask.
         """
         if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
-            raise NotImplementedError("'edisp-bias' method currently only supported for spectral datasets")
+            raise NotImplementedError(
+                "'edisp-bias' method currently only supported for spectral datasets"
+            )
 
         e_min = dataset.edisp.get_bias_energy(self.bias_percent / 100)
         return dataset.counts.energy_mask(emin=e_min)

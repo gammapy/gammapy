@@ -220,7 +220,9 @@ def test_safe_mask_maker(observations):
     mask_offset = safe_mask_maker.make_mask_offset_max(dataset=dataset, observation=obs)
     assert_allclose(mask_offset.sum(), 109)
 
-    mask_energy_aeff_default = safe_mask_maker.make_mask_energy_aeff_default(dataset=dataset, observation=obs)
+    mask_energy_aeff_default = safe_mask_maker.make_mask_energy_aeff_default(
+        dataset=dataset, observation=obs
+    )
     assert_allclose(mask_energy_aeff_default.sum(), 242)
 
     with pytest.raises(NotImplementedError) as excinfo:
@@ -232,6 +234,3 @@ def test_safe_mask_maker(observations):
         safe_mask_maker.make_mask_energy_edisp_bias(dataset)
 
     assert "only supported" in str(excinfo.value)
-
-
-

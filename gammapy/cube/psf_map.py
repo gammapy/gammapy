@@ -3,7 +3,6 @@ from copy import deepcopy
 import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
-from astropy.coordinates import Angle
 from gammapy.irf import EnergyDependentTablePSF
 from gammapy.maps import Map, MapCoord
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -323,7 +322,9 @@ class PSFMap:
             parent_slices, cutout_slices = None, None
 
         self.psf_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self.psf_map.data[parent_slices] += (other.psf_map.data * other.exposure_map.data)[cutout_slices]
+        self.psf_map.data[parent_slices] += (
+            other.psf_map.data * other.exposure_map.data
+        )[cutout_slices]
 
         # stack exposure map
         self.exposure_map.stack(other.exposure_map)

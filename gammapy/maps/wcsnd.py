@@ -243,7 +243,9 @@ class WcsNDMap(WcsMap):
         if keepdims:
             for ax in self.geom.axes:
                 geom = geom.to_cube([ax.squash()])
-        data = func.reduce(self.data, axis=axis, keepdims=keepdims, where=~np.isnan(self.data))
+        data = func.reduce(
+            self.data, axis=axis, keepdims=keepdims, where=~np.isnan(self.data)
+        )
         # TODO: summing over the axis can change the unit, handle this correctly
         return self._init_copy(geom=geom, data=data)
 

@@ -323,7 +323,9 @@ class EDispMap:
             parent_slices, cutout_slices = None, None
 
         self.edisp_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self.edisp_map.data[parent_slices] += (other.edisp_map.data * other.exposure_map.data)[cutout_slices]
+        self.edisp_map.data[parent_slices] += (
+            other.edisp_map.data * other.exposure_map.data
+        )[cutout_slices]
 
         # stack exposure map
         self.exposure_map.stack(other.exposure_map)
