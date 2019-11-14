@@ -37,8 +37,8 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/cta_sensitivity.ipynb
   datasets:
     - cta-1dc
-- name: detect_ts
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/detect_ts.ipynb
+- name: detect
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/detect.ipynb
   datasets:
     - fermi-3fhl-gc
     - catalogs

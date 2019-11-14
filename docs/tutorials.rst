@@ -68,10 +68,9 @@ Notebooks
 
 *2-dim sky image analysis*
 
-- `Source detection with Gammapy <notebooks/detect_ts.html>`__ (Fermi-LAT data example) | *detect_ts.ipynb*
 - `CTA 2D source fitting with Gammapy <notebooks/image_analysis.html>`__ (DC 1 example) | *image_analysis.ipynb*
 - `CTA 2D source fitting with Sherpa <notebooks/image_fitting_with_sherpa.html>`__ | *image_fitting_with_sherpa.ipynb*
-
+- `Source detection <notebooks/detect.html>`__ | *detect.ipynb*
 
 *1-dim spectral analysis*
 
