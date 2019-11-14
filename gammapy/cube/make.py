@@ -296,6 +296,12 @@ class MapDatasetMaker:
 
         kwargs = {"name": f"obs_{observation.obs_id}", "gti": observation.gti}
 
+        geom = self._cutout_geom(self.geom, observation)
+        mask_safe = Map.from_geom(geom, dtype=bool)
+        mask_safe.data |= True
+
+        kwargs["mask_safe"] = mask_safe
+
         if "counts" in selection:
             counts = self.make_counts(observation)
             kwargs["counts"] = counts

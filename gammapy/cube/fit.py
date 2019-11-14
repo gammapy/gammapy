@@ -450,7 +450,6 @@ class MapDataset(Dataset):
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
-                mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or)
                 self.psf.stack(other.psf)
             else:
                 raise ValueError("Stacking of PSF kernels not supported")
