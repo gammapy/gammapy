@@ -22,7 +22,7 @@ Notebooks
 .. toctree::
    :hidden:
 
-   notebooks/first_analysis.ipynb
+   notebooks/analysis1.ipynb
    notebooks/overview.ipynb
    notebooks/maps.ipynb
    notebooks/models.ipynb
@@ -47,13 +47,7 @@ Notebooks
 
 **Getting started**
 
-- `First analysis <notebooks/first_analysis.html>`__ | *first_analysis.ipynb*
-
-**Gammapy package**
-
-- `Overview <notebooks/overview.html>`__  | *overview.ipynb*
-- `Maps <notebooks/maps.html>`__  | *maps.ipynb*
-- `Models <notebooks/models.html>`__  | *models.ipynb*
+- `First analysis <notebooks/analysis_1.html>`__ | *analysis_1.ipynb*
 
 **What data can I analyse?**
 
@@ -63,7 +57,7 @@ Notebooks
 
 **Analyses**
 
-3-dim sky cube analysis:
+*3-dim sky cube analysis*
 
 - `CTA data analysis with Gammapy <notebooks/cta_data_analysis.html>`__ | *cta_data_analysis.ipynb*
 - `3D analysis <notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
@@ -71,27 +65,34 @@ Notebooks
 - `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
 - `Joint 3D and 1D analysis <notebooks/joint_1d_3d_analysis.html>`__ | *joint_1d_3d_analysis.ipynb*
 
-2-dim sky image analysis:
+*2-dim sky image analysis*
 
 - `Source detection with Gammapy <notebooks/detect_ts.html>`__ (Fermi-LAT data example) | *detect_ts.ipynb*
 - `CTA 2D source fitting with Gammapy <notebooks/image_analysis.html>`__ (DC 1 example) | *image_analysis.ipynb*
 - `CTA 2D source fitting with Sherpa <notebooks/image_fitting_with_sherpa.html>`__ | *image_fitting_with_sherpa.ipynb*
 
 
-1-dim spectral analysis:
+*1-dim spectral analysis*
 
 - `Spectral simulation with Gammapy <notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
 - `Spectral analysis with Gammapy  <notebooks/spectrum_analysis.html>`__ (H.E.S.S. data example) | *spectrum_analysis.ipynb*
 - `Fitting Gammapy spectra with sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
 - `Flux point fitting with Gammapy <notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
 
-Time-dependent analysis:
+*Time-dependent analysis*
 
 - `Light curves <notebooks/light_curve.html>`__ | *light_curve.ipynb*
 
-Sensitivity:
+**Sensitivity**
 
 - `Compute the CTA sensitivity <notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
+
+**Gammapy package**
+
+- `Overview <notebooks/overview.html>`__  | *overview.ipynb*
+- `Maps <notebooks/maps.html>`__  | *maps.ipynb*
+- `Models <notebooks/models.html>`__  | *models.ipynb*
+
 
 
 .. _tutorials_scripts:
