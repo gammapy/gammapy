@@ -256,7 +256,7 @@ Using the high-level interface
 
 Gammapy tutorial notebooks that show examples using the high-level interface:
 
-* `hess.html <../notebooks/hess.html>`__
+* `first_analysis.html <../notebooks/first_analysis.html>`__
 
 Reference/API
 =============

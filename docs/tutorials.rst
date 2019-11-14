@@ -54,6 +54,7 @@ Notebooks
 **What data can I analyse?**
 
 - `CTA first data challenge (1DC) with Gammapy <notebooks/cta_1dc_introduction.html>`__ | *cta_1dc_introduction.ipynb*
+- `H.E.S.S. data with Gammapy <notebooks/hess.html>`__ |  *hess.ipynb*
 - `Fermi-LAT data with Gammapy <notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
 
 **Analyses**

@@ -58,6 +58,10 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/first_analysis.ipynb
   datasets:
     - hess-dl3-dr1
+- name: hess
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/hess.ipynb
+  datasets:
+    - hess-dl3-dr1
 - name: hgps
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/hgps.ipynb
 - name: image_analysis
