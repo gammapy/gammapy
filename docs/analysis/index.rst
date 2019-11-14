@@ -251,6 +251,30 @@ for the source and/or the background.
             unit  :
             dtype : float64
 
+Source detection
+----------------
+
+You can also run source detection algorithms in wide field stacked 2D images. For this you need to
+assign a value for the `threshold` parameter in the ``detection`` section and a map where to perform
+the detection (i.e. `sqrt_ts`, `flux` or `niter`.
+
+.. gp-howto-hli:: detection
+
+.. code-block:: python
+
+    >>> analysis.detect()
+    INFO:gammapy.analysis.core:Proceeding to source detection.
+    >>> print(analysis.detections)
+    value   x   y      ra       dec
+                      deg       deg
+    ------ --- --- --------- ---------
+    36.086 252 197 266.42400 -29.00490
+    16.726 206 204 266.83194 -28.14603
+    >>> analysis.plot_detections()
+
+.. gp-image:: hli/detections.png
+    :width: 100%
+
 Using the high-level interface
 ------------------------------
 
