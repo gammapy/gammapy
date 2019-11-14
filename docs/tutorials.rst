@@ -23,10 +23,12 @@ Notebooks
    :hidden:
 
    notebooks/first_analysis.ipynb
-   notebooks/first_steps.ipynb
+   notebooks/overview.ipynb
    notebooks/maps.ipynb
    notebooks/models.ipynb
    notebooks/cta_1dc_introduction.ipynb
+   notebooks/hess.ipynb
+   notebooks/fermi_lat.ipynb
    notebooks/cta_data_analysis.ipynb
    notebooks/analysis_3d.ipynb
    notebooks/analysis_3d_joint.ipynb
@@ -36,7 +38,6 @@ Notebooks
    notebooks/spectrum_analysis.ipynb
    notebooks/spectrum_fitting_with_sherpa.ipynb
    notebooks/sed_fitting_gammacat_fermi.ipynb
-   notebooks/fermi_lat.ipynb
    notebooks/light_curve.ipynb
    notebooks/cta_sensitivity.ipynb
    notebooks/spectrum_simulation.ipynb
@@ -46,8 +47,11 @@ Notebooks
 
 **Getting started**
 
-- `First steps with Gammapy <notebooks/first_steps.html>`__  | *first_steps.ipynb*
 - `First analysis <notebooks/first_analysis.html>`__ | *first_analysis.ipynb*
+
+**Gammapy package**
+
+- `Overview <notebooks/overview.html>`__  | *overview.ipynb*
 - `Maps <notebooks/maps.html>`__  | *maps.ipynb*
 - `Models <notebooks/models.html>`__  | *models.ipynb*
 
@@ -88,6 +92,7 @@ Time-dependent analysis:
 Sensitivity:
 
 - `Compute the CTA sensitivity <notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
+
 
 .. _tutorials_scripts:
 

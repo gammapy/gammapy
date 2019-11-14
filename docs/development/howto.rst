@@ -941,7 +941,7 @@ versions of the notebooks and subsections providing its filename with the ``.ipy
 and the relative path to the ``notebooks`` folder. This folder is created and populated with notebooks
 at the root of the ``docs`` folder in the process of documentation building::
 
-    `Maps in first steps with Gammapy <../notebooks/first_steps.ipynb#Maps>`__
+    `Maps section in Gammapy overview tutorial <../notebooks/overview.ipynb#Maps>`__
 
 Links within notebooks
 ++++++++++++++++++++++
@@ -951,7 +951,7 @@ and subsections using the markdown syntax to declare links to resources, as show
 
 .. code-block:: rst
 
-    - [Maps in first steps with Gammapy](first_steps.ipynb#Maps)
+    - [Maps section in Gammapy overview tutorial](overview.ipynb#Maps)
     - [Help!](../getting-started.rst#help)
 
 You can also link to the Gammapy API reference documentation using the same Sphinx syntax that is used
