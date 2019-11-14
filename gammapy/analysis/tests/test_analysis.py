@@ -218,17 +218,17 @@ def test_validate_astropy_quantities():
     config = AnalysisConfig()
     cfg = {"observations": {"filters": [{"filter_type": "all", "lon": "1 deg"}]}}
     config.update_settings(cfg)
-    assert config.validate() is None
+    assert config.validate() is True
 
 
 def test_validate_config():
     config = AnalysisConfig()
-    assert config.validate() is None
+    assert config.validate() is True
 
 
 def test_docs_file():
     config = AnalysisConfig.from_yaml(DOC_FILE)
-    assert config.validate() is None
+    assert config.validate() is True
 
 
 def test_help():
@@ -277,3 +277,15 @@ def test_validation_checks():
     analysis.run_fit()
     del analysis.settings["flux-points"]
     assert analysis.get_flux_points() is False
+
+
+@requires_data()
+def test_source_detection():
+    config = AnalysisConfig.from_template("2d")
+    analysis = Analysis(config)
+    analysis.get_observations()
+    analysis.get_datasets()
+    analysis.detect()
+
+    assert len(analysis.TSmaps.items()) == 6
+    assert len(analysis.detections) == 2
