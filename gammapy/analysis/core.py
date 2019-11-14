@@ -4,6 +4,7 @@ import copy
 import logging
 from collections import defaultdict
 from pathlib import Path
+import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -257,6 +258,21 @@ class Analysis:
         self.TSmaps = estimator.run(maps, psf2D.data)
         self.detection_map = self.TSmaps[self.settings["detection"]["map"]]
         self.detections = find_peaks(self.detection_map, threshold=self.settings["detection"]["threshold"])
+
+    def plot_detections(self):
+        """Plot detections found in map."""
+
+        _, ax, _ = self.detection_map.plot(add_cbar=True)
+        ax.scatter(
+            self.detections["ra"],
+            self.detections["dec"],
+            transform=plt.gca().get_transform("icrs"),
+            color="none",
+            edgecolor="w",
+            marker="o",
+            s=600,
+            lw=1.5,
+        )
 
     @staticmethod
     def _create_geometry(params):
