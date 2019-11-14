@@ -157,7 +157,7 @@ class TestSpectralFit:
         fit = Fit([dataset])
         result = fit.run()
 
-        stats = dataset.likelihood_per_bin()
+        stats = dataset.stat_array()
         actual = np.sum(stats[dataset.mask_safe])
 
         desired = result.total_stat

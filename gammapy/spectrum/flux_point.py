@@ -1312,7 +1312,7 @@ class FluxPointsDataset(Dataset):
         """Compute predicted flux."""
         return self.model(self.data.e_ref)
 
-    def likelihood_per_bin(self):
+    def stat_array(self):
         """Likelihood per bin given the current model parameters."""
         model = self.flux_pred()
         data = self.data.table["dnde"].quantity

@@ -51,7 +51,7 @@ class Dataset(abc.ABC):
 
     def stat_sum(self):
         """Total statistic given the current model parameters."""
-        stat = self.likelihood_per_bin()
+        stat = self.stat_array()
 
         if self.mask is not None:
             stat = stat[self.mask]
@@ -59,8 +59,8 @@ class Dataset(abc.ABC):
         return np.sum(stat, dtype=np.float64)
 
     @abc.abstractmethod
-    def likelihood_per_bin(self):
-        """Likelihood per bin given the current model parameters"""
+    def stat_array(self):
+        """Statistic array, one value per data point."""
 
     def copy(self):
         """A deep copy."""

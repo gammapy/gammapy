@@ -464,7 +464,7 @@ class MapDataset(Dataset):
         if self.gti and other.gti:
             self.gti = self.gti.stack(other.gti).union()
 
-    def likelihood_per_bin(self):
+    def stat_array(self):
         """Likelihood per bin given the current model parameters"""
         return self._stat(n_on=self.counts.data, mu_on=self.npred().data)
 
@@ -1049,7 +1049,7 @@ class MapDatasetOnOff(MapDataset):
         """Excess (counts - alpha * counts_off)"""
         return self.counts.data - self.background.data
 
-    def likelihood_per_bin(self):
+    def stat_array(self):
         """Likelihood per bin given the current model parameters"""
         mu_sig = self.npred().data
         on_stat_ = wstat(
