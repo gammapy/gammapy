@@ -262,17 +262,20 @@ class Analysis:
     def plot_detections(self):
         """Plot detections found in map."""
 
-        _, ax, _ = self.detection_map.plot(add_cbar=True)
-        ax.scatter(
-            self.detections["ra"],
-            self.detections["dec"],
-            transform=plt.gca().get_transform("icrs"),
-            color="none",
-            edgecolor="w",
-            marker="o",
-            s=600,
-            lw=1.5,
-        )
+        if self.detections and self.detection_map:
+            _, ax, _ = self.detection_map.plot(add_cbar=True)
+            ax.scatter(
+                self.detections["ra"],
+                self.detections["dec"],
+                transform=plt.gca().get_transform("icrs"),
+                color="none",
+                edgecolor="w",
+                marker="o",
+                s=600,
+                lw=1.5,
+            )
+        else:
+            log.info("No detections or map found.")
 
     @staticmethod
     def _create_geometry(params):
