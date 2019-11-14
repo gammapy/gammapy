@@ -5,11 +5,10 @@ general:
     outdir: .
 
 observations:
-    datastore: $GAMMAPY_DATA/hess-dl3-dr1/
+    datastore: $GAMMAPY_DATA/cta-1dc/index/gps
     filters:
-        - filter_type: par_value
-          value_param: Crab
-          variable: TARGET_NAME
+        - filter_type: ids
+          obs_ids: [110380, 111140, 111159]
 
 datasets:
     dataset-type: MapDataset
@@ -17,16 +16,16 @@ datasets:
     offset-max: 2.5 deg
     psf-kernel-radius: 0.3 deg
     geom:
-        skydir: [83.633, 22.014]
-        width: [5, 5]
-        binsz: 0.04
-        coordsys: CEL
-        proj: TAN
+        skydir: [0, 0]
+        width: [10, 8]
+        binsz: 0.02
+        coordsys: GAL
+        proj: CAR
         axes:
             - name: energy
               hi_bnd: 10
-              lo_bnd: 1
-              nbin: 4
+              lo_bnd: 0.1
+              nbin: 10
               interp: log
               node_type: edges
               unit: TeV
