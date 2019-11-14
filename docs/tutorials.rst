@@ -24,9 +24,6 @@ Notebooks
 
    notebooks/analysis_1.ipynb
    notebooks/analysis_2.ipynb
-   notebooks/overview.ipynb
-   notebooks/maps.ipynb
-   notebooks/models.ipynb
    notebooks/cta.ipynb
    notebooks/hess.ipynb
    notebooks/fermi_lat.ipynb
@@ -44,6 +41,10 @@ Notebooks
    notebooks/spectrum_simulation.ipynb
    notebooks/image_analysis.ipynb
    notebooks/joint_1d_3d_analysis.ipynb
+   notebooks/overview.ipynb
+   notebooks/maps.ipynb
+   notebooks/modeling.ipynb
+   notebooks/models.ipynb
 
 **Getting started**
 
@@ -89,8 +90,8 @@ Notebooks
 
 - `Overview <notebooks/overview.html>`__  | *overview.ipynb*
 - `Maps <notebooks/maps.html>`__  | *maps.ipynb*
-- `Models <notebooks/models.html>`__  | *models.ipynb*
-
+- `Modeling and Fitting <notebooks/models.html>`__  | *modeling.ipynb*
+- `Models Gallery <notebooks/models.html>`__  | *models.ipynb*
 
 
 .. _tutorials_scripts:

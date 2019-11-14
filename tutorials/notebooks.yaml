@@ -83,6 +83,8 @@
     - fermi-3fhl-gc
   images:
     - gammapy_maps
+- name: modeling
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/modeling.ipynb
 - name: models
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/models.ipynb
   requires: naima
