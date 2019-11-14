@@ -84,7 +84,8 @@ class Analysis:
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
-        self.config.validate()
+        if not self.config.validate():
+            return False
         log.info("Fetching observations.")
         datastore_path = make_path(self.settings["observations"]["datastore"])
         if datastore_path.is_file():
@@ -359,8 +360,7 @@ class Analysis:
     def _validate_reduction_settings(self):
         """Validate settings before proceeding to data reduction."""
         if self.observations and len(self.observations):
-            self.config.validate()
-            return True
+            return self.config.validate()
         else:
             log.info("No observations selected.")
             log.info("Data reduction cannot be done.")
@@ -368,8 +368,7 @@ class Analysis:
 
     def _validate_set_model(self):
         if self.datasets and len(self.datasets) != 0:
-            self.config.validate()
-            return True
+            return self.config.validate()
         else:
             log.info("No datasets reduced.")
             return False
@@ -501,9 +500,11 @@ class AnalysisConfig:
         validator = _gp_units_validator
         try:
             jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
+            return True
         except jsonschema.exceptions.ValidationError as ex:
             log.error("Error when validating configuration parameters against schema.")
             log.error(ex.message)
+            return False
 
     @staticmethod
     def _get_doc_sections():
