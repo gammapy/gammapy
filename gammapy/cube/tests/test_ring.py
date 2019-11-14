@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
-from gammapy.cube import AdaptiveRingBackgroundMaker, RingBackgroundMaker
+from gammapy.cube import AdaptiveRingBackgroundMaker, RingBackgroundMaker, MapDataset
 from gammapy.cube.make import MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
@@ -42,20 +42,23 @@ def exclusion_mask(geom):
 
 
 @pytest.fixture(scope="session")
-def map_dataset_maker(geom):
-    return MapDatasetMaker(geom=geom, offset_max="2 deg")
+def map_dataset_maker():
+    return
 
 
 @requires_data()
-def test_ring_bkg_maker(map_dataset_maker, observations, exclusion_mask):
+def test_ring_bkg_maker(geom, observations, exclusion_mask):
     ring_bkg_maker = RingBackgroundMaker(
         r_in="0.2 deg", width="0.3 deg", exclusion_mask=exclusion_mask
     )
     safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
+    map_dataset_maker = MapDatasetMaker(offset_max="2 deg")
+
+    reference = MapDataset.create(geom)
     datasets = []
 
     for obs in observations:
-        dataset = map_dataset_maker.run(obs)
+        dataset = map_dataset_maker.run(reference, obs)
         dataset = safe_mask_maker.run(dataset, obs)
         dataset = dataset.to_image()
 
@@ -109,7 +112,7 @@ def test_ring_bkg_maker(map_dataset_maker, observations, exclusion_mask):
     ],
 )
 @requires_data()
-def test_adaptive_ring_bkg_maker(pars, map_dataset_maker, observations, exclusion_mask):
+def test_adaptive_ring_bkg_maker(pars, geom, observations, exclusion_mask):
     adaptive_ring_bkg_maker = AdaptiveRingBackgroundMaker(
         r_in="0.2 deg",
         width="0.3 deg",
@@ -119,9 +122,11 @@ def test_adaptive_ring_bkg_maker(pars, map_dataset_maker, observations, exclusio
         method=pars["method"],
     )
     safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
+    map_dataset_maker = MapDatasetMaker(offset_max="2 deg")
 
+    dataset = MapDataset.create(geom)
     obs = observations[pars["obs_idx"]]
-    dataset = map_dataset_maker.run(obs)
+    dataset = map_dataset_maker.run(dataset, obs)
     dataset = safe_mask_maker.run(dataset, obs)
 
     dataset = dataset.to_image()
