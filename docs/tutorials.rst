@@ -113,7 +113,6 @@ Extra topics
 
     notebooks/hgps.ipynb
     notebooks/source_population_model.ipynb
-    notebooks/cwt.ipynb
     notebooks/astro_dark_matter.ipynb
     notebooks/background_model.ipynb
     notebooks/mcmc_sampling.ipynb
@@ -123,7 +122,6 @@ These notebooks contain examples on some more specialised functionality in Gamma
 
 - `H.E.S.S. Galactic plane survey (HGPS) data <notebooks/hgps.html>`__ | *hgps.ipynb*
 - `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
-- `Continuous wavelet transform on gamma-ray images <notebooks/cwt.html>`__ | *cwt.ipynb*
 - `Dark matter spatial and spectral models <notebooks/astro_dark_matter.html>`__ | *astro_dark_matter.ipynb*
 - `Make template background model <notebooks/background_model.html>`__ | *background_model.ipynb*
 - `MCMC sampling of Gammapy models using the emcee package <notebooks/mcmc_sampling.html>`__ | *mcmc_sampling.ipynb*
