@@ -23,7 +23,7 @@ def test_datasets_types(datasets):
 
 
 def test_datasets_likelihood(datasets):
-    likelihood = datasets.likelihood()
+    likelihood = datasets.stat_sum()
     assert_allclose(likelihood, 0)
 
 

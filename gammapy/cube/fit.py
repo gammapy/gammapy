@@ -165,7 +165,7 @@ class MapDataset(Dataset):
 
         stat = np.nan
         if self.model is not None or self.background_model is not None:
-            stat = self.likelihood()
+            stat = self.stat_sum()
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
         # model section
@@ -464,7 +464,7 @@ class MapDataset(Dataset):
         if self.gti and other.gti:
             self.gti = self.gti.stack(other.gti).union()
 
-    def likelihood_per_bin(self):
+    def stat_array(self):
         """Likelihood per bin given the current model parameters"""
         return self._stat(n_on=self.counts.data, mu_on=self.npred().data)
 
@@ -581,7 +581,7 @@ class MapDataset(Dataset):
     def _counts_data(self):
         return self.counts.data.astype(float)
 
-    def likelihood(self):
+    def stat_sum(self):
         """Total likelihood given the current model parameters."""
         counts, npred = self._counts_data, self.npred().data
 
@@ -1049,7 +1049,7 @@ class MapDatasetOnOff(MapDataset):
         """Excess (counts - alpha * counts_off)"""
         return self.counts.data - self.background.data
 
-    def likelihood_per_bin(self):
+    def stat_array(self):
         """Likelihood per bin given the current model parameters"""
         mu_sig = self.npred().data
         on_stat_ = wstat(
@@ -1167,9 +1167,9 @@ class MapDatasetOnOff(MapDataset):
 
         super().stack(other)
 
-    def likelihood(self):
+    def stat_sum(self):
         """Total likelihood given the current model parameters."""
-        return Dataset.likelihood(self)
+        return Dataset.stat_sum(self)
 
     def fake(self, background_model, random_state="random-seed"):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.

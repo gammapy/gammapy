@@ -142,7 +142,7 @@ class SpectrumDataset(Dataset):
 
         stat = np.nan
         if self.model is not None:
-            stat = self.likelihood()
+            stat = self.stat_sum()
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
         n_pars, n_free_pars = 0, 0
@@ -225,7 +225,7 @@ class SpectrumDataset(Dataset):
             npred.data += self.background.data
         return npred
 
-    def likelihood_per_bin(self):
+    def stat_array(self):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
@@ -607,7 +607,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         npred = self._predictor.compute_npred()
         return npred
 
-    def likelihood_per_bin(self):
+    def stat_array(self):
         """Likelihood per bin given the current model parameters"""
         mu_sig = self.npred_sig().data
         on_stat_ = wstat(

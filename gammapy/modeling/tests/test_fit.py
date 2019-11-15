@@ -16,7 +16,7 @@ class MyDataset:
         )
         self.data_shape = (1,)
 
-    def likelihood(self):
+    def stat_sum(self):
         # self._model.parameters = parameters
         x, y, z = [p.value for p in self.parameters]
         x_opt, y_opt, z_opt = 2, 3e2, 4e-2
@@ -106,29 +106,29 @@ def test_confidence_frozen(backend):
     assert_allclose(result["errn"], 1)
 
 
-def test_likelihood_profile():
+def test_stat_profile():
     dataset = MyDataset()
     fit = Fit([dataset])
     fit.run()
-    result = fit.likelihood_profile("x", nvalues=3)
+    result = fit.stat_profile("x", nvalues=3)
 
     assert_allclose(result["values"], [0, 2, 4], atol=1e-7)
-    assert_allclose(result["likelihood"], [4, 0, 4], atol=1e-7)
+    assert_allclose(result["stat"], [4, 0, 4], atol=1e-7)
 
     # Check that original value state wasn't changed
     assert_allclose(dataset.parameters["x"].value, 2)
 
 
-def test_likelihood_profile_reoptimize():
+def test_stat_profile_reoptimize():
     dataset = MyDataset()
     fit = Fit([dataset])
     fit.run()
 
     dataset.parameters["y"].value = 0
-    result = fit.likelihood_profile("x", nvalues=3, reoptimize=True)
+    result = fit.stat_profile("x", nvalues=3, reoptimize=True)
 
     assert_allclose(result["values"], [0, 2, 4], atol=1e-7)
-    assert_allclose(result["likelihood"], [4, 0, 4], atol=1e-7)
+    assert_allclose(result["stat"], [4, 0, 4], atol=1e-7)
 
 
 def test_minos_contour():

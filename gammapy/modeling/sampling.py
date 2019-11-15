@@ -55,7 +55,7 @@ def lnprob(pars, dataset):
 
     # dataset.likelihood returns Cash statistics values
     # emcee will maximisise the LogLikelihood so we need -dataset.likelihood
-    total_lnprob = -dataset.likelihood() + lnprob_priors
+    total_lnprob = -dataset.stat_sum() + lnprob_priors
 
     return total_lnprob
 

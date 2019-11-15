@@ -215,7 +215,7 @@ class TestFluxPoints:
     @requires_dependency("matplotlib")
     def test_plot_likelihood(self, flux_points_likelihood):
         with mpl_plot_check():
-            flux_points_likelihood.plot_likelihood()
+            flux_points_likelihood.plot_ts_profiles()
 
 
 @requires_data()
@@ -310,23 +310,23 @@ class TestFluxPointFit:
 
     @staticmethod
     @requires_dependency("iminuit")
-    def test_likelihood_profile(fit):
+    def test_stat_profile(fit):
         optimize_opts = {"backend": "minuit"}
 
         result = fit.run(optimize_opts=optimize_opts)
 
-        profile = fit.likelihood_profile("amplitude", nvalues=3, bounds=1)
+        profile = fit.stat_profile("amplitude", nvalues=3, bounds=1)
 
-        ts_diff = profile["likelihood"] - result.total_stat
+        ts_diff = profile["stat"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
 
         value = result.parameters["amplitude"].value
         err = result.parameters.error("amplitude")
         values = np.array([value - err, value, value + err])
 
-        profile = fit.likelihood_profile("amplitude", values=values)
+        profile = fit.stat_profile("amplitude", values=values)
 
-        ts_diff = profile["likelihood"] - result.total_stat
+        ts_diff = profile["stat"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
 
     @staticmethod

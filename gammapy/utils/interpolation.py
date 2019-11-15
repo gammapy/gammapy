@@ -8,7 +8,7 @@ from astropy import units as u
 __all__ = [
     "ScaledRegularGridInterpolator",
     "interpolation_scale",
-    "interpolate_likelihood_profile",
+    "interpolate_profile",
 ]
 
 
@@ -188,29 +188,26 @@ class LinearScale(InterpolationScale):
         return values
 
 
-def interpolate_likelihood_profile(value_scan, dloglike_scan, interp_scale="sqrt"):
-    """Helper function to interpolate likelihood profiles.
+def interpolate_profile(x, y, interp_scale="sqrt"):
+    """Helper function to interpolate one-dimensional profiles.
 
     Parameters
     ----------
-    value_scan : `~numpy.ndarray`
-        Array of parameter values.
-    dloglike_scan : `~numpy.ndarray`
-        Array of delta log-likelihood values, with respect to the minimum.
+    x : `~numpy.ndarray`
+        Array of x values
+    y : `~numpy.ndarray`
+        Array of y values
     interp_scale : {"sqrt", "lin"}
-        Interpolation scale applied to the likelihood profile. If the profile is
+        Interpolation scale applied to the profile. If the profile is
         of parabolic shape, a "sqrt" scaling is recommended. In other cases or
         for fine sampled profiles a "lin" can also be used.
 
     Returns
     -------
     interp : `ScaledRegularGridInterpolator`
-        Interpolator instance.
+        Interpolator
     """
-    # likelihood profiles are typically of parabolic shape, so we use a
-    # sqrt scaling of the values and perform linear interpolation on the scaled
-    # values
-    sign = np.sign(np.gradient(dloglike_scan))
+    sign = np.sign(np.gradient(y))
     return ScaledRegularGridInterpolator(
-        points=(value_scan,), values=sign * dloglike_scan, values_scale=interp_scale
+        points=(x,), values=sign * y, values_scale=interp_scale
     )

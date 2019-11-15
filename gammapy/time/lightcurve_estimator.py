@@ -22,19 +22,19 @@ class LightCurveEstimator:
     source : str
         For which source in the model to compute the flux points. Default is ''
     norm_min : float
-        Minimum value for the norm used for the likelihood profile evaluation.
+        Minimum value for the norm used for the fit statistic profile evaluation.
     norm_max : float
-        Maximum value for the norm used for the likelihood profile evaluation.
+        Maximum value for the norm used for the fit statistic profile evaluation.
     norm_n_values : int
-        Number of norm values used for the likelihood profile.
+        Number of norm values used for the fit statistic profile.
     norm_values : `numpy.ndarray`
-        Array of norm values to be used for the likelihood profile.
+        Array of norm values to be used for the fit statistic profile.
     sigma : int
         Sigma to use for asymmetric error computation.
     sigma_ul : int
         Sigma to use for upper limit computation.
     reoptimize : bool
-        reoptimize other parameters during likelihod scan
+        reoptimize other parameters during fit statistic scan?
     """
 
     def __init__(
@@ -114,7 +114,7 @@ class LightCurveEstimator:
                 * "errn-errp": estimate asymmetric errors.
                 * "ul": estimate upper limits.
                 * "ts": estimate ts and sqrt(ts) values.
-                * "norm-scan": estimate likelihood profiles.
+                * "norm-scan": estimate fit statistic profiles.
 
             By default all steps are executed.
 
@@ -265,7 +265,7 @@ class LightCurveEstimator:
         """
         norm = self.model.norm
 
-        # TODO: the minuit backend has convergence problems when the likelihood is not
+        # TODO: the minuit backend has convergence problems when the fit statistic is not
         #  of parabolic shape, which is the case, when there are zero counts in the
         #  bin. For this case we change to the scipy backend.
         counts = self.estimate_counts(dataset)["counts"]
@@ -290,7 +290,7 @@ class LightCurveEstimator:
         result : dict
             Dict with ts and sqrt(ts) for the flux point.
         """
-        loglike = self.datasets.likelihood()
+        stat = self.datasets.stat_sum()
 
         # store best fit amplitude, set amplitude of fit model to zero
         self.model.norm.value = 0
@@ -299,26 +299,25 @@ class LightCurveEstimator:
         if self.reoptimize:
             _ = self.fit.optimize()
 
-        loglike_null = self.datasets.likelihood()
+        stat_null = self.datasets.stat_sum()
 
         # compute sqrt TS
-        ts = np.abs(loglike_null - loglike)
+        ts = np.abs(stat_null - stat)
         sqrt_ts = np.sqrt(ts)
         return {"sqrt_ts": sqrt_ts, "ts": ts}
 
     def estimate_norm_scan(self):
-        """Estimate likelihood profile for the norm parameter.
+        """Estimate fit statistic profile for the norm parameter.
 
         Returns
         -------
         result : dict
-            Dict with norm_scan and dloglike_scan for the flux point.
+            Keys "norm_scan", "stat_scan"
         """
-        result = self.fit.likelihood_profile(
+        result = self.fit.stat_profile(
             self.model.norm, values=self.norm_values, reoptimize=self.reoptimize
         )
-        dloglike_scan = result["likelihood"]
-        return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
+        return {"norm_scan": result["values"], "stat_scan": result["stat"]}
 
     def estimate_norm(self):
         """Fit norm of the flux point.
@@ -326,7 +325,7 @@ class LightCurveEstimator:
         Returns
         -------
         result : dict
-            Dict with "norm" and "loglike" for the flux point.
+            Dict with "norm" and "stat" for the flux point.
         """
         # start optimization with norm=1
         self.model.norm.value = 1.0
@@ -339,4 +338,4 @@ class LightCurveEstimator:
         else:
             norm = np.nan
 
-        return {"norm": norm, "loglike": result.total_stat, "success": result.success}
+        return {"norm": norm, "stat": result.total_stat, "success": result.success}

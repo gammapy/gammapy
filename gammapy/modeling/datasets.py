@@ -49,10 +49,9 @@ class Dataset(abc.ABC):
             mask = None
         return mask
 
-    def likelihood(self):
-        """Total likelihood given the current model parameters.
-        """
-        stat = self.likelihood_per_bin()
+    def stat_sum(self):
+        """Total statistic given the current model parameters."""
+        stat = self.stat_array()
 
         if self.mask is not None:
             stat = stat[self.mask]
@@ -60,8 +59,8 @@ class Dataset(abc.ABC):
         return np.sum(stat, dtype=np.float64)
 
     @abc.abstractmethod
-    def likelihood_per_bin(self):
-        """Likelihood per bin given the current model parameters"""
+    def stat_array(self):
+        """Statistic array, one value per data point."""
 
     def copy(self):
         """A deep copy."""
@@ -121,13 +120,13 @@ class Datasets:
         """Whether all contained datasets have the same data shape"""
         return len(set(_.data_shape for _ in self)) == 1
 
-    def likelihood(self):
+    def stat_sum(self):
         """Compute joint likelihood"""
-        total_likelihood = 0
+        stat_sum = 0
         # TODO: add parallel evaluation of likelihoods
         for dataset in self:
-            total_likelihood += dataset.likelihood()
-        return total_likelihood
+            stat_sum += dataset.stat_sum()
+        return stat_sum
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n"

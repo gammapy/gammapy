@@ -5,8 +5,8 @@ from numpy.testing import assert_allclose
 from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.scipy import (
     confidence_scipy,
-    likelihood_profile_ul_scipy,
     optimize_scipy,
+    stat_profile_ul_scipy,
 )
 
 
@@ -100,11 +100,11 @@ def test_scipy_confidence(pars):
     assert_allclose(result["errn"], 0.2, rtol=1e-3)
 
 
-def test_likelihood_profile_ul_scipy():
+def test_stat_profile_ul_scipy():
     x = np.linspace(-5, 5, 7)
     y = x ** 2
-    ul = likelihood_profile_ul_scipy(x, y)
+    ul = stat_profile_ul_scipy(x, y)
     assert_allclose(ul, 2)
 
-    ul = likelihood_profile_ul_scipy(x, x, interp_scale="lin")
+    ul = stat_profile_ul_scipy(x, x, interp_scale="lin")
     assert_allclose(ul, 4)
