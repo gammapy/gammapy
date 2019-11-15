@@ -1,5 +1,5 @@
 # This is a list of available example scripts.
 # It's used for downloading of scripts with gammapy download.
 # Let's keep it alphabetical.
-- name: exptest
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/examples/exptest.py
+- name: survey_map
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/examples/survey_map.py
