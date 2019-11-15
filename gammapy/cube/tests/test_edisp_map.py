@@ -48,10 +48,7 @@ def make_edisp_map_test():
     )
 
     aeff2d = fake_aeff2d()
-    exposure_geom = WcsGeom.create(
-        skydir=pointing, binsz=1.0, width=5.0, axes=[energy_axis]
-    )
-
+    exposure_geom = geom.squash(axis="migra")
     exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
     return make_edisp_map(edisp2d, pointing, geom, 3 * u.deg, exposure_map)

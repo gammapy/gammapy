@@ -82,9 +82,7 @@ def make_test_psfmap(size, shape="gauss"):
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
-    exposure_geom = WcsGeom.create(
-        skydir=pointing, binsz=0.2, width=5, axes=[energy_axis]
-    )
+    exposure_geom = geom.squash(axis="theta")
 
     exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
