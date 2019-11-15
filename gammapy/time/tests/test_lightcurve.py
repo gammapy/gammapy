@@ -194,7 +194,7 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert_allclose(lightcurve.table["ts"], [1381.461738, 1381.462675], rtol=1e-5)
     assert_allclose(lightcurve.table[0]["norm_scan"], [0.2, 1.0, 5.0])
     assert_allclose(
-        lightcurve.table[0]["dloglike_scan"],
+        lightcurve.table[0]["stat_scan"],
         [444.426957, 23.375417, 3945.382802],
         rtol=1e-5,
     )

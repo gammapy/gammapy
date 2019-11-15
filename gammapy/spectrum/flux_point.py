@@ -28,7 +28,7 @@ REQUIRED_COLUMNS = {
         "ref_dnde",
         "norm",
         "norm_scan",
-        "dloglike_scan",
+        "stat_scan",
     ],
 }
 
@@ -172,6 +172,21 @@ class FluxPoints:
         if "SED_TYPE" not in table.meta.keys():
             sed_type = cls._guess_sed_type(table)
             table.meta["SED_TYPE"] = sed_type
+
+        # TODO: check sign and factor 2 here
+        # https://github.com/gammapy/gammapy/pull/2546#issuecomment-554274318
+        # The idea below is to support the format here:
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/flux_points/index.html#likelihood-columns
+        # but internally to go to the uniform "stat"
+
+        if "loglike" in table.colnames and "stat" not in table.colnames:
+            table["stat"] = 2 * table["loglike"]
+
+        if "loglike_null" in table.colnames and "stat_null" not in table.colnames:
+            table["stat_null"] = 2 * table["loglike_null"]
+
+        if "dloglike_scan" in table.colnames and "stat_scan" not in table.colnames:
+            table["stat_scan"] = 2 * table["dloglike_scan"]
 
         return cls(table=table)
 
@@ -640,7 +655,7 @@ class FluxPoints:
         ax.set_ylabel(f"{self.sed_type} ({y_unit})")
         return ax
 
-    def plot_stat_profiles(
+    def plot_ts_profiles(
         self,
         ax=None,
         energy_unit="TeV",
@@ -697,8 +712,8 @@ class FluxPoints:
             y_ref = self.table["ref_" + self.sed_type].quantity[idx]
             norm = (y_values / y_ref).to_value("")
             norm_scan = row["norm_scan"]
-            dloglike_scan = row["dloglike_scan"] - row["stat"]
-            interp = interpolate_profile(norm_scan, dloglike_scan)
+            ts_scan = row["stat_scan"] - row["stat"]
+            interp = interpolate_profile(norm_scan, ts_scan)
             z[idx] = interp((norm,))
 
         kwargs.setdefault("vmax", 0)
@@ -1078,13 +1093,12 @@ class FluxPointsEstimator:
         Returns
         -------
         result : dict
-            Dict with norm_scan and dloglike_scan for the flux point.
+            Keys: "norm_scan", "stat_scan"
         """
         result = self.fit.stat_profile(
             self.model.norm, values=self.norm_values, reoptimize=self.reoptimize
         )
-        dloglike_scan = result["stat"]
-        return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
+        return {"norm_scan": result["values"], "stat_scan": result["stat"]}
 
     def estimate_norm(self):
         """Fit norm of the flux point.

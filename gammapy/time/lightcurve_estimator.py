@@ -312,13 +312,12 @@ class LightCurveEstimator:
         Returns
         -------
         result : dict
-            Dict with norm_scan and dloglike_scan for the flux point.
+            Keys "norm_scan", "stat_scan"
         """
         result = self.fit.stat_profile(
             self.model.norm, values=self.norm_values, reoptimize=self.reoptimize
         )
-        dloglike_scan = result["stat"]
-        return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
+        return {"norm_scan": result["values"], "stat_scan": result["stat"]}
 
     def estimate_norm(self):
         """Fit norm of the flux point.

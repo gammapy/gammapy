@@ -215,7 +215,7 @@ class TestFluxPoints:
     @requires_dependency("matplotlib")
     def test_plot_likelihood(self, flux_points_likelihood):
         with mpl_plot_check():
-            flux_points_likelihood.plot_stat_profiles()
+            flux_points_likelihood.plot_ts_profiles()
 
 
 @requires_data()
