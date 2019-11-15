@@ -306,16 +306,11 @@ class PSFMap:
         if cutout_info is not None:
             slices = cutout_info["parent-slices"]
             parent_slices = Ellipsis, slices[0], slices[1]
-
-            slices = cutout_info["cutout-slices"]
-            cutout_slices = Ellipsis, slices[0], slices[1]
         else:
-            parent_slices, cutout_slices = None, None
+            parent_slices = None
 
         self.psf_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self.psf_map.data[parent_slices] += (
-            other.psf_map.data * other.exposure_map.data
-        )[cutout_slices]
+        self.psf_map.stack(other.psf_map * other.exposure_map.data)
 
         # stack exposure map
         self.exposure_map.stack(other.exposure_map)

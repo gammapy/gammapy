@@ -303,16 +303,11 @@ class EDispMap:
         if cutout_info is not None:
             slices = cutout_info["parent-slices"]
             parent_slices = Ellipsis, slices[0], slices[1]
-
-            slices = cutout_info["cutout-slices"]
-            cutout_slices = Ellipsis, slices[0], slices[1]
         else:
-            parent_slices, cutout_slices = None, None
+            parent_slices = None
 
         self.edisp_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self.edisp_map.data[parent_slices] += (
-            other.edisp_map.data * other.exposure_map.data
-        )[cutout_slices]
+        self.edisp_map.stack(other.edisp_map * other.exposure_map.data)
 
         # stack exposure map
         self.exposure_map.stack(other.exposure_map)
