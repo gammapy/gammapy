@@ -124,15 +124,6 @@ class PSFMap:
             raise ValueError("Incorrect theta axis position in input Map")
 
         self.psf_map = psf_map
-
-        if exposure_map is not None and exposure_map.geom.ndim == 3:
-            energy_axis = psf_map.geom.get_axis_by_name("energy")
-            rad_axis = psf_map.geom.get_axis_by_name("theta")
-            geom_image = exposure_map.geom.to_image()
-            geom = geom_image.to_cube([rad_axis.squash(), energy_axis])
-            data = exposure_map.data[:, np.newaxis, :, :]
-            exposure_map = Map.from_geom(geom=geom, data=data, unit=exposure_map.unit)
-
         self.exposure_map = exposure_map
 
     @classmethod
@@ -351,8 +342,7 @@ class PSFMap:
         psf_map : `PSFMap`
             Point spread function map.
         """
-        energy_true_axis = geom.get_axis_by_name("energy")
-        geom_exposure_psf = geom.to_image().to_cube([energy_true_axis])
+        geom_exposure_psf = geom.squash(axis="theta")
         exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
         psf_map = Map.from_geom(geom, unit="sr-1")
         return cls(psf_map, exposure_psf)

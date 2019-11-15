@@ -126,15 +126,6 @@ class EDispMap:
             raise ValueError("Incorrect migra axis position in input Map")
 
         self.edisp_map = edisp_map
-
-        if exposure_map is not None and exposure_map.geom.ndim == 3:
-            energy_axis = edisp_map.geom.get_axis_by_name("energy")
-            migra_axis = edisp_map.geom.get_axis_by_name("migra")
-            geom_image = exposure_map.geom.to_image()
-            geom = geom_image.to_cube([migra_axis.squash(), energy_axis])
-            data = exposure_map.data[:, np.newaxis, :, :]
-            exposure_map = Map.from_geom(geom=geom, data=data, unit=exposure_map.unit)
-
         self.exposure_map = exposure_map
 
     @classmethod
@@ -354,9 +345,7 @@ class EDispMap:
         edisp_map : `EDispMap`
             Energy dispersion map.
         """
-        energy_true_axis = geom.get_axis_by_name("energy")
-
-        geom_exposure_edisp = geom.to_image().to_cube([energy_true_axis])
+        geom_exposure_edisp = geom.squash(axis="migra")
         exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
 
         migra_axis = geom.get_axis_by_name("migra")
