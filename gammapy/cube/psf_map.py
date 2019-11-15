@@ -289,7 +289,7 @@ class PSFMap:
 
         return m
 
-    def stack(self, other):
+    def stack(self, other, weights=None):
         """Stack PSFMap with another one in place.
 
         Parameters
@@ -310,10 +310,10 @@ class PSFMap:
             parent_slices = None
 
         self.psf_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self.psf_map.stack(other.psf_map * other.exposure_map.data)
+        self.psf_map.stack(other.psf_map * other.exposure_map.data, weights=weights)
 
         # stack exposure map
-        self.exposure_map.stack(other.exposure_map)
+        self.exposure_map.stack(other.exposure_map, weights=weights)
 
         with np.errstate(invalid="ignore"):
             self.psf_map.data[parent_slices] /= self.exposure_map.data[parent_slices]

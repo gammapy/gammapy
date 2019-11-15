@@ -286,7 +286,7 @@ class EDispMap:
             data=data,
         )
 
-    def stack(self, other):
+    def stack(self, other, weights=None):
         """Stack EDispMap with another one in place.
 
         Parameters
@@ -307,10 +307,10 @@ class EDispMap:
             parent_slices = None
 
         self.edisp_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self.edisp_map.stack(other.edisp_map * other.exposure_map.data)
+        self.edisp_map.stack(other.edisp_map * other.exposure_map.data, weights=weights)
 
         # stack exposure map
-        self.exposure_map.stack(other.exposure_map)
+        self.exposure_map.stack(other.exposure_map, weights=weights)
 
         with np.errstate(invalid="ignore"):
             self.edisp_map.data[parent_slices] /= self.exposure_map.data[parent_slices]
