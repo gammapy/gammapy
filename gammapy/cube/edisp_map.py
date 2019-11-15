@@ -10,7 +10,7 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 __all__ = ["make_edisp_map", "EDispMap"]
 
 
-def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
+def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     """Make a edisp map for a single observation
 
     Expected axes : migra and true energy in this specific order
@@ -25,8 +25,6 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
     geom : `~gammapy.maps.Geom`
         the map geom to be used. It provides the target geometry.
         rad and true energy axes should be given in this specific order.
-    max_offset : `~astropy.coordinates.Angle`
-        maximum offset w.r.t. fov center
     exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
@@ -44,22 +42,17 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
 
     # Compute separations with pointing position
     offset = geom.separation(pointing)
-    valid = np.where(offset < max_offset)
 
     # Compute EDisp values
     edisp_values = edisp.data.evaluate(
-        offset=offset[valid],
-        e_true=energy[:, np.newaxis],
+        offset=offset,
+        e_true=energy[:, np.newaxis, np.newaxis, np.newaxis],
         migra=migra[:, np.newaxis, np.newaxis],
     )
 
-    # Re-order axes to be consistent with expected geometry
-    edisp_values = np.transpose(edisp_values, axes=(1, 0, 2))
-
     # Create Map and fill relevant entries
-    edispmap = Map.from_geom(geom, unit="")
-    edispmap.data[:, :, valid[0], valid[1]] += edisp_values.to_value(edispmap.unit)
-
+    data = edisp_values.to_value("")
+    edispmap = Map.from_geom(geom, data=data, unit="")
     return EDispMap(edispmap, exposure_map)
 
 

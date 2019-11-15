@@ -11,7 +11,7 @@ from .psf_kernel import PSFKernel
 __all__ = ["make_psf_map", "PSFMap"]
 
 
-def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
+def make_psf_map(psf, pointing, geom, exposure_map=None):
     """Make a psf map for a single observation
 
     Expected axes : rad and true energy in this specific order
@@ -26,8 +26,6 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     geom : `~gammapy.maps.Geom`
         the map geom to be used. It provides the target geometry.
         rad and true energy axes should be given in this specific order.
-    max_offset : `~astropy.coordinates.Angle`
-        maximum offset w.r.t. fov center
     exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
@@ -45,19 +43,22 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
 
     # Compute separations with pointing position
     offset = geom.separation(pointing)
-    valid = np.where(offset < max_offset)
 
     # Compute PSF values
-    psf_values = psf.evaluate(offset=offset[valid], energy=energy, rad=rad)
+    # TODO: allow broadcasting in PSF3D.evaluate()
+    psf_values = psf._interpolate(
+        (
+            rad[:, np.newaxis, np.newaxis],
+            offset,
+            energy[:, np.newaxis, np.newaxis, np.newaxis],
 
-    # Re-order axes to be consistent with expected geometry
-    psf_values = np.transpose(psf_values, axes=(2, 0, 1))
+        )
+    )
 
     # TODO: this probably does not ensure that probability is properly normalized in the PSFMap
     # Create Map and fill relevant entries
-    psfmap = Map.from_geom(geom, unit="sr-1")
-    psfmap.data[:, :, valid[0], valid[1]] += psf_values.to_value(psfmap.unit)
-
+    data = psf_values.to_value("sr-1")
+    psfmap = Map.from_geom(geom, data=data, unit="sr-1")
     return PSFMap(psfmap, exposure_map)
 
 
