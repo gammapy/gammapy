@@ -76,7 +76,7 @@ class SigmaVEstimator:
     that makes the likelihood ratio :math:`-2\lambda_P = RATIO` is multiplied by the thermal relic cross
     section, and subsequently taken as the estimated value of :math:`\sigma\nu`. The value of :math:`RATIO`
     is set by default to 2.71. This process is performed for a given number of runs so to have better statistics.
-    Nuissance parameters may be also introduced.
+    Nuisance parameters may be also introduced.
 
     Parameters
     ----------
@@ -123,20 +123,20 @@ class SigmaVEstimator:
         channels = ["b", "t", "Z"]
         masses = [70, 200, 500, 5000, 10000, 50000, 100000]*u.GeV
 
-        # Define nuissance parameters and attach them to the dataset
-        nuissance = dict(
+        # Define nuisance parameters and attach them to the dataset
+        nuisance = dict(
             j=JFAC,
             jobs=JFAC,
             sigmaj=0.1*JFAC,
             sigmatau=0.01
         )
-        dataset.nuissance = nuissance
+        dataset.nuisance = nuisance
 
         # Instantiate the estimator
         estimator = SigmaVEstimator(dataset, masses, channels, background_model=bkg, jfactor=JFAC)
 
         # Run the estimator
-        result = estimator.run(10, nuissance=True, likelihood_profile_opts=dict(bounds=(0, 500), nvalues=100))
+        result = estimator.run(10, nuisance=True, likelihood_profile_opts=dict(bounds=(0, 500), nvalues=100))
     """
 
     RATIO = 2.71
@@ -179,7 +179,7 @@ class SigmaVEstimator:
     def run(
         self,
         runs,
-        nuissance=False,
+        nuisance=False,
         likelihood_profile_opts=dict(bounds=100, nvalues=50),
         optimize_opts=None,
         covariance_opts=None,
@@ -190,8 +190,8 @@ class SigmaVEstimator:
         ----------
         runs: int
             Number of runs where to perform the fitting.
-        nuissance: bool
-            Flag to perform fitting with nuissance parameters. Default False.
+        nuisance: bool
+            Flag to perform fitting with nuisance parameters. Default False.
         likelihood_profile_opts : dict
             Options passed to `~gammapy.utils.fitting.Fit.likelihood_profile`.
         optimize_opts : dict
@@ -212,7 +212,7 @@ class SigmaVEstimator:
             self.dataset.fake(background_model=self.background)
 
             # loop in channels and masses
-            valid = self._loops(run, nuissance, likelihood_profile_opts, optimize_opts, covariance_opts)
+            valid = self._loops(run, nuisance, likelihood_profile_opts, optimize_opts, covariance_opts)
             # if the value of sv<=0 or does not reach self.RATIO
             # skip the run and continue with the next one
             if not valid:
@@ -235,7 +235,7 @@ class SigmaVEstimator:
             self.result["mean"][ch] = table
         return self.result
 
-    def _loops(self, run, nuissance, likelihood_profile_opts, optimize_opts, covariance_opts):
+    def _loops(self, run, nuisance, likelihood_profile_opts, optimize_opts, covariance_opts):
         for ch in self.channels:
             log.info(f"Channel: {ch}")
             table_rows = []
@@ -244,7 +244,7 @@ class SigmaVEstimator:
                 dataset_loop = self._set_model_dataset(ch, mass)
                 fit_result = self._fit_dataset(
                     dataset_loop,
-                    nuissance,
+                    nuisance,
                     run,
                     ch,
                     mass,
@@ -305,7 +305,7 @@ class SigmaVEstimator:
     def _fit_dataset(
         self,
         dataset_loop,
-        nuissance,
+        nuisance,
         run,
         ch,
         mass,
@@ -315,19 +315,19 @@ class SigmaVEstimator:
     ):
         """Fit dataset to model and calculate parameter value for upper limit."""
 
-        if nuissance and dataset_loop.check_nuissance():
-            # fit to the realization for each value of j nuissance parameter in a range of sigmaj
+        if nuisance and dataset_loop.check_nuisance():
+            # fit to the realization for each value of j nuisance parameter in a range of sigmaj
             resfits = []
             likes = []
             profiles = []
             js = []
-            widthsigma = dataset_loop.nuissance["width"] * dataset_loop.nuissance["sigmaj"].value
-            jlo = dataset_loop.nuissance["jobs"].value - widthsigma
-            jhi = dataset_loop.nuissance["jobs"].value + widthsigma
-            unit = dataset_loop.nuissance["j"].unit
+            widthsigma = dataset_loop.nuisance["width"] * dataset_loop.nuisance["sigmaj"].value
+            jlo = dataset_loop.nuisance["jobs"].value - widthsigma
+            jhi = dataset_loop.nuisance["jobs"].value + widthsigma
+            unit = dataset_loop.nuisance["j"].unit
 
-            for ji in np.linspace(jlo, jhi, dataset_loop.nuissance["steps"]):
-                dataset_loop.nuissance["j"] = ji * unit
+            for ji in np.linspace(jlo, jhi, dataset_loop.nuisance["steps"]):
+                dataset_loop.nuisance["j"] = ji * unit
                 ifit = Fit(dataset_loop)
                 js.append(ji)
                 resfits.append(ifit.run())
@@ -415,12 +415,12 @@ class SigmaVEstimator:
 
 
 class DMDatasetOnOff(SpectrumDatasetOnOff):
-    """Dark matter dataset OnOff with nuissance parameters and likelihood."""
+    """Dark matter dataset OnOff with nuisance parameters and likelihood."""
 
-    def __init__(self, nuissance=None, **kwargs):
+    def __init__(self, nuisance=None, **kwargs):
         super().__init__(**kwargs)
-        if nuissance is None:
-            nuissance = {
+        if nuisance is None:
+            nuisance = {
                 "j": None,
                 "jobs": None,
                 "sigmaj": None,
@@ -428,78 +428,78 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
                 "width": None,
                 "steps": None,
             }
-        self.nuissance = nuissance
+        self.nuisance = nuisance
 
     @property
-    def nuissance(self):
-        return self._nuissance
+    def nuisance(self):
+        return self._nuisance
 
-    @nuissance.setter
-    def nuissance(self, nuissance):
-        if not isinstance(nuissance, dict):
-            raise TypeError(f"Invalid type: {nuissance}, {type(nuissance)}")
-        if "j" not in nuissance:
-            nuissance["j"] = None
-        if "jobs" not in nuissance:
-            nuissance["jobs"] = None
-        if "sigmaj" not in nuissance:
-            nuissance["sigmaj"] = None
-        if "sigmatau" not in nuissance:
-            nuissance["sigmatau"] = None
-        if "width" not in nuissance:
-            nuissance["width"] = 5
-        if "steps" not in nuissance:
-            nuissance["steps"] = 15
-        self._nuissance = nuissance
+    @nuisance.setter
+    def nuisance(self, nuisance):
+        if not isinstance(nuisance, dict):
+            raise TypeError(f"Invalid type: {nuisance}, {type(nuisance)}")
+        if "j" not in nuisance:
+            nuisance["j"] = None
+        if "jobs" not in nuisance:
+            nuisance["jobs"] = None
+        if "sigmaj" not in nuisance:
+            nuisance["sigmaj"] = None
+        if "sigmatau" not in nuisance:
+            nuisance["sigmatau"] = None
+        if "width" not in nuisance:
+            nuisance["width"] = 5
+        if "steps" not in nuisance:
+            nuisance["steps"] = 15
+        self._nuisance = nuisance
 
-    def check_nuissance(self):
-        if not isinstance(self.nuissance["j"], Quantity):
-            log.warning("Units for j nuissance parameter missing.")
+    def check_nuisance(self):
+        if not isinstance(self.nuisance["j"], Quantity):
+            log.warning("Units for j nuisance parameter missing.")
             return False
-        if not isinstance(self.nuissance["jobs"], Quantity):
-            log.warning("Units for jobs nuissance parameter missing.")
+        if not isinstance(self.nuisance["jobs"], Quantity):
+            log.warning("Units for jobs nuisance parameter missing.")
             return False
-        if not isinstance(self.nuissance["sigmaj"], Quantity):
-            log.warning("Units for sigmaj nuissance parameter missing.")
+        if not isinstance(self.nuisance["sigmaj"], Quantity):
+            log.warning("Units for sigmaj nuisance parameter missing.")
             return False
-        if not self.nuissance["j"].value:
-            log.warning("Value for j nuissance parameter missing.")
+        if not self.nuisance["j"].value:
+            log.warning("Value for j nuisance parameter missing.")
             return False
-        if not self.nuissance["jobs"].value:
-            log.warning("Value for jobs nuissance parameter missing.")
+        if not self.nuisance["jobs"].value:
+            log.warning("Value for jobs nuisance parameter missing.")
             return False
-        if not self.nuissance["sigmaj"].value:
-            log.warning("Value for sigmaj nuissance parameter missing.")
+        if not self.nuisance["sigmaj"].value:
+            log.warning("Value for sigmaj nuisance parameter missing.")
             return False
-        if not self.nuissance["sigmatau"]:
-            log.warning("Value for sigmatau nuissance parameter missing.")
+        if not self.nuisance["sigmatau"]:
+            log.warning("Value for sigmatau nuisance parameter missing.")
             return False
-        if not self.nuissance["width"]:
+        if not self.nuisance["width"]:
             return False
-        if not self.nuissance["steps"]:
+        if not self.nuisance["steps"]:
             return False
         return True
 
     def likelihood(self):
         wstat = super().likelihood()
         liketotal = wstat
-        if self.check_nuissance():
-            liketotal += self.jnuissance() + self.gnuissance()
+        if self.check_nuisance():
+            liketotal += self.jnuisance() + self.gnuisance()
         return liketotal
 
-    def jnuissance(self):
-        exp_up = (np.log10(self.nuissance["j"].value) - np.log10(self.nuissance["jobs"].value)) ** 2
-        exp_down = 2 * (np.log(self.nuissance["sigmaj"].value) ** 2)
+    def jnuisance(self):
+        exp_up = (np.log10(self.nuisance["j"].value) - np.log10(self.nuisance["jobs"].value)) ** 2
+        exp_down = 2 * (np.log(self.nuisance["sigmaj"].value) ** 2)
         up = np.exp(-1 * exp_up / exp_down)
         down = (
             np.log(10)
-            * self.nuissance["jobs"].value
+            * self.nuisance["jobs"].value
             * np.sqrt(2 * np.pi)
-            * np.log10(self.nuissance["sigmaj"].value)
+            * np.log10(self.nuisance["sigmaj"].value)
         )
         res = up / down
         return -2 * np.log(res)
 
-    def gnuissance(self):
-        res = 1 / (np.sqrt(2* np.pi) * self.nuissance["sigmatau"])
+    def gnuisance(self):
+        res = 1 / (np.sqrt(2* np.pi) * self.nuisance["sigmatau"])
         return -2 * np.log(res)
