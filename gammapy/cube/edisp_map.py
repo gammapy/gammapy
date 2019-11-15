@@ -287,17 +287,13 @@ class EDispMap:
         )
 
     def stack(self, other):
-        """Stack EDispMap with another one.
+        """Stack EDispMap with another one in place.
 
         Parameters
         ----------
         other : `~gammapy.cube.EDispMap`
-            the edispmap to be stacked with this one.
+            Energy dispersion map to be stacked with this one.
 
-        Returns
-        -------
-        new : `~gammapy.cube.EDispMap`
-            the stacked edispmap
         """
         if self.exposure_map is None or other.exposure_map is None:
             raise ValueError("Missing exposure map for PSFMap.stack")

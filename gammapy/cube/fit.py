@@ -428,7 +428,8 @@ class MapDataset(Dataset):
             self.counts.stack(other.counts, weights=other.mask_safe)
 
         if self.exposure and other.exposure:
-            # TODO: apply energy dependent mask to exposure
+            # TODO: apply energy dependent mask to exposure. Does this require
+            #  a mask_safe in true energy?
             mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or)
             self.exposure.data[..., ~mask_image.data] = 0
 

@@ -703,7 +703,7 @@ class WcsNDMap(WcsMap):
         ----------
         other : `WcsNDMap`
             Other map to stack
-        weights : `~numpy.ndarray`
+        weights : `WcsNDMap`
             Array to be used as weights.
         """
         if self.geom == other.geom:

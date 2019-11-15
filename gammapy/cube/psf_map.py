@@ -290,7 +290,7 @@ class PSFMap:
         return m
 
     def stack(self, other):
-        """Stack PSFMap with another one.
+        """Stack PSFMap with another one in place.
 
         Parameters
         ----------
