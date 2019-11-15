@@ -23,7 +23,7 @@ or request a feature, or need help with anything Gammapy-related.
     overview
     install/index
     getting-started
-    tutorials
+    tutorials/index
     howto
     references
     changelog
