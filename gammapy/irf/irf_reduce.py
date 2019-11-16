@@ -9,7 +9,6 @@ from .psf_table import EnergyDependentTablePSF
 __all__ = [
     "make_psf",
     "make_mean_psf",
-    "apply_containment_fraction",
     "compute_energy_thresholds",
 ]
 
@@ -88,39 +87,6 @@ def make_mean_psf(observations, position, energy=None, rad=None):
         else:
             stacked_psf = stacked_psf.stack(psf)
     return stacked_psf
-
-
-def apply_containment_fraction(aeff, psf, radius):
-    """Estimate PSF containment inside a given radius and correct effective area for leaking flux.
-
-    The PSF and effective area must have the same binning in energy.
-
-    Parameters
-    ----------
-    aeff : `~gammapy.irf.EffectiveAreaTable`
-        the input 1D effective area
-    psf : `~gammapy.irf.EnergyDependentTablePSF`
-        the input 1D PSF
-    radius : `~astropy.coordinates.Angle`
-        the maximum angle
-
-    Returns
-    -------
-    correct_aeff : `~gammapy.irf.EffectiveAreaTable`
-        the output corrected 1D effective area
-    """
-    energy_center = aeff.energy.center
-    energy_edges = aeff.energy.edges
-
-    containment = psf.containment(energy_center, radius)
-
-    corrected_aeff = EffectiveAreaTable(
-        energy_lo=energy_edges[:-1],
-        energy_hi=energy_edges[1:],
-        data=aeff.data.data * np.squeeze(containment),
-        meta=aeff.meta,
-    )
-    return corrected_aeff
 
 
 def compute_energy_thresholds(

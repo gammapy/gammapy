@@ -808,7 +808,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         is_zero = total_off == 0
         acceptance_off[is_zero] = 1 / average_alpha
 
-        self.acceptance = np.ones(self.counts_off.data, dtype=float)
+        self.acceptance = np.ones_like(self.counts_off.data, dtype=float)
         self.acceptance_off = acceptance_off
 
         if self.counts_off is not None:

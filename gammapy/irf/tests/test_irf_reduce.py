@@ -111,29 +111,6 @@ def test_make_mean_psf(data_store):
     assert_allclose(psf.psf_value.value[22, 22], 12206.1665)
 
 
-def test_apply_containment_fraction():
-    n_edges_energy = 5
-    energy = energy_logspace(0.1, 10.0, nbins=n_edges_energy + 1, unit="TeV")
-    area = np.ones(n_edges_energy) * 4 * u.m ** 2
-    aeff = EffectiveAreaTable(energy[:-1], energy[1:], data=area)
-
-    nrad = 100
-    rad = Angle(np.linspace(0, 0.5, nrad), "deg")
-    psf_table = TablePSF.from_shape(shape="disk", width="0.2 deg", rad=rad)
-    psf_values = (
-        np.resize(psf_table.psf_value.value, (n_edges_energy, nrad))
-        * psf_table.psf_value.unit
-    )
-    edep_psf_table = EnergyDependentTablePSF(
-        aeff.energy.center, rad, psf_value=psf_values
-    )
-
-    new_aeff = apply_containment_fraction(aeff, edep_psf_table, Angle("0.1 deg"))
-
-    assert_allclose(new_aeff.data.data.value, 1.0, rtol=5e-4)
-    assert new_aeff.data.data.unit == "m2"
-
-
 @requires_data("gammapy-data")
 def test_compute_thresholds_from_crab_data():
     """Obs read from file"""
