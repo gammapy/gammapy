@@ -79,39 +79,3 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
         bkg_map = bkg_map.downsample(factor=oversampling, axis="energy")
 
     return bkg_map
-
-
-def _fov_background_norm(acceptance_map, counts_map, exclusion_mask=None):
-    """Compute FOV background norm.
-
-    This operation is normally performed on single observation maps.
-    An exclusion map is used to avoid using regions with significant gamma-ray emission.
-    All maps are assumed to follow the same WcsGeom.
-
-    Parameters
-    ----------
-    acceptance_map : `~gammapy.maps.WcsNDMap`
-        Observation hadron acceptance map (i.e. predicted background map)
-    counts_map : `~gammapy.maps.WcsNDMap`
-        Observation counts map
-    exclusion_mask : `~gammapy.maps.WcsNDMap`
-        Exclusion mask
-
-    Returns
-    -------
-    norm_factor : `~numpy.ndarray`
-        Background normalization factor as function of energy (1D vector)
-    """
-    if exclusion_mask is None:
-        mask = np.ones_like(counts_map, dtype=bool)
-    else:
-        # We resize the mask
-        mask = np.resize(np.squeeze(exclusion_mask.data), acceptance_map.data.shape)
-
-    # We multiply the data with the mask to obtain normalization factors in each energy bin
-    integ_acceptance = np.sum(acceptance_map.data * mask, axis=(1, 2))
-    integ_counts = np.sum(counts_map.data * mask, axis=(1, 2))
-
-    norm_factor = integ_counts / integ_acceptance
-
-    return norm_factor
