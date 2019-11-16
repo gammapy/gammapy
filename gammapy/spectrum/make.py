@@ -4,7 +4,6 @@ import numpy as np
 from astropy import units as u
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
-from gammapy.irf import apply_containment_fraction
 from gammapy.maps import WcsGeom
 from gammapy.maps.geom import frame_to_coordsys
 from .core import CountsSpectrum
@@ -137,8 +136,9 @@ class SpectrumDatasetMaker:
                 raise TypeError(
                     "Containment correction only supported for circular regions."
                 )
-            table_psf = observation.psf.to_energy_dependent_table_psf(theta=offset)
-            aeff = apply_containment_fraction(aeff, table_psf, self.region.radius)
+            psf = observation.psf.to_energy_dependent_table_psf(theta=offset)
+            containment = psf.containment(aeff.energy.center, self.region.radius)
+            aeff.data.data *= containment.squeeze()
 
         return aeff
 

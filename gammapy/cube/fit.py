@@ -11,7 +11,7 @@ from gammapy.cube.edisp_map import EDispMap
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
-from gammapy.irf import EffectiveAreaTable, EnergyDispersion, apply_containment_fraction
+from gammapy.irf import EffectiveAreaTable, EnergyDispersion
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
@@ -867,8 +867,9 @@ class MapDataset(Dataset):
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containement correction impossible")
             else:
-                psf_table = self.psf.get_energy_dependent_table_psf(on_region.center)
-                aeff = apply_containment_fraction(aeff, psf_table, on_region.radius)
+                psf = self.psf.get_energy_dependent_table_psf(on_region.center)
+                containment = psf.containment(aeff.energy.center, self.region.radius)
+                aeff.data.data *= containment.squeeze()
 
         if self.edisp is not None:
             if isinstance(self.edisp, EnergyDispersion):

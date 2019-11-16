@@ -803,18 +803,13 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             acceptance_off = total_off / total_alpha
             average_alpha = total_alpha.sum() / total_off.sum()
 
-        acceptance = np.ones_like(self.counts_off.data, dtype=float)
-        is_zero = total_off == 0
         # For the bins where the stacked OFF counts equal 0, the alpha value is performed by weighting on the total
         # OFF counts of each run
+        is_zero = total_off == 0
         acceptance_off[is_zero] = 1 / average_alpha
 
-        self.acceptance = acceptance
+        self.acceptance = np.ones_like(self.counts_off.data, dtype=float)
         self.acceptance_off = acceptance_off
-
-        if self.counts is not None:
-            self.counts.data[~self.mask_safe] = 0
-            self.counts.data[other.mask_safe] += other.counts.data[other.mask_safe]
 
         if self.counts_off is not None:
             self.counts_off.data[~self.mask_safe] = 0
@@ -822,31 +817,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
                 other.mask_safe
             ]
 
-        # We need to put this first to avoid later modifications of the energy ranges
-        irf_stacker = IRFStacker(
-            list_aeff=[self.aeff, other.aeff],
-            list_livetime=[self.livetime, other.livetime],
-            list_edisp=[self.edisp, other.edisp],
-            list_low_threshold=[self.energy_range[0], other.energy_range[0]],
-            list_high_threshold=[self.energy_range[1], other.energy_range[1]],
-        )
-
-        if self.aeff is not None:
-            if self.edisp is not None:
-                irf_stacker.stack_edisp()
-                self.edisp = irf_stacker.stacked_edisp
-            irf_stacker.stack_aeff()
-            self.aeff = irf_stacker.stacked_aeff
-
-        # We need to put this last not to modify the self.energy_range for previous calculations
-        self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
-
-        if self.gti is not None:
-            self.gti = self.gti.stack(other.gti).union()
-
-        # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
-        # of GTIs
-        self.livetime += other.livetime
+        super().stack(other)
 
     def peek(self, figsize=(16, 4)):
         """Quick-look summary plots."""
