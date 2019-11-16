@@ -51,7 +51,7 @@ def make_edisp_map_test():
     exposure_geom = geom.squash(axis="migra")
     exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
-    return make_edisp_map(edisp2d, pointing, geom, 3 * u.deg, exposure_map)
+    return make_edisp_map(edisp2d, pointing, geom, exposure_map)
 
 
 def test_make_edisp_map():

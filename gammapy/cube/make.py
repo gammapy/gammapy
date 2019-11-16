@@ -182,7 +182,6 @@ class MapDatasetMaker:
             edisp=observation.edisp,
             pointing=observation.pointing_radec,
             geom=geom,
-            max_offset=self.offset_max,
             exposure_map=exposure,
         )
 
@@ -214,7 +213,6 @@ class MapDatasetMaker:
             psf=psf,
             pointing=observation.pointing_radec,
             geom=geom,
-            max_offset=self.offset_max,
             exposure_map=exposure,
         )
 
