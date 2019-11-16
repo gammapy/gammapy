@@ -1,23 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose, assert_equal
-import astropy.units as u
+from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
-from gammapy.data import DataStore, Observations
+from gammapy.data import DataStore
 from gammapy.irf import (
-    EffectiveAreaTable,
-    EnergyDependentTablePSF,
-    EnergyDispersion,
-    TablePSF,
-    apply_containment_fraction,
-    compute_energy_thresholds,
-    make_mean_edisp,
     make_mean_psf,
     make_psf,
 )
 from gammapy.utils.energy import energy_logspace
-from gammapy.utils.testing import assert_quantity_allclose, requires_data
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")

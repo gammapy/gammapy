@@ -4,7 +4,6 @@ import numpy as np
 from astropy import units as u
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
-from gammapy.irf import apply_containment_fraction
 from gammapy.maps import WcsGeom
 from gammapy.maps.geom import frame_to_coordsys
 from .core import CountsSpectrum

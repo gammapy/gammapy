@@ -9,7 +9,6 @@ from .psf_table import EnergyDependentTablePSF
 __all__ = [
     "make_psf",
     "make_mean_psf",
-    "compute_energy_thresholds",
 ]
 
 log = logging.getLogger(__name__)
@@ -87,81 +86,3 @@ def make_mean_psf(observations, position, energy=None, rad=None):
         else:
             stacked_psf = stacked_psf.stack(psf)
     return stacked_psf
-
-
-def compute_energy_thresholds(
-    aeff, edisp, method_lo="none", method_hi="none", **kwargs
-):
-    """Compute safe energy thresholds from 1D energy dispersion and effective area.
-
-    Set the high and low energy threshold based on a chosen method.
-    For now the methods return thresholds assuming true and reco energy are comparable.
-
-    Available methods for setting the low energy threshold:
-
-        * area_max : Set energy threshold at x percent of the maximum effective
-          area (x given as kwargs['area_percent_lo'])
-
-        * energy_bias : Set energy threshold at energy where the energy bias
-          exceeds a value of x percent (given as kwargs['bias_percent_lo'])
-
-        * none : Do not apply a lower threshold
-
-    Available methods for setting the high energy threshold:
-
-        * area_max : Set energy threshold at x percent of the maximum effective
-          area (x given as kwargs['area_percent_hi']). The threshold is searched
-          in the last true energy decade of the effective area.
-
-        * energy_bias : Set energy threshold at energy where the energy bias
-          exceeds a value of x percent (given as kwargs['bias_percent_hi']).
-          The threshold is searched in the last true energy decade of the
-          energy dispersion.
-
-        * none : Do not apply a higher energy threshold
-
-    Parameters
-    ----------
-    aeff : `~gammapy.irf.EffectiveAreaTable`
-        the 1D effective area
-    edisp : `~gammapy.irf.EnergyDispersion`
-        the energy dispersion used
-    method_lo : {'area_max', 'energy_bias', 'none'}
-        Method for defining the low energy threshold
-    method_hi : {'area_max', 'energy_bias', 'none'}
-        Method for defining the high energy threshold
-    """
-
-    # Low threshold
-    if method_lo == "area_max":
-        aeff_thres = kwargs["area_percent_lo"] / 100 * aeff.max_area
-        thres_lo = aeff.find_energy(aeff_thres)
-    elif method_lo == "energy_bias":
-        thres_lo = edisp.get_bias_energy(kwargs["bias_percent_lo"] / 100)
-    elif method_lo == "none":
-        thres_lo = aeff.energy.edges[0]
-    else:
-        raise ValueError(f"Invalid method_lo: {method_lo}")
-
-    # High threshold
-    if method_hi == "area_max":
-        aeff_thres = kwargs["area_percent_hi"] / 100 * aeff.max_area
-        e_max = aeff.energy.edges[-1]
-        try:
-            thres_hi = aeff.find_energy(aeff_thres, emin=0.1 * e_max, emax=e_max)
-        except ValueError:
-            thres_hi = e_max
-    elif method_hi == "energy_bias":
-        e_max = aeff.energy.edges[-1]
-        try:
-            thres_hi = edisp.get_bias_energy(
-                kwargs["bias_percent_hi"] / 100, emin=0.1 * e_max, emax=e_max
-            )
-        except ValueError:
-            thres_hi = e_max
-    elif method_hi == "none":
-        thres_hi = aeff.energy.edges[-1]
-    else:
-        raise ValueError(f"Invalid method_hi: {method_hi}")
-
-    return thres_lo, thres_hi
