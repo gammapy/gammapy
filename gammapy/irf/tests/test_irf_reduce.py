@@ -111,42 +111,6 @@ def test_make_mean_psf(data_store):
     assert_allclose(psf.psf_value.value[22, 22], 12206.1665)
 
 
-@requires_data()
-def test_make_mean_edisp(data_store):
-    position = SkyCoord(83.63, 22.01, unit="deg")
-
-    obs1 = data_store.obs(23523)
-    obs2 = data_store.obs(23592)
-    observations = Observations([obs1, obs2])
-
-    e_true = energy_logspace(0.01, 150, 81, "TeV")
-    e_reco = energy_logspace(0.5, 100, 16, "TeV")
-    rmf = make_mean_edisp(observations, position=position, e_true=e_true, e_reco=e_reco)
-
-    assert len(rmf.e_true.center) == 80
-    assert len(rmf.e_reco.center) == 15
-    assert_quantity_allclose(rmf.data.data[53, 8], 0.056, atol=2e-2)
-
-    rmf2 = make_mean_edisp(
-        observations,
-        position=position,
-        e_true=e_true,
-        e_reco=e_reco,
-        low_reco_threshold="1 TeV",
-        high_reco_threshold="60 TeV",
-    )
-    i2 = np.where(rmf2.data.evaluate(e_reco="0.8 TeV") != 0)[0]
-    assert len(i2) == 0
-    i2 = np.where(rmf2.data.evaluate(e_reco="61 TeV") != 0)[0]
-    assert len(i2) == 0
-    i = np.where(rmf.data.evaluate(e_reco="1.5 TeV") != 0)[0]
-    i2 = np.where(rmf2.data.evaluate(e_reco="1.5 TeV") != 0)[0]
-    assert_equal(i, i2)
-    i = np.where(rmf.data.evaluate(e_reco="40 TeV") != 0)[0]
-    i2 = np.where(rmf2.data.evaluate(e_reco="40 TeV") != 0)[0]
-    assert_equal(i, i2)
-
-
 def test_apply_containment_fraction():
     n_edges_energy = 5
     energy = energy_logspace(0.1, 10.0, nbins=n_edges_energy + 1, unit="TeV")

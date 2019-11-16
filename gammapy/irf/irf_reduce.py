@@ -9,7 +9,6 @@ from .psf_table import EnergyDependentTablePSF
 __all__ = [
     "make_psf",
     "make_mean_psf",
-    "make_mean_edisp",
     "apply_containment_fraction",
     "compute_energy_thresholds",
 ]
@@ -89,69 +88,6 @@ def make_mean_psf(observations, position, energy=None, rad=None):
         else:
             stacked_psf = stacked_psf.stack(psf)
     return stacked_psf
-
-
-def make_mean_edisp(
-    observations,
-    position,
-    e_true,
-    e_reco,
-    low_reco_threshold="0.002 TeV",
-    high_reco_threshold="150 TeV",
-):
-    """Compute mean energy dispersion.
-
-    Compute the mean edisp of a set of observations j at a given position
-
-    The stacking is implemented in :func:`~gammapy.irf.IRFStacker.stack_edisp`
-
-    Parameters
-    ----------
-    observations : `~gammapy.data.Observations`
-        Observations for which to compute the EDISP
-    position : `~astropy.coordinates.SkyCoord`
-        Position at which to compute the EDISP
-    e_true : `~astropy.units.Quantity`
-        True energy axis
-    e_reco : `~astropy.units.Quantity`
-        Reconstructed energy axis
-    low_reco_threshold : `~astropy.units.Quantity`
-        low energy threshold in reco energy
-    high_reco_threshold : `~astropy.units.Quantity`
-        high energy threshold in reco energy
-
-    Returns
-    -------
-    stacked_edisp : `~gammapy.irf.EnergyDispersion`
-        Stacked EDISP for a set of observation
-    """
-    low_reco_threshold = u.Quantity(low_reco_threshold)
-    high_reco_threshold = u.Quantity(high_reco_threshold)
-
-    list_aeff = []
-    list_edisp = []
-    list_livetime = []
-    list_low_threshold = [low_reco_threshold] * len(observations)
-    list_high_threshold = [high_reco_threshold] * len(observations)
-
-    for obs in observations:
-        offset = position.separation(obs.pointing_radec)
-        list_aeff.append(obs.aeff.to_effective_area_table(offset, energy=e_true))
-        list_edisp.append(
-            obs.edisp.to_energy_dispersion(offset, e_reco=e_reco, e_true=e_true)
-        )
-        list_livetime.append(obs.observation_live_time_duration)
-
-    irf_stack = IRFStacker(
-        list_aeff=list_aeff,
-        list_edisp=list_edisp,
-        list_livetime=list_livetime,
-        list_low_threshold=list_low_threshold,
-        list_high_threshold=list_high_threshold,
-    )
-    irf_stack.stack_edisp()
-
-    return irf_stack.stacked_edisp
 
 
 def apply_containment_fraction(aeff, psf, radius):
