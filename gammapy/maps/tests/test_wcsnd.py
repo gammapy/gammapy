@@ -372,6 +372,7 @@ def test_wcsndmap_reproject():
     assert m_reprojected.geom.axes[0].name == "energy"
 
 
+@pytest.mark.xfail
 @requires_dependency("healpy")
 def test_wcsndmap_reproject_allsky_car():
     geom = WcsGeom.create(binsz=10.0, proj="CAR", coordsys="CEL")
