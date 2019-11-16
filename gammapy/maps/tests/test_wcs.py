@@ -297,6 +297,13 @@ def test_wcsgeom_instance_cache():
     assert id(coord_2) == id(coord_2_cached)
 
 
+def test_wcsgeom_squash():
+    axis = MapAxis.from_nodes([1, 2, 3], name="test-axis")
+    geom = WcsGeom.create(npix=(3, 3), axes=[axis])
+    geom_squashed = geom.squash(axis="test-axis")
+    assert geom_squashed.data_shape == (1, 3, 3)
+
+
 def test_wcsgeom_get_pix_coords():
     geom = WcsGeom.create(
         skydir=(0, 0), npix=(4, 3), binsz=1, coordsys="GAL", proj="CAR", axes=axes1
