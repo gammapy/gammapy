@@ -189,3 +189,12 @@ class TestEnergyDispersion2D:
     def test_peek(self):
         with mpl_plot_check():
             self.edisp.peek()
+
+
+@requires_data("gammapy-data")
+def test_get_bias_energy():
+    """Obs read from file"""
+    rmffile = "$GAMMAPY_DATA/joint-crab/spectra/hess/rmf_obs23523.fits"
+    edisp = EnergyDispersion.read(rmffile)
+    thresh_lo = edisp.get_bias_energy(0.1)
+    assert_allclose(thresh_lo.to("TeV").value, 0.9174, rtol=1e-4)
