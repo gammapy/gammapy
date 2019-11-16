@@ -424,20 +424,20 @@ class MapDataset(Dataset):
         """
 
         if self.counts and other.counts:
-            self.counts.data[~self.mask_safe.data] = 0
+            self.counts *= self.mask_safe
             self.counts.stack(other.counts, weights=other.mask_safe)
 
         if self.exposure and other.exposure:
-            # TODO: apply energy dependent mask to exposure
             mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or)
-            self.exposure.data[..., ~mask_image.data] = 0
-
+            self.exposure *= mask_image.data
+            # TODO: apply energy dependent mask to exposure. Does this require
+            #  a mask_safe in true energy?
             mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
             self.exposure.stack(other.exposure, weights=mask_image_other)
 
         if self.background_model and other.background_model:
             bkg = self.background_model.evaluate()
-            bkg.data[~self.mask_safe.data] = 0
+            bkg *= self.mask_safe
             other_bkg = other.background_model.evaluate()
             bkg.stack(other_bkg, weights=other.mask_safe)
 
@@ -450,19 +450,37 @@ class MapDataset(Dataset):
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
-                mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or)
-                self.psf.stack(other.psf)
+                mask_irf = self._mask_safe_irf(self.psf.psf_map, mask_image)
+                self.psf.psf_map *= mask_irf.data
+                self.psf.exposure_map *= mask_irf.data
+
+                mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
+                mask_irf_other = self._mask_safe_irf(other.psf.psf_map, mask_image_other)
+                self.psf.stack(other.psf, weights=mask_irf_other)
             else:
                 raise ValueError("Stacking of PSF kernels not supported")
 
         if self.edisp and other.edisp:
             if isinstance(self.edisp, EDispMap) and isinstance(other.edisp, EDispMap):
-                self.edisp.stack(other.edisp)
+                mask_irf = self._mask_safe_irf(self.edisp.edisp_map, mask_image)
+                self.edisp.edisp_map *= mask_irf.data
+                self.edisp.exposure_map *= mask_irf.data
+
+                mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
+                mask_irf_other = self._mask_safe_irf(other.edisp.edisp_map, mask_image_other)
+                self.edisp.stack(other.edisp, weights=mask_irf_other)
             else:
                 raise ValueError("Stacking of edisp kernels not supported")
 
         if self.gti and other.gti:
             self.gti = self.gti.stack(other.gti).union()
+
+    @staticmethod
+    def _mask_safe_irf(irf_map, mask):
+        geom = irf_map.geom.to_image()
+        coords = geom.get_coord()
+        data = mask.get_by_coord(coords).astype(bool)
+        return Map.from_geom(geom=geom, data=data)
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
@@ -544,7 +562,8 @@ class MapDataset(Dataset):
             counts_spatial, npred_spatial, method
         )
 
-        spatial_residuals.data[self.exposure.data[0] == 0] = np.nan
+        mask = self.mask_safe.reduce_over_axes(func=np.logical_or)
+        spatial_residuals.data[~mask.data] = np.nan
 
         # If no region is provided, skip spectral residuals
         ncols = 2 if region is not None else 1

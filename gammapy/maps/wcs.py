@@ -744,6 +744,37 @@ class WcsGeom(Geom):
             cutout_info=self.cutout_info,
         )
 
+    def squash(self, axis):
+        """Squash geom axis.
+
+        Parameters
+        ----------
+        axis : str
+            Axis to squash.
+
+        Returns
+        -------
+        geom : `Geom`
+            Geom with squashed axis.
+        """
+        _ = self.get_axis_by_name(axis)
+        npix = (np.max(self._npix[0]), np.max(self._npix[1]))
+        cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
+
+        axes = []
+        for ax in copy.deepcopy(self.axes):
+            if ax.name == axis:
+                ax = ax.squash()
+            axes.append(ax)
+
+        return self.__class__(
+            self._wcs.deepcopy(),
+            npix,
+            cdelt=cdelt,
+            axes=axes,
+            cutout_info=self.cutout_info
+        )
+
     def pad(self, pad_width):
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)

@@ -104,17 +104,13 @@ def test_map_maker(pars, observations):
     )
 
     maker = MapDatasetMaker(
-        geom=pars["geom"],
-        energy_axis_true=pars["e_true"],
         offset_max="2 deg",
         background_oversampling=pars.get("background_oversampling"),
-        binsz_irf=pars["binsz_irf"],
-        margin_irf=pars["margin_irf"],
     )
     safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
 
     for obs in observations:
-        dataset = maker.run(obs)
+        dataset = maker.run(stacked, obs)
         dataset = safe_mask_maker.run(dataset, obs)
         stacked.stack(dataset)
 
@@ -148,7 +144,7 @@ def test_map_maker(pars, observations):
 @requires_data()
 def test_map_maker_ring(observations):
     geomd = geom(ebounds=[0.1, 10])
-    map_dataset_maker = MapDatasetMaker(geom=geomd, offset_max="2 deg")
+    map_dataset_maker = MapDatasetMaker(offset_max="2 deg")
     safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
 
     stacked = MapDatasetOnOff.create(geomd)
@@ -164,7 +160,7 @@ def test_map_maker_ring(observations):
     )
 
     for obs in observations:
-        dataset = map_dataset_maker.run(obs)
+        dataset = map_dataset_maker.run(stacked, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
         dataset = dataset.to_image()
@@ -185,16 +181,20 @@ def test_map_maker_obs(observations):
         [0.1, 0.5, 2.5, 10.0], name="energy", unit="TeV", interp="log"
     )
     geom_exp = geom(ebounds=[0.1, 0.5, 2.5, 10.0])
-    maker_obs = MapDatasetMaker(
+
+    reference = MapDataset.create(
         geom=geom_reco,
         energy_axis_true=e_true,
         binsz_irf=1.0,
         margin_irf=1.0,
+    )
+
+    maker_obs = MapDatasetMaker(
         offset_max=2.0 * u.deg,
         cutout=False,
     )
 
-    map_dataset = maker_obs.run(observations[0])
+    map_dataset = maker_obs.run(reference, observations[0])
     assert map_dataset.counts.geom == geom_reco
     assert map_dataset.background_model.map.geom == geom_reco
     assert map_dataset.exposure.geom == geom_exp
@@ -213,9 +213,10 @@ def test_safe_mask_maker(observations):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", interp="log", unit="TeV")
     geom = WcsGeom.create(npix=(11, 11), axes=[axis], skydir=obs.pointing_radec)
 
-    dataset_maker = MapDatasetMaker(geom=geom, offset_max="3 deg")
+    empty_dataset = MapDataset.create(geom=geom)
+    dataset_maker = MapDatasetMaker(offset_max="3 deg")
     safe_mask_maker = SafeMaskMaker(offset_max="3 deg")
-    dataset = dataset_maker.run(obs)
+    dataset = dataset_maker.run(empty_dataset, obs)
 
     mask_offset = safe_mask_maker.make_mask_offset_max(dataset=dataset, observation=obs)
     assert_allclose(mask_offset.sum(), 109)

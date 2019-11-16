@@ -60,7 +60,7 @@ def test_make_psf_map():
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
-    psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg)
+    psfmap = make_psf_map(psf, pointing, geom)
 
     assert psfmap.psf_map.geom.axes[0] == rad_axis
     assert psfmap.psf_map.geom.axes[1] == energy_axis
@@ -82,13 +82,11 @@ def make_test_psfmap(size, shape="gauss"):
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
-    exposure_geom = WcsGeom.create(
-        skydir=pointing, binsz=0.2, width=5, axes=[energy_axis]
-    )
+    exposure_geom = geom.squash(axis="theta")
 
     exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
-    return make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map)
+    return make_psf_map(psf, pointing, geom, exposure_map)
 
 
 def test_psfmap_to_table_psf():

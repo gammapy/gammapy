@@ -11,7 +11,7 @@ from .psf_kernel import PSFKernel
 __all__ = ["make_psf_map", "PSFMap"]
 
 
-def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
+def make_psf_map(psf, pointing, geom, exposure_map=None):
     """Make a psf map for a single observation
 
     Expected axes : rad and true energy in this specific order
@@ -26,8 +26,6 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     geom : `~gammapy.maps.Geom`
         the map geom to be used. It provides the target geometry.
         rad and true energy axes should be given in this specific order.
-    max_offset : `~astropy.coordinates.Angle`
-        maximum offset w.r.t. fov center
     exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
@@ -45,19 +43,22 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
 
     # Compute separations with pointing position
     offset = geom.separation(pointing)
-    valid = np.where(offset < max_offset)
 
     # Compute PSF values
-    psf_values = psf.evaluate(offset=offset[valid], energy=energy, rad=rad)
+    # TODO: allow broadcasting in PSF3D.evaluate()
+    psf_values = psf._interpolate(
+        (
+            rad[:, np.newaxis, np.newaxis],
+            offset,
+            energy[:, np.newaxis, np.newaxis, np.newaxis],
 
-    # Re-order axes to be consistent with expected geometry
-    psf_values = np.transpose(psf_values, axes=(2, 0, 1))
+        )
+    )
 
     # TODO: this probably does not ensure that probability is properly normalized in the PSFMap
     # Create Map and fill relevant entries
-    psfmap = Map.from_geom(geom, unit="sr-1")
-    psfmap.data[:, :, valid[0], valid[1]] += psf_values.to_value(psfmap.unit)
-
+    data = psf_values.to_value("sr-1")
+    psfmap = Map.from_geom(geom, data=data, unit="sr-1")
     return PSFMap(psfmap, exposure_map)
 
 
@@ -124,15 +125,6 @@ class PSFMap:
             raise ValueError("Incorrect theta axis position in input Map")
 
         self.psf_map = psf_map
-
-        if exposure_map is not None and exposure_map.geom.ndim == 3:
-            energy_axis = psf_map.geom.get_axis_by_name("energy")
-            rad_axis = psf_map.geom.get_axis_by_name("theta")
-            geom_image = exposure_map.geom.to_image()
-            geom = geom_image.to_cube([rad_axis.squash(), energy_axis])
-            data = exposure_map.data[:, np.newaxis, :, :]
-            exposure_map = Map.from_geom(geom=geom, data=data, unit=exposure_map.unit)
-
         self.exposure_map = exposure_map
 
     @classmethod
@@ -298,8 +290,8 @@ class PSFMap:
 
         return m
 
-    def stack(self, other):
-        """Stack PSFMap with another one.
+    def stack(self, other, weights=None):
+        """Stack PSFMap with another one in place.
 
         Parameters
         ----------
@@ -315,19 +307,14 @@ class PSFMap:
         if cutout_info is not None:
             slices = cutout_info["parent-slices"]
             parent_slices = Ellipsis, slices[0], slices[1]
-
-            slices = cutout_info["cutout-slices"]
-            cutout_slices = Ellipsis, slices[0], slices[1]
         else:
-            parent_slices, cutout_slices = None, None
+            parent_slices = None
 
         self.psf_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self.psf_map.data[parent_slices] += (
-            other.psf_map.data * other.exposure_map.data
-        )[cutout_slices]
+        self.psf_map.stack(other.psf_map * other.exposure_map.data, weights=weights)
 
         # stack exposure map
-        self.exposure_map.stack(other.exposure_map)
+        self.exposure_map.stack(other.exposure_map, weights=weights)
 
         with np.errstate(invalid="ignore"):
             self.psf_map.data[parent_slices] /= self.exposure_map.data[parent_slices]
@@ -351,8 +338,7 @@ class PSFMap:
         psf_map : `PSFMap`
             Point spread function map.
         """
-        energy_true_axis = geom.get_axis_by_name("energy")
-        geom_exposure_psf = geom.to_image().to_cube([energy_true_axis])
+        geom_exposure_psf = geom.squash(axis="theta")
         exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
         psf_map = Map.from_geom(geom, unit="sr-1")
         return cls(psf_map, exposure_psf)

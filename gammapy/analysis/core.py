@@ -251,13 +251,14 @@ class Analysis:
         offset_max = Angle(self.settings["datasets"]["offset-max"])
         log.info("Creating datasets.")
 
-        maker = MapDatasetMaker(geom=geom, offset_max=offset_max, **geom_irf)
+        maker = MapDatasetMaker(offset_max=offset_max)
         maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=offset_max)
 
+        stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
+
         if self.settings["datasets"]["stack-datasets"]:
-            stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
             for obs in self.observations:
-                dataset = maker.run(obs)
+                dataset = maker.run(stacked, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
                 stacked.stack(dataset)
             self._extract_irf_kernels(stacked)
@@ -265,7 +266,7 @@ class Analysis:
         else:
             datasets = []
             for obs in self.observations:
-                dataset = maker.run(obs)
+                dataset = maker.run(stacked, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
                 self._extract_irf_kernels(dataset)
                 datasets.append(dataset)

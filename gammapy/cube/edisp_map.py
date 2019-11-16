@@ -10,7 +10,7 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 __all__ = ["make_edisp_map", "EDispMap"]
 
 
-def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
+def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     """Make a edisp map for a single observation
 
     Expected axes : migra and true energy in this specific order
@@ -25,8 +25,6 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
     geom : `~gammapy.maps.Geom`
         the map geom to be used. It provides the target geometry.
         rad and true energy axes should be given in this specific order.
-    max_offset : `~astropy.coordinates.Angle`
-        maximum offset w.r.t. fov center
     exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
@@ -44,22 +42,17 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
 
     # Compute separations with pointing position
     offset = geom.separation(pointing)
-    valid = np.where(offset < max_offset)
 
     # Compute EDisp values
     edisp_values = edisp.data.evaluate(
-        offset=offset[valid],
-        e_true=energy[:, np.newaxis],
+        offset=offset,
+        e_true=energy[:, np.newaxis, np.newaxis, np.newaxis],
         migra=migra[:, np.newaxis, np.newaxis],
     )
 
-    # Re-order axes to be consistent with expected geometry
-    edisp_values = np.transpose(edisp_values, axes=(1, 0, 2))
-
     # Create Map and fill relevant entries
-    edispmap = Map.from_geom(geom, unit="")
-    edispmap.data[:, :, valid[0], valid[1]] += edisp_values.to_value(edispmap.unit)
-
+    data = edisp_values.to_value("")
+    edispmap = Map.from_geom(geom, data=data, unit="")
     return EDispMap(edispmap, exposure_map)
 
 
@@ -126,15 +119,6 @@ class EDispMap:
             raise ValueError("Incorrect migra axis position in input Map")
 
         self.edisp_map = edisp_map
-
-        if exposure_map is not None and exposure_map.geom.ndim == 3:
-            energy_axis = edisp_map.geom.get_axis_by_name("energy")
-            migra_axis = edisp_map.geom.get_axis_by_name("migra")
-            geom_image = exposure_map.geom.to_image()
-            geom = geom_image.to_cube([migra_axis.squash(), energy_axis])
-            data = exposure_map.data[:, np.newaxis, :, :]
-            exposure_map = Map.from_geom(geom=geom, data=data, unit=exposure_map.unit)
-
         self.exposure_map = exposure_map
 
     @classmethod
@@ -295,18 +279,14 @@ class EDispMap:
             data=data,
         )
 
-    def stack(self, other):
-        """Stack EDispMap with another one.
+    def stack(self, other, weights=None):
+        """Stack EDispMap with another one in place.
 
         Parameters
         ----------
         other : `~gammapy.cube.EDispMap`
-            the edispmap to be stacked with this one.
+            Energy dispersion map to be stacked with this one.
 
-        Returns
-        -------
-        new : `~gammapy.cube.EDispMap`
-            the stacked edispmap
         """
         if self.exposure_map is None or other.exposure_map is None:
             raise ValueError("Missing exposure map for PSFMap.stack")
@@ -316,19 +296,14 @@ class EDispMap:
         if cutout_info is not None:
             slices = cutout_info["parent-slices"]
             parent_slices = Ellipsis, slices[0], slices[1]
-
-            slices = cutout_info["cutout-slices"]
-            cutout_slices = Ellipsis, slices[0], slices[1]
         else:
-            parent_slices, cutout_slices = None, None
+            parent_slices = None
 
         self.edisp_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self.edisp_map.data[parent_slices] += (
-            other.edisp_map.data * other.exposure_map.data
-        )[cutout_slices]
+        self.edisp_map.stack(other.edisp_map * other.exposure_map.data, weights=weights)
 
         # stack exposure map
-        self.exposure_map.stack(other.exposure_map)
+        self.exposure_map.stack(other.exposure_map, weights=weights)
 
         with np.errstate(invalid="ignore"):
             self.edisp_map.data[parent_slices] /= self.exposure_map.data[parent_slices]
@@ -354,9 +329,7 @@ class EDispMap:
         edisp_map : `EDispMap`
             Energy dispersion map.
         """
-        energy_true_axis = geom.get_axis_by_name("energy")
-
-        geom_exposure_edisp = geom.to_image().to_cube([energy_true_axis])
+        geom_exposure_edisp = geom.squash(axis="migra")
         exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
 
         migra_axis = geom.get_axis_by_name("migra")
