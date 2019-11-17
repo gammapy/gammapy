@@ -31,25 +31,25 @@ dependencies:
   - reproject
   - sherpa
   - iminuit
+  # dev dependencies
   - pytest
   - pytest-cov
   - pytest-xdist
+  - pytest-astropy
   - sphinx
   - pandoc
   - pylint
   - flake8
-  - pip:
-    - setuptools-scm
-    - sphinx-astropy
-    - sphinx-rtd-theme
-    - nbsphinx
-    - sphinx-click
-    - pydocstyle
-    - black
-    - isort
-    - naima
-    - numdifftools
-    - pytest-astropy
-    - twine
-    - parfive
-    - jsonschema
+  - black
+  - isort
+  - setuptools-scm
+  - sphinx-astropy
+  - sphinx_rtd_theme
+  - nbsphinx
+  - sphinx-click
+  - pydocstyle
+  - naima
+  - numdifftools
+  - twine
+  - parfive
+  - jsonschema
