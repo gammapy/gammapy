@@ -75,6 +75,10 @@ Notebooks
 - `Spectral analysis  <../notebooks/spectrum_analysis.html>`__ | *spectrum_analysis.ipynb*
 - `Flux point fitting <../notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
 
+*joint modeling and fitting*
+
+- `Joint Fermi, HESS and HAWC Crab spectral fit <../notebooks/joint_1d_3d_analysis.html>`__ | *joint_1d_3d_analysis.ipynb*
+
 *Time-dependent analysis*
 
 - `Light curves <../notebooks/light_curve.html>`__ | *light_curve.ipynb*
