@@ -104,8 +104,7 @@ def test_map_maker(pars, observations):
     )
 
     maker = MapDatasetMaker(
-        offset_max="2 deg",
-        background_oversampling=pars.get("background_oversampling"),
+        offset_max="2 deg", background_oversampling=pars.get("background_oversampling")
     )
     safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
 
@@ -183,16 +182,10 @@ def test_map_maker_obs(observations):
     geom_exp = geom(ebounds=[0.1, 0.5, 2.5, 10.0])
 
     reference = MapDataset.create(
-        geom=geom_reco,
-        energy_axis_true=e_true,
-        binsz_irf=1.0,
-        margin_irf=1.0,
+        geom=geom_reco, energy_axis_true=e_true, binsz_irf=1.0, margin_irf=1.0
     )
 
-    maker_obs = MapDatasetMaker(
-        offset_max=2.0 * u.deg,
-        cutout=False,
-    )
+    maker_obs = MapDatasetMaker(offset_max=2.0 * u.deg, cutout=False)
 
     map_dataset = maker_obs.run(reference, observations[0])
     assert map_dataset.counts.geom == geom_reco

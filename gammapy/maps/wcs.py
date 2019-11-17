@@ -772,7 +772,7 @@ class WcsGeom(Geom):
             npix,
             cdelt=cdelt,
             axes=axes,
-            cutout_info=self.cutout_info
+            cutout_info=self.cutout_info,
         )
 
     def pad(self, pad_width):

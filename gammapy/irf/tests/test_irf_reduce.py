@@ -4,10 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from gammapy.data import DataStore
-from gammapy.irf import (
-    make_mean_psf,
-    make_psf,
-)
+from gammapy.irf import make_mean_psf, make_psf
 from gammapy.utils.energy import energy_logspace
 from gammapy.utils.testing import requires_data
 

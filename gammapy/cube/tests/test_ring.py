@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
-from gammapy.cube import AdaptiveRingBackgroundMaker, RingBackgroundMaker, MapDataset
+from gammapy.cube import AdaptiveRingBackgroundMaker, MapDataset, RingBackgroundMaker
 from gammapy.cube.make import MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap

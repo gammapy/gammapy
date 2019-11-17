@@ -8,10 +8,7 @@ from gammapy.modeling.models import BackgroundModel
 from .background import make_map_background_irf
 from .edisp_map import make_edisp_map
 from .exposure import make_map_exposure_true_energy
-from .fit import (
-    MapDataset,
-    MapDatasetOnOff,
-)
+from .fit import MapDataset, MapDatasetOnOff
 from .psf_map import make_psf_map
 
 __all__ = ["MapDatasetMaker", "SafeMaskMaker"]
@@ -36,11 +33,7 @@ class MapDatasetMaker:
     """
 
     def __init__(
-        self,
-        offset_max,
-        background_oversampling=None,
-        cutout_mode="trim",
-        cutout=True,
+        self, offset_max, background_oversampling=None, cutout_mode="trim", cutout=True
     ):
         self.offset_max = Angle(offset_max)
         self.background_oversampling = background_oversampling

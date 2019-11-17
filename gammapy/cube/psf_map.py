@@ -51,7 +51,6 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
             rad[:, np.newaxis, np.newaxis],
             offset,
             energy[:, np.newaxis, np.newaxis, np.newaxis],
-
         )
     )
 

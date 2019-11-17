@@ -1,15 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
-from astropy import units as u
-from .effective_area import EffectiveAreaTable
-from .irf_stack import IRFStacker
 from .psf_table import EnergyDependentTablePSF
 
-__all__ = [
-    "make_psf",
-    "make_mean_psf",
-]
+__all__ = ["make_psf", "make_mean_psf"]
 
 log = logging.getLogger(__name__)
 

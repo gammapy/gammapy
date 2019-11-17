@@ -455,7 +455,9 @@ class MapDataset(Dataset):
                 self.psf.exposure_map *= mask_irf.data
 
                 mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
-                mask_irf_other = self._mask_safe_irf(other.psf.psf_map, mask_image_other)
+                mask_irf_other = self._mask_safe_irf(
+                    other.psf.psf_map, mask_image_other
+                )
                 self.psf.stack(other.psf, weights=mask_irf_other)
             else:
                 raise ValueError("Stacking of PSF kernels not supported")
@@ -467,7 +469,9 @@ class MapDataset(Dataset):
                 self.edisp.exposure_map *= mask_irf.data
 
                 mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
-                mask_irf_other = self._mask_safe_irf(other.edisp.edisp_map, mask_image_other)
+                mask_irf_other = self._mask_safe_irf(
+                    other.edisp.edisp_map, mask_image_other
+                )
                 self.edisp.stack(other.edisp, weights=mask_irf_other)
             else:
                 raise ValueError("Stacking of edisp kernels not supported")
