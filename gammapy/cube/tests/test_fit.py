@@ -306,7 +306,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.counts = dataset_1.npred()
 
     dataset_2 = get_map_dataset(
-        sky_model, geom, geom_etrue, evaluation_mode="global", likelihood="cstat"
+        sky_model, geom, geom_etrue, evaluation_mode="global"
     )
     dataset_2.counts = dataset_2.npred()
 
@@ -323,7 +323,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     npred = dataset_1.npred().data.sum()
     assert_allclose(npred, 6220.529956, rtol=1e-3)
-    assert_allclose(result.total_stat, 11802.750562, rtol=1e-3)
+    assert_allclose(result.total_stat, 27725.577785, rtol=1e-3)
 
     pars = result.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
@@ -349,7 +349,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_2.mask_safe = Map.from_geom(geom, data=mask_safe)
 
     stat = fit.datasets.stat_sum()
-    assert_allclose(stat, 6425.389198)
+    assert_allclose(stat, 15254.470527)
 
     # test model evaluation outside image
 

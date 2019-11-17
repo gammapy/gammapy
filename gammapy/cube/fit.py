@@ -16,7 +16,7 @@ from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
 from gammapy.spectrum import SpectrumDataset
-from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython, wstat
+from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
 from .exposure import _map_spectrum_weight
@@ -58,8 +58,6 @@ class MapDataset(Dataset):
         Energy dispersion
     background_model : `~gammapy.modeling.models.BackgroundModel`
         Background model to use for the fit.
-    likelihood : {"cash", "cstat"}
-        Likelihood function to use for the fit.
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
         The "local" mode evaluates the model components on smaller grids to save computation time.
@@ -72,6 +70,7 @@ class MapDataset(Dataset):
         GTI of the observation or union of GTI if it is a stacked observation
     """
 
+    likelihood_type = "cash"
     tag = "MapDataset"
 
     def __init__(
@@ -84,7 +83,6 @@ class MapDataset(Dataset):
         edisp=None,
         background_model=None,
         name="",
-        likelihood="cash",
         evaluation_mode="local",
         mask_safe=None,
         gti=None,
@@ -95,7 +93,6 @@ class MapDataset(Dataset):
             raise ValueError("mask data must have dtype bool")
 
         self.evaluation_mode = evaluation_mode
-        self.likelihood_type = likelihood
         self.counts = counts
         self.exposure = exposure
         self.mask_fit = mask_fit
@@ -106,14 +103,6 @@ class MapDataset(Dataset):
         self.name = name
         self.mask_safe = mask_safe
         self.gti = gti
-        if likelihood == "cash":
-            self._stat = cash
-            self._stat_sum = cash_sum_cython
-        elif likelihood == "cstat":
-            self._stat = cstat
-            self._stat_sum = cstat_sum_cython
-        else:
-            raise ValueError(f"Invalid likelihood: {likelihood!r}")
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
@@ -488,7 +477,7 @@ class MapDataset(Dataset):
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
-        return self._stat(n_on=self.counts.data, mu_on=self.npred().data)
+        return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
     def residuals(self, method="diff"):
         """Compute residuals map.
@@ -609,9 +598,9 @@ class MapDataset(Dataset):
         counts, npred = self._counts_data, self.npred().data
 
         if self.mask is not None:
-            return self._stat_sum(counts[self.mask.data], npred[self.mask.data])
+            return cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
         else:
-            return self._stat_sum(counts.ravel(), npred.ravel())
+            return cash_sum_cython(counts.ravel(), npred.ravel())
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
