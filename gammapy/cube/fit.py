@@ -35,7 +35,7 @@ MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
 )
 
 BINSZ_IRF_DEFAULT = 0.2
-MARGIN_IRF_DEFAULT = 0.5
+MARGIN_IRF_DEFAULT = 0
 # TODO: Choose optimal binnings depending on IRFs
 
 
