@@ -42,7 +42,7 @@ dependencies:
   - flake8
   - black
   - isort
-  - setuptools-scm
+  - setuptools_scm
   - sphinx-astropy
   - sphinx_rtd_theme
   - nbsphinx
@@ -53,3 +53,4 @@ dependencies:
   - twine
   - parfive
   - jsonschema
+  - yamllint

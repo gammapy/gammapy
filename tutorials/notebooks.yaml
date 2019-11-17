@@ -28,7 +28,6 @@
     - gammapy_datastore_butler
 - name: cta_data_analysis
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/cta_data_analysis.ipynb
-  requires: sherpa
   datasets:
     - cta-1dc
   images:

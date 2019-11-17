@@ -548,7 +548,6 @@ def make_gti(times, time_ref="2010-01-01"):
     return GTI(table)
 
 
-@requires_dependency("sherpa")
 @requires_data("gammapy-data")
 def make_observation_list():
     """obs with dummy IRF"""
