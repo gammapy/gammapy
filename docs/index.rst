@@ -33,22 +33,23 @@ or request a feature, or need help with anything Gammapy-related.
     :caption: Gammapy Package
     :maxdepth: 1
 
+    analysis/index
+    modeling/index
+    cube/index
+    spectrum/index
+    time/index
+    detect/index
     data/index
     irf/index
     maps/index
-    modeling/index
-    cube/index
-    detect/index
-    spectrum/index
-    time/index
-
-    stats/index
-    utils/index
-    analysis/index
-    scripts/index
 
     catalog/index
     astro/index
+
+    stats/index
+    utils/index
+    scripts/index
+
 
 .. _gammapy_dev:
 .. toctree::
