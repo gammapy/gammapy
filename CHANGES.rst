@@ -12,20 +12,22 @@ Summary
 
 **What's new**
 
-The main focus of the work for Gammapy v0.15 was the clean-up and unification
-of the map and cube data reduction. Gammapy now features a ``MapDatasetMaker``,
-and ``SpectrumDatasetMaker`` which directly produce a ``MapDataset`` or ``SpectrumDataset``
-from DL3 data. The existing background estimation classes were adapted by introducing
-a ``ReflectedRegionsBackgroundMaker``, ``RingBackgroundMaker`` and ``AdaptiveRingbackgroundMaker``.
-Those makers also be chained to create custom data reduction workflows.
+A major focus of the work for Gammapy v0.15 was the clean-up and unification of
+the spectrum and cube data reduction. Gammapy now features a
+``MapDatasetMaker``, and ``SpectrumDatasetMaker`` which directly produce a
+``MapDataset`` or ``SpectrumDataset`` from DL3 data. The existing background
+estimation classes were adapted by introducing a
+``ReflectedRegionsBackgroundMaker``, ``RingBackgroundMaker`` and
+``AdaptiveRingbackgroundMaker``. Those makers also be chained to create custom
+data reduction workflows.
 
-For v0.15 a ``MapDatasetOnOff`` was introduced to handle on-off observation based
-analyses and as a container for ring-background estimation. All datasets
-now have a ``.create()`` method to allow an easy creation of the dataset
-from a ``WcsGeom`` or energy specification (for spectral datasets).
+A ``MapDatasetOnOff`` was introduced to handle on-off observation based analyses
+and as a container for ring-background estimation. All datasets now have a
+``.create()`` method to allow an easy creation of the dataset from a ``WcsGeom``
+or energy specification (for spectral datasets).
 
-In Gammapy v0.15 a tutorial was added showing how to do a multi-instrument
-analysis of the Crab using H.E.S.S., Fermi-LAT and HAWC data.
+A tutorial was added showing how to do a multi-instrument analysis of the Crab
+using H.E.S.S., Fermi-LAT and HAWC data.
 
 The support for 2FHL and 4FGL was improved by adding attributes returning
 spatial and spectral models as well as lightcurves to the corresponding objects.
@@ -35,9 +37,8 @@ All spatial models now feature a ``.to_region`` and ``.position_error`` method,
 which return a ``SkyRegion`` object that can be used to illustrate the outline
 and position error of the model.
 
-The high-level ``Analysis`` class was moved to the newly introduced ``gammapy.analysis``
-sub-package.
-
+The high-level ``Analysis`` class was moved to the newly introduced
+``gammapy.analysis`` sub-package.
 
 **Contributors:**
 
