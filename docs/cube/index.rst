@@ -26,51 +26,58 @@ stores in addition the `counts_off`, `acceptance` and `acceptance_off` data.
 A `MapDataset` can be created from any `WcsGeom` object. This is illustrated
 in the following example:
 
+.. code-block:: python
 
-.. code:: python
+    from gammapy.maps import MapAxis, WcsGeom
+    from gammapy.cube import MapDataset
 
-		from gammapy.maps import MapAxis, WcsGeom
-		from gammapy.cube import MapDataset
+    energy_axis = MapAxis.from_bounds(
+        1, 10, nbin=11, name="energy", unit="TeV", interp="log"
+    )
+    geom = WcsGeom.create(axes=[energy_axis])
+    dataset_empty = MapDataset.create(geom=geom)
+    print(dataset_empty)
 
-		energy_axis = MapAxis.from_bounds(1, 10, nbin=11, name="energy", unit="TeV", interp="log")
-		geom = WcsGeom.create(axes=[energy_axis])
-		dataset_empty = MapDataset.create(geom=geom)
-		print(dataset_empty)
-
-At this point the created `dataset` is empty. The `.create()` method has
+At this point the created `dataset` is empty. The ``.create()`` method has
 additional options, e.g. it is also possible to specify a true energy axis:
 
-.. code:: python
+.. code-block:: python
 
-	from gammapy.maps import MapAxis, WcsGeom
-	from gammapy.cube import MapDataset
+    from gammapy.maps import MapAxis, WcsGeom
+    from gammapy.cube import MapDataset
 
-	energy_axis = MapAxis.from_bounds(1, 10, nbin=11, name="energy", unit="TeV", interp="log")
-	geom = WcsGeom.create(axes=[energy_axis])
+    energy_axis = MapAxis.from_bounds(
+        1, 10, nbin=11, name="energy", unit="TeV", interp="log"
+    )
+    geom = WcsGeom.create(axes=[energy_axis])
 
-	energy_axis_true = MapAxis.from_bounds(0.3, 10, nbin=31, name="energy", unit="TeV", interp="log")
-	dataset_empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true)
-	print(dataset_empty)
+    energy_axis_true = MapAxis.from_bounds(
+        0.3, 10, nbin=31, name="energy", unit="TeV", interp="log"
+    )
+    dataset_empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true)
+    print(dataset_empty)
 
 Once this empty "reference" dataset is defined, it can be filled with observational
 data using the `MapDatasetMaker`:
 
-.. code:: python
+.. code-block:: python
 
-	from gammapy.cube import MapDatasetMaker, MapDataset
-	from gammapy.data import DataStore
-	from gammapy.maps import MapAxis, WcsGeom
+    from gammapy.cube import MapDatasetMaker, MapDataset
+    from gammapy.data import DataStore
+    from gammapy.maps import MapAxis, WcsGeom
 
-	data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
-	obs = data_store.get_observations([23592])[0]
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    obs = data_store.get_observations([23592])[0]
 
-	energy_axis = MapAxis.from_bounds(1, 10, nbin=11, name="energy", unit="TeV", interp="log")
-	geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5)
-	dataset_empty = MapDataset.create(geom=geom)
+    energy_axis = MapAxis.from_bounds(
+        1, 10, nbin=11, name="energy", unit="TeV", interp="log"
+    )
+    geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5)
+    dataset_empty = MapDataset.create(geom=geom)
 
-	maker = MapDatasetMaker(offset_max="3 deg")
-	dataset = maker.run(dataset_empty, obs)
-	print(dataset)
+    maker = MapDatasetMaker(offset_max="3 deg")
+    dataset = maker.run(dataset_empty, obs)
+    print(dataset)
 
 The `MapDatasetMaker` creates a cutout adapted  observation and
 fills the corresponding `counts`, `exposure`, `background`,
@@ -94,28 +101,31 @@ criteria, Gammapy provides a `SafeMaskMaker` class.
 
 Here is an example how to use it:
 
-.. code:: python
+.. code-block:: python
 
-	from gammapy.cube import MapDatasetMaker, MapDataset, SafeMaskMaker
-	from gammapy.data import DataStore
-	from gammapy.maps import MapAxis, WcsGeom
+    from gammapy.cube import MapDatasetMaker, MapDataset, SafeMaskMaker
+    from gammapy.data import DataStore
+    from gammapy.maps import MapAxis, WcsGeom
 
-	data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
-	obs = data_store.get_observations([23592])[0]
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    obs = data_store.get_observations([23592])[0]
 
-	energy_axis = MapAxis.from_bounds(1, 10, nbin=11, name="energy", unit="TeV", interp="log")
-	geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5)
-	dataset_empty = MapDataset.create(geom=geom)
+    energy_axis = MapAxis.from_bounds(
+        1, 10, nbin=11, name="energy", unit="TeV", interp="log"
+    )
+    geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5)
+    dataset_empty = MapDataset.create(geom=geom)
 
-	maker = MapDatasetMaker(offset_max="3 deg")
-	safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "offset-max"], offset_max="3 deg")
+    maker = MapDatasetMaker(offset_max="3 deg")
+    safe_mask_maker = SafeMaskMaker(
+        methods=["aeff-default", "offset-max"], offset_max="3 deg"
+    )
 
-	dataset = maker.run(dataset_empty, obs)
-	dataset = safe_mask_maker.run(dataset, obs)
-	print(dataset.mask_safe)
+    dataset = maker.run(dataset_empty, obs)
+    dataset = safe_mask_maker.run(dataset, obs)
+    print(dataset.mask_safe)
 
-
-The `methods` keyword specifies the method used. Please take a
+The ``methods`` keyword specifies the method used. Please take a
 look at `SafeMaskMaker` to see which methods are available.
 The `SafeMaskMaker` does not modify any data, but defines the
 `MapDataset.mask_safe` attribute.
@@ -131,26 +141,27 @@ range mask (`MapDataset.mask_safe`) is applied by setting data outside to
 zero, then data is added to the larger map dataset. To stack multiple
 observations, the larger dataset must be created first:
 
-.. code:: python
+.. code-block:: python
 
-	from gammapy.cube import MapDatasetMaker, MapDataset
-	from gammapy.data import DataStore
-	from gammapy.maps import MapAxis, WcsGeom
+    from gammapy.cube import MapDatasetMaker, MapDataset
+    from gammapy.data import DataStore
+    from gammapy.maps import MapAxis, WcsGeom
 
-	data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
-	obs = data_store.get_observations([23592])[0]
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    obs = data_store.get_observations([23592])[0]
 
-	energy_axis = MapAxis.from_bounds(1, 10, nbin=11, name="energy", unit="TeV", interp="log")
-	geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5, binsz=0.02)
-	stacked = MapDataset.create(geom=geom)
+    energy_axis = MapAxis.from_bounds(
+        1, 10, nbin=11, name="energy", unit="TeV", interp="log"
+    )
+    geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5, binsz=0.02)
+    stacked = MapDataset.create(geom=geom)
 
-	maker = MapDatasetMaker(offset_max="3 deg")
+    maker = MapDatasetMaker(offset_max="3 deg")
 
-	dataset = maker.run(stacked, obs)
-	stacked.stack(dataset)
+    dataset = maker.run(stacked, obs)
+    stacked.stack(dataset)
 
-	print(stacked)
-
+    print(stacked)
 
 Combining Data Reduction Steps
 ==============================
@@ -160,31 +171,29 @@ a full data reduction chain. For this the `MapDatasetMaker` is run
 first and the output dataset is the passed on to the next maker step.
 Finally the dataset per observation is stacked into a larger map.
 
+.. code-block:: python
 
-.. code:: python
+    from gammapy.cube import MapDatasetMaker, MapDataset, SafeMaskMaker
+    from gammapy.data import DataStore
+    from gammapy.maps import MapAxis, WcsGeom
 
-	from gammapy.cube import MapDatasetMaker, MapDataset
-	from gammapy.data import DataStore
-	from gammapy.maps import MapAxis, WcsGeom
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    observations = data_store.get_observations([23523, 23592, 23526, 23559])
 
-	data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
-	observations = data_store.get_observations([23523, 23592, 23526, 23559])
+    energy_axis = MapAxis.from_bounds(1, 10, nbin=11, name="energy", unit="TeV", interp="log")
+    geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5, binsz=0.02)
 
-	energy_axis = MapAxis.from_bounds(1, 10, nbin=11, name="energy", unit="TeV", interp="log")
-	geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5, binsz=0.02)
+    maker = MapDatasetMaker(offset_max="3 deg")
+    safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "offset-max"], offset_max="3 deg")
 
-	maker = MapDatasetMaker(offset_max="3 deg")
-	safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "offset-max"], offset_max="3 deg")
+    stacked = MapDataset.create(geom)
 
-	stacked = MapDataset.create(geom)
+    for obs in observations:
+        dataset = maker.run(stacked, obs)
+        dataset = safe_mask_maker.run(dataset, obs)
+        stacked.stack(dataset)
 
-	for obs in observations:
-		dataset = maker.run(stacked, obs)
-		dataset = safe_mask_maker.run(dataset, obs)
-		stacked.stack(dataset)
-
-	print(stacked)
-
+    print(stacked)
 
 Ring Background Estimation
 ==========================
@@ -195,32 +204,34 @@ classed. Theses classes can only be used for image based data.
 A given `MapDataset` has to be reduced to a single image by calling
 `MapDataset.to_image()`
 
+.. code-block:: python
 
-.. code:: python
+    from gammapy.cube import MapDatasetMaker, MapDataset, RingBackgroundMaker, SafeMaskMaker
+    from gammapy.data import DataStore
+    from gammapy.maps import MapAxis, WcsGeom
 
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    observations = data_store.get_observations([23592, 23559])
 
-	from gammapy.cube import MapDatasetMaker, MapDataset, RingBackgroundMaker, SafeMaskMaker
-	from gammapy.data import DataStore
-	from gammapy.maps import MapAxis, WcsGeom
+    energy_axis = MapAxis.from_bounds(
+        0.3, 30, nbin=11, name="energy", unit="TeV", interp="log"
+    )
+    geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=8, binsz=0.02)
 
-	data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
-	observations = data_store.get_observations([23592, 23559])
+    stacked = MapDataset.create(geom)
+    stacked_on_off = MapDataset.create(geom.squash(axis="energy"))
 
-	energy_axis = MapAxis.from_bounds(0.3, 30, nbin=11, name="energy", unit="TeV", interp="log")
-	geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=8, binsz=0.02)
+    maker = MapDatasetMaker(offset_max="3 deg")
+    safe_mask_maker = SafeMaskMaker(
+        methods=["aeff-default", "offset-max"], offset_max="3 deg"
+    )
+    ring_bkg_maker = RingBackgroundMaker(r_in="0.3 deg", width="0.3 deg")
 
-	stacked = MapDataset.create(geom)
-	stacked_on_off = MapDataset.create(geom.squash(axis="energy"))
-
-	maker = MapDatasetMaker(offset_max="3 deg")
-	safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "offset-max"], offset_max="3 deg")
-	ring_bkg_maker = RingBackgroundMaker(r_in="0.3 deg", width="0.3 deg")
-
-	for obs in observations:
-		dataset = maker.run(stacked, obs)
-		dataset = safe_mask_maker.run(dataset, obs)
-		dataset_on_off = ring_bkg_maker.run(dataset.to_image())
-		stacked_on_off.stack(dataset_on_off)
+    for obs in observations:
+        dataset = maker.run(stacked, obs)
+        dataset = safe_mask_maker.run(dataset, obs)
+        dataset_on_off = ring_bkg_maker.run(dataset.to_image())
+        stacked_on_off.stack(dataset_on_off)
 
 Using `gammapy.cube`
 =====================
