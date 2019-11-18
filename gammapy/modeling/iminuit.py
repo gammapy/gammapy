@@ -47,14 +47,18 @@ def optimize_iminuit(parameters, function, **kwargs):
 
     kwargs = kwargs.copy()
     migrad_opts = kwargs.pop("migrad_opts", {})
+    strategy = kwargs.pop("strategy", 1)
+    tol = kwargs.pop("tol", 0.1)
     minuit = Minuit(minuit_func.fcn, **kwargs)
     minuit.migrad(**migrad_opts)
+    minuit.tol = tol
+    minuit.set_strategy(strategy)
 
     factors = minuit.args
     info = {
         "success": minuit.migrad_ok(),
         "nfev": minuit.get_num_call_fcn(),
-        "message": _get_message(minuit),
+        "message": _get_message(minuit, parameters),
     }
     optimizer = minuit
 
@@ -122,9 +126,10 @@ def mncontour(minuit, parameters, x, y, numpoints, sigma):
 
 
 # this code is copied from https://github.com/iminuit/iminuit/blob/master/iminuit/_minimize.py#L95
-def _get_message(m):
+def _get_message(m, parameters):
     message = "Optimization terminated successfully."
     success = m.migrad_ok()
+    success &= np.all(np.isfinite([par.value for par in parameters]))
     if not success:
         message = "Optimization failed."
         fmin = m.get_fmin()

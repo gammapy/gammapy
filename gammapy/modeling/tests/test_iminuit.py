@@ -104,12 +104,14 @@ def test_iminuit_limits(pars):
     # assert states[1]["upper_limit"] is None
 
 
-def test_migrad_opts(pars):
+def test_opts(pars):
     ds = MyDataset(pars)
     factors, info, minuit = optimize_iminuit(
-        function=ds.fcn, parameters=pars, migrad_opts={"ncall": 20}
+        function=ds.fcn, parameters=pars, migrad_opts={"ncall": 20}, tol=1.0, strategy=2
     )
     assert info["nfev"] == 20
+    assert minuit.tol == 1.0
+    assert minuit.strategy == 2
 
 
 def test_iminuit_confidence(pars):
