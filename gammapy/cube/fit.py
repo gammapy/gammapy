@@ -127,8 +127,11 @@ class MapDataset(Dataset):
 
         exposure_min, exposure_max, exposure_unit = np.nan, np.nan, ""
         if self.exposure is not None:
-            exposure_min = np.min(self.exposure.data[self.exposure.data > 0])
-            exposure_max = np.max(self.exposure.data)
+            mask = self.mask_safe.reduce_over_axes(np.logical_or).data
+            if not mask.any():
+                mask = None
+            exposure_min = np.min(self.exposure.data[..., mask])
+            exposure_max = np.max(self.exposure.data[..., mask])
             exposure_unit = self.exposure.unit
 
         str_ += "\t{:32}: {:.2e} {}\n".format(
