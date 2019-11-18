@@ -305,9 +305,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.background_model.norm.value = 0.5
     dataset_1.counts = dataset_1.npred()
 
-    dataset_2 = get_map_dataset(
-        sky_model, geom, geom_etrue, evaluation_mode="global"
-    )
+    dataset_2 = get_map_dataset(sky_model, geom, geom_etrue, evaluation_mode="global")
     dataset_2.counts = dataset_2.npred()
 
     sky_model.parameters["sigma"].frozen = True
