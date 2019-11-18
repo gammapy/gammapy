@@ -118,14 +118,6 @@ def test_cash_sum_cython(test_data):
     assert_allclose(stat, ref)
 
 
-def test_ctstat_sum_cython(test_data):
-    counts = np.array(test_data["n_on"], dtype=float)
-    npred = np.array(test_data["mu_sig"], dtype=float)
-    stat = stats.cstat_sum_cython(counts=counts, npred=npred)
-    ref = stats.cstat(counts, npred).sum()
-    assert_allclose(stat, ref)
-
-
 def test_wstat_corner_cases():
     """test WSTAT formulae for corner cases"""
     n_on = 0
