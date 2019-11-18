@@ -124,7 +124,7 @@ The `SafeMaskMaker` does not modify any data, but defines the
 Stacking of Datasets
 ====================
 
-The `MapDataset` as well as `MapDatasetOnOff` both have an in-place `.stack()`
+The `MapDataset` as well as `MapDatasetOnOff` both have an in-place ``stack()``
 methods, which allows to stack individual `MapDataset`, which are computed
 per observation into a larger dataset. During the stacking the safe data
 range mask (`MapDataset.mask_safe`) is applied by setting data outside to
