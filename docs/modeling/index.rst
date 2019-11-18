@@ -31,7 +31,7 @@ Spectral Models
 ---------------
 Models are imported from the `gammapy.modeling.models` namespace:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.modeling.models import PowerLawSpectralModel
 
@@ -42,7 +42,7 @@ Spectral models all come with default parameters. Different parameter
 values can be passed on creation of the model, either as a string defining
 the value and unit or as an `~astropy.units.Quantity` object directly:
 
-.. code:: python
+.. code-block:: python
 
     from astropy import units as u
     from gammapy.modeling.models import PowerLawSpectralModel
@@ -56,7 +56,7 @@ the value and unit or as an `~astropy.units.Quantity` object directly:
 
 The model can be evaluated at given energies by calling the model instance:
 
-.. code:: python
+.. code-block:: python
 
     from astropy import units as u
     from gammapy.modeling.models import PowerLawSpectralModel
@@ -71,7 +71,7 @@ The model can be evaluated at given energies by calling the model instance:
 For spectral models you can computed in addition the integrated and energy flux
 in a given energy range:
 
-.. code:: python
+.. code-block:: python
 
     from astropy import units as u
     from gammapy.modeling.models import PowerLawSpectralModel
@@ -93,7 +93,7 @@ Spatial Models
 
 Spatial models are imported from the same `gammapy.modeling.models` namespace:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.modeling.models import GaussianSpatialModel
 
@@ -103,7 +103,7 @@ Spatial models are imported from the same `gammapy.modeling.models` namespace:
 The default coordinate frame is ``"icrs"``, but the frame can be modified using the
 ``frame`` argument:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.modeling.models import GaussianSpatialModel
 
@@ -114,7 +114,7 @@ The default coordinate frame is ``"icrs"``, but the frame can be modified using 
 
 Spatial models can be evaluated again by calling the instance:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.modeling.models import GaussianSpatialModel
     from astropy import units as u
@@ -129,7 +129,7 @@ Spatial models can be evaluated again by calling the instance:
 The returned quantity corresponds to a surface brightness. Spatial model
 can be also evaluated using `gammapy.maps.Map` and `gammapy.maps.Geom` objects:
 
-.. code:: python
+.. code-block:: python
 
     import matplotlib.pyplot as plt
     from gammapy.modeling.models import GaussianSpatialModel
@@ -148,7 +148,7 @@ SkyModel and SkyDiffuseCube
 The `~gammapy.modeling.models.SkyModel` class combines a spectral and a spatial model. It can be created
 from existing spatial and spectral model components:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.modeling.models import SkyModel, GaussianSpatialModel, PowerLawSpectralModel
 
@@ -164,7 +164,7 @@ multiple components.
 The `gammapy.modeling.models.SkyDiffuseCube` can be used to represent source models based on templates.
 It can be created from an existing FITS file:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.modeling.models import SkyDiffuseCube
 

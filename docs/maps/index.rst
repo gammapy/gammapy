@@ -53,7 +53,7 @@ an empty map object from scratch. The ``map_type`` argument can be used to
 control the pixelization scheme (WCS or HPX) and whether the map internally uses
 a sparse representation of the data.
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import Map
     from astropy.coordinates import SkyCoord
@@ -70,7 +70,7 @@ Higher dimensional map objects (cubes and hypercubes) can be constructed by
 passing a list of `~MapAxis` objects for non-spatial dimensions with the
 ``axes`` parameter:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import Map, MapAxis
     from astropy.coordinates import SkyCoord
@@ -92,7 +92,7 @@ geometry parameters. This vector must have the same shape as the non-spatial
 dimensions of the map. The following example demonstrates creating an energy
 cube with a pixel size proportional to the Fermi-LAT PSF:
 
-.. code:: python
+.. code-block:: python
 
     import numpy as np
     from gammapy.maps import Map, MapAxis
@@ -125,7 +125,7 @@ returned sub-map use a `slice` object of length one. This behaviour is
 equivalent to regular numpy array indexing. The following example demonstrates
 the use of `~Map.slice_by_idx()` on a map with a time and energy axes:
 
-.. code:: python
+.. code-block:: python
 
     import numpy as np
     from gammapy.maps import Map, MapAxis
@@ -196,7 +196,7 @@ the suffix of the method name (e.g. `~Map.get_by_idx`).  The following
 demonstrates how one can access the same pixels of a WCS map using each of the
 three coordinate systems:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import Map
 
@@ -213,7 +213,7 @@ arguments can be used to perform an operation along a slice of the map at a
 fixed value along that dimension. Multi-dimensional arguments can be use to
 broadcast a given operation across a grid of coordinate values.
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import Map
 
@@ -235,7 +235,7 @@ broadcast a given operation across a grid of coordinate values.
 The ``set`` and ``fill`` methods can both be used to set pixel values. The
 following demonstrates how one can set pixel values:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import Map
 
@@ -254,7 +254,7 @@ The ``coord`` accessor methods accept `dict`, `~MapCoord`, and
 arrays.  The coordinate frame of the `~astropy.coordinates.SkyCoord` will be
 transformed to match the coordinate system of the map.
 
-.. code:: python
+.. code-block:: python
 
     import numpy as np
     from astropy.coordinates import SkyCoord
@@ -275,7 +275,7 @@ transformed to match the coordinate system of the map.
 A `~MapCoord` or `dict` argument can be used to interact with a map object
 without reference to the axis ordering of the map geometry:
 
-.. code:: python
+.. code-block:: python
 
     coord = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
     m.set_by_coord(coord, [0.5, 1.5])
@@ -318,7 +318,7 @@ Axes of a `MapCoord` can be accessed by index, name, or attribute.  A `MapCoord`
 without explicit axis names can be created by calling `MapCoord.create` with a
 `tuple` argument:
 
-.. code:: python
+.. code-block:: python
 
     import numpy as np
     from astropy.coordinates import SkyCoord
@@ -348,7 +348,7 @@ without named axes must have the same axis ordering as the map geometry.
 
 A `MapCoord` with named axes can be created by calling `MapCoord.create` with a `dict`:
 
-.. code:: python
+.. code-block:: python
 
     c = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
     print(c[0], c['lon'], c.lon)
@@ -388,7 +388,7 @@ for WCS-based maps with regular geometry (e.g. 2D or ND with the same geometry
 in every image plane). ``linear`` and higher order interpolation by pixel
 coordinates is only supported for WCS-based maps.
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import Map
 
@@ -406,7 +406,7 @@ extract a cut-out of a map, or to convert between WCS and HPX map types.  If the
 projection geometry lacks non-spatial dimensions then the non-spatial dimensions
 of the original map will be copied over to the projected map.
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import WcsNDMap, HpxGeom
 
@@ -427,7 +427,7 @@ so that the data array can be indexed directly. Here is an example for an in-pla
 convolution of an image using `astropy.convolution.convolve` to interpolate NaN
 values:
 
-.. code:: python
+.. code-block:: python
 
     import numpy as np
     from astropy.convolution import convolve
@@ -449,7 +449,7 @@ FITS I/O
 Maps can be written to and read from a FITS file with the `~Map.write` and
 `~Map.read` methods:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import Map
 
@@ -464,7 +464,7 @@ Maps can be serialized to a sparse data format by calling `~Map.write` with
 ``sparse=True``. This will write all non-zero pixels in the map to a data table
 appropriate to the pixelization scheme.
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import Map
 
@@ -475,7 +475,7 @@ appropriate to the pixelization scheme.
 Sparse maps have the same ``read`` and ``write`` methods with the exception that
 they will be written to a sparse format by default:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import Map
 
@@ -492,7 +492,7 @@ different geometries to the same file.  For backward compatibility with software
 using other formats, the ``conv`` keyword option is provided to write a file
 using a format other than the GADF format:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import Map, MapAxis
 
@@ -509,7 +509,7 @@ All map objects provide a ``plot`` method for generating a visualization of a
 map.  This method returns figure, axes, and image objects that can be used to
 further tweak/customize the image.
 
-.. code:: python
+.. code-block:: python
 
     import matplotlib.pyplot as plt
     from gammapy.maps import Map
@@ -527,7 +527,7 @@ Creating counts cubes from event lists
 
 This example shows how to fill a counts cube from an event list:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.data import EventList
     from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
@@ -571,7 +571,7 @@ Generating a Cutout of a Model Cube
 This example shows how to extract a cut-out of LAT galactic diffuse model cube
 using the `WcsNDMap.cutout` method:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import WcsGeom, WcsNDMap
     from astropy import units as u

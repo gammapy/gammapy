@@ -17,7 +17,7 @@ the pixel size (NSIDE), coordinate system, and definition of non-spatial axes
 (e.g. energy).  By default a HEALPix geometry will encompass the full sky.  The
 following example shows how to create an all-sky 2D HEALPix image:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import HpxGeom, HpxNDMap, HpxMap
     # Create a HEALPix geometry of NSIDE=16
@@ -31,7 +31,7 @@ Partial-sky maps can be created by passing a ``region`` argument to the map
 geometry constructor or by setting the ``width`` argument to the
 `~gammapy.maps.HpxMap.create` factory method:
 
-.. code:: python
+.. code-block:: python
 
     from gammapy.maps import HpxGeom, HpxMap, HpxNDMap
     from astropy.coordinates import SkyCoord
