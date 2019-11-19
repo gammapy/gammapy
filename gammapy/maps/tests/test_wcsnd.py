@@ -343,58 +343,6 @@ def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes, keepd
         assert_allclose(np.nansum(m.data), np.nansum(msum.data))
 
 
-def test_wcsndmap_reproject():
-    skydir = SkyCoord(110.0, 75.0, unit="deg", frame="icrs")
-    geom = WcsGeom.create(npix=10, binsz=1.0, coordsys="GAL", proj="AIT", skydir=skydir)
-    geom_new = geom.downsample(2)
-
-    data = np.arange(np.prod(geom.data_shape)).reshape(geom.data_shape)
-    m = WcsNDMap(data=data, geom=geom, unit="m2")
-
-    m_reprojected = m.reproject(geom_new, order=1)
-    assert m.unit == m_reprojected.unit
-
-    assert_allclose(m_reprojected.data[0, 0], 5.5)
-    assert_allclose(m_reprojected.data[4, 4], 93.5)
-
-    energy_axis = MapAxis.from_bounds(0.1, 10, 2, name="energy", interp="log")
-    geom_3d = geom.to_cube([energy_axis])
-
-    data = np.arange(np.prod(geom_3d.data_shape)).reshape(geom_3d.data_shape)
-    m = WcsNDMap(data=data, geom=geom_3d, unit="m2")
-
-    m_reprojected = m.reproject(geom_new, order=1)
-    assert m.unit == m_reprojected.unit
-
-    assert_allclose(m_reprojected.data[0, 0, 0], 5.5)
-    assert_allclose(m_reprojected.data[1, 4, 4], 193.5)
-
-    assert m_reprojected.geom.axes[0].name == "energy"
-
-
-@pytest.mark.xfail
-@requires_dependency("healpy")
-def test_wcsndmap_reproject_allsky_car():
-    geom = WcsGeom.create(binsz=10.0, proj="CAR", coordsys="CEL")
-    m = WcsNDMap(geom)
-    coords = m.geom.get_coord()
-    m.set_by_coord(coords, coords[0].value)
-
-    geom0 = WcsGeom.create(
-        binsz=1.0, proj="CAR", coordsys="CEL", skydir=(180.0, 0.0), width=30.0
-    )
-    m0 = m.reproject(geom0, order=1)
-    coords0 = m0.geom.get_coord()
-    assert_allclose(m0.get_by_coord(coords0), coords0[0].value)
-
-    geom1 = HpxGeom.create(binsz=5.0, coordsys="CEL")
-    m1 = m.reproject(geom1, order=1)
-    coords1 = m1.geom.get_coord()
-
-    m = (coords1[0] > 10) & (coords1[0] < 350)
-    assert_allclose(m1.get_by_coord((coords1[0][m], coords1[1][m])), coords1[0][m])
-
-
 @pytest.mark.parametrize(
     ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
 )
