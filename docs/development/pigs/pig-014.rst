@@ -8,7 +8,8 @@ PIG 14 - Uncertainty estimation
 
 * Author: Christoph Deil, Axel Donath, Quentin Rémy, Fabio Acero
 * Created: June 20, 2019
-* Status: draft
+* Accepted: Nov 19, 2019
+* Status: accepted
 * Discussion: `GH 2255`_
 
 Abstract
@@ -41,7 +42,7 @@ a covariance matrix that represents parameter uncertainties and correlations.
 Parameter standard errors are obtained as the square root of the elements on the
 diagonal of the covariance matrix (see e.g. `The interpretation of errors`_).
 Asymmetric errors and confidence intervals can be obtained via likelihood
-profile shape analysis, using methods on the ``gammapy.modeling.Fit` class,
+profile shape analysis, using methods on the ``gammapy.modeling.Fit`` class,
 partially re-implementing, partially calling the methods available in Minuit or
 Sherpa (see e.g. `Fitting and Estimating Parameter Confidence Limits with
 Sherpa`_).
@@ -134,7 +135,11 @@ Alternatives
 Decision
 ========
 
-tbd
+This proposal was discussed extensively on Github (`GH 2255`_), and also
+in-person at the Gammapy coding sprint in Nov 2019. The exact mechanism and
+implementation for uncertainty propagation needs to be worked out (see the
+prototype notebook), this will happen at the coding sprint later this week.
+There were no objections to this proposal received, so it's accepted.
 
 .. _The interpretation of errors: http://lmu.web.psi.ch/docu/manuals/software_manuals/minuit2/mnerror.pdf
 .. _Fitting and Estimating Parameter Confidence Limits with Sherpa: http://conference.scipy.org/proceedings/scipy2011/pdfs/brefsdal.pdf
