@@ -19,8 +19,6 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
-pytest.importorskip("reproject")
-
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="spam")]
 axes2 = [
     MapAxis(np.logspace(0.0, 3.0, 3), interp="log"),
