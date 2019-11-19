@@ -273,11 +273,6 @@ def coord_to_idx(edges, x, clip=False):
     return ibin
 
 
-def bin_to_val(edges, bins):
-    ctr = 0.5 * (edges[1:] + edges[:-1])
-    return ctr[bins]
-
-
 def coord_to_pix(edges, coord, interp="lin"):
     """Convert axis to pixel coordinates for given interpolation scheme."""
     scale = interpolation_scale(interp)
