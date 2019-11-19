@@ -130,8 +130,8 @@ class LightCurveEstimator:
         rows = []
         for dataset in self.datasets:
             row = {
-                "time_min": dataset.counts.meta["t_start"].mjd,
-                "time_max": dataset.counts.meta["t_stop"].mjd,
+                "time_min": dataset.gti.time_start[0].mjd,
+                "time_max": dataset.gti.time_stop[-1].mjd,
             }
             row.update(self.estimate_time_bin_flux(dataset, steps))
             rows.append(row)
@@ -179,8 +179,8 @@ class LightCurveEstimator:
             log.warning(
                 "Fit failed for time bin between {t_min} and {t_max},"
                 " setting NaN.".format(
-                    t_min=dataset.counts.meta["t_start"],
-                    t_max=dataset.counts.meta["t_stop"],
+                    t_min=dataset.gti.time_start[0].mjd,
+                    t_max=dataset.gti.time_stop[-1].mjd,
                 )
             )
 

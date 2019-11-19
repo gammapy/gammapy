@@ -6,6 +6,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
+from gammapy.data import GTI
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.spectrum.tests.test_flux_point_estimator import (
     simulate_map_dataset,
@@ -152,16 +153,13 @@ def test_lightcurve_plot_time(lc):
 def get_spectrum_datasets():
     model = PowerLawSpectralModel()
     dataset_1 = simulate_spectrum_dataset(model=model, random_state=0)
-    dataset_1.counts.meta = {
-        "t_start": Time("2010-01-01T00:00:00"),
-        "t_stop": Time("2010-01-01T01:00:00"),
-    }
+    gti1 = GTI.create("0h", "1h", "2010-01-01T00:00:00")
+    dataset_1.gti = gti1
 
     dataset_2 = simulate_spectrum_dataset(model, random_state=1)
-    dataset_2.counts.meta = {
-        "t_start": Time("2010-01-01T01:00:00"),
-        "t_stop": Time("2010-01-01T02:00:00"),
-    }
+    gti2 = GTI.create("1h", "2h", "2010-01-01T00:00:00")
+    dataset_2.gti = gti2
+
 
     return [dataset_1, dataset_2]
 
@@ -202,16 +200,12 @@ def test_lightcurve_estimator_spectrum_datasets():
 
 def get_map_datasets():
     dataset_1 = simulate_map_dataset(random_state=0)
-    dataset_1.counts.meta = {
-        "t_start": Time("2010-01-01T00:00:00"),
-        "t_stop": Time("2010-01-01T01:00:00"),
-    }
+    gti1 = GTI.create("0 h", "1 h", "2010-01-01T00:00:00")
+    dataset_1.gti = gti1
 
     dataset_2 = simulate_map_dataset(random_state=1)
-    dataset_2.counts.meta = {
-        "t_start": Time("2010-01-01T01:00:00"),
-        "t_stop": Time("2010-01-01T02:00:00"),
-    }
+    gti2 = GTI.create("1 h", "2 h", "2010-01-01T00:00:00")
+    dataset_2.gti = gti2
 
     return [dataset_1, dataset_2]
 
