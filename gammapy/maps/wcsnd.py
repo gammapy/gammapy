@@ -83,10 +83,10 @@ class WcsNDMap(WcsMap):
 
         meta = cls._get_meta_from_header(hdu.header)
         unit = unit_from_fits_image_hdu(hdu.header)
-        map_out = cls(geom, meta=meta, unit=unit)
 
         # TODO: Should we support extracting slices?
         if isinstance(hdu, fits.BinTableHDU):
+            map_out = cls(geom, meta=meta, unit=unit)
             pix = hdu.data.field("PIX")
             pix = np.unravel_index(pix, shape_wcs[::-1])
             vals = hdu.data.field("VALUE")
@@ -99,7 +99,7 @@ class WcsNDMap(WcsMap):
 
             map_out.set_by_idx(idx[::-1], vals)
         else:
-            map_out.data = hdu.data
+            map_out = cls(geom=geom, meta=meta, data=hdu.data, unit=unit)
 
         return map_out
 
