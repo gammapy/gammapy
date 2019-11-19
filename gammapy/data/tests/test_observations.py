@@ -1,9 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-from gammapy.data import DataStore
+from gammapy.data import DataStore, Observation
+from gammapy.irf import load_cta_irfs
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
     assert_time_allclose,
@@ -131,6 +134,21 @@ def test_observations_select_time(
         assert_time_allclose(
             new_obss[-1].gti.time_stop[-1], expected_times[1], atol=0.01
         )
+
+
+def test_observation():
+    livetime = 5.0 * u.hr
+    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    irfs = load_cta_irfs(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+
+    obs = Observation(
+        obs_id=1, observation_live_time_duration=livetime, pointing=pointing, irfs=irfs
+    )
+
+    assert_skycoord_allclose(obs.pointing_radec, pointing.icrs)
+    assert_allclose(obs.gti.time_delta, livetime)
 
 
 @requires_data()
