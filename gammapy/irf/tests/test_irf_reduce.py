@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from gammapy.data import DataStore
 from gammapy.irf import make_mean_psf, make_psf
-from gammapy.utils.energy import energy_logspace
+from gammapy.maps import MapAxis
 from gammapy.utils.testing import requires_data
 
 
@@ -30,7 +30,7 @@ def data_store():
             "psf_value": 4369.96391,
         },
         {
-            "energy": energy_logspace(1, 10, 101, "TeV"),
+            "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV").edges,
             "rad": None,
             "energy_shape": (101,),
             "psf_energy": 1412.537545,
@@ -52,7 +52,7 @@ def data_store():
             "psf_value": 25888.5047,
         },
         {
-            "energy": energy_logspace(1, 10, 101, "TeV"),
+            "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV").edges,
             "rad": Angle(np.arange(0, 2, 0.002), "deg"),
             "energy_shape": (101,),
             "psf_energy": 1412.537545,

@@ -6,8 +6,8 @@ from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.utils import lazyproperty
+from gammapy.maps import MapAxis
 from gammapy.utils.array import array_stats_str
-from gammapy.utils.energy import energy_logspace
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
@@ -432,7 +432,7 @@ class EnergyDependentTablePSF:
         exposure = TemplateSpectralModel(self.energy, self.exposure)
 
         e_min, e_max = energy_band
-        energy = energy_logspace(emin=e_min, emax=e_max, nbins=n_bins)
+        energy = MapAxis.from_energy_bounds(e_min, e_max, n_bins).edges
 
         weights = spectrum(energy) * exposure(energy)
         weights /= weights.sum()

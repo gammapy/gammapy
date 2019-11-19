@@ -485,6 +485,41 @@ class MapAxis:
         return cls(nodes, **kwargs)
 
     @classmethod
+    def from_energy_bounds(cls, emin, emax, nbin, unit=None):
+        """Make an energy axis.
+
+        Used frequently also to make energy grids, by making
+        the axis, and then using ``axis.center`` or ``axis.edges``.
+
+        Parameters
+        ----------
+        emin, emax : `~astropy.units.Quantity`, float
+            Energy range
+        nbin : int
+            Number of bins
+        unit : `~astropy.units.Unit`
+            Energy unit
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Axis with name "energy" and interp "log".
+        """
+        if unit is None:
+            emin = u.Quantity(emin)
+            emax = u.Quantity(emax)
+            unit = emax.unit
+            emin = emin.to(unit)
+        else:
+            unit = u.Unit(unit)
+            emin = u.Quantity(emin, unit)
+            emax = u.Quantity(emax, unit)
+
+        return cls.from_bounds(
+            emin.value, emax.value, nbin=nbin, unit=unit, interp="log", name="energy"
+        )
+
+    @classmethod
     def from_nodes(cls, nodes, **kwargs):
         """Generate an axis object from a sequence of nodes (bin centers).
 
