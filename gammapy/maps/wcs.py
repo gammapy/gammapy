@@ -12,7 +12,6 @@ from regions import SkyRegion
 from .geom import (
     Geom,
     MapCoord,
-    axes_pix_to_coord,
     find_and_read_bands,
     get_shape,
     make_axes,
@@ -691,7 +690,9 @@ class WcsGeom(Geom):
             u.Quantity(coords[1], unit="deg", copy=False),
         ]
 
-        coords += axes_pix_to_coord(self.axes, pix[self._slice_non_spatial_axes])
+        for ax, t in zip(self.axes, pix[self._slice_non_spatial_axes]):
+            coords += [ax.pix_to_coord(t)]
+
         return tuple(coords)
 
     def pix_to_idx(self, pix, clip=False):
