@@ -26,7 +26,6 @@ def make_cython_extension(filename):
 
 cython_files = [
     "gammapy/detect/_test_statistics_cython.pyx",
-    "gammapy/maps/_sparse.pyx",
     "gammapy/stats/fit_statistics_cython.pyx",
 ]
 

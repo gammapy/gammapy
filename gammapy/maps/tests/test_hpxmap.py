@@ -79,7 +79,7 @@ def test_hpxmap_read_write(tmp_path, nside, nested, coordsys, region, axes):
 
     m = create_map(nside, nested, coordsys, region, axes)
     fill_poisson(m, mu=0.5, random_state=0)
-    m.write(path, overwrite=True)
+    m.write(path, sparse=True, overwrite=True)
 
     m2 = HpxNDMap.read(path)
     m4 = Map.read(path, map_type="hpx")
@@ -97,7 +97,7 @@ def test_hpxmap_read_write(tmp_path, nside, nested, coordsys, region, axes):
     assert_allclose(m.data[...][msk], m4.data[...][msk])
 
     # Specify alternate HDU name for IMAGE and BANDS table
-    m.write(path, hdu="IMAGE", hdu_bands="TEST", overwrite=True)
+    m.write(path, sparse=True, hdu="IMAGE", hdu_bands="TEST", overwrite=True)
     m2 = HpxNDMap.read(path)
     m3 = Map.read(path)
     m4 = Map.read(path, map_type="hpx")
