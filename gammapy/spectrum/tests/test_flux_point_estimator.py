@@ -210,10 +210,14 @@ def test_no_likelihood_contribution():
     dataset.model = PowerLawSpectralModel()
     dataset.mask_safe = np.zeros(dataset.data_shape, dtype=bool)
 
-    fpe = FluxPointsEstimator([dataset], e_edges=[1, 10] * u.TeV)
+    fpe = FluxPointsEstimator([dataset], e_edges=[1, 3, 10] * u.TeV)
+    fp = fpe.run()
 
-    with pytest.raises(ValueError):
-        fpe.run()
+    assert np.isnan(fp.table["norm"]).all()
+    assert np.isnan(fp.table["norm_err"]).all()
+    assert np.isnan(fp.table["norm_ul"]).all()
+    assert np.isnan(fp.table["norm_scan"]).all()
+    assert_allclose(fp.table["counts"], 0)
 
 
 def test_mask_shape():
@@ -239,5 +243,6 @@ def test_mask_shape():
         datasets=[dataset_2, dataset_1], e_edges=[1, 10] * u.TeV, source="source"
     )
 
-    with pytest.raises(ValueError):
-        fpe.run()
+    fp = fpe.run()
+
+    assert_allclose(fp.table["counts"], 0)
