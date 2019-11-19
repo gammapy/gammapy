@@ -50,8 +50,7 @@ Constructing with Factory Methods
 
 The `~Map` class provides a `~Map.create` factory method to facilitate creating
 an empty map object from scratch. The ``map_type`` argument can be used to
-control the pixelization scheme (WCS or HPX) and whether the map internally uses
-a sparse representation of the data.
+control the pixelization scheme (WCS or HPX).
 
 .. code-block:: python
 
@@ -439,7 +438,7 @@ Maps can be written to and read from a FITS file with the `~Map.write` and
     m.write('file.fits', hdu='IMAGE')
     m = Map.read('file.fits', hdu='IMAGE')
 
-If ``map_type`` argument is not given when calling `~Map.read` a non-sparse map
+If ``map_type`` argument is not given when calling `~Map.read` a map
 object will be instantiated with the pixelization of the input HDU.
 
 Maps can be serialized to a sparse data format by calling `~Map.write` with
@@ -453,17 +452,6 @@ appropriate to the pixelization scheme.
     m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
     m.write('file.fits', hdu='IMAGE', sparse=True)
     m = Map.read('file.fits', hdu='IMAGE', map_type='wcs')
-
-Sparse maps have the same ``read`` and ``write`` methods with the exception that
-they will be written to a sparse format by default:
-
-.. code-block:: python
-
-    from gammapy.maps import Map
-
-    m = Map.create(binsz=0.1, map_type='hpx-sparse', width=10.0)
-    m.write('file.fits', hdu='IMAGE')
-    m = Map.read('file.fits', hdu='IMAGE', map_type='hpx-sparse')
 
 By default files will be written to the *gamma-astro-data-format* specification
 for sky maps (see `here

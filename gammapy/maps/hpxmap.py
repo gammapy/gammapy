@@ -85,7 +85,6 @@ class HpxMap(Map):
             A HPX map object.
         """
         from .hpxnd import HpxNDMap
-        from .hpxsparse import HpxSparseMap
 
         hpx = HpxGeom.create(
             nside=nside,
@@ -99,12 +98,8 @@ class HpxMap(Map):
         )
         if cls.__name__ == "HpxNDMap":
             return HpxNDMap(hpx, dtype=dtype, meta=meta, unit=unit)
-        elif cls.__name__ == "HpxSparseMap":
-            return HpxSparseMap(hpx, dtype=dtype, meta=meta, unit=unit)
         elif map_type == "hpx":
             return HpxNDMap(hpx, dtype=dtype, meta=meta, unit=unit)
-        elif map_type == "hpx-sparse":
-            return HpxSparseMap(hpx, dtype=dtype, meta=meta, unit=unit)
         else:
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 

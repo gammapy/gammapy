@@ -22,7 +22,6 @@ mapbase_args = [
     (0.1, 10.0, "hpx", SkyCoord(0.0, 30.0, unit="deg"), None, ""),
     (0.1, 10.0, "hpx", SkyCoord(0.0, 30.0, unit="deg"), map_axes[:1], ""),
     (0.1, 10.0, "hpx", SkyCoord(0.0, 30.0, unit="deg"), map_axes, "s^2"),
-    (0.1, 10.0, "hpx-sparse", SkyCoord(0.0, 30.0, unit="deg"), None, ""),
 ]
 
 mapbase_args_with_axes = [_ for _ in mapbase_args if _[4] is not None]
@@ -137,7 +136,7 @@ def test_map_slice_by_idx(binsz, width, map_type, skydir, axes, unit):
     assert sliced.data.base is data
 
 
-@pytest.mark.parametrize("map_type", ["wcs", "hpx", "hpx-sparse"])
+@pytest.mark.parametrize("map_type", ["wcs", "hpx"])
 def test_map_meta_read_write(map_type):
     meta = {"user": "test"}
 
