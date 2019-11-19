@@ -197,30 +197,6 @@ class HpxNDMap(HpxMap):
         data = np.nansum(self.data, axis=axis)
         return self._init_copy(geom=geom, data=data)
 
-    def _reproject_to_wcs(self, geom, order=1, mode="interp"):
-        from reproject import reproject_from_healpix
-
-        data = np.empty(geom.data_shape)
-        coordsys = "galactic" if geom.coordsys == "GAL" else "icrs"
-
-        for img, idx in self.iter_by_image():
-            # TODO: Create WCS object for image plane if
-            # multi-resolution geom
-            shape_out = geom.get_image_shape(idx)[::-1]
-            vals, footprint = reproject_from_healpix(
-                (img, coordsys),
-                geom.wcs,
-                shape_out=shape_out,
-                nested=self.geom.nest,
-                order=order,
-            )
-            data[idx] = vals
-
-        return self._init_copy(geom=geom, data=data)
-
-    def _reproject_to_hpx(self):
-        raise NotImplementedError("Maybe try using Map.interp_by_coord().")
-
     def pad(self, pad_width, mode="constant", cval=0, order=1):
         geom = self.geom.pad(pad_width)
         map_out = self._init_copy(geom=geom, data=None)

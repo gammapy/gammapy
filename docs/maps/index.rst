@@ -397,24 +397,6 @@ coordinates is only supported for WCS-based maps.
     m.interp_by_coord(([-0.05, -0.05], [0.05, 0.05]), interp='linear')
     m.interp_by_coord(([-0.05, -0.05], [0.05, 0.05]), interp='cubic')
 
-Projection
-----------
-
-The `~Map.reproject` method can be used to project a map onto a different
-geometry.  This can be used to convert between different WCS projections,
-extract a cut-out of a map, or to convert between WCS and HPX map types.  If the
-projection geometry lacks non-spatial dimensions then the non-spatial dimensions
-of the original map will be copied over to the projected map.
-
-.. code-block:: python
-
-    from gammapy.maps import WcsNDMap, HpxGeom
-
-    m = WcsNDMap.read('$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz')
-    geom = HpxGeom.create(nside=8, coordsys='GAL')
-    # Convert LAT standard IEM to HPX (nside=8)
-    m_proj = m.reproject(geom)
-    m_proj.write('gll_iem_v06_hpx_nside8.fits')
 
 .. _mapiter:
 

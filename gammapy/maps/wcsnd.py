@@ -13,7 +13,6 @@ from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
-from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 from .utils import INVALID_INDEX, interp_to_order
 from .wcsmap import WcsGeom, WcsMap
 
@@ -83,10 +82,10 @@ class WcsNDMap(WcsMap):
 
         meta = cls._get_meta_from_header(hdu.header)
         unit = unit_from_fits_image_hdu(hdu.header)
-        map_out = cls(geom, meta=meta, unit=unit)
 
         # TODO: Should we support extracting slices?
         if isinstance(hdu, fits.BinTableHDU):
+            map_out = cls(geom, meta=meta, unit=unit)
             pix = hdu.data.field("PIX")
             pix = np.unravel_index(pix, shape_wcs[::-1])
             vals = hdu.data.field("VALUE")
@@ -99,7 +98,7 @@ class WcsNDMap(WcsMap):
 
             map_out.set_by_idx(idx[::-1], vals)
         else:
-            map_out.data = hdu.data
+            map_out = cls(geom=geom, meta=meta, data=hdu.data, unit=unit)
 
         return map_out
 
@@ -247,64 +246,6 @@ class WcsNDMap(WcsMap):
             self.data, axis=axis, keepdims=keepdims, where=~np.isnan(self.data)
         )
         # TODO: summing over the axis can change the unit, handle this correctly
-        return self._init_copy(geom=geom, data=data)
-
-    def _reproject_to_wcs(self, geom, mode="interp", order=1):
-        from reproject import reproject_interp, reproject_exact
-
-        data = np.empty(geom.data_shape)
-
-        for img, idx in self.iter_by_image():
-            # TODO: Create WCS object for image plane if
-            # multi-resolution geom
-            shape_out = geom.get_image_shape(idx)[::-1]
-
-            if self.geom.projection == "CAR" and self.geom.is_allsky:
-                vals, footprint = reproject_car_to_wcs(
-                    (img, self.geom.wcs), geom.wcs, shape_out=shape_out
-                )
-            elif mode == "interp":
-                vals, footprint = reproject_interp(
-                    (img, self.geom.wcs), geom.wcs, shape_out=shape_out
-                )
-            elif mode == "exact":
-                vals, footprint = reproject_exact(
-                    (img, self.geom.wcs), geom.wcs, shape_out=shape_out
-                )
-            else:
-                raise TypeError(f"mode must be 'interp' or 'exact'. Got: {mode!r}")
-
-            data[idx] = vals
-
-        return self._init_copy(geom=geom, data=data)
-
-    def _reproject_to_hpx(self, geom, mode="interp", order=1):
-        from reproject import reproject_to_healpix
-
-        data = np.empty(geom.data_shape)
-        coordsys = "galactic" if geom.coordsys == "GAL" else "icrs"
-
-        for img, idx in self.iter_by_image():
-            # TODO: For partial-sky HPX we need to map from full- to
-            # partial-sky indices
-            if self.geom.projection == "CAR" and self.geom.is_allsky:
-                vals, footprint = reproject_car_to_hpx(
-                    (img, self.geom.wcs),
-                    coordsys,
-                    nside=geom.nside,
-                    nested=geom.nest,
-                    order=order,
-                )
-            else:
-                vals, footprint = reproject_to_healpix(
-                    (img, self.geom.wcs),
-                    coordsys,
-                    nside=geom.nside,
-                    nested=geom.nest,
-                    order=order,
-                )
-            data[idx] = vals
-
         return self._init_copy(geom=geom, data=data)
 
     def pad(self, pad_width, mode="constant", cval=0, order=1):
