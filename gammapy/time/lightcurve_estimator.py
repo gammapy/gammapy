@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 from astropy.time import Time
+from astropy.table import Table
 import astropy.units as u
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import ScaleSpectralModel
@@ -12,6 +13,45 @@ from gammapy.utils.table import table_from_row_data
 __all__ = ["LightCurveEstimator"]
 
 log = logging.getLogger(__name__)
+
+
+def group_datasets_in_time_interval(datasets, time_intervals, atol="1e-6 s"):
+    """Compute the table with the info on the group to which belong each dataset
+    The Tsart and Tstop are stored in MJD from a scale in "utc"
+    Parameters
+    ----------
+    datasets : list of `~gammapy.spectrum.SpectrumDataset` or `~gammapy.cube.MapDataset`
+        Spectrum or Map datasets.
+    time_intervals : list of `astropy.time.Time`
+        Start and stop time for each intervals to compute the LC
+
+    Returns
+    -------
+    table_info : `~astropy.table.Table`
+        Contains the grouping info for each dataset
+    atol : `~astropy.units.Quantity`
+        Tolerance value for time comparison with different scale (Ex= "tt", "utc")
+
+    """
+    table_info = Table(names=('Name', 'Tstart', 'Tstop', 'Bin_type', 'Group_ID'), meta={'name': 'first table'},
+                       dtype=('S10', 'f8', 'f8', 'S10', 'i8'))
+    time_intervals_lowedges = [time_interval[0] for time_interval in time_intervals]
+    time_intervals_upedges = [time_interval[1] for time_interval in time_intervals]
+
+    for dataset in datasets:
+        tstart = dataset.gti.time_start[0]
+        tstop = dataset.gti.time_stop[-1]
+        mask = tstart >= Time(time_intervals_lowedges) - atol
+        mask &= tstop <= Time(time_intervals_upedges) + atol
+        if np.any(mask):
+            group_index = np.where(mask)[0]
+            bin_type = ""
+        else:
+            group_index = -1
+            bin_type = "Overflow"
+        table_info.add_row([dataset.name, tstart.utc.mjd, tstop.utc.mjd, bin_type, group_index])
+
+    return table_info
 
 
 class LightCurveEstimator:
@@ -45,17 +85,17 @@ class LightCurveEstimator:
     """
 
     def __init__(
-        self,
-        datasets,
-        time_intervals=None,
-        source="",
-        norm_min=0.2,
-        norm_max=5,
-        norm_n_values=11,
-        norm_values=None,
-        sigma=1,
-        sigma_ul=2,
-        reoptimize=False,
+            self,
+            datasets,
+            time_intervals=None,
+            source="",
+            norm_min=0.2,
+            norm_max=5,
+            norm_n_values=11,
+            norm_values=None,
+            sigma=1,
+            sigma_ul=2,
+            reoptimize=False,
     ):
         self.datasets = Datasets(datasets)
 
@@ -77,7 +117,6 @@ class LightCurveEstimator:
         time_stop_sorted = time_stop[sorted_indices]
         diff_time_stop = np.diff(time_stop_sorted)
         diff_time_interval_edges = time_start_sorted[1:] - time_stop_sorted[:-1]
-
         if np.any(diff_time_stop < 0) or np.any(diff_time_interval_edges < 0):
             raise ValueError("You give overlapping time bin to perform the LC.")
         else:
@@ -110,6 +149,7 @@ class LightCurveEstimator:
         self.source = source
 
         self._set_scale_model()
+        self.group_table_info = None
 
     def _set_scale_model(self):
         # set the model on all datasets
@@ -146,7 +186,8 @@ class LightCurveEstimator:
                 * "norm-scan": estimate fit statistic profiles.
 
             By default all steps are executed.
-        atol :
+        atol : `~astropy.units.Quantity`
+            Tolerance value for time comparison with different scale (Ex= "tt", "utc")
 
         Returns
         -------
@@ -158,32 +199,25 @@ class LightCurveEstimator:
         self.e_min = e_min
         self.e_max = e_max
 
-        list_tstart_dataset = Time([d.gti.time_start[0] for d in self.datasets])
-        list_tstop_dataset = Time([d.gti.time_stop[-1] for d in self.datasets])
         rows = []
-
-        for time_interval in self.time_intervals:
-            mask = list_tstart_dataset >= time_interval[0] - atol
-            mask &= list_tstop_dataset <= time_interval[1] + atol
-            if np.any(mask):
-                index = np.where(mask)[0]
-                row = {
-                    "time_min": time_interval[0].mjd,
-                    "time_max": time_interval[1].mjd,
-                }
-                interval_list_dataset = Datasets([self.datasets[int(_)] for _ in index])
-                row.update(
-                    self.estimate_time_bin_flux(
-                        interval_list_dataset, time_interval, steps
-                    )
-                )
-                rows.append(row)
-            else:
-                continue
-        if len(rows) == 0:
+        self.group_table_info = group_datasets_in_time_interval(datasets=self.datasets,
+                                                                time_intervals=self.time_intervals,
+                                                                atol=atol)
+        if np.all(self.group_table_info["Bin_type"] == "Overflow"):
             raise ValueError(
                 "None of your dataset GTI are include in the time intervals"
             )
+        for igroup, time_interval in enumerate(self.time_intervals):
+            index_dataset = np.where(self.group_table_info["Group_ID"] == igroup)[0]
+            row = {
+                "time_min": time_interval[0].mjd,
+                "time_max": time_interval[1].mjd,
+            }
+            interval_list_dataset = Datasets([self.datasets[int(_)] for _ in index_dataset])
+            row.update(
+                self.estimate_time_bin_flux(interval_list_dataset, time_interval, steps)
+            )
+            rows.append(row)
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         table = FluxPoints(table).to_sed_type("flux").table
         return LightCurve(table)

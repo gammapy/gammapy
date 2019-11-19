@@ -136,10 +136,12 @@ def test_lightcurve_plot_time(lc):
 def get_spectrum_datasets():
     model = PowerLawSpectralModel()
     dataset_1 = simulate_spectrum_dataset(model=model, random_state=0)
+    dataset_1.name="dataset_1"
     gti1 = GTI.create("0h", "1h", "2010-01-01T00:00:00")
     dataset_1.gti = gti1
 
     dataset_2 = simulate_spectrum_dataset(model, random_state=1)
+    dataset_2.name = "dataset_2"
     gti2 = GTI.create("1h", "2h", "2010-01-01T00:00:00")
     dataset_2.gti = gti2
 
@@ -184,6 +186,12 @@ def test_lightcurve_estimator_spectrum_datasets():
         [444.426957, 23.375417, 3945.382802],
         rtol=1e-5,
     )
+
+    assert len(estimator.group_table_info) == 2
+    assert estimator.group_table_info["Name"][0] == "dataset_1"
+    assert_allclose(estimator.group_table_info["Tstart"], [55197.0, 55197.04166666667])
+    assert_allclose(estimator.group_table_info["Tstop"], [55197.04166666667, 55197.083333333336])
+    assert_allclose(estimator.group_table_info["Group_ID"], [0, 1])
 
     # Test default time interval: each time interval is equal to the gti of each dataset, here one hour
     datasets = get_spectrum_datasets()
@@ -268,11 +276,13 @@ def test_lightcurve_estimator_spectrum_datasets():
 
 def get_map_datasets():
     dataset_1 = simulate_map_dataset(random_state=0)
+    dataset_1.name = "dataset_1"
     gti1 = GTI.create("0 h", "1 h", "2010-01-01T00:00:00")
     dataset_1.gti = gti1
 
     dataset_2 = simulate_map_dataset(random_state=1)
     gti2 = GTI.create("1 h", "2 h", "2010-01-01T00:00:00")
+    dataset_2.name = "dataset_2"
     dataset_2.gti = gti2
 
     return [dataset_1, dataset_2]
