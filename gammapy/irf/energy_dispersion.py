@@ -7,7 +7,6 @@ from astropy.table import Table
 from astropy.units import Quantity
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
-from gammapy.utils.energy import energy_logcenter
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
@@ -638,15 +637,15 @@ class EnergyDispersion2D:
     --------
     Read energy dispersion IRF from disk:
 
+    >>> from gammapy.maps import MapAxis
     >>> from gammapy.irf import EnergyDispersion2D
-    >>> from gammapy.utils.energy import energy_logspace
     >>> filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz'
     >>> edisp2d = EnergyDispersion2D.read(filename, hdu="EDISP")
 
     Create energy dispersion matrix (`~gammapy.irf.EnergyDispersion`)
     for a given field of view offset and energy binning:
 
-    >>> energy = energy_logspace(0.1, 20, 60, 'TeV')
+    >>> energy = MapAxis.from_bounds(0.1, 20, nbin=60, unit="TeV", interp="log").edges
     >>> edisp = edisp2d.to_energy_dispersion(offset='1.2 deg', e_reco=energy, e_true=energy)
 
     See Also
@@ -726,7 +725,7 @@ class EnergyDispersion2D:
         """
         e_true = Quantity(e_true)
         # erf does not work with Quantities
-        true = energy_logcenter(e_true).to_value("TeV")
+        true = MapAxis.from_edges(e_true, interp="log").center.to_value("TeV")
 
         true2d, migra2d = np.meshgrid(true, migra)
 
@@ -826,7 +825,7 @@ class EnergyDispersion2D:
         e_reco = self.data.axis("e_true").edges if e_reco is None else e_reco
 
         data = []
-        for energy in energy_logcenter(e_true):
+        for energy in MapAxis.from_edges(e_true, interp="log").center:
             vec = self.get_response(offset=offset, e_true=energy, e_reco=e_reco)
             data.append(vec)
 
