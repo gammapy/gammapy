@@ -278,9 +278,7 @@ class Map(abc.ABC):
 
             return HpxNDMap
         elif map_type == "hpx-sparse":
-            from .hpxsparse import HpxSparseMap
-
-            return HpxSparseMap
+            raise NotImplementedError()
         else:
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 

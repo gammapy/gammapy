@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, HpxSparseMap, Map, MapAxis
+from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis
 from gammapy.maps.geom import coordsys_to_frame
 from gammapy.maps.utils import fill_poisson
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
@@ -37,25 +37,13 @@ hpx_test_partialsky_geoms = [
 
 hpx_test_geoms = hpx_test_allsky_geoms + hpx_test_partialsky_geoms
 
-hpx_test_geoms_sparse = [tuple(list(t) + [True]) for t in hpx_test_geoms]
-hpx_test_geoms_sparse += [tuple(list(t) + [False]) for t in hpx_test_geoms]
 
-
-def create_map(nside, nested, coordsys, region, axes, sparse):
-    if sparse:
-        m = HpxSparseMap(
-            HpxGeom(
-                nside=nside, nest=nested, coordsys=coordsys, region=region, axes=axes
-            )
+def create_map(nside, nested, coordsys, region, axes):
+    return HpxNDMap(
+        HpxGeom(
+            nside=nside, nest=nested, coordsys=coordsys, region=region, axes=axes
         )
-    else:
-        m = HpxNDMap(
-            HpxGeom(
-                nside=nside, nest=nested, coordsys=coordsys, region=region, axes=axes
-            )
-        )
-
-    return m
+    )
 
 
 @pytest.mark.parametrize(
@@ -77,35 +65,30 @@ def test_hpxmap_init(nside, nested, coordsys, region, axes):
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes", "sparse"), hpx_test_geoms_sparse
+    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
 )
-def test_hpxmap_create(nside, nested, coordsys, region, axes, sparse):
-    create_map(nside, nested, coordsys, region, axes, sparse)
+def test_hpxmap_create(nside, nested, coordsys, region, axes):
+    create_map(nside, nested, coordsys, region, axes)
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes", "sparse"), hpx_test_geoms_sparse
+    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
 )
-def test_hpxmap_read_write(tmp_path, nside, nested, coordsys, region, axes, sparse):
+def test_hpxmap_read_write(tmp_path, nside, nested, coordsys, region, axes):
     path = tmp_path / "tmp.fits"
 
-    m = create_map(nside, nested, coordsys, region, axes, sparse)
+    m = create_map(nside, nested, coordsys, region, axes)
     fill_poisson(m, mu=0.5, random_state=0)
-    m.write(path, sparse=sparse, overwrite=True)
+    m.write(path, overwrite=True)
 
     m2 = HpxNDMap.read(path)
-    m3 = HpxSparseMap.read(path)
     m4 = Map.read(path, map_type="hpx")
-    if sparse:
-        msk = np.isfinite(m2.data[...])
-    else:
-        msk = np.ones_like(m2.data[...], dtype=bool)
+    msk = np.ones_like(m2.data[...], dtype=bool)
 
     assert_allclose(m.data[...][msk], m2.data[...][msk])
-    assert_allclose(m.data[...][msk], m3.data[...][msk])
     assert_allclose(m.data[...][msk], m4.data[...][msk])
 
-    m.write(path, sparse=True, overwrite=True)
+    m.write(path, overwrite=True)
     m2 = HpxNDMap.read(path)
     m3 = HpxMap.read(path, map_type="hpx")
     m4 = Map.read(path, map_type="hpx")
@@ -126,7 +109,7 @@ def test_hpxmap_read_write_fgst(tmp_path):
     axis = MapAxis.from_bounds(100.0, 1000.0, 4, name="energy", unit="MeV")
 
     # Test Counts Cube
-    m = create_map(8, False, "GAL", None, [axis], False)
+    m = create_map(8, False, "GAL", None, [axis])
     m.write(path, conv="fgst-ccube", overwrite=True)
     with fits.open(path, memmap=False) as hdulist:
         assert "SKYMAP" in hdulist
@@ -148,10 +131,10 @@ def test_hpxmap_read_write_fgst(tmp_path):
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes", "sparse"), hpx_test_geoms_sparse
+    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
 )
-def test_hpxmap_set_get_by_pix(nside, nested, coordsys, region, axes, sparse):
-    m = create_map(nside, nested, coordsys, region, axes, sparse)
+def test_hpxmap_set_get_by_pix(nside, nested, coordsys, region, axes):
+    m = create_map(nside, nested, coordsys, region, axes)
     coords = m.geom.get_coord(flat=True)
     idx = m.geom.get_idx(flat=True)
     m.set_by_pix(idx, coords[0])
@@ -159,16 +142,16 @@ def test_hpxmap_set_get_by_pix(nside, nested, coordsys, region, axes, sparse):
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes", "sparse"), hpx_test_geoms_sparse
+    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
 )
-def test_hpxmap_set_get_by_coord(nside, nested, coordsys, region, axes, sparse):
-    m = create_map(nside, nested, coordsys, region, axes, sparse)
+def test_hpxmap_set_get_by_coord(nside, nested, coordsys, region, axes):
+    m = create_map(nside, nested, coordsys, region, axes)
     coords = m.geom.get_coord(flat=True)
     m.set_by_coord(coords, coords[0])
     assert_allclose(coords[0], m.get_by_coord(coords))
 
     # Test with SkyCoords
-    m = create_map(nside, nested, coordsys, region, axes, sparse)
+    m = create_map(nside, nested, coordsys, region, axes)
     coords = m.geom.get_coord(flat=True)
     skydir = SkyCoord(
         coords[0], coords[1], unit="deg", frame=coordsys_to_frame(m.geom.coordsys)
@@ -211,10 +194,10 @@ def test_hpxmap_interp_by_coord_quantities():
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes", "sparse"), hpx_test_geoms_sparse
+    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
 )
-def test_hpxmap_fill_by_coord(nside, nested, coordsys, region, axes, sparse):
-    m = create_map(nside, nested, coordsys, region, axes, sparse)
+def test_hpxmap_fill_by_coord(nside, nested, coordsys, region, axes):
+    m = create_map(nside, nested, coordsys, region, axes)
     coords = m.geom.get_coord(flat=True)
     m.fill_by_coord(coords, coords[1])
     m.fill_by_coord(coords, coords[1])
