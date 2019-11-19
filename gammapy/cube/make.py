@@ -134,7 +134,7 @@ class MapDatasetMaker:
         """
         geom = self._cutout_geom(dataset.counts.geom, observation)
 
-        bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "ALTAZ")
+        bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
         if bkg_coordsys == "ALTAZ":
             pointing = observation.fixed_pointing_info
         elif bkg_coordsys == "RADEC":
