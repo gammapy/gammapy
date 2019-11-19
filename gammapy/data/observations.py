@@ -12,8 +12,9 @@ from gammapy.utils.time import time_ref_from_dict
 from .event_list import EventListChecker
 from .filters import ObservationFilter
 from .pointing import FixedPointingInfo
+from .gti import GTI
 
-__all__ = ["DataStoreObservation", "Observations"]
+__all__ = ["DataStoreObservation", "Observations", "Observation"]
 
 log = logging.getLogger(__name__)
 
@@ -344,6 +345,53 @@ class Observations:
                 new_obs_list.append(new_obs)
 
         return self.__class__(new_obs_list)
+
+
+class Observation:
+    """In-memory observation for binned simulation
+
+    Parameters:
+        obs_id: int
+            Observation ID as identifier
+        observation_live_time_duration: ~astropy.units.Quantity`
+            Livetime exposure of the simulated observation
+        pointing: `~astropy.coordinates.SkyCoord`
+            Pointing position
+        irfs: dict
+            Dictionary of IRFs used for simulating the observation,
+            containing `aeff`, `bkg`, `edisp`, `psf`
+    """
+
+    def __init__(
+            self,
+            obs_id=None,
+            observation_live_time_duration=None,
+            pointing=None,
+            irfs={},
+    ):
+        self.obs_id = obs_id
+        self.observation_live_time_duration = observation_live_time_duration
+        self.pointing_radec = pointing.icrs if pointing else None
+        self.aeff = irfs.get("aeff")
+        self.edisp = irfs.get("edisp")
+        self.psf = irfs.get("psf")
+        self.bkg = irfs.get("bkg")
+
+
+    def __str__(self):
+        ss = "Info for OBS_ID = {}\n".format(self.obs_id)
+
+        ss += "- Pointing pos: RA {:.2f} / Dec {:.2f}\n".format(
+            self.pointing_radec.ra if self.pointing_radec else "None",
+            self.pointing_radec.dec if self.pointing_radec else "None",
+        )
+
+        ss += "- Livetime duration: {}\n".format(self.observation_live_time_duration)
+        return ss
+
+    @property
+    def gti(self):
+        self.gti = GTI.create([0*u.hr], [self.observation_live_time_duration])
 
 
 class ObservationChecker(Checker):
