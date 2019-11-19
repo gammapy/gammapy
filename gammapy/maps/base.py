@@ -359,48 +359,6 @@ class Map(abc.ABC):
         vals = u.Quantity(map_in.get_by_idx(idx), map_in.unit)
         self.fill_by_coord(coords, vals)
 
-    def reproject(self, geom, order=1, mode="interp"):
-        """Reproject this map to a different geometry.
-
-        Only spatial axes are reprojected, if you would like to reproject
-        non-spatial axes consider using `Map.interp_by_coord()` instead.
-
-        Parameters
-        ----------
-        geom : `Geom`
-            Geometry of projection.
-        mode : {'interp', 'exact'}
-            Method for reprojection.  'interp' method interpolates at pixel
-            centers.  'exact' method integrates over intersection of pixels.
-        order : int or str
-            Order of interpolating polynomial (0 = nearest-neighbor, 1 =
-            linear, 2 = quadratic, 3 = cubic).
-
-        Returns
-        -------
-        map : `Map`
-            Reprojected map.
-        """
-        if geom.is_image:
-            axes = [ax.copy() for ax in self.geom.axes]
-            geom = geom.copy(axes=axes)
-        else:
-            axes_eq = geom.ndim == self.geom.ndim
-            axes_eq &= np.all(
-                [ax0 == ax1 for ax0, ax1 in zip(geom.axes, self.geom.axes)]
-            )
-
-            if not axes_eq:
-                raise ValueError(
-                    "Map and target geometry non-spatial axes must match."
-                    "Use interp_by_coord to interpolate in non-spatial axes."
-                )
-
-        if geom.is_hpx:
-            return self._reproject_to_hpx(geom, mode=mode, order=order)
-        else:
-            return self._reproject_to_wcs(geom, mode=mode, order=order)
-
     @abc.abstractmethod
     def pad(self, pad_width, mode="constant", cval=0, order=1):
         """Pad the spatial dimensions of the map.
