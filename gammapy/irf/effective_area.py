@@ -5,7 +5,6 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
-from gammapy.utils.energy import energy_logcenter
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 
@@ -154,7 +153,7 @@ class EffectiveAreaTable:
             ss += "Valid instruments: HESS, HESS2, CTA"
             raise ValueError(ss)
 
-        xx = energy_logcenter(energy).to_value("MeV")
+        xx = MapAxis.from_edges(energy, interp="log").center.to_value("MeV")
 
         g1 = pars[instrument][0]
         g2 = pars[instrument][1]
@@ -428,7 +427,9 @@ class EffectiveAreaTable2D:
         if energy is None:
             energy = self.data.axis("energy").edges
 
-        area = self.data.evaluate(offset=offset, energy=energy_logcenter(energy))
+        area = self.data.evaluate(
+            offset=offset, energy=MapAxis.from_edges(energy, interp="log").center
+        )
 
         return EffectiveAreaTable(
             energy_lo=energy[:-1], energy_hi=energy[1:], data=area

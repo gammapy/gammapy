@@ -7,8 +7,8 @@ from astropy.io import fits
 from astropy.stats import gaussian_fwhm_to_sigma
 from astropy.table import Table
 from astropy.units import Quantity, Unit
+from gammapy.maps import MapAxis
 from gammapy.utils.array import array_stats_str
-from gammapy.utils.energy import energy_logspace
 from gammapy.utils.gauss import MultiGauss2D
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
@@ -324,7 +324,7 @@ class EnergyDependentMultiGaussPSF:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = energy_logspace(self.energy_lo[0], self.energy_hi[-1], 100)
+        energy = MapAxis.from_energy_bounds(self.energy_lo[0], self.energy_hi[-1], 100).edges
 
         for theta in thetas:
             for fraction in fractions:

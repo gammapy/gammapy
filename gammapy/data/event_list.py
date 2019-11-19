@@ -7,8 +7,7 @@ from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from astropy.units import Quantity, Unit
-from gammapy.maps import MapCoord, WcsNDMap
-from gammapy.utils.energy import energy_logspace
+from gammapy.maps import MapAxis, MapCoord, WcsNDMap
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.regions import make_region
 from gammapy.utils.scripts import make_path
@@ -279,7 +278,7 @@ class EventListBase:
 
     def _default_plot_ebounds(self):
         energy = self.energy
-        return energy_logspace(energy.min(), energy.max(), 50)
+        return MapAxis.from_energy_bounds(energy.min(), energy.max(), 50).edges
 
     def _counts_spectrum(self, ebounds):
         from gammapy.spectrum import CountsSpectrum

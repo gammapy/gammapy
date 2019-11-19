@@ -5,9 +5,9 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.units import Quantity
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from gammapy.maps import MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
 from gammapy.spectrum import CountsSpectrum, SpectrumEvaluator
-from gammapy.utils.energy import energy_logspace
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
@@ -18,13 +18,13 @@ from gammapy.utils.testing import (
 class TestCountsSpectrum:
     def setup(self):
         self.counts = [0, 0, 2, 5, 17, 3]
-        self.bins = energy_logspace(1, 10, 7, "TeV")
+        self.bins = MapAxis.from_energy_bounds(1, 10, 6, "TeV").edges
         self.spec = CountsSpectrum(
             data=self.counts, energy_lo=self.bins[:-1], energy_hi=self.bins[1:]
         )
 
     def test_wrong_init(self):
-        bins = energy_logspace(1, 10, 8, "TeV")
+        bins = MapAxis.from_energy_bounds(1, 10, 8, "TeV").edges
         with pytest.raises(ValueError):
             CountsSpectrum(data=self.counts, energy_lo=bins[:-1], energy_hi=bins[1:])
 

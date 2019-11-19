@@ -6,8 +6,8 @@ import scipy.optimize
 import scipy.special
 import astropy.units as u
 from astropy.table import Table
+from gammapy.maps import MapAxis
 from gammapy.modeling import Model, Parameter, Parameters
-from gammapy.utils.energy import energy_logspace
 from gammapy.utils.integrate import integrate_spectrum
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
@@ -219,7 +219,7 @@ class SpectralModel(Model):
         ax = plt.gca() if ax is None else ax
 
         emin, emax = energy_range
-        energy = energy_logspace(emin, emax, n_points, energy_unit)
+        energy = MapAxis.from_energy_bounds(emin, emax, n_points, energy_unit).edges
 
         # evaluate model
         flux = self(energy).to(flux_unit)
@@ -288,7 +288,7 @@ class SpectralModel(Model):
         kwargs.setdefault("linewidth", 0)
 
         emin, emax = energy_range
-        energy = energy_logspace(emin, emax, n_points, energy_unit)
+        energy = MapAxis.from_energy_bounds(emin, emax, n_points, energy_unit).edges
 
         flux, flux_err = self.evaluate_error(energy).to(flux_unit)
 

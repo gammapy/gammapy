@@ -2,6 +2,7 @@
 import pytest
 import numpy as np
 import astropy.units as u
+from gammapy.maps import MapAxis
 from gammapy.modeling.models import (
     SPECTRAL_MODELS,
     AbsorbedSpectralModel,
@@ -18,7 +19,6 @@ from gammapy.modeling.models import (
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     TemplateSpectralModel,
 )
-from gammapy.utils.energy import energy_logspace
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
@@ -28,8 +28,7 @@ from gammapy.utils.testing import (
 
 
 def table_model():
-    energy_edges = energy_logspace(0.1 * u.TeV, 100 * u.TeV, 1000)
-    energy = np.sqrt(energy_edges[:-1] * energy_edges[1:])
+    energy = MapAxis.from_energy_bounds(0.1 * u.TeV, 100 * u.TeV, 1000).center
 
     model = PowerLawSpectralModel(
         index=2.3, amplitude="4 cm-2 s-1 TeV-1", reference="1 TeV"
