@@ -144,13 +144,7 @@ def test_observation():
     )
 
     obs = Observation.create(
-        livetime=livetime,
-        pointing=pointing,
-        aeff=irfs["aeff"],
-        bkg=irfs["bkg"],
-        psf=irfs["psf"],
-        edisp=irfs["edisp"],
-        deadtime=0.1,
+        pointing, livetime=livetime, irfs=irfs, deadtime_fraction=0.1,
     )
 
     assert_skycoord_allclose(obs.pointing_radec, pointing.icrs)
