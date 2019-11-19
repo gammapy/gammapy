@@ -135,7 +135,7 @@ def test_observations_select_time(
             new_obss[-1].gti.time_stop[-1], expected_times[1], atol=0.01
         )
 
-
+@requires_data()
 def test_observation():
     livetime = 5.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
