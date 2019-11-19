@@ -351,34 +351,50 @@ class Observation:
     """In-memory observation for binned simulation
 
     Parameters:
+    ------------
         obs_id: int
             Observation ID as identifier
-        observation_live_time_duration: ~astropy.units.Quantity`
-            Livetime exposure of the simulated observation
         pointing: `~astropy.coordinates.SkyCoord`
-            Pointing position
-        irfs: dict
-            Dictionary of IRFs used for simulating the observation,
-            containing `aeff`, `bkg`, `edisp`, `psf`
+            Pointing position in icrs coordinates
+        aeff: `~gammapy.irf.EffectiveAreaTable2D`
+            Effective area used for simulating the observation
+        edisp: `~gammapy.irf.EnergyDispersion2D`
+            Energy dispersion IRF for simulating the observation
+        psf: `~gammapy.irf.PSF3D`
+            PSF IRF  used for simulating the observation
+        bkg: `~gammapy.irf.Background3D`
+            Background rate model
+        gti: `~gammapy.data.GTI`
+            Table with GTI start and stop time
+        deadtime: float, optional
+            Deadtime fraction, defaults to 0
     """
 
     def __init__(
-        self, obs_id=None, observation_live_time_duration=None, pointing=None, irfs={},
+        self,
+        obs_id=None,
+        gti=None,
+        pointing=None,
+        aeff=None,
+        edisp=None,
+        psf=None,
+        bkg=None,
+        deadtime=0.0,
     ):
         self.obs_id = obs_id
-        self.observation_live_time_duration = observation_live_time_duration
-        self.pointing_radec = pointing.icrs if pointing else None
-        self.aeff = irfs.get("aeff")
-        self.edisp = irfs.get("edisp")
-        self.psf = irfs.get("psf")
-        self.bkg = irfs.get("bkg")
+        self.pointing_radec = pointing
+        self.aeff = aeff
+        self.edisp = edisp
+        self.psf = psf
+        self.bkg = bkg
+        self.gti = gti
+        self.observation_dead_time_fraction = deadtime
 
     def __str__(self):
         ss = "Info for OBS_ID = {}\n".format(self.obs_id)
 
         ss += "- Pointing pos: RA {:.2f} / Dec {:.2f}\n".format(
-            self.pointing_radec.ra if self.pointing_radec else "None",
-            self.pointing_radec.dec if self.pointing_radec else "None",
+            self.pointing_radec.ra, self.pointing_radec.dec,
         )
 
         ss += "- Livetime duration: {}\n".format(self.observation_live_time_duration)
@@ -386,15 +402,84 @@ class Observation:
 
     @property
     def tstart(self):
-        return Quantity(0.0, "hr")
+        return self.gti.time_start[0]
 
     @property
     def tstop(self):
-        return self.observation_live_time_duration
+        return self.gti.time_stop[0]
 
     @property
-    def gti(self):
-        return GTI.create([self.tstart], [self.tstop])
+    def observation_time_duration(self):
+        return self.gti.time_delta
+
+    @property
+    def observation_live_time_duration(self):
+        return self.observation_time_duration * (
+            1 - self.observation_dead_time_fraction
+        )
+
+    @classmethod
+    def create(
+        cls,
+        obs_id=None,
+        livetime=None,
+        tstart=None,
+        tstop=None,
+        pointing=None,
+        aeff=None,
+        edisp=None,
+        psf=None,
+        bkg=None,
+        deadtime=0.0,
+    ):
+        """Creates an in-memory observation.
+        User must either provide the livetime, or the start and stop times.
+
+        Parameters
+        ------------
+           obs_id: int
+                Observation ID as identifier
+           livetime: ~astropy.units.Quantity`
+                Livetime exposure of the simulated observation
+           tstart: `~astropy.units.Quantity`, optional
+                Start time of observation
+           tstop: `~astropy.units.Quantity`, optional
+                 Stop time of observation
+           pointing: `~astropy.coordinates.SkyCoord`
+              Pointing position.
+              By default, points to the Crab
+            aeff: `~gammapy.irf.EffectiveAreaTable2D`
+                Effective area used for simulating the observation
+           edisp: `~gammapy.irf.EnergyDispersion2D`
+                Energy dispersion IRF for simulating the observation
+           psf: `~gammapy.irf.PSF3D`
+                PSF IRF  used for simulating the observation
+           bkg: `~gammapy.irf.Background3D`
+                Background rate model
+           deadtime: float, optional
+                Deadtime fraction, defaults to 0
+
+        Returns:
+        ----------------
+              obs: `gammapy.data.Observation`
+        """
+
+        tstart = tstart or Quantity(0.0, "hr")
+        tstop = livetime or tstop
+        gti = GTI.create([tstart], [tstop])
+        pointing = pointing.icrs if pointing else SkyCoord(83.63, 22.01, unit="deg")
+        obs_id = obs_id or 1
+
+        return cls(
+            obs_id=obs_id,
+            pointing=pointing,
+            gti=gti,
+            aeff=aeff,
+            bkg=bkg,
+            edisp=edisp,
+            psf=psf,
+            deadtime=deadtime,
+        )
 
 
 class ObservationChecker(Checker):

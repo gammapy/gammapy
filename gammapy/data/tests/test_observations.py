@@ -143,12 +143,18 @@ def test_observation():
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
 
-    obs = Observation(
-        obs_id=1, observation_live_time_duration=livetime, pointing=pointing, irfs=irfs
+    obs = Observation.create(
+        livetime=livetime,
+        pointing=pointing,
+        aeff=irfs["aeff"],
+        bkg=irfs["bkg"],
+        psf=irfs["psf"],
+        edisp=irfs["edisp"],
+        deadtime=0.1,
     )
 
     assert_skycoord_allclose(obs.pointing_radec, pointing.icrs)
-    assert_allclose(obs.gti.time_delta, livetime)
+    assert_allclose(obs.observation_live_time_duration, 0.9 * livetime)
 
 
 @requires_data()
