@@ -829,6 +829,7 @@ class FluxPointsEstimator:
         self.fit = Fit(self.datasets)
 
         self._set_scale_model()
+        self._contribute_to_stat = False
 
     def _freeze_parameters(self):
         # freeze other parameters
@@ -900,7 +901,7 @@ class FluxPointsEstimator:
 
     def _energy_mask(self, e_group, dataset):
         energy_mask = np.zeros(dataset.data_shape)
-        energy_mask[e_group["idx_min"] : e_group["idx_max"] + 1] = 1
+        energy_mask[e_group["idx_min"]: e_group["idx_max"] + 1] = 1
         return energy_mask.astype(bool)
 
     def estimate_flux_point(self, e_group, steps="all"):
@@ -939,7 +940,6 @@ class FluxPointsEstimator:
             "ref_eflux": self.ref_model.energy_flux(e_min, e_max),
             "ref_e2dnde": self.ref_model(e_ref) * e_ref ** 2,
         }
-        contribute_to_stat = False
 
         for dataset in self.datasets:
             dataset.mask_fit = self._energy_mask(e_group=e_group, dataset=dataset)
@@ -948,14 +948,7 @@ class FluxPointsEstimator:
             if dataset.mask_safe is not None:
                 mask &= dataset.mask_safe
 
-            contribute_to_stat |= mask.any()
-
-        if not contribute_to_stat:
-            raise ValueError(
-                f"No dataset contributes to the fit statistic between"
-                f" {e_min:.3f} and {e_max:.3f}. Please adapt the "
-                f"flux point energy edges or check the dataset masks."
-            )
+            self._contribute_to_stat |= mask.any()
 
         with self.datasets.parameters.restore_values:
 
@@ -1003,6 +996,9 @@ class FluxPointsEstimator:
         result : dict
             Dict with asymmetric errors for the flux point norm.
         """
+        if not self._contribute_to_stat:
+            return {"norm_errp": np.nan, "norm_errn": np.nan}
+
         result = self.fit.confidence(parameter=self.model.norm, sigma=self.sigma)
         return {"norm_errp": result["errp"], "norm_errn": result["errn"]}
 
@@ -1014,6 +1010,9 @@ class FluxPointsEstimator:
         result : dict
             Dict with symmetric error for the flux point norm.
         """
+        if not self._contribute_to_stat:
+            return {"norm_err": np.nan}
+
         result = self.fit.covariance()
         norm_err = result.parameters.error(self.model.norm)
         return {"norm_err": norm_err}
@@ -1026,6 +1025,9 @@ class FluxPointsEstimator:
         result : dict
             Dict with an array with one entry per dataset with counts for the flux point.
         """
+        if not self._contribute_to_stat:
+            return {"counts": np.zeros(len(self.datasets))}
+
         counts = []
         for dataset in self.datasets:
             mask = dataset.mask_fit
@@ -1044,6 +1046,9 @@ class FluxPointsEstimator:
         result : dict
             Dict with upper limit for the flux point norm.
         """
+        if not self._contribute_to_stat:
+            return {"norm_ul": np.nan}
+
         norm = self.model.norm
 
         # TODO: the minuit backend has convergence problems when the fit statistic is not
@@ -1071,6 +1076,9 @@ class FluxPointsEstimator:
         result : dict
             Dict with ts and sqrt(ts) for the flux point.
         """
+        if not self._contribute_to_stat:
+            return {"sqrt_ts": np.nan, "ts": np.nan}
+
         stat = self.datasets.stat_sum()
 
         # store best fit amplitude, set amplitude of fit model to zero
@@ -1095,6 +1103,10 @@ class FluxPointsEstimator:
         result : dict
             Keys: "norm_scan", "stat_scan"
         """
+        if not self._contribute_to_stat:
+            nans = np.nan * np.empty_like(self.norm_values)
+            return {"norm_scan": nans, "stat_scan": nans}
+
         result = self.fit.stat_profile(
             self.model.norm, values=self.norm_values, reoptimize=self.reoptimize
         )
@@ -1108,6 +1120,9 @@ class FluxPointsEstimator:
         result : dict
             Dict with "norm" and "stat" for the flux point.
         """
+        if not self._contribute_to_stat:
+            return {"norm": np.nan, "stat": np.nan, "success": False}
+
         # start optimization with norm=1
         self.model.norm.value = 1.0
         self.model.norm.frozen = False
