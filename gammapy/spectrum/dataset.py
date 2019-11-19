@@ -868,6 +868,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         'cm2'.
 
         The naming scheme is fixed, with {name} the dataset name:
+        
         * PHA file is named pha_obs{name}.fits
         * BKG file is named bkg_obs{name}.fits
         * ARF file is named arf_obs{name}.fits
@@ -973,6 +974,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         the same folder.
 
         The naming scheme is fixed to the following scheme
+
         * PHA file is named pha_obs{name}.fits
         * BKG file is named bkg_obs{name}.fits
         * ARF file is named arf_obs{name}.fits
