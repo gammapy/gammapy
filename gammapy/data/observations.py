@@ -363,11 +363,7 @@ class Observation:
     """
 
     def __init__(
-            self,
-            obs_id=None,
-            observation_live_time_duration=None,
-            pointing=None,
-            irfs={},
+        self, obs_id=None, observation_live_time_duration=None, pointing=None, irfs={},
     ):
         self.obs_id = obs_id
         self.observation_live_time_duration = observation_live_time_duration
@@ -376,7 +372,6 @@ class Observation:
         self.edisp = irfs.get("edisp")
         self.psf = irfs.get("psf")
         self.bkg = irfs.get("bkg")
-
 
     def __str__(self):
         ss = "Info for OBS_ID = {}\n".format(self.obs_id)
@@ -390,8 +385,16 @@ class Observation:
         return ss
 
     @property
+    def tstart(self):
+        return Quantity(0.0, "hr")
+
+    @property
+    def tstop(self):
+        return self.observation_live_time_duration
+
+    @property
     def gti(self):
-        self.gti = GTI.create([0*u.hr], [self.observation_live_time_duration])
+        return GTI.create([self.tstart], [self.tstop])
 
 
 class ObservationChecker(Checker):
