@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+from astropy.time import Time
+import astropy.units as u
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import ScaleSpectralModel
 from gammapy.spectrum import FluxPoints, SpectrumDatasetOnOff
@@ -13,12 +15,17 @@ log = logging.getLogger(__name__)
 
 
 class LightCurveEstimator:
-    """Estimate flux points for a given list of datasets, each per time bin.
+    """Estimate flux points for a given list of datasets, and in given time interval.
+    If not given, by default will compute the LC for each dataset.
+
+    We required that GTI of the dataset to be totally include in a time interval to be taken into account in the LC.
 
     Parameters
     ----------
     datasets : list of `~gammapy.spectrum.SpectrumDataset` or `~gammapy.cube.MapDataset`
         Spectrum or Map datasets.
+    time_intervals : list of `astropy.time.Time`
+        Start and stop time for each intervals to compute the LC
     source : str
         For which source in the model to compute the flux points. Default is ''
     norm_min : float
@@ -40,6 +47,7 @@ class LightCurveEstimator:
     def __init__(
         self,
         datasets,
+        time_intervals=None,
         source="",
         norm_min=0.2,
         norm_max=5,
@@ -56,6 +64,27 @@ class LightCurveEstimator:
                 "Light Curve estimation requires a list of datasets"
                 " of the same type and data shape."
             )
+
+        if time_intervals is None:
+            time_intervals = [
+                Time([d.gti.time_start[0], d.gti.time_stop[-1]]) for d in self.datasets
+            ]
+
+        time_start = Time([interval[0] for interval in time_intervals])
+        time_stop = Time([interval[1] for interval in time_intervals])
+        sorted_indices = time_start.argsort()
+        time_start_sorted = time_start[sorted_indices]
+        time_stop_sorted = time_stop[sorted_indices]
+        diff_time_stop = np.diff(time_stop_sorted)
+        diff_time_interval_edges = time_start_sorted[1:] - time_stop_sorted[:-1]
+
+        if np.any(diff_time_stop < 0) or np.any(diff_time_interval_edges < 0):
+            raise ValueError("You give overlapping time bin to perform the LC.")
+        else:
+            self.time_intervals = [
+                Time([tstart, tstop])
+                for tstart, tstop in zip(time_start_sorted, time_stop_sorted)
+            ]
 
         dataset = self.datasets[0]
 
@@ -94,7 +123,7 @@ class LightCurveEstimator:
     def ref_model(self):
         return self.model.model
 
-    def run(self, e_ref, e_min, e_max, steps="all"):
+    def run(self, e_ref, e_min, e_max, steps="all", atol="1e-6 s"):
         """Run light curve extraction.
 
         Normalize integral and energy flux between emin and emax.
@@ -117,34 +146,57 @@ class LightCurveEstimator:
                 * "norm-scan": estimate fit statistic profiles.
 
             By default all steps are executed.
+        atol :
 
         Returns
         -------
         lightcurve : `~gammapy.time.LightCurve`
             the Light Curve object
         """
+        atol = u.Quantity(atol)
         self.e_ref = e_ref
         self.e_min = e_min
         self.e_max = e_max
 
+        list_tstart_dataset = Time([d.gti.time_start[0] for d in self.datasets])
+        list_tstop_dataset = Time([d.gti.time_stop[-1] for d in self.datasets])
         rows = []
-        for dataset in self.datasets:
-            row = {
-                "time_min": dataset.gti.time_start[0].mjd,
-                "time_max": dataset.gti.time_stop[-1].mjd,
-            }
-            row.update(self.estimate_time_bin_flux(dataset, steps))
-            rows.append(row)
 
+        for time_interval in self.time_intervals:
+            mask = list_tstart_dataset >= time_interval[0] - atol
+            mask &= list_tstop_dataset <= time_interval[1] + atol
+            if np.any(mask):
+                index = np.where(mask)[0]
+                row = {
+                    "time_min": time_interval[0].mjd,
+                    "time_max": time_interval[1].mjd,
+                }
+                interval_list_dataset = Datasets([self.datasets[int(_)] for _ in index])
+                row.update(
+                    self.estimate_time_bin_flux(
+                        interval_list_dataset, time_interval, steps
+                    )
+                )
+                rows.append(row)
+            else:
+                continue
+        if len(rows) == 0:
+            raise ValueError(
+                "None of your dataset GTI are include in the time intervals"
+            )
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         table = FluxPoints(table).to_sed_type("flux").table
         return LightCurve(table)
 
-    def estimate_time_bin_flux(self, dataset, steps="all"):
+    def estimate_time_bin_flux(self, datasets, time_interval, steps="all"):
         """Estimate flux point for a single energy group.
 
         Parameters
         ----------
+        datasets : `~gammapy.modeling.Datasets`
+            the list of dataset object
+        time_interval : astropy.time.Time`
+            Start and stop time for each intervals
         steps : list of str
             Which steps to execute. Available options are:
 
@@ -161,7 +213,7 @@ class LightCurveEstimator:
         result : dict
             Dict with results for the flux point.
         """
-        self.fit = Fit([dataset])
+        self.fit = Fit([datasets])
 
         result = {
             "e_ref": self.e_ref,
@@ -179,8 +231,7 @@ class LightCurveEstimator:
             log.warning(
                 "Fit failed for time bin between {t_min} and {t_max},"
                 " setting NaN.".format(
-                    t_min=dataset.gti.time_start[0].mjd,
-                    t_max=dataset.gti.time_stop[-1].mjd,
+                    t_min=time_interval[0].mjd, t_max=time_interval[1].mjd
                 )
             )
 
@@ -191,16 +242,16 @@ class LightCurveEstimator:
             result.update(self.estimate_norm_err())
 
         if "counts" in steps:
-            result.update(self.estimate_counts(dataset))
+            result.update(self.estimate_counts(datasets))
+
+        if "ul" in steps:
+            result.update(self.estimate_norm_ul(datasets))
 
         if "errp-errn" in steps:
             result.update(self.estimate_norm_errn_errp())
 
-        if "ul" in steps:
-            result.update(self.estimate_norm_ul(dataset))
-
         if "ts" in steps:
-            result.update(self.estimate_norm_ts())
+            result.update(self.estimate_norm_ts(datasets))
 
         if "norm-scan" in steps:
             result.update(self.estimate_norm_scan())
@@ -231,32 +282,34 @@ class LightCurveEstimator:
         norm_err = result.parameters.error(self.model.norm)
         return {"norm_err": norm_err}
 
-    def estimate_counts(self, dataset):
+    def estimate_counts(self, datasets):
         """Estimate counts for the flux point.
 
         Parameters
         ----------
-        dataset : `~gammapy.modeling.Dataset`
-            the dataset object
+        datasets : `~gammapy.modeling.Datasets`
+            the list of dataset object
 
         Returns
         -------
         result : dict
             Dict with an array with one entry per dataset with counts for the flux point.
         """
-        # TODO : use e_min and e_max interval for counts calculation
-        # TODO : add off counts and excess? for DatasetOnOff
-        # TODO : this may require a loop once we support Datasets per time bin
-        mask = dataset.mask
-        if dataset.mask_safe is not None:
-            mask &= dataset.mask_safe
 
-        counts = dataset.counts.data[mask].sum()
+        counts = []
+        for dataset in datasets:
+            mask = dataset.mask
+            counts.append(dataset.counts.data[mask].sum())
 
-        return {"counts": counts}
+        return {"counts": np.array(counts, dtype=int).sum()}
 
-    def estimate_norm_ul(self, dataset):
+    def estimate_norm_ul(self, datasets):
         """Estimate upper limit for a flux point.
+
+        Parameters
+        ----------
+        datasets : `~gammapy.modeling.Datasets`
+            the list of dataset object
 
         Returns
         -------
@@ -267,8 +320,8 @@ class LightCurveEstimator:
 
         # TODO: the minuit backend has convergence problems when the fit statistic is not
         #  of parabolic shape, which is the case, when there are zero counts in the
-        #  bin. For this case we change to the scipy backend.
-        counts = self.estimate_counts(dataset)["counts"]
+        #  energy bin. For this case we change to the scipy backend.
+        counts = self.estimate_counts(datasets)["counts"]
 
         if np.all(counts == 0):
             result = self.fit.confidence(
@@ -282,15 +335,20 @@ class LightCurveEstimator:
 
         return {"norm_ul": result["errp"] + norm.value}
 
-    def estimate_norm_ts(self):
+    def estimate_norm_ts(self, datasets):
         """Estimate ts and sqrt(ts) for the flux point.
+
+        Parameters
+        ----------
+        datasets : `~gammapy.modeling.Datasets`
+            the list of dataset object
 
         Returns
         -------
         result : dict
             Dict with ts and sqrt(ts) for the flux point.
         """
-        stat = self.datasets.stat_sum()
+        stat = datasets.stat_sum()
 
         # store best fit amplitude, set amplitude of fit model to zero
         self.model.norm.value = 0
@@ -299,7 +357,7 @@ class LightCurveEstimator:
         if self.reoptimize:
             _ = self.fit.optimize()
 
-        stat_null = self.datasets.stat_sum()
+        stat_null = datasets.stat_sum()
 
         # compute sqrt TS
         ts = np.abs(stat_null - stat)
