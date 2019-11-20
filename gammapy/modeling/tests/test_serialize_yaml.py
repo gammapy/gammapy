@@ -13,6 +13,7 @@ from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 from io import StringIO
 
+
 @requires_data()
 def test_dict_to_skymodels():
     filename = get_pkg_data_filename("data/examples.yaml")
@@ -253,12 +254,11 @@ def test_all_model_classes(model_class):
 @pytest.mark.parametrize("model", make_all_models())
 def test_all_model_instances(model):
     assert model.tag == model.__class__.__name__
-    
-    
-@requires_data()    
+
+
+@requires_data()
 def test_missing_parameters():
     filename = get_pkg_data_filename("data/examples.yaml")
     models = SkyModels.from_yaml(filename)
     assert models["source1"].spatial_model.e in models.parameters
-    assert len(models["source1"].spatial_model.parameters) == 5
-    
+    assert len(models["source1"].spatial_model.parameters) == 6
