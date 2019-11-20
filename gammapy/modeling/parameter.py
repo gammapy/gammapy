@@ -441,6 +441,9 @@ class Parameters:
 
     def update_from_dict(self, data):
         for par in data["parameters"]:
+            # TODO: not sure if we should allow this
+            # parameter names should be fixed on init
+            # To be rediscussed
             parameter = self[par["name"].split("@")[0]]
             parameter.name = par["name"]
             parameter.value = float(par["value"])
@@ -448,10 +451,9 @@ class Parameters:
             parameter.min = float(par.get("min", parameter.min))
             parameter.max = float(par.get("max", parameter.max))
             parameter.frozen = par.get("frozen", parameter.frozen)
-        try:
+
+        if "covariance" in data:
             self.covariance = np.array(data["covariance"])
-        except KeyError:
-            pass
 
     @property
     def _ufloats(self):
