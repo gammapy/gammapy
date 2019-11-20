@@ -259,19 +259,21 @@ class Analysis:
 
         if self.settings["datasets"]["stack-datasets"]:
             for obs in self.observations:
-                log.info(f"Processing observation: {obs.obs_id}")
+                log.info(f"Processing observation {obs.obs_id}")
                 dataset = maker.run(stacked, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
+                log.debug(dataset)
                 stacked.stack(dataset)
             self._extract_irf_kernels(stacked)
             datasets = [stacked]
         else:
             datasets = []
             for obs in self.observations:
-                log.info(f"Processing observation: {obs.obs_id}")
+                log.info(f"Processing observation {obs.obs_id}")
                 dataset = maker.run(stacked, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
                 self._extract_irf_kernels(dataset)
+                log.debug(dataset)
                 datasets.append(dataset)
 
         self.datasets = Datasets(datasets)
@@ -342,11 +344,12 @@ class Analysis:
 
         datasets = []
         for obs in self.observations:
-            log.info(f"Processing observation: {obs.obs_id}")
+            log.info(f"Processing observation {obs.obs_id}")
             selection = ["counts", "aeff", "edisp"]
             dataset = dataset_maker.run(obs, selection=selection)
             dataset = reflected_bkg_maker.run(dataset, obs)
             dataset = safe_mask_maker.run(dataset, obs)
+            log.debug(dataset)
             datasets.append(dataset)
 
         self.datasets = Datasets(datasets)
