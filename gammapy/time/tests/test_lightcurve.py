@@ -150,6 +150,59 @@ def get_spectrum_datasets():
 
 @requires_data()
 @requires_dependency("iminuit")
+def test_group_datasets_in_time_interval():
+    # Doing a LC on one hour bin
+    datasets = get_spectrum_datasets()
+    time_intervals = [
+        Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]),
+        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
+    ]
+    estimator = LightCurveEstimator(
+        datasets, norm_n_values=3, time_intervals=time_intervals
+    )
+    steps = ["err", "counts", "ts", "norm-scan"]
+    estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV, steps=steps)
+
+    assert len(estimator.group_table_info) == 2
+    assert estimator.group_table_info["Name"][0] == "dataset_1"
+    assert_allclose(estimator.group_table_info["Tstart"], [55197.0, 55197.04166666667])
+    assert_allclose(
+        estimator.group_table_info["Tstop"], [55197.04166666667, 55197.083333333336]
+    )
+    assert_allclose(estimator.group_table_info["Group_ID"], [0, 1])
+
+
+@requires_data()
+@requires_dependency("iminuit")
+def test_group_datasets_in_time_interval_outflows():
+    datasets = get_spectrum_datasets()
+    # Check Overflow
+    time_intervals = [
+        Time(["2010-01-01T00:00:00", "2010-01-01T00:55:00"]),
+        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
+    ]
+    estimator = LightCurveEstimator(
+        datasets, norm_n_values=3, time_intervals=time_intervals
+    )
+    steps = ["err", "counts", "ts", "norm-scan"]
+    estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV, steps=steps)
+    assert estimator.group_table_info["Bin_type"][0] == "Overflow"
+
+    # Check underflow
+    time_intervals = [
+        Time(["2010-01-01T00:05:00", "2010-01-01T01:00:00"]),
+        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
+    ]
+    estimator = LightCurveEstimator(
+        datasets, norm_n_values=3, time_intervals=time_intervals
+    )
+    steps = ["err", "counts", "ts", "norm-scan"]
+    estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV, steps=steps)
+    assert estimator.group_table_info["Bin_type"][0] == "Underflow"
+
+
+@requires_data()
+@requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets():
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
@@ -185,54 +238,58 @@ def test_lightcurve_estimator_spectrum_datasets():
         [444.426957, 23.375417, 3945.382802],
         rtol=1e-5,
     )
-    assert len(estimator.group_table_info) == 2
-    assert estimator.group_table_info["Name"][0] == "dataset_1"
-    assert_allclose(estimator.group_table_info["Tstart"], [55197.0, 55197.04166666667])
-    assert_allclose(
-        estimator.group_table_info["Tstop"], [55197.04166666667, 55197.083333333336]
-    )
-    assert_allclose(estimator.group_table_info["Group_ID"], [0, 1])
 
+
+@requires_data()
+@requires_dependency("iminuit")
+def test_lightcurve_estimator_spectrum_datasets_default():
     # Test default time interval: each time interval is equal to the gti of each dataset, here one hour
     datasets = get_spectrum_datasets()
-    estimator_default = LightCurveEstimator(datasets, norm_n_values=3)
-    lightcurve_default = estimator_default.run(
-        e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV
+    estimator = LightCurveEstimator(datasets, norm_n_values=3)
+    steps = ["err", "counts", "ts", "norm-scan"]
+    lightcurve = estimator.run(
+        e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV, steps=steps
     )
-    assert_allclose(lightcurve.table["time_min"], lightcurve_default.table["time_min"])
-    assert_allclose(lightcurve.table["time_max"], lightcurve_default.table["time_max"])
-    assert_allclose(lightcurve.table["norm"], lightcurve_default.table["norm"])
+    assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
+    assert_allclose(lightcurve.table["time_max"], [55197.041667, 55197.083333])
+    assert_allclose(lightcurve.table["norm"], [0.988127, 0.948108], rtol=1e-5)
 
+
+@requires_data()
+@requires_dependency("iminuit")
+def test_lightcurve_estimator_spectrum_datasets_notordered():
     # Test that if the time intervals given are not ordered in time, it is first ordered correctly and then
     # compute as expected
     datasets = get_spectrum_datasets()
-    time_intervals_not_ordered = [
+    time_intervals = [
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
         Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]),
     ]
-    estimator_not_ordered = LightCurveEstimator(
-        datasets, norm_n_values=3, time_intervals=time_intervals_not_ordered
+    estimator = LightCurveEstimator(
+        datasets, norm_n_values=3, time_intervals=time_intervals
     )
-    lightcurve_not_ordered = estimator_not_ordered.run(
-        e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV
+    steps = ["err", "counts", "ts", "norm-scan"]
+    lightcurve = estimator.run(
+        e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV, steps=steps
     )
-    assert_allclose(
-        lightcurve_not_ordered.table["time_min"], lightcurve_default.table["time_min"]
-    )
-    assert_allclose(
-        lightcurve_not_ordered.table["time_max"], lightcurve_default.table["time_max"]
-    )
-    assert_allclose(
-        lightcurve_not_ordered.table["norm"], lightcurve_default.table["norm"]
-    )
+    assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
+    assert_allclose(lightcurve.table["time_max"], [55197.041667, 55197.083333])
+    assert_allclose(lightcurve.table["norm"], [0.988127, 0.948108], rtol=1e-5)
 
-    # Test all dataset in a single LC bin
+
+@requires_data()
+@requires_dependency("iminuit")
+def test_lightcurve_estimator_spectrum_datasets_largerbin():
+    # Test all dataset in a single LC bin, here two hours
     datasets = get_spectrum_datasets()
     time_intervals = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
     estimator = LightCurveEstimator(
         datasets, norm_n_values=3, time_intervals=time_intervals
     )
-    lightcurve = estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV)
+    steps = ["err", "counts", "ts", "norm-scan"]
+    lightcurve = estimator.run(
+        e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV, steps=steps
+    )
 
     assert_allclose(lightcurve.table["time_min"], [55197.0])
     assert_allclose(lightcurve.table["time_max"], [55197.083333])
@@ -248,6 +305,10 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert_allclose(lightcurve.table["norm_err"], [0.030929], rtol=1e-4)
     assert_allclose(lightcurve.table["ts"], [1381.880757], rtol=1e-5)
 
+
+@requires_data()
+@requires_dependency("iminuit")
+def test_lightcurve_estimator_spectrum_datasets_timeoverlaped():
     # Check that it returns a ValueError if the time intervals overlapped
     datasets = get_spectrum_datasets()
     time_intervals = [
@@ -259,6 +320,10 @@ def test_lightcurve_estimator_spectrum_datasets():
     msg = "You give overlapping time bin to perform the LC."
     assert str(excinfo.value) == msg
 
+
+@requires_data()
+@requires_dependency("iminuit")
+def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_intervals():
     # Check that it returns a ValueError if the time intervals are smaller than the dataset GTI.
     datasets = get_spectrum_datasets()
     time_intervals = [
@@ -269,33 +334,10 @@ def test_lightcurve_estimator_spectrum_datasets():
         datasets, norm_n_values=3, time_intervals=time_intervals
     )
     with pytest.raises(ValueError) as excinfo:
-        estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV)
+        steps = ["err", "counts", "ts", "norm-scan"]
+        estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV, steps=steps)
     msg = "None of your dataset GTI are include in the time intervals"
     assert str(excinfo.value) == msg
-
-    # Check Overflow
-    datasets = get_spectrum_datasets()
-    time_intervals = [
-        Time(["2010-01-01T00:00:00", "2010-01-01T00:55:00"]),
-        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
-    ]
-    estimator = LightCurveEstimator(
-        datasets, norm_n_values=3, time_intervals=time_intervals
-    )
-    estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV)
-    assert estimator.group_table_info["Bin_type"][0] == "Overflow"
-
-    # Check underflow
-    datasets = get_spectrum_datasets()
-    time_intervals = [
-        Time(["2010-01-01T00:05:00", "2010-01-01T01:00:00"]),
-        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
-    ]
-    estimator = LightCurveEstimator(
-        datasets, norm_n_values=3, time_intervals=time_intervals
-    )
-    estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV)
-    assert estimator.group_table_info["Bin_type"][0] == "Underflow"
 
 
 def get_map_datasets():

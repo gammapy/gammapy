@@ -17,35 +17,39 @@ log = logging.getLogger(__name__)
 
 def group_datasets_in_time_interval(datasets, time_intervals, atol="1e-6 s"):
     """Compute the table with the info on the group to which belong each dataset
-    The Tsart and Tstop are stored in MJD from a scale in "utc"
+    The Tstart and Tstop are stored in MJD from a scale in "utc".
+
     Parameters
     ----------
     datasets : list of `~gammapy.spectrum.SpectrumDataset` or `~gammapy.cube.MapDataset`
         Spectrum or Map datasets.
     time_intervals : list of `astropy.time.Time`
-        Start and stop time for each intervals to compute the LC
+        Start and stop time for each interval to compute the LC
+    atol : `~astropy.units.Quantity`
+        Tolerance value for time comparison with different scale (Ex= "tt", "utc"). Default 1e-6 sec.
 
     Returns
     -------
     table_info : `~astropy.table.Table`
         Contains the grouping info for each dataset
-    atol : `~astropy.units.Quantity`
-        Tolerance value for time comparison with different scale (Ex= "tt", "utc")
-
     """
-    table_info = Table(
+    dataset_group_ID_table = Table(
         names=("Name", "Tstart", "Tstop", "Bin_type", "Group_ID"),
         meta={"name": "first table"},
         dtype=("S10", "f8", "f8", "S10", "i8"),
     )
-    time_intervals_lowedges = [time_interval[0] for time_interval in time_intervals]
-    time_intervals_upedges = [time_interval[1] for time_interval in time_intervals]
+    time_intervals_lowedges = Time(
+        [time_interval[0] for time_interval in time_intervals]
+    )
+    time_intervals_upedges = Time(
+        [time_interval[1] for time_interval in time_intervals]
+    )
 
     for dataset in datasets:
         tstart = dataset.gti.time_start[0]
         tstop = dataset.gti.time_stop[-1]
-        mask1 = tstart >= Time(time_intervals_lowedges) - atol
-        mask2 = tstop <= Time(time_intervals_upedges) + atol
+        mask1 = tstart >= time_intervals_lowedges - atol
+        mask2 = tstop <= time_intervals_upedges + atol
         mask = mask1 & mask2
         if np.any(mask):
             group_index = np.where(mask)[0]
@@ -58,11 +62,11 @@ def group_datasets_in_time_interval(datasets, time_intervals, atol="1e-6 s"):
                 bin_type = "Underflow"
             else:
                 bin_type = "Outflow"
-        table_info.add_row(
+        dataset_group_ID_table.add_row(
             [dataset.name, tstart.utc.mjd, tstop.utc.mjd, bin_type, group_index]
         )
 
-    return table_info
+    return dataset_group_ID_table
 
 
 class LightCurveEstimator:
@@ -76,7 +80,7 @@ class LightCurveEstimator:
     datasets : list of `~gammapy.spectrum.SpectrumDataset` or `~gammapy.cube.MapDataset`
         Spectrum or Map datasets.
     time_intervals : list of `astropy.time.Time`
-        Start and stop time for each intervals to compute the LC
+        Start and stop time for each interval to compute the LC
     source : str
         For which source in the model to compute the flux points. Default is ''
     norm_min : float
@@ -159,12 +163,18 @@ class LightCurveEstimator:
         self.reoptimize = reoptimize
         self.source = source
 
-        self._set_scale_model()
         self.group_table_info = None
 
-    def _set_scale_model(self):
+    def _set_scale_model(self, datasets):
+        """
+        Parameters
+        ----------
+        datasets : `~gammapy.modeling.Datasets`
+            the list of dataset object
+
+        """
         # set the model on all datasets
-        for dataset in self.datasets:
+        for dataset in datasets:
             if isinstance(dataset, SpectrumDatasetOnOff):
                 dataset.model = self.model
             else:
@@ -198,7 +208,7 @@ class LightCurveEstimator:
 
             By default all steps are executed.
         atol : `~astropy.units.Quantity`
-            Tolerance value for time comparison with different scale (Ex= "tt", "utc")
+            Tolerance value for time comparison with different scale (Ex= "tt", "utc"). Default 1e-6 sec.
 
         Returns
         -------
@@ -226,8 +236,9 @@ class LightCurveEstimator:
 
             row = {"time_min": time_interval[0].mjd, "time_max": time_interval[1].mjd}
             interval_list_dataset = Datasets(
-                [self.datasets[int(_)] for _ in index_dataset]
+                [self.datasets[int(_)].copy() for _ in index_dataset]
             )
+            self._set_scale_model(interval_list_dataset)
             row.update(
                 self.estimate_time_bin_flux(interval_list_dataset, time_interval, steps)
             )
@@ -244,7 +255,7 @@ class LightCurveEstimator:
         datasets : `~gammapy.modeling.Datasets`
             the list of dataset object
         time_interval : astropy.time.Time`
-            Start and stop time for each intervals
+            Start and stop time for each interval
         steps : list of str
             Which steps to execute. Available options are:
 
