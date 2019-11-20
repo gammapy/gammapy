@@ -26,7 +26,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
-
+from gammapy.modeling import Datasets
 
 @pytest.fixture
 def geom():
@@ -671,3 +671,18 @@ def test_stack_onoff_cutout(geom_image):
     assert_allclose(dataset.counts_off.data.sum(), dataset_cutout.counts_off.data.sum())
     assert_allclose(dataset.alpha.data.sum(), dataset_cutout.alpha.data.sum())
     assert_allclose(dataset.exposure.data.sum(), dataset_cutout.exposure.data.sum())
+
+
+def test_datasets_io_no_model(tmpdir):
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(npix=(5, 5), axes=[axis])
+    dataset_1 = MapDataset.create(geom)
+    dataset_2 = MapDataset.create(geom)
+
+    datasets = Datasets([dataset_1, dataset_2])
+
+    datasets.to_yaml(path=tmpdir, prefix="test")
+
+
+
+
