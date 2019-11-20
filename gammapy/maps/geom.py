@@ -237,23 +237,6 @@ def pix_tuple_to_idx(pix):
     return tuple(idx)
 
 
-def axes_pix_to_coord(axes, pix):
-    """Perform pixel to axis coordinates for a list of `~MapAxis` objects.
-
-    Parameters
-    ----------
-    axes : list
-        List of `~MapAxis`.
-    pix : tuple
-        Tuple of pixel coordinates.
-    """
-    coords = []
-    for ax, t in zip(axes, pix):
-        coords += [ax.pix_to_coord(t)]
-
-    return coords
-
-
 def coord_to_idx(edges, x, clip=False):
     """Convert axis coordinates ``x`` to bin indices.
 
@@ -271,11 +254,6 @@ def coord_to_idx(edges, x, clip=False):
 
     ibin[~np.isfinite(x)] = INVALID_INDEX.int
     return ibin
-
-
-def bin_to_val(edges, bins):
-    ctr = 0.5 * (edges[1:] + edges[:-1])
-    return ctr[bins]
 
 
 def coord_to_pix(edges, coord, interp="lin"):
