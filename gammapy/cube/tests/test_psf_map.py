@@ -161,7 +161,7 @@ def test_containment_radius_map():
         skydir=pointing, binsz=0.5, width=(4, 3), axes=[psf_theta_axis, energy_axis]
     )
 
-    psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg)
+    psfmap = make_psf_map(psf=psf, pointing=pointing, geom=geom)
     m = psfmap.containment_radius_map(1 * u.TeV)
     coord = SkyCoord(0.3, 0, unit="deg")
     val = m.interp_by_coord(coord)
