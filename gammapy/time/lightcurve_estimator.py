@@ -33,23 +33,34 @@ def group_datasets_in_time_interval(datasets, time_intervals, atol="1e-6 s"):
         Tolerance value for time comparison with different scale (Ex= "tt", "utc")
 
     """
-    table_info = Table(names=('Name', 'Tstart', 'Tstop', 'Bin_type', 'Group_ID'), meta={'name': 'first table'},
-                       dtype=('S10', 'f8', 'f8', 'S10', 'i8'))
+    table_info = Table(
+        names=("Name", "Tstart", "Tstop", "Bin_type", "Group_ID"),
+        meta={"name": "first table"},
+        dtype=("S10", "f8", "f8", "S10", "i8"),
+    )
     time_intervals_lowedges = [time_interval[0] for time_interval in time_intervals]
     time_intervals_upedges = [time_interval[1] for time_interval in time_intervals]
 
     for dataset in datasets:
         tstart = dataset.gti.time_start[0]
         tstop = dataset.gti.time_stop[-1]
-        mask = tstart >= Time(time_intervals_lowedges) - atol
-        mask &= tstop <= Time(time_intervals_upedges) + atol
+        mask1 = tstart >= Time(time_intervals_lowedges) - atol
+        mask2 = tstop <= Time(time_intervals_upedges) + atol
+        mask = mask1 & mask2
         if np.any(mask):
             group_index = np.where(mask)[0]
             bin_type = ""
         else:
             group_index = -1
-            bin_type = "Overflow"
-        table_info.add_row([dataset.name, tstart.utc.mjd, tstop.utc.mjd, bin_type, group_index])
+            if np.any(mask1):
+                bin_type = "Overflow"
+            elif np.any(mask2):
+                bin_type = "Underflow"
+            else:
+                bin_type = "Outflow"
+        table_info.add_row(
+            [dataset.name, tstart.utc.mjd, tstop.utc.mjd, bin_type, group_index]
+        )
 
     return table_info
 
@@ -85,17 +96,17 @@ class LightCurveEstimator:
     """
 
     def __init__(
-            self,
-            datasets,
-            time_intervals=None,
-            source="",
-            norm_min=0.2,
-            norm_max=5,
-            norm_n_values=11,
-            norm_values=None,
-            sigma=1,
-            sigma_ul=2,
-            reoptimize=False,
+        self,
+        datasets,
+        time_intervals=None,
+        source="",
+        norm_min=0.2,
+        norm_max=5,
+        norm_n_values=11,
+        norm_values=None,
+        sigma=1,
+        sigma_ul=2,
+        reoptimize=False,
     ):
         self.datasets = Datasets(datasets)
 
@@ -200,20 +211,23 @@ class LightCurveEstimator:
         self.e_max = e_max
 
         rows = []
-        self.group_table_info = group_datasets_in_time_interval(datasets=self.datasets,
-                                                                time_intervals=self.time_intervals,
-                                                                atol=atol)
-        if np.all(self.group_table_info["Bin_type"] == "Overflow"):
+        self.group_table_info = group_datasets_in_time_interval(
+            datasets=self.datasets, time_intervals=self.time_intervals, atol=atol
+        )
+        if np.all(self.group_table_info["Group_ID"] == -1):
             raise ValueError(
                 "None of your dataset GTI are include in the time intervals"
             )
         for igroup, time_interval in enumerate(self.time_intervals):
             index_dataset = np.where(self.group_table_info["Group_ID"] == igroup)[0]
-            row = {
-                "time_min": time_interval[0].mjd,
-                "time_max": time_interval[1].mjd,
-            }
-            interval_list_dataset = Datasets([self.datasets[int(_)] for _ in index_dataset])
+            if len(index_dataset) == 0:
+                log.info("No Dataset for the time interval " + str(igroup))
+                continue
+
+            row = {"time_min": time_interval[0].mjd, "time_max": time_interval[1].mjd}
+            interval_list_dataset = Datasets(
+                [self.datasets[int(_)] for _ in index_dataset]
+            )
             row.update(
                 self.estimate_time_bin_flux(interval_list_dataset, time_interval, steps)
             )
