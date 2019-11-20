@@ -5,3 +5,4 @@ from .lightcurve import *
 from .lightcurve_estimator import *
 from .period import *
 from .simulate import *
+from .variability import *
