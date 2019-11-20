@@ -108,7 +108,12 @@ class SpectrumDataset(Dataset):
         counts_off = np.nan
         if getattr(self, "counts_off", None) is not None:
             counts_off = np.sum(self.counts_off.data)
-        str_ += "\t{:32}: {:.2f}\n\n".format("Total off counts", counts_off)
+            str_ += "\t{:32}: {:.2f}\n\n".format("Total off counts", counts_off)
+
+        background = np.nan
+        if getattr(self, "background", None) is not None:
+            background = np.sum(self.background.data)
+            str_ += "\t{:32}: {:.2f}\n\n".format("Total background counts", background)
 
         aeff_min, aeff_max, aeff_unit = np.nan, np.nan, ""
         if self.aeff is not None:
@@ -141,7 +146,7 @@ class SpectrumDataset(Dataset):
         str_ += "\t{:32}: {}\n".format("Fit statistic type", self.likelihood_type)
 
         stat = np.nan
-        if self.model is not None:
+        if self.model is not None and self.counts is not None:
             stat = self.stat_sum()
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
