@@ -423,7 +423,7 @@ class Parameters:
         parameters = []
         for par in data["parameters"]:
             parameter = Parameter(
-                name=par["name"],
+                name=par["name"].split("@")[0],
                 factor=float(par["value"]),
                 unit=par.get("unit", ""),
                 min=float(par.get("min", np.nan)),
@@ -438,6 +438,20 @@ class Parameters:
             covariance = None
 
         return cls(parameters=parameters, covariance=covariance)
+
+    def update_from_dict(self, data):
+        for par in data["parameters"]:
+            parameter = self[par["name"].split("@")[0]]
+            parameter.value = float(par["value"])
+            parameter.unit=u.Unit(par.get("unit", parameter.unit))
+            parameter.min=float(par.get("min", parameter.min))
+            parameter.max=float(par.get("max", parameter.max))
+            parameter.frozen=par.get("frozen", parameter.frozen)
+        try:
+            self.covariance = np.array(data["covariance"])
+        except KeyError:
+            pass
+
 
     @property
     def _ufloats(self):

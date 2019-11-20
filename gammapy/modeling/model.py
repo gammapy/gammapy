@@ -82,7 +82,7 @@ class Model:
 
     # TODO: try to get rid of this
     def _update_from_dict(self, data):
-        self._parameters = Parameters.from_dict(data)
+        self._parameters.update_from_dict(data)
         for parameter in self.parameters:
             setattr(self, parameter.name, parameter)
 
