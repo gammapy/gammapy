@@ -1,12 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
+from gammapy.data import DataStore
 from gammapy.cube import PSFMap, make_map_exposure_true_energy, make_psf_map
 from gammapy.irf import PSF3D, EffectiveAreaTable2D
 from gammapy.maps import MapAxis, MapCoord, WcsGeom
+from gammapy.maps.utils import edges_from_lo_hi
+from gammapy.utils.testing import requires_data
+
+
+@pytest.fixture(scope="session")
+def data_store():
+    return DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 
 
 def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
@@ -152,7 +161,7 @@ def test_containment_radius_map():
         skydir=pointing, binsz=0.5, width=(4, 3), axes=[psf_theta_axis, energy_axis]
     )
 
-    psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg)
+    psfmap = make_psf_map(psf=psf, pointing=pointing, geom=geom)
     m = psfmap.containment_radius_map(1 * u.TeV)
     coord = SkyCoord(0.3, 0, unit="deg")
     val = m.interp_by_coord(coord)
@@ -209,3 +218,146 @@ def test_sample_coord_gauss():
 
     assert_allclose(np.mean(coords.skycoord.data.lon.wrap_at("180d").deg), 0, atol=1e-3)
     assert_allclose(np.mean(coords.lat), 0, atol=1e-3)
+
+
+def make_psf_map_obs(geom, obs):
+    exposure_map = make_map_exposure_true_energy(
+        geom=geom.squash(axis="theta"),
+        pointing=obs.pointing_radec,
+        aeff=obs.aeff,
+        livetime=obs.observation_live_time_duration
+    )
+
+    psf_map = make_psf_map(
+        geom=geom,
+        psf=obs.psf,
+        pointing=obs.pointing_radec,
+        exposure_map=exposure_map
+    )
+    return psf_map
+
+
+@requires_data()
+@pytest.mark.parametrize(
+    "pars",
+    [
+        {
+            "energy": None,
+            "rad": None,
+            "energy_shape": (32,),
+            "psf_energy": 865.9643,
+            "rad_shape": (144,),
+            "psf_rad": 0.0015362848,
+            "psf_exposure": 3.14711e12,
+            "psf_value_shape": (32, 144),
+            "psf_value": 4369.96391,
+        },
+        {
+            "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV"),
+            "rad": None,
+            "energy_shape": (100,),
+            "psf_energy": 1428.893959,
+            "rad_shape": (144,),
+            "psf_rad": 0.0015362848,
+            "psf_exposure": 4.723409e+12,
+            "psf_value_shape": (100, 144),
+            "psf_value": 3719.21488,
+        },
+        {
+            "energy": None,
+            "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="theta"),
+            "energy_shape": (32,),
+            "psf_energy": 865.9643,
+            "rad_shape": (1000,),
+            "psf_rad": 0.000524,
+            "psf_exposure": 3.14711e12,
+            "psf_value_shape": (32, 1000),
+            "psf_value": 25888.5047,
+        },
+        {
+            "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV"),
+            "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="theta"),
+            "energy_shape": (100,),
+            "psf_energy": 1428.893959,
+            "rad_shape": (1000,),
+            "psf_rad": 0.000524,
+            "psf_exposure": 4.723409e+12,
+            "psf_value_shape": (100, 1000),
+            "psf_value": 22561.543595,
+        },
+    ],
+)
+def test_make_psf(pars, data_store):
+    obs = data_store.obs(23523)
+    psf = obs.psf
+
+    if pars["energy"] is None:
+        edges = edges_from_lo_hi(psf.energy_lo, psf.energy_hi)
+        energy_axis = MapAxis.from_edges(edges, interp="log", name="energy")
+    else:
+        energy_axis = pars["energy"]
+
+    if pars["rad"] is None:
+        edges = edges_from_lo_hi(psf.rad_lo, psf.rad_hi)
+        rad_axis = MapAxis.from_edges(edges, name="theta")
+    else:
+        rad_axis = pars["rad"]
+
+    position = SkyCoord(83.63, 22.01, unit="deg")
+
+    geom = WcsGeom.create(
+        skydir=position,
+        npix=(3, 3),
+        axes=[rad_axis, energy_axis],
+        binsz=0.2
+    )
+    psf_map = make_psf_map_obs(geom, obs)
+    psf = psf_map.get_energy_dependent_table_psf(position)
+
+    assert psf.energy.unit == "GeV"
+    assert psf.energy.shape == pars["energy_shape"]
+    assert_allclose(psf.energy.value[15], pars["psf_energy"], rtol=1e-3)
+
+    assert psf.rad.unit == "rad"
+    assert psf.rad.shape == pars["rad_shape"]
+    assert_allclose(psf.rad.value[15], pars["psf_rad"], rtol=1e-3)
+
+    assert psf.exposure.unit == "cm2 s"
+    assert psf.exposure.shape == pars["energy_shape"]
+    assert_allclose(psf.exposure.value[15], pars["psf_exposure"], rtol=1e-3)
+
+    assert psf.psf_value.unit == "sr-1"
+    assert psf.psf_value.shape == pars["psf_value_shape"]
+    assert_allclose(psf.psf_value.value[15, 50], pars["psf_value"], rtol=1e-3)
+
+
+@requires_data()
+def test_make_mean_psf(data_store):
+    observations = data_store.get_observations([23523, 23526])
+    position = SkyCoord(83.63, 22.01, unit="deg")
+
+    psf = observations[0].psf
+
+    edges = edges_from_lo_hi(psf.energy_lo, psf.energy_hi)
+    energy_axis = MapAxis.from_edges(edges, interp="log", name="energy")
+
+    edges = edges_from_lo_hi(psf.rad_lo, psf.rad_hi)
+    rad_axis = MapAxis.from_edges(edges, name="theta")
+
+    geom = WcsGeom.create(
+        skydir=position,
+        npix=(3, 3),
+        axes=[rad_axis, energy_axis],
+        binsz=0.2
+    )
+
+    psf_map_1 = make_psf_map_obs(geom, observations[0])
+    psf_map_2 = make_psf_map_obs(geom, observations[1])
+
+    stacked_psf = psf_map_1.copy()
+    stacked_psf.stack(psf_map_2)
+
+    psf = stacked_psf.get_energy_dependent_table_psf(position)
+
+    assert not np.isnan(psf.psf_value.value).any()
+    assert_allclose(psf.psf_value.value[22, 22], 12206.1665, rtol=1e-3)
