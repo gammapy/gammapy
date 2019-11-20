@@ -439,6 +439,22 @@ class Parameters:
 
         return cls(parameters=parameters, covariance=covariance)
 
+    def update_from_dict(self, data):
+        for par in data["parameters"]:
+            # TODO: not sure if we should allow this
+            # parameter names should be fixed on init
+            # To be rediscussed
+            parameter = self[par["name"].split("@")[0]]
+            parameter.name = par["name"]
+            parameter.value = float(par["value"])
+            parameter.unit = u.Unit(par.get("unit", parameter.unit))
+            parameter.min = float(par.get("min", parameter.min))
+            parameter.max = float(par.get("max", parameter.max))
+            parameter.frozen = par.get("frozen", parameter.frozen)
+
+        if "covariance" in data:
+            self.covariance = np.array(data["covariance"])
+
     @property
     def _ufloats(self):
         """Return dict of ufloats with covariance."""
