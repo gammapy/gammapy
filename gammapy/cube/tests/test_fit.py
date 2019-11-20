@@ -676,12 +676,19 @@ def test_stack_onoff_cutout(geom_image):
 def test_datasets_io_no_model(tmpdir):
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)
     geom = WcsGeom.create(npix=(5, 5), axes=[axis])
-    dataset_1 = MapDataset.create(geom)
-    dataset_2 = MapDataset.create(geom)
+    dataset_1 = MapDataset.create(geom, name="1")
+    dataset_2 = MapDataset.create(geom, name="2")
 
     datasets = Datasets([dataset_1, dataset_2])
 
     datasets.to_yaml(path=tmpdir, prefix="test")
+
+    filename_1 = tmpdir / "test_data_1.fits"
+    assert filename_1.exists()
+
+    filename_2 = tmpdir / "test_data_2.fits"
+    assert filename_2.exists()
+
 
 
 
