@@ -30,10 +30,6 @@ from gammapy.utils.testing import (
 
 @pytest.fixture(scope="session")
 def lc():
-    # table = Table()
-    # time_ref = Time('2010-01-01')
-    # meta = time_ref_to_dict(time_ref)
-
     meta = dict(TIMESYS="utc")
 
     table = Table(
@@ -96,20 +92,6 @@ def test_lightcurve_read_write(tmp_path, lc, format):
     assert time.scale == "utc"
     assert time.format == "mjd"
     assert_allclose(time.mjd, [55198, 55202.5])
-
-
-def test_lightcurve_fvar(lc):
-    fvar, fvar_err = lc.compute_fvar()
-    assert_allclose(fvar, 0.6982120021884471)
-    # Note: the following tolerance is very low in the next assert,
-    # because results differ by ~ 1e-3 between different machines
-    assert_allclose(fvar_err, 0.07905694150420949, rtol=1e-2)
-
-
-def test_lightcurve_chisq(lc):
-    chi2, pval = lc.compute_chisq()
-    assert_quantity_allclose(chi2, 1.0000000000000001e-11)
-    assert_quantity_allclose(pval, 0.999997476867478)
 
 
 @requires_dependency("matplotlib")

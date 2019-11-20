@@ -9,9 +9,13 @@ time - Time analysis
 Introduction
 ============
 
-`gammapy.time` contains methods for time-based analysis, e.g. from AGN, binaries
-or pulsars. There is also `gammapy.utils.time`, which contains low-level helper
-functions for time conversions e.g. following the
+`gammapy.time` contains classes and methods for time-based analysis, e.g. for AGN, binaries
+or pulsars studies. The main classes are `~gammapy.time.LightCurve`, which is a container for
+lightcurves, and `~gammapy.time.LightCurveEstimator`, which extracts a light curve from a list
+ of datasets. A number of functions to test for variability and periodicity are available in
+`~gammapy.time.variability` and `~gammapy.time.periodicity`. Finally, there is also
+`gammapy.utils.time`, which contains low-level helper
+functions for time conversions.
 
 Getting Started
 ===============
@@ -46,35 +50,7 @@ few conveniences, like creating time objects and a quick-look plot:
 Variability test
 ----------------
 
-The `~gammapy.time.exptest` function can be used to compute the significance of
-variability (compared to the null hypothesis of constant rate) for a list of
-event time differences.
-
-Here's an example how to use the `~gammapy.time.random_times` helper function to
-simulate a `~astropy.time.TimeDelta` array for a given constant rate and use
-`~gammapy.time.exptest` to assess the level of variability (0.11 sigma in this
-case, not variable):
-
-.. code-block:: python
-
-    >>> from astropy.units import Quantity
-    >>> from gammapy.time import random_times, exptest
-    >>> rate = Quantity(10, 'Hz')
-    >>> time_delta = random_times(size=100, rate=rate, return_diff=True, random_state=0)
-    >>> mr = exptest(time_delta)
-    >>> print(mr)
-    0.11395763079
-
-See ``examples/example_exptest.py`` for a longer example.
-
-TODO: apply this to the 3FHL events and check which sources are variable as a nice example.
-
-.. code-block:: python
-
-    from gammapy.data import EventList
-    from gammapy.time import exptest
-    events = EventList.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz")
-    # TODO: cone select events for 3FHL catalog sources, compute mr for each and print 10 most variable sources
+TODO: Add some rapid discussion of chisquare and fractional variance functions
 
 Other codes
 ===========
