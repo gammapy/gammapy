@@ -558,8 +558,9 @@ class MapDataset(Dataset):
             counts_spatial, npred_spatial, method
         )
 
-        mask = self.mask_safe.reduce_over_axes(func=np.logical_or)
-        spatial_residuals.data[~mask.data] = np.nan
+        if self.mask_safe is not None:
+            mask = self.mask_safe.reduce_over_axes(func=np.logical_or)
+            spatial_residuals.data[~mask.data] = np.nan
 
         # If no region is provided, skip spectral residuals
         ncols = 2 if region is not None else 1
