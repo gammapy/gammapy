@@ -411,7 +411,7 @@ class Observation:
 
     @property
     def observation_time_duration(self):
-        return self.gti.time_delta
+        return self.gti.time_delta[0]
 
     @property
     def observation_live_time_duration(self):
