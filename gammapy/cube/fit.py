@@ -156,7 +156,9 @@ class MapDataset(Dataset):
         str_ += "\t{:32}: {}\n".format("Fit statistic type", self.likelihood_type)
 
         stat = np.nan
-        if self.model is not None or self.background_model is not None:
+        if self.count is not None and (
+            self.model is not None or self.background_model is not None
+        ):
             stat = self.stat_sum()
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
