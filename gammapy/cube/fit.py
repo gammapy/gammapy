@@ -1380,7 +1380,7 @@ class MapEvaluator:
                     position=self.model.position, width=width
                 )
                 self.contributes = True
-            except NoOverlapError:
+            except (NoOverlapError, ValueError):
                 self.contributes = False
         else:
             self.exposure = exposure
