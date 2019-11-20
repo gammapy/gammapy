@@ -220,6 +220,23 @@ def test_sample_coord_gauss():
     assert_allclose(np.mean(coords.lat), 0, atol=1e-3)
 
 
+def make_psf_map_obs(geom, obs):
+    exposure_map = make_map_exposure_true_energy(
+        geom=geom.squash(axis="theta"),
+        pointing=obs.pointing_radec,
+        aeff=obs.aeff,
+        livetime=obs.observation_live_time_duration
+    )
+
+    psf_map = make_psf_map(
+        geom=geom,
+        psf=obs.psf,
+        pointing=obs.pointing_radec,
+        exposure_map=exposure_map
+    )
+    return psf_map
+
+
 @requires_data()
 @pytest.mark.parametrize(
     "pars",
@@ -294,21 +311,7 @@ def test_make_psf(pars, data_store):
         axes=[rad_axis, energy_axis],
         binsz=0.2
     )
-
-    exposure_map = make_map_exposure_true_energy(
-        geom=geom.squash(axis="theta"),
-        pointing=obs.pointing_radec,
-        aeff=obs.aeff,
-        livetime=obs.observation_live_time_duration
-    )
-
-    psf_map = make_psf_map(
-        geom=geom,
-        psf=obs.psf,
-        pointing=obs.pointing_radec,
-        exposure_map=exposure_map
-    )
-
+    psf_map = make_psf_map_obs(geom, obs)
     psf = psf_map.get_energy_dependent_table_psf(position)
 
     assert psf.energy.unit == "GeV"
@@ -326,3 +329,35 @@ def test_make_psf(pars, data_store):
     assert psf.psf_value.unit == "sr-1"
     assert psf.psf_value.shape == pars["psf_value_shape"]
     assert_allclose(psf.psf_value.value[15, 50], pars["psf_value"], rtol=1e-3)
+
+
+@requires_data()
+def test_make_mean_psf(data_store):
+    observations = data_store.get_observations([23523, 23526])
+    position = SkyCoord(83.63, 22.01, unit="deg")
+
+    psf = observations[0].psf
+
+    edges = edges_from_lo_hi(psf.energy_lo, psf.energy_hi)
+    energy_axis = MapAxis.from_edges(edges, interp="log", name="energy")
+
+    edges = edges_from_lo_hi(psf.rad_lo, psf.rad_hi)
+    rad_axis = MapAxis.from_edges(edges, name="theta")
+
+    geom = WcsGeom.create(
+        skydir=position,
+        npix=(3, 3),
+        axes=[rad_axis, energy_axis],
+        binsz=0.2
+    )
+
+    psf_map_1 = make_psf_map_obs(geom, observations[0])
+    psf_map_2 = make_psf_map_obs(geom, observations[1])
+
+    stacked_psf = psf_map_1.copy()
+    stacked_psf.stack(psf_map_2)
+
+    psf = stacked_psf.get_energy_dependent_table_psf(position)
+
+    assert not np.isnan(psf.psf_value.value).any()
+    assert_allclose(psf.psf_value.value[22, 22], 12206.1665, rtol=1e-3)
