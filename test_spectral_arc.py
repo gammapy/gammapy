@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.maps import MapAxis
 from gammapy.modeling.models import (
@@ -12,6 +11,7 @@ from gammapy.modeling.models import (
     ExpCutoffPowerLaw3FGLSpectralModel,
     ExpCutoffPowerLawSpectralModel,
     GaussianSpectralModel,
+    LogGaussianSpectralModel,
     LogParabolaSpectralModel,
     NaimaSpectralModel,
     PowerLaw2SpectralModel,
@@ -179,6 +179,30 @@ TEST_MODELS = [
         integral_infinity=u.Quantity(4, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(7.999998896163037, "TeV cm-2 s-1"),
     ),
+    dict(
+        name="LogGaussianSpectralModel",
+        model=LogGaussianSpectralModel(
+            norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2
+        ),
+        val_at_2TeV=u.Quantity(3.98942280401, "cm-2 s-1 TeV-1"),
+        val_at_3TeV=u.Quantity(0.34066933236079916, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(3.994439, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(8.151414, "TeV cm-2 s-1"),
+    ),
+    dict(
+        name="ecpl",
+        model=ExpCutoffPowerLawSpectralModel(
+            index=1.8 * u.Unit(""),
+            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            reference=1 * u.TeV,
+            lambda_=0.1 / u.TeV,
+            alpha=0.8,
+        ),
+        val_at_2TeV=u.Quantity(0.871694294554192, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(3.026342, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(7.38652453, "TeV cm-2 s-1"),
+        e_peak=1.7677669529663684 * u.TeV,
+    ),
 ]
 
 # Add compound models
@@ -225,6 +249,7 @@ TEST_MODELS.append(
 )
 
 
+@requires_dependency("uncertainties")
 @requires_dependency("scipy")
 @pytest.mark.parametrize("spectrum", TEST_MODELS, ids=lambda _: _["name"])
 def test_models(spectrum):
@@ -237,30 +262,7 @@ def test_models(spectrum):
         value = model(energy)
         assert_quantity_allclose(value, spectrum["val_at_3TeV"])
 
-    emin = 1
-        kwargs = {par.name: par.quantity for par in self.parameters}
-        kwargs = self._convert_evaluate_unit(kwargs, energy)
-        return self.evaluate(energy, **kwargs)
-
-    @staticmethod
-    def _convert_evaluate_unit(kwargs_ref, energy):
-        kwargs = {}
-        for name, quantity in kwargs_ref.items():
-            if quantity.unit.physical_type == "energy":
-                quantity = quantity.to(energy.unit)
-            kwargs[name] = quantity
-        return kwargs
-
-    def __add__(self, model):
-        if not isinstance(model, SpectralModel):
-            model = ConstantSpectralModel(const=model)
-        return CompoundSpectralModel(self, model, operator.add)
-
-    def __radd__(self, model):
-        return self.__add__(model)
-
-    def __sub__(self, model):
-        if not isinstance(model, SpectralModel): * u.TeV
+    emin = 1 * u.TeV
     emax = 10 * u.TeV
     assert_quantity_allclose(
         model.integral(emin=emin, emax=emax), spectrum["integral_1_10TeV"]
@@ -278,6 +280,7 @@ def test_models(spectrum):
         isinstance(model, ConstantSpectralModel)
         or spectrum["name"] == "compound6"
         or spectrum["name"] == "GaussianSpectralModel"
+        or spectrum["name"] == "LogGaussianSpectralModel"
     ):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.01)
 
@@ -307,6 +310,7 @@ def test_model_unit():
 
 
 @requires_dependency("matplotlib")
+@requires_dependency("uncertainties")
 def test_model_plot():
     pwl = PowerLawSpectralModel(
         amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
@@ -379,6 +383,26 @@ def test_absorption():
     desired = u.Quantity(2.739695e-13, "TeV-1 s-1 cm-2")
     assert model.alpha_norm.value == 1.5
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
+
+
+@requires_dependency("uncertainties")
+def test_pwl_index_2_error():
+    pwl = PowerLawSpectralModel(
+        amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
+    )
+    pwl.parameters.set_error(amplitude=1e-13 * u.Unit("TeV-1 cm-2 s-1"))
+
+    val, val_err = pwl.evaluate_error(1 * u.TeV)
+    assert_quantity_allclose(val, 1e-12 * u.Unit("TeV-1 cm-2 s-1"))
+    assert_quantity_allclose(val_err, 0.1e-12 * u.Unit("TeV-1 cm-2 s-1"))
+
+    flux, flux_err = pwl.integral_error(1 * u.TeV, 10 * u.TeV)
+    assert_quantity_allclose(flux, 9e-13 * u.Unit("cm-2 s-1"))
+    assert_quantity_allclose(flux_err, 9e-14 * u.Unit("cm-2 s-1"))
+
+    eflux, eflux_err = pwl.energy_flux_error(1 * u.TeV, 10 * u.TeV)
+    assert_quantity_allclose(eflux, 2.302585e-12 * u.Unit("TeV cm-2 s-1"))
+    assert_quantity_allclose(eflux_err, 0.2302585e-12 * u.Unit("TeV cm-2 s-1"))
 
 
 def test_ecpl_integrate():
@@ -512,92 +536,3 @@ class TestNaimaModel:
         )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
-
-
-class TestSpectralModelErrorPropagation:
-    """Test spectral model error propagation.
-
-    https://github.com/gammapy/gammapy/blob/master/docs/development/pigs/pig-014.rst#proposal
-    https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/experiments/uncertainty_estimation_prototype.ipynb
-    """
-
-    def setup(self):
-        self.model = LogParabolaSpectralModel(
-            amplitude=3.76e-11 * u.Unit("cm-2 s-1 TeV-1"),
-            reference=1 * u.TeV,
-            alpha=2.44,
-            beta=0.25,
-        )
-        self.model.parameters.covariance = [
-            [1.31e-23, 0, -6.80e-14, 3.04e-13],
-            [0, 0, 0, 0],
-            [-6.80e-14, 0, 0.00899, 0.00904],
-            [3.04e-13, 0, 0.00904, 0.0284],
-        ]
-
-    def test_evaluate_error_scalar(self):
-        # evaluate_error on scalar
-        out = self.model.evaluate_error(1 * u.TeV)
-        assert isinstance(out, u.Quantity)
-        assert out.unit == "cm-2 s-1 TeV-1"
-        assert out.shape == (2,)
-        assert_allclose(out.data, [3.7600e-11, 3.6193e-12], rtol=1e-3)
-
-    def test_evaluate_error_array(self):
-        out = self.model.evaluate_error([1, 100] * u.TeV)
-        assert out.shape == (2, 2)
-        expected = [[3.76e-11, 2.469e-18], [3.619e-12, 9.375e-18]]
-        assert_allclose(out.data, expected, rtol=1e-3)
-
-    def test_evaluate_error_unit(self):
-        out = self.model.evaluate_error(1e6 * u.MeV)
-        assert out.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(out.data, [3.760e-11, 3.6193e-12], rtol=1e-3)
-
-    @pytest.mark.xfail(reason="FIXME, do we need this method?")
-    def test_integral_error(self):
-        out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)
-        assert out.unit == "cm-2 s-1"
-        assert out.shape == (2,)
-        assert_allclose(out.data, [2.197e-11, 2.796e-12], rtol=1e-3)
-
-    @pytest.mark.xfail(reason="FIXME, do we need this method?")
-    def test_energy_flux_error(self):
-        out = self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV)
-        assert out.unit == "TeV cm-2 s-1"
-        assert out.shape == (2,)
-        assert_allclose(out.data, [4.119e-11, 8.157e-12], rtol=1e-3)
-
-    def test_ecpl_model(self):
-        # Regression test for ECPL model
-        # https://github.com/gammapy/gammapy/issues/2007
-        model = ExpCutoffPowerLawSpectralModel(
-            amplitude=2.076183759227292e-12 * u.Unit("cm-2 s-1 TeV-1"),
-            index=1.8763343736076483,
-            lambda_=0.08703226432146616 * u.Unit("TeV-1"),
-            reference=1 * u.TeV,
-        )
-        model.parameters.covariance = [
-            [0.00204191498, -1.507724e-14, 0.0, -0.001834819],
-            [-1.507724e-14, 1.6864740e-25, 0.0, 1.854251e-14],
-            [0.0, 0.0, 0.0, 0.0],
-            [-0.001834819175, 1.8542517e-14, 0.0, 0.0032559101],
-        ]
-
-        out = model.evaluate_error(1 * u.TeV)
-        assert_allclose(out.data, [1.903129e-12, 2.979976e-13], rtol=1e-3)
-
-        out = model.evaluate_error(0.1 * u.TeV)
-        assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
-
-    def test_naima_model_error_proprgation(self):
-        # Regression test for Naima model
-        # https://github.com/gammapy/gammapy/issues/2190
-        # TODO: implement test case. Move to Naima model tests!
-        pass
-
-    def test_absorption_model_error_propagation(self):
-        # Regression test for absorption model
-        # https://github.com/gammapy/gammapy/issues/1046
-        # TODO: implement test case. Move to absorption model tests!
-        pass
