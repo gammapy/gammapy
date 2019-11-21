@@ -37,7 +37,7 @@ How to extract 1D spectra?
 ++++++++++++++++++++++++++
 
 How to compute the cumulative significance of a source?
-++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Data reduction: maps
 --------------------
@@ -46,13 +46,15 @@ How to build maps?
 ++++++++++++++++++
 
 How to plot a excess map?
-+++++++++++++++++++++++++++
++++++++++++++++++++++++++
 
 How to overlay significance and excess on maps?
 +++++++++++++++++++++++++++++++++++++++++++++++
 
 How to detect sources in a map?
 +++++++++++++++++++++++++++++++
+
+Short explanation and link to detect.ipynb
 
 How to compute the significance of a source?
 ++++++++++++++++++++++++++++++++++++++++++++
@@ -84,15 +86,23 @@ allows modeling and fitting of Naima models within Gammapy (e.g. using CTA, H.E.
 
 **TODO: give link to example in a notebook.**
 
+How to add a user defined model?
+++++++++++++++++++++++++++++++++
+
+**TODO: move content from spectrum_simulation.ipynb**
 
 How to extract a lightcurve?
 ++++++++++++++++++++++++++++
 
+Link to relevant notebook.
+
 How to create a light curve with time intervals shorter than observations?
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+Link to relevant notebook.
 
-Do we really want the those:
+Do we really want those:
+
 How to test for variability?
 ++++++++++++++++++++++++++++
 
