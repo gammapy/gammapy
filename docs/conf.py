@@ -38,7 +38,6 @@ intersphinx_mapping["regions"] = (
     None,
 )
 intersphinx_mapping["reproject"] = ("https://reproject.readthedocs.io/en/latest/", None)
-intersphinx_mapping["uncertainties"] = ("https://pythonhosted.org/uncertainties/", None)
 intersphinx_mapping["naima"] = ("https://naima.readthedocs.io/en/latest/", None)
 intersphinx_mapping["gadf"] = (
     "https://gamma-astro-data-formats.readthedocs.io/en/latest/",
