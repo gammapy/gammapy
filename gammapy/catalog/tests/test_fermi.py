@@ -154,7 +154,6 @@ class TestFermi4FGLObject:
         expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
         assert actual == expected
 
-    @requires_dependency("uncertainties")
     @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
         model = self.cat[ref["idx"]].spectral_model()
@@ -303,7 +302,6 @@ class TestFermi3FGLObject:
         assert isinstance(data["Unc_Flux100_300"][0], float)
         assert_allclose(data["Unc_Flux100_300"][0], -1.44535601265261e-08)
 
-    @requires_dependency("uncertainties")
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
         model = self.cat[ref["idx"]].spectral_model()
@@ -312,7 +310,7 @@ class TestFermi3FGLObject:
 
         assert isinstance(model, ref["spec_type"])
         assert_quantity_allclose(dnde, ref["dnde"])
-        assert_quantity_allclose(dnde_err, ref["dnde_err"])
+        assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-3)
 
     def test_spatial_model(self):
         model = self.cat[0].spatial_model()
@@ -530,7 +528,6 @@ class TestFermi3FHLObject:
         assert_allclose(position.ra.deg, 83.634834, atol=1e-3)
         assert_allclose(position.dec.deg, 22.019203, atol=1e-3)
 
-    @requires_dependency("uncertainties")
     @pytest.mark.parametrize("ref", SOURCES_3FHL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
         model = self.cat[ref["idx"]].spectral_model()
@@ -539,7 +536,7 @@ class TestFermi3FHLObject:
 
         assert isinstance(model, ref["spec_type"])
         assert_quantity_allclose(dnde, ref["dnde"])
-        assert_quantity_allclose(dnde_err, ref["dnde_err"])
+        assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-3)
 
     @pytest.mark.parametrize("ref", SOURCES_3FHL, ids=lambda _: _["name"])
     def test_spatial_model(self, ref):

@@ -4,6 +4,7 @@ import operator
 import numpy as np
 import scipy.optimize
 import scipy.special
+from scipy.optimize.slsqp import approx_jacobian
 import astropy.units as u
 from astropy.table import Table
 from gammapy.maps import MapAxis
@@ -17,14 +18,18 @@ class SpectralModel(Model):
     """Spectral model base class."""
 
     def __call__(self, energy):
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, energy)
+        return self.evaluate(energy, **kwargs)
+
+    @staticmethod
+    def _convert_evaluate_unit(kwargs_ref, energy):
         kwargs = {}
-        for par in self.parameters:
-            quantity = par.quantity
+        for name, quantity in kwargs_ref.items():
             if quantity.unit.physical_type == "energy":
                 quantity = quantity.to(energy.unit)
-            kwargs[par.name] = quantity
-
-        return self.evaluate(energy, **kwargs)
+            kwargs[name] = quantity
+        return kwargs
 
     def __add__(self, model):
         if not isinstance(model, SpectralModel):
@@ -42,20 +47,18 @@ class SpectralModel(Model):
     def __rsub__(self, model):
         return self.__sub__(model)
 
-    def _parse_uarray(self, uarray):
-        from uncertainties import unumpy
+    def _evaluate_gradient(self, energy, eps=1e-12):
+        x = self.parameters.values
+        frozen = np.array([_.frozen for _ in self.parameters])
 
-        values = unumpy.nominal_values(uarray)
-        errors = unumpy.std_devs(uarray)
-        return values, errors
+        def func(xk):
+            kwargs = {par.name: val * par.unit for val, par in zip(xk, self.parameters)}
+            kwargs = self._convert_evaluate_unit(kwargs, energy)
+            return self.evaluate(energy, **kwargs).value
 
-    def _convert_energy(self, energy):
-        if "reference" in self.parameters.names:
-            return energy.to(self.parameters["reference"].unit)
-        elif "emin" in self.parameters.names:
-            return energy.to(self.parameters["emin"].unit)
-        else:
-            return energy
+        grad = approx_jacobian(x=x, func=func, epsilon=eps)
+        grad[:, frozen] = 0
+        return grad.T
 
     def evaluate_error(self, energy):
         """Evaluate spectral model with error propagation.
@@ -67,15 +70,16 @@ class SpectralModel(Model):
 
         Returns
         -------
-        flux, flux_error : tuple of `~astropy.units.Quantity`
+        dnde, dnde_error : tuple of `~astropy.units.Quantity`
             Tuple of flux and flux error.
         """
-        energy = self._convert_energy(energy)
+        p_cov = self.parameters.covariance
+        df_dp = self._evaluate_gradient(energy)
+        f_cov = df_dp.T @ p_cov @ df_dp
+        f_err = np.sqrt(np.diagonal(f_cov))
 
-        unit = self(energy).unit
-        upars = self.parameters._ufloats
-        uarray = self.evaluate(energy.value, **upars)
-        return self._parse_uarray(uarray) * unit
+        q = self(energy)
+        return u.Quantity([q.value, f_err], unit=q.unit)
 
     def integral(self, emin, emax, **kwargs):
         r"""Integrate spectral model numerically.
@@ -95,32 +99,6 @@ class SpectralModel(Model):
         """
         return integrate_spectrum(self, emin, emax, **kwargs)
 
-    def integral_error(self, emin, emax, **kwargs):
-        """Integrate spectral model numerically with error propagation.
-
-        Parameters
-        ----------
-        emin, emax : `~astropy.units.Quantity`
-            Lower adn upper  bound of integration range.
-        **kwargs : dict
-            Keyword arguments passed to func:`~gammapy.utils.integrate.integrate_spectrum`
-
-        Returns
-        -------
-        integral, integral_error : tuple of `~astropy.units.Quantity`
-            Tuple of integral flux and integral flux error.
-        """
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
-        unit = self.integral(emin, emax, **kwargs).unit
-        upars = self.parameters._ufloats
-
-        def f(x):
-            return self.evaluate(x, **upars)
-
-        uarray = integrate_spectrum(f, emin.value, emax.value, **kwargs)
-        return self._parse_uarray(uarray) * unit
-
     def energy_flux(self, emin, emax, **kwargs):
         r"""Compute energy flux in given energy range.
 
@@ -139,36 +117,6 @@ class SpectralModel(Model):
             return x * self(x)
 
         return integrate_spectrum(f, emin, emax, **kwargs)
-
-    def energy_flux_error(self, emin, emax, **kwargs):
-        r"""Compute energy flux in given energy range with error propagation.
-
-        .. math::
-            G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}} E \phi(E) dE
-
-        Parameters
-        ----------
-        emin, emax : `~astropy.units.Quantity`
-            Lower bound of integration range.
-        **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.utils.integrate.integrate_spectrum`
-
-        Returns
-        -------
-        energy_flux, energy_flux_error : tuple of `~astropy.units.Quantity`
-            Tuple of energy flux and energy flux error.
-        """
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
-
-        unit = self.energy_flux(emin, emax, **kwargs).unit
-        upars = self.parameters._ufloats
-
-        def f(x):
-            return x * self.evaluate(x, **upars)
-
-        uarray = integrate_spectrum(f, emin.value, emax.value, **kwargs)
-        return self._parse_uarray(uarray) * unit
 
     def plot(
         self,
@@ -512,44 +460,9 @@ class PowerLawSpectralModel(SpectralModel):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range
         """
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
         kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, emin)
         return self.evaluate_integral(emin=emin, emax=emax, **kwargs)
-
-    def integral_error(self, emin, emax, **kwargs):
-        r"""Integrate power law analytically with error propagation.
-
-        Parameters
-        ----------
-        emin, emax : `~astropy.units.Quantity`
-            Lower and upper bound of integration range.
-
-        Returns
-        -------
-        integral, integral_error : tuple of `~astropy.units.Quantity`
-            Tuple of integral flux and integral flux error.
-        """
-        # kwargs are passed to this function but not used
-        # this is to get a consistent API with SpectralModel.integral()
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
-
-        unit = self.integral(emin, emax, **kwargs).unit
-        upars = self.parameters._ufloats
-
-        if np.isclose(upars["index"].nominal_value, 1):
-            prefactor = upars["amplitude"] * upars["reference"]
-            upper = np.log(emax.value)
-            lower = np.log(emin.value)
-        else:
-            val = -1 * upars["index"] + 1
-            prefactor = upars["amplitude"] * upars["reference"] / val
-            upper = np.power((emax.value / upars["reference"]), val)
-            lower = np.power((emin.value / upars["reference"]), val)
-
-        uarray = prefactor * (upper - lower)
-        return self._parse_uarray(uarray) * unit
 
     def energy_flux(self, emin, emax):
         r"""Compute energy flux in given energy range analytically.
@@ -564,44 +477,9 @@ class PowerLawSpectralModel(SpectralModel):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         """
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
         kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, emin)
         return self.evaluate_energy_flux(emin=emin, emax=emax, **kwargs)
-
-    def energy_flux_error(self, emin, emax, **kwargs):
-        r"""Compute energy flux in given energy range analytically with error propagation.
-
-        Parameters
-        ----------
-        emin, emax : `~astropy.units.Quantity`
-            Lower and upper bound of integration range.
-
-        Returns
-        -------
-        energy_flux, energy_flux_error : tuple of `~astropy.units.Quantity`
-            Tuple of energy flux and energy flux error.
-        """
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
-
-        unit = self.energy_flux(emin, emax, **kwargs).unit
-        upars = self.parameters._ufloats
-
-        val = -1 * upars["index"] + 2
-
-        if np.isclose(val.nominal_value, 0):
-            # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
-            # for reference
-            temp = upars["amplitude"] * upars["reference"] ** 2
-            uarray = temp * np.log(emax.value / emin.value)
-        else:
-            prefactor = upars["amplitude"] * upars["reference"] ** 2 / val
-            upper = (emax.value / upars["reference"]) ** val
-            lower = (emin.value / upars["reference"]) ** val
-            uarray = prefactor * (upper - lower)
-
-        return self._parse_uarray(uarray) * unit
 
     def inverse(self, value):
         """Return energy for a given function value of the spectral model.
@@ -694,36 +572,6 @@ class PowerLaw2SpectralModel(SpectralModel):
 
         return pars["amplitude"].quantity * top / bottom
 
-    def integral_error(self, emin, emax, **kwargs):
-        r"""Integrate power law analytically with error propagation.
-
-        Parameters
-        ----------
-        emin, emax : `~astropy.units.Quantity`
-            Lower and upper bound of integration range.
-
-        Returns
-        -------
-        integral, integral_error : tuple of `~astropy.units.Quantity`
-            Tuple of integral flux and integral flux error.
-        """
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
-
-        unit = self.integral(emin, emax, **kwargs).unit
-        upars = self.parameters._ufloats
-
-        temp1 = np.power(emax.value, -upars["index"] + 1)
-        temp2 = np.power(emin.value, -upars["index"] + 1)
-        top = temp1 - temp2
-
-        temp1 = np.power(upars["emax"], -upars["index"] + 1)
-        temp2 = np.power(upars["emin"], -upars["index"] + 1)
-        bottom = temp1 - temp2
-
-        uarray = upars["amplitude"] * top / bottom
-        return self._parse_uarray(uarray) * unit
-
     def inverse(self, value):
         """Return energy for a given function value of the spectral model.
 
@@ -776,12 +624,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
     def evaluate(energy, index, amplitude, reference, lambda_):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index)
-        try:
-            cutoff = np.exp(-energy * lambda_)
-        except (AttributeError, TypeError):
-            from uncertainties.unumpy import exp
-
-            cutoff = exp(-energy * lambda_)
+        cutoff = np.exp(-energy * lambda_)
         return pwl * cutoff
 
     @property
@@ -834,12 +677,7 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     def evaluate(energy, index, amplitude, reference, ecut):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index)
-        try:
-            cutoff = np.exp((reference - energy) / ecut)
-        except (AttributeError, TypeError):
-            from uncertainties.unumpy import exp
-
-            cutoff = exp((reference - energy) / ecut)
+        cutoff = np.exp((reference - energy) / ecut)
         return pwl * cutoff
 
 
@@ -867,22 +705,17 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     """
 
     tag = "SuperExpCutoffPowerLaw3FGLSpectralModel"
-    index_1 = Parameter("index_1", 1.5)
-    index_2 = Parameter("index_2", 2)
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
     reference = Parameter("reference", "1 TeV", frozen=True)
     ecut = Parameter("ecut", "10 TeV")
+    index_1 = Parameter("index_1", 1.5)
+    index_2 = Parameter("index_2", 2)
 
     @staticmethod
     def evaluate(energy, amplitude, reference, ecut, index_1, index_2):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
-        try:
-            cutoff = np.exp((reference / ecut) ** index_2 - (energy / ecut) ** index_2)
-        except (AttributeError, TypeError):
-            from uncertainties.unumpy import exp
-
-            cutoff = exp((reference / ecut) ** index_2 - (energy / ecut) ** index_2)
+        cutoff = np.exp((reference / ecut) ** index_2 - (energy / ecut) ** index_2)
         return pwl * cutoff
 
 
@@ -916,26 +749,21 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     """
 
     tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
-    index_1 = Parameter("index_1", 1.5)
-    index_2 = Parameter("index_2", 2)
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
     reference = Parameter("reference", "1 TeV", frozen=True)
     expfactor = Parameter("expfactor", "1e-2")
+    index_1 = Parameter("index_1", 1.5)
+    index_2 = Parameter("index_2", 2)
 
     @staticmethod
     def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
-        try:
-            cutoff = np.exp(
-                expfactor
-                / reference.unit ** index_2
-                * (reference ** index_2 - energy ** index_2)
-            )
-        except (AttributeError, TypeError):
-            from uncertainties.unumpy import exp
-
-            cutoff = exp(expfactor * (reference ** index_2 - energy ** index_2))
+        cutoff = np.exp(
+            expfactor
+            / reference.unit ** index_2
+            * (reference ** index_2 - energy ** index_2)
+        )
         return pwl * cutoff
 
 
@@ -984,14 +812,8 @@ class LogParabolaSpectralModel(SpectralModel):
     @staticmethod
     def evaluate(energy, amplitude, reference, alpha, beta):
         """Evaluate the model (static function)."""
-        try:
-            xx = (energy / reference).to("")
-            exponent = -alpha - beta * np.log(xx)
-        except (AttributeError, TypeError):
-            from uncertainties.unumpy import log
-
-            xx = energy / reference
-            exponent = -alpha - beta * log(xx)
+        xx = energy / reference
+        exponent = -alpha - beta * np.log(xx)
         return amplitude * np.power(xx, exponent)
 
     @property
@@ -1463,13 +1285,6 @@ class NaimaSpectralModel(SpectralModel):
             parameters.append(parameter)
 
         super()._init_from_parameters(parameters)
-
-    def evaluate_error(self, energy):
-        # This method will need to be overridden here, since the radiative models in naima don't
-        # support the evaluation on energy values that is performed in the base class method
-        raise NotImplementedError(
-            "Error evaluation for naima models currently not supported."
-        )
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model."""

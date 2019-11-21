@@ -26,7 +26,6 @@ dependencies:
   - pyyaml
   - scipy
   - matplotlib
-  - uncertainties
   - healpy
   - reproject
   - sherpa

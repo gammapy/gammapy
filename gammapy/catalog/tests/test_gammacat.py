@@ -23,9 +23,7 @@ SOURCES = [
         "dnde_1TeV": 1.36e-11 * u.Unit("cm-2 s-1 TeV-1"),
         "dnde_1TeV_err": 7.531e-13 * u.Unit("cm-2 s-1 TeV-1"),
         "flux_1TeV": 2.104e-11 * u.Unit("cm-2 s-1"),
-        "flux_1TeV_err": 1.973e-12 * u.Unit("cm-2 s-1"),
         "eflux_1_10TeV": 9.265778680255336e-11 * u.Unit("erg cm-2 s-1"),
-        "eflux_1_10TeV_err": 9.590978299538194e-12 * u.Unit("erg cm-2 s-1"),
         "n_flux_points": 24,
         "is_pointlike": False,
         "spatial_model": "GaussianSpatialModel",
@@ -39,9 +37,7 @@ SOURCES = [
         "dnde_1TeV": 3.7e-12 * u.Unit("cm-2 s-1 TeV-1"),
         "dnde_1TeV_err": 4e-13 * u.Unit("cm-2 s-1 TeV-1"),
         "flux_1TeV": 2.056e-12 * u.Unit("cm-2 s-1"),
-        "flux_1TeV_err": 3.187e-13 * u.Unit("cm-2 s-1"),
         "eflux_1_10TeV": 6.235650344765057e-12 * u.Unit("erg cm-2 s-1"),
-        "eflux_1_10TeV_err": 1.2210315515569183e-12 * u.Unit("erg cm-2 s-1"),
         "n_flux_points": 11,
         "is_pointlike": False,
         "spatial_model": "GaussianSpatialModel",
@@ -55,9 +51,7 @@ SOURCES = [
         "dnde_1TeV": 2.678e-12 * u.Unit("cm-2 s-1 TeV-1"),
         "dnde_1TeV_err": 2.55e-13 * u.Unit("cm-2 s-1 TeV-1"),
         "flux_1TeV": 2.457e-12 * u.Unit("cm-2 s-1"),
-        "flux_1TeV_err": 3.692e-13 * u.Unit("cm-2 s-1"),
         "eflux_1_10TeV": 8.923614018939419e-12 * u.Unit("erg cm-2 s-1"),
-        "eflux_1_10TeV_err": 1.4613807070890267e-12 * u.Unit("erg cm-2 s-1"),
         "n_flux_points": 13,
         "is_pointlike": False,
         "spatial_model": "GaussianSpatialModel",
@@ -144,7 +138,6 @@ class TestSourceCatalogObjectGammaCat:
         assert_quantity_allclose(flux, ref["flux_1TeV"], rtol=1e-3)
         assert_quantity_allclose(eflux, ref["eflux_1_10TeV"], rtol=1e-3)
 
-    @requires_dependency("uncertainties")
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_spectral_model_err(self, gammacat, ref):
         source = gammacat[ref["name"]]
@@ -153,18 +146,9 @@ class TestSourceCatalogObjectGammaCat:
         e_min, e_max, e_inf = [1, 10, 1e10] * u.TeV
 
         dnde, dnde_err = spectral_model.evaluate_error(e_min)
-        flux, flux_err = spectral_model.integral_error(emin=e_min, emax=e_inf)
-        eflux, eflux_err = spectral_model.energy_flux_error(emin=e_min, emax=e_max).to(
-            "erg cm-2 s-1"
-        )
 
         assert_quantity_allclose(dnde, ref["dnde_1TeV"], rtol=1e-3)
-        assert_quantity_allclose(flux, ref["flux_1TeV"], rtol=1e-3)
-        assert_quantity_allclose(eflux, ref["eflux_1_10TeV"], rtol=1e-3)
-
         assert_quantity_allclose(dnde_err, ref["dnde_1TeV_err"], rtol=1e-3)
-        assert_quantity_allclose(flux_err, ref["flux_1TeV_err"], rtol=1e-3)
-        assert_quantity_allclose(eflux_err, ref["eflux_1_10TeV_err"], rtol=1e-3)
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_flux_points(self, gammacat, ref):

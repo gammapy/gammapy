@@ -455,25 +455,6 @@ class Parameters:
         if "covariance" in data:
             self.covariance = np.array(data["covariance"])
 
-    @property
-    def _ufloats(self):
-        """Return dict of ufloats with covariance."""
-        from uncertainties import correlated_values
-
-        values = [_.value for _ in self._parameters]
-
-        try:
-            # convert existing parameters to ufloats
-            uarray = correlated_values(values, self.covariance)
-        except np.linalg.LinAlgError:
-            raise ValueError("Covariance matrix not set.")
-
-        upars = {}
-        for par, upar in zip(self._parameters, uarray):
-            upars[par.name] = upar
-
-        return upars
-
     def error(self, parname):
         """Get parameter error.
 

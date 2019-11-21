@@ -25,7 +25,6 @@ GAMMAPY_DEPENDENCIES = [
     "regions",
     "iminuit",
     "naima",
-    "uncertainties",
 ]
 
 GAMMAPY_ENV_VARIABLES = [

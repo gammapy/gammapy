@@ -99,18 +99,6 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
     slice2[axis] = slice(1, None)
     slice1, slice2 = tuple(slice1), tuple(slice2)
 
-    # arrays with uncertainties contain objects
-    if y.dtype == "O":
-        from uncertainties.unumpy import log10
-
-        # uncertainties.unumpy.log10 can't deal with tiny values see
-        # https://github.com/gammapy/gammapy/issues/687, so we filter out the values
-        # here. As the values are so small it doesn't affect the final result.
-        # the sqrt is taken to create a margin, because of the later division
-        # y[slice2] / y[slice1]
-        valid = y > np.sqrt(np.finfo(float).tiny)
-        x, y = x[valid], y[valid]
-
     if x.ndim == 1:
         shape = [1] * y.ndim
         shape[axis] = x.shape[0]

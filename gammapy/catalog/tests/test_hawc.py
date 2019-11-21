@@ -65,14 +65,12 @@ class TestSourceCatalogObject2HWC:
             cat[0].sky_model("extended")
 
     @staticmethod
-    @requires_dependency("uncertainties")
     def test_spectral_model(cat):
         m = cat[0].spectral_model()
-        flux, flux_err = m.integral_error(1 * u.TeV, 10 * u.TeV)
-        assert flux.unit == "cm-2 s-1"
-        assert_allclose(flux.value, 1.72699e-11, rtol=1e-3)
-        assert flux_err.unit == "cm-2 s-1"
-        assert_allclose(flux_err.value, 3.252178e-13, rtol=1e-3)
+        dnde, dnde_err = m.evaluate_error(1 * u.TeV)
+        assert dnde.unit == "cm-2 s-1 TeV-1"
+        assert_allclose(dnde.value, 2.802365e-11, rtol=1e-3)
+        assert_allclose(dnde_err.value, 6.537506e-13, rtol=1e-3)
 
     @staticmethod
     def test_spatial_model(cat):

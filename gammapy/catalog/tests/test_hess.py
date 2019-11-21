@@ -116,7 +116,6 @@ class TestSourceCatalogObjectHGPS:
         assert spec_types == {"pl": 66, "ecpl": 12}
 
     @staticmethod
-    @requires_dependency("uncertainties")
     def test_spectral_model_pl(cat):
         source = cat["HESS J1843-033"]
 
@@ -128,12 +127,7 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(pars["index"].value, 2.1513476371765137)
         assert_allclose(pars["reference"].value, 1.867810606956482)
 
-        val, err = model.integral_error(1 * u.TeV, 1e5 * u.TeV).value
-        assert_allclose(val, source.data["Flux_Spec_Int_1TeV"].value, rtol=0.01)
-        assert_allclose(err, source.data["Flux_Spec_Int_1TeV_Err"].value, rtol=0.01)
-
     @staticmethod
-    @requires_dependency("uncertainties")
     def test_spectral_model_ecpl(cat):
         source = cat["HESS J0835-455"]
 
@@ -146,9 +140,10 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(pars["reference"].value, 1.696938754239)
         assert_allclose(pars["lambda_"].value, 0.081517637)
 
-        val, err = model.integral_error(1 * u.TeV, 1e5 * u.TeV).value
-        assert_allclose(val, source.data["Flux_Spec_Int_1TeV"].value, rtol=0.01)
-        assert_allclose(err, source.data["Flux_Spec_Int_1TeV_Err"].value, rtol=0.01)
+        assert_allclose(pars.error("amplitude"), 3.260472e-13, rtol=1e-3)
+        assert_allclose(pars.error("index"), 0.077331, atol=0.001)
+        assert_allclose(pars.error("reference"), 0)
+        assert_allclose(pars.error("lambda_"), 0.011535, atol=0.001)
 
         model = source.spectral_model("pl")
         assert isinstance(model, PowerLawSpectralModel)
@@ -158,9 +153,9 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(pars["index"].value, 1.8913707)
         assert_allclose(pars["reference"].value, 3.0176312923431396)
 
-        val, err = model.integral_error(1 * u.TeV, 1e5 * u.TeV).value
-        assert_allclose(val, source.data["Flux_Spec_PL_Int_1TeV"].value, rtol=0.01)
-        assert_allclose(err, source.data["Flux_Spec_PL_Int_1TeV_Err"].value, rtol=0.01)
+        assert_allclose(pars.error("amplitude"), 6.992061e-14, rtol=1e-3)
+        assert_allclose(pars.error("index"), 0.028383, atol=0.001)
+        assert_allclose(pars.error("reference"), 0)
 
     @staticmethod
     def test_spatial_model_type(cat):

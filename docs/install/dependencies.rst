@@ -60,7 +60,6 @@ example data download (``parfive``) or in one of the tutorials (``sherpa``).
 * pandas_ for working with tables (not used within Gammapy)
 * healpy_ for `HEALPIX`_ data handling
 * reproject_ for image reprojection
-* uncertainties_ for linear error propagation
 * iminuit_ for fitting by optimization
 * Sherpa_ for modeling and fitting
 * naima_ for SED modeling
