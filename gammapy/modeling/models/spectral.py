@@ -535,40 +535,6 @@ class PowerLawSpectralModel(SpectralModel):
         kwargs = {par.name: par.quantity for par in self.parameters}
         return self.evaluate_energy_flux(emin=emin, emax=emax, **kwargs)
 
-    def energy_flux_error(self, emin, emax, **kwargs):
-        r"""Compute energy flux in given energy range analytically with error propagation.
-
-        Parameters
-        ----------
-        emin, emax : `~astropy.units.Quantity`
-            Lower and upper bound of integration range.
-
-        Returns
-        -------
-        energy_flux, energy_flux_error : tuple of `~astropy.units.Quantity`
-            Tuple of energy flux and energy flux error.
-        """
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
-
-        unit = self.energy_flux(emin, emax, **kwargs).unit
-        upars = self.parameters._ufloats
-
-        val = -1 * upars["index"] + 2
-
-        if np.isclose(val.nominal_value, 0):
-            # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
-            # for reference
-            temp = upars["amplitude"] * upars["reference"] ** 2
-            uarray = temp * np.log(emax.value / emin.value)
-        else:
-            prefactor = upars["amplitude"] * upars["reference"] ** 2 / val
-            upper = (emax.value / upars["reference"]) ** val
-            lower = (emin.value / upars["reference"]) ** val
-            uarray = prefactor * (upper - lower)
-
-        return self._parse_uarray(uarray) * unit
-
     def inverse(self, value):
         """Return energy for a given function value of the spectral model.
 
