@@ -136,14 +136,10 @@ def test_sample_coord():
 
 
 @pytest.mark.parametrize(
-    "position", [
-        SkyCoord("0 deg", "0 deg"),
-        SkyCoord("180 deg", "0 deg"),
-        SkyCoord("0 deg", "90 deg"),
-        SkyCoord("180 deg", "-90 deg")
-    ]
+    "position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"]
 )
 def test_edisp_from_diagonal_response(position):
+    position = SkyCoord(position)
     energy_axis_true = MapAxis.from_energy_bounds("0.3 TeV", "10 TeV", nbin=31)
     edisp_map = EDispMap.from_diagonal_response(energy_axis_true)
 

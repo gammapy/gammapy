@@ -363,15 +363,12 @@ def test_make_mean_psf(data_store):
     assert_allclose(psf.psf_value.value[22, 22], 12206.1665, rtol=1e-3)
 
 
+@requires_data()
 @pytest.mark.parametrize(
-    "position", [
-        SkyCoord("0 deg", "0 deg"),
-        SkyCoord("180 deg", "0 deg"),
-        SkyCoord("0 deg", "90 deg"),
-        SkyCoord("180 deg", "-90 deg")
-    ]
+    "position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"]
 )
 def test_psf_map_from_table_psf(position):
+    position = SkyCoord(position)
     filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_psf_gc.fits.gz"
     table_psf = EnergyDependentTablePSF.read(filename)
     psf_map = PSFMap.from_energy_dependent_table_psf(table_psf)
