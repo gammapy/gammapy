@@ -339,18 +339,10 @@ class Observations:
         new_observations : `~gammapy.data.Observations`
             A new observations instance of the specified time interval
         """
-
-        tstart = Time([_.tstart for _ in self])
-        tstop = Time([_.tstop for _ in self])
-
         new_obs_list = []
-        mask = tstart < time_interval[1]
-        mask &= tstop > time_interval[0]
 
-        indices = np.where(mask)[0]
-        if len(indices)>0:
-            for index in indices:
-                obs = self[index]
+        for obs in self:
+            if (obs.tstart < time_interval[1]) & (obs.tstop > time_interval[0]):
                 new_obs = obs.select_time(time_interval)
                 new_obs_list.append(new_obs)
 
