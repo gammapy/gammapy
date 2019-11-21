@@ -5,6 +5,7 @@
 Gammapy conda installation
 ==========================
 
+**TODO: do we still want it here since we push for conda install anyways**
 
 If you want to use some Python package together with Gammapy that is not
 pre-installed as part of that conda environment, you can use ``conda`` or

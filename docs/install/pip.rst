@@ -7,6 +7,8 @@ Installation with pip or setup.py
 
 .. _install-pip:
 
+**TODO: move to others or do we still expose this?**
+
 pip
 ---
 
