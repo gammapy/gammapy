@@ -70,10 +70,14 @@ def group_datasets_in_time_interval(datasets, time_intervals, atol="1e-6 s"):
 
 
 class LightCurveEstimator:
-    """Estimate flux points for a given list of datasets, and in given time interval.
-    If not given, by default will compute the LC for each dataset.
+    """Estimates flux values of model component in time intervals and returns a `gammapy.time.LightCurve` object.
 
-    We required that GTI of the dataset to be totally include in a time interval to be taken into account in the LC.
+    The estimator will fit the source model component to datasets in each of the time intervals
+    provided.
+
+    If no time intervals are provided, the estimator will use the time intervals defined by the datasets GTIs.
+
+    To be included in the estimation, the dataset must have their GTI fully overlapping a time interval.
 
     Parameters
     ----------
@@ -125,20 +129,7 @@ class LightCurveEstimator:
                 Time([d.gti.time_start[0], d.gti.time_stop[-1]]) for d in self.datasets
             ]
 
-        time_start = Time([interval[0] for interval in time_intervals])
-        time_stop = Time([interval[1] for interval in time_intervals])
-        sorted_indices = time_start.argsort()
-        time_start_sorted = time_start[sorted_indices]
-        time_stop_sorted = time_stop[sorted_indices]
-        diff_time_stop = np.diff(time_stop_sorted)
-        diff_time_interval_edges = time_start_sorted[1:] - time_stop_sorted[:-1]
-        if np.any(diff_time_stop < 0) or np.any(diff_time_interval_edges < 0):
-            raise ValueError("LightCurveEstimator requires non-overlapping time bins.")
-        else:
-            self.time_intervals = [
-                Time([tstart, tstop])
-                for tstart, tstop in zip(time_start_sorted, time_stop_sorted)
-            ]
+        self._check_and_sort_time_intervals(time_intervals)
 
         dataset = self.datasets[0]
 
@@ -164,6 +155,30 @@ class LightCurveEstimator:
         self.source = source
 
         self.group_table_info = None
+
+    def _check_and_sort_time_intervals(self, time_intervals):
+        """Sort the time_intervals by increasing time if not already ordered correctly.
+
+        Parameters
+        ----------
+        time_intervals : list of `astropy.time.Time`
+            Start and stop time for each interval to compute the LC
+
+        """
+        time_start = Time([interval[0] for interval in time_intervals])
+        time_stop = Time([interval[1] for interval in time_intervals])
+        sorted_indices = time_start.argsort()
+        time_start_sorted = time_start[sorted_indices]
+        time_stop_sorted = time_stop[sorted_indices]
+        diff_time_stop = np.diff(time_stop_sorted)
+        diff_time_interval_edges = time_start_sorted[1:] - time_stop_sorted[:-1]
+        if np.any(diff_time_stop < 0) or np.any(diff_time_interval_edges < 0):
+            raise ValueError("LightCurveEstimator requires non-overlapping time bins.")
+        else:
+            self.time_intervals = [
+                Time([tstart, tstop])
+                for tstart, tstop in zip(time_start_sorted, time_stop_sorted)
+            ]
 
     def _set_scale_model(self, datasets):
         """
