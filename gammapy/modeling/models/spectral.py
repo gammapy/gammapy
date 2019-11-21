@@ -1464,13 +1464,6 @@ class NaimaSpectralModel(SpectralModel):
 
         super()._init_from_parameters(parameters)
 
-    def evaluate_error(self, energy):
-        # This method will need to be overridden here, since the radiative models in naima don't
-        # support the evaluation on energy values that is performed in the base class method
-        raise NotImplementedError(
-            "Error evaluation for naima models currently not supported."
-        )
-
     def evaluate(self, energy, **kwargs):
         """Evaluate the model."""
         for name, value in kwargs.items():
