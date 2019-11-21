@@ -239,6 +239,7 @@ def test_lightcurve_estimator_spectrum_datasets():
         rtol=1e-5,
     )
 
+
 @requires_data()
 @requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
@@ -257,11 +258,14 @@ def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
 
     steps = ["err", "counts", "ts", "norm-scan"]
     estimator = LightCurveEstimator(
-        datasets, norm_n_values=3, time_intervals=time_intervals)
-    lightcurve = estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV, steps=steps)
+        datasets, norm_n_values=3, time_intervals=time_intervals
+    )
+    lightcurve = estimator.run(
+        e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV, steps=steps
+    )
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
     assert_allclose(lightcurve.table["time_max"], [55197.041667, 55197.083333])
-    assert_allclose(lightcurve.table["stat"], [6.60304 , 0.421047], rtol=1e-5)
+    assert_allclose(lightcurve.table["stat"], [6.60304, 0.421047], rtol=1e-5)
     assert_allclose(lightcurve.table["norm"], [0.885082, 0.967022], rtol=1e-5)
 
 
