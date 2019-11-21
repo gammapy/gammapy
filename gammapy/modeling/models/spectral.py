@@ -43,13 +43,6 @@ class SpectralModel(Model):
     def __rsub__(self, model):
         return self.__sub__(model)
 
-    def _parse_uarray(self, uarray):
-        from uncertainties import unumpy
-
-        values = unumpy.nominal_values(uarray)
-        errors = unumpy.std_devs(uarray)
-        return values, errors
-
     def _convert_energy(self, energy):
         if "reference" in self.parameters.names:
             return energy.to(self.parameters["reference"].unit)
@@ -636,12 +629,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
     def evaluate(energy, index, amplitude, reference, lambda_):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index)
-        try:
-            cutoff = np.exp(-energy * lambda_)
-        except (AttributeError, TypeError):
-            from uncertainties.unumpy import exp
-
-            cutoff = exp(-energy * lambda_)
+        cutoff = np.exp(-energy * lambda_)
         return pwl * cutoff
 
     @property
@@ -694,12 +682,7 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     def evaluate(energy, index, amplitude, reference, ecut):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index)
-        try:
-            cutoff = np.exp((reference - energy) / ecut)
-        except (AttributeError, TypeError):
-            from uncertainties.unumpy import exp
-
-            cutoff = exp((reference - energy) / ecut)
+        cutoff = np.exp((reference - energy) / ecut)
         return pwl * cutoff
 
 
@@ -737,12 +720,7 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     def evaluate(energy, amplitude, reference, ecut, index_1, index_2):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
-        try:
-            cutoff = np.exp((reference / ecut) ** index_2 - (energy / ecut) ** index_2)
-        except (AttributeError, TypeError):
-            from uncertainties.unumpy import exp
-
-            cutoff = exp((reference / ecut) ** index_2 - (energy / ecut) ** index_2)
+        cutoff = np.exp((reference / ecut) ** index_2 - (energy / ecut) ** index_2)
         return pwl * cutoff
 
 
@@ -786,16 +764,11 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
-        try:
-            cutoff = np.exp(
-                expfactor
-                / reference.unit ** index_2
-                * (reference ** index_2 - energy ** index_2)
-            )
-        except (AttributeError, TypeError):
-            from uncertainties.unumpy import exp
-
-            cutoff = exp(expfactor * (reference ** index_2 - energy ** index_2))
+        cutoff = np.exp(
+            expfactor
+            / reference.unit ** index_2
+            * (reference ** index_2 - energy ** index_2)
+        )
         return pwl * cutoff
 
 
@@ -844,14 +817,8 @@ class LogParabolaSpectralModel(SpectralModel):
     @staticmethod
     def evaluate(energy, amplitude, reference, alpha, beta):
         """Evaluate the model (static function)."""
-        try:
-            xx = (energy / reference).to("")
-            exponent = -alpha - beta * np.log(xx)
-        except (AttributeError, TypeError):
-            from uncertainties.unumpy import log
-
-            xx = energy / reference
-            exponent = -alpha - beta * log(xx)
+        xx = energy / reference
+        exponent = -alpha - beta * np.log(xx)
         return amplitude * np.power(xx, exponent)
 
     @property
