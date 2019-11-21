@@ -517,40 +517,6 @@ class PowerLawSpectralModel(SpectralModel):
         kwargs = {par.name: par.quantity for par in self.parameters}
         return self.evaluate_integral(emin=emin, emax=emax, **kwargs)
 
-    def integral_error(self, emin, emax, **kwargs):
-        r"""Integrate power law analytically with error propagation.
-
-        Parameters
-        ----------
-        emin, emax : `~astropy.units.Quantity`
-            Lower and upper bound of integration range.
-
-        Returns
-        -------
-        integral, integral_error : tuple of `~astropy.units.Quantity`
-            Tuple of integral flux and integral flux error.
-        """
-        # kwargs are passed to this function but not used
-        # this is to get a consistent API with SpectralModel.integral()
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
-
-        unit = self.integral(emin, emax, **kwargs).unit
-        upars = self.parameters._ufloats
-
-        if np.isclose(upars["index"].nominal_value, 1):
-            prefactor = upars["amplitude"] * upars["reference"]
-            upper = np.log(emax.value)
-            lower = np.log(emin.value)
-        else:
-            val = -1 * upars["index"] + 1
-            prefactor = upars["amplitude"] * upars["reference"] / val
-            upper = np.power((emax.value / upars["reference"]), val)
-            lower = np.power((emin.value / upars["reference"]), val)
-
-        uarray = prefactor * (upper - lower)
-        return self._parse_uarray(uarray) * unit
-
     def energy_flux(self, emin, emax):
         r"""Compute energy flux in given energy range analytically.
 
