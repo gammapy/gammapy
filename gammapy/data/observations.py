@@ -325,26 +325,28 @@ class Observations:
         """List of obs IDs (`list`)"""
         return [str(obs.obs_id) for obs in self.list]
 
-    def select_time(self, time_interval):
+    def select_time(self, time_intervals):
         """Select a time interval of the observations.
 
         Parameters
         ----------
-        time_interval : `astropy.time.Time`
-            Start and stop time of the selected time interval.
-            For now we only support a single time interval.
+        time_intervals : `astropy.time.Time` or list of `astropy.time.Time`
+            list of Start and stop time of the time intervals or one Time interval
 
         Returns
         -------
         new_observations : `~gammapy.data.Observations`
-            A new observations instance of the specified time interval
+            A new Observations instance of the specified time intervals
         """
         new_obs_list = []
+        if isinstance(time_intervals, Time):
+            time_intervals = [time_intervals]
 
-        for obs in self:
-            if (obs.tstart < time_interval[1]) & (obs.tstop > time_interval[0]):
-                new_obs = obs.select_time(time_interval)
-                new_obs_list.append(new_obs)
+        for time_interval in time_intervals:
+            for obs in self:
+                if (obs.tstart < time_interval[1]) & (obs.tstop > time_interval[0]):
+                    new_obs = obs.select_time(time_interval)
+                    new_obs_list.append(new_obs)
 
         return self.__class__(new_obs_list)
 
@@ -396,7 +398,7 @@ class Observation:
         ss = "Info for OBS_ID = {}\n".format(self.obs_id)
 
         ss += "- Pointing pos: RA {:.2f} / Dec {:.2f}\n".format(
-            self.pointing_radec.ra, self.pointing_radec.dec,
+            self.pointing_radec.ra, self.pointing_radec.dec
         )
 
         ss += "- Livetime duration: {}\n".format(self.observation_live_time_duration)
