@@ -50,6 +50,5 @@ various installation options:
 
     dependencies
     conda
-    check
     pip
     other
