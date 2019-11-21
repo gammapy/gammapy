@@ -221,7 +221,6 @@ def make_all_models():
         "TemplateSpectralModel", energy=[1, 2] * u.cm, values=[3, 4] * u.cm
     )  # TODO: add unit validation?
     yield Model.create("GaussianSpectralModel")
-    yield Model.create("LogGaussianSpectralModel")
     # TODO: yield Model.create("AbsorbedSpectralModel")
     # TODO: yield Model.create("NaimaSpectralModel")
     # TODO: yield Model.create("ScaleSpectralModel")
