@@ -524,6 +524,7 @@ class TestNaimaModel:
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
 
+
 class TestSpectralModelErrorPropagation:
     """Test spectral model error propagation.
 
@@ -570,15 +571,45 @@ class TestSpectralModelErrorPropagation:
     def test_integral_error(self):
         out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "cm-2 s-1"
-        assert out.shape == (2, )
+        assert out.shape == (2,)
         assert_allclose(out.data, [2.197e-11, 2.796e-12], rtol=1e-3)
 
     def test_energy_flux_error(self):
         out = self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "TeV cm-2 s-1"
-        assert out.shape == (2, )
+        assert out.shape == (2,)
         assert_allclose(out.data, [4.119e-11, 8.157e-12], rtol=1e-3)
 
+    def test_ecpl_model(self):
+        # Regression test for ECPL model
+        # https://github.com/gammapy/gammapy/issues/2007
+        model = ExpCutoffPowerLawSpectralModel(
+            amplitude=2.076183759227292e-12 * u.Unit("cm-2 s-1 TeV-1"),
+            index=1.8763343736076483,
+            lambda_=0.08703226432146616 * u.Unit("TeV-1"),
+            reference=1 * u.TeV,
+        )
+        model.parameters.covariance = [
+            [0.00204191498, -1.507724e-14, 0.0, -0.001834819],
+            [-1.507724e-14, 1.6864740e-25, 0.0, 1.854251e-14],
+            [0.0, 0.0, 0.0, 0.0],
+            [-0.001834819175, 1.8542517e-14, 0.0, 0.0032559101],
+        ]
 
-    def test_power_law(self):
+        out = model.evaluate_error(1 * u.TeV)
+        assert_allclose(out.data, [1.903129e-12, 2.979976e-13], rtol=1e-3)
+
+        out = model.evaluate_error(0.1 * u.TeV)
+        assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
+
+    def test_naima_model_error_proprgation(self):
+        # Regression test for Naima model
+        # https://github.com/gammapy/gammapy/issues/2190
+        # TODO: implement test case. Move to Naima model tests!
+        pass
+
+    def test_absorption_model_error_propagation(self):
+        # Regression test for absorption model
+        # https://github.com/gammapy/gammapy/issues/1046
+        # TODO: implement test case. Move to absorption model tests!
         pass
