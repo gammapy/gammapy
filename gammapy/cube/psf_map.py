@@ -4,7 +4,7 @@ import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
 from gammapy.irf import EnergyDependentTablePSF
-from gammapy.maps import Map, MapCoord
+from gammapy.maps import Map, MapCoord, WcsGeom, MapAxis
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .psf_kernel import PSFKernel
 
@@ -398,3 +398,43 @@ class PSFMap:
         return MapCoord.create(
             {"skycoord": event_positions, "energy": map_coord["energy"]}
         )
+
+    @classmethod
+    def from_energy_dependent_table_psf(cls, table_psf):
+        """Create PSF map from table PSF object.
+
+        Helper function to create an allsky PSF map from
+        table PSF, which does not depend on position.
+
+        Parameters
+        ----------
+        table_psf : `EnergyDependentTablePSF`
+            Table PSF
+
+        Returns
+        -------
+        psf_map : `PSFMap`
+            Point spread function map.
+        """
+        energy_axis = MapAxis.from_nodes(table_psf.energy, name="energy", interp="log")
+        rad_axis = MapAxis.from_nodes(table_psf.rad, name="theta")
+
+        geom = WcsGeom.create(
+            npix=(4, 2),
+            proj="CAR",
+            binsz=180,
+            axes=[rad_axis, energy_axis]
+        )
+        coords = geom.get_coord()
+
+        # TODO: support broadcasting in .evaluate()
+        data = table_psf._interpolate((coords["energy"], coords["theta"])).to_value("sr-1")
+        psf_map = Map.from_geom(geom, data=data, unit="sr-1")
+
+        geom_exposure = geom.squash(axis="theta")
+
+        data = table_psf.exposure.reshape((-1, 1, 1, 1))
+
+        exposure_map = Map.from_geom(geom_exposure, unit="cm2 s")
+        exposure_map.quantity += data
+        return cls(psf_map=psf_map, exposure_map=exposure_map)

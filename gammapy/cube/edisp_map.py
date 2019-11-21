@@ -4,8 +4,9 @@ import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
 from gammapy.irf import EnergyDispersion
-from gammapy.maps import Map, MapCoord
+from gammapy.maps import Map, MapCoord, WcsGeom, MapAxis
 from gammapy.utils.random import InverseCDFSampler, get_random_state
+
 
 __all__ = ["make_edisp_map", "EDispMap"]
 
@@ -234,10 +235,9 @@ class EDispMap:
         # Build the pixels tuple
         pix = np.meshgrid(pix_lon, pix_lat, pix_migra, pix_ener)
         # Interpolate in the EDisp map. Squeeze to remove dimensions of length 1
-        edisp_values = np.squeeze(
-            self.edisp_map.interp_by_pix(pix)
-            * u.Unit(self.edisp_map.unit)  # * migra_step
-        )
+        edisp_values = self.edisp_map.interp_by_pix(pix) * u.Unit(self.edisp_map.unit)
+        edisp_values = np.squeeze(edisp_values, axis=(0, 1))
+
         e_trues = self.edisp_map.geom.axes[1].center
         data = []
 
@@ -370,3 +370,31 @@ class EDispMap:
         energy_reco = migra_axis.pix_to_coord(pix_edisp)
 
         return MapCoord.create({"skycoord": map_coord.skycoord, "energy": energy_reco})
+
+    @classmethod
+    def from_diagonal_response(cls, energy_axis_true, migra_axis=None):
+        """Create an allsky EDisp map with diagonal response.
+
+        Parameters
+        ----------
+        energy_axis_true : `MapAxis`
+            True energy axis
+        migra_axis : `MapAxis`
+            Migra axis
+
+        Returns
+        -------
+        edisp_map : `EDispMap`
+            Energy dispersion map.
+        """
+        from .fit import MIGRA_AXIS_DEFAULT
+        migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
+
+        geom = WcsGeom.create(
+            npix=(4, 2),
+            proj="CAR",
+            binsz=90,
+            axes=[migra_axis, energy_axis_true]
+        )
+
+        return cls.from_geom(geom)

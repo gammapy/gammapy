@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -132,3 +133,22 @@ def test_sample_coord():
 
     assert len(coords_corrected["energy"]) == 2
     assert_allclose(coords_corrected["energy"], [0.9961658, 1.11269299], rtol=1e-5)
+
+
+@pytest.mark.parametrize(
+    "position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"]
+)
+def test_edisp_from_diagonal_response(position):
+    position = SkyCoord(position)
+    energy_axis_true = MapAxis.from_energy_bounds("0.3 TeV", "10 TeV", nbin=31)
+    edisp_map = EDispMap.from_diagonal_response(energy_axis_true)
+
+    e_reco = energy_axis_true.edges
+    edisp_kernel = edisp_map.get_energy_dispersion(position, e_reco=e_reco)
+
+    sum_kernel = np.sum(edisp_kernel.data.data, axis=1).data
+
+    # We exclude the first and last bin, where there is no
+    # e_reco to contribute to
+    assert_allclose(sum_kernel[1:-1], 1)
+

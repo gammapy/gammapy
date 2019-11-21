@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy.units import Unit
 from gammapy.data import DataStore
 from gammapy.cube import PSFMap, make_map_exposure_true_energy, make_psf_map
-from gammapy.irf import PSF3D, EffectiveAreaTable2D
+from gammapy.irf import PSF3D, EffectiveAreaTable2D, EnergyDependentTablePSF
 from gammapy.maps import MapAxis, MapCoord, WcsGeom
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.testing import requires_data
@@ -361,3 +361,22 @@ def test_make_mean_psf(data_store):
 
     assert not np.isnan(psf.psf_value.value).any()
     assert_allclose(psf.psf_value.value[22, 22], 12206.1665, rtol=1e-3)
+
+
+@requires_data()
+@pytest.mark.parametrize(
+    "position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"]
+)
+def test_psf_map_from_table_psf(position):
+    position = SkyCoord(position)
+    filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_psf_gc.fits.gz"
+    table_psf = EnergyDependentTablePSF.read(filename)
+    psf_map = PSFMap.from_energy_dependent_table_psf(table_psf)
+
+    table_psf_new = psf_map.get_energy_dependent_table_psf(position)
+
+    assert_allclose(table_psf_new.psf_value.value, table_psf.psf_value.value)
+    assert table_psf_new.psf_value.unit == "sr-1"
+
+    assert_allclose(table_psf_new.exposure.value, table_psf.exposure.value)
+    assert table_psf_new.exposure.unit == "cm2 s"

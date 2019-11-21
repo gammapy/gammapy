@@ -10,6 +10,8 @@ from gammapy.cube import (
     MapDatasetOnOff,
     PSFKernel,
     make_map_exposure_true_energy,
+    EDispMap,
+    PSFMap
 )
 from gammapy.data import GTI
 from gammapy.irf import (
@@ -112,9 +114,8 @@ def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, **kwargs):
 
     if edisp:
         # define energy dispersion
-        e_true = geom_etrue.get_axis_by_name("energy").edges
-        e_reco = geom.get_axis_by_name("energy").edges
-        edisp = EnergyDispersion.from_diagonal_response(e_true=e_true, e_reco=e_reco)
+        e_true = geom_etrue.get_axis_by_name("energy")
+        edisp = EDispMap.from_diagonal_response(energy_axis_true=e_true)
     else:
         edisp = None
 
@@ -155,7 +156,7 @@ def test_fake(sky_model, geom, geom_etrue):
 
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
     assert_allclose(real_dataset.counts.data.sum(), 8220.399727)
-    assert_allclose(dataset.counts.data.sum(), 8397)
+    assert_allclose(dataset.counts.data.sum(), 8365)
 
 
 @requires_data()
@@ -238,8 +239,10 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
         "EXPOSURE_BANDS",
         "BACKGROUND",
         "BACKGROUND_BANDS",
-        "EDISP_MATRIX",
-        "EDISP_MATRIX_EBOUNDS",
+        "EDISP",
+        "EDISP_BANDS",
+        "EDISP_EXPOSURE",
+        "EDISP_EXPOSURE_BANDS",
         "PSF_KERNEL",
         "PSF_KERNEL_BANDS",
         "MASK_SAFE",
@@ -261,7 +264,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     assert_allclose(
         dataset.background_model.map.data, dataset_new.background_model.map.data
     )
-    assert_allclose(dataset.edisp.data.data.value, dataset_new.edisp.data.data.value)
+    assert_allclose(dataset.edisp.edisp_map.data, dataset_new.edisp.edisp_map.data)
     assert_allclose(dataset.psf.data, dataset_new.psf.data)
     assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
     assert_allclose(dataset.mask_fit.data, dataset_new.mask_fit.data)
@@ -270,16 +273,8 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     assert dataset.counts.geom == dataset_new.counts.geom
     assert dataset.exposure.geom == dataset_new.exposure.geom
     assert dataset.background_model.map.geom == dataset_new.background_model.map.geom
+    assert dataset.edisp.edisp_map.geom == dataset_new.edisp.edisp_map.geom
 
-    assert_allclose(
-        dataset.edisp.e_true.edges.value, dataset_new.edisp.e_true.edges.value
-    )
-    assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
-
-    assert_allclose(
-        dataset.edisp.e_reco.edges.value, dataset_new.edisp.e_reco.edges.value
-    )
-    assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
     assert_allclose(
         dataset.gti.time_sum.to_value("s"), dataset_new.gti.time_sum.to_value("s")
     )
@@ -321,17 +316,17 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     npred = dataset_1.npred().data.sum()
     assert_allclose(npred, 6220.529956, rtol=1e-3)
-    assert_allclose(result.total_stat, 27725.577785, rtol=1e-3)
+    assert_allclose(result.total_stat, 27040.706975, rtol=1e-3)
 
     pars = result.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
     assert_allclose(pars.error("lon_0"), 0.002651, rtol=1e-2)
 
     assert_allclose(pars["index"].value, 3, rtol=1e-2)
-    assert_allclose(pars.error("index"), 0.021222, rtol=1e-2)
+    assert_allclose(pars.error("index"), 0.023899, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error("amplitude"), 3.117271e-13, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 3.450585e-13, rtol=1e-2)
 
     # background norm 1
     assert_allclose(pars[8].value, 0.5, rtol=1e-2)
@@ -347,7 +342,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_2.mask_safe = Map.from_geom(geom, data=mask_safe)
 
     stat = fit.datasets.stat_sum()
-    assert_allclose(stat, 15254.470527)
+    assert_allclose(stat, 14952.78696)
 
     # test model evaluation outside image
 
@@ -362,7 +357,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 @requires_dependency("iminuit")
 @requires_data()
 def test_map_fit_one_energy_bin(sky_model, geom_image):
-    dataset = get_map_dataset(sky_model, geom_image, geom_image)
+    dataset = get_map_dataset(sky_model, geom_image, geom_image, edisp=False)
     sky_model.spectral_model.index.value = 3.0
     sky_model.spectral_model.index.frozen = True
     dataset.background_model.norm.value = 0.5

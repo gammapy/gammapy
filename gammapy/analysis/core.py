@@ -293,10 +293,6 @@ class Analysis:
         dataset.psf = dataset.psf.get_psf_kernel(
             position=position, geom=geom_psf, max_radius=max_radius
         )
-        e_reco = geom.get_axis_by_name("energy").edges
-        dataset.edisp = dataset.edisp.get_energy_dispersion(
-            position=position, e_reco=e_reco
-        )
 
     def _set_logging(self):
         """Set logging parameters for API."""
