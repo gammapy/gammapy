@@ -552,7 +552,7 @@ def test_map_dataset_onoff_fits_io(images, tmp_path):
     dataset.write(tmp_path / "test.fits")
 
     dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits")
-    assert len(dataset_new.model) == 0
+    assert dataset_new.model is None
     assert dataset_new.mask.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
