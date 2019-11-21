@@ -26,7 +26,7 @@ def group_datasets_in_time_interval(datasets, time_intervals, atol="1e-6 s"):
     time_intervals : list of `astropy.time.Time`
         Start and stop time for each interval to compute the LC
     atol : `~astropy.units.Quantity`
-        Tolerance value for time comparison with different scale (Ex= "tt", "utc"). Default 1e-6 sec.
+        Tolerance value for time comparison with different scale. Default 1e-6 sec.
 
     Returns
     -------
@@ -133,7 +133,7 @@ class LightCurveEstimator:
         diff_time_stop = np.diff(time_stop_sorted)
         diff_time_interval_edges = time_start_sorted[1:] - time_stop_sorted[:-1]
         if np.any(diff_time_stop < 0) or np.any(diff_time_interval_edges < 0):
-            raise ValueError("You give overlapping time bin to perform the LC.")
+            raise ValueError("LightCurveEstimator requires non-overlapping time bins.")
         else:
             self.time_intervals = [
                 Time([tstart, tstop])
@@ -208,7 +208,7 @@ class LightCurveEstimator:
 
             By default all steps are executed.
         atol : `~astropy.units.Quantity`
-            Tolerance value for time comparison with different scale (Ex= "tt", "utc"). Default 1e-6 sec.
+            Tolerance value for time comparison with different scale. Default 1e-6 sec.
 
         Returns
         -------
@@ -225,13 +225,11 @@ class LightCurveEstimator:
             datasets=self.datasets, time_intervals=self.time_intervals, atol=atol
         )
         if np.all(self.group_table_info["Group_ID"] == -1):
-            raise ValueError(
-                "None of your dataset GTI are include in the time intervals"
-            )
+            raise ValueError("LightCurveEstimator: No datasets in time intervals")
         for igroup, time_interval in enumerate(self.time_intervals):
             index_dataset = np.where(self.group_table_info["Group_ID"] == igroup)[0]
             if len(index_dataset) == 0:
-                log.info("No Dataset for the time interval " + str(igroup))
+                log.debug("No Dataset for the time interval " + str(igroup))
                 continue
 
             row = {"time_min": time_interval[0].mjd, "time_max": time_interval[1].mjd}

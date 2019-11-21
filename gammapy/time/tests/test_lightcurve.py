@@ -346,7 +346,7 @@ def test_lightcurve_estimator_spectrum_datasets_timeoverlaped():
     ]
     with pytest.raises(ValueError) as excinfo:
         LightCurveEstimator(datasets, norm_n_values=3, time_intervals=time_intervals)
-    msg = "You give overlapping time bin to perform the LC."
+    msg = "LightCurveEstimator requires non-overlapping time bins."
     assert str(excinfo.value) == msg
 
 
@@ -365,7 +365,7 @@ def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_interval
     with pytest.raises(ValueError) as excinfo:
         steps = ["err", "counts", "ts", "norm-scan"]
         estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV, steps=steps)
-    msg = "None of your dataset GTI are include in the time intervals"
+    msg = "LightCurveEstimator: No datasets in time intervals"
     assert str(excinfo.value) == msg
 
 
