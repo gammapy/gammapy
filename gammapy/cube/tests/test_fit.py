@@ -26,7 +26,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
-
+from gammapy.modeling import Datasets
 
 @pytest.fixture
 def geom():
@@ -254,7 +254,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset.write(tmp_path / "test.fits")
 
     dataset_new = MapDataset.read(tmp_path / "test.fits")
-    assert dataset_new.model is None
+    assert len(dataset_new.model) == 0
     assert dataset_new.mask.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
@@ -671,3 +671,25 @@ def test_stack_onoff_cutout(geom_image):
     assert_allclose(dataset.counts_off.data.sum(), dataset_cutout.counts_off.data.sum())
     assert_allclose(dataset.alpha.data.sum(), dataset_cutout.alpha.data.sum())
     assert_allclose(dataset.exposure.data.sum(), dataset_cutout.exposure.data.sum())
+
+
+def test_datasets_io_no_model(tmpdir):
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(npix=(5, 5), axes=[axis])
+    dataset_1 = MapDataset.create(geom, name="1")
+    dataset_2 = MapDataset.create(geom, name="2")
+
+    datasets = Datasets([dataset_1, dataset_2])
+
+    datasets.to_yaml(path=tmpdir, prefix="test")
+
+    filename_1 = tmpdir / "test_data_1.fits"
+    assert filename_1.exists()
+
+    filename_2 = tmpdir / "test_data_2.fits"
+    assert filename_2.exists()
+
+
+
+
+
