@@ -68,7 +68,7 @@ commands are.
 
 Fermi ScienceTools
 ------------------
-
+**TODO: this is not a package manager move somewhere else**
 The `Fermi ScienceTools`_ ships with it's own Python 2.7 interpreter.
 
 The last release of Gammapy to support Python 2.7 was Gammapy v0.10 from January 2019.

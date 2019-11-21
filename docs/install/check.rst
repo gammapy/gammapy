@@ -6,6 +6,8 @@ Check Gammapy installation
 How to run checks
 -----------------
 
+**TODO: Check this. There seems to be an issue here.**
+
 To check if Gammapy is correctly installed, start up python or ipython, import
 Gammapy and run the unit tests::
 

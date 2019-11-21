@@ -32,6 +32,8 @@ useful, unless you run out of disk space).
 Required dependencies
 ---------------------
 
+**TODO: update to latest dependencies.**
+**TODO: rather link to environment.yaml file?**
 Required dependencies are automatically installed when using e.g. ``conda
 install gammapy -c conda-forge`` or ``pip install gammapy``.
 
