@@ -584,7 +584,7 @@ def make_observation_list():
         mask_safe=np.ones(on_vector.energy.nbin, dtype=bool),
         acceptance=1,
         acceptance_off=2,
-        name="2",
+        name="1",
         gti=gti1,
     )
     obs2 = SpectrumDatasetOnOff(
@@ -702,4 +702,11 @@ def test_datasets_stack_reduce():
 def test_spectrum_dataset_on_off_to_yaml(tmpdir):
     spectrum_datasets_on_off = make_observation_list()
     datasets = Datasets(spectrum_datasets_on_off)
-    datasets.to_yaml(path=str(tmpdir))
+    datasets.to_yaml(path=tmpdir)
+    datasets_read = Datasets.from_yaml(
+        tmpdir / "_datasets.yaml", tmpdir / "_models.yaml"
+    )
+    assert len(datasets_read) == len(datasets)
+    assert datasets_read[0].name == datasets[0].name
+    assert datasets_read[1].name == datasets[1].name
+    assert datasets_read[1].counts.data.sum() == datasets[1].counts.data.sum()

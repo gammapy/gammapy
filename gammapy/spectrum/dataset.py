@@ -1087,9 +1087,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         info["gamma_rate"] = info["excess"] / info["livetime"]
         return info
 
-    def to_dict(self, *args, **kwargs):
+    def to_dict(self, filename, *args, **kwargs):
         """Convert to dict for YAML serialization."""
-        filename = f"pha_obs{self.name}.fits"
+        outdir = Path(filename).parent
+        filename = str(outdir / f"pha_obs{self.name}.fits")
 
         if self.model is not None:
             models = [_.name for _ in self.model]
