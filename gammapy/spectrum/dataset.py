@@ -7,12 +7,13 @@ from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 from gammapy.stats import cash, significance_on_off, wstat
-from gammapy.modeling.models import SkyModels
+from gammapy.modeling.models import SkyModels, SkyModel
 from gammapy.modeling import Dataset
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
 from .core import CountsSpectrum, SpectrumEvaluator
+from gammapy.modeling import Parameters
 
 __all__ = [
     "SpectrumDatasetOnOff",
@@ -30,7 +31,7 @@ class SpectrumDataset(Dataset):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SpectralModel`
+    model : `~gammapy.modeling.models.SkyModels` or `~gammapy.modeling.models.SkyModel`
         Fit model
     counts : `~gammapy.spectrum.CountsSpectrum`
         Counts spectrum
@@ -72,6 +73,7 @@ class SpectrumDataset(Dataset):
         name="",
         gti=None,
     ):
+
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
@@ -173,18 +175,24 @@ class SpectrumDataset(Dataset):
         return self._model
 
     @model.setter
-    def model(self, model):
-        self._model = model
+    def model(self, model):    
+        if isinstance(model, SkyModel):
+            model = SkyModels([model])
         if model is not None:
-            self._parameters = self._model.parameters
+            self._model = model
+            parameters = []
+            for _ in self._model:
+                parameters+=list(_.spectral_model.parameters)
+            self._parameters = Parameters(parameters)
             self._predictor = SpectrumEvaluator(
-                model=self.model,
+                model= self.model,
                 livetime=self.livetime,
                 aeff=self.aeff,
                 e_true=self._energy_axis.edges,
                 edisp=self.edisp,
             )
         else:
+            self.model = SkyModels([])
             self._parameters = None
             self._predictor = None
 
@@ -1091,15 +1099,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """Convert to dict for YAML serialization."""
         outdir = Path(filename).parent
         filename = str(outdir / f"pha_obs{self.name}.fits")
-
-        if self.model is not None:
-            models = [_.name for _ in self.model]
-        else:
-            models = []
         return {
             "name": self.name,
             "type": self.tag,
-            "models": models,
+            "models": [_.name for _ in self.model],
             "likelihood": self.likelihood_type,
             "filename": filename,
         }

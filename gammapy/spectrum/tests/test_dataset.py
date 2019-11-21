@@ -12,6 +12,7 @@ from gammapy.modeling.models import (
     ConstantSpectralModel,
     ExpCutoffPowerLawSpectralModel,
     PowerLawSpectralModel,
+    SkyModel
 )
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
@@ -32,9 +33,9 @@ class TestSpectrumDataset:
         self.nbins = 30
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
 
-        self.source_model = PowerLawSpectralModel(
+        self.source_model = SkyModel(spectral_model=PowerLawSpectralModel(
             index=2.1, amplitude=1e5 * u.Unit("cm-2 s-1 TeV-1"), reference=0.1 * u.TeV
-        )
+        ))
 
         self.livetime = 100 * u.s
         aeff = EffectiveAreaTable.from_constant(binning, "1 cm2")
@@ -47,7 +48,7 @@ class TestSpectrumDataset:
         )
 
         random_state = get_random_state(23)
-        flux = self.source_model.integral(binning[:-1], binning[1:])
+        flux = self.source_model.spectral_model.integral(binning[:-1], binning[1:])
         self.npred = (flux * aeff.data.data[0] * self.livetime).to_value("")
         self.npred += bkg_expected
         source_counts = random_state.poisson(self.npred)
@@ -122,7 +123,7 @@ class TestSpectrumDataset:
             dataset.parameters
 
         dataset.model = self.source_model
-        assert dataset.parameters[0] == self.source_model.parameters[0]
+        assert dataset.parameters[0] == self.source_model.spectral_model.parameters[0]
 
     def test_str(self):
         assert "SpectrumDataset" in str(self.dataset)
@@ -299,7 +300,7 @@ class TestSpectrumOnOff:
 
     def test_npred_no_edisp(self):
         const = 1 * u.Unit("cm-2 s-1 TeV-1")
-        model = ConstantSpectralModel(const=const)
+        model = SkyModel(spectral_model=ConstantSpectralModel(const=const))
         livetime = 1 * u.s
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
@@ -330,7 +331,7 @@ class TestSpectrumOnOff:
 
     @requires_dependency("matplotlib")
     def test_plot_fit(self):
-        model = PowerLawSpectralModel()
+        model = SkyModel()
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -396,7 +397,7 @@ class TestSpectrumOnOff:
         assert_allclose(mask, desired)
 
     def test_str(self):
-        model = PowerLawSpectralModel()
+        model = SkyModel()
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -412,7 +413,7 @@ class TestSpectrumOnOff:
 
     def test_fake(self):
         """Test the fake dataset"""
-        source_model = PowerLawSpectralModel()
+        source_model = SkyModel()
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -471,16 +472,16 @@ class TestSpectralFit:
             ]
         )
 
-        self.pwl = PowerLawSpectralModel(
+        self.pwl = SkyModel(spectral_model=PowerLawSpectralModel(
             index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
-        )
+        ))
 
-        self.ecpl = ExpCutoffPowerLawSpectralModel(
+        self.ecpl = SkyModel(spectral_model=ExpCutoffPowerLawSpectralModel(
             index=2,
             amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV,
-        )
+        ))
 
         # Example fit for one observation
         self.datasets[0].model = self.pwl
@@ -496,7 +497,7 @@ class TestSpectralFit:
         result = self.fit.run()
         pars = self.fit.datasets.parameters
 
-        assert self.pwl is self.datasets[0].model
+        assert self.pwl is self.datasets[0].model[0]
 
         assert_allclose(result.total_stat, 38.343, rtol=1e-3)
         assert_allclose(pars["index"].value, 2.817, rtol=1e-3)
@@ -648,9 +649,9 @@ class TestSpectrumDatasetOnOffStack:
 
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""
-        pwl = PowerLawSpectralModel(
+        pwl = SkyModel(spectral_model=PowerLawSpectralModel(
             index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
-        )
+        ))
         self.stacked_dataset.model = pwl
 
         npred_stacked = self.stacked_dataset.npred().data

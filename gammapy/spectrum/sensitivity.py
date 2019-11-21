@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import astropy.units as u
 from astropy.table import Column, Table
-from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import excess_matching_significance_on_off
 from .core import SpectrumEvaluator
 
@@ -92,7 +92,7 @@ class SensitivityEstimator:
 
         # TODO: simplify the following computation
         predictor = SpectrumEvaluator(
-            model, aeff=self.arf, edisp=self.rmf, livetime=self.livetime
+            SkyModel(spectral_model=model), aeff=self.arf, edisp=self.rmf, livetime=self.livetime
         )
         counts = predictor.compute_npred().data
         phi_0 = excess_counts / counts
