@@ -1369,9 +1369,11 @@ class MapEvaluator:
         # cache current position of the model component
 
         # TODO: lookup correct Edisp for this component
-        if edisp is not None:
+        if isinstance(edisp, EDispMap):
             e_reco = geom.get_axis_by_name("energy").edges
             self.edisp = edisp.get_energy_dispersion(self.model.position, e_reco=e_reco)
+        else:
+            self.edisp = edisp
 
         # TODO: lookup correct PSF for this component
         self.psf = psf # .get_psf_kernel(self.model.position, geom=exposure.geom)

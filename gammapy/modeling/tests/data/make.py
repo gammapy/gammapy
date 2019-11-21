@@ -23,7 +23,7 @@ DATA_PATH = Path("./")
 
 
 def make_example_2():
-    spatial = GaussianSpatialModel("0 deg", "0 deg", "1 deg")
+    spatial = GaussianSpatialModel(lon_0="0 deg", lat_0="0 deg", sigma="1 deg")
     model = SkyModel(spatial, PowerLawSpectralModel())
     models = SkyModels([model])
     models.to_yaml(DATA_PATH / "example2.yaml")
@@ -93,17 +93,14 @@ def make_datasets_example():
         stacked = MapDataset.create(geom=geom)
         stacked.background_model.name = "background_irf_" + names[idx]
 
-        maker = MapDatasetMaker(geom=geom, offset_max=4.0 * u.deg)
+        maker = MapDatasetMaker(offset_max=4.0 * u.deg)
 
         for obs in observations:
-            dataset = maker.run(obs)
+            dataset = maker.run(stacked, obs)
             stacked.stack(dataset)
 
         stacked.psf = stacked.psf.get_psf_kernel(
             position=geom.center_skydir, geom=geom, max_radius="0.3 deg"
-        )
-        stacked.edisp = stacked.edisp.get_energy_dispersion(
-            position=geom.center_skydir, e_reco=energy_axis.edges
         )
 
         stacked.name = names[idx]
