@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
 from gammapy.cube.fit import MapDataset
-from gammapy.spectrum import FluxPointsDataset, SpectrumDataset
+from gammapy.spectrum import FluxPointsDataset, SpectrumDatasetOnOff
 from .models import Registry, SkyDiffuseCube, SkyModel
 
 # TODO: move this elsewhere ?
-DATASETS = Registry([MapDataset, SpectrumDataset, FluxPointsDataset])
+DATASETS = Registry([MapDataset, SpectrumDatasetOnOff, FluxPointsDataset])
 
 __all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
 
@@ -131,11 +131,11 @@ def datasets_to_dict(datasets, path, prefix, overwrite):
                 if model not in unique_models:
                     unique_models.append(model)
 
-        try:
-            if dataset.background_model not in unique_backgrounds:
-                unique_backgrounds.append(dataset.background_model)
-        except AttributeError:
-            pass
+            try:
+                if dataset.background_model not in unique_backgrounds:
+                    unique_backgrounds.append(dataset.background_model)
+            except AttributeError:
+                pass
 
     datasets_dict = {"datasets": datasets_dictlist}
     components_dict = models_to_dict(unique_models + unique_backgrounds)
