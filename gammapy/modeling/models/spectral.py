@@ -1387,37 +1387,3 @@ class GaussianSpectralModel(SpectralModel):
         return a * (np.exp(-u_min ** 2) - np.exp(-u_max ** 2)) + b * (
             scipy.special.erf(u_max) - scipy.special.erf(u_min)
         )
-
-
-class LogGaussianSpectralModel(SpectralModel):
-    r"""Log Gaussian spectral model.
-
-    .. math::
-        \phi(E) = \frac{N_0}{E \, \sigma \sqrt{2\pi}}
-         \exp{ \frac{- \left( \ln(\frac{E}{\bar{E}}) \right)^2 }{2 \sigma^2} }
-
-    This model was used in this CTA study for the electron spectrum: Table 3
-    in https://ui.adsabs.harvard.edu/abs/2013APh....43..171B
-
-    Parameters
-    ----------
-    norm : `~astropy.units.Quantity`
-        :math:`N_0`
-    mean : `~astropy.units.Quantity`
-        :math:`\bar{E}`
-    sigma : `float`
-        :math:`\sigma`
-    """
-
-    tag = "LogGaussianSpectralModel"
-    norm = Parameter("norm", 1e-12 * u.Unit("cm-2 s-1"))
-    mean = Parameter("mean", 1 * u.TeV)
-    sigma = Parameter("sigma", 2)
-
-    @staticmethod
-    def evaluate(energy, norm, mean, sigma):
-        return (
-            norm
-            / (energy * sigma * np.sqrt(2 * np.pi))
-            * np.exp(-(np.log(energy / mean)) ** 2 / (2 * sigma ** 2))
-        )

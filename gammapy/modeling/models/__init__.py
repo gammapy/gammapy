@@ -43,7 +43,6 @@ SPECTRAL_MODELS = Registry(
         LogParabolaSpectralModel,
         TemplateSpectralModel,
         GaussianSpectralModel,
-        LogGaussianSpectralModel,
         AbsorbedSpectralModel,
         NaimaSpectralModel,
         ScaleSpectralModel,
