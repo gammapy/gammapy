@@ -626,36 +626,6 @@ class PowerLaw2SpectralModel(SpectralModel):
 
         return pars["amplitude"].quantity * top / bottom
 
-    def integral_error(self, emin, emax, **kwargs):
-        r"""Integrate power law analytically with error propagation.
-
-        Parameters
-        ----------
-        emin, emax : `~astropy.units.Quantity`
-            Lower and upper bound of integration range.
-
-        Returns
-        -------
-        integral, integral_error : tuple of `~astropy.units.Quantity`
-            Tuple of integral flux and integral flux error.
-        """
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
-
-        unit = self.integral(emin, emax, **kwargs).unit
-        upars = self.parameters._ufloats
-
-        temp1 = np.power(emax.value, -upars["index"] + 1)
-        temp2 = np.power(emin.value, -upars["index"] + 1)
-        top = temp1 - temp2
-
-        temp1 = np.power(upars["emax"], -upars["index"] + 1)
-        temp2 = np.power(upars["emin"], -upars["index"] + 1)
-        bottom = temp1 - temp2
-
-        uarray = upars["amplitude"] * top / bottom
-        return self._parse_uarray(uarray) * unit
-
     def inverse(self, value):
         """Return energy for a given function value of the spectral model.
 
