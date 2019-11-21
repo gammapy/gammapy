@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.maps import MapAxis
 from gammapy.modeling.models import (
@@ -522,3 +523,62 @@ class TestNaimaModel:
         )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
+
+class TestSpectralModelErrorPropagation:
+    """Test spectral model error propagation.
+
+    https://github.com/gammapy/gammapy/blob/master/docs/development/pigs/pig-014.rst#proposal
+    https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/experiments/uncertainty_estimation_prototype.ipynb
+    """
+
+    def setup(self):
+        self.model = LogParabolaSpectralModel(
+            amplitude=3.76e-11 * u.Unit("cm-2 s-1 TeV-1"),
+            reference=1 * u.TeV,
+            alpha=2.44,
+            beta=0.25,
+        )
+        self.model.parameters.covariance = [
+            [1.31e-23, 0, -6.80e-14, 3.04e-13],
+            [0, 0, 0, 0],
+            [-6.80e-14, 0, 0.00899, 0.00904],
+            [3.04e-13, 0, 0.00904, 0.0284],
+        ]
+
+    def test_evaluate_error_scalar(self):
+        # evaluate_error on scalar
+        out = self.model.evaluate_error(1 * u.TeV)
+        assert isinstance(out, u.Quantity)
+        assert out.unit == "cm-2 s-1 TeV-1"
+        assert out.shape == (2,)
+        assert_allclose(out.data, [3.76000000e-11, 3.61939221e-12])
+
+    def test_evaluate_error_array(self):
+        out = self.model.evaluate_error([1, 100] * u.TeV)
+        assert out.shape == (2, 2)
+        expected = [
+            [3.76e-11, 2.4694642988749597e-18],
+            [3.6193922141707712e-12, 9.375077745817002e-18],
+        ]
+        assert_allclose(out.data, expected)
+
+    def test_evaluate_error_unit(self):
+        out = self.model.evaluate_error(1e6 * u.MeV)
+        assert out.unit == "cm-2 s-1 TeV-1"
+        assert_allclose(out.data, [3.760e-11, 3.61939221e-12], rtol=1e-3)
+
+    def test_integral_error(self):
+        out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)
+        assert out.unit == "cm-2 s-1"
+        assert out.shape == (2, )
+        assert_allclose(out.data, [2.197e-11, 2.796e-12], rtol=1e-3)
+
+    def test_energy_flux_error(self):
+        out = self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV)
+        assert out.unit == "TeV cm-2 s-1"
+        assert out.shape == (2, )
+        assert_allclose(out.data, [4.119e-11, 8.157e-12], rtol=1e-3)
+
+
+    def test_power_law(self):
+        pass
