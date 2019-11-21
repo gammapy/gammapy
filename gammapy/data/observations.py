@@ -321,6 +321,14 @@ class Observations:
         return s
 
     @property
+    def tstart(self):
+        return Time([_.tstart for _ in self])
+
+    @property
+    def tstop(self):
+        return Time([_.tstop for _ in self])
+
+    @property
     def ids(self):
         """List of obs IDs (`list`)"""
         return [str(obs.obs_id) for obs in self.list]
@@ -340,9 +348,16 @@ class Observations:
             A new observations instance of the specified time interval
         """
         new_obs_list = []
-        for obs in self:
-            new_obs = obs.select_time(time_interval)
-            if len(new_obs.gti.table) > 0:
+        mask = self.tstart < time_interval[1]
+        mask &= self.tstop > time_interval[0]
+
+        indices = np.where(mask)[0]
+        print(indices)
+        if len(indices)>0:
+            for index in indices:
+                obs = self[index]
+                new_obs = obs.select_time(time_interval)
+#                if len(new_obs.gti.table>0):
                 new_obs_list.append(new_obs)
 
         return self.__class__(new_obs_list)
