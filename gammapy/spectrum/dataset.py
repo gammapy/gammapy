@@ -6,8 +6,9 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
-from gammapy.modeling import Dataset
 from gammapy.stats import cash, significance_on_off, wstat
+from gammapy.modeling.models import SkyModels
+from gammapy.modeling import Dataset
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
@@ -1085,6 +1086,68 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         info["background_rate"] = info["background"] / info["livetime"]
         info["gamma_rate"] = info["excess"] / info["livetime"]
         return info
+
+    def to_dict(self, filename, *args, **kwargs):
+        """Convert to dict for YAML serialization."""
+        outdir = Path(filename).parent
+        filename = str(outdir / f"pha_obs{self.name}.fits")
+
+        if self.model is not None:
+            models = [_.name for _ in self.model]
+        else:
+            models = []
+        return {
+            "name": self.name,
+            "type": self.tag,
+            "models": models,
+            "likelihood": self.likelihood_type,
+            "filename": filename,
+        }
+
+    def write(self, filename, overwrite):
+        """Write spectrum dataset on off to file.
+
+        Currently only the OGIP format is supported
+
+        Parameters
+        ----------
+        filename : str
+            Filename to write to.
+        overwrite : bool
+            Overwrite existing file.
+        """
+        outdir = Path(filename).parent
+        self.to_ogip_files(outdir=outdir, overwrite=overwrite)
+
+    @classmethod
+    def from_dict(cls, data, components, models):
+        """Create flux point dataset from dict.
+
+        Parameters
+        ----------
+        data : dict
+            Dict containing data to create dataset from.
+        components : list of dict
+            Not used.
+        models : list of `SkyModel`
+            List of model components.
+
+        Returns
+        -------
+        dataset : `SpectrumDatasetOnOff`
+            Spectrum dataset on off.
+
+        """
+        model = SkyModels([model for model in models if model.name in data["models"]])
+
+        # TODO: assumes that the model is a skymodel
+        # so this will work only when this change will be effective
+        filename = data["filename"]
+
+        dataset = cls.from_ogip_files(filename=filename)
+        dataset.mask_fit = None
+        dataset.model = model
+        return dataset
 
 
 def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS", hdu3="GTI"):

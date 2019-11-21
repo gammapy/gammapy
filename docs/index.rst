@@ -3,7 +3,7 @@
 .. image:: _static/gammapy_banner.png
     :width: 400px
 
-|
+.. Should we add a known issues section at the end?
 
 Gammapy
 -------

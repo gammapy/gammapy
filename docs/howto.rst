@@ -5,34 +5,111 @@
 How To
 ======
 
-TODO: add short entries explaining how to do something specific in Gammapy.
+**TODO: add short entries explaining how to do something specific in Gammapy.**
+**Follow general overview: from DL3 to observations to dataset to model/fit**
 
 Probably each HOWTO should be a short section with just 1-2 sentences and links to tutorials and API docs,
 or if it should be small mini-tutorials with code snippets, possibly on sub-pages.
 
 See docs PIG: https://github.com/gammapy/gammapy/pull/2463
 
+Data access and manipulation
+----------------------------
+
+How to open a data store and access observations?
++++++++++++++++++++++++++++++++++++++++++++++++++
+
+How to select observations?
++++++++++++++++++++++++++++
+
+How to filter selected observations?
+++++++++++++++++++++++++++++++++++++
+
+How to explore the IRFs of an observation?
+++++++++++++++++++++++++++++++++++++++++++
+
+Data reduction: spectra
+-----------------------
+
+what do we want to see here?
+
+How to extract 1D spectra?
+++++++++++++++++++++++++++
+
+How to compute the cumulative significance of a source?
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Data reduction: maps
+--------------------
+
+How to build maps?
+++++++++++++++++++
+
+How to plot a excess map?
++++++++++++++++++++++++++
+
+How to overlay significance and excess on maps?
++++++++++++++++++++++++++++++++++++++++++++++++
+
+How to detect sources in a map?
++++++++++++++++++++++++++++++++
+
+Short explanation and link to detect.ipynb
+
 How to compute the significance of a source?
---------------------------------------------
+++++++++++++++++++++++++++++++++++++++++++++
 
 Estimate the significance of a source, or more generally of an additional model component
 (such as e.g. a spectral line on top of a power-law spectrum), is done via a hypothesis test.
 You fit two models, with and without the extra source or component, then use the test statistic
 values from both fits to compute the significance or p-value.
 
+**TODO: link to notebook**
 TODO: update this entry once https://github.com/gammapy/gammapy/issues/2149
 and https://github.com/gammapy/gammapy/issues/1540 are resolved, linking to the documentation
 developed there.
 
+
+Modeling and fitting
+--------------------
+
+How to share a model between two datasets?
+++++++++++++++++++++++++++++++++++++++++++
+
 How to use Gammapy with astrophysical modeling packages?
---------------------------------------------------------
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 It is possible to combine Gammapy with astrophysical modeling codes, if they provide a Python interface.
 Usually this requires some glue code to be written, e.g. `~gammapy.modeling.models.NaimaSpectralModel` is
 an example of a Gammapy wrapper class around the Naima spectral model and radiation classes, which then
 allows modeling and fitting of Naima models within Gammapy (e.g. using CTA, H.E.S.S. or Fermi-LAT data).
 
-TOOD: give more and better examples.
+**TODO: give link to example in a notebook.**
+
+How to add a user defined model?
+++++++++++++++++++++++++++++++++
+
+**TODO: move content from spectrum_simulation.ipynb**
+
+How to extract a lightcurve?
+++++++++++++++++++++++++++++
+
+Link to relevant notebook.
+
+How to create a light curve with time intervals shorter than observations?
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Link to relevant notebook.
+
+Do we really want those:
+
+How to test for variability?
+++++++++++++++++++++++++++++
+
+How to test for periodicity in a light curve?
++++++++++++++++++++++++++++++++++++++++++++++
+
+
 
 Other Ideas
 -----------
@@ -70,7 +147,6 @@ Source Detection
 - How to define/get position and spatial dimensions at different energy thresholds?
 - How to calculate surface brightness or radial profile in within a specific mask/region?
 - How to calculate a spectrum within a specific mask/region?
-- How to overlay significance and excess on maps?
 
 Light Curves
 ++++++++++++
