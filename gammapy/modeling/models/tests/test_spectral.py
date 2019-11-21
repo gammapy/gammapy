@@ -236,7 +236,6 @@ TEST_MODELS.append(
 )
 
 
-@requires_dependency("uncertainties")
 @requires_dependency("scipy")
 @pytest.mark.parametrize("spectrum", TEST_MODELS, ids=lambda _: _["name"])
 def test_models(spectrum):
@@ -297,7 +296,6 @@ def test_model_unit():
 
 
 @requires_dependency("matplotlib")
-@requires_dependency("uncertainties")
 def test_model_plot():
     pwl = PowerLawSpectralModel(
         amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2

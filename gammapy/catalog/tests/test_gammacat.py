@@ -138,7 +138,6 @@ class TestSourceCatalogObjectGammaCat:
         assert_quantity_allclose(flux, ref["flux_1TeV"], rtol=1e-3)
         assert_quantity_allclose(eflux, ref["eflux_1_10TeV"], rtol=1e-3)
 
-    @requires_dependency("uncertainties")
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_spectral_model_err(self, gammacat, ref):
         source = gammacat[ref["name"]]

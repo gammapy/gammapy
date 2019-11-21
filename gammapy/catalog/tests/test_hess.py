@@ -116,7 +116,6 @@ class TestSourceCatalogObjectHGPS:
         assert spec_types == {"pl": 66, "ecpl": 12}
 
     @staticmethod
-    @requires_dependency("uncertainties")
     def test_spectral_model_pl(cat):
         source = cat["HESS J1843-033"]
 
@@ -129,7 +128,6 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(pars["reference"].value, 1.867810606956482)
 
     @staticmethod
-    @requires_dependency("uncertainties")
     def test_spectral_model_ecpl(cat):
         source = cat["HESS J0835-455"]
 
@@ -158,7 +156,6 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(pars.error("amplitude"), 6.992061e-14, rtol=1e-3)
         assert_allclose(pars.error("index"), 0.028383, atol=0.001)
         assert_allclose(pars.error("reference"), 0)
-
 
     @staticmethod
     def test_spatial_model_type(cat):

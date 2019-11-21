@@ -65,7 +65,6 @@ class TestSourceCatalogObject2HWC:
             cat[0].sky_model("extended")
 
     @staticmethod
-    @requires_dependency("uncertainties")
     def test_spectral_model(cat):
         m = cat[0].spectral_model()
         dnde, dnde_err = m.evaluate_error(1 * u.TeV)
