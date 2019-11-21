@@ -8,7 +8,7 @@ from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 from gammapy.stats import cash, significance_on_off, wstat
 from gammapy.modeling.models import SkyModels
-from gammapy.modeling import Dataset, Parameters
+from gammapy.modeling import Dataset
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
