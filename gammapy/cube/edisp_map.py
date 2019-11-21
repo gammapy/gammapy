@@ -235,10 +235,9 @@ class EDispMap:
         # Build the pixels tuple
         pix = np.meshgrid(pix_lon, pix_lat, pix_migra, pix_ener)
         # Interpolate in the EDisp map. Squeeze to remove dimensions of length 1
-        edisp_values = np.squeeze(
-            self.edisp_map.interp_by_pix(pix)
-            * u.Unit(self.edisp_map.unit)  # * migra_step
-        )
+        edisp_values = self.edisp_map.interp_by_pix(pix) * u.Unit(self.edisp_map.unit)
+        edisp_values = np.squeeze(edisp_values, axis=(0, 1))
+
         e_trues = self.edisp_map.geom.axes[1].center
         data = []
 
