@@ -374,8 +374,12 @@ def test_make_mean_psf(data_store):
 def test_psf_map_from_table_psf(position):
     filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_psf_gc.fits.gz"
     table_psf = EnergyDependentTablePSF.read(filename)
-    psf_map = PSFMap.from_table_psf(table_psf)
+    psf_map = PSFMap.from_energy_dependent_table_psf(table_psf)
 
     table_psf_new = psf_map.get_energy_dependent_table_psf(position)
 
     assert_allclose(table_psf_new.psf_value.value, table_psf.psf_value.value)
+    assert table_psf_new.psf_value.unit == "sr-1"
+
+    assert_allclose(table_psf_new.exposure.value, table_psf.exposure.value)
+    assert table_psf_new.exposure.unit == "cm2 s"

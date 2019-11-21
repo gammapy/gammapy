@@ -400,7 +400,7 @@ class PSFMap:
         )
 
     @classmethod
-    def from_table_psf(cls, table_psf):
+    def from_energy_dependent_table_psf(cls, table_psf):
         """Create PSF map from table PSF object.
 
         Helper function to create an allsky PSF map from
@@ -431,5 +431,10 @@ class PSFMap:
         data = table_psf._interpolate((coords["energy"], coords["theta"])).to_value("sr-1")
         psf_map = Map.from_geom(geom, data=data, unit="sr-1")
 
-        exposure_map = Map.from_geom(geom.squash(axis="energy"), unit="cm2 s")
+        geom_exposure = geom.squash(axis="theta")
+
+        data = table_psf.exposure.reshape((-1, 1, 1, 1))
+
+        exposure_map = Map.from_geom(geom_exposure, unit="cm2 s")
+        exposure_map.quantity += data
         return cls(psf_map=psf_map, exposure_map=exposure_map)
