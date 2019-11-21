@@ -4,7 +4,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDataset, simulate_dataset
+from gammapy.cube import MapDataset, MapDatasetMaker
+from gammapy.data import Observation
 from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -63,13 +64,17 @@ def simulate_map_dataset(random_state=0):
     )
     pwl = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=gauss, spectral_model=pwl, name="source")
-    dataset = simulate_dataset(
-        skymodel=skymodel,
-        geom=geom,
-        pointing=skydir,
-        irfs=irfs,
-        random_state=random_state,
-    )
+
+    obs = Observation.create(pointing=skydir, livetime=1 * u.h, irfs=irfs)
+    empty = MapDataset.create(geom)
+    maker = MapDatasetMaker(offset_max="2 deg", cutout=False)
+    dataset = maker.run(empty, obs, selection=["exposure", "background", "psf", "edisp"])
+
+    position = SkyCoord("0 deg", "0 deg", frame="galactic")
+    dataset.psf = dataset.psf.get_psf_kernel(position=position, geom=geom, max_radius=0.8 *u.deg)
+
+    dataset.model = skymodel
+    dataset.fake(random_state=random_state)
     return dataset
 
 
@@ -163,25 +168,25 @@ class TestFluxPointsEstimator:
         fp = fpe_map_pwl.run()
 
         actual = fp.table["norm"].data
-        assert_allclose(actual, [0.953499, 0.939298, 0.916759], rtol=1e-3)
+        assert_allclose(actual, [0.968217, 0.968712, 0.897872], rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, [0.067226, 0.051343, 0.084163], rtol=1e-2)
+        assert_allclose(actual, [0.067386, 0.052279, 0.091548], rtol=1e-2)
 
         actual = fp.table["counts"].data
-        assert_allclose(actual, [[44498, 0], [1931, 0], [273, 0]])
+        assert_allclose(actual, [[44609, 0], [1923, 0], [250, 0]])
 
         actual = fp.table["norm_ul"].data
-        assert_allclose(actual, [1.090041, 1.04463, 1.094956], rtol=1e-2)
+        assert_allclose(actual, [1.104696, 1.075925, 1.091443], rtol=1e-2)
 
         actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, [16.401681, 28.0265, 20.654943], rtol=1e-2)
+        assert_allclose(actual, [16.64713 , 28.415688, 18.3774043], rtol=1e-2)
 
         actual = fp.table["norm_scan"][0]
         assert_allclose(actual, [0.2, 1, 5])
 
         actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-        assert_allclose(actual, [1.555231e02, 4.734243e-01, 2.045164e03], rtol=1e-2)
+        assert_allclose(actual, [1.614884e+02, 2.263890e-01, 2.015639e+03], rtol=1e-2)
 
     @staticmethod
     @requires_dependency("iminuit")
@@ -190,19 +195,19 @@ class TestFluxPointsEstimator:
         fp = fpe_map_pwl_reoptimize.run(steps=["err", "norm-scan", "ts"])
 
         actual = fp.table["norm"].data
-        assert_allclose(actual, 0.904058, rtol=1e-3)
+        assert_allclose(actual, 0.986422, rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, 0.059177, rtol=1e-2)
+        assert_allclose(actual, 0.061124, rtol=1e-2)
 
         actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, 24.686177, rtol=1e-2)
+        assert_allclose(actual, 25.214661, rtol=1e-2)
 
         actual = fp.table["norm_scan"][0]
         assert_allclose(actual, 1)
 
         actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-        assert_allclose(actual, 2.484034, rtol=1e-2)
+        assert_allclose(actual, 0.048701, rtol=1e-2)
 
 
 def test_no_likelihood_contribution():
