@@ -18,14 +18,18 @@ class SpectralModel(Model):
     """Spectral model base class."""
 
     def __call__(self, energy):
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, energy)
+        return self.evaluate(energy, **kwargs)
+
+    @staticmethod
+    def _convert_evaluate_unit(kwargs_ref, energy):
         kwargs = {}
-        for par in self.parameters:
-            quantity = par.quantity
+        for name, quantity in kwargs_ref.items():
             if quantity.unit.physical_type == "energy":
                 quantity = quantity.to(energy.unit)
-            kwargs[par.name] = quantity
-
-        return self.evaluate(energy, **kwargs)
+            kwargs[name] = quantity
+        return kwargs
 
     def __add__(self, model):
         if not isinstance(model, SpectralModel):
@@ -43,20 +47,14 @@ class SpectralModel(Model):
     def __rsub__(self, model):
         return self.__sub__(model)
 
-    def _convert_energy(self, energy):
-        if "reference" in self.parameters.names:
-            return energy.to(self.parameters["reference"].unit)
-        elif "emin" in self.parameters.names:
-            return energy.to(self.parameters["emin"].unit)
-        else:
-            return energy
-
     def _evaluate_gradient(self, energy, eps=1e-12):
         x = self.parameters.values
         frozen = np.array([_.frozen for _ in self.parameters])
 
         def func(xk):
-            return self.evaluate(energy.to_value("TeV"), *xk)
+            kwargs = {par.name: val * par.unit for val, par in zip(xk, self.parameters)}
+            kwargs = self._convert_evaluate_unit(kwargs, energy)
+            return self.evaluate(energy, **kwargs).value
 
         grad = approx_jacobian(x=x, func=func, epsilon=eps)
         grad[:, frozen] = 0
@@ -75,7 +73,6 @@ class SpectralModel(Model):
         dnde, dnde_error : tuple of `~astropy.units.Quantity`
             Tuple of flux and flux error.
         """
-        energy = self._convert_energy(energy)
         p_cov = self.parameters.covariance
         df_dp = self._evaluate_gradient(energy)
         f_cov = df_dp.T @ p_cov @ df_dp
@@ -463,9 +460,8 @@ class PowerLawSpectralModel(SpectralModel):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range
         """
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
         kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, emin)
         return self.evaluate_integral(emin=emin, emax=emax, **kwargs)
 
     def energy_flux(self, emin, emax):
@@ -481,9 +477,8 @@ class PowerLawSpectralModel(SpectralModel):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         """
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
         kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, emin)
         return self.evaluate_energy_flux(emin=emin, emax=emax, **kwargs)
 
     def inverse(self, value):
@@ -710,11 +705,11 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     """
 
     tag = "SuperExpCutoffPowerLaw3FGLSpectralModel"
-    index_1 = Parameter("index_1", 1.5)
-    index_2 = Parameter("index_2", 2)
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
     reference = Parameter("reference", "1 TeV", frozen=True)
     ecut = Parameter("ecut", "10 TeV")
+    index_1 = Parameter("index_1", 1.5)
+    index_2 = Parameter("index_2", 2)
 
     @staticmethod
     def evaluate(energy, amplitude, reference, ecut, index_1, index_2):
@@ -754,11 +749,11 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     """
 
     tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
-    index_1 = Parameter("index_1", 1.5)
-    index_2 = Parameter("index_2", 2)
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
     reference = Parameter("reference", "1 TeV", frozen=True)
     expfactor = Parameter("expfactor", "1e-2")
+    index_1 = Parameter("index_1", 1.5)
+    index_2 = Parameter("index_2", 2)
 
     @staticmethod
     def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
