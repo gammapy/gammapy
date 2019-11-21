@@ -225,7 +225,7 @@ class MapDataset(Dataset):
                 evaluator = MapEvaluator(
                     component, evaluation_mode=self.evaluation_mode
                 )
-                evaluator.update(self.exposure, self.psf, self.edisp)
+                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
                 evaluators.append(evaluator)
 
             self._evaluators = evaluators
@@ -273,7 +273,7 @@ class MapDataset(Dataset):
                 # if the model component drifts out of its support the evaluator has
                 # has to be updated
                 if evaluator.needs_update:
-                    evaluator.update(self.exposure, self.psf, self.edisp)
+                    evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
 
                 if evaluator.contributes:
                     npred = evaluator.compute_npred()
@@ -876,7 +876,7 @@ class MapDataset(Dataset):
             if isinstance(self.edisp, EnergyDispersion):
                 edisp = self.edisp
             else:
-                self.edisp.get_energy_dispersion(on_region.center, self._energy_axis)
+                edisp = self.edisp.get_energy_dispersion(on_region.center, self._energy_axis.edges)
         else:
             edisp = None
 
@@ -1351,7 +1351,7 @@ class MapEvaluator:
             update = separation > (self.model.evaluation_radius + CUTOUT_MARGIN)
         return update
 
-    def update(self, exposure, psf, edisp):
+    def update(self, exposure, psf, edisp, geom):
         """Update MapEvaluator, based on the current position of the model component.
 
         Parameters
@@ -1362,15 +1362,19 @@ class MapEvaluator:
             PSF map.
         edisp : `gammapy.cube.EDispMap`
             Edisp map.
+        geom : `WcsGeom`
+            Counts geom
         """
         log.debug("Updating model evaluator")
         # cache current position of the model component
 
         # TODO: lookup correct Edisp for this component
-        self.edisp = edisp
+        if edisp is not None:
+            e_reco = geom.get_axis_by_name("energy").edges
+            self.edisp = edisp.get_energy_dispersion(self.model.position, e_reco=e_reco)
 
         # TODO: lookup correct PSF for this component
-        self.psf = psf
+        self.psf = psf # .get_psf_kernel(self.model.position, geom=exposure.geom)
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
