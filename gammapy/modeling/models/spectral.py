@@ -4,6 +4,7 @@ import operator
 import numpy as np
 import scipy.optimize
 import scipy.special
+from scipy.optimize.slsqp import approx_jacobian
 import astropy.units as u
 from astropy.table import Table
 from gammapy.maps import MapAxis
@@ -57,6 +58,17 @@ class SpectralModel(Model):
         else:
             return energy
 
+    def _evaluate_gradient(self, energy, eps=1e-12):
+        x = self.parameters.values
+        frozen = np.array([_.frozen for _ in self.parameters])
+
+        def func(xk):
+            return self.evaluate(energy.to_value("TeV"), *xk)
+
+        grad = approx_jacobian(x=x, func=func, epsilon=eps)
+        grad[:, frozen] = 0
+        return grad.T
+
     def evaluate_error(self, energy):
         """Evaluate spectral model with error propagation.
 
@@ -67,15 +79,17 @@ class SpectralModel(Model):
 
         Returns
         -------
-        flux, flux_error : tuple of `~astropy.units.Quantity`
+        dnde, dnde_error : tuple of `~astropy.units.Quantity`
             Tuple of flux and flux error.
         """
         energy = self._convert_energy(energy)
+        p_cov = self.parameters.covariance
+        df_dp = self._evaluate_gradient(energy)
+        f_cov = df_dp.T @ p_cov @ df_dp
+        f_err = np.sqrt(np.diagonal(f_cov))
 
-        unit = self(energy).unit
-        upars = self.parameters._ufloats
-        uarray = self.evaluate(energy.value, **upars)
-        return self._parse_uarray(uarray) * unit
+        q = self(energy)
+        return u.Quantity([q.value, f_err], unit=q.unit)
 
     def integral(self, emin, emax, **kwargs):
         r"""Integrate spectral model numerically.

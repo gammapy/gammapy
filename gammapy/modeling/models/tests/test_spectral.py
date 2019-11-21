@@ -552,21 +552,18 @@ class TestSpectralModelErrorPropagation:
         assert isinstance(out, u.Quantity)
         assert out.unit == "cm-2 s-1 TeV-1"
         assert out.shape == (2,)
-        assert_allclose(out.data, [3.76000000e-11, 3.61939221e-12])
+        assert_allclose(out.data, [3.7600e-11, 3.6193e-12], rtol=1e-3)
 
     def test_evaluate_error_array(self):
         out = self.model.evaluate_error([1, 100] * u.TeV)
         assert out.shape == (2, 2)
-        expected = [
-            [3.76e-11, 2.4694642988749597e-18],
-            [3.6193922141707712e-12, 9.375077745817002e-18],
-        ]
-        assert_allclose(out.data, expected)
+        expected = [[3.76e-11, 2.469e-18], [3.619e-12, 9.375e-18]]
+        assert_allclose(out.data, expected, rtol=1e-3)
 
     def test_evaluate_error_unit(self):
         out = self.model.evaluate_error(1e6 * u.MeV)
         assert out.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(out.data, [3.760e-11, 3.61939221e-12], rtol=1e-3)
+        assert_allclose(out.data, [3.760e-11, 3.6193e-12], rtol=1e-3)
 
     def test_integral_error(self):
         out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)

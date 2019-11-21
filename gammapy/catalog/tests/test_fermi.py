@@ -312,7 +312,7 @@ class TestFermi3FGLObject:
 
         assert isinstance(model, ref["spec_type"])
         assert_quantity_allclose(dnde, ref["dnde"])
-        assert_quantity_allclose(dnde_err, ref["dnde_err"])
+        assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-3)
 
     def test_spatial_model(self):
         model = self.cat[0].spatial_model()
@@ -539,7 +539,7 @@ class TestFermi3FHLObject:
 
         assert isinstance(model, ref["spec_type"])
         assert_quantity_allclose(dnde, ref["dnde"])
-        assert_quantity_allclose(dnde_err, ref["dnde_err"])
+        assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-3)
 
     @pytest.mark.parametrize("ref", SOURCES_3FHL, ids=lambda _: _["name"])
     def test_spatial_model(self, ref):
