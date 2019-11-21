@@ -93,7 +93,7 @@ class MapDataset(Dataset):
             raise ValueError("mask data must have dtype bool")
         if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
-        
+
         self.evaluation_mode = evaluation_mode
         self.counts = counts
         self.exposure = exposure
