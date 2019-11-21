@@ -109,32 +109,6 @@ class SpectralModel(Model):
         """
         return integrate_spectrum(self, emin, emax, **kwargs)
 
-    def integral_error(self, emin, emax, **kwargs):
-        """Integrate spectral model numerically with error propagation.
-
-        Parameters
-        ----------
-        emin, emax : `~astropy.units.Quantity`
-            Lower adn upper  bound of integration range.
-        **kwargs : dict
-            Keyword arguments passed to func:`~gammapy.utils.integrate.integrate_spectrum`
-
-        Returns
-        -------
-        integral, integral_error : tuple of `~astropy.units.Quantity`
-            Tuple of integral flux and integral flux error.
-        """
-        emin = self._convert_energy(emin)
-        emax = self._convert_energy(emax)
-        unit = self.integral(emin, emax, **kwargs).unit
-        upars = self.parameters._ufloats
-
-        def f(x):
-            return self.evaluate(x, **upars)
-
-        uarray = integrate_spectrum(f, emin.value, emax.value, **kwargs)
-        return self._parse_uarray(uarray) * unit
-
     def energy_flux(self, emin, emax, **kwargs):
         r"""Compute energy flux in given energy range.
 
