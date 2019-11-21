@@ -14,7 +14,6 @@ import logging
 import copy
 
 __all__ = ["JFactory", "SigmaVEstimator"]
-
 log = logging.getLogger(__name__)
 
 
@@ -113,7 +112,7 @@ class SigmaVEstimator:
         dataset = DMDatasetOnOff(
             aeff=aeff,
             edisp=edisp,
-            model=flux_model,
+            models=[flux_model],
             livetime=livetime,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
@@ -136,7 +135,7 @@ class SigmaVEstimator:
         estimator = SigmaVEstimator(dataset, masses, channels, background_model=bkg, jfactor=JFAC)
 
         # Run the estimator
-        result = estimator.run(10, nuisance=True, likelihood_profile_opts=dict(bounds=(0, 500), nvalues=100))
+        result = estimator.run(10, nuisance=True, stat_profile_opts=dict(bounds=(0, 500), nvalues=100))
     """
 
     RATIO = 2.71
@@ -160,9 +159,9 @@ class SigmaVEstimator:
         self.background = background_model
         self.jfactor = jfactor
 
-        dm_params_container = dataset.model
-        if isinstance(dataset.model, AbsorbedSpectralModel):
-            dm_params_container = dataset.model.spectral_model
+        dm_params_container = dataset.models[0].spectral_model
+        if isinstance(dataset.models[0].spectral_model, AbsorbedSpectralModel):
+            dm_params_container = dataset.models[0].spectral_model.spectral_model
         self.z = dm_params_container.z
         self.k = dm_params_container.k
 
@@ -180,7 +179,7 @@ class SigmaVEstimator:
         self,
         runs,
         nuisance=False,
-        likelihood_profile_opts=dict(bounds=100, nvalues=50),
+        stat_profile_opts=dict(bounds=100, nvalues=50),
         optimize_opts=None,
         covariance_opts=None,
     ):
@@ -192,8 +191,8 @@ class SigmaVEstimator:
             Number of runs where to perform the fitting.
         nuisance: bool
             Flag to perform fitting with nuisance parameters. Default False.
-        likelihood_profile_opts : dict
-            Options passed to `~gammapy.utils.fitting.Fit.likelihood_profile`.
+        stat_profile_opts : dict
+            Options passed to `~gammapy.utils.fitting.Fit.stat_profile`.
         optimize_opts : dict
             Options passed to `~gammapy.utils.fitting.Fit.optimize`.
         covariance_opts : dict
@@ -205,14 +204,14 @@ class SigmaVEstimator:
             result['mean'] provides mean and std values for sigma v vs. mass for each channel.
             result['runs'] provides a table of sigma v vs. mass and likelihood profiles for each run and channel.
         """
-        likelihood_profile_opts["parameter"] = "sv"
+        stat_profile_opts["parameter"] = "sv"
 
         for run in range(runs):
             log.info(f"Run: {run}")
             self.dataset.fake(background_model=self.background)
 
             # loop in channels and masses
-            valid = self._loops(run, nuisance, likelihood_profile_opts, optimize_opts, covariance_opts)
+            valid = self._loops(run, nuisance, stat_profile_opts, optimize_opts, covariance_opts)
             # if the value of sv<=0 or does not reach self.RATIO
             # skip the run and continue with the next one
             if not valid:
@@ -235,7 +234,7 @@ class SigmaVEstimator:
             self.result["mean"][ch] = table
         return self.result
 
-    def _loops(self, run, nuisance, likelihood_profile_opts, optimize_opts, covariance_opts):
+    def _loops(self, run, nuisance, stat_profile_opts, optimize_opts, covariance_opts):
         for ch in self.channels:
             log.info(f"Channel: {ch}")
             table_rows = []
@@ -248,7 +247,7 @@ class SigmaVEstimator:
                     run,
                     ch,
                     mass,
-                    likelihood_profile_opts=likelihood_profile_opts,
+                    stat_profile_opts=stat_profile_opts,
                     optimize_opts=optimize_opts,
                     covariance_opts=covariance_opts,
                 )
@@ -261,7 +260,7 @@ class SigmaVEstimator:
                     "sigma_v": fit_result["sigma_v"].value,
                     "sv_best": fit_result["sv_best"],
                     "sv_ul": fit_result["sv_ul"],
-                    "likeprofile": fit_result["likeprofile"],
+                    "statprofile": fit_result["statprofile"],
                 }
                 table_rows.append(row)
                 self.sigmas[ch][mass.value][run] = row["sigma_v"]
@@ -282,7 +281,7 @@ class SigmaVEstimator:
                     "sigma_v": None,
                     "sv_best": None,
                     "sv_ul": None,
-                    "likeprofile": fit_result["likeprofile"],
+                    "statprofile": fit_result["statprofile"],
                 }
                 table_rows.append(row)
                 self.sigmas[ch][mass.value][run] = None
@@ -294,12 +293,12 @@ class SigmaVEstimator:
         flux_model = DarkMatterAnnihilationSpectralModel(
             mass=mass, channel=ch, sv=1, jfactor=self.jfactor, z=self.z, k=self.k
         )
-        if isinstance(self.dataset.model, AbsorbedSpectralModel):
+        if isinstance(self.dataset.models[0].spectral_model, AbsorbedSpectralModel):
             flux_model = AbsorbedSpectralModel(
-                flux_model, self.dataset.model.absorption, self.z
+                flux_model, self.dataset.models[0].spectral_model.absorption, self.z
             )
         ds = self.dataset.copy()
-        ds.model = flux_model
+        ds.models[0].spectral_model = flux_model
         return ds
 
     def _fit_dataset(
@@ -309,7 +308,7 @@ class SigmaVEstimator:
         run,
         ch,
         mass,
-        likelihood_profile_opts=None,
+        stat_profile_opts=None,
         optimize_opts=None,
         covariance_opts=None,
     ):
@@ -328,46 +327,46 @@ class SigmaVEstimator:
 
             for ji in np.linspace(jlo, jhi, dataset_loop.nuisance["steps"]):
                 dataset_loop.nuisance["j"] = ji * unit
-                ifit = Fit(dataset_loop)
+                ifit = Fit([dataset_loop])
                 js.append(ji)
                 resfits.append(ifit.run())
-                ilike = dataset_loop.likelihood()
+                ilike = dataset_loop.stat_sum()
                 likes.append(ilike)
-                profiles.append(ifit.likelihood_profile(**likelihood_profile_opts))
+                profiles.append(ifit.stat_profile(**stat_profile_opts))
                 log.debug(f"J: {ji:.2e} \t Min Likelihood: {ilike}")
             # choose likelihood profile giving the minimum value for the likelihood
             likemin = min(likes)
             idx = likes.index(likemin)
-            likeprofile = profiles[idx]
+            statprofile = profiles[idx]
             fit_result = resfits[idx]
             log.debug(f"J best: {js[idx]}")
         else:
-            fit = Fit(dataset_loop)
+            fit = Fit([dataset_loop])
             fit_result = fit.run(optimize_opts, covariance_opts)
-            likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
-            likemin = dataset_loop.likelihood()
-        halfprofile = copy.deepcopy(likeprofile)
+            statprofile = fit.stat_profile(**stat_profile_opts)
+            likemin = dataset_loop.stat_sum()
+        halfprofile = copy.deepcopy(statprofile)
 
         # consider sv value in the physical region
         sv_best = fit_result.parameters["sv"].value
         log.debug(f"SvBest found: {sv_best}")
         if sv_best < 0:
             sv_best = 0
-            likemin = interp1d(likeprofile["values"], likeprofile["likelihood"], kind="quadratic")(0)
+            likemin = interp1d(statprofile["values"], statprofile["stat"], kind="quadratic")(0)
 
         max_like_detection = 0
         max_like_difference = 0
         if max(halfprofile["values"] > 0):
-            idx = np.min(np.argwhere(likeprofile["values"] > 0))
-            filtered_x_values = likeprofile["values"][likeprofile["values"] > 0]
-            filtered_y_values = likeprofile["likelihood"][idx:]
+            idx = np.min(np.argwhere(statprofile["values"] > 0))
+            filtered_x_values = statprofile["values"][statprofile["values"] > 0]
+            filtered_y_values = statprofile["stat"][idx:]
             halfprofile["values"] = np.concatenate((np.array([sv_best]), filtered_x_values))
-            halfprofile["likelihood"] = np.concatenate((np.array([likemin]), filtered_y_values))
-            max_like_difference = (np.max(halfprofile["likelihood"]) - likemin - self.RATIO)
+            halfprofile["stat"] = np.concatenate((np.array([likemin]), filtered_y_values))
+            max_like_difference = (np.max(halfprofile["stat"]) - likemin - self.RATIO)
             # detection
             likezero = interp1d(
-                likeprofile["values"],
-                likeprofile["likelihood"],
+                statprofile["values"],
+                statprofile["stat"],
                 kind="quadratic",
                 fill_value="extrapolate",
             )(0)
@@ -376,7 +375,7 @@ class SigmaVEstimator:
             log.debug(f"Min Likelihood: {likemin}")
             log.debug(f"SvBest: {sv_best}")
             log.debug(f"SvMax: {np.max(halfprofile['values'])}")
-            log.debug(f"DeltaLMax: {max_like_difference:.4f} \t| Max:  {np.max(halfprofile['likelihood'])}")
+            log.debug(f"DeltaLMax: {max_like_difference:.4f} \t| Max:  {np.max(halfprofile['stat'])}")
             log.debug(f"DeltaLZero: {max_like_detection:.4f} \t| Zero: {likezero}")
 
         try:
@@ -388,7 +387,7 @@ class SigmaVEstimator:
             sv_ul = brentq(
                 interp1d(
                     halfprofile["values"],
-                    halfprofile["likelihood"] - likemin - self.RATIO,
+                    halfprofile["stat"] - likemin - self.RATIO,
                     kind="quadratic",
                 ),
                 sv_best,
@@ -409,7 +408,7 @@ class SigmaVEstimator:
             sigma_v=sigma_v,
             sv_best=sv_best,
             sv_ul=sv_ul,
-            likeprofile=likeprofile,
+            statprofile=statprofile,
         )
         return res
 
@@ -480,8 +479,8 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
             return False
         return True
 
-    def likelihood(self):
-        wstat = super().likelihood()
+    def stat_sum(self):
+        wstat = super().stat_sum()
         liketotal = wstat
         if self.check_nuisance():
             liketotal += self.jnuisance() + self.gnuisance()
