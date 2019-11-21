@@ -703,5 +703,3 @@ def test_spectrum_dataset_on_off_to_yaml(tmpdir):
     spectrum_datasets_on_off = make_observation_list()
     datasets = Datasets(spectrum_datasets_on_off)
     datasets.to_yaml(path=str(tmpdir))
-
-

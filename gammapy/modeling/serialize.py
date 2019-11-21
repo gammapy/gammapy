@@ -125,16 +125,17 @@ def datasets_to_dict(datasets, path, prefix, overwrite):
         filename = path / f"{prefix}_data_{dataset.name}.fits"
         dataset.write(filename, overwrite)
         datasets_dictlist.append(dataset.to_dict(filename=filename))
-
-        for model in dataset.model:
-            if model not in unique_models:
-                unique_models.append(model)
-
-        try:
-            if dataset.background_model not in unique_backgrounds:
-                unique_backgrounds.append(dataset.background_model)
-        except AttributeError:
-            pass
+        
+        if dataset.model:
+            for model in dataset.model:
+                if model not in unique_models:
+                    unique_models.append(model)
+    
+            try:
+                if dataset.background_model not in unique_backgrounds:
+                    unique_backgrounds.append(dataset.background_model)
+            except AttributeError:
+                pass
 
     datasets_dict = {"datasets": datasets_dictlist}
     components_dict = models_to_dict(unique_models + unique_backgrounds)

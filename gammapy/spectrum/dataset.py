@@ -1090,10 +1090,15 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     def to_dict(self, *args, **kwargs):
         """Convert to dict for YAML serialization."""
         filename = f"pha_obs{self.name}.fits"
+
+        if self.model is not None:
+            models = [_.name for _ in self.model]
+        else:
+            models = []
         return {
             "name": self.name,
             "type": self.tag,
-            "models": self.model.names,
+            "models": models,
             "likelihood": self.likelihood_type,
             "filename": filename,
         }
