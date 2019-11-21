@@ -87,11 +87,13 @@ class MapDataset(Dataset):
         mask_safe=None,
         gti=None,
     ):
+        if model is None :
+            model = SkyModels([])
         if mask_fit is not None and mask_fit.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
         if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
-
+        
         self.evaluation_mode = evaluation_mode
         self.counts = counts
         self.exposure = exposure
@@ -798,17 +800,11 @@ class MapDataset(Dataset):
 
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
-
-        if self.model is not None:
-            models = [_.name for _ in self.model]
-        else:
-            models = []
-
         return {
             "name": self.name,
             "type": self.tag,
             "likelihood": self.likelihood_type,
-            "models": models,
+            "models": [_.name for _ in self.model],
             "background": self.background_model.name,
             "filename": str(filename),
         }
