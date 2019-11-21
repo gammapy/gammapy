@@ -135,6 +135,29 @@ def test_observations_select_time(
             new_obss[-1].gti.time_stop[-1], expected_times[1], atol=0.01
         )
 
+
+def test_observations_select_time_time_intervals_list(data_store):
+    obs_ids = data_store.obs_table["OBS_ID"][:8]
+    obss = data_store.get_observations(obs_ids)
+    # third time interval is out of the observations time range
+    time_intervals = [
+        Time([53090.130, 53090.140], format="mjd", scale="tt"),
+        Time([53110.011, 53110.019], format="mjd", scale="tt"),
+        Time([53112.345, 53112.42], format="mjd", scale="tt"),
+    ]
+    new_obss = obss.select_time(time_intervals)
+
+    assert len(new_obss.list) == 2
+    assert new_obss[0].events.time[0] >= time_intervals[0][0]
+    assert new_obss[0].events.time[-1] < time_intervals[0][1]
+    assert new_obss[1].events.time[0] >= time_intervals[1][0]
+    assert new_obss[1].events.time[-1] < time_intervals[1][1]
+    assert_time_allclose(new_obss[0].gti.time_start[0], time_intervals[0][0])
+    assert_time_allclose(new_obss[0].gti.time_stop[-1], time_intervals[0][1])
+    assert_time_allclose(new_obss[1].gti.time_start[0], time_intervals[1][0])
+    assert_time_allclose(new_obss[1].gti.time_stop[-1], time_intervals[1][1])
+
+
 @requires_data()
 def test_observation():
     livetime = 5.0 * u.hr
@@ -144,7 +167,7 @@ def test_observation():
     )
 
     obs = Observation.create(
-        pointing, livetime=livetime, irfs=irfs, deadtime_fraction=0.1,
+        pointing, livetime=livetime, irfs=irfs, deadtime_fraction=0.1
     )
 
     assert_skycoord_allclose(obs.pointing_radec, pointing.icrs)
