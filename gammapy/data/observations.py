@@ -352,12 +352,10 @@ class Observations:
         mask &= self.tstop > time_interval[0]
 
         indices = np.where(mask)[0]
-        print(indices)
         if len(indices)>0:
             for index in indices:
                 obs = self[index]
                 new_obs = obs.select_time(time_interval)
-#                if len(new_obs.gti.table>0):
                 new_obs_list.append(new_obs)
 
         return self.__class__(new_obs_list)
