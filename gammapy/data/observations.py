@@ -330,17 +330,17 @@ class Observations:
 
         Parameters
         ----------
-        time_intervals : list of `astropy.time.Time`
-            list of Start and stop time of the time intervals.
+        time_intervals : astropy.time.Time or list of astropy.time.Time
+        list of Start and stop time of the time intervals or one Time interval
 
 
         Returns
         -------
         new_observations : `~gammapy.data.Observations`
-            A new observations instance of the specified time intervals
+        A new observations instance of the specified time intervals
         """
         new_obs_list = []
-        if not isinstance(time_intervals, list):
+        if isinstance(time_intervals, Time):
             time_intervals = [time_intervals]
 
         for time_interval in time_intervals:
