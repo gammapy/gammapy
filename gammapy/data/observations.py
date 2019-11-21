@@ -321,14 +321,6 @@ class Observations:
         return s
 
     @property
-    def tstart(self):
-        return Time([_.tstart for _ in self])
-
-    @property
-    def tstop(self):
-        return Time([_.tstop for _ in self])
-
-    @property
     def ids(self):
         """List of obs IDs (`list`)"""
         return [str(obs.obs_id) for obs in self.list]
@@ -347,9 +339,13 @@ class Observations:
         new_observations : `~gammapy.data.Observations`
             A new observations instance of the specified time interval
         """
+
+        tstart = Time([_.tstart for _ in self])
+        tstop = Time([_.tstop for _ in self])
+
         new_obs_list = []
-        mask = self.tstart < time_interval[1]
-        mask &= self.tstop > time_interval[0]
+        mask = tstart < time_interval[1]
+        mask &= tstop > time_interval[0]
 
         indices = np.where(mask)[0]
         if len(indices)>0:
