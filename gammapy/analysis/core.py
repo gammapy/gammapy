@@ -169,14 +169,9 @@ class Analysis:
             self.model = SkyModels.from_yaml(filepath)
         else:
             return False
-        # TODO: Deal with multiple components
         for dataset in self.datasets:
-            if isinstance(dataset, MapDataset):
-                dataset.model = self.model
-            else:
-                if len(self.model) > 1:
-                    raise ValueError("Cannot fit multiple spectral models")
-                dataset.model = self.model[0].spectral_model
+            dataset.model = self.model
+
         log.info(self.model)
 
     def run_fit(self, optimize_opts=None):
