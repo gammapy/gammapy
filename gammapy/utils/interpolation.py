@@ -145,6 +145,7 @@ class LogScale(InterpolationScale):
         values = np.clip(values, self.tiny, np.inf)
         return np.log(values)
 
+    @staticmethod
     def _inverse(self, values):
         output = np.exp(values)
         return np.where(abs(output) - self.tiny <= self.tiny, 0, output)
