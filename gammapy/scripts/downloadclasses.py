@@ -256,8 +256,6 @@ class ParallelDownload:
         if self.modetutorials:
             GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / "datasets"
             if self.release:
-                datafolder = "datasets-" + self.release
-                GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / datafolder
                 print(
                     "*** Enter the following commands below to get started with this version of Gammapy"
                 )
