@@ -2214,42 +2214,6 @@
   ]
  },
  {
-  "name": "images",
-  "description": "tbd",
-  "files": [
-   {
-    "path": "images/MSH15-52_counts.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/images/MSH15-52_counts.fits.gz",
-    "filesize": 46022,
-    "hashmd5": "dd33b7c0a7eeee743df8d41329b062bb"
-   },
-   {
-    "path": "images/MSH15-52_psf.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/images/MSH15-52_psf.fits.gz",
-    "filesize": 99630,
-    "hashmd5": "3a8f57b352808ae5aeb5637435eac21f"
-   },
-   {
-    "path": "images/MSH15-52_background.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/images/MSH15-52_background.fits.gz",
-    "filesize": 744502,
-    "hashmd5": "19e89c3341cd268de504dc032b77e1dc"
-   },
-   {
-    "path": "images/MSH15-52_exposure.fits.gz",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/images/MSH15-52_exposure.fits.gz",
-    "filesize": 1031160,
-    "hashmd5": "135e1a4d158de115d5bb37592e2728bc"
-   },
-   {
-    "path": "images/Vela_region_WMAP_K.fits",
-    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/images/Vela_region_WMAP_K.fits",
-    "filesize": 371520,
-    "hashmd5": "638823f77624a93ad9027c73238c37fb"
-   }
-  ]
- },
- {
   "name": "joint-crab",
   "description": "tbd",
   "files": [

@@ -107,11 +107,6 @@ class DatasetHESSDL3DR1(DownloadDataset):
     description = "tbd"
 
 
-class DatasetImages(DownloadDataset):
-    name = "images"
-    description = "tbd"
-
-
 class DatasetEBL(DownloadDataset):
     name = "ebl"
     description = "tbd"
@@ -194,6 +189,7 @@ class DatasetFermi3FHLGC(DownloadDataset):
         str(basepath / "gll_iem_v06_gc.fits.gz"),
     ]
 
+
 class DatasetFermi3FHLcrab(DownloadDataset):
 
     name = "fermi-3fhl-crab"
@@ -223,7 +219,6 @@ class DownloadDatasetIndex:
         DatasetCatalogs,
         DatasetFermi3FHL,
         DatasetHESSDL3DR1,
-        DatasetImages,
         DatasetJointCrab,
         DatasetEBL,
         DatasetGammaCat,
