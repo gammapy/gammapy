@@ -6,12 +6,12 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.cube import (
+    EDispMap,
     MapDataset,
     MapDatasetOnOff,
     PSFKernel,
+    PSFMap,
     make_map_exposure_true_energy,
-    EDispMap,
-    PSFMap
 )
 from gammapy.data import GTI
 from gammapy.irf import (

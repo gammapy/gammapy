@@ -4,7 +4,7 @@ import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
 from gammapy.irf import EnergyDependentTablePSF
-from gammapy.maps import Map, MapCoord, WcsGeom, MapAxis
+from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .psf_kernel import PSFKernel
 
@@ -414,15 +414,14 @@ class PSFMap:
         rad_axis = MapAxis.from_nodes(table_psf.rad, name="theta")
 
         geom = WcsGeom.create(
-            npix=(4, 2),
-            proj="CAR",
-            binsz=180,
-            axes=[rad_axis, energy_axis]
+            npix=(4, 2), proj="CAR", binsz=180, axes=[rad_axis, energy_axis]
         )
         coords = geom.get_coord()
 
         # TODO: support broadcasting in .evaluate()
-        data = table_psf._interpolate((coords["energy"], coords["theta"])).to_value("sr-1")
+        data = table_psf._interpolate((coords["energy"], coords["theta"])).to_value(
+            "sr-1"
+        )
         psf_map = Map.from_geom(geom, data=data, unit="sr-1")
 
         geom_exposure = geom.squash(axis="theta")

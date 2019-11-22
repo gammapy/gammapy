@@ -73,10 +73,14 @@ def simulate_map_dataset(random_state=0):
     obs = Observation.create(pointing=skydir, livetime=1 * u.h, irfs=irfs)
     empty = MapDataset.create(geom)
     maker = MapDatasetMaker(offset_max="2 deg", cutout=False)
-    dataset = maker.run(empty, obs, selection=["exposure", "background", "psf", "edisp"])
+    dataset = maker.run(
+        empty, obs, selection=["exposure", "background", "psf", "edisp"]
+    )
 
     position = SkyCoord("0 deg", "0 deg", frame="galactic")
-    dataset.psf = dataset.psf.get_psf_kernel(position=position, geom=geom, max_radius=0.8 *u.deg)
+    dataset.psf = dataset.psf.get_psf_kernel(
+        position=position, geom=geom, max_radius=0.8 * u.deg
+    )
 
     dataset.model = skymodel
     dataset.fake(random_state=random_state)
@@ -185,13 +189,13 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, [1.104696, 1.075925, 1.091443], rtol=1e-2)
 
         actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, [16.64713 , 28.415688, 18.3774043], rtol=1e-2)
+        assert_allclose(actual, [16.64713, 28.415688, 18.3774043], rtol=1e-2)
 
         actual = fp.table["norm_scan"][0]
         assert_allclose(actual, [0.2, 1, 5])
 
         actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-        assert_allclose(actual, [1.614884e+02, 2.263890e-01, 2.015639e+03], rtol=1e-2)
+        assert_allclose(actual, [1.614884e02, 2.263890e-01, 2.015639e03], rtol=1e-2)
 
     @staticmethod
     @requires_dependency("iminuit")

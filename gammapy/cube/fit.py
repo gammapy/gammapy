@@ -876,7 +876,9 @@ class MapDataset(Dataset):
             if isinstance(self.edisp, EnergyDispersion):
                 edisp = self.edisp
             else:
-                edisp = self.edisp.get_energy_dispersion(on_region.center, self._energy_axis.edges)
+                edisp = self.edisp.get_energy_dispersion(
+                    on_region.center, self._energy_axis.edges
+                )
         else:
             edisp = None
 
@@ -1376,7 +1378,7 @@ class MapEvaluator:
             self.edisp = edisp
 
         # TODO: lookup correct PSF for this component
-        self.psf = psf # .get_psf_kernel(self.model.position, geom=exposure.geom)
+        self.psf = psf  # .get_psf_kernel(self.model.position, geom=exposure.geom)
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position

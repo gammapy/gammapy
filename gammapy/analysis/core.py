@@ -257,7 +257,7 @@ class Analysis:
                 log.info(f"Processing observation {obs.obs_id}")
                 dataset = maker.run(stacked, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
-                dataset.background_model.name =  f"bkg_{dataset.name}"
+                dataset.background_model.name = f"bkg_{dataset.name}"
                 # TODO remove this once dataset and model have unique identifiers
                 log.debug(dataset)
                 stacked.stack(dataset)

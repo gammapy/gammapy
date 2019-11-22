@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy.time import Time
-from astropy.table import Table
 import astropy.units as u
+from astropy.table import Table
+from astropy.time import Time
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import ScaleSpectralModel
 from gammapy.spectrum import FluxPoints, SpectrumDatasetOnOff

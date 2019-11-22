@@ -135,9 +135,7 @@ def test_sample_coord():
     assert_allclose(coords_corrected["energy"], [0.9961658, 1.11269299], rtol=1e-5)
 
 
-@pytest.mark.parametrize(
-    "position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"]
-)
+@pytest.mark.parametrize("position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"])
 def test_edisp_from_diagonal_response(position):
     position = SkyCoord(position)
     energy_axis_true = MapAxis.from_energy_bounds("0.3 TeV", "10 TeV", nbin=31)
@@ -151,4 +149,3 @@ def test_edisp_from_diagonal_response(position):
     # We exclude the first and last bin, where there is no
     # e_reco to contribute to
     assert_allclose(sum_kernel[1:-1], 1)
-
