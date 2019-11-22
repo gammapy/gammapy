@@ -179,6 +179,20 @@ TEST_MODELS = [
         integral_infinity=u.Quantity(4, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(7.999998896163037, "TeV cm-2 s-1"),
     ),
+    dict(
+        name="ecpl",
+        model=ExpCutoffPowerLawSpectralModel(
+            index=1.8 * u.Unit(""),
+            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            reference=1 * u.TeV,
+            lambda_=0.1 / u.TeV,
+            alpha=0.8,
+        ),
+        val_at_2TeV=u.Quantity(0.871694294554192, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(3.026342, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(7.38652453, "TeV cm-2 s-1"),
+        e_peak=1.7677669529663684 * u.TeV,
+    ),
 ]
 
 # Add compound models

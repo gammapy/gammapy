@@ -627,7 +627,8 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
     def evaluate(energy, index, amplitude, reference, lambda_, alpha):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index)
-        cutoff = np.exp(-energy * lambda_)
+        cutoff = np.exp(- np.power(energy * lambda_, alpha))
+
         return pwl * cutoff
 
     @property
