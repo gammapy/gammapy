@@ -64,11 +64,10 @@ class ComputePlan:
         try:
             from parfive import Downloader
         except ImportError:
-            log.error(
-                "The parfive package needs to be installed to download files with gammapy download"
-            )
+            log.error("To use gammapy download, install the parfive package!")
             return
-        dl = Downloader(progress=False)
+
+        dl = Downloader(progress=False, file_progress=False)
         filename_env = "gammapy-" + self.release + "-environment.yml"
         url_file_env = BASE_URL + "/install/" + filename_env
         filepath_env = str(self.outfolder / filename_env)
@@ -221,15 +220,13 @@ class ParallelDownload:
         try:
             from parfive import Downloader
         except ImportError:
-            log.error(
-                "The parfive package needs to be installed to download files with gammapy download"
-            )
+            log.error("To use gammapy download, install the parfive package!")
             return
 
         if self.listfiles:
             log.info(f"Content will be downloaded in {self.outfolder}")
 
-        dl = Downloader(progress=self.progress)
+        dl = Downloader(progress=self.progress, file_progress=False)
         for rec in self.listfiles:
             url = self.listfiles[rec]["url"]
             path = self.outfolder / self.listfiles[rec]["path"]
