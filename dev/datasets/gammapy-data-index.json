@@ -2496,18 +2496,6 @@
   ]
  },
  {
-  "name": "gamma-cat",
-  "description": "tbd",
-  "files": [
-   {
-    "path": "gamma-cat/gammacat.fits.gz",
-    "url": "https://github.com/gammapy/gamma-cat/raw/master/output/gammacat.fits.gz",
-    "filesize": 43614,
-    "hashmd5": "391a9763c054345206e073342bb2367b"
-   }
-  ]
- },
- {
   "name": "fermi-3fhl-gc",
   "description": "Prepared Fermi-LAT 3FHL dataset of the Galactic center region",
   "files": [

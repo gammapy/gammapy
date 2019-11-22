@@ -141,16 +141,6 @@ class DatasetJointCrab(DownloadDataset):
             )
 
 
-class DatasetGammaCat(DownloadDataset):
-    name = "gamma-cat"
-    description = "tbd"
-    base_url = "https://github.com/gammapy/gamma-cat/raw/master"
-    local_repo = Path(os.environ["GAMMA_CAT"])
-
-    followLinks = "Others"
-    pathlist = [str(Path("output") / "gammacat.fits.gz")]
-
-
 class DatasetFermiLat(DownloadDataset):
 
     name = "fermi-3fhl"
@@ -221,7 +211,6 @@ class DownloadDatasetIndex:
         DatasetHESSDL3DR1,
         DatasetJointCrab,
         DatasetEBL,
-        DatasetGammaCat,
         DatasetFermi3FHLGC,
         DatasetFermi3FHLcrab,
         DatasetHAWCcrab,
