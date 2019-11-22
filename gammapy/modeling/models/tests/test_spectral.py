@@ -251,30 +251,7 @@ def test_models(spectrum):
         value = model(energy)
         assert_quantity_allclose(value, spectrum["val_at_3TeV"])
 
-    emin = 1
-        kwargs = {par.name: par.quantity for par in self.parameters}
-        kwargs = self._convert_evaluate_unit(kwargs, energy)
-        return self.evaluate(energy, **kwargs)
-
-    @staticmethod
-    def _convert_evaluate_unit(kwargs_ref, energy):
-        kwargs = {}
-        for name, quantity in kwargs_ref.items():
-            if quantity.unit.physical_type == "energy":
-                quantity = quantity.to(energy.unit)
-            kwargs[name] = quantity
-        return kwargs
-
-    def __add__(self, model):
-        if not isinstance(model, SpectralModel):
-            model = ConstantSpectralModel(const=model)
-        return CompoundSpectralModel(self, model, operator.add)
-
-    def __radd__(self, model):
-        return self.__add__(model)
-
-    def __sub__(self, model):
-        if not isinstance(model, SpectralModel): * u.TeV
+    emin = 1 * u.TeV
     emax = 10 * u.TeV
     assert_quantity_allclose(
         model.integral(emin=emin, emax=emax), spectrum["integral_1_10TeV"]
