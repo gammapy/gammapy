@@ -35,6 +35,10 @@ class EventListBase:
     - ``RA``, ``DEC`` - ICRS system position (deg)
     - ``ENERGY`` - Energy (usually MeV for Fermi and TeV for IACTs)
 
+    Note that ``TIME`` is usually sorted, but sometimes it is not.
+    E.g. when simulating data, or processing it in certain ways.
+    So generally any analysis code should assume ``TIME`` is not sorted.
+
     Other optional (columns) that are sometimes useful for high-level analysis:
 
     - ``GLON``, ``GLAT`` - Galactic coordinates (deg)
