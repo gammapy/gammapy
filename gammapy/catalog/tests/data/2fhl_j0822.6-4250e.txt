@@ -7,6 +7,7 @@ Associations     : Puppis A, 3FGL J0822.6-4250e, 1FHL J0822.6-4250e
 ASSOC_PROB_BAY   : nan
 ASSOC_PROB_LR    : nan
 Class            : snr
+TeVCat flag      : N/A
 
 *** Other info ***
 
