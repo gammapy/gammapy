@@ -6,11 +6,11 @@ Source name          : 3FGL J0023.4+0923
 Extended name        :                   
 Associations     : PSR J0023+0923
 Class1           : PSR  
-TeVCat flag      : No TeV association
+TeVCat flag      : N
 
 *** Other info ***
 
-Other flags          : None
+Other flags          : 0
 
 *** Position info ***
 

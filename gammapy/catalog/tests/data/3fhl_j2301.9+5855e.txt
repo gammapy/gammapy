@@ -8,7 +8,7 @@ Associations     : CTB 109, 3FGL J2301.2+5853
 ASSOC_PROB_BAY   : nan
 ASSOC_PROB_LR    : nan
 Class            : SNR    
-TeVCat flag      : No TeV association
+TeVCat flag      : N
 
 *** Other info ***
 

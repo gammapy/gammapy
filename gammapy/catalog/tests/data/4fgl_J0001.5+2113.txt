@@ -9,14 +9,14 @@ ASSOC_PROB_BAY   : 0.998
 ASSOC_PROB_LR    : 0.958
 Class1           : fsrq 
 Class2           :      
-TeVCat flag      : No TeV association
+TeVCat flag      : N
 
 *** Other info ***
 
 Significance (100 MeV - 1 TeV)   : 30.666
 Npred                            : 3110.9
 
-Other flags          : None
+Other flags          : 0
 
 *** Position info ***
 

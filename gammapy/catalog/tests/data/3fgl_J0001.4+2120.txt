@@ -6,11 +6,11 @@ Source name          : 3FGL J0001.4+2120
 Extended name        :                   
 Associations     : TXS 2358+209, 3EG J2359+2041
 Class1           : fsrq 
-TeVCat flag      : No TeV association
+TeVCat flag      : N
 
 *** Other info ***
 
-Other flags          : None
+Other flags          : 0
 
 *** Position info ***
 

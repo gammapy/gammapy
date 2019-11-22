@@ -9,14 +9,14 @@ ASSOC_PROB_BAY   : nan
 ASSOC_PROB_LR    : nan
 Class1           :      
 Class2           :      
-TeVCat flag      : No TeV association
+TeVCat flag      : N
 
 *** Other info ***
 
 Significance (100 MeV - 1 TeV)   : 35.921
 Npred                            : 11034.4
 
-Other flags          : Source-to-background ratio less than 10% in highest band in which TS > 25. Background is integrated over the 68%-confidence area (pi*r_682) or 1 square degree, whichever is smaller.
+Other flags          : 4
 
 *** Position info ***
 

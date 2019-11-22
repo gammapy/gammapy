@@ -6,11 +6,11 @@ Source name          : 3FGL J0835.3-4510
 Extended name        :                   
 Associations     : PSR J0835-4510, Vela, Vela Pulsar, 1AGL J0835-4509
 Class1           : PSR  
-TeVCat flag      : Small TeV source
+TeVCat flag      : P
 
 *** Other info ***
 
-Other flags          : None
+Other flags          : 0
 
 *** Position info ***
 

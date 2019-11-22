@@ -9,14 +9,14 @@ ASSOC_PROB_BAY   : 0.000
 ASSOC_PROB_LR    : 0.000
 Class1           :      
 Class2           :      
-TeVCat flag      : No TeV association
+TeVCat flag      : N
 
 *** Other info ***
 
 Significance (100 MeV - 1 TeV)   : 7.400
 Npred                            : 230.9
 
-Other flags          : None
+Other flags          : 0
 
 *** Position info ***
 
