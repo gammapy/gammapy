@@ -599,7 +599,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
     r"""Spectral exponential cutoff power-law model.
 
     .. math::
-        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma} \exp(-\lambda E)
+        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma} \exp(- {(\lambda E})^{\alpha})
 
     Parameters
     ----------
@@ -611,6 +611,8 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         :math:`E_0`
     lambda_ : `~astropy.units.Quantity`
         :math:`\lambda`
+    alpha : `~astropy.units.Quantity`
+        :math:`\alpha`
     """
 
     tag = "ExpCutoffPowerLawSpectralModel"
@@ -619,12 +621,14 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
     reference = Parameter("reference", "1 TeV", frozen=True)
     lambda_ = Parameter("lambda_", "0.1 TeV-1")
+    alpha = Parameter("alpha", "1.0", frozen=True)
 
     @staticmethod
-    def evaluate(energy, index, amplitude, reference, lambda_):
+    def evaluate(energy, index, amplitude, reference, lambda_, alpha):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index)
-        cutoff = np.exp(-energy * lambda_)
+        cutoff = np.exp(- np.power(energy * lambda_, alpha))
+
         return pwl * cutoff
 
     @property
@@ -634,16 +638,17 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         This is the peak in E^2 x dN/dE and is given by:
 
         .. math::
-            E_{Peak} = (2 - \Gamma) / \lambda
+            E_{Peak} =  \left(\frac{2 - \Gamma}{\alpha}\right)^{1/\alpha} / \lambda
         """
         p = self.parameters
         reference = p["reference"].quantity
         index = p["index"].quantity
         lambda_ = p["lambda_"].quantity
-        if index >= 2:
+        alpha = p["alpha"].quantity
+        if index >= 2 or lambda_ == 0. or alpha == 0.:
             return np.nan * reference.unit
         else:
-            return (2 - index) / lambda_
+            return np.power((2 - index)/alpha, 1/alpha) / lambda_
 
 
 class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):

@@ -107,7 +107,7 @@ def test_datasets_to_io(tmp_path):
     datasets = Datasets.from_yaml(filedata, filemodel)
 
     assert len(datasets) == 2
-    assert len(datasets.parameters) == 20
+    assert len(datasets.parameters) == 22
 
     dataset0 = datasets[0]
     assert dataset0.counts.data.sum() == 6824
