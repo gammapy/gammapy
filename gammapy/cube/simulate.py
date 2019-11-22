@@ -3,22 +3,22 @@
 import astropy.units as u
 from gammapy.data import Observation
 from gammapy.cube import MapDatasetMaker, MapDataset
-from gammapy.maps import WcsNDMap
-from gammapy.modeling.models import BackgroundModel
-from gammapy.utils.random import get_random_state
-
-__all__ = ["simulate_dataset"]
 
 
-def simulate_dataset(
+__all__ = ["simulate_map"]
+
+
+def simulate_map(
     skymodel,
     geom,
     pointing,
     irfs,
     livetime=1 * u.h,
-    offset_max=2.0*u.deg,
-    selection = ["exposure", "background", "psf", "edisp"],
+    offset_max=2.0 * u.deg,
+    selection=["exposure", "background", "psf", "edisp"],
+    background_pars={"norm": 1.0, "tilt": 0.0},
     random_state="random-seed",
+    **kwargs,
 ):
     """Simulate a 3D dataset.
 
@@ -26,6 +26,8 @@ def simulate_dataset(
     geometry and irfs for a given exposure time.
     This will return a MapDataset object which includes the counts cube,
     exposure cube, psf cube, energy dispersion cube, background model and the sky model.
+    By default, a background model will be made from the IRFs. The user can also pass some
+    other model if desired.
 
     Parameters
     ----------
@@ -41,12 +43,15 @@ def simulate_dataset(
         Livetime exposure of the simulated observation
     offset_max : `~astropy.units.Quantity`
         FoV offset cut
-    selection: list
+    selection: list, optional
         List of str, selecting which IRFs to use.
         Available: 'exposure', 'background', 'psf', 'edisp'
         By default, all are made.
     random_state: {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
+    background pars: dict
+        Dictionary specifying an additional norm and tilt in the background
+    **kwargs: additional default `MapAxis` to pass to `MapDataset.create`
 
     Returns
     -------
@@ -55,9 +60,14 @@ def simulate_dataset(
     """
 
     obs = Observation.create(pointing=pointing, livetime=livetime, irfs=irfs)
-    empty = MapDataset.create(geom)
+    empty = MapDataset.create(geom, **kwargs)
     maker = MapDatasetMaker(offset_max=offset_max)
     dataset = maker.run(empty, obs, selection=selection)
+    dataset.psf = dataset.psf.get_psf_kernel(
+        position=pointing, geom=geom, max_radius="0.3 deg",
+    )
+    dataset.background_model.parameters["norm"].value = background_pars["norm"]
+    dataset.background_model.parameters["tilt"].value = background_pars["tilt"]
     dataset.model = skymodel
     dataset.fake(random_state=random_state)
     return dataset
