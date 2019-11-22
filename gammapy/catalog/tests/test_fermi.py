@@ -581,22 +581,6 @@ class TestSourceCatalog3FGL:
         table = self.cat.extended_sources_table
         assert len(table) == 25
 
-    def test_select_source_classes(self):
-        selection = self.cat.select_source_class("galactic")
-        assert len(selection.table) == 101
-
-        selection = self.cat.select_source_class("extra-galactic")
-        assert len(selection.table) == 1684
-
-        selection = self.cat.select_source_class("unassociated")
-        assert len(selection.table) == 1010
-
-        selection = self.cat.select_source_class("ALL")
-        assert len(selection.table) == 239
-
-        selection = self.cat.select_source_class("PSR")
-        assert len(selection.table) == 143
-
 
 @requires_data()
 class TestSourceCatalog2FHL:
@@ -628,19 +612,3 @@ class TestSourceCatalog3FHL:
     def test_extended_sources(self):
         table = self.cat.extended_sources_table
         assert len(table) == 55
-
-    def test_select_source_classes(self):
-        selection = self.cat.select_source_class("galactic")
-        assert len(selection.table) == 44
-
-        selection = self.cat.select_source_class("extra-galactic")
-        assert len(selection.table) == 1177
-
-        selection = self.cat.select_source_class("unassociated")
-        assert len(selection.table) == 177
-
-        selection = self.cat.select_source_class("ALL")
-        assert len(selection.table) == 135
-
-        selection = self.cat.select_source_class("PSR")
-        assert len(selection.table) == 53

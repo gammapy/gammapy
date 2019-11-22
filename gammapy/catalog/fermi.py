@@ -1141,37 +1141,6 @@ class SourceCatalog3FGL(SourceCatalog):
     name = "3fgl"
     description = "LAT 4-year point source catalog"
     source_object_class = SourceCatalogObject3FGL
-    source_categories = {
-        "galactic": ["psr", "pwn", "snr", "spp", "glc"],
-        "extra-galactic": [
-            "css",
-            "bll",
-            "fsrq",
-            "agn",
-            "nlsy1",
-            "rdg",
-            "sey",
-            "bcu",
-            "gal",
-            "sbg",
-            "ssrq",
-        ],
-        "GALACTIC": ["PSR", "PWN", "SNR", "HMB", "BIN", "NOV", "SFR"],
-        "EXTRA-GALACTIC": [
-            "CSS",
-            "BLL",
-            "FSRQ",
-            "AGN",
-            "NLSY1",
-            "RDG",
-            "SEY",
-            "BCU",
-            "GAL",
-            "SBG",
-            "SSRQ",
-        ],
-        "unassociated": [""],
-    }
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v16.fit.gz"):
         filename = make_path(filename)
@@ -1200,70 +1169,6 @@ class SourceCatalog3FGL(SourceCatalog):
         )
 
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
-
-    def is_source_class(self, source_class):
-        """
-        Check if source belongs to a given source class.
-
-        The classes are described in Table 3 of the 3FGL paper:
-
-        https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
-
-        Parameters
-        ----------
-        source_class : str
-            Source class designator as defined in Table 3. There are a few extra
-            selections available:
-
-            - 'ALL': all identified objects
-            - 'all': all objects with associations
-            - 'galactic': all sources with an associated galactic object
-            - 'GALACTIC': all identified galactic sources
-            - 'extra-galactic': all sources with an associated extra-galactic object
-            - 'EXTRA-GALACTIC': all identified extra-galactic sources
-            - 'unassociated': all unassociated objects
-
-        Returns
-        -------
-        selection : `~numpy.ndarray`
-            Selection mask.
-        """
-        source_class_info = np.array([_.strip() for _ in self.table["CLASS1"]])
-
-        cats = self.source_categories
-        if source_class in cats:
-            category = set(cats[source_class])
-        elif source_class == "ALL":
-            category = set(cats["EXTRA-GALACTIC"] + cats["GALACTIC"])
-        elif source_class == "all":
-            category = set(cats["extra-galactic"] + cats["galactic"])
-        elif source_class in np.unique(source_class_info):
-            category = {source_class}
-        else:
-            raise ValueError(f"Invalid source_class: {source_class!r}")
-
-        return np.array([_ in category for _ in source_class_info])
-
-    def select_source_class(self, source_class):
-        """
-        Select all sources of a given source class.
-
-        See `SourceCatalog3FHL.is_source_class` for further documentation
-
-        Parameters
-        ----------
-        source_class : str
-            Source class designator.
-
-        Returns
-        -------
-        selection : `SourceCatalog3FHL`
-            Subset of the 3FHL catalog containing only the selected source class.
-        """
-        catalog = self.copy()
-        selection = self.is_source_class(source_class)
-        catalog.table = catalog.table[selection]
-        return catalog
 
 
 class SourceCatalog4FGL(SourceCatalog):
@@ -1351,13 +1256,6 @@ class SourceCatalog3FHL(SourceCatalog):
     name = "3fhl"
     description = "LAT third high-energy source catalog"
     source_object_class = SourceCatalogObject3FHL
-    source_categories = {
-        "galactic": ["glc", "hmb", "psr", "pwn", "sfr", "snr", "spp"],
-        "extra-galactic": ["agn", "bcu", "bll", "fsrq", "rdg", "sbg"],
-        "GALACTIC": ["BIN", "HMB", "PSR", "PWN", "SFR", "SNR"],
-        "EXTRA-GALACTIC": ["BLL", "FSRQ", "NLSY1", "RDG"],
-        "unassociated": [""],
-    }
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v13.fit.gz"):
         filename = make_path(filename)
@@ -1379,67 +1277,3 @@ class SourceCatalog3FHL(SourceCatalog):
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
         self.rois = Table.read(filename, hdu="ROIs")
         self.energy_bounds_table = Table.read(filename, hdu="EnergyBounds")
-
-    def is_source_class(self, source_class):
-        """
-        Check if source belongs to a given source class.
-
-        The classes are described in Table 3 of the 3FGL paper:
-
-        https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
-
-        Parameters
-        ----------
-        source_class : str
-            Source class designator as defined in Table 3. There are a few extra
-            selections available:
-
-            - 'ALL': all identified objects
-            - 'all': all objects with associations
-            - 'galactic': all sources with an associated galactic object
-            - 'GALACTIC': all identified galactic sources
-            - 'extra-galactic': all sources with an associated extra-galactic object
-            - 'EXTRA-GALACTIC': all identified extra-galactic sources
-            - 'unassociated': all unassociated objects
-
-        Returns
-        -------
-        selection : `~numpy.ndarray`
-            Selection mask.
-        """
-        source_class_info = np.array([_.strip() for _ in self.table["CLASS"]])
-
-        cats = self.source_categories
-        if source_class in cats:
-            category = set(cats[source_class])
-        elif source_class == "ALL":
-            category = set(cats["EXTRA-GALACTIC"] + cats["GALACTIC"])
-        elif source_class == "all":
-            category = set(cats["extra-galactic"] + cats["galactic"])
-        elif source_class in np.unique(source_class_info):
-            category = {source_class}
-        else:
-            raise ValueError(f"Invalid source_class: {source_class!r}")
-
-        return np.array([_ in category for _ in source_class_info])
-
-    def select_source_class(self, source_class):
-        """
-        Select all sources of a given source class.
-
-        See `SourceCatalog3FHL.is_source_class` for further documentation
-
-        Parameters
-        ----------
-        source_class : str
-            Source class designator.
-
-        Returns
-        -------
-        selection : `SourceCatalog3FHL`
-            Subset of the 3FHL catalog containing only the selected source class.
-        """
-        catalog = self.copy()
-        selection = self.is_source_class(source_class)
-        catalog.table = catalog.table[selection]
-        return catalog
