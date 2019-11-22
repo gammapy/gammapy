@@ -4,8 +4,13 @@ import numpy as np
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
-from gammapy.modeling import Dataset, Datasets, Fit
-from gammapy.modeling.models import PowerLawSpectralModel, ScaleSpectralModel, SkyModels
+from gammapy.modeling import Dataset, Datasets, Fit, Parameters
+from gammapy.modeling.models import (
+    PowerLawSpectralModel,
+    ScaleSpectralModel,
+    SkyModel,
+    SkyModels,
+)
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -807,10 +812,10 @@ class FluxPointsEstimator:
 
         dataset = self.datasets[0]
 
-        if isinstance(dataset, SpectrumDatasetOnOff):
-            model = dataset.model
-        else:
+        if len(dataset.model) > 1:
             model = dataset.model[source].spectral_model
+        else:
+            model = dataset.model[0].spectral_model
 
         self.model = ScaleSpectralModel(model)
         self.model.norm.min = 0
@@ -850,10 +855,10 @@ class FluxPointsEstimator:
     def _set_scale_model(self):
         # set the model on all datasets
         for dataset in self.datasets:
-            if isinstance(dataset, SpectrumDatasetOnOff):
-                dataset.model = self.model
-            else:
+            if len(dataset.model) > 1:
                 dataset.model[self.source].spectral_model = self.model
+            else:
+                dataset.model[0].spectral_model = self.model
 
     @property
     def ref_model(self):
@@ -901,7 +906,7 @@ class FluxPointsEstimator:
 
     def _energy_mask(self, e_group, dataset):
         energy_mask = np.zeros(dataset.data_shape)
-        energy_mask[e_group["idx_min"]: e_group["idx_max"] + 1] = 1
+        energy_mask[e_group["idx_min"] : e_group["idx_max"] + 1] = 1
         return energy_mask.astype(bool)
 
     def estimate_flux_point(self, e_group, steps="all"):
@@ -1143,7 +1148,7 @@ class FluxPointsDataset(Dataset):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SpectralModel`
+    model : `~gammapy.modeling.models.SkyModels` or `~gammapy.modeling.models.SkyModel`
         Spectral model
     data : `~gammapy.spectrum.FluxPoints`
         Flux points.
@@ -1180,12 +1185,19 @@ class FluxPointsDataset(Dataset):
     def __init__(
         self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None, name=""
     ):
-        self.model = model
         self.data = data
         self.mask_fit = mask_fit
-        self.parameters = model.parameters
         self.name = name
 
+        if model is None:
+            model = SkyModels([])
+        if isinstance(model, SkyModel):
+            model = SkyModels([model])
+        self.model = model
+        parameters_list = []
+        for _ in self.model:
+            parameters_list += list(_.spectral_model.parameters)
+        self.parameters = Parameters(parameters_list)
         if data.sed_type != "dnde":
             raise ValueError("Currently only flux points of type 'dnde' are supported.")
 
@@ -1239,7 +1251,7 @@ class FluxPointsDataset(Dataset):
 
         Returns
         -------
-        dataset : `FluxPointDataset`
+        dataset : `FluxPointsDataset`
             Flux point datasets.
 
         """
@@ -1335,13 +1347,16 @@ class FluxPointsDataset(Dataset):
         sigma[is_p] = sigma_p[is_p]
         return FluxPointsDataset._stat_chi2(data, model, sigma)
 
-    def flux_pred(self):
+    def flux_pred(self, energy):
         """Compute predicted flux."""
-        return self.model(self.data.e_ref)
+        flux = 0.0
+        for _ in self.model:
+            flux += _.spectral_model(energy)
+        return flux
 
     def stat_array(self):
         """Fit statistic array."""
-        model = self.flux_pred()
+        model = self.flux_pred(self.data.e_ref)
         data = self.data.table["dnde"].quantity
 
         if self.likelihood_type == "chi2":
@@ -1376,7 +1391,7 @@ class FluxPointsDataset(Dataset):
         fp = self.data
         data = fp.table[fp.sed_type]
 
-        model = self.model(fp.e_ref)
+        model = self.flux_pred(fp.e_ref)
 
         residuals = self._compute_residuals(data, model, method)
         # Remove residuals for upper_limits
@@ -1445,7 +1460,7 @@ class FluxPointsDataset(Dataset):
         if xerr is not None:
             xerr = xerr[0].to_value(self._e_unit), xerr[1].to_value(self._e_unit)
 
-        model = self.model(fp.e_ref)
+        model = self.flux_pred(fp.e_ref)
         yerr = fp._plot_get_flux_err(fp.sed_type)
 
         if method == "diff":
@@ -1516,7 +1531,8 @@ class FluxPointsDataset(Dataset):
         plot_kwargs.setdefault("zorder", 10)
         plot_kwargs.update(model_kwargs)
         plot_kwargs.setdefault("label", "Best fit model")
-        self.model.plot(ax=ax, **plot_kwargs)
+        for _ in self.model:
+            _.spectral_model.plot(ax=ax, **plot_kwargs)
 
         plot_kwargs.setdefault("color", ax.lines[-1].get_color())
         del plot_kwargs["label"]

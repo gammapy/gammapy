@@ -4,7 +4,7 @@ import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
 from gammapy.irf import EnergyDependentTablePSF
-from gammapy.maps import Map, MapCoord, WcsGeom, MapAxis
+from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .psf_kernel import PSFKernel
 
@@ -239,10 +239,7 @@ class PSFMap:
 
         if self.exposure_map is not None:
             exposure_3d = self.exposure_map.slice_by_idx({"theta": 0})
-            coords = {
-                "skycoord": position,
-                "energy": energies.reshape((-1, 1, 1))
-            }
+            coords = {"skycoord": position, "energy": energies.reshape((-1, 1, 1))}
             data = exposure_3d.interp_by_coord(coords).squeeze()
             exposure = data * self.exposure_map.unit
         else:
@@ -250,10 +247,7 @@ class PSFMap:
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(
-            energy=energies,
-            rad=rad,
-            psf_value=psf_values.T,
-            exposure=exposure
+            energy=energies, rad=rad, psf_value=psf_values.T, exposure=exposure
         )
 
     def get_psf_kernel(self, position, geom, max_radius=None, factor=4):
@@ -420,15 +414,14 @@ class PSFMap:
         rad_axis = MapAxis.from_nodes(table_psf.rad, name="theta")
 
         geom = WcsGeom.create(
-            npix=(4, 2),
-            proj="CAR",
-            binsz=180,
-            axes=[rad_axis, energy_axis]
+            npix=(4, 2), proj="CAR", binsz=180, axes=[rad_axis, energy_axis]
         )
         coords = geom.get_coord()
 
         # TODO: support broadcasting in .evaluate()
-        data = table_psf._interpolate((coords["energy"], coords["theta"])).to_value("sr-1")
+        data = table_psf._interpolate((coords["energy"], coords["theta"])).to_value(
+            "sr-1"
+        )
         psf_map = Map.from_geom(geom, data=data, unit="sr-1")
 
         geom_exposure = geom.squash(axis="theta")

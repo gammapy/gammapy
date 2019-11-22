@@ -169,14 +169,9 @@ class Analysis:
             self.model = SkyModels.from_yaml(filepath)
         else:
             return False
-        # TODO: Deal with multiple components
         for dataset in self.datasets:
-            if isinstance(dataset, MapDataset):
-                dataset.model = self.model
-            else:
-                if len(self.model) > 1:
-                    raise ValueError("Cannot fit multiple spectral models")
-                dataset.model = self.model[0].spectral_model
+            dataset.model = self.model
+
         log.info(self.model)
 
     def run_fit(self, optimize_opts=None):
@@ -218,7 +213,7 @@ class Analysis:
         )
         fp = flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
-        model = self.model[source].spectral_model.copy()
+        model = self.model[source].copy()
         self.flux_points = FluxPointsDataset(data=fp, model=model)
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
@@ -262,7 +257,7 @@ class Analysis:
                 log.info(f"Processing observation {obs.obs_id}")
                 dataset = maker.run(stacked, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
-                dataset.background_model.name =  f"bkg_{dataset.name}"
+                dataset.background_model.name = f"bkg_{dataset.name}"
                 # TODO remove this once dataset and model have unique identifiers
                 log.debug(dataset)
                 stacked.stack(dataset)

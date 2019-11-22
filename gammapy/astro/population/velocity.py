@@ -42,7 +42,7 @@ class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
     def evaluate(v, amplitude, sigma):
         """One dimensional velocity model function."""
         term1 = np.sqrt(2 / np.pi) * v ** 2 / sigma ** 3
-        term2 = np.exp(-v ** 2 / (2 * sigma ** 2))
+        term2 = np.exp(-(v ** 2) / (2 * sigma ** 2))
         return term1 * term2
 
 
@@ -82,8 +82,8 @@ class FaucherKaspi2006VelocityBimodal(Fittable1DModel):
     def evaluate(v, amplitude, sigma_1, sigma_2, w):
         """One dimensional Faucher-Guigere & Kaspi 2006 velocity model function."""
         A = amplitude * np.sqrt(2 / np.pi) * v ** 2
-        term1 = (w / sigma_1 ** 3) * np.exp(-v ** 2 / (2 * sigma_1 ** 2))
-        term2 = (1 - w) / sigma_2 ** 3 * np.exp(-v ** 2 / (2 * sigma_2 ** 2))
+        term1 = (w / sigma_1 ** 3) * np.exp(-(v ** 2) / (2 * sigma_1 ** 2))
+        term2 = (1 - w) / sigma_2 ** 3 * np.exp(-(v ** 2) / (2 * sigma_2 ** 2))
         return A * (term1 + term2)
 
 

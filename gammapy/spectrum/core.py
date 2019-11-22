@@ -7,6 +7,7 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
+from gammapy.modeling.models import SkyModel, SkyModels
 from gammapy.utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
 from gammapy.utils.regions import compound_region_to_list
 from gammapy.utils.scripts import make_path
@@ -332,8 +333,8 @@ class SpectrumEvaluator:
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SpectralModel`
-        Spectral model
+    model : `~gammapy.modeling.models.SkyModels` or `~gammapy.modeling.models.SkyModel`
+        Spectral model.
     aeff : `~gammapy.irf.EffectiveAreaTable`
         EffectiveArea
     edisp : `~gammapy.irf.EnergyDispersion`, optional
@@ -371,10 +372,13 @@ class SpectrumEvaluator:
     """
 
     def __init__(self, model, aeff=None, edisp=None, livetime=None, e_true=None):
-        self.model = model
         self.aeff = aeff
         self.edisp = edisp
         self.livetime = livetime
+
+        if isinstance(model, SkyModel):
+            model = SkyModels([model])
+        self.model = model
 
         if aeff is not None:
             e_true = self.aeff.energy.edges
@@ -383,9 +387,11 @@ class SpectrumEvaluator:
         self.e_reco = None
 
     def compute_npred(self):
-        integral_flux = self.model.integral(
-            emin=self.e_true[:-1], emax=self.e_true[1:], intervals=True
-        )
+        integral_flux = 0.0
+        for _ in self.model:
+            integral_flux += _.spectral_model.integral(
+                emin=self.e_true[:-1], emax=self.e_true[1:], intervals=True
+            )
 
         true_counts = self.apply_aeff(integral_flux)
         return self.apply_edisp(true_counts)

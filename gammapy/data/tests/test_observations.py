@@ -135,6 +135,7 @@ def test_observations_select_time(
             new_obss[-1].gti.time_stop[-1], expected_times[1], atol=0.01
         )
 
+
 @requires_data()
 def test_observations_select_time_time_intervals_list(data_store):
     obs_ids = data_store.obs_table["OBS_ID"][:8]

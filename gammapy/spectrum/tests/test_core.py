@@ -6,7 +6,11 @@ from astropy import units as u
 from astropy.units import Quantity
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
 from gammapy.maps import MapAxis
-from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
+from gammapy.modeling.models import (
+    PowerLawSpectralModel,
+    SkyModel,
+    TemplateSpectralModel,
+)
 from gammapy.spectrum import CountsSpectrum, SpectrumEvaluator
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -61,21 +65,27 @@ def get_test_cases():
     e_reco = Quantity(np.logspace(-1, 2, 100), "TeV")
     return [
         dict(
-            model=PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1"),
+            model=SkyModel(
+                spectral_model=PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1")
+            ),
             aeff=EffectiveAreaTable.from_parametrization(e_true),
             livetime="10 h",
             npred=1448.05960,
         ),
         dict(
-            model=PowerLawSpectralModel(
-                reference="1 GeV", amplitude="1e-11 GeV-1 cm-2 s-1"
+            model=SkyModel(
+                spectral_model=PowerLawSpectralModel(
+                    reference="1 GeV", amplitude="1e-11 GeV-1 cm-2 s-1"
+                )
             ),
             aeff=EffectiveAreaTable.from_parametrization(e_true),
             livetime="30 h",
             npred=4.34417881,
         ),
         dict(
-            model=PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1"),
+            model=SkyModel(
+                spectral_model=PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1")
+            ),
             aeff=EffectiveAreaTable.from_parametrization(e_true),
             edisp=EnergyDispersion.from_gauss(
                 e_reco=e_reco, e_true=e_true, bias=0, sigma=0.2
@@ -84,9 +94,11 @@ def get_test_cases():
             npred=1437.450076,
         ),
         dict(
-            model=TemplateSpectralModel(
-                energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
-                values=[4.0, 3.0, 1.0, 0.1] * u.Unit("TeV-1"),
+            model=SkyModel(
+                spectral_model=TemplateSpectralModel(
+                    energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
+                    values=[4.0, 3.0, 1.0, 0.1] * u.Unit("TeV-1"),
+                )
             ),
             e_true=[0.1, 0.2, 0.3, 0.4] * u.TeV,
             npred=0.554513062,

@@ -51,7 +51,7 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
     t = np.linspace(0, t_length, n_data)
     t_obs = np.sort(rand.choice(t, n_obs, replace=False))
     n_outliers = n_outliers
-    dmag = rand.normal(0, 1, n_data) * -1 ** (rand.randint(2, size=n_data))
+    dmag = rand.normal(0, 1, n_data) * -(1 ** (rand.randint(2, size=n_data)))
     dmag_obs = dmag[np.searchsorted(t, t_obs)]
     outliers = rand.randint(0, t.size, n_outliers)
     mag = amplitude * np.sin(2 * np.pi * t / period) + dmag

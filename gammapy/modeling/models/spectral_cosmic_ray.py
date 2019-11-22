@@ -26,7 +26,7 @@ class _LogGaussianSpectralModel(SpectralModel):
         return (
             L
             / (energy * w * np.sqrt(2 * np.pi))
-            * np.exp(-(np.log(energy / Ep)) ** 2 / (2 * w ** 2))
+            * np.exp(-((np.log(energy / Ep)) ** 2) / (2 * w ** 2))
         )
 
 

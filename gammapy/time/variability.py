@@ -4,6 +4,7 @@ import scipy.stats as stats
 
 __all__ = ["compute_fvar", "compute_chisq"]
 
+
 def compute_fvar(flux, flux_err):
     r"""Calculate the fractional excess variance.
 

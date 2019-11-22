@@ -118,12 +118,17 @@ class SkyModel(SkyModelBase):
 
     tag = "SkyModel"
 
-    def __init__(self, spatial_model, spectral_model, name="source"):
+    def __init__(self, spatial_model=None, spectral_model=None, name="source"):
+        from . import PointSpatialModel, PowerLawSpectralModel
+
+        if spatial_model is None:
+            spatial_model = PointSpatialModel()
+        if spectral_model is None:
+            spectral_model = PowerLawSpectralModel()
         self.name = name
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
         super().__init__()
-
         # TODO: this hack is needed for compound models to work
         self.__dict__.pop("_parameters")
 

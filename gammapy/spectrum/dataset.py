@@ -6,9 +6,9 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
+from gammapy.modeling import Dataset, Parameters
+from gammapy.modeling.models import SkyModel, SkyModels
 from gammapy.stats import cash, significance_on_off, wstat
-from gammapy.modeling.models import SkyModels
-from gammapy.modeling import Dataset
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
@@ -30,7 +30,7 @@ class SpectrumDataset(Dataset):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SpectralModel`
+    model : `~gammapy.modeling.models.SkyModels` or `~gammapy.modeling.models.SkyModel`
         Fit model
     counts : `~gammapy.spectrum.CountsSpectrum`
         Counts spectrum
@@ -72,6 +72,7 @@ class SpectrumDataset(Dataset):
         name="",
         gti=None,
     ):
+
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
@@ -174,9 +175,14 @@ class SpectrumDataset(Dataset):
 
     @model.setter
     def model(self, model):
-        self._model = model
+        if isinstance(model, SkyModel):
+            model = SkyModels([model])
         if model is not None:
-            self._parameters = self._model.parameters
+            self._model = model
+            parameters_list = []
+            for _ in self._model:
+                parameters_list += list(_.spectral_model.parameters)
+            self._parameters = Parameters(parameters_list)
             self._predictor = SpectrumEvaluator(
                 model=self.model,
                 livetime=self.livetime,
@@ -185,6 +191,7 @@ class SpectrumDataset(Dataset):
                 edisp=self.edisp,
             )
         else:
+            self.model = SkyModels([])
             self._parameters = None
             self._predictor = None
 
@@ -201,10 +208,14 @@ class SpectrumDataset(Dataset):
 
     @property
     def parameters(self):
+        """List of parameters (`~gammapy.modeling.Parameters`)"""
+
         if self._parameters is None:
             raise AttributeError("No model set for Dataset")
-        else:
-            return self._parameters
+        parameters_list = []
+        for _ in self._model:
+            parameters_list += list(_.spectral_model.parameters)
+        return Parameters(parameters_list)
 
     @property
     def _energy_axis(self):
@@ -874,7 +885,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         'cm2'.
 
         The naming scheme is fixed, with {name} the dataset name:
-        
+
         * PHA file is named pha_obs{name}.fits
         * BKG file is named bkg_obs{name}.fits
         * ARF file is named arf_obs{name}.fits
@@ -1091,15 +1102,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """Convert to dict for YAML serialization."""
         outdir = Path(filename).parent
         filename = str(outdir / f"pha_obs{self.name}.fits")
-
-        if self.model is not None:
-            models = [_.name for _ in self.model]
-        else:
-            models = []
         return {
             "name": self.name,
             "type": self.tag,
-            "models": models,
+            "models": [_.name for _ in self.model],
             "likelihood": self.likelihood_type,
             "filename": filename,
         }

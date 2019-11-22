@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy.time import Time
-from astropy.table import Table
 import astropy.units as u
+from astropy.table import Table
+from astropy.time import Time
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import ScaleSpectralModel
 from gammapy.spectrum import FluxPoints, SpectrumDatasetOnOff
@@ -133,10 +133,10 @@ class LightCurveEstimator:
 
         dataset = self.datasets[0]
 
-        if isinstance(dataset, SpectrumDatasetOnOff):
-            model = dataset.model
-        else:
+        if len(dataset.model) > 1:
             model = dataset.model[source].spectral_model
+        else:
+            model = dataset.model[0].spectral_model
 
         self.model = ScaleSpectralModel(model)
         self.model.norm.min = 0
@@ -188,12 +188,11 @@ class LightCurveEstimator:
             the list of dataset object
 
         """
-        # set the model on all datasets
         for dataset in datasets:
-            if isinstance(dataset, SpectrumDatasetOnOff):
-                dataset.model = self.model
-            else:
+            if len(dataset.model) > 1:
                 dataset.model[self.source].spectral_model = self.model
+            else:
+                dataset.model[0].spectral_model = self.model
 
     @property
     def ref_model(self):
