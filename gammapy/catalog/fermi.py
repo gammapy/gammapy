@@ -114,19 +114,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
             ss += "{:<16s} : {}\n".format("Class2", d["CLASS2"])
         except (KeyError):
             pass
-        try:
-            tevcat_flag = d["TEVCAT_FLAG"]
-            if tevcat_flag == "N":
-                tevcat_message = "No TeV association"
-            elif tevcat_flag == "P":
-                tevcat_message = "Small TeV source"
-            elif tevcat_flag == "E":
-                tevcat_message = "Extended TeV source (diameter > 40 arcmins)"
-            else:
-                tevcat_message = "N/A"
-            ss += "{:<16s} : {}\n".format("TeVCat flag", tevcat_message)
-        except (KeyError):
-            pass
+        ss += "{:<16s} : {}\n".format("TeVCat flag", d.get("TEVCAT_FLAG", "N/A"))
         return ss
 
     @abc.abstractmethod
@@ -243,34 +231,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         fmt = "{:<32s} : {:.3f}\n"
         ss += fmt.format("Significance (100 MeV - 1 TeV)", d["Signif_Avg"])
         ss += "{:<32s} : {:.1f}\n".format("Npred", d["Npred"])
-
-        flag_message = {
-            0: "None",
-            1: "Source with T S > 35 which went to T S < 25 when changing the diffuse model "
-            "(see Sec. 3.7.1 in catalog paper) or the analysis method (see Sec. 3.7.2 in catalog paper). "
-            "Sources with T S ≤ 35 are not flagged with this bit because normal statistical fluctuations can push them to T S < 25.",
-            2: "Moved beyond its 95% error ellipse when changing the diffuse model. ",
-            3: "Flux (> 1 GeV) or energy flux (> 100 MeV) changed by more than 3σ when "
-            "changing the diffuse model or the analysis method. Requires also that the flux "
-            "change by more than 35% (to not flag strong sources).",
-            4: "Source-to-background ratio less than 10% in highest band in which TS > 25. Background is integrated "
-            "over the 68%-confidence area (pi*r_682) or 1 square degree, whichever is smaller.",
-            5: "Closer than theta_ref from a brighter neighbor, where theta_ref is defined in the highest band in which "
-            " source TS > 25, or the band with highest TS if all are < 25. theta_ref is set to 3.77 degrees (FWHM) below 100 MeV, "
-            "1.68 degrees between 100 and 300 MeV , 1.03 degrees between 300 MeV and 1 GeV, "
-            "0. 76 degree between 1 and 3 GeV (in-between FWHM and 2*r_68), "
-            "0.49 degree between 3 and 10 GeV and 0.25 degree above 10 GeV (2*r_68).",
-            6: "On top of an interstellar gas clump or small-scale defect in the model of diffuse emission. This flag "
-            'is equivalent to the "c" suffix in the source name (see Sec. 3.7.1 in catalog paper).',
-            9: "Localization Quality > 8 in pointlike (see Section 3.1 in catalog paper) or long axis of 95% ellipse > 0.25.",
-            10: "Total Spectral Fit Quality > 20  or Spectral Fit Quality > 9 in any band (see Equation 5 in catalog paper).",
-            12: "Highly curved spectrum; LogParabolaSpectralModel beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see "
-            "Section 3.3 in catalog paper).",
-        }
-        ss += "\n{:<20s} : {}\n".format(
-            "Other flags", flag_message.get(d["Flags"], "N/A")
-        )
-
+        ss += "\n{:<20s} : {}\n".format("Other flags", d["Flags"])
         return ss
 
     def _info_spectral_fit(self):
@@ -550,32 +511,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         """Print other info."""
         d = self.data
         ss = "\n*** Other info ***\n\n"
-        flag_message = {
-            0: "None",
-            1: "Source with TS > 35 which went to TS < 25 when changing the diffuse model. Note that sources with TS < "
-            "35 are not flagged with this bit because normal statistical fluctuations can push them to TS < 25.",
-            3: "Flux (> 1 GeV) or energy flux (> 100 MeV) changed by more than 3 sigma when changing the diffuse model."
-            " Requires also that the flux change by more than 35% (to not flag strong sources).",
-            4: "Source-to-background ratio less than 10% in highest band in which TS > 25. Background is integrated "
-            "over the 68%-confidence area (pi*r_682) or 1 square degree, whichever is smaller.",
-            5: "Closer than theta_ref from a brighter neighbor, where theta_ref is defined in the highest band in which"
-            " source TS > 25, or the band with highest TS if all are < 25. theta_ref is set to 2.17 degrees (FWHM)"
-            " below 300 MeV, 1.38 degrees between 300 MeV and 1 GeV, 0.87 degrees between 1 GeV and 3 GeV, 0.67"
-            " degrees between 3 and 10 GeV and 0.45 degrees about 10 GeV (2*r_68).",
-            6: "On top of an interstellar gas clump or small-scale defect in the model of diffuse emission. This flag "
-            'is equivalent to the "c" suffix in the source name.',
-            7: "Unstable position determination; result from gtfindsrc outside the 95% ellipse from pointlike.",
-            9: "Localization Quality > 8 in pointlike (see Section 3.1 in catalog paper) or long axis of 95% ellipse >"
-            " 0.25.",
-            10: "Spectral Fit Quality > 16.3 (see Equation 3 in 2FGL catalog paper).",
-            11: "Possibly due to the Sun (see Section 3.6 in catalog paper).",
-            12: "Highly curved spectrum; LogParabolaSpectralModel beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see "
-            "Section 3.3 in catalog paper).",
-        }
-        ss += "{:<20s} : {}\n".format(
-            "Other flags", flag_message.get(d["Flags"], "N/A")
-        )
-
+        ss += "{:<20s} : {}\n".format("Other flags", d["Flags"])
         return ss
 
     def _info_spectral_fit(self):
