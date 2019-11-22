@@ -1,12 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations"""
 import astropy.units as u
-from gammapy.cube import (
-    MapDataset,
-    PSFKernel,
-    make_map_background_irf,
-    make_map_exposure_true_energy,
-)
+from gammapy.data import Observation
+from gammapy.cube import MapDatasetMaker, MapDataset
 from gammapy.maps import WcsNDMap
 from gammapy.modeling.models import BackgroundModel
 from gammapy.utils.random import get_random_state
@@ -20,21 +16,21 @@ def simulate_dataset(
     pointing,
     irfs,
     livetime=1 * u.h,
-    offset=1 * u.deg,
-    max_radius=0.8 * u.deg,
+    offset_max=2.0*u.deg,
+    selection = ["exposure", "background", "psf", "edisp"],
     random_state="random-seed",
 ):
     """Simulate a 3D dataset.
 
     Simulate a source defined with a sky model for a given pointing,
     geometry and irfs for a given exposure time.
-    This will return a dataset object which includes the counts cube,
-    the exposure cube, the psf cube, the background model and the sky model.
+    This will return a MapDataset object which includes the counts cube,
+    exposure cube, psf cube, energy dispersion cube, background model and the sky model.
 
     Parameters
     ----------
     skymodel : `~gammapy.modeling.models.SkyModel`
-        Background model map
+        The skymodel to simulate the data
     geom : `~gammapy.maps.WcsGeom`
         Geometry object for the observation
     pointing : `~astropy.coordinates.SkyCoord`
@@ -43,11 +39,12 @@ def simulate_dataset(
         Irfs used for simulating the observation
     livetime : `~astropy.units.Quantity`
         Livetime exposure of the simulated observation
-    offset : `~astropy.units.Quantity`
-        Offset from the center of the pointing position.
-        This is used for the PSF and Edisp estimation
-    max_radius : `~astropy.coordinates.Angle`
-        The maximum radius of the PSF kernel.
+    offset_max : `~astropy.units.Quantity`
+        FoV offset cut
+    selection: list
+        List of str, selecting which IRFs to use.
+        Available: 'exposure', 'background', 'psf', 'edisp'
+        By default, all are made.
     random_state: {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
 
@@ -56,36 +53,11 @@ def simulate_dataset(
     dataset : `~gammapy.cube.MapDataset`
         A dataset of the simulated observation.
     """
-    background = make_map_background_irf(
-        pointing=pointing, ontime=livetime, bkg=irfs["bkg"], geom=geom
-    )
 
-    background_model = BackgroundModel(background)
-
-    psf = irfs["psf"].to_energy_dependent_table_psf(theta=offset)
-    psf_kernel = PSFKernel.from_table_psf(psf, geom, max_radius=max_radius)
-
-    exposure = make_map_exposure_true_energy(
-        pointing=pointing, livetime=livetime, aeff=irfs["aeff"], geom=geom
-    )
-
-    if "edisp" in irfs:
-        energy = geom.axes[0].edges
-        edisp = irfs["edisp"].to_energy_dispersion(offset, e_reco=energy, e_true=energy)
-    else:
-        edisp = None
-
-    dataset = MapDataset(
-        model=skymodel,
-        exposure=exposure,
-        background_model=background_model,
-        psf=psf_kernel,
-        edisp=edisp,
-    )
-
-    npred_map = dataset.npred()
-    rng = get_random_state(random_state)
-    counts = rng.poisson(npred_map.data)
-    dataset.counts = WcsNDMap(geom, counts)
-
+    obs = Observation.create(pointing=pointing, livetime=livetime, irfs=irfs)
+    empty = MapDataset.create(geom)
+    maker = MapDatasetMaker(offset_max=offset_max)
+    dataset = maker.run(empty, obs, selection=selection)
+    dataset.model = skymodel
+    dataset.fake(random_state=random_state)
     return dataset
