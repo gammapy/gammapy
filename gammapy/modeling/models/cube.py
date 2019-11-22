@@ -8,6 +8,7 @@ from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
 from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 
+
 class SkyModelBase(Model):
     """Sky model base class"""
 
@@ -119,6 +120,7 @@ class SkyModel(SkyModelBase):
 
     def __init__(self, spatial_model=None, spectral_model=None, name="source"):
         from . import PointSpatialModel, PowerLawSpectralModel
+
         if spatial_model is None:
             spatial_model = PointSpatialModel()
         if spectral_model is None:

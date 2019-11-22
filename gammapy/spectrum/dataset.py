@@ -6,14 +6,13 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
+from gammapy.modeling import Dataset, Parameters
+from gammapy.modeling.models import SkyModel, SkyModels
 from gammapy.stats import cash, significance_on_off, wstat
-from gammapy.modeling.models import SkyModels, SkyModel
-from gammapy.modeling import Dataset
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
 from .core import CountsSpectrum, SpectrumEvaluator
-from gammapy.modeling import Parameters
 
 __all__ = [
     "SpectrumDatasetOnOff",
@@ -175,17 +174,17 @@ class SpectrumDataset(Dataset):
         return self._model
 
     @model.setter
-    def model(self, model):    
+    def model(self, model):
         if isinstance(model, SkyModel):
             model = SkyModels([model])
         if model is not None:
             self._model = model
             parameters_list = []
             for _ in self._model:
-                parameters_list+=list(_.spectral_model.parameters)
+                parameters_list += list(_.spectral_model.parameters)
             self._parameters = Parameters(parameters_list)
             self._predictor = SpectrumEvaluator(
-                model= self.model,
+                model=self.model,
                 livetime=self.livetime,
                 aeff=self.aeff,
                 e_true=self._energy_axis.edges,
@@ -207,16 +206,15 @@ class SpectrumDataset(Dataset):
     def mask_safe(self, mask):
         self._mask_safe = mask
 
-
     @property
     def parameters(self):
         """List of parameters (`~gammapy.modeling.Parameters`)"""
-        
+
         if self._parameters is None:
             raise AttributeError("No model set for Dataset")
         parameters_list = []
         for _ in self._model:
-            parameters_list+=list(_.spectral_model.parameters)
+            parameters_list += list(_.spectral_model.parameters)
         return Parameters(parameters_list)
 
     @property
@@ -887,7 +885,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         'cm2'.
 
         The naming scheme is fixed, with {name} the dataset name:
-        
+
         * PHA file is named pha_obs{name}.fits
         * BKG file is named bkg_obs{name}.fits
         * ARF file is named arf_obs{name}.fits

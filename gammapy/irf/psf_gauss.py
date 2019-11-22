@@ -324,7 +324,9 @@ class EnergyDependentMultiGaussPSF:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = MapAxis.from_energy_bounds(self.energy_lo[0], self.energy_hi[-1], 100).edges
+        energy = MapAxis.from_energy_bounds(
+            self.energy_lo[0], self.energy_hi[-1], 100
+        ).edges
 
         for theta in thetas:
             for fraction in fractions:

@@ -5,9 +5,9 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
-from gammapy.data import DataStore
 from gammapy.cube import PSFMap, make_map_exposure_true_energy, make_psf_map
 from gammapy.irf import PSF3D, EffectiveAreaTable2D, EnergyDependentTablePSF
+from gammapy.data import DataStore
 from gammapy.maps import MapAxis, MapCoord, WcsGeom
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.testing import requires_data
@@ -225,14 +225,11 @@ def make_psf_map_obs(geom, obs):
         geom=geom.squash(axis="theta"),
         pointing=obs.pointing_radec,
         aeff=obs.aeff,
-        livetime=obs.observation_live_time_duration
+        livetime=obs.observation_live_time_duration,
     )
 
     psf_map = make_psf_map(
-        geom=geom,
-        psf=obs.psf,
-        pointing=obs.pointing_radec,
-        exposure_map=exposure_map
+        geom=geom, psf=obs.psf, pointing=obs.pointing_radec, exposure_map=exposure_map
     )
     return psf_map
 
@@ -259,7 +256,7 @@ def make_psf_map_obs(geom, obs):
             "psf_energy": 1428.893959,
             "rad_shape": (144,),
             "psf_rad": 0.0015362848,
-            "psf_exposure": 4.723409e+12,
+            "psf_exposure": 4.723409e12,
             "psf_value_shape": (100, 144),
             "psf_value": 3719.21488,
         },
@@ -281,7 +278,7 @@ def make_psf_map_obs(geom, obs):
             "psf_energy": 1428.893959,
             "rad_shape": (1000,),
             "psf_rad": 0.000524,
-            "psf_exposure": 4.723409e+12,
+            "psf_exposure": 4.723409e12,
             "psf_value_shape": (100, 1000),
             "psf_value": 22561.543595,
         },
@@ -306,10 +303,7 @@ def test_make_psf(pars, data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")
 
     geom = WcsGeom.create(
-        skydir=position,
-        npix=(3, 3),
-        axes=[rad_axis, energy_axis],
-        binsz=0.2
+        skydir=position, npix=(3, 3), axes=[rad_axis, energy_axis], binsz=0.2
     )
     psf_map = make_psf_map_obs(geom, obs)
     psf = psf_map.get_energy_dependent_table_psf(position)
@@ -345,10 +339,7 @@ def test_make_mean_psf(data_store):
     rad_axis = MapAxis.from_edges(edges, name="theta")
 
     geom = WcsGeom.create(
-        skydir=position,
-        npix=(3, 3),
-        axes=[rad_axis, energy_axis],
-        binsz=0.2
+        skydir=position, npix=(3, 3), axes=[rad_axis, energy_axis], binsz=0.2
     )
 
     psf_map_1 = make_psf_map_obs(geom, observations[0])

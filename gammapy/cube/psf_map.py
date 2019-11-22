@@ -239,10 +239,7 @@ class PSFMap:
 
         if self.exposure_map is not None:
             exposure_3d = self.exposure_map.slice_by_idx({"theta": 0})
-            coords = {
-                "skycoord": position,
-                "energy": energies.reshape((-1, 1, 1))
-            }
+            coords = {"skycoord": position, "energy": energies.reshape((-1, 1, 1))}
             data = exposure_3d.interp_by_coord(coords).squeeze()
             exposure = data * self.exposure_map.unit
         else:
@@ -250,10 +247,7 @@ class PSFMap:
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(
-            energy=energies,
-            rad=rad,
-            psf_value=psf_values.T,
-            exposure=exposure
+            energy=energies, rad=rad, psf_value=psf_values.T, exposure=exposure
         )
 
     def get_psf_kernel(self, position, geom, max_radius=None, factor=4):

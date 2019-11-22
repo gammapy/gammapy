@@ -223,7 +223,7 @@ class FaucherKaspi2006(Fittable1DModel):
     def evaluate(r, amplitude, r_0, sigma):
         """Evaluate model."""
         term1 = 1.0 / np.sqrt(2 * np.pi * sigma)
-        term2 = np.exp(-(r - r_0) ** 2 / (2 * sigma ** 2))
+        term2 = np.exp(-((r - r_0) ** 2) / (2 * sigma ** 2))
         return amplitude * term1 * term2
 
 

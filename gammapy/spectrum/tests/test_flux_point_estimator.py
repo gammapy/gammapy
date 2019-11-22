@@ -26,7 +26,11 @@ from gammapy.utils.testing import requires_data, requires_dependency
 def simulate_spectrum_dataset(model, random_state=0):
     energy = np.logspace(-0.5, 1.5, 21) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
-    bkg_model = SkyModel(spectral_model=PowerLawSpectralModel(index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1"))
+    bkg_model = SkyModel(
+        spectral_model=PowerLawSpectralModel(
+            index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1"
+        )
+    )
 
     dataset = SpectrumDatasetOnOff(
         aeff=aeff, model=model, livetime=100 * u.h, acceptance=1, acceptance_off=5

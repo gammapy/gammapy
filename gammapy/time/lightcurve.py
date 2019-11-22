@@ -109,7 +109,6 @@ class LightCurve:
         """
         self.table.write(make_path(filename), **kwargs)
 
-
     def plot(self, ax=None, time_format="mjd", flux_unit="cm-2 s-1", **kwargs):
         """Plot flux points.
 

@@ -1331,7 +1331,7 @@ class GaussianSpectralModel(SpectralModel):
         return (
             norm
             / (sigma * np.sqrt(2 * np.pi))
-            * np.exp(-(energy - mean) ** 2 / (2 * sigma ** 2))
+            * np.exp(-((energy - mean) ** 2) / (2 * sigma ** 2))
         )
 
     def integral(self, emin, emax, **kwargs):
@@ -1384,6 +1384,6 @@ class GaussianSpectralModel(SpectralModel):
         ).to_value("")
         a = pars["norm"].quantity * pars["sigma"].quantity / np.sqrt(2 * np.pi)
         b = pars["norm"].quantity * pars["mean"].quantity / 2
-        return a * (np.exp(-u_min ** 2) - np.exp(-u_max ** 2)) + b * (
+        return a * (np.exp(-(u_min ** 2)) - np.exp(-(u_max ** 2))) + b * (
             scipy.special.erf(u_max) - scipy.special.erf(u_min)
         )

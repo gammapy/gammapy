@@ -7,10 +7,10 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
+from gammapy.modeling.models import SkyModel, SkyModels
 from gammapy.utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
 from gammapy.utils.regions import compound_region_to_list
 from gammapy.utils.scripts import make_path
-from gammapy.modeling.models import SkyModels, SkyModel
 
 __all__ = ["CountsSpectrum", "SpectrumEvaluator"]
 
@@ -376,8 +376,8 @@ class SpectrumEvaluator:
         self.edisp = edisp
         self.livetime = livetime
 
-        if isinstance(model,SkyModel):
-            model= SkyModels([model])
+        if isinstance(model, SkyModel):
+            model = SkyModels([model])
         self.model = model
 
         if aeff is not None:
@@ -387,7 +387,7 @@ class SpectrumEvaluator:
         self.e_reco = None
 
     def compute_npred(self):
-        integral_flux = 0.
+        integral_flux = 0.0
         for _ in self.model:
             integral_flux += _.spectral_model.integral(
                 emin=self.e_true[:-1], emax=self.e_true[1:], intervals=True

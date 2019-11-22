@@ -40,9 +40,7 @@ hpx_test_geoms = hpx_test_allsky_geoms + hpx_test_partialsky_geoms
 
 def create_map(nside, nested, coordsys, region, axes):
     return HpxNDMap(
-        HpxGeom(
-            nside=nside, nest=nested, coordsys=coordsys, region=region, axes=axes
-        )
+        HpxGeom(nside=nside, nest=nested, coordsys=coordsys, region=region, axes=axes)
     )
 
 

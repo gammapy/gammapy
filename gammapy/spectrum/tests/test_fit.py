@@ -7,7 +7,7 @@ from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     PowerLawSpectralModel,
-    SkyModel
+    SkyModel,
 )
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
@@ -21,16 +21,20 @@ class TestFit:
     def setup(self):
         self.nbins = 30
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
-        self.source_model = SkyModel(spectral_model=PowerLawSpectralModel(
-            index=2, amplitude=1e5 * u.Unit("cm-2 s-1 TeV-1"), reference=0.1 * u.TeV
-        ))
+        self.source_model = SkyModel(
+            spectral_model=PowerLawSpectralModel(
+                index=2, amplitude=1e5 * u.Unit("cm-2 s-1 TeV-1"), reference=0.1 * u.TeV
+            )
+        )
         bkg_model = PowerLawSpectralModel(
             index=3, amplitude=1e4 * u.Unit("cm-2 s-1 TeV-1"), reference=0.1 * u.TeV
         )
 
         self.alpha = 0.1
         random_state = get_random_state(23)
-        npred = self.source_model.spectral_model.integral(binning[:-1], binning[1:]).value
+        npred = self.source_model.spectral_model.integral(
+            binning[:-1], binning[1:]
+        ).value
         source_counts = random_state.poisson(npred)
         self.src = CountsSpectrum(
             energy_lo=binning[:-1], energy_hi=binning[1:], data=source_counts
@@ -140,16 +144,20 @@ class TestSpectralFit:
         obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
         self.obs_list = [obs1, obs2]
 
-        self.pwl = SkyModel(spectral_model=PowerLawSpectralModel(
-            index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
-        ))
+        self.pwl = SkyModel(
+            spectral_model=PowerLawSpectralModel(
+                index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
+            )
+        )
 
-        self.ecpl = SkyModel(spectral_model=ExpCutoffPowerLawSpectralModel(
-            index=2,
-            amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-            reference=1 * u.TeV,
-            lambda_=0.1 / u.TeV,
-        ))
+        self.ecpl = SkyModel(
+            spectral_model=ExpCutoffPowerLawSpectralModel(
+                index=2,
+                amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
+                reference=1 * u.TeV,
+                lambda_=0.1 / u.TeV,
+            )
+        )
 
     def test_stats(self):
         dataset = self.obs_list[0]

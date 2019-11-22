@@ -4,8 +4,9 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Column, Table
 from astropy.time import Time
-from gammapy.time import LightCurve, compute_fvar, compute_chisq
+from gammapy.time import LightCurve, compute_chisq, compute_fvar
 from gammapy.utils.testing import assert_quantity_allclose
+
 
 @pytest.fixture(scope="session")
 def lc():
@@ -24,6 +25,7 @@ def lc():
     )
 
     return LightCurve(table=table)
+
 
 def test_lightcurve_fvar(lc):
     flux = lc.table["flux"].astype("float64")

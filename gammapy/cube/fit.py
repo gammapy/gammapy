@@ -87,7 +87,7 @@ class MapDataset(Dataset):
         mask_safe=None,
         gti=None,
     ):
-        if model is None :
+        if model is None:
             model = SkyModels([])
         if mask_fit is not None and mask_fit.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")

@@ -12,7 +12,7 @@ from gammapy.modeling.models import (
     ConstantSpectralModel,
     ExpCutoffPowerLawSpectralModel,
     PowerLawSpectralModel,
-    SkyModel
+    SkyModel,
 )
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
@@ -33,9 +33,13 @@ class TestSpectrumDataset:
         self.nbins = 30
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
 
-        self.source_model = SkyModel(spectral_model=PowerLawSpectralModel(
-            index=2.1, amplitude=1e5 * u.Unit("cm-2 s-1 TeV-1"), reference=0.1 * u.TeV
-        ))
+        self.source_model = SkyModel(
+            spectral_model=PowerLawSpectralModel(
+                index=2.1,
+                amplitude=1e5 * u.Unit("cm-2 s-1 TeV-1"),
+                reference=0.1 * u.TeV,
+            )
+        )
 
         self.livetime = 100 * u.s
         aeff = EffectiveAreaTable.from_constant(binning, "1 cm2")
@@ -472,16 +476,20 @@ class TestSpectralFit:
             ]
         )
 
-        self.pwl = SkyModel(spectral_model=PowerLawSpectralModel(
-            index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
-        ))
+        self.pwl = SkyModel(
+            spectral_model=PowerLawSpectralModel(
+                index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
+            )
+        )
 
-        self.ecpl = SkyModel(spectral_model=ExpCutoffPowerLawSpectralModel(
-            index=2,
-            amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-            reference=1 * u.TeV,
-            lambda_=0.1 / u.TeV,
-        ))
+        self.ecpl = SkyModel(
+            spectral_model=ExpCutoffPowerLawSpectralModel(
+                index=2,
+                amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
+                reference=1 * u.TeV,
+                lambda_=0.1 / u.TeV,
+            )
+        )
 
         # Example fit for one observation
         self.datasets[0].model = self.pwl
@@ -649,9 +657,11 @@ class TestSpectrumDatasetOnOffStack:
 
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""
-        pwl = SkyModel(spectral_model=PowerLawSpectralModel(
-            index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
-        ))
+        pwl = SkyModel(
+            spectral_model=PowerLawSpectralModel(
+                index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
+            )
+        )
         self.stacked_dataset.model = pwl
 
         npred_stacked = self.stacked_dataset.npred().data

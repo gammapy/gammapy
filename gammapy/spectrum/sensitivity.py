@@ -92,7 +92,10 @@ class SensitivityEstimator:
 
         # TODO: simplify the following computation
         predictor = SpectrumEvaluator(
-            SkyModel(spectral_model=model), aeff=self.arf, edisp=self.rmf, livetime=self.livetime
+            SkyModel(spectral_model=model),
+            aeff=self.arf,
+            edisp=self.rmf,
+            livetime=self.livetime,
         )
         counts = predictor.compute_npred().data
         phi_0 = excess_counts / counts

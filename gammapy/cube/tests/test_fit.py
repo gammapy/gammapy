@@ -20,7 +20,7 @@ from gammapy.irf import (
     EnergyDispersion,
 )
 from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
-from gammapy.modeling import Fit
+from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import (
     BackgroundModel,
     GaussianSpatialModel,
@@ -28,7 +28,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
-from gammapy.modeling import Datasets
+
 
 @pytest.fixture
 def geom():
@@ -683,8 +683,3 @@ def test_datasets_io_no_model(tmpdir):
 
     filename_2 = tmpdir / "test_data_2.fits"
     assert filename_2.exists()
-
-
-
-
-
