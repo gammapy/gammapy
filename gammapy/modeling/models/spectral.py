@@ -611,7 +611,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         :math:`E_0`
     lambda_ : `~astropy.units.Quantity`
         :math:`\lambda`
-    alpha_ : `~astropy.units.Quantity`
+    alpha : `~astropy.units.Quantity`
         :math:`\alpha`
     """
 
@@ -621,10 +621,10 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
     reference = Parameter("reference", "1 TeV", frozen=True)
     lambda_ = Parameter("lambda_", "0.1 TeV-1")
-    alpha_ = Parameter("alpha_", "1.0", frozen=True)
+    alpha = Parameter("alpha", "1.0", frozen=True)
 
     @staticmethod
-    def evaluate(energy, index, amplitude, reference, lambda_, alpha_):
+    def evaluate(energy, index, amplitude, reference, lambda_, alpha):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index)
         cutoff = np.exp(-energy * lambda_)
@@ -643,11 +643,11 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         reference = p["reference"].quantity
         index = p["index"].quantity
         lambda_ = p["lambda_"].quantity
-        alpha_ = p["alpha_"].quantity
-        if index >= 2 or lambda_ == 0. or alpha_ == 0.:
+        alpha = p["alpha"].quantity
+        if index >= 2 or lambda_ == 0. or alpha == 0.:
             return np.nan * reference.unit
         else:
-            return pow((2 - index)/alpha_, 1/alpha_) / lambda_
+            return np.power((2 - index)/alpha, 1/alpha) / lambda_
 
 
 class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
