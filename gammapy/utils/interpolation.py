@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Interpolation utilities"""
-import warnings
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
@@ -155,11 +154,6 @@ class LogScale(InterpolationScale):
                 output[is_tiny] = 0.0
             except (TypeError):
                 output = 0.0
-            warnings.warn(
-                "Interpolated values reached float32 precision limit", Warning
-            )
-            # for example TemplateSpectralModel used to define diffuse models
-            # could require large precision so users may want to redefine unit scaling.
         return output
 
 
