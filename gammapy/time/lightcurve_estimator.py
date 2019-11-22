@@ -133,10 +133,10 @@ class LightCurveEstimator:
 
         dataset = self.datasets[0]
 
-        if isinstance(dataset, SpectrumDatasetOnOff):
-            model = dataset.model
-        else:
+        if len(dataset.model)>1:
             model = dataset.model[source].spectral_model
+        else:
+            model = dataset.model[0].spectral_model
 
         self.model = ScaleSpectralModel(model)
         self.model.norm.min = 0
@@ -189,11 +189,11 @@ class LightCurveEstimator:
 
         """
         # set the model on all datasets
-        for dataset in datasets:
-            if isinstance(dataset, SpectrumDatasetOnOff):
-                dataset.model = self.model
-            else:
+        for dataset in self.datasets:
+            if len(dataset.model)>1:
                 dataset.model[self.source].spectral_model = self.model
+            else:
+                dataset.model[0].spectral_model = self.model
 
     @property
     def ref_model(self):

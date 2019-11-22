@@ -180,10 +180,10 @@ class SpectrumDataset(Dataset):
             model = SkyModels([model])
         if model is not None:
             self._model = model
-            parameters = []
+            parameters_list = []
             for _ in self._model:
-                parameters+=list(_.spectral_model.parameters)
-            self._parameters = Parameters(parameters)
+                parameters_list+=list(_.spectral_model.parameters)
+            self._parameters = Parameters(parameters_list)
             self._predictor = SpectrumEvaluator(
                 model= self.model,
                 livetime=self.livetime,
@@ -207,12 +207,17 @@ class SpectrumDataset(Dataset):
     def mask_safe(self, mask):
         self._mask_safe = mask
 
+
     @property
     def parameters(self):
+        """List of parameters (`~gammapy.modeling.Parameters`)"""
+        
         if self._parameters is None:
             raise AttributeError("No model set for Dataset")
-        else:
-            return self._parameters
+        parameters_list = []
+        for _ in self._model:
+            parameters_list+=list(_.spectral_model.parameters)
+        return Parameters(parameters_list)
 
     @property
     def _energy_axis(self):

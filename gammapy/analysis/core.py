@@ -213,7 +213,7 @@ class Analysis:
         )
         fp = flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
-        model = self.model[source].spectral_model.copy()
+        model = self.model[source].copy()
         self.flux_points = FluxPointsDataset(data=fp, model=model)
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))

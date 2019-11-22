@@ -4,7 +4,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
-from gammapy.modeling import Dataset, Datasets, Fit
+from gammapy.modeling import Dataset, Datasets, Fit, Parameters
 from gammapy.modeling.models import PowerLawSpectralModel, ScaleSpectralModel, SkyModels, SkyModel
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
@@ -850,10 +850,10 @@ class FluxPointsEstimator:
     def _set_scale_model(self):
         # set the model on all datasets
         for dataset in self.datasets:
-            if isinstance(dataset, SpectrumDatasetOnOff):
-                dataset.model = SkyModel(spectral_model=self.model)
-            else:
+            if len(dataset.model)>1:
                 dataset.model[self.source].spectral_model = self.model
+            else:
+                dataset.model[0].spectral_model = self.model
 
     @property
     def ref_model(self):
@@ -1182,7 +1182,6 @@ class FluxPointsDataset(Dataset):
     ):
         self.data = data
         self.mask_fit = mask_fit
-        self.parameters = model.parameters
         self.name = name
 
         if model is None:
@@ -1190,7 +1189,10 @@ class FluxPointsDataset(Dataset):
         if isinstance(model, SkyModel):
             model = SkyModels([model])
         self.model = model
-            
+        parameters_list = []
+        for _ in self.model:
+            parameters_list+=list(_.spectral_model.parameters)
+        self.parameters = Parameters(parameters_list)
         if data.sed_type != "dnde":
             raise ValueError("Currently only flux points of type 'dnde' are supported.")
 
