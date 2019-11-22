@@ -317,17 +317,23 @@ class ReflectedRegionsBackgroundMaker:
         finder = self._get_finder(dataset, observation)
         finder.run()
 
-        region_union = list_to_compound_region(finder.reflected_regions)
+        if len(finder.reflected_regions)>0 :
+            region_union = list_to_compound_region(finder.reflected_regions)
 
-        wcs = finder.reference_map.geom.wcs
-        events_off = observation.events.select_region(region_union, wcs)
+            wcs = finder.reference_map.geom.wcs
+            events_off = observation.events.select_region(region_union, wcs)
 
-        edges = dataset.counts.energy.edges
-        counts_off = CountsSpectrum(
-            energy_hi=edges[1:], energy_lo=edges[:-1], region=region_union
-        )
-        counts_off.fill_events(events_off)
-        return counts_off
+            edges = dataset.counts.energy.edges
+            counts_off = CountsSpectrum(
+                energy_hi=edges[1:], energy_lo=edges[:-1], region=region_union
+            )
+            counts_off.fill_events(events_off)
+            acceptance_off = len(finder.reflected_regions)
+        else:
+            # if no OFF regions are found, off is set to None and acceptance_off to zero
+            counts_off = None
+            acceptance_off = 0
+        return counts_off, acceptance_off
 
     def run(self, dataset, observation):
         """Run reflected regions background maker
@@ -344,8 +350,7 @@ class ReflectedRegionsBackgroundMaker:
         dataset_on_off : `SpectrumDatasetOnOff`
             On off dataset.
         """
-        counts_off = self.make_counts_off(dataset, observation)
-        acceptance_off = len(compound_region_to_list(counts_off.region))
+        counts_off, acceptance_off = self.make_counts_off(dataset, observation)
 
         return SpectrumDatasetOnOff(
             counts=dataset.counts,
