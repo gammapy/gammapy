@@ -447,6 +447,13 @@ class TestNaimaModel:
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
 
+        # Test error propagation
+        model.parameters.set_error(amplitude=0.1 * model.amplitude.value)
+        model.evaluate_error(1 * u.TeV)
+        assert_allclose(
+            model.parameters.error("amplitude") / model.amplitude.value, 0.1
+        )
+
     def test_ic(self):
         import naima
 
