@@ -10,15 +10,10 @@ from gammapy.cube import (
     MapDataset,
     MapDatasetOnOff,
     PSFKernel,
-    PSFMap,
     make_map_exposure_true_energy,
 )
 from gammapy.data import GTI
-from gammapy.irf import (
-    EffectiveAreaTable2D,
-    EnergyDependentMultiGaussPSF,
-    EnergyDispersion,
-)
+from gammapy.irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
 from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import (

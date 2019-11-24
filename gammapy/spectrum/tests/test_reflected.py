@@ -55,6 +55,7 @@ def spectrum_dataset_maker(on_region):
     e_true = np.logspace(-0.5, 2, 11) * u.TeV
     return SpectrumDatasetMaker(region=on_region, e_reco=e_reco, e_true=e_true)
 
+
 @pytest.fixture()
 def spectrum_dataset_maker_no_off():
     pos = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
@@ -64,7 +65,6 @@ def spectrum_dataset_maker_no_off():
     e_reco = np.logspace(0, 2, 5) * u.TeV
     e_true = np.logspace(-0.5, 2, 11) * u.TeV
     return SpectrumDatasetMaker(region=on_region, e_reco=e_reco, e_true=e_true)
-
 
 
 @pytest.fixture()
@@ -190,8 +190,11 @@ def test_reflected_bkg_maker(spectrum_dataset_maker, reflected_bkg_maker, observ
     assert_allclose(len(regions_0), 11)
     assert_allclose(len(regions_1), 11)
 
+
 @requires_data()
-def test_reflected_bkg_maker_no_off(spectrum_dataset_maker_no_off, reflected_bkg_maker, observations):
+def test_reflected_bkg_maker_no_off(
+    spectrum_dataset_maker_no_off, reflected_bkg_maker, observations
+):
     datasets = []
 
     for obs in observations:
@@ -201,4 +204,3 @@ def test_reflected_bkg_maker_no_off(spectrum_dataset_maker_no_off, reflected_bkg
 
     assert datasets[0].counts_off is None
     assert_allclose(datasets[0].acceptance_off, 0)
-

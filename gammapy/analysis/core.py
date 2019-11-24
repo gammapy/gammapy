@@ -344,7 +344,9 @@ class Analysis:
             dataset = dataset_maker.run(obs, selection=selection)
             dataset = reflected_bkg_maker.run(dataset, obs)
             if dataset.counts_off is None:
-                log.info(f"No OFF region found for observation {obs.obs_id}. Discarding.")
+                log.info(
+                    f"No OFF region found for observation {obs.obs_id}. Discarding."
+                )
                 continue
             dataset = safe_mask_maker.run(dataset, obs)
             log.debug(dataset)

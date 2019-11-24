@@ -10,7 +10,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
-from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")

@@ -24,7 +24,6 @@ from gammapy.utils.testing import (
     assert_quantity_allclose,
     assert_time_allclose,
     requires_data,
-    requires_dependency,
 )
 
 SOURCES_4FGL = [

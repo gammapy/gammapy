@@ -6,7 +6,7 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import ScaleSpectralModel
-from gammapy.spectrum import FluxPoints, SpectrumDatasetOnOff
+from gammapy.spectrum import FluxPoints
 from gammapy.time import LightCurve
 from gammapy.utils.table import table_from_row_data
 

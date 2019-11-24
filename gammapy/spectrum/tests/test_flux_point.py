@@ -10,7 +10,6 @@ from gammapy.modeling.models import (
     ConstantSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    SkyModels,
     SpectralModel,
 )
 from gammapy.spectrum import FluxPoints, FluxPointsDataset

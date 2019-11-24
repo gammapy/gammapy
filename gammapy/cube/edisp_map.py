@@ -4,7 +4,7 @@ import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
 from gammapy.irf import EnergyDispersion
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
+from gammapy.maps import Map, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 
 __all__ = ["make_edisp_map", "EDispMap"]

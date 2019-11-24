@@ -6,7 +6,6 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity, Unit
 from gammapy.maps import HpxGeom, HpxNDMap, Map, MapAxis, WcsGeom, WcsNDMap
-from gammapy.utils.testing import requires_dependency
 
 pytest.importorskip("healpy")
 

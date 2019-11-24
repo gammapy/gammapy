@@ -13,11 +13,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
-from gammapy.utils.testing import (
-    assert_quantity_allclose,
-    requires_data,
-    requires_dependency,
-)
+from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 SOURCES = [
     {"idx": 33, "name": "HESS J1713-397", "str_ref_file": "data/hess_j1713-397.txt"},

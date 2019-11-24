@@ -10,7 +10,7 @@ from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.cube import MapEvaluator, PSFKernel
 from gammapy.irf import EnergyDependentMultiGaussPSF
-from gammapy.maps import HpxGeom, Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
+from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.maps.utils import fill_poisson
 from gammapy.modeling.models import (
     GaussianSpatialModel,

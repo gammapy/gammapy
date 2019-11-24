@@ -6,7 +6,7 @@ from astropy.coordinates import Angle
 from regions import PixCoord
 from gammapy.maps import WcsNDMap
 from gammapy.maps.geom import frame_to_coordsys
-from gammapy.utils.regions import compound_region_to_list, list_to_compound_region
+from gammapy.utils.regions import list_to_compound_region
 from .core import CountsSpectrum
 from .dataset import SpectrumDatasetOnOff
 
@@ -317,7 +317,7 @@ class ReflectedRegionsBackgroundMaker:
         finder = self._get_finder(dataset, observation)
         finder.run()
 
-        if len(finder.reflected_regions)>0 :
+        if len(finder.reflected_regions) > 0:
             region_union = list_to_compound_region(finder.reflected_regions)
 
             wcs = finder.reference_map.geom.wcs
