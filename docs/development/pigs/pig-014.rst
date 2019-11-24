@@ -60,8 +60,8 @@ Here we will discuss two standard techniques to compute such uncertaintes:
 
 If you're not familiar with the techniques, here's a few references:
 
-- `Error estimation in astronomy: A guide`_
-- `Frequentism and Bayesianism: A Python-driven Primer`_
+- `Error estimation in astronomy - A guide`_
+- `Frequentism and Bayesianism - A Python-driven Primer`_
 
 In Gammapy we currently use the `uncertainties`_ package to propagate errors to
 differential fluxes ``spectral_model.evaluate_error`` and integral fluxes
@@ -144,8 +144,8 @@ There were no objections to this proposal received, so it's accepted.
 .. _The interpretation of errors: http://lmu.web.psi.ch/docu/manuals/software_manuals/minuit2/mnerror.pdf
 .. _Fitting and Estimating Parameter Confidence Limits with Sherpa: http://conference.scipy.org/proceedings/scipy2011/pdfs/brefsdal.pdf
 .. _Wikipedia - Propagation of uncertainty: https://en.wikipedia.org/wiki/Propagation_of_uncertainty
-.. _Frequentism and Bayesianism: A Python-driven Primer: https://arxiv.org/pdf/1411.5018.pdf
-.. _Error estimation in astronomy: A guide: https://arxiv.org/pdf/1009.2755.pdf
+.. _Frequentism and Bayesianism - A Python-driven Primer: https://arxiv.org/pdf/1411.5018.pdf
+.. _Error estimation in astronomy - A guide: https://arxiv.org/pdf/1009.2755.pdf
 
 .. _Gammapy uncertainty propagation prototype notebook: https://github.com/gammapy/gammapy-extra/blob/master/experiments/uncertainty_estimation_prototype.ipynb
 .. _joint_crab fit_errorbands.py: https://github.com/open-gamma-ray-astro/joint-crab/blob/master/joint_crab/fit_errorbands.py

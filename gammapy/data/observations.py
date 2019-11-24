@@ -352,25 +352,25 @@ class Observations:
 
 
 class Observation:
-    """In-memory observation for binned simulation
+    """In-memory observation.
 
     Parameters
-    ------------
-    obs_id: int
+    ----------
+    obs_id : int
         Observation ID as identifier
-    pointing: `~astropy.coordinates.SkyCoord`
+    pointing : `~astropy.coordinates.SkyCoord`
         Pointing position in icrs coordinates
-    aeff: `~gammapy.irf.EffectiveAreaTable2D`
+    aeff : `~gammapy.irf.EffectiveAreaTable2D`
         Effective area used for simulating the observation
-    edisp: `~gammapy.irf.EnergyDispersion2D`
+    edisp : `~gammapy.irf.EnergyDispersion2D`
         Energy dispersion IRF for simulating the observation
-    psf: `~gammapy.irf.PSF3D`
+    psf : `~gammapy.irf.PSF3D`
         PSF IRF  used for simulating the observation
-    bkg: `~gammapy.irf.Background3D`
+    bkg : `~gammapy.irf.Background3D`
         Background rate model
-    gti: `~gammapy.data.GTI`
+    gti : `~gammapy.data.GTI`
         Table with GTI start and stop time
-    deadtime: float, optional
+    deadtime : float, optional
         Deadtime fraction, defaults to 0
     """
 
@@ -433,31 +433,31 @@ class Observation:
         irfs=None,
         deadtime_fraction=0.0,
     ):
-        """Creates an in-memory observation.
+        """Create an observation.
+
         User must either provide the livetime, or the start and stop times.
 
         Parameters
         -----------
-        pointing: `~astropy.coordinates.SkyCoord`
+        pointing : `~astropy.coordinates.SkyCoord`
             Pointing position
-        obs_id: int
+        obs_id : int
             Observation ID as identifier
-        livetime: ~astropy.units.Quantity`
+        livetime : ~astropy.units.Quantity`
             Livetime exposure of the simulated observation
-        tstart: `~astropy.units.Quantity`, optional
+        tstart : `~astropy.units.Quantity`
             Start time of observation
-        tstop: `~astropy.units.Quantity`, optional
+        tstop : `~astropy.units.Quantity`
             Stop time of observation
-        irfs: dict
+        irfs : dict
             IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`
-        deadtime_fraction: float, optional
+        deadtime_fraction : float, optional
             Deadtime fraction, defaults to 0
 
         Returns
         --------
-        obs: `gammapy.data.Observation`
+        obs : `gammapy.data.Observation`
         """
-
         tstart = tstart or Quantity(0.0, "hr")
         tstop = (tstart + livetime) or tstop
         gti = GTI.create([tstart], [tstop])
@@ -486,30 +486,30 @@ class Observation:
         irf="South0.5hr",
         deadtime_fraction=0.0,
     ):
-        """
-        Create an in-memory observation using IRFs from a given CTA CALDB
+        """Create an observation using IRFs from a given CTA CALDB.
+
         Parameters
-        -----------
-        pointing: `~astropy.coordinates.SkyCoord`
+        ----------
+        pointing : `~astropy.coordinates.SkyCoord`
             Pointing position
-        obs_id: int
+        obs_id : int
             Observation ID as identifier
-        livetime: ~astropy.units.Quantity`
+        livetime : ~astropy.units.Quantity`
             Livetime exposure of the simulated observation
-        tstart: `~astropy.units.Quantity`, optional
+        tstart : `~astropy.units.Quantity`
             Start time of observation
-        tstop: `~astropy.units.Quantity`, optional
+        tstop : `~astropy.units.Quantity`
             Stop time of observation
-        caldb: string
+        caldb : str
             Calibration database
-        irf: string
+        irf : str
             Type of Instrumental response function.
-        deadtime_fraction: float, optional
+        deadtime_fraction : float, optional
             Deadtime fraction, defaults to 0
 
         Returns
-        --------
-        obs: `gammapy.data.Observation`
+        -------
+        obs : `gammapy.data.Observation`
         """
         from .data_store import CalDBIRF
 

@@ -12,7 +12,7 @@ Introduction
 `gammapy.time` contains classes and methods for time-based analysis, e.g. for AGN, binaries
 or pulsars studies. The main classes are `~gammapy.time.LightCurve`, which is a container for
 lightcurves, and `~gammapy.time.LightCurveEstimator`, which extracts a light curve from a list
- of datasets. A number of functions to test for variability and periodicity are available in
+of datasets. A number of functions to test for variability and periodicity are available in
 `~gammapy.time.variability` and `~gammapy.time.periodicity`. Finally, there is also
 `gammapy.utils.time`, which contains low-level helper
 functions for time conversions.
