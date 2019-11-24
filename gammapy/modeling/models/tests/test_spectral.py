@@ -589,12 +589,6 @@ class TestSpectralModelErrorPropagation:
         out = model.evaluate_error(0.1 * u.TeV)
         assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
 
-    def test_naima_model_error_proprgation(self):
-        # Regression test for Naima model
-        # https://github.com/gammapy/gammapy/issues/2190
-        # TODO: implement test case. Move to Naima model tests!
-        pass
-
     def test_absorption_model_error_propagation(self):
         # Regression test for absorption model
         # https://github.com/gammapy/gammapy/issues/1046
