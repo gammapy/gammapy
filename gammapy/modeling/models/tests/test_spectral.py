@@ -447,6 +447,12 @@ class TestNaimaModel:
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
 
+        # Test error propagation
+        # TODO: This test is failing. it has to be fixed before merging
+        model.parameters.set_error(amplitude=0.1 * model.amplitude.value)
+        dnde, dnde_err = model.evaluate_error(1 * u.TeV)
+        assert_allclose(dnde_err / dnde, 0.1)
+
     def test_ic(self):
         import naima
 
@@ -581,12 +587,6 @@ class TestSpectralModelErrorPropagation:
 
         out = model.evaluate_error(0.1 * u.TeV)
         assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
-
-    def test_naima_model_error_proprgation(self):
-        # Regression test for Naima model
-        # https://github.com/gammapy/gammapy/issues/2190
-        # TODO: implement test case. Move to Naima model tests!
-        pass
 
     def test_absorption_model_error_propagation(self):
         # Regression test for absorption model
