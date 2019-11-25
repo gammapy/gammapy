@@ -396,7 +396,24 @@ class EDispMap:
 
         return cls.from_geom(geom)
 
-    def cutout(self):
-        """"""
-        
-        return self.cutout()
+    def cutout(self, position, width, mode="trim"):
+        """Cutout edisp map.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the region in (lon, lat) in that specific order.
+            If only one value is passed, a square region is extracted.
+        mode : {'trim', 'partial', 'strict'}
+            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+
+        Returns
+        -------
+        cutout : `EdispMap`
+            Cutout edisp map.
+        """
+        edisp_map = self.edisp_map.cutout(position, width, mode)
+        exposure_map = self.exposure_map.cutout(position, width, mode)
+        return self.__class__(edisp_map=edisp_map, exposure_map=exposure_map)

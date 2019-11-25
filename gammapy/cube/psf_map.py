@@ -431,3 +431,25 @@ class PSFMap:
         exposure_map = Map.from_geom(geom_exposure, unit="cm2 s")
         exposure_map.quantity += data
         return cls(psf_map=psf_map, exposure_map=exposure_map)
+
+    def cutout(self, position, width, mode="trim"):
+        """Cutout map psf map.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the region in (lon, lat) in that specific order.
+            If only one value is passed, a square region is extracted.
+        mode : {'trim', 'partial', 'strict'}
+            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+
+        Returns
+        -------
+        cutout : `PSFMap`
+            Cutout psf map.
+        """
+        psf_map = self.psf_map.cutout(position, width, mode)
+        exposure_map = self.exposure_map.cutout(position, width, mode)
+        return self.__class__(psf_map=psf_map, exposure_map=exposure_map)
