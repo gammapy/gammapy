@@ -1,13 +1,13 @@
+from enum import Enum
+from pathlib import Path
+from typing import List
 from astropy.coordinates import Angle
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.utils.scripts import read_yaml
+import yaml
 from pydantic import BaseModel, FilePath
 from pydantic.utils import deep_update
-from pathlib import Path
-from typing import List
-from enum import Enum
-import yaml
+from gammapy.utils.scripts import read_yaml
 
 __all__ = ["AnalysisConfig"]
 

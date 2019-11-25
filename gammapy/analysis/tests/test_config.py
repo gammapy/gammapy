@@ -1,33 +1,31 @@
+from pathlib import Path
 import pytest
 from astropy.units import Quantity
-from gammapy.analysis.config import AnalysisConfig
 from gammapy.analysis.config import (
-    General,
-    Log,
-    Data,
-    Datasets,
-    Geom,
-    Wcs,
-    Fov,
-    Selection,
+    AnalysisConfig,
+    AngleType,
     Axes,
     Background,
+    BackgroundMethodEnum,
+    Data,
+    Datasets,
+    EnergyAxis,
+    EnergyRange,
+    EnergyType,
     Fit,
     FluxPoints,
-    TimeRange,
-    EnergyRange,
-    SpatialCircleRange,
-    EnergyAxis,
-    SkyCoordType,
-    BackgroundMethodEnum,
+    Fov,
     FrameEnum,
+    General,
+    Geom,
+    Log,
+    Selection,
+    SkyCoordType,
+    SpatialCircleRange,
+    TimeRange,
     TimeType,
-    EnergyType,
-    AngleType,
+    Wcs,
 )
-
-
-from pathlib import Path
 
 config_file = Path(__file__).resolve().parent / ".." / "config" / "config.yaml"
 
