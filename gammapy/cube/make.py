@@ -23,10 +23,26 @@ class MapDatasetMaker:
     ----------
     background_oversampling : int
         Background evaluation oversampling factor in energy.
+    selection : list
+        List of str, selecting which maps to make.
+        Available: 'counts', 'exposure', 'background', 'psf', 'edisp'
+        By default, all maps are made.
     """
+    available_selection = ["counts", "exposure", "background", "psf", "edisp"]
 
-    def __init__(self, background_oversampling=None):
+    def __init__(self, background_oversampling=None, selection=None):
         self.background_oversampling = background_oversampling
+
+        if selection is None:
+            selection = self.available_selection
+
+        selection = set(selection)
+
+        if not selection.issubset(self.available_selection):
+            difference = selection.difference(self.available_selection)
+            raise ValueError(f"{difference} is not a valid method.")
+
+        self.selection = selection
 
     @staticmethod
     def make_counts(geom, observation):
@@ -182,7 +198,7 @@ class MapDatasetMaker:
             exposure_map=exposure,
         )
 
-    def run(self, dataset, observation, selection=None):
+    def run(self, dataset, observation):
         """Make map dataset.
 
         Parameters
@@ -191,18 +207,12 @@ class MapDatasetMaker:
             Reference dataset.
         observation : `~gammapy.data.DataStoreObservation`
             Observation
-        selection : list
-            List of str, selecting which maps to make.
-            Available: 'counts', 'exposure', 'background', 'psf', 'edisp'
-            By default, all maps are made.
 
         Returns
         -------
         dataset : `MapDataset`
             Map dataset.
         """
-        selection = _check_selection(selection)
-
         kwargs = {"name": f"obs_{observation.obs_id}", "gti": observation.gti}
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
@@ -210,43 +220,27 @@ class MapDatasetMaker:
 
         kwargs["mask_safe"] = mask_safe
 
-        if "counts" in selection:
+        if "counts" in self.selection:
             counts = self.make_counts(dataset.counts.geom, observation)
             kwargs["counts"] = counts
 
-        if "exposure" in selection:
+        if "exposure" in self.selection:
             exposure = self.make_exposure(dataset.exposure.geom, observation)
             kwargs["exposure"] = exposure
 
-        if "background" in selection:
+        if "background" in self.selection:
             background_map = self.make_background(dataset.counts.geom, observation)
             kwargs["background_model"] = BackgroundModel(background_map)
 
-        if "psf" in selection:
+        if "psf" in self.selection:
             psf = self.make_psf(dataset.psf.psf_map.geom, observation)
             kwargs["psf"] = psf
 
-        if "edisp" in selection:
+        if "edisp" in self.selection:
             edisp = self.make_edisp(dataset.edisp.edisp_map.geom, observation)
             kwargs["edisp"] = edisp
 
         return MapDataset(**kwargs)
-
-
-def _check_selection(selection):
-    """Handle default and validation of selection"""
-    available = ["counts", "exposure", "background", "psf", "edisp"]
-    if selection is None:
-        selection = available
-
-    if not isinstance(selection, list):
-        raise TypeError("Selection must be a list of str")
-
-    for name in selection:
-        if name not in available:
-            raise ValueError(f"Selection not available: {name!r}")
-
-    return selection
 
 
 class SafeMaskMaker:
