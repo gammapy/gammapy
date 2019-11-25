@@ -1,5 +1,6 @@
 import pytest
 from gammapy.analysis.config import Config, General
+from pathlib import Path
 
 
 def test_config_basics():
@@ -13,9 +14,9 @@ def test_config_create_from_dict():
     assert config.general.log.level == "warning"
 
 
-@pytest.mark.xfail(reason="TODO")
 def test_config_create_from_yaml():
-    config = Config.from_yaml("../config/config.yaml")
+    cfg = Path(__file__).resolve().parent / ".." / "config" / "config.yaml"
+    config = Config.from_yaml(cfg)
     assert isinstance(config.general, General)
 
 

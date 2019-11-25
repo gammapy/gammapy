@@ -1,5 +1,6 @@
 ---
-general:  # optional /these are default values
+# optional
+general:
     log:
         level: info
         filename: filename.log
@@ -8,16 +9,13 @@ general:  # optional /these are default values
 
 data:
     datastore: $GAMMAPY_DATA/hess-dl3-dr1/
-
-    # mutually exclusive options for ids
-    obs_ids: [42, 43]
-    obs_file: obs.csv
-
-    obs_cone: {frame: galactic, lon: 42 deg, lat: 43 deg, radius: 3 deg}
-    obs_time: {start: 2019-12-01, stop: 2020-03-01}
+    obs_ids: [23523, 23526]
+    obs_file:                             # csv file with obs_ids
+    obs_cone: {frame: galactic, lon: 83.633 deg, lat: 22.014 deg}
+    obs_time: {start: "2019-12-01", stop: "2020-03-01"}
 
 datasets:
-    type: 3d    # 1d
+    type: 3d  # 1d
     stack: true
     geom:
         # mandatory for 3d
@@ -36,7 +34,7 @@ datasets:
     # mandatory for 1d
     background:
         method: reflected
-        exclusion: exclusion.fits
+        exclusion:    # fits file for exclusion mask
     # mandatory for 1d
     onregion: {frame: galactic, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
     containment_correction: true
