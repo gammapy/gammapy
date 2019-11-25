@@ -9,7 +9,7 @@ from typing import List
 from enum import Enum
 import yaml
 
-__all__ = ["Config", "General"]
+__all__ = ["AnalysisConfig"]
 
 
 class AngleType(Angle):
@@ -65,14 +65,14 @@ class GammapyBaseModel(BaseModel):
     @classmethod
     def from_yaml(cls, filename):
         config = read_yaml(filename)
-        return Config(**config)
+        return AnalysisConfig(**config)
 
     def to_yaml(self):
         return yaml.dump(yaml.safe_load(self.json()))
 
     def update_from_dict(self, other):
         data = deep_update(self.dict(exclude_defaults=True), other.dict(exclude_defaults=True))
-        return Config(**data)
+        return AnalysisConfig(**data)
 
 
 class Skydir(GammapyBaseModel):
@@ -180,7 +180,7 @@ class General(GammapyBaseModel):
     outdir: str = "."
 
 
-class Config(GammapyBaseModel):
+class AnalysisConfig(GammapyBaseModel):
     """Config class handling the high-level interface settings."""
     general: General = General()
     data: Data = Data()
