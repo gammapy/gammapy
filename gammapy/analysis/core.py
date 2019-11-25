@@ -247,7 +247,7 @@ class Analysis:
         offset_max = Angle(self.settings["datasets"]["offset-max"])
         log.info("Creating datasets.")
 
-        maker = MapDatasetMaker(offset_max=offset_max)
+        maker = MapDatasetMaker()
         maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=offset_max)
 
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
@@ -255,7 +255,8 @@ class Analysis:
         if self.settings["datasets"]["stack-datasets"]:
             for obs in self.observations:
                 log.info(f"Processing observation {obs.obs_id}")
-                dataset = maker.run(stacked, obs)
+                cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
+                dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
                 dataset.background_model.name = f"bkg_{dataset.name}"
                 # TODO remove this once dataset and model have unique identifiers
@@ -267,7 +268,8 @@ class Analysis:
             datasets = []
             for obs in self.observations:
                 log.info(f"Processing observation {obs.obs_id}")
-                dataset = maker.run(stacked, obs)
+                cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
+                dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
                 dataset.background_model.name = f"bkg_{dataset.name}"
                 # TODO remove this once dataset and model have unique identifiers
