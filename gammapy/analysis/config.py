@@ -3,6 +3,7 @@ from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.utils.scripts import make_path, read_yaml
 from pydantic import BaseModel, FilePath, validator
+from pydantic.utils import deep_update
 from pathlib import Path
 from typing import List
 from enum import Enum
@@ -24,8 +25,9 @@ class GammapyBaseModel(BaseModel):
     def to_yaml(self):
         return yaml.dump(self.dict())
 
-    def update_from_dict(self):
-        pass
+    def update_from_dict(self, other):
+        data = deep_update(self.dict(exclude_defaults=True), other.dict(exclude_defaults=True))
+        return Config(**data)
 
 
 class AngleType(Angle):

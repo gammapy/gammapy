@@ -1,4 +1,5 @@
 import pytest
+from astropy.units import Quantity
 from gammapy.analysis.config import Config, General
 from pathlib import Path
 
@@ -26,7 +27,10 @@ def test_config_to_yaml():
     assert "level: info" in config.to_yaml()
 
 
-@pytest.mark.xfail(reason="TODO")
 def test_config_update_from_dict():
-    config = Config()
-    config.update_from_dict()
+    config1 = Config()
+    data = {"fit": {"fit_range": {"min": "1 TeV",  "max": "100 TeV"}}}
+    config2 = Config(**data)
+    config = config1.update_from_dict(config2)
+    assert config.fit.fit_range.min == Quantity("1 TeV")
+    assert config.general.log.level == "info"
