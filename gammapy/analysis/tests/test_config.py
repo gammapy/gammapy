@@ -21,7 +21,6 @@ def test_config_create_from_yaml():
     assert isinstance(config.general, General)
 
 
-@pytest.mark.xfail(reason="TODO")
 def test_config_to_yaml():
     config = Config()
     assert "level: info" in config.to_yaml()

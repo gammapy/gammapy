@@ -12,24 +12,6 @@ import yaml
 __all__ = ["Config", "General"]
 
 
-class GammapyBaseModel(BaseModel):
-    class Config:
-        validate_assignment = True
-        extra = 'forbid'
-
-    @classmethod
-    def from_yaml(cls, filename):
-        config = read_yaml(filename)
-        return Config(**config)
-
-    def to_yaml(self):
-        return yaml.dump(self.dict())
-
-    def update_from_dict(self, other):
-        data = deep_update(self.dict(exclude_defaults=True), other.dict(exclude_defaults=True))
-        return Config(**data)
-
-
 class AngleType(Angle):
     @classmethod
     def __get_validators__(cls):
@@ -68,6 +50,32 @@ class FrameEnum(str, Enum):
 
 class BackgroundMethodEnum(str, Enum):
     reflected = 'reflected'
+
+
+class GammapyBaseModel(BaseModel):
+    class Config:
+        validate_assignment = True
+        extra = 'forbid'
+        json_encoders = {
+            AngleType: lambda v: f"{v.value} {v.unit}",
+            Angle: lambda v: f"{v.value} {v.unit}",
+            EnergyType: lambda v: f"{v.value} {v.unit}",
+            Quantity: lambda v: f"{v.value} {v.unit}",
+            TimeType: lambda v: f"{v.value}",
+            Time: lambda v: f"{v.value}",
+        }
+
+    @classmethod
+    def from_yaml(cls, filename):
+        config = read_yaml(filename)
+        return Config(**config)
+
+    def to_yaml(self):
+        return yaml.dump(yaml.safe_load(self.json()))
+
+    def update_from_dict(self, other):
+        data = deep_update(self.dict(exclude_defaults=True), other.dict(exclude_defaults=True))
+        return Config(**data)
 
 
 class Skydir(GammapyBaseModel):
