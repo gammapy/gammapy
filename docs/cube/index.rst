@@ -75,16 +75,13 @@ data using the `MapDatasetMaker`:
     geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5)
     dataset_empty = MapDataset.create(geom=geom)
 
-    maker = MapDatasetMaker(offset_max="3 deg")
+    maker = MapDatasetMaker()
     dataset = maker.run(dataset_empty, obs)
     print(dataset)
 
-The `MapDatasetMaker` creates a cutout adapted  observation and
-fills the corresponding `counts`, `exposure`, `background`,
-`psf` and `edisp` map per observation. The size of the cutout
-is typically the maximal offset from the observation position.
-The `MapDatasetMaker.run()` method has a `selection` parameter,
-in some of the maps should not be computed.
+The `MapDatasetMaker` fills the corresponding `counts`, `exposure`, `background`,
+`psf` and `edisp` map per observation. The `MapDatasetMaker` has a
+`selection` parameter, in case some of the maps should not be computed.
 
 
 Safe Data Range Handling
@@ -116,7 +113,7 @@ Here is an example how to use it:
     geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5)
     dataset_empty = MapDataset.create(geom=geom)
 
-    maker = MapDatasetMaker(offset_max="3 deg")
+    maker = MapDatasetMaker()
     safe_mask_maker = SafeMaskMaker(
         methods=["aeff-default", "offset-max"], offset_max="3 deg"
     )
@@ -156,7 +153,7 @@ observations, the larger dataset must be created first:
     geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5, binsz=0.02)
     stacked = MapDataset.create(geom=geom)
 
-    maker = MapDatasetMaker(offset_max="3 deg")
+    maker = MapDatasetMaker()
 
     dataset = maker.run(stacked, obs)
     stacked.stack(dataset)
@@ -183,13 +180,14 @@ Finally the dataset per observation is stacked into a larger map.
     energy_axis = MapAxis.from_bounds(1, 10, nbin=11, name="energy", unit="TeV", interp="log")
     geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5, binsz=0.02)
 
-    maker = MapDatasetMaker(offset_max="3 deg")
+    maker = MapDatasetMaker()
     safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "offset-max"], offset_max="3 deg")
 
     stacked = MapDataset.create(geom)
 
     for obs in observations:
-        dataset = maker.run(stacked, obs)
+    	cutout = stacked.cutout(obs.pointing_radec, width="6 deg")
+        dataset = maker.run(cutout, obs)
         dataset = safe_mask_maker.run(dataset, obs)
         stacked.stack(dataset)
 
