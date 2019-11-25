@@ -1,9 +1,12 @@
-from typing import List
-import yaml
-from astropy.time import Time
 from astropy.coordinates import Angle
+from astropy.time import Time
 from astropy.units import Quantity
-from pydantic import BaseModel
+from gammapy.utils.scripts import make_path, read_yaml
+from pydantic import BaseModel, FilePath, validator
+from pathlib import Path
+from typing import List
+from enum import Enum
+import yaml
 
 __all__ = ["Config", "General"]
 
@@ -13,46 +16,15 @@ class GammapyBaseModel(BaseModel):
         validate_assignment = True
         extra = 'forbid'
 
+    @classmethod
+    def from_yaml(cls, filename):
+        config = read_yaml(filename)
+        return Config(**config)
+
     def to_yaml(self):
         return yaml.dump(self.dict())
 
     def update_from_dict(self):
-        pass
-
-
-class FileNameType(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    # TODO
-    # filename exists
-    @classmethod
-    def validate(cls, v):
-        pass
-
-
-class FrameType(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    # TODO
-    # frame is a valid frame
-    @classmethod
-    def validate(cls, v):
-        pass
-
-
-class BackgroundMethodType(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    # TODO
-    # only reflected method allowed
-    @classmethod
-    def validate(cls, v):
         pass
 
 
@@ -73,7 +45,7 @@ class EnergyType(Quantity):
 
     @classmethod
     def validate(cls, v):
-        assert isinstance(v.to("erg"), Quantity)
+        assert isinstance(Quantity(v).to("erg"), Quantity)
         return Quantity(v)
 
 
@@ -87,20 +59,29 @@ class TimeType(Time):
         return Time(v)
 
 
+class FrameEnum(str, Enum):
+    icrs = 'icrs'
+    galactic = 'galactic'
+
+
+class BackgroundMethodEnum(str, Enum):
+    reflected = 'reflected'
+
+
 class Skydir(GammapyBaseModel):
-    frame: FrameType = FrameType("icrs")
+    frame: FrameEnum = FrameEnum.icrs
     lon: AngleType = AngleType("83.633 deg")
     lat: AngleType = AngleType("22.014 deg")
 
 
 class EnergyAxis(GammapyBaseModel):
-    min: EnergyRange = EnergyType("0.1 TeV")
-    max: EnergyRange = EnergyType("10 TeV")
+    min: EnergyType = EnergyType("0.1 TeV")
+    max: EnergyType = EnergyType("10 TeV")
     nbins: int = 30
 
 
 class SpatialCircleRange(GammapyBaseModel):
-    frame: FrameType = FrameType("icrs")
+    frame: FrameEnum = FrameEnum.icrs
     lon: AngleType = AngleType("83.633 deg")
     lat: AngleType = AngleType("22.014 deg")
     radius: AngleType = AngleType("0.1 deg")
@@ -115,15 +96,9 @@ class TimeRange(GammapyBaseModel):
     start: TimeType = None
     stop: TimeType = None
 
-    # TODO
-    # stop bigger than start
-    @classmethod
-    def validate(cls, v):
-        pass
-
 
 class FluxPoints(GammapyBaseModel):
-    fit_range: EnergyAxis = EnergyAxis()
+    energy: EnergyAxis = EnergyAxis()
 
 
 class Fit(GammapyBaseModel):
@@ -131,8 +106,8 @@ class Fit(GammapyBaseModel):
 
 
 class Background(GammapyBaseModel):
-    method: BackgroundMethodType = BackgroundMethodType("reflected")
-    exclusion: FileNameType = None
+    method: BackgroundMethodEnum = BackgroundMethodEnum.reflected
+    exclusion: FilePath = None
 
 
 class Axes(GammapyBaseModel):
@@ -168,28 +143,26 @@ class Datasets(GammapyBaseModel):
     stack: bool = True
     geom: Geom = Geom()
     background: Background = Background()
-    onregion: SpatialCircleRange = None
+    onregion: SpatialCircleRange = SpatialCircleRange()
     containment_correction: bool = True
     psf_kernel_radius: AngleType = AngleType("0.6 deg")
 
 
 class Data(GammapyBaseModel):
-    datastore: str = "$GAMMAPY_DATA/hess-dl3-dr1/"
-    obs_ids = List[int] = []
-    obs_file = str = None
-    obs_cone = SpatialCircleRange = None
-    obs_time = TimeRange = None
+    datastore: Path = "$GAMMAPY_DATA/hess-dl3-dr1/"
+    obs_ids: List[int] = []
+    obs_file: FilePath = None
+    obs_cone: SpatialCircleRange = SpatialCircleRange()
+    obs_time: TimeRange = TimeRange()
 
-    # TODO
-    # mutually exclusive obs_ids filters
-    @classmethod
-    def validate(cls, v):
-        pass
+    @validator("datastore")
+    def datastore_exists(cls, v):
+        return make_path(v)
 
 
 class Log(GammapyBaseModel):
     level: str = "info"
-    filename: str = None
+    filename: Path = None
     filemode: str = None
     format: str = None
     datefmt: str = None
