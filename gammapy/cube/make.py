@@ -295,7 +295,8 @@ class SafeMaskMaker:
         Percentage of the energy bias to be used as lower
         energy threshold for method "edisp-bias"
     position : `~astropy.coordinates.SkyCoord`
-        Position at which the `aeff_percent` or `bias_percent` are computed.
+        Position at which the `aeff_percent` or `bias_percent` are computed. By default,
+        it uses the position of the center of the map.
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
     """
@@ -416,12 +417,11 @@ class SafeMaskMaker:
         edisp = dataset.edisp
 
         if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
-            if self.position is None:
-                raise AttributeError(
-                    "To compute the energy bias, a position has to be set"
-                )
+            position = self.position
+            if position is None:
+                position = dataset.counts.geom.center_skydir
             e_reco = dataset.counts.geom.get_axis_by_name("energy").edges
-            edisp = edisp.get_energy_dispersion(self.position, e_reco)
+            edisp = edisp.get_energy_dispersion(position, e_reco)
             counts = dataset.counts.geom
         else:
             counts = dataset.counts
@@ -429,7 +429,8 @@ class SafeMaskMaker:
         e_min = edisp.get_bias_energy(self.bias_percent / 100)
         return counts.energy_mask(emin=e_min)
 
-    def make_mask_bkg_peak_energy(self, dataset):
+    @staticmethod
+    def make_mask_energy_bkg_peak(dataset):
         """Make safe energy mask based on the binned background.
 
         The energy threshold is defined as the upper edge of the energy
@@ -454,9 +455,8 @@ class SafeMaskMaker:
             background_spectrum = dataset.background
             counts = dataset.counts
 
-        peak = background_spectrum.data.max()
-        idx = list(background_spectrum.data).index(peak)
-        e_min = background_spectrum.energy.center[idx]
+        idx = np.argmax(background_spectrum.data)
+        e_min = background_spectrum.energy.edges[idx + 1]
         return counts.energy_mask(emin=e_min)
 
     def run(self, dataset, observation):
@@ -489,7 +489,7 @@ class SafeMaskMaker:
             mask_safe &= self.make_mask_energy_edisp_bias(dataset)
 
         if "bkg-peak" in self.methods:
-            mask_safe &= self.make_mask_bkg_peak_energy(dataset)
+            mask_safe &= self.make_mask_energy_bkg_peak(dataset)
 
         if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
             mask_safe = Map.from_geom(dataset.counts.geom, data=mask_safe)

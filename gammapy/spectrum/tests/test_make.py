@@ -128,8 +128,9 @@ def test_safe_mask_maker_dl3(spectrum_dataset_maker_crab, observations_hess_dl3)
     mask_safe = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
     assert mask_safe.sum() == 3
 
-    mask_safe = safe_mask_maker.make_mask_bkg_peak_energy(dataset)
+    mask_safe = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
     assert mask_safe.sum() == 3
+
 
 @requires_data()
 def test_safe_mask_maker_dc1(spectrum_dataset_maker_gc, observations_cta_dc1):
