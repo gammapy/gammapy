@@ -16,6 +16,7 @@ from gammapy.modeling.models import (
     SkyModel,
     SkyModels,
     create_fermi_isotropic_diffuse_model,
+    ConstantFluxSpatialModel
 )
 from gammapy.utils.testing import requires_data
 
@@ -112,6 +113,30 @@ def test_sky_model_init():
 
     with pytest.raises(TypeError):
         SkyModel(spectral_model=PowerLawSpectralModel(), spatial_model=1234)
+
+
+def test_sky_model_init_none():
+    pwl = PowerLawSpectralModel()
+    model = SkyModel(spectral_model=pwl)
+
+    assert_allclose(model.spatial_model.evaluate(), 1)
+
+    assert model.spatial_model.evaluation_radius is None
+    assert model.spatial_model.frame == "icrs"
+    assert model.spatial_model.to_dict()
+
+
+def test_sky_model_none_io(tmpdir):
+    pwl = PowerLawSpectralModel()
+    model = SkyModel(spectral_model=pwl, name="test")
+    models = SkyModels([model])
+
+    filename = tmpdir / "test-models-none.yaml"
+    models.to_yaml(filename)
+
+    models = SkyModels.from_yaml(filename)
+
+    assert isinstance(models["test"].spatial_model, ConstantFluxSpatialModel)
 
 
 def test_skymodel_addition(sky_model, sky_models, sky_models_2, diffuse_model):

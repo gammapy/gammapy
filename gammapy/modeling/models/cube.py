@@ -7,6 +7,8 @@ import astropy.units as u
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
 from gammapy.utils.scripts import make_path, read_yaml, write_yaml
+from .spatial import ConstantFluxSpatialModel
+from .spectral import PowerLawSpectralModel
 
 
 class SkyModelBase(Model):
@@ -119,13 +121,14 @@ class SkyModel(SkyModelBase):
     tag = "SkyModel"
 
     def __init__(self, spatial_model=None, spectral_model=None, name="source"):
-        from . import PointSpatialModel, PowerLawSpectralModel
+        self.name = name
 
         if spatial_model is None:
-            spatial_model = PointSpatialModel()
+            spatial_model = ConstantFluxSpatialModel()
+
         if spectral_model is None:
             spectral_model = PowerLawSpectralModel()
-        self.name = name
+
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
         super().__init__()
@@ -235,17 +238,17 @@ class SkyModel(SkyModelBase):
         """Create SkyModel from dict"""
         from gammapy.modeling.models import SPATIAL_MODELS, SPECTRAL_MODELS
 
-        model_class = SPECTRAL_MODELS.get_cls(data["spectral"]["type"])
-        spectral_model = model_class.from_dict(data["spectral"])
+        kwargs = {"name": data["name"]}
 
-        model_class = SPATIAL_MODELS.get_cls(data["spatial"]["type"])
-        spatial_model = model_class.from_dict(data["spatial"])
+        data_spectral = data.get("spectral")
+        model_class = SPECTRAL_MODELS.get_cls(data_spectral["type"])
+        kwargs["spectral_model"] = model_class.from_dict(data_spectral)
 
-        return cls(
-            name=data["name"],
-            spatial_model=spatial_model,
-            spectral_model=spectral_model,
-        )
+        data_spatial = data.get("spatial")
+        model_class = SPATIAL_MODELS.get_cls(data_spatial["type"])
+        kwargs["spatial_model"] = model_class.from_dict(data_spatial)
+
+        return cls(**kwargs)
 
 
 class SkyDiffuseCube(SkyModelBase):

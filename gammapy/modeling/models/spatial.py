@@ -448,8 +448,29 @@ class ShellSpatialModel(SpatialModel):
         )
 
 
+class ConstantFluxSpatialModel(SpatialModel):
+    """Spatial model representing a constant flux."""
+    tag = "ConstantFluxSpatialModel"
+    frame = "icrs"
+    evaluation_radius = None
+
+    @staticmethod
+    def evaluate(*args, **kwargs):
+        return 1
+
+    def position(self):
+        raise ValueError("None placeholder model does not have a position")
+
+    def to_dict(self):
+        return {"type": self.tag}
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls()
+
+
 class ConstantSpatialModel(SpatialModel):
-    """Spatially constant (isotropic) spatial model.
+    """Spatial model presenting a constant surface brightness.
 
     Parameters
     ----------

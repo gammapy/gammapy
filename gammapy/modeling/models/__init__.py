@@ -21,6 +21,7 @@ class Registry(list):
 SPATIAL_MODELS = Registry(
     [
         ConstantSpatialModel,
+        ConstantFluxSpatialModel,
         TemplateSpatialModel,
         DiskSpatialModel,
         GaussianSpatialModel,
