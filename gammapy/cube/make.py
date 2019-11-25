@@ -21,19 +21,17 @@ class MapDatasetMaker:
 
     Parameters
     ----------
-    offset_max : `~astropy.coordinates.Angle`
+    cutout_width : `~astropy.coordinates.Angle`
         Maximum offset angle
     background_oversampling : int
         Background evaluation oversampling factor in energy.
-    cutout : bool
-         Whether to cutout the observation.
     cutout_mode : {'trim', 'partial', 'strict'}
         Mode option for cutting out the observation,
         for details see `~astropy.nddata.utils.Cutout2D`.
     """
 
     def __init__(
-        self, offset_max, background_oversampling=None, cutout_mode="trim", cutout=True
+        self, cutout_width, background_oversampling=None, cutout_mode="trim", cutout=True
     ):
         self.offset_max = Angle(offset_max)
         self.background_oversampling = background_oversampling

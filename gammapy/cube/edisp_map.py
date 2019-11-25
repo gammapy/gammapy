@@ -395,3 +395,8 @@ class EDispMap:
         )
 
         return cls.from_geom(geom)
+
+    def cutout(self):
+        """"""
+        
+        return self.cutout()
