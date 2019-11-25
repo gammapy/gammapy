@@ -11,7 +11,7 @@ data:
     datastore: $GAMMAPY_DATA/hess-dl3-dr1/
     obs_ids: [23523, 23526]
     obs_file:                             # csv file with obs_ids
-    obs_cone: {frame: galactic, lon: 83.633 deg, lat: 22.014 deg}
+    obs_cone: {frame: galactic, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
     obs_time: {start: "2019-12-01", stop: "2020-03-01"}
 
 datasets:
