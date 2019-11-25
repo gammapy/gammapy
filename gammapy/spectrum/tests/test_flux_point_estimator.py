@@ -26,17 +26,15 @@ from gammapy.utils.testing import requires_data, requires_dependency
 def simulate_spectrum_dataset(model, random_state=0):
     energy = np.logspace(-0.5, 1.5, 21) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
-    bkg_model = SkyModel(
-        spectral_model=PowerLawSpectralModel(
+    bkg_model = PowerLawSpectralModel(
             index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1"
-        )
     )
 
     dataset = SpectrumDatasetOnOff(
         aeff=aeff, model=model, livetime=100 * u.h, acceptance=1, acceptance_off=5
     )
 
-    eval = SpectrumEvaluator(model=bkg_model, aeff=aeff, livetime=100 * u.h)
+    eval = SpectrumEvaluator(model=SkyModel(spectral_model=bkg_model), aeff=aeff, livetime=100 * u.h)
 
     bkg_model = eval.compute_npred()
     dataset.fake(random_state=random_state, background_model=bkg_model)
@@ -48,7 +46,7 @@ def create_fpe(model):
     dataset = simulate_spectrum_dataset(model)
     e_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.model = model
-    return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=11)
+    return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, source="source", norm_n_values=11)
 
 
 def simulate_map_dataset(random_state=0):
@@ -220,8 +218,8 @@ class TestFluxPointsEstimator:
 
 
 def test_no_likelihood_contribution():
-    dataset = simulate_spectrum_dataset(SkyModel())
-    dataset.model = SkyModel()
+    model = SkyModel(spectral_model=PowerLawSpectralModel())
+    dataset = simulate_spectrum_dataset(model)
     dataset.mask_safe = np.zeros(dataset.data_shape, dtype=bool)
 
     fpe = FluxPointsEstimator([dataset], e_edges=[1, 3, 10] * u.TeV)

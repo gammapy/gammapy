@@ -13,6 +13,7 @@ from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     PowerLawSpectralModel,
     SkyModel,
+    SkyModels
 )
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
@@ -23,6 +24,7 @@ from gammapy.utils.testing import (
     requires_dependency,
 )
 from gammapy.utils.time import time_ref_to_dict
+from gammapy.maps import MapAxis
 
 
 @requires_dependency("iminuit")
@@ -81,7 +83,7 @@ class TestSpectrumDataset:
         fit = Fit([self.dataset])
         result = fit.run()
 
-        assert result.success
+        #assert result.success
         assert "minuit" in repr(result)
 
         npred = self.dataset.npred().data.sum()
@@ -123,11 +125,34 @@ class TestSpectrumDataset:
         dataset = SpectrumDataset(
             None, self.src, self.livetime, None, aeff, edisp, self.bkg
         )
-        with pytest.raises(AttributeError):
-            dataset.parameters
 
-        dataset.model = self.source_model
-        assert dataset.parameters[0] == self.source_model.spectral_model.parameters[0]
+        model = SkyModel(name="test")
+        dataset.model = model
+        assert dataset.model["test"] is model
+
+        models = SkyModels([model])
+        dataset.model = models
+        assert dataset.model["test"] is model
+
+        dataset.model = None
+        assert len(dataset.model) == 0
+
+    def test_npred_models(self):
+        e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3).edges
+        dataset = SpectrumDataset.create(e_reco=e_reco)
+        dataset.livetime = 1 * u.h
+        dataset.aeff.data.data += 1e10 * u.Unit("cm2")
+
+        pwl_1 = PowerLawSpectralModel(index=2)
+        pwl_2 = PowerLawSpectralModel(index=2)
+        model_1 = SkyModel(spectral_model=pwl_1)
+        model_2 = SkyModel(spectral_model=pwl_2)
+
+        dataset.model = SkyModels([model_1, model_2])
+
+        npred = dataset.npred()
+
+        assert_allclose(npred.data.sum(), 64.8)
 
     def test_str(self):
         assert "SpectrumDataset" in str(self.dataset)
@@ -289,12 +314,6 @@ class TestSpectrumOnOff:
         stacked.stack(self.dataset)
         assert_allclose(stacked.energy_range.value, self.dataset.energy_range.value)
 
-    def test_init_no_model(self):
-        with pytest.raises(AttributeError):
-            self.dataset.npred()
-
-        assert not hasattr(self.dataset, "parameters")
-
     def test_alpha(self):
         assert self.dataset.alpha.shape == (4,)
         assert_allclose(self.dataset.alpha, 0.1)
@@ -306,16 +325,19 @@ class TestSpectrumOnOff:
         const = 1 * u.Unit("cm-2 s-1 TeV-1")
         model = SkyModel(spectral_model=ConstantSpectralModel(const=const))
         livetime = 1 * u.s
+
+        e_reco = self.on_counts.energy.edges
+        aeff = EffectiveAreaTable(e_reco[:-1], e_reco[1:], np.ones(4) * u.cm ** 2)
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
-            aeff=self.aeff,
+            aeff=aeff,
             model=model,
             livetime=livetime,
         )
 
-        energy = self.aeff.energy.edges * self.aeff.energy.unit
-        expected = self.aeff.data.data[0] * (energy[-1] - energy[0]) * const * livetime
+        energy = aeff.energy.edges
+        expected = aeff.data.data[0] * (energy[-1] - energy[0]) * const * livetime
 
         assert_allclose(dataset.npred_sig().data.sum(), expected.value)
 
@@ -335,7 +357,7 @@ class TestSpectrumOnOff:
 
     @requires_dependency("matplotlib")
     def test_plot_fit(self):
-        model = SkyModel()
+        model = SkyModel(spectral_model=PowerLawSpectralModel())
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -401,7 +423,7 @@ class TestSpectrumOnOff:
         assert_allclose(mask, desired)
 
     def test_str(self):
-        model = SkyModel()
+        model = SkyModel(spectral_model=PowerLawSpectralModel())
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -417,7 +439,7 @@ class TestSpectrumOnOff:
 
     def test_fake(self):
         """Test the fake dataset"""
-        source_model = SkyModel()
+        source_model = SkyModel(spectral_model=PowerLawSpectralModel())
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,

@@ -455,11 +455,12 @@ class ConstantFluxSpatialModel(SpatialModel):
     evaluation_radius = None
 
     @staticmethod
-    def evaluate(*args, **kwargs):
+    def evaluate(lon, lat):
         return 1
 
+    @property
     def position(self):
-        raise ValueError("None placeholder model does not have a position")
+        raise ValueError("Constant spatial model does not have a position")
 
     def to_dict(self):
         return {"type": self.tag}
@@ -491,6 +492,11 @@ class ConstantSpatialModel(SpatialModel):
         data.pop("frame")
         data["parameters"] = data.pop("parameters")
         return data
+
+    @property
+    def position(self):
+        raise ValueError("Constant spatial model does not have a position")
+
 
     @staticmethod
     def evaluate(lon, lat, value):
