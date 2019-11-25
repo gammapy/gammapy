@@ -1188,16 +1188,7 @@ class FluxPointsDataset(Dataset):
         self.data = data
         self.mask_fit = mask_fit
         self.name = name
-
-        if model is None:
-            model = SkyModels([])
-        if isinstance(model, SkyModel):
-            model = SkyModels([model])
         self.model = model
-        parameters_list = []
-        for _ in self.model:
-            parameters_list += list(_.spectral_model.parameters)
-        self.parameters = Parameters(parameters_list)
         if data.sed_type != "dnde":
             raise ValueError("Currently only flux points of type 'dnde' are supported.")
 
@@ -1213,6 +1204,29 @@ class FluxPointsDataset(Dataset):
                 f"Invalid likelihood: {likelihood!r}."
                 " Choose either 'chi2' or 'chi2assym'."
             )
+
+    @property
+    def model(self):
+        return self._model
+
+    @model.setter
+    def model(self, model):
+        if model is None:
+            model = SkyModels([])
+        elif isinstance(model, SkyModel):
+            model = SkyModels([model])
+
+        self._model = model
+
+    @property
+    def parameters(self):
+        """List of parameters (`~gammapy.modeling.Parameters`)"""
+        parameters = []
+
+        for component in self.model:
+            parameters.append(component.spectral_model.parameters)
+
+        return Parameters.from_stack(parameters)
 
     def write(self, filename, overwrite=True, **kwargs):
         """Write flux point dataset to file.
@@ -1347,16 +1361,16 @@ class FluxPointsDataset(Dataset):
         sigma[is_p] = sigma_p[is_p]
         return FluxPointsDataset._stat_chi2(data, model, sigma)
 
-    def flux_pred(self, energy):
+    def flux_pred(self):
         """Compute predicted flux."""
         flux = 0.0
-        for _ in self.model:
-            flux += _.spectral_model(energy)
+        for component in self.model:
+            flux += component.spectral_model(self.data.e_ref)
         return flux
 
     def stat_array(self):
         """Fit statistic array."""
-        model = self.flux_pred(self.data.e_ref)
+        model = self.flux_pred()
         data = self.data.table["dnde"].quantity
 
         if self.likelihood_type == "chi2":
@@ -1391,7 +1405,7 @@ class FluxPointsDataset(Dataset):
         fp = self.data
         data = fp.table[fp.sed_type]
 
-        model = self.flux_pred(fp.e_ref)
+        model = self.flux_pred()
 
         residuals = self._compute_residuals(data, model, method)
         # Remove residuals for upper_limits
@@ -1460,7 +1474,7 @@ class FluxPointsDataset(Dataset):
         if xerr is not None:
             xerr = xerr[0].to_value(self._e_unit), xerr[1].to_value(self._e_unit)
 
-        model = self.flux_pred(fp.e_ref)
+        model = self.flux_pred()
         yerr = fp._plot_get_flux_err(fp.sed_type)
 
         if method == "diff":

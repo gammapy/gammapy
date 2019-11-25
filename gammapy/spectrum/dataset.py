@@ -175,25 +175,23 @@ class SpectrumDataset(Dataset):
 
     @model.setter
     def model(self, model):
-        if isinstance(model, SkyModel):
+        if model is None:
+            model = SkyModels([])
+        elif isinstance(model, SkyModel):
             model = SkyModels([model])
-        if model is not None:
-            self._model = model
-            parameters_list = []
-            for _ in self._model:
-                parameters_list += list(_.spectral_model.parameters)
-            self._parameters = Parameters(parameters_list)
-            self._predictor = SpectrumEvaluator(
-                model=self.model,
+
+        self._model = model
+        self._evaluators = []
+
+        for component in model:
+            evaluator = SpectrumEvaluator(
+                model=component,
                 livetime=self.livetime,
                 aeff=self.aeff,
                 e_true=self._energy_axis.edges,
                 edisp=self.edisp,
             )
-        else:
-            self.model = SkyModels([])
-            self._parameters = None
-            self._predictor = None
+            self._evaluators.append(evaluator)
 
     @property
     def mask_safe(self):
@@ -209,13 +207,12 @@ class SpectrumDataset(Dataset):
     @property
     def parameters(self):
         """List of parameters (`~gammapy.modeling.Parameters`)"""
+        parameters = []
 
-        if self._parameters is None:
-            raise AttributeError("No model set for Dataset")
-        parameters_list = []
-        for _ in self._model:
-            parameters_list += list(_.spectral_model.parameters)
-        return Parameters(parameters_list)
+        for component in self.model:
+            parameters.append(component.spectral_model.parameters)
+
+        return Parameters.from_stack(parameters)
 
     @property
     def _energy_axis(self):
@@ -235,11 +232,15 @@ class SpectrumDataset(Dataset):
 
     def npred(self):
         """Return npred map (model + background)"""
-        if self._predictor is None:
-            raise AttributeError("No model set for Dataset")
-        npred = self._predictor.compute_npred()
+        data = np.zeros(self.data_shape)
+        npred = self._as_counts_spectrum(data)
+
+        for evaluator in self._evaluators:
+            npred += evaluator.compute_npred()
+
         if self.background:
-            npred.data += self.background.data
+            npred += self.background
+
         return npred
 
     def stat_array(self):
@@ -619,9 +620,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def npred_sig(self):
         """Predicted counts from source model (`CountsSpectrum`)."""
-        if self._predictor is None:
-            raise AttributeError("No model set for this Dataset")
-        npred = self._predictor.compute_npred()
+        data = np.zeros(self.data_shape)
+        npred = self._as_counts_spectrum(data)
+
+        for evaluator in self._evaluators:
+            npred += evaluator.compute_npred()
+
         return npred
 
     def stat_array(self):

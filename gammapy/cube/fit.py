@@ -87,8 +87,6 @@ class MapDataset(Dataset):
         mask_safe=None,
         gti=None,
     ):
-        if model is None:
-            model = SkyModels([])
         if mask_fit is not None and mask_fit.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
         if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
@@ -213,22 +211,24 @@ class MapDataset(Dataset):
 
     @model.setter
     def model(self, model):
-        if isinstance(model, SkyModel):
+        if model is None:
+            model = SkyModels([])
+
+        elif isinstance(model, SkyModel):
             model = SkyModels([model])
 
         self._model = model
 
-        if model is not None:
-            evaluators = []
+        evaluators = []
 
-            for component in model:
-                evaluator = MapEvaluator(
-                    component, evaluation_mode=self.evaluation_mode
-                )
-                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
-                evaluators.append(evaluator)
+        for component in model:
+            evaluator = MapEvaluator(
+                component, evaluation_mode=self.evaluation_mode
+            )
+            evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+            evaluators.append(evaluator)
 
-            self._evaluators = evaluators
+        self._evaluators = evaluators
 
     @property
     def parameters(self):
@@ -268,16 +268,15 @@ class MapDataset(Dataset):
         if self.background_model:
             npred_total += self.background_model.evaluate()
 
-        if self.model:
-            for evaluator in self._evaluators:
-                # if the model component drifts out of its support the evaluator has
-                # has to be updated
-                if evaluator.needs_update:
-                    evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+        for evaluator in self._evaluators:
+            # if the model component drifts out of its support the evaluator has
+            # has to be updated
+            if evaluator.needs_update:
+                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
 
-                if evaluator.contributes:
-                    npred = evaluator.compute_npred()
-                    npred_total.stack(npred)
+            if evaluator.contributes:
+                npred = evaluator.compute_npred()
+                npred_total.stack(npred)
 
         return npred_total
 
