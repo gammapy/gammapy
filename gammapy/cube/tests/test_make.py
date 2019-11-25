@@ -203,12 +203,16 @@ def test_map_maker_obs(observations):
 def test_safe_mask_maker(observations):
     obs = observations[0]
 
-    axis = MapAxis.from_edges([0.1, 1, 10], name="energy", interp="log", unit="TeV")
+    axis = MapAxis.from_bounds(
+        0.1, 10, nbin=16, unit="TeV", name="energy", interp="log"
+    )
     geom = WcsGeom.create(npix=(11, 11), axes=[axis], skydir=obs.pointing_radec)
 
     empty_dataset = MapDataset.create(geom=geom)
     dataset_maker = MapDatasetMaker(offset_max="3 deg")
-    safe_mask_maker = SafeMaskMaker(offset_max="3 deg")
+    safe_mask_maker = SafeMaskMaker(
+        offset_max="3 deg", bias_percent=0.02, position=obs.pointing_radec
+    )
     dataset = dataset_maker.run(empty_dataset, obs)
 
     mask_offset = safe_mask_maker.make_mask_offset_max(dataset=dataset, observation=obs)
@@ -217,14 +221,12 @@ def test_safe_mask_maker(observations):
     mask_energy_aeff_default = safe_mask_maker.make_mask_energy_aeff_default(
         dataset=dataset, observation=obs
     )
-    assert_allclose(mask_energy_aeff_default.sum(), 242)
+    assert_allclose(mask_energy_aeff_default.sum(), 1936)
+
+    mask_edisp_bias = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
+    assert_allclose(mask_edisp_bias.sum(), 1815)
 
     with pytest.raises(NotImplementedError) as excinfo:
-        safe_mask_maker.make_mask_energy_edisp_bias(dataset)
-
-    assert "only supported" in str(excinfo.value)
-
-    with pytest.raises(NotImplementedError) as excinfo:
-        safe_mask_maker.make_mask_energy_edisp_bias(dataset)
+        safe_mask_maker.make_mask_energy_aeff_max(dataset)
 
     assert "only supported" in str(excinfo.value)

@@ -294,6 +294,8 @@ class SafeMaskMaker:
     bias_percent : float
         Percentage of the energy bias to be used as lower
         energy threshold for method "edisp-bias"
+    position : `~astropy.coordinates.SkyCoord`
+        Position at which the `aeff_percent` or `bias_percent` are computed.
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
     """
@@ -305,6 +307,7 @@ class SafeMaskMaker:
         methods=("aeff-default",),
         aeff_percent=10,
         bias_percent=10,
+        position=None,
         offset_max="3 deg",
     ):
         methods = set(methods)
@@ -316,6 +319,7 @@ class SafeMaskMaker:
         self.methods = methods
         self.aeff_percent = aeff_percent
         self.bias_percent = bias_percent
+        self.position = position
         self.offset_max = Angle(offset_max)
 
     def make_mask_offset_max(self, dataset, observation):
@@ -403,13 +407,21 @@ class SafeMaskMaker:
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
-        if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
-            raise NotImplementedError(
-                "'edisp-bias' method currently only supported for spectral datasets"
-            )
+        edisp = dataset.edisp
 
-        e_min = dataset.edisp.get_bias_energy(self.bias_percent / 100)
-        return dataset.counts.energy_mask(emin=e_min)
+        if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
+            if self.position is None:
+                raise AttributeError(
+                    "To compute the energy bias, a position has to be set"
+                )
+            e_reco = dataset.counts.geom.get_axis_by_name("energy").edges
+            edisp = edisp.get_energy_dispersion(self.position, e_reco)
+            counts = dataset.counts.geom
+        else:
+            counts = dataset.counts
+
+        e_min = edisp.get_bias_energy(self.bias_percent / 100)
+        return counts.energy_mask(emin=e_min)
 
     def run(self, dataset, observation):
         """Make safe data range mask.
