@@ -77,26 +77,26 @@ class GammapyBaseModel(BaseModel):
 
 class Skydir(GammapyBaseModel):
     frame: FrameEnum = FrameEnum.icrs
-    lon: AngleType = AngleType("83.633 deg")
-    lat: AngleType = AngleType("22.014 deg")
+    lon: AngleType = "83.633 deg"
+    lat: AngleType = "22.014 deg"
 
 
 class EnergyAxis(GammapyBaseModel):
-    min: EnergyType = EnergyType("0.1 TeV")
-    max: EnergyType = EnergyType("10 TeV")
+    min: EnergyType = "0.1 TeV"
+    max: EnergyType = "10 TeV"
     nbins: int = 30
 
 
 class SpatialCircleRange(GammapyBaseModel):
     frame: FrameEnum = FrameEnum.icrs
-    lon: AngleType = AngleType("83.633 deg")
-    lat: AngleType = AngleType("22.014 deg")
-    radius: AngleType = AngleType("0.1 deg")
+    lon: AngleType = "83.633 deg"
+    lat: AngleType = "22.014 deg"
+    radius: AngleType = "0.1 deg"
 
 
 class EnergyRange(GammapyBaseModel):
-    min: EnergyType = EnergyType("0.1 TeV")
-    max: EnergyType = EnergyType("10 TeV")
+    min: EnergyType = "0.1 TeV"
+    max: EnergyType = "10 TeV"
 
 
 class TimeRange(GammapyBaseModel):
@@ -123,20 +123,20 @@ class Axes(GammapyBaseModel):
 
 
 class Selection(GammapyBaseModel):
-    offset_max: AngleType = AngleType("2.5 deg")
+    offset_max: AngleType = "2.5 deg"
 
 
 class Fov(GammapyBaseModel):
-    width: AngleType = AngleType("5 deg")
-    height: AngleType = AngleType("5 deg")
+    width: AngleType = "5 deg"
+    height: AngleType = "5 deg"
 
 
 class Wcs(GammapyBaseModel):
     skydir: Skydir = Skydir()
-    binsize: AngleType = AngleType("0.1 deg")
+    binsize: AngleType = "0.1 deg"
     fov: Fov = Fov()
-    binsize_irf: AngleType = AngleType("0.1 deg")
-    margin_irf: AngleType = AngleType("0.1 deg")
+    binsize_irf: AngleType = "0.1 deg"
+    margin_irf: AngleType = "0.1 deg"
 
 
 class Geom(GammapyBaseModel):
@@ -152,7 +152,7 @@ class Datasets(GammapyBaseModel):
     background: Background = Background()
     onregion: SpatialCircleRange = SpatialCircleRange()
     containment_correction: bool = True
-    psf_kernel_radius: AngleType = AngleType("0.6 deg")
+    psf_kernel_radius: AngleType = "0.6 deg"
 
 
 class Data(GammapyBaseModel):
