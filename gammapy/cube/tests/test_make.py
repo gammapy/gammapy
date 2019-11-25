@@ -103,13 +103,12 @@ def test_map_maker(pars, observations):
         margin_irf=pars["margin_irf"],
     )
 
-    maker = MapDatasetMaker(
-        offset_max="2 deg", background_oversampling=pars.get("background_oversampling")
-    )
+    maker = MapDatasetMaker(background_oversampling=pars.get("background_oversampling"))
     safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
 
     for obs in observations:
-        dataset = maker.run(stacked, obs)
+        cutout = stacked.cutout(position=obs.pointing_radec, width="4 deg")
+        dataset = maker.run(cutout, obs)
         dataset = safe_mask_maker.run(dataset, obs)
         stacked.stack(dataset)
 
@@ -143,7 +142,7 @@ def test_map_maker(pars, observations):
 @requires_data()
 def test_map_maker_ring(observations):
     geomd = geom(ebounds=[0.1, 10])
-    map_dataset_maker = MapDatasetMaker(offset_max="2 deg")
+    map_dataset_maker = MapDatasetMaker()
     safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
 
     stacked = MapDatasetOnOff.create(geomd)
@@ -159,7 +158,8 @@ def test_map_maker_ring(observations):
     )
 
     for obs in observations:
-        dataset = map_dataset_maker.run(stacked, obs)
+        cutout = stacked.cutout(position=obs.pointing_radec, width="4 deg")
+        dataset = map_dataset_maker.run(cutout, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
         dataset = dataset.to_image()
@@ -185,7 +185,7 @@ def test_map_maker_obs(observations):
         geom=geom_reco, energy_axis_true=e_true, binsz_irf=1.0, margin_irf=1.0
     )
 
-    maker_obs = MapDatasetMaker(offset_max=2.0 * u.deg, cutout=False)
+    maker_obs = MapDatasetMaker()
 
     map_dataset = maker_obs.run(reference, observations[0])
     assert map_dataset.counts.geom == geom_reco
@@ -209,10 +209,9 @@ def test_safe_mask_maker(observations):
     geom = WcsGeom.create(npix=(11, 11), axes=[axis], skydir=obs.pointing_radec)
 
     empty_dataset = MapDataset.create(geom=geom)
-    dataset_maker = MapDatasetMaker(offset_max="3 deg")
-    safe_mask_maker = SafeMaskMaker(
-        offset_max="3 deg", bias_percent=0.02, position=obs.pointing_radec
-    )
+    dataset_maker = MapDatasetMaker()
+    safe_mask_maker = SafeMaskMaker(offset_max="3 deg", bias_percent=0.02, position=obs.pointing_radec)
+
     dataset = dataset_maker.run(empty_dataset, obs)
 
     mask_offset = safe_mask_maker.make_mask_offset_max(dataset=dataset, observation=obs)

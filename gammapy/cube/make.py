@@ -21,41 +21,21 @@ class MapDatasetMaker:
 
     Parameters
     ----------
-    cutout_width : `~astropy.coordinates.Angle`
-        Maximum offset angle
     background_oversampling : int
         Background evaluation oversampling factor in energy.
-    cutout_mode : {'trim', 'partial', 'strict'}
-        Mode option for cutting out the observation,
-        for details see `~astropy.nddata.utils.Cutout2D`.
     """
 
-    def __init__(
-        self, cutout_width, background_oversampling=None, cutout_mode="trim", cutout=True
-    ):
-        self.offset_max = Angle(offset_max)
+    def __init__(self, background_oversampling=None):
         self.background_oversampling = background_oversampling
-        self.cutout_mode = cutout_mode
-        self.cutout_width = 2 * self.offset_max
-        self.cutout = cutout
 
-    def _cutout_geom(self, geom, observation):
-        if self.cutout:
-            return geom.cutout(
-                position=observation.pointing_radec,
-                width=self.cutout_width,
-                mode=self.cutout_mode,
-            )
-        else:
-            return geom
-
-    def make_counts(self, dataset, observation):
+    @staticmethod
+    def make_counts(geom, observation):
         """Make counts map.
 
         Parameters
         ----------
-        dataset : `MapDataset`
-            Reference dataset.
+        geom : `Geom`
+            Reference map geom.
         observation : `DataStoreObservation`
             Observation container.
 
@@ -64,18 +44,18 @@ class MapDatasetMaker:
         counts : `Map`
             Counts map.
         """
-        geom = self._cutout_geom(dataset.counts.geom, observation)
         counts = Map.from_geom(geom)
         counts.fill_events(observation.events)
         return counts
 
-    def make_exposure(self, dataset, observation):
+    @staticmethod
+    def make_exposure(geom, observation):
         """Make exposure map.
 
         Parameters
         ----------
-        dataset : `MapDataset`
-            Reference dataset.
+        geom : `Geom`
+            Reference map geom.
         observation : `DataStoreObservation`
             Observation container.
 
@@ -84,7 +64,6 @@ class MapDatasetMaker:
         exposure : `Map`
             Exposure map.
         """
-        geom = self._cutout_geom(dataset.exposure.geom, observation)
         return make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
             livetime=observation.observation_live_time_duration,
@@ -92,7 +71,8 @@ class MapDatasetMaker:
             geom=geom,
         )
 
-    def make_exposure_irf(self, geom, observation):
+    @staticmethod
+    def make_exposure_irf(geom, observation):
         """Make exposure map with irf geometry.
 
         Parameters
@@ -107,7 +87,6 @@ class MapDatasetMaker:
         exposure : `Map`
             Exposure map.
         """
-        geom = self._cutout_geom(geom, observation)
         return make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
             livetime=observation.observation_live_time_duration,
@@ -115,13 +94,13 @@ class MapDatasetMaker:
             geom=geom,
         )
 
-    def make_background(self, dataset, observation):
+    def make_background(self, geom, observation):
         """Make background map.
 
         Parameters
         ----------
-        dataset : `MapDataset`
-            Reference dataset.
+        geom : `Geom`
+            Reference geom.
         observation : `DataStoreObservation`
             Observation container.
 
@@ -130,9 +109,8 @@ class MapDatasetMaker:
         background : `Map`
             Background map.
         """
-        geom = self._cutout_geom(dataset.counts.geom, observation)
-
         bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
+
         if bkg_coordsys == "ALTAZ":
             pointing = observation.fixed_pointing_info
         elif bkg_coordsys == "RADEC":
@@ -151,13 +129,13 @@ class MapDatasetMaker:
             oversampling=self.background_oversampling,
         )
 
-    def make_edisp(self, dataset, observation):
+    def make_edisp(self, geom, observation):
         """Make edisp map.
 
         Parameters
         ----------
-        dataset : `MapDataset`
-            Reference dataset.
+        geom : `Geom`
+            Reference geom.
         observation : `DataStoreObservation`
             Observation container.
 
@@ -166,8 +144,7 @@ class MapDatasetMaker:
         edisp : `EdispMap`
             Edisp map.
         """
-        geom = self._cutout_geom(dataset.edisp.edisp_map.geom, observation)
-        exposure = self.make_exposure_irf(dataset.edisp.exposure_map.geom, observation)
+        exposure = self.make_exposure_irf(geom.squash(axis="migra"), observation)
 
         return make_edisp_map(
             edisp=observation.edisp,
@@ -176,13 +153,13 @@ class MapDatasetMaker:
             exposure_map=exposure,
         )
 
-    def make_psf(self, dataset, observation):
+    def make_psf(self, geom, observation):
         """Make psf map.
 
         Parameters
         ----------
-        dataset : `MapDataset`
-            Reference dataset.
+        geom : `Geom`
+            Reference geom.
         observation : `DataStoreObservation`
             Observation container.
 
@@ -192,13 +169,11 @@ class MapDatasetMaker:
             Psf map.
         """
         psf = observation.psf
-        geom = self._cutout_geom(dataset.psf.psf_map.geom, observation)
-
         if isinstance(psf, EnergyDependentMultiGaussPSF):
-            rad_axis = dataset.psf.psf_map.geom.get_axis_by_name("theta")
+            rad_axis = geom.get_axis_by_name("theta")
             psf = psf.to_psf3d(rad=rad_axis.center)
 
-        exposure = self.make_exposure_irf(dataset.psf.exposure_map.geom, observation)
+        exposure = self.make_exposure_irf(geom.squash(axis="theta"), observation)
 
         return make_psf_map(
             psf=psf,
@@ -230,30 +205,29 @@ class MapDatasetMaker:
 
         kwargs = {"name": f"obs_{observation.obs_id}", "gti": observation.gti}
 
-        geom = self._cutout_geom(dataset.counts.geom, observation)
-        mask_safe = Map.from_geom(geom, dtype=bool)
+        mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
         mask_safe.data |= True
 
         kwargs["mask_safe"] = mask_safe
 
         if "counts" in selection:
-            counts = self.make_counts(dataset, observation)
+            counts = self.make_counts(dataset.counts.geom, observation)
             kwargs["counts"] = counts
 
         if "exposure" in selection:
-            exposure = self.make_exposure(dataset, observation)
+            exposure = self.make_exposure(dataset.exposure.geom, observation)
             kwargs["exposure"] = exposure
 
         if "background" in selection:
-            background_map = self.make_background(dataset, observation)
+            background_map = self.make_background(dataset.counts.geom, observation)
             kwargs["background_model"] = BackgroundModel(background_map)
 
         if "psf" in selection:
-            psf = self.make_psf(dataset, observation)
+            psf = self.make_psf(dataset.psf.psf_map.geom, observation)
             kwargs["psf"] = psf
 
         if "edisp" in selection:
-            edisp = self.make_edisp(dataset, observation)
+            edisp = self.make_edisp(dataset.edisp.edisp_map.geom, observation)
             kwargs["edisp"] = edisp
 
         return MapDataset(**kwargs)
