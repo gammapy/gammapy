@@ -29,7 +29,7 @@ class EnergyType(Quantity):
 
     @classmethod
     def validate(cls, v):
-        assert isinstance(Quantity(v).to("erg"), Quantity)
+        assert v.unit.physical_type == "energy"
         return EnergyType(v)
 
 
