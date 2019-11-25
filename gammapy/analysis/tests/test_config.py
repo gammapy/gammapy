@@ -23,11 +23,12 @@ from gammapy.analysis.config import (
     FrameEnum,
     TimeType,
     EnergyType,
-    AngleType
+    AngleType,
 )
 
 
 from pathlib import Path
+
 config_file = Path(__file__).resolve().parent / ".." / "config" / "config.yaml"
 
 
@@ -49,7 +50,11 @@ def test_config_basics():
     assert isinstance(config.fit.fit_range, EnergyRange)
     assert isinstance(config.data.obs_cone, SpatialCircleRange)
     assert isinstance(config.flux_points.energy, EnergyAxis)
-    config.datasets.geom.wcs.skydir = {"frame": "galactic", "lon": "83.633 deg", "lat": "22.014 deg"}
+    config.datasets.geom.wcs.skydir = {
+        "frame": "galactic",
+        "lon": "83.633 deg",
+        "lat": "22.014 deg",
+    }
     assert isinstance(config.datasets.geom.wcs.skydir, SkyCoordType)
     assert isinstance(config.datasets.background.method, BackgroundMethodEnum)
     assert isinstance(config.datasets.geom.wcs.skydir.frame, FrameEnum)

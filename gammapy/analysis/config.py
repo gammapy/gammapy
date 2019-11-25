@@ -44,18 +44,18 @@ class TimeType(Time):
 
 
 class FrameEnum(str, Enum):
-    icrs = 'icrs'
-    galactic = 'galactic'
+    icrs = "icrs"
+    galactic = "galactic"
 
 
 class BackgroundMethodEnum(str, Enum):
-    reflected = 'reflected'
+    reflected = "reflected"
 
 
 class GammapyBaseModel(BaseModel):
     class Config:
         validate_assignment = True
-        extra = 'forbid'
+        extra = "forbid"
         json_encoders = {
             AngleType: lambda v: f"{v.value} {v.unit}",
             EnergyType: lambda v: f"{v.value} {v.unit}",
@@ -71,7 +71,9 @@ class GammapyBaseModel(BaseModel):
         return yaml.dump(yaml.safe_load(self.json()))
 
     def update_from_dict(self, other):
-        data = deep_update(self.dict(exclude_defaults=True), other.dict(exclude_defaults=True))
+        data = deep_update(
+            self.dict(exclude_defaults=True), other.dict(exclude_defaults=True)
+        )
         return AnalysisConfig(**data)
 
 
@@ -178,6 +180,7 @@ class General(GammapyBaseModel):
 
 class AnalysisConfig(GammapyBaseModel):
     """Config class handling the high-level interface settings."""
+
     general: General = General()
     data: Data = Data()
     datasets: Datasets = Datasets()
