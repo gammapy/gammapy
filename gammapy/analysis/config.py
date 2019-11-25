@@ -29,7 +29,7 @@ class EnergyType(Quantity):
 
     @classmethod
     def validate(cls, v):
-        assert v.unit.physical_type == "energy"
+        assert Quantity(v).unit.physical_type == "energy"
         return EnergyType(v)
 
 
@@ -82,8 +82,8 @@ class SkyCoordType(GammapyBaseModel):
 
 
 class EnergyAxis(GammapyBaseModel):
-    min: EnergyType = "0.1 TeV"
-    max: EnergyType = "10 TeV"
+    min: EnergyType = EnergyType("0.1 TeV")
+    max: EnergyType = EnergyType("10 TeV")
     nbins: int = 30
 
 
@@ -95,8 +95,8 @@ class SpatialCircleRange(GammapyBaseModel):
 
 
 class EnergyRange(GammapyBaseModel):
-    min: EnergyType = "0.1 TeV"
-    max: EnergyType = "10 TeV"
+    min: EnergyType = EnergyType("0.1 TeV")
+    max: EnergyType = EnergyType("10 TeV")
 
 
 class TimeRange(GammapyBaseModel):
@@ -123,20 +123,20 @@ class Axes(GammapyBaseModel):
 
 
 class Selection(GammapyBaseModel):
-    offset_max: AngleType = "2.5 deg"
+    offset_max: AngleType = AngleType("2.5 deg")
 
 
 class Fov(GammapyBaseModel):
-    width: AngleType = "5 deg"
-    height: AngleType = "5 deg"
+    width: AngleType = AngleType("5 deg")
+    height: AngleType = AngleType("5 deg")
 
 
 class Wcs(GammapyBaseModel):
     skydir: SkyCoordType = SkyCoordType()
-    binsize: AngleType = "0.1 deg"
+    binsize: AngleType = AngleType("0.1 deg")
     fov: Fov = Fov()
-    binsize_irf: AngleType = "0.1 deg"
-    margin_irf: AngleType = "0.1 deg"
+    binsize_irf: AngleType = AngleType("0.1 deg")
+    margin_irf: AngleType = AngleType("0.1 deg")
 
 
 class Geom(GammapyBaseModel):
@@ -152,11 +152,11 @@ class Datasets(GammapyBaseModel):
     background: Background = Background()
     onregion: SpatialCircleRange = SpatialCircleRange()
     containment_correction: bool = True
-    psf_kernel_radius: AngleType = "0.6 deg"
+    psf_kernel_radius: AngleType = AngleType("0.6 deg")
 
 
 class Data(GammapyBaseModel):
-    datastore: Path = "$GAMMAPY_DATA/hess-dl3-dr1/"
+    datastore: Path = Path("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids: List[int] = []
     obs_file: FilePath = None
     obs_cone: SpatialCircleRange = SpatialCircleRange()
