@@ -75,10 +75,10 @@ class GammapyBaseModel(BaseModel):
         return AnalysisConfig(**data)
 
 
-class Skydir(GammapyBaseModel):
+class SkyCoordType(GammapyBaseModel):
     frame: FrameEnum = FrameEnum.icrs
-    lon: AngleType = "83.633 deg"
-    lat: AngleType = "22.014 deg"
+    lon: AngleType = None
+    lat: AngleType = None
 
 
 class EnergyAxis(GammapyBaseModel):
@@ -89,9 +89,9 @@ class EnergyAxis(GammapyBaseModel):
 
 class SpatialCircleRange(GammapyBaseModel):
     frame: FrameEnum = FrameEnum.icrs
-    lon: AngleType = "83.633 deg"
-    lat: AngleType = "22.014 deg"
-    radius: AngleType = "0.1 deg"
+    lon: AngleType = None
+    lat: AngleType = None
+    radius: AngleType = None
 
 
 class EnergyRange(GammapyBaseModel):
@@ -132,7 +132,7 @@ class Fov(GammapyBaseModel):
 
 
 class Wcs(GammapyBaseModel):
-    skydir: Skydir = Skydir()
+    skydir: SkyCoordType = SkyCoordType()
     binsize: AngleType = "0.1 deg"
     fov: Fov = Fov()
     binsize_irf: AngleType = "0.1 deg"
