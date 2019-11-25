@@ -19,7 +19,7 @@ class AngleType(Angle):
 
     @classmethod
     def validate(cls, v):
-        return Angle(v)
+        return AngleType(v)
 
 
 class EnergyType(Quantity):
@@ -30,7 +30,7 @@ class EnergyType(Quantity):
     @classmethod
     def validate(cls, v):
         assert isinstance(Quantity(v).to("erg"), Quantity)
-        return Quantity(v)
+        return EnergyType(v)
 
 
 class TimeType(Time):
@@ -40,7 +40,7 @@ class TimeType(Time):
 
     @classmethod
     def validate(cls, v):
-        return Time(v)
+        return TimeType(v)
 
 
 class FrameEnum(str, Enum):
@@ -58,11 +58,8 @@ class GammapyBaseModel(BaseModel):
         extra = 'forbid'
         json_encoders = {
             AngleType: lambda v: f"{v.value} {v.unit}",
-            Angle: lambda v: f"{v.value} {v.unit}",
             EnergyType: lambda v: f"{v.value} {v.unit}",
-            Quantity: lambda v: f"{v.value} {v.unit}",
             TimeType: lambda v: f"{v.value}",
-            Time: lambda v: f"{v.value}",
         }
 
     @classmethod
