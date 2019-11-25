@@ -1,8 +1,8 @@
 from astropy.coordinates import Angle
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.utils.scripts import make_path, read_yaml
-from pydantic import BaseModel, FilePath, validator
+from gammapy.utils.scripts import read_yaml
+from pydantic import BaseModel, FilePath
 from pydantic.utils import deep_update
 from pathlib import Path
 from typing import List
@@ -161,10 +161,6 @@ class Data(GammapyBaseModel):
     obs_file: FilePath = None
     obs_cone: SpatialCircleRange = SpatialCircleRange()
     obs_time: TimeRange = TimeRange()
-
-    @validator("datastore")
-    def datastore_exists(cls, v):
-        return make_path(v)
 
 
 class Log(GammapyBaseModel):
