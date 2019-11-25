@@ -1,9 +1,10 @@
 from pathlib import Path
 import pytest
 from astropy.units import Quantity
+from astropy.coordinates import Angle, SkyCoord
+from astropy.time import Time
 from gammapy.analysis.config import (
     AnalysisConfig,
-    AngleType,
     Axes,
     Background,
     BackgroundMethodEnum,
@@ -11,7 +12,6 @@ from gammapy.analysis.config import (
     Datasets,
     EnergyAxis,
     EnergyRange,
-    EnergyType,
     Fit,
     FluxPoints,
     Fov,
@@ -20,10 +20,8 @@ from gammapy.analysis.config import (
     Geom,
     Log,
     Selection,
-    SkyCoordType,
     SpatialCircleRange,
     TimeRange,
-    TimeType,
     Wcs,
 )
 
@@ -53,13 +51,13 @@ def test_config_basics():
         "lon": "83.633 deg",
         "lat": "22.014 deg",
     }
-    assert isinstance(config.datasets.geom.wcs.skydir, SkyCoordType)
+    # assert isinstance(config.datasets.geom.wcs.skydir, SkyCoord)
     assert isinstance(config.datasets.background.method, BackgroundMethodEnum)
     assert isinstance(config.datasets.geom.wcs.skydir.frame, FrameEnum)
     config.data.obs_time.start = "2019-12-01"
-    assert isinstance(config.data.obs_time.start, TimeType)
-    assert isinstance(config.fit.fit_range.min, EnergyType)
-    assert isinstance(config.datasets.geom.wcs.binsize, AngleType)
+    assert isinstance(config.data.obs_time.start, Time)
+    assert isinstance(config.fit.fit_range.min, Quantity)
+    assert isinstance(config.datasets.geom.wcs.binsize, Angle)
 
 
 def test_config_create_from_dict():

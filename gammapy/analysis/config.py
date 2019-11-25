@@ -19,7 +19,7 @@ class AngleType(Angle):
 
     @classmethod
     def validate(cls, v):
-        return AngleType(v)
+        return Angle(v)
 
 
 class EnergyType(Quantity):
@@ -29,8 +29,10 @@ class EnergyType(Quantity):
 
     @classmethod
     def validate(cls, v):
-        assert Quantity(v).unit.physical_type == "energy"
-        return EnergyType(v)
+        v = Quantity(v)
+        if v.unit.physical_type != "energy":
+            raise ValueError(f"Invalid unit for energy: {v.unit!r}")
+        return v
 
 
 class TimeType(Time):
@@ -40,7 +42,7 @@ class TimeType(Time):
 
     @classmethod
     def validate(cls, v):
-        return TimeType(v)
+        return Time(v)
 
 
 class FrameEnum(str, Enum):
@@ -54,12 +56,13 @@ class BackgroundMethodEnum(str, Enum):
 
 class GammapyBaseModel(BaseModel):
     class Config:
+        validate_all = True
         validate_assignment = True
         extra = "forbid"
         json_encoders = {
-            AngleType: lambda v: f"{v.value} {v.unit}",
-            EnergyType: lambda v: f"{v.value} {v.unit}",
-            TimeType: lambda v: f"{v.value}",
+            Angle: lambda v: f"{v.value} {v.unit}",
+            Quantity: lambda v: f"{v.value} {v.unit}",
+            Time: lambda v: f"{v.value}",
         }
 
     @classmethod
@@ -84,8 +87,8 @@ class SkyCoordType(GammapyBaseModel):
 
 
 class EnergyAxis(GammapyBaseModel):
-    min: EnergyType = EnergyType("0.1 TeV")
-    max: EnergyType = EnergyType("10 TeV")
+    min: EnergyType = "0.1 TeV"
+    max: EnergyType = "10 TeV"
     nbins: int = 30
 
 
@@ -97,8 +100,8 @@ class SpatialCircleRange(GammapyBaseModel):
 
 
 class EnergyRange(GammapyBaseModel):
-    min: EnergyType = EnergyType("0.1 TeV")
-    max: EnergyType = EnergyType("10 TeV")
+    min: EnergyType = "0.1 TeV"
+    max: EnergyType = "10 TeV"
 
 
 class TimeRange(GammapyBaseModel):
@@ -125,20 +128,20 @@ class Axes(GammapyBaseModel):
 
 
 class Selection(GammapyBaseModel):
-    offset_max: AngleType = AngleType("2.5 deg")
+    offset_max: AngleType = "2.5 deg"
 
 
 class Fov(GammapyBaseModel):
-    width: AngleType = AngleType("5 deg")
-    height: AngleType = AngleType("5 deg")
+    width: AngleType = "5 deg"
+    height: AngleType = "5 deg"
 
 
 class Wcs(GammapyBaseModel):
     skydir: SkyCoordType = SkyCoordType()
-    binsize: AngleType = AngleType("0.1 deg")
+    binsize: AngleType = "0.1 deg"
     fov: Fov = Fov()
-    binsize_irf: AngleType = AngleType("0.1 deg")
-    margin_irf: AngleType = AngleType("0.1 deg")
+    binsize_irf: AngleType = "0.1 deg"
+    margin_irf: AngleType = "0.1 deg"
 
 
 class Geom(GammapyBaseModel):
@@ -154,7 +157,7 @@ class Datasets(GammapyBaseModel):
     background: Background = Background()
     onregion: SpatialCircleRange = SpatialCircleRange()
     containment_correction: bool = True
-    psf_kernel_radius: AngleType = AngleType("0.6 deg")
+    psf_kernel_radius: AngleType = "0.6 deg"
 
 
 class Data(GammapyBaseModel):
