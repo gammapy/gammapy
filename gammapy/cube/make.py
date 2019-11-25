@@ -459,7 +459,7 @@ class SafeMaskMaker:
         e_min = background_spectrum.energy.edges[idx + 1]
         return counts.energy_mask(emin=e_min)
 
-    def run(self, dataset, observation):
+    def run(self, dataset, observation=None):
         """Make safe data range mask.
 
         Parameters
