@@ -282,7 +282,7 @@ class SafeMaskMaker:
 
     Parameters
     ----------
-    methods : {"aeff-default", "aeff-max", "edisp-bias", "offset-max"}
+    methods : {"aeff-default", "aeff-max", "edisp-bias", "offset-max", "bkg-peak"}
         Method to use for the safe energy range. Can be a
         list with a combination of those. Resulting masks
         are combined with logical `and`. "aeff-default"
@@ -300,7 +300,13 @@ class SafeMaskMaker:
         Maximum offset cut.
     """
 
-    available_methods = {"aeff-default", "aeff-max", "edisp-bias", "offset-max"}
+    available_methods = {
+        "aeff-default",
+        "aeff-max",
+        "edisp-bias",
+        "offset-max",
+        "bkg-peak",
+    }
 
     def __init__(
         self,
@@ -399,7 +405,7 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : `SpectrumDataset` or `SpectrumDatasetOnOff`
+        dataset : `MapDataset`, `MapDatasetOnOff`, `SpectrumDataset` or `SpectrumDatasetOnOff`
             Dataset to compute mask for.
 
         Returns
@@ -421,6 +427,36 @@ class SafeMaskMaker:
             counts = dataset.counts
 
         e_min = edisp.get_bias_energy(self.bias_percent / 100)
+        return counts.energy_mask(emin=e_min)
+
+    def make_mask_bkg_peak_energy(self, dataset):
+        """Make safe energy mask based on the binned background.
+
+        The energy threshold is defined as the upper edge of the energy
+        bin with the highest predicted background rate. This method is motivated
+        by its use in the HESS DL3 validation paper: https://arxiv.org/pdf/1910.08088.pdf
+
+        Parameters
+        ----------
+        dataset : `MapDataset`, `MapDatasetOnOff`, `SpectrumDataset` or `SpectrumDatasetOnOff`
+            Dataset to compute mask for.
+
+        Returns
+        -------
+        mask_safe : `~numpy.ndarray`
+            Safe data range mask.
+        """
+
+        if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
+            background_spectrum = dataset.background_model.map.get_spectrum()
+            counts = dataset.counts.geom
+        else:
+            background_spectrum = dataset.background
+            counts = dataset.counts
+
+        peak = background_spectrum.data.max()
+        idx = list(background_spectrum.data).index(peak)
+        e_min = background_spectrum.energy.center[idx]
         return counts.energy_mask(emin=e_min)
 
     def run(self, dataset, observation):
@@ -451,6 +487,9 @@ class SafeMaskMaker:
 
         if "edisp-bias" in self.methods:
             mask_safe &= self.make_mask_energy_edisp_bias(dataset)
+
+        if "bkg-peak" in self.methods:
+            mask_safe &= self.make_mask_bkg_peak_energy(dataset)
 
         if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
             mask_safe = Map.from_geom(dataset.counts.geom, data=mask_safe)

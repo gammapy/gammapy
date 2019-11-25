@@ -226,6 +226,9 @@ def test_safe_mask_maker(observations):
     mask_edisp_bias = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
     assert_allclose(mask_edisp_bias.sum(), 1815)
 
+    mask_bkg_peak = safe_mask_maker.make_mask_bkg_peak_energy(dataset)
+    assert_allclose(mask_bkg_peak.sum(), 1815)
+
     with pytest.raises(NotImplementedError) as excinfo:
         safe_mask_maker.make_mask_energy_aeff_max(dataset)
 
