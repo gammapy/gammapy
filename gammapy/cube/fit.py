@@ -939,6 +939,54 @@ class MapDataset(Dataset):
             name=self.name,
         )
 
+    def cutout(self, position, width, mode="trim"):
+        """Cutout map dataset.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the region in (lon, lat) in that specific order.
+            If only one value is passed, a square region is extracted.
+        mode : {'trim', 'partial', 'strict'}
+            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+
+        Returns
+        -------
+        cutout : `~gammapy.maps.MapDataset`
+            Cutout map dataset.
+        """
+        kwargs = {"gti": self.gti}
+        cutout_kwargs = {"position": position, "width": width, "mode": mode}
+
+        if self.counts is not None:
+            kwargs["counts"] = self.counts.cutout(**cutout_kwargs)
+
+        if self.exposure is not None:
+            kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
+
+        if self.background_model is not None:
+            bkg_map = self.background_model.map.cutout(**cutout_kwargs)
+            bkg_model = BackgroundModel(bkg_map)
+            factors = [par.factor for par in self.background_model.parameters]
+            bkg_model.parameters.set_parameter_factors(factors)
+            kwargs["background_model"] = bkg_model
+
+        if self.edisp is not None:
+            kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
+
+        if self.psf is not None:
+            kwargs["psf"] = self.psf.cutout(**cutout_kwargs)
+
+        if self.mask_safe is not None:
+            kwargs["mask_safe"] = self.mask_safe.cutout(**cutout_kwargs)
+
+        if self.mask_fit is not None:
+            kwargs["mask_fit"] = self.mask_fit.cutout(**cutout_kwargs)
+
+        return self.__class__(**kwargs)
+
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.

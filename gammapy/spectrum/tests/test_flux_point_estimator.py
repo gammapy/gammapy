@@ -72,10 +72,8 @@ def simulate_map_dataset(random_state=0):
 
     obs = Observation.create(pointing=skydir, livetime=1 * u.h, irfs=irfs)
     empty = MapDataset.create(geom)
-    maker = MapDatasetMaker(offset_max="2 deg", cutout=False)
-    dataset = maker.run(
-        empty, obs, selection=["exposure", "background", "psf", "edisp"]
-    )
+    maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
+    dataset = maker.run(empty, obs)
 
     position = SkyCoord("0 deg", "0 deg", frame="galactic")
     dataset.psf = dataset.psf.get_psf_kernel(

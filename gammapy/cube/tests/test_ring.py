@@ -52,13 +52,14 @@ def test_ring_bkg_maker(geom, observations, exclusion_mask):
         r_in="0.2 deg", width="0.3 deg", exclusion_mask=exclusion_mask
     )
     safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
-    map_dataset_maker = MapDatasetMaker(offset_max="2 deg")
+    map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
 
     reference = MapDataset.create(geom)
     datasets = []
 
     for obs in observations:
-        dataset = map_dataset_maker.run(reference, obs)
+        cutout = reference.cutout(obs.pointing_radec, width="4 deg")
+        dataset = map_dataset_maker.run(cutout, obs)
         dataset = safe_mask_maker.run(dataset, obs)
         dataset = dataset.to_image()
 
@@ -122,10 +123,11 @@ def test_adaptive_ring_bkg_maker(pars, geom, observations, exclusion_mask):
         method=pars["method"],
     )
     safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
-    map_dataset_maker = MapDatasetMaker(offset_max="2 deg")
+    map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
 
-    dataset = MapDataset.create(geom)
     obs = observations[pars["obs_idx"]]
+
+    dataset = MapDataset.create(geom).cutout(obs.pointing_radec, width="4 deg")
     dataset = map_dataset_maker.run(dataset, obs)
     dataset = safe_mask_maker.run(dataset, obs)
 
