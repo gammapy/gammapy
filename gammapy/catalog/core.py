@@ -79,7 +79,12 @@ class SourceCatalog:
         self._source_name_alias = source_name_alias
 
     def __str__(self):
-        return self.description + f" with {len(self.table)} objects."
+        return (
+            f"{self.__class__.__name__}:\n"
+            f"    name: {self.name}\n"
+            f"    description: {self.description}\n"
+            f"    sources: {len(self.table)}\n"
+        )
 
     @lazyproperty
     def _name_to_index_cache(self):
