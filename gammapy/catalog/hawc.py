@@ -21,7 +21,6 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
     """
 
     _source_name_key = "source_name"
-    _source_index_key = "catalog_row_index"
 
     def __str__(self):
         return self.info()
