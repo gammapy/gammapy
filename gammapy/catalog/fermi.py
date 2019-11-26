@@ -42,7 +42,7 @@ def compute_flux_points_ul(quantity, quantity_errp):
     return 2 * quantity_errp + quantity
 
 
-class SourceCatalogObjectFermiBase(SourceCatalogObject):
+class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
     """Base class for Fermi-LAT catalogs."""
 
     asso = ["ASSOC1", "ASSOC2", "ASSOC_TEV", "ASSOC_GAM1", "ASSOC_GAM2", "ASSOC_GAM3"]
@@ -79,16 +79,13 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         return ss
 
     def _info_basic(self):
-        """Print basic info."""
         d = self.data
         keys = self.asso
         ss = "\n*** Basic info ***\n\n"
         ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
         ss += "{:<20s} : {}\n".format("Source name", self.name)
-        try:
+        if "Extended_Source_Name" in d:
             ss += "{:<20s} : {}\n".format("Extended name", d["Extended_Source_Name"])
-        except (KeyError):
-            pass
 
         def get_nonentry_keys(keys):
             vals = [d[_].strip() for _ in keys]
@@ -114,10 +111,9 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
 
     @abc.abstractmethod
     def _info_more(self):
-        return "\n"
+        pass
 
     def _info_position(self):
-        """Print position info."""
         d = self.data
         ss = "\n*** Position info ***\n\n"
         ss += "{:<20s} : {:.3f}\n".format("RA", d["RAJ2000"])
@@ -149,20 +145,17 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         ss += "{:<16s} : {}\n\n".format("Spatial filename", e["Spatial_Filename"])
         return ss
 
-    @abc.abstractmethod
     def _info_spectral_fit(self):
-        pass
+        return "\n"
 
     def _info_spectral_points(self):
-        """Print spectral points."""
         ss = "\n*** Spectral points ***\n\n"
         lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
         ss += "\n".join(lines)
         return ss
 
-    @abc.abstractmethod
     def _info_lightcurve(self):
-        pass
+        return "\n"
 
     @property
     def is_pointlike(self):
@@ -220,7 +213,6 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
     _ebounds = u.Quantity([50, 100, 300, 1000, 3000, 10000, 30000, 300000], "MeV")
 
     def _info_more(self):
-        """Print other info."""
         d = self.data
         ss = "\n*** Other info ***\n\n"
         fmt = "{:<32s} : {:.3f}\n"
@@ -230,7 +222,6 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_spectral_fit(self):
-        """Print spectral info."""
         d = self.data
         spec_type = d["SpectrumType"].strip()
 
@@ -303,7 +294,6 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_lightcurve(self):
-        """Print lightcurve info."""
         d = self.data
         ss = "\n*** Lightcurve info ***\n\n"
         ss += "Lightcurve measured in the energy band: 100 MeV - 100 GeV\n\n"
@@ -516,14 +506,12 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
     """
 
     def _info_more(self):
-        """Print other info."""
         d = self.data
         ss = "\n*** Other info ***\n\n"
         ss += "{:<20s} : {}\n".format("Other flags", d["Flags"])
         return ss
 
     def _info_spectral_fit(self):
-        """Print spectral info."""
         d = self.data
         spec_type = d["SpectrumType"].strip()
 
@@ -591,7 +579,6 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_lightcurve(self):
-        """Print lightcurve info."""
         d = self.data
         ss = "\n*** Lightcurve info ***\n\n"
         ss += "Lightcurve measured in the energy band: 100 MeV - 100 GeV\n\n"
@@ -811,7 +798,6 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
     """Energy range used for the catalog."""
 
     def _info_more(self):
-        """Print other info."""
         d = self.data
         ss = "\n*** Other info ***\n\n"
         fmt = "{:<32s} : {:.3f}\n"
@@ -819,7 +805,6 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_position(self):
-        """Print position info."""
         d = self.data
         ss = "\n*** Position info ***\n\n"
         ss += "{:<20s} : {:.3f}\n".format("RA", d["RAJ2000"])
@@ -833,7 +818,6 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_spectral_fit(self):
-        """Print model data."""
         d = self.data
 
         ss = "\n*** Spectral fit info ***\n\n"
@@ -940,9 +924,6 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         values = [self.data[prefix + _ + "GeV"] for _ in self._ebounds_suffix]
         return u.Quantity(values, unit)
 
-    def _info_lightcurve(self):
-        return "\n"
-
 
 class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
     """One source from the Fermi-LAT 3FHL catalog.
@@ -957,7 +938,6 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
     _ebounds = u.Quantity([10, 20, 50, 150, 500, 2000], "GeV")
 
     def _info_position(self):
-        """Print position info."""
         d = self.data
         ss = "\n*** Position info ***\n\n"
         ss += "{:<20s} : {:.3f}\n".format("RA", d["RAJ2000"])
@@ -975,7 +955,6 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_spectral_fit(self):
-        """Print model data."""
         d = self.data
         spec_type = d["SpectrumType"].strip()
 
@@ -1034,7 +1013,6 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_more(self):
-        """Print other info."""
         d = self.data
         ss = "\n*** Other info ***\n\n"
 
@@ -1161,9 +1139,6 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
                 raise ValueError(f"Invalid morph_type: {morph_type!r}")
         self._set_spatial_errors(model)
         return model
-
-    def _info_lightcurve(self):
-        return "\n"
 
 
 class SourceCatalog3FGL(SourceCatalog):
