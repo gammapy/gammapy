@@ -45,30 +45,6 @@ class SourceCatalogObject:
         return self.data[self._row_index_key]
 
     @property
-    def _data_python_dict(self):
-        """Convert ``data`` to a Python dict with Python types.
-
-        The dict is readily JSON or YAML serializable.
-        Quantity unit information is stripped.
-
-        This is mainly used at the moment to pass the data to
-        the gamma-sky.net webpage.
-        """
-        out = {}
-        for key, value in self.data.items():
-            if isinstance(value, int):
-                out_val = value
-            else:
-                # This works because almost all values in ``data``
-                # are Numpy objects, and ``tolist`` works for Numpy
-                # arrays and scalars.
-                out_val = np.asarray(value).tolist()
-
-            out[key] = out_val
-
-        return out
-
-    @property
     def position(self):
         """Source position (`~astropy.coordinates.SkyCoord`)."""
         table = table_from_row_data([self.data])
@@ -215,18 +191,6 @@ class SourceCatalog:
         names = [_.strip() for _ in self.extended_sources_table["Source_Name"]]
         idx = range(len(names))
         return dict(zip(names, idx))
-
-    @property
-    def _data_python_list(self):
-        """Convert catalog to a Python list with Python types.
-
-        The list is readily JSON or YAML serializable.
-        Quantity unit information is stripped.
-
-        This is mainly used at the moment to pass the data to
-        the gamma-sky.net webpage.
-        """
-        return [source._data_python_dict for source in self]
 
     @property
     def positions(self):

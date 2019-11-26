@@ -112,15 +112,6 @@ class TestSourceCatalogObjectGammaCat:
         expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
         assert actual == expected
 
-    def test_data_python_dict(self, gammacat):
-        source = gammacat[0]
-        data = source._data_python_dict
-        assert isinstance(data["ra"], float)
-        assert data["ra"] == 1.649999976158142
-        assert isinstance(data["sed_e_min"], list)
-        assert isinstance(data["sed_e_min"][0], float)
-        assert_allclose(data["sed_e_min"][0], 0.5600000023841858)
-
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_spectral_model(self, gammacat, ref):
         source = gammacat[ref["name"]]
