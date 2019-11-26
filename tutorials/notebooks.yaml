@@ -23,14 +23,9 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/cta.ipynb
   datasets:
     - cta-1dc
-  images:
-    - cta-1dc
-    - gammapy_datastore_butler
 - name: cta_data_analysis
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/cta_data_analysis.ipynb
   datasets:
-    - cta-1dc
-  images:
     - cta-1dc
 - name: cta_sensitivity
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/cta_sensitivity.ipynb
