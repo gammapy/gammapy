@@ -26,7 +26,7 @@ class SourceCatalogObject:
     """
 
     _source_name_key = "Source_Name"
-    _source_index_key = "_row_index"
+    _row_index_key = "_row_index"
 
     def __init__(self, data, data_extended=None):
         self.data = data
@@ -42,7 +42,7 @@ class SourceCatalogObject:
     @property
     def row_index(self):
         """Row index of source in catalog (int)"""
-        return self.data[self._source_index_key]
+        return self.data[self._row_index_key]
 
     @property
     def _data_python_dict(self):
@@ -193,7 +193,7 @@ class SourceCatalog:
             Source object
         """
         data = table_row_to_dict(self.table[index])
-        data[SourceCatalogObject._source_index_key] = index
+        data[SourceCatalogObject._row_index_key] = index
 
         if "Extended_Source_Name" in data:
             name_extended = data["Extended_Source_Name"].strip()

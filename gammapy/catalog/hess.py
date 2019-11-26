@@ -715,7 +715,7 @@ class SourceCatalogHGPS(SourceCatalog):
     def gaussian_component(self, row_idx):
         """Gaussian component (`SourceCatalogObjectHGPSComponent`)."""
         data = table_row_to_dict(self.table_components[row_idx])
-        data[SourceCatalogObject._source_index_key] = row_idx
+        data[SourceCatalogObject._row_index_key] = row_idx
         return SourceCatalogObjectHGPSComponent(data=data)
 
 
