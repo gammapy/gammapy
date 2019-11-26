@@ -15,7 +15,7 @@ and catalogs relevant for gamma-ray astronomy specifically.
 Support for the following catalogs is available:
 
 * ``hgps`` / `SourceCatalogHGPS` - H.E.S.S. Galactic plane survey (HGPS)
-* ``gamma-cat`` /  / `SourceCatalogGammaCat` - An open catalog of gamma-ray sources
+* ``gamma-cat`` /  `SourceCatalogGammaCat` - An open catalog of gamma-ray sources
 * ``3fgl`` / `SourceCatalog3FGL` - LAT 4-year point source catalog
 * ``4fgl`` / `SourceCatalog4FGL` - LAT 8-year point source catalog
 * ``2fhl`` / `SourceCatalog2FHL` - LAT second high-energy source catalog

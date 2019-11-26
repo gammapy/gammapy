@@ -10,7 +10,9 @@ from gammapy.utils.testing import assert_quantity_allclose
 
 class SomeSourceCatalog(SourceCatalog):
     """Minimal test source catalog class for unit tests."""
-    description = "spam"
+
+    name = "test123"
+    description = "Test source catalog"
 
 
 def make_test_catalog():
@@ -18,7 +20,6 @@ def make_test_catalog():
     table["Source_Name"] = ["a", "bb", "ccc"]
     table["RA"] = Column([42.2, 43.3, 44.4], unit="deg")
     table["DEC"] = Column([1, 2, 3], unit="deg")
-
     return SomeSourceCatalog(table)
 
 
@@ -71,6 +72,7 @@ class TestSourceCatalog:
     def test_positions(self):
         positions = self.cat.positions
         assert len(positions) == 3
+
 
 class TestSourceCatalogObject:
     def setup(self):

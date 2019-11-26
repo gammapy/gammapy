@@ -51,7 +51,7 @@ class SourceCatalogObject:
         return _skycoord_from_table(table)[0]
 
 
-class SourceCatalog:
+class SourceCatalog(abc.ABC):
     """Generic source catalog.
 
     This class can be used directly, but it's mostly used as a
@@ -73,10 +73,18 @@ class SourceCatalog:
 
     @classmethod
     @abc.abstractmethod
+    def name(cls):
+        """Catalog name (str)."""
+        pass
+
+    @classmethod
+    @abc.abstractmethod
     def description(cls):
+        """Catalog description (str)."""
         pass
 
     source_object_class = SourceCatalogObject
+    """Source class (`SourceCatalogObject`)."""
 
     def __init__(self, table, source_name_key="Source_Name", source_name_alias=()):
         self.table = table
