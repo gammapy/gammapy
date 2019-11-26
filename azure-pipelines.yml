@@ -40,7 +40,7 @@ jobs:
     displayName: 'Install Gammapy'
 
   - script: |
-      gammapy download datasets --out=$(GAMMAPY_DATA) --silent
+      gammapy download datasets --out=$(GAMMAPY_DATA) --silent --tests
     displayName: 'Get GAMMAPY_DATA'
 
   - script: |
@@ -115,7 +115,7 @@ jobs:
 
   - script: |
       source activate gammapy-dev
-      gammapy download datasets --out=$(GAMMAPY_DATA) --silent
+      gammapy download datasets --out=$(GAMMAPY_DATA) --silent --tests
     displayName: 'Get GAMMAPY_DATA'
 
   - script: |
