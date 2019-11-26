@@ -2,7 +2,7 @@
 """HAWC catalogs (https://www.hawc-observatory.org)."""
 import numpy as np
 from astropy.table import Table
-from gammapy.modeling.models import DiskSpatialModel, Model, PointSpatialModel, SkyModel
+from gammapy.modeling.models import Model, SkyModel
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -140,21 +140,29 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         idx = self._get_idx(which)
 
         if idx == 0:
-            model = PointSpatialModel(
-                lon_0=self.data["glon"], lat_0=self.data["glat"], frame="galactic"
-            )
+            tag = "PointSpatialModel"
+            pars = {
+                "lon_0": self.data["glon"],
+                "lat_0": self.data["glat"],
+                "frame": "galactic",
+            }
         else:
-            model = DiskSpatialModel(
-                lon_0=self.data["glon"],
-                lat_0=self.data["glat"],
-                r_0=self.data[f"spec{idx}_radius"],
-                frame="galactic",
-            )
+            tag = "DiskSpatialModel"
+            pars = {
+                "lon_0": self.data["glon"],
+                "lat_0": self.data["glat"],
+                "r_0": self.data[f"spec{idx}_radius"],
+                "frame": "galactic",
+            }
 
-        lat_err = self.data["pos_err"].to("deg")
-        lon_err = self.data["pos_err"].to("deg") / np.cos(self.data["glat"].to("rad"))
-        model.parameters.set_error(lon_0=lon_err, lat_0=lat_err)
+        errs = {
+            "lat_0": self.data["pos_err"].to("deg"),
+            "lon_0": self.data["pos_err"].to("deg")
+            / np.cos(self.data["glat"].to("rad")),
+        }
 
+        model = Model.create(tag, **pars)
+        model.parameters.set_error(**errs)
         return model
 
     def sky_model(self, which="point"):

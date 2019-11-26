@@ -10,13 +10,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from gammapy.modeling.models import (
-    GaussianSpatialModel,
-    Model,
-    PointSpatialModel,
-    ShellSpatialModel,
-    SkyModel,
-)
+from gammapy.modeling.models import Model, SkyModel
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
@@ -325,11 +319,15 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         d = self.data
         morph_type = d["morph_type"]
 
-        glon = d["glon"]
-        glat = d["glat"]
+        pars = {"lon_0": d["glon"], "lat_0": d["glat"], "frame": "galactic"}
+        errs = {
+            "lat_0": self.data["pos_err"].to("deg"),
+            "lon_0": self.data["pos_err"].to("deg")
+            / np.cos(self.data["glat"].to("rad")),
+        }
 
         if morph_type == "point":
-            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
+            tag = "PointSpatialModel"
         elif morph_type == "gauss":
             # TODO: add infos back once model support elongation
             # pars['x_stddev'] = d['morph_sigma']
@@ -339,27 +337,20 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             # if not np.isnan(d['morph_pa']):
             #     # TODO: handle reference frame for rotation angle
             #     pars['theta'] = Angle(d['morph_pa'], 'deg').rad
-            model = GaussianSpatialModel(
-                lon_0=glon, lat_0=glat, sigma=d["morph_sigma"], frame="galactic"
-            )
+            tag = "GaussianSpatialModel"
+            pars["sigma"] = d["morph_sigma"]
         elif morph_type == "shell":
-            model = ShellSpatialModel(
-                lon_0=glon,
-                lat_0=glat,
-                # TODO: probably we shouldn't guess a shell width here!
-                radius=0.8 * d["morph_sigma"],
-                width=0.2 * d["morph_sigma"],
-                frame="galactic",
-            )
+            tag = "ShellSpatialModel"
+            # TODO: probably we shouldn't guess a shell width here!
+            pars["radius"] = 0.8 * d["morph_sigma"]
+            pars["width"] = 0.2 * d["morph_sigma"]
         elif morph_type == "none":
             return None
         else:
             raise ValueError(f"Invalid morph_type: {morph_type!r}")
 
-        lat_err = self.data["pos_err"].to("deg")
-        lon_err = self.data["pos_err"].to("deg") / np.cos(self.data["glat"].to("rad"))
-        model.parameters.set_error(lon_0=lon_err, lat_0=lat_err)
-        # TODO: check if pos_err is really 1sigma
+        model = Model.create(tag, **pars)
+        model.parameters.set_error(**errs)
         return model
 
     def sky_model(self):

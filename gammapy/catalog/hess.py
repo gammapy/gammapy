@@ -5,14 +5,7 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
-from gammapy.modeling.models import (
-    GaussianSpatialModel,
-    Model,
-    PointSpatialModel,
-    ShellSpatialModel,
-    SkyModel,
-    SkyModels,
-)
+from gammapy.modeling.models import Model, SkyModel, SkyModels
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
@@ -77,12 +70,16 @@ class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
     def spatial_model(self):
         """Component spatial model (`~gammapy.modeling.models.GaussianSpatialModel`)."""
         d = self.data
-        model = GaussianSpatialModel(
-            lon_0=d["GLON"], lat_0=d["GLAT"], sigma=d["Size"], frame="galactic"
-        )
-        model.parameters.set_error(
-            lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"]
-        )
+        tag = "GaussianSpatialModel"
+        pars = {
+            "lon_0": d["GLON"],
+            "lat_0": d["GLAT"],
+            "sigma": d["Size"],
+            "frame": "galactic",
+        }
+        errs = {"lon_0": d["GLON_Err"], "lat_0": d["GLAT_Err"], "sigma": d["Size_Err"]}
+        model = Model.create(tag, **pars)
+        model.parameters.set_error(**errs)
         return model
 
 
@@ -505,37 +502,31 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         - ``Shell``: `~gammapy.modeling.models.ShellSpatialModel`
         """
         d = self.data
-        glon = d["GLON"]
-        glat = d["GLAT"]
+        pars = {"lon_0": d["GLON"], "lat_0": d["GLAT"], "frame": "galactic"}
+        errs = {"lon_0": d["GLON_Err"], "lat_0": d["GLAT_Err"]}
 
         spatial_type = self.spatial_model_type
 
         if self.is_pointlike:
-            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
+            tag = "PointSpatialModel"
         elif spatial_type == "gaussian":
-            model = GaussianSpatialModel(
-                lon_0=glon, lat_0=glat, sigma=d["Size"], frame="galactic"
-            )
-            model.parameters.set_error(
-                lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"]
-            )
+            tag = "GaussianSpatialModel"
+            pars["sigma"] = d["Size"]
+            errs["sigma"] = d["Size_Err"]
         elif spatial_type in {"2-gaussian", "3-gaussian"}:
             raise ValueError("For Gaussian or Multi-Gaussian models, use sky_model()!")
         elif spatial_type == "shell":
             # HGPS contains no information on shell width
             # Here we assume a 5% shell width for all shells.
-            r_out = d["Size"]
-            radius = 0.95 * r_out
-            width = r_out - radius
-            model = ShellSpatialModel(
-                lon_0=glon, lat_0=glat, width=width, radius=radius, frame="galactic"
-            )
-            model.parameters.set_error(
-                lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], radius=d["Size_Err"]
-            )
+            tag = "ShellSpatialModel"
+            pars["radius"] = 0.95 * d["Size"]
+            pars["width"] = d["Size"] - pars["radius"]
+            errs["radius"] = d["Size_Err"]
         else:
             raise ValueError(f"Invalid spatial_type: {spatial_type}")
 
+        model = Model.create(tag, **pars)
+        model.parameters.set_error(**errs)
         return model
 
     def sky_model(self, which="best"):
@@ -560,13 +551,10 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 spectral_model_comp = spectral_model.copy()
                 # weight amplitude of the component
                 spectral_model_comp.parameters["amplitude"].value *= weight
-                models.append(
-                    SkyModel(
-                        component.spatial_model(),
-                        spectral_model_comp,
-                        name=component.name,
-                    )
+                model = SkyModel(
+                    component.spatial_model(), spectral_model_comp, name=component.name
                 )
+                models.append(model)
 
             return SkyModels(models)
         else:
