@@ -18,8 +18,10 @@ DEV_SCRIPTS_YAML_URL = BASE_URL_DEV + "examples/scripts.yaml"
 DEV_DATA_JSON_LOCAL = "../../dev/datasets/gammapy-data-index.json"
 
 
-def parse_datafiles(datasearch, datasetslist):
+def parse_datafiles(datasearch, datasetslist, download_tests=False):
     for dataset in datasetslist:
+        if dataset["name"] == "tests" and not download_tests and datasearch != "tests":
+            continue
         if (datasearch == dataset["name"] or datasearch == "") and dataset.get(
             "files", ""
         ):
@@ -48,12 +50,13 @@ def parse_imagefiles(notebookslist):
 class ComputePlan:
     """Generates the whole list of files to download"""
 
-    def __init__(self, src, outfolder, release, option, modetutorials=False):
+    def __init__(self, src, outfolder, release, option, modetutorials=False, download_tests=False):
         self.src = src
         self.outfolder = Path(outfolder)
         self.release = release
         self.option = option
         self.modetutorials = modetutorials
+        self.download_tests = download_tests
         self.listfiles = {}
         log.info(f"Looking for {self.option}...")
 
@@ -137,7 +140,7 @@ class ComputePlan:
             datasets = json.loads(txt)
             datafound = {}
             if not self.modetutorials:
-                datafound.update(dict(parse_datafiles(self.src, datasets)))
+                datafound.update(dict(parse_datafiles(self.src, datasets, download_tests=self.download_tests)))
             else:
                 for item in self.listfiles:
                     record = self.listfiles[item]
