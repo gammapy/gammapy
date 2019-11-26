@@ -17,7 +17,7 @@ Npred                            : 53.1
 
 HEP Energy       : 364.828 GeV
 HEP Probability  : 0.849
-Bayesian Blocks  : 1 (not variable)
+Bayesian Blocks  : 1
 Redshift         : nan
 NuPeak_obs       : nan Hz
 

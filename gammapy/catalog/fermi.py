@@ -1012,14 +1012,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         )
         ss += "{:<16s} : {:.3f}\n".format("HEP Probability", d["HEP_Prob"])
 
-        # This is the number of Bayesian blocks for most sources,
-        # except -1 means "could not be tested"
-        msg = d["Variability_BayesBlocks"]
-        if msg == 1:
-            msg = "1 (not variable)"
-        elif msg == -1:
-            msg = "Could not be tested"
-        ss += "{:<16s} : {}\n".format("Bayesian Blocks", msg)
+        ss += "{:<16s} : {}\n".format("Bayesian Blocks", d["Variability_BayesBlocks"])
 
         ss += "{:<16s} : {:.3f}\n".format("Redshift", d["Redshift"])
         ss += "{:<16s} : {:.3} {}\n".format(
