@@ -44,6 +44,7 @@ install gammapy -c conda-forge`` or ``pip install gammapy``.
 * click_ - used for the ``gammapy`` command line tool
 * PyYAML_ - support for YAML_ format (config and results files)
 * jsonschema_ - support for json-schema.org_ (config file validation)
+* pydantic_ - support config file validation
 
 Optional dependencies
 ---------------------

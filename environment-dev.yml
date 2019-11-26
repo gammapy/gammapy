@@ -53,3 +53,4 @@ dependencies:
   - parfive
   - jsonschema
   - yamllint
+  - pydantic

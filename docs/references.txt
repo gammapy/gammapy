@@ -132,3 +132,4 @@
 .. _Sherpa statistics page: https://cxc.cfa.harvard.edu/sherpa/statistics
 .. _XML schema: https://en.wikipedia.org/wiki/XML_schema
 .. _setuptools console_scripts entry point: https://python-packaging.readthedocs.io/en/latest/command-line-scripts.html
+.. _pydantic: https://pydantic-docs.helpmanual.io
