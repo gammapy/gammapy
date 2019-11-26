@@ -20,13 +20,13 @@ class SourceCatalogObject:
     attribute as a dict.
 
     The source catalog object is decoupled from the source catalog,
-    it doesn't hold a reference back to it.
-    The catalog table row index is stored in `_table_row_index` though,
-    because it can be useful for debugging or display.
+    it doesn't hold a reference back to it, except for a key
+    ``_row_index`` of type ``int`` that links to the catalog table
+    row the source information comes from.
     """
 
     _source_name_key = "Source_Name"
-    _source_index_key = "catalog_row_index"
+    _source_index_key = "_row_index"
 
     def __init__(self, data, data_extended=None):
         self.data = data
@@ -40,7 +40,7 @@ class SourceCatalogObject:
         return name.strip()
 
     @property
-    def index(self):
+    def row_index(self):
         """Row index of source in catalog (int)"""
         return self.data[self._source_index_key]
 
@@ -97,10 +97,6 @@ class SourceCatalog:
 
     source_object_class = SourceCatalogObject
 
-    # TODO: at the moment these are duplicated in SourceCatalogObject.
-    # Should we share them somehow?
-    _source_index_key = "catalog_row_index"
-
     def __init__(self, table, source_name_key="Source_Name", source_name_alias=()):
         self.table = table
         self._source_name_key = source_name_key
@@ -146,6 +142,7 @@ class SourceCatalog:
         if name not in possible_names:
             self.__dict__.pop("_name_to_index_cache")
             index = self._name_to_index_cache[name]
+
         return index
 
     def source_name(self, index):
@@ -196,7 +193,7 @@ class SourceCatalog:
             Source object
         """
         data = table_row_to_dict(self.table[index])
-        data[self._source_index_key] = index
+        data[SourceCatalogObject._source_index_key] = index
 
         if "Extended_Source_Name" in data:
             name_extended = data["Extended_Source_Name"].strip()

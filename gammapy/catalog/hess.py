@@ -133,8 +133,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """Print basic info."""
         d = self.data
         ss = "\n*** Basic info ***\n\n"
-        ss += "Catalog row index (zero-based) : {}\n".format(d["catalog_row_index"])
-        ss += "{:<20s} : {}\n".format("Source name", d["Source_Name"])
+        ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
+        ss += "{:<20s} : {}\n".format("Source name", self.name)
 
         ss += "{:<20s} : {}\n".format("Analysis reference", d["Analysis_Reference"])
         ss += "{:<20s} : {}\n".format("Source class", d["Source_Class"])
@@ -715,7 +715,7 @@ class SourceCatalogHGPS(SourceCatalog):
     def gaussian_component(self, row_idx):
         """Gaussian component (`SourceCatalogObjectHGPSComponent`)."""
         data = table_row_to_dict(self.table_components[row_idx])
-        data["catalog_row_index"] = row_idx
+        data[SourceCatalogObject._source_index_key] = row_idx
         return SourceCatalogObjectHGPSComponent(data=data)
 
 

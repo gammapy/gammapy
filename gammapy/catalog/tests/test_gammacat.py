@@ -85,7 +85,7 @@ class TestSourceCatalogGammaCat:
             "SNR G006.4-00.1",
             "GRO J1801-2320",
         ]:
-            assert gammacat[name].index == 112
+            assert gammacat[name].row_index == 112
 
     def test_sort_table(self, gammacat):
         name = "HESS J1848-018"

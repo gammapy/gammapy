@@ -75,8 +75,8 @@ class TestSourceCatalogObject:
     def test_name(self):
         assert self.source.name == "bb"
 
-    def test_index(self):
-        assert self.source.index == 1
+    def test_row_index(self):
+        assert self.source.row_index == 1
 
     def test_data(self):
         d = self.source.data
