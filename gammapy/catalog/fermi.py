@@ -641,14 +641,13 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
             errs["beta"] = self.data["Unc_beta"]
             model = LogParabolaSpectralModel(**pars)
         elif spec_type == "PLSuperExpCutoff":
-            # TODO: why convert to GeV here? Remove?
-            pars["reference"] = pars["reference"].to("GeV")
+            pars["reference"] = pars["reference"]
             pars["index_1"] = self.data["Spectral_Index"]
             pars["index_2"] = self.data["Exp_Index"]
-            pars["ecut"] = self.data["Cutoff"].to("GeV")
+            pars["ecut"] = self.data["Cutoff"]
             errs["index_1"] = self.data["Unc_Spectral_Index"]
             errs["index_2"] = self.data["Unc_Exp_Index"]
-            errs["ecut"] = self.data["Unc_Cutoff"].to("GeV")
+            errs["ecut"] = self.data["Unc_Cutoff"]
             model = SuperExpCutoffPowerLaw3FGLSpectralModel(**pars)
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
