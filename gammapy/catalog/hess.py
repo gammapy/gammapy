@@ -6,10 +6,9 @@ from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from gammapy.modeling.models import (
-    ExpCutoffPowerLawSpectralModel,
     GaussianSpatialModel,
+    Model,
     PointSpatialModel,
-    PowerLawSpectralModel,
     ShellSpatialModel,
     SkyModel,
     SkyModels,
@@ -448,27 +447,34 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         else:
             raise ValueError(f"Invalid selection: which = {which!r}")
 
-        pars, errs = {}, {}
-
         if spec_type == "pl":
-            pars["index"] = data["Index_Spec_PL"]
-            pars["amplitude"] = data["Flux_Spec_PL_Diff_Pivot"]
-            pars["reference"] = data["Energy_Spec_PL_Pivot"]
-            errs["amplitude"] = data["Flux_Spec_PL_Diff_Pivot_Err"]
-            errs["index"] = data["Index_Spec_PL_Err"]
-            model = PowerLawSpectralModel(**pars)
+            tag = "PowerLawSpectralModel"
+            pars = {
+                "index": data["Index_Spec_PL"],
+                "amplitude": data["Flux_Spec_PL_Diff_Pivot"],
+                "reference": data["Energy_Spec_PL_Pivot"],
+            }
+            errs = {
+                "amplitude": data["Flux_Spec_PL_Diff_Pivot_Err"],
+                "index": data["Index_Spec_PL_Err"],
+            }
         elif spec_type == "ecpl":
-            pars["index"] = data["Index_Spec_ECPL"]
-            pars["amplitude"] = data["Flux_Spec_ECPL_Diff_Pivot"]
-            pars["reference"] = data["Energy_Spec_ECPL_Pivot"]
-            pars["lambda_"] = data["Lambda_Spec_ECPL"]
-            errs["index"] = data["Index_Spec_ECPL_Err"]
-            errs["amplitude"] = data["Flux_Spec_ECPL_Diff_Pivot_Err"]
-            errs["lambda_"] = data["Lambda_Spec_ECPL_Err"]
-            model = ExpCutoffPowerLawSpectralModel(**pars)
+            tag = "ExpCutoffPowerLawSpectralModel"
+            pars = {
+                "index": data["Index_Spec_ECPL"],
+                "amplitude": data["Flux_Spec_ECPL_Diff_Pivot"],
+                "reference": data["Energy_Spec_ECPL_Pivot"],
+                "lambda_": data["Lambda_Spec_ECPL"],
+            }
+            errs = {
+                "index": data["Index_Spec_ECPL_Err"],
+                "amplitude": data["Flux_Spec_ECPL_Diff_Pivot_Err"],
+                "lambda_": data["Lambda_Spec_ECPL_Err"],
+            }
         else:
             raise ValueError(f"Invalid spec_type: {spec_type}")
 
+        model = Model.create(tag, **pars)
         model.parameters.set_error(**errs)
         return model
 

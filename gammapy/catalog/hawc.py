@@ -2,12 +2,7 @@
 """HAWC catalogs (https://www.hawc-observatory.org)."""
 import numpy as np
 from astropy.table import Table
-from gammapy.modeling.models import (
-    DiskSpatialModel,
-    PointSpatialModel,
-    PowerLawSpectralModel,
-    SkyModel,
-)
+from gammapy.modeling.models import DiskSpatialModel, Model, PointSpatialModel, SkyModel
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -120,16 +115,19 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """
         idx = self._get_idx(which)
 
-        pars, errs = {}, {}
-        pars["amplitude"] = self.data[f"spec{idx}_dnde"]
-        errs["amplitude"] = self.data[f"spec{idx}_dnde_err"]
-        pars["index"] = -self.data[f"spec{idx}_index"]
-        errs["index"] = self.data[f"spec{idx}_index_err"]
-        pars["reference"] = "7 TeV"
+        pars = {
+            "reference": "7 TeV",
+            "amplitude": self.data[f"spec{idx}_dnde"],
+            "index": -self.data[f"spec{idx}_index"],
+        }
 
-        model = PowerLawSpectralModel(**pars)
+        errs = {
+            "amplitude": self.data[f"spec{idx}_dnde_err"],
+            "index": self.data[f"spec{idx}_index_err"],
+        }
+
+        model = Model.create("PowerLawSpectralModel", **pars)
         model.parameters.set_error(**errs)
-
         return model
 
     def spatial_model(self, which="point"):

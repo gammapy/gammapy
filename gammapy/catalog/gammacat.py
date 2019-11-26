@@ -11,11 +11,9 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from gammapy.modeling.models import (
-    ExpCutoffPowerLawSpectralModel,
     GaussianSpatialModel,
+    Model,
     PointSpatialModel,
-    PowerLaw2SpectralModel,
-    PowerLawSpectralModel,
     ShellSpatialModel,
     SkyModel,
 )
@@ -268,44 +266,55 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         """
         data = self.data
         spec_type = data["spec_type"]
-        pars, errs = {}, {}
 
         if spec_type == "pl":
-            model_class = PowerLawSpectralModel
-            pars["amplitude"] = data["spec_pl_norm"]
-            errs["amplitude"] = data["spec_pl_norm_err"]
-            pars["index"] = data["spec_pl_index"]
-            errs["index"] = data["spec_pl_index_err"]
-            pars["reference"] = data["spec_pl_e_ref"]
+            tag = "PowerLawSpectralModel"
+            pars = {
+                "amplitude": data["spec_pl_norm"],
+                "index": data["spec_pl_index"],
+                "reference": data["spec_pl_e_ref"],
+            }
+            errs = {
+                "amplitude": data["spec_pl_norm_err"],
+                "index": data["spec_pl_index_err"],
+            }
         elif spec_type == "pl2":
-            model_class = PowerLaw2SpectralModel
-            pars["amplitude"] = data["spec_pl2_flux"]
-            errs["amplitude"] = data["spec_pl2_flux_err"]
-            pars["index"] = data["spec_pl2_index"]
-            errs["index"] = data["spec_pl2_index_err"]
-            pars["emin"] = data["spec_pl2_e_min"]
             e_max = data["spec_pl2_e_max"]
             DEFAULT_E_MAX = u.Quantity(1e5, "TeV")
             if np.isnan(e_max.value):
                 e_max = DEFAULT_E_MAX
-            pars["emax"] = e_max
+
+            tag = "PowerLaw2SpectralModel"
+            pars = {
+                "amplitude": data["spec_pl2_flux"],
+                "index": data["spec_pl2_index"],
+                "emin": data["spec_pl2_e_min"],
+                "emax": e_max,
+            }
+            errs = {
+                "amplitude": data["spec_pl2_flux_err"],
+                "index": data["spec_pl2_index_err"],
+            }
         elif spec_type == "ecpl":
-            model_class = ExpCutoffPowerLawSpectralModel
-            pars["amplitude"] = data["spec_ecpl_norm"]
-            errs["amplitude"] = data["spec_ecpl_norm_err"]
-            pars["index"] = data["spec_ecpl_index"]
-            errs["index"] = data["spec_ecpl_index_err"]
-            pars["lambda_"] = 1.0 / data["spec_ecpl_e_cut"]
-            errs["lambda_"] = data["spec_ecpl_e_cut_err"] / data["spec_ecpl_e_cut"] ** 2
-            pars["reference"] = data["spec_ecpl_e_ref"]
+            tag = "ExpCutoffPowerLawSpectralModel"
+            pars = {
+                "amplitude": data["spec_ecpl_norm"],
+                "index": data["spec_ecpl_index"],
+                "lambda_": 1.0 / data["spec_ecpl_e_cut"],
+                "reference": data["spec_ecpl_e_ref"],
+            }
+            errs = {
+                "amplitude": data["spec_ecpl_norm_err"],
+                "index": data["spec_ecpl_index_err"],
+                "lambda_": data["spec_ecpl_e_cut_err"] / data["spec_ecpl_e_cut"] ** 2,
+            }
         elif spec_type == "none":
             return None
         else:
             raise ValueError(f"Invalid spec_type: {spec_type}")
 
-        model = model_class(**pars)
+        model = Model.create(tag, **pars)
         model.parameters.set_error(**errs)
-
         return model
 
     def spatial_model(self):

@@ -9,15 +9,10 @@ from astropy.time import Time
 from astropy.wcs import FITSFixedWarning
 from gammapy.modeling.models import (
     DiskSpatialModel,
-    ExpCutoffPowerLaw3FGLSpectralModel,
     GaussianSpatialModel,
-    LogParabolaSpectralModel,
+    Model,
     PointSpatialModel,
-    PowerLaw2SpectralModel,
-    PowerLawSpectralModel,
     SkyModel,
-    SuperExpCutoffPowerLaw3FGLSpectralModel,
-    SuperExpCutoffPowerLaw4FGLSpectralModel,
     TemplateSpatialModel,
 )
 from gammapy.spectrum import FluxPoints
@@ -380,36 +375,49 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         spec_type = self.data["SpectrumType"].strip()
 
-        pars, errs = {}, {}
-        pars["reference"] = self.data["Pivot_Energy"]
-
         if spec_type == "PowerLaw":
-            pars["amplitude"] = self.data["PL_Flux_Density"]
-            pars["index"] = self.data["PL_Index"]
-            errs["amplitude"] = self.data["Unc_PL_Flux_Density"]
-            errs["index"] = self.data["Unc_PL_Index"]
-            model = PowerLawSpectralModel(**pars)
+            tag = "PowerLawSpectralModel"
+            pars = {
+                "reference": self.data["Pivot_Energy"],
+                "amplitude": self.data["PL_Flux_Density"],
+                "index": self.data["PL_Index"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_PL_Flux_Density"],
+                "index": self.data["Unc_PL_Index"],
+            }
         elif spec_type == "LogParabola":
-            pars["amplitude"] = self.data["LP_Flux_Density"]
-            pars["alpha"] = self.data["LP_Index"]
-            pars["beta"] = self.data["LP_beta"]
-            errs["amplitude"] = self.data["Unc_LP_Flux_Density"]
-            errs["alpha"] = self.data["Unc_LP_Index"]
-            errs["beta"] = self.data["Unc_LP_beta"]
-            model = LogParabolaSpectralModel(**pars)
+            tag = "LogParabolaSpectralModel"
+            pars = {
+                "reference": self.data["Pivot_Energy"],
+                "amplitude": self.data["LP_Flux_Density"],
+                "alpha": self.data["LP_Index"],
+                "beta": self.data["LP_beta"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_LP_Flux_Density"],
+                "alpha": self.data["Unc_LP_Index"],
+                "beta": self.data["Unc_LP_beta"],
+            }
         elif spec_type == "PLSuperExpCutoff":
-            pars["amplitude"] = self.data["PLEC_Flux_Density"]
-            pars["index_1"] = self.data["PLEC_Index"]
-            pars["index_2"] = self.data["PLEC_Exp_Index"]
-            pars["expfactor"] = self.data["PLEC_Expfactor"]
-            errs["amplitude"] = self.data["Unc_PLEC_Flux_Density"]
-            errs["index_1"] = self.data["Unc_PLEC_Index"]
-            errs["index_2"] = np.nan_to_num(self.data["Unc_PLEC_Exp_Index"])
-            errs["expfactor"] = self.data["Unc_PLEC_Expfactor"]
-            model = SuperExpCutoffPowerLaw4FGLSpectralModel(**pars)
+            tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
+            pars = {
+                "reference": self.data["Pivot_Energy"],
+                "amplitude": self.data["PLEC_Flux_Density"],
+                "index_1": self.data["PLEC_Index"],
+                "index_2": self.data["PLEC_Exp_Index"],
+                "expfactor": self.data["PLEC_Expfactor"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_PLEC_Flux_Density"],
+                "index_1": self.data["Unc_PLEC_Index"],
+                "index_2": np.nan_to_num(self.data["Unc_PLEC_Exp_Index"]),
+                "expfactor": self.data["Unc_PLEC_Expfactor"],
+            }
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
+        model = Model.create(tag, **pars)
         model.parameters.set_error(**errs)
         return model
 
@@ -619,39 +627,62 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         spec_type = self.data["SpectrumType"].strip()
 
-        pars, errs = {}, {}
-        pars["amplitude"] = self.data["Flux_Density"]
-        errs["amplitude"] = self.data["Unc_Flux_Density"]
-        pars["reference"] = self.data["Pivot_Energy"]
-
         if spec_type == "PowerLaw":
-            pars["index"] = self.data["Spectral_Index"]
-            errs["index"] = self.data["Unc_Spectral_Index"]
-            model = PowerLawSpectralModel(**pars)
+            tag = "PowerLawSpectralModel"
+            pars = {
+                "amplitude": self.data["Flux_Density"],
+                "reference": self.data["Pivot_Energy"],
+                "index": self.data["Spectral_Index"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_Flux_Density"],
+                "index": self.data["Unc_Spectral_Index"],
+            }
         elif spec_type == "PLExpCutoff":
-            pars["index"] = self.data["Spectral_Index"]
-            pars["ecut"] = self.data["Cutoff"]
-            errs["index"] = self.data["Unc_Spectral_Index"]
-            errs["ecut"] = self.data["Unc_Cutoff"]
-            model = ExpCutoffPowerLaw3FGLSpectralModel(**pars)
+            tag = "ExpCutoffPowerLaw3FGLSpectralModel"
+            pars = {
+                "amplitude": self.data["Flux_Density"],
+                "reference": self.data["Pivot_Energy"],
+                "index": self.data["Spectral_Index"],
+                "ecut": self.data["Cutoff"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_Flux_Density"],
+                "index": self.data["Unc_Spectral_Index"],
+                "ecut": self.data["Unc_Cutoff"],
+            }
         elif spec_type == "LogParabola":
-            pars["alpha"] = self.data["Spectral_Index"]
-            pars["beta"] = self.data["beta"]
-            errs["alpha"] = self.data["Unc_Spectral_Index"]
-            errs["beta"] = self.data["Unc_beta"]
-            model = LogParabolaSpectralModel(**pars)
+            tag = "LogParabolaSpectralModel"
+            pars = {
+                "amplitude": self.data["Flux_Density"],
+                "reference": self.data["Pivot_Energy"],
+                "alpha": self.data["Spectral_Index"],
+                "beta": self.data["beta"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_Flux_Density"],
+                "alpha": self.data["Unc_Spectral_Index"],
+                "beta": self.data["Unc_beta"],
+            }
         elif spec_type == "PLSuperExpCutoff":
-            pars["reference"] = pars["reference"]
-            pars["index_1"] = self.data["Spectral_Index"]
-            pars["index_2"] = self.data["Exp_Index"]
-            pars["ecut"] = self.data["Cutoff"]
-            errs["index_1"] = self.data["Unc_Spectral_Index"]
-            errs["index_2"] = self.data["Unc_Exp_Index"]
-            errs["ecut"] = self.data["Unc_Cutoff"]
-            model = SuperExpCutoffPowerLaw3FGLSpectralModel(**pars)
+            tag = "SuperExpCutoffPowerLaw3FGLSpectralModel"
+            pars = {
+                "amplitude": self.data["Flux_Density"],
+                "reference": self.data["Pivot_Energy"],
+                "index_1": self.data["Spectral_Index"],
+                "index_2": self.data["Exp_Index"],
+                "ecut": self.data["Cutoff"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_Flux_Density"],
+                "index_1": self.data["Unc_Spectral_Index"],
+                "index_2": self.data["Unc_Exp_Index"],
+                "ecut": self.data["Unc_Cutoff"],
+            }
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
+        model = Model.create(tag, **pars)
         model.parameters.set_error(**errs)
         return model
 
@@ -869,15 +900,19 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
 
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
-        pars, errs = {}, {}
-        pars["amplitude"] = self.data["Flux50"]
-        pars["emin"], pars["emax"] = self.energy_range
-        pars["index"] = self.data["Spectral_Index"]
+        tag = "PowerLaw2SpectralModel"
+        pars = {
+            "amplitude": self.data["Flux50"],
+            "emin": self.energy_range[0],
+            "emax": self.energy_range[1],
+            "index": self.data["Spectral_Index"],
+        }
+        errs = {
+            "amplitude": self.data["Unc_Flux50"],
+            "index": self.data["Unc_Spectral_Index"],
+        }
 
-        errs["amplitude"] = self.data["Unc_Flux50"]
-        errs["index"] = self.data["Unc_Spectral_Index"]
-
-        model = PowerLaw2SpectralModel(**pars)
+        model = Model.create(tag, **pars)
         model.parameters.set_error(**errs)
         return model
 
@@ -1026,24 +1061,34 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         d = self.data
         spec_type = self.data["SpectrumType"].strip()
 
-        pars, errs = {}, {}
-        pars["amplitude"] = d["Flux_Density"]
-        errs["amplitude"] = d["Unc_Flux_Density"]
-        pars["reference"] = d["Pivot_Energy"]
-
         if spec_type == "PowerLaw":
-            pars["index"] = d["PowerLaw_Index"]
-            errs["index"] = d["Unc_PowerLaw_Index"]
-            model = PowerLawSpectralModel(**pars)
+            tag = "PowerLawSpectralModel"
+            pars = {
+                "reference": d["Pivot_Energy"],
+                "amplitude": d["Flux_Density"],
+                "index": d["PowerLaw_Index"],
+            }
+            errs = {
+                "amplitude": d["Unc_Flux_Density"],
+                "index": d["Unc_PowerLaw_Index"],
+            }
         elif spec_type == "LogParabola":
-            pars["alpha"] = d["Spectral_Index"]
-            pars["beta"] = d["beta"]
-            errs["alpha"] = d["Unc_Spectral_Index"]
-            errs["beta"] = d["Unc_beta"]
-            model = LogParabolaSpectralModel(**pars)
+            tag = "LogParabolaSpectralModel"
+            pars = {
+                "reference": d["Pivot_Energy"],
+                "amplitude": d["Flux_Density"],
+                "alpha": d["Spectral_Index"],
+                "beta": d["beta"],
+            }
+            errs = {
+                "amplitude": d["Unc_Flux_Density"],
+                "alpha": d["Unc_Spectral_Index"],
+                "beta": d["Unc_beta"],
+            }
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
+        model = Model.create(tag, **pars)
         model.parameters.set_error(**errs)
         return model
 
