@@ -2,7 +2,7 @@
 *** Basic info ***
 
 Catalog row index (zero-based) : 0
-Source name          : 3FGL J0000.1+6545 
+Source name          : 3FGL J0000.1+6545
 Extended name        :                   
 Associations     : 
 Class1           :      

@@ -2,7 +2,7 @@
 *** Basic info ***
 
 Catalog row index (zero-based) : 4
-Source name          : 3FGL J0001.4+2120 
+Source name          : 3FGL J0001.4+2120
 Extended name        :                   
 Associations     : TXS 2358+209, 3EG J2359+2041
 Class1           : fsrq 

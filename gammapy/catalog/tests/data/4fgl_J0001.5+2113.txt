@@ -2,7 +2,7 @@
 *** Basic info ***
 
 Catalog row index (zero-based) : 3
-Source name          : 4FGL J0001.5+2113 
+Source name          : 4FGL J0001.5+2113
 Extended name        :                   
 Associations     : TXS 2358+209, 3FGL J0001.4+2120, 3EG J2359+2041
 ASSOC_PROB_BAY   : 0.998

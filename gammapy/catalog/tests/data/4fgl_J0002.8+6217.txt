@@ -2,7 +2,7 @@
 *** Basic info ***
 
 Catalog row index (zero-based) : 7
-Source name          : 4FGL J0002.8+6217 
+Source name          : 4FGL J0002.8+6217
 Extended name        :                   
 Associations     : PSR J0002+6216, 3FGL J0002.6+6218
 ASSOC_PROB_BAY   : 1.000
