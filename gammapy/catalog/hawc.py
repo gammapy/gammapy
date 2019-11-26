@@ -63,18 +63,13 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
     @staticmethod
     def _info_spectrum_one(d, idx):
-        label = f"spec{idx}_"
         ss = f"Spectrum {idx}:\n"
-        args = (
-            "Flux at 7 TeV",
-            d[label + "dnde"].value,
-            d[label + "dnde_err"].value,
-            "cm-2 s-1 TeV-1",
-        )
-        ss += "{:20s} : {:.3} +- {:.3} {}\n".format(*args)
-        args = "Spectral index", d[label + "index"], d[label + "index_err"]
-        ss += "{:20s} : {:.3f} +- {:.3f}\n".format(*args)
-        ss += "{:20s} : {:1}\n\n".format("Test radius", d[label + "radius"])
+        val, err = d[f"spec{idx}_dnde"].value, d[f"spec{idx}_dnde_err"].value
+        ss += f"Flux at 7 TeV: {val:.3} +- {err:.3} cm-2 s-1 TeV-1\n"
+        val, err = d[f"spec{idx}_index"], d[f"spec{idx}_index_err"]
+        ss += f"Spectral index: {val:.3f} +- {err:.3f}\n"
+        radius = d[f"spec{idx}_radius"]
+        ss += f"Test Radius: {radius:1}\n\n"
         return ss
 
     def _info_spectrum(self):

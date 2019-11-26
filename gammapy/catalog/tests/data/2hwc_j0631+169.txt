@@ -15,12 +15,12 @@ Position error: 0.114 deg
 *** Spectral info ***
 
 Spectrum 0:
-Flux at 7 TeV        : 6.71e-15 +- 1.47e-15 cm-2 s-1 TeV-1
-Spectral index       : -2.570 +- 0.150
-Test radius          : 0.0 deg
+Flux at 7 TeV: 6.71e-15 +- 1.47e-15 cm-2 s-1 TeV-1
+Spectral index: -2.570 +- 0.150
+Test Radius: 0.0 deg
 
 Spectrum 1:
-Flux at 7 TeV        : 4.87e-14 +- 6.85e-15 cm-2 s-1 TeV-1
-Spectral index       : -2.230 +- 0.080
-Test radius          : 2.0 deg
+Flux at 7 TeV: 4.87e-14 +- 6.85e-15 cm-2 s-1 TeV-1
+Spectral index: -2.230 +- 0.080
+Test Radius: 2.0 deg
 
