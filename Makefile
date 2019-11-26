@@ -153,6 +153,6 @@ dataset-index:
 	python dev/datasets/make_dataset_index.py dataset-index
 
 dataset-download:
-	gammapy download datasets --out=$(GAMMAPY_DATA)
+	gammapy download datasets --out=$(GAMMAPY_DATA) --tests
 
 # TODO: add test and code quality checks for `examples`
