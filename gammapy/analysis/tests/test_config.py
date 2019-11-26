@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from pathlib import Path
 import pytest
 from astropy.units import Quantity
