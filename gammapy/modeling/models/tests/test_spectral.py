@@ -371,6 +371,13 @@ def test_absorption():
     assert model.alpha_norm.value == 1.5
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
 
+    # Test error propagation
+    model.spectral_model.parameters.set_error(
+        amplitude=0.1 * model.spectral_model.amplitude.value
+    )
+    dnde, dnde_err = model.evaluate_error(1 * u.TeV)
+    assert_allclose(dnde_err / dnde, 0.1)
+
 
 def test_ecpl_integrate():
     # regression test to check the numerical integration for small energy bins
@@ -586,10 +593,4 @@ class TestSpectralModelErrorPropagation:
         # Regression test for Naima model
         # https://github.com/gammapy/gammapy/issues/2190
         # TODO: implement test case. Move to Naima model tests!
-        pass
-
-    def test_absorption_model_error_propagation(self):
-        # Regression test for absorption model
-        # https://github.com/gammapy/gammapy/issues/1046
-        # TODO: implement test case. Move to absorption model tests!
         pass
