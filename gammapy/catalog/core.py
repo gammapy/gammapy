@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalog and object base classes."""
+import abc
 import copy
 import numbers
-import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data, table_row_to_dict
@@ -70,6 +70,11 @@ class SourceCatalog:
         Columns with source name aliases. This will allow accessing the source
         row by alias names as well.
     """
+
+    @classmethod
+    @abc.abstractmethod
+    def description(cls):
+        pass
 
     source_object_class = SourceCatalogObject
 
