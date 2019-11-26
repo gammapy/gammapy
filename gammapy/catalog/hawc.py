@@ -156,9 +156,8 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
             }
 
         errs = {
-            "lat_0": self.data["pos_err"].to("deg"),
-            "lon_0": self.data["pos_err"].to("deg")
-            / np.cos(self.data["glat"].to("rad")),
+            "lat_0": self.data["pos_err"],
+            "lon_0": self.data["pos_err"] / np.cos(self.data["glat"]),
         }
 
         model = Model.create(tag, **pars)

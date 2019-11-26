@@ -321,9 +321,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         pars = {"lon_0": d["glon"], "lat_0": d["glat"], "frame": "galactic"}
         errs = {
-            "lat_0": self.data["pos_err"].to("deg"),
-            "lon_0": self.data["pos_err"].to("deg")
-            / np.cos(self.data["glat"].to("rad")),
+            "lat_0": self.data["pos_err"],
+            "lon_0": self.data["pos_err"] / np.cos(self.data["glat"]),
         }
 
         if morph_type == "point":

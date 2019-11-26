@@ -183,14 +183,14 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
             percent = 0.95
             semi_minor = d["Conf_95_SemiMinor"]
             semi_major = d["Conf_95_SemiMajor"]
-            phi_0 = d["Conf_95_PosAng"].to("deg")
+            phi_0 = d["Conf_95_PosAng"]
 
         if np.isnan(phi_0):
             phi_0 = 0.0 * u.deg
 
         scale_1sigma = Gauss2DPDF().containment_radius(percent)
-        lat_err = semi_major.to("deg") / scale_1sigma
-        lon_err = semi_minor.to("deg") / scale_1sigma / np.cos(d["DEJ2000"].to("rad"))
+        lat_err = semi_major / scale_1sigma
+        lon_err = semi_minor / scale_1sigma / np.cos(d["DEJ2000"])
 
         if model.tag != "TemplateSpatialModel":
             model.parameters.set_error(lon_0=lon_err, lat_0=lat_err)
@@ -347,10 +347,10 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
             e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
-            sigma = de["Model_SemiMajor"].to("deg")
-            phi = de["Model_PosAng"].to("deg")
+            sigma = de["Model_SemiMajor"]
+            phi = de["Model_PosAng"]
             if morph_type == "Disk":
-                r_0 = de["Model_SemiMajor"].to("deg")
+                r_0 = de["Model_SemiMajor"]
                 model = DiskSpatialModel(
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
@@ -698,10 +698,10 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
             e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
-            sigma = de["Model_SemiMajor"].to("deg")
-            phi = de["Model_PosAng"].to("deg")
+            sigma = de["Model_SemiMajor"]
+            phi = de["Model_PosAng"]
             if morph_type == "Disk":
-                r_0 = de["Model_SemiMajor"].to("deg")
+                r_0 = de["Model_SemiMajor"]
                 model = DiskSpatialModel(
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
@@ -875,10 +875,10 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
             e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
-            sigma = de["Model_SemiMajor"].to("deg")
-            phi = de["Model_PosAng"].to("deg")
+            sigma = de["Model_SemiMajor"]
+            phi = de["Model_PosAng"]
             if morph_type in ["Disk", "Elliptical Disk"]:
-                r_0 = de["Model_SemiMajor"].to("deg")
+                r_0 = de["Model_SemiMajor"]
                 model = DiskSpatialModel(
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
@@ -1140,10 +1140,10 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
             de = self.data_extended
             morph_type = de["Spatial_Function"].strip()
             e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
-            sigma = de["Model_SemiMajor"].to("deg")
-            phi = de["Model_PosAng"].to("deg")
+            sigma = de["Model_SemiMajor"]
+            phi = de["Model_PosAng"]
             if morph_type == "RadialDisk":
-                r_0 = de["Model_SemiMajor"].to("deg")
+                r_0 = de["Model_SemiMajor"]
                 model = DiskSpatialModel(
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
