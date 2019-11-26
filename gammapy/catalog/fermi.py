@@ -88,8 +88,8 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         d = self.data
         keys = self.asso
         ss = "\n*** Basic info ***\n\n"
-        ss += "Catalog row index (zero-based) : {}\n".format(d["catalog_row_index"])
-        ss += "{:<20s} : {}\n".format("Source name", d["Source_Name"])
+        ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
+        ss += "{:<20s} : {}\n".format("Source name", self.name)
         try:
             ss += "{:<20s} : {}\n".format("Extended name", d["Extended_Source_Name"])
         except (KeyError):

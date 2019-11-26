@@ -41,7 +41,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     """
 
     _source_name_key = "common_name"
-    _source_index_key = "catalog_row_index"
 
     def __str__(self):
         return self.info()
@@ -74,8 +73,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         """Print basic info."""
         d = self.data
         ss = "\n*** Basic info ***\n\n"
-        ss += "Catalog row index (zero-based) : {}\n".format(d["catalog_row_index"])
-        ss += "{:<15s} : {}\n".format("Common name", d["common_name"])
+        ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
+        ss += "{:<15s} : {}\n".format("Common name", self.name)
 
         def get_nonentry_keys(keys):
             vals = [d[_].strip() for _ in keys]

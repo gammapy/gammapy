@@ -37,7 +37,7 @@ FLUX_TO_CRAB = 100 / 2.26e-11
 FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
 
 
-class SourceCatalogObjectHGPSComponent:
+class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
     """One Gaussian component from the HGPS catalog.
 
     See Also
@@ -46,7 +46,6 @@ class SourceCatalogObjectHGPSComponent:
     """
 
     _source_name_key = "Component_ID"
-    _source_index_key = "row_index"
 
     def __init__(self, data):
         self.data = data
@@ -75,11 +74,6 @@ class SourceCatalogObjectHGPSComponent:
         """Source name (str)"""
         name = self.data[self._source_name_key]
         return name.strip()
-
-    @property
-    def index(self):
-        """Row index of source in table (int)"""
-        return self.data[self._source_index_key]
 
     def spatial_model(self):
         """Component spatial model (`~gammapy.modeling.models.GaussianSpatialModel`)."""
@@ -139,8 +133,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """Print basic info."""
         d = self.data
         ss = "\n*** Basic info ***\n\n"
-        ss += "Catalog row index (zero-based) : {}\n".format(d["catalog_row_index"])
-        ss += "{:<20s} : {}\n".format("Source name", d["Source_Name"])
+        ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
+        ss += "{:<20s} : {}\n".format("Source name", self.name)
 
         ss += "{:<20s} : {}\n".format("Analysis reference", d["Analysis_Reference"])
         ss += "{:<20s} : {}\n".format("Source class", d["Source_Class"])
@@ -694,7 +688,7 @@ class SourceCatalogHGPS(SourceCatalog):
         source = super()._make_source_object(index)
 
         if source.data["Components"] != "":
-            self._attach_component_info(source)
+            source.components = list(self._get_gaussian_components(source))
 
         self._attach_association_info(source)
 
@@ -703,12 +697,10 @@ class SourceCatalogHGPS(SourceCatalog):
 
         return source
 
-    def _attach_component_info(self, source):
-        source.components = []
-        lookup = SourceCatalog(self.table_components, source_name_key="Component_ID")
+    def _get_gaussian_components(self, source):
         for name in source.data["Components"].split(", "):
-            component = SourceCatalogObjectHGPSComponent(data=lookup[name].data)
-            source.components.append(component)
+            row_index = int(name.split()[-1]) - 1
+            yield self.gaussian_component(row_index)
 
     def _attach_association_info(self, source):
         t = self.table_associations
@@ -723,7 +715,7 @@ class SourceCatalogHGPS(SourceCatalog):
     def gaussian_component(self, row_idx):
         """Gaussian component (`SourceCatalogObjectHGPSComponent`)."""
         data = table_row_to_dict(self.table_components[row_idx])
-        data["row_index"] = row_idx
+        data[SourceCatalogObject._row_index_key] = row_idx
         return SourceCatalogObjectHGPSComponent(data=data)
 
 

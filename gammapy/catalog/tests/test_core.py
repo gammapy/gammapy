@@ -8,20 +8,27 @@ from gammapy.catalog import SourceCatalog
 from gammapy.utils.testing import assert_quantity_allclose
 
 
+class SomeSourceCatalog(SourceCatalog):
+    """Minimal test source catalog class for unit tests."""
+
+    name = "test123"
+    description = "Test source catalog"
+
+
 def make_test_catalog():
     table = Table()
     table["Source_Name"] = ["a", "bb", "ccc"]
     table["RA"] = Column([42.2, 43.3, 44.4], unit="deg")
     table["DEC"] = Column([1, 2, 3], unit="deg")
-
-    catalog = SourceCatalog(table)
-
-    return catalog
+    return SomeSourceCatalog(table)
 
 
 class TestSourceCatalog:
     def setup(self):
         self.cat = make_test_catalog()
+
+    def test_str(self):
+        assert "description" in str(self.cat)
 
     def test_table(self):
         assert_allclose(self.cat.table["RA"][1], 43.3)
@@ -75,8 +82,8 @@ class TestSourceCatalogObject:
     def test_name(self):
         assert self.source.name == "bb"
 
-    def test_index(self):
-        assert self.source.index == 1
+    def test_row_index(self):
+        assert self.source.row_index == 1
 
     def test_data(self):
         d = self.source.data

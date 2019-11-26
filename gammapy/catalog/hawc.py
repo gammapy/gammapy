@@ -21,7 +21,6 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
     """
 
     _source_name_key = "source_name"
-    _source_index_key = "catalog_row_index"
 
     def __str__(self):
         return self.info()
@@ -52,8 +51,8 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """Print basic info."""
         return (
             f"\n*** Basic info ***\n\n"
-            f"Catalog row index (zero-based) : {self.data['catalog_row_index']}\n"
-            f"Source name : {self.data['source_name']}\n"
+            f"Catalog row index (zero-based) : {self.row_index}\n"
+            f"Source name : {self.name}\n"
         )
 
     def _info_position(self):

@@ -2,7 +2,7 @@
 *** Basic info ***
 
 Catalog row index (zero-based) : 55
-Source name          : 3FGL J0023.4+0923 
+Source name          : 3FGL J0023.4+0923
 Extended name        :                   
 Associations     : PSR J0023+0923
 Class1           : PSR  

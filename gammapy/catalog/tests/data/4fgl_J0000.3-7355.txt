@@ -2,7 +2,7 @@
 *** Basic info ***
 
 Catalog row index (zero-based) : 0
-Source name          : 4FGL J0000.3-7355 
+Source name          : 4FGL J0000.3-7355
 Extended name        :                   
 Associations     : 
 ASSOC_PROB_BAY   : 0.000

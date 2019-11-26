@@ -71,7 +71,7 @@ class TestSourceCatalogObjectHGPS:
     @staticmethod
     def test_basics(source):
         assert source.name == "HESS J1843-033"
-        assert source.index == 64
+        assert source.row_index == 64
         data = source.data
         assert data["Source_Class"] == "Unid"
         assert "SourceCatalogObjectHGPS" in repr(source)
@@ -280,7 +280,7 @@ class TestSourceCatalogObjectHGPSComponent:
 
     @staticmethod
     def test_index(component):
-        assert component.index == 83
+        assert component.row_index == 83
 
     @staticmethod
     def test_spatial_model(component):

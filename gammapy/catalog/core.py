@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalog and object base classes."""
+import abc
 import copy
 import numbers
-import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data, table_row_to_dict
@@ -20,13 +20,13 @@ class SourceCatalogObject:
     attribute as a dict.
 
     The source catalog object is decoupled from the source catalog,
-    it doesn't hold a reference back to it.
-    The catalog table row index is stored in `_table_row_index` though,
-    because it can be useful for debugging or display.
+    it doesn't hold a reference back to it, except for a key
+    ``_row_index`` of type ``int`` that links to the catalog table
+    row the source information comes from.
     """
 
     _source_name_key = "Source_Name"
-    _source_index_key = "catalog_row_index"
+    _row_index_key = "_row_index"
 
     def __init__(self, data, data_extended=None):
         self.data = data
@@ -40,33 +40,9 @@ class SourceCatalogObject:
         return name.strip()
 
     @property
-    def index(self):
+    def row_index(self):
         """Row index of source in catalog (int)"""
-        return self.data[self._source_index_key]
-
-    @property
-    def _data_python_dict(self):
-        """Convert ``data`` to a Python dict with Python types.
-
-        The dict is readily JSON or YAML serializable.
-        Quantity unit information is stripped.
-
-        This is mainly used at the moment to pass the data to
-        the gamma-sky.net webpage.
-        """
-        out = {}
-        for key, value in self.data.items():
-            if isinstance(value, int):
-                out_val = value
-            else:
-                # This works because almost all values in ``data``
-                # are Numpy objects, and ``tolist`` works for Numpy
-                # arrays and scalars.
-                out_val = np.asarray(value).tolist()
-
-            out[key] = out_val
-
-        return out
+        return self.data[self._row_index_key]
 
     @property
     def position(self):
@@ -75,7 +51,7 @@ class SourceCatalogObject:
         return _skycoord_from_table(table)[0]
 
 
-class SourceCatalog:
+class SourceCatalog(abc.ABC):
     """Generic source catalog.
 
     This class can be used directly, but it's mostly used as a
@@ -95,11 +71,20 @@ class SourceCatalog:
         row by alias names as well.
     """
 
-    source_object_class = SourceCatalogObject
+    @classmethod
+    @abc.abstractmethod
+    def name(cls):
+        """Catalog name (str)."""
+        pass
 
-    # TODO: at the moment these are duplicated in SourceCatalogObject.
-    # Should we share them somehow?
-    _source_index_key = "catalog_row_index"
+    @classmethod
+    @abc.abstractmethod
+    def description(cls):
+        """Catalog description (str)."""
+        pass
+
+    source_object_class = SourceCatalogObject
+    """Source class (`SourceCatalogObject`)."""
 
     def __init__(self, table, source_name_key="Source_Name", source_name_alias=()):
         self.table = table
@@ -107,7 +92,12 @@ class SourceCatalog:
         self._source_name_alias = source_name_alias
 
     def __str__(self):
-        return self.description + f" with {len(self.table)} objects."
+        return (
+            f"{self.__class__.__name__}:\n"
+            f"    name: {self.name}\n"
+            f"    description: {self.description}\n"
+            f"    sources: {len(self.table)}\n"
+        )
 
     @lazyproperty
     def _name_to_index_cache(self):
@@ -146,6 +136,7 @@ class SourceCatalog:
         if name not in possible_names:
             self.__dict__.pop("_name_to_index_cache")
             index = self._name_to_index_cache[name]
+
         return index
 
     def source_name(self, index):
@@ -196,7 +187,7 @@ class SourceCatalog:
             Source object
         """
         data = table_row_to_dict(self.table[index])
-        data[self._source_index_key] = index
+        data[SourceCatalogObject._row_index_key] = index
 
         if "Extended_Source_Name" in data:
             name_extended = data["Extended_Source_Name"].strip()
@@ -218,18 +209,6 @@ class SourceCatalog:
         names = [_.strip() for _ in self.extended_sources_table["Source_Name"]]
         idx = range(len(names))
         return dict(zip(names, idx))
-
-    @property
-    def _data_python_list(self):
-        """Convert catalog to a Python list with Python types.
-
-        The list is readily JSON or YAML serializable.
-        Quantity unit information is stripped.
-
-        This is mainly used at the moment to pass the data to
-        the gamma-sky.net webpage.
-        """
-        return [source._data_python_dict for source in self]
 
     @property
     def positions(self):
