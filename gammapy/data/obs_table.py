@@ -44,6 +44,22 @@ class ObservationTable(Table):
             self["GLON_PNT"], self["GLAT_PNT"], unit="deg", frame="galactic"
         )
 
+    @property
+    def time_ref(self):
+        """Time reference (`~astropy.time.Time`)."""
+        return time_ref_from_dict(self.meta)
+
+    @property
+    def time_start(self):
+        """Observation start time (`~astropy.time.Time`)."""
+        return self.time_ref + Quantity(self["TSTART"], "second")
+
+    @property
+    def time_stop(self):
+        """Observation stop time (`~astropy.time.Time`)."""
+        return self.time_ref + Quantity(self["TSTOP"], "second")
+
+
     @lazyproperty
     def _index_dict(self):
         """Dict containing row index for all obs ids."""
@@ -140,8 +156,7 @@ class ObservationTable(Table):
 
         Apply a 1D box selection (min, max) to a
         table on any time variable that is in the observation table.
-        It supports both fomats: absolute times in
-        `~astropy.time.Time` variables and [MET]_.
+        It supports absolute times in `~astropy.time.Time` format.
 
         If the inverted flag is activated, the selection is applied to
         keep all elements outside the selected range.
