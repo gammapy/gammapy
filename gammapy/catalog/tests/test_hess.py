@@ -149,17 +149,6 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(pars.error("reference"), 0)
 
     @staticmethod
-    def test_spatial_model_type(cat):
-        morph_types = collections.Counter([_.spatial_model_type for _ in cat])
-        assert morph_types == {
-            "gaussian": 52,
-            "2-gaussian": 8,
-            "shell": 7,
-            "point-like": 6,
-            "3-gaussian": 5,
-        }
-
-    @staticmethod
     def test_position_error(cat):
         scale_r95 = Gauss2DPDF().containment_radius(0.95)
 

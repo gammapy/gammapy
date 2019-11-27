@@ -64,8 +64,7 @@ class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
     @property
     def name(self):
         """Source name (str)"""
-        name = self.data[self._source_name_key]
-        return name.strip()
+        return self.data[self._source_name_key]
 
     def spatial_model(self):
         """Component spatial model (`~gammapy.modeling.models.GaussianSpatialModel`)."""
@@ -467,14 +466,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         model.parameters.set_error(**errs)
         return model
 
-    @property
-    def spatial_model_type(self):
-        """Spatial model type (str).
-
-        One of: 'point-like', 'shell', 'gaussian', '2-gaussian', '3-gaussian'
-        """
-        return self.data["Spatial_Model"].strip().lower()
-
     def spatial_model(self):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
@@ -489,17 +480,17 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         pars = {"lon_0": d["GLON"], "lat_0": d["GLAT"], "frame": "galactic"}
         errs = {"lon_0": d["GLON_Err"], "lat_0": d["GLAT_Err"]}
 
-        spatial_type = self.spatial_model_type
+        spatial_type = self.data["Spatial_Model"]
 
-        if spatial_type == "point-like":
+        if spatial_type == "Point-Like":
             tag = "PointSpatialModel"
-        elif spatial_type == "gaussian":
+        elif spatial_type == "Gaussian":
             tag = "GaussianSpatialModel"
             pars["sigma"] = d["Size"]
             errs["sigma"] = d["Size_Err"]
-        elif spatial_type in {"2-gaussian", "3-gaussian"}:
+        elif spatial_type in {"2-Gaussian", "3-Gaussian"}:
             raise ValueError("For Gaussian or Multi-Gaussian models, use sky_model()!")
-        elif spatial_type == "shell":
+        elif spatial_type == "Shell":
             # HGPS contains no information on shell width
             # Here we assume a 5% shell width for all shells.
             tag = "ShellSpatialModel"
@@ -526,7 +517,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         sky_model : `~gammapy.modeling.models.SkyModel`
             Sky model of the catalog object.
         """
-        if self.spatial_model_type in {"2-gaussian", "3-gaussian"}:
+        spatial_type = self.data["Spatial_Model"]
+        if spatial_type in {"2-Gaussian", "3-Gaussian"}:
             models = []
             for component in self.components:
                 spectral_model = self.spectral_model(which=which)
