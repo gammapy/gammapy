@@ -414,14 +414,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         return u.Quantity([emin, emax], "TeV")
 
-    @property
-    def spectral_model_type(self):
-        """Spectral model type (str).
-
-        One of: 'pl', 'ecpl'
-        """
-        return self.data["Spectral_Model"].strip().lower()
-
     def spectral_model(self, which="best"):
         """Spectral model (`~gammapy.modeling.models.SpectralModel`).
 
@@ -438,7 +430,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         data = self.data
 
         if which == "best":
-            spec_type = self.spectral_model_type
+            spec_type = self.data["Spectral_Model"].strip().lower()
         elif which in {"pl", "ecpl"}:
             spec_type = which
         else:

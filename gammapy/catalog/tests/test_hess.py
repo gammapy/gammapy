@@ -107,11 +107,6 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(energy_range.value, [0.21544346, 61.89658356])
 
     @staticmethod
-    def test_spectral_model_type(cat):
-        spec_types = collections.Counter([_.spectral_model_type for _ in cat])
-        assert spec_types == {"pl": 66, "ecpl": 12}
-
-    @staticmethod
     def test_spectral_model_pl(cat):
         source = cat["HESS J1843-033"]
 
