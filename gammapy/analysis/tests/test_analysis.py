@@ -60,77 +60,23 @@ def test_config_to_yaml(tmp_path):
     assert "stack" in text
 
 
-def config_observations():
-    cfg = """
-      - observations:
-            datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
-            filters:
-            - filter_type: all
-        result: 4
-      - observations:
-            datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
-            filters:
-            - filter_type: ids
-              obs_ids:
-              - 110380
-        result: 1
-      - observations:
-            datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
-            filters:
-            - filter_type: all
-            - filter_type: ids
-              exclude: true
-              obs_ids:
-              - 110380
-        result: 3
-      - observations:
-            datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
-            filters:
-            - filter_type: sky_circle
-              frame: galactic
-              lat: 0 deg
-              lon: 0 deg
-              border: 0.5 deg
-              radius: 1 deg
-        result: 1
-      - observations:
-            datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
-            filters:
-            - filter_type: angle_box
-              value_range:
-              - 265 deg
-              - 268 deg
-              variable: RA_PNT
-        result: 2
-      - observations:
-            datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
-            filters:
-            - filter_type: par_box
-              value_range:
-              - 106000
-              - 107000
-              variable: EVENT_COUNT
-        result: 2
-      - observations:
-            datastore: $GAMMAPY_DATA/hess-dl3-dr1
-            filters:
-            - filter_type: par_value
-              value_param: Off data
-              variable: TARGET_NAME
-        result: 45
-    """
-    config_obs = yaml.safe_load(cfg)
-    return config_obs
-
-
 @requires_data()
-@pytest.mark.parametrize("config_obs", config_observations())
-def test_get_observations(config_obs):
+def test_get_observations():
     config = AnalysisConfig()
     analysis = Analysis(config)
-    analysis.config.update_settings(config_obs)
+    analysis.config.data.datastore = "$GAMMAPY_DATA/cta-1dc/index/gps/"
     analysis.get_observations()
-    assert len(analysis.observations) == config_obs["result"]
+    assert len(analysis.observations) == 4
+    analysis.config.data.obs_ids = ["110380"]
+    analysis.get_observations()
+    assert len(analysis.observations) == 1
+    config = AnalysisConfig.from_template("1d")
+    analysis = Analysis(config)
+    analysis.get_observations()
+    assert len(analysis.observations) == 4
+    # TODO
+    # obs_file
+    # obs_time
 
 
 @pytest.fixture(scope="session")

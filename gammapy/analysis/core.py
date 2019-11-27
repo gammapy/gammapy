@@ -30,7 +30,7 @@ class Analysis:
     """Config-driven high-level analysis interface.
 
     It is initialized by default with a set of configuration parameters and values declared in
-    an internal configuration schema YAML file, though the user can also provide configuration
+    an internal high-level interface model, though the user can also provide configuration
     parameters passed as a nested dictionary at the moment of instantiation. In that case these
     parameters will overwrite the default values of those present in the configuration file.
 
@@ -70,50 +70,28 @@ class Analysis:
             return False
 
         log.info("Fetching observations.")
-        datastore_path = make_path(self.settings["observations"]["datastore"])
-        if datastore_path.is_file():
-            self.datastore = DataStore().from_file(datastore_path)
-        elif datastore_path.is_dir():
-            self.datastore = DataStore().from_dir(datastore_path)
-        else:
-            raise FileNotFoundError(f"Datastore {datastore_path} not found.")
-        ids = []
-        selection = dict()
-        for criteria in self.settings["observations"]["filters"]:
-            selected_obs = ObservationTable()
-
-            # TODO: Reduce significantly the code.
-            # This block would be handled by datastore.obs_table.select_observations
-            selection["type"] = criteria["filter_type"]
-            for key, val in criteria.items():
-                if key in ["lon", "lat", "radius", "border"]:
-                    val = Angle(val)
-                selection[key] = val
-            if selection["type"] == "angle_box":
-                selection["type"] = "par_box"
-                selection["value_range"] = Angle(criteria["value_range"])
-            if selection["type"] == "sky_circle" or selection["type"].endswith("_box"):
-                selected_obs = self.datastore.obs_table.select_observations(selection)
-            if selection["type"] == "par_value":
-                mask = (
-                    self.datastore.obs_table[criteria["variable"]]
-                    == criteria["value_param"]
-                )
-                selected_obs = self.datastore.obs_table[mask]
-            if selection["type"] == "ids":
-                obs_list = self.datastore.get_observations(criteria["obs_ids"])
-                selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
-            if selection["type"] == "all":
-                obs_list = self.datastore.get_observations()
-                selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
-
-            if len(selected_obs):
-                if "exclude" in criteria and criteria["exclude"]:
-                    exclude = selected_obs["OBS_ID"].tolist()
-                    selection = np.isin(ids, exclude)
-                    ids = list(np.array(ids)[~selection])
-                else:
-                    ids.extend(selected_obs["OBS_ID"].tolist())
+        selected_obs = ObservationTable()
+        obs_list = self.datastore.get_observations()
+        if len(self.config.data.obs_ids):
+            obs_list = self.datastore.get_observations(self.config.data.obs_ids)
+        selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
+        ids = selected_obs["OBS_ID"].tolist()
+        # TODO
+        # if self.config.data.obs_file:
+        # add obs_ids from file
+        # ids.extend(selected_obs["OBS_ID"].tolist())
+        if self.config.data.obs_cone.lon is not None:
+            # TODO remove border keyword
+            cone = dict(type='sky_circle', frame=self.config.data.obs_cone.frame,
+                             lon=self.config.data.obs_cone.lon,
+                             lat=self.config.data.obs_cone.lat,
+                             radius=self.config.data.obs_cone.radius,
+                             border="1 deg")
+            selected_cone = self.datastore.obs_table.select_observations(cone)
+            ids = list(set(ids) & set(selected_cone["OBS_ID"].tolist()))
+        # TODO
+        # if self.config.data.obs_time.start is not None:
+        # filter obs_ids with time filter
         self.observations = self.datastore.get_observations(ids, skip_missing=True)
         log.info(f"{len(self.observations.list)} observations were selected.")
         for obs in self.observations.list:
@@ -382,6 +360,13 @@ class Analysis:
             log.info("No datastore defined")
             log.info("Observation selection cannot be done.")
             return False
+        datastore_path = make_path(self.config.data.datastore)
+        if datastore_path.is_file():
+            self.datastore = DataStore().from_file(datastore_path)
+        elif datastore_path.is_dir():
+            self.datastore = DataStore().from_dir(datastore_path)
+        else:
+            raise FileNotFoundError(f"Datastore {datastore_path} not found.")
         return True
 
     def _validate_reduction_settings(self):

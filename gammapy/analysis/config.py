@@ -93,7 +93,7 @@ class EnergyAxis(GammapyBaseModel):
 
 
 class SpatialCircleRange(GammapyBaseModel):
-    frame: FrameEnum = FrameEnum.icrs
+    frame: FrameEnum = None
     lon: AngleType = None
     lat: AngleType = None
     radius: AngleType = None
