@@ -10,15 +10,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from gammapy.modeling.models import (
-    ExpCutoffPowerLawSpectralModel,
-    GaussianSpatialModel,
-    PointSpatialModel,
-    PowerLaw2SpectralModel,
-    PowerLawSpectralModel,
-    ShellSpatialModel,
-    SkyModel,
-)
+from gammapy.modeling.models import Model, SkyModel
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
@@ -72,175 +64,96 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     def _info_basic(self):
         """Print basic info."""
         d = self.data
-        ss = "\n*** Basic info ***\n\n"
-        ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
-        ss += "{:<15s} : {}\n".format("Common name", self.name)
-
-        def get_nonentry_keys(keys):
-            vals = [d[_].strip() for _ in keys]
-            return ",".join([_ for _ in vals if _ != ""])
-
-        keys = ["gamma_names", "fermi_names", "other_names"]
-        other_names = get_nonentry_keys(keys)
-        ss += "{:<15s} : {}\n".format("Other names", other_names)
-        ss += "{:<15s} : {}\n".format("Location", d["where"])
-        ss += "{:<15s} : {}\n".format("Class", d["classes"])
-
-        ss += "\n{:<15s} : {}\n".format("TeVCat ID", d["tevcat_id"])
-        ss += "{:<15s} : {}\n".format("TeVCat 2 ID", d["tevcat2_id"])
-        ss += "{:<15s} : {}\n".format("TeVCat name", d["tevcat_name"])
-
-        ss += "\n{:<15s} : {}\n".format("TGeVCat ID", d["tgevcat_id"])
-        ss += "{:<15s} : {}\n".format("TGeVCat name", d["tgevcat_name"])
-
-        ss += "\n{:<15s} : {}\n".format("Discoverer", d["discoverer"])
-        ss += "{:<15s} : {}\n".format("Discovery date", d["discovery_date"])
-        ss += "{:<15s} : {}\n".format("Seen by", d["seen_by"])
-        ss += "{:<15s} : {}\n".format("Reference", d["reference_id"])
-
-        return ss
+        return (
+            f"\n*** Basic info ***\n\n"
+            f"Catalog row index (zero-based): {self.row_index}\n"
+            f"Common name: {self.name}\n"
+            f"Gamma names: {d.gamma_names}\n"
+            f"Fermi names: {d.fermi_names}\n"
+            f"Other names: {d.other_names}\n"
+            f"Location: {d.where}\n"
+            f"Class: {d.classes}\n\n"
+            f"TeVCat ID: {d.tevcat_id}\n"
+            f"TeVCat 2 ID: {d.tevcat2_id}\n"
+            f"TeVCat name: {d.tevcat_name}\n\n"
+            f"TGeVCat ID: {d.tgevcat_id}\n"
+            f"TGeVCat name: {d.tgevcat_name}\n\n"
+            f"Discoverer: {d.discoverer}\n"
+            f"Discovery date: {d.discovery_date}\n"
+            f"Seen by: {d.seen_by}\n"
+            f"Reference: {d.reference_id}\n"
+        )
 
     def _info_position(self):
         """Print position info."""
         d = self.data
-        ss = "\n*** Position info ***\n\n"
-
-        ss += "SIMBAD:\n"
-        ss += "{:<20s} : {:.3f}\n".format("RA", d["ra"])
-        ss += "{:<20s} : {:.3f}\n".format("DEC", d["dec"])
-        ss += "{:<20s} : {:.3f}\n".format("GLON", d["glon"])
-        ss += "{:<20s} : {:.3f}\n".format("GLAT", d["glat"])
-
-        ss += "\nMeasurement:\n"
-        ss += "{:<20s} : {:.3f}\n".format("RA", d["pos_ra"])
-        ss += "{:<20s} : {:.3f}\n".format("DEC", d["pos_dec"])
-        ss += "{:<20s} : {:.3f}\n".format("GLON", d["pos_glon"])
-        ss += "{:<20s} : {:.3f}\n".format("GLAT", d["pos_glat"])
-        ss += "{:<20s} : {:.3f}\n".format("Position error", d["pos_err"])
-
-        return ss
+        return (
+            f"\n*** Position info ***\n\n"
+            f"SIMBAD:\n"
+            f"RA: {d.ra:.3f}\n"
+            f"DEC: {d.dec:.3f}\n"
+            f"GLON: {d.glon:.3f}\n"
+            f"GLAT: {d.glat:.3f}\n"
+            f"\nMeasurement:\n"
+            f"RA: {d.pos_ra:.3f}\n"
+            f"DEC: {d.pos_dec:.3f}\n"
+            f"GLON: {d.pos_glon:.3f}\n"
+            f"GLAT: {d.pos_glat:.3f}\n"
+            f"Position error: {d.pos_err:.3f}\n"
+        )
 
     def _info_morph(self):
         """Print morphology info."""
-        ss = "\n*** Morphology info ***\n\n"
         d = self.data
-        ss += "{:<25s} : {}\n".format("Morphology model type", d["morph_type"])
-
-        # TODO: change to morphology model dependent printout
-        # (see spectra printout and `spatial_model` property)
-        ss += "{:<25s} : {:.3f}\n".format("Sigma", d["morph_sigma"])
-        ss += "{:<25s} : {:.3f}\n".format("Sigma error", d["morph_sigma_err"])
-        ss += "{:<25s} : {:.3f}\n".format("Sigma2", d["morph_sigma2"])
-        ss += "{:<25s} : {:.3f}\n".format("Sigma2 error", d["morph_sigma2_err"])
-
-        ss += "{:<25s} : {:.3f}\n".format("Position angle", d["morph_pa"])
-        ss += "{:<25s} : {:.3f}\n".format("Position angle error", d["morph_pa_err"])
-        ss += "{:<25s} : {}\n".format("Position angle frame", d["morph_pa_frame"])
-
-        return ss
+        return (
+            f"\n*** Morphology info ***\n\n"
+            f"Morphology model type: {d.morph_type}\n"
+            f"Sigma: {d.morph_sigma:.3f}\n"
+            f"Sigma error: {d.morph_sigma_err:.3f}\n"
+            f"Sigma2: {d.morph_sigma2:.3f}\n"
+            f"Sigma2 error: {d.morph_sigma2_err:.3f}\n"
+            f"Position angle: {d.morph_pa:.3f}\n"
+            f"Position angle error: {d.morph_pa_err:.3f}\n"
+            f"Position angle frame: {d.morph_pa_frame}\n"
+        )
 
     def _info_spectral_fit(self):
         """Print spectral info."""
         d = self.data
-        ss = "\n*** Spectral info ***\n\n"
-        ss += "{:<15s} : {:.3f}\n".format("Significance", d["significance"])
-        ss += "{:<15s} : {:.3f}\n".format("Livetime", d["livetime"])
+        ss = f"\n*** Spectral info ***\n\n"
+        ss += f"Significance: {d.significance:.3f}\n"
+        ss += f"Livetime: {d.livetime:.3f}\n"
 
         spec_type = d["spec_type"]
-        ss += "\n{:<15s} : {}\n".format("Spectrum type", spec_type)
-
-        # Spectral model parameters
+        ss += f"\nSpectrum type: {spec_type}\n"
         if spec_type == "pl":
-            ss += "{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys) {}\n".format(
-                "norm",
-                d["spec_pl_norm"].value,
-                d["spec_pl_norm_err"].value,
-                d["spec_pl_norm_err_sys"].value,
-                "cm-2 s-1 TeV-1",
-            )
-            ss += "{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys)\n".format(
-                "index",
-                d["spec_pl_index"],
-                d["spec_pl_index_err"],
-                d["spec_pl_index_err_sys"],
-            )
-            ss += "{:<15s} : {:.3}\n".format("reference", d["spec_pl_e_ref"])
-
+            ss += f"norm: {d.spec_pl_norm:.3} +- {d.spec_pl_norm_err:.3} (stat) +- {d.spec_pl_norm_err_sys:.3} (sys) cm-2 s-1 TeV-1\n"
+            ss += f"index: {d.spec_pl_index:.3} +- {d.spec_pl_index_err:.3} (stat) +- {d.spec_pl_index_err_sys:.3} (sys)\n"
+            ss += f"reference: {d.spec_pl_e_ref:.3}\n"
         elif spec_type == "pl2":
-            ss += "{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys) {}\n".format(
-                "flux",
-                d["spec_pl2_flux"].value,
-                d["spec_pl2_flux_err"].value,
-                d["spec_pl2_flux_err_sys"].value,
-                "cm-2 s-1",
-            )
-            ss += "{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys)\n".format(
-                "index",
-                d["spec_pl2_index"],
-                d["spec_pl2_index_err"],
-                d["spec_pl2_index_err_sys"],
-            )
-            ss += "{:<15s} : {:.3}\n".format("e_min", d["spec_pl2_e_min"])
-            ss += "{:<15s} : {:.3}\n".format("e_max", d["spec_pl2_e_max"])
-
+            ss += f"flux: {d.spec_pl2_flux.value:.3} +- {d.spec_pl2_flux_err.value:.3} (stat) +- {d.spec_pl2_flux_err_sys.value:.3} (sys) cm-2 s-1\n"
+            ss += f"index: {d.spec_pl2_index:.3} +- {d.spec_pl2_index_err:.3} (stat) +- {d.spec_pl2_index_err_sys:.3} (sys)\n"
+            ss += f"e_min: {d.spec_pl2_e_min:.3}\n"
+            ss += f"e_max: {d.spec_pl2_e_max:.3}\n"
         elif spec_type == "ecpl":
-            ss += "{:<15s} : {:.3g} +- {:.3g} (stat) +- {:.03g} (sys) {}\n".format(
-                "norm",
-                d["spec_ecpl_norm"].value,
-                d["spec_ecpl_norm_err"].value,
-                d["spec_ecpl_norm_err_sys"].value,
-                "cm-2 s-1 TeV-1",
-            )
-            ss += "{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys)\n".format(
-                "index",
-                d["spec_ecpl_index"],
-                d["spec_ecpl_index_err"],
-                d["spec_ecpl_index_err_sys"],
-            )
-            ss += "{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (stat) {}\n".format(
-                "e_cut",
-                d["spec_ecpl_e_cut"].value,
-                d["spec_ecpl_e_cut_err"].value,
-                d["spec_ecpl_e_cut_err_sys"].value,
-                "TeV",
-            )
-            ss += "{:<15s} : {:.3}\n".format("reference", d["spec_ecpl_e_ref"])
+            ss += f"norm: {d.spec_ecpl_norm.value:.3g} +- {d.spec_ecpl_norm_err.value:.3g} (stat) +- {d.spec_ecpl_norm_err_sys.value:.03g} (sys) cm-2 s-1 TeV-1\n"
+            ss += f"index: {d.spec_ecpl_index:.3} +- {d.spec_ecpl_index_err:.3} (stat) +- {d.spec_ecpl_index_err_sys:.3} (sys)\n"
+            ss += f"e_cut: {d.spec_ecpl_e_cut.value:.3} +- {d.spec_ecpl_e_cut_err.value:.3} (stat) +- {d.spec_ecpl_e_cut_err_sys.value:.3} (sys) TeV\n"
+            ss += f"reference: {d.spec_ecpl_e_ref:.3}\n"
         elif spec_type == "none":
             pass
         else:
             raise ValueError(f"Invalid spec_type: {spec_type}")
 
-        ss += "\n{:<20s} : ({:.3}, {:.3}) TeV\n".format(
-            "Energy range", d["spec_erange_min"].value, d["spec_erange_max"].value
-        )
-        ss += "{:<20s} : {:.3}\n".format("theta", d["spec_theta"])
+        ss += f"\nEnergy range: ({d.spec_erange_min.value:.3}, {d.spec_erange_max.value:.3}) TeV\n"
+        ss += f"theta: {d.spec_theta:.3}\n"
 
         ss += "\n\nDerived fluxes:\n"
 
-        ss += "{:<30s} : {:.3} +- {:.3} (stat) {}\n".format(
-            "Spectral model norm (1 TeV)",
-            d["spec_dnde_1TeV"].value,
-            d["spec_dnde_1TeV_err"].value,
-            "cm-2 s-1 TeV-1",
-        )
-        ss += "{:<30s} : {:.3} +- {:.3} (stat) {}\n".format(
-            "Integrated flux (>1 TeV)",
-            d["spec_flux_1TeV"].value,
-            d["spec_flux_1TeV_err"].value,
-            "cm-2 s-1",
-        )
-        ss += "{:<30s} : {:.3f} +- {:.3f} {}\n".format(
-            "Integrated flux (>1 TeV)",
-            d["spec_flux_1TeV_crab"],
-            d["spec_flux_1TeV_crab_err"],
-            "(% Crab)",
-        )
-        ss += "{:<30s} : {:.3} +- {:.3} (stat) {}\n".format(
-            "Integrated flux (1-10 TeV)",
-            d["spec_eflux_1TeV_10TeV"].value,
-            d["spec_eflux_1TeV_10TeV_err"].value,
-            "erg cm-2 s-1",
-        )
+        ss += f"Spectral model norm (1 TeV): {d.spec_dnde_1TeV:.3} +- {d.spec_dnde_1TeV_err:.3} (stat) cm-2 s-1 TeV-1\n"
+        ss += f"Integrated flux (>1 TeV): {d.spec_flux_1TeV.value:.3} +- {d.spec_flux_1TeV_err.value:.3} (stat) cm-2 s-1\n"
+        ss += f"Integrated flux (>1 TeV): {d.spec_flux_1TeV_crab:.3f} +- {d.spec_flux_1TeV_crab_err:.3f} (% Crab)\n"
+        ss += f"Integrated flux (1-10 TeV): {d.spec_eflux_1TeV_10TeV.value:.3} +- {d.spec_eflux_1TeV_10TeV_err.value:.3} (stat) erg cm-2 s-1\n"
 
         return ss
 
@@ -248,9 +161,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         """Print spectral points info."""
         d = self.data
         ss = "\n*** Spectral points ***\n\n"
-        ss += "{:<25s} : {}\n".format("SED reference id", d["sed_reference_id"])
-        ss += "{:<25s} : {}\n".format("Number of spectral points", d["sed_n_points"])
-        ss += "{:<25s} : {}\n\n".format("Number of upper limits", d["sed_n_ul"])
+        ss += f"SED reference ID: {d.sed_reference_id}\n"
+        ss += f"Number of spectral points: {d.sed_n_points}\n"
+        ss += f"Number of upper limits: {d.sed_n_ul}\n\n"
 
         flux_points = self.flux_points
         if flux_points is None:
@@ -268,44 +181,55 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         """
         data = self.data
         spec_type = data["spec_type"]
-        pars, errs = {}, {}
 
         if spec_type == "pl":
-            model_class = PowerLawSpectralModel
-            pars["amplitude"] = data["spec_pl_norm"]
-            errs["amplitude"] = data["spec_pl_norm_err"]
-            pars["index"] = data["spec_pl_index"]
-            errs["index"] = data["spec_pl_index_err"]
-            pars["reference"] = data["spec_pl_e_ref"]
+            tag = "PowerLawSpectralModel"
+            pars = {
+                "amplitude": data["spec_pl_norm"],
+                "index": data["spec_pl_index"],
+                "reference": data["spec_pl_e_ref"],
+            }
+            errs = {
+                "amplitude": data["spec_pl_norm_err"],
+                "index": data["spec_pl_index_err"],
+            }
         elif spec_type == "pl2":
-            model_class = PowerLaw2SpectralModel
-            pars["amplitude"] = data["spec_pl2_flux"]
-            errs["amplitude"] = data["spec_pl2_flux_err"]
-            pars["index"] = data["spec_pl2_index"]
-            errs["index"] = data["spec_pl2_index_err"]
-            pars["emin"] = data["spec_pl2_e_min"]
             e_max = data["spec_pl2_e_max"]
             DEFAULT_E_MAX = u.Quantity(1e5, "TeV")
             if np.isnan(e_max.value):
                 e_max = DEFAULT_E_MAX
-            pars["emax"] = e_max
+
+            tag = "PowerLaw2SpectralModel"
+            pars = {
+                "amplitude": data["spec_pl2_flux"],
+                "index": data["spec_pl2_index"],
+                "emin": data["spec_pl2_e_min"],
+                "emax": e_max,
+            }
+            errs = {
+                "amplitude": data["spec_pl2_flux_err"],
+                "index": data["spec_pl2_index_err"],
+            }
         elif spec_type == "ecpl":
-            model_class = ExpCutoffPowerLawSpectralModel
-            pars["amplitude"] = data["spec_ecpl_norm"]
-            errs["amplitude"] = data["spec_ecpl_norm_err"]
-            pars["index"] = data["spec_ecpl_index"]
-            errs["index"] = data["spec_ecpl_index_err"]
-            pars["lambda_"] = 1.0 / data["spec_ecpl_e_cut"]
-            errs["lambda_"] = data["spec_ecpl_e_cut_err"] / data["spec_ecpl_e_cut"] ** 2
-            pars["reference"] = data["spec_ecpl_e_ref"]
+            tag = "ExpCutoffPowerLawSpectralModel"
+            pars = {
+                "amplitude": data["spec_ecpl_norm"],
+                "index": data["spec_ecpl_index"],
+                "lambda_": 1.0 / data["spec_ecpl_e_cut"],
+                "reference": data["spec_ecpl_e_ref"],
+            }
+            errs = {
+                "amplitude": data["spec_ecpl_norm_err"],
+                "index": data["spec_ecpl_index_err"],
+                "lambda_": data["spec_ecpl_e_cut_err"] / data["spec_ecpl_e_cut"] ** 2,
+            }
         elif spec_type == "none":
             return None
         else:
             raise ValueError(f"Invalid spec_type: {spec_type}")
 
-        model = model_class(**pars)
+        model = Model.create(tag, **pars)
         model.parameters.set_error(**errs)
-
         return model
 
     def spatial_model(self):
@@ -316,11 +240,14 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         d = self.data
         morph_type = d["morph_type"]
 
-        glon = d["glon"]
-        glat = d["glat"]
+        pars = {"lon_0": d["glon"], "lat_0": d["glat"], "frame": "galactic"}
+        errs = {
+            "lat_0": self.data["pos_err"],
+            "lon_0": self.data["pos_err"] / np.cos(self.data["glat"]),
+        }
 
         if morph_type == "point":
-            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
+            tag = "PointSpatialModel"
         elif morph_type == "gauss":
             # TODO: add infos back once model support elongation
             # pars['x_stddev'] = d['morph_sigma']
@@ -330,27 +257,20 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             # if not np.isnan(d['morph_pa']):
             #     # TODO: handle reference frame for rotation angle
             #     pars['theta'] = Angle(d['morph_pa'], 'deg').rad
-            model = GaussianSpatialModel(
-                lon_0=glon, lat_0=glat, sigma=d["morph_sigma"], frame="galactic"
-            )
+            tag = "GaussianSpatialModel"
+            pars["sigma"] = d["morph_sigma"]
         elif morph_type == "shell":
-            model = ShellSpatialModel(
-                lon_0=glon,
-                lat_0=glat,
-                # TODO: probably we shouldn't guess a shell width here!
-                radius=0.8 * d["morph_sigma"],
-                width=0.2 * d["morph_sigma"],
-                frame="galactic",
-            )
+            tag = "ShellSpatialModel"
+            # TODO: probably we shouldn't guess a shell width here!
+            pars["radius"] = 0.8 * d["morph_sigma"]
+            pars["width"] = 0.2 * d["morph_sigma"]
         elif morph_type == "none":
             return None
         else:
             raise ValueError(f"Invalid morph_type: {morph_type!r}")
 
-        lat_err = self.data["pos_err"].to("deg")
-        lon_err = self.data["pos_err"].to("deg") / np.cos(self.data["glat"].to("rad"))
-        model.parameters.set_error(lon_0=lon_err, lat_0=lat_err)
-        # TODO: check if pos_err is really 1sigma
+        model = Model.create(tag, **pars)
+        model.parameters.set_error(**errs)
         return model
 
     def sky_model(self):
@@ -401,13 +321,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             _del_nan_col(table, colname)
 
         return FluxPoints(table)
-
-    @property
-    def is_pointlike(self):
-        """
-        Source is pointlike.
-        """
-        return self.data["morph_type"] == "point"
 
 
 class SourceCatalogGammaCat(SourceCatalog):
@@ -483,8 +396,8 @@ class GammaCatDataCollection:
         return cls(data_index=data_index)
 
     def __str__(self):
-        ss = "version = {}".format(self.data_index["info"]["version"])
-        return ss
+        version = self.data_index["info"]["version"]
+        return f"version: {version}"
 
 
 @functools.total_ordering

@@ -9,15 +9,10 @@ from astropy.time import Time
 from astropy.wcs import FITSFixedWarning
 from gammapy.modeling.models import (
     DiskSpatialModel,
-    ExpCutoffPowerLaw3FGLSpectralModel,
     GaussianSpatialModel,
-    LogParabolaSpectralModel,
+    Model,
     PointSpatialModel,
-    PowerLaw2SpectralModel,
-    PowerLawSpectralModel,
     SkyModel,
-    SuperExpCutoffPowerLaw3FGLSpectralModel,
-    SuperExpCutoffPowerLaw4FGLSpectralModel,
     TemplateSpatialModel,
 )
 from gammapy.spectrum import FluxPoints
@@ -47,7 +42,7 @@ def compute_flux_points_ul(quantity, quantity_errp):
     return 2 * quantity_errp + quantity
 
 
-class SourceCatalogObjectFermiBase(SourceCatalogObject):
+class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
     """Base class for Fermi-LAT catalogs."""
 
     asso = ["ASSOC1", "ASSOC2", "ASSOC_TEV", "ASSOC_GAM1", "ASSOC_GAM2", "ASSOC_GAM3"]
@@ -74,7 +69,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
             ss += self._info_more()
         if "position" in ops:
             ss += self._info_position()
-            if not self.is_pointlike:
+            if not self._is_pointlike:
                 ss += self._info_morphology()
         if "spectral" in ops:
             ss += self._info_spectral_fit()
@@ -84,16 +79,13 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         return ss
 
     def _info_basic(self):
-        """Print basic info."""
         d = self.data
         keys = self.asso
         ss = "\n*** Basic info ***\n\n"
         ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
         ss += "{:<20s} : {}\n".format("Source name", self.name)
-        try:
+        if "Extended_Source_Name" in d:
             ss += "{:<20s} : {}\n".format("Extended name", d["Extended_Source_Name"])
-        except (KeyError):
-            pass
 
         def get_nonentry_keys(keys):
             vals = [d[_].strip() for _ in keys]
@@ -119,10 +111,9 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
 
     @abc.abstractmethod
     def _info_more(self):
-        return "\n"
+        pass
 
     def _info_position(self):
-        """Print position info."""
         d = self.data
         ss = "\n*** Position info ***\n\n"
         ss += "{:<20s} : {:.3f}\n".format("RA", d["RAJ2000"])
@@ -154,23 +145,20 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
         ss += "{:<16s} : {}\n\n".format("Spatial filename", e["Spatial_Filename"])
         return ss
 
-    @abc.abstractmethod
     def _info_spectral_fit(self):
-        pass
+        return "\n"
 
     def _info_spectral_points(self):
-        """Print spectral points."""
         ss = "\n*** Spectral points ***\n\n"
         lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
         ss += "\n".join(lines)
         return ss
 
-    @abc.abstractmethod
     def _info_lightcurve(self):
-        pass
+        return "\n"
 
     @property
-    def is_pointlike(self):
+    def _is_pointlike(self):
         return self.data["Extended_Source_Name"].strip() == ""
 
     # FIXME: this should be renamed `set_position_error`,
@@ -188,14 +176,14 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject):
             percent = 0.95
             semi_minor = d["Conf_95_SemiMinor"]
             semi_major = d["Conf_95_SemiMajor"]
-            phi_0 = d["Conf_95_PosAng"].to("deg")
+            phi_0 = d["Conf_95_PosAng"]
 
         if np.isnan(phi_0):
             phi_0 = 0.0 * u.deg
 
         scale_1sigma = Gauss2DPDF().containment_radius(percent)
-        lat_err = semi_major.to("deg") / scale_1sigma
-        lon_err = semi_minor.to("deg") / scale_1sigma / np.cos(d["DEJ2000"].to("rad"))
+        lat_err = semi_major / scale_1sigma
+        lon_err = semi_minor / scale_1sigma / np.cos(d["DEJ2000"])
 
         if model.tag != "TemplateSpatialModel":
             model.parameters.set_error(lon_0=lon_err, lat_0=lat_err)
@@ -225,7 +213,6 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
     _ebounds = u.Quantity([50, 100, 300, 1000, 3000, 10000, 30000, 300000], "MeV")
 
     def _info_more(self):
-        """Print other info."""
         d = self.data
         ss = "\n*** Other info ***\n\n"
         fmt = "{:<32s} : {:.3f}\n"
@@ -235,7 +222,6 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_spectral_fit(self):
-        """Print spectral info."""
         d = self.data
         spec_type = d["SpectrumType"].strip()
 
@@ -308,7 +294,6 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_lightcurve(self):
-        """Print lightcurve info."""
         d = self.data
         ss = "\n*** Lightcurve info ***\n\n"
         ss += "Lightcurve measured in the energy band: 100 MeV - 100 GeV\n\n"
@@ -346,16 +331,16 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
 
-        if self.is_pointlike:
+        if self._is_pointlike:
             model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
             e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
-            sigma = de["Model_SemiMajor"].to("deg")
-            phi = de["Model_PosAng"].to("deg")
+            sigma = de["Model_SemiMajor"]
+            phi = de["Model_PosAng"]
             if morph_type == "Disk":
-                r_0 = de["Model_SemiMajor"].to("deg")
+                r_0 = de["Model_SemiMajor"]
                 model = DiskSpatialModel(
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
@@ -380,36 +365,49 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         spec_type = self.data["SpectrumType"].strip()
 
-        pars, errs = {}, {}
-        pars["reference"] = self.data["Pivot_Energy"]
-
         if spec_type == "PowerLaw":
-            pars["amplitude"] = self.data["PL_Flux_Density"]
-            pars["index"] = self.data["PL_Index"]
-            errs["amplitude"] = self.data["Unc_PL_Flux_Density"]
-            errs["index"] = self.data["Unc_PL_Index"]
-            model = PowerLawSpectralModel(**pars)
+            tag = "PowerLawSpectralModel"
+            pars = {
+                "reference": self.data["Pivot_Energy"],
+                "amplitude": self.data["PL_Flux_Density"],
+                "index": self.data["PL_Index"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_PL_Flux_Density"],
+                "index": self.data["Unc_PL_Index"],
+            }
         elif spec_type == "LogParabola":
-            pars["amplitude"] = self.data["LP_Flux_Density"]
-            pars["alpha"] = self.data["LP_Index"]
-            pars["beta"] = self.data["LP_beta"]
-            errs["amplitude"] = self.data["Unc_LP_Flux_Density"]
-            errs["alpha"] = self.data["Unc_LP_Index"]
-            errs["beta"] = self.data["Unc_LP_beta"]
-            model = LogParabolaSpectralModel(**pars)
+            tag = "LogParabolaSpectralModel"
+            pars = {
+                "reference": self.data["Pivot_Energy"],
+                "amplitude": self.data["LP_Flux_Density"],
+                "alpha": self.data["LP_Index"],
+                "beta": self.data["LP_beta"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_LP_Flux_Density"],
+                "alpha": self.data["Unc_LP_Index"],
+                "beta": self.data["Unc_LP_beta"],
+            }
         elif spec_type == "PLSuperExpCutoff":
-            pars["amplitude"] = self.data["PLEC_Flux_Density"]
-            pars["index_1"] = self.data["PLEC_Index"]
-            pars["index_2"] = self.data["PLEC_Exp_Index"]
-            pars["expfactor"] = self.data["PLEC_Expfactor"]
-            errs["amplitude"] = self.data["Unc_PLEC_Flux_Density"]
-            errs["index_1"] = self.data["Unc_PLEC_Index"]
-            errs["index_2"] = np.nan_to_num(self.data["Unc_PLEC_Exp_Index"])
-            errs["expfactor"] = self.data["Unc_PLEC_Expfactor"]
-            model = SuperExpCutoffPowerLaw4FGLSpectralModel(**pars)
+            tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
+            pars = {
+                "reference": self.data["Pivot_Energy"],
+                "amplitude": self.data["PLEC_Flux_Density"],
+                "index_1": self.data["PLEC_Index"],
+                "index_2": self.data["PLEC_Exp_Index"],
+                "expfactor": self.data["PLEC_Expfactor"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_PLEC_Flux_Density"],
+                "index_1": self.data["Unc_PLEC_Index"],
+                "index_2": np.nan_to_num(self.data["Unc_PLEC_Exp_Index"]),
+                "expfactor": self.data["Unc_PLEC_Expfactor"],
+            }
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
+        model = Model.create(tag, **pars)
         model.parameters.set_error(**errs)
         return model
 
@@ -508,14 +506,12 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
     """
 
     def _info_more(self):
-        """Print other info."""
         d = self.data
         ss = "\n*** Other info ***\n\n"
         ss += "{:<20s} : {}\n".format("Other flags", d["Flags"])
         return ss
 
     def _info_spectral_fit(self):
-        """Print spectral info."""
         d = self.data
         spec_type = d["SpectrumType"].strip()
 
@@ -583,7 +579,6 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_lightcurve(self):
-        """Print lightcurve info."""
         d = self.data
         ss = "\n*** Lightcurve info ***\n\n"
         ss += "Lightcurve measured in the energy band: 100 MeV - 100 GeV\n\n"
@@ -619,40 +614,62 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         spec_type = self.data["SpectrumType"].strip()
 
-        pars, errs = {}, {}
-        pars["amplitude"] = self.data["Flux_Density"]
-        errs["amplitude"] = self.data["Unc_Flux_Density"]
-        pars["reference"] = self.data["Pivot_Energy"]
-
         if spec_type == "PowerLaw":
-            pars["index"] = self.data["Spectral_Index"]
-            errs["index"] = self.data["Unc_Spectral_Index"]
-            model = PowerLawSpectralModel(**pars)
+            tag = "PowerLawSpectralModel"
+            pars = {
+                "amplitude": self.data["Flux_Density"],
+                "reference": self.data["Pivot_Energy"],
+                "index": self.data["Spectral_Index"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_Flux_Density"],
+                "index": self.data["Unc_Spectral_Index"],
+            }
         elif spec_type == "PLExpCutoff":
-            pars["index"] = self.data["Spectral_Index"]
-            pars["ecut"] = self.data["Cutoff"]
-            errs["index"] = self.data["Unc_Spectral_Index"]
-            errs["ecut"] = self.data["Unc_Cutoff"]
-            model = ExpCutoffPowerLaw3FGLSpectralModel(**pars)
+            tag = "ExpCutoffPowerLaw3FGLSpectralModel"
+            pars = {
+                "amplitude": self.data["Flux_Density"],
+                "reference": self.data["Pivot_Energy"],
+                "index": self.data["Spectral_Index"],
+                "ecut": self.data["Cutoff"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_Flux_Density"],
+                "index": self.data["Unc_Spectral_Index"],
+                "ecut": self.data["Unc_Cutoff"],
+            }
         elif spec_type == "LogParabola":
-            pars["alpha"] = self.data["Spectral_Index"]
-            pars["beta"] = self.data["beta"]
-            errs["alpha"] = self.data["Unc_Spectral_Index"]
-            errs["beta"] = self.data["Unc_beta"]
-            model = LogParabolaSpectralModel(**pars)
+            tag = "LogParabolaSpectralModel"
+            pars = {
+                "amplitude": self.data["Flux_Density"],
+                "reference": self.data["Pivot_Energy"],
+                "alpha": self.data["Spectral_Index"],
+                "beta": self.data["beta"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_Flux_Density"],
+                "alpha": self.data["Unc_Spectral_Index"],
+                "beta": self.data["Unc_beta"],
+            }
         elif spec_type == "PLSuperExpCutoff":
-            # TODO: why convert to GeV here? Remove?
-            pars["reference"] = pars["reference"].to("GeV")
-            pars["index_1"] = self.data["Spectral_Index"]
-            pars["index_2"] = self.data["Exp_Index"]
-            pars["ecut"] = self.data["Cutoff"].to("GeV")
-            errs["index_1"] = self.data["Unc_Spectral_Index"]
-            errs["index_2"] = self.data["Unc_Exp_Index"]
-            errs["ecut"] = self.data["Unc_Cutoff"].to("GeV")
-            model = SuperExpCutoffPowerLaw3FGLSpectralModel(**pars)
+            tag = "SuperExpCutoffPowerLaw3FGLSpectralModel"
+            pars = {
+                "amplitude": self.data["Flux_Density"],
+                "reference": self.data["Pivot_Energy"],
+                "index_1": self.data["Spectral_Index"],
+                "index_2": self.data["Exp_Index"],
+                "ecut": self.data["Cutoff"],
+            }
+            errs = {
+                "amplitude": self.data["Unc_Flux_Density"],
+                "index_1": self.data["Unc_Spectral_Index"],
+                "index_2": self.data["Unc_Exp_Index"],
+                "ecut": self.data["Unc_Cutoff"],
+            }
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
+        model = Model.create(tag, **pars)
         model.parameters.set_error(**errs)
         return model
 
@@ -662,16 +679,16 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
 
-        if self.is_pointlike:
+        if self._is_pointlike:
             model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
             e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
-            sigma = de["Model_SemiMajor"].to("deg")
-            phi = de["Model_PosAng"].to("deg")
+            sigma = de["Model_SemiMajor"]
+            phi = de["Model_PosAng"]
             if morph_type == "Disk":
-                r_0 = de["Model_SemiMajor"].to("deg")
+                r_0 = de["Model_SemiMajor"]
                 model = DiskSpatialModel(
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
@@ -781,7 +798,6 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
     """Energy range used for the catalog."""
 
     def _info_more(self):
-        """Print other info."""
         d = self.data
         ss = "\n*** Other info ***\n\n"
         fmt = "{:<32s} : {:.3f}\n"
@@ -789,7 +805,6 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_position(self):
-        """Print position info."""
         d = self.data
         ss = "\n*** Position info ***\n\n"
         ss += "{:<20s} : {:.3f}\n".format("RA", d["RAJ2000"])
@@ -803,7 +818,6 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_spectral_fit(self):
-        """Print model data."""
         d = self.data
 
         ss = "\n*** Spectral fit info ***\n\n"
@@ -830,7 +844,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         return ss
 
     @property
-    def is_pointlike(self):
+    def _is_pointlike(self):
         return self.data["Source_Name"].strip()[-1] != "e"
 
     def spatial_model(self):
@@ -839,16 +853,16 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
 
-        if self.is_pointlike:
+        if self._is_pointlike:
             model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
         else:
             de = self.data_extended
             morph_type = de["Model_Form"].strip()
             e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
-            sigma = de["Model_SemiMajor"].to("deg")
-            phi = de["Model_PosAng"].to("deg")
+            sigma = de["Model_SemiMajor"]
+            phi = de["Model_PosAng"]
             if morph_type in ["Disk", "Elliptical Disk"]:
-                r_0 = de["Model_SemiMajor"].to("deg")
+                r_0 = de["Model_SemiMajor"]
                 model = DiskSpatialModel(
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
@@ -870,15 +884,19 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
 
     def spectral_model(self):
         """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
-        pars, errs = {}, {}
-        pars["amplitude"] = self.data["Flux50"]
-        pars["emin"], pars["emax"] = self.energy_range
-        pars["index"] = self.data["Spectral_Index"]
+        tag = "PowerLaw2SpectralModel"
+        pars = {
+            "amplitude": self.data["Flux50"],
+            "emin": self.energy_range[0],
+            "emax": self.energy_range[1],
+            "index": self.data["Spectral_Index"],
+        }
+        errs = {
+            "amplitude": self.data["Unc_Flux50"],
+            "index": self.data["Unc_Spectral_Index"],
+        }
 
-        errs["amplitude"] = self.data["Unc_Flux50"]
-        errs["index"] = self.data["Unc_Spectral_Index"]
-
-        model = PowerLaw2SpectralModel(**pars)
+        model = Model.create(tag, **pars)
         model.parameters.set_error(**errs)
         return model
 
@@ -906,9 +924,6 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         values = [self.data[prefix + _ + "GeV"] for _ in self._ebounds_suffix]
         return u.Quantity(values, unit)
 
-    def _info_lightcurve(self):
-        return "\n"
-
 
 class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
     """One source from the Fermi-LAT 3FHL catalog.
@@ -923,7 +938,6 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
     _ebounds = u.Quantity([10, 20, 50, 150, 500, 2000], "GeV")
 
     def _info_position(self):
-        """Print position info."""
         d = self.data
         ss = "\n*** Position info ***\n\n"
         ss += "{:<20s} : {:.3f}\n".format("RA", d["RAJ2000"])
@@ -941,7 +955,6 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_spectral_fit(self):
-        """Print model data."""
         d = self.data
         spec_type = d["SpectrumType"].strip()
 
@@ -1000,7 +1013,6 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         return ss
 
     def _info_more(self):
-        """Print other info."""
         d = self.data
         ss = "\n*** Other info ***\n\n"
 
@@ -1013,14 +1025,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         )
         ss += "{:<16s} : {:.3f}\n".format("HEP Probability", d["HEP_Prob"])
 
-        # This is the number of Bayesian blocks for most sources,
-        # except -1 means "could not be tested"
-        msg = d["Variability_BayesBlocks"]
-        if msg == 1:
-            msg = "1 (not variable)"
-        elif msg == -1:
-            msg = "Could not be tested"
-        ss += "{:<16s} : {}\n".format("Bayesian Blocks", msg)
+        ss += "{:<16s} : {}\n".format("Bayesian Blocks", d["Variability_BayesBlocks"])
 
         ss += "{:<16s} : {:.3f}\n".format("Redshift", d["Redshift"])
         ss += "{:<16s} : {:.3} {}\n".format(
@@ -1034,24 +1039,34 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         d = self.data
         spec_type = self.data["SpectrumType"].strip()
 
-        pars, errs = {}, {}
-        pars["amplitude"] = d["Flux_Density"]
-        errs["amplitude"] = d["Unc_Flux_Density"]
-        pars["reference"] = d["Pivot_Energy"]
-
         if spec_type == "PowerLaw":
-            pars["index"] = d["PowerLaw_Index"]
-            errs["index"] = d["Unc_PowerLaw_Index"]
-            model = PowerLawSpectralModel(**pars)
+            tag = "PowerLawSpectralModel"
+            pars = {
+                "reference": d["Pivot_Energy"],
+                "amplitude": d["Flux_Density"],
+                "index": d["PowerLaw_Index"],
+            }
+            errs = {
+                "amplitude": d["Unc_Flux_Density"],
+                "index": d["Unc_PowerLaw_Index"],
+            }
         elif spec_type == "LogParabola":
-            pars["alpha"] = d["Spectral_Index"]
-            pars["beta"] = d["beta"]
-            errs["alpha"] = d["Unc_Spectral_Index"]
-            errs["beta"] = d["Unc_beta"]
-            model = LogParabolaSpectralModel(**pars)
+            tag = "LogParabolaSpectralModel"
+            pars = {
+                "reference": d["Pivot_Energy"],
+                "amplitude": d["Flux_Density"],
+                "alpha": d["Spectral_Index"],
+                "beta": d["beta"],
+            }
+            errs = {
+                "amplitude": d["Unc_Flux_Density"],
+                "alpha": d["Unc_Spectral_Index"],
+                "beta": d["Unc_beta"],
+            }
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
+        model = Model.create(tag, **pars)
         model.parameters.set_error(**errs)
         return model
 
@@ -1097,16 +1112,16 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
 
-        if self.is_pointlike:
+        if self._is_pointlike:
             model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
         else:
             de = self.data_extended
             morph_type = de["Spatial_Function"].strip()
             e = (1 - (de["Model_SemiMinor"] / de["Model_SemiMajor"]) ** 2.0) ** 0.5
-            sigma = de["Model_SemiMajor"].to("deg")
-            phi = de["Model_PosAng"].to("deg")
+            sigma = de["Model_SemiMajor"]
+            phi = de["Model_PosAng"]
             if morph_type == "RadialDisk":
-                r_0 = de["Model_SemiMajor"].to("deg")
+                r_0 = de["Model_SemiMajor"]
                 model = DiskSpatialModel(
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
@@ -1124,9 +1139,6 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
                 raise ValueError(f"Invalid morph_type: {morph_type!r}")
         self._set_spatial_errors(model)
         return model
-
-    def _info_lightcurve(self):
-        return "\n"
 
 
 class SourceCatalog3FGL(SourceCatalog):

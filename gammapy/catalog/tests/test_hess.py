@@ -107,11 +107,6 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(energy_range.value, [0.21544346, 61.89658356])
 
     @staticmethod
-    def test_spectral_model_type(cat):
-        spec_types = collections.Counter([_.spectral_model_type for _ in cat])
-        assert spec_types == {"pl": 66, "ecpl": 12}
-
-    @staticmethod
     def test_spectral_model_pl(cat):
         source = cat["HESS J1843-033"]
 
@@ -152,17 +147,6 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(pars.error("amplitude"), 6.992061e-14, rtol=1e-3)
         assert_allclose(pars.error("index"), 0.028383, atol=0.001)
         assert_allclose(pars.error("reference"), 0)
-
-    @staticmethod
-    def test_spatial_model_type(cat):
-        morph_types = collections.Counter([_.spatial_model_type for _ in cat])
-        assert morph_types == {
-            "gaussian": 52,
-            "2-gaussian": 8,
-            "shell": 7,
-            "point-like": 6,
-            "3-gaussian": 5,
-        }
 
     @staticmethod
     def test_position_error(cat):

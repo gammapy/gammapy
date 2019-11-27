@@ -1,75 +1,77 @@
 
 *** Basic info ***
 
-Catalog row index (zero-based) : 134
-Common name     : HESS J1848-018
-Other names     : HESS J1848-018,1HWC J1849-017c,WR121a,W43
-Location        : gal
-Class           : unid
+Catalog row index (zero-based): 134
+Common name: HESS J1848-018
+Gamma names: HESS J1848-018,1HWC J1849-017c
+Fermi names: 
+Other names: WR121a,W43
+Location: gal
+Class: unid
 
-TeVCat ID       : 187
-TeVCat 2 ID     : hcE3Ou
-TeVCat name     : TeV J1848-017
+TeVCat ID: 187
+TeVCat 2 ID: hcE3Ou
+TeVCat name: TeV J1848-017
 
-TGeVCat ID      : 128
-TGeVCat name    : TeV J1848-0147
+TGeVCat ID: 128
+TGeVCat name: TeV J1848-0147
 
-Discoverer      : hess
-Discovery date  : 2008-07
-Seen by         : hess
-Reference       : 2008AIPC.1085..372C
+Discoverer: hess
+Discovery date: 2008-07
+Seen by: hess
+Reference: 2008AIPC.1085..372C
 
 *** Position info ***
 
 SIMBAD:
-RA                   : 282.120 deg
-DEC                  : -1.792 deg
-GLON                 : 31.000 deg
-GLAT                 : -0.159 deg
+RA: 282.120 deg
+DEC: -1.792 deg
+GLON: 31.000 deg
+GLAT: -0.159 deg
 
 Measurement:
-RA                   : 282.121 deg
-DEC                  : -1.792 deg
-GLON                 : 31.000 deg
-GLAT                 : -0.160 deg
-Position error       : nan deg
+RA: 282.121 deg
+DEC: -1.792 deg
+GLON: 31.000 deg
+GLAT: -0.160 deg
+Position error: nan deg
 
 *** Morphology info ***
 
-Morphology model type     : gauss
-Sigma                     : 0.320 deg
-Sigma error               : 0.020 deg
-Sigma2                    : nan deg
-Sigma2 error              : nan deg
-Position angle            : nan deg
-Position angle error      : nan deg
-Position angle frame      : 
+Morphology model type: gauss
+Sigma: 0.320 deg
+Sigma error: 0.020 deg
+Sigma2: nan deg
+Sigma2 error: nan deg
+Position angle: nan deg
+Position angle error: nan deg
+Position angle frame: 
 
 *** Spectral info ***
 
-Significance    : 9.000
-Livetime        : 50.000 h
+Significance: 9.000
+Livetime: 50.000 h
 
-Spectrum type   : pl
-norm            : 3.7e-12 +- 4e-13 (stat) +- 7e-13 (sys) cm-2 s-1 TeV-1
-index           : 2.8 +- 0.2 (stat) +- 0.2 (sys)
-reference       : 1.0 TeV
+Spectrum type: pl
+norm: 3.7e-12 1 / (cm2 s TeV) +- 4e-13 1 / (cm2 s TeV) (stat) +- 7e-13 1 / (cm2 s TeV) (sys) cm-2 s-1 TeV-1
+index: 2.8 +- 0.2 (stat) +- 0.2 (sys)
+reference: 1.0 TeV
 
-Energy range         : (0.9, 12.0) TeV
-theta                : 0.2 deg
+Energy range: (0.9, 12.0) TeV
+theta: 0.2 deg
 
 
 Derived fluxes:
-Spectral model norm (1 TeV)    : 3.7e-12 +- 4e-13 (stat) cm-2 s-1 TeV-1
-Integrated flux (>1 TeV)       : 2.06e-12 +- 3.19e-13 (stat) cm-2 s-1
-Integrated flux (>1 TeV)       : 9.909 +- 1.536 (% Crab)
-Integrated flux (1-10 TeV)     : 6.24e-12 +- 1.22e-12 (stat) erg cm-2 s-1
+Spectral model norm (1 TeV): 3.7e-12 1 / (cm2 s TeV) +- 4e-13 1 / (cm2 s TeV) (stat) cm-2 s-1 TeV-1
+Integrated flux (>1 TeV): 2.06e-12 +- 3.19e-13 (stat) cm-2 s-1
+Integrated flux (>1 TeV): 9.909 +- 1.536 (% Crab)
+Integrated flux (1-10 TeV): 6.24e-12 +- 1.22e-12 (stat) erg cm-2 s-1
 
 *** Spectral points ***
 
-SED reference id          : 2008AIPC.1085..372C
-Number of spectral points : 11
-Number of upper limits    : 0
+SED reference ID: 2008AIPC.1085..372C
+Number of spectral points: 11
+Number of upper limits: 0
 
 e_ref        dnde         dnde_errn       dnde_errp   
  TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)

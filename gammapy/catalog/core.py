@@ -1,13 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalog and object base classes."""
 import abc
-import copy
 import numbers
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data, table_row_to_dict
 
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
+
+
+# https://pydanny.blogspot.com/2011/11/loving-bunch-class.html
+class Bunch(dict):
+    """ Warning: DON'T USE THIS IN REAL PROJECTS """
+
+    def __init__(self, **kw):
+        dict.__init__(self, kw)
+        self.__dict__.update(kw)
 
 
 class SourceCatalogObject:
@@ -29,9 +37,9 @@ class SourceCatalogObject:
     _row_index_key = "_row_index"
 
     def __init__(self, data, data_extended=None):
-        self.data = data
+        self.data = Bunch(**data)
         if data_extended:
-            self.data_extended = data_extended
+            self.data_extended = Bunch(**data_extended)
 
     @property
     def name(self):
@@ -214,10 +222,6 @@ class SourceCatalog(abc.ABC):
     def positions(self):
         """Source positions (`~astropy.coordinates.SkyCoord`)."""
         return _skycoord_from_table(self.table)
-
-    def copy(self):
-        """Copy catalog"""
-        return copy.deepcopy(self)
 
 
 def _skycoord_from_table(table):

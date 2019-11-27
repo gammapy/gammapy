@@ -2,12 +2,7 @@
 """HAWC catalogs (https://www.hawc-observatory.org)."""
 import numpy as np
 from astropy.table import Table
-from gammapy.modeling.models import (
-    DiskSpatialModel,
-    PointSpatialModel,
-    PowerLawSpectralModel,
-    SkyModel,
-)
+from gammapy.modeling.models import Model, SkyModel
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -59,37 +54,31 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """Print position info."""
         return (
             f"\n*** Position info ***\n\n"
-            f"RA: {self.data['ra']:.3f}\n"
-            f"DEC: {self.data['dec']:.3f}\n"
-            f"GLON: {self.data['glon']:.3f}\n"
-            f"GLAT: {self.data['glat']:.3f}\n"
-            f"Position error: {self.data['pos_err']:.3f}\n"
+            f"RA: {self.data.ra:.3f}\n"
+            f"DEC: {self.data.dec:.3f}\n"
+            f"GLON: {self.data.glon:.3f}\n"
+            f"GLAT: {self.data.glat:.3f}\n"
+            f"Position error: {self.data.pos_err:.3f}\n"
         )
 
     @staticmethod
     def _info_spectrum_one(d, idx):
-        label = f"spec{idx}_"
         ss = f"Spectrum {idx}:\n"
-        args = (
-            "Flux at 7 TeV",
-            d[label + "dnde"].value,
-            d[label + "dnde_err"].value,
-            "cm-2 s-1 TeV-1",
-        )
-        ss += "{:20s} : {:.3} +- {:.3} {}\n".format(*args)
-        args = "Spectral index", d[label + "index"], d[label + "index_err"]
-        ss += "{:20s} : {:.3f} +- {:.3f}\n".format(*args)
-        ss += "{:20s} : {:1}\n\n".format("Test radius", d[label + "radius"])
+        val, err = d[f"spec{idx}_dnde"].value, d[f"spec{idx}_dnde_err"].value
+        ss += f"Flux at 7 TeV: {val:.3} +- {err:.3} cm-2 s-1 TeV-1\n"
+        val, err = d[f"spec{idx}_index"], d[f"spec{idx}_index_err"]
+        ss += f"Spectral index: {val:.3f} +- {err:.3f}\n"
+        radius = d[f"spec{idx}_radius"]
+        ss += f"Test Radius: {radius:1}\n\n"
         return ss
 
     def _info_spectrum(self):
         """Print spectral info."""
-        d = self.data
         ss = "\n*** Spectral info ***\n\n"
-        ss += self._info_spectrum_one(d, 0)
+        ss += self._info_spectrum_one(self.data, 0)
 
         if self.n_models == 2:
-            ss += self._info_spectrum_one(d, 1)
+            ss += self._info_spectrum_one(self.data, 1)
         else:
             ss += "No second spectrum available for this source"
 
@@ -98,7 +87,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
     @property
     def n_models(self):
         """Number of models (1 or 2)."""
-        return 1 if np.isnan(self.data["spec1_dnde"]) else 2
+        return 1 if np.isnan(self.data.spec1_dnde) else 2
 
     def _get_idx(self, which):
         if which == "point":
@@ -120,16 +109,19 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """
         idx = self._get_idx(which)
 
-        pars, errs = {}, {}
-        pars["amplitude"] = self.data[f"spec{idx}_dnde"]
-        errs["amplitude"] = self.data[f"spec{idx}_dnde_err"]
-        pars["index"] = -self.data[f"spec{idx}_index"]
-        errs["index"] = self.data[f"spec{idx}_index_err"]
-        pars["reference"] = "7 TeV"
+        pars = {
+            "reference": "7 TeV",
+            "amplitude": self.data[f"spec{idx}_dnde"],
+            "index": -self.data[f"spec{idx}_index"],
+        }
 
-        model = PowerLawSpectralModel(**pars)
+        errs = {
+            "amplitude": self.data[f"spec{idx}_dnde_err"],
+            "index": self.data[f"spec{idx}_index_err"],
+        }
+
+        model = Model.create("PowerLawSpectralModel", **pars)
         model.parameters.set_error(**errs)
-
         return model
 
     def spatial_model(self, which="point"):
@@ -140,23 +132,21 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
           Only available for some sources. Raise ValueError if not available.
         """
         idx = self._get_idx(which)
+        pars = {"lon_0": self.data.glon, "lat_0": self.data.glat, "frame": "galactic"}
 
         if idx == 0:
-            model = PointSpatialModel(
-                lon_0=self.data["glon"], lat_0=self.data["glat"], frame="galactic"
-            )
+            tag = "PointSpatialModel"
         else:
-            model = DiskSpatialModel(
-                lon_0=self.data["glon"],
-                lat_0=self.data["glat"],
-                r_0=self.data[f"spec{idx}_radius"],
-                frame="galactic",
-            )
+            tag = "DiskSpatialModel"
+            pars["r_0"] = self.data[f"spec{idx}_radius"]
 
-        lat_err = self.data["pos_err"].to("deg")
-        lon_err = self.data["pos_err"].to("deg") / np.cos(self.data["glat"].to("rad"))
-        model.parameters.set_error(lon_0=lon_err, lat_0=lat_err)
+        errs = {
+            "lat_0": self.data.pos_err,
+            "lon_0": self.data.pos_err / np.cos(self.data.glat),
+        }
 
+        model = Model.create(tag, **pars)
+        model.parameters.set_error(**errs)
         return model
 
     def sky_model(self, which="point"):

@@ -5,15 +5,7 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
-from gammapy.modeling.models import (
-    ExpCutoffPowerLawSpectralModel,
-    GaussianSpatialModel,
-    PointSpatialModel,
-    PowerLawSpectralModel,
-    ShellSpatialModel,
-    SkyModel,
-    SkyModels,
-)
+from gammapy.modeling.models import Model, SkyModel, SkyModels
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
@@ -72,18 +64,21 @@ class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
     @property
     def name(self):
         """Source name (str)"""
-        name = self.data[self._source_name_key]
-        return name.strip()
+        return self.data[self._source_name_key]
 
     def spatial_model(self):
         """Component spatial model (`~gammapy.modeling.models.GaussianSpatialModel`)."""
         d = self.data
-        model = GaussianSpatialModel(
-            lon_0=d["GLON"], lat_0=d["GLAT"], sigma=d["Size"], frame="galactic"
-        )
-        model.parameters.set_error(
-            lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"]
-        )
+        tag = "GaussianSpatialModel"
+        pars = {
+            "lon_0": d["GLON"],
+            "lat_0": d["GLAT"],
+            "sigma": d["Size"],
+            "frame": "galactic",
+        }
+        errs = {"lon_0": d["GLON_Err"], "lat_0": d["GLAT_Err"], "sigma": d["Size_Err"]}
+        model = Model.create(tag, **pars)
+        model.parameters.set_error(**errs)
         return model
 
 
@@ -418,14 +413,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         return u.Quantity([emin, emax], "TeV")
 
-    @property
-    def spectral_model_type(self):
-        """Spectral model type (str).
-
-        One of: 'pl', 'ecpl'
-        """
-        return self.data["Spectral_Model"].strip().lower()
-
     def spectral_model(self, which="best"):
         """Spectral model (`~gammapy.modeling.models.SpectralModel`).
 
@@ -442,51 +429,42 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         data = self.data
 
         if which == "best":
-            spec_type = self.spectral_model_type
+            spec_type = self.data["Spectral_Model"].strip().lower()
         elif which in {"pl", "ecpl"}:
             spec_type = which
         else:
             raise ValueError(f"Invalid selection: which = {which!r}")
 
-        pars, errs = {}, {}
-
         if spec_type == "pl":
-            pars["index"] = data["Index_Spec_PL"]
-            pars["amplitude"] = data["Flux_Spec_PL_Diff_Pivot"]
-            pars["reference"] = data["Energy_Spec_PL_Pivot"]
-            errs["amplitude"] = data["Flux_Spec_PL_Diff_Pivot_Err"]
-            errs["index"] = data["Index_Spec_PL_Err"]
-            model = PowerLawSpectralModel(**pars)
+            tag = "PowerLawSpectralModel"
+            pars = {
+                "index": data["Index_Spec_PL"],
+                "amplitude": data["Flux_Spec_PL_Diff_Pivot"],
+                "reference": data["Energy_Spec_PL_Pivot"],
+            }
+            errs = {
+                "amplitude": data["Flux_Spec_PL_Diff_Pivot_Err"],
+                "index": data["Index_Spec_PL_Err"],
+            }
         elif spec_type == "ecpl":
-            pars["index"] = data["Index_Spec_ECPL"]
-            pars["amplitude"] = data["Flux_Spec_ECPL_Diff_Pivot"]
-            pars["reference"] = data["Energy_Spec_ECPL_Pivot"]
-            pars["lambda_"] = data["Lambda_Spec_ECPL"]
-            errs["index"] = data["Index_Spec_ECPL_Err"]
-            errs["amplitude"] = data["Flux_Spec_ECPL_Diff_Pivot_Err"]
-            errs["lambda_"] = data["Lambda_Spec_ECPL_Err"]
-            model = ExpCutoffPowerLawSpectralModel(**pars)
+            tag = "ExpCutoffPowerLawSpectralModel"
+            pars = {
+                "index": data["Index_Spec_ECPL"],
+                "amplitude": data["Flux_Spec_ECPL_Diff_Pivot"],
+                "reference": data["Energy_Spec_ECPL_Pivot"],
+                "lambda_": data["Lambda_Spec_ECPL"],
+            }
+            errs = {
+                "index": data["Index_Spec_ECPL_Err"],
+                "amplitude": data["Flux_Spec_ECPL_Diff_Pivot_Err"],
+                "lambda_": data["Lambda_Spec_ECPL_Err"],
+            }
         else:
             raise ValueError(f"Invalid spec_type: {spec_type}")
 
+        model = Model.create(tag, **pars)
         model.parameters.set_error(**errs)
         return model
-
-    @property
-    def spatial_model_type(self):
-        """Spatial model type (str).
-
-        One of: 'point-like', 'shell', 'gaussian', '2-gaussian', '3-gaussian'
-        """
-        return self.data["Spatial_Model"].strip().lower()
-
-    @property
-    def is_pointlike(self):
-        """Source is pointlike? (bool)"""
-        d = self.data
-        has_size_ul = np.isfinite(d["Size_UL"])
-        pointlike = d["Spatial_Model"] == "Point-Like"
-        return pointlike or has_size_ul
 
     def spatial_model(self):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
@@ -499,37 +477,31 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         - ``Shell``: `~gammapy.modeling.models.ShellSpatialModel`
         """
         d = self.data
-        glon = d["GLON"]
-        glat = d["GLAT"]
+        pars = {"lon_0": d["GLON"], "lat_0": d["GLAT"], "frame": "galactic"}
+        errs = {"lon_0": d["GLON_Err"], "lat_0": d["GLAT_Err"]}
 
-        spatial_type = self.spatial_model_type
+        spatial_type = self.data["Spatial_Model"]
 
-        if self.is_pointlike:
-            model = PointSpatialModel(lon_0=glon, lat_0=glat, frame="galactic")
-        elif spatial_type == "gaussian":
-            model = GaussianSpatialModel(
-                lon_0=glon, lat_0=glat, sigma=d["Size"], frame="galactic"
-            )
-            model.parameters.set_error(
-                lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"]
-            )
-        elif spatial_type in {"2-gaussian", "3-gaussian"}:
+        if spatial_type == "Point-Like":
+            tag = "PointSpatialModel"
+        elif spatial_type == "Gaussian":
+            tag = "GaussianSpatialModel"
+            pars["sigma"] = d["Size"]
+            errs["sigma"] = d["Size_Err"]
+        elif spatial_type in {"2-Gaussian", "3-Gaussian"}:
             raise ValueError("For Gaussian or Multi-Gaussian models, use sky_model()!")
-        elif spatial_type == "shell":
+        elif spatial_type == "Shell":
             # HGPS contains no information on shell width
             # Here we assume a 5% shell width for all shells.
-            r_out = d["Size"]
-            radius = 0.95 * r_out
-            width = r_out - radius
-            model = ShellSpatialModel(
-                lon_0=glon, lat_0=glat, width=width, radius=radius, frame="galactic"
-            )
-            model.parameters.set_error(
-                lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], radius=d["Size_Err"]
-            )
+            tag = "ShellSpatialModel"
+            pars["radius"] = 0.95 * d["Size"]
+            pars["width"] = d["Size"] - pars["radius"]
+            errs["radius"] = d["Size_Err"]
         else:
             raise ValueError(f"Invalid spatial_type: {spatial_type}")
 
+        model = Model.create(tag, **pars)
+        model.parameters.set_error(**errs)
         return model
 
     def sky_model(self, which="best"):
@@ -545,22 +517,17 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         sky_model : `~gammapy.modeling.models.SkyModel`
             Sky model of the catalog object.
         """
-        if self.spatial_model_type in {"2-gaussian", "3-gaussian"}:
+        spatial_type = self.data["Spatial_Model"]
+        if spatial_type in {"2-Gaussian", "3-Gaussian"}:
             models = []
-
-            spectral_model = self.spectral_model(which=which)
             for component in self.components:
+                spectral_model = self.spectral_model(which=which)
                 weight = component.data["Flux_Map"] / self.data["Flux_Map"]
-                spectral_model_comp = spectral_model.copy()
-                # weight amplitude of the component
-                spectral_model_comp.parameters["amplitude"].value *= weight
-                models.append(
-                    SkyModel(
-                        component.spatial_model(),
-                        spectral_model_comp,
-                        name=component.name,
-                    )
+                spectral_model.parameters["amplitude"].value *= weight
+                model = SkyModel(
+                    component.spatial_model(), spectral_model, name=component.name
                 )
+                models.append(model)
 
             return SkyModels(models)
         else:
