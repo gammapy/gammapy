@@ -232,7 +232,7 @@ class AnalysisConfig(GammapyBaseModel):
             )
             log.info(f"Configuration settings saved into {fpath}")
         else:
-            return yaml.dump(yaml.safe_load(self.json()))
+            return yaml.dump(yaml.safe_load(self.json()), sort_keys=False, indent=4)
 
     def help(self, section=""):
         """Print template configuration settings."""

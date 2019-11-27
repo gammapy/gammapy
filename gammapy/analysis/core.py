@@ -133,7 +133,6 @@ class Analysis:
             return False
         for dataset in self.datasets:
             dataset.model = self.model
-
         log.info(self.model)
 
     def run_fit(self, optimize_opts=None):
@@ -245,7 +244,6 @@ class Analysis:
 
         maker = MapDatasetMaker()
         maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=offset_max)
-
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
         if self.config.datasets.stack:
@@ -272,7 +270,6 @@ class Analysis:
                 self._extract_irf_kernels(dataset)
                 log.debug(dataset)
                 datasets.append(dataset)
-
         self.datasets = Datasets(datasets)
 
     def _extract_irf_kernels(self, dataset):
@@ -390,13 +387,8 @@ class Analysis:
 
     def _validate_fp_settings(self):
         """Validate settings before proceeding to flux points estimation."""
-        valid = True
         if not self.fit:
             log.info("No results available from fit.")
-            valid = False
-        if not self.config.flux_points.energy:
-            log.info("No values declared for the energy bins.")
-            valid = False
-        if not valid:
             log.info("Flux points calculation cannot be done.")
-        return valid
+            return False
+        return True
