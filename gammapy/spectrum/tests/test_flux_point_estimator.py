@@ -218,8 +218,7 @@ class TestFluxPointsEstimator:
 
 
 def test_no_likelihood_contribution():
-    dataset = simulate_spectrum_dataset(SkyModel())
-    dataset.model = SkyModel()
+    dataset = simulate_spectrum_dataset(SkyModel(spectral_model=PowerLawSpectralModel()))
     dataset.mask_safe = np.zeros(dataset.data_shape, dtype=bool)
 
     fpe = FluxPointsEstimator([dataset], e_edges=[1, 3, 10] * u.TeV)

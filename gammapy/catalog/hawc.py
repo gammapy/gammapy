@@ -160,7 +160,9 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         of the source size, based on the residual excess..
         """
         return SkyModel(
-            self.spatial_model(which), self.spectral_model(which), name=self.name
+            spatial_model=self.spatial_model(which),
+            spectral_model=self.spectral_model(which),
+            name=self.name
         )
 
 
