@@ -141,10 +141,9 @@ class Analysis:
             return False
 
         for ds in self.datasets:
-            # TODO: fit_range handled in jsonschema validation class
-            if "fit" in self.settings and "fit_range" in self.settings["fit"]:
-                e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
-                e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
+            if self.config.fit.fit_range:
+                e_min = self.config.fit.fit_range.min
+                e_max = self.config.fit.fit_range.max
                 if isinstance(ds, MapDataset):
                     ds.mask_fit = ds.counts.geom.energy_mask(e_min, e_max)
                 else:
@@ -167,15 +166,20 @@ class Analysis:
 
         # TODO: add "source" to config
         log.info("Calculating flux points.")
-        axis_params = self.settings["flux-points"]["fp_binning"]
+        axis_params = self.config.flux_points.energy.dict()
+        axis_params = dict(lo_bnd=self.config.flux_points.energy.min.value,
+                           hi_bnd=self.config.flux_points.energy.max.value,
+                           nbin=self.config.flux_points.energy.nbins,
+                           unit=self.config.flux_points.energy.min.unit,
+                           interp="log",
+                           node_type="edges")
         e_edges = MapAxis.from_bounds(**axis_params).edges
         flux_point_estimator = FluxPointsEstimator(
             e_edges=e_edges, datasets=self.datasets, source=source
         )
         fp = flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
-        model = self.model[source].copy()
-        self.flux_points = FluxPointsDataset(data=fp, model=model)
+        self.flux_points = FluxPointsDataset(data=fp, model=self.model[source])
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
 
