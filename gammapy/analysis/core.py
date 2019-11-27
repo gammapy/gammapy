@@ -1,14 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high-level interface API"""
-import copy
 import logging
-from collections import defaultdict
-from pathlib import Path
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-import jsonschema
 import yaml
 from gammapy.analysis.config import AnalysisConfig
 from gammapy.cube import MapDataset, MapDatasetMaker, SafeMaskMaker
@@ -28,15 +24,6 @@ from gammapy.utils.scripts import make_path, read_yaml
 __all__ = ["Analysis"]
 
 log = logging.getLogger(__name__)
-CONFIG_PATH = Path(__file__).resolve().parent / "config"
-SCHEMA_FILE = CONFIG_PATH / "schema.yaml"
-DOCS_FILE = CONFIG_PATH / "docs.yaml"
-
-ANALYSIS_TEMPLATES = {
-    "basic": "template-basic.yaml",
-    "1d": "template-1d.yaml",
-    "3d": "template-3d.yaml",
-}
 
 
 class Analysis:
@@ -57,7 +44,7 @@ class Analysis:
 
     def __init__(self, config=None):
         if isinstance(config, dict):
-            self._config = AnalysisConfig(config)
+            self._config = AnalysisConfig(**config)
         elif isinstance(config, AnalysisConfig):
             self._config = config
         else:
@@ -76,11 +63,6 @@ class Analysis:
     def config(self):
         """Analysis configuration (`AnalysisConfig`)"""
         return self._config
-
-    @property
-    def settings(self):
-        """Configuration settings for the analysis session."""
-        return self.config.settings
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
