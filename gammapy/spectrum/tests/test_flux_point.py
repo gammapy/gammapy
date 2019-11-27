@@ -257,12 +257,13 @@ def test_flux_point_dataset_serialization(tmp_path):
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     data = FluxPoints.read(path)
     data.table["e_ref"] = data.e_ref.to("TeV")
-    # TODO: remove duplicate definition this once model is redefine as skymodel
-    spatial_model = ConstantSpatialModel()
     spectral_model = PowerLawSpectralModel(
         index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
     )
-    model = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model, name="test_model")
+    model = SkyModel(
+        spectral_model=spectral_model,
+        name="test_model"
+    )
     dataset = FluxPointsDataset(model, data, name="test_dataset")
 
     Datasets([dataset]).to_yaml(tmp_path, prefix="tmp")
