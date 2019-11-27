@@ -126,9 +126,10 @@ def datasets_to_dict(datasets, path, prefix, overwrite):
         dataset.write(filename, overwrite)
         datasets_dictlist.append(dataset.to_dict(filename=filename))
 
-        for model in dataset.model:
-            if model not in unique_models:
-                unique_models.append(model)
+        if dataset.model is not None:
+            for model in dataset.model:
+                if model not in unique_models:
+                    unique_models.append(model)
 
         try:
             if dataset.background_model not in unique_backgrounds:
