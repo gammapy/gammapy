@@ -66,7 +66,9 @@ class Analysis:
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
-        self.config.validate()
+        if not self._validate_observations_settings():
+            return False
+
         log.info("Fetching observations.")
         datastore_path = make_path(self.settings["observations"]["datastore"])
         if datastore_path.is_file():
@@ -140,8 +142,9 @@ class Analysis:
         filename : string
             Name of the model YAML file describing the model.
         """
-        if not self._validate_set_model():
+        if not self._validate_set_model_settings():
             return False
+
         log.info(f"Reading model.")
         if isinstance(model, str):
             model = yaml.safe_load(model)
@@ -344,45 +347,44 @@ class Analysis:
             stacked.name = "stacked"
             self.datasets = Datasets([stacked])
 
+    def _validate_observations_settings(self):
+        """Validate settings before proceeding to observations selection."""
+        if not self.config.data.datastore:
+            log.info("No datastore defined")
+            log.info("Observation selection cannot be done.")
+            return False
+        return True
+
     def _validate_reduction_settings(self):
         """Validate settings before proceeding to data reduction."""
-        if self.observations and len(self.observations):
-            self.config.validate()
-            return True
-        else:
+        if not self.observations or len(self.observations) == 0:
             log.info("No observations selected.")
             log.info("Data reduction cannot be done.")
             return False
+        return True
 
-    def _validate_set_model(self):
-        if self.datasets and len(self.datasets) != 0:
-            self.config.validate()
-            return True
-        else:
+    def _validate_set_model_settings(self):
+        """Validate settings before proceeding to model attach."""
+        if not self.datasets or len(self.datasets) == 0:
             log.info("No datasets reduced.")
             return False
+        return True
 
     def _validate_fitting_settings(self):
-        """Validate settings before proceeding to fit 1D."""
+        """Validate settings before proceeding to fit."""
         if not self.model:
-            log.info("No model fetched for datasets.")
+            log.info("No model attached to datasets.")
             log.info("Fit cannot be done.")
             return False
-        else:
-            return True
+        return True
 
     def _validate_fp_settings(self):
         """Validate settings before proceeding to flux points estimation."""
         valid = True
-        if self.fit:
-            self.config.validate()
-        else:
+        if not self.fit:
             log.info("No results available from fit.")
             valid = False
-        if "flux-points" not in self.settings:
-            log.info("No values declared for the energy bins.")
-            valid = False
-        elif "fp_binning" not in self.settings["flux-points"]:
+        if not self.config.flux_points.energy:
             log.info("No values declared for the energy bins.")
             valid = False
         if not valid:
