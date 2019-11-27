@@ -259,7 +259,7 @@ def test_select_time_box():
     obs_table_time = make_test_observation_table(
         n_obs=10,
         date_range=(datestart, dateend),
-        use_abs_time=True,
+        use_abs_time=False,
         random_state=random_state,
     )
 
@@ -267,10 +267,18 @@ def test_select_time_box():
     value_range = Time(["2012-01-01T01:00:00", "2012-01-01T02:00:00"])
     selection = dict(type="time_box", time_range=value_range)
     selected_obs_table = obs_table_time.select_observations(selection)
-    time_start = selected_obs_table["TSTART"]
-    assert (value_range[0] < time_start).all()
-    assert (time_start < value_range[1]).all()
+    time_start = selected_obs_table.time_start
+    time_stop = selected_obs_table.time_stop
 
+    assert (value_range[0] < time_start).all() & (time_stop < value_range[1]).all()
+
+    # Test selection with partial overlap of observations and value_range
+    selection_partial = dict(type="time_box", time_range=value_range, partial_overlap=True)
+    selected_obs_table = obs_table_time.select_observations(selection_partial)
+    time_start = selected_obs_table.time_start
+    time_stop = selected_obs_table.time_stop
+
+    assert (value_range[1] > time_start).all() & (time_stop > value_range[0]).all()
 
 def test_select_sky_regions():
     random_state = np.random.RandomState(seed=0)

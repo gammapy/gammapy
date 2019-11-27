@@ -9,7 +9,7 @@ from astropy.utils import lazyproperty
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
-from gammapy.utils.time import time_relative_to_ref
+from gammapy.utils.time import time_ref_from_dict
 from .gti import GTI
 
 __all__ = ["ObservationTable"]
@@ -271,6 +271,8 @@ class ObservationTable(Table):
         """
         if "inverted" not in selection:
             selection["inverted"] = False
+        if "partial_overlap" not in selection:
+            selection["partial_overlap"] = False
 
         if selection["type"] == "sky_circle":
             lon = Angle(selection["lon"], "deg")
@@ -287,7 +289,7 @@ class ObservationTable(Table):
             return self[mask]
         elif selection["type"] == "time_box":
             return self.select_time_range(
-                "TSTART", selection["time_range"], selection["inverted"]
+                 selection["time_range"], selection["partial_overlap"], selection["inverted"]
             )
         elif selection["type"] == "par_box":
             return self.select_range(
