@@ -101,14 +101,11 @@ class Analysis:
         """Produce reduced datasets."""
         if not self._validate_reduction_settings():
             return False
-        if self.settings["datasets"]["dataset-type"] == "SpectrumDatasetOnOff":
+
+        if self.config.datasets.type == "1d":
             self._spectrum_extraction()
-        elif self.settings["datasets"]["dataset-type"] == "MapDataset":
-            self._map_making()
         else:
-            # TODO raise error?
-            log.info("Data reduction method not available.")
-            return False
+            self._map_making()
 
     def set_model(self, model=None, filename=""):
         """Read the model from dict or filename and attach it to datasets.
@@ -293,43 +290,33 @@ class Analysis:
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
-        region = self.settings["datasets"]["geom"]["region"]
         log.info("Reducing spectrum datasets.")
-        on_lon = Angle(region["center"][0])
-        on_lat = Angle(region["center"][1])
-        on_center = SkyCoord(on_lon, on_lat, frame=region["frame"])
-        on_region = CircleSkyRegion(on_center, Angle(region["radius"]))
+        on_lon = self.config.datasets.onregion.lon
+        on_lat = self.config.datasets.onregion.lat
+        on_center = SkyCoord(on_lon, on_lat, frame=self.config.datasets.onregion.frame)
+        on_region = CircleSkyRegion(on_center, self.config.datasets.onregion.radius)
 
         maker_config = {}
-        if "containment_correction" in self.settings["datasets"]:
-            maker_config["containment_correction"] = self.settings["datasets"][
-                "containment_correction"
-            ]
-        params = self.settings["datasets"]["geom"]["axes"][0]
-        e_reco = MapAxis.from_bounds(**params).edges
+        if self.config.datasets.containment_correction:
+            maker_config["containment_correction"] = self.config.datasets.containment_correction
+        axis_params = dict(lo_bnd=self.config.datasets.geom.axes.energy.min.value,
+                      hi_bnd=self.config.datasets.geom.axes.energy.max.value,
+                      nbin=self.config.datasets.geom.axes.energy.nbins,
+                      unit=self.config.datasets.geom.axes.energy.min.unit,
+                      interp="log",
+                      node_type="edges")
+        e_reco = MapAxis.from_bounds(**axis_params).edges
         maker_config["e_reco"] = e_reco
-
         # TODO: remove hard-coded e_true and make it configurable
         maker_config["e_true"] = np.logspace(-2, 2.5, 109) * u.TeV
         maker_config["region"] = on_region
 
         dataset_maker = SpectrumDatasetMaker(**maker_config)
         bkg_maker_config = {}
-        background = self.settings["datasets"]["background"]
-
-        if "exclusion_mask" in background:
-            map_hdu = {}
-            filename = background["exclusion_mask"]["filename"]
-            if "hdu" in background["exclusion_mask"]:
-                map_hdu = {"hdu": background["exclusion_mask"]["hdu"]}
-            exclusion_region = Map.read(filename, **map_hdu)
+        if self.config.datasets.background.exclusion:
+            exclusion_region = Map.read(self.config.datasets.background.exclusion)
             bkg_maker_config["exclusion_mask"] = exclusion_region
-        if background["background_estimator"] == "reflected":
-            reflected_bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
-        else:
-            # TODO: raise error?
-            log.info("Background estimation only for reflected regions method.")
-
+        bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
         safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "aeff-max"])
 
         datasets = []
@@ -337,19 +324,16 @@ class Analysis:
             log.info(f"Processing observation {obs.obs_id}")
             selection = ["counts", "aeff", "edisp"]
             dataset = dataset_maker.run(obs, selection=selection)
-            dataset = reflected_bkg_maker.run(dataset, obs)
+            dataset = bkg_maker.run(dataset, obs)
             if dataset.counts_off is None:
-                log.info(
-                    f"No OFF region found for observation {obs.obs_id}. Discarding."
-                )
+                log.info(f"No OFF region found for observation {obs.obs_id}. Discarding.")
                 continue
             dataset = safe_mask_maker.run(dataset, obs)
             log.debug(dataset)
             datasets.append(dataset)
 
         self.datasets = Datasets(datasets)
-
-        if self.settings["datasets"]["stack-datasets"]:
+        if self.config.datasets.stack:
             stacked = self.datasets.stack_reduce()
             stacked.name = "stacked"
             self.datasets = Datasets([stacked])
