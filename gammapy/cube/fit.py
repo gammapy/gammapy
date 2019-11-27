@@ -1380,9 +1380,6 @@ class MapEvaluator:
         self.edisp = edisp
         self.contributes = True
 
-        if model.spatial_model is None:
-            raise ValueError("Map dataset requires spatial model component")
-
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
 
