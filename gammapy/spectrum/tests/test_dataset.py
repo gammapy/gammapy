@@ -335,7 +335,7 @@ class TestSpectrumOnOff:
 
     @requires_dependency("matplotlib")
     def test_plot_fit(self):
-        model = SkyModel()
+        model = SkyModel(spectral_model=PowerLawSpectralModel())
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -401,7 +401,7 @@ class TestSpectrumOnOff:
         assert_allclose(mask, desired)
 
     def test_str(self):
-        model = SkyModel()
+        model = SkyModel(spectral_model=PowerLawSpectralModel())
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -417,7 +417,7 @@ class TestSpectrumOnOff:
 
     def test_fake(self):
         """Test the fake dataset"""
-        source_model = SkyModel()
+        source_model = SkyModel(spectral_model=PowerLawSpectralModel())
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,

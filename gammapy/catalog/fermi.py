@@ -191,7 +191,11 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
 
     def sky_model(self):
         """Sky model (`~gammapy.modeling.models.SkyModel`)."""
-        return SkyModel(self.spatial_model(), self.spectral_model(), name=self.name)
+        return SkyModel(
+            spatial_model=self.spatial_model(),
+            spectral_model=self.spectral_model(),
+            name=self.name
+        )
 
 
 class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):

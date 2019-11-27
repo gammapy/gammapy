@@ -275,7 +275,11 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     def sky_model(self):
         """Source sky model (`~gammapy.modeling.models.SkyModel`)."""
-        return SkyModel(self.spatial_model(), self.spectral_model(), name=self.name)
+        return SkyModel(
+            spatial_model=self.spatial_model(),
+            spectral_model=self.spectral_model(),
+            name=self.name
+        )
 
     def _add_source_meta(self, table):
         """Copy over some info to table.meta"""

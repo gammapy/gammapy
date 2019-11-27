@@ -28,7 +28,7 @@ def sky_model():
     spectral_model = PowerLawSpectralModel(
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
-    return SkyModel(spatial_model, spectral_model, name="source-1")
+    return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model, name="source-1")
 
 
 @pytest.fixture(scope="session")

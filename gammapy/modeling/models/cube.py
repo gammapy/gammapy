@@ -108,23 +108,22 @@ class SkyModel(SkyModelBase):
 
     Parameters
     ----------
-    spatial_model : `~gammapy.modeling.models.SpatialModel`
-        Spatial model (must be normalised to integrate to 1)
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model
+    spatial_model : `~gammapy.modeling.models.SpatialModel`
+        Spatial model (must be normalised to integrate to 1)
     name : str
         Model identifier
     """
 
     tag = "SkyModel"
 
-    def __init__(self, spatial_model=None, spectral_model=None, name="source"):
-        from . import PointSpatialModel, PowerLawSpectralModel
+    def __init__(self, spectral_model, spatial_model=None, name="source"):
+        from . import PointSpatialModel
 
         if spatial_model is None:
             spatial_model = PointSpatialModel()
-        if spectral_model is None:
-            spectral_model = PowerLawSpectralModel()
+
         self.name = name
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model

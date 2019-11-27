@@ -525,14 +525,18 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 weight = component.data["Flux_Map"] / self.data["Flux_Map"]
                 spectral_model.parameters["amplitude"].value *= weight
                 model = SkyModel(
-                    component.spatial_model(), spectral_model, name=component.name
+                    spatial_model=component.spatial_model(),
+                    spectral_model=spectral_model,
+                    name=component.name
                 )
                 models.append(model)
 
             return SkyModels(models)
         else:
             return SkyModel(
-                self.spatial_model(), self.spectral_model(which=which), name=self.name
+                spatial_model=self.spatial_model(),
+                spectral_model=self.spectral_model(which=which),
+                name=self.name
             )
 
     @property

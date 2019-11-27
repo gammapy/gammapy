@@ -7,7 +7,7 @@ import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.data import GTI
-from gammapy.modeling.models import SkyModel
+from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
 from gammapy.spectrum.tests.test_flux_point_estimator import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
@@ -128,7 +128,7 @@ def test_lightcurve_plot_time(lc):
 
 
 def get_spectrum_datasets():
-    model = SkyModel()
+    model = SkyModel(spectral_model=PowerLawSpectralModel())
     dataset_1 = simulate_spectrum_dataset(model=model, random_state=0)
     dataset_1.name = "dataset_1"
     gti1 = GTI.create("0h", "1h", "2010-01-01T00:00:00")
