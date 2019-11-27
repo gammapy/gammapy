@@ -201,6 +201,16 @@ class AnalysisConfig(GammapyBaseModel):
         """
         filename = CONFIG_PATH / ANALYSIS_TEMPLATES[template]
         return cls.from_yaml(filename)
+
+    def __str__(self):
+        """Display settings in pretty YAML format."""
+        info = self.__class__.__name__ + "\n\n\t"
+
+        data = self.to_yaml()
+        data = data.replace("\n", "\n\t")
+        info += data
+        return info.expandtabs(tabsize=4)
+
     @classmethod
     def from_yaml(cls, filename):
         config = read_yaml(filename)
