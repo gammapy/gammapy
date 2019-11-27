@@ -12,6 +12,9 @@ from gammapy.utils.scripts import read_yaml
 
 __all__ = ["AnalysisConfig"]
 
+CONFIG_PATH = Path(__file__).resolve().parent / "config"
+DOCS_FILE = CONFIG_PATH / "docs.yaml"
+ANALYSIS_TEMPLATES = {"1d": "template-1d.yaml", "3d": "template-3d.yaml"}
 
 class AngleType(Angle):
     @classmethod
@@ -70,20 +73,6 @@ class GammapyBaseModel(BaseModel):
             Quantity: lambda v: f"{v.value} {v.unit}",
             Time: lambda v: f"{v.value}",
         }
-
-    @classmethod
-    def from_yaml(cls, filename):
-        config = read_yaml(filename)
-        return AnalysisConfig(**config)
-
-    def to_yaml(self):
-        return yaml.dump(yaml.safe_load(self.json()))
-
-    def update_from_dict(self, other):
-        data = deep_update(
-            self.dict(exclude_defaults=True), other.dict(exclude_defaults=True)
-        )
-        return AnalysisConfig(**data)
 
 
 class SkyCoordType(GammapyBaseModel):
@@ -195,3 +184,37 @@ class AnalysisConfig(GammapyBaseModel):
     datasets: Datasets = Datasets()
     fit: Fit = Fit()
     flux_points: FluxPoints = FluxPoints()
+
+    @classmethod
+    def from_template(cls, template):
+        """Create AnalysisConfig from existing templates.
+
+        Parameters
+        ----------
+        template : {"1d", "3d"}
+            Built-in templates.
+
+        Returns
+        -------
+        config : `AnalysisConfig`
+            AnalysisConfig class
+        """
+        filename = CONFIG_PATH / ANALYSIS_TEMPLATES[template]
+        return cls.from_yaml(filename)
+    @classmethod
+    def from_yaml(cls, filename):
+        config = read_yaml(filename)
+        return AnalysisConfig(**config)
+
+    def to_yaml(self, filename=None, overwrite=False):
+        if filename:
+            fname = Path(filename).name
+            fpath = Path(self.general.outdir) / fname
+            if fpath.exists() and not overwrite:
+                raise IOError(f"File {filename} already exists.")
+            fpath.write_text(
+                yaml.dump(yaml.safe_load(self.json()), sort_keys=False, indent=4)
+            )
+            log.info(f"Configuration settings saved into {fpath}")
+        else:
+            return yaml.dump(yaml.safe_load(self.json()))
