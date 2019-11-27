@@ -406,25 +406,3 @@ class Analysis:
         if not valid:
             log.info("Flux points calculation cannot be done.")
         return valid
-
-
-def is_quantity(instance):
-    try:
-        _ = u.Quantity(instance)
-        return True
-    except ValueError:
-        return False
-
-
-def _astropy_quantity(_, instance):
-    """Check a number may also be an astropy quantity."""
-    is_number = jsonschema.Draft7Validator.TYPE_CHECKER.is_type(instance, "number")
-    return is_number or is_quantity(instance)
-
-
-_type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(
-    "number", _astropy_quantity
-)
-_gp_units_validator = jsonschema.validators.extend(
-    jsonschema.Draft7Validator, type_checker=_type_checker
-)
