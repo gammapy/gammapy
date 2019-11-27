@@ -544,15 +544,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """
         if self.spatial_model_type in {"2-gaussian", "3-gaussian"}:
             models = []
-
-            spectral_model = self.spectral_model(which=which)
             for component in self.components:
+                spectral_model = self.spectral_model(which=which)
                 weight = component.data["Flux_Map"] / self.data["Flux_Map"]
-                spectral_model_comp = spectral_model.copy()
-                # weight amplitude of the component
-                spectral_model_comp.parameters["amplitude"].value *= weight
+                spectral_model.parameters["amplitude"].value *= weight
                 model = SkyModel(
-                    component.spatial_model(), spectral_model_comp, name=component.name
+                    component.spatial_model(), spectral_model, name=component.name
                 )
                 models.append(model)
 

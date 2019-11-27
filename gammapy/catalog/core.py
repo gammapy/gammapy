@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalog and object base classes."""
 import abc
-import copy
 import numbers
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
@@ -214,10 +213,6 @@ class SourceCatalog(abc.ABC):
     def positions(self):
         """Source positions (`~astropy.coordinates.SkyCoord`)."""
         return _skycoord_from_table(self.table)
-
-    def copy(self):
-        """Copy catalog"""
-        return copy.deepcopy(self)
 
 
 def _skycoord_from_table(table):
