@@ -309,10 +309,9 @@ class Analysis:
 
     def _set_logging(self):
         """Set logging parameters for API."""
-        logging.basicConfig(**self.settings["general"]["logging"])
-        log.info(
-            "Setting logging config: {!r}".format(self.settings["general"]["logging"])
-        )
+        self.config.general.log.level = self.config.general.log.level.upper()
+        logging.basicConfig(**self.config.general.log.dict())
+        log.info("Setting logging config: {!r}".format(self.config.general.log.dict()))
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
