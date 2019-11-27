@@ -70,22 +70,23 @@ class Analysis:
             return False
 
         log.info("Fetching observations.")
+        data_settings = self.config.data
         selected_obs = ObservationTable()
         obs_list = self.datastore.get_observations()
         if len(self.config.data.obs_ids):
-            obs_list = self.datastore.get_observations(self.config.data.obs_ids)
+            obs_list = self.datastore.get_observations(data_settings.obs_ids)
         selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
         ids = selected_obs["OBS_ID"].tolist()
         # TODO
         # if self.config.data.obs_file:
         # add obs_ids from file
         # ids.extend(selected_obs["OBS_ID"].tolist())
-        if self.config.data.obs_cone.lon is not None:
+        if data_settings.obs_cone.lon is not None:
             # TODO remove border keyword
-            cone = dict(type='sky_circle', frame=self.config.data.obs_cone.frame,
-                             lon=self.config.data.obs_cone.lon,
-                             lat=self.config.data.obs_cone.lat,
-                             radius=self.config.data.obs_cone.radius,
+            cone = dict(type='sky_circle', frame=data_settings.obs_cone.frame,
+                             lon=data_settings.obs_cone.lon,
+                             lat=data_settings.obs_cone.lat,
+                             radius=data_settings.obs_cone.radius,
                              border="1 deg")
             selected_cone = self.datastore.obs_table.select_observations(cone)
             ids = list(set(ids) & set(selected_cone["OBS_ID"].tolist()))
@@ -140,10 +141,11 @@ class Analysis:
         if not self._validate_fitting_settings():
             return False
 
+        fit_settings = self.config.fit
         for ds in self.datasets:
-            if self.config.fit.fit_range:
-                e_min = self.config.fit.fit_range.min
-                e_max = self.config.fit.fit_range.max
+            if fit_settings.fit_range:
+                e_min = fit_settings.fit_range.min
+                e_max = fit_settings.fit_range.max
                 if isinstance(ds, MapDataset):
                     ds.mask_fit = ds.counts.geom.energy_mask(e_min, e_max)
                 else:
@@ -164,16 +166,10 @@ class Analysis:
         if not self._validate_fp_settings():
             return False
 
+        fp_settings = self.config.flux_points
         # TODO: add "source" to config
         log.info("Calculating flux points.")
-        axis_params = self.config.flux_points.energy.dict()
-        axis_params = dict(lo_bnd=self.config.flux_points.energy.min.value,
-                           hi_bnd=self.config.flux_points.energy.max.value,
-                           nbin=self.config.flux_points.energy.nbins,
-                           unit=self.config.flux_points.energy.min.unit,
-                           interp="log",
-                           node_type="edges")
-        e_edges = MapAxis.from_bounds(**axis_params).edges
+        e_edges = self._make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
             e_edges=e_edges, datasets=self.datasets, source=source
         )
@@ -299,21 +295,16 @@ class Analysis:
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
         log.info("Reducing spectrum datasets.")
-        on_lon = self.config.datasets.onregion.lon
-        on_lat = self.config.datasets.onregion.lat
-        on_center = SkyCoord(on_lon, on_lat, frame=self.config.datasets.onregion.frame)
-        on_region = CircleSkyRegion(on_center, self.config.datasets.onregion.radius)
+        datasets_settings = self.config.datasets
+        on_lon = datasets_settings.onregion.lon
+        on_lat = datasets_settings.onregion.lat
+        on_center = SkyCoord(on_lon, on_lat, frame=datasets_settings.onregion.frame)
+        on_region = CircleSkyRegion(on_center, datasets_settings.onregion.radius)
 
         maker_config = {}
-        if self.config.datasets.containment_correction:
-            maker_config["containment_correction"] = self.config.datasets.containment_correction
-        axis_params = dict(lo_bnd=self.config.datasets.geom.axes.energy.min.value,
-                      hi_bnd=self.config.datasets.geom.axes.energy.max.value,
-                      nbin=self.config.datasets.geom.axes.energy.nbins,
-                      unit=self.config.datasets.geom.axes.energy.min.unit,
-                      interp="log",
-                      node_type="edges")
-        e_reco = MapAxis.from_bounds(**axis_params).edges
+        if datasets_settings.containment_correction:
+            maker_config["containment_correction"] = datasets_settings.containment_correction
+        e_reco = self._make_energy_axis(datasets_settings.geom.axes.energy).edges
         maker_config["e_reco"] = e_reco
         # TODO: remove hard-coded e_true and make it configurable
         maker_config["e_true"] = np.logspace(-2, 2.5, 109) * u.TeV
@@ -321,8 +312,8 @@ class Analysis:
 
         dataset_maker = SpectrumDatasetMaker(**maker_config)
         bkg_maker_config = {}
-        if self.config.datasets.background.exclusion:
-            exclusion_region = Map.read(self.config.datasets.background.exclusion)
+        if datasets_settings.background.exclusion:
+            exclusion_region = Map.read(datasets_settings.background.exclusion)
             bkg_maker_config["exclusion_mask"] = exclusion_region
         bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
         safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "aeff-max"])
