@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from collections import defaultdict
 from enum import Enum
 from pathlib import Path
 from typing import List
@@ -228,3 +229,22 @@ class AnalysisConfig(GammapyBaseModel):
             log.info(f"Configuration settings saved into {fpath}")
         else:
             return yaml.dump(yaml.safe_load(self.json()))
+
+    def help(self, section=""):
+        """Print template configuration settings."""
+        doc = self._get_doc_sections()
+        for keyword in doc.keys():
+            if section == "" or section == keyword:
+                print(doc[keyword])
+
+    @staticmethod
+    def _get_doc_sections():
+        """Returns dict with commented docs from docs file"""
+        doc = defaultdict(str)
+        with open(DOCS_FILE) as f:
+            for line in filter(lambda line: not line.startswith("---"), f):
+                line = line.strip("\n")
+                if line.startswith("# Section: "):
+                    keyword = line.replace("# Section: ", "")
+                doc[keyword] += line + "\n"
+        return doc

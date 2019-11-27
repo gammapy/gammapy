@@ -121,7 +121,7 @@ The observations used in the analysis may be selected from a ``datastore`` decla
 ``observations`` section of the settings, using also different parameters and values to
 build a composed filter.
 
-.. gp-howto-hli:: observations
+.. gp-howto-hli:: data
 
 You may use the `get_observations()` method to proceed to make the observation filtering.
 The observations are stored as a list of `~gammapy.data.DataStoreObservation` objects.
