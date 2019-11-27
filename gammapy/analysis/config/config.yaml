@@ -11,7 +11,7 @@ data:
     datastore: $GAMMAPY_DATA/hess-dl3-dr1/
     obs_ids: [23523, 23526]
     obs_file:                             # csv file with obs_ids
-    obs_cone: {frame: galactic, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
+    obs_cone: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
     obs_time: {start: "2019-12-01", stop: "2020-03-01"}
 
 datasets:
@@ -20,7 +20,7 @@ datasets:
     geom:
         # mandatory for 3d
         wcs:
-            skydir: {frame: galactic, lon: 83.633 deg, lat: 22.014 deg}
+            skydir: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg}
             binsize: 0.1 deg
             fov: {width: 7 deg, height: 5 deg}
             binsize_irf: 0.1 deg
@@ -36,7 +36,7 @@ datasets:
         method: reflected
         exclusion:    # fits file for exclusion mask
     # mandatory for 1d
-    onregion: {frame: galactic, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
+    onregion: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
     containment_correction: true
     psf_kernel_radius: 0.6 deg
 
