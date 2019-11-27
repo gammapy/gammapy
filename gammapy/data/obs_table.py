@@ -151,7 +151,7 @@ class ObservationTable(Table):
 
         return self[mask]
 
-    def select_time_range(self, selection_variable, time_range, inverted=False):
+    def select_time_range(self, time_range, partial_overlap=False, inverted=False):
         """Make an observation table, applying a time selection.
 
         Apply a 1D box selection (min, max) to a
@@ -163,10 +163,10 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        selection_variable : str
-            Name of variable to apply a cut (it should exist on the table).
         time_range : `~astropy.time.Time`
             Allowed time range (min, max).
+        partial_overlap : bool, optional
+            Include partially overlapping observations. Default is False
         inverted : bool, optional
             Invert selection: keep all entries outside the (min, max) range.
 
@@ -175,16 +175,17 @@ class ObservationTable(Table):
         obs_table : `~gammapy.data.ObservationTable`
             Observation table after selection.
         """
-        if self.meta["TIME_FORMAT"] == "absolute":
-            # read times into a Time object
-            time = Time(self[selection_variable])
-        else:
-            # transform time to MET
-            time_range = time_relative_to_ref(time_range, self.meta)
-            # read values into a quantity in case units have to be taken into account
-            time = Quantity(self[selection_variable])
+        tstart = self.time_start
+        tstop = self.time_stop
 
-        mask = (time_range[0] <= time) & (time < time_range[1])
+        if partial_overlap is False:
+            mask1 = time_range[0] <= tstart
+            mask2 = time_range[1] >= tstop
+        else:
+            mask1 = time_range[0] <= tstop
+            mask2 = time_range[1] >= tstart
+
+        mask = mask1 & mask2
 
         if inverted:
             mask = np.invert(mask)
