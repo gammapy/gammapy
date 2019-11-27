@@ -119,11 +119,6 @@ class SkyModel(SkyModelBase):
     tag = "SkyModel"
 
     def __init__(self, spectral_model, spatial_model=None, name="source"):
-        from . import PointSpatialModel
-
-        if spatial_model is None:
-            spatial_model = PointSpatialModel()
-
         self.name = name
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
@@ -133,7 +128,13 @@ class SkyModel(SkyModelBase):
 
     @property
     def parameters(self):
-        return self.spatial_model.parameters + self.spectral_model.parameters
+        parameters = []
+
+        if self.spatial_model is not None:
+            parameters.append(self.spatial_model.parameters)
+
+        parameters.append(self.spectral_model.parameters)
+        return Parameters.from_stack(parameters)
 
     @property
     def spatial_model(self):
@@ -202,20 +203,31 @@ class SkyModel(SkyModelBase):
         value : `~astropy.units.Quantity`
             Model value at the given point.
         """
-        val_spatial = self.spatial_model(lon, lat)  # pylint:disable=not-callable
-        val_spectral = self.spectral_model(energy)  # pylint:disable=not-callable
-        return val_spatial * val_spectral
+        value = self.spectral_model(energy)  # pylint:disable=not-callable
+
+        if self.spatial_model is not None:
+            value = value * self.spatial_model(lon, lat)  # pylint:disable=not-callable
+
+        return value
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
-        val_spatial = self.spatial_model.evaluate_geom(geom.to_image())
         energy = geom.get_axis_by_name("energy").center[:, np.newaxis, np.newaxis]
-        val_spectral = self.spectral_model(energy)
-        return val_spatial * val_spectral
+        value = self.spectral_model(energy)
+
+        if self.spatial_model is not None:
+            value = value * self.spatial_model.evaluate_geom(geom.to_image())
+
+        return value
 
     def copy(self, **kwargs):
         """Copy SkyModel"""
-        kwargs.setdefault("spatial_model", self.spatial_model.copy())
+        if self.spatial_model is not None:
+            spatial_model = self.spatial_model.copy()
+        else:
+            spatial_model = None
+
+        kwargs.setdefault("spatial_model", spatial_model)
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
         kwargs.setdefault("name", self.name + "-copy")
         return self.__class__(**kwargs)
@@ -225,8 +237,11 @@ class SkyModel(SkyModelBase):
         data = {}
         data["name"] = self.name
         data["type"] = self.tag
-        data["spatial"] = self.spatial_model.to_dict()
         data["spectral"] = self.spectral_model.to_dict()
+
+        if self.spatial_model is not None:
+            data["spatial"] = self.spatial_model.to_dict()
+
         return data
 
     @classmethod
@@ -237,8 +252,13 @@ class SkyModel(SkyModelBase):
         model_class = SPECTRAL_MODELS.get_cls(data["spectral"]["type"])
         spectral_model = model_class.from_dict(data["spectral"])
 
-        model_class = SPATIAL_MODELS.get_cls(data["spatial"]["type"])
-        spatial_model = model_class.from_dict(data["spatial"])
+        spatial_data = data.get("spatial")
+
+        if spatial_data is not None:
+            model_class = SPATIAL_MODELS.get_cls(spatial_data["type"])
+            spatial_model = model_class.from_dict(spatial_data)
+        else:
+            spatial_model = None
 
         return cls(
             name=data["name"],
