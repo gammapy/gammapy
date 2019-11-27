@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 from collections import defaultdict
 from enum import Enum
 from pathlib import Path
@@ -16,6 +17,9 @@ __all__ = ["AnalysisConfig"]
 CONFIG_PATH = Path(__file__).resolve().parent / "config"
 DOCS_FILE = CONFIG_PATH / "docs.yaml"
 ANALYSIS_TEMPLATES = {"1d": "template-1d.yaml", "3d": "template-3d.yaml"}
+
+log = logging.getLogger(__name__)
+
 
 class AngleType(Angle):
     @classmethod
