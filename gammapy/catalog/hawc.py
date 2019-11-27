@@ -54,11 +54,11 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         """Print position info."""
         return (
             f"\n*** Position info ***\n\n"
-            f"RA: {self.data['ra']:.3f}\n"
-            f"DEC: {self.data['dec']:.3f}\n"
-            f"GLON: {self.data['glon']:.3f}\n"
-            f"GLAT: {self.data['glat']:.3f}\n"
-            f"Position error: {self.data['pos_err']:.3f}\n"
+            f"RA: {self.data.ra:.3f}\n"
+            f"DEC: {self.data.dec:.3f}\n"
+            f"GLON: {self.data.glon:.3f}\n"
+            f"GLAT: {self.data.glat:.3f}\n"
+            f"Position error: {self.data.pos_err:.3f}\n"
         )
 
     @staticmethod
@@ -74,12 +74,11 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
     def _info_spectrum(self):
         """Print spectral info."""
-        d = self.data
         ss = "\n*** Spectral info ***\n\n"
-        ss += self._info_spectrum_one(d, 0)
+        ss += self._info_spectrum_one(self.data, 0)
 
         if self.n_models == 2:
-            ss += self._info_spectrum_one(d, 1)
+            ss += self._info_spectrum_one(self.data, 1)
         else:
             ss += "No second spectrum available for this source"
 
@@ -88,7 +87,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
     @property
     def n_models(self):
         """Number of models (1 or 2)."""
-        return 1 if np.isnan(self.data["spec1_dnde"]) else 2
+        return 1 if np.isnan(self.data.spec1_dnde) else 2
 
     def _get_idx(self, which):
         if which == "point":
@@ -133,26 +132,17 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
           Only available for some sources. Raise ValueError if not available.
         """
         idx = self._get_idx(which)
+        pars = {"lon_0": self.data.glon, "lat_0": self.data.glat, "frame": "galactic"}
 
         if idx == 0:
             tag = "PointSpatialModel"
-            pars = {
-                "lon_0": self.data["glon"],
-                "lat_0": self.data["glat"],
-                "frame": "galactic",
-            }
         else:
             tag = "DiskSpatialModel"
-            pars = {
-                "lon_0": self.data["glon"],
-                "lat_0": self.data["glat"],
-                "r_0": self.data[f"spec{idx}_radius"],
-                "frame": "galactic",
-            }
+            pars["r_0"] = self.data[f"spec{idx}_radius"]
 
         errs = {
-            "lat_0": self.data["pos_err"],
-            "lon_0": self.data["pos_err"] / np.cos(self.data["glat"]),
+            "lat_0": self.data.pos_err,
+            "lon_0": self.data.pos_err / np.cos(self.data.glat),
         }
 
         model = Model.create(tag, **pars)

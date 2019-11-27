@@ -1,76 +1,78 @@
 
 *** Basic info ***
 
-Catalog row index (zero-based) : 118
-Common name     : HESS J1813-178
-Other names     : HESS J1813-178,G12.82-0.02,PSR J1813-1749,CXOU J181335.1-174957,IGR J18135-1751,W33
-Location        : gal
-Class           : pwn
+Catalog row index (zero-based): 118
+Common name: HESS J1813-178
+Gamma names: HESS J1813-178
+Fermi names: 
+Other names: G12.82-0.02,PSR J1813-1749,CXOU J181335.1-174957,IGR J18135-1751,W33
+Location: gal
+Class: pwn
 
-TeVCat ID       : 114
-TeVCat 2 ID     : Unhlxa
-TeVCat name     : TeV J1813-178
+TeVCat ID: 114
+TeVCat 2 ID: Unhlxa
+TeVCat name: TeV J1813-178
 
-TGeVCat ID      : 116
-TGeVCat name    : TeV J1813-1750
+TGeVCat ID: 116
+TGeVCat name: TeV J1813-1750
 
-Discoverer      : hess
-Discovery date  : 2005-03
-Seen by         : hess,magic
-Reference       : 2006ApJ...636..777A
+Discoverer: hess
+Discovery date: 2005-03
+Seen by: hess,magic
+Reference: 2006ApJ...636..777A
 
 *** Position info ***
 
 SIMBAD:
-RA                   : 273.363 deg
-DEC                  : -17.849 deg
-GLON                 : 12.787 deg
-GLAT                 : 0.000 deg
+RA: 273.363 deg
+DEC: -17.849 deg
+GLON: 12.787 deg
+GLAT: 0.000 deg
 
 Measurement:
-RA                   : 273.408 deg
-DEC                  : -17.842 deg
-GLON                 : 12.813 deg
-GLAT                 : -0.034 deg
-Position error       : 0.005 deg
+RA: 273.408 deg
+DEC: -17.842 deg
+GLON: 12.813 deg
+GLAT: -0.034 deg
+Position error: 0.005 deg
 
 *** Morphology info ***
 
-Morphology model type     : gauss
-Sigma                     : 0.036 deg
-Sigma error               : 0.006 deg
-Sigma2                    : nan deg
-Sigma2 error              : nan deg
-Position angle            : nan deg
-Position angle error      : nan deg
-Position angle frame      : 
+Morphology model type: gauss
+Sigma: 0.036 deg
+Sigma error: 0.006 deg
+Sigma2: nan deg
+Sigma2 error: nan deg
+Position angle: nan deg
+Position angle error: nan deg
+Position angle frame: 
 
 *** Spectral info ***
 
-Significance    : 13.500
-Livetime        : 9.700 h
+Significance: 13.500
+Livetime: 9.700 h
 
-Spectrum type   : pl2
-flux            : 1.42e-11 +- 1.1e-12 (stat) +- 3e-13 (sys) cm-2 s-1
-index           : 2.09 +- 0.08 (stat) +- 0.2 (sys)
-e_min           : 0.2 TeV
-e_max           : nan TeV
+Spectrum type: pl2
+flux: 1.42e-11 +- 1.1e-12 (stat) +- 3e-13 (sys) cm-2 s-1
+index: 2.09 +- 0.08 (stat) +- 0.2 (sys)
+e_min: 0.2 TeV
+e_max: nan TeV
 
-Energy range         : (nan, nan) TeV
-theta                : 0.15 deg
+Energy range: (nan, nan) TeV
+theta: 0.15 deg
 
 
 Derived fluxes:
-Spectral model norm (1 TeV)    : 2.68e-12 +- 2.55e-13 (stat) cm-2 s-1 TeV-1
-Integrated flux (>1 TeV)       : 2.46e-12 +- 3.69e-13 (stat) cm-2 s-1
-Integrated flux (>1 TeV)       : 11.844 +- 1.780 (% Crab)
-Integrated flux (1-10 TeV)     : 8.92e-12 +- 1.46e-12 (stat) erg cm-2 s-1
+Spectral model norm (1 TeV): 2.68e-12 1 / (cm2 s TeV) +- 2.55e-13 1 / (cm2 s TeV) (stat) cm-2 s-1 TeV-1
+Integrated flux (>1 TeV): 2.46e-12 +- 3.69e-13 (stat) cm-2 s-1
+Integrated flux (>1 TeV): 11.844 +- 1.780 (% Crab)
+Integrated flux (1-10 TeV): 8.92e-12 +- 1.46e-12 (stat) erg cm-2 s-1
 
 *** Spectral points ***
 
-SED reference id          : 2006ApJ...636..777A
-Number of spectral points : 13
-Number of upper limits    : 0
+SED reference ID: 2006ApJ...636..777A
+Number of spectral points: 13
+Number of upper limits: 0
 
 e_ref        dnde         dnde_errn       dnde_errp   
  TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)

@@ -9,6 +9,15 @@ from gammapy.utils.table import table_from_row_data, table_row_to_dict
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
 
 
+# https://pydanny.blogspot.com/2011/11/loving-bunch-class.html
+class Bunch(dict):
+    """ Warning: DON'T USE THIS IN REAL PROJECTS """
+
+    def __init__(self, **kw):
+        dict.__init__(self, kw)
+        self.__dict__.update(kw)
+
+
 class SourceCatalogObject:
     """Source catalog object.
 
@@ -28,9 +37,9 @@ class SourceCatalogObject:
     _row_index_key = "_row_index"
 
     def __init__(self, data, data_extended=None):
-        self.data = data
+        self.data = Bunch(**data)
         if data_extended:
-            self.data_extended = data_extended
+            self.data_extended = Bunch(**data_extended)
 
     @property
     def name(self):
