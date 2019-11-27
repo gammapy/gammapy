@@ -114,6 +114,29 @@ def test_sky_model_init():
         SkyModel(spectral_model=PowerLawSpectralModel(), spatial_model=1234)
 
 
+def test_sky_model_spatial_none_io(tmpdir):
+    pwl = PowerLawSpectralModel()
+    model = SkyModel(spectral_model=pwl, name="test")
+    models = SkyModels([model])
+
+    filename = tmpdir / "test-models-none.yaml"
+    models.to_yaml(filename)
+
+    models = SkyModels.from_yaml(filename)
+
+    assert models["test"].spatial_model is None
+
+
+def test_sky_model_spatial_none_evaluate(geom):
+    pwl = PowerLawSpectralModel()
+    model = SkyModel(spectral_model=pwl, name="test")
+
+    data = model.evaluate_geom(geom).to_value("cm-2 s-1 TeV-1")
+
+    assert data.shape == (2, 1, 1)
+    assert_allclose(data[0], 3.305785e-12)
+
+
 def test_skymodel_addition(sky_model, sky_models, sky_models_2, diffuse_model):
     models = sky_model + sky_model.copy()
     assert isinstance(models, SkyModels)

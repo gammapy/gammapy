@@ -194,7 +194,7 @@ def test_analysis_3d():
     assert len(analysis.datasets) == 1
     assert len(analysis.fit_result.parameters) == 8
     res = analysis.fit_result.parameters
-    assert res[3].unit == "cm-2 s-1 TeV-1"
+    assert res["amplitude"].unit == "cm-2 s-1 TeV-1"
     assert len(analysis.flux_points.data.table) == 2
     dnde = analysis.flux_points.data.table["dnde"].quantity
 
