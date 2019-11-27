@@ -14,24 +14,50 @@ DOC_FILE = CONFIG_PATH / "docs.yaml"
 
 def test_config():
     config = AnalysisConfig()
-    assert config.settings["general"]["logging"]["level"] == "INFO"
-    cfg = {"general": {"outdir": "test"}}
-    config.update_settings(cfg)
-    assert config.settings["general"]["logging"]["level"] == "INFO"
-    assert config.settings["general"]["outdir"] == "test"
-
+    assert config.general.log.level == "info"
     with pytest.raises(ValueError):
         Analysis()
-
     assert "AnalysisConfig" in str(config)
 
 
-def test_config_to_yaml(tmp_path):
+def test_docs_file():
+    config = AnalysisConfig.from_yaml(DOC_FILE)
+    assert config.general.outdir == "."
+
+
+def test_help():
     config = AnalysisConfig()
-    config.settings["general"]["outdir"] = tmp_path
-    config.to_yaml(overwrite=True)
-    text = (tmp_path / config.filename).read_text()
-    assert "stack-datasets" in text
+    assert config.help() is None
+
+
+def test_update():
+    cfg = AnalysisConfig()
+    analysis = Analysis(cfg)
+    data = {"general": {"outdir": "test"}}
+    analysis.update_config(data)
+    assert analysis.config.general.outdir == "test"
+
+    analysis = Analysis(cfg)
+    cfg2 = AnalysisConfig(**data)
+    analysis.update_config(cfg2)
+    assert analysis.config.general.outdir == "test"
+
+    analysis = Analysis(cfg)
+    data = """
+    general: 
+        outdir: test
+    """
+    analysis.update_config(data)
+    assert analysis.config.general.outdir == "test"
+
+
+def test_config_to_yaml(tmp_path):
+    filename = "temp.yaml"
+    config = AnalysisConfig()
+    config.general.outdir = str(tmp_path)
+    config.to_yaml(filename=filename)
+    text = (tmp_path / filename).read_text()
+    assert "stack" in text
 
 
 def config_observations():
