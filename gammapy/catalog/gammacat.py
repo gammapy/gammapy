@@ -322,13 +322,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
         return FluxPoints(table)
 
-    @property
-    def is_pointlike(self):
-        """
-        Source is pointlike.
-        """
-        return self.data["morph_type"] == "point"
-
 
 class SourceCatalogGammaCat(SourceCatalog):
     """Gammacat open TeV source catalog.

@@ -25,7 +25,6 @@ SOURCES = [
         "flux_1TeV": 2.104e-11 * u.Unit("cm-2 s-1"),
         "eflux_1_10TeV": 9.265778680255336e-11 * u.Unit("erg cm-2 s-1"),
         "n_flux_points": 24,
-        "is_pointlike": False,
         "spatial_model": "GaussianSpatialModel",
         "ra": 128.287003,
         "dec": -45.189999,
@@ -39,7 +38,6 @@ SOURCES = [
         "flux_1TeV": 2.056e-12 * u.Unit("cm-2 s-1"),
         "eflux_1_10TeV": 6.235650344765057e-12 * u.Unit("erg cm-2 s-1"),
         "n_flux_points": 11,
-        "is_pointlike": False,
         "spatial_model": "GaussianSpatialModel",
         "ra": 282.119995,
         "dec": -1.792,
@@ -53,7 +51,6 @@ SOURCES = [
         "flux_1TeV": 2.457e-12 * u.Unit("cm-2 s-1"),
         "eflux_1_10TeV": 8.923614018939419e-12 * u.Unit("erg cm-2 s-1"),
         "n_flux_points": 13,
-        "is_pointlike": False,
         "spatial_model": "GaussianSpatialModel",
         "ra": 273.362915,
         "dec": -17.84889,
@@ -159,8 +156,6 @@ class TestSourceCatalogObjectGammaCat:
         # TODO: put better asserts on model properties
         # TODO: add a point and shell source -> separate list of sources for morphology test parametrization?
         assert spatial_model.__class__.__name__ == ref["spatial_model"]
-
-        assert source.is_pointlike == ref["is_pointlike"]
 
         model = gammacat["HESS J1634-472"].spatial_model()
         pos_err = model.position_error
