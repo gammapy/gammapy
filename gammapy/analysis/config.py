@@ -46,6 +46,11 @@ class TimeType(Time):
         return Time(v)
 
 
+class ReductionTypeEnum(str, Enum):
+    spectrum = "1d"
+    cube = "3d"
+
+
 class FrameEnum(str, Enum):
     icrs = "icrs"
     galactic = "galactic"
@@ -152,7 +157,7 @@ class Geom(GammapyBaseModel):
 
 
 class Datasets(GammapyBaseModel):
-    type: str = "1d"
+    type: ReductionTypeEnum = ReductionTypeEnum.spectrum
     stack: bool = True
     geom: Geom = Geom()
     background: Background = Background()
