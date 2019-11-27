@@ -241,6 +241,12 @@ class AnalysisConfig(GammapyBaseModel):
             if section == "" or section == keyword:
                 print(doc[keyword])
 
+    def _update(self, other):
+        config = deep_update(
+            self.dict(exclude_defaults=True), other.dict(exclude_defaults=True)
+        )
+        return AnalysisConfig(**config)
+
     @staticmethod
     def _get_doc_sections():
         """Returns dict with commented docs from docs file"""

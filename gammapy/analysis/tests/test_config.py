@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from pathlib import Path
 import pytest
-from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
+from astropy.units import Quantity
 from gammapy.analysis.config import (
     AnalysisConfig,
     Axes,
@@ -26,7 +26,7 @@ from gammapy.analysis.config import (
     Wcs,
 )
 
-config_file = Path(__file__).resolve().parent / ".." / "config" / "config.yaml"
+CONFIG_FILE = Path(__file__).resolve().parent / ".." / "config" / "config.yaml"
 
 
 def test_config_basics():
@@ -68,7 +68,7 @@ def test_config_create_from_dict():
 
 
 def test_config_create_from_yaml():
-    config = AnalysisConfig.from_yaml(config_file)
+    config = AnalysisConfig.from_yaml(CONFIG_FILE)
     assert isinstance(config.general, General)
 
 
@@ -77,10 +77,10 @@ def test_config_to_yaml():
     assert "level: info" in config.to_yaml()
 
 
-def test_config_update_from_dict():
+def test_config_update():
     config1 = AnalysisConfig()
     data = {"fit": {"fit_range": {"min": "1 TeV", "max": "100 TeV"}}}
     config2 = AnalysisConfig(**data)
-    config = config1.update_from_dict(config2)
+    config = config1._update(config2)
     assert config.fit.fit_range.min == Quantity("1 TeV")
     assert config.general.log.level == "info"

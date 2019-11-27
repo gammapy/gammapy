@@ -204,6 +204,36 @@ class Analysis:
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
 
+    def update_config(self, config=None, filename=""):
+        """Updates config with provided settings.
+
+        Parameters
+        ----------
+        config : string dict or `AnalysisConfig` object
+            Configuration settings provided in dict() syntax.
+        filename : string
+            Filename in YAML format.
+        """
+        upd_cfg = None
+        try:
+            if filename:
+                filepath = make_path(filename)
+                config = dict(read_yaml(filepath))
+            if isinstance(config, str):
+                config = dict(yaml.safe_load(config))
+            if isinstance(config, dict):
+                upd_cfg = AnalysisConfig(**config)
+            if isinstance(config, AnalysisConfig):
+                upd_cfg = config
+        except Exception as ex:
+            log.error("Could not parse the config settings provided.")
+            log.error(ex)
+            return False
+        if upd_cfg is None:
+            self._config = AnalysisConfig()
+        else:
+            self._config = self.config._update(upd_cfg)
+
     @staticmethod
     def _create_geometry(params):
         """Create the geometry."""
