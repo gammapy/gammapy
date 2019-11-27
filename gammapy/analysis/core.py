@@ -213,33 +213,38 @@ class Analysis:
         else:
             self._config = self.config._update(upd_cfg)
 
-    @staticmethod
-    def _create_geometry(params):
+    def _create_geometry(self):
         """Create the geometry."""
-        geom_params = copy.deepcopy(params)
-        axes = []
-        for axis_params in params.get("axes", []):
-            ax = MapAxis.from_bounds(**axis_params)
-            axes.append(ax)
+        geom_params = {}
+        geom_settings = self.config.datasets.geom
+        skydir_settings = geom_settings.wcs.skydir
+        if skydir_settings.lon is not None:
+            skydir = SkyCoord(skydir_settings.lon, skydir_settings.lat, frame=skydir_settings.frame)
+            geom_params["skydir"] = skydir
+        if skydir_settings.frame == "icrs":
+            geom_params["coordsys"] = "CEL"
+        if skydir_settings.frame == "galactic":
+            geom_params["coordsys"] = "GAL"
+        axes = [self._make_energy_axis(geom_settings.axes.energy)]
         geom_params["axes"] = axes
-        if "skydir" in geom_params:
-            geom_params["skydir"] = tuple(geom_params["skydir"])
+        geom_params["binsz"] = geom_settings.wcs.binsize
+        width = geom_settings.wcs.fov.width.to("deg").value
+        height = geom_settings.wcs.fov.height.to("deg").value
+        geom_params["width"] = (width, height)
         return WcsGeom.create(**geom_params)
 
     def _map_making(self):
         """Make maps and datasets for 3d analysis."""
         log.info("Creating geometry.")
 
-        geom = self._create_geometry(self.settings["datasets"]["geom"])
-
+        geom = self._create_geometry()
+        geom_settings = self.config.datasets.geom
         geom_irf = dict(energy_axis_true=None, binsz_irf=None, margin_irf=None)
-        if "energy-axis-true" in self.settings["datasets"]:
-            axis_params = self.settings["datasets"]["energy-axis-true"]
-            geom_irf["energy_axis_true"] = MapAxis.from_bounds(**axis_params)
-        geom_irf["binsz_irf"] = self.settings["datasets"].get("binsz", None)
-        geom_irf["margin_irf"] = self.settings["datasets"].get("margin", None)
-
-        offset_max = Angle(self.settings["datasets"]["offset-max"])
+        if geom_settings.axes.energy_true.min is not None:
+            geom_irf["energy_axis_true"] = self._make_energy_axis(geom_settings.axes.energy_true)
+        geom_irf["binsz_irf"] = geom_settings.wcs.binsize_irf.to("deg").value
+        geom_irf["margin_irf"] = geom_settings.wcs.margin_irf.to("deg").value
+        offset_max = geom_settings.selection.offset_max
         log.info("Creating datasets.")
 
         maker = MapDatasetMaker()
@@ -247,7 +252,7 @@ class Analysis:
 
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
-        if self.settings["datasets"]["stack-datasets"]:
+        if self.config.datasets.stack:
             for obs in self.observations:
                 log.info(f"Processing observation {obs.obs_id}")
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
@@ -275,8 +280,7 @@ class Analysis:
         self.datasets = Datasets(datasets)
 
     def _extract_irf_kernels(self, dataset):
-        # TODO: remove hard-coded default value
-        max_radius = self.settings["datasets"].get("psf-kernel-radius", "0.6 deg")
+        max_radius = self.config.datasets.psf_kernel_radius
         # TODO: handle IRF maps in fit
         geom = dataset.counts.geom
         geom_irf = dataset.exposure.geom
@@ -341,6 +345,19 @@ class Analysis:
             stacked = self.datasets.stack_reduce()
             stacked.name = "stacked"
             self.datasets = Datasets([stacked])
+
+    @staticmethod
+    def _make_energy_axis(axis):
+        """Helper method to build an energy axis."""
+        axis_params = dict(name="energy",
+                           lo_bnd=axis.min.value,
+                           hi_bnd=axis.max.value,
+                           nbin=axis.nbins,
+                           unit=axis.min.unit,
+                           interp="log",
+                           node_type="edges")
+        energy_axis = MapAxis.from_bounds(**axis_params)
+        return energy_axis
 
     def _validate_observations_settings(self):
         """Validate settings before proceeding to observations selection."""
