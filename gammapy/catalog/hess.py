@@ -483,14 +483,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """
         return self.data["Spatial_Model"].strip().lower()
 
-    @property
-    def is_pointlike(self):
-        """Source is pointlike? (bool)"""
-        d = self.data
-        has_size_ul = np.isfinite(d["Size_UL"])
-        pointlike = d["Spatial_Model"] == "Point-Like"
-        return pointlike or has_size_ul
-
     def spatial_model(self):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
@@ -507,7 +499,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         spatial_type = self.spatial_model_type
 
-        if self.is_pointlike:
+        if spatial_type == "point-like":
             tag = "PointSpatialModel"
         elif spatial_type == "gaussian":
             tag = "GaussianSpatialModel"
