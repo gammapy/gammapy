@@ -69,7 +69,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
             ss += self._info_more()
         if "position" in ops:
             ss += self._info_position()
-            if not self.is_pointlike:
+            if not self._is_pointlike:
                 ss += self._info_morphology()
         if "spectral" in ops:
             ss += self._info_spectral_fit()
@@ -158,7 +158,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         return "\n"
 
     @property
-    def is_pointlike(self):
+    def _is_pointlike(self):
         return self.data["Extended_Source_Name"].strip() == ""
 
     # FIXME: this should be renamed `set_position_error`,
@@ -331,7 +331,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
 
-        if self.is_pointlike:
+        if self._is_pointlike:
             model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
         else:
             de = self.data_extended
@@ -679,7 +679,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
 
-        if self.is_pointlike:
+        if self._is_pointlike:
             model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
         else:
             de = self.data_extended
@@ -844,7 +844,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         return ss
 
     @property
-    def is_pointlike(self):
+    def _is_pointlike(self):
         return self.data["Source_Name"].strip()[-1] != "e"
 
     def spatial_model(self):
@@ -853,7 +853,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
 
-        if self.is_pointlike:
+        if self._is_pointlike:
             model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
         else:
             de = self.data_extended
@@ -1112,7 +1112,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
 
-        if self.is_pointlike:
+        if self._is_pointlike:
             model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
         else:
             de = self.data_extended
