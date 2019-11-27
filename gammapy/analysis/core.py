@@ -10,6 +10,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
+from gammapy.analysis.config import AnalysisConfig
 from gammapy.cube import MapDataset, MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
@@ -24,7 +25,7 @@ from gammapy.spectrum import (
 )
 from gammapy.utils.scripts import make_path, read_yaml
 
-__all__ = ["Analysis", "AnalysisConfig"]
+__all__ = ["Analysis"]
 
 log = logging.getLogger(__name__)
 CONFIG_PATH = Path(__file__).resolve().parent / "config"
@@ -405,131 +406,6 @@ class Analysis:
         if not valid:
             log.info("Flux points calculation cannot be done.")
         return valid
-
-
-class AnalysisConfig:
-    """Analysis configuration.
-
-    Parameters
-    ----------
-    config : dict
-        Configuration parameters
-    """
-
-    def __init__(self, config=None, filename="config.yaml"):
-        self.settings = {}
-        self.template = ""
-        if config is None:
-            self.template = CONFIG_PATH / ANALYSIS_TEMPLATES["basic"]
-        # add user settings
-        self.update_settings(config, self.template)
-        self.filename = Path(filename).name
-
-    def __str__(self):
-        """Display settings in pretty YAML format."""
-        info = self.__class__.__name__ + "\n\n\t"
-
-        data = yaml.dump(self.settings, sort_keys=False, indent=4)
-        data = data.replace("\n", "\n\t")
-        info += data
-        return info.expandtabs(tabsize=4)
-
-    def to_yaml(self, filename=None, overwrite=False):
-        """Serialize config into a yaml formatted file.
-
-        Parameters
-        ----------
-        filename : str, Path
-            Configuration settings filename
-            Default config.yaml
-        overwrite : bool
-            Whether to overwrite an existing file.
-        """
-        if filename is None:
-            filename = self.filename
-
-        self.filename = Path(filename).name
-        path_file = Path(self.settings["general"]["outdir"]) / self.filename
-
-        if path_file.exists() and not overwrite:
-            raise IOError(f"File {filename} already exists.")
-
-        path_file.write_text(yaml.dump(self.settings, sort_keys=False, indent=4))
-        log.info(f"Configuration settings saved into {path_file}")
-
-    @classmethod
-    def from_yaml(cls, filename):
-        """Read config from filename"""
-        filename = make_path(filename)
-        config = read_yaml(filename)
-        return cls(config, filename=filename)
-
-    @classmethod
-    def from_template(cls, template="basic"):
-        """Create AnalysisConfig from existing templates.
-
-        Parameters
-        ----------
-        template : {"basic", "1d", "3d"}
-            Build in templates.
-
-        Returns
-        -------
-        analysis : `AnalysisConfig`
-            AnalysisConfig class
-        """
-        filename = CONFIG_PATH / ANALYSIS_TEMPLATES[template]
-        return cls.from_yaml(filename)
-
-    def help(self, section=""):
-        """Print template configuration settings."""
-        doc = self._get_doc_sections()
-        for keyword in doc.keys():
-            if section == "" or section == keyword:
-                print(doc[keyword])
-
-    def update_settings(self, config=None, filename=""):
-        """Update settings with config dictionary or values in configfile"""
-        if filename:
-            filepath = make_path(filename)
-            config = read_yaml(filepath)
-        if config is None:
-            config = {}
-        if isinstance(config, str):
-            config = yaml.safe_load(config)
-        if len(config):
-            self._update_settings(config, self.settings)
-        self.validate()
-
-    def validate(self):
-        """Validate and/or fill initial config parameters against schema."""
-        validator = _gp_units_validator
-        try:
-            jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
-        except jsonschema.exceptions.ValidationError as ex:
-            log.error("Error when validating configuration parameters against schema.")
-            log.error(ex.message)
-
-    @staticmethod
-    def _get_doc_sections():
-        """Returns dict with commented docs from docs file"""
-        doc = defaultdict(str)
-        with open(DOCS_FILE) as f:
-            for line in filter(lambda line: not line.startswith("---"), f):
-                line = line.strip("\n")
-                if line.startswith("# Section: "):
-                    keyword = line.replace("# Section: ", "")
-                doc[keyword] += line + "\n"
-        return doc
-
-    def _update_settings(self, source, target):
-        for key, val in source.items():
-            if key not in target:
-                target[key] = {}
-            if not isinstance(val, dict) or val == {}:
-                target[key] = val
-            else:
-                self._update_settings(val, target[key])
 
 
 def is_quantity(instance):
