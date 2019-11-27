@@ -111,7 +111,6 @@ def test_MDE_sample_background():
 
     assert len(bkg_evt.table["ENERGY"]) == 375084
     assert_allclose(bkg_evt.table["ENERGY"][0], 2.1613281656472028, rtol=1e-5)
-    assert_allclose(bkg_evt.table["ENERGY"][1], 1.7671637269378804, rtol=1e-5)
     assert_allclose(bkg_evt.table["RA"][0], 0.7167667097717688, rtol=1e-5)
     assert_allclose(bkg_evt.table["DEC"][0], 1.1422945173936792, rtol=1e-5)
     assert_allclose(bkg_evt.table["MC_ID"][0], 0, rtol=1e-5)
