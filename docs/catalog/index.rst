@@ -33,21 +33,15 @@ or to create initial source models for certain energy bands and sky regions.
 Tutorials
 =========
 
-The `Source catalogs tutorial <../notebooks/catalog.html>`__ gives many examples and a hands-on introduction
-to using `gammapy.catalog`.
+The main tutorial for `gammapy.catalog` is:
+
+* `Source catalogs tutorial <../notebooks/catalog.html>`__
 
 Other :ref:`tutorials` mentioning `gammapy.catalog` are:
 
 * `Overview tutorial <../notebooks/overview.html>`__
 * `HGPS tutorial <../notebooks/hgps.html>`__
 * `SED fitting tutorial <../notebooks/sed_fitting_gammacat_fermi.html>`__
-
-The following pages describe ``gammapy.catalog`` in more detail:
-
-.. toctree::
-    :maxdepth: 1
-
-    gammacat
 
 Reference/API
 =============
