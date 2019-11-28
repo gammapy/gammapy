@@ -282,6 +282,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     assert stacked1.psf.exposure_map is not None
     assert stacked1.edisp.edisp_map is not None
     assert stacked1.edisp.exposure_map is not None
+    assert stacked.mask.dtype == bool
 
     assert_allclose(stacked1.psf.psf_map, stacked.psf.psf_map)
     assert_allclose(stacked1.edisp.edisp_map, stacked.edisp.edisp_map)
