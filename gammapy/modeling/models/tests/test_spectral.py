@@ -454,6 +454,11 @@ class TestNaimaModel:
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
 
+        model.parameters.set_error(amplitude=0.1 * model.amplitude.value)
+
+        out = model.evaluate_error(1 * u.TeV)
+        assert_allclose(out.data, [5.266068e-13, 5.266068e-14], rtol=1e-3)
+
     def test_ic(self):
         import naima
 
@@ -589,8 +594,3 @@ class TestSpectralModelErrorPropagation:
         out = model.evaluate_error(0.1 * u.TeV)
         assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
 
-    def test_naima_model_error_proprgation(self):
-        # Regression test for Naima model
-        # https://github.com/gammapy/gammapy/issues/2190
-        # TODO: implement test case. Move to Naima model tests!
-        pass
