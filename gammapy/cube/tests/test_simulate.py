@@ -93,6 +93,19 @@ def dataset_maker():
 
 
 @requires_data()
+def test_MDE_sample_sources():
+    dataset = dataset_maker()
+    sampler = MapDatasetEventSampler(random_state=0)
+    src_evt = sampler.sample_sources(dataset=dataset)
+
+    assert len(src_evt.table["ENERGY"]) == 726
+    assert_allclose(src_evt.table["ENERGY"][0], 9.637228658895618, rtol=1e-5)
+    assert_allclose(src_evt.table["RA"][0], 266.3541109343822, rtol=1e-5)
+    assert_allclose(src_evt.table["DEC"][0], -28.88356606406115, rtol=1e-5)
+    assert_allclose(src_evt.table["MC_ID"][0], 1, rtol=1e-5)
+
+
+@requires_data()
 def test_MDE_sample_background():
     dataset = dataset_maker()
     sampler = MapDatasetEventSampler(random_state=0)

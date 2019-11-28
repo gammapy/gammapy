@@ -109,6 +109,49 @@ class MapDatasetEventSampler:
     def __init__(self, random_state="random-seed"):
         self.random_state = get_random_state(random_state)
 
+    def sample_sources(self, dataset):
+        """Sample source model components.
+        Parameters
+        ----------
+        dataset : `MapDataset`
+            Map dataset.
+
+        Returns
+        -------
+        events : `EventList`
+            Event list
+        """
+        events_all = []
+        for idx, evaluator in enumerate(dataset._evaluators):
+            table = Table()
+            evaluator.edisp = None
+            evaluator.psf = None
+            npred = evaluator.compute_npred()
+            n_events = self.random_state.poisson(np.sum(npred.data))
+
+            # sample position
+            coords = npred.sample_coord(n_events, self.random_state)
+            table["ENERGY"] = coords["energy"]
+            table["RA"] = coords.skycoord.icrs.ra.deg
+            table["DEC"] = coords.skycoord.icrs.dec.deg
+            table["MC_ID"] = idx + 1
+
+            # sample time
+            # TODO: .temporal_model does not exist yet
+            time_start, time_stop, time_ref = (
+                dataset.gti.time_start,
+                dataset.gti.time_stop,
+                dataset.gti.time_ref,
+            )
+            model = ConstantTemporalModel()
+            time = model.sample_time(n_events, time_start, time_stop, self.random_state)
+            table["TIME"] = u.Quantity(
+                ((time.mjd - time_ref.mjd) * u.day).to(u.s)
+            ).value
+            events_all.append(EventList(table))
+
+        return EventList.stack(events_all)
+
     def sample_background(self, dataset):
         """Sample background
 
