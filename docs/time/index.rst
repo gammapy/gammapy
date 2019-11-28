@@ -91,7 +91,7 @@ A few utility functions to perform timing tests are available in `~gammapy.time`
 `~gammapy.time` also provides methods for period detection in time series, i.e. light
 curves of :math:`\gamma`-ray sources.  `~gammapy.time.robust_periodogram` performs a
 periodogram analysis where the unevenly sampled time series is contaminated by outliers,
-i.e. due to the source's high states. This is demonstrated in the following `page<../time/period.html>`.
+i.e. due to the source's high states. This is demonstrated in the following `page<../time/period.html>`__.
 
 Tutorials
 =========
