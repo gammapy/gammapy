@@ -4,7 +4,6 @@ import operator
 import numpy as np
 import scipy.optimize
 import scipy.special
-from scipy.optimize.slsqp import approx_jacobian
 import astropy.units as u
 from astropy.table import Table
 from gammapy.maps import MapAxis
@@ -47,26 +46,35 @@ class SpectralModel(Model):
     def __rsub__(self, model):
         return self.__sub__(model)
 
-    def _evaluate_gradient(self, energy, eps=1e-12):
-        x = self.parameters.values
-        frozen = np.array([_.frozen for _ in self.parameters])
+    def _evaluate_gradient(self, energy, eps):
+        n = len(self.parameters)
+        f = self(energy)
+        shape = (n, len(np.atleast_1d(energy)))
+        df_dp = np.zeros(shape)
 
-        def func(xk):
-            kwargs = {par.name: val * par.unit for val, par in zip(xk, self.parameters)}
-            kwargs = self._convert_evaluate_unit(kwargs, energy)
-            return self.evaluate(energy, **kwargs).value
+        for idx, parameter in enumerate(self.parameters):
+            if parameter.frozen or eps[idx] == 0:
+                continue
 
-        grad = approx_jacobian(x=x, func=func, epsilon=eps)
-        grad[:, frozen] = 0
-        return grad.T
+            parameter.value += eps[idx]
+            df = self(energy) - f
+            df_dp[idx] = df.value / eps[idx]
 
-    def evaluate_error(self, energy):
+            # Reset model to original parameter
+            parameter.value -= eps[idx]
+
+        return df_dp
+
+    def evaluate_error(self, energy, precision=1e-4):
         """Evaluate spectral model with error propagation.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to evaluate
+        precision : float
+            Numerical precision of the gradient evaluation.
+            Given as a fraction of the parameter error.
 
         Returns
         -------
@@ -74,7 +82,9 @@ class SpectralModel(Model):
             Tuple of flux and flux error.
         """
         p_cov = self.parameters.covariance
-        df_dp = self._evaluate_gradient(energy)
+        eps = np.sqrt(np.diag(self.parameters.covariance)) * precision
+
+        df_dp = self._evaluate_gradient(energy, eps)
         f_cov = df_dp.T @ p_cov @ df_dp
         f_err = np.sqrt(np.diagonal(f_cov))
 

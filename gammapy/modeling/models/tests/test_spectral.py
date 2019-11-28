@@ -605,5 +605,5 @@ def test_naima_model_error_propagation():
     model.parameters.set_error(amplitude=0.1 * model.amplitude.value)
 
     out = model.evaluate_error(1 * u.TeV)
-    assert_allclose(out.data, [5.266068e-13, 0], rtol=1e-3)
+    assert_allclose(out.data, [5.266068e-13, 5.266068e-14], rtol=1e-3)
 
