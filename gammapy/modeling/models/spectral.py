@@ -65,16 +65,16 @@ class SpectralModel(Model):
 
         return df_dp
 
-    def evaluate_error(self, energy, precision=1e-4):
+    def evaluate_error(self, energy, epsilon=1e-4):
         """Evaluate spectral model with error propagation.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to evaluate
-        precision : float
-            Numerical precision of the gradient evaluation.
-            Given as a fraction of the parameter error.
+        epsilon : float
+            Step size of the gradient evaluation. Given as a
+            fraction of the parameter error.
 
         Returns
         -------
@@ -82,7 +82,7 @@ class SpectralModel(Model):
             Tuple of flux and flux error.
         """
         p_cov = self.parameters.covariance
-        eps = np.sqrt(np.diag(self.parameters.covariance)) * precision
+        eps = np.sqrt(np.diag(self.parameters.covariance)) * epsilon
 
         df_dp = self._evaluate_gradient(energy, eps)
         f_cov = df_dp.T @ p_cov @ df_dp

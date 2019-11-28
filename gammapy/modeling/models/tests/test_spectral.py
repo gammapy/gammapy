@@ -454,6 +454,11 @@ class TestNaimaModel:
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
 
+        model.parameters.set_error(amplitude=0.1 * model.amplitude.value)
+
+        out = model.evaluate_error(1 * u.TeV)
+        assert_allclose(out.data, [5.266068e-13, 5.266068e-14], rtol=1e-3)
+
     def test_ic(self):
         import naima
 
@@ -588,22 +593,4 @@ class TestSpectralModelErrorPropagation:
 
         out = model.evaluate_error(0.1 * u.TeV)
         assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
-
-
-@requires_dependency("naima")
-def test_naima_model_error_propagation():
-    import naima
-
-    particle_distribution = naima.models.PowerLaw(
-        amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
-    )
-
-    radiative_model = naima.radiative.PionDecay(
-        particle_distribution, nh=1 * u.cm ** -3
-    )
-    model = NaimaSpectralModel(radiative_model)
-    model.parameters.set_error(amplitude=0.1 * model.amplitude.value)
-
-    out = model.evaluate_error(1 * u.TeV)
-    assert_allclose(out.data, [5.266068e-13, 5.266068e-14], rtol=1e-3)
 
