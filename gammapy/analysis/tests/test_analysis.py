@@ -67,6 +67,7 @@ def test_get_observations():
     # obs_time
 
 
+@requires_data()
 def test_set_model():
     config = AnalysisConfig.from_template("1d")
     analysis = Analysis(config)

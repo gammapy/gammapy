@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import json
 import logging
 from collections import defaultdict
 from enum import Enum
@@ -182,7 +183,7 @@ class GeneralConfig(GammapyBaseConfig):
 
 
 class AnalysisConfig(GammapyBaseConfig):
-    """Config class handling the high-level interface settings."""
+    """Gammapy analysis configuration."""
 
     general: GeneralConfig = GeneralConfig()
     observations: ObservationsConfig = ObservationsConfig()
@@ -192,7 +193,7 @@ class AnalysisConfig(GammapyBaseConfig):
 
     @classmethod
     def from_template(cls, template):
-        """Create AnalysisConfig from existing templates.
+        """Create from existing templates.
 
         Parameters
         ----------
@@ -210,41 +211,43 @@ class AnalysisConfig(GammapyBaseConfig):
     def __str__(self):
         """Display settings in pretty YAML format."""
         info = self.__class__.__name__ + "\n\n\t"
-
         data = self.to_yaml()
         data = data.replace("\n", "\n\t")
         info += data
         return info.expandtabs(tabsize=4)
 
     @classmethod
-    def read(cls, filename):
-        """Reads the configuration from a YAML file."""
-        config = read_yaml(filename)
+    def read(cls, path):
+        """Reads from YAML file."""
+        config = read_yaml(path)
         return AnalysisConfig(**config)
 
     @classmethod
     def from_yaml(cls, config_str):
-        """Helper method that returns a AnalysisConfig from a string."""
+        """Create from YAML string."""
         settings = yaml.safe_load(config_str)
         return AnalysisConfig(**settings)
 
-    def write(self, filename, overwrite=False):
-        """Writes the configuration in a YAML file."""
-        fname = Path(filename)
-        if Path(filename).exists() and not overwrite:
-            raise IOError(f"File {filename} already exists.")
-        fname.write_text(self.to_yaml())
-        log.info(f"Configuration settings saved into {fname}")
+    def write(self, path, overwrite=False):
+        """Write to YAML file."""
+        path = make_path(path)
+        if path.exists() and not overwrite:
+            raise IOError(f"File exists already: {path}")
+        path.write_text(self.to_yaml())
 
     def to_yaml(self):
-        """Helper method that returns a YAML formatted string."""
-        # We need to call `json()` to trigger serialisation of custom fields,
-        # like e.g. Angle or Enum objects.
-        # https://pydantic-docs.helpmanual.io/usage/exporting_models/#modeljson
-        return yaml.dump(yaml.safe_load(self.json()), sort_keys=False, indent=4)
+        """Convert to YAML string."""
+        # Here using `dict()` instead of `json()` would be more natural.
+        # We should change this once pydantic adds support for custom encoders
+        # to `dict()`. See https://github.com/samuelcolvin/pydantic/issues/1043
+        config = json.loads(self.json())
+        return yaml.dump(config, sort_keys=False, indent=4)
 
     def set_logging(self):
-        """Set logging parameters for API."""
+        """Set logging config.
+
+        Calls ``logging.basicConfig``, i.e. adjusts global logging state.
+        """
         self.general.log.level = self.general.log.level.upper()
         logging.basicConfig(**self.general.log.dict())
         log.info("Setting logging config: {!r}".format(self.general.log.dict()))
@@ -256,8 +259,6 @@ class AnalysisConfig(GammapyBaseConfig):
          ----------
          config : string dict or `AnalysisConfig` object
              Configuration settings provided in dict() syntax.
-         filename : string
-             Filename in YAML format.
          """
         if isinstance(config, str):
             config = dict(yaml.safe_load(config))
