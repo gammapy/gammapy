@@ -56,7 +56,8 @@ def spectrum_dataset_maker_crab_fine_bins():
     region = CircleSkyRegion(pos, radius)
     e_true = np.logspace(-2, 2.5, 109) * u.TeV
     e_reco = np.logspace(-2, 2, 73) * u.TeV
-    return SpectrumDatasetMaker(region=region, e_reco=e_reco, e_true=e_true)
+    return SpectrumDatasetMaker(region=region, e_reco=e_reco, e_true=e_true,
+                                selection=["counts", "aeff", "edisp"])
 
 
 @pytest.fixture
@@ -180,9 +181,7 @@ class TestSpectrumMakerChain:
         spectrum_dataset_maker_crab_fine_bins.containment_correction = pars[
             "containment_correction"
         ]
-        dataset = spectrum_dataset_maker_crab_fine_bins.run(
-            obs, selection=["counts", "aeff", "edisp"]
-        )
+        dataset = spectrum_dataset_maker_crab_fine_bins.run(obs)
         dataset = reflected_regions_bkg_maker.run(dataset, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
@@ -210,9 +209,7 @@ class TestSpectrumMakerChain:
 
         obs = observations_hess_dl3[0]
         spectrum_dataset_maker_crab_fine_bins.containment_correction = True
-        dataset = spectrum_dataset_maker_crab_fine_bins.run(
-            obs, selection=["counts", "aeff", "edisp"]
-        )
+        dataset = spectrum_dataset_maker_crab_fine_bins.run(obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
         actual = dataset.energy_range[0]

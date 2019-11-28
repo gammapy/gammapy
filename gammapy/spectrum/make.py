@@ -32,13 +32,24 @@ class SpectrumDatasetMaker:
         True energy binning
     containment_correction : bool
         Apply containment correction for point sources and circular on regions.
-    """
+    selection : list
+        List of str, selecting which maps to make.
+        Available: 'counts', 'aeff', 'background', 'edisp'
+        By default, all spectra are made.
 
-    def __init__(self, region, e_reco, e_true=None, containment_correction=False):
+    """
+    available_selection = ["counts", "background", "aeff", "edisp"]
+
+    def __init__(self, region, e_reco, e_true=None, containment_correction=False, selection=None):
         self.region = region
         self.e_reco = e_reco
         self.e_true = e_true or e_reco
         self.containment_correction = containment_correction
+
+        if selection is None:
+            selection = self.available_selection
+
+        self.selection = selection
 
     # TODO: move this to a RegionGeom class
     @lazyproperty
@@ -162,25 +173,19 @@ class SpectrumDatasetMaker:
         )
         return edisp
 
-    def run(self, observation, selection=None):
+    def run(self, observation):
         """Make spectrum dataset.
 
         Parameters
         ----------
         observation: `DataStoreObservation`
             Observation to reduce.
-        selection : list
-            List of str, selecting which maps to make.
-            Available: 'counts', 'aeff', 'background', 'edisp'
-            By default, all spectra are made.
 
         Returns
         -------
         dataset : `SpectrumDataset`
             Spectrum dataset.
         """
-        if selection is None:
-            selection = ["counts", "background", "aeff", "edisp"]
 
         kwargs = {
             "name": f"{observation.obs_id}",
@@ -188,16 +193,16 @@ class SpectrumDatasetMaker:
             "livetime": observation.observation_live_time_duration,
         }
 
-        if "counts" in selection:
+        if "counts" in self.selection:
             kwargs["counts"] = self.make_counts(observation)
 
-        if "background" in selection:
+        if "background" in self.selection:
             kwargs["background"] = self.make_background(observation)
 
-        if "aeff" in selection:
+        if "aeff" in self.selection:
             kwargs["aeff"] = self.make_aeff(observation)
 
-        if "edisp" in selection:
+        if "edisp" in self.selection:
             kwargs["edisp"] = self.make_edisp(observation)
 
         return SpectrumDataset(**kwargs)
