@@ -188,7 +188,7 @@ class Analysis:
         log.info("\n{}".format(self.flux_points.data.table[cols]))
 
     def update_config(self, config):
-        self._config = self.config.update(config)
+        self._config = self._config.update(config=config)
 
     def _create_geometry(self):
         """Create the geometry."""

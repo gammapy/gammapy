@@ -25,12 +25,10 @@ def test_update_config():
     data = {"general": {"outdir": "test"}}
     analysis.update_config(data)
     assert analysis.config.general.outdir == "test"
-
     analysis = Analysis(cfg)
     cfg2 = AnalysisConfig(**data)
     analysis.update_config(cfg2)
     assert analysis.config.general.outdir == "test"
-
     analysis = Analysis(cfg)
     data = """
     general:
@@ -38,6 +36,10 @@ def test_update_config():
     """
     analysis.update_config(data)
     assert analysis.config.general.outdir == "test"
+    analysis = Analysis(cfg)
+    data = "spam"
+    with pytest.raises(ValueError):
+        analysis.update_config(data)
 
 
 @requires_data()

@@ -210,6 +210,23 @@ is stored in the ``flux_points`` property as a `~gammapy.spectrum.FluxPoints` ob
           8.79922543569107  1.877442373267013e-13  7.097738087032472e-14  1.254638299336029e-13 2.2705519890120373e-14 False
     >>> analysis.flux_points.peek()
 
+Residuals
+---------
+
+For 3D analysis we can compute a residual image to check how good are the models
+for the source and/or the background.
+
+.. code-block:: python
+
+    >>> analysis.datasets.datasets[0].residuals()
+            geom  : WcsGeom
+            axes  : ['lon', 'lat', 'energy']
+            shape : (250, 250, 4)
+            ndim  : 3
+            unit  :
+            dtype : float64
+    >>> analysis.datasets.datasets[0].residuals()
+
 Using the high-level interface
 ------------------------------
 
