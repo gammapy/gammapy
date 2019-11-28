@@ -80,13 +80,13 @@ class GammapyBaseModel(BaseModel):
         }
 
 
-class SkyCoordType(GammapyBaseModel):
-    frame: FrameEnum = FrameEnum.icrs
+class SkyCoordConfig(GammapyBaseModel):
+    frame: FrameEnum = None
     lon: AngleType = None
     lat: AngleType = None
 
 
-class EnergyAxis(GammapyBaseModel):
+class EnergyAxisConfig(GammapyBaseModel):
     min: EnergyType = "0.1 TeV"
     max: EnergyType = "10 TeV"
     nbins: int = 30
@@ -110,7 +110,7 @@ class TimeRange(GammapyBaseModel):
 
 
 class FluxPoints(GammapyBaseModel):
-    energy: EnergyAxis = EnergyAxis()
+    energy: EnergyAxisConfig = EnergyAxisConfig()
 
 
 class Fit(GammapyBaseModel):
@@ -123,8 +123,8 @@ class Background(GammapyBaseModel):
 
 
 class Axes(GammapyBaseModel):
-    energy: EnergyAxis = EnergyAxis()
-    energy_true: EnergyAxis = EnergyAxis()
+    energy: EnergyAxisConfig = EnergyAxisConfig()
+    energy_true: EnergyAxisConfig = EnergyAxisConfig()
 
 
 class Selection(GammapyBaseModel):
@@ -137,7 +137,7 @@ class Fov(GammapyBaseModel):
 
 
 class Wcs(GammapyBaseModel):
-    skydir: SkyCoordType = SkyCoordType()
+    skydir: SkyCoordConfig = SkyCoordConfig()
     binsize: AngleType = "0.1 deg"
     fov: Fov = Fov()
     binsize_irf: AngleType = "0.1 deg"

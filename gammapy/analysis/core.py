@@ -42,7 +42,7 @@ class Analysis:
         Configuration options following `AnalysisConfig` schema
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config):
         if isinstance(config, dict):
             self._config = AnalysisConfig(**config)
         elif isinstance(config, AnalysisConfig):

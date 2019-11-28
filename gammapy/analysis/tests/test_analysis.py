@@ -9,28 +9,17 @@ from gammapy.utils.testing import requires_data, requires_dependency
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 MODEL_FILE = CONFIG_PATH / "model.yaml"
-DOC_FILE = CONFIG_PATH / "docs.yaml"
 
 
-def test_config():
-    config = AnalysisConfig()
-    assert config.general.log.level == "info"
+def test_init():
+    cfg = {"general": {"outdir": "test"}}
+    analysis = Analysis(cfg)
+    assert analysis.config.general.outdir == "test"
     with pytest.raises(TypeError):
-        Analysis()
-    assert "AnalysisConfig" in str(config)
+        Analysis("spam")
 
 
-def test_docs_file():
-    config = AnalysisConfig.from_yaml(filename=DOC_FILE)
-    assert config.general.outdir == "."
-
-
-def test_help():
-    config = AnalysisConfig()
-    assert config.help() is None
-
-
-def test_update():
+def test_update_config():
     cfg = AnalysisConfig()
     analysis = Analysis(cfg)
     data = {"general": {"outdir": "test"}}
@@ -49,15 +38,6 @@ def test_update():
     """
     analysis.update_config(data)
     assert analysis.config.general.outdir == "test"
-
-
-def test_config_to_yaml(tmp_path):
-    filename = "temp.yaml"
-    config = AnalysisConfig()
-    config.general.outdir = str(tmp_path)
-    config.to_yaml(filename=filename)
-    text = (tmp_path / filename).read_text()
-    assert "stack" in text
 
 
 @requires_data()
@@ -79,9 +59,9 @@ def test_get_observations():
     # obs_time
 
 
-@pytest.fixture(scope="session")
-def config_analysis_data():
-    """Get test config, extend to several scenarios"""
+@requires_dependency("iminuit")
+@requires_data()
+def test_analysis_1d():
     cfg = """
     data:
         datastore: $GAMMAPY_DATA/hess-dl3-dr1
@@ -95,15 +75,9 @@ def config_analysis_data():
     flux_points:
         energy: {min: 1 TeV, max: 50 TeV, nbins: 4}
     """
-    return cfg
-
-
-@requires_dependency("iminuit")
-@requires_data()
-def test_analysis_1d(config_analysis_data):
     config = AnalysisConfig.from_template("1d")
     analysis = Analysis(config)
-    analysis.update_config(config_analysis_data)
+    analysis.update_config(cfg)
     analysis.get_observations()
     analysis.get_datasets()
     analysis.set_model(filename=MODEL_FILE)
@@ -171,16 +145,6 @@ def test_analysis_3d_joint_datasets():
     analysis.get_observations()
     analysis.get_datasets()
     assert len(analysis.datasets) == 4
-
-
-@requires_data()
-def test_analysis_3d_no_geom_irf():
-    config = AnalysisConfig.from_template("3d")
-    analysis = Analysis(config)
-    analysis.get_observations()
-    analysis.get_datasets()
-
-    assert len(analysis.datasets) == 1
 
 
 @requires_dependency("iminuit")

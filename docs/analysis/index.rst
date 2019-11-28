@@ -45,7 +45,7 @@ them into a file that you can edit to start a new analysis from the modified con
 
     >>> print(config)
     >>> config.to_yaml("config.yaml")
-    >>> config = AnalysisConfig.from_yaml("config.yaml")
+    >>> config = AnalysisConfig.from_yaml(filename="config.yaml")
 
 You may choose a predefined **configuration template** for your configuration. If no
 value for the configuration template is provided, the ``basic`` template will be used by
@@ -56,7 +56,7 @@ configuration from the modified file.
 
     >>> config = AnalysisConfig.from_template("1d")
     >>> config.to_yaml("config.yaml")
-    >>> config = AnalysisConfig.from_yaml("config.yaml")
+    >>> config = AnalysisConfig.from_yaml(filename="config.yaml")
 
 You could also have started with a built-in analysis configuration and extend it with
 with your custom settings declared in a Python nested dictionary. Note how the nested
@@ -85,7 +85,7 @@ At any moment you can change the value of one specific parameter needed in the a
 
 .. code-block:: python
 
-    >>> config.settings.datasets.geom.wcs.skydir.frame = "galactic"
+    >>> config.datasets.geom.wcs.skydir.frame = "galactic"
 
 It is also possible to add new configuration parameters and values or overwrite the ones already
 defined in your session analysis. In this case you may use the `analysis.update_config()` method
@@ -95,8 +95,8 @@ sections and/or from a previous analysis).:
 .. code-block:: python
 
     >>> config_dict = {"data": {"datastore": "$GAMMAPY_DATA/hess-dl3-dr1"}}
-    >>> analysis.update_config(config=config_dict)
-    >>> analysis.update_config(configfile="fit.yaml")
+    >>> analysis.update_config(config_dict)
+    >>> analysis.update_config(filename="fit.yaml")
 
 In the following you may find more detailed information on the different sections which
 compose the YAML formatted nested configuration settings hierarchy.
