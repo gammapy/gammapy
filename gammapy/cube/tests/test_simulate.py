@@ -3,7 +3,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDataset, simulate_dataset, MapDatasetEventSampler
+from gammapy.cube import MapDataset, MapDatasetEventSampler, simulate_dataset
 from gammapy.cube.tests.test_fit import get_map_dataset
 from gammapy.data import GTI
 from gammapy.irf import load_cta_irfs

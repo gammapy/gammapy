@@ -50,7 +50,9 @@ def parse_imagefiles(notebookslist):
 class ComputePlan:
     """Generates the whole list of files to download"""
 
-    def __init__(self, src, outfolder, release, option, modetutorials=False, download_tests=False):
+    def __init__(
+        self, src, outfolder, release, option, modetutorials=False, download_tests=False
+    ):
         self.src = src
         self.outfolder = Path(outfolder)
         self.release = release
@@ -140,7 +142,13 @@ class ComputePlan:
             datasets = json.loads(txt)
             datafound = {}
             if not self.modetutorials:
-                datafound.update(dict(parse_datafiles(self.src, datasets, download_tests=self.download_tests)))
+                datafound.update(
+                    dict(
+                        parse_datafiles(
+                            self.src, datasets, download_tests=self.download_tests
+                        )
+                    )
+                )
             else:
                 for item in self.listfiles:
                     record = self.listfiles[item]

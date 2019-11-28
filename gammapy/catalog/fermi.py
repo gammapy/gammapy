@@ -194,7 +194,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         return SkyModel(
             spatial_model=self.spatial_model(),
             spectral_model=self.spectral_model(),
-            name=self.name
+            name=self.name,
         )
 
 

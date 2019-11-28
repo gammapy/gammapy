@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations"""
 import numpy as np
-from astropy.table import Table
 import astropy.units as u
+from astropy.table import Table
 from gammapy.cube import (
     MapDataset,
     PSFKernel,
@@ -11,9 +11,7 @@ from gammapy.cube import (
 )
 from gammapy.data import EventList
 from gammapy.maps import WcsNDMap
-from gammapy.modeling.models import BackgroundModel
-from gammapy.modeling.models import ConstantTemporalModel
-
+from gammapy.modeling.models import BackgroundModel, ConstantTemporalModel
 from gammapy.utils.random import get_random_state
 
 __all__ = ["simulate_dataset", "MapDatasetEventSampler"]

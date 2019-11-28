@@ -59,7 +59,6 @@ class ObservationTable(Table):
         """Observation stop time (`~astropy.time.Time`)."""
         return self.time_ref + Quantity(self["TSTOP"], "second")
 
-
     @lazyproperty
     def _index_dict(self):
         """Dict containing row index for all obs ids."""
@@ -289,7 +288,9 @@ class ObservationTable(Table):
             return self[mask]
         elif selection["type"] == "time_box":
             return self.select_time_range(
-                 selection["time_range"], selection["partial_overlap"], selection["inverted"]
+                selection["time_range"],
+                selection["partial_overlap"],
+                selection["inverted"],
             )
         elif selection["type"] == "par_box":
             return self.select_range(

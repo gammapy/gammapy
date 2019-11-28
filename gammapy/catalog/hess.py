@@ -527,7 +527,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 model = SkyModel(
                     spatial_model=component.spatial_model(),
                     spectral_model=spectral_model,
-                    name=component.name
+                    name=component.name,
                 )
                 models.append(model)
 
@@ -536,7 +536,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             return SkyModel(
                 spatial_model=self.spatial_model(),
                 spectral_model=self.spectral_model(which=which),
-                name=self.name
+                name=self.name,
             )
 
     @property

@@ -12,10 +12,7 @@ from gammapy.spectrum import FluxPoints
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
-__all__ = [
-    "SourceCatalogGammaCat",
-    "SourceCatalogObjectGammaCat",
-]
+__all__ = ["SourceCatalogGammaCat", "SourceCatalogObjectGammaCat"]
 
 log = logging.getLogger(__name__)
 
@@ -272,7 +269,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         return SkyModel(
             spatial_model=self.spatial_model(),
             spectral_model=self.spectral_model(),
-            name=self.name
+            name=self.name,
         )
 
     def _add_source_meta(self, table):

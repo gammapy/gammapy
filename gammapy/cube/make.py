@@ -28,6 +28,7 @@ class MapDatasetMaker:
         Available: 'counts', 'exposure', 'background', 'psf', 'edisp'
         By default, all maps are made.
     """
+
     available_selection = ["counts", "exposure", "background", "psf", "edisp"]
 
     def __init__(self, background_oversampling=None, selection=None):

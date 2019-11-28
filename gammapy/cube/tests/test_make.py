@@ -210,7 +210,9 @@ def test_safe_mask_maker(observations):
 
     empty_dataset = MapDataset.create(geom=geom)
     dataset_maker = MapDatasetMaker()
-    safe_mask_maker = SafeMaskMaker(offset_max="3 deg", bias_percent=0.02, position=obs.pointing_radec)
+    safe_mask_maker = SafeMaskMaker(
+        offset_max="3 deg", bias_percent=0.02, position=obs.pointing_radec
+    )
 
     dataset = dataset_maker.run(empty_dataset, obs)
 

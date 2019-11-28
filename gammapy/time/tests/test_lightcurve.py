@@ -7,7 +7,7 @@ import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.data import GTI
-from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.spectrum.tests.test_flux_point_estimator import (
     simulate_map_dataset,
     simulate_spectrum_dataset,

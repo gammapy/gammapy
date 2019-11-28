@@ -162,7 +162,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         return SkyModel(
             spatial_model=self.spatial_model(which),
             spectral_model=self.spectral_model(which),
-            name=self.name
+            name=self.name,
         )
 
 

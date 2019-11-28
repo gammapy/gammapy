@@ -72,12 +72,19 @@ def cli_download_scripts(src, out, release, modetutorials, silent):
     help="Path where datasets will be copied.",
     show_default=True,
 )
-@click.option("--tests", default=False, is_flag=True, help="Include datasets needed for development tests.")
+@click.option(
+    "--tests",
+    default=False,
+    is_flag=True,
+    help="Include datasets needed for development tests.",
+)
 @click.option("--modetutorials", default=False, hidden=True)
 @click.option("--silent", default=True, is_flag=True, hidden=True)
 def cli_download_datasets(src, out, release, tests, modetutorials, silent):
     """Download datasets"""
-    plan = ComputePlan(src, out, release, "datasets", modetutorials=modetutorials, download_tests=tests)
+    plan = ComputePlan(
+        src, out, release, "datasets", modetutorials=modetutorials, download_tests=tests
+    )
     down = ParallelDownload(
         plan.getfilelist(),
         plan.getlocalfolder(),

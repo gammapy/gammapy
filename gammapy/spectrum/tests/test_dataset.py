@@ -7,13 +7,14 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from gammapy.maps import MapAxis
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     ExpCutoffPowerLawSpectralModel,
     PowerLawSpectralModel,
     SkyModel,
-    SkyModels
+    SkyModels,
 )
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
@@ -24,7 +25,6 @@ from gammapy.utils.testing import (
     requires_dependency,
 )
 from gammapy.utils.time import time_ref_to_dict
-from gammapy.maps import MapAxis
 
 
 @requires_dependency("iminuit")
@@ -83,7 +83,7 @@ class TestSpectrumDataset:
         fit = Fit([self.dataset])
         result = fit.run()
 
-        #assert result.success
+        # assert result.success
         assert "minuit" in repr(result)
 
         npred = self.dataset.npred().data.sum()

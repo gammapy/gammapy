@@ -273,12 +273,15 @@ def test_select_time_box():
     assert (value_range[0] < time_start).all() & (time_stop < value_range[1]).all()
 
     # Test selection with partial overlap of observations and value_range
-    selection_partial = dict(type="time_box", time_range=value_range, partial_overlap=True)
+    selection_partial = dict(
+        type="time_box", time_range=value_range, partial_overlap=True
+    )
     selected_obs_table = obs_table_time.select_observations(selection_partial)
     time_start = selected_obs_table.time_start
     time_stop = selected_obs_table.time_stop
 
     assert (value_range[1] > time_start).all() & (time_stop > value_range[0]).all()
+
 
 def test_select_sky_regions():
     random_state = np.random.RandomState(seed=0)
