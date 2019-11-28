@@ -26,10 +26,6 @@ class SpectrumDatasetMaker:
     ----------
     region : `~regions.SkyRegion`
         Region to compute spectrum dataset for.
-    e_reco : `~astropy.units.Quantity`
-        Reconstructed energy binning
-    e_true : `~astropy.units.Quantity`
-        True energy binning
     containment_correction : bool
         Apply containment correction for point sources and circular on regions.
     selection : list
@@ -40,10 +36,8 @@ class SpectrumDatasetMaker:
     """
     available_selection = ["counts", "background", "aeff", "edisp"]
 
-    def __init__(self, region, e_reco, e_true=None, containment_correction=False, selection=None):
+    def __init__(self, region, containment_correction=False, selection=None):
         self.region = region
-        self.e_reco = e_reco
-        self.e_true = e_true or e_reco
         self.containment_correction = containment_correction
 
         if selection is None:
@@ -64,11 +58,13 @@ class SpectrumDatasetMaker:
             coordsys=coordsys,
         )
 
-    def make_counts(self, observation):
+    def make_counts(self, energy_axis, observation):
         """Make counts
 
         Parameters
         ----------
+        energy_axis : `MapAxis`
+            Reconstructed energy axis.
         observation: `DataStoreObservation`
             Observation to compute effective area for.
 
@@ -77,11 +73,10 @@ class SpectrumDatasetMaker:
         counts : `CountsSpectrum`
             Counts spectrum
         """
-        energy_hi = self.e_reco[1:]
-        energy_lo = self.e_reco[:-1]
+        edges = energy_axis.edges
 
         counts = CountsSpectrum(
-            energy_hi=energy_hi, energy_lo=energy_lo, region=self.region
+            energy_hi=edges[1:], energy_lo=edges[:-1], region=self.region
         )
         events_region = observation.events.select_region(
             self.region, wcs=self.geom_ref.wcs
@@ -89,11 +84,13 @@ class SpectrumDatasetMaker:
         counts.fill_events(events_region)
         return counts
 
-    def make_background(self, observation):
+    def make_background(self, energy_axis, observation):
         """Make background
 
         Parameters
         ----------
+        energy_axis : `MapAxis`
+            Reconstructed energy axis.
         observation: `DataStoreObservation`
             Observation to compute effective area for.
 
@@ -108,29 +105,29 @@ class SpectrumDatasetMaker:
             )
 
         offset = observation.pointing_radec.separation(self.region.center)
-        energy_hi = self.e_reco[1:]
-        energy_lo = self.e_reco[:-1]
+        e_reco = energy_axis.edges
 
         bkg = observation.bkg
 
         data = bkg.evaluate_integrate(
-            fov_lon=0 * u.deg, fov_lat=offset, energy_reco=self.e_reco
+            fov_lon=0 * u.deg, fov_lat=offset, energy_reco=e_reco
         )
 
         solid_angle = 2 * np.pi * (1 - np.cos(self.region.radius)) * u.sr
         data *= solid_angle
         data *= observation.observation_time_duration
 
-        counts = CountsSpectrum(
-            energy_hi=energy_hi, energy_lo=energy_lo, data=data.to_value(""), unit=""
+        return CountsSpectrum(
+            energy_hi=e_reco[1:], energy_lo=e_reco[:-1], data=data.to_value(""), unit=""
         )
-        return counts
 
-    def make_aeff(self, observation):
+    def make_aeff(self, energy_axis_true, observation):
         """Make effective area
 
         Parameters
         ----------
+        energy_axis_true : `MapAxis`
+            True energy axis.
         observation: `DataStoreObservation`
             Observation to compute effective area for.
 
@@ -140,7 +137,7 @@ class SpectrumDatasetMaker:
             Effective area table.
         """
         offset = observation.pointing_radec.separation(self.region.center)
-        aeff = observation.aeff.to_effective_area_table(offset, energy=self.e_true)
+        aeff = observation.aeff.to_effective_area_table(offset, energy=energy_axis_true.edges)
 
         if self.containment_correction:
             if not isinstance(self.region, CircleSkyRegion):
@@ -153,11 +150,15 @@ class SpectrumDatasetMaker:
 
         return aeff
 
-    def make_edisp(self, observation):
+    def make_edisp(self, energy_axis, energy_axis_true, observation):
         """Make energy dispersion
 
         Parameters
         ----------
+        energy_axis : `MapAxis`
+            Reconstructed energy axis.
+        energy_axis_true : `MapAxis`
+            True energy axis.
         observation: `DataStoreObservation`
             Observation to compute edisp for.
 
@@ -169,15 +170,17 @@ class SpectrumDatasetMaker:
         """
         offset = observation.pointing_radec.separation(self.region.center)
         edisp = observation.edisp.to_energy_dispersion(
-            offset, e_reco=self.e_reco, e_true=self.e_true
+            offset, e_reco=energy_axis.edges, e_true=energy_axis_true.edges
         )
         return edisp
 
-    def run(self, observation):
+    def run(self, dataset, observation):
         """Make spectrum dataset.
 
         Parameters
         ----------
+        dataset : `SpectrumDataset`
+            Spectrum dataset.
         observation: `DataStoreObservation`
             Observation to reduce.
 
@@ -192,17 +195,20 @@ class SpectrumDatasetMaker:
             "gti": observation.gti,
             "livetime": observation.observation_live_time_duration,
         }
+        energy_axis = dataset.counts.energy
+        energy_axis_true = dataset.aeff.data.axis("energy")
 
         if "counts" in self.selection:
-            kwargs["counts"] = self.make_counts(observation)
+            kwargs["counts"] = self.make_counts(energy_axis, observation)
 
         if "background" in self.selection:
-            kwargs["background"] = self.make_background(observation)
+            kwargs["background"] = self.make_background(energy_axis, observation)
 
         if "aeff" in self.selection:
-            kwargs["aeff"] = self.make_aeff(observation)
+            kwargs["aeff"] = self.make_aeff(energy_axis_true, observation)
 
         if "edisp" in self.selection:
-            kwargs["edisp"] = self.make_edisp(observation)
+
+            kwargs["edisp"] = self.make_edisp(energy_axis, energy_axis_true, observation)
 
         return SpectrumDataset(**kwargs)
