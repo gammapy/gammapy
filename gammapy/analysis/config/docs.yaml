@@ -12,7 +12,7 @@ general:
     # output folder where files will be stored
     outdir: .
 
-# Section: data
+# Section: observations
 # Observations used in the analysis / mandatory
 observations:
     # path to data store where to fetch observations
@@ -52,7 +52,7 @@ datasets:
 fit:
     fit_range: {min: 0.1 TeV, max: 10 TeV}
 
-# Section: flux-points
+# Section: flux_points
 # Flux estimation process /optional
 flux_points:
     energy: {min: 0.1 TeV, max: 10 TeV, nbins: 30}

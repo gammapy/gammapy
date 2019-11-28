@@ -117,14 +117,13 @@ def test_exclusion_region(tmp_path):
     config = AnalysisConfig.from_template("1d")
     analysis = Analysis(config)
 
-    skydir = SkyCoord(83, 22, unit="deg", frame="icrs")
-    exclusion_region = CircleSkyRegion(center=SkyCoord(85, 23, unit="deg", frame="icrs"), radius=1 * u.deg)
-    exclusion_mask = Map.create(npix=(150, 150), binsz=0.05, skydir=skydir, proj="TAN", coordsys="CEL")
+    exclusion_region = CircleSkyRegion(center=SkyCoord("85d 23d"), radius=1 * u.deg)
+    exclusion_mask = Map.create(npix=(150, 150), binsz=0.05, skydir=SkyCoord("83d 22d"))
     mask = exclusion_mask.geom.region_mask([exclusion_region], inside=False)
     exclusion_mask.data = mask.astype(int)
     filename = tmp_path / "exclusion.fits"
     exclusion_mask.write(filename)
-    config.datasets.background.exclusion = str(filename)
+    config.datasets.background.exclusion = filename
 
     analysis.get_observations()
     analysis.get_datasets()

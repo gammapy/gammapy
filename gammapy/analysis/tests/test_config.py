@@ -77,12 +77,10 @@ def test_config_create_from_yaml():
 def test_config_to_yaml(tmp_path):
     config = AnalysisConfig()
     assert "level: info" in config.to_yaml()
-
-    filename = "temp.yaml"
     config = AnalysisConfig()
-    config.general.outdir = str(tmp_path)
-    config.write(filename)
-    text = (tmp_path / filename).read_text()
+    fpath = Path(tmp_path) / "temp.yaml"
+    config.write(fpath)
+    text = Path(fpath).read_text()
     assert "stack" in text
     with pytest.raises(IOError):
-        config.write(filename)
+        config.write(fpath)

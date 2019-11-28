@@ -92,7 +92,7 @@ class EnergyAxisConfig(GammapyBaseConfig):
     nbins: int = 30
 
 
-class SpatialCircleRangeConfig(GammapyBaseConfig):
+class SpatialCircleConfig(GammapyBaseConfig):
     frame: FrameEnum = None
     lon: AngleType = None
     lat: AngleType = None
@@ -122,7 +122,7 @@ class BackgroundConfig(GammapyBaseConfig):
     exclusion: FilePath = None
 
 
-class AxesConfig(GammapyBaseConfig):
+class EnergyAxesConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig()
     energy_true: EnergyAxisConfig = EnergyAxisConfig()
 
@@ -147,7 +147,7 @@ class WcsConfig(GammapyBaseConfig):
 class GeomConfig(GammapyBaseConfig):
     wcs: WcsConfig = WcsConfig()
     selection: SelectionConfig = SelectionConfig()
-    axes: AxesConfig = AxesConfig()
+    axes: EnergyAxesConfig = EnergyAxesConfig()
 
 
 class DatasetsConfig(GammapyBaseConfig):
@@ -155,7 +155,7 @@ class DatasetsConfig(GammapyBaseConfig):
     stack: bool = True
     geom: GeomConfig = GeomConfig()
     background: BackgroundConfig = BackgroundConfig()
-    on_region: SpatialCircleRangeConfig = SpatialCircleRangeConfig()
+    on_region: SpatialCircleConfig = SpatialCircleConfig()
     containment_correction: bool = True
     psf_kernel_radius: AngleType = "0.6 deg"
 
@@ -164,7 +164,7 @@ class ObservationsConfig(GammapyBaseConfig):
     datastore: Path = Path("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids: List[int] = []
     obs_file: FilePath = None
-    obs_cone: SpatialCircleRangeConfig = SpatialCircleRangeConfig()
+    obs_cone: SpatialCircleConfig = SpatialCircleConfig()
     obs_time: TimeRangeConfig = TimeRangeConfig()
 
 
@@ -218,24 +218,26 @@ class AnalysisConfig(GammapyBaseConfig):
 
     @classmethod
     def read(cls, filename):
+        """Reads the configuration from a YAML file."""
         config = read_yaml(filename)
-        return cls.from_yaml(config)
+        return AnalysisConfig(**config)
 
     @classmethod
-    def from_yaml(cls, settings):
-        if isinstance(settings, str):
-            settings = yaml.safe_load(settings)
+    def from_yaml(cls, config_str):
+        """Helper method that returns a AnalysisConfig from a string."""
+        settings = yaml.safe_load(config_str)
         return AnalysisConfig(**settings)
 
     def write(self, filename, overwrite=False):
-        fname = Path(filename).name
-        fpath = Path(self.general.outdir) / fname
-        if fpath.exists() and not overwrite:
+        """Writes the configuration in a YAML file."""
+        fname = Path(filename)
+        if Path(filename).exists() and not overwrite:
             raise IOError(f"File {filename} already exists.")
-        fpath.write_text(self.to_yaml())
-        log.info(f"Configuration settings saved into {fpath}")
+        fname.write_text(self.to_yaml())
+        log.info(f"Configuration settings saved into {fname}")
 
     def to_yaml(self):
+        """Helper method that returns a YAML formatted string."""
         # We need to call `json()` to trigger serialisation of custom fields,
         # like e.g. Angle or Enum objects.
         # https://pydantic-docs.helpmanual.io/usage/exporting_models/#modeljson
@@ -247,7 +249,7 @@ class AnalysisConfig(GammapyBaseConfig):
         logging.basicConfig(**self.general.log.dict())
         log.info("Setting logging config: {!r}".format(self.general.log.dict()))
 
-    def update(self, config=None, filename=""):
+    def update(self, config=None):
         """Updates config with provided settings.
 
          Parameters
@@ -257,14 +259,8 @@ class AnalysisConfig(GammapyBaseConfig):
          filename : string
              Filename in YAML format.
          """
-        try:
-            if filename:
-                filepath = make_path(filename)
-                config = dict(read_yaml(filepath))
-            if isinstance(config, str) and not filename:
-                config = dict(yaml.safe_load(config))
-        except Exception:
-            raise ValueError("Could not parse the config settings provided.")
+        if isinstance(config, str):
+            config = dict(yaml.safe_load(config))
         if isinstance(config, dict):
             config = AnalysisConfig(**config)
         if isinstance(config, AnalysisConfig):

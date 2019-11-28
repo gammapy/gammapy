@@ -79,7 +79,7 @@ the sections and parameters or only for one specific section or group of paramet
 .. code-block:: python
 
     >>> config.help()
-    >>> config.help("flux-points")
+    >>> config.help("flux_points")
 
 At any moment you can change the value of one specific parameter needed in the analysis.
 
@@ -117,7 +117,7 @@ The observations used in the analysis may be selected from a ``datastore`` decla
 ``data`` section of the settings, using also different parameters and values to
 create a composed filter.
 
-.. gp-howto-hli:: data
+.. gp-howto-hli:: observations
 
 You may use the `get_observations()` method to proceed to make the observation filtering.
 The observations are stored as a list of `~gammapy.data.DataStoreObservation` objects.
@@ -184,7 +184,7 @@ Flux points
 For spectral analysis where we aim to calculate flux points in a range of energies, we
 may declare the parameters needed in the ``flux_points`` section.
 
-.. gp-howto-hli:: flux-points
+.. gp-howto-hli:: flux_points
 
 You may use the `get_flux_points()` method to calculate the flux points. The result
 is stored in the ``flux_points`` property as a `~gammapy.spectrum.FluxPoints` object.
