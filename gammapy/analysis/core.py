@@ -66,8 +66,14 @@ class Analysis:
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
-        if not self._validate_observations_settings():
-            return False
+
+        datastore_path = make_path(self.config.data.datastore)
+        if datastore_path.is_file():
+            self.datastore = DataStore().from_file(datastore_path)
+        elif datastore_path.is_dir():
+            self.datastore = DataStore().from_dir(datastore_path)
+        else:
+            raise FileNotFoundError(f"Datastore {datastore_path} not found.")
 
         log.info("Fetching observations.")
         data_settings = self.config.data
@@ -103,8 +109,8 @@ class Analysis:
 
     def get_datasets(self):
         """Produce reduced datasets."""
-        if not self._validate_reduction_settings():
-            return False
+        if not self.observations or len(self.observations) == 0:
+            raise RuntimeError("No observations have been selected.")
 
         if self.config.datasets.type == "1d":
             self._spectrum_extraction()
@@ -121,8 +127,8 @@ class Analysis:
         filename : string
             Name of the model YAML file describing the model.
         """
-        if not self._validate_set_model_settings():
-            return False
+        if not self.datasets or len(self.datasets) == 0:
+            raise RuntimeError("No datasets have been reduced.")
 
         log.info(f"Reading model.")
         if isinstance(model, str):
@@ -140,8 +146,8 @@ class Analysis:
 
     def run_fit(self, optimize_opts=None):
         """Fitting reduced datasets to model."""
-        if not self._validate_fitting_settings():
-            return False
+        if not self.model:
+            raise RuntimeError("No model attached to datasets.")
 
         fit_settings = self.config.fit
         for ds in self.datasets:
@@ -165,8 +171,8 @@ class Analysis:
         source : string
             Name of the model component where to calculate the flux points.
         """
-        if not self._validate_fp_settings():
-            return False
+        if not self.fit:
+            raise RuntimeError("No results available from Fit.")
 
         fp_settings = self.config.flux_points
         # TODO: add "source" to config
@@ -357,49 +363,3 @@ class Analysis:
             interp="log",
             node_type="edges",
         )
-
-    def _validate_observations_settings(self):
-        """Validate settings before proceeding to observations selection."""
-        if not self.config.data.datastore:
-            log.info("No datastore defined")
-            log.info("Observation selection cannot be done.")
-            return False
-        datastore_path = make_path(self.config.data.datastore)
-        if datastore_path.is_file():
-            self.datastore = DataStore().from_file(datastore_path)
-        elif datastore_path.is_dir():
-            self.datastore = DataStore().from_dir(datastore_path)
-        else:
-            raise FileNotFoundError(f"Datastore {datastore_path} not found.")
-        return True
-
-    def _validate_reduction_settings(self):
-        """Validate settings before proceeding to data reduction."""
-        if not self.observations or len(self.observations) == 0:
-            log.info("No observations selected.")
-            log.info("Data reduction cannot be done.")
-            return False
-        return True
-
-    def _validate_set_model_settings(self):
-        """Validate settings before proceeding to model attach."""
-        if not self.datasets or len(self.datasets) == 0:
-            log.info("No datasets reduced.")
-            return False
-        return True
-
-    def _validate_fitting_settings(self):
-        """Validate settings before proceeding to fit."""
-        if not self.model:
-            log.info("No model attached to datasets.")
-            log.info("Fit cannot be done.")
-            return False
-        return True
-
-    def _validate_fp_settings(self):
-        """Validate settings before proceeding to flux points estimation."""
-        if not self.fit:
-            log.info("No results available from fit.")
-            log.info("Flux points calculation cannot be done.")
-            return False
-        return True

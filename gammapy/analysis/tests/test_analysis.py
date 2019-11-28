@@ -44,6 +44,9 @@ def test_update_config():
 def test_get_observations():
     config = AnalysisConfig()
     analysis = Analysis(config)
+    analysis.config.data.datastore = "other"
+    with pytest.raises(FileNotFoundError):
+        analysis.get_observations()
     analysis.config.data.datastore = "$GAMMAPY_DATA/cta-1dc/index/gps/"
     analysis.get_observations()
     assert len(analysis.observations) == 4
@@ -57,6 +60,17 @@ def test_get_observations():
     # TODO
     # obs_file
     # obs_time
+
+
+def test_set_model():
+    config = AnalysisConfig.from_template("1d")
+    analysis = Analysis(config)
+    analysis.get_observations()
+    analysis.get_datasets()
+    model_str = Path(MODEL_FILE).read_text()
+    analysis.set_model(model=model_str)
+    assert isinstance(analysis.model, SkyModels) is True
+    assert analysis.set_model() is False
 
 
 @requires_dependency("iminuit")
@@ -149,28 +163,14 @@ def test_analysis_3d_joint_datasets():
 
 @requires_dependency("iminuit")
 @requires_data()
-def test_validation_checks():
-    config = AnalysisConfig()
-    analysis = Analysis(config)
-    analysis.config.data.datastore = "other"
-    with pytest.raises(FileNotFoundError):
-        analysis.get_observations()
-
+def test_usage_errors():
     config = AnalysisConfig.from_template("1d")
     analysis = Analysis(config)
-    assert analysis.get_flux_points() is False
-    assert analysis.run_fit() is False
-    assert analysis.set_model() is False
-    assert analysis.get_datasets() is False
-
-    analysis.observations = None
-    assert analysis.get_datasets() is False
-
-    analysis.config.datasets.type = "1d"
-    analysis.get_observations()
-    analysis.get_datasets()
-    model_str = Path(MODEL_FILE).read_text()
-    analysis.set_model(model=model_str)
-    assert isinstance(analysis.model, SkyModels) is True
-    assert analysis.set_model() is False
-    assert analysis.get_flux_points() is False
+    with pytest.raises(RuntimeError):
+        analysis.get_datasets()
+    with pytest.raises(RuntimeError):
+        analysis.set_model()
+    with pytest.raises(RuntimeError):
+        analysis.run_fit()
+    with pytest.raises(RuntimeError):
+        analysis.get_flux_points()
