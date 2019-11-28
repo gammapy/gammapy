@@ -62,7 +62,6 @@ def test_simulate():
     assert_allclose(dataset.edisp.data.data[10, 10], 0.85944298, rtol=1e-5)
 
 
-@requires_data()
 def dataset_maker():
     position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
     energy_axis = MapAxis.from_bounds(
@@ -93,6 +92,7 @@ def dataset_maker():
     return dataset
 
 
+@requires_data()
 def test_MDE_sample_background():
     dataset = dataset_maker()
     sampler = MapDatasetEventSampler(random_state=0)
