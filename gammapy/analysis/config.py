@@ -10,7 +10,7 @@ from astropy.units import Quantity
 import yaml
 from pydantic import BaseModel, FilePath
 from pydantic.utils import deep_update
-from gammapy.utils.scripts import read_yaml
+from gammapy.utils.scripts import read_yaml, make_path
 
 __all__ = ["AnalysisConfig"]
 
@@ -243,11 +243,31 @@ class AnalysisConfig(GammapyBaseConfig):
             if section == "" or section == keyword:
                 print(doc[keyword])
 
-    def _update(self, other):
-        config = deep_update(
-            self.dict(exclude_defaults=True), other.dict(exclude_defaults=True)
-        )
-        return AnalysisConfig(**config)
+    def update(self, config=None, filename=""):
+        """Updates config with provided settings.
+
+         Parameters
+         ----------
+         config : string dict or `AnalysisConfig` object
+             Configuration settings provided in dict() syntax.
+         filename : string
+             Filename in YAML format.
+         """
+        try:
+            if filename:
+                filepath = make_path(filename)
+                config = dict(read_yaml(filepath))
+            if isinstance(config, str) and not filename:
+                config = dict(yaml.safe_load(config))
+        except Exception:
+            raise ValueError("Could not parse the config settings provided.")
+        if isinstance(config, dict):
+            config = AnalysisConfig(**config)
+        if isinstance(config, AnalysisConfig):
+            upd_config = deep_update(
+                self.dict(exclude_defaults=True), config.dict(exclude_defaults=True)
+            )
+            return AnalysisConfig(**upd_config)
 
     @staticmethod
     def _get_doc_sections():

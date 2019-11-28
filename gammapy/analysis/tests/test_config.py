@@ -89,6 +89,6 @@ def test_config_update():
     config1 = AnalysisConfig()
     data = {"fit": {"fit_range": {"min": "1 TeV", "max": "100 TeV"}}}
     config2 = AnalysisConfig(**data)
-    config = config1._update(config2)
+    config = config1.update(config2)
     assert config.fit.fit_range.min == Quantity("1 TeV")
     assert config.general.log.level == "info"
