@@ -993,13 +993,13 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         BKG file, ARF, and RMF must be set in the PHA header and be present in
         the same folder.
 
-        The naming scheme is fixed to the following scheme
+        The naming scheme is fixed to the following scheme:
 
-        * PHA file is named pha_obs{name}.fits
-        * BKG file is named bkg_obs{name}.fits
-        * ARF file is named arf_obs{name}.fits
-        * RMF file is named rmf_obs{name}.fits
-         with {name} the dataset name.
+        * PHA file is named ``pha_obs{name}.fits``
+        * BKG file is named ``bkg_obs{name}.fits``
+        * ARF file is named ``arf_obs{name}.fits``
+        * RMF file is named ``rmf_obs{name}.fits``
+          with ``{name}`` the dataset name.
 
         Parameters
         ----------

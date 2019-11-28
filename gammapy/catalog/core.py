@@ -11,8 +11,6 @@ __all__ = ["SourceCatalog", "SourceCatalogObject"]
 
 # https://pydanny.blogspot.com/2011/11/loving-bunch-class.html
 class Bunch(dict):
-    """ Warning: DON'T USE THIS IN REAL PROJECTS """
-
     def __init__(self, **kw):
         dict.__init__(self, kw)
         self.__dict__.update(kw)

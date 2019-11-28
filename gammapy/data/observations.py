@@ -438,7 +438,7 @@ class Observation:
         User must either provide the livetime, or the start and stop times.
 
         Parameters
-        -----------
+        ----------
         pointing : `~astropy.coordinates.SkyCoord`
             Pointing position
         obs_id : int
@@ -455,7 +455,7 @@ class Observation:
             Deadtime fraction, defaults to 0
 
         Returns
-        --------
+        -------
         obs : `gammapy.data.Observation`
         """
         tstart = tstart or Quantity(0.0, "hr")

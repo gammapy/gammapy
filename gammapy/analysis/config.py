@@ -253,13 +253,13 @@ class AnalysisConfig(GammapyBaseConfig):
         log.info("Setting logging config: {!r}".format(self.general.log.dict()))
 
     def update(self, config=None):
-        """Updates config with provided settings.
+        """Update config with provided settings.
 
-         Parameters
-         ----------
-         config : string dict or `AnalysisConfig` object
-             Configuration settings provided in dict() syntax.
-         """
+        Parameters
+        ----------
+        config : string dict or `AnalysisConfig` object
+            Configuration settings provided in dict() syntax.
+        """
         if isinstance(config, str):
             config = dict(yaml.safe_load(config))
         if isinstance(config, dict):
