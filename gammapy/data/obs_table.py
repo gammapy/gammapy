@@ -3,7 +3,6 @@ from collections import namedtuple
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
-from astropy.time import Time
 from astropy.units import Quantity, Unit
 from astropy.utils import lazyproperty
 from gammapy.utils.regions import SphericalCircleSkyRegion

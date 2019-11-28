@@ -5,11 +5,7 @@ from astropy import units as u
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import SourceCatalogGammaCat
 from gammapy.utils.gauss import Gauss2DPDF
-from gammapy.utils.testing import (
-    assert_quantity_allclose,
-    requires_data,
-    requires_dependency,
-)
+from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 SOURCES = [
     {
