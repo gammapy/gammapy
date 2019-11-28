@@ -65,14 +65,33 @@ fits a scale factor on the model component representing the source in each time 
 and returns a `~gammapy.time.LightCurve`. It can work with spectral (1D) datasets as well
 as with map (3D) datasets.
 
-
+Once a `~gammapy.Fit.Datasets` object is build with a model set, one can call the estimator
+to compute the light curve in the `datasets
+time intervals <../notebooks/Light_curve.html#Light-Curve-estimation:-by-observation>`__
+or in `user defined time intervals <../notebooks/Light_curve.html#LC-estimation-by-night>`__
+to group observations (e.g. by night, week etc).
 
 .. _time-variability:
 
 Variability and peridocity test
 -------------------------------
 
-TODO: Add some rapid discussion of chisquare and fractional variance functions
+A few utility functions to perform timing tests are available in `~gammapy.time`.
+
+`~gammapy.time.compute_chisq` performs a chisquare test for variable source flux::
+
+     >>> from gammapy.time import chisquare
+     >>> print(compute_chisq(lc['FLUX']))
+
+`~gammapy.time.compute_fvar` calculates the fractional variance excess (see [Vaughan2003]_)::
+
+     >>> from gammapy.time import fvar
+     >>> print(compute_fvar(lc['FLUX'], lc['FLUX_ERR']))
+
+`~gammapy.time` also provides methods for period detection in time series, i.e. light
+curves of :math:`\gamma`-ray sources.  `~gammapy.time.robust_periodogram` performs a
+periodogram analysis where the unevenly sampled time series is contaminated by outliers,
+i.e. due to the source's high states. This is demonstrated in the following `page<../time/period.html>`.
 
 Tutorials
 =========
