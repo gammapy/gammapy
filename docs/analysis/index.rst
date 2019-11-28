@@ -34,7 +34,6 @@ an IPython console or a notebook.
     >>> from gammapy.analysis import Analysis, AnalysisConfig
     >>> config = AnalysisConfig()
     >>> analysis = Analysis(config)
-        INFO:gammapy.analysis.analysis:Setting logging config: {'level': 'INFO'}
 
 Configuration and methods
 =========================
@@ -46,7 +45,6 @@ them into a file that you can edit to start a new analysis from the modified con
 
     >>> print(config)
     >>> config.to_yaml("config.yaml")
-    INFO:gammapy.analysis.analysis:Configuration settings saved into config.yaml
     >>> config = AnalysisConfig.from_yaml("config.yaml")
 
 You may choose a predefined **configuration template** for your configuration. If no
@@ -71,8 +69,8 @@ file.
 
     >>> config = AnalysisConfig.from_template("1d")
     >>> analysis = Analysis(config)
-    >>> config_dict = {"general": {"logging": {"level": "WARNING"}}}
-    >>> config.update_settings(config_dict)
+    >>> config_dict = {"general": {"log": {"level": "warning"}}}
+    >>> analysis.update_config(config_dict)
 
 The hierarchical structure of the tens of parameters needed may be hard to follow. You can
 print as a *how-to* documentation a helping sample config file with example values for all
@@ -83,24 +81,22 @@ the sections and parameters or only for one specific section or group of paramet
     >>> config.help()
     >>> config.help("flux-points")
 
-At any moment you can change the value of one specific parameter needed in the analysis. Note
-that it is a good practice to validate your settings when you modify the value of parameters.
+At any moment you can change the value of one specific parameter needed in the analysis.
 
 .. code-block:: python
 
-    >>> config.settings["reduction"]["geom"]["region"]["frame"] = "galactic"
-    >>> config.validate()
+    >>> config.settings.datasets.geom.wcs.skydir.frame = "galactic"
 
 It is also possible to add new configuration parameters and values or overwrite the ones already
-defined in your session analysis. In this case you may use the `config.update_settings()` method
+defined in your session analysis. In this case you may use the `analysis.update_config()` method
 using a custom nested dictionary or custom YAML file (i.e. re-use a config file for specific
 sections and/or from a previous analysis).:
 
 .. code-block:: python
 
-    >>> config_dict = {"observations": {"datastore": "$GAMMAPY_DATA/hess-dl3-dr1"}}
-    >>> config.update_settings(config=config_dict)
-    >>> config.update_settings(configfile="fit.yaml")
+    >>> config_dict = {"data": {"datastore": "$GAMMAPY_DATA/hess-dl3-dr1"}}
+    >>> analysis.update_config(config=config_dict)
+    >>> analysis.update_config(configfile="fit.yaml")
 
 In the following you may find more detailed information on the different sections which
 compose the YAML formatted nested configuration settings hierarchy.
@@ -108,7 +104,7 @@ compose the YAML formatted nested configuration settings hierarchy.
 General settings
 ----------------
 
-The ``general`` section comprises information related with the ``logging`` configuration,
+The ``general`` section comprises information related with the ``log`` configuration,
 as well as the output folder where all file outputs and datasets will be stored, declared
 as value of the ``outdir`` parameter.
 
@@ -118,8 +114,8 @@ Observations selection
 ----------------------
 
 The observations used in the analysis may be selected from a ``datastore`` declared in the
-``observations`` section of the settings, using also different parameters and values to
-build a composed filter.
+``data`` section of the settings, using also different parameters and values to
+create a composed filter.
 
 .. gp-howto-hli:: data
 
@@ -138,35 +134,23 @@ The observations are stored as a list of `~gammapy.data.DataStoreObservation` ob
 Data reduction and datasets
 ---------------------------
 
-The data reduction process needs a choice of a dataset type, declared as the class name
-(`~gammapy.cube.MapDataset`, `~gammapy.spectrum.SpectrumDatasetOnOff`) in the ``reduction`` section of the settings. For the
-estimation of the background with a dataset type `~gammapy.spectrum.SpectrumDatasetOnOff`, a ``background_estimator``
-is needed, other parameters related with the ``on_region`` and ``exclusion_mask`` FITS file
-may be also present. Parameters for geometry are also needed and declared in this section,
-as well as a boolean flag ``stack-datasets``.
+The data reduction process needs a choice of a dataset type, declared as ``1d`` or ``3d``
+in the ``datasets`` section of the settings. For the estimation of the background in a ``1d``
+use case, a background ``method`` is needed, other parameters related like the ``onregion``
+and ``exclusion`` FITS file may be also present. Parameters for geometry are also needed and
+declared in this section, as well as a boolean flag ``stack``.
 
 .. gp-howto-hli:: datasets
 
 You may use the `get_datasets()` method to proceed to the data reduction process.
 The final reduced datasets are stored in the ``datasets`` attribute.
-For spectral reduction the information related with the background estimation is
-stored in the ``background_estimator`` property.
+For spectrum datasets reduction the information related with the background estimation is
+stored in the ``background`` property.
 
 .. code-block:: python
 
     >>> analysis.get_datasets()
-    >>> analysis.datasets.datasets
-        [SpectrumDatasetOnOff,
-         SpectrumDatasetOnOff,
-         SpectrumDatasetOnOff,
-         SpectrumDatasetOnOff,
-         SpectrumDatasetOnOff,
-         SpectrumDatasetOnOff,
-         SpectrumDatasetOnOff,
-         SpectrumDatasetOnOff]
-    >>> analysis.background_estimator.on_region
-        <CircleSkyRegion(<SkyCoord (ICRS): (ra, dec) in deg
-            (83.633, 22.014)>, radius=0.1 deg)>
+    >>> analysis.datasets.info_table()
 
 Model
 -----
@@ -193,21 +177,12 @@ is stored in the ``fit_result`` property.
 .. code-block:: python
 
     >>> analysis.run_fit()
-    >>> analysis.fit_result
-        OptimizeResult
-
-            backend    : minuit
-            method     : minuit
-            success    : True
-            message    : Optimization terminated successfully.
-            nfev       : 111
-            total stat : 239.28
 
 Flux points
 -----------
 
 For spectral analysis where we aim to calculate flux points in a range of energies, we
-may declare the parameters needed in the ``flux-points`` section.
+may declare the parameters needed in the ``flux_points`` section.
 
 .. gp-howto-hli:: flux-points
 
@@ -234,22 +209,6 @@ is stored in the ``flux_points`` property as a `~gammapy.spectrum.FluxPoints` ob
           7.26291750173621 1.2879288326657447e-13 2.5317668601400673e-13 4.0803852787540073e-13  6.601201499048379e-14 False
           8.79922543569107  1.877442373267013e-13  7.097738087032472e-14  1.254638299336029e-13 2.2705519890120373e-14 False
     >>> analysis.flux_points.peek()
-
-Residuals
----------
-
-For 3D analysis we can compute a residual image to check how good are the models
-for the source and/or the background.
-
-.. code-block:: python
-
-    >>> analysis.datasets.datasets[0].residuals()
-            geom  : WcsGeom
-            axes  : ['lon', 'lat', 'energy']
-            shape : (250, 250, 4)
-            ndim  : 3
-            unit  :
-            dtype : float64
 
 Using the high-level interface
 ------------------------------
