@@ -1,14 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.time import Time
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.cube import MapDataset, simulate_dataset, MapDatasetEventSampler
 from gammapy.cube.tests.test_fit import get_map_dataset
 from gammapy.data import GTI
 from gammapy.irf import load_cta_irfs
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
