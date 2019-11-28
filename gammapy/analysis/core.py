@@ -1,15 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high-level interface API"""
-import copy
 import logging
-from collections import defaultdict
-from pathlib import Path
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-import jsonschema
 import yaml
+from gammapy.analysis.config import AnalysisConfig
 from gammapy.cube import MapDataset, MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
@@ -22,27 +19,18 @@ from gammapy.spectrum import (
     ReflectedRegionsBackgroundMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.utils.scripts import make_path, read_yaml
+from gammapy.utils.scripts import make_path
 
-__all__ = ["Analysis", "AnalysisConfig"]
+__all__ = ["Analysis"]
 
 log = logging.getLogger(__name__)
-CONFIG_PATH = Path(__file__).resolve().parent / "config"
-SCHEMA_FILE = CONFIG_PATH / "schema.yaml"
-DOCS_FILE = CONFIG_PATH / "docs.yaml"
-
-ANALYSIS_TEMPLATES = {
-    "basic": "template-basic.yaml",
-    "1d": "template-1d.yaml",
-    "3d": "template-3d.yaml",
-}
 
 
 class Analysis:
     """Config-driven high-level analysis interface.
 
     It is initialized by default with a set of configuration parameters and values declared in
-    an internal configuration schema YAML file, though the user can also provide configuration
+    an internal high-level interface model, though the user can also provide configuration
     parameters passed as a nested dictionary at the moment of instantiation. In that case these
     parameters will overwrite the default values of those present in the configuration file.
 
@@ -54,15 +42,9 @@ class Analysis:
         Configuration options following `AnalysisConfig` schema
     """
 
-    def __init__(self, config=None):
-        if isinstance(config, dict):
-            self._config = AnalysisConfig(config)
-        elif isinstance(config, AnalysisConfig):
-            self._config = config
-        else:
-            raise ValueError("Dict or `AnalysiConfig` object required.")
-
-        self._set_logging()
+    def __init__(self, config):
+        self.config = config
+        self.config.set_logging()
         self.datastore = None
         self.observations = None
         self.datasets = None
@@ -76,59 +58,53 @@ class Analysis:
         """Analysis configuration (`AnalysisConfig`)"""
         return self._config
 
-    @property
-    def settings(self):
-        """Configuration settings for the analysis session."""
-        return self.config.settings
+    @config.setter
+    def config(self, value):
+        if isinstance(value, dict):
+            self._config = AnalysisConfig(**value)
+        elif isinstance(value, AnalysisConfig):
+            self._config = value
+        else:
+            raise TypeError("config must be dict or AnalysisConfig.")
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
-        self.config.validate()
-        log.info("Fetching observations.")
-        datastore_path = make_path(self.settings["observations"]["datastore"])
-        if datastore_path.is_file():
-            self.datastore = DataStore().from_file(datastore_path)
-        elif datastore_path.is_dir():
-            self.datastore = DataStore().from_dir(datastore_path)
+        path = make_path(self.config.observations.datastore)
+
+        if path.is_file():
+            self.datastore = DataStore.from_file(path)
+        elif path.is_dir():
+            self.datastore = DataStore.from_dir(path)
         else:
-            raise FileNotFoundError(f"Datastore {datastore_path} not found.")
-        ids = []
-        selection = dict()
-        for criteria in self.settings["observations"]["filters"]:
-            selected_obs = ObservationTable()
+            raise FileNotFoundError(f"Datastore not found: {path}")
 
-            # TODO: Reduce significantly the code.
-            # This block would be handled by datastore.obs_table.select_observations
-            selection["type"] = criteria["filter_type"]
-            for key, val in criteria.items():
-                if key in ["lon", "lat", "radius", "border"]:
-                    val = Angle(val)
-                selection[key] = val
-            if selection["type"] == "angle_box":
-                selection["type"] = "par_box"
-                selection["value_range"] = Angle(criteria["value_range"])
-            if selection["type"] == "sky_circle" or selection["type"].endswith("_box"):
-                selected_obs = self.datastore.obs_table.select_observations(selection)
-            if selection["type"] == "par_value":
-                mask = (
-                    self.datastore.obs_table[criteria["variable"]]
-                    == criteria["value_param"]
-                )
-                selected_obs = self.datastore.obs_table[mask]
-            if selection["type"] == "ids":
-                obs_list = self.datastore.get_observations(criteria["obs_ids"])
-                selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
-            if selection["type"] == "all":
-                obs_list = self.datastore.get_observations()
-                selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
-
-            if len(selected_obs):
-                if "exclude" in criteria and criteria["exclude"]:
-                    exclude = selected_obs["OBS_ID"].tolist()
-                    selection = np.isin(ids, exclude)
-                    ids = list(np.array(ids)[~selection])
-                else:
-                    ids.extend(selected_obs["OBS_ID"].tolist())
+        log.info("Fetching observations.")
+        data_settings = self.config.observations
+        selected_obs = ObservationTable()
+        obs_list = self.datastore.get_observations()
+        if len(self.config.observations.obs_ids):
+            obs_list = self.datastore.get_observations(data_settings.obs_ids)
+        selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
+        ids = selected_obs["OBS_ID"].tolist()
+        # TODO
+        # if self.config.observations.obs_file:
+        # add obs_ids from file
+        # ids.extend(selected_obs["OBS_ID"].tolist())
+        if data_settings.obs_cone.lon is not None:
+            # TODO remove border keyword
+            cone = dict(
+                type="sky_circle",
+                frame=data_settings.obs_cone.frame,
+                lon=data_settings.obs_cone.lon,
+                lat=data_settings.obs_cone.lat,
+                radius=data_settings.obs_cone.radius,
+                border="1 deg",
+            )
+            selected_cone = self.datastore.obs_table.select_observations(cone)
+            ids = list(set(ids) & set(selected_cone["OBS_ID"].tolist()))
+        # TODO
+        # if self.config.observations.obs_time.start is not None:
+        # filter obs_ids with time filter
         self.observations = self.datastore.get_observations(ids, skip_missing=True)
         log.info(f"{len(self.observations.list)} observations were selected.")
         for obs in self.observations.list:
@@ -136,16 +112,15 @@ class Analysis:
 
     def get_datasets(self):
         """Produce reduced datasets."""
-        if not self._validate_reduction_settings():
-            return False
-        if self.settings["datasets"]["dataset-type"] == "SpectrumDatasetOnOff":
+        if not self.observations or len(self.observations) == 0:
+            raise RuntimeError("No observations have been selected.")
+
+        if self.config.datasets.type == "1d":
             self._spectrum_extraction()
-        elif self.settings["datasets"]["dataset-type"] == "MapDataset":
+        elif self.config.datasets.type == "3d":
             self._map_making()
         else:
-            # TODO raise error?
-            log.info("Data reduction method not available.")
-            return False
+            ValueError(f"Invalid dataset type: {self.config.datasets.type}")
 
     def set_model(self, model=None, filename=""):
         """Read the model from dict or filename and attach it to datasets.
@@ -157,11 +132,13 @@ class Analysis:
         filename : string
             Name of the model YAML file describing the model.
         """
-        if not self._validate_set_model():
-            return False
+        if not self.datasets or len(self.datasets) == 0:
+            raise RuntimeError("Missing datasets")
+
         log.info(f"Reading model.")
         if isinstance(model, str):
             model = yaml.safe_load(model)
+
         if model:
             self.model = SkyModels(dict_to_models(model))
         elif filename:
@@ -169,6 +146,7 @@ class Analysis:
             self.model = SkyModels.from_yaml(filepath)
         else:
             return False
+
         for dataset in self.datasets:
             dataset.model = self.model
 
@@ -176,19 +154,20 @@ class Analysis:
 
     def run_fit(self, optimize_opts=None):
         """Fitting reduced datasets to model."""
-        if not self._validate_fitting_settings():
-            return False
+        if not self.model:
+            raise RuntimeError("Missing model")
 
-        for ds in self.datasets:
-            # TODO: fit_range handled in jsonschema validation class
-            if "fit" in self.settings and "fit_range" in self.settings["fit"]:
-                e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
-                e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
-                if isinstance(ds, MapDataset):
-                    ds.mask_fit = ds.counts.geom.energy_mask(e_min, e_max)
+        fit_settings = self.config.fit
+        for dataset in self.datasets:
+            if fit_settings.fit_range:
+                e_min = fit_settings.fit_range.min
+                e_max = fit_settings.fit_range.max
+                if isinstance(dataset, MapDataset):
+                    dataset.mask_fit = dataset.counts.geom.energy_mask(e_min, e_max)
                 else:
-                    ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
-        log.info("Fitting reduced datasets.")
+                    dataset.mask_fit = dataset.counts.energy_mask(e_min, e_max)
+
+        log.info("Fitting datasets.")
         self.fit = Fit(self.datasets)
         self.fit_result = self.fit.run(optimize_opts=optimize_opts)
         log.info(self.fit_result)
@@ -201,58 +180,68 @@ class Analysis:
         source : string
             Name of the model component where to calculate the flux points.
         """
-        if not self._validate_fp_settings():
-            return False
+        if not self.fit:
+            raise RuntimeError("No results available from Fit.")
 
+        fp_settings = self.config.flux_points
         # TODO: add "source" to config
         log.info("Calculating flux points.")
-        axis_params = self.settings["flux-points"]["fp_binning"]
-        e_edges = MapAxis.from_bounds(**axis_params).edges
+        e_edges = self._make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
             e_edges=e_edges, datasets=self.datasets, source=source
         )
         fp = flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
-        model = self.model[source].copy()
-        self.flux_points = FluxPointsDataset(data=fp, model=model)
+        self.flux_points = FluxPointsDataset(data=fp, model=self.model[source])
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
 
-    @staticmethod
-    def _create_geometry(params):
+    def update_config(self, config):
+        self.config = self.config.update(config=config)
+
+    def _create_geometry(self):
         """Create the geometry."""
-        geom_params = copy.deepcopy(params)
-        axes = []
-        for axis_params in params.get("axes", []):
-            ax = MapAxis.from_bounds(**axis_params)
-            axes.append(ax)
+        geom_params = {}
+        geom_settings = self.config.datasets.geom
+        skydir_settings = geom_settings.wcs.skydir
+        if skydir_settings.lon is not None:
+            skydir = SkyCoord(
+                skydir_settings.lon, skydir_settings.lat, frame=skydir_settings.frame
+            )
+            geom_params["skydir"] = skydir
+        if skydir_settings.frame == "icrs":
+            geom_params["coordsys"] = "CEL"
+        if skydir_settings.frame == "galactic":
+            geom_params["coordsys"] = "GAL"
+        axes = [self._make_energy_axis(geom_settings.axes.energy)]
         geom_params["axes"] = axes
-        if "skydir" in geom_params:
-            geom_params["skydir"] = tuple(geom_params["skydir"])
+        geom_params["binsz"] = geom_settings.wcs.binsize
+        width = geom_settings.wcs.fov.width.to("deg").value
+        height = geom_settings.wcs.fov.height.to("deg").value
+        geom_params["width"] = (width, height)
         return WcsGeom.create(**geom_params)
 
     def _map_making(self):
         """Make maps and datasets for 3d analysis."""
         log.info("Creating geometry.")
 
-        geom = self._create_geometry(self.settings["datasets"]["geom"])
-
+        geom = self._create_geometry()
+        geom_settings = self.config.datasets.geom
         geom_irf = dict(energy_axis_true=None, binsz_irf=None, margin_irf=None)
-        if "energy-axis-true" in self.settings["datasets"]:
-            axis_params = self.settings["datasets"]["energy-axis-true"]
-            geom_irf["energy_axis_true"] = MapAxis.from_bounds(**axis_params)
-        geom_irf["binsz_irf"] = self.settings["datasets"].get("binsz", None)
-        geom_irf["margin_irf"] = self.settings["datasets"].get("margin", None)
-
-        offset_max = Angle(self.settings["datasets"]["offset-max"])
+        if geom_settings.axes.energy_true.min is not None:
+            geom_irf["energy_axis_true"] = self._make_energy_axis(
+                geom_settings.axes.energy_true
+            )
+        geom_irf["binsz_irf"] = geom_settings.wcs.binsize_irf.to("deg").value
+        geom_irf["margin_irf"] = geom_settings.wcs.margin_irf.to("deg").value
+        offset_max = geom_settings.selection.offset_max
         log.info("Creating datasets.")
 
         maker = MapDatasetMaker()
         maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=offset_max)
-
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
-        if self.settings["datasets"]["stack-datasets"]:
+        if self.config.datasets.stack:
             for obs in self.observations:
                 log.info(f"Processing observation {obs.obs_id}")
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
@@ -276,12 +265,10 @@ class Analysis:
                 self._extract_irf_kernels(dataset)
                 log.debug(dataset)
                 datasets.append(dataset)
-
         self.datasets = Datasets(datasets)
 
     def _extract_irf_kernels(self, dataset):
-        # TODO: remove hard-coded default value
-        max_radius = self.settings["datasets"].get("psf-kernel-radius", "0.6 deg")
+        max_radius = self.config.datasets.psf_kernel_radius
         # TODO: handle IRF maps in fit
         geom = dataset.counts.geom
         geom_irf = dataset.exposure.geom
@@ -291,52 +278,32 @@ class Analysis:
             position=position, geom=geom_psf, max_radius=max_radius
         )
 
-    def _set_logging(self):
-        """Set logging parameters for API."""
-        logging.basicConfig(**self.settings["general"]["logging"])
-        log.info(
-            "Setting logging config: {!r}".format(self.settings["general"]["logging"])
-        )
-
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
-        region = self.settings["datasets"]["geom"]["region"]
         log.info("Reducing spectrum datasets.")
-        on_lon = Angle(region["center"][0])
-        on_lat = Angle(region["center"][1])
-        on_center = SkyCoord(on_lon, on_lat, frame=region["frame"])
-        on_region = CircleSkyRegion(on_center, Angle(region["radius"]))
+        datasets_settings = self.config.datasets
+        on_lon = datasets_settings.on_region.lon
+        on_lat = datasets_settings.on_region.lat
+        on_center = SkyCoord(on_lon, on_lat, frame=datasets_settings.on_region.frame)
+        on_region = CircleSkyRegion(on_center, datasets_settings.on_region.radius)
 
         maker_config = {}
-        if "containment_correction" in self.settings["datasets"]:
-            maker_config["containment_correction"] = self.settings["datasets"][
+        if datasets_settings.containment_correction:
+            maker_config[
                 "containment_correction"
-            ]
-        params = self.settings["datasets"]["geom"]["axes"][0]
-        e_reco = MapAxis.from_bounds(**params).edges
+            ] = datasets_settings.containment_correction
+        e_reco = self._make_energy_axis(datasets_settings.geom.axes.energy).edges
         maker_config["e_reco"] = e_reco
-
         # TODO: remove hard-coded e_true and make it configurable
         maker_config["e_true"] = np.logspace(-2, 2.5, 109) * u.TeV
         maker_config["region"] = on_region
 
         dataset_maker = SpectrumDatasetMaker(**maker_config)
         bkg_maker_config = {}
-        background = self.settings["datasets"]["background"]
-
-        if "exclusion_mask" in background:
-            map_hdu = {}
-            filename = background["exclusion_mask"]["filename"]
-            if "hdu" in background["exclusion_mask"]:
-                map_hdu = {"hdu": background["exclusion_mask"]["hdu"]}
-            exclusion_region = Map.read(filename, **map_hdu)
+        if datasets_settings.background.exclusion:
+            exclusion_region = Map.read(datasets_settings.background.exclusion)
             bkg_maker_config["exclusion_mask"] = exclusion_region
-        if background["background_estimator"] == "reflected":
-            reflected_bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
-        else:
-            # TODO: raise error?
-            log.info("Background estimation only for reflected regions method.")
-
+        bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
         safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "aeff-max"])
 
         datasets = []
@@ -344,7 +311,7 @@ class Analysis:
             log.info(f"Processing observation {obs.obs_id}")
             selection = ["counts", "aeff", "edisp"]
             dataset = dataset_maker.run(obs, selection=selection)
-            dataset = reflected_bkg_maker.run(dataset, obs)
+            dataset = bkg_maker.run(dataset, obs)
             if dataset.counts_off is None:
                 log.info(
                     f"No OFF region found for observation {obs.obs_id}. Discarding."
@@ -356,199 +323,19 @@ class Analysis:
 
         self.datasets = Datasets(datasets)
 
-        if self.settings["datasets"]["stack-datasets"]:
+        if self.config.datasets.stack:
             stacked = self.datasets.stack_reduce()
             stacked.name = "stacked"
             self.datasets = Datasets([stacked])
 
-    def _validate_reduction_settings(self):
-        """Validate settings before proceeding to data reduction."""
-        if self.observations and len(self.observations):
-            self.config.validate()
-            return True
-        else:
-            log.info("No observations selected.")
-            log.info("Data reduction cannot be done.")
-            return False
-
-    def _validate_set_model(self):
-        if self.datasets and len(self.datasets) != 0:
-            self.config.validate()
-            return True
-        else:
-            log.info("No datasets reduced.")
-            return False
-
-    def _validate_fitting_settings(self):
-        """Validate settings before proceeding to fit 1D."""
-        if not self.model:
-            log.info("No model fetched for datasets.")
-            log.info("Fit cannot be done.")
-            return False
-        else:
-            return True
-
-    def _validate_fp_settings(self):
-        """Validate settings before proceeding to flux points estimation."""
-        valid = True
-        if self.fit:
-            self.config.validate()
-        else:
-            log.info("No results available from fit.")
-            valid = False
-        if "flux-points" not in self.settings:
-            log.info("No values declared for the energy bins.")
-            valid = False
-        elif "fp_binning" not in self.settings["flux-points"]:
-            log.info("No values declared for the energy bins.")
-            valid = False
-        if not valid:
-            log.info("Flux points calculation cannot be done.")
-        return valid
-
-
-class AnalysisConfig:
-    """Analysis configuration.
-
-    Parameters
-    ----------
-    config : dict
-        Configuration parameters
-    """
-
-    def __init__(self, config=None, filename="config.yaml"):
-        self.settings = {}
-        self.template = ""
-        if config is None:
-            self.template = CONFIG_PATH / ANALYSIS_TEMPLATES["basic"]
-        # add user settings
-        self.update_settings(config, self.template)
-        self.filename = Path(filename).name
-
-    def __str__(self):
-        """Display settings in pretty YAML format."""
-        info = self.__class__.__name__ + "\n\n\t"
-
-        data = yaml.dump(self.settings, sort_keys=False, indent=4)
-        data = data.replace("\n", "\n\t")
-        info += data
-        return info.expandtabs(tabsize=4)
-
-    def to_yaml(self, filename=None, overwrite=False):
-        """Serialize config into a yaml formatted file.
-
-        Parameters
-        ----------
-        filename : str, Path
-            Configuration settings filename
-            Default config.yaml
-        overwrite : bool
-            Whether to overwrite an existing file.
-        """
-        if filename is None:
-            filename = self.filename
-
-        self.filename = Path(filename).name
-        path_file = Path(self.settings["general"]["outdir"]) / self.filename
-
-        if path_file.exists() and not overwrite:
-            raise IOError(f"File {filename} already exists.")
-
-        path_file.write_text(yaml.dump(self.settings, sort_keys=False, indent=4))
-        log.info(f"Configuration settings saved into {path_file}")
-
-    @classmethod
-    def from_yaml(cls, filename):
-        """Read config from filename"""
-        filename = make_path(filename)
-        config = read_yaml(filename)
-        return cls(config, filename=filename)
-
-    @classmethod
-    def from_template(cls, template="basic"):
-        """Create AnalysisConfig from existing templates.
-
-        Parameters
-        ----------
-        template : {"basic", "1d", "3d"}
-            Build in templates.
-
-        Returns
-        -------
-        analysis : `AnalysisConfig`
-            AnalysisConfig class
-        """
-        filename = CONFIG_PATH / ANALYSIS_TEMPLATES[template]
-        return cls.from_yaml(filename)
-
-    def help(self, section=""):
-        """Print template configuration settings."""
-        doc = self._get_doc_sections()
-        for keyword in doc.keys():
-            if section == "" or section == keyword:
-                print(doc[keyword])
-
-    def update_settings(self, config=None, filename=""):
-        """Update settings with config dictionary or values in configfile"""
-        if filename:
-            filepath = make_path(filename)
-            config = read_yaml(filepath)
-        if config is None:
-            config = {}
-        if isinstance(config, str):
-            config = yaml.safe_load(config)
-        if len(config):
-            self._update_settings(config, self.settings)
-        self.validate()
-
-    def validate(self):
-        """Validate and/or fill initial config parameters against schema."""
-        validator = _gp_units_validator
-        try:
-            jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
-        except jsonschema.exceptions.ValidationError as ex:
-            log.error("Error when validating configuration parameters against schema.")
-            log.error(ex.message)
-
     @staticmethod
-    def _get_doc_sections():
-        """Returns dict with commented docs from docs file"""
-        doc = defaultdict(str)
-        with open(DOCS_FILE) as f:
-            for line in filter(lambda line: not line.startswith("---"), f):
-                line = line.strip("\n")
-                if line.startswith("# Section: "):
-                    keyword = line.replace("# Section: ", "")
-                doc[keyword] += line + "\n"
-        return doc
-
-    def _update_settings(self, source, target):
-        for key, val in source.items():
-            if key not in target:
-                target[key] = {}
-            if not isinstance(val, dict) or val == {}:
-                target[key] = val
-            else:
-                self._update_settings(val, target[key])
-
-
-def is_quantity(instance):
-    try:
-        _ = u.Quantity(instance)
-        return True
-    except ValueError:
-        return False
-
-
-def _astropy_quantity(_, instance):
-    """Check a number may also be an astropy quantity."""
-    is_number = jsonschema.Draft7Validator.TYPE_CHECKER.is_type(instance, "number")
-    return is_number or is_quantity(instance)
-
-
-_type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(
-    "number", _astropy_quantity
-)
-_gp_units_validator = jsonschema.validators.extend(
-    jsonschema.Draft7Validator, type_checker=_type_checker
-)
+    def _make_energy_axis(axis):
+        return MapAxis.from_bounds(
+            name="energy",
+            lo_bnd=axis.min.value,
+            hi_bnd=axis.max.to_value(axis.min.unit),
+            nbin=axis.nbins,
+            unit=axis.min.unit,
+            interp="log",
+            node_type="edges",
+        )

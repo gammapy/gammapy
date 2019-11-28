@@ -1,9 +1,8 @@
----
 # Section: general
-# General settings for the high-level interface
+# General settings for the high-level interface / optional
 general:
     # logging settings for the session
-    logging:
+    log:
         # choose one of the example values for level
         level: INFO            # also CRITICAL, ERROR, WARNING, DEBUG
         filename: filename.log
@@ -14,91 +13,46 @@ general:
     outdir: .
 
 # Section: observations
-# Observations used in the analysis
+# Observations used in the analysis / mandatory
 observations:
     # path to data store where to fetch observations
-    datastore: "$GAMMAPY_DATA/hess-dl3-dr1"
-    # filtering composed of a list of filters with selection criteria
-    filters:
-        - filter_type: sky_circle
-          # also angle_box, par_box, par_value, ids, all
-          # filter_type "sky_circle"
-          frame: icrs          #  or galactic
-          lon: 83.633 deg
-          lat: 22.014 deg
-          radius: 1 deg
-          border: 1 deg
-          # alternatively define the box search within a given variable
-          # filter_type "par_box" and values with units for value_range
-          variable: ENERGY
-          value_range: [1 TeV, 100 TeV]
-          # alternatively define the search for a specific value
-          # filter_type "par_value" with value_param parameter
-          value_param: Crab    # used for i.e variable TARGET
-          # alternatively choose a list of specific observations
-          # filter_type "ids" providing a list of identifiers in obs_ids
-          obs_ids: [23523, 23526]
-          inverted: false      # true for not matching criteria
-          exclude: false       # true to exclude matched observations
+    datastore: $GAMMAPY_DATA/hess-dl3-dr1/
+    obs_ids: [23523, 23526]
+    obs_file:   # csv file with obs_ids
+    # spatial /time filters applied on the obs_ids
+    obs_cone: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
+    obs_time: {start: "2019-12-01", stop: "2020-03-01"}
 
 # Section: datasets
-# Process of data reduction
+# Process of data reduction / mandatory
 datasets:
-    dataset-type: SpectrumDatasetOnOff   # also MapDataset
-    stack-datasets: false
-    # parameters for the estimation of the background if SpectrumDatasetOnOff
-    background:
-        background_estimator: reflected
-        exclusion_mask:
-            filename: mask.fits
-            hdu: IMAGE
-    containment_correction: true
-    # geometry settings
+    type: 3d   # also 1d
+    stack: false
     geom:
-        # on region in spectrum extraction
-        region:
-            center: [83.633 deg, 22.014 deg]
-            frame: icrs        # or galactic
-            radius: 0.1 deg
-        # spatial geometry ofr 2d maps
-        binsz: 0.02             # map pixel size in degrees
-        coordsys: CEL           # coordinate system also GAL
-        proj: CAR               # any valid WCS projection type
-        skydir: [83, 22]        # lon and lat in deg in the coordsys of the map
-        width: [5, 5]           # width of the map in degrees
-        # additional axes other than spatial
-        # example values for energy axis
+        wcs:
+            skydir: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg}
+            binsize: 0.1 deg
+            fov: {width: 7 deg, height: 5 deg}
+            binsize_irf: 0.1 deg
+            margin_irf: 0.1 deg
+        selection:
+            offset_max: 2.5 deg
         axes:
-            - name: energy
-              lo_bnd: 0.01
-              hi_bnd: 100
-              nbin: 73
-              unit: TeV
-              interp: log
-    energy-axis-true:
-        name: energy
-        lo_bnd: 0.01
-        hi_bnd: 100
-        nbin: 73
-        unit: TeV
-        interp: log
-    binsz-irf: 0.02             # IRF map pixel size in degrees
-    margin-irf: 0.05            # IRF map pixel size in degrees
+            energy: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
+            energy_true: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
+    background:
+        method: reflected
+        exclusion:    # fits file for exclusion mask
+    on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
+    containment_correction: true
+    psf_kernel_radius: 0.6 deg
 
 # Section: fit
-# Fitting process
+# Fitting process / optional
 fit:
-    fit_range:
-        min: 1 TeV
-        max: 100 TeV
+    fit_range: {min: 0.1 TeV, max: 10 TeV}
 
-# Section: flux-points
-# Flux estimation process
-flux-points:
-    fp_binning:
-        lo_bnd: 1
-        hi_bnd: 10
-        nbin: 11
-        unit: TeV
-        interp: log
-        node_type: edges
+# Section: flux_points
+# Flux estimation process /optional
+flux_points:
+    energy: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
