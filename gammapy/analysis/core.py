@@ -337,15 +337,14 @@ class Analysis:
     @staticmethod
     def _make_energy_axis(axis):
         """Helper method to build an energy axis."""
-        axis_params = dict(name="energy",
-                           lo_bnd=axis.min.value,
-                           hi_bnd=axis.max.value,
-                           nbin=axis.nbins,
-                           unit=axis.min.unit,
-                           interp="log",
-                           node_type="edges")
-        energy_axis = MapAxis.from_bounds(**axis_params)
-        return energy_axis
+        return MapAxis.from_bounds(
+            name="energy",
+            lo_bnd=axis.min.value,
+            hi_bnd=axis.max.value,
+            nbin=axis.nbins,
+            unit=axis.min.unit,
+            interp="log",
+            node_type="edges")
 
     def _validate_observations_settings(self):
         """Validate settings before proceeding to observations selection."""
