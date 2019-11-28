@@ -1428,8 +1428,8 @@ class MapEvaluator:
             self.psf = psf.get_psf_kernel(
                 self.model.position, geom=exposure.geom, max_radius=0.8 * u.deg
             )
-        # else:
-        #    self.psf = psf
+        else:
+            self.psf = psf
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
