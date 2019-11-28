@@ -12,11 +12,7 @@ from gammapy.cube import (
 from gammapy.data import EventList
 from gammapy.maps import WcsNDMap
 from gammapy.modeling.models import BackgroundModel
-from gammapy.modeling.models import (
-    ConstantTemporalModel,
-    LightCurveTemplateTemporalModel,
-    PhaseCurveTemplateTemporalModel,
-)
+from gammapy.modeling.models import ConstantTemporalModel
 
 from gammapy.utils.random import get_random_state
 
@@ -115,10 +111,11 @@ class MapDatasetEventSampler:
 
     def sample_background(self, dataset):
         """Sample background
+
         Parameters
         ----------
         dataset : `MapDataset`
-        Map dataset.
+            Map dataset.
 
         Returns
         -------
@@ -133,20 +130,18 @@ class MapDatasetEventSampler:
         # sample position
         coords = background.sample_coord(n_events, self.random_state)
         table["ENERGY"] = coords["energy"]
-        table["RA"] = coords["lon"]
-        table["DEC"] = coords["lat"]
+        table["RA"] = coords.skycoord.icrs.ra.deg
+        table["DEC"] = coords.skycoord.icrs.dec.deg
         table["MC_ID"] = 0
 
         # sample time
-        t_start, t_stop, t_ref = (
+        time_start, time_stop, time_ref = (
             dataset.gti.time_start,
             dataset.gti.time_stop,
             dataset.gti.time_ref,
         )
         model = ConstantTemporalModel()
-        time = model.sample_time(n_events, t_start, t_stop, self.random_state)
-        table["TIME"] = u.Quantity(
-            ((time.mjd - dataset.gti.time_ref.mjd) * u.day).to(u.s)
-        ).value
+        time = model.sample_time(n_events, time_start, time_stop, self.random_state)
+        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).value
 
         return EventList(table)

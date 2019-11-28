@@ -63,20 +63,11 @@ def test_simulate():
     assert_allclose(dataset.edisp.data.data[10, 10], 0.85944298, rtol=1e-5)
 
 
+@requires_data()
 def dataset_maker():
     position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
     energy_axis = MapAxis.from_bounds(
         1, 100, nbin=30, unit="TeV", name="energy", interp="log"
-    )
-
-    exposure = Map.create(
-        binsz=0.02,
-        map_type="wcs",
-        skydir=position,
-        width="2 deg",
-        axes=[energy_axis],
-        coordsys="GAL",
-        unit="cm2 s",
     )
 
     spatial_model = GaussianSpatialModel(
@@ -90,7 +81,6 @@ def dataset_maker():
         skydir=position, binsz=0.02, width="5 deg", coordsys="GAL", axes=[energy_axis]
     )
 
-    t_ref = Time("2010-01-01T00:00:00")
     t_min = 0 * u.s
     t_max = 30000 * u.s
 
@@ -111,6 +101,6 @@ def test_MDE_sample_background():
 
     assert len(bkg_evt.table["ENERGY"]) == 375084
     assert_allclose(bkg_evt.table["ENERGY"][0], 2.1613281656472028, rtol=1e-5)
-    assert_allclose(bkg_evt.table["RA"][0], 0.7167667097717688, rtol=1e-5)
-    assert_allclose(bkg_evt.table["DEC"][0], 1.1422945173936792, rtol=1e-5)
+    assert_allclose(bkg_evt.table["RA"][0], 265.7253792887848, rtol=1e-5)
+    assert_allclose(bkg_evt.table["DEC"][0], -27.727581635186304, rtol=1e-5)
     assert_allclose(bkg_evt.table["MC_ID"][0], 0, rtol=1e-5)
