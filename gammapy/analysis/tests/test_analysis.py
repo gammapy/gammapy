@@ -15,7 +15,7 @@ DOC_FILE = CONFIG_PATH / "docs.yaml"
 def test_config():
     config = AnalysisConfig()
     assert config.general.log.level == "info"
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         Analysis()
     assert "AnalysisConfig" in str(config)
 

@@ -52,7 +52,6 @@ def test_config_basics():
         "lon": "83.633 deg",
         "lat": "22.014 deg",
     }
-    # assert isinstance(config.datasets.geom.wcs.skydir, SkyCoord)
     assert isinstance(config.datasets.background.method, BackgroundMethodEnum)
     assert isinstance(config.datasets.geom.wcs.skydir.frame, FrameEnum)
     config.data.obs_time.start = "2019-12-01"

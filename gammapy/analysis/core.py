@@ -48,7 +48,7 @@ class Analysis:
         elif isinstance(config, AnalysisConfig):
             self._config = config
         else:
-            raise ValueError("Dict or `AnalysiConfig` object required.")
+            raise TypeError("config must be dict or AnalysisConfig.")
 
         self._set_logging()
         self.datastore = None
