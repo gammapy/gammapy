@@ -21,7 +21,7 @@ def test_config():
 
 
 def test_docs_file():
-    config = AnalysisConfig.from_yaml(DOC_FILE)
+    config = AnalysisConfig.from_yaml(filename=DOC_FILE)
     assert config.general.outdir == "."
 
 
