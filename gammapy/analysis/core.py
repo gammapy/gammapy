@@ -50,7 +50,7 @@ class Analysis:
         else:
             raise TypeError("config must be dict or AnalysisConfig.")
 
-        self._set_logging()
+        self._config.set_logging()
         self.datastore = None
         self.observations = None
         self.datasets = None
@@ -268,12 +268,6 @@ class Analysis:
         dataset.psf = dataset.psf.get_psf_kernel(
             position=position, geom=geom_psf, max_radius=max_radius
         )
-
-    def _set_logging(self):
-        """Set logging parameters for API."""
-        self.config.general.log.level = self.config.general.log.level.upper()
-        logging.basicConfig(**self.config.general.log.dict())
-        log.info("Setting logging config: {!r}".format(self.config.general.log.dict()))
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""

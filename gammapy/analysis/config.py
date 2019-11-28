@@ -236,12 +236,11 @@ class AnalysisConfig(GammapyBaseConfig):
         else:
             return yaml.dump(yaml.safe_load(self.json()), sort_keys=False, indent=4)
 
-    def help(self, section=""):
-        """Print template configuration settings."""
-        doc = self._get_doc_sections()
-        for keyword in doc.keys():
-            if section == "" or section == keyword:
-                print(doc[keyword])
+    def set_logging(self):
+        """Set logging parameters for API."""
+        self.general.log.level = self.general.log.level.upper()
+        logging.basicConfig(**self.general.log.dict())
+        log.info("Setting logging config: {!r}".format(self.general.log.dict()))
 
     def update(self, config=None, filename=""):
         """Updates config with provided settings.
@@ -268,6 +267,13 @@ class AnalysisConfig(GammapyBaseConfig):
                 self.dict(exclude_defaults=True), config.dict(exclude_defaults=True)
             )
             return AnalysisConfig(**upd_config)
+
+    def help(self, section=""):
+        """Print template configuration settings."""
+        doc = self._get_doc_sections()
+        for keyword in doc.keys():
+            if section == "" or section == keyword:
+                print(doc[keyword])
 
     @staticmethod
     def _get_doc_sections():
