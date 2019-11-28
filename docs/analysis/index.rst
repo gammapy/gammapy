@@ -125,11 +125,11 @@ The observations are stored as a list of `~gammapy.data.DataStoreObservation` ob
 .. code-block:: python
 
     >>> analysis.get_observations()
-    >>> analysis.observations.list
-        [<gammapy.data.observations.DataStoreObservation at 0x11e040320>,
-         <gammapy.data.observations.DataStoreObservation at 0x11153d550>,
-         <gammapy.data.observations.DataStoreObservation at 0x110a84160>,
-         <gammapy.data.observations.DataStoreObservation at 0x110a84b38>]
+    >>> list(analysis.observations)
+    [<gammapy.data.observations.DataStoreObservation at 0x11e040320>,
+     <gammapy.data.observations.DataStoreObservation at 0x11153d550>,
+     <gammapy.data.observations.DataStoreObservation at 0x110a84160>,
+     <gammapy.data.observations.DataStoreObservation at 0x110a84b38>]
 
 Data reduction and datasets
 ---------------------------
@@ -192,22 +192,22 @@ is stored in the ``flux_points`` property as a `~gammapy.spectrum.FluxPoints` ob
 .. code-block:: python
 
     >>> analysis.get_flux_points()
-        INFO:gammapy.analysis.analysis:Calculating flux points.
-        INFO:gammapy.analysis.analysis:
-              e_ref               ref_flux                 dnde                 dnde_ul                dnde_err        is_ul
-               TeV              1 / (cm2 s)          1 / (cm2 s TeV)        1 / (cm2 s TeV)        1 / (cm2 s TeV)
-        ------------------ ---------------------- ---------------------- ---------------------- ---------------------- -----
-        1.1364636663857248   5.82540193791155e-12 1.6945571729283257e-11 2.0092001005968464e-11  1.491004091925887e-12 False
-        1.3768571648527583 2.0986802770569557e-12 1.1137098968561381e-11 1.4371773951168255e-11  1.483696107656724e-12 False
-        1.6681005372000581 3.0592927032553813e-12  8.330762241576842e-12   9.97704078861513e-12  7.761855010963746e-13 False
-        2.1544346900318834  1.991366151205521e-12  3.749504881244244e-12  4.655825384923802e-12  4.218641798406146e-13 False
-        2.6101572156825363  7.174167397335237e-13 2.3532638339895766e-12 3.2547227459669707e-12   4.05804720903438e-13 False
-        3.1622776601683777 1.0457942646403696e-12 1.5707172671966065e-12 2.0110274930777325e-12 2.0291499028818014e-13 False
-         3.831186849557287 3.7676160725948056e-13  6.988070884720634e-13 1.0900735920193252e-12 1.6898704308171627e-13 False
-        4.6415888336127775  5.492137361542478e-13 4.2471136559991427e-13  6.095655421226728e-13  8.225678668637978e-14 False
-         5.994842503189405 3.5749624179174077e-13 2.2261366353081893e-13  3.350617464903039e-13  4.898878805758816e-14 False
-          7.26291750173621 1.2879288326657447e-13 2.5317668601400673e-13 4.0803852787540073e-13  6.601201499048379e-14 False
-          8.79922543569107  1.877442373267013e-13  7.097738087032472e-14  1.254638299336029e-13 2.2705519890120373e-14 False
+    INFO:gammapy.analysis.analysis:Calculating flux points.
+    INFO:gammapy.analysis.analysis:
+          e_ref               ref_flux                 dnde                 dnde_ul                dnde_err        is_ul
+           TeV              1 / (cm2 s)          1 / (cm2 s TeV)        1 / (cm2 s TeV)        1 / (cm2 s TeV)
+    ------------------ ---------------------- ---------------------- ---------------------- ---------------------- -----
+    1.1364636663857248   5.82540193791155e-12 1.6945571729283257e-11 2.0092001005968464e-11  1.491004091925887e-12 False
+    1.3768571648527583 2.0986802770569557e-12 1.1137098968561381e-11 1.4371773951168255e-11  1.483696107656724e-12 False
+    1.6681005372000581 3.0592927032553813e-12  8.330762241576842e-12   9.97704078861513e-12  7.761855010963746e-13 False
+    2.1544346900318834  1.991366151205521e-12  3.749504881244244e-12  4.655825384923802e-12  4.218641798406146e-13 False
+    2.6101572156825363  7.174167397335237e-13 2.3532638339895766e-12 3.2547227459669707e-12   4.05804720903438e-13 False
+    3.1622776601683777 1.0457942646403696e-12 1.5707172671966065e-12 2.0110274930777325e-12 2.0291499028818014e-13 False
+     3.831186849557287 3.7676160725948056e-13  6.988070884720634e-13 1.0900735920193252e-12 1.6898704308171627e-13 False
+    4.6415888336127775  5.492137361542478e-13 4.2471136559991427e-13  6.095655421226728e-13  8.225678668637978e-14 False
+     5.994842503189405 3.5749624179174077e-13 2.2261366353081893e-13  3.350617464903039e-13  4.898878805758816e-14 False
+      7.26291750173621 1.2879288326657447e-13 2.5317668601400673e-13 4.0803852787540073e-13  6.601201499048379e-14 False
+      8.79922543569107  1.877442373267013e-13  7.097738087032472e-14  1.254638299336029e-13 2.2705519890120373e-14 False
     >>> analysis.flux_points.peek()
 
 Residuals
@@ -218,14 +218,7 @@ for the source and/or the background.
 
 .. code-block:: python
 
-    >>> analysis.datasets.datasets[0].residuals()
-            geom  : WcsGeom
-            axes  : ['lon', 'lat', 'energy']
-            shape : (250, 250, 4)
-            ndim  : 3
-            unit  :
-            dtype : float64
-    >>> analysis.datasets.datasets[0].residuals()
+    >>> analysis.datasets[0].plot_residuals()
 
 Using the high-level interface
 ------------------------------

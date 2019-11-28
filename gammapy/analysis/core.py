@@ -43,14 +43,8 @@ class Analysis:
     """
 
     def __init__(self, config):
-        if isinstance(config, dict):
-            self._config = AnalysisConfig(**config)
-        elif isinstance(config, AnalysisConfig):
-            self._config = config
-        else:
-            raise TypeError("config must be dict or AnalysisConfig.")
-
-        self._config.set_logging()
+        self.config = config
+        self.config.set_logging()
         self.datastore = None
         self.observations = None
         self.datasets = None
@@ -64,16 +58,25 @@ class Analysis:
         """Analysis configuration (`AnalysisConfig`)"""
         return self._config
 
+    @config.setter
+    def config(self, value):
+        if isinstance(value, dict):
+            self._config = AnalysisConfig(**value)
+        elif isinstance(value, AnalysisConfig):
+            self._config = value
+        else:
+            raise TypeError("config must be dict or AnalysisConfig.")
+
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
+        path = make_path(self.config.observations.datastore)
 
-        datastore_path = make_path(self.config.observations.datastore)
-        if datastore_path.is_file():
-            self.datastore = DataStore().from_file(datastore_path)
-        elif datastore_path.is_dir():
-            self.datastore = DataStore().from_dir(datastore_path)
+        if path.is_file():
+            self.datastore = DataStore.from_file(path)
+        elif path.is_dir():
+            self.datastore = DataStore.from_dir(path)
         else:
-            raise FileNotFoundError(f"Datastore {datastore_path} not found.")
+            raise FileNotFoundError(f"Datastore not found: {path}")
 
         log.info("Fetching observations.")
         data_settings = self.config.observations
@@ -114,8 +117,10 @@ class Analysis:
 
         if self.config.datasets.type == "1d":
             self._spectrum_extraction()
-        else:
+        elif self.config.datasets.type == "3d":
             self._map_making()
+        else:
+            ValueError(f"Invalid dataset type: {self.config.datasets.type}")
 
     def set_model(self, model=None, filename=""):
         """Read the model from dict or filename and attach it to datasets.
@@ -128,11 +133,12 @@ class Analysis:
             Name of the model YAML file describing the model.
         """
         if not self.datasets or len(self.datasets) == 0:
-            raise RuntimeError("No datasets have been reduced.")
+            raise RuntimeError("Missing datasets")
 
         log.info(f"Reading model.")
         if isinstance(model, str):
             model = yaml.safe_load(model)
+
         if model:
             self.model = SkyModels(dict_to_models(model))
         elif filename:
@@ -140,25 +146,28 @@ class Analysis:
             self.model = SkyModels.from_yaml(filepath)
         else:
             return False
+
         for dataset in self.datasets:
             dataset.model = self.model
+
         log.info(self.model)
 
     def run_fit(self, optimize_opts=None):
         """Fitting reduced datasets to model."""
         if not self.model:
-            raise RuntimeError("No model attached to datasets.")
+            raise RuntimeError("Missing model")
 
         fit_settings = self.config.fit
-        for ds in self.datasets:
+        for dataset in self.datasets:
             if fit_settings.fit_range:
                 e_min = fit_settings.fit_range.min
                 e_max = fit_settings.fit_range.max
-                if isinstance(ds, MapDataset):
-                    ds.mask_fit = ds.counts.geom.energy_mask(e_min, e_max)
+                if isinstance(dataset, MapDataset):
+                    dataset.mask_fit = dataset.counts.geom.energy_mask(e_min, e_max)
                 else:
-                    ds.mask_fit = ds.counts.energy_mask(e_min, e_max)
-        log.info("Fitting reduced datasets.")
+                    dataset.mask_fit = dataset.counts.energy_mask(e_min, e_max)
+
+        log.info("Fitting datasets.")
         self.fit = Fit(self.datasets)
         self.fit_result = self.fit.run(optimize_opts=optimize_opts)
         log.info(self.fit_result)
@@ -188,7 +197,7 @@ class Analysis:
         log.info("\n{}".format(self.flux_points.data.table[cols]))
 
     def update_config(self, config):
-        self._config = self._config.update(config=config)
+        self.config = self.config.update(config=config)
 
     def _create_geometry(self):
         """Create the geometry."""
@@ -313,6 +322,7 @@ class Analysis:
             datasets.append(dataset)
 
         self.datasets = Datasets(datasets)
+
         if self.config.datasets.stack:
             stacked = self.datasets.stack_reduce()
             stacked.name = "stacked"
@@ -320,11 +330,10 @@ class Analysis:
 
     @staticmethod
     def _make_energy_axis(axis):
-        """Helper method to build an energy axis."""
         return MapAxis.from_bounds(
             name="energy",
             lo_bnd=axis.min.value,
-            hi_bnd=axis.max.value,
+            hi_bnd=axis.max.to_value(axis.min.unit),
             nbin=axis.nbins,
             unit=axis.min.unit,
             interp="log",
