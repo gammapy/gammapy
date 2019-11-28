@@ -68,7 +68,7 @@ class BackgroundMethodEnum(str, Enum):
     reflected = "reflected"
 
 
-class GammapyBaseModel(BaseModel):
+class GammapyBaseConfig(BaseModel):
     class Config:
         validate_all = True
         validate_assignment = True
@@ -80,95 +80,95 @@ class GammapyBaseModel(BaseModel):
         }
 
 
-class SkyCoordConfig(GammapyBaseModel):
+class SkyCoordConfig(GammapyBaseConfig):
     frame: FrameEnum = None
     lon: AngleType = None
     lat: AngleType = None
 
 
-class EnergyAxisConfig(GammapyBaseModel):
+class EnergyAxisConfig(GammapyBaseConfig):
     min: EnergyType = "0.1 TeV"
     max: EnergyType = "10 TeV"
     nbins: int = 30
 
 
-class SpatialCircleRange(GammapyBaseModel):
+class SpatialCircleRangeConfig(GammapyBaseConfig):
     frame: FrameEnum = None
     lon: AngleType = None
     lat: AngleType = None
     radius: AngleType = None
 
 
-class EnergyRange(GammapyBaseModel):
+class EnergyRangeConfig(GammapyBaseConfig):
     min: EnergyType = "0.1 TeV"
     max: EnergyType = "10 TeV"
 
 
-class TimeRange(GammapyBaseModel):
+class TimeRangeConfig(GammapyBaseConfig):
     start: TimeType = None
     stop: TimeType = None
 
 
-class FluxPoints(GammapyBaseModel):
+class FluxPointsConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig()
 
 
-class Fit(GammapyBaseModel):
-    fit_range: EnergyRange = EnergyRange()
+class FitConfig(GammapyBaseConfig):
+    fit_range: EnergyRangeConfig = EnergyRangeConfig()
 
 
-class Background(GammapyBaseModel):
+class BackgroundConfig(GammapyBaseConfig):
     method: BackgroundMethodEnum = BackgroundMethodEnum.reflected
     exclusion: FilePath = None
 
 
-class Axes(GammapyBaseModel):
+class AxesConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig()
     energy_true: EnergyAxisConfig = EnergyAxisConfig()
 
 
-class Selection(GammapyBaseModel):
+class SelectionConfig(GammapyBaseConfig):
     offset_max: AngleType = "2.5 deg"
 
 
-class Fov(GammapyBaseModel):
+class FovConfig(GammapyBaseConfig):
     width: AngleType = "5 deg"
     height: AngleType = "5 deg"
 
 
-class Wcs(GammapyBaseModel):
+class WcsConfig(GammapyBaseConfig):
     skydir: SkyCoordConfig = SkyCoordConfig()
     binsize: AngleType = "0.1 deg"
-    fov: Fov = Fov()
+    fov: FovConfig = FovConfig()
     binsize_irf: AngleType = "0.1 deg"
     margin_irf: AngleType = "0.1 deg"
 
 
-class Geom(GammapyBaseModel):
-    wcs: Wcs = Wcs()
-    selection: Selection = Selection()
-    axes: Axes = Axes()
+class GeomConfig(GammapyBaseConfig):
+    wcs: WcsConfig = WcsConfig()
+    selection: SelectionConfig = SelectionConfig()
+    axes: AxesConfig = AxesConfig()
 
 
-class Datasets(GammapyBaseModel):
+class DatasetsConfig(GammapyBaseConfig):
     type: ReductionTypeEnum = ReductionTypeEnum.spectrum
     stack: bool = True
-    geom: Geom = Geom()
-    background: Background = Background()
-    on_region: SpatialCircleRange = SpatialCircleRange()
+    geom: GeomConfig = GeomConfig()
+    background: BackgroundConfig = BackgroundConfig()
+    on_region: SpatialCircleRangeConfig = SpatialCircleRangeConfig()
     containment_correction: bool = True
     psf_kernel_radius: AngleType = "0.6 deg"
 
 
-class Data(GammapyBaseModel):
+class ObservationsConfig(GammapyBaseConfig):
     datastore: Path = Path("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids: List[int] = []
     obs_file: FilePath = None
-    obs_cone: SpatialCircleRange = SpatialCircleRange()
-    obs_time: TimeRange = TimeRange()
+    obs_cone: SpatialCircleRangeConfig = SpatialCircleRangeConfig()
+    obs_time: TimeRangeConfig = TimeRangeConfig()
 
 
-class Log(GammapyBaseModel):
+class LogConfig(GammapyBaseConfig):
     level: str = "info"
     filename: Path = None
     filemode: str = None
@@ -176,19 +176,19 @@ class Log(GammapyBaseModel):
     datefmt: str = None
 
 
-class General(GammapyBaseModel):
-    log: Log = Log()
+class GeneralConfig(GammapyBaseConfig):
+    log: LogConfig = LogConfig()
     outdir: str = "."
 
 
-class AnalysisConfig(GammapyBaseModel):
+class AnalysisConfig(GammapyBaseConfig):
     """Config class handling the high-level interface settings."""
 
-    general: General = General()
-    data: Data = Data()
-    datasets: Datasets = Datasets()
-    fit: Fit = Fit()
-    flux_points: FluxPoints = FluxPoints()
+    general: GeneralConfig = GeneralConfig()
+    observations: ObservationsConfig = ObservationsConfig()
+    datasets: DatasetsConfig = DatasetsConfig()
+    fit: FitConfig = FitConfig()
+    flux_points: FluxPointsConfig = FluxPointsConfig()
 
     @classmethod
     def from_template(cls, template):

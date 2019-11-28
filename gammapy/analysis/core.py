@@ -67,7 +67,7 @@ class Analysis:
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
 
-        datastore_path = make_path(self.config.data.datastore)
+        datastore_path = make_path(self.config.observations.datastore)
         if datastore_path.is_file():
             self.datastore = DataStore().from_file(datastore_path)
         elif datastore_path.is_dir():
@@ -76,15 +76,15 @@ class Analysis:
             raise FileNotFoundError(f"Datastore {datastore_path} not found.")
 
         log.info("Fetching observations.")
-        data_settings = self.config.data
+        data_settings = self.config.observations
         selected_obs = ObservationTable()
         obs_list = self.datastore.get_observations()
-        if len(self.config.data.obs_ids):
+        if len(self.config.observations.obs_ids):
             obs_list = self.datastore.get_observations(data_settings.obs_ids)
         selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
         ids = selected_obs["OBS_ID"].tolist()
         # TODO
-        # if self.config.data.obs_file:
+        # if self.config.observations.obs_file:
         # add obs_ids from file
         # ids.extend(selected_obs["OBS_ID"].tolist())
         if data_settings.obs_cone.lon is not None:
@@ -100,7 +100,7 @@ class Analysis:
             selected_cone = self.datastore.obs_table.select_observations(cone)
             ids = list(set(ids) & set(selected_cone["OBS_ID"].tolist()))
         # TODO
-        # if self.config.data.obs_time.start is not None:
+        # if self.config.observations.obs_time.start is not None:
         # filter obs_ids with time filter
         self.observations = self.datastore.get_observations(ids, skip_missing=True)
         log.info(f"{len(self.observations.list)} observations were selected.")

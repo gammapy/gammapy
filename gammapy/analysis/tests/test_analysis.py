@@ -44,13 +44,13 @@ def test_update_config():
 def test_get_observations():
     config = AnalysisConfig()
     analysis = Analysis(config)
-    analysis.config.data.datastore = "other"
+    analysis.config.observations.datastore = "other"
     with pytest.raises(FileNotFoundError):
         analysis.get_observations()
-    analysis.config.data.datastore = "$GAMMAPY_DATA/cta-1dc/index/gps/"
+    analysis.config.observations.datastore = "$GAMMAPY_DATA/cta-1dc/index/gps/"
     analysis.get_observations()
     assert len(analysis.observations) == 4
-    analysis.config.data.obs_ids = ["110380"]
+    analysis.config.observations.obs_ids = ["110380"]
     analysis.get_observations()
     assert len(analysis.observations) == 1
     config = AnalysisConfig.from_template("1d")
@@ -77,7 +77,7 @@ def test_set_model():
 @requires_data()
 def test_analysis_1d():
     cfg = """
-    data:
+    observations:
         datastore: $GAMMAPY_DATA/hess-dl3-dr1
         obs_ids: [23523, 23526]
     datasets:

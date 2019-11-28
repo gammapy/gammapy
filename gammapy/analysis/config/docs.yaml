@@ -14,7 +14,7 @@ general:
 
 # Section: data
 # Observations used in the analysis / mandatory
-data:
+observations:
     # path to data store where to fetch observations
     datastore: $GAMMAPY_DATA/hess-dl3-dr1/
     obs_ids: [23523, 23526]

@@ -6,7 +6,7 @@ general:
         filemode: w
     outdir: .
 
-data:
+observations:
     datastore: $GAMMAPY_DATA/hess-dl3-dr1/
     obs_ids: [23523, 23526]
     obs_file:                             # csv file with obs_ids
