@@ -999,9 +999,9 @@ class MapDatasetOnOff(MapDataset):
         Counts cube
     counts_off : `~gammapy.maps.WcsNDMap`
         Ring-convolved counts cube
-    acceptance : `~gammapy.maps.WcsNDMap` or float
+    acceptance : `~gammapy.maps.WcsNDMap`
         Acceptance from the IRFs
-    acceptance_off : `~gammapy.maps.WcsNDMap` or float
+    acceptance_off : `~gammapy.maps.WcsNDMap`
         Acceptance off
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
