@@ -205,7 +205,7 @@ class AnalysisConfig(GammapyBaseConfig):
             AnalysisConfig class
         """
         filename = CONFIG_PATH / ANALYSIS_TEMPLATES[template]
-        return cls.from_yaml(filename=filename)
+        return cls.read(filename)
 
     def __str__(self):
         """Display settings in pretty YAML format."""
@@ -217,24 +217,26 @@ class AnalysisConfig(GammapyBaseConfig):
         return info.expandtabs(tabsize=4)
 
     @classmethod
-    def from_yaml(cls, settings="", filename=None):
-        config = yaml.safe_load(settings)
-        if filename:
-            config = read_yaml(filename)
-        return AnalysisConfig(**config)
+    def read(cls, filename):
+        config = read_yaml(filename)
+        return cls.from_yaml(config)
 
-    def to_yaml(self, filename=None, overwrite=False):
-        if filename:
-            fname = Path(filename).name
-            fpath = Path(self.general.outdir) / fname
-            if fpath.exists() and not overwrite:
-                raise IOError(f"File {filename} already exists.")
-            fpath.write_text(
-                yaml.dump(yaml.safe_load(self.json()), sort_keys=False, indent=4)
-            )
-            log.info(f"Configuration settings saved into {fpath}")
-        else:
-            return yaml.dump(yaml.safe_load(self.json()), sort_keys=False, indent=4)
+    @classmethod
+    def from_yaml(cls, settings):
+        if isinstance(settings, str):
+            settings = yaml.safe_load(settings)
+        return AnalysisConfig(**settings)
+
+    def write(self, filename, overwrite=False):
+        fname = Path(filename).name
+        fpath = Path(self.general.outdir) / fname
+        if fpath.exists() and not overwrite:
+            raise IOError(f"File {filename} already exists.")
+        fpath.write_text(self.to_yaml())
+        log.info(f"Configuration settings saved into {fpath}")
+
+    def to_yaml(self):
+        return yaml.dump(yaml.safe_load(self.json()), sort_keys=False, indent=4)
 
     def set_logging(self):
         """Set logging parameters for API."""

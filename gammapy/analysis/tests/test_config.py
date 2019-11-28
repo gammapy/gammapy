@@ -56,7 +56,7 @@ def test_config_basics():
     config = AnalysisConfig()
     assert "AnalysisConfig" in str(config)
     assert config.help() is None
-    config = AnalysisConfig.from_yaml(filename=DOC_FILE)
+    config = AnalysisConfig.read(DOC_FILE)
     assert config.general.outdir == "."
 
 
@@ -67,7 +67,10 @@ def test_config_create_from_dict():
 
 
 def test_config_create_from_yaml():
-    config = AnalysisConfig.from_yaml(filename=CONFIG_FILE)
+    config = AnalysisConfig.read(CONFIG_FILE)
+    assert isinstance(config.general, GeneralConfig)
+    config_str = Path(CONFIG_FILE).read_text()
+    config = AnalysisConfig.from_yaml(config_str)
     assert isinstance(config.general, GeneralConfig)
 
 
@@ -78,8 +81,8 @@ def test_config_to_yaml(tmp_path):
     filename = "temp.yaml"
     config = AnalysisConfig()
     config.general.outdir = str(tmp_path)
-    config.to_yaml(filename=filename)
+    config.write(filename)
     text = (tmp_path / filename).read_text()
     assert "stack" in text
     with pytest.raises(IOError):
-        config.to_yaml(filename=filename)
+        config.write(filename)

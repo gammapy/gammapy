@@ -44,8 +44,8 @@ them into a file that you can edit to start a new analysis from the modified con
 .. code-block:: python
 
     >>> print(config)
-    >>> config.to_yaml("config.yaml")
-    >>> config = AnalysisConfig.from_yaml(filename="config.yaml")
+    >>> config.write("config.yaml")
+    >>> config = AnalysisConfig.read("config.yaml")
 
 You may choose a predefined **configuration template** for your configuration. If no
 value for the configuration template is provided, the ``basic`` template will be used by
@@ -55,8 +55,8 @@ configuration from the modified file.
 .. code-block:: python
 
     >>> config = AnalysisConfig.from_template("1d")
-    >>> config.to_yaml("config.yaml")
-    >>> config = AnalysisConfig.from_yaml(filename="config.yaml")
+    >>> config.write("config.yaml")
+    >>> config = AnalysisConfig.read("config.yaml")
 
 You could also have started with a built-in analysis configuration and extend it with
 with your custom settings declared in a Python nested dictionary. Note how the nested
