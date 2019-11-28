@@ -675,12 +675,12 @@ class MapDataset(Dataset):
                 ]
 
         if self.mask_safe is not None:
-            mask_safe_int = self.mask_safe
+            mask_safe_int = self.mask_safe.copy()
             mask_safe_int.data = mask_safe_int.data.astype(int)
             hdulist += mask_safe_int.to_hdulist(hdu="mask_safe")[exclude_primary]
 
         if self.mask_fit is not None:
-            mask_fit_int = self.mask_fit
+            mask_fit_int = self.mask_fit.copy()
             mask_fit_int.data = mask_fit_int.data.astype(int)
             hdulist += mask_fit_int.to_hdulist(hdu="mask_fit")[exclude_primary]
 
