@@ -83,11 +83,14 @@ class Analysis:
         # ids.extend(selected_obs["OBS_ID"].tolist())
         if data_settings.obs_cone.lon is not None:
             # TODO remove border keyword
-            cone = dict(type='sky_circle', frame=data_settings.obs_cone.frame,
-                             lon=data_settings.obs_cone.lon,
-                             lat=data_settings.obs_cone.lat,
-                             radius=data_settings.obs_cone.radius,
-                             border="1 deg")
+            cone = dict(
+                type="sky_circle",
+                frame=data_settings.obs_cone.frame,
+                lon=data_settings.obs_cone.lon,
+                lat=data_settings.obs_cone.lat,
+                radius=data_settings.obs_cone.radius,
+                border="1 deg",
+            )
             selected_cone = self.datastore.obs_table.select_observations(cone)
             ids = list(set(ids) & set(selected_cone["OBS_ID"].tolist()))
         # TODO
@@ -214,7 +217,9 @@ class Analysis:
         geom_settings = self.config.datasets.geom
         skydir_settings = geom_settings.wcs.skydir
         if skydir_settings.lon is not None:
-            skydir = SkyCoord(skydir_settings.lon, skydir_settings.lat, frame=skydir_settings.frame)
+            skydir = SkyCoord(
+                skydir_settings.lon, skydir_settings.lat, frame=skydir_settings.frame
+            )
             geom_params["skydir"] = skydir
         if skydir_settings.frame == "icrs":
             geom_params["coordsys"] = "CEL"
@@ -236,7 +241,9 @@ class Analysis:
         geom_settings = self.config.datasets.geom
         geom_irf = dict(energy_axis_true=None, binsz_irf=None, margin_irf=None)
         if geom_settings.axes.energy_true.min is not None:
-            geom_irf["energy_axis_true"] = self._make_energy_axis(geom_settings.axes.energy_true)
+            geom_irf["energy_axis_true"] = self._make_energy_axis(
+                geom_settings.axes.energy_true
+            )
         geom_irf["binsz_irf"] = geom_settings.wcs.binsize_irf.to("deg").value
         geom_irf["margin_irf"] = geom_settings.wcs.margin_irf.to("deg").value
         offset_max = geom_settings.selection.offset_max
@@ -300,7 +307,9 @@ class Analysis:
 
         maker_config = {}
         if datasets_settings.containment_correction:
-            maker_config["containment_correction"] = datasets_settings.containment_correction
+            maker_config[
+                "containment_correction"
+            ] = datasets_settings.containment_correction
         e_reco = self._make_energy_axis(datasets_settings.geom.axes.energy).edges
         maker_config["e_reco"] = e_reco
         # TODO: remove hard-coded e_true and make it configurable
@@ -322,7 +331,9 @@ class Analysis:
             dataset = dataset_maker.run(obs, selection=selection)
             dataset = bkg_maker.run(dataset, obs)
             if dataset.counts_off is None:
-                log.info(f"No OFF region found for observation {obs.obs_id}. Discarding.")
+                log.info(
+                    f"No OFF region found for observation {obs.obs_id}. Discarding."
+                )
                 continue
             dataset = safe_mask_maker.run(dataset, obs)
             log.debug(dataset)
@@ -344,7 +355,8 @@ class Analysis:
             nbin=axis.nbins,
             unit=axis.min.unit,
             interp="log",
-            node_type="edges")
+            node_type="edges",
+        )
 
     def _validate_observations_settings(self):
         """Validate settings before proceeding to observations selection."""

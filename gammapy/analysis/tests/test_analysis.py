@@ -44,7 +44,7 @@ def test_update():
 
     analysis = Analysis(cfg)
     data = """
-    general: 
+    general:
         outdir: test
     """
     analysis.update_config(data)
