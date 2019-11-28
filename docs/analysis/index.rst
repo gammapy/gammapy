@@ -136,7 +136,7 @@ Data reduction and datasets
 
 The data reduction process needs a choice of a dataset type, declared as ``1d`` or ``3d``
 in the ``datasets`` section of the settings. For the estimation of the background in a ``1d``
-use case, a background ``method`` is needed, other parameters related like the ``onregion``
+use case, a background ``method`` is needed, other parameters related like the ``on_region``
 and ``exclusion`` FITS file may be also present. Parameters for geometry are also needed and
 declared in this section, as well as a boolean flag ``stack``.
 

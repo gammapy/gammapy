@@ -90,7 +90,7 @@ def config_analysis_data():
         type: 1d
         background:
             method: reflected
-        onregion: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
+        on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
         containment_correction: false
     flux_points:
         energy: {min: 1 TeV, max: 50 TeV, nbins: 4}

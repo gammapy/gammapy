@@ -300,10 +300,10 @@ class Analysis:
         """Run all steps for the spectrum extraction."""
         log.info("Reducing spectrum datasets.")
         datasets_settings = self.config.datasets
-        on_lon = datasets_settings.onregion.lon
-        on_lat = datasets_settings.onregion.lat
-        on_center = SkyCoord(on_lon, on_lat, frame=datasets_settings.onregion.frame)
-        on_region = CircleSkyRegion(on_center, datasets_settings.onregion.radius)
+        on_lon = datasets_settings.on_region.lon
+        on_lat = datasets_settings.on_region.lat
+        on_center = SkyCoord(on_lon, on_lat, frame=datasets_settings.on_region.frame)
+        on_region = CircleSkyRegion(on_center, datasets_settings.on_region.radius)
 
         maker_config = {}
         if datasets_settings.containment_correction:

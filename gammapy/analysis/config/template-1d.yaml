@@ -11,7 +11,7 @@ datasets:
             energy: {min: 0.01 TeV, max: 100 TeV, nbins: 73}
     background:
         method: reflected
-    onregion: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.1 deg}
+    on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.1 deg}
     containment_correction: true
     psf_kernel_radius: 0.6 deg
 

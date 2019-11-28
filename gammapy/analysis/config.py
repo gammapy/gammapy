@@ -155,7 +155,7 @@ class Datasets(GammapyBaseModel):
     stack: bool = True
     geom: Geom = Geom()
     background: Background = Background()
-    onregion: SpatialCircleRange = SpatialCircleRange()
+    on_region: SpatialCircleRange = SpatialCircleRange()
     containment_correction: bool = True
     psf_kernel_radius: AngleType = "0.6 deg"
 

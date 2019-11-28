@@ -49,7 +49,7 @@ datasets:
         method: reflected
         exclusion:    # fits file for exclusion mask
     # mandatory for 1d
-    onregion: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
+    on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
     containment_correction: true
     psf_kernel_radius: 0.6 deg
 
