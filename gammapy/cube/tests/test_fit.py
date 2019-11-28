@@ -9,7 +9,7 @@ from gammapy.cube import (
     EDispMap,
     MapDataset,
     MapDatasetOnOff,
-    PSFKernel,
+    PSFMap,
     make_map_exposure_true_energy,
 )
 from gammapy.data import GTI
@@ -75,15 +75,15 @@ def get_exposure(geom_etrue):
     return exposure_map
 
 
-def get_psf(geom_etrue):
+def get_psf():
     filename = (
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
-    psf_kernel = PSFKernel.from_table_psf(table_psf, geom_etrue, max_radius=0.5 * u.deg)
-    return psf_kernel
+    psf_map = PSFMap.from_energy_dependent_table_psf(table_psf)
+    return psf_map
 
 
 @pytest.fixture
@@ -104,7 +104,7 @@ def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, **kwargs):
     m.quantity = 0.2 * np.ones(m.data.shape)
     background_model = BackgroundModel(m)
 
-    psf = get_psf(geom_etrue)
+    psf = get_psf()
     exposure = get_exposure(geom_etrue)
 
     if edisp:
@@ -238,8 +238,10 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
         "EDISP_BANDS",
         "EDISP_EXPOSURE",
         "EDISP_EXPOSURE_BANDS",
-        "PSF_KERNEL",
-        "PSF_KERNEL_BANDS",
+        "PSF",
+        "PSF_BANDS",
+        "PSF_EXPOSURE",
+        "PSF_EXPOSURE_BANDS",
         "MASK_SAFE",
         "MASK_SAFE_BANDS",
         "MASK_FIT",
@@ -260,7 +262,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
         dataset.background_model.map.data, dataset_new.background_model.map.data
     )
     assert_allclose(dataset.edisp.edisp_map.data, dataset_new.edisp.edisp_map.data)
-    assert_allclose(dataset.psf.data, dataset_new.psf.data)
+    assert_allclose(dataset.psf.psf_map.data, dataset_new.psf.psf_map.data)
     assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
     assert_allclose(dataset.mask_fit.data, dataset_new.mask_fit.data)
     assert_allclose(dataset.mask_safe.data, dataset_new.mask_safe.data)

@@ -1418,20 +1418,23 @@ class MapEvaluator:
         log.debug("Updating model evaluator")
         # cache current position of the model component
 
-        # TODO: lookup correct Edisp for this component
         if isinstance(edisp, EDispMap):
             e_reco = geom.get_axis_by_name("energy").edges
             self.edisp = edisp.get_energy_dispersion(self.model.position, e_reco=e_reco)
         else:
             self.edisp = edisp
 
-        # TODO: lookup correct PSF for this component
-        self.psf = psf  # .get_psf_kernel(self.model.position, geom=exposure.geom)
+        if isinstance(psf, PSFMap):
+            self.psf = psf.get_psf_kernel(
+                self.model.position, geom=exposure.geom, max_radius=0.8 * u.deg
+            )
+        # else:
+        #    self.psf = psf
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
-            if psf is not None:
-                psf_width = np.max(psf.psf_kernel_map.geom.width)
+            if self.psf is not None:
+                psf_width = np.max(self.psf.psf_kernel_map.geom.width)
             else:
                 psf_width = 0 * u.deg
 

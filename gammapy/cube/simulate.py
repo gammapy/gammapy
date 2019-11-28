@@ -5,7 +5,7 @@ from astropy.table import Table
 import astropy.units as u
 from gammapy.cube import (
     MapDataset,
-    PSFKernel,
+    PSFMap,
     make_map_background_irf,
     make_map_exposure_true_energy,
 )
@@ -68,7 +68,7 @@ def simulate_dataset(
     background_model = BackgroundModel(background)
 
     psf = irfs["psf"].to_energy_dependent_table_psf(theta=offset)
-    psf_kernel = PSFKernel.from_table_psf(psf, geom, max_radius=max_radius)
+    psf_map = PSFMap.from_energy_dependent_table_psf(psf)
 
     exposure = make_map_exposure_true_energy(
         pointing=pointing, livetime=livetime, aeff=irfs["aeff"], geom=geom
@@ -84,7 +84,7 @@ def simulate_dataset(
         model=skymodel,
         exposure=exposure,
         background_model=background_model,
-        psf=psf_kernel,
+        psf=psf_map,
         edisp=edisp,
     )
 

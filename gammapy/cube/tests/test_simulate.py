@@ -58,7 +58,7 @@ def test_simulate():
     assert_allclose(
         dataset.background_model.map.data[5, 20, 20], 0.9765545345855245, rtol=1e-5
     )
-    assert_allclose(dataset.psf.data[5, 32, 32], 0.04203219)
+    assert_allclose(dataset.psf.psf_map.data[5, 5, 0, 0], 91987.862)
     assert_allclose(dataset.edisp.data.data[10, 10], 0.85944298, rtol=1e-5)
 
 
