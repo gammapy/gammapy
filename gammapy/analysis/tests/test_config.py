@@ -68,7 +68,7 @@ def test_config_create_from_dict():
 
 
 def test_config_create_from_yaml():
-    config = AnalysisConfig.from_yaml(CONFIG_FILE)
+    config = AnalysisConfig.from_yaml(filename=CONFIG_FILE)
     assert isinstance(config.general, General)
 
 
