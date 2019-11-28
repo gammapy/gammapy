@@ -236,6 +236,9 @@ class AnalysisConfig(GammapyBaseConfig):
         log.info(f"Configuration settings saved into {fpath}")
 
     def to_yaml(self):
+        # We need to call `json()` to trigger serialisation of custom fields,
+        # like e.g. Angle or Enum objects.
+        # https://pydantic-docs.helpmanual.io/usage/exporting_models/#modeljson
         return yaml.dump(yaml.safe_load(self.json()), sort_keys=False, indent=4)
 
     def set_logging(self):

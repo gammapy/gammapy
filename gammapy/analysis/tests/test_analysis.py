@@ -2,7 +2,10 @@
 from pathlib import Path
 import pytest
 from numpy.testing import assert_allclose
-import yaml
+from regions import CircleSkyRegion
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+from gammapy.maps import Map
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.modeling.models import SkyModels
 from gammapy.utils.testing import requires_data, requires_dependency
@@ -107,6 +110,25 @@ def test_analysis_1d():
 
     assert_allclose(dnde[0].value, 8.03604e-12, rtol=1e-2)
     assert_allclose(dnde[-1].value, 5.382879e-21, rtol=1e-2)
+
+
+@requires_data()
+def test_exclusion_region(tmp_path):
+    config = AnalysisConfig.from_template("1d")
+    analysis = Analysis(config)
+
+    skydir = SkyCoord(83, 22, unit="deg", frame="icrs")
+    exclusion_region = CircleSkyRegion(center=SkyCoord(85, 23, unit="deg", frame="icrs"), radius=1 * u.deg)
+    exclusion_mask = Map.create(npix=(150, 150), binsz=0.05, skydir=skydir, proj="TAN", coordsys="CEL")
+    mask = exclusion_mask.geom.region_mask([exclusion_region], inside=False)
+    exclusion_mask.data = mask.astype(int)
+    filename = tmp_path / "exclusion.fits"
+    exclusion_mask.write(filename)
+    config.datasets.background.exclusion = str(filename)
+
+    analysis.get_observations()
+    analysis.get_datasets()
+    assert len(analysis.datasets) == 4
 
 
 @requires_dependency("iminuit")
