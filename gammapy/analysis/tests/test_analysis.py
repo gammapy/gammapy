@@ -2,11 +2,11 @@
 from pathlib import Path
 import pytest
 from numpy.testing import assert_allclose
-from regions import CircleSkyRegion
-from astropy.coordinates import SkyCoord
 import astropy.units as u
-from gammapy.maps import Map
+from astropy.coordinates import SkyCoord
+from regions import CircleSkyRegion
 from gammapy.analysis import Analysis, AnalysisConfig
+from gammapy.maps import Map
 from gammapy.modeling.models import SkyModels
 from gammapy.utils.testing import requires_data, requires_dependency
 

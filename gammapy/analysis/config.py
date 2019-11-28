@@ -10,7 +10,7 @@ from astropy.units import Quantity
 import yaml
 from pydantic import BaseModel, FilePath
 from pydantic.utils import deep_update
-from gammapy.utils.scripts import read_yaml, make_path
+from gammapy.utils.scripts import make_path, read_yaml
 
 __all__ = ["AnalysisConfig"]
 

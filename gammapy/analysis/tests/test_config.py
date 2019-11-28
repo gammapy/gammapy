@@ -4,7 +4,7 @@ import pytest
 from astropy.coordinates import Angle
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.analysis.config import AnalysisConfig, GeneralConfig, FrameEnum
+from gammapy.analysis.config import AnalysisConfig, FrameEnum, GeneralConfig
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 CONFIG_FILE = CONFIG_PATH / "config.yaml"
@@ -40,7 +40,7 @@ def test_config_not_default_types():
         "frame": "galactic",
         "lon": "83.633 deg",
         "lat": "22.014 deg",
-        "radius": "1 deg"
+        "radius": "1 deg",
     }
     assert isinstance(config.observations.obs_cone.frame, FrameEnum)
     assert isinstance(config.observations.obs_cone.lon, Angle)
