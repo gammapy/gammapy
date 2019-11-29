@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+import collections.abc
 import copy
 import numpy as np
 from gammapy.utils.scripts import make_path, read_yaml, write_yaml
@@ -83,7 +84,7 @@ class Dataset(abc.ABC):
         return residuals
 
 
-class Datasets:
+class Datasets(collections.abc.Sequence):
     """Dataset collection.
 
     Parameters
