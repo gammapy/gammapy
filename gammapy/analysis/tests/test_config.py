@@ -82,3 +82,9 @@ def test_config_to_yaml(tmp_path):
     assert "stack" in text
     with pytest.raises(IOError):
         config.write(fpath)
+
+
+def test_get_doc_sections():
+    config = AnalysisConfig()
+    doc = config._get_doc_sections()
+    assert "general" in doc.keys()
