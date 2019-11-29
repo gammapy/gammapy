@@ -21,7 +21,7 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
 from .exposure import _map_spectrum_weight
 
-__all__ = ["MapEvaluator", "MapDataset", "MapDatasetOnOff"]
+__all__ = ["MapDataset", "MapDatasetOnOff"]
 
 log = logging.getLogger(__name__)
 
