@@ -118,3 +118,7 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/joint_1d_3d_analysis.ipynb
   datasets:
     - crab-3datasets
+- name: light_curve_flare
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/light_curve_flare.ipynb
+  datasets:
+    - hess-dl3-dr1
