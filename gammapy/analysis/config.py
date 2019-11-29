@@ -280,13 +280,6 @@ class AnalysisConfig(GammapyBaseConfig):
         )
         return AnalysisConfig(**upd_config)
 
-    def help(self, section=""):
-        """Print template configuration settings."""
-        doc = self._get_doc_sections()
-        for keyword in doc.keys():
-            if section == "" or section == keyword:
-                print(doc[keyword])
-
     @staticmethod
     def _get_doc_sections():
         """Returns dict with commented docs from docs file"""

@@ -55,7 +55,6 @@ def test_config_not_default_types():
 def test_config_basics():
     config = AnalysisConfig()
     assert "AnalysisConfig" in str(config)
-    assert config.help() is None
     config = AnalysisConfig.read(DOC_FILE)
     assert config.general.outdir == "."
 
