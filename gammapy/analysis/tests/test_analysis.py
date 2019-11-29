@@ -23,25 +23,21 @@ def test_init():
 
 
 def test_update_config():
-    cfg = AnalysisConfig()
-    analysis = Analysis(cfg)
+    analysis = Analysis(AnalysisConfig())
     data = {"general": {"outdir": "test"}}
-    analysis.update_config(data)
-    assert analysis.config.general.outdir == "test"
-    analysis = Analysis(cfg)
     cfg2 = AnalysisConfig(**data)
     analysis.update_config(cfg2)
     assert analysis.config.general.outdir == "test"
-    analysis = Analysis(cfg)
+    analysis = Analysis(AnalysisConfig())
     data = """
     general:
         outdir: test
     """
     analysis.update_config(data)
     assert analysis.config.general.outdir == "test"
-    analysis = Analysis(cfg)
-    data = "spam"
-    with pytest.raises(ValueError):
+    analysis = Analysis(AnalysisConfig())
+    data = 0
+    with pytest.raises(TypeError):
         analysis.update_config(data)
 
 
