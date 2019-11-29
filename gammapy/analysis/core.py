@@ -122,15 +122,13 @@ class Analysis:
         else:
             ValueError(f"Invalid dataset type: {self.config.datasets.type}")
 
-    def set_model(self, model=None, filename=""):
-        """Read the model from dict or filename and attach it to datasets.
+    def set_model(self, model):
+        """Set model to datasets.
 
         Parameters
         ----------
-        model: dict or string
-            Dictionary or string in YAML format with the serialized model.
-        filename : string
-            Name of the model YAML file describing the model.
+        model: `SkyModel` or string
+            `SkyModels` or string in YAML format with the serialized model.
         """
         if not self.datasets or len(self.datasets) == 0:
             raise RuntimeError("Missing datasets")
@@ -138,19 +136,20 @@ class Analysis:
         log.info(f"Reading model.")
         if isinstance(model, str):
             model = yaml.safe_load(model)
-
-        if model:
             self.model = SkyModels(dict_to_models(model))
-        elif filename:
-            filepath = make_path(filename)
-            self.model = SkyModels.from_yaml(filepath)
+        elif isinstance(model, SkyModels):
+            self.model = model
         else:
-            return False
-
+            raise TypeError("Model should be a YAML string or a SkyModels object.")
         for dataset in self.datasets:
             dataset.model = self.model
-
         log.info(self.model)
+
+    @classmethod
+    def read_model(cls, filename):
+        """Reads model rom YAML file."""
+        filepath = make_path(filename)
+        return SkyModels.from_yaml(filepath)
 
     def run_fit(self, optimize_opts=None):
         """Fitting reduced datasets to model."""
