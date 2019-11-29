@@ -12,6 +12,7 @@ import yaml
 from pydantic import BaseModel, FilePath
 from pydantic.utils import deep_update
 from gammapy.utils.scripts import make_path, read_yaml
+from gammapy.cube import MapDatasetMaker
 
 __all__ = ["AnalysisConfig"]
 
@@ -67,6 +68,14 @@ class FrameEnum(str, Enum):
 
 class BackgroundMethodEnum(str, Enum):
     reflected = "reflected"
+
+
+class MapSelectionEnum(str, Enum):
+    counts = "counts"
+    exposure = "exposure"
+    background = "background"
+    psf = "psf"
+    edisp = "edisp"
 
 
 class GammapyBaseConfig(BaseModel):
@@ -155,7 +164,7 @@ class DatasetsConfig(GammapyBaseConfig):
     type: ReductionTypeEnum = ReductionTypeEnum.spectrum
     stack: bool = True
     geom: GeomConfig = GeomConfig()
-    map_selection: List[str] = None
+    map_selection: List[MapSelectionEnum] = MapDatasetMaker.available_selection
     background: BackgroundConfig = BackgroundConfig()
     on_region: SpatialCircleConfig = SpatialCircleConfig()
     containment_correction: bool = True

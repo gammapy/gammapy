@@ -8,7 +8,7 @@ datasets:
     geom:
         axes:
             energy: {min: 0.01 TeV, max: 100 TeV, nbins: 73}
-    map_selection:
+    map_selection: ['counts', 'exposure', 'background', 'psf', 'edisp']
     background:
         method: reflected
     on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.1 deg}

@@ -21,7 +21,7 @@ observations:
     obs_file:   # csv file with obs_ids
     # spatial /time filters applied on the obs_ids
     obs_cone: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
-    obs_time: {start: "2019-12-01", stop: "2020-03-01"}
+    obs_time: {start: '2019-12-01', stop: '2020-03-01'}
 
 # Section: datasets
 # Process of data reduction / mandatory
@@ -40,7 +40,7 @@ datasets:
         axes:
             energy: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
             energy_true: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
-    map_selection:
+    map_selection: ['counts', 'exposure', 'background', 'psf', 'edisp']
     background:
         method: reflected
         exclusion:    # fits file for exclusion mask

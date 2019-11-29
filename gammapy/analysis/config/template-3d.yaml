@@ -17,7 +17,7 @@ datasets:
         axes:
             energy: {min: 1 TeV, max: 10 TeV, nbins: 4}
             energy_true: {min: 1 TeV, max: 10 TeV, nbins: 5}
-    map_selection:
+    map_selection: ['counts', 'exposure', 'background', 'psf', 'edisp']
 
 fit:
     fit_range: {min: 1 TeV, max: 10 TeV}
