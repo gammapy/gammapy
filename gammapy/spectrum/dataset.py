@@ -172,12 +172,14 @@ class SpectrumDataset(Dataset):
     @property
     def models(self):
         """Models (`gammapy.modeling.models.SkyModels`)."""
-        return self._model
+        return self._models
 
     @models.setter
     def models(self, value):
         if value is None or isinstance(value, SkyModels):
             models = value
+        elif isinstance(value, list):
+            models = SkyModels(value)
         elif isinstance(value, SkyModel):
             models = SkyModels([value])
         else:
