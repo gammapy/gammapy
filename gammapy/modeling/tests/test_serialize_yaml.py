@@ -104,7 +104,7 @@ def test_datasets_to_io(tmp_path):
     filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
     filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
 
-    datasets = Datasets.from_yaml(filedata, filemodel)
+    datasets = Datasets.read(filedata, filemodel)
 
     assert len(datasets) == 2
     assert len(datasets.parameters) == 22
@@ -136,8 +136,8 @@ def test_datasets_to_io(tmp_path):
 
     assert_allclose(dataset1.model[1].parameters["lon_0"].value, 0.9, atol=0.1)
 
-    datasets.to_yaml(tmp_path, prefix="written")
-    datasets_read = Datasets.from_yaml(
+    datasets.write(tmp_path, prefix="written")
+    datasets_read = Datasets.read(
         tmp_path / "written_datasets.yaml", tmp_path / "written_models.yaml"
     )
     assert len(datasets_read) == 2

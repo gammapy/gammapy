@@ -258,8 +258,8 @@ def test_flux_point_dataset_serialization(tmp_path):
     model = SkyModel(spectral_model=spectral_model, name="test_model")
     dataset = FluxPointsDataset(model, data, name="test_dataset")
 
-    Datasets([dataset]).to_yaml(tmp_path, prefix="tmp")
-    datasets = Datasets.from_yaml(
+    Datasets([dataset]).write(tmp_path, prefix="tmp")
+    datasets = Datasets.read(
         tmp_path / "tmp_datasets.yaml", tmp_path / "tmp_models.yaml"
     )
     new_dataset = datasets[0]
