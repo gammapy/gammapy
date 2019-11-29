@@ -115,7 +115,7 @@ def make_datasets_example():
     print("expo sum : ", dataset0.exposure.data.sum())
     print("bkg0 sum : ", dataset0.background_model.evaluate().data.sum())
 
-    datasets.to_yaml("$GAMMAPY_DATA/tests/models", prefix="gc_example_", overwrite=True)
+    datasets.write("$GAMMAPY_DATA/tests/models", prefix="gc_example_", overwrite=True)
 
 
 if __name__ == "__main__":
