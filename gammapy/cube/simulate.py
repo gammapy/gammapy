@@ -120,7 +120,7 @@ class MapDatasetEventSampler:
             Temporal model.
         gti : `MapDataset` object
             Good time intervals of the given MapDataset object.
-        MC_ID : `Int`
+        MC_ID : int
             Monte Carlo identifier of the sampled source.
 
         Returns
