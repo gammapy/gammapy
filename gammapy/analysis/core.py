@@ -237,7 +237,7 @@ class Analysis:
         offset_max = geom_settings.selection.offset_max
         log.info("Creating datasets.")
 
-        maker = MapDatasetMaker()
+        maker = MapDatasetMaker(selection=self.config.datasets.map_selection)
         maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=offset_max)
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
@@ -247,8 +247,9 @@ class Analysis:
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                 dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
-                dataset.background_model.name = f"bkg_{dataset.name}"
-                # TODO remove this once dataset and model have unique identifiers
+                if "background" in self.config.datasets.map_selection:
+                    dataset.background_model.name = f"bkg_{dataset.name}"
+                    # TODO remove this once dataset and model have unique identifiers
                 log.debug(dataset)
                 stacked.stack(dataset)
             self._extract_irf_kernels(stacked)
@@ -260,8 +261,9 @@ class Analysis:
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                 dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
-                dataset.background_model.name = f"bkg_{dataset.name}"
-                # TODO remove this once dataset and model have unique identifiers
+                if "background" in self.config.datasets.map_selection:
+                    dataset.background_model.name = f"bkg_{dataset.name}"
+                    # TODO remove this once dataset and model have unique identifiers
                 self._extract_irf_kernels(dataset)
                 log.debug(dataset)
                 datasets.append(dataset)
