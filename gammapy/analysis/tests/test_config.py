@@ -7,7 +7,6 @@ from astropy.units import Quantity
 from gammapy.analysis.config import AnalysisConfig, FrameEnum, GeneralConfig
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
-CONFIG_FILE = CONFIG_PATH / "config.yaml"
 DOC_FILE = CONFIG_PATH / "docs.yaml"
 
 
@@ -66,9 +65,9 @@ def test_config_create_from_dict():
 
 
 def test_config_create_from_yaml():
-    config = AnalysisConfig.read(CONFIG_FILE)
+    config = AnalysisConfig.read(DOC_FILE)
     assert isinstance(config.general, GeneralConfig)
-    config_str = Path(CONFIG_FILE).read_text()
+    config_str = Path(DOC_FILE).read_text()
     config = AnalysisConfig.from_yaml(config_str)
     assert isinstance(config.general, GeneralConfig)
 
