@@ -34,8 +34,7 @@ env:
         - CONDA_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml pandas naima sherpa libgfortran regions reproject pandoc ipython iminuit'
         - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy matplotlib pyyaml pandas naima sherpa regions reproject pandoc ipython iminuit'
         - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy matplotlib pyyaml pandas naima regions reproject pandoc ipython iminuit'
-        - CONDA_DEPENDENCIES_DOCS='Cython click scipy healpy matplotlib pyyaml pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter'
-        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml pandas naima sherpa libgfortran iminuit regions reproject pandoc ipython jupyter'
+        - CONDA_DEPENDENCIES_DOCS='Cython click scipy healpy matplotlib pyyaml pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter iminuit'
 
         - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy parfive pydantic'
 
@@ -105,7 +104,7 @@ matrix:
 
         # Test Jupyter notebooks
         - env: PYTHON_VERSION=3.6 CMD='make test-nb'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_DOCS
 
         # Test example scripts
         - env: PYTHON_VERSION=3.6 CMD='make test-scripts'
