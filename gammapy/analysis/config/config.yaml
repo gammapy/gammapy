@@ -28,6 +28,7 @@ datasets:
         axes:
             energy: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
             energy_true: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
+    map_selection:
     background:
         method: reflected
         exclusion:    # fits file for exclusion mask
