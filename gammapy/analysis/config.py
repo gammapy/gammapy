@@ -168,7 +168,6 @@ class DatasetsConfig(GammapyBaseConfig):
     background: BackgroundConfig = BackgroundConfig()
     on_region: SpatialCircleConfig = SpatialCircleConfig()
     containment_correction: bool = True
-    psf_kernel_radius: AngleType = "0.6 deg"
 
 
 class ObservationsConfig(GammapyBaseConfig):

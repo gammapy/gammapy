@@ -252,7 +252,6 @@ class Analysis:
                     # TODO remove this once dataset and model have unique identifiers
                 log.debug(dataset)
                 stacked.stack(dataset)
-            self._extract_irf_kernels(stacked)
             datasets = [stacked]
         else:
             datasets = []
@@ -264,21 +263,9 @@ class Analysis:
                 if "background" in self.config.datasets.map_selection:
                     dataset.background_model.name = f"bkg_{dataset.name}"
                     # TODO remove this once dataset and model have unique identifiers
-                self._extract_irf_kernels(dataset)
                 log.debug(dataset)
                 datasets.append(dataset)
         self.datasets = Datasets(datasets)
-
-    def _extract_irf_kernels(self, dataset):
-        max_radius = self.config.datasets.psf_kernel_radius
-        # TODO: handle IRF maps in fit
-        geom = dataset.counts.geom
-        geom_irf = dataset.exposure.geom
-        position = geom.center_skydir
-        geom_psf = geom.to_image().to_cube(geom_irf.axes)
-        dataset.psf = dataset.psf.get_psf_kernel(
-            position=position, geom=geom_psf, max_radius=max_radius
-        )
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
