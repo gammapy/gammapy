@@ -137,6 +137,8 @@ class MapDatasetEventSampler:
         table["RA_TRUE"] = coords.skycoord.icrs.ra.deg
         table["DEC_TRUE"] = coords.skycoord.icrs.dec.deg
         table["MC_ID"] = MC_ID
+        table["RA_TRUE"].unit= "Deg"
+        table["DEC_TRUE"].unit= "Deg"
 
         # sample time
         # TODO: .temporal_model does not exist yet
@@ -145,6 +147,7 @@ class MapDatasetEventSampler:
             n_events, time_start, time_stop, self.random_state
         )
         table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).value
+        table["TIME"].unit= "s"
 
         return table
 
