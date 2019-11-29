@@ -126,8 +126,8 @@ def datasets_to_dict(datasets, path, prefix, overwrite):
         dataset.write(filename, overwrite)
         datasets_dictlist.append(dataset.to_dict(filename=filename))
 
-        if dataset.model is not None:
-            for model in dataset.model:
+        if dataset.models is not None:
+            for model in dataset.models:
                 if model not in unique_models:
                     unique_models.append(model)
 

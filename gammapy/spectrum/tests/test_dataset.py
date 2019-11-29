@@ -146,7 +146,7 @@ class TestSpectrumDataset:
         model_1 = SkyModel(spectral_model=pwl_1)
         model_2 = SkyModel(spectral_model=pwl_2)
 
-        dataset.model = SkyModels([model_1, model_2])
+        dataset.models = SkyModels([model_1, model_2])
 
         npred = dataset.npred()
 
@@ -512,12 +512,12 @@ class TestSpectralFit:
         )
 
         # Example fit for one observation
-        self.datasets[0].model = self.pwl
+        self.datasets[0].models = self.pwl
         self.fit = Fit([self.datasets[0]])
 
     def set_model(self, model):
         for obs in self.datasets:
-            obs.model = model
+            obs.models = model
 
     @requires_dependency("iminuit")
     def test_basic_results(self):
@@ -525,7 +525,7 @@ class TestSpectralFit:
         result = self.fit.run()
         pars = self.fit.datasets.parameters
 
-        assert self.pwl is self.datasets[0].model[0]
+        assert self.pwl is self.datasets[0].models[0]
 
         assert_allclose(result.total_stat, 38.343, rtol=1e-3)
         assert_allclose(pars["index"].value, 2.817, rtol=1e-3)
@@ -682,14 +682,14 @@ class TestSpectrumDatasetOnOffStack:
                 index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
             )
         )
-        self.stacked_dataset.model = pwl
+        self.stacked_dataset.models = pwl
 
         npred_stacked = self.stacked_dataset.npred().data
         npred_stacked[~self.stacked_dataset.mask_safe] = 0
         npred_summed = np.zeros_like(npred_stacked)
 
         for obs in self.obs_list:
-            obs.model = pwl
+            obs.models = pwl
             npred_summed[obs.mask_safe] += obs.npred().data[obs.mask_safe]
 
         assert_allclose(npred_stacked, npred_summed)

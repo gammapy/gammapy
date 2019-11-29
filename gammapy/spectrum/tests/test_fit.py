@@ -161,7 +161,7 @@ class TestSpectralFit:
 
     def test_stats(self):
         dataset = self.obs_list[0]
-        dataset.model = self.pwl
+        dataset.models = self.pwl
 
         fit = Fit([dataset])
         result = fit.run()
@@ -192,7 +192,7 @@ class TestSpectralFit:
             data=data, energy_lo=e_edges[:-1], energy_hi=e_edges[1:]
         )
         dataset.edisp = None
-        dataset.model = self.pwl
+        dataset.models = self.pwl
 
         fit = Fit([dataset])
         result = fit.run()
@@ -201,7 +201,7 @@ class TestSpectralFit:
     def test_stacked_fit(self):
         dataset = self.obs_list[0].copy()
         dataset.stack(self.obs_list[1])
-        dataset.model = self.pwl
+        dataset.models = self.pwl
 
         fit = Fit([dataset])
         result = fit.run()

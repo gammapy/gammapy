@@ -144,7 +144,7 @@ class Analysis:
             raise TypeError(f"Invalid type: {model!r}")
 
         for dataset in self.datasets:
-            dataset.model = self.model
+            dataset.models = self.model
 
         log.info(self.model)
 
@@ -194,7 +194,7 @@ class Analysis:
         )
         fp = flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
-        self.flux_points = FluxPointsDataset(data=fp, model=self.model[source])
+        self.flux_points = FluxPointsDataset(data=fp, models=self.model[source])
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
 
