@@ -330,7 +330,7 @@ class TestSpectrumOnOff:
             counts=self.on_counts,
             counts_off=self.off_counts,
             aeff=aeff,
-            model=model,
+            models=model,
             livetime=livetime,
         )
 
@@ -359,7 +359,7 @@ class TestSpectrumOnOff:
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
-            model=model,
+            models=model,
             aeff=self.aeff,
             livetime=self.livetime,
             edisp=self.edisp,
@@ -425,7 +425,7 @@ class TestSpectrumOnOff:
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
-            model=model,
+            models=model,
             aeff=self.aeff,
             livetime=self.livetime,
             edisp=self.edisp,
@@ -441,7 +441,7 @@ class TestSpectrumOnOff:
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
-            model=source_model,
+            models=source_model,
             aeff=self.aeff,
             livetime=self.livetime,
             edisp=self.edisp,

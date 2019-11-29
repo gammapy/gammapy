@@ -535,7 +535,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SpectralModel`
+    models : `~gammapy.modeling.models.SkyModels`
         Fit model
     counts : `~gammapy.spectrum.CountsSpectrum`
         ON Counts spectrum
@@ -570,7 +570,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def __init__(
         self,
-        model=None,
+        models=None,
         counts=None,
         counts_off=None,
         livetime=None,
@@ -594,7 +594,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.mask_fit = mask_fit
         self.aeff = aeff
         self.edisp = edisp
-        self.model = model
+        self.models = models
         self.mask_safe = mask_safe
 
         if np.isscalar(acceptance):
@@ -1118,8 +1118,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         outdir = Path(filename).parent
         filename = str(outdir / f"pha_obs{self.name}.fits")
 
-        if self.model is not None:
-            models = [_.name for _ in self.model]
+        if self.models is not None:
+            models = [_.name for _ in self.models]
         else:
             models = []
 
@@ -1165,7 +1165,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Spectrum dataset on off.
 
         """
-        model = SkyModels([model for model in models if model.name in data["models"]])
+        models = [model for model in models if model.name in data["models"]]
 
         # TODO: assumes that the model is a skymodel
         # so this will work only when this change will be effective
@@ -1173,7 +1173,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         dataset = cls.from_ogip_files(filename=filename)
         dataset.mask_fit = None
-        dataset.model = model
+        dataset.models = models
         return dataset
 
 

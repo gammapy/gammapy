@@ -91,7 +91,7 @@ class TestFit:
             acceptance=1,
             acceptance_off=1 / self.alpha,
         )
-        dataset.model = self.source_model
+        dataset.models = self.source_model
 
         self.source_model.parameters.index = 1.12
 
@@ -108,7 +108,7 @@ class TestFit:
         dataset = SpectrumDatasetOnOff(
             counts=self.src, mask_safe=np.ones(self.src.energy.nbin, dtype=bool)
         )
-        dataset.model = self.source_model
+        dataset.models = self.source_model
 
         assert np.sum(dataset.mask_safe) == self.nbins
         e_min, e_max = dataset.energy_range
