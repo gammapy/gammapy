@@ -672,7 +672,7 @@ def test_datasets_io_no_model(tmpdir):
 
     datasets = Datasets([dataset_1, dataset_2])
 
-    datasets.to_yaml(path=tmpdir, prefix="test")
+    datasets.write(path=tmpdir, prefix="test")
 
     filename_1 = tmpdir / "test_data_1.fits"
     assert filename_1.exists()
