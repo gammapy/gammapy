@@ -70,16 +70,7 @@ def _map_spectrum_weight(map, spectrum=None):
         spectrum = PowerLawSpectralModel(index=2.0)
 
     # Compute weights vector
-    # Should we change to call spectrum.integrate ?
-    energy_center = map.geom.get_axis_by_name("energy").center
     energy_edges = map.geom.get_axis_by_name("energy").edges
-    energy_width = np.diff(energy_edges)
-    weights = spectrum(energy_center) * energy_width
+    weights = spectrum.integral(emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True)
     weights /= weights.sum()
-
-    # Make new map with weights applied
-    map_weighted = map.copy()
-    for img, idx in map_weighted.iter_by_image():
-        img *= weights[idx].value
-
-    return map_weighted
+    return map * weights.reshape((-1, 1, 1))
