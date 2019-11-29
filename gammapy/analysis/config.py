@@ -155,6 +155,7 @@ class DatasetsConfig(GammapyBaseConfig):
     type: ReductionTypeEnum = ReductionTypeEnum.spectrum
     stack: bool = True
     geom: GeomConfig = GeomConfig()
+    map_selection: List[str] = None
     background: BackgroundConfig = BackgroundConfig()
     on_region: SpatialCircleConfig = SpatialCircleConfig()
     containment_correction: bool = True
