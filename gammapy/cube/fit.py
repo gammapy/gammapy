@@ -892,20 +892,20 @@ class MapDataset(Dataset):
             name=self.name,
         )
 
-    def to_image(self, spectrum=None, keepdims=True):
+    def to_image(self, spectrum=None):
         """Create images by summing over the energy axis.
 
         Exposure is weighted with an assumed spectrum,
         resulting in a weighted mean exposure image.
+
+        Currently the PSFMap and EdispMap are dropped from the
+        resulting image dataset.
 
         Parameters
         ----------
         spectrum : `~gammapy.modeling.models.SpectralModel`
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
-        keepdims : bool, optional
-            If this is set to True, the energy axes is kept with a single bin.
-            If False, the energy axes is removed
 
         Returns
         -------
@@ -915,14 +915,12 @@ class MapDataset(Dataset):
         counts = self.counts * self.mask_safe
         background = self.background_model.evaluate() * self.mask_safe
 
-        counts = counts.sum_over_axes(keepdims=keepdims)
+        counts = counts.sum_over_axes(keepdims=True)
         exposure = _map_spectrum_weight(self.exposure, spectrum)
-        exposure = exposure.sum_over_axes(keepdims=keepdims)
-        background = background.sum_over_axes(keepdims=keepdims)
+        exposure = exposure.sum_over_axes(keepdims=True)
+        background = background.sum_over_axes(keepdims=True)
 
-        mask_image = self.mask_safe.reduce_over_axes(
-            func=np.logical_or, keepdims=keepdims
-        )
+        mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
 
         # TODO: add edisp and psf
         edisp = None
