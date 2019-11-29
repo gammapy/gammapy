@@ -807,11 +807,16 @@ class MapDataset(Dataset):
 
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
+        if self.models is None:
+            models = []
+        else:
+            models = [_.name for _ in self.models]
+
         return {
             "name": self.name,
             "type": self.tag,
             "likelihood": self.likelihood_type,
-            "models": [_.name for _ in self.models],
+            "models": models,
             "background": self.background_model.name,
             "filename": str(filename),
         }

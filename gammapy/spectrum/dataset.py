@@ -1120,10 +1120,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         outdir = Path(filename).parent
         filename = str(outdir / f"pha_obs{self.name}.fits")
 
-        if self.models is not None:
-            models = [_.name for _ in self.models]
-        else:
+        if self.models is None:
             models = []
+        else:
+            models = [_.name for _ in self.models]
 
         return {
             "name": self.name,
