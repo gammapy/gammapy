@@ -11,8 +11,8 @@ from astropy.units import Quantity
 import yaml
 from pydantic import BaseModel, FilePath
 from pydantic.utils import deep_update
-from gammapy.utils.scripts import make_path, read_yaml
 from gammapy.cube import MapDatasetMaker
+from gammapy.utils.scripts import make_path, read_yaml
 
 __all__ = ["AnalysisConfig"]
 
@@ -274,11 +274,12 @@ class AnalysisConfig(GammapyBaseConfig):
         elif isinstance(config, AnalysisConfig):
             other = config
         else:
-            raise TypeError("Config should be a YAML string or an AnalysisConfig object.")
-        upd_config = deep_update(
+            raise TypeError(f"Invalid type: {config}")
+
+        config_new = deep_update(
             self.dict(exclude_defaults=True), other.dict(exclude_defaults=True)
         )
-        return AnalysisConfig(**upd_config)
+        return AnalysisConfig(**config_new)
 
     @staticmethod
     def _get_doc_sections():

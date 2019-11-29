@@ -71,6 +71,8 @@ def _map_spectrum_weight(map, spectrum=None):
 
     # Compute weights vector
     energy_edges = map.geom.get_axis_by_name("energy").edges
-    weights = spectrum.integral(emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True)
+    weights = spectrum.integral(
+        emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
+    )
     weights /= weights.sum()
     return map * weights.reshape((-1, 1, 1))

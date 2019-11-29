@@ -408,6 +408,4 @@ class SpectrumEvaluator:
             cts = true_counts
             e_reco = self.aeff.energy.edges
 
-        return CountsSpectrum(
-            data=cts, energy_lo=e_reco[:-1], energy_hi=e_reco[1:]
-        )
+        return CountsSpectrum(data=cts, energy_lo=e_reco[:-1], energy_hi=e_reco[1:])
