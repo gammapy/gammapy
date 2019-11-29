@@ -104,7 +104,7 @@ def test_datasets_to_io(tmp_path):
     filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
     filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
 
-    datasets = Datasets.from_yaml(filedata, filemodel)
+    datasets = Datasets.read(filedata, filemodel)
 
     assert len(datasets) == 2
     assert len(datasets.parameters) == 22
