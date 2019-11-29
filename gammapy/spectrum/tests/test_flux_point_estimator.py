@@ -17,8 +17,8 @@ from gammapy.modeling.models import (
 from gammapy.spectrum import (
     FluxPointsEstimator,
     SpectrumDatasetOnOff,
-    SpectrumEvaluator,
 )
+from gammapy.spectrum.core import SpectrumEvaluator
 from gammapy.utils.testing import requires_data, requires_dependency
 
 

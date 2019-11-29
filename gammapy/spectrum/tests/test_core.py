@@ -11,7 +11,8 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpectralModel,
 )
-from gammapy.spectrum import CountsSpectrum, SpectrumEvaluator
+from gammapy.spectrum import CountsSpectrum
+from gammapy.spectrum.core import SpectrumEvaluator
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
