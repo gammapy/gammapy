@@ -733,8 +733,8 @@ def test_datasets_stack_reduce():
 def test_spectrum_dataset_on_off_to_yaml(tmpdir):
     spectrum_datasets_on_off = make_observation_list()
     datasets = Datasets(spectrum_datasets_on_off)
-    datasets.to_yaml(path=tmpdir)
-    datasets_read = Datasets.from_yaml(
+    datasets.write(path=tmpdir)
+    datasets_read = Datasets.read(
         tmpdir / "_datasets.yaml", tmpdir / "_models.yaml"
     )
     assert len(datasets_read) == len(datasets)
