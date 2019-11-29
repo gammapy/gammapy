@@ -61,7 +61,7 @@ exposure_map = make_map_exposure_true_energy(
     pointing=pointing, livetime=livetime, aeff=aeff, geom=geom
 )
 
-dataset = MapDataset(model=models, exposure=exposure_map)
+dataset = MapDataset(models=models, exposure=exposure_map)
 npred = dataset.npred()
 
 dataset.fake()

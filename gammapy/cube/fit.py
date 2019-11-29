@@ -44,7 +44,7 @@ class MapDataset(Dataset):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SkyModel` or `~gammapy.modeling.models.SkyModels`
+    models : `~gammapy.modeling.models.SkyModels`
         Source sky models.
     counts : `~gammapy.maps.WcsNDMap`
         Counts cube
@@ -75,7 +75,7 @@ class MapDataset(Dataset):
 
     def __init__(
         self,
-        model=None,
+        models=None,
         counts=None,
         exposure=None,
         mask_fit=None,
@@ -87,8 +87,6 @@ class MapDataset(Dataset):
         mask_safe=None,
         gti=None,
     ):
-        if model is None:
-            model = SkyModels([])
         if mask_fit is not None and mask_fit.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
         if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
@@ -101,7 +99,7 @@ class MapDataset(Dataset):
         self.psf = psf
         self.edisp = edisp
         self.background_model = background_model
-        self.model = model
+        self.models = models
         self.name = name
         self.mask_safe = mask_safe
         self.gti = gti
@@ -118,7 +116,7 @@ class MapDataset(Dataset):
         str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
 
         npred = np.nan
-        if self.model is not None or self.background_model is not None:
+        if self.models is not None or self.background_model is not None:
             npred = np.sum(self.npred().data)
         str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
 
@@ -159,15 +157,15 @@ class MapDataset(Dataset):
 
         stat = np.nan
         if self.counts is not None and (
-            self.model is not None or self.background_model is not None
+            self.models is not None or self.background_model is not None
         ):
             stat = self.stat_sum()
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
         # model section
         n_models = 0
-        if self.model is not None:
-            n_models = len(self.model)
+        if self.models is not None:
+            n_models = len(self.models)
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
 
         str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.parameters))
@@ -177,8 +175,8 @@ class MapDataset(Dataset):
 
         components = []
 
-        if self.model is not None:
-            components += self.model
+        if self.models is not None:
+            components += self.models
 
         if self.background_model is not None:
             components += [self.background_model]
@@ -207,36 +205,45 @@ class MapDataset(Dataset):
         return str_.expandtabs(tabsize=4)
 
     @property
-    def model(self):
-        """Sky model to fit (`~gammapy.cube.SkyModel` or `~gammapy.cube.SkyModels`)"""
-        return self._model
+    def models(self):
+        """Models (`~gammapy.modeling.models.SkyModels`)."""
+        return self._models
 
-    @model.setter
-    def model(self, model):
-        if isinstance(model, SkyModel):
-            model = SkyModels([model])
+    @models.setter
+    def models(self, value):
+        if value is None or isinstance(value, SkyModels):
+            models = value
+        elif isinstance(value, SkyModel):
+            models = SkyModels([value])
+        else:
+            raise TypeError(f"Invalid: {value!r}")
 
-        self._model = model
+        self._models = models
 
-        if model is not None:
-            evaluators = []
+        self._make_evaluators()
 
-            for component in model:
-                evaluator = MapEvaluator(
-                    component, evaluation_mode=self.evaluation_mode
-                )
-                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
-                evaluators.append(evaluator)
+    def _make_evaluators(self):
+        if self.models is None:
+            self._evaluators = []
+            return
 
-            self._evaluators = evaluators
+        evaluators = []
+        for model in self.models:
+            evaluator = MapEvaluator(
+                model, evaluation_mode=self.evaluation_mode
+            )
+            evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+            evaluators.append(evaluator)
+
+        self._evaluators = evaluators
 
     @property
     def parameters(self):
         """List of parameters (`~gammapy.modeling.Parameters`)"""
         parameters_list = []
 
-        if self.model:
-            parameters_list.append(self.model.parameters)
+        if self.models:
+            parameters_list.append(self.models.parameters)
 
         if self.background_model:
             parameters_list.append(self.background_model.parameters)
@@ -268,7 +275,7 @@ class MapDataset(Dataset):
         if self.background_model:
             npred_total += self.background_model.evaluate()
 
-        if self.model:
+        if self.models:
             for evaluator in self._evaluators:
                 # if the model component drifts out of its support the evaluator has
                 # has to be updated
@@ -792,7 +799,7 @@ class MapDataset(Dataset):
                     dataset.background_model = background_model
 
         models_list = [model for model in models if model.name in model_names]
-        dataset.model = SkyModels(models_list)
+        dataset.models = SkyModels(models_list)
         if "likelihood" in data:
             dataset.likelihood_type = data["likelihood"]
 
@@ -804,7 +811,7 @@ class MapDataset(Dataset):
             "name": self.name,
             "type": self.tag,
             "likelihood": self.likelihood_type,
-            "models": [_.name for _ in self.model],
+            "models": [_.name for _ in self.models],
             "background": self.background_model.name,
             "filename": str(filename),
         }

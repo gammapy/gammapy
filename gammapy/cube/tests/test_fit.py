@@ -121,7 +121,7 @@ def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, **kwargs):
     mask_fit = Map.from_geom(geom, data=mask_fit)
 
     return MapDataset(
-        model=sky_model,
+        models=sky_model,
         exposure=exposure,
         background_model=background_model,
         psf=psf,
@@ -254,7 +254,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset.write(tmp_path / "test.fits")
 
     dataset_new = MapDataset.read(tmp_path / "test.fits")
-    assert len(dataset_new.model) == 0
+    assert len(dataset_new.models) == 0
     assert dataset_new.mask.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
@@ -344,7 +344,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     # test model evaluation outside image
 
-    dataset_1.model[0].spatial_model.lon_0.value = 150
+    dataset_1.models[0].spatial_model.lon_0.value = 150
     dataset_1.npred()
     assert not dataset_1._evaluators[0].contributes
 

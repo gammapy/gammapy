@@ -50,7 +50,7 @@ def test_simulate():
     )
 
     assert isinstance(dataset, MapDataset)
-    assert isinstance(dataset.model, SkyModels)
+    assert isinstance(dataset.models, SkyModels)
 
     assert dataset.counts.data.dtype is np.dtype("int")
     assert_allclose(dataset.counts.data[5, 20, 20], 2)

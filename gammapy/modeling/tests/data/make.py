@@ -104,7 +104,7 @@ def make_datasets_example():
         )
 
         stacked.name = names[idx]
-        stacked.model = models[idx] + diffuse_model
+        stacked.models = models[idx] + diffuse_model
         datasets_list.append(stacked)
 
     datasets = Datasets(datasets_list)

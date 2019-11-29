@@ -146,8 +146,9 @@ class SkyModel(SkyModelBase):
     def spatial_model(self, model):
         from .spatial import SpatialModel
 
-        if not isinstance(model, (SpatialModel, type(None))):
+        if not (model is None or isinstance(model, SpatialModel)):
             raise TypeError(f"Invalid type: {model!r}")
+
         self._spatial_model = model
 
     @property
@@ -159,7 +160,7 @@ class SkyModel(SkyModelBase):
     def spectral_model(self, model):
         from .spectral import SpectralModel
 
-        if not isinstance(model, (SpectralModel, type(None))):
+        if not (model is None or isinstance(model, SpectralModel)):
             raise TypeError(f"Invalid type: {model!r}")
         self._spectral_model = model
 

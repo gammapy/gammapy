@@ -79,7 +79,7 @@ def simulate_dataset(
         edisp = None
 
     dataset = MapDataset(
-        model=skymodel,
+        models=skymodel,
         exposure=exposure,
         background_model=background_model,
         psf=psf_map,
