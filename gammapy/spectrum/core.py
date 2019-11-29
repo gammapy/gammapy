@@ -11,7 +11,7 @@ from gammapy.utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
 from gammapy.utils.regions import compound_region_to_list
 from gammapy.utils.scripts import make_path
 
-__all__ = ["CountsSpectrum", "SpectrumEvaluator"]
+__all__ = ["CountsSpectrum"]
 
 log = logging.getLogger(__name__)
 
@@ -371,21 +371,16 @@ class SpectrumEvaluator:
         plt.show()
     """
 
-    def __init__(self, model, aeff=None, edisp=None, livetime=None, e_true=None):
+    def __init__(self, model, aeff=None, edisp=None, livetime=None):
         self.model = model
         self.aeff = aeff
         self.edisp = edisp
         self.livetime = livetime
 
-        if aeff is not None:
-            e_true = self.aeff.energy.edges
-
-        self.e_true = e_true
-        self.e_reco = None
-
     def compute_npred(self):
+        e_true = self.aeff.energy.edges
         integral_flux = self.model.spectral_model.integral(
-            emin=self.e_true[:-1], emax=self.e_true[1:], intervals=True
+            emin=e_true[:-1], emax=e_true[1:], intervals=True
         )
 
         true_counts = self.apply_aeff(integral_flux)
@@ -408,11 +403,11 @@ class SpectrumEvaluator:
 
         if self.edisp is not None:
             cts = self.edisp.apply(true_counts)
-            self.e_reco = self.edisp.e_reco.edges
+            e_reco = self.edisp.e_reco.edges
         else:
             cts = true_counts
-            self.e_reco = self.e_true
+            e_reco = self.aeff.energy.edges
 
         return CountsSpectrum(
-            data=cts, energy_lo=self.e_reco[:-1], energy_hi=self.e_reco[1:]
+            data=cts, energy_lo=e_reco[:-1], energy_hi=e_reco[1:]
         )

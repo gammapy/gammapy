@@ -100,7 +100,7 @@ def get_test_cases():
                     values=[4.0, 3.0, 1.0, 0.1] * u.Unit("TeV-1"),
                 )
             ),
-            e_true=[0.1, 0.2, 0.3, 0.4] * u.TeV,
+            aeff=EffectiveAreaTable.from_constant([0.1, 0.2, 0.3, 0.4] * u.TeV, 1),
             npred=0.554513062,
         ),
     ]
@@ -111,5 +111,6 @@ def test_counts_predictor(case):
     opts = case.copy()
     del opts["npred"]
     predictor = SpectrumEvaluator(**opts)
-    actual = predictor.compute_npred().total_counts
-    assert_allclose(actual, case["npred"])
+    npred = predictor.compute_npred()
+    assert npred.unit == ""
+    assert_allclose(npred.total_counts, case["npred"])

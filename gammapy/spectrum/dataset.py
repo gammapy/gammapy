@@ -187,7 +187,6 @@ class SpectrumDataset(Dataset):
                     model=component,
                     livetime=self.livetime,
                     aeff=self.aeff,
-                    e_true=self._energy_axis.edges,
                     edisp=self.edisp,
                 )
                 self._evaluators.append(evaluator)
