@@ -137,8 +137,8 @@ class MapDatasetEventSampler:
         table["RA_TRUE"] = coords.skycoord.icrs.ra.deg
         table["DEC_TRUE"] = coords.skycoord.icrs.dec.deg
         table["MC_ID"] = MC_ID
-        table["RA_TRUE"].unit= "Deg"
-        table["DEC_TRUE"].unit= "Deg"
+        table["RA_TRUE"].unit= "deg"
+        table["DEC_TRUE"].unit= "deg"
 
         # sample time
         # TODO: .temporal_model does not exist yet
