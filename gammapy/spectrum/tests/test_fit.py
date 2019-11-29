@@ -57,7 +57,7 @@ class TestFit:
     def test_cash(self):
         """Simple CASH fit to the on vector"""
         dataset = SpectrumDataset(
-            model=self.source_model,
+            models=self.source_model,
             counts=self.src,
             aeff=self.aeff,
             livetime=self.src.livetime,
@@ -118,7 +118,7 @@ class TestFit:
 
     def test_stat_profile(self):
         dataset = SpectrumDataset(
-            model=self.source_model,
+            models=self.source_model,
             aeff=self.aeff,
             livetime=self.src.livetime,
             counts=self.src,

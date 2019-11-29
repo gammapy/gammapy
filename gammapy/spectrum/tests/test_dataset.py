@@ -63,7 +63,7 @@ class TestSpectrumDataset:
             energy_lo=binning[:-1], energy_hi=binning[1:], data=source_counts
         )
         self.dataset = SpectrumDataset(
-            model=self.source_model,
+            models=self.source_model,
             counts=self.src,
             aeff=aeff,
             livetime=self.livetime,
@@ -110,7 +110,7 @@ class TestSpectrumDataset:
         mask_fit = np.ones(self.nbins, dtype=np.dtype("float"))
         with pytest.raises(ValueError):
             SpectrumDataset(
-                model=self.source_model,
+                models=self.source_model,
                 counts=self.src,
                 livetime=self.livetime,
                 mask_fit=mask_fit,
@@ -128,12 +128,12 @@ class TestSpectrumDataset:
 
         spectral_model = PowerLawSpectralModel()
         model = SkyModel(spectral_model=spectral_model, name="test")
-        dataset.model = model
-        assert dataset.model["test"] is model
+        dataset.models = model
+        assert dataset.models["test"] is model
 
         models = SkyModels([model])
-        dataset.model = models
-        assert dataset.model["test"] is model
+        dataset.models = models
+        assert dataset.models["test"] is model
 
     def test_npred_models(self):
         e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3).edges
