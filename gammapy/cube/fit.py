@@ -1425,9 +1425,7 @@ class MapEvaluator:
             self.edisp = edisp
 
         if isinstance(psf, PSFMap):
-            self.psf = psf.get_psf_kernel(
-                self.model.position, geom=exposure.geom, max_radius=0.8 * u.deg
-            )
+            self.psf = psf.get_psf_kernel(self.model.position, geom=exposure.geom)
         else:
             self.psf = psf
 
