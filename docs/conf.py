@@ -193,8 +193,4 @@ automodsumm_inherited_members = True
 # http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
 suppress_warnings = ["ref.citation"]
 
-# temporal fix for sphinx v2 and sphinx_rtd_theme
-# https://github.com/readthedocs/sphinx_rtd_theme/issues/766
-html4_writer = True
-
 # nitpicky = True

@@ -5,6 +5,16 @@
     --gammapy-lightgray: #f2f2f2;;
 }
 
+/*
+temporal fix for sphinx v2 and sphinx_rtd_theme
+https://github.com/readthedocs/sphinx_rtd_theme/issues/766
+*/
+.classifier:before {
+    font-style: normal;
+    margin: 0.2em;
+    content: ":";
+}
+
 /* sidebar header (and topbar for mobile) */
  .wy-side-nav-search, .wy-nav-top {
    background: var(--gammapy-secondary);
