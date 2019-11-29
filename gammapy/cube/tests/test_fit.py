@@ -506,7 +506,7 @@ def get_map_dataset_onoff(images, **kwargs):
     mask_safe = Map.from_geom(mask_geom, data=mask_data)
 
     return MapDatasetOnOff(
-        model=None,
+        models=None,
         counts=images["counts"],
         counts_off=images["counts_off"],
         acceptance=images["acceptance"],
@@ -545,7 +545,7 @@ def test_map_dataset_onoff_fits_io(images, tmp_path):
     dataset.write(tmp_path / "test.fits")
 
     dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits")
-    assert dataset_new.model is None
+    assert dataset_new.models is None
     assert dataset_new.mask.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)

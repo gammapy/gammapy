@@ -998,7 +998,7 @@ class MapDatasetOnOff(MapDataset):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SkyModel` or `~gammapy.modeling.models.SkyModels`
+    models : `~gammapy.modeling.models.SkyModels`
         Source sky models.
     counts : `~gammapy.maps.WcsNDMap`
         Counts cube
@@ -1035,7 +1035,7 @@ class MapDatasetOnOff(MapDataset):
 
     def __init__(
         self,
-        model=None,
+        models=None,
         counts=None,
         counts_off=None,
         acceptance=None,
@@ -1070,7 +1070,7 @@ class MapDatasetOnOff(MapDataset):
         self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
-        self.model = model
+        self.models = models
         self.name = name
         self.mask_safe = mask_safe
         self.gti = gti
@@ -1100,8 +1100,8 @@ class MapDatasetOnOff(MapDataset):
         """List of parameters (`~gammapy.modeling.Parameters`)"""
         parameters = []
 
-        if self.model:
-            parameters += self.model.parameters
+        if self.models:
+            parameters += self.models.parameters
 
         return Parameters(parameters)
 
