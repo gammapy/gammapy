@@ -4,7 +4,6 @@
 # Let's keep it alphabetical.
 - name: analysis_3d
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/analysis_3d.ipynb
-  requires: iminuit
   datasets:
     - cta-1dc
     - fermi-3fhl-gc
@@ -12,7 +11,6 @@
     - DC1_3d
 - name: analysis_3d_joint
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/analysis_3d_joint.ipynb
-  requires: iminuit
   datasets:
     - cta-1dc  
 - name: astro_dark_matter
@@ -76,14 +74,12 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/modeling.ipynb
 - name: models
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/models.ipynb
-  requires: naima
 - name: light_curve
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/light_curve.ipynb
   datasets:
     - hess-dl3-dr1
 - name: mcmc_sampling
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/mcmc_sampling.ipynb
-  requires: emcee
   datasets:
     - cta-1dc
   images:
@@ -94,20 +90,17 @@
     - cta-1dc
 - name: sed_fitting_gammacat_fermi
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/sed_fitting_gammacat_fermi.ipynb
-  requires: iminuit
   datasets:
     - catalogs
     - gamma-cat
 - name: simulate_3d
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/simulate_3d.ipynb
-  requires: iminuit
   datasets:
     - cta-1dc
 - name: source_population_model
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/source_population_model.ipynb
 - name: spectrum_analysis
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_analysis.ipynb
-  requires: iminuit
   datasets:
     - hess-dl3-dr1
 - name: spectrum_simulation
