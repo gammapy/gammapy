@@ -109,8 +109,48 @@ class MapDatasetEventSampler:
     def __init__(self, random_state="random-seed"):
         self.random_state = get_random_state(random_state)
 
+    def _sample_coord_time(self, npred, temporal_model, gti, MC_ID=0):
+        """Sample source model components.
+
+        Parameters
+        ----------
+        npred : `~gammapy.maps.Map`
+            Maps of the predicted counts.
+        temporal_model : `~gammapy.modeling.models`
+            Temporal model.
+        gti : `MapDataset` object
+            Good time intervals of the given MapDataset object.
+        MC_ID : `Int`
+            Monte Carlo identifier of the sampled source.
+
+        Returns
+        -------
+        events : `EventList`
+            Event list
+        """
+        table = Table()
+        n_events = self.random_state.poisson(np.sum(npred.data))
+
+        # sample position
+        coords = npred.sample_coord(n_events, self.random_state)
+        table["ENERGY_TRUE"] = coords["energy"]
+        table["RA_TRUE"] = coords.skycoord.icrs.ra.deg
+        table["DEC_TRUE"] = coords.skycoord.icrs.dec.deg
+        table["MC_ID"] = MC_ID
+
+        # sample time
+        # TODO: .temporal_model does not exist yet
+        time_start, time_stop, time_ref = (gti.time_start, gti.time_stop, gti.time_ref)
+        time = temporal_model.sample_time(
+            n_events, time_start, time_stop, self.random_state
+        )
+        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).value
+
+        return table
+
     def sample_sources(self, dataset):
         """Sample source model components.
+
         Parameters
         ----------
         dataset : `MapDataset`
@@ -123,31 +163,15 @@ class MapDatasetEventSampler:
         """
         events_all = []
         for idx, evaluator in enumerate(dataset._evaluators):
-            table = Table()
             evaluator.edisp = None
             evaluator.psf = None
             npred = evaluator.compute_npred()
-            n_events = self.random_state.poisson(np.sum(npred.data))
 
-            # sample position
-            coords = npred.sample_coord(n_events, self.random_state)
-            table["ENERGY"] = coords["energy"]
-            table["RA"] = coords.skycoord.icrs.ra.deg
-            table["DEC"] = coords.skycoord.icrs.dec.deg
-            table["MC_ID"] = idx + 1
+            temporal_model = ConstantTemporalModel()
 
-            # sample time
-            # TODO: .temporal_model does not exist yet
-            time_start, time_stop, time_ref = (
-                dataset.gti.time_start,
-                dataset.gti.time_stop,
-                dataset.gti.time_ref,
+            table = self._sample_coord_time(
+                npred, temporal_model, dataset.gti, MC_ID=idx + 1
             )
-            model = ConstantTemporalModel()
-            time = model.sample_time(n_events, time_start, time_stop, self.random_state)
-            table["TIME"] = u.Quantity(
-                ((time.mjd - time_ref.mjd) * u.day).to(u.s)
-            ).value
             events_all.append(EventList(table))
 
         return EventList.stack(events_all)
@@ -165,26 +189,13 @@ class MapDatasetEventSampler:
         events : `EventList`
             Background events
         """
-        table = Table()
-
         background = dataset.background_model.evaluate()
-        n_events = self.random_state.poisson(np.sum(background.data))
 
-        # sample position
-        coords = background.sample_coord(n_events, self.random_state)
-        table["ENERGY"] = coords["energy"]
-        table["RA"] = coords.skycoord.icrs.ra.deg
-        table["DEC"] = coords.skycoord.icrs.dec.deg
-        table["MC_ID"] = 0
+        temporal_model = ConstantTemporalModel()
 
-        # sample time
-        time_start, time_stop, time_ref = (
-            dataset.gti.time_start,
-            dataset.gti.time_stop,
-            dataset.gti.time_ref,
-        )
-        model = ConstantTemporalModel()
-        time = model.sample_time(n_events, time_start, time_stop, self.random_state)
-        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).value
+        table = self._sample_coord_time(background, temporal_model, dataset.gti)
+        table.rename_column("ENERGY_TRUE", "ENERGY")
+        table.rename_column("RA_TRUE", "RA")
+        table.rename_column("DEC_TRUE", "DEC")
 
         return EventList(table)
