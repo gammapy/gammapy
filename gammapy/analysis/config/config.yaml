@@ -34,7 +34,6 @@ datasets:
         exclusion:    # fits file for exclusion mask
     on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
     containment_correction: true
-    psf_kernel_radius: 0.6 deg
 
 # optional
 fit:
