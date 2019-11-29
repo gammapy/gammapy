@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Cube models (axes: lon, lat, energy)."""
+import collections.abc
 import copy
 from pathlib import Path
 import numpy as np
@@ -31,7 +32,7 @@ class SkyModelBase(Model):
         return self(coords.lon, coords.lat, coords["energy"])
 
 
-class SkyModels:
+class SkyModels(collections.abc.Sequence):
     """Sky model collection.
 
     Parameters

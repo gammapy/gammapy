@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import collections.abc
 import logging
 import numpy as np
 from astropy.coordinates import SkyCoord
@@ -292,26 +293,26 @@ class DataStoreObservation:
         return checker.run(checks=checks)
 
 
-class Observations:
+class Observations(collections.abc.Sequence):
     """Container class that holds a list of observations.
 
     Parameters
     ----------
-    obs_list : list
+    observations : list
         A list of `~gammapy.data.DataStoreObservation`
     """
 
-    def __init__(self, obs_list=None):
-        self.list = obs_list or []
+    def __init__(self, observations=None):
+        self._observations = observations or []
 
     def __getitem__(self, key):
         if isinstance(key, str):
             key = self.ids.index(key)
 
-        return self.list[key]
+        return self._observations[key]
 
     def __len__(self):
-        return len(self.list)
+        return len(self._observations)
 
     def __str__(self):
         s = self.__class__.__name__ + "\n"
@@ -323,7 +324,7 @@ class Observations:
     @property
     def ids(self):
         """List of obs IDs (`list`)"""
-        return [str(obs.obs_id) for obs in self.list]
+        return [str(obs.obs_id) for obs in self]
 
     def select_time(self, time_intervals):
         """Select a time interval of the observations.

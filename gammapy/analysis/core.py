@@ -84,7 +84,7 @@ class Analysis:
         obs_list = self.datastore.get_observations()
         if len(self.config.observations.obs_ids):
             obs_list = self.datastore.get_observations(data_settings.obs_ids)
-        selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
+        selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list]
         ids = selected_obs["OBS_ID"].tolist()
         # TODO
         # if self.config.observations.obs_file:
@@ -106,8 +106,8 @@ class Analysis:
         # if self.config.observations.obs_time.start is not None:
         # filter obs_ids with time filter
         self.observations = self.datastore.get_observations(ids, skip_missing=True)
-        log.info(f"{len(self.observations.list)} observations were selected.")
-        for obs in self.observations.list:
+        log.info(f"Number of selected observations: {len(self.observations)}")
+        for obs in self.observations:
             log.debug(obs)
 
     def get_datasets(self):

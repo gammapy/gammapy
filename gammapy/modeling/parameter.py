@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Model parameter classes."""
+import collections.abc
 import copy
 import itertools
 import numpy as np
@@ -238,7 +239,7 @@ class Parameter:
             raise ValueError(f"Invalid method: {method}")
 
 
-class Parameters:
+class Parameters(collections.abc.Sequence):
     """Parameters container.
 
     - List of `Parameter` objects.

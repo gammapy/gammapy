@@ -148,7 +148,7 @@ def test_observations_select_time_time_intervals_list(data_store):
     ]
     new_obss = obss.select_time(time_intervals)
 
-    assert len(new_obss.list) == 2
+    assert len(new_obss) == 2
     assert new_obss[0].events.time[0] >= time_intervals[0][0]
     assert new_obss[0].events.time[-1] < time_intervals[0][1]
     assert new_obss[1].events.time[0] >= time_intervals[1][0]
