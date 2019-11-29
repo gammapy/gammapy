@@ -272,6 +272,8 @@ class PSFMap:
             the resulting kernel
         """
         table_psf = self.get_energy_dependent_table_psf(position)
+        if max_radius is None:
+            max_radius = np.max(table_psf.rad)
         return PSFKernel.from_table_psf(table_psf, geom, max_radius, factor)
 
     def containment_radius_map(self, energy, fraction=0.68):

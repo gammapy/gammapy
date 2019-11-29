@@ -75,11 +75,6 @@ def simulate_map_dataset(random_state=0):
     maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
     dataset = maker.run(empty, obs)
 
-    position = SkyCoord("0 deg", "0 deg", frame="galactic")
-    dataset.psf = dataset.psf.get_psf_kernel(
-        position=position, geom=geom, max_radius=0.8 * u.deg
-    )
-
     dataset.model = skymodel
     dataset.fake(random_state=random_state)
     return dataset
@@ -175,7 +170,7 @@ class TestFluxPointsEstimator:
         fp = fpe_map_pwl.run()
 
         actual = fp.table["norm"].data
-        assert_allclose(actual, [0.968217, 0.968712, 0.897872], rtol=1e-3)
+        assert_allclose(actual, [0.974651, 0.966819, 0.897374], rtol=1e-2)
 
         actual = fp.table["norm_err"].data
         assert_allclose(actual, [0.067386, 0.052279, 0.091548], rtol=1e-2)
