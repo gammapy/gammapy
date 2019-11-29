@@ -35,6 +35,7 @@ Notebooks
    ../notebooks/spectrum_analysis.ipynb
    ../notebooks/sed_fitting_gammacat_fermi.ipynb
    ../notebooks/light_curve.ipynb
+   ../notebooks/light_curve_flare.ipynb
    ../notebooks/cta_sensitivity.ipynb
    ../notebooks/spectrum_simulation.ipynb
    ../notebooks/image_analysis.ipynb
@@ -78,6 +79,7 @@ Notebooks
 *Time-dependent analysis*
 
 - `Light curves <../notebooks/light_curve.html>`__ | *light_curve.ipynb*
+- `Light curves for flares <../notebooks/light_curve_flare.html>`__ | *light_curve_flare.ipynb*
 
 **Simulations, Sensitivity, Observability**
 
