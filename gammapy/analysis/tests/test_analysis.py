@@ -25,9 +25,10 @@ def test_init():
 def test_update_config():
     analysis = Analysis(AnalysisConfig())
     data = {"general": {"outdir": "test"}}
-    cfg2 = AnalysisConfig(**data)
-    analysis.update_config(cfg2)
+    config = AnalysisConfig(**data)
+    analysis.update_config(config)
     assert analysis.config.general.outdir == "test"
+
     analysis = Analysis(AnalysisConfig())
     data = """
     general:
@@ -35,10 +36,10 @@ def test_update_config():
     """
     analysis.update_config(data)
     assert analysis.config.general.outdir == "test"
+
     analysis = Analysis(AnalysisConfig())
-    data = 0
     with pytest.raises(TypeError):
-        analysis.update_config(data)
+        analysis.update_config(0)
 
 
 @requires_data()
@@ -64,7 +65,7 @@ def test_get_observations():
 
 
 @requires_data()
-def test_set_model():
+def test_set_models():
     config = AnalysisConfig.from_template("1d")
     analysis = Analysis(config)
     analysis.get_observations()
@@ -97,8 +98,7 @@ def test_analysis_1d():
     analysis.update_config(cfg)
     analysis.get_observations()
     analysis.get_datasets()
-    model = analysis.read_model(MODEL_FILE)
-    analysis.set_model(model)
+    analysis.read_model(MODEL_FILE)
     analysis.run_fit()
     analysis.get_flux_points()
 
@@ -137,8 +137,7 @@ def test_analysis_1d_stacked():
     analysis.config.datasets.stack = True
     analysis.get_observations()
     analysis.get_datasets()
-    model = analysis.read_model(MODEL_FILE)
-    analysis.set_model(model)
+    analysis.read_model(MODEL_FILE)
     analysis.run_fit()
 
     assert len(analysis.datasets) == 1
@@ -156,8 +155,7 @@ def test_analysis_3d():
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    model = analysis.read_model(MODEL_FILE)
-    analysis.set_model(model)
+    analysis.read_model(MODEL_FILE)
     analysis.datasets["stacked"].background_model.tilt.frozen = False
     analysis.run_fit()
     analysis.get_flux_points()
@@ -193,8 +191,7 @@ def test_usage_errors():
     with pytest.raises(RuntimeError):
         analysis.get_datasets()
     with pytest.raises(RuntimeError):
-        model = analysis.read_model(MODEL_FILE)
-        analysis.set_model(model)
+        analysis.read_model(MODEL_FILE)
     with pytest.raises(RuntimeError):
         analysis.run_fit()
     with pytest.raises(RuntimeError):

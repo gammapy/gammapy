@@ -123,33 +123,36 @@ class Analysis:
             ValueError(f"Invalid dataset type: {self.config.datasets.type}")
 
     def set_model(self, model):
-        """Set model to datasets.
+        """Set models on datasets.
 
         Parameters
         ----------
-        model: `SkyModel` or string
-            `SkyModels` or string in YAML format with the serialized model.
+        model : `~gammapy.modeling.models.SkyModels` or str
+            SkyModels object or YAML models string
         """
         if not self.datasets or len(self.datasets) == 0:
             raise RuntimeError("Missing datasets")
 
         log.info(f"Reading model.")
         if isinstance(model, str):
+            # FIXME: SkyModels should offer a method to create from YAML str
             model = yaml.safe_load(model)
             self.model = SkyModels(dict_to_models(model))
         elif isinstance(model, SkyModels):
             self.model = model
         else:
-            raise TypeError("Model should be a YAML string or a SkyModels object.")
+            raise TypeError(f"Invalid type: {model!r}")
+
         for dataset in self.datasets:
             dataset.model = self.model
+
         log.info(self.model)
 
-    @classmethod
-    def read_model(cls, filename):
-        """Reads model rom YAML file."""
-        filepath = make_path(filename)
-        return SkyModels.from_yaml(filepath)
+    def read_model(self, path):
+        """Read models from YAML file."""
+        path = make_path(path)
+        models = SkyModels.from_yaml(path)
+        self.set_model(models)
 
     def run_fit(self, optimize_opts=None):
         """Fitting reduced datasets to model."""
