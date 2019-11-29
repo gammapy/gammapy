@@ -270,21 +270,15 @@ class AnalysisConfig(GammapyBaseConfig):
             Configuration settings provided in dict() syntax.
         """
         if isinstance(config, str):
-            config = dict(yaml.safe_load(config))
-        if isinstance(config, dict):
-            config = AnalysisConfig(**config)
-        if isinstance(config, AnalysisConfig):
-            upd_config = deep_update(
-                self.dict(exclude_defaults=True), config.dict(exclude_defaults=True)
-            )
-            return AnalysisConfig(**upd_config)
-
-    def help(self, section=""):
-        """Print template configuration settings."""
-        doc = self._get_doc_sections()
-        for keyword in doc.keys():
-            if section == "" or section == keyword:
-                print(doc[keyword])
+            other = AnalysisConfig.from_yaml(config)
+        elif isinstance(config, AnalysisConfig):
+            other = config
+        else:
+            raise TypeError("Config should be a YAML string or an AnalysisConfig object.")
+        upd_config = deep_update(
+            self.dict(exclude_defaults=True), other.dict(exclude_defaults=True)
+        )
+        return AnalysisConfig(**upd_config)
 
     @staticmethod
     def _get_doc_sections():

@@ -156,13 +156,20 @@ Model
 -----
 
 For now we simply declare the model as a reference to a separate YAML file, passing
-the filename into the `set_model()` method to fetch the model and attach it to your
-datasets. Note that You may also pass a serialized model as a dictionary.
+the filename into the `~gammapy.analysis.Analysis.read_model` method to fetch the model and attach it to your
+datasets.
 
 .. code-block:: python
 
-    >>> analysis.set_model(filename="model.yaml")
-    >>> analysis.set_model(model=dict_model)
+    >>> analysis.read_model("model.yaml")
+
+If you have a `~gammapy.modeling.models.SkyModels` object, or a YAML string representing
+one, you can use the ``set_model` method:
+
+.. code-block:: python
+
+    >>> models = SkyModels(...)
+    >>> analysis.set_model(models)
 
 Fitting
 -------
