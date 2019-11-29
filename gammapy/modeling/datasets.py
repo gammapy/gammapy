@@ -160,8 +160,8 @@ class Datasets(collections.abc.Sequence):
         """
         from .serialize import dict_to_datasets
 
-        components = read_yaml(filemodel)
-        data_list = read_yaml(filedata)
+        components = read_yaml(make_path(filemodel))
+        data_list = read_yaml(make_path(filedata))
         datasets = dict_to_datasets(data_list, components)
         return cls(datasets)
 
