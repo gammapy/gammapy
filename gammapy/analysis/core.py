@@ -48,7 +48,7 @@ class Analysis:
         self.datastore = None
         self.observations = None
         self.datasets = None
-        self.model = None
+        self.models = None
         self.fit = None
         self.fit_result = None
         self.flux_points = None
@@ -122,42 +122,42 @@ class Analysis:
         else:
             ValueError(f"Invalid dataset type: {self.config.datasets.type}")
 
-    def set_model(self, model):
+    def set_models(self, models):
         """Set models on datasets.
 
         Parameters
         ----------
-        model : `~gammapy.modeling.models.SkyModels` or str
+        models : `~gammapy.modeling.models.SkyModels` or str
             SkyModels object or YAML models string
         """
         if not self.datasets or len(self.datasets) == 0:
             raise RuntimeError("Missing datasets")
 
         log.info(f"Reading model.")
-        if isinstance(model, str):
+        if isinstance(models, str):
             # FIXME: SkyModels should offer a method to create from YAML str
-            model = yaml.safe_load(model)
-            self.model = SkyModels(dict_to_models(model))
-        elif isinstance(model, SkyModels):
-            self.model = model
+            models = yaml.safe_load(models)
+            self.models = SkyModels(dict_to_models(models))
+        elif isinstance(models, SkyModels):
+            self.models = models
         else:
-            raise TypeError(f"Invalid type: {model!r}")
+            raise TypeError(f"Invalid type: {models!r}")
 
         for dataset in self.datasets:
-            dataset.models = self.model
+            dataset.models = self.models
 
-        log.info(self.model)
+        log.info(self.models)
 
-    def read_model(self, path):
+    def read_models(self, path):
         """Read models from YAML file."""
         path = make_path(path)
         models = SkyModels.from_yaml(path)
-        self.set_model(models)
+        self.set_models(models)
 
     def run_fit(self, optimize_opts=None):
         """Fitting reduced datasets to model."""
-        if not self.model:
-            raise RuntimeError("Missing model")
+        if not self.models:
+            raise RuntimeError("Missing models")
 
         fit_settings = self.config.fit
         for dataset in self.datasets:
@@ -194,7 +194,7 @@ class Analysis:
         )
         fp = flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
-        self.flux_points = FluxPointsDataset(data=fp, models=self.model[source])
+        self.flux_points = FluxPointsDataset(data=fp, models=self.models[source])
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
 
