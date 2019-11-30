@@ -229,9 +229,7 @@ class MapDataset(Dataset):
 
         evaluators = []
         for model in self.models:
-            evaluator = MapEvaluator(
-                model, evaluation_mode=self.evaluation_mode
-            )
+            evaluator = MapEvaluator(model, evaluation_mode=self.evaluation_mode)
             evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
             evaluators.append(evaluator)
 

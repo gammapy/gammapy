@@ -197,10 +197,7 @@ class SpectrumDataset(Dataset):
         evaluators = []
         for model in self.models:
             evaluator = SpectrumEvaluator(
-                model=model,
-                livetime=self.livetime,
-                aeff=self.aeff,
-                edisp=self.edisp,
+                model=model, livetime=self.livetime, aeff=self.aeff, edisp=self.edisp
             )
             evaluators.append(evaluator)
 

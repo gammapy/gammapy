@@ -122,7 +122,9 @@ def test_datasets_to_io(tmp_path):
     dataset1 = datasets[1]
     assert dataset1.background_model.name == "background_irf_g09"
 
-    assert dataset0.models["gll_iem_v06_cutout"] == dataset1.models["gll_iem_v06_cutout"]
+    assert (
+        dataset0.models["gll_iem_v06_cutout"] == dataset1.models["gll_iem_v06_cutout"]
+    )
 
     assert isinstance(dataset0.models, SkyModels)
     assert len(dataset0.models) == 2
