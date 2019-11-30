@@ -30,7 +30,7 @@ def simulate_spectrum_dataset(model, random_state=0):
     )
 
     dataset = SpectrumDatasetOnOff(
-        aeff=aeff, model=model, livetime=100 * u.h, acceptance=1, acceptance_off=5
+        aeff=aeff, models=model, livetime=100 * u.h, acceptance=1, acceptance_off=5
     )
 
     eval = SpectrumEvaluator(model=bkg_model, aeff=aeff, livetime=100 * u.h)
@@ -44,7 +44,7 @@ def create_fpe(model):
     model = SkyModel(spectral_model=model)
     dataset = simulate_spectrum_dataset(model)
     e_edges = [0.1, 1, 10, 100] * u.TeV
-    dataset.model = model
+    dataset.models = model
     return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=11)
 
 
@@ -72,7 +72,7 @@ def simulate_map_dataset(random_state=0):
     maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
     dataset = maker.run(empty, obs)
 
-    dataset.model = skymodel
+    dataset.models = skymodel
     dataset.fake(random_state=random_state)
     return dataset
 
@@ -241,8 +241,8 @@ def test_mask_shape():
         spectral_model=PowerLawSpectralModel(), spatial_model=GaussianSpatialModel()
     )
 
-    dataset_1.model = model
-    dataset_2.model = model
+    dataset_1.models = model
+    dataset_2.models = model
 
     fpe = FluxPointsEstimator(
         datasets=[dataset_2, dataset_1], e_edges=[1, 10] * u.TeV, source="source"

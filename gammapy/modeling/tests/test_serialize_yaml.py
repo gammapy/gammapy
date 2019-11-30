@@ -122,19 +122,21 @@ def test_datasets_to_io(tmp_path):
     dataset1 = datasets[1]
     assert dataset1.background_model.name == "background_irf_g09"
 
-    assert dataset0.model["gll_iem_v06_cutout"] == dataset1.model["gll_iem_v06_cutout"]
-
-    assert isinstance(dataset0.model, SkyModels)
-    assert len(dataset0.model) == 2
-    assert dataset0.model[0].name == "gc"
-    assert dataset0.model[1].name == "gll_iem_v06_cutout"
-
     assert (
-        dataset0.model[0].parameters["reference"]
-        is dataset1.model[1].parameters["reference"]
+        dataset0.models["gll_iem_v06_cutout"] == dataset1.models["gll_iem_v06_cutout"]
     )
 
-    assert_allclose(dataset1.model[1].parameters["lon_0"].value, 0.9, atol=0.1)
+    assert isinstance(dataset0.models, SkyModels)
+    assert len(dataset0.models) == 2
+    assert dataset0.models[0].name == "gc"
+    assert dataset0.models[1].name == "gll_iem_v06_cutout"
+
+    assert (
+        dataset0.models[0].parameters["reference"]
+        is dataset1.models[1].parameters["reference"]
+    )
+
+    assert_allclose(dataset1.models[1].parameters["lon_0"].value, 0.9, atol=0.1)
 
     datasets.write(tmp_path, prefix="written")
     datasets_read = Datasets.read(

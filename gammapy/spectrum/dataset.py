@@ -30,7 +30,7 @@ class SpectrumDataset(Dataset):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SkyModels` or `~gammapy.modeling.models.SkyModel`
+    models : `~gammapy.modeling.models.SkyModels`
         Fit model
     counts : `~gammapy.spectrum.CountsSpectrum`
         Counts spectrum
@@ -61,7 +61,7 @@ class SpectrumDataset(Dataset):
 
     def __init__(
         self,
-        model=None,
+        models=None,
         counts=None,
         livetime=None,
         aeff=None,
@@ -86,7 +86,7 @@ class SpectrumDataset(Dataset):
         self.aeff = aeff
         self.edisp = edisp
         self.background = background
-        self.model = model
+        self.models = models
         self.mask_safe = mask_safe
         self.name = name
         self.gti = gti
@@ -103,7 +103,7 @@ class SpectrumDataset(Dataset):
         str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
 
         npred = np.nan
-        if self.model is not None:
+        if self.models is not None:
             npred = np.sum(self.npred().data)
         str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
 
@@ -148,21 +148,21 @@ class SpectrumDataset(Dataset):
         str_ += "\t{:32}: {}\n".format("Fit statistic type", self.likelihood_type)
 
         stat = np.nan
-        if self.model is not None and self.counts is not None:
+        if self.models is not None and self.counts is not None:
             stat = self.stat_sum()
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
         n_pars, n_free_pars = 0, 0
-        if self.model is not None:
-            n_pars = len(self.model.parameters)
+        if self.models is not None:
+            n_pars = len(self.models.parameters)
             n_free_pars = len(self.parameters.free_parameters)
 
         str_ += "\t{:32}: {}\n".format("Number of parameters", n_pars)
         str_ += "\t{:32}: {}\n\n".format("Number of free parameters", n_free_pars)
 
-        if self.model is not None:
-            str_ += "\t{:32}: {}\n".format("Model type", self.model.__class__.__name__)
-            info = str(self.model.parameters)
+        if self.models is not None:
+            str_ += "\t{:32}: {}\n".format("Model type", self.models.__class__.__name__)
+            info = str(self.models.parameters)
             lines = info.split("\n")
             for line in lines[2:-1]:
                 str_ += "\t" + line.replace(":", "\t:") + "\n"
@@ -170,26 +170,38 @@ class SpectrumDataset(Dataset):
         return str_.expandtabs(tabsize=4)
 
     @property
-    def model(self):
-        return self._model
+    def models(self):
+        """Models (`gammapy.modeling.models.SkyModels`)."""
+        return self._models
 
-    @model.setter
-    def model(self, model):
-        if isinstance(model, SkyModel):
-            model = SkyModels([model])
+    @models.setter
+    def models(self, value):
+        if value is None or isinstance(value, SkyModels):
+            models = value
+        elif isinstance(value, list):
+            models = SkyModels(value)
+        elif isinstance(value, SkyModel):
+            models = SkyModels([value])
+        else:
+            raise TypeError(f"Invalid: {value!r}")
 
-        self._model = model
-        self._evaluators = []
+        self._models = models
 
-        if model is not None:
-            for component in model:
-                evaluator = SpectrumEvaluator(
-                    model=component,
-                    livetime=self.livetime,
-                    aeff=self.aeff,
-                    edisp=self.edisp,
-                )
-                self._evaluators.append(evaluator)
+        self._make_evaluators()
+
+    def _make_evaluators(self):
+        if self.models is None:
+            self._evaluators = []
+            return
+
+        evaluators = []
+        for model in self.models:
+            evaluator = SpectrumEvaluator(
+                model=model, livetime=self.livetime, aeff=self.aeff, edisp=self.edisp
+            )
+            evaluators.append(evaluator)
+
+        self._evaluators = evaluators
 
     @property
     def mask_safe(self):
@@ -207,7 +219,7 @@ class SpectrumDataset(Dataset):
         """List of parameters (`~gammapy.modeling.Parameters`)"""
         parameters = []
 
-        for component in self.model:
+        for component in self.models:
             parameters.append(component.spectral_model.parameters)
 
         return Parameters.from_stack(parameters)
@@ -522,7 +534,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SpectralModel`
+    models : `~gammapy.modeling.models.SkyModels`
         Fit model
     counts : `~gammapy.spectrum.CountsSpectrum`
         ON Counts spectrum
@@ -557,7 +569,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def __init__(
         self,
-        model=None,
+        models=None,
         counts=None,
         counts_off=None,
         livetime=None,
@@ -581,7 +593,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.mask_fit = mask_fit
         self.aeff = aeff
         self.edisp = edisp
-        self.model = model
+        self.models = models
         self.mask_safe = mask_safe
 
         if np.isscalar(acceptance):
@@ -1105,10 +1117,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         outdir = Path(filename).parent
         filename = str(outdir / f"pha_obs{self.name}.fits")
 
-        if self.model is not None:
-            models = [_.name for _ in self.model]
-        else:
+        if self.models is None:
             models = []
+        else:
+            models = [_.name for _ in self.models]
 
         return {
             "name": self.name,
@@ -1152,7 +1164,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Spectrum dataset on off.
 
         """
-        model = SkyModels([model for model in models if model.name in data["models"]])
+        models = [model for model in models if model.name in data["models"]]
 
         # TODO: assumes that the model is a skymodel
         # so this will work only when this change will be effective
@@ -1160,7 +1172,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         dataset = cls.from_ogip_files(filename=filename)
         dataset.mask_fit = None
-        dataset.model = model
+        dataset.models = models
         return dataset
 
 

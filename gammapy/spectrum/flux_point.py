@@ -812,10 +812,11 @@ class FluxPointsEstimator:
 
         dataset = self.datasets[0]
 
-        if len(dataset.model) > 1:
-            model = dataset.model[source].spectral_model
+        # TODO: this is complex and non-obvious behaviour. Simlify!
+        if len(dataset.models) > 1:
+            model = dataset.models[source].spectral_model
         else:
-            model = dataset.model[0].spectral_model
+            model = dataset.models[0].spectral_model
 
         self.model = ScaleSpectralModel(model)
         self.model.norm.min = 0
@@ -855,10 +856,10 @@ class FluxPointsEstimator:
     def _set_scale_model(self):
         # set the model on all datasets
         for dataset in self.datasets:
-            if len(dataset.model) > 1:
-                dataset.model[self.source].spectral_model = self.model
+            if len(dataset.models) > 1:
+                dataset.models[self.source].spectral_model = self.model
             else:
-                dataset.model[0].spectral_model = self.model
+                dataset.models[0].spectral_model = self.model
 
     @property
     def ref_model(self):
@@ -1148,8 +1149,8 @@ class FluxPointsDataset(Dataset):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SkyModels` or `~gammapy.modeling.models.SkyModel`
-        Spectral model
+    models : `~gammapy.modeling.models.SkyModels`
+        Models (only spectral part needs to be set)
     data : `~gammapy.spectrum.FluxPoints`
         Flux points.
     mask_fit : `numpy.ndarray`
@@ -1163,18 +1164,17 @@ class FluxPointsDataset(Dataset):
     --------
     Load flux points from file and fit with a power-law model::
 
-        from astropy import units as u
-        from gammapy.spectrum import FluxPoints, FluxPointsDataset
         from gammapy.modeling import Fit
-        from gammapy.modeling.models import PowerLawSpectralModel
+        from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+        from gammapy.spectrum import FluxPoints, FluxPointsDataset
 
-        filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits'
+        filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
         flux_points = FluxPoints.read(filename)
 
-        model = PowerLawSpectralModel()
+        model = SkyModel(spectral_model=PowerLawSpectralModel())
 
         dataset = FluxPointsDataset(model, flux_points)
-        fit = Fit(dataset)
+        fit = Fit([dataset])
         result = fit.run()
         print(result)
         print(result.parameters.to_table())
@@ -1183,12 +1183,12 @@ class FluxPointsDataset(Dataset):
     tag = "FluxPointsDataset"
 
     def __init__(
-        self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None, name=""
+        self, models, data, mask_fit=None, likelihood="chi2", mask_safe=None, name=""
     ):
         self.data = data
         self.mask_fit = mask_fit
         self.name = name
-        self.model = model
+        self.models = models
         if data.sed_type != "dnde":
             raise ValueError("Currently only flux points of type 'dnde' are supported.")
 
@@ -1206,22 +1206,28 @@ class FluxPointsDataset(Dataset):
             )
 
     @property
-    def model(self):
-        return self._model
+    def models(self):
+        return self._models
 
-    @model.setter
-    def model(self, model):
-        if isinstance(model, SkyModel):
-            model = SkyModels([model])
+    @models.setter
+    def models(self, value):
+        if isinstance(value, SkyModels):
+            models = value
+        elif isinstance(value, list):
+            models = SkyModels(value)
+        elif isinstance(value, SkyModel):
+            models = SkyModels([value])
+        else:
+            raise TypeError(f"Invalid: {value!r}")
 
-        self._model = model
+        self._models = models
 
     @property
     def parameters(self):
         """List of parameters (`~gammapy.modeling.Parameters`)"""
         parameters = []
 
-        for component in self.model:
+        for component in self.models:
             parameters.append(component.spectral_model.parameters)
 
         return Parameters.from_stack(parameters)
@@ -1265,9 +1271,8 @@ class FluxPointsDataset(Dataset):
         -------
         dataset : `FluxPointsDataset`
             Flux point datasets.
-
         """
-        models_list = [model for model in models if model.name in data["models"]]
+        models = [model for model in models if model.name in data["models"]]
         # TODO: assumes that the model is a skymodel
         # so this will work only when this change will be effective
         table = Table.read(data["filename"])
@@ -1275,7 +1280,7 @@ class FluxPointsDataset(Dataset):
         mask_safe = table["mask_safe"].data.astype("bool")
         table.remove_columns(["mask_fit", "mask_safe"])
         return cls(
-            model=SkyModels(models_list),
+            models=models,
             name=data["name"],
             data=FluxPoints(table),
             mask_fit=mask_fit,
@@ -1285,8 +1290,8 @@ class FluxPointsDataset(Dataset):
 
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
-        if self.model is not None:
-            models = [_.name for _ in self.model]
+        if self.models is not None:
+            models = [_.name for _ in self.models]
         else:
             models = []
 
@@ -1301,7 +1306,7 @@ class FluxPointsDataset(Dataset):
     def __str__(self):
         str_ = f"{self.__class__.__name__}: \n"
         str_ += "\n"
-        if self.model is None:
+        if self.models is None:
             str_ += "\t{:32}:   {} \n".format("Model Name", "No Model")
         else:
             str_ += "\t{:32}:   {} \n".format("Total flux points", len(self.data.table))
@@ -1318,7 +1323,7 @@ class FluxPointsDataset(Dataset):
                     "Excluded by user", (~self.mask_fit).sum()
                 )
             str_ += "\t{:32}:   {}\n".format(
-                "Model Name", self.model.__class__.__name__
+                "Model Name", self.models.__class__.__name__
             )
             str_ += "\t{:32}:   {}\n".format("N parameters", len(self.parameters))
             str_ += "\t{:32}:   {}\n".format(
@@ -1367,7 +1372,7 @@ class FluxPointsDataset(Dataset):
     def flux_pred(self):
         """Compute predicted flux."""
         flux = 0.0
-        for component in self.model:
+        for component in self.models:
             flux += component.spectral_model(self.data.e_ref)
         return flux
 
@@ -1548,15 +1553,15 @@ class FluxPointsDataset(Dataset):
         plot_kwargs.setdefault("zorder", 10)
         plot_kwargs.update(model_kwargs)
         plot_kwargs.setdefault("label", "Best fit model")
-        for _ in self.model:
+        for _ in self.models:
             _.spectral_model.plot(ax=ax, **plot_kwargs)
 
         plot_kwargs.setdefault("color", ax.lines[-1].get_color())
         del plot_kwargs["label"]
 
-        if self.model.parameters.covariance is not None:
+        if self.models.parameters.covariance is not None:
             try:
-                self.model.plot_error(ax=ax, **plot_kwargs)
+                self.models.plot_error(ax=ax, **plot_kwargs)
             except AttributeError:
                 log.debug("Model does not support evaluation of errors")
 

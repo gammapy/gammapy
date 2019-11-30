@@ -57,7 +57,7 @@ class TestFit:
     def test_cash(self):
         """Simple CASH fit to the on vector"""
         dataset = SpectrumDataset(
-            model=self.source_model,
+            models=self.source_model,
             counts=self.src,
             aeff=self.aeff,
             livetime=self.src.livetime,
@@ -91,7 +91,7 @@ class TestFit:
             acceptance=1,
             acceptance_off=1 / self.alpha,
         )
-        dataset.model = self.source_model
+        dataset.models = self.source_model
 
         self.source_model.parameters.index = 1.12
 
@@ -108,7 +108,7 @@ class TestFit:
         dataset = SpectrumDatasetOnOff(
             counts=self.src, mask_safe=np.ones(self.src.energy.nbin, dtype=bool)
         )
-        dataset.model = self.source_model
+        dataset.models = self.source_model
 
         assert np.sum(dataset.mask_safe) == self.nbins
         e_min, e_max = dataset.energy_range
@@ -118,7 +118,7 @@ class TestFit:
 
     def test_stat_profile(self):
         dataset = SpectrumDataset(
-            model=self.source_model,
+            models=self.source_model,
             aeff=self.aeff,
             livetime=self.src.livetime,
             counts=self.src,
@@ -161,7 +161,7 @@ class TestSpectralFit:
 
     def test_stats(self):
         dataset = self.obs_list[0]
-        dataset.model = self.pwl
+        dataset.models = self.pwl
 
         fit = Fit([dataset])
         result = fit.run()
@@ -192,7 +192,7 @@ class TestSpectralFit:
             data=data, energy_lo=e_edges[:-1], energy_hi=e_edges[1:]
         )
         dataset.edisp = None
-        dataset.model = self.pwl
+        dataset.models = self.pwl
 
         fit = Fit([dataset])
         result = fit.run()
@@ -201,7 +201,7 @@ class TestSpectralFit:
     def test_stacked_fit(self):
         dataset = self.obs_list[0].copy()
         dataset.stack(self.obs_list[1])
-        dataset.model = self.pwl
+        dataset.models = self.pwl
 
         fit = Fit([dataset])
         result = fit.run()

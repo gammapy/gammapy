@@ -70,11 +70,11 @@ def test_set_models():
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    model_str = Path(MODEL_FILE).read_text()
-    analysis.set_model(model=model_str)
-    assert isinstance(analysis.model, SkyModels) is True
+    models_str = Path(MODEL_FILE).read_text()
+    analysis.set_models(models=models_str)
+    assert isinstance(analysis.models, SkyModels) is True
     with pytest.raises(TypeError):
-        analysis.set_model(0)
+        analysis.set_models(0)
 
 
 @requires_dependency("iminuit")
@@ -98,7 +98,7 @@ def test_analysis_1d():
     analysis.update_config(cfg)
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.read_model(MODEL_FILE)
+    analysis.read_models(MODEL_FILE)
     analysis.run_fit()
     analysis.get_flux_points()
 
@@ -137,7 +137,7 @@ def test_analysis_1d_stacked():
     analysis.config.datasets.stack = True
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.read_model(MODEL_FILE)
+    analysis.read_models(MODEL_FILE)
     analysis.run_fit()
 
     assert len(analysis.datasets) == 1
@@ -155,7 +155,7 @@ def test_analysis_3d():
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.read_model(MODEL_FILE)
+    analysis.read_models(MODEL_FILE)
     analysis.datasets["stacked"].background_model.tilt.frozen = False
     analysis.run_fit()
     analysis.get_flux_points()
@@ -191,7 +191,7 @@ def test_usage_errors():
     with pytest.raises(RuntimeError):
         analysis.get_datasets()
     with pytest.raises(RuntimeError):
-        analysis.read_model(MODEL_FILE)
+        analysis.read_models(MODEL_FILE)
     with pytest.raises(RuntimeError):
         analysis.run_fit()
     with pytest.raises(RuntimeError):
