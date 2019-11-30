@@ -7,10 +7,10 @@ PIG 8 - Datasets
 ****************
 
 * Author: Axel Donath, Christoph Deil, Regis Terrier & Atreyee Sinha
-* Created: Jan 4th, 2018
-* Accepted:
-* Status:
-* Discussion:
+* Created: Jan 4th, 2019
+* Accepted: Nov 30th, 2019
+* Status: accepted
+* Discussion: `GH 1986`_
 
 
 Abstract
@@ -433,7 +433,7 @@ for the `MapDataset`):
     dataset = MapDataset(counts=None)
 
     # to sample a counts map from npred
-    dataset.counts = dataset.simulate_counts(random_seed=0)
+    dataset.counts = dataset.fake(random_seed=0)
 
     fit = Fit(dataset)
     fit.optimize()
@@ -605,16 +605,16 @@ requests and are not loaded in memory when calling `.read()`. We leave this ques
 un-addressed in this PR but mention it for completeness.
 
 
-Data reduction
---------------
-For now
-
 
 Decision
 ========
-
+Because of the urgent need of the dataset abstraction for API unification
+and joint-likelihood analyses, the proposal in this PIG has been implement
+without official sign off by the Gammapy coordination committee, but after
+approval by the lead developers.
 
 
 .. _gammapy: https://github.com/gammapy/gammapy
 .. _gammapy-web: https://github.com/gammapy/gammapy-webpage
 .. _`gamma-astro-data-formats PHA`: https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/ogip/index.html
+.. _`GH 1986`: https://github.com/gammapy/gammapy/pull/1986
