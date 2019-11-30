@@ -109,7 +109,7 @@ class MapDatasetEventSampler:
     def __init__(self, random_state="random-seed"):
         self.random_state = get_random_state(random_state)
 
-    def _sample_coord_time(self, npred, temporal_model, gti, MC_ID=0):
+    def _sample_coord_time(self, npred, temporal_model, gti):
         """Sample source model components.
 
         Parameters
@@ -120,8 +120,6 @@ class MapDatasetEventSampler:
             Temporal model.
         gti : `MapDataset` object
             Good time intervals of the given MapDataset object.
-        MC_ID : int
-            Monte Carlo identifier of the sampled source.
 
         Returns
         -------
@@ -132,23 +130,18 @@ class MapDatasetEventSampler:
         n_events = self.random_state.poisson(np.sum(npred.data))
 
         # sample position
-        coords = npred.sample_coord(n_events, self.random_state)
+        coords = npred.sample_coord(
+            n_events=n_events, random_state=self.random_state
+        )
         table["ENERGY_TRUE"] = coords["energy"]
-        table["RA_TRUE"] = coords.skycoord.icrs.ra.deg
-        table["DEC_TRUE"] = coords.skycoord.icrs.dec.deg
-        table["MC_ID"] = MC_ID
-        table["RA_TRUE"].unit= "deg"
-        table["DEC_TRUE"].unit= "deg"
+        table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
+        table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
 
-        # sample time
-        # TODO: .temporal_model does not exist yet
         time_start, time_stop, time_ref = (gti.time_start, gti.time_stop, gti.time_ref)
         time = temporal_model.sample_time(
             n_events, time_start, time_stop, self.random_state
         )
-        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).value
-        table["TIME"].unit= "s"
-
+        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).to("s")
         return table
 
     def sample_sources(self, dataset):
@@ -173,8 +166,9 @@ class MapDatasetEventSampler:
             temporal_model = ConstantTemporalModel()
 
             table = self._sample_coord_time(
-                npred, temporal_model, dataset.gti, MC_ID=idx + 1
+                npred, temporal_model, dataset.gti
             )
+            table["MC_ID"] = idx + 1
             events_all.append(EventList(table))
 
         return EventList.stack(events_all)
@@ -197,8 +191,8 @@ class MapDatasetEventSampler:
         temporal_model = ConstantTemporalModel()
 
         table = self._sample_coord_time(background, temporal_model, dataset.gti)
+        table["MC_ID"] = 0
         table.rename_column("ENERGY_TRUE", "ENERGY")
         table.rename_column("RA_TRUE", "RA")
         table.rename_column("DEC_TRUE", "DEC")
-
         return EventList(table)
