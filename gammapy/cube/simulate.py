@@ -129,12 +129,12 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `MapDataset`
+        dataset : `~gammapy.cube.MapDataset`
             Map dataset.
 
         Returns
         -------
-        events : `EventList`
+        events : `~gammapy.data.EventList`
             Event list
         """
         events_all = []
@@ -156,12 +156,12 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `MapDataset`
-            Map dataset.
+        dataset : `~gammapy.cube.MapDataset`
+            Map dataset
 
         Returns
         -------
-        events : `EventList`
+        events : `gammapy.data.EventList`
             Background events
         """
         background = dataset.background_model.evaluate()
@@ -169,8 +169,10 @@ class MapDatasetEventSampler:
         temporal_model = ConstantTemporalModel()
 
         table = self._sample_coord_time(background, temporal_model, dataset.gti)
+
         table["MC_ID"] = 0
         table.rename_column("ENERGY_TRUE", "ENERGY")
         table.rename_column("RA_TRUE", "RA")
         table.rename_column("DEC_TRUE", "DEC")
+
         return EventList(table)
