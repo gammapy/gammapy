@@ -39,3 +39,4 @@ def cli_run_analysis(filename):
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
+    print("Data reduction process finished.")
