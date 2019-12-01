@@ -439,12 +439,14 @@ class WcsNDMap(WcsMap):
         ax.coords.frame.set_linewidth(0)
 
         # Set plot axis limits
-        ymax, xmax = self.data.shape
-        xmargin, _ = self.geom.coord_to_pix({"lon": 180, "lat": 0})
-        _, ymargin = self.geom.coord_to_pix({"lon": 0, "lat": -90})
+        xmin, _ = self.geom.coord_to_pix({"lon": 180, "lat": 0})
+        xmax, _ = self.geom.coord_to_pix({"lon": -180, "lat": 0})
 
-        ax.set_xlim(xmargin, xmax - xmargin)
-        ax.set_ylim(ymargin, ymax - ymargin)
+        _, ymin = self.geom.coord_to_pix({"lon": 0, "lat": -90})
+        _, ymax = self.geom.coord_to_pix({"lon": 0, "lat": 90})
+
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
 
         ax.text(0, ymax, self.geom.coordsys + " coords")
 
@@ -454,6 +456,9 @@ class WcsNDMap(WcsMap):
         lon.set_ticks(spacing=glon_spacing * u.deg, color="w", alpha=0.8)
         lat.set_ticks(spacing=glat_spacing * u.deg)
         lon.set_ticks_visible(False)
+
+        lon.set_major_formatter("d")
+        lat.set_major_formatter("d")
 
         lon.set_ticklabel(color="w", alpha=0.8)
         lon.grid(alpha=0.2, linestyle="solid", color="w")
