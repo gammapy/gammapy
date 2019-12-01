@@ -178,52 +178,51 @@ installation issues on the Gammapy mailing list of Slack any time!
 Example
 -------
 
-Here's one example what you can do with the Gammapy CLI: use the ``gammapy image
-bin`` command to create a counts image from a Fermi-LAT event list as well as a
-FITS image that serves as a reference geometry (projection, center, binning) for
-the counts image we're creating.
+Here's one example what you can do with the Gammapy CLI: use the ``gammapy analysis``
+command to first create a default configuration file with default values and then
+perform a simple automated data reduction process (i.e. fetching observations from
+a datastore and producing the reduced datasets.)
 
 .. code-block:: text
 
-    $ gammapy image bin --help
-    Usage: gammapy image bin [OPTIONS] EVENT_FILE REFERENCE_FILE OUT_FILE
+    $ gammapy analysis --help
+    Usage: gammapy analysis [OPTIONS] COMMAND [ARGS]...
 
-      Bin events into an image.
+    Automation of configuration driven data reduction process.
 
-      You have to give the event, reference and out FITS filename.
+    Examples
+    --------
+
+    $ gammapy analysis config
+    $ gammapy analysis run
+    $ gammapy analysis config --overwrite
+    $ gammapy analysis config --filename myconfig.yaml
+    $ gammapy analysis run --filename myconfig.yaml
 
     Options:
-      --overwrite  Overwrite existing files?
-      -h, --help   Show this message and exit.
+    -h, --help  Show this message and exit.
 
-    $ gammapy image bin \
-        $GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz \
-        $GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz \
-        out.fits
-    INFO:gammapy.scripts.image_bin:Executing cli_image_bin
-    INFO:gammapy.scripts.image_bin:Reading /home/gammapy-data/datasets/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz
-    INFO:gammapy.scripts.image_bin:Reading /home/gammapy-data/datasets/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz
-    INFO:gammapy.scripts.image_bin:Writing out.fits
+    Commands:
+    config  Writes default configuration file.
+    run     Performs automated data reduction process.
 
-If you have the FTOOLS_ installed or other tools that can work with the files
-that Gammapy supports, you can of course use them together::
-
-    $ ftlist $GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz H
-
-            Name               Type       Dimensions
-            ----               ----       ----------
-    HDU 1   Primary Array      Null Array
-    HDU 2   EVENTS             BinTable    23 cols x 32843 rows
-    HDU 3   GTI                BinTable     2 cols x 39042 rows
+    $ gammapy analysis config
+    INFO:gammapy.scripts.analysis:Configuration file produced: config.yaml
 
 
-    $ ftlist out.fits H
+You can manually edit this produced configuration file and the run the data reduction process::
 
-            Name               Type       Dimensions
-            ----               ----       ----------
-    HDU 1   Primary Array      Image      Real4(400x200)
+    $ gammapy analysis run
 
-    $ ds9 out.fits
+    INFO:gammapy.analysis.config:Setting logging config: {'level': 'INFO', 'filename': None, 'filemode': None, 'format': None, 'datefmt': None}
+    INFO:gammapy.analysis.core:Fetching observations.
+    INFO:gammapy.analysis.core:Number of selected observations: 4
+    INFO:gammapy.analysis.core:Reducing spectrum datasets.
+    INFO:gammapy.analysis.core:Processing observation 23592
+    INFO:gammapy.analysis.core:Processing observation 23523
+    INFO:gammapy.analysis.core:Processing observation 23526
+    INFO:gammapy.analysis.core:Processing observation 23559
+    Datasets stored in datasets folder.
 
 .. _CLI_ref:
 
