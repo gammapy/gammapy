@@ -1155,8 +1155,6 @@ class FluxPointsDataset(Dataset):
         Flux points.
     mask_fit : `numpy.ndarray`
         Mask to apply for fitting
-    likelihood : {"chi2", "chi2assym"}
-        Likelihood function to use for the fit.
     mask_safe : `numpy.ndarray`
         Mask defining the safe data range.
 
@@ -1180,10 +1178,11 @@ class FluxPointsDataset(Dataset):
         print(result.parameters.to_table())
     """
 
+    likelihood_type = "chi2"
     tag = "FluxPointsDataset"
 
     def __init__(
-        self, models, data, mask_fit=None, likelihood="chi2", mask_safe=None, name=""
+        self, models, data, mask_fit=None, mask_safe=None, name=""
     ):
         self.data = data
         self.mask_fit = mask_fit
@@ -1196,14 +1195,6 @@ class FluxPointsDataset(Dataset):
             mask_safe = np.isfinite(data.table["dnde"])
 
         self.mask_safe = mask_safe
-
-        if likelihood in ["chi2", "chi2assym"]:
-            self.likelihood_type = likelihood
-        else:
-            raise ValueError(
-                f"Invalid likelihood: {likelihood!r}."
-                " Choose either 'chi2' or 'chi2assym'."
-            )
 
     @property
     def models(self):
@@ -1285,7 +1276,6 @@ class FluxPointsDataset(Dataset):
             data=FluxPoints(table),
             mask_fit=mask_fit,
             mask_safe=mask_safe,
-            likelihood=data["likelihood"],
         )
 
     def to_dict(self, filename=""):
@@ -1299,7 +1289,6 @@ class FluxPointsDataset(Dataset):
             "name": self.name,
             "type": self.tag,
             "models": models,
-            "likelihood": self.likelihood_type,
             "filename": str(filename),
         }
 
@@ -1349,25 +1338,12 @@ class FluxPointsDataset(Dataset):
                         str_ += "\t \t {:23}:   {:.2f} {} \n".format(
                             par.name, par.value, par.unit
                         )
-            str_ += "\t{:32}:   {}\n".format("Likelihood type", self.likelihood_type)
             str_ += "\t{:32}:   {:.2f}\n".format("Likelihood value", self.stat_sum())
         return str_
 
     def data_shape(self):
         """Shape of the flux points data (tuple)."""
         return self.data.e_ref.shape
-
-    @staticmethod
-    def _stat_chi2(data, model, sigma):
-        return ((data - model) / sigma).to_value("") ** 2
-
-    @staticmethod
-    def _stat_chi2_assym(data, model, sigma_n, sigma_p):
-        """Assymetric chi2 statistics for a list of flux points and model."""
-        is_p = model > data
-        sigma = sigma_n
-        sigma[is_p] = sigma_p[is_p]
-        return FluxPointsDataset._stat_chi2(data, model, sigma)
 
     def flux_pred(self):
         """Compute predicted flux."""
@@ -1380,17 +1356,8 @@ class FluxPointsDataset(Dataset):
         """Fit statistic array."""
         model = self.flux_pred()
         data = self.data.table["dnde"].quantity
-
-        if self.likelihood_type == "chi2":
-            sigma = self.data.table["dnde_err"].quantity
-            return self._stat_chi2(data, model, sigma)
-        elif self.likelihood_type == "chi2assym":
-            sigma_n = self.data.table["dnde_errn"].quantity
-            sigma_p = self.data.table["dnde_errp"].quantity
-            return self._stat_chi2_assym(data, model, sigma_n, sigma_p)
-        else:
-            # TODO: add fit statistic profiles
-            pass
+        sigma = self.data.table["dnde_err"].quantity
+        return ((data - model) / sigma).to_value("") ** 2
 
     def residuals(self, method="diff"):
         """Compute the flux point residuals ().
