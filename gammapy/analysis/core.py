@@ -86,10 +86,11 @@ class Analysis:
             obs_list = self.datastore.get_observations(data_settings.obs_ids)
         selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list]
         ids = selected_obs["OBS_ID"].tolist()
-        # TODO
-        # if self.config.observations.obs_file:
-        # add obs_ids from file
-        # ids.extend(selected_obs["OBS_ID"].tolist())
+        if self.config.observations.obs_file:
+            path = make_path(self.config.observations.obs_file)
+            with open(path, 'r') as f:
+                ids_file = [int(obs_id) for obs_id in f.readlines()]
+            ids.extend(ids_file)
         if data_settings.obs_cone.lon is not None:
             # TODO remove border keyword
             cone = dict(

@@ -43,7 +43,7 @@ def test_update_config():
 
 
 @requires_data()
-def test_get_observations():
+def test_get_observations(tmp_path):
     config = AnalysisConfig()
     analysis = Analysis(config)
     analysis.config.observations.datastore = "other"
@@ -60,8 +60,17 @@ def test_get_observations():
     analysis.get_observations()
     assert len(analysis.observations) == 4
     # TODO
-    # obs_file
     # obs_time
+    config = AnalysisConfig()
+    analysis = Analysis(config)
+    analysis.get_observations()
+    filename = tmp_path / "obs_ids.txt"
+    with open(filename, 'w') as f:
+        for item in analysis.observations.ids:
+            f.write(item)
+    analysis.config.observations.obs_file = filename
+    analysis.get_observations()
+    assert len(analysis.observations) == 105
 
 
 @requires_data()
