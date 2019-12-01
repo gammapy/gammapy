@@ -103,10 +103,11 @@ class Analysis:
             )
             selected_cone = self.datastore.obs_table.select_observations(cone)
             ids = list(set(ids) & set(selected_cone["OBS_ID"].tolist()))
-        # TODO
-        # if self.config.observations.obs_time.start is not None:
-        # filter obs_ids with time filter
         self.observations = self.datastore.get_observations(ids, skip_missing=True)
+        if self.config.observations.obs_time.start is not None:
+            start = self.config.observations.obs_time.start
+            stop = self.config.observations.obs_time.stop
+            self.observations = self.observations.select_time([(start, stop)])
         log.info(f"Number of selected observations: {len(self.observations)}")
         for obs in self.observations:
             log.debug(obs)

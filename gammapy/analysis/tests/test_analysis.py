@@ -59,8 +59,6 @@ def test_get_observations(tmp_path):
     analysis = Analysis(config)
     analysis.get_observations()
     assert len(analysis.observations) == 4
-    # TODO
-    # obs_time
     config = AnalysisConfig()
     analysis = Analysis(config)
     analysis.get_observations()
@@ -71,6 +69,9 @@ def test_get_observations(tmp_path):
     analysis.config.observations.obs_file = filename
     analysis.get_observations()
     assert len(analysis.observations) == 105
+    analysis.config.observations.obs_time = {"start": "2004-03-26", "stop": "2004-05-26"}
+    analysis.get_observations()
+    assert len(analysis.observations) == 40
 
 
 @requires_data()
