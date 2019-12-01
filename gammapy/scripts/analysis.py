@@ -33,10 +33,23 @@ def cli_make_config(filename, overwrite):
     help="Filename with default configuration values.",
     show_default=True
 )
-def cli_run_analysis(filename):
+@click.option(
+    "--out",
+    default="datasets",
+    help="Output folder where reduced datasets are stored.",
+    show_default=True
+)
+@click.option(
+    "--overwrite",
+    default=False,
+    is_flag=True,
+    help="Overwrite existing datasets."
+)
+def cli_run_analysis(filename, out, overwrite):
     """Performs automated data reduction process."""
     config = AnalysisConfig.read(filename)
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    print("Data reduction process finished.")
+    analysis.datasets.write(out, overwrite=overwrite)
+    print(f"Datasets stored in {out} folder.")
