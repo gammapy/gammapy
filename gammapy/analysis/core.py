@@ -285,7 +285,7 @@ class Analysis:
                 "containment_correction"
             ] = datasets_settings.containment_correction
         e_reco = self._make_energy_axis(datasets_settings.geom.axes.energy).edges
-        maker_config["region"] = on_region
+
         maker_config["selection"] = ["counts", "aeff", "edisp"]
         dataset_maker = SpectrumDatasetMaker(**maker_config)
         bkg_maker_config = {}
@@ -297,7 +297,8 @@ class Analysis:
 
         reference = SpectrumDataset.create(
             e_reco=e_reco,
-            e_true=np.logspace(-2, 2.5, 109) * u.TeV
+            e_true=np.logspace(-2, 2.5, 109) * u.TeV,
+            region=on_region
         )
 
         datasets = []
