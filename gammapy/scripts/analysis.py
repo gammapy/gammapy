@@ -21,13 +21,21 @@ log = logging.getLogger(__name__)
 )
 def cli_make_config(filename, overwrite):
     """Writes default configuration file."""
-    config = AnalysisConfig()
+    config = AnalysisConfig.from_template("1d")
     config.write(filename, overwrite=overwrite)
     log.info(f"Configuration file produced: {filename}")
 
 
 @click.command(name="run")
-def cli_run_analysis():
-    """Perform analysis process values declared in configuration file."""
-    print("run")
-    pass
+@click.option(
+    "--filename",
+    default="config.yaml",
+    help="Filename with default configuration values.",
+    show_default=True
+)
+def cli_run_analysis(filename):
+    """Performs automated data reduction process."""
+    config = AnalysisConfig.read(filename)
+    analysis = Analysis(config)
+    analysis.get_observations()
+    analysis.get_datasets()

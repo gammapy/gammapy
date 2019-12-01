@@ -67,7 +67,7 @@ def cli(log_level, ignore_warnings):  # noqa: D301
 
 @cli.group("analysis")
 def cli_analysis():
-    """Automation of configuration driven analysis process.
+    """Automation of configuration driven data reduction process.
 
     \b
     Examples
@@ -76,6 +76,7 @@ def cli_analysis():
     \b
     $ gammapy analysis config
     $ gammapy analysis run
+    $ gammapy analysis config --overwrite
     $ gammapy analysis config --filename myconfig.yaml
     $ gammapy analysis run --filename myconfig.yaml
     """
