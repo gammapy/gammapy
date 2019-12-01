@@ -108,27 +108,11 @@ class MapDatasetEventSampler:
         self.random_state = get_random_state(random_state)
 
     def _sample_coord_time(self, npred, temporal_model, gti):
-        """Sample source model components.
-
-        Parameters
-        ----------
-        npred : `~gammapy.maps.Map`
-            Maps of the predicted counts.
-        temporal_model : `~gammapy.modeling.models`
-            Temporal model.
-        gti : `MapDataset` object
-            Good time intervals of the given MapDataset object.
-
-        Returns
-        -------
-        events : `EventList`
-            Event list
-        """
-        table = Table()
         n_events = self.random_state.poisson(np.sum(npred.data))
 
-        # sample position
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
+
+        table = Table()
         table["ENERGY_TRUE"] = coords["energy"]
         table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
         table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
