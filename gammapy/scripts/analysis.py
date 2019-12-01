@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
     "--filename",
     default="config.yaml",
     help="Filename to store the default configuration values.",
-    show_default=True,
+    show_default=True
 )
 @click.option(
     "--overwrite",
