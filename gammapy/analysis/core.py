@@ -17,8 +17,8 @@ from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
     ReflectedRegionsBackgroundMaker,
+    SpectrumDataset,
     SpectrumDatasetMaker,
-    SpectrumDataset
 )
 from gammapy.utils.scripts import make_path
 
@@ -296,9 +296,7 @@ class Analysis:
         safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "aeff-max"])
 
         reference = SpectrumDataset.create(
-            e_reco=e_reco,
-            e_true=np.logspace(-2, 2.5, 109) * u.TeV,
-            region=on_region
+            e_reco=e_reco, e_true=np.logspace(-2, 2.5, 109) * u.TeV, region=on_region
         )
 
         datasets = []

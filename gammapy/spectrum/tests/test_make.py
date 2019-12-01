@@ -8,7 +8,11 @@ from regions import CircleSkyRegion
 from gammapy.cube import SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import WcsGeom, WcsNDMap
-from gammapy.spectrum import ReflectedRegionsBackgroundMaker, SpectrumDatasetMaker, SpectrumDataset
+from gammapy.spectrum import (
+    ReflectedRegionsBackgroundMaker,
+    SpectrumDataset,
+    SpectrumDatasetMaker,
+)
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
@@ -72,9 +76,7 @@ def reflected_regions_bkg_maker():
 
 
 @requires_data()
-def test_spectrum_dataset_maker_hess_dl3(
-    spectrum_dataset_crab, observations_hess_dl3
-):
+def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
     datasets = []
     maker = SpectrumDatasetMaker()
 
@@ -93,9 +95,7 @@ def test_spectrum_dataset_maker_hess_dl3(
 
 
 @requires_data()
-def test_spectrum_dataset_maker_hess_cta(
-    spectrum_dataset_gc, observations_cta_dc1
-):
+def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_gc, observations_cta_dc1):
     maker = SpectrumDatasetMaker()
 
     datasets = []
@@ -180,7 +180,9 @@ class TestSpectrumMakerChain:
     ):
         """Test quantitative output for various configs"""
         safe_mask_maker = SafeMaskMaker()
-        maker = SpectrumDatasetMaker(containment_correction=pars["containment_correction"])
+        maker = SpectrumDatasetMaker(
+            containment_correction=pars["containment_correction"]
+        )
 
         obs = observations_hess_dl3[0]
         dataset = maker.run(spectrum_dataset_crab_fine, obs)

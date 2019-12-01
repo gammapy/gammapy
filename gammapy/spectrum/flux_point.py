@@ -1181,9 +1181,7 @@ class FluxPointsDataset(Dataset):
     likelihood_type = "chi2"
     tag = "FluxPointsDataset"
 
-    def __init__(
-        self, models, data, mask_fit=None, mask_safe=None, name=""
-    ):
+    def __init__(self, models, data, mask_fit=None, mask_safe=None, name=""):
         self.data = data
         self.mask_fit = mask_fit
         self.name = name

@@ -128,9 +128,7 @@ class MapDatasetEventSampler:
         n_events = self.random_state.poisson(np.sum(npred.data))
 
         # sample position
-        coords = npred.sample_coord(
-            n_events=n_events, random_state=self.random_state
-        )
+        coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
         table["ENERGY_TRUE"] = coords["energy"]
         table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
         table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
@@ -163,9 +161,7 @@ class MapDatasetEventSampler:
 
             temporal_model = ConstantTemporalModel()
 
-            table = self._sample_coord_time(
-                npred, temporal_model, dataset.gti
-            )
+            table = self._sample_coord_time(npred, temporal_model, dataset.gti)
             table["MC_ID"] = idx + 1
             events_all.append(EventList(table))
 

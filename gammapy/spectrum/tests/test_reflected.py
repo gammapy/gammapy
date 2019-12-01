@@ -12,7 +12,11 @@ from regions import (
 )
 from gammapy.data import DataStore
 from gammapy.maps import WcsGeom, WcsNDMap
-from gammapy.spectrum import ReflectedRegionsBackgroundMaker, ReflectedRegionsFinder, SpectrumDataset
+from gammapy.spectrum import (
+    ReflectedRegionsBackgroundMaker,
+    ReflectedRegionsFinder,
+    SpectrumDataset,
+)
 from gammapy.spectrum.make import SpectrumDatasetMaker
 from gammapy.utils.regions import compound_region_to_list
 from gammapy.utils.testing import (
@@ -162,7 +166,9 @@ def test_reflected_bkg_maker(on_region, reflected_bkg_maker, observations):
     e_reco = np.logspace(0, 2, 5) * u.TeV
     e_true = np.logspace(-0.5, 2, 11) * u.TeV
 
-    dataset_empty = SpectrumDataset.create(e_reco=e_reco, e_true=e_true, region=on_region)
+    dataset_empty = SpectrumDataset.create(
+        e_reco=e_reco, e_true=e_true, region=on_region
+    )
 
     maker = SpectrumDatasetMaker(selection=["counts"])
 

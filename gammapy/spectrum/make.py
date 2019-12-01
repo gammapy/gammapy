@@ -2,7 +2,6 @@
 import logging
 import numpy as np
 from astropy import units as u
-from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.maps import WcsGeom
 from gammapy.maps.geom import frame_to_coordsys
@@ -12,8 +11,6 @@ from .dataset import SpectrumDataset
 __all__ = ["SpectrumDatasetMaker"]
 
 log = logging.getLogger(__name__)
-
-__all__ = ["SpectrumDatasetMaker"]
 
 
 class SpectrumDatasetMaker:
@@ -30,8 +27,8 @@ class SpectrumDatasetMaker:
         List of str, selecting which maps to make.
         Available: 'counts', 'aeff', 'background', 'edisp'
         By default, all spectra are made.
-
     """
+
     available_selection = ["counts", "background", "aeff", "edisp"]
 
     def __init__(self, containment_correction=False, selection=None):
@@ -48,15 +45,11 @@ class SpectrumDatasetMaker:
         """Reference geometry to project region"""
         coordsys = frame_to_coordsys(region.center.frame.name)
         return WcsGeom.create(
-            skydir=region.center,
-            npix=(1, 1),
-            binsz=1,
-            proj="TAN",
-            coordsys=coordsys,
+            skydir=region.center, npix=(1, 1), binsz=1, proj="TAN", coordsys=coordsys
         )
 
     def make_counts(self, region, energy_axis, observation):
-        """Make counts
+        """Make counts.
 
         Parameters
         ----------
@@ -85,7 +78,7 @@ class SpectrumDatasetMaker:
 
     @staticmethod
     def make_background(region, energy_axis, observation):
-        """Make background
+        """Make background.
 
         Parameters
         ----------
@@ -124,7 +117,7 @@ class SpectrumDatasetMaker:
         )
 
     def make_aeff(self, region, energy_axis_true, observation):
-        """Make effective area
+        """Make effective area.
 
         Parameters
         ----------
@@ -141,7 +134,9 @@ class SpectrumDatasetMaker:
             Effective area table.
         """
         offset = observation.pointing_radec.separation(region.center)
-        aeff = observation.aeff.to_effective_area_table(offset, energy=energy_axis_true.edges)
+        aeff = observation.aeff.to_effective_area_table(
+            offset, energy=energy_axis_true.edges
+        )
 
         if self.containment_correction:
             if not isinstance(region, CircleSkyRegion):
@@ -156,7 +151,7 @@ class SpectrumDatasetMaker:
 
     @staticmethod
     def make_edisp(position, energy_axis, energy_axis_true, observation):
-        """Make energy dispersion
+        """Make energy dispersion.
 
         Parameters
         ----------
@@ -176,10 +171,9 @@ class SpectrumDatasetMaker:
 
         """
         offset = observation.pointing_radec.separation(position)
-        edisp = observation.edisp.to_energy_dispersion(
+        return observation.edisp.to_energy_dispersion(
             offset, e_reco=energy_axis.edges, e_true=energy_axis_true.edges
         )
-        return edisp
 
     def run(self, dataset, observation):
         """Make spectrum dataset.
@@ -196,7 +190,6 @@ class SpectrumDatasetMaker:
         dataset : `SpectrumDataset`
             Spectrum dataset.
         """
-
         kwargs = {
             "name": f"{observation.obs_id}",
             "gti": observation.gti,
@@ -210,13 +203,17 @@ class SpectrumDatasetMaker:
             kwargs["counts"] = self.make_counts(region, energy_axis, observation)
 
         if "background" in self.selection:
-            kwargs["background"] = self.make_background(region, energy_axis, observation)
+            kwargs["background"] = self.make_background(
+                region, energy_axis, observation
+            )
 
         if "aeff" in self.selection:
             kwargs["aeff"] = self.make_aeff(region, energy_axis_true, observation)
 
         if "edisp" in self.selection:
 
-            kwargs["edisp"] = self.make_edisp(region.center, energy_axis, energy_axis_true, observation)
+            kwargs["edisp"] = self.make_edisp(
+                region.center, energy_axis, energy_axis_true, observation
+            )
 
         return SpectrumDataset(**kwargs)
