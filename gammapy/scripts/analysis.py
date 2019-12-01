@@ -7,10 +7,23 @@ log = logging.getLogger(__name__)
 
 
 @click.command(name="config")
-def cli_make_config():
+@click.option(
+    "--filename",
+    default="config.yaml",
+    help="Filename to store the default configuration values.",
+    show_default=True,
+)
+@click.option(
+    "--overwrite",
+    default=False,
+    is_flag=True,
+    help="Overwrite existing file."
+)
+def cli_make_config(filename, overwrite):
     """Writes default configuration file."""
-    print("make")
-    pass
+    config = AnalysisConfig()
+    config.write(filename, overwrite=overwrite)
+    log.info(f"Configuration file produced: {filename}")
 
 
 @click.command(name="run")
