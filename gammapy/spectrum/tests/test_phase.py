@@ -11,14 +11,6 @@ from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")
-def on_region():
-    """Example on_region for testing."""
-    pos = SkyCoord("08h35m20.65525s", "-45d10m35.1545s", frame="icrs")
-    radius = Angle(0.2, "deg")
-    return SphericalCircleSkyRegion(pos, radius)
-
-
-@pytest.fixture(scope="session")
 def observations():
     """Example observation list for testing."""
     datastore = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
@@ -26,14 +18,9 @@ def observations():
 
 
 @pytest.fixture(scope="session")
-def phase_bkg_maker(on_region):
+def phase_bkg_maker():
     """Example background estimator for testing."""
     return PhaseBackgroundMaker(on_phase=(0.5, 0.6), off_phase=(0.7, 1))
-
-
-@pytest.fixture()
-def spectrum_dataset_maker(on_region):
-    return SpectrumDatasetMaker(region=on_region)
 
 
 @requires_data()
@@ -42,13 +29,21 @@ def test_basic(phase_bkg_maker):
 
 
 @requires_data()
-def test_run(observations, phase_bkg_maker, spectrum_dataset_maker):
+def test_run(observations, phase_bkg_maker):
+
+    maker = SpectrumDatasetMaker()
+
     e_reco = np.logspace(0, 2, 5) * u.TeV
     e_true = np.logspace(-0.5, 2, 11) * u.TeV
-    dataset = SpectrumDataset.create(e_reco, e_true)
+
+    pos = SkyCoord("08h35m20.65525s", "-45d10m35.1545s", frame="icrs")
+    radius = Angle(0.2, "deg")
+    region = SphericalCircleSkyRegion(pos, radius)
+
+    dataset_empty = SpectrumDataset.create(e_reco, e_true, region=region)
 
     obs = observations["111630"]
-    dataset = spectrum_dataset_maker.run(dataset, obs)
+    dataset = maker.run(dataset_empty, obs)
     dataset_on_off = phase_bkg_maker.run(dataset, obs)
 
     assert_allclose(dataset_on_off.acceptance, 0.1)

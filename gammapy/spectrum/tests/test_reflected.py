@@ -50,20 +50,7 @@ def observations():
 
 
 @pytest.fixture()
-def spectrum_dataset_maker(on_region):
-    return SpectrumDatasetMaker(region=on_region, selection=["counts"])
-
-
-@pytest.fixture()
-def spectrum_dataset_maker_no_off():
-    pos = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
-    radius = Angle(0.11, "deg")
-    on_region = CircleSkyRegion(pos, radius)
-    return SpectrumDatasetMaker(region=on_region, selection=["counts"])
-
-
-@pytest.fixture()
-def reflected_bkg_maker(on_region, exclusion_mask):
+def reflected_bkg_maker(exclusion_mask):
     return ReflectedRegionsBackgroundMaker(exclusion_mask=exclusion_mask)
 
 
@@ -169,16 +156,18 @@ def bad_on_region(exclusion_mask, on_region):
 
 
 @requires_data()
-def test_reflected_bkg_maker(spectrum_dataset_maker, reflected_bkg_maker, observations):
+def test_reflected_bkg_maker(on_region, reflected_bkg_maker, observations):
     datasets = []
 
     e_reco = np.logspace(0, 2, 5) * u.TeV
     e_true = np.logspace(-0.5, 2, 11) * u.TeV
 
-    dataset_empty = SpectrumDataset.create(e_reco=e_reco, e_true=e_true)
+    dataset_empty = SpectrumDataset.create(e_reco=e_reco, e_true=e_true, region=on_region)
+
+    maker = SpectrumDatasetMaker(selection=["counts"])
 
     for obs in observations:
-        dataset = spectrum_dataset_maker.run(dataset_empty, obs)
+        dataset = maker.run(dataset_empty, obs)
         dataset_on_off = reflected_bkg_maker.run(dataset, obs)
         datasets.append(dataset_on_off)
 
@@ -192,17 +181,21 @@ def test_reflected_bkg_maker(spectrum_dataset_maker, reflected_bkg_maker, observ
 
 
 @requires_data()
-def test_reflected_bkg_maker_no_off(
-    spectrum_dataset_maker_no_off, reflected_bkg_maker, observations
-):
+def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations):
+    pos = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
+    radius = Angle(0.11, "deg")
+    region = CircleSkyRegion(pos, radius)
+
+    maker = SpectrumDatasetMaker(selection=["counts"])
+
     datasets = []
 
     e_reco = np.logspace(0, 2, 5) * u.TeV
     e_true = np.logspace(-0.5, 2, 11) * u.TeV
-    dataset_empty = SpectrumDataset.create(e_reco=e_reco, e_true=e_true)
+    dataset_empty = SpectrumDataset.create(e_reco=e_reco, e_true=e_true, region=region)
 
     for obs in observations:
-        dataset = spectrum_dataset_maker_no_off.run(dataset_empty, obs)
+        dataset = maker.run(dataset_empty, obs)
         dataset_on_off = reflected_bkg_maker.run(dataset, obs)
         datasets.append(dataset_on_off)
 
