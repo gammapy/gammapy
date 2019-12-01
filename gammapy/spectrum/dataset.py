@@ -406,7 +406,7 @@ class SpectrumDataset(Dataset):
         return ax
 
     @classmethod
-    def create(cls, e_reco, e_true=None, reference_time="2000-01-01"):
+    def create(cls, e_reco, e_true=None, region=None, reference_time="2000-01-01"):
         """Creates empty SpectrumDataset
 
         Empty containers are created with the correct geometry.
@@ -415,19 +415,21 @@ class SpectrumDataset(Dataset):
         The safe_mask is set to False in every bin.
 
         Parameters
-        ----------
+        ----------]
         e_reco : `~astropy.units.Quantity`
             edges of counts vector
         e_true : `~astropy.units.Quantity`
             edges of effective area table. If not set use reco energy values. Default : None
+        region : `~regions.SkyRegion`
+            Region to define the dataset for.
         reference_time : `~astropy.time.Time`
             reference time of the dataset, Default is "2000-01-01"
         """
         if e_true is None:
             e_true = e_reco
 
-        counts = CountsSpectrum(e_reco[:-1], e_reco[1:])
-        background = CountsSpectrum(e_reco[:-1], e_reco[1:])
+        counts = CountsSpectrum(e_reco[:-1], e_reco[1:], region=region)
+        background = CountsSpectrum(e_reco[:-1], e_reco[1:], region=region)
         aeff = EffectiveAreaTable(
             e_true[:-1], e_true[1:], np.zeros(e_true[:-1].shape) * u.m ** 2
         )
@@ -678,7 +680,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.counts_off = npred_off
 
     @classmethod
-    def create(cls, e_reco, e_true=None, reference_time="2000-01-01"):
+    def create(cls, e_reco, e_true=None, region=None, reference_time="2000-01-01"):
         """Create empty SpectrumDatasetOnOff.
 
         Empty containers are created with the correct geometry.
@@ -692,14 +694,16 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             edges of counts vector
         e_true : `~astropy.units.Quantity`
             edges of effective area table. If not set use reco energy values. Default : None
+        region : `~regions.SkyRegion`
+            Region to define the dataset for.
         reference_time : `~astropy.time.Time`
             reference time of the dataset, Default is "2000-01-01"
         """
         if e_true is None:
             e_true = e_reco
 
-        counts = CountsSpectrum(e_reco[:-1], e_reco[1:])
-        counts_off = CountsSpectrum(e_reco[:-1], e_reco[1:])
+        counts = CountsSpectrum(e_reco[:-1], e_reco[1:], region=region)
+        counts_off = CountsSpectrum(e_reco[:-1], e_reco[1:], region=region)
         aeff = EffectiveAreaTable(
             e_true[:-1], e_true[1:], np.zeros(e_true[:-1].shape) * u.m ** 2
         )

@@ -24,8 +24,6 @@ class SpectrumDatasetMaker:
 
     Parameters
     ----------
-    region : `~regions.SkyRegion`
-        Region to compute spectrum dataset for.
     containment_correction : bool
         Apply containment correction for point sources and circular on regions.
     selection : list
@@ -36,8 +34,7 @@ class SpectrumDatasetMaker:
     """
     available_selection = ["counts", "background", "aeff", "edisp"]
 
-    def __init__(self, region, containment_correction=False, selection=None):
-        self.region = region
+    def __init__(self, containment_correction=False, selection=None):
         self.containment_correction = containment_correction
 
         if selection is None:
@@ -46,23 +43,25 @@ class SpectrumDatasetMaker:
         self.selection = selection
 
     # TODO: move this to a RegionGeom class
-    @lazyproperty
-    def geom_ref(self):
+    @staticmethod
+    def geom_ref(region):
         """Reference geometry to project region"""
-        coordsys = frame_to_coordsys(self.region.center.frame.name)
+        coordsys = frame_to_coordsys(region.center.frame.name)
         return WcsGeom.create(
-            skydir=self.region.center,
+            skydir=region.center,
             npix=(1, 1),
             binsz=1,
             proj="TAN",
             coordsys=coordsys,
         )
 
-    def make_counts(self, energy_axis, observation):
+    def make_counts(self, region, energy_axis, observation):
         """Make counts
 
         Parameters
         ----------
+        region : `~regions.SkyRegion`
+            Region to compute counts spectrum for.
         energy_axis : `MapAxis`
             Reconstructed energy axis.
         observation: `DataStoreObservation`
@@ -76,19 +75,22 @@ class SpectrumDatasetMaker:
         edges = energy_axis.edges
 
         counts = CountsSpectrum(
-            energy_hi=edges[1:], energy_lo=edges[:-1], region=self.region
+            energy_hi=edges[1:], energy_lo=edges[:-1], region=region
         )
         events_region = observation.events.select_region(
-            self.region, wcs=self.geom_ref.wcs
+            region, wcs=self.geom_ref(region).wcs
         )
         counts.fill_events(events_region)
         return counts
 
-    def make_background(self, energy_axis, observation):
+    @staticmethod
+    def make_background(region, energy_axis, observation):
         """Make background
 
         Parameters
         ----------
+        region : `~regions.SkyRegion`
+            Region to compute background spectrum for.
         energy_axis : `MapAxis`
             Reconstructed energy axis.
         observation: `DataStoreObservation`
@@ -99,12 +101,12 @@ class SpectrumDatasetMaker:
         background : `CountsSpectrum`
             Background spectrum
         """
-        if not isinstance(self.region, CircleSkyRegion):
+        if not isinstance(region, CircleSkyRegion):
             raise TypeError(
                 "Background computation only supported for circular regions."
             )
 
-        offset = observation.pointing_radec.separation(self.region.center)
+        offset = observation.pointing_radec.separation(region.center)
         e_reco = energy_axis.edges
 
         bkg = observation.bkg
@@ -113,7 +115,7 @@ class SpectrumDatasetMaker:
             fov_lon=0 * u.deg, fov_lat=offset, energy_reco=e_reco
         )
 
-        solid_angle = 2 * np.pi * (1 - np.cos(self.region.radius)) * u.sr
+        solid_angle = 2 * np.pi * (1 - np.cos(region.radius)) * u.sr
         data *= solid_angle
         data *= observation.observation_time_duration
 
@@ -121,11 +123,13 @@ class SpectrumDatasetMaker:
             energy_hi=e_reco[1:], energy_lo=e_reco[:-1], data=data.to_value(""), unit=""
         )
 
-    def make_aeff(self, energy_axis_true, observation):
+    def make_aeff(self, region, energy_axis_true, observation):
         """Make effective area
 
         Parameters
         ----------
+        region : `~regions.SkyRegion`
+            Region to compute background effective area.
         energy_axis_true : `MapAxis`
             True energy axis.
         observation: `DataStoreObservation`
@@ -136,25 +140,28 @@ class SpectrumDatasetMaker:
         aeff : `EffectiveAreaTable`
             Effective area table.
         """
-        offset = observation.pointing_radec.separation(self.region.center)
+        offset = observation.pointing_radec.separation(region.center)
         aeff = observation.aeff.to_effective_area_table(offset, energy=energy_axis_true.edges)
 
         if self.containment_correction:
-            if not isinstance(self.region, CircleSkyRegion):
+            if not isinstance(region, CircleSkyRegion):
                 raise TypeError(
                     "Containment correction only supported for circular regions."
                 )
             psf = observation.psf.to_energy_dependent_table_psf(theta=offset)
-            containment = psf.containment(aeff.energy.center, self.region.radius)
+            containment = psf.containment(aeff.energy.center, region.radius)
             aeff.data.data *= containment.squeeze()
 
         return aeff
 
-    def make_edisp(self, energy_axis, energy_axis_true, observation):
+    @staticmethod
+    def make_edisp(position, energy_axis, energy_axis_true, observation):
         """Make energy dispersion
 
         Parameters
         ----------
+        position : `SkyCoord`
+            Position to compute energy dispersion for.
         energy_axis : `MapAxis`
             Reconstructed energy axis.
         energy_axis_true : `MapAxis`
@@ -168,7 +175,7 @@ class SpectrumDatasetMaker:
             Energy dispersion
 
         """
-        offset = observation.pointing_radec.separation(self.region.center)
+        offset = observation.pointing_radec.separation(position)
         edisp = observation.edisp.to_energy_dispersion(
             offset, e_reco=energy_axis.edges, e_true=energy_axis_true.edges
         )
@@ -197,18 +204,19 @@ class SpectrumDatasetMaker:
         }
         energy_axis = dataset.counts.energy
         energy_axis_true = dataset.aeff.data.axis("energy")
+        region = dataset.counts.region
 
         if "counts" in self.selection:
-            kwargs["counts"] = self.make_counts(energy_axis, observation)
+            kwargs["counts"] = self.make_counts(region, energy_axis, observation)
 
         if "background" in self.selection:
-            kwargs["background"] = self.make_background(energy_axis, observation)
+            kwargs["background"] = self.make_background(region, energy_axis, observation)
 
         if "aeff" in self.selection:
-            kwargs["aeff"] = self.make_aeff(energy_axis_true, observation)
+            kwargs["aeff"] = self.make_aeff(region, energy_axis_true, observation)
 
         if "edisp" in self.selection:
 
-            kwargs["edisp"] = self.make_edisp(energy_axis, energy_axis_true, observation)
+            kwargs["edisp"] = self.make_edisp(region.center, energy_axis, energy_axis_true, observation)
 
         return SpectrumDataset(**kwargs)
