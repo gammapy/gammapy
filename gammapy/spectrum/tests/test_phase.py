@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from gammapy.data import DataStore
-from gammapy.spectrum import PhaseBackgroundMaker, SpectrumDatasetMaker
+from gammapy.spectrum import PhaseBackgroundMaker, SpectrumDatasetMaker, SpectrumDataset
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.testing import requires_data
 
@@ -33,9 +33,7 @@ def phase_bkg_maker(on_region):
 
 @pytest.fixture()
 def spectrum_dataset_maker(on_region):
-    e_reco = np.logspace(0, 2, 5) * u.TeV
-    e_true = np.logspace(-0.5, 2, 11) * u.TeV
-    return SpectrumDatasetMaker(region=on_region, e_reco=e_reco, e_true=e_true)
+    return SpectrumDatasetMaker(region=on_region)
 
 
 @requires_data()
@@ -45,8 +43,12 @@ def test_basic(phase_bkg_maker):
 
 @requires_data()
 def test_run(observations, phase_bkg_maker, spectrum_dataset_maker):
+    e_reco = np.logspace(0, 2, 5) * u.TeV
+    e_true = np.logspace(-0.5, 2, 11) * u.TeV
+    dataset = SpectrumDataset.create(e_reco, e_true)
+
     obs = observations["111630"]
-    dataset = spectrum_dataset_maker.run(obs)
+    dataset = spectrum_dataset_maker.run(dataset, obs)
     dataset_on_off = phase_bkg_maker.run(dataset, obs)
 
     assert_allclose(dataset_on_off.acceptance, 0.1)
