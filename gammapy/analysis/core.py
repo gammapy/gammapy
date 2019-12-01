@@ -92,14 +92,13 @@ class Analysis:
                 ids_file = [int(obs_id) for obs_id in f.readlines()]
             ids.extend(ids_file)
         if data_settings.obs_cone.lon is not None:
-            # TODO remove border keyword
             cone = dict(
                 type="sky_circle",
                 frame=data_settings.obs_cone.frame,
                 lon=data_settings.obs_cone.lon,
                 lat=data_settings.obs_cone.lat,
                 radius=data_settings.obs_cone.radius,
-                border="1 deg",
+                border="0 deg",
             )
             selected_cone = self.datastore.obs_table.select_observations(cone)
             ids = list(set(ids) & set(selected_cone["OBS_ID"].tolist()))
