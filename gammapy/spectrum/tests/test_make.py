@@ -8,7 +8,7 @@ from regions import CircleSkyRegion
 from gammapy.cube import SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import WcsGeom, WcsNDMap
-from gammapy.spectrum import ReflectedRegionsBackgroundMaker, SpectrumDatasetMaker
+from gammapy.spectrum import ReflectedRegionsBackgroundMaker, SpectrumDatasetMaker, SpectrumDataset
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
@@ -29,34 +29,33 @@ def observations_cta_dc1():
 
 
 @pytest.fixture()
-def spectrum_dataset_maker_gc():
+def spectrum_dataset_gc():
+    e_reco = np.logspace(0, 2, 5) * u.TeV
+    e_true = np.logspace(-0.5, 2, 11) * u.TeV
     pos = SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
     radius = Angle(0.11, "deg")
     region = CircleSkyRegion(pos, radius)
-
-    e_reco = np.logspace(0, 2, 5) * u.TeV
-    e_true = np.logspace(-0.5, 2, 11) * u.TeV
-    return SpectrumDatasetMaker(region=region, e_reco=e_reco, e_true=e_true)
+    return SpectrumDataset.create(e_reco, e_true, region=region)
 
 
 @pytest.fixture()
-def spectrum_dataset_maker_crab():
-    pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
-    radius = Angle(0.11, "deg")
-    region = CircleSkyRegion(pos, radius)
+def spectrum_dataset_crab():
     e_reco = np.logspace(0, 2, 5) * u.TeV
     e_true = np.logspace(-0.5, 2, 11) * u.TeV
-    return SpectrumDatasetMaker(region=region, e_reco=e_reco, e_true=e_true)
-
-
-@pytest.fixture
-def spectrum_dataset_maker_crab_fine_bins():
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     radius = Angle(0.11, "deg")
     region = CircleSkyRegion(pos, radius)
+    return SpectrumDataset.create(e_reco, e_true, region=region)
+
+
+@pytest.fixture()
+def spectrum_dataset_crab_fine():
     e_true = np.logspace(-2, 2.5, 109) * u.TeV
     e_reco = np.logspace(-2, 2, 73) * u.TeV
-    return SpectrumDatasetMaker(region=region, e_reco=e_reco, e_true=e_true)
+    pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
+    radius = Angle(0.11, "deg")
+    region = CircleSkyRegion(pos, radius)
+    return SpectrumDataset.create(e_reco, e_true, region=region)
 
 
 @pytest.fixture
@@ -74,12 +73,13 @@ def reflected_regions_bkg_maker():
 
 @requires_data()
 def test_spectrum_dataset_maker_hess_dl3(
-    spectrum_dataset_maker_crab, observations_hess_dl3
+    spectrum_dataset_crab, observations_hess_dl3
 ):
     datasets = []
+    maker = SpectrumDatasetMaker()
 
     for obs in observations_hess_dl3:
-        dataset = spectrum_dataset_maker_crab.run(obs)
+        dataset = maker.run(spectrum_dataset_crab, obs)
         datasets.append(dataset)
 
     assert_allclose(datasets[0].counts.data.sum(), 100)
@@ -94,12 +94,14 @@ def test_spectrum_dataset_maker_hess_dl3(
 
 @requires_data()
 def test_spectrum_dataset_maker_hess_cta(
-    spectrum_dataset_maker_gc, observations_cta_dc1
+    spectrum_dataset_gc, observations_cta_dc1
 ):
+    maker = SpectrumDatasetMaker()
+
     datasets = []
 
     for obs in observations_cta_dc1:
-        dataset = spectrum_dataset_maker_gc.run(obs)
+        dataset = maker.run(spectrum_dataset_gc, obs)
         datasets.append(dataset)
 
     assert_allclose(datasets[0].counts.data.sum(), 53)
@@ -113,11 +115,13 @@ def test_spectrum_dataset_maker_hess_cta(
 
 
 @requires_data()
-def test_safe_mask_maker_dl3(spectrum_dataset_maker_crab, observations_hess_dl3):
+def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
+
     safe_mask_maker = SafeMaskMaker()
+    maker = SpectrumDatasetMaker()
 
     obs = observations_hess_dl3[0]
-    dataset = spectrum_dataset_maker_crab.run(obs)
+    dataset = maker.run(spectrum_dataset_crab, obs)
     dataset = safe_mask_maker.run(dataset, obs)
     assert_allclose(dataset.energy_range[0].value, 1)
     assert dataset.energy_range[0].unit == "TeV"
@@ -133,11 +137,12 @@ def test_safe_mask_maker_dl3(spectrum_dataset_maker_crab, observations_hess_dl3)
 
 
 @requires_data()
-def test_safe_mask_maker_dc1(spectrum_dataset_maker_gc, observations_cta_dc1):
+def test_safe_mask_maker_dc1(spectrum_dataset_gc, observations_cta_dc1):
     safe_mask_maker = SafeMaskMaker(methods=["edisp-bias", "aeff-max"])
 
     obs = observations_cta_dc1[0]
-    dataset = spectrum_dataset_maker_gc.run(obs)
+    maker = SpectrumDatasetMaker()
+    dataset = maker.run(spectrum_dataset_gc, obs)
     dataset = safe_mask_maker.run(dataset, obs)
     assert_allclose(dataset.energy_range[0].value, 3.162278, rtol=1e-3)
     assert dataset.energy_range[0].unit == "TeV"
@@ -170,19 +175,15 @@ class TestSpectrumMakerChain:
         pars,
         results,
         observations_hess_dl3,
-        spectrum_dataset_maker_crab_fine_bins,
+        spectrum_dataset_crab_fine,
         reflected_regions_bkg_maker,
     ):
         """Test quantitative output for various configs"""
         safe_mask_maker = SafeMaskMaker()
+        maker = SpectrumDatasetMaker(containment_correction=pars["containment_correction"])
 
         obs = observations_hess_dl3[0]
-        spectrum_dataset_maker_crab_fine_bins.containment_correction = pars[
-            "containment_correction"
-        ]
-        dataset = spectrum_dataset_maker_crab_fine_bins.run(
-            obs, selection=["counts", "aeff", "edisp"]
-        )
+        dataset = maker.run(spectrum_dataset_crab_fine, obs)
         dataset = reflected_regions_bkg_maker.run(dataset, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
@@ -204,15 +205,14 @@ class TestSpectrumMakerChain:
         assert_allclose(gti_dataset["STOP"], gti_obs["STOP"])
 
     def test_compute_energy_threshold(
-        self, spectrum_dataset_maker_crab_fine_bins, observations_hess_dl3
+        self, spectrum_dataset_crab_fine, observations_hess_dl3
     ):
+
+        maker = SpectrumDatasetMaker(containment_correction=True)
         safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 
         obs = observations_hess_dl3[0]
-        spectrum_dataset_maker_crab_fine_bins.containment_correction = True
-        dataset = spectrum_dataset_maker_crab_fine_bins.run(
-            obs, selection=["counts", "aeff", "edisp"]
-        )
+        dataset = maker.run(spectrum_dataset_crab_fine, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
         actual = dataset.energy_range[0]

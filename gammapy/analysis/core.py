@@ -18,6 +18,7 @@ from gammapy.spectrum import (
     FluxPointsEstimator,
     ReflectedRegionsBackgroundMaker,
     SpectrumDatasetMaker,
+    SpectrumDataset
 )
 from gammapy.utils.scripts import make_path
 
@@ -284,11 +285,8 @@ class Analysis:
                 "containment_correction"
             ] = datasets_settings.containment_correction
         e_reco = self._make_energy_axis(datasets_settings.geom.axes.energy).edges
-        maker_config["e_reco"] = e_reco
-        # TODO: remove hard-coded e_true and make it configurable
-        maker_config["e_true"] = np.logspace(-2, 2.5, 109) * u.TeV
-        maker_config["region"] = on_region
 
+        maker_config["selection"] = ["counts", "aeff", "edisp"]
         dataset_maker = SpectrumDatasetMaker(**maker_config)
         bkg_maker_config = {}
         if datasets_settings.background.exclusion:
@@ -297,11 +295,16 @@ class Analysis:
         bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
         safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "aeff-max"])
 
+        reference = SpectrumDataset.create(
+            e_reco=e_reco,
+            e_true=np.logspace(-2, 2.5, 109) * u.TeV,
+            region=on_region
+        )
+
         datasets = []
         for obs in self.observations:
             log.info(f"Processing observation {obs.obs_id}")
-            selection = ["counts", "aeff", "edisp"]
-            dataset = dataset_maker.run(obs, selection=selection)
+            dataset = dataset_maker.run(reference, obs)
             dataset = bkg_maker.run(dataset, obs)
             if dataset.counts_off is None:
                 log.info(
