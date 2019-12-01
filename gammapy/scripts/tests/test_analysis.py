@@ -4,20 +4,22 @@ from gammapy.utils.testing import run_cli
 
 
 def test_cli_analysis(tmp_path):
-    path = tmp_path / "config.yaml"
+    path_config = tmp_path / "config.yaml"
     args = [
         "analysis",
         "config",
-        f"--filename={path}"
+        f"--filename={path_config}"
     ]
     run_cli(cli, args)
-    assert path.exists()
+    assert path_config.exists()
 
+    path_datasets = tmp_path / "datasets"
     args = [
         "analysis",
         "run",
-        f"--filename={path}"
+        f"--filename={path_config}",
+        f"--out={path_datasets}"
     ]
-    result = run_cli(cli, args)
-    assert "Data reduction process finished." in result.output
+    run_cli(cli, args)
+    assert path_datasets.exists()
 
