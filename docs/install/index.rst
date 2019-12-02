@@ -49,6 +49,5 @@ various installation options:
     :maxdepth: 1
 
     dependencies
-    conda
     pip
     other
