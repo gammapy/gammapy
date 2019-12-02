@@ -65,9 +65,21 @@ def cli(log_level, ignore_warnings):  # noqa: D301
         warnings.simplefilter("ignore")
 
 
-@cli.group("image")
-def cli_image():
-    """Analysis - 2D images"""
+@cli.group("analysis")
+def cli_analysis():
+    """Automation of configuration driven data reduction process.
+
+    \b
+    Examples
+    --------
+
+    \b
+    $ gammapy analysis config
+    $ gammapy analysis run
+    $ gammapy analysis config --overwrite
+    $ gammapy analysis config --filename myconfig.yaml
+    $ gammapy analysis run --filename myconfig.yaml
+    """
 
 
 @cli.group("download", short_help="Download datasets and notebooks")
@@ -181,6 +193,14 @@ def add_subcommands():
     from .jupyter import cli_jupyter_test
 
     cli_jupyter.add_command(cli_jupyter_test)
+
+    from .analysis import cli_make_config
+
+    cli_analysis.add_command(cli_make_config)
+
+    from .analysis import cli_run_analysis
+
+    cli_analysis.add_command(cli_run_analysis)
 
 
 add_subcommands()
