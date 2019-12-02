@@ -98,6 +98,15 @@ interface and with the lower level API:
 - `1D spectrum simulation <../notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
 - `Point source sensitivity <../notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
 
+.. _tutorials_scripts:
+
+ Scripts
+ -------
+ .. toctree::
+     :hidden:
+
+     survey_map
+
 
 .. _tutorials_extras:
 
