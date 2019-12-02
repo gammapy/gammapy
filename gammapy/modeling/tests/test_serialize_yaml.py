@@ -87,10 +87,10 @@ def test_dict_to_skymodels():
 def test_sky_models_io(tmp_path):
     # TODO: maybe change to a test case where we create a model programatically?
     filename = get_pkg_data_filename("data/examples.yaml")
-    models = SkyModels.from_yaml(filename)
+    models = SkyModels.read(filename)
 
-    models.to_yaml(tmp_path / "tmp.yaml")
-    models = SkyModels.from_yaml(tmp_path / "tmp.yaml")
+    models.write(tmp_path / "tmp.yaml")
+    models = SkyModels.read(tmp_path / "tmp.yaml")
 
     assert_allclose(models.parameters["lat_0"].min, -90.0)
 
@@ -259,6 +259,6 @@ def test_all_model_instances(model):
 @requires_data()
 def test_missing_parameters():
     filename = get_pkg_data_filename("data/examples.yaml")
-    models = SkyModels.from_yaml(filename)
+    models = SkyModels.read(filename)
     assert models["source1"].spatial_model.e in models.parameters
     assert len(models["source1"].spatial_model.parameters) == 6

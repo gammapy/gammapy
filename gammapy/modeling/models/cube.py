@@ -3,11 +3,12 @@
 import collections.abc
 import copy
 from pathlib import Path
+import yaml
 import numpy as np
 import astropy.units as u
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
-from gammapy.utils.scripts import make_path, read_yaml, write_yaml
+from gammapy.utils.scripts import make_path
 
 
 class SkyModelBase(Model):
@@ -52,20 +53,33 @@ class SkyModels(collections.abc.Sequence):
         return Parameters.from_stack([_.parameters for _ in self._skymodels])
 
     @classmethod
-    def from_yaml(cls, filename):
-        """Write to YAML file."""
+    def read(cls, filename):
+        """Read from YAML file."""
+        yaml_str = Path(filename).read_text()
+        return cls.from_yaml(yaml_str)
+
+    @classmethod
+    def from_yaml(cls, yaml_str):
+        """Create from YAML string."""
         from gammapy.modeling.serialize import dict_to_models
 
-        data = read_yaml(filename)
+        data = yaml.safe_load(yaml_str)
         skymodels = dict_to_models(data)
         return cls(skymodels)
 
-    def to_yaml(self, filename):
+    def write(self, path, overwrite=False):
         """Write to YAML file."""
+        path = make_path(path)
+        if path.exists() and not overwrite:
+            raise IOError(f"File exists already: {path}")
+        path.write_text(self.to_yaml())
+
+    def to_yaml(self):
+        """Convert to YAML string."""
         from gammapy.modeling.serialize import models_to_dict
 
-        components_dict = models_to_dict(self._skymodels)
-        write_yaml(components_dict, filename, sort_keys=False)
+        data = models_to_dict(self._skymodels)
+        return yaml.dump(data, sort_keys=False, indent=4, width=80, default_flow_style=None)
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"
