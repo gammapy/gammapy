@@ -147,9 +147,9 @@ class FovConfig(GammapyBaseConfig):
 
 class WcsConfig(GammapyBaseConfig):
     skydir: SkyCoordConfig = SkyCoordConfig()
-    binsize: AngleType = "0.1 deg"
+    binsize: AngleType = "0.02 deg"
     fov: FovConfig = FovConfig()
-    binsize_irf: AngleType = "0.1 deg"
+    binsize_irf: AngleType = "0.2 deg"
 
 
 class GeomConfig(GammapyBaseConfig):
