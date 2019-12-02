@@ -121,7 +121,6 @@ Extra topics
 .. toctree::
     :hidden:
 
-    ../notebooks/hgps.ipynb
     ../notebooks/source_population_model.ipynb
     ../notebooks/astro_dark_matter.ipynb
     ../notebooks/background_model.ipynb
@@ -130,7 +129,6 @@ Extra topics
 
 These notebooks contain examples on some more specialised functionality in Gammapy.
 
-- `H.E.S.S. Galactic plane survey (HGPS) data <../notebooks/hgps.html>`__ | *hgps.ipynb*
 - `Astrophysical source population modeling <../notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
 - `Dark matter spatial and spectral models <../notebooks/astro_dark_matter.html>`__ | *astro_dark_matter.ipynb*
 - `Make template background model <../notebooks/background_model.html>`__ | *background_model.ipynb*
