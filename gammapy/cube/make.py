@@ -312,7 +312,13 @@ class SafeMaskMaker:
             Maximum offset mask.
 
         """
-        separation = dataset.counts.geom.separation(observation.pointing_radec)
+        if dataset.counts:
+            geom = dataset.counts.geom
+        elif dataset.background_model:
+            geom = dataset.background_model.map.geom
+        elif dataset.exposure:
+            geom = dataset.exposure.geom
+        separation = geom.separation(observation.pointing_radec)
         return separation < self.offset_max
 
     @staticmethod
