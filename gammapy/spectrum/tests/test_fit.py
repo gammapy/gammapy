@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import EffectiveAreaTable
@@ -236,3 +237,16 @@ class TestSpectralFit:
         sau.fit()
         assert_allclose(model.pars[0].val, 2.732, rtol=1e-3)
         assert_allclose(model.pars[2].val, 4.647, rtol=1e-3)
+
+
+def test_stack_no_livetime():
+    e_reco = np.logspace(0, 1, 3) * u.TeV
+    dataset_1 = SpectrumDataset.create(e_reco=e_reco)
+    dataset_1.livetime = None
+    dataset_2 = dataset_1.copy()
+
+    with pytest.raises(ValueError):
+        dataset_1.stack(dataset_2)
+
+
+

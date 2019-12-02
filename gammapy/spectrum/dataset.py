@@ -501,15 +501,17 @@ class SpectrumDataset(Dataset):
                 other.mask_safe
             ]
 
-        irf_stacker = IRFStacker(
-            list_aeff=[self.aeff, other.aeff],
-            list_livetime=[self.livetime, other.livetime],
-            list_edisp=[self.edisp, other.edisp],
-            list_low_threshold=[self.energy_range[0], other.energy_range[0]],
-            list_high_threshold=[self.energy_range[1], other.energy_range[1]],
-        )
-
         if self.aeff is not None:
+            if self.livetime is None or other.livetime is None:
+                raise ValueError("Stacking of IRFs requires the livetime to be defined on both datasets")
+
+            irf_stacker = IRFStacker(
+                list_aeff=[self.aeff, other.aeff],
+                list_livetime=[self.livetime, other.livetime],
+                list_edisp=[self.edisp, other.edisp],
+                list_low_threshold=[self.energy_range[0], other.energy_range[0]],
+                list_high_threshold=[self.energy_range[1], other.energy_range[1]],
+            )
             irf_stacker.stack_aeff()
             if self.edisp is not None:
                 irf_stacker.stack_edisp()
@@ -523,7 +525,8 @@ class SpectrumDataset(Dataset):
 
         # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
         # of GTIs
-        self.livetime += other.livetime
+        if self.livetime is not None:
+            self.livetime += other.livetime
 
 
 class SpectrumDatasetOnOff(SpectrumDataset):
