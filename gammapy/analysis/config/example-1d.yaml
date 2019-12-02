@@ -1,6 +1,7 @@
 observations:
     datastore: $GAMMAPY_DATA/hess-dl3-dr1
     obs_cone: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 5 deg}
+    obs_ids: [23592, 23559]
 
 datasets:
     type: 1d
@@ -8,7 +9,6 @@ datasets:
     geom:
         axes:
             energy: {min: 0.01 TeV, max: 100 TeV, nbins: 73}
-    map_selection: ['counts', 'exposure', 'background', 'psf', 'edisp']
     background:
         method: reflected
     on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.1 deg}
@@ -18,4 +18,4 @@ fit:
     fit_range: {min: 0.1 TeV, max: 100 TeV}
 
 flux_points:
-    energy: {min: 1 TeV, max: 10 TeV, nbins: 11}
+    energy: {min: 1 TeV, max: 10 TeV, nbins: 2}

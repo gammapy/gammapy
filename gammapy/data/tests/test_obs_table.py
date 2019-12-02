@@ -299,12 +299,8 @@ def test_select_sky_regions():
     assert len(obs_table) == 32
 
     selection = dict(
-        type="sky_circle",
-        frame="galactic",
-        lon="0 deg",
-        lat="0 deg",
-        radius="50 deg",
-        )
+        type="sky_circle", frame="galactic", lon="0 deg", lat="0 deg", radius="50 deg"
+    )
     obs_table = obs_table.select_observations(selection)
     assert len(obs_table) == 30
 

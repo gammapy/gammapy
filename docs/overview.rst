@@ -204,11 +204,10 @@ Simulation
 
 Gammapy currently supports binned simulation, Poisson fluctuation of predicted
 counts maps. The following tutorials illustrate how to use that to predict
-observability, significance and sensitivity, using CTA examples:
-
-- `3D map simulation <notebooks/simulate_3d.html>`__
-- `1D spectrum simulation <notebooks/spectrum_simulation.html>`__
-- `Point source sensitivity <notebooks/cta_sensitivity.html>`__
+observability, significance and sensitivity, using CTA examples: `3D map
+simulation <notebooks/simulate_3d.html>`__, `1D spectrum simulation
+<notebooks/spectrum_simulation.html>`__, and `Point source sensitivity
+<notebooks/cta_sensitivity.html>`__.
 
 Development of event sampling is work in progress, currently Gammapy cannot be
 used yet to simulate DL3 events data.
@@ -221,15 +220,10 @@ Other topics
 Gammapy is organised in sub-packages, containing many classes and functions. In
 this overview we only mentioned the most important concepts and parts to get
 started. To learn more, see the following sub packages and documentation pages:
-
-- :ref:`gammapy.data <data>`
-- :ref:`gammapy.irf <irf>`
-- :ref:`gammapy.maps <maps>`
-- :ref:`gammapy.catalog <catalog>`
-- :ref:`gammapy.astro <astro>`
-- :ref:`gammapy.stats <stats>`
-- :ref:`gammapy.detect <detect>`
-- :ref:`gammapy.scripts <CLI>` (``gammapy`` command line tool)
+:ref:`gammapy.data <data>`, :ref:`gammapy.irf <irf>`, :ref:`gammapy.maps
+<maps>`, :ref:`gammapy.catalog <catalog>`, :ref:`gammapy.astro <astro>`,
+:ref:`gammapy.stats <stats>`, :ref:`gammapy.detect <detect>`,
+:ref:`gammapy.scripts <CLI>` (``gammapy`` command line tool).
 
 Note that in Gammapy, 2D image analyses are partly done with actual 2D images
 that don't have an energy axis (e.g. in :ref:`gammapy.detect <detect>`), and

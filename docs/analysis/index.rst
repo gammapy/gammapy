@@ -13,13 +13,12 @@ analysis - High-level interface
 Introduction
 ============
 
-The high-level interface for Gammapy follows the recommendations written in
-:ref:`pig-012`. It provides a high-level Python API for the most common use cases
-identified in the analysis process. The classes and methods included may be used in
-Python scripts, notebooks or as commands within IPython sessions. The high-level user
-interface could also be used to automatise processes driven by parameters declared
-in a configuration file in YAML format. Hence, it also provides you with different
-configuration templates to address the most common analysis use cases identified.
+The high-level interface for Gammapy provides a high-level Python API for the
+most common use cases identified in the analysis process. The classes and
+methods included may be used in Python scripts, notebooks or as commands within
+IPython sessions. The high-level user interface could also be used to automatise
+processes driven by parameters declared in a configuration file in YAML format
+that addresses the most common analysis use cases identified.
 
 .. _analysis_start:
 
@@ -47,30 +46,17 @@ them into a file that you can edit to start a new analysis from the modified con
     >>> config.write("config.yaml")
     >>> config = AnalysisConfig.read("config.yaml")
 
-You may choose a predefined **configuration template** for your configuration. If no
-value for the configuration template is provided, the ``basic`` template will be used by
-default. You may dump the settings into a file, edit the file and re-initialize your
-configuration from the modified file.
+You can start with the built-in default analysis configuration and update it by
+passing values for just the parameters you want to set, using the
+``AnalysisConfig.from_yaml`` method:
 
 .. code-block:: python
 
-    >>> config = AnalysisConfig.from_template("1d")
-    >>> config.write("config.yaml")
-    >>> config = AnalysisConfig.read("config.yaml")
-
-You could also have started with a built-in analysis configuration and extend it with
-with your custom settings declared in a Python nested dictionary. Note how the nested
-dictionary must follow the hierarchical structure of the parameters. Declaring the
-configuration settings of the analysis in this way may be tedious and prone to errors
-if you have several parameters to set, so we suggest you to proceed using a configuration
-file.
-
-.. code-block:: python
-
-    >>> config = AnalysisConfig.from_template("1d")
-    >>> analysis = Analysis(config)
-    >>> config_dict = {"general": {"log": {"level": "warning"}}}
-    >>> analysis.update_config(config_dict)
+    config = AnalysisConfig.from_yaml("""
+    general:
+        log:
+            level: warning
+    """)
 
 The hierarchical structure of the tens of parameters needed may be hard to follow. You can
 print as a *how-to* documentation a helping sample config file with example values for all
@@ -78,8 +64,7 @@ the sections and parameters or only for one specific section or group of paramet
 
 .. code-block:: python
 
-    >>> config.help()
-    >>> config.help("flux_points")
+    >>> print(config)
 
 At any moment you can change the value of one specific parameter needed in the analysis.
 

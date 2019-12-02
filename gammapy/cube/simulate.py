@@ -10,7 +10,7 @@ from gammapy.cube import (
     make_map_exposure_true_energy,
 )
 from gammapy.data import EventList
-from gammapy.maps import WcsNDMap, MapCoord
+from gammapy.maps import MapCoord, WcsNDMap
 from gammapy.modeling.models import BackgroundModel, ConstantTemporalModel
 from gammapy.utils.random import get_random_state
 
