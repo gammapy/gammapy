@@ -465,7 +465,13 @@ class SafeMaskMaker:
             mask_safe &= self.make_mask_energy_bkg_peak(dataset)
 
         if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
-            mask_safe = Map.from_geom(dataset.counts.geom, data=mask_safe)
+            if dataset.counts:
+                geom = dataset.counts.geom
+            elif dataset.background_model:
+                geom = dataset.background_model.map.geom
+            elif dataset.exposure:
+                geom = dataset.exposure.geom
+            mask_safe = Map.from_geom(geom, data=mask_safe)
 
         dataset.mask_safe = mask_safe
         return dataset
