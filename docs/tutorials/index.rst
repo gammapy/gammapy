@@ -14,15 +14,6 @@ the tutorial notebooks and example datasets. The setup steps are described in
 :ref:`getting-started`. Once Gammapy installed, remember that you can always use
 ``gammapy info`` to check your setup.
 
-Before exploring the various notebooks describing analyses, you can explore the
-Gammapy package and its basic data structures with the following notebooks:
-
-- `Overview <../notebooks/overview.html>`__  | *overview.ipynb*
-- `Maps <../notebooks/maps.html>`__  | *maps.ipynb*
-- `Modeling and Fitting <../notebooks/modeling.html>`__  | *modeling.ipynb*
-- `Models Gallery <../notebooks/models.html>`__  | *models.ipynb*
-- `Source catalogs <../notebooks/catalog.html>`__  | *catalog.ipynb*
-
 .. _tutorials_notebooks:
 
 Notebooks
@@ -96,6 +87,14 @@ interface and with the lower level API:
 - `3D map simulation <../notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
 - `1D spectrum simulation <../notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
 - `Point source sensitivity <../notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
+
+**Gammapy package**
+
+- `Overview <../notebooks/overview.html>`__  | *overview.ipynb*
+- `Maps <../notebooks/maps.html>`__  | *maps.ipynb*
+- `Modeling and Fitting <../notebooks/modeling.html>`__  | *modeling.ipynb*
+- `Models Gallery <../notebooks/models.html>`__  | *models.ipynb*
+- `Source catalogs <../notebooks/catalog.html>`__  | *catalog.ipynb*
 
 .. _tutorials_scripts:
 
