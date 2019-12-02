@@ -21,7 +21,7 @@ Introduction
 Gammapy is an open-source Python package for gamma-ray astronomy built on Numpy
 and Astropy. It is a prototype for the Cherenkov Telescope Array (CTA) science
 tools, and can also be used to analyse data from existing gamma-ray telescopes
-if their data is available in the standard FITS format.
+if their data is available in the standard FITS format (gadf_).
 
 To use Gammapy you need a basic knowledge of Python, Numpy, Astropy, as well as
 matplotlib for plotting. Many standard gamma-ray analyses can be done with few
@@ -31,6 +31,7 @@ eventually, if you want to script more complex analyses, or inspect analysis
 results or intermediate analysis products, you need to acquire a basic to
 intermediate Python skill level. See :ref:`tutorials_basics` for links to
 excellent tutorials on Python, Numpy and Astropy.
+
 
 Gammapy workflow
 ----------------
@@ -43,6 +44,10 @@ DL3 data format
 
 - `gammapy.data.EventList` (link to relevant doc)
 - `gammapy.irf` (link to relevant doc)
+
+TODO: mention Fermi
+
+To learn more, see :ref:`gammapy.data <data>` and :ref:`gammapy.irf <irf>`.
 
 Data reduction
 --------------
@@ -92,7 +97,8 @@ fit statistic.
 The `gammapy.spectrum.FluxPointsDataset` contains `gammapy.spectrum.FluxPoints`
 and a spectral model, the fit statistic used is ``chi2``.
 
-To learn more about datasets, see :ref:`cube`, :ref:`spectrum`.
+To learn more about datasets, see :ref:`gammapy.cube <cube>`,
+:ref:`gammapy.spectrum <spectrum>`, :ref:`gammapy.modeling <modeling>`.
 
 Modeling and Fitting
 --------------------
@@ -103,7 +109,39 @@ See `gammapy.modeling` and `gammapy.modeling.models`.
 - Models (link to model.ipynb)
 - Typical operations with links to notebooks
 
-Lightcurves
------------
+Time analysis
+-------------
 
-See `gammapy.time`.
+Light curves are represented as `gammapy.time.LightCurve` objects, a wrapper
+class around `astropy.table.Table`. To compute light curves, use the
+`gammapy.time.LightCurveEstimator`.
+
+To learn more about time, see :ref:`gammapy.time <time>`.
+
+Simulation
+----------
+
+Gammapy currently supports binned simulation, Poisson fluctuation of predicted
+counts maps. The following tutorials illustrate how to use that to predict
+observability, significance and sensitivity, using CTA examples:
+
+- `3D map simulation <notebooks/simulate_3d.html>`__
+- `1D spectrum simulation <notebooks/spectrum_simulation.html>`__
+- `Point source sensitivity <notebooks/cta_sensitivity.html>`__
+
+Development of event sampling is work in progress, coming soon.
+
+Other
+-----
+
+Parts of Gammapy not mentioned in this overview yet:
+
+- :ref:`gammapy.data <data>`
+- :ref:`gammapy.irf <irf>`
+- :ref:`gammapy.maps <maps>`
+- :ref:`gammapy.catalog <catalog>`
+- :ref:`gammapy.astro <astro>`
+- :ref:`gammapy.stats <stats>`
+- :ref:`gammapy.detect <detect>`
+- :ref:`gammapy.scripts <CLI>` (``gammapy`` command line tool)
+
