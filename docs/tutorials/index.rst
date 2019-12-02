@@ -100,12 +100,12 @@ interface and with the lower level API:
 
 .. _tutorials_scripts:
 
- Scripts
- -------
- .. toctree::
-     :hidden:
+Scripts
+-------
+.. toctree::
+    :hidden:
 
-     survey_map
+    survey_map
 
 
 .. _tutorials_extras:
