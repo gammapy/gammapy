@@ -16,7 +16,6 @@ of datasets. A number of functions to test for variability and periodicity are a
 `~gammapy.time.variability` and `~gammapy.time.periodicity`. Finally, `gammapy.utils.time`
 contains low-level helper functions for time conversions.
 
-
 Lightcurve
 ==========
 
@@ -64,7 +63,7 @@ to compute the light curve in the datasets time intervals::
 where `source` is the model component describing the source of interest and `datasets` the `~gammapy.modeling.Datasets`
 object produced by data reduction.
 The light curve notebook shows an example of `observation based light curve
-extraction<../notebooks/light_curve.html#Light-Curve-estimation:-by-observation>`__
+extraction <../notebooks/light_curve.html#Light-Curve-estimation:-by-observation>`__
 
 Similarly, `~gammapy.time.LightCurveEstimator` can be used to extract the light curve in user defined time intervals.
 This can be useful to combine datasets to produce light curve by night, week or month::
@@ -72,7 +71,7 @@ This can be useful to combine datasets to produce light curve by night, week or 
     >>> lc_estimator = LightCurveEstimator(datasets, source="source", time_intervals=time_intervals)
     >>> lc = lc_estimator.run(e_min=1*u.TeV, emax=10*u.TeV, e_ref=1*u.TeV)
 
- where `time_intervals` is a list of time intervals as `~astropy.time.Time` objects.
+where `time_intervals` is a list of time intervals as `~astropy.time.Time` objects.
 The light curve notebook shows an example of `night-wise light curve
 extraction <../notebooks/light_curve.html#Night-wise-LC-estimation>`__
 
@@ -95,7 +94,7 @@ A few utility functions to perform timing tests are available in `~gammapy.time`
 `~gammapy.time` also provides methods for period detection in time series, i.e. light
 curves of :math:`\gamma`-ray sources.  `~gammapy.time.robust_periodogram` performs a
 periodogram analysis where the unevenly sampled time series is contaminated by outliers,
-i.e. due to the source's high states. This is demonstrated in the following :ref:`page<period>`
+i.e. due to the source's high states. This is demonstrated on the :ref:`period` page.
 
 Tutorials
 =========

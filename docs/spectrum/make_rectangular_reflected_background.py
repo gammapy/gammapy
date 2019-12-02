@@ -10,6 +10,7 @@ from gammapy.spectrum import (
     ReflectedRegionsBackgroundMaker,
     SpectrumDatasetMaker,
     plot_spectrum_datasets_off_regions,
+    SpectrumDataset
 )
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
@@ -26,15 +27,17 @@ rectangle = RectangleSkyRegion(
 
 
 bkg_maker = ReflectedRegionsBackgroundMaker(min_distance=0.1 * u.rad)
+dataset_maker = SpectrumDatasetMaker(selection=["counts"])
 
-dataset_maker = SpectrumDatasetMaker(
-    region=rectangle, e_reco=np.logspace(-1, 2, 30) * u.TeV
+dataset_empty = SpectrumDataset.create(
+    e_reco=np.logspace(-1, 2, 30) * u.TeV,
+    region=rectangle
 )
 
 datasets = []
 
 for obs in observations:
-    dataset = dataset_maker.run(obs, selection=["counts"])
+    dataset = dataset_maker.run(dataset_empty, obs)
     dataset_on_off = bkg_maker.run(observation=obs, dataset=dataset)
     datasets.append(dataset_on_off)
 

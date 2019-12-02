@@ -8,8 +8,8 @@ PIG 8 - Datasets
 
 * Author: Axel Donath, Christoph Deil, Regis Terrier & Atreyee Sinha
 * Created: Jan 4th, 2019
-* Accepted: Nov 30th, 2019
-* Status: accepted
+* Withdrawn: Nov 30th, 2019
+* Status: withdrawn
 * Discussion: `GH 1986`_
 
 
@@ -23,12 +23,12 @@ joint-likelihood fitting of IACT and Fermi-LAT data, combined analysis of gamma-
 data with flux points or a combined spectral and cube analysis. The joint-likelihood
 approach also allows for combining different event types in a single analysis.
 
-For this reason we propose to introduce the abstraction layer of a `Dataset` in Gammapy.
+For this reason we propose to introduce the abstraction layer of a ``Dataset`` in Gammapy.
 A dataset bundles the reduced data with a parametric source model, background model,
 instrument response functions and the fit statistics function. It evaluates the model
 and returns the log-likelihood of the data, given the current model parameters.
 This approach allows to introduce a uniform fitting interface represented by a single
-`Fit` class, independent of the type of the analysis (spectral, spatial, cube). In
+``Fit`` class, independent of the type of the analysis (spectral, spatial, cube). In
 addition Datasets can be combined by adding their log-likelihood values, linking
 and concatenating their model parameters. This enables all combinations
 of a joint-likelihood analyses described above.
@@ -36,10 +36,10 @@ of a joint-likelihood analyses described above.
 
 Proposal
 ========
-In general the proposal includes three basic types of classes: `Dataset`, `Datasets`
-and `Fit `. The `Dataset` bundles the model and data, the `Datasets` class combines
-multiple datasets for joint-likelhood fitting and the `Fit` class represents the
-interface to the optimization methods, which are implemented in `gammapy.utils.fitting`.
+In general the proposal includes three basic types of classes: ``Dataset``, ``Datasets``
+and ``Fit ``. The ``Dataset`` bundles the model and data, the ``Datasets`` class combines
+multiple datasets for joint-likelhood fitting and the ``Fit`` class represents the
+interface to the optimization methods, which are implemented in ``gammapy.utils.fitting``.
 Here is an illustration of the proposed API:
 
 .. code::
@@ -65,14 +65,14 @@ Here is an illustration of the proposed API:
     fit.optimize()
 
 
-To enabled the different analysis use-cases we propose to introduce a `MapDataset`,
-`SpectrumDataset`, `SpectrumDatasetOnOff` and `FluxPointsDataset`.
+To enabled the different analysis use-cases we propose to introduce a ``MapDataset``,
+``SpectrumDataset``, ``SpectrumDatasetOnOff`` and ``FluxPointsDataset``.
 
 
-`Dataset`
----------
-The `Dataset` class is the abstract base class for all datasets. It defines the minimal required
-interface for a dataset to work with the `Fit` class and basic user API. It serves
+Dataset
+-------
+The ``Dataset`` class is the abstract base class for all datasets. It defines the minimal required
+interface for a dataset to work with the ``Fit`` class and basic user API. It serves
 as a base class for all built-in datasets, as well as for user defined ones:
 
 
@@ -93,25 +93,25 @@ as a base class for all built-in datasets, as well as for user defined ones:
             return (self.model.evaluate() - self.data) ** 2
 
 
-Any dataset derived from the base class has to define a `.stat_per_bin()` method,
-that returns the log-likelihood given the current model parameters and a `.parameters`
-attribute, which defines the parameters passed on to the `Fit` class.
+Any dataset derived from the base class has to define a ``.stat_per_bin()`` method,
+that returns the log-likelihood given the current model parameters and a ``.parameters``
+attribute, which defines the parameters passed on to the ``Fit`` class.
 
-The dataset also (optionally) defines two kinds of masks: the `mask_safe` and `mask_fit`.
-The main purpose is that safe data range defined by `mask_safe` is set in advance
-e.g. during data reduction and not modified later, while the `mask_fit` can be
+The dataset also (optionally) defines two kinds of masks: the ``mask_safe`` and ``mask_fit``.
+The main purpose is that safe data range defined by ``mask_safe`` is set in advance
+e.g. during data reduction and not modified later, while the ``mask_fit`` can be
 modified by users to manually define the fit range or by algorithms e.g. flux point computation.
-For likelihood evaluation both mask are combined by the `Dataset` base class.
+For likelihood evaluation both mask are combined by the ``Dataset`` base class.
 
 
 
-`Datasets`
-----------
+Datasets
+--------
 
 To combine multiple datasets in a joint-likelihood analysis we propose to introduce
-a `Datasets` class. Its responsibility is to add up the log-likelihood values of
-the individual datasets and join the parameter lists. The `Datasets` class
-also represents the main interface to the `Fit` class.
+a ``Datasets`` class. Its responsibility is to add up the log-likelihood values of
+the individual datasets and join the parameter lists. The ``Datasets`` class
+also represents the main interface to the ``Fit`` class.
 
 The following example shows how a joint-likelihood analysis of multiple observations
 is supposed to work:
@@ -172,10 +172,10 @@ Combined spectral / flux points analysis:
     fit.optimize()
 
 
-`MapDataset`
-------------
+MapDataset
+----------
 To enable the standard combined spectral and spatial analysis we propose to
-introduce a `MapDataset` class. A `MapDataset` bundles the counts data, source model,
+introduce a ``MapDataset`` class. A ``MapDataset`` bundles the counts data, source model,
 IRFs, background model corresponding to a given event selection.
 
 It is supposed to work as following:
@@ -209,28 +209,28 @@ It is supposed to work as following:
     fit.optimize()
 
 
-For the psf argument three values are possible: `None`, `PSFKernel()`
-or `PSFMap`. In the first case the PSF convolution is skipped. In the
+For the psf argument three values are possible: ``None``, ``PSFKernel()``
+or ``PSFMap``. In the first case the PSF convolution is skipped. In the
 second case a single PSF for the whole map is assumed. In the last
-case a spatially varying PSF is handled. The same holds for the `edisp`
+case a spatially varying PSF is handled. The same holds for the ``edisp``
 argument.
 
 In the proposed implementation the counts map and background model must be
-defined on the same map geometry. A separate setup step in `MapDataset.__init__`
+defined on the same map geometry. A separate setup step in ``MapDataset.__init__``
 creates cutouts of the exposure map for the individual model components and assigns
 the corresponding IRFs to the model component and bundles all into the already
-existing `MapEvaluator()` object. The list of model evaluators is cached on the
-`MapDataset` and used later to efficiently compute the predicted number of counts.
+existing ``MapEvaluator()`` object. The list of model evaluators is cached on the
+``MapDataset`` and used later to efficiently compute the predicted number of counts.
 
-The `stat` argument allows to choose between built-in fit statistics
-such as `cash` or `cstat` for convenience.
+The ``stat`` argument allows to choose between built-in fit statistics
+such as ``cash`` or ``cstat`` for convenience.
 
 
-`MapDatasetOnOff`
-----------------
-For on-off based analyses a `MapDatasetOnOff` will be introduced. It inherits
-most of its functionality from the `MapDataset`, but implements in addition the
-handling of `counts_off` and `acceptance` and `acceptance_off` information:
+MapDatasetOnOff
+---------------
+For on-off based analyses a ``MapDatasetOnOff`` will be introduced. It inherits
+most of its functionality from the ``MapDataset``, but implements in addition the
+handling of ``counts_off`` and ``acceptance`` and ``acceptance_off`` information:
 
 .. code ::
 
@@ -267,10 +267,10 @@ handling of `counts_off` and `acceptance` and `acceptance_off` information:
     fit = Fit(dataset)
     fit.optimize()
 
-The `background_model` can be defined optionally for simulation or
-fitting to the `counts_off` data.
+The ``background_model`` can be defined optionally for simulation or
+fitting to the ``counts_off`` data.
 
-The `MapDatasetOnOff` additionally implements the following methods
+The ``MapDatasetOnOff`` additionally implements the following methods
 needed for the evaluation of the fit statistic:
 
 .. code::
@@ -282,10 +282,10 @@ needed for the evaluation of the fit statistic:
 
 
 
-`SpectrumDataset`
------------------
+SpectrumDataset
+---------------
 
-For spectral analysis we propose to introduce a `SpectrumDataset`:
+For spectral analysis we propose to introduce a ``SpectrumDataset``:
 
 .. code ::
 
@@ -314,11 +314,11 @@ For spectral analysis we propose to introduce a `SpectrumDataset`:
     dataset.stat()
 
 
-`SpectrumDatasetOnOff`
-----------------------
+SpectrumDatasetOnOff
+--------------------
 
-For on-off based spectral analysis we propose to introduce a `SpectrumDatasetOnOff`
-class which again inherits from `SpectrumDataset` and handles the additional information
+For on-off based spectral analysis we propose to introduce a ``SpectrumDatasetOnOff``
+class which again inherits from ``SpectrumDataset`` and handles the additional information
 accordingly:
 
 .. code ::
@@ -349,15 +349,15 @@ accordingly:
     dataset.stat_per_bin()
     dataset.stat()
 
-We propose to refactor the existing `SpectrumObservation` object into the
-`SpectrumDatasetsOnOff` class.
+We propose to refactor the existing ``SpectrumObservation`` object into the
+``SpectrumDatasetsOnOff`` class.
 
 
 
-`FluxPointsDataset`
--------------------
+FluxPointsDataset
+-----------------
 
-For fitting of flux points we propose to introduce a `FluxPointsDataset`:
+For fitting of flux points we propose to introduce a ``FluxPointsDataset``:
 
 .. code::
 
@@ -376,17 +376,17 @@ For fitting of flux points we propose to introduce a `FluxPointsDataset`:
     fit = Fit(dataset)
     fit.optimize()
 
-The `FluxPoint` class also supports the `likelihood` format, which has to be implemented
-in a special way in the `FluxPointsDataset`. The `likelihood` format stores the
+The ``FluxPoint`` class also supports the ``likelihood`` format, which has to be implemented
+in a special way in the ``FluxPointsDataset``. The ``likelihood`` format stores the
 likelihood of the flux point, depending on energy and amplitude. Given a predicted
 flux by the spectral model the likelihood can be directly interpolated. This could
-be supported by a specific option `FluxPointsDataset(stat="likelihood")` or similar.
+be supported by a specific option ``FluxPointsDataset(stat="likelihood")`` or similar.
 
 
 Dataset helper / convenience methods
 ------------------------------------
 We propose to implement a few convenience methods on all datasets. E.g.
-a `.residuals()` method, which computes the residual for the given data
+a ``.residuals()`` method, which computes the residual for the given data
 and state of the model:
 
 .. code::
@@ -394,12 +394,12 @@ and state of the model:
     dataset.residuals(method="diff")
 
 A selection of methods for the residual computation would ne available, such
-as `data - model`, `(data - model) / model` and `(data - model) / sqrt(model)`.
+as ``data - model``, ``(data - model) / model`` and ``(data - model) / sqrt(model)``.
 
-For counts based datasets an `.excess()` method can be implmented.
+For counts based datasets an ``.excess()`` method can be implmented.
 
 
-All dataset objects should implment a `__str__` method, so that the following
+All dataset objects should implement a ``__str__`` method, so that the following
 works:
 
 .. code::
@@ -409,7 +409,7 @@ works:
 Specific to each dataset information on the model, model parameters, data and
 fit statistics is printed.
 
-We propose to implement a `.peek()` method on all datasets:
+We propose to implement a ``.peek()`` method on all datasets:
 
 .. code::
 
@@ -419,13 +419,13 @@ In an interactive environment this will show a default visualisation of the
 dataset including model, data, IRFs and residuals.
 
 
-Simulation of `MapDataset` and `SpectrumDataset`
-------------------------------------------------
-The `MapDataset` and `SpectrumDataset` classes will be the central classes
+Simulation of MapDataset and SpectrumDataset
+--------------------------------------------
+The ``MapDataset`` and ``SpectrumDataset`` classes will be the central classes
 for map and spectrum based analyses. In many cases it's useful to simulate
 counts from a predicted number of counts model. The direct sampling of
 binned data for the datasets could be supported as following (illustrated
-for the `MapDataset`):
+for the ``MapDataset``):
 
 .. code::
 
@@ -438,9 +438,9 @@ for the `MapDataset`):
     fit = Fit(dataset)
     fit.optimize()
 
-Which calls `np.random.poisson()` internally on the npred map and returns
-the resulting map. This works equivalently for the `SpectrumDataset`,
-`SpectrumDatasetOnOff` and `MapDatasetOnOff`. The on-off dataset require
+Which calls ``np.random.poisson()`` internally on the npred map and returns
+the resulting map. This works equivalently for the ``SpectrumDataset``,
+``SpectrumDatasetOnOff`` and ``MapDatasetOnOff``. The on-off dataset require
 a background model for this to work.
 
 Unbinned simulation (sampling of event lists) is addressed in a separate PIG.
@@ -453,7 +453,7 @@ Dataset serialization
 ---------------------
 
 For convenience all dataset classes should support serialization, implemented
-via `.read()` and `.write()` methods. For now we only consider the serialization
+via ``.read()`` and ``.write()`` methods. For now we only consider the serialization
 of the data of the datasets and not the of the model, which might always stay
 separate. As the dataset has to orchestrate the serialization of multiple objects,
 such as different kind of maps, flux-points etc. one option is to introduce the
@@ -490,12 +490,12 @@ reading datasets to and from disk:
 
 
 
-The `SpectrumDatasetOnOff` in addition implements serialisation to the standard
+The ``SpectrumDatasetOnOff`` in addition implements serialisation to the standard
 OGIP format described on the `gamma-astro-data-formats PHA`_ page.
 
 
 
-The `Datasets` object could be serialized equivalently as a list of datasets:
+The ``Datasets`` object could be serialized equivalently as a list of datasets:
 
 .. code::
 
@@ -532,51 +532,51 @@ Task List
 This is a proposal for a list of pull requests implementing the proposed changes,
 ordered by priority:
 
-1. Refactor the current `FluxPointFit` into a `FluxPointsDataset` class
-and make it work with the current `Fit` class. Ensure that the `Fit` class
+1. Refactor the current ``FluxPointFit`` into a ``FluxPointsDataset`` class
+and make it work with the current ``Fit`` class. Ensure that the ``Fit`` class
 supports the old inheritance scheme as well as the new dataset on init.
 Update tests and tutorials (`#2023 <https://github.com/gammapy/gammapy/pull/2023>`_).
 
-2. Refactor the current `MapFit` into the `MapDataset` class. Only support a
-fixed energy dispersion and psf first. Use the current `MapEvaluator` for model
+2. Refactor the current ``MapFit`` into the ``MapDataset`` class. Only support a
+fixed energy dispersion and psf first. Use the current ``MapEvaluator`` for model
 evaluation, but split out the background evaluation. Update test and tutorials
 (`#2026 <https://github.com/gammapy/gammapy/issues/2026>`_)
 
-3. Implement the `Datasets` class in `gammapy.utils.fitting.datasets`, add tests
-using multiple `MapDataset`. Change the `Fit` interface to take a `Datasets`
-object or list of `MapDataset` on input (`#2030 <https://github.com/gammapy/gammapy/issues/2030>`_).
+3. Implement the ``Datasets`` class in ``gammapy.utils.fitting.datasets``, add tests
+using multiple ``MapDataset``. Change the ``Fit`` interface to take a ``Datasets``
+object or list of ``MapDataset`` on input (`#2030 <https://github.com/gammapy/gammapy/issues/2030>`_).
 
-4. Enable joint-likelihood analyses by filtering the `Datasets.parameters` for
+4. Enable joint-likelihood analyses by filtering the ``Datasets.parameters`` for
 unique parameters only. Add a tutorial for joint-likelihood fitting of multiple
 observations (`#2045 <https://github.com/gammapy/gammapy/issues/2045>`_).
 
-5. Implement `MapDataset.setup()` method, using a list of `MapEvaluator`
-objects. Add an `.evaluation_radius()` attribute to all the spatial models.
+5. Implement ``MapDataset.setup()`` method, using a list of ``MapEvaluator``
+objects. Add an ``.evaluation_radius()`` attribute to all the spatial models.
 Only support a fixed PSF and edisp per model component (`#2071 <https://github.com/gammapy/gammapy/issues/2071>`_).
 
-6. Add support for psf maps to `MapDataset.setup()`. Extend the `.setup()` method
-to look up the correct PSF for the given model component. A `PSFMap` has to be
-passed on `MapDataset.__init__()` (**v0.14**).
+6. Add support for psf maps to ``MapDataset.setup()``. Extend the ``.setup()`` method
+to look up the correct PSF for the given model component. A ``PSFMap`` has to be
+passed on ``MapDataset.__init__()`` (**v0.14**).
 
-7. Add support for energy dispersion maps to `MapDataset`. Extend the `.setup()`
-method to look up the correct EDisp for a given model component. An `EdispMap`
-has to be passed on `MapDataset.__init__()` (**v0.14**).
+7. Add support for energy dispersion maps to ``MapDataset``. Extend the ``.setup()``
+method to look up the correct EDisp for a given model component. An ``EdispMap``
+has to be passed on ``MapDataset.__init__()`` (**v0.14**).
 
 8. Add tutorial for joint-likelihood fitting of IACT and Fermi-LAT data, based
 on the joint-crab dataset (**v0.14**).
 
-9. Add a `name` attribute to datasets and a `Datasets.__getitem__` method (**v0.14**).
+9. Add a ``name`` attribute to datasets and a ``Datasets.__getitem__`` method (**v0.14**).
 
 10. Implement dataset serialization to yaml (**v0.14**).
 
 11. Implement datasets serialization to a single FITS file (`#2264 <https://github.com/gammapy/gammapy/issues/2264>`_).
 
-12. Add the direct likelihood evaluation to the `FluxPointsDataset`, by
+12. Add the direct likelihood evaluation to the ``FluxPointsDataset``, by
 interpolating flux point likelihood profiles (**v0.14**).
 
-13. Implement `MapDataset.fake()`, `SpectrumDataset.fake()` and `SoectrumDatasetOnOff.fake()` methods (**v0.14**).
+13. Implement ``MapDataset.fake()``, ``SpectrumDataset.fake()`` and ``SpectrumDatasetOnOff.fake()`` methods (**v0.14**).
 
-14. Implement convenience helper methods `.residuals()`, `.peek()` and `.__str__` for
+14. Implement convenience helper methods ``.residuals()``, ``.peek()`` and ``.__str__`` for
 all datasets (**v0.14**).
 
 
@@ -600,18 +600,15 @@ Lazy loading of Datasets
 ------------------------
 For the use-case of inspecting or stacking individual datasets (e.g. MapDataset per observation)
 it could be advantegeous to implement a lazy-loading or generator interface for
-`Datasets.read()`. Such that the individual datasets are only read from disk on
-requests and are not loaded in memory when calling `.read()`. We leave this question
+``Datasets.read()``. Such that the individual datasets are only read from disk on
+requests and are not loaded in memory when calling ``.read()``. We leave this question
 un-addressed in this PR but mention it for completeness.
 
 
 
 Decision
 ========
-Because of the urgent need of the dataset abstraction for API unification
-and joint-likelihood analyses, the proposal in this PIG has been implement
-without official sign off by the Gammapy coordination committee, but after
-approval by the lead developers.
+The authors decided to withdraw the PIG. Most of the proposed changes are implemented.
 
 
 .. _gammapy: https://github.com/gammapy/gammapy

@@ -18,7 +18,7 @@ class LightCurve:
     TODO: specification of format is work in progress
     See https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/pull/61
 
-    Usage: :ref:`time-lc`
+    Usage: :ref:`time`
 
     Parameters
     ----------
