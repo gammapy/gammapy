@@ -202,7 +202,6 @@ class MapDatasetEventSampler:
         )
 
         coords_reco = edisp_map.sample_coord(coord, self.random_state)
-        events.table["ENERGY_TRUE"] = coords_reco["energy"] * u.TeV
-        events.table.rename_column("ENERGY_TRUE", "ENERGY")
+        events.table["ENERGY"] = coords_reco["energy"] * u.TeV
 
         return events

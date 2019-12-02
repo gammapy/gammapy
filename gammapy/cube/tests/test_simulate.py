@@ -129,7 +129,13 @@ def test_MDE_sample_edisp():
     events = sampler.sample_edisp(edisp_map, events)
 
     assert len(events.table) == 726
-    assert_allclose(events.table["ENERGY_TRUE"][0], 1.0600765557667795, rtol=1e-5)
+    assert_allclose(events.table["ENERGY"][0], 1.0600765557667795, rtol=1e-5)
+    assert events.table["ENERGY"].unit == "TeV"
+
     assert_allclose(events.table["RA"][0], 266.3541109343822, rtol=1e-5)
+    assert events.table["RA"].unit == "deg"
+
     assert_allclose(events.table["DEC"][0], -28.88356606406115, rtol=1e-5)
+    assert events.table["DEC"].unit == "deg"
+
     assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
