@@ -2,8 +2,6 @@
 
 .. _getting-started:
 
-**TODO add links to data repositories (CTA 1DC, HESS-DL3-DR1)**
-
 Getting Started
 ===============
 
