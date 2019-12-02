@@ -65,10 +65,10 @@ matrix:
           env: TEST_COVERAGE=true CMD='make test-cov'
                PIP_DEPENDENCIES="$PIP_DEPENDENCIES pytest-cov codecov"
 
-#        # MacOS X tests
-#        - os: osx
-#          env: PYTHON_VERSION=3.6 CMD='make test'
-#               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_OSX
+        # MacOS X tests
+        - os: osx
+          env: PYTHON_VERSION=3.6 CMD='make test'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_OSX
 
         # Run tests without optional dependencies
         - env: PYTHON_VERSION=3.6 CMD='make test'
