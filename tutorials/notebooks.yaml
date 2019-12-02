@@ -95,8 +95,6 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/simulate_3d.ipynb
   datasets:
     - cta-1dc
-- name: source_population_model
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/source_population_model.ipynb
 - name: spectrum_analysis
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_analysis.ipynb
   datasets:
