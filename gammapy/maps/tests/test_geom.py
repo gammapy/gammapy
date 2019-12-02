@@ -369,3 +369,8 @@ def test_group_table_outside_range(energy_axis_ref):
 
     with pytest.raises(ValueError):
         energy_axis_ref.group_table(e_edges)
+
+
+def test_map_axis_single_bin():
+    with pytest.raises(ValueError):
+        _ = MapAxis.from_nodes([1])
