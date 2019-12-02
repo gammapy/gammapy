@@ -42,34 +42,68 @@ def test_update_config():
         analysis.update_config(0)
 
 
-@requires_data()
-def test_get_observations(tmp_path):
+def test_get_observations_no_datastore():
     config = AnalysisConfig()
     analysis = Analysis(config)
     analysis.config.observations.datastore = "other"
     with pytest.raises(FileNotFoundError):
         analysis.get_observations()
+
+
+@requires_data()
+def test_get_observations_all():
+    config = AnalysisConfig()
+    analysis = Analysis(config)
     analysis.config.observations.datastore = "$GAMMAPY_DATA/cta-1dc/index/gps/"
     analysis.get_observations()
     assert len(analysis.observations) == 4
+
+
+@requires_data()
+def test_get_observations_obs_ids():
+    config = AnalysisConfig()
+    analysis = Analysis(config)
+    analysis.config.observations.datastore = "$GAMMAPY_DATA/cta-1dc/index/gps/"
     analysis.config.observations.obs_ids = ["110380"]
     analysis.get_observations()
     assert len(analysis.observations) == 1
-    config = AnalysisConfig.from_template("1d")
+
+
+@requires_data()
+def test_get_observations_obs_cone():
+    config = AnalysisConfig()
     analysis = Analysis(config)
+    analysis.config.observations.datastore = "$GAMMAPY_DATA/hess-dl3-dr1"
+    analysis.config.observations.obs_cone = {
+        "frame": "icrs",
+        "lon": "83d",
+        "lat": "22d",
+        "radius": "5d",
+    }
     analysis.get_observations()
     assert len(analysis.observations) == 4
+
+
+@requires_data()
+def test_get_observations_obs_file(tmp_path):
     config = AnalysisConfig()
     analysis = Analysis(config)
     analysis.get_observations()
     filename = tmp_path / "obs_ids.txt"
-    with open(filename, 'w') as f:
-        for item in analysis.observations.ids:
-            f.write(f"{item}\n")
+    filename.write_text("20136\n47829\n")
     analysis.config.observations.obs_file = filename
     analysis.get_observations()
-    assert len(analysis.observations) == 105
-    analysis.config.observations.obs_time = {"start": "2004-03-26", "stop": "2004-05-26"}
+    assert len(analysis.observations) == 2
+
+
+@requires_data()
+def test_get_observations_obs_time(tmp_path):
+    config = AnalysisConfig()
+    analysis = Analysis(config)
+    analysis.config.observations.obs_time = {
+        "start": "2004-03-26",
+        "stop": "2004-05-26",
+    }
     analysis.get_observations()
     assert len(analysis.observations) == 40
     analysis.config.observations.obs_ids = [0]
