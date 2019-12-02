@@ -11,67 +11,103 @@ Introduction
 
 `gammapy.time` contains classes and methods for time-based analysis, e.g. for AGN, binaries
 or pulsars studies. The main classes are `~gammapy.time.LightCurve`, which is a container for
-lightcurves, and `~gammapy.time.LightCurveEstimator`, which extracts a light curve from a list
+light curves, and `~gammapy.time.LightCurveEstimator`, which extracts a light curve from a list
 of datasets. A number of functions to test for variability and periodicity are available in
-`~gammapy.time.variability` and `~gammapy.time.periodicity`. Finally, there is also
-`gammapy.utils.time`, which contains low-level helper
-functions for time conversions.
+`~gammapy.time.variability` and `~gammapy.time.periodicity`. Finally, `gammapy.utils.time`
+contains low-level helper functions for time conversions.
 
-Getting Started
-===============
-
-.. _time-lc:
 
 Lightcurve
-----------
+==========
 
-This section introduces the `~gammapy.time.LightCurve` class.
+Gammapy uses a simple container for light curves: the `~gammapy.time.LightCurve` class. It stores
+the light curve in the form of a `~astropy.table.Table` and provides a few convenience methods,
+to create time objects and plots.
 
-Read a table that contains a lightcurve::
+The table structure follows the approach proposed in the gamma-ray-astro-formats_ webpage.
+
+.. _gamma-ray-astro-formats: https://gamma-astro-data-formats.readthedocs.io/en/latest/lightcurves/index.html
+
+The following example shows how to read a table that contains a lightcurve and then create a ``LightCurve`` object.
+The latter gives access to a number of utilities such as plots and access to times as `~astropy.time.Time` objects::
 
     >>> from astropy.table import Table
     >>> url = 'https://github.com/gammapy/gamma-cat/raw/master/input/data/2006/2006A%2526A...460..743A/tev-000119-lc.ecsv'
     >>> table = Table.read(url, format='ascii.ecsv')
-
-Create a ``LightCurve`` object:
-
     >>> from gammapy.time import LightCurve
     >>> lc = LightCurve(table)
-
-``LightCurve`` is a simple container that stores the LC table, and provices a
-few conveniences, like creating time objects and a quick-look plot:
-
     >>> lc.time[:2].iso
     ['2004-05-23 01:47:08.160' '2004-05-23 02:17:31.200']
     >>> lc.plot()
 
-.. _time-variability:
 
-Variability test
-----------------
+Light Curve Extraction
+======================
 
-TODO: Add some rapid discussion of chisquare and fractional variance functions
+The extraction of a light curve from gamma-ray data follows the general approach of
+data reduction and modeling/fitting. Observations are first reduced to dataset objects
+(e.g. `~gammapy.cube.MapDataset` or `~gammapy.spectrum.SpectrumDatasetOnOff`). Then, after
+setting the appropriate model the flux is extracted in each time bin with the
+`~gammapy.time.LightCurveEstimator`.
 
-Other codes
-===========
+To extract the light curve of a source, the `~gammapy.time.LightCurveEstimator`
+fits a scale factor on the model component representing the source in each time bin
+and returns a `~gammapy.time.LightCurve`. It can work with spectral (1D) datasets as well
+as with map (3D) datasets.
 
-Where possible we shouldn't duplicate timing analysis functionality that's
-already available elsewhere. In some cases it's enough to refer gamma-ray
-astronomers to other packages, sometimes a convenience wrapper for our data
-formats or units might make sense.
+Once a `~gammapy.Fit.Datasets` object is build with a model set, one can call the estimator
+to compute the light curve in the datasets time intervals::
 
-Some references (please add what you find useful
+    >>> lc_estimator = LightCurveEstimator(datasets, source="source")
+    >>> lc = lc_estimator.run(e_min=1*u.TeV, emax=10*u.TeV, e_ref=1*u.TeV)
 
-* https://github.com/astroML/gatspy
-* https://github.com/matteobachetti/MaLTPyNT
-* https://github.com/nanograv/PINT
-* http://www.astroml.org/modules/classes.html#module-astroML.time_series
-* http://www.astroml.org/book_figures/chapter10/index.html
-* http://docs.astropy.org/en/latest/api/astropy.stats.bayesian_blocks.html
-* https://github.com/samconnolly/DELightcurveSimulation
-* https://github.com/cokelaer/spectrum
-* https://github.com/YSOVAR/YSOVAR
-* https://nbviewer.ipython.org/github/YSOVAR/Analysis/blob/master/TimeScalesinYSOVAR.ipynb
+where `source` is the model component describing the source of interest and `datasets` the `~gammapy.modeling.Datasets`
+object produced by data reduction.
+The light curve notebook shows an example of `observation based light curve
+extraction<../notebooks/light_curve.html#Light-Curve-estimation:-by-observation>`__
+
+Similarly, `~gammapy.time.LightCurveEstimator` can be used to extract the light curve in user defined time intervals.
+This can be useful to combine datasets to produce light curve by night, week or month::
+
+    >>> lc_estimator = LightCurveEstimator(datasets, source="source", time_intervals=time_intervals)
+    >>> lc = lc_estimator.run(e_min=1*u.TeV, emax=10*u.TeV, e_ref=1*u.TeV)
+
+ where `time_intervals` is a list of time intervals as `~astropy.time.Time` objects.
+The light curve notebook shows an example of `night-wise light curve
+extraction <../notebooks/light_curve.html#Night-wise-LC-estimation>`__
+
+
+Variability and periodicity tests
+=================================
+
+A few utility functions to perform timing tests are available in `~gammapy.time`.
+
+`~gammapy.time.compute_chisq` performs a chisquare test for variable source flux::
+
+     >>> from gammapy.time import chisquare
+     >>> print(compute_chisq(lc['FLUX']))
+
+`~gammapy.time.compute_fvar` calculates the fractional variance excess::
+
+     >>> from gammapy.time import fvar
+     >>> print(compute_fvar(lc['FLUX'], lc['FLUX_ERR']))
+
+`~gammapy.time` also provides methods for period detection in time series, i.e. light
+curves of :math:`\gamma`-ray sources.  `~gammapy.time.robust_periodogram` performs a
+periodogram analysis where the unevenly sampled time series is contaminated by outliers,
+i.e. due to the source's high states. This is demonstrated in the following :ref:`page<period>`
+
+Tutorials
+=========
+
+The main tutorial demonstrates how to extract light curves from 1D and 3D datasets:
+
+* `Light Curve tutorial <../notebooks/light_curve.html>`__
+
+Light curve extraction on small time bins (i.e. smaller than the observation scale) for flares
+is demonstrated in the following tutorial:
+
+* `Flare tutorial <../notebooks/light_curve_flare.html>`__
 
 Using `gammapy.time`
 ====================
