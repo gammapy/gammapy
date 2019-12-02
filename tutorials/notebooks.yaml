@@ -9,10 +9,6 @@
     - fermi-3fhl-gc
   images:
     - DC1_3d
-- name: analysis_3d_joint
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/analysis_3d_joint.ipynb
-  datasets:
-    - cta-1dc  
 - name: astro_dark_matter
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/astro_dark_matter.ipynb
   datasets:

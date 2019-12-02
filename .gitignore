@@ -64,6 +64,9 @@ docs/notebooks
 tutorials/fit_result_LogParabola.yaml
 tutorials/model-best-fit.yaml
 tutorials/crab-3datasets
+tutorials/analysis_1
+tutorials/analysis_3d
+tutorials/config.yaml
 gammapy-datasets
 temp
 
