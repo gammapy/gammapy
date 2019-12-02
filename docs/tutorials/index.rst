@@ -14,6 +14,15 @@ the tutorial notebooks and example datasets. The setup steps are described in
 :ref:`getting-started`. Once Gammapy installed, remember that you can always use
 ``gammapy info`` to check your setup.
 
+Before exploring the various notebooks describing analyses, you can explore the
+Gammapy package and its basic data structures with the following notebooks:
+
+- `Overview <../notebooks/overview.html>`__  | *overview.ipynb*
+- `Maps <../notebooks/maps.html>`__  | *maps.ipynb*
+- `Modeling and Fitting <../notebooks/modeling.html>`__  | *modeling.ipynb*
+- `Models Gallery <../notebooks/models.html>`__  | *models.ipynb*
+- `Source catalogs <../notebooks/catalog.html>`__  | *catalog.ipynb*
+
 .. _tutorials_notebooks:
 
 Notebooks
@@ -48,6 +57,9 @@ Notebooks
 
 **Getting started**
 
+The following tutorials show the same 3D cube analysis of the Crab with the high level
+interface and with the lower level API:
+
 - `First analysis <../notebooks/analysis_1.html>`__ | *analysis_1.ipynb*
 - `Second analysis <../notebooks/analysis_2.html>`__ | *analysis_2.ipynb*
 
@@ -63,7 +75,6 @@ Notebooks
 
 - `CTA data analysis with Gammapy <../notebooks/cta_data_analysis.html>`__ | *cta_data_analysis.ipynb*
 - `3D analysis <../notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
-- `Joint 3D analysis <../notebooks/analysis_3d_joint.html>`__ | *analysis_3d_joint.ipynb*
 - `Joint 3D and 1D analysis <../notebooks/joint_1d_3d_analysis.html>`__ | *joint_1d_3d_analysis.ipynb*
 
 *2-dim sky image analysis*
@@ -87,14 +98,6 @@ Notebooks
 - `1D spectrum simulation <../notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
 - `Point source sensitivity <../notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
 
-**Gammapy package**
-
-- `Overview <../notebooks/overview.html>`__  | *overview.ipynb*
-- `Maps <../notebooks/maps.html>`__  | *maps.ipynb*
-- `Modeling and Fitting <../notebooks/modeling.html>`__  | *modeling.ipynb*
-- `Models Gallery <../notebooks/models.html>`__  | *models.ipynb*
-- `Source catalogs <../notebooks/catalog.html>`__  | *catalog.ipynb*
-
 .. _tutorials_scripts:
 
 Scripts
@@ -104,15 +107,6 @@ Scripts
 
     survey_map
 
-TODO: show a few examples how to use Gammapy from Python scripts.
-
-::
-
-    cd $GAMMAPY_DATA/../scripts-0.13
-    python cta_1dc_survey_map.py
-
-- TODO: Make a CTA 1DC survey counts map :ref:`survey_map`.
-- TODO: some other long-running analysis or simulation
 
 .. _tutorials_extras:
 
