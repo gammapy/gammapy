@@ -18,7 +18,6 @@ __all__ = ["AnalysisConfig"]
 
 CONFIG_PATH = Path(__file__).resolve().parent / "config"
 DOCS_FILE = CONFIG_PATH / "docs.yaml"
-ANALYSIS_TEMPLATES = {"1d": "template-1d.yaml", "3d": "template-3d.yaml"}
 
 log = logging.getLogger(__name__)
 
