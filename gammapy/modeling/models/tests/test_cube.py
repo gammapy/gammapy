@@ -125,7 +125,7 @@ def test_sky_model_spatial_none_io(tmpdir):
     filename = tmpdir / "test-models-none.yaml"
     models.to_yaml(filename)
 
-    models = SkyModels.from_yaml(filename)
+    models = SkyModels.read(filename)
 
     assert models["test"].spatial_model is None
 

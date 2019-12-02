@@ -3,11 +3,12 @@
 import collections.abc
 import copy
 from pathlib import Path
+import yaml
 import numpy as np
 import astropy.units as u
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
-from gammapy.utils.scripts import make_path, read_yaml, write_yaml
+from gammapy.utils.scripts import make_path, write_yaml
 
 
 class SkyModelBase(Model):
@@ -52,11 +53,17 @@ class SkyModels(collections.abc.Sequence):
         return Parameters.from_stack([_.parameters for _ in self._skymodels])
 
     @classmethod
-    def from_yaml(cls, filename):
-        """Write to YAML file."""
+    def read(cls, filename):
+        """Read from YAML file."""
+        yaml_str = Path(filename).read_text()
+        return cls.from_yaml(yaml_str)
+
+    @classmethod
+    def from_yaml(cls, yaml_str):
+        """Create from YAML string."""
         from gammapy.modeling.serialize import dict_to_models
 
-        data = read_yaml(filename)
+        data = yaml.safe_load(yaml_str)
         skymodels = dict_to_models(data)
         return cls(skymodels)
 

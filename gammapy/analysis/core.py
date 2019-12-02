@@ -162,7 +162,7 @@ class Analysis:
     def read_models(self, path):
         """Read models from YAML file."""
         path = make_path(path)
-        models = SkyModels.from_yaml(path)
+        models = SkyModels.read(path)
         self.set_models(models)
 
     def run_fit(self, optimize_opts=None):
