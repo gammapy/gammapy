@@ -13,6 +13,7 @@ from gammapy.utils.testing import requires_data, requires_dependency
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 MODEL_FILE = CONFIG_PATH / "model.yaml"
 
+
 def get_example_config(which):
     """Example config: which can be "1d" or "3d"."""
     return AnalysisConfig.read(CONFIG_PATH / f"example-{which}.yaml")

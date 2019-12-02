@@ -5,6 +5,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.cube import MapDataset, MapDatasetEventSampler, simulate_dataset
 from gammapy.cube.tests.test_fit import get_map_dataset
+from gammapy.cube.tests.test_psf_map import make_test_psfmap
 from gammapy.data import GTI
 from gammapy.irf import load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
@@ -15,7 +16,6 @@ from gammapy.modeling.models import (
     SkyModels,
 )
 from gammapy.utils.testing import requires_data
-from gammapy.cube.tests.test_psf_map import make_test_psfmap
 
 
 @requires_data()

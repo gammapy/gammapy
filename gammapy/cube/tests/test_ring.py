@@ -72,7 +72,9 @@ def test_ring_bkg_maker(geom, observations, exclusion_mask):
     assert_allclose(datasets[0].acceptance_off.data[mask].sum(), 2961300, rtol=1e-5)
     assert_allclose(datasets[1].acceptance_off.data[mask].sum(), 2364657.2, rtol=1e-5)
     assert_allclose(datasets[0].alpha.data[0][100][100], 0.00063745599, rtol=1e-5)
-    assert_allclose(datasets[0].exposure.data[0][100][100], 806254444.8480084, rtol=1e-5)
+    assert_allclose(
+        datasets[0].exposure.data[0][100][100], 806254444.8480084, rtol=1e-5
+    )
 
 
 @pytest.mark.parametrize(

@@ -279,7 +279,7 @@ class ObservationTable(Table):
             if "border" in selection:
                 border = Angle(selection["border"])
             else:
-                border = Angle(0,'deg')
+                border = Angle(0, "deg")
             region = SphericalCircleSkyRegion(
                 center=SkyCoord(lon, lat, frame=selection["frame"]),
                 radius=radius + border,
