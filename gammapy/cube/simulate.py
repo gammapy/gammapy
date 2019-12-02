@@ -10,7 +10,7 @@ from gammapy.cube import (
     make_map_exposure_true_energy,
 )
 from gammapy.data import EventList
-from gammapy.maps import WcsNDMap
+from gammapy.maps import WcsNDMap, MapCoord
 from gammapy.modeling.models import BackgroundModel, ConstantTemporalModel
 from gammapy.utils.random import get_random_state
 
@@ -176,3 +176,32 @@ class MapDatasetEventSampler:
         table.rename_column("DEC_TRUE", "DEC")
 
         return EventList(table)
+
+    def sample_psf(self, psf_map, events):
+        """Sample psf map.
+
+        Parameters
+        ----------
+        psf_map : `~gammapy.cube.PSFMap`
+            PSF map.
+        events : `~gammapy.data.EventList`
+            Event list.
+
+        Returns
+        -------
+        events : `EventList`
+            Event list with reconstructed position columns.
+        """
+        coord = MapCoord(
+            {
+                "lon": events.table["RA_TRUE"].quantity,
+                "lat": events.table["DEC_TRUE"].quantity,
+                "energy": events.table["ENERGY_TRUE"].quantity,
+            },
+            coordsys="icrs",
+        )
+
+        coords_reco = psf_map.sample_coord(coord, self.random_state)
+        events.table["RA"] = coords_reco["lon"] * u.deg
+        events.table["DEC"] = coords_reco["lat"] * u.deg
+        return events
