@@ -406,12 +406,12 @@ def test_create(geom, geom_etrue):
 
     assert empty_dataset.exposure.data.shape == (3, 100, 100)
 
-    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 12, 12)
-    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 12, 12)
+    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 10, 10)
+    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 10, 10)
 
-    assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 12, 12)
-    assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 12, 12)
-    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 432)
+    assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 10, 10)
+    assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 10, 10)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 300)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
@@ -577,13 +577,13 @@ def test_create_onoff(geom, geom_etrue):
     assert_allclose(empty_dataset.acceptance.data.sum(), 0.0)
     assert_allclose(empty_dataset.acceptance_off.data.sum(), 0.0)
 
-    assert empty_dataset.psf.psf_map.data.shape == (2, 50, 12, 12)
-    assert empty_dataset.psf.exposure_map.data.shape == (2, 1, 12, 12)
+    assert empty_dataset.psf.psf_map.data.shape == (2, 50, 10, 10)
+    assert empty_dataset.psf.exposure_map.data.shape == (2, 1, 10, 10)
 
-    assert empty_dataset.edisp.edisp_map.data.shape == (2, 50, 12, 12)
-    assert empty_dataset.edisp.exposure_map.data.shape == (2, 1, 12, 12)
+    assert empty_dataset.edisp.edisp_map.data.shape == (2, 50, 10, 10)
+    assert empty_dataset.edisp.exposure_map.data.shape == (2, 1, 10, 10)
 
-    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 288)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 200)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 

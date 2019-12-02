@@ -150,7 +150,6 @@ class WcsConfig(GammapyBaseConfig):
     binsize: AngleType = "0.1 deg"
     fov: FovConfig = FovConfig()
     binsize_irf: AngleType = "0.1 deg"
-    margin_irf: AngleType = "0.1 deg"
 
 
 class GeomConfig(GammapyBaseConfig):

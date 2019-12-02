@@ -240,13 +240,12 @@ class Analysis:
 
         geom = self._create_geometry()
         geom_settings = self.config.datasets.geom
-        geom_irf = dict(energy_axis_true=None, binsz_irf=None, margin_irf=None)
+        geom_irf = dict(energy_axis_true=None, binsz_irf=None)
         if geom_settings.axes.energy_true.min is not None:
             geom_irf["energy_axis_true"] = self._make_energy_axis(
                 geom_settings.axes.energy_true
             )
         geom_irf["binsz_irf"] = geom_settings.wcs.binsize_irf.to("deg").value
-        geom_irf["margin_irf"] = geom_settings.wcs.margin_irf.to("deg").value
         offset_max = geom_settings.selection.offset_max
         log.info("Creating datasets.")
 

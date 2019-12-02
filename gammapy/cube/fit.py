@@ -35,8 +35,6 @@ MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
 )
 
 BINSZ_IRF_DEFAULT = 0.2
-MARGIN_IRF_DEFAULT = 0.5
-# TODO: Choose optimal binnings depending on IRFs
 
 
 class MapDataset(Dataset):
@@ -355,7 +353,6 @@ class MapDataset(Dataset):
         migra_axis=None,
         rad_axis=None,
         binsz_irf=None,
-        margin_irf=None,
         reference_time="2000-01-01",
         name="",
         **kwargs,
@@ -374,8 +371,6 @@ class MapDataset(Dataset):
             Rad axis for the psf map
         binsz_irf : float
             IRF Map pixel size in degrees.
-        margin_irf : float
-            IRF map margin size in degrees
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
@@ -390,20 +385,10 @@ class MapDataset(Dataset):
         rad_axis = rad_axis or RAD_AXIS_DEFAULT
         energy_axis_true = energy_axis_true or geom.get_axis_by_name("energy")
         binsz_irf = binsz_irf or BINSZ_IRF_DEFAULT
-        margin_irf = margin_irf or MARGIN_IRF_DEFAULT
-        margin_irf = margin_irf * u.deg
 
         geom_image = geom.to_image()
         geom_exposure = geom_image.to_cube([energy_axis_true])
-
-        geom_irf = WcsGeom.create(
-            binsz=binsz_irf,
-            width=geom_image.width + margin_irf,
-            skydir=geom_image.center_skydir,
-            proj=geom_image.projection,
-            coordsys=geom_image.coordsys,
-        )
-
+        geom_irf = geom_image.to_binsz(binsz=binsz_irf)
         geom_psf = geom_irf.to_cube([rad_axis, energy_axis_true])
         geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
 

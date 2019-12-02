@@ -40,7 +40,6 @@ def geom(ebounds, binsz=0.5):
             "exposure_image": 7.921993e10,
             "background": 27989.05,
             "binsz_irf": 0.5,
-            "margin_irf": 0.0,
         },
         {
             # Test single energy bin
@@ -51,7 +50,6 @@ def geom(ebounds, binsz=0.5):
             "exposure_image": 1.16866e11,
             "background": 30424.451,
             "binsz_irf": 0.5,
-            "margin_irf": 0.0,
         },
         {
             # Test single energy bin with exclusion mask
@@ -63,7 +61,6 @@ def geom(ebounds, binsz=0.5):
             "exposure_image": 1.16866e11,
             "background": 30424.451,
             "binsz_irf": 0.5,
-            "margin_irf": 0.0,
         },
         {
             # Test for different e_true and e_reco bins
@@ -77,7 +74,6 @@ def geom(ebounds, binsz=0.5):
             "background": 28760.283,
             "background_oversampling": 2,
             "binsz_irf": 0.5,
-            "margin_irf": 0.0,
         },
         {
             # Test for different e_true and e_reco and spatial bins
@@ -91,7 +87,6 @@ def geom(ebounds, binsz=0.5):
             "background": 28760.283,
             "background_oversampling": 2,
             "binsz_irf": 1.0,
-            "margin_irf": 0.0,
         },
     ],
 )
@@ -100,7 +95,6 @@ def test_map_maker(pars, observations):
         geom=pars["geom"],
         energy_axis_true=pars["e_true"],
         binsz_irf=pars["binsz_irf"],
-        margin_irf=pars["margin_irf"],
     )
 
     maker = MapDatasetMaker(background_oversampling=pars.get("background_oversampling"))
@@ -182,7 +176,7 @@ def test_map_maker_obs(observations):
     geom_exp = geom(ebounds=[0.1, 0.5, 2.5, 10.0])
 
     reference = MapDataset.create(
-        geom=geom_reco, energy_axis_true=e_true, binsz_irf=1.0, margin_irf=1.0
+        geom=geom_reco, energy_axis_true=e_true, binsz_irf=1.0,
     )
 
     maker_obs = MapDatasetMaker()
@@ -191,10 +185,10 @@ def test_map_maker_obs(observations):
     assert map_dataset.counts.geom == geom_reco
     assert map_dataset.background_model.map.geom == geom_reco
     assert map_dataset.exposure.geom == geom_exp
-    assert map_dataset.edisp.edisp_map.data.shape == (3, 48, 6, 11)
-    assert map_dataset.edisp.exposure_map.data.shape == (3, 1, 6, 11)
-    assert map_dataset.psf.psf_map.data.shape == (3, 66, 6, 11)
-    assert map_dataset.psf.exposure_map.data.shape == (3, 1, 6, 11)
+    assert map_dataset.edisp.edisp_map.data.shape == (3, 48, 5, 10)
+    assert map_dataset.edisp.exposure_map.data.shape == (3, 1, 5, 10)
+    assert map_dataset.psf.psf_map.data.shape == (3, 66, 5, 10)
+    assert map_dataset.psf.exposure_map.data.shape == (3, 1, 5, 10)
     assert_allclose(map_dataset.gti.time_delta, 1800.0 * u.s)
     assert map_dataset.name == "obs_110380"
 

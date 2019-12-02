@@ -34,7 +34,6 @@ datasets:
             binsize: 0.1 deg
             fov: {width: 7 deg, height: 5 deg}
             binsize_irf: 0.1 deg
-            margin_irf: 0.1 deg
         selection:
             offset_max: 2.5 deg
         axes:
