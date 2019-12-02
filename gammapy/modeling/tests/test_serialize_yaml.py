@@ -89,7 +89,7 @@ def test_sky_models_io(tmp_path):
     filename = get_pkg_data_filename("data/examples.yaml")
     models = SkyModels.read(filename)
 
-    models.to_yaml(tmp_path / "tmp.yaml")
+    models.write(tmp_path / "tmp.yaml")
     models = SkyModels.read(tmp_path / "tmp.yaml")
 
     assert_allclose(models.parameters["lat_0"].min, -90.0)

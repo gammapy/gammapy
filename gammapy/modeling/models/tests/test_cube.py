@@ -123,7 +123,7 @@ def test_sky_model_spatial_none_io(tmpdir):
     models = SkyModels([model])
 
     filename = tmpdir / "test-models-none.yaml"
-    models.to_yaml(filename)
+    models.write(filename)
 
     models = SkyModels.read(filename)
 

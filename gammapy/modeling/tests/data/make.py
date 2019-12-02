@@ -26,7 +26,7 @@ def make_example_2():
     spatial = GaussianSpatialModel(lon_0="0 deg", lat_0="0 deg", sigma="1 deg")
     model = SkyModel(spatial, PowerLawSpectralModel())
     models = SkyModels([model])
-    models.to_yaml(DATA_PATH / "example2.yaml")
+    models.write(DATA_PATH / "example2.yaml")
 
 
 def make_datasets_example():

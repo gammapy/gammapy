@@ -8,7 +8,7 @@ import numpy as np
 import astropy.units as u
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
-from gammapy.utils.scripts import make_path, write_yaml
+from gammapy.utils.scripts import make_path
 
 
 class SkyModelBase(Model):
@@ -67,12 +67,19 @@ class SkyModels(collections.abc.Sequence):
         skymodels = dict_to_models(data)
         return cls(skymodels)
 
-    def to_yaml(self, filename):
+    def write(self, path, overwrite=False):
         """Write to YAML file."""
+        path = make_path(path)
+        if path.exists() and not overwrite:
+            raise IOError(f"File exists already: {path}")
+        path.write_text(self.to_yaml())
+
+    def to_yaml(self):
+        """Convert to YAML string."""
         from gammapy.modeling.serialize import models_to_dict
 
-        components_dict = models_to_dict(self._skymodels)
-        write_yaml(components_dict, filename, sort_keys=False)
+        data = models_to_dict(self._skymodels)
+        return yaml.dump(data, sort_keys=False, indent=4, width=80, default_flow_style=None)
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"
