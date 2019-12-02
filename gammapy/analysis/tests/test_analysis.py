@@ -65,13 +65,16 @@ def test_get_observations(tmp_path):
     filename = tmp_path / "obs_ids.txt"
     with open(filename, 'w') as f:
         for item in analysis.observations.ids:
-            f.write(item)
+            f.write(f"{item}\n")
     analysis.config.observations.obs_file = filename
     analysis.get_observations()
     assert len(analysis.observations) == 105
     analysis.config.observations.obs_time = {"start": "2004-03-26", "stop": "2004-05-26"}
     analysis.get_observations()
     assert len(analysis.observations) == 40
+    analysis.config.observations.obs_ids = [0]
+    with pytest.raises(ValueError):
+        analysis.get_observations()
 
 
 @requires_data()
