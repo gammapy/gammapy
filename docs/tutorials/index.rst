@@ -38,7 +38,6 @@ Notebooks
    ../notebooks/fermi_lat.ipynb
    ../notebooks/cta_data_analysis.ipynb
    ../notebooks/analysis_3d.ipynb
-   ../notebooks/analysis_3d_joint.ipynb
    ../notebooks/simulate_3d.ipynb
    ../notebooks/detect.ipynb
    ../notebooks/spectrum_analysis.ipynb
