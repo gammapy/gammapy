@@ -16,7 +16,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.testing import requires_data
 from gammapy.cube.tests.test_edisp_map import make_edisp_map_test
-
+from gammapy.cube.tests.test_psf_map import make_test_psfmap
 
 @requires_data()
 def test_simulate():
@@ -94,33 +94,65 @@ def dataset_maker():
 
 
 @requires_data()
-def test_MDE_sample_sources():
+def test_mde_sample_sources():
     dataset = dataset_maker()
     sampler = MapDatasetEventSampler(random_state=0)
-    src_evt = sampler.sample_sources(dataset=dataset)
+    events = sampler.sample_sources(dataset=dataset)
 
-    assert len(src_evt.table["ENERGY_TRUE"]) == 726
-    assert_allclose(src_evt.table["ENERGY_TRUE"][0], 9.637228658895618, rtol=1e-5)
-    assert_allclose(src_evt.table["RA_TRUE"][0], 266.3541109343822, rtol=1e-5)
-    assert_allclose(src_evt.table["DEC_TRUE"][0], -28.88356606406115, rtol=1e-5)
-    assert_allclose(src_evt.table["MC_ID"][0], 1, rtol=1e-5)
+    assert len(events.table["ENERGY_TRUE"]) == 726
+    assert_allclose(events.table["ENERGY_TRUE"][0], 9.637228658895618, rtol=1e-5)
+    assert events.table["ENERGY_TRUE"].unit == "TeV"
+
+    assert_allclose(events.table["RA_TRUE"][0], 266.3541109343822, rtol=1e-5)
+    assert events.table["RA_TRUE"].unit == "deg"
+
+    assert_allclose(events.table["DEC_TRUE"][0], -28.88356606406115, rtol=1e-5)
+    assert events.table["DEC_TRUE"].unit == "deg"
+
+    assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
 
 
 @requires_data()
-def test_MDE_sample_background():
+def test_mde_sample_background():
     dataset = dataset_maker()
     sampler = MapDatasetEventSampler(random_state=0)
-    bkg_evt = sampler.sample_background(dataset=dataset)
+    events = sampler.sample_background(dataset=dataset)
 
-    assert len(bkg_evt.table["ENERGY"]) == 375084
-    assert_allclose(bkg_evt.table["ENERGY"][0], 2.1613281656472028, rtol=1e-5)
-    assert_allclose(bkg_evt.table["RA"][0], 265.7253792887848, rtol=1e-5)
-    assert_allclose(bkg_evt.table["DEC"][0], -27.727581635186304, rtol=1e-5)
-    assert_allclose(bkg_evt.table["MC_ID"][0], 0, rtol=1e-5)
+    assert len(events.table["ENERGY"]) == 375084
+    assert_allclose(events.table["ENERGY"][0], 2.1613281656472028, rtol=1e-5)
+    assert events.table["ENERGY"].unit == "TeV"
+
+    assert_allclose(events.table["RA"][0], 265.7253792887848, rtol=1e-5)
+    assert events.table["RA"].unit == "deg"
+
+    assert_allclose(events.table["DEC"][0], -27.727581635186304, rtol=1e-5)
+    assert events.table["DEC"].unit == "deg"
+
+    assert_allclose(events.table["MC_ID"][0], 0, rtol=1e-5)
 
 
 @requires_data()
-def test_MDE_sample_edisp():
+def test_mde_sample_psf():
+    psf_map = make_test_psfmap(0.1 * u.deg, shape="gauss")
+
+    dataset = dataset_maker()
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.sample_sources(dataset=dataset)
+    events = sampler.sample_psf(psf_map, events)
+
+    assert len(events.table) == 726
+    assert_allclose(events.table["ENERGY_TRUE"][0], 9.637228658895618, rtol=1e-5)
+    assert events.table["ENERGY_TRUE"].unit == "TeV"
+
+    assert_allclose(events.table["RA"][0], 266.46418313134603, rtol=1e-5)
+    assert events.table["RA"].unit == "deg"
+
+    assert_allclose(events.table["DEC"][0], -28.85688796198139, rtol=1e-5)
+    assert events.table["DEC"].unit == "deg"
+
+
+@requires_data()
+def test_mde_sample_edisp():
     edisp_map = make_edisp_map_test()
 
     dataset = dataset_maker()

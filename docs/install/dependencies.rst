@@ -18,9 +18,7 @@ healpy (needed to work with HEALPix maps, which is common for all-sky analyses).
 Gammapy is a Python package built on Numpy and Astropy, as well as a few other
 required dependencies. For certain functionality, optional dependencies are
 used. The recommended way to install Gammapy is via a conda environment which
-includes all required and optional dependencies (see :ref:`install`). If you
-want a more minimal installation, that is possible of course (see
-:ref:`install-conda`).
+includes all required and optional dependencies (see :ref:`install`).
 
 Note that when you install Gammapy with conda (or actually any alternative
 distribution channel), you have a full package manager at your fingertips. You

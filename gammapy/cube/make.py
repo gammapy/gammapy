@@ -301,7 +301,7 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : Dataset`
+        dataset : `Dataset`
             Dataset to compute mask for.
         observation: `DataStoreObservation`
             Observation to compute mask for.
@@ -312,7 +312,7 @@ class SafeMaskMaker:
             Maximum offset mask.
 
         """
-        separation = dataset.counts.geom.separation(observation.pointing_radec)
+        separation = dataset._geom.separation(observation.pointing_radec)
         return separation < self.offset_max
 
     @staticmethod
@@ -459,7 +459,7 @@ class SafeMaskMaker:
             mask_safe &= self.make_mask_energy_bkg_peak(dataset)
 
         if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
-            mask_safe = Map.from_geom(dataset.counts.geom, data=mask_safe)
+            mask_safe = Map.from_geom(dataset._geom, data=mask_safe)
 
         dataset.mask_safe = mask_safe
         return dataset
