@@ -263,8 +263,15 @@ class MapDataset(Dataset):
 
     @property
     def data_shape(self):
-        """Shape of the counts data (tuple)"""
-        return self.counts.data.shape
+        """Shape of the counts or background data (tuple)"""
+        if self.counts:
+            return self.counts.data.shape
+        elif self.background_model:
+            return self.background_model.map.data.shape
+        elif self.exposure:
+            return self.exposure.data.shape
+        else:
+            raise ValueError("No map available to extract shape")
 
     def npred(self):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
