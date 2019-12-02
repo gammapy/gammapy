@@ -341,6 +341,7 @@ class SigmaVEstimator:
             fit_result = resfits[idx]
             log.debug(f"J best: {js[idx]}")
         else:
+            dataset_loop.models[0].spectral_model.parameters["jfactor"].frozen = True
             fit = Fit([dataset_loop])
             fit_result = fit.run(optimize_opts, covariance_opts)
             statprofile = fit.stat_profile(**stat_profile_opts)
