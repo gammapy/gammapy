@@ -407,7 +407,7 @@ class SpectrumDataset(Dataset):
 
     @classmethod
     def create(cls, e_reco, e_true=None, region=None, reference_time="2000-01-01"):
-        """Creates empty SpectrumDataset
+        """Creates empty spectrum dataset.
 
         Empty containers are created with the correct geometry.
         counts, background and aeff are zero and edisp is diagonal.
@@ -415,7 +415,7 @@ class SpectrumDataset(Dataset):
         The safe_mask is set to False in every bin.
 
         Parameters
-        ----------]
+        ----------
         e_reco : `~astropy.units.Quantity`
             edges of counts vector
         e_true : `~astropy.units.Quantity`

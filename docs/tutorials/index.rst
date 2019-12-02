@@ -101,6 +101,7 @@ interface and with the lower level API:
 
 Scripts
 -------
+
 .. toctree::
     :hidden:
 
@@ -111,6 +112,7 @@ Scripts
 
 Extra topics
 ------------
+
 .. toctree::
     :hidden:
 
