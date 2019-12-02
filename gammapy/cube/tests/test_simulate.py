@@ -125,11 +125,11 @@ def test_MDE_sample_psf():
 
     dataset = dataset_maker()
     sampler = MapDatasetEventSampler(random_state=0)
-    src_evt = sampler.sample_sources(dataset=dataset)
-    src_evt_corr = sampler.sample_psf(psf_map, src_evt)
+    events = sampler.sample_sources(dataset=dataset)
+    events = sampler.sample_psf(psf_map, events)
 
-    assert len(src_evt_corr.table) == 726
-    assert_allclose(src_evt_corr.table["ENERGY_TRUE"][0], 9.637228658895618, rtol=1e-5)
-    assert_allclose(src_evt_corr.table["RA"][0], 266.46418313134603, rtol=1e-5)
-    assert_allclose(src_evt_corr.table["DEC"][0], -28.85688796198139, rtol=1e-5)
-    assert_allclose(src_evt_corr.table["MC_ID"][0], 1, rtol=1e-5)
+    assert len(events.table) == 726
+    assert_allclose(events.table["ENERGY_TRUE"][0], 9.637228658895618, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 266.46418313134603, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -28.85688796198139, rtol=1e-5)
+    assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)

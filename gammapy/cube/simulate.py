@@ -182,9 +182,9 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        psf_map : `PSFMap`
+        psf_map : `~gammapy.cube.PSFMap`
             PSF map.
-        events : `EventList`
+        events : `~gammapy.data.EventList`
             Event list.
 
         Returns
@@ -192,8 +192,6 @@ class MapDatasetEventSampler:
         events : `EventList`
             Event list with reconstructed position columns.
         """
-
-        energy_unit = events.table["RA_TRUE"].unit
         coord = MapCoord(
             {
                 "lon": events.table["RA_TRUE"].quantity,
@@ -204,8 +202,8 @@ class MapDatasetEventSampler:
         )
 
         coords_reco = psf_map.sample_coord(coord, self.random_state)
-        events.table["RA_TRUE"] = coords_reco["lon"] * energy_unit
-        events.table["DEC_TRUE"] = coords_reco["lat"] * energy_unit
+        events.table["RA_TRUE"] = coords_reco["lon"] * u.deg
+        events.table["DEC_TRUE"] = coords_reco["lat"] * u.deg
         events.table.rename_column("RA_TRUE", "RA")
         events.table.rename_column("DEC_TRUE", "DEC")
 
