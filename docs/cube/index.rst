@@ -124,8 +124,13 @@ Here is an example how to use it:
 
 The ``methods`` keyword specifies the method used. Please take a
 look at `SafeMaskMaker` to see which methods are available.
-The `SafeMaskMaker` does not modify any data, but defines the
-`MapDataset.mask_safe` attribute.
+The `SafeMaskMaker` does not modify any data, but only defines the
+`MapDataset.mask_safe` attribute. This means that the safe data
+range can be defined and modified in between the data reduction
+and stacking and fitting. For a joint-likelihood analysis of multiple
+observations the safe mask is applied to the counts and predicted
+number of counts map during fitting. This correctly accounts for
+contributions (spill-over) by the PSF from outside the field of view.
 
 
 Stacking of Datasets
@@ -192,6 +197,12 @@ Finally the dataset per observation is stacked into a larger map.
         stacked.stack(dataset)
 
     print(stacked)
+
+To maintain good performance it is always recommended to do a cutout
+of the `MapDataset` as shown above. In case you want to increase the
+offset-cut later, you can also choose a larger width of the cutout
+than `2 * offset_max`.
+
 
 Ring Background Estimation
 ==========================
