@@ -207,7 +207,6 @@ class SigmaVEstimator:
         stat_profile_opts["parameter"] = "sv"
 
         for run in range(runs):
-            log.info(f"Run: {run}")
             self.dataset.fake(background_model=self.background)
 
             # loop in channels and masses
@@ -236,10 +235,8 @@ class SigmaVEstimator:
 
     def _loops(self, run, nuisance, stat_profile_opts, optimize_opts, covariance_opts):
         for ch in self.channels:
-            log.info(f"Channel: {ch}")
             table_rows = []
             for mass in self.masses:
-                log.info(f"Mass: {mass}")
                 dataset_loop = self._set_model_dataset(ch, mass)
                 fit_result = self._fit_dataset(
                     dataset_loop,
@@ -264,7 +261,6 @@ class SigmaVEstimator:
                 }
                 table_rows.append(row)
                 self.sigmas[ch][mass.value][run] = row["sigma_v"]
-                log.info(f"Sigma v:{row['sigma_v']}")
 
             table = table_from_row_data(rows=table_rows)
             table["sigma_v"].unit = self.XSECTION.unit
@@ -350,7 +346,8 @@ class SigmaVEstimator:
 
         # consider sv value in the physical region
         sv_best = fit_result.parameters["sv"].value
-        log.debug(f"SvBest found: {sv_best}")
+        likemin_found = likemin
+        sv_best_found = sv_best
         if sv_best < 0:
             sv_best = 0
             likemin = interp1d(statprofile["values"], statprofile["stat"], kind="quadratic")(0)
@@ -363,7 +360,7 @@ class SigmaVEstimator:
             filtered_y_values = statprofile["stat"][idx:]
             halfprofile["values"] = np.concatenate((np.array([sv_best]), filtered_x_values))
             halfprofile["stat"] = np.concatenate((np.array([likemin]), filtered_y_values))
-            max_like_difference = (np.max(halfprofile["stat"]) - likemin - self.RATIO)
+            max_like_difference = (np.max(halfprofile["stat"]) - likemin)
             # detection
             likezero = interp1d(
                 statprofile["values"],
@@ -373,15 +370,17 @@ class SigmaVEstimator:
             )(0)
             max_like_detection = likezero - likemin
 
-            log.debug(f"Min Likelihood: {likemin}")
-            log.debug(f"SvBest: {sv_best}")
-            log.debug(f"SvMax: {np.max(halfprofile['values'])}")
-            log.debug(f"DeltaLMax: {max_like_difference:.4f} \t| Max:  {np.max(halfprofile['stat'])}")
-            log.debug(f"DeltaLZero: {max_like_detection:.4f} \t| Zero: {likezero}")
+            log.info(f"----")
+            log.info(f"Run: {run}")
+            log.info(f"Channel: {ch}")
+            log.info(f"Mass: {mass}")
+            # log.debug(f"LikeMinFound: {likemin_found:.3f} \t| LikeMin: {likemin:.3f}")
+            log.debug(f"DeltaLMax: {max_like_difference:.4f} \t| Max: {np.max(halfprofile['stat']):.3f} \t| Min:  {likemin:.3f}")
+            log.debug(f"DeltaLZero: {max_like_detection:.4f} \t| Zero: {likezero:.3f} \t| Min:  {likemin:.3f}")
 
         try:
-            assert (np.max(halfprofile["values"]) > 0), "Values for jfactor found outside the physical region"
-            assert max_like_difference > 0, "Wider range needed in likelihood profile"
+            assert (np.max(halfprofile["values"]) > 0), "All values found negative"
+            assert max_like_difference > self.RATIO, "Wider range needed in likelihood profile"
             assert max_like_detection <= 25, "Detection found"
 
             # find the value of the scale parameter `sv` reaching self.RATIO
@@ -397,6 +396,8 @@ class SigmaVEstimator:
                 rtol=1e-5,
             )
             sigma_v = sv_ul * self.XSECTION
+            log.debug(f"SvBestFound: {sv_best_found:.3f} \t| SvBest: {sv_best:.3f} \t| SvRatio: {sv_ul:.3f}")
+            log.info(f"Sigma v:{sigma_v}")
         except Exception as ex:
             sigma_v = None
             sv_best = None
