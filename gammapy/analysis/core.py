@@ -4,6 +4,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.table import Table
 from regions import CircleSkyRegion
 import yaml
 from gammapy.analysis.config import AnalysisConfig
@@ -79,9 +80,17 @@ class Analysis:
 
         log.info("Fetching observations.")
         observations_settings = self.config.observations
-        if len(observations_settings.obs_ids) and observations_settings.obs_file is not None:
-            raise ValueError("Values for both parameters obs_ids and obs_file are not accepted.")
-        elif not len(observations_settings.obs_ids) and observations_settings.obs_file is None:
+        if (
+            len(observations_settings.obs_ids)
+            and observations_settings.obs_file is not None
+        ):
+            raise ValueError(
+                "Values for both parameters obs_ids and obs_file are not accepted."
+            )
+        elif (
+            not len(observations_settings.obs_ids)
+            and observations_settings.obs_file is None
+        ):
             obs_list = self.datastore.get_observations()
             ids = [obs.obs_id for obs in obs_list]
         elif len(observations_settings.obs_ids):
@@ -89,8 +98,7 @@ class Analysis:
             ids = [obs.obs_id for obs in obs_list]
         else:
             path = make_path(self.config.observations.obs_file)
-            with open(path, 'r') as f:
-                ids = [int(obs_id) for obs_id in f.readlines()]
+            ids = list(Table.read(path, format="ascii", data_start=0).columns[0])
 
         if observations_settings.obs_cone.lon is not None:
             cone = dict(
