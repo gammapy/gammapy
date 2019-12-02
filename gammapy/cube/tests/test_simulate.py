@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
     SkyModels,
 )
 from gammapy.utils.testing import requires_data
+from gammapy.cube.tests.test_psf_map import make_test_psfmap
 
 
 @requires_data()
@@ -116,3 +117,19 @@ def test_MDE_sample_background():
     assert_allclose(bkg_evt.table["RA"][0], 265.7253792887848, rtol=1e-5)
     assert_allclose(bkg_evt.table["DEC"][0], -27.727581635186304, rtol=1e-5)
     assert_allclose(bkg_evt.table["MC_ID"][0], 0, rtol=1e-5)
+
+
+@requires_data()
+def test_MDE_sample_psf():
+    psf_map = make_test_psfmap(0.1 * u.deg, shape="gauss")
+
+    dataset = dataset_maker()
+    sampler = MapDatasetEventSampler(random_state=0)
+    src_evt = sampler.sample_sources(dataset=dataset)
+    src_evt_corr = sampler.sample_psf(psf_map, src_evt)
+
+    assert len(src_evt_corr.table) == 726
+    assert_allclose(src_evt_corr.table["ENERGY_TRUE"][0], 9.637228658895618, rtol=1e-5)
+    assert_allclose(src_evt_corr.table["RA"][0], 266.46418313134603, rtol=1e-5)
+    assert_allclose(src_evt_corr.table["DEC"][0], -28.85688796198139, rtol=1e-5)
+    assert_allclose(src_evt_corr.table["MC_ID"][0], 1, rtol=1e-5)
