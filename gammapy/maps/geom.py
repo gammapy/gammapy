@@ -322,6 +322,9 @@ class MapAxis:
         if ~(np.all(nodes == np.sort(nodes)) or np.all(nodes[::-1] == np.sort(nodes))):
             raise ValueError("MapAxis: node values must be sorted")
 
+        if len(nodes) == 1 and node_type == "center":
+            raise ValueError("Single bins can only be used with node-type 'edges'")
+
         if isinstance(nodes, u.Quantity):
             unit = nodes.unit if nodes.unit is not None else ""
             nodes = nodes.value
