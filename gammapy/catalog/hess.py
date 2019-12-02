@@ -566,8 +566,6 @@ class SourceCatalogHGPS(SourceCatalog):
 
     One source is represented by `SourceCatalogObjectHGPS`.
 
-    An extensive tutorial is available here: `hgps.html <../notebooks/hgps.html>`__
-
     Examples
     --------
     Let's assume you have downloaded the HGPS catalog FITS file, e.g. via:
