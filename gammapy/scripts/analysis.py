@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 )
 def cli_make_config(filename, overwrite):
     """Writes default configuration file."""
-    config = AnalysisConfig.from_template("1d")
+    config = AnalysisConfig()
     config.write(filename, overwrite=overwrite)
     log.info(f"Configuration file produced: {filename}")
 
