@@ -202,9 +202,6 @@ class MapDatasetEventSampler:
         )
 
         coords_reco = psf_map.sample_coord(coord, self.random_state)
-        events.table["RA_TRUE"] = coords_reco["lon"] * u.deg
-        events.table["DEC_TRUE"] = coords_reco["lat"] * u.deg
-        events.table.rename_column("RA_TRUE", "RA")
-        events.table.rename_column("DEC_TRUE", "DEC")
-
+        events.table["RA"] = coords_reco["lon"] * u.deg
+        events.table["DEC"] = coords_reco["lat"] * u.deg
         return events
