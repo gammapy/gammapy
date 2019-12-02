@@ -2,6 +2,7 @@
 from gammapy.scripts.main import cli
 from gammapy.utils.testing import run_cli
 from gammapy.analysis import AnalysisConfig
+from gammapy.utils.testing import requires_data
 
 
 def test_cli_analysis_config(tmp_path):
@@ -11,6 +12,7 @@ def test_cli_analysis_config(tmp_path):
     assert path_config.exists()
 
 
+@requires_data()
 def test_cli_analysis_run(tmp_path):
     path_config = tmp_path / "config.yaml"
     config = AnalysisConfig.from_template("1d")
