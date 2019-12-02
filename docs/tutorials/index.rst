@@ -9,10 +9,15 @@ This page lists the Gammapy tutorials that are available as `Jupyter`_ notebooks
 
 You can read them here, or execute them using a temporary cloud server in Binder.
 
-To execute them locally, you have to first install Gammapy locally and download
-the tutorial notebooks and example datasets. The setup steps are described in
-:ref:`getting-started`. Once Gammapy installed, remember that you can always use
-``gammapy info`` to check your setup.
+To execute them locally, you have to first install Gammapy locally (see
+:ref:`install`) and download the tutorial notebooks and example datasets (see
+:ref:`getting-started`). Once Gammapy installed, remember that you can always
+use ``gammapy info`` to check your setup.
+
+Gammapy is a Python package built on `Numpy`_ and `Astropy`_, so to use it
+effectively, you have to learn the basics. Many good free resources are
+available, e.g. `A Whirlwind tour of Python`_, the `Python data science
+handbook`_ and the `Astropy Hands-On Tutorial`_.
 
 .. _tutorials_notebooks:
 
@@ -128,17 +133,3 @@ These notebooks contain examples on some more specialised functionality in Gamma
 - `Make template background model <../notebooks/background_model.html>`__ | *background_model.ipynb*
 - `MCMC sampling of Gammapy models using the emcee package <../notebooks/mcmc_sampling.html>`__ | *mcmc_sampling.ipynb*
 - `Pulsar analysis with Gammapy <../notebooks/pulsar_analysis.html>`__ | *pulsar_analysis.ipynb*
-
-.. _tutorials_basics:
-
-Basics
-------
-
-Gammapy is a Python package built on `Numpy`_ and `Astropy`_, so to use it effectively,
-you have to learn the basics. To make plots you have to learn a bit of `matplotlib`_.
-
-Here are some great hands-on tutorials to get started quickly:
-
-- Python: `A Whirlwind tour of Python <https://nbviewer.jupyter.org/github/jakevdp/WhirlwindTourOfPython/blob/master/Index.ipynb>`__
-- IPython, Jupyter, Numpy, matplotlib: `Python data science handbook <http://nbviewer.jupyter.org/github/jakevdp/PythonDataScienceHandbook/blob/master/notebooks/Index.ipynb>`__
-- Astropy: `Astropy Hands-On Tutorial <https://github.com/Asterics2020-Obelics/School2019/tree/master/astropy>`__
