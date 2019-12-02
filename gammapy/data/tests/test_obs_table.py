@@ -298,6 +298,16 @@ def test_select_sky_regions():
     obs_table = obs_table.select_observations(selection)
     assert len(obs_table) == 32
 
+    selection = dict(
+        type="sky_circle",
+        frame="galactic",
+        lon="0 deg",
+        lat="0 deg",
+        radius="50 deg",
+        )
+    obs_table = obs_table.select_observations(selection)
+    assert len(obs_table) == 30
+
 
 def test_create_gti():
     date_start = Time("2012-01-01T00:30:00")
