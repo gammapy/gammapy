@@ -16,11 +16,11 @@ level interface `~gammapy.analysis.Analysis` `here <notebooks/analysis_1.html#Se
 You can also create the object directly, see
 this `example <notebooks/analysis_2.html#Defining-the-datastore-and-selecting-observations>`__.
 
-How to select observations?
-+++++++++++++++++++++++++++
+..  How to select observations?
+    +++++++++++++++++++++++++++
 
-How to filter selected observations?
-++++++++++++++++++++++++++++++++++++
+..  How to filter selected observations?
+    ++++++++++++++++++++++++++++++++++++
 
 How to explore the IRFs of an observation?
 ++++++++++++++++++++++++++++++++++++++++++
@@ -55,14 +55,14 @@ You can find an example usage `here <notebooks/spectrum_analysis.html#Source-sta
 Data reduction: maps
 --------------------
 
-How to build maps?
-++++++++++++++++++
+..  How to build maps?
+    ++++++++++++++++++
 
-How to plot a excess map?
-+++++++++++++++++++++++++
+..  How to plot a excess map?
+    +++++++++++++++++++++++++
 
-How to overlay significance and excess on maps?
-+++++++++++++++++++++++++++++++++++++++++++++++
+..  How to overlay significance and excess on maps?
+    +++++++++++++++++++++++++++++++++++++++++++++++
 
 How to detect sources in a map?
 +++++++++++++++++++++++++++++++
@@ -83,17 +83,17 @@ Estimate the significance of a source, or more generally of an additional model 
 You fit two models, with and without the extra source or component, then use the test statistic
 values from both fits to compute the significance or p-value.
 
-**TODO: link to notebook**
-TODO: update this entry once https://github.com/gammapy/gammapy/issues/2149
-and https://github.com/gammapy/gammapy/issues/1540 are resolved, linking to the documentation
-developed there.
+..  TODO: link to notebook
+    TODO: update this entry once https://github.com/gammapy/gammapy/issues/2149
+    and https://github.com/gammapy/gammapy/issues/1540 are resolved, linking to the documentation
+    developed there.
 
 
 Modeling and fitting
 --------------------
 
-How to share a model between two datasets?
-++++++++++++++++++++++++++++++++++++++++++
+..  How to share a model between two datasets?
+    ++++++++++++++++++++++++++++++++++++++++++
 
 How to use Gammapy with astrophysical modeling packages?
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -104,15 +104,14 @@ an example of a Gammapy wrapper class around the Naima spectral model and radiat
 allows modeling and fitting of Naima models within Gammapy (e.g. using CTA, H.E.S.S. or Fermi-LAT data).
 
 
-How to add a user defined model?
-++++++++++++++++++++++++++++++++
-
-**TODO: move content from spectrum_simulation.ipynb**
+.. How to add a user defined model?
+    ++++++++++++++++++++++++++++++++
+    **TODO: move content from spectrum_simulation.ipynb**
 
 How to extract a lightcurve?
 ++++++++++++++++++++++++++++
 
-Link to relevant notebook.
+This is demonstrated in the following `notebook <notebooks/Light_curve.html>`__.
 
 How to create a light curve with time intervals shorter than observations?
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
