@@ -10,7 +10,7 @@ from gammapy.cube import (
     make_map_exposure_true_energy,
 )
 from gammapy.data import EventList
-from gammapy.maps import WcsNDMap
+from gammapy.maps import WcsNDMap, MapCoord
 from gammapy.modeling.models import BackgroundModel, ConstantTemporalModel
 from gammapy.utils.random import get_random_state
 
@@ -176,3 +176,33 @@ class MapDatasetEventSampler:
         table.rename_column("DEC_TRUE", "DEC")
 
         return EventList(table)
+
+    def sample_edisp(self, edisp_map, events):
+        """Sample energy dispersion map.
+
+        Parameters
+        ----------
+        edisp_map : `~gammapy.cube.EdispMap`
+            Edisp map.
+        events : `~gammapy.data.EventList`
+            Event list with the true energies.
+
+        Returns
+        -------
+        events : `~gammapy.data.EventList`
+            Event list with reconstructed energy column.
+        """
+        coord = MapCoord(
+            {
+                "lon": events.table["RA"].quantity,
+                "lat": events.table["DEC"].quantity,
+                "energy": events.table["ENERGY_TRUE"].quantity,
+            },
+            coordsys="icrs",
+        )
+
+        coords_reco = edisp_map.sample_coord(coord, self.random_state)
+        events.table["ENERGY_TRUE"] = coords_reco["energy"] * u.TeV
+        events.table.rename_column("ENERGY_TRUE", "ENERGY")
+
+        return events

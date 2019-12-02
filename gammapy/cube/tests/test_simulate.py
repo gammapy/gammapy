@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
     SkyModels,
 )
 from gammapy.utils.testing import requires_data
+from gammapy.cube.tests.test_edisp_map import make_edisp_map_test
 
 
 @requires_data()
@@ -116,3 +117,19 @@ def test_MDE_sample_background():
     assert_allclose(bkg_evt.table["RA"][0], 265.7253792887848, rtol=1e-5)
     assert_allclose(bkg_evt.table["DEC"][0], -27.727581635186304, rtol=1e-5)
     assert_allclose(bkg_evt.table["MC_ID"][0], 0, rtol=1e-5)
+
+
+@requires_data()
+def test_MDE_sample_edisp():
+    edisp_map = make_edisp_map_test()
+
+    dataset = dataset_maker()
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.sample_sources(dataset=dataset)
+    events = sampler.sample_edisp(edisp_map, events)
+
+    assert len(events.table) == 726
+    assert_allclose(events.table["ENERGY_TRUE"][0], 1.0600765557667795, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 266.3541109343822, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -28.88356606406115, rtol=1e-5)
+    assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
