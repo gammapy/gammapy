@@ -15,7 +15,7 @@ MODEL_FILE = CONFIG_PATH / "model.yaml"
 
 def get_example_config(which):
     """Example config: which can be "1d" or "3d"."""
-    return AnalysisConfig.read(CONFIG_PATH / f"template-{which}.yaml")
+    return AnalysisConfig.read(CONFIG_PATH / f"example-{which}.yaml")
 
 
 def test_init():
