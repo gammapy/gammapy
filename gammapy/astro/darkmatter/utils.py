@@ -155,16 +155,8 @@ class SigmaVEstimator:
         self.flux_model = dataset.models[0].spectral_model
         if isinstance(dataset.models[0].spectral_model, AbsorbedSpectralModel):
             self.flux_model = dataset.models[0].spectral_model.spectral_model
-
-        # initialization of data containers
         self.sigmas = {}
         self.result = dict(mean={}, runs={})
-        for ch in self.channels:
-            self.result["mean"][ch] = None
-            self.result["runs"][ch] = {}
-            self.sigmas[ch] = {}
-            for mass in self.masses:
-                self.sigmas[ch][mass.value] = {}
 
     def run(
         self,
@@ -195,15 +187,20 @@ class SigmaVEstimator:
             result['mean'] provides mean and std values for sigma v vs. mass for each channel.
             result['runs'] provides a table of sigma v vs. mass and likelihood profiles for each run and channel.
         """
-        stat_profile_opts["parameter"] = "sv"
 
+        # initialize data containers
+        for ch in self.channels:
+            self.result["mean"][ch] = None
+            self.result["runs"][ch] = {}
+            self.sigmas[ch] = {}
+            for mass in self.masses:
+                self.sigmas[ch][mass.value] = {}
+
+        # loop in runs
         for run in range(runs):
             self.dataset.fake(background_model=self.background)
-
-            # loop in channels and masses
             valid = self._loops(run, nuisance, stat_profile_opts, optimize_opts, covariance_opts)
-            # if the value of sv<=0 or does not reach self.RATIO
-            # skip the run and continue with the next one
+            # if sv<=0 or sv does not reach ratio then skip the run and continue with the next one
             if not valid:
                 continue
 
@@ -225,11 +222,17 @@ class SigmaVEstimator:
         return self.result
 
     def _loops(self, run, nuisance, stat_profile_opts, optimize_opts, covariance_opts):
+        """Loop in channels and masses."""
+
         for ch in self.channels:
             table_rows = []
             for mass in self.masses:
+
+                # modify and set flux model
                 dataset_loop = self._set_model_dataset(ch, mass)
-                fit_result = self._fit_dataset(
+
+                # build profile from fitting
+                sv_best, likemin, statprofile = self._fit_dataset(
                     dataset_loop,
                     nuisance,
                     run,
@@ -239,10 +242,16 @@ class SigmaVEstimator:
                     optimize_opts=optimize_opts,
                     covariance_opts=covariance_opts,
                 )
+
+                # calculate results from a profile
+                fit_result = self._produce_results(sv_best, likemin, statprofile)
+
+                # not valid run
                 if fit_result["sigma_v"] is None:
                     self._make_bad_run_row(run, fit_result)
                     return False
 
+                # build table of results incrementally
                 row = {
                     "mass": mass,
                     "sigma_v": fit_result["sigma_v"].value,
@@ -252,14 +261,14 @@ class SigmaVEstimator:
                 }
                 table_rows.append(row)
                 self.sigmas[ch][mass.value][run] = row["sigma_v"]
-
             table = table_from_row_data(rows=table_rows)
             table["sigma_v"].unit = self.XSECTION.unit
             self.result["runs"][ch][run] = table
         return True
 
     def _make_bad_run_row(self, run, fit_result):
-        """Add the likelihood profile for a bad run."""
+        """Add only likelihood profile for a bad run."""
+
         for ch in self.channels:
             table_rows = []
             for mass in self.masses:
@@ -276,7 +285,8 @@ class SigmaVEstimator:
             self.result["runs"][ch][run] = table
 
     def _set_model_dataset(self, ch, mass):
-        """Set model to fit in dataset."""
+        """Attach to loop dataset the model to fit."""
+        
         jfactor = self.flux_model.parameters["jfactor"].value * self.flux_model.parameters["jfactor"].unit
         flux_model = DarkMatterAnnihilationSpectralModel(
             mass=mass, channel=ch, sv=1, jfactor=jfactor, z=self.flux_model.z, k=self.flux_model.k
@@ -300,60 +310,81 @@ class SigmaVEstimator:
         optimize_opts=None,
         covariance_opts=None,
     ):
-        """Fit dataset to model and calculate parameter value for upper limit."""
+        """Fit loop dataset model to fake realization and calculate parameter value for upper limit."""
+
+        log.info(f"----")
+        log.info(f"Run: {run}")
+        log.info(f"Channel: {ch}")
+        log.info(f"Mass: {mass}")
+
+        stat_profile_opts["parameter"] = "sv"
+        dataset_loop.models.parameters["jfactor"].frozen = True
+        fit = Fit([dataset_loop])
+        fit_result = fit.run(optimize_opts, covariance_opts)
+        sv_best = fit_result.parameters["sv"].value
+        likemin = dataset_loop.stat_sum()
+        statprofile = fit.stat_profile(**stat_profile_opts)
 
         if nuisance and dataset_loop.check_nuisance():
-            # fit to the realization for each value of j nuisance parameter in a range of sigmaj
-            resfits = []
-            likes = []
-            profiles = []
-            js = []
-            widthsigma = dataset_loop.nuisance["width"] * dataset_loop.nuisance["sigmaj"].value
-            jlo = dataset_loop.nuisance["jobs"].value - widthsigma
-            jhi = dataset_loop.nuisance["jobs"].value + widthsigma
-            unit = dataset_loop.nuisance["j"].unit
+            sv_best, likemin, statprofile = self._build_nuissance_profile(
+                dataset_loop,
+                stat_profile_opts=stat_profile_opts,
+                optimize_opts=optimize_opts,
+                covariance_opts=covariance_opts,
+            )
+        return sv_best, likemin, statprofile
 
-            for ji in np.linspace(jlo, jhi, dataset_loop.nuisance["steps"]):
-                dataset_loop.nuisance["j"] = ji * unit
-                ifit = Fit([dataset_loop])
-                js.append(ji)
-                resfits.append(ifit.run())
-                ilike = dataset_loop.stat_sum()
-                likes.append(ilike)
-                profiles.append(ifit.stat_profile(**stat_profile_opts))
-                log.debug(f"J: {ji:.2e} \t Min Likelihood: {ilike}")
-            # choose likelihood profile giving the minimum value for the likelihood
-            likemin = min(likes)
-            idx = likes.index(likemin)
-            statprofile = profiles[idx]
-            fit_result = resfits[idx]
-            log.debug(f"J best: {js[idx]}")
-        else:
-            dataset_loop.models.parameters["jfactor"].frozen = True
-            fit = Fit([dataset_loop])
-            fit_result = fit.run(optimize_opts, covariance_opts)
-            statprofile = fit.stat_profile(**stat_profile_opts)
-            likemin = dataset_loop.stat_sum()
-        halfprofile = copy.deepcopy(statprofile)
+    @staticmethod
+    def _build_nuissance_profile(
+            dataset_loop,
+            stat_profile_opts=None,
+            optimize_opts=None,
+            covariance_opts=None,
+    ):
+        # TODO
+        # build the sv profile in the sv / jfactor degenerated plane
+        # resfits = []
+        # likes = []
+        # profiles = []
+        # js = []
+        # widthsigma = dataset_loop.nuisance["width"] * dataset_loop.nuisance["sigmaj"].value
+        # jlo = dataset_loop.nuisance["jobs"].value - widthsigma
+        # jhi = dataset_loop.nuisance["jobs"].value + widthsigma
+        # unit = dataset_loop.nuisance["j"].unit
 
-        # consider sv value in the physical region
-        sv_best = fit_result.parameters["sv"].value
-        likemin_found = likemin
-        sv_best_found = sv_best
-        if sv_best < 0:
-            sv_best = 0
-            likemin = interp1d(statprofile["values"], statprofile["stat"], kind="quadratic")(0)
+        # for ji in np.linspace(jlo, jhi, dataset_loop.nuisance["steps"]):
+        #    dataset_loop.nuisance["j"] = ji * unit
+        #    ifit = Fit([dataset_loop])
+        #    js.append(ji)
+        #    resfits.append(ifit.run())
+        #    ilike = dataset_loop.stat_sum()
+        #    likes.append(ilike)
+        #    profiles.append(ifit.stat_profile(**stat_profile_opts))
+        #    log.debug(f"J: {ji:.2e} \t Min Likelihood: {ilike}")
+        # choose likelihood profile giving the minimum value for the likelihood
+        # likemin = min(likes)
+        # idx = likes.index(likemin)
+        # statprofile = profiles[idx]
+        # fit_result = resfits[idx]
+        # log.debug(f"J best: {js[idx]}")
+        sv_best = 0
+        likemin = 0
+        statprofile = 0
+        return sv_best, likemin, statprofile
 
-        max_like_detection = 0
-        max_like_difference = 0
-        if max(halfprofile["values"] > 0):
-            idx = np.min(np.argwhere(statprofile["values"] > 0))
-            filtered_x_values = statprofile["values"][statprofile["values"] > 0]
-            filtered_y_values = statprofile["stat"][idx:]
-            halfprofile["values"] = np.concatenate((np.array([sv_best]), filtered_x_values))
-            halfprofile["stat"] = np.concatenate((np.array([likemin]), filtered_y_values))
-            max_like_difference = (np.max(halfprofile["stat"]) - likemin)
-            # detection
+    def _produce_results(
+        self,
+        sv_best,
+        likemin,
+        statprofile
+    ):
+        """Calculate value of sigma_v from a specific fitting profile."""
+
+        try:
+            # check all values are positive
+            assert (np.max(statprofile["values"]) > 0), "All values found negative"
+
+            # check detection
             likezero = interp1d(
                 statprofile["values"],
                 statprofile["stat"],
@@ -361,21 +392,23 @@ class SigmaVEstimator:
                 fill_value="extrapolate",
             )(0)
             max_like_detection = likezero - likemin
-
-            log.info(f"----")
-            log.info(f"Run: {run}")
-            log.info(f"Channel: {ch}")
-            log.info(f"Mass: {mass}")
-            # log.debug(f"LikeMinFound: {likemin_found:.3f} \t| LikeMin: {likemin:.3f}")
-            log.debug(f"DeltaLMax: {max_like_difference:.4f} \t| Max: {np.max(halfprofile['stat']):.3f} \t| Min:  {likemin:.3f}")
-            log.debug(f"DeltaLZero: {max_like_detection:.4f} \t| Zero: {likezero:.3f} \t| Min:  {likemin:.3f}")
-
-        try:
-            assert (np.max(halfprofile["values"]) > 0), "All values found negative"
-            assert max_like_difference > self.RATIO, "Wider range needed in likelihood profile"
+            log.debug(f"DeltaLZero: {max_like_detection:.4f} \t| LZero: {likezero:.3f} \t| LMin:  {likemin:.3f}")
             assert max_like_detection <= 25, "Detection found"
 
-            # find the value of the scale parameter `sv` reaching self.RATIO
+            # consider sv value in the physical region
+            sv_best_found = sv_best
+            if sv_best < 0:
+                sv_best = 0
+                likemin = interp1d(statprofile["values"], statprofile["stat"], kind="quadratic")(0)
+            halfprofile = self._make_positive_profile(sv_best, likemin, statprofile)
+
+            # check values in likelihood are bigger than ratio
+            likemax = np.max(halfprofile['stat'])
+            max_like_difference = (np.max(halfprofile["stat"]) - likemin)
+            log.debug(f"DeltaLMax: {max_like_difference:.4f} \t| LMax: {likemax:.3f} \t| LMin:  {likemin:.3f}")
+            assert max_like_difference > self.RATIO, "Wider range needed in likelihood profile"
+
+            # find the value of the scale parameter `sv` reaching the ratio
             sv_ul = brentq(
                 interp1d(
                     halfprofile["values"],
@@ -388,14 +421,14 @@ class SigmaVEstimator:
                 rtol=1e-5,
             )
             sigma_v = sv_ul * self.XSECTION
-            log.debug(f"SvBestFound: {sv_best_found:.3f} \t| SvBest: {sv_best:.3f} \t| SvRatio: {sv_ul:.3f}")
+            log.debug(f"SvBestFound: {sv_best_found:.3f} \t| SvBest: {sv_best:.3f} \t| SvUL: {sv_ul:.3f}")
             log.info(f"Sigma v:{sigma_v}")
+
         except Exception as ex:
             sigma_v = None
             sv_best = None
             sv_ul = None
-            log.warning(f"Skipping Run: {run}")
-            log.warning(f"Channel: {ch} - Mass: {mass}")
+            log.warning(f"Skipping run")
             log.warning(ex)
 
         res = dict(
@@ -405,6 +438,22 @@ class SigmaVEstimator:
             statprofile=statprofile,
         )
         return res
+
+    @staticmethod
+    def _make_positive_profile(
+            sv_best,
+            likemin,
+            statprofile
+    ):
+        """Return the positive side of a profile."""
+
+        halfprofile = copy.deepcopy(statprofile)
+        idx = np.min(np.argwhere(statprofile["values"] > 0))
+        filtered_x_values = statprofile["values"][statprofile["values"] > 0]
+        filtered_y_values = statprofile["stat"][idx:]
+        halfprofile["values"] = np.concatenate((np.array([sv_best]), filtered_x_values))
+        halfprofile["stat"] = np.concatenate((np.array([likemin]), filtered_y_values))
+        return halfprofile
 
 
 class DMDatasetOnOff(SpectrumDatasetOnOff):
@@ -418,65 +467,15 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
                 "jobs": None,
                 "sigmaj": None,
                 "sigmatau": None,
-                "width": None,
-                "steps": None,
+                "range": 50,
+                "steps": 15,
             }
         self.nuisance = nuisance
-
-    @property
-    def nuisance(self):
-        return self._nuisance
-
-    @nuisance.setter
-    def nuisance(self, nuisance):
-        if not isinstance(nuisance, dict):
-            raise TypeError(f"Invalid type: {nuisance}, {type(nuisance)}")
-        if "j" not in nuisance:
-            nuisance["j"] = None
-        if "jobs" not in nuisance:
-            nuisance["jobs"] = None
-        if "sigmaj" not in nuisance:
-            nuisance["sigmaj"] = None
-        if "sigmatau" not in nuisance:
-            nuisance["sigmatau"] = None
-        if "width" not in nuisance:
-            nuisance["width"] = 5
-        if "steps" not in nuisance:
-            nuisance["steps"] = 15
-        self._nuisance = nuisance
-
-    def check_nuisance(self):
-        if not isinstance(self.nuisance["j"], Quantity):
-            log.warning("Units for j nuisance parameter missing.")
-            return False
-        if not isinstance(self.nuisance["jobs"], Quantity):
-            log.warning("Units for jobs nuisance parameter missing.")
-            return False
-        if not isinstance(self.nuisance["sigmaj"], Quantity):
-            log.warning("Units for sigmaj nuisance parameter missing.")
-            return False
-        if not self.nuisance["j"].value:
-            log.warning("Value for j nuisance parameter missing.")
-            return False
-        if not self.nuisance["jobs"].value:
-            log.warning("Value for jobs nuisance parameter missing.")
-            return False
-        if not self.nuisance["sigmaj"].value:
-            log.warning("Value for sigmaj nuisance parameter missing.")
-            return False
-        if not self.nuisance["sigmatau"]:
-            log.warning("Value for sigmatau nuisance parameter missing.")
-            return False
-        if not self.nuisance["width"]:
-            return False
-        if not self.nuisance["steps"]:
-            return False
-        return True
 
     def stat_sum(self):
         wstat = super().stat_sum()
         liketotal = wstat
-        if self.check_nuisance():
+        if self.nuisance["j"]:
             liketotal += self.jnuisance() + self.gnuisance()
         return liketotal
 
@@ -495,5 +494,5 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
         return -2 * np.log(res)
 
     def gnuisance(self):
-        res = 1 / (np.sqrt(2* np.pi) * self.nuisance["sigmatau"])
+        res = 1 / (np.sqrt(2 * np.pi) * self.nuisance["sigmatau"])
         return -2 * np.log(res)
