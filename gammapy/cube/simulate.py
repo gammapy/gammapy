@@ -194,8 +194,8 @@ class MapDatasetEventSampler:
         """
         coord = MapCoord(
             {
-                "lon": events.table["RA"].quantity,
-                "lat": events.table["DEC"].quantity,
+                "lon": events.table["RA_TRUE"].quantity,
+                "lat": events.table["DEC_TRUE"].quantity,
                 "energy": events.table["ENERGY_TRUE"].quantity,
             },
             coordsys="icrs",
