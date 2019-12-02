@@ -17,6 +17,9 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.testing import requires_data
 
+from gammapy.cube.tests.test_edisp_map import make_edisp_map_test
+from gammapy.cube.tests.test_psf_map import make_test_psfmap
+
 
 @requires_data()
 def test_simulate():
@@ -148,6 +151,26 @@ def test_mde_sample_psf():
     assert events.table["RA"].unit == "deg"
 
     assert_allclose(events.table["DEC"][0], -28.85688796198139, rtol=1e-5)
+    assert events.table["DEC"].unit == "deg"
+
+
+@requires_data()
+def test_mde_sample_edisp():
+    edisp_map = make_edisp_map_test()
+
+    dataset = dataset_maker()
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.sample_sources(dataset=dataset)
+    events = sampler.sample_edisp(edisp_map, events)
+
+    assert len(events.table) == 726
+    assert_allclose(events.table["ENERGY"][0], 1.0600765557667795, rtol=1e-5)
+    assert events.table["ENERGY"].unit == "TeV"
+
+    assert_allclose(events.table["RA"][0], 266.3541109343822, rtol=1e-5)
+    assert events.table["RA"].unit == "deg"
+
+    assert_allclose(events.table["DEC"][0], -28.88356606406115, rtol=1e-5)
     assert events.table["DEC"].unit == "deg"
 
     assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)

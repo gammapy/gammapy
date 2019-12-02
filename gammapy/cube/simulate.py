@@ -176,6 +176,34 @@ class MapDatasetEventSampler:
         table.rename_column("DEC_TRUE", "DEC")
 
         return EventList(table)
+      
+    def sample_edisp(self, edisp_map, events):
+        """Sample energy dispersion map.
+
+        Parameters
+        ----------
+        edisp_map : `~gammapy.cube.EdispMap`
+            Edisp map.
+        events : `~gammapy.data.EventList`
+            Event list with the true energies.
+
+        Returns
+        -------
+        events : `~gammapy.data.EventList`
+            Event list with reconstructed energy column.
+        """
+        coord = MapCoord(
+            {
+                "lon": events.table["RA"].quantity,
+                "lat": events.table["DEC"].quantity,
+                "energy": events.table["ENERGY_TRUE"].quantity,
+            },
+            coordsys="icrs",
+        )
+
+        coords_reco = edisp_map.sample_coord(coord, self.random_state)
+        events.table["ENERGY"] = coords_reco["energy"] * u.TeV
+        return events
 
     def sample_psf(self, psf_map, events):
         """Sample psf map.
