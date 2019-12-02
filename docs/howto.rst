@@ -5,19 +5,16 @@
 How To
 ======
 
-**TODO: add short entries explaining how to do something specific in Gammapy.**
-**Follow general overview: from DL3 to observations to dataset to model/fit**
-
-Probably each HOWTO should be a short section with just 1-2 sentences and links to tutorials and API docs,
-or if it should be small mini-tutorials with code snippets, possibly on sub-pages.
-
-See docs PIG: https://github.com/gammapy/gammapy/pull/2463
-
 Data access and manipulation
 ----------------------------
 
 How to open a data store and access observations?
 +++++++++++++++++++++++++++++++++++++++++++++++++
+
+Gammapy accesses data through a `~gammapy.data.DataStore` object. You can see how to create one with the high
+level interface `~gammapy.analysis.Analysis` `here <../notebooks/Analysis_1.html#Setting-the-data-to-use>`__.
+You can also create the object directly, see
+this `example <../notebooks/Analysis_2.html#Defining-the-datastore-and-selecting-observations>`__.
 
 How to select observations?
 +++++++++++++++++++++++++++
@@ -31,13 +28,23 @@ How to explore the IRFs of an observation?
 Data reduction: spectra
 -----------------------
 
-what do we want to see here?
-
 How to extract 1D spectra?
 ++++++++++++++++++++++++++
 
+The `~gammapy.analysis.Analysis` class can perform spectral extraction. The `~gammapy.analysis.AnalysisConfig`
+must be defined to produce '1d' datasets.
+
+Alternatively, you can follow the `spectrum extraction notebook <../notebooks/Spectrum_analysis.html>`__.
+
 How to compute the cumulative significance of a source?
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+A classical plot in gamma-ray astronomy is the cumulative significance of a source as a function
+of observing time. In Gammapy, you can produce it with 1D (spectral) analysis. Once datasets are produced
+for a given ON region, you can access the total statistics with the `~gammapy.modeling.Datasets.info_table()`
+method.
+
+You can find an example usage `here <../notebooks/Spectrum_analysis.html#Source-statistic>`__.
 
 Data reduction: maps
 --------------------
@@ -114,41 +121,4 @@ How to test for periodicity in a light curve?
 Other Ideas
 -----------
 
-Below some examples what "How to" entries could be, taken
-from https://github.com/gammapy/gammapy/pull/2463#issuecomment-544126183
-
-See also https://github.com/gammapy/gammapy/pull/2463#issuecomment-545309352
-for links to examples what other projects put as HOWTO or FAQ.
-
-Modeling
-++++++++
-
-- How to test the spectral and/or spatial model?
-- How to calculate lower/upper limits for a spectral parameter?
-
-SED
-+++
-
-- How to calculate integral/differential flux and upper limits?
-- How to calculate spectral points and residuals?
-- How to plot the SED with errors?
-
-Source Detection
-++++++++++++++++
-
-- How to build and display the on region?
-- How to get the significance?
-- How to get excess and its error?
-- How to get background counts?
-
-2D Morphology
-+++++++++++++
-
-- How to define/get position and spatial dimensions at different energy thresholds?
-- How to calculate surface brightness or radial profile in within a specific mask/region?
-- How to calculate a spectrum within a specific mask/region?
-
-Light Curves
-++++++++++++
-
-- How to do analysis of light curves and upper limits
+If you think an entry is missing, please send us a request to add it.
