@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import EffectiveAreaTable
@@ -247,6 +247,3 @@ def test_stack_no_livetime():
 
     with pytest.raises(ValueError):
         dataset_1.stack(dataset_2)
-
-
-

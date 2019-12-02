@@ -503,7 +503,7 @@ class SpectrumDataset(Dataset):
 
         if self.aeff is not None:
             if self.livetime is None or other.livetime is None:
-                raise ValueError("Stacking of IRFs requires the livetime to be defined on both datasets")
+                raise ValueError("IRF stacking requires livetime for both datasets.")
 
             irf_stacker = IRFStacker(
                 list_aeff=[self.aeff, other.aeff],
@@ -523,8 +523,7 @@ class SpectrumDataset(Dataset):
         if self.gti is not None:
             self.gti = self.gti.stack(other.gti).union()
 
-        # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
-        # of GTIs
+        # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum of GTIs
         if self.livetime is not None:
             self.livetime += other.livetime
 

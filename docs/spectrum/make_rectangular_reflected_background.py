@@ -8,9 +8,9 @@ from gammapy.data import DataStore
 from gammapy.maps import Map
 from gammapy.spectrum import (
     ReflectedRegionsBackgroundMaker,
+    SpectrumDataset,
     SpectrumDatasetMaker,
     plot_spectrum_datasets_off_regions,
-    SpectrumDataset
 )
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
@@ -30,8 +30,7 @@ bkg_maker = ReflectedRegionsBackgroundMaker(min_distance=0.1 * u.rad)
 dataset_maker = SpectrumDatasetMaker(selection=["counts"])
 
 dataset_empty = SpectrumDataset.create(
-    e_reco=np.logspace(-1, 2, 30) * u.TeV,
-    region=rectangle
+    e_reco=np.logspace(-1, 2, 30) * u.TeV, region=rectangle
 )
 
 datasets = []

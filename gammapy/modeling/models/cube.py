@@ -3,9 +3,9 @@
 import collections.abc
 import copy
 from pathlib import Path
-import yaml
 import numpy as np
 import astropy.units as u
+import yaml
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
 from gammapy.utils.scripts import make_path
@@ -79,7 +79,9 @@ class SkyModels(collections.abc.Sequence):
         from gammapy.modeling.serialize import models_to_dict
 
         data = models_to_dict(self._skymodels)
-        return yaml.dump(data, sort_keys=False, indent=4, width=80, default_flow_style=None)
+        return yaml.dump(
+            data, sort_keys=False, indent=4, width=80, default_flow_style=None
+        )
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"
