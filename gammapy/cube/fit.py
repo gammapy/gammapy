@@ -254,8 +254,10 @@ class MapDataset(Dataset):
             return self.counts.geom
         elif self.background_model is not None:
             return self.background_model.map.geom
-        else:
+        elif self.exposure:
             return self.exposure.geom
+        else:
+            raise ValueError("No map available to extract shape")
 
     @property
     def _energy_axis(self):
@@ -264,14 +266,7 @@ class MapDataset(Dataset):
     @property
     def data_shape(self):
         """Shape of the counts or background data (tuple)"""
-        if self.counts:
-            return self.counts.data.shape
-        elif self.background_model:
-            return self.background_model.map.data.shape
-        elif self.exposure:
-            return self.exposure.data.shape
-        else:
-            raise ValueError("No map available to extract shape")
+        return self._geom.data_shape
 
     def npred(self):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
