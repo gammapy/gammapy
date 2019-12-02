@@ -118,7 +118,6 @@ Extra topics
 .. toctree::
     :hidden:
 
-    ../notebooks/source_population_model.ipynb
     ../notebooks/astro_dark_matter.ipynb
     ../notebooks/background_model.ipynb
     ../notebooks/mcmc_sampling.ipynb
@@ -126,7 +125,6 @@ Extra topics
 
 These notebooks contain examples on some more specialised functionality in Gammapy.
 
-- `Astrophysical source population modeling <../notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
 - `Dark matter spatial and spectral models <../notebooks/astro_dark_matter.html>`__ | *astro_dark_matter.ipynb*
 - `Make template background model <../notebooks/background_model.html>`__ | *background_model.ipynb*
 - `MCMC sampling of Gammapy models using the emcee package <../notebooks/mcmc_sampling.html>`__ | *mcmc_sampling.ipynb*
