@@ -250,7 +250,9 @@ class AnalysisConfig(GammapyBaseConfig):
         # We should change this once pydantic adds support for custom encoders
         # to `dict()`. See https://github.com/samuelcolvin/pydantic/issues/1043
         config = json.loads(self.json())
-        return yaml.dump(config, sort_keys=False, indent=4)
+        return yaml.dump(
+            config, sort_keys=False, indent=4, width=80, default_flow_style=None
+        )
 
     def set_logging(self):
         """Set logging config.

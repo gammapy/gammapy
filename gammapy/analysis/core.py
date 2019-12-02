@@ -4,6 +4,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.table import Table
 from regions import CircleSkyRegion
 import yaml
 from gammapy.analysis.config import AnalysisConfig
@@ -71,7 +72,6 @@ class Analysis:
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
         path = make_path(self.config.observations.datastore)
-
         if path.is_file():
             self.datastore = DataStore.from_file(path)
         elif path.is_dir():
@@ -80,33 +80,43 @@ class Analysis:
             raise FileNotFoundError(f"Datastore not found: {path}")
 
         log.info("Fetching observations.")
-        data_settings = self.config.observations
-        selected_obs = ObservationTable()
-        obs_list = self.datastore.get_observations()
-        if len(self.config.observations.obs_ids):
-            obs_list = self.datastore.get_observations(data_settings.obs_ids)
-        selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list]
-        ids = selected_obs["OBS_ID"].tolist()
-        # TODO
-        # if self.config.observations.obs_file:
-        # add obs_ids from file
-        # ids.extend(selected_obs["OBS_ID"].tolist())
-        if data_settings.obs_cone.lon is not None:
-            # TODO remove border keyword
+        observations_settings = self.config.observations
+        if (
+            len(observations_settings.obs_ids)
+            and observations_settings.obs_file is not None
+        ):
+            raise ValueError(
+                "Values for both parameters obs_ids and obs_file are not accepted."
+            )
+        elif (
+            not len(observations_settings.obs_ids)
+            and observations_settings.obs_file is None
+        ):
+            obs_list = self.datastore.get_observations()
+            ids = [obs.obs_id for obs in obs_list]
+        elif len(observations_settings.obs_ids):
+            obs_list = self.datastore.get_observations(observations_settings.obs_ids)
+            ids = [obs.obs_id for obs in obs_list]
+        else:
+            path = make_path(self.config.observations.obs_file)
+            ids = list(Table.read(path, format="ascii", data_start=0).columns[0])
+
+        if observations_settings.obs_cone.lon is not None:
             cone = dict(
                 type="sky_circle",
-                frame=data_settings.obs_cone.frame,
-                lon=data_settings.obs_cone.lon,
-                lat=data_settings.obs_cone.lat,
-                radius=data_settings.obs_cone.radius,
-                border="1 deg",
+                frame=observations_settings.obs_cone.frame,
+                lon=observations_settings.obs_cone.lon,
+                lat=observations_settings.obs_cone.lat,
+                radius=observations_settings.obs_cone.radius,
+                border="0 deg",
             )
             selected_cone = self.datastore.obs_table.select_observations(cone)
             ids = list(set(ids) & set(selected_cone["OBS_ID"].tolist()))
-        # TODO
-        # if self.config.observations.obs_time.start is not None:
-        # filter obs_ids with time filter
         self.observations = self.datastore.get_observations(ids, skip_missing=True)
+        if self.config.observations.obs_time.start is not None:
+            start = self.config.observations.obs_time.start
+            stop = self.config.observations.obs_time.stop
+            self.observations = self.observations.select_time([(start, stop)])
         log.info(f"Number of selected observations: {len(self.observations)}")
         for obs in self.observations:
             log.debug(obs)
