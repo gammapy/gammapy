@@ -13,6 +13,10 @@ from gammapy.utils.testing import requires_data, requires_dependency
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 MODEL_FILE = CONFIG_PATH / "model.yaml"
 
+def get_example_config(which):
+    """Example config: which can be "1d" or "3d"."""
+    return AnalysisConfig.read(CONFIG_PATH / f"example-{which}.yaml")
+
 
 def test_init():
     cfg = {"general": {"outdir": "test"}}
@@ -113,7 +117,7 @@ def test_get_observations_obs_time(tmp_path):
 
 @requires_data()
 def test_set_models():
-    config = AnalysisConfig.from_template("1d")
+    config = get_example_config("1d")
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
@@ -140,7 +144,7 @@ def test_analysis_1d():
     flux_points:
         energy: {min: 1 TeV, max: 50 TeV, nbins: 4}
     """
-    config = AnalysisConfig.from_template("1d")
+    config = get_example_config("1d")
     analysis = Analysis(config)
     analysis.update_config(cfg)
     analysis.get_observations()
@@ -160,7 +164,7 @@ def test_analysis_1d():
 
 @requires_data()
 def test_exclusion_region(tmp_path):
-    config = AnalysisConfig.from_template("1d")
+    config = get_example_config("1d")
     analysis = Analysis(config)
 
     exclusion_region = CircleSkyRegion(center=SkyCoord("85d 23d"), radius=1 * u.deg)
@@ -173,13 +177,13 @@ def test_exclusion_region(tmp_path):
 
     analysis.get_observations()
     analysis.get_datasets()
-    assert len(analysis.datasets) == 4
+    assert len(analysis.datasets) == 2
 
 
 @requires_dependency("iminuit")
 @requires_data()
 def test_analysis_1d_stacked():
-    config = AnalysisConfig.from_template("1d")
+    config = get_example_config("1d")
     analysis = Analysis(config)
     analysis.config.datasets.stack = True
     analysis.get_observations()
@@ -188,17 +192,17 @@ def test_analysis_1d_stacked():
     analysis.run_fit()
 
     assert len(analysis.datasets) == 1
-    assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 404)
+    assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 184)
     pars = analysis.fit_result.parameters
 
-    assert_allclose(pars["index"].value, 2.676283, rtol=1e-3)
-    assert_allclose(pars["amplitude"].value, 4.554215e-11, rtol=1e-3)
+    assert_allclose(pars["index"].value, 2.76913, rtol=1e-2)
+    assert_allclose(pars["amplitude"].value, 5.496388e-11, rtol=1e-2)
 
 
 @requires_dependency("iminuit")
 @requires_data()
 def test_analysis_3d():
-    config = AnalysisConfig.from_template("3d")
+    config = get_example_config("3d")
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
@@ -214,26 +218,26 @@ def test_analysis_3d():
     assert len(analysis.flux_points.data.table) == 2
     dnde = analysis.flux_points.data.table["dnde"].quantity
 
-    assert_allclose(dnde[0].value, 1.182768e-11, rtol=1e-1)
-    assert_allclose(dnde[-1].value, 4.051367e-13, rtol=1e-1)
-    assert_allclose(res["index"].value, 2.76607, rtol=1e-1)
-    assert_allclose(res["tilt"].value, -0.143204, rtol=1e-1)
+    assert_allclose(dnde[0].value, 1.467946e-11, rtol=1e-2)
+    assert_allclose(dnde[-1].value, 4.051367e-13, rtol=1e-2)
+    assert_allclose(res["index"].value, 2.921873, rtol=1e-2)
+    assert_allclose(res["tilt"].value, -0.133544, rtol=1e-2)
 
 
 @requires_data()
 def test_analysis_3d_joint_datasets():
-    config = AnalysisConfig.from_template("3d")
+    config = get_example_config("3d")
     config.datasets.stack = False
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    assert len(analysis.datasets) == 4
+    assert len(analysis.datasets) == 2
 
 
 @requires_dependency("iminuit")
 @requires_data()
 def test_usage_errors():
-    config = AnalysisConfig.from_template("1d")
+    config = get_example_config("1d")
     analysis = Analysis(config)
     with pytest.raises(RuntimeError):
         analysis.get_datasets()

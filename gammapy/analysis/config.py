@@ -18,7 +18,6 @@ __all__ = ["AnalysisConfig"]
 
 CONFIG_PATH = Path(__file__).resolve().parent / "config"
 DOCS_FILE = CONFIG_PATH / "docs.yaml"
-ANALYSIS_TEMPLATES = {"1d": "template-1d.yaml", "3d": "template-3d.yaml"}
 
 log = logging.getLogger(__name__)
 
@@ -199,23 +198,6 @@ class AnalysisConfig(GammapyBaseConfig):
     datasets: DatasetsConfig = DatasetsConfig()
     fit: FitConfig = FitConfig()
     flux_points: FluxPointsConfig = FluxPointsConfig()
-
-    @classmethod
-    def from_template(cls, template):
-        """Create from existing templates.
-
-        Parameters
-        ----------
-        template : {"1d", "3d"}
-            Built-in templates.
-
-        Returns
-        -------
-        config : `AnalysisConfig`
-            AnalysisConfig class
-        """
-        filename = CONFIG_PATH / ANALYSIS_TEMPLATES[template]
-        return cls.read(filename)
 
     def __str__(self):
         """Display settings in pretty YAML format."""
