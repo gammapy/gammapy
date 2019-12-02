@@ -102,8 +102,10 @@ interface and with the lower level API:
 Scripts
 -------
 
+Examples how to run Gammapy via Python scripts:
+
 .. toctree::
-    :hidden:
+    :maxdepth: 1
 
     survey_map
 
