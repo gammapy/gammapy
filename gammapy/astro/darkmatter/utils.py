@@ -88,10 +88,6 @@ class SigmaVEstimator:
     background_model: `~gammapy.spectrum.CountsSpectrum`
         BackgroundModel. In the future will be part of the SpectrumDataset Class.
         For the moment, a CountSpectrum.
-    jfact : `~astropy.units.Quantity` (optional)
-        Integrated J-Factor
-        Needed when `~gammapy.image.models.SkyPointSource` spatial model is used.
-        Default value 1.
 
     Examples
     --------
@@ -132,7 +128,7 @@ class SigmaVEstimator:
         dataset.nuisance = nuisance
 
         # Instantiate the estimator
-        estimator = SigmaVEstimator(dataset, masses, channels, background_model=bkg, jfactor=JFAC)
+        estimator = SigmaVEstimator(dataset, masses, channels, background_model=bkg)
 
         # Run the estimator
         result = estimator.run(10, nuisance=True, stat_profile_opts=dict(bounds=(0, 500), nvalues=100))
@@ -149,21 +145,16 @@ class SigmaVEstimator:
         dataset,
         masses,
         channels,
-        background_model,
-        jfactor=1,
+        background_model
     ):
 
         self.dataset = dataset
         self.masses = masses
         self.channels = channels
         self.background = background_model
-        self.jfactor = jfactor
-
-        dm_params_container = dataset.models[0].spectral_model
+        self.flux_model = dataset.models[0].spectral_model
         if isinstance(dataset.models[0].spectral_model, AbsorbedSpectralModel):
-            dm_params_container = dataset.models[0].spectral_model.spectral_model
-        self.z = dm_params_container.z
-        self.k = dm_params_container.k
+            self.flux_model = dataset.models[0].spectral_model.spectral_model
 
         # initialization of data containers
         self.sigmas = {}
@@ -286,12 +277,13 @@ class SigmaVEstimator:
 
     def _set_model_dataset(self, ch, mass):
         """Set model to fit in dataset."""
+        jfactor = self.flux_model.parameters["jfactor"].value * self.flux_model.parameters["jfactor"].unit
         flux_model = DarkMatterAnnihilationSpectralModel(
-            mass=mass, channel=ch, sv=1, jfactor=self.jfactor, z=self.z, k=self.k
+            mass=mass, channel=ch, sv=1, jfactor=jfactor, z=self.flux_model.z, k=self.flux_model.k
         )
         if isinstance(self.dataset.models[0].spectral_model, AbsorbedSpectralModel):
             flux_model = AbsorbedSpectralModel(
-                flux_model, self.dataset.models[0].spectral_model.absorption, self.z
+                flux_model, self.dataset.models[0].spectral_model.absorption, self.flux_model.z
             )
         ds = self.dataset.copy()
         ds.models[0].spectral_model = flux_model
@@ -337,7 +329,7 @@ class SigmaVEstimator:
             fit_result = resfits[idx]
             log.debug(f"J best: {js[idx]}")
         else:
-            dataset_loop.models[0].spectral_model.parameters["jfactor"].frozen = True
+            dataset_loop.models.parameters["jfactor"].frozen = True
             fit = Fit([dataset_loop])
             fit_result = fit.run(optimize_opts, covariance_opts)
             statprofile = fit.stat_profile(**stat_profile_opts)
@@ -489,7 +481,8 @@ class DMDatasetOnOff(SpectrumDatasetOnOff):
         return liketotal
 
     def jnuisance(self):
-        exp_up = (np.log10(self.nuisance["j"].value) - np.log10(self.nuisance["jobs"].value)) ** 2
+        jfactor = self.models.parameters["jfactor"].value
+        exp_up = (np.log10(jfactor) - np.log10(self.nuisance["jobs"].value)) ** 2
         exp_down = 2 * (np.log(self.nuisance["sigmaj"].value) ** 2)
         up = np.exp(-1 * exp_up / exp_down)
         down = (
