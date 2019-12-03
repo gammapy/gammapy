@@ -10,21 +10,29 @@ from gammapy import __version__
 
 log = logging.getLogger(__name__)
 
+# Should be in sync with `docs/install/dependencies.rst`
 GAMMAPY_DEPENDENCIES = [
+    # required
     "numpy",
     "scipy",
-    "matplotlib",
-    "cython",
     "astropy",
-    "astropy_healpix",
-    "reproject",
-    "sherpa",
-    "pytest",
-    "sphinx",
-    "healpy",
     "regions",
+    "click",
+    "yaml",
+    # "pydantic",  # has no __version__
+    # optional
+    "IPython",
+    # "jupyter",   # has no __version__
+    "jupyterlab",
+    "matplotlib",
+    "pandas",
+    "healpy",
     "iminuit",
+    "sherpa",
     "naima",
+    "emcee",
+    "corner",
+    "parfive",
 ]
 
 GAMMAPY_ENV_VARIABLES = [
@@ -37,9 +45,9 @@ GAMMAPY_ENV_VARIABLES = [
 
 @click.command(name="info")
 @click.option("--system/--no-system", default=True, help="Show system info")
-@click.option("--version/--no-version", default=True, help="Show version info")
+@click.option("--version/--no-version", default=True, help="Show version")
 @click.option(
-    "--dependencies/--no-dependencies", default=True, help="Show dependencies info"
+    "--dependencies/--no-dependencies", default=True, help="Show dependencies"
 )
 @click.option("--envvar/--no-envvar", default=True, help="Show environment variables")
 def cli_info(system, version, dependencies, envvar):
