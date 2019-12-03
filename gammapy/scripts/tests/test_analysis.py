@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from gammapy.analysis import AnalysisConfig
 from gammapy.scripts.main import cli
 from gammapy.utils.testing import requires_data, run_cli
 from ...analysis.tests.test_analysis import get_example_config

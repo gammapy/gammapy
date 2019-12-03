@@ -9,7 +9,7 @@ from regions import CircleSkyRegion
 import yaml
 from gammapy.analysis.config import AnalysisConfig
 from gammapy.cube import MapDataset, MapDatasetMaker, SafeMaskMaker
-from gammapy.data import DataStore, ObservationTable
+from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import SkyModels

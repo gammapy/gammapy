@@ -92,9 +92,7 @@ def geom(ebounds, binsz=0.5):
 )
 def test_map_maker(pars, observations):
     stacked = MapDataset.create(
-        geom=pars["geom"],
-        energy_axis_true=pars["e_true"],
-        binsz_irf=pars["binsz_irf"],
+        geom=pars["geom"], energy_axis_true=pars["e_true"], binsz_irf=pars["binsz_irf"]
     )
 
     maker = MapDatasetMaker(background_oversampling=pars.get("background_oversampling"))
@@ -176,7 +174,7 @@ def test_map_maker_obs(observations):
     geom_exp = geom(ebounds=[0.1, 0.5, 2.5, 10.0])
 
     reference = MapDataset.create(
-        geom=geom_reco, energy_axis_true=e_true, binsz_irf=1.0,
+        geom=geom_reco, energy_axis_true=e_true, binsz_irf=1.0
     )
 
     maker_obs = MapDatasetMaker()

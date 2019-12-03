@@ -176,7 +176,7 @@ class MapDatasetEventSampler:
         table.rename_column("DEC_TRUE", "DEC")
 
         return EventList(table)
-      
+
     def sample_edisp(self, edisp_map, events):
         """Sample energy dispersion map.
 
