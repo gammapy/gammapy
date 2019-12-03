@@ -1,16 +1,25 @@
 .. _gammapy_0p15_release:
 
-0.15 (Dec 2, 2019)
+0.15 (Dec 3, 2019)
 ------------------
 
 Summary
 +++++++
 
-- Released Dec 2, 2019
+- Released Dec 3, 2019
 - 12 contributors
-- 186 pull requests (not all listed below)
+- 187 pull requests (not all listed below)
 
 **What's new**
+
+For Gammapy v0.15 the high-level ``Analysis`` class was moved to the newly
+introduced ``gammapy.analysis`` sub-package. The structure of the YAML config
+file was simplified and validation of config parameters is now also available
+for interactive use of the ``Analysis`` class. Both is demonstrated in the
+`first analysis with Gammapy notebook <notebooks/analysis_1.html>`__.
+In addition a new ``gammapy analysis`` command line tool was introduced,
+which executes the data reduction part of and analysis based on a given config
+file. The use of the tool is documented `here <scripts/index.rst#example>`__.
 
 A major focus of the work for Gammapy v0.15 was the clean-up and unification of
 the spectrum and map data reduction. Gammapy now features a ``MapDatasetMaker``,
@@ -18,32 +27,36 @@ and ``SpectrumDatasetMaker`` which directly produce a ``MapDataset`` or
 ``SpectrumDataset`` from DL3 data. The existing background estimation classes
 were adapted by introducing a ``ReflectedRegionsBackgroundMaker``,
 ``RingBackgroundMaker`` and ``AdaptiveRingbackgroundMaker``. Those makers can
-also be chained to create custom data reduction workflows. Gammapy now supports
-spatially varying PSF and energy dispersion in the data reduction as well as
-during fitting.
+also be chained to create custom data reduction workflows. The new data reduction
+API is shown in the `second analysis with Gammapy notebook <notebooks/analysis_2.html>`__
+and corresponding `docs page <cube/index.rst>`__.
 
-A ``MapDatasetOnOff`` was introduced to handle on-off observation based analyses
-and as a container for image based ring-background estimation. All datasets now
-have a ``.create()`` method to allow an easy creation of the dataset from a map
+Following the proposal in `PIG 18`_ the structure of the documentation was
+improved. The new `overview page <overview.rst>`__ gives an
+introduction and overview of the Gammapy analysis workflow and package
+structure. The structure and content of the `tutorials page <tutorials/index.rst>`__
+was simplified and cleaned up and a `how to <howto.rst>`__ page was introduced.
+A tutorial notebook showing how to do a joint `multi-instrument analysis <notebooks/joint_1d_3d_analysis.html>`__
+of the Crab Nebula using H.E.S.S. and Fermi-LAT data and HAWC flux points was added.
+
+By introducing an in memory ``Observation`` class, Gammapy now features unified
+support for binned simulations of spectrum and map datasets. This is shown
+in the `1d simulation <notebooks/spectrum_simulation.html>`__ and
+`3d simulation <notebooks/simulate_3d.html>`__ tutorial notebooks.
+
+Gammapy now supports spatially varying PSF and energy dispersion in the data
+reduction as well as during fitting. Error propagation is now supported for
+the ``AbsorbedSpectralModel`` and ``NaimaModel``. A ``MapDatasetOnOff`` was
+introduced to handle on-off observation based analyses and as a container
+for image based ring-background estimation. All datasets now have a
+``.create()`` method to allow an easy creation of the dataset from a map
 geometry or energy specification.
 
+This release contains several API breaking changes and removal of non-essential
+parts of Gammapy (see PR list below). These changes are required to finally
+arrive at a more consistent and stable API for Gammapy v1.0. Thanks for your
+understanding!
 
-For Gammapy v0.15 we improved the structure of the tutorials page and added
-new tutorials. E.g. one showing how to do a multi-instrument analysis of the Crab
-Nebula using H.E.S.S., Fermi-LAT and HAWC data.
-
-The support for 2FHL and 4FGL was improved the support for the Fermi-LAT 1FHL
-catalog was dropped.
-
-All spatial models now feature a ``.to_region`` and ``.position_error`` method,
-which return a ``SkyRegion`` object that can be used to illustrate the outline
-and position error of the model. Error propagation is now supported for the
-``AbsorbedSpectralModel`` and ``NaimaModel``.
-
-The high-level ``Analysis`` class was moved to the newly introduced ``gammapy.analysis``
-sub-package. The structure of the config file was simplified and validation of
-config parameters is now also available for interactive use of the ``Analysis``
-class.
 
 **Contributors:**
 
@@ -150,6 +163,7 @@ See the complete `Gammapy v0.15 merged pull requests list on Github <https://git
 - [#2350] Modernise Gammapy code base (Christoph Deil)
 
 
+.. _PIG 18: https://docs.gammapy.org/dev/development/pigs/pig-018.html
 
 
 .. _gammapy_0p14_release:
