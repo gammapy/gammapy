@@ -53,7 +53,7 @@ size to download is about 100 MB.
 
 .. code-block:: bash
 
-    gammapy download tutorials --release 0.14
+    gammapy download tutorials --release 0.15
     cd gammapy-tutorials
     export GAMMAPY_DATA=$PWD/datasets
 
