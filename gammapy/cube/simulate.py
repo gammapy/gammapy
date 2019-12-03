@@ -233,3 +233,107 @@ class MapDatasetEventSampler:
         events.table["RA"] = coords_reco["lon"] * u.deg
         events.table["DEC"] = coords_reco["lat"] * u.deg
         return events
+
+    @staticmethod
+    def event_list_meta(dataset, observation):
+        """Event list meta info.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.cube.MapDataset`
+            Map dataset.
+        observation : `~gammapy.data.Observation`
+            In memory observation.
+
+        Returns
+        -------
+        meta : dict
+            Meta dictionary.
+        """
+        # See: https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
+        meta = {}
+        # TODO: currently additional meta data is missing
+        import gammapy
+
+        meta["MJDREFI"] = int(dataset.gti.time_ref.mjd)
+        meta["MJDREFF"] = dataset.gti.time_ref.mjd % 1
+        meta["TIMEUNIT"] = "s"
+        meta["TIMESYS"] = "TT"
+        meta["TIMEREF"] = "LOCAL"
+        #         meta["DATE-OBS"] = dataset.gti.time_start.isot[0][0:10]
+        #         meta["DATE-END"] = dataset.gti.time_stop.isot[0][0:10]
+        meta["TIME-OBS"] = dataset.gti.time_start.isot[0]
+        meta["TIME-END"] = dataset.gti.time_stop.isot[0]
+
+        meta["OBS_ID"] = observation.obs_id
+
+        meta["TSTART"] = (
+            ((dataset.gti.time_start.mjd - dataset.gti.time_ref.mjd) * u.day)
+            .to(u.s)
+            .value[0]
+        )
+        meta["TSTOP"] = (
+            ((dataset.gti.time_stop.mjd - dataset.gti.time_ref.mjd) * u.day)
+            .to(u.s)
+            .value[0]
+        )
+        meta["ONTIME"] = dataset.gti.time_sum.value
+        meta["LIVETIME"] = observation.gti.time_sum.value
+        meta["DEADC"] = dataset.gti.time_sum.value / observation.gti.time_sum.value
+        meta["RA_PNT"] = observation.pointing_radec.icrs.ra.value
+        meta["DEC_PNT"] = observation.pointing_radec.icrs.dec.value
+
+        meta["EQUINOX"] = "J2000"
+        meta["RADECSYS"] = "icrs"
+        # TO DO: these keywords should be taken from the IRF of the dataset
+        meta["ORIGIN"] = ""
+        meta["TELESCOP"] = ""
+        meta["INSTRUME"] = ""
+        #
+
+        meta["CREATOR"] = "Gammapy {}".format(gammapy.__version__)
+
+        meta["OBSERVER"] = ""
+        meta["CREATED"] = ""
+        meta["OBJECT"] = dataset.name
+        meta["RA_OBJ"] = ""
+        meta["DEC_OBJ"] = ""
+        meta["OBS_MODE"] = ""
+        meta["EV_CLASS"] = ""
+        meta["TELAPSE"] = ""
+
+        meta["GEOLON"] = ""
+        meta["GEOLAT"] = ""
+        meta["ALTITUDE"] = ""
+
+        return meta
+
+    def run(self, dataset, observation=None, edisp="True"):
+        """Run the event sampler, applying IRF corrections.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.cube.MapDataset`
+            Map dataset
+        observation : `~gammapy.data.Observation`
+            In memory observation.
+        edisp : Bool
+            It allows to include or exclude the Edisp in the simulation.
+
+        Returns
+        -------
+        events : `~gammapy.data.EventList`
+            Event list.
+        """
+        events_bkg = self.sample_background(dataset)
+        events_src = self.sample_sources(dataset)
+        events_src = self.sample_psf(dataset.psf, events_src)
+
+        if edisp == "True":
+            events_src = self.sample_edisp(dataset.edisp, events_src)
+
+        events = EventList.stack([events_bkg, events_src])
+        #         events.table["EVENT_ID"] =
+        events.table.meta = self.event_list_meta(dataset, observation)
+
+        return events

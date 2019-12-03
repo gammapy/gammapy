@@ -7,7 +7,7 @@ from gammapy.cube import MapDataset, MapDatasetEventSampler, simulate_dataset
 from gammapy.cube.tests.test_edisp_map import make_edisp_map_test
 from gammapy.cube.tests.test_fit import get_map_dataset
 from gammapy.cube.tests.test_psf_map import make_test_psfmap
-from gammapy.data import GTI
+from gammapy.data import GTI, Observation
 from gammapy.irf import load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -172,3 +172,37 @@ def test_mde_sample_edisp():
     assert events.table["DEC_TRUE"].unit == "deg"
 
     assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
+
+
+@requires_data()
+def test_mde_run():
+    irfs = load_cta_irfs(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    livetime = 10.0 * u.hr
+    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    obs = Observation.create(
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+    )
+
+    dataset = dataset_maker()
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.run(dataset=dataset, observation=obs)
+
+    assert len(events.table) == 375764
+    assert_allclose(events.table["ENERGY"][0], 2.1613281656472028, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 265.7253792887848, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -27.727581635186304, rtol=1e-5)
+
+    return events
+
+
+@requires_data()
+def test_mde_meta():
+    events = test_mde_run()
+    meta = events.table.meta
+
+    assert meta["MJDREFI"] == 51544
+    assert meta["MJDREFF"] == 0.0007428703684126958
+    assert meta["TSTOP"] == 29999.999999720603
+    assert meta["RADECSYS"] == "icrs"
