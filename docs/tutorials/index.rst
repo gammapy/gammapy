@@ -38,7 +38,7 @@ Notebooks
    ../notebooks/simulate_3d.ipynb
    ../notebooks/detect.ipynb
    ../notebooks/spectrum_analysis.ipynb
-   ../notebooks/sed_fitting_gammacat_fermi.ipynb
+   ../notebooks/sed_fitting.ipynb
    ../notebooks/light_curve.ipynb
    ../notebooks/light_curve_flare.ipynb
    ../notebooks/cta_sensitivity.ipynb
@@ -80,7 +80,7 @@ interface and with the lower level API:
 *1-dim spectral analysis*
 
 - `Spectral analysis  <../notebooks/spectrum_analysis.html>`__ | *spectrum_analysis.ipynb*
-- `Flux point fitting <../notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
+- `Flux point fitting <../notebooks/sed_fitting.html>`__ | *sed_fitting.ipynb*
 
 *Time-dependent analysis*
 
