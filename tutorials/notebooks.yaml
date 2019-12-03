@@ -99,8 +99,8 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_simulation.ipynb
   datasets:
     - cta-1dc
-- name: analysis_joint
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/analysis_joint.ipynb
+- name: analysis_mwl
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/analysis_mwl.ipynb
   datasets:
     - crab-3datasets
 - name: light_curve_flare

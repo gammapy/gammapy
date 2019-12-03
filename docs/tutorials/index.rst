@@ -34,7 +34,7 @@ Notebooks
    ../notebooks/fermi_lat.ipynb
    ../notebooks/cta_data_analysis.ipynb
    ../notebooks/analysis_3d.ipynb
-   ../notebooks/analysis_joint.ipynb
+   ../notebooks/analysis_mwl.ipynb
    ../notebooks/simulate_3d.ipynb
    ../notebooks/detect.ipynb
    ../notebooks/spectrum_analysis.ipynb
@@ -70,7 +70,7 @@ interface and with the lower level API:
 
 - `CTA data analysis with Gammapy <../notebooks/cta_data_analysis.html>`__ | *cta_data_analysis.ipynb*
 - `3D analysis <../notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
-- `Joint 3D and 1D analysis <../notebooks/analysis_joint.html>`__ | *analysis_joint.ipynb*
+- `Multi instrument joint 3D and 1D analysis <../notebooks/analysis_mwl.html>`__ | *analysis_mwl.ipynb*
 
 *2-dim sky image analysis*
 
