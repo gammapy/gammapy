@@ -143,14 +143,13 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`
     jfactor : `~astropy.units.Quantity`
         Integrated J-Factor free parameter for model fitting.
-        Needed when `~gammapy.modeling.models.PointSpatialModel` spatial model is used.
-        Default value 1.
+        Default value 1 * u.Unit("GeV2 cm-5").
     z: float
         Redshift value
     k: int
         Type of dark matter particle (k:2 Majorana, k:4 Dirac)
     sv : `~gammapy.modeling.Parameter`
-        Scale free parameter for model fitting
+        Scale free parameter for model fitting.
 
     Examples
     --------
