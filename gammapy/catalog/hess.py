@@ -596,8 +596,6 @@ class SourceCatalogHGPS(SourceCatalog):
 
     >>> source.components
     >>> cat.gaussian_component(83)
-
-    More examples here: `hgps.html <../notebooks/hgps.html>`__
     """
 
     name = "hgps"
