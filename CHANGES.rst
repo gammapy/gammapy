@@ -18,7 +18,7 @@ file was simplified and validation of config parameters is now available
 for interactive use of the ``Analysis`` class as well. Both is demonstrated in the
 `first analysis with Gammapy notebook <notebooks/analysis_1.html>`__.
 In addition a new ``gammapy analysis`` command line tool was introduced,
-which executes the data reduction part of and analysis based on a given config
+which executes the data reduction part of an analysis, based on a given config
 file. The use of the tool is documented `here <scripts/index.rst#example>`__.
 
 Following the proposal in `PIG 18`_ the structure of the documentation was
