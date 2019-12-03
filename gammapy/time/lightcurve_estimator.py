@@ -16,7 +16,8 @@ log = logging.getLogger(__name__)
 
 
 def group_datasets_in_time_interval(datasets, time_intervals, atol="1e-6 s"):
-    """Compute the table with the info on the group to which belong each dataset
+    """Compute the table with the info on the group to which belong each dataset.
+
     The Tstart and Tstop are stored in MJD from a scale in "utc".
 
     Parameters
@@ -70,7 +71,7 @@ def group_datasets_in_time_interval(datasets, time_intervals, atol="1e-6 s"):
 
 
 class LightCurveEstimator:
-    """Estimates flux values of model component in time intervals and returns a `gammapy.time.LightCurve` object.
+    """Compute light curve.
 
     The estimator will fit the source model component to datasets in each of the time intervals
     provided.
@@ -163,7 +164,6 @@ class LightCurveEstimator:
         ----------
         time_intervals : list of `astropy.time.Time`
             Start and stop time for each interval to compute the LC
-
         """
         time_start = Time([interval[0] for interval in time_intervals])
         time_stop = Time([interval[1] for interval in time_intervals])
@@ -181,13 +181,6 @@ class LightCurveEstimator:
             ]
 
     def _set_scale_model(self, datasets):
-        """
-        Parameters
-        ----------
-        datasets : `~gammapy.modeling.Datasets`
-            the list of dataset object
-
-        """
         for dataset in datasets:
             if len(dataset.models) > 1:
                 dataset.models[self.source].spectral_model = self.model

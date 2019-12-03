@@ -85,8 +85,9 @@ def shape_divisible_by(shape, factor):
 
 def symmetric_crop_pad_width(shape, new_shape):
     """
-    Compute symmetric crop or pad width to obtain a new shape from a given old
-    shape of an array.
+    Compute symmetric crop or pad width.
+
+    To obtain a new shape from a given old shape of an array.
 
     Parameters
     ----------

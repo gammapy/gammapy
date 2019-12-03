@@ -18,9 +18,7 @@ D_SUN_TO_GALACTIC_CENTER = Quantity(8.5, "kpc")
 
 
 def cartesian(r, theta):
-    """
-    Convert polar coordinates to cartesian coordinates.
-    """
+    """Convert polar coordinates to cartesian coordinates."""
     x = r * np.cos(theta)
     y = r * np.sin(theta)
     return x, y
@@ -34,8 +32,9 @@ def polar(x, y):
 
 
 def galactic(x, y, z, obs_pos=None):
-    """Compute galactic coordinates lon, lat (deg) and distance (kpc)
-    for given position in cartesian coordinates (kpc).
+    """Compute galactic coordinates lon, lat and distance.
+
+    For given position in cartesian coordinates (kpc).
     """
     obs_pos = obs_pos or [D_SUN_TO_GALACTIC_CENTER, 0, 0]
     y_prime = y + D_SUN_TO_GALACTIC_CENTER

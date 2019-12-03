@@ -1,5 +1,3 @@
-"""Utility functions / classes for working with distributions
-(e.g. probability density functions)
-"""
+"""Random probability distribution helpers."""
 from .inverse_cdf import *
 from .utils import *

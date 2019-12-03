@@ -102,9 +102,6 @@ class AdaptiveRingBackgroundMaker:
 
     @staticmethod
     def _alpha_approx_cube(cubes):
-        """Compute alpha as acceptance / acceptance_off.
-        Where acceptance_off < 0, alpha is set to infinity.
-        """
         acceptance = cubes["acceptance"]
         acceptance_off = cubes["acceptance_off"]
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -159,7 +156,6 @@ class AdaptiveRingBackgroundMaker:
         cubes : dict of `~gammapy.maps.WcsNDMap`
             Dictionary containing ``counts_off``, ``acceptance`` and ``acceptance_off`` cubes.
         """
-
         counts = dataset.counts
         background = dataset.background_model.map
         kernels = self.kernels(counts)
@@ -200,8 +196,6 @@ class AdaptiveRingBackgroundMaker:
         ----------
         dataset : `~gammapy.cube.fit.MapDataset`
             Input map dataset.
-        exclusion : `~gammapy.maps.WcsNDMap`
-            Exclusion mask for regions with known gamma-ray emission.
 
         Returns
         -------

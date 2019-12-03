@@ -105,7 +105,8 @@ def gammapy_sphinx_ext_activate():
 
 
 def parse_notebooks(folder, url_docs):
-    """
+    """Parse Jupyter notebook.
+
     Modifies raw and html-fixed notebooks so they will not have broken links
     to other files in the documentation. Adds a box to the sphinx formatted
     notebooks with info and links to the *.ipynb and *.py files.
