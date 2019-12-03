@@ -32,7 +32,7 @@ env:
         - ASTROPY_USE_SYSTEM_PYTEST=1
 
         - CONDA_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml pandas naima sherpa libgfortran regions reproject pandoc ipython iminuit'
-        - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy matplotlib pyyaml pandas naima sherpa regions reproject pandoc ipython iminuit'
+        - CONDA_DEPENDENCIES_OSX='Cython click numpy scipy healpy matplotlib pyyaml pandas naima sherpa regions reproject pandoc ipython iminuit'
         - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy matplotlib pyyaml pandas naima regions reproject pandoc ipython iminuit'
         - CONDA_DEPENDENCIES_DOCS='Cython click scipy healpy matplotlib pyyaml pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter iminuit'
 
