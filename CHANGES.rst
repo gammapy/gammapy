@@ -1,44 +1,74 @@
 .. _gammapy_0p15_release:
 
-0.15 (Dec 2, 2019)
+0.15 (Dec 3, 2019)
 ------------------
 
 Summary
 +++++++
 
-- Released Dec 2, 2019
-- 11 contributors
-- 97 pull requests (not all listed below)
+- Released Dec 3, 2019
+- 12 contributors
+- 187 pull requests (not all listed below)
 
 **What's new**
 
-A major focus of the work for Gammapy v0.15 was the clean-up and unification of
-the spectrum and cube data reduction. Gammapy now features a
-``MapDatasetMaker``, and ``SpectrumDatasetMaker`` which directly produce a
-``MapDataset`` or ``SpectrumDataset`` from DL3 data. The existing background
-estimation classes were adapted by introducing a
-``ReflectedRegionsBackgroundMaker``, ``RingBackgroundMaker`` and
-``AdaptiveRingbackgroundMaker``. Those makers also be chained to create custom
-data reduction workflows.
+For Gammapy v0.15 the high-level ``Analysis`` class was moved to the newly
+introduced ``gammapy.analysis`` sub-package. The syntax of the YAML config
+file was simplified and validation of config parameters is now available
+for interactive use of the ``Analysis`` class as well. Both is demonstrated in the
+`first analysis with Gammapy notebook <notebooks/analysis_1.html>`__.
+In addition a new ``gammapy analysis`` command line tool was introduced,
+which executes the data reduction part of and analysis based on a given config
+file. The use of the tool is documented `here <scripts/index.rst#example>`__.
 
-A ``MapDatasetOnOff`` was introduced to handle on-off observation based analyses
-and as a container for ring-background estimation. All datasets now have a
-``.create()`` method to allow an easy creation of the dataset from a ``WcsGeom``
-or energy specification (for spectral datasets).
+Following the proposal in `PIG 18`_ the structure of the documentation was
+improved. The new `overview page <overview.rst>`__ gives an introduction and
+overview of the Gammapy analysis workflow and package structure. The structure
+and content of the `tutorials page <tutorials/index.rst>`__ was simplified and
+cleaned up and a `how to <howto.rst>`__ page was introduced. A tutorial notebook
+showing how to do a joint `multi-instrument analysis <notebooks/joint_1d_3d_analysis.html>`__
+of the Crab Nebula using H.E.S.S. and Fermi-LAT data and HAWC flux points was added.
 
-A tutorial was added showing how to do a multi-instrument analysis of the Crab
-using H.E.S.S., Fermi-LAT and HAWC data.
+Another focus of the work for Gammapy v0.15 was the clean-up and unification of
+the spectrum and map data reduction. Gammapy now features a ``MapDatasetMaker``,
+and ``SpectrumDatasetMaker`` which directly produce a ``MapDataset`` or
+``SpectrumDataset`` from DL3 data. The existing background estimation classes
+were adapted by introducing a ``ReflectedRegionsBackgroundMaker``,
+``RingBackgroundMaker`` and ``AdaptiveRingbackgroundMaker``. Those makers can
+also be chained to create custom data reduction workflows. The new data reduction
+API is shown in the `second analysis with Gammapy notebook <notebooks/analysis_2.html>`__
+and corresponding `docs page <cube/index.rst>`__.
+
+A ``MapDatasetOnOff`` class was introduced to handle on-off observation based analyses
+and as a container for image based ring-background estimation. All datasets now
+have a ``.create()`` method to allow an easy creation of the dataset from a map
+geometry or energy specification. Gammapy now supports spatially varying PSF and
+energy dispersion in the data reduction as well as during fitting. By introducing
+an in memory ``Observation`` class Gammapy now features unified support for
+binned simulations of spectrum and map datasets. This is shown in the
+`1d simulation <notebooks/spectrum_simulation.html>`__ and
+`3d simulation <notebooks/simulate_3d.html>`__ tutorial notebooks.
+
+The ``LightCurveEstimator`` was improved to use the GTIs defined on datasets
+and allow for grouping of datasets according to provided time intervals. Details
+are explained on the `time docs page <time/index.rst>`__ and the newly added
+`flare light curve notebook <notebooks/light_curve_flare.html>`__.
 
 The support for 2FHL and 4FGL was improved by adding attributes returning
 spatial and spectral models as well as lightcurves to the corresponding objects.
-The support for the Fermi-LAT 1FHL catalog was dropped.
+The support for the Fermi-LAT 1FHL catalog was dropped. An overview can be found
+on the `catalog docs page <catalog/index.rst>`__ and the `catalog tutorial notebook
+<notebooks/catalog.html>`__.
 
-All spatial models now feature a ``.to_region`` and ``.position_error`` method,
-which return a ``SkyRegion`` object that can be used to illustrate the outline
-and position error of the model.
+Error propagation is now fully supported for the ``AbsorbedSpectralModel`` and
+``NaimaModel``.
 
-The high-level ``Analysis`` class was moved to the newly introduced
-``gammapy.analysis`` sub-package.
+For this release the dependency on ``reproject`` and ``jsonschema`` was dropped. The
+latter was replaced by a new dependency on ``pydantic``. This release contains
+several API breaking changes and removal of non-essential parts of Gammapy
+(see PR list below). These changes are required to finally arrive at a more
+consistent and stable API for Gammapy v1.0. Thanks for your understanding!
+
 
 **Contributors:**
 
@@ -47,6 +77,7 @@ In alphabetical order by first name:
 - Atreyee Sinha
 - Axel Donath
 - Brigitta Sipocz
+- Bruno Khelifi
 - Christoph Deil
 - Fabio Pintore
 - Fabio Acero
@@ -65,6 +96,31 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 See the complete `Gammapy v0.15 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.14>`__.
 
 
+- [#2660] Remove tutorials/source_population_model.ipynb (Christoph Deil)
+- [#2654] Remove HGPS map and catalog tutorial (Christoph Deil)
+- [#2651] Add SkyModels read and write methods (Christoph Deil)
+- [#2645] Remove FluxPointsDataset chi2assym option (Christoph Deil)
+- [#2637] Remove keepdims option from MapDataset.to_images() (Axel Donath)
+- [#2635] Change Datasets model to models (Christoph Deil)
+- [#2627] Activate PSFMap for fitting (Atreyee Sinha)
+- [#2619] Unify model setters of all datasets (Axel Donath)
+- [#2620] Make SkyModel.spatial_model optional (Axel Donath)
+- [#2616] Add MapDatasetEventSampler.sample_background() method (Fabio Pintore)
+- [#2604] Implement additional methods for SafeMaskMaker (Luca Giunti)
+- [#2595] Change SpectrumDataset and FluxPointDataset model to SkyModels (Quentin Remy)
+- [#2594] Add light curve flare tutorial notebook (Lea Jouvin)
+- [#2587] Activate EDispMap in MapEvaluator (Axel Donath)
+- [#2585] Improve spectral model error propagation (Christoph Deil)
+- [#2580] Speed up Observations.select_time (Régis Terrier)
+- [#2574] Generalise exponential cutoff power law spectral model (Bruno Khelifi)
+- [#2567] Add time intervals to LightCurveEstimator (Lea Jouvin)
+- [#2564] Remove HpxSparseMap class (Axel Donath)
+- [#2563] Add in memory Observation class (Atreyee Sinha)
+- [#2562] Remove map reprojection functionality (Axel Donath)
+- [#2561] Use dataset GTI table in LightCurveEstimator (Régis Terrier)
+- [#2559] Replace energy grid helper functions with MapAxis (Christoph Deil)
+- [#2558] Remove gammapy.utils.nddata.sqrt_space (Christoph Deil)
+- [#2557] Add more options to Minuit wrapper (Quentin Remy)
 - [#2553] Remove MapDataset cstat likelihood option (Christoph Deil)
 - [#2552] Remove unused functions from gammapy.irf (Axel Donath)
 - [#2551] Cleanup mask safe handling (Axel Donath)
@@ -119,6 +175,7 @@ See the complete `Gammapy v0.15 merged pull requests list on Github <https://git
 - [#2350] Modernise Gammapy code base (Christoph Deil)
 
 
+.. _PIG 18: https://docs.gammapy.org/dev/development/pigs/pig-018.html
 
 
 .. _gammapy_0p14_release:
