@@ -34,16 +34,16 @@ Notebooks
    ../notebooks/fermi_lat.ipynb
    ../notebooks/cta_data_analysis.ipynb
    ../notebooks/analysis_3d.ipynb
+   ../notebooks/analysis_joint.ipynb
    ../notebooks/simulate_3d.ipynb
    ../notebooks/detect.ipynb
    ../notebooks/spectrum_analysis.ipynb
-   ../notebooks/sed_fitting_gammacat_fermi.ipynb
+   ../notebooks/sed_fitting.ipynb
    ../notebooks/light_curve.ipynb
    ../notebooks/light_curve_flare.ipynb
    ../notebooks/cta_sensitivity.ipynb
    ../notebooks/spectrum_simulation.ipynb
    ../notebooks/image_analysis.ipynb
-   ../notebooks/joint_1d_3d_analysis.ipynb
    ../notebooks/overview.ipynb
    ../notebooks/maps.ipynb
    ../notebooks/modeling.ipynb
@@ -70,7 +70,7 @@ interface and with the lower level API:
 
 - `CTA data analysis with Gammapy <../notebooks/cta_data_analysis.html>`__ | *cta_data_analysis.ipynb*
 - `3D analysis <../notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
-- `Joint 3D and 1D analysis <../notebooks/joint_1d_3d_analysis.html>`__ | *joint_1d_3d_analysis.ipynb*
+- `Joint 3D and 1D analysis <../notebooks/analysis_joint.html>`__ | *analysis_joint.ipynb*
 
 *2-dim sky image analysis*
 
@@ -80,7 +80,7 @@ interface and with the lower level API:
 *1-dim spectral analysis*
 
 - `Spectral analysis  <../notebooks/spectrum_analysis.html>`__ | *spectrum_analysis.ipynb*
-- `Flux point fitting <../notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
+- `Flux point fitting <../notebooks/sed_fitting.html>`__ | *sed_fitting.ipynb*
 
 *Time-dependent analysis*
 

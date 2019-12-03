@@ -40,8 +40,7 @@ The main tutorial for `gammapy.catalog` is:
 Other :ref:`tutorials` mentioning `gammapy.catalog` are:
 
 * `Overview tutorial <../notebooks/overview.html>`__
-* `HGPS tutorial <../notebooks/hgps.html>`__
-* `SED fitting tutorial <../notebooks/sed_fitting_gammacat_fermi.html>`__
+* `SED fitting tutorial <../notebooks/sed_fitting.html>`__
 
 Reference/API
 =============
