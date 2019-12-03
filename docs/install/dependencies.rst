@@ -30,12 +30,10 @@ useful, unless you run out of disk space).
 Required dependencies
 ---------------------
 
-**TODO: update to latest dependencies.**
-**TODO: rather link to environment.yaml file?**
 Required dependencies are automatically installed when using e.g. ``conda
 install gammapy -c conda-forge`` or ``pip install gammapy``.
 
-* numpy_ - nd-array, math functions
+* numpy_ - array and math functions
 * scipy_ - numerical methods (interpolation, integration, convolution)
 * Astropy_ - core package for Astronomy in Python
 * regions_ - Astropy sky region package
@@ -57,7 +55,6 @@ example data download (``parfive``) or in one of the tutorials (``sherpa``).
 * matplotlib_ for plotting
 * pandas_ for working with tables (not used within Gammapy)
 * healpy_ for `HEALPIX`_ data handling
-* reproject_ for image reprojection
 * iminuit_ for fitting by optimization
 * Sherpa_ for modeling and fitting
 * naima_ for SED modeling
