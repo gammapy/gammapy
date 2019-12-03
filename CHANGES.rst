@@ -13,15 +13,23 @@ Summary
 **What's new**
 
 For Gammapy v0.15 the high-level ``Analysis`` class was moved to the newly
-introduced ``gammapy.analysis`` sub-package. The structure of the YAML config
-file was simplified and validation of config parameters is now also available
-for interactive use of the ``Analysis`` class. Both is demonstrated in the
+introduced ``gammapy.analysis`` sub-package. The syntax of the YAML config
+file was simplified and validation of config parameters is now available
+for interactive use of the ``Analysis`` class as well. Both is demonstrated in the
 `first analysis with Gammapy notebook <notebooks/analysis_1.html>`__.
 In addition a new ``gammapy analysis`` command line tool was introduced,
 which executes the data reduction part of and analysis based on a given config
 file. The use of the tool is documented `here <scripts/index.rst#example>`__.
 
-A major focus of the work for Gammapy v0.15 was the clean-up and unification of
+Following the proposal in `PIG 18`_ the structure of the documentation was
+improved. The new `overview page <overview.rst>`__ gives an introduction and
+overview of the Gammapy analysis workflow and package structure. The structure
+and content of the `tutorials page <tutorials/index.rst>`__ was simplified and
+cleaned up and a `how to <howto.rst>`__ page was introduced. A tutorial notebook
+showing how to do a joint `multi-instrument analysis <notebooks/joint_1d_3d_analysis.html>`__
+of the Crab Nebula using H.E.S.S. and Fermi-LAT data and HAWC flux points was added.
+
+Another focus of the work for Gammapy v0.15 was the clean-up and unification of
 the spectrum and map data reduction. Gammapy now features a ``MapDatasetMaker``,
 and ``SpectrumDatasetMaker`` which directly produce a ``MapDataset`` or
 ``SpectrumDataset`` from DL3 data. The existing background estimation classes
@@ -31,31 +39,35 @@ also be chained to create custom data reduction workflows. The new data reductio
 API is shown in the `second analysis with Gammapy notebook <notebooks/analysis_2.html>`__
 and corresponding `docs page <cube/index.rst>`__.
 
-Following the proposal in `PIG 18`_ the structure of the documentation was
-improved. The new `overview page <overview.rst>`__ gives an
-introduction and overview of the Gammapy analysis workflow and package
-structure. The structure and content of the `tutorials page <tutorials/index.rst>`__
-was simplified and cleaned up and a `how to <howto.rst>`__ page was introduced.
-A tutorial notebook showing how to do a joint `multi-instrument analysis <notebooks/joint_1d_3d_analysis.html>`__
-of the Crab Nebula using H.E.S.S. and Fermi-LAT data and HAWC flux points was added.
-
-By introducing an in memory ``Observation`` class, Gammapy now features unified
-support for binned simulations of spectrum and map datasets. This is shown
-in the `1d simulation <notebooks/spectrum_simulation.html>`__ and
+A ``MapDatasetOnOff`` class was introduced to handle on-off observation based analyses
+and as a container for image based ring-background estimation. All datasets now
+have a ``.create()`` method to allow an easy creation of the dataset from a map
+geometry or energy specification. Gammapy now supports spatially varying PSF and
+energy dispersion in the data reduction as well as during fitting. By introducing
+an in memory ``Observation`` class Gammapy now features unified support for
+binned simulations of spectrum and map datasets. This is shown in the
+`1d simulation <notebooks/spectrum_simulation.html>`__ and
 `3d simulation <notebooks/simulate_3d.html>`__ tutorial notebooks.
 
-Gammapy now supports spatially varying PSF and energy dispersion in the data
-reduction as well as during fitting. Error propagation is now supported for
-the ``AbsorbedSpectralModel`` and ``NaimaModel``. A ``MapDatasetOnOff`` was
-introduced to handle on-off observation based analyses and as a container
-for image based ring-background estimation. All datasets now have a
-``.create()`` method to allow an easy creation of the dataset from a map
-geometry or energy specification.
+The ``LightCurveEstimator`` was improved to use the GTIs defined on datasets
+and allow for grouping of datasets according to provided time intervals. Details
+are explained on the `time docs page <time/index.rst>`__ and the newly added
+`flare light curve notebook <notebooks/light_curve_flare.html>`__.
 
-This release contains several API breaking changes and removal of non-essential
-parts of Gammapy (see PR list below). These changes are required to finally
-arrive at a more consistent and stable API for Gammapy v1.0. Thanks for your
-understanding!
+The support for 2FHL and 4FGL was improved by adding attributes returning
+spatial and spectral models as well as lightcurves to the corresponding objects.
+The support for the Fermi-LAT 1FHL catalog was dropped. An overview can be found
+on the `catalog docs page <catalog/index.rst>`__ and the `catalog tutorial notebook
+<notebooks/catalog.html>`__.
+
+Error propagation is now fully supported for the ``AbsorbedSpectralModel`` and
+``NaimaModel``.
+
+For this release the dependency on ``reproject`` and ``jsonschema`` was dropped. The
+latter was replaced by a new dependency on ``pydantic``. This release contains
+several API breaking changes and removal of non-essential parts of Gammapy
+(see PR list below). These changes are required to finally arrive at a more
+consistent and stable API for Gammapy v1.0. Thanks for your understanding!
 
 
 **Contributors:**
