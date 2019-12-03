@@ -26,7 +26,7 @@ improved. The new `overview page <overview.rst>`__ gives an introduction and
 overview of the Gammapy analysis workflow and package structure. The structure
 and content of the `tutorials page <tutorials/index.rst>`__ was simplified and
 cleaned up and a `how to <howto.rst>`__ page was introduced. A tutorial notebook
-showing how to do a joint `multi-instrument analysis <notebooks/joint_1d_3d_analysis.html>`__
+showing how to do a joint `multi-instrument analysis <notebooks/analysis_joint.html>`__
 of the Crab Nebula using H.E.S.S. and Fermi-LAT data and HAWC flux points was added.
 
 Another focus of the work for Gammapy v0.15 was the clean-up and unification of
