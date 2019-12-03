@@ -14,6 +14,7 @@ from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
+from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
 from gammapy.spectrum import SpectrumDataset
 from gammapy.stats import cash, cash_sum_cython, wstat
@@ -164,6 +165,10 @@ class MapDataset(Dataset):
         n_models = 0
         if self.models is not None:
             n_models = len(self.models)
+
+        if self.background_model is not None:
+            n_models += 1
+
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
 
         str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.parameters))
@@ -193,10 +198,9 @@ class MapDataset(Dataset):
                 )
 
             str_ += "\t\tParameters:\n"
-
-            info = str(model.parameters)
+            info = _get_parameters_str(model.parameters)
             lines = info.split("\n")
-            str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+            str_ += "\t\t" + "\n\t\t".join(lines[:-1])
 
             str_ += "\n\n"
 
@@ -485,9 +489,9 @@ class MapDataset(Dataset):
         ----------
         method: {"diff", "diff/model", "diff/sqrt(model)"}
             Method used to compute the residuals. Available options are:
-                - `diff` (default): data - model
-                - `diff/model`: (data - model) / model
-                - `diff/sqrt(model)`: (data - model) / sqrt(model)
+                - "diff" (default): data - model
+                - "diff/model": (data - model) / model
+                - "diff/sqrt(model)": (data - model) / sqrt(model)
 
         Returns
         -------
@@ -508,9 +512,9 @@ class MapDataset(Dataset):
         """
         Plot spatial and spectral residuals.
 
-        The spectral residuals are extracted from the provided `region`, and the
+        The spectral residuals are extracted from the provided region, and the
         normalization used for the residuals computation can be controlled using
-        the `norm` parameter. If no `region` is passed, only the spatial
+        the method parameter. If no region is passed, only the spatial
         residuals are shown.
 
         Parameters
@@ -949,7 +953,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        cutout : `~gammapy.maps.MapDataset`
+        cutout : `MapDataset`
             Cutout map dataset.
         """
         kwargs = {"gti": self.gti}
@@ -1142,13 +1146,13 @@ class MapDatasetOnOff(MapDataset):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `gammapy.maps.WcsGeom`
             geometry for the counts, counts_off, acceptance and acceptance_off maps
-        geom_exposure : `Geom`
+        geom_exposure : `gammapy.maps.WcsGeom`
             geometry for the exposure map
-        geom_psf : `Geom`
+        geom_psf : `gammapy.maps.WcsGeom`
             geometry for the psf map
-        geom_edisp : `Geom`
+        geom_edisp : `gammapy.maps.WcsGeom`
             geometry for the energy dispersion map
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition

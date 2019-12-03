@@ -12,6 +12,25 @@ from astropy.table import Table
 __all__ = ["Parameter", "Parameters"]
 
 
+def _get_parameters_str(parameters):
+    str_ = ""
+
+    for par in parameters:
+        if par.name == "amplitude":
+            line = "\t{:12} {:11}: {:.2e} {} {}\n"
+        else:
+            line = "\t{:12} {:11}: {:.3f} {} {}\n"
+
+        frozen = "(frozen)" if par.frozen else ""
+        try:
+            error = "+/- {:.2f}".format(parameters.get_error(par))
+        except AttributeError:
+            error = ""
+
+        str_ += line.format(par.name, frozen, par.value, error, par.unit)
+    return str_
+
+
 class Parameter:
     """A model parameter.
 

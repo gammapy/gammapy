@@ -137,6 +137,8 @@ def test_map_dataset_str(sky_model, geom, geom_etrue):
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit
     assert "MapDataset" in str(dataset)
+    assert "(frozen)" in str(dataset)
+    assert "background" in str(dataset)
 
 
 @requires_data()
