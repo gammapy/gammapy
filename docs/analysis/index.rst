@@ -149,12 +149,12 @@ datasets.
     >>> analysis.read_model("model.yaml")
 
 If you have a `~gammapy.modeling.models.SkyModels` object, or a YAML string representing
-one, you can use the `~gammapy.analysis.Analysis.set_model` method:
+one, you can use the `~gammapy.analysis.Analysis.set_models` method:
 
 .. code-block:: python
 
     >>> models = SkyModels(...)
-    >>> analysis.set_model(models)
+    >>> analysis.set_models(models)
 
 Fitting
 -------
