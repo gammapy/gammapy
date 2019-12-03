@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Image utility functions"""
+"""Image utility functions."""
 import logging
 import numpy as np
 import scipy.ndimage

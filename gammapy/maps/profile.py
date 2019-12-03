@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Tools to create profiles (i.e. 1D "slices" from 2D images)"""
+"""Tools to create profiles (i.e. 1D "slices" from 2D images)."""
 import numpy as np
 import scipy.ndimage
 from astropy import units as u

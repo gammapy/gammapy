@@ -37,7 +37,7 @@ class MapPanelPlotter:
         self.grid_spec = GridSpec(nrows=npanels, ncols=1, **kwargs)
 
     def _get_ax_extend(self, ax, panel):
-        """Get width and height of the axis in world coordinates"""
+        """Get width and height of the axis in world coordinates."""
         p = self.parameters
 
         # compute aspect ratio of the axis

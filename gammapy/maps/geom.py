@@ -405,7 +405,7 @@ class MapAxis:
 
     @lazyproperty
     def bin_width(self):
-        """Return array of bin widths"""
+        """Array of bin widths."""
         return np.diff(self.edges)
 
     @property
