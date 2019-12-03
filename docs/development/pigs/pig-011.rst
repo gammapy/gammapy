@@ -183,7 +183,7 @@ used and freeze its parameters. Then we would apply it to the various
 
 To help, the user deal with model parameters some helper function could be
 introduced to freeze all parameters of a model. Another possibility is to assume
-that all parameters are fixed except the `amplitude` in the
+that all parameters are fixed except the ``amplitude`` in the
 ``LightCurveEstimator.run()`` method, or pass as arguments the names of the
 parameters to leave free.
 
@@ -238,7 +238,7 @@ the dependency to astropy v>3.2. This would look like:
 Light Curve Fitting
 -------------------
 
-We could provide distinct objects specialized for `Map` and `Spectrum` datasets
+We could provide distinct objects specialized for ``Map`` and ``Spectrum`` datasets
 instead of a single object.
 
 Lightcurve
@@ -254,11 +254,11 @@ Lomb-Scargle periodograms.
 Task list
 =========
 
-- Add `TSTART` and `TSTOP` meta info on the ``Dataset`` as well as the `GTI` table.
-- Introduce `GTI.union()` method to merge `Datasets`.
-- Refactor the ``Lightcurve`` class to add a number of new content in the `Table` e.g.:
+- Add ``TSTART`` and ``TSTOP`` meta info on the ``Dataset`` as well as the ``GTI`` table.
+- Introduce ``GTI.union()``` method to merge ``Datasets``.
+- Refactor the ``Lightcurve`` class to add a number of new content in the ``Table`` e.g.:
 
-  - a `fit_stat_scan` column.
+  - a ``fit_stat_scan`` column.
   - rebinning methods
 
 - Implement the new ``LightCurveEstimator`` class

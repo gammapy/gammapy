@@ -167,7 +167,7 @@ See the complete `Gammapy v0.15 merged pull requests list on Github <https://git
 - [#2449] Fix and improve 2HWC catalog source models (Quentin Remy)
 - [#2448] Improve 4FGL catalog support (Quentin Remy)
 - [#2446] Implement WcsNDMap.stack() method (Axel Donath)
-- [#2444] Remove `MapMaker` class (Axel Donath)
+- [#2444] Remove MapMaker class (Axel Donath)
 - [#2441] Add GTI export in datasets (Régis Terrier)
 - [#2435] Add modeling notebook with model plot examples (Christoph Deil)
 - [#2433] Update astropy and numpy versions in Travis-CI (Brigitta Sipocz)

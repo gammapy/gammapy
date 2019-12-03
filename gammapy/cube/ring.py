@@ -151,13 +151,13 @@ class AdaptiveRingBackgroundMaker:
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.fit.MapDataset`
+        dataset : `~gammapy.cube.MapDataset`
             Input map dataset.
 
         Returns
         -------
         cubes : dict of `~gammapy.maps.WcsNDMap`
-            Dictionary containing `counts_off`, `acceptance` and `acceptance_off` cubes.
+            Dictionary containing ``counts_off``, ``acceptance`` and ``acceptance_off`` cubes.
         """
 
         counts = dataset.counts

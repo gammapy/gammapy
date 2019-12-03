@@ -51,14 +51,14 @@ class MapDatasetMaker:
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Reference map geom.
-        observation : `DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             Observation container.
 
         Returns
         -------
-        counts : `Map`
+        counts : `~gammapy.maps.Map`
             Counts map.
         """
         counts = Map.from_geom(geom)
@@ -71,14 +71,14 @@ class MapDatasetMaker:
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Reference map geom.
-        observation : `DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             Observation container.
 
         Returns
         -------
-        exposure : `Map`
+        exposure : `~gammapy.maps.Map`
             Exposure map.
         """
         return make_map_exposure_true_energy(
@@ -94,14 +94,14 @@ class MapDatasetMaker:
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Reference geom.
-        observation : `DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             Observation container.
 
         Returns
         -------
-        exposure : `Map`
+        exposure : `~gammapy.maps.Map`
             Exposure map.
         """
         return make_map_exposure_true_energy(
@@ -116,14 +116,14 @@ class MapDatasetMaker:
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Reference geom.
-        observation : `DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             Observation container.
 
         Returns
         -------
-        background : `Map`
+        background : `~gammapy.maps.Map`
             Background map.
         """
         bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
@@ -147,18 +147,18 @@ class MapDatasetMaker:
         )
 
     def make_edisp(self, geom, observation):
-        """Make edisp map.
+        """Make energy dispersion map.
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Reference geom.
-        observation : `DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             Observation container.
 
         Returns
         -------
-        edisp : `EdispMap`
+        edisp : `~gammapy.cube.EDispMap`
             Edisp map.
         """
         exposure = self.make_exposure_irf(geom.squash(axis="migra"), observation)
@@ -175,14 +175,14 @@ class MapDatasetMaker:
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Reference geom.
-        observation : `DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             Observation container.
 
         Returns
         -------
-        psf : `PSFMap`
+        psf : `~gammapy.cube.PSFMap`
             Psf map.
         """
         psf = observation.psf
@@ -204,14 +204,14 @@ class MapDatasetMaker:
 
         Parameters
         ----------
-        dataset : `MapDataset`
+        dataset : `~gammapy.cube.MapDataset`
             Reference dataset.
         observation : `~gammapy.data.DataStoreObservation`
             Observation
 
         Returns
         -------
-        dataset : `MapDataset`
+        dataset : `~gammapy.cube.MapDataset`
             Map dataset.
         """
         kwargs = {"name": f"obs_{observation.obs_id}", "gti": observation.gti}
@@ -301,16 +301,15 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : `Dataset`
+        dataset : `~gammapy.modeling.Dataset`
             Dataset to compute mask for.
-        observation: `DataStoreObservation`
+        observation: `~gammapy.data.DataStoreObservation`
             Observation to compute mask for.
 
         Returns
         -------
         mask_safe : `~numpy.ndarray`
             Maximum offset mask.
-
         """
         separation = dataset._geom.separation(observation.pointing_radec)
         return separation < self.offset_max
@@ -321,9 +320,9 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : `Dataset`
+        dataset : `~gammapy.modeling.Dataset`
             Dataset to compute mask for.
-        observation: `DataStoreObservation`
+        observation: `~gammapy.data.DataStoreObservation`
             Observation to compute mask for.
 
         Returns
@@ -351,7 +350,7 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : `SpectrumDataset` or `SpectrumDatasetOnOff`
+        dataset : `~gammapy.spectrum.SpectrumDataset` or `~gammapy.spectrum.SpectrumDatasetOnOff`
             Dataset to compute mask for.
 
         Returns
@@ -373,7 +372,7 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : `MapDataset`, `MapDatasetOnOff`, `SpectrumDataset` or `SpectrumDatasetOnOff`
+        dataset : `~gammapy.modeling.Dataset`
             Dataset to compute mask for.
 
         Returns
@@ -406,7 +405,7 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : `MapDataset`, `MapDatasetOnOff`, `SpectrumDataset` or `SpectrumDatasetOnOff`
+        dataset : `~gammapy.modeling.Dataset`
             Dataset to compute mask for.
 
         Returns
@@ -431,9 +430,9 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : `Dataset`
+        dataset : `~gammapy.modeling.Dataset`
             Dataset to compute mask for.
-        observation: `DataStoreObservation`
+        observation: `~gammapy.data.DataStoreObservation`
             Observation to compute mask for.
 
         Returns

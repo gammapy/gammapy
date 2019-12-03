@@ -55,14 +55,14 @@ class SpectrumDatasetMaker:
         ----------
         region : `~regions.SkyRegion`
             Region to compute counts spectrum for.
-        energy_axis : `MapAxis`
+        energy_axis : `~gammapy.maps.MapAxis`
             Reconstructed energy axis.
-        observation: `DataStoreObservation`
+        observation: `~gammapy.data.DataStoreObservation`
             Observation to compute effective area for.
 
         Returns
         -------
-        counts : `CountsSpectrum`
+        counts : `~gammapy.spectrum.CountsSpectrum`
             Counts spectrum
         """
         edges = energy_axis.edges
@@ -84,14 +84,14 @@ class SpectrumDatasetMaker:
         ----------
         region : `~regions.SkyRegion`
             Region to compute background spectrum for.
-        energy_axis : `MapAxis`
+        energy_axis : `~gammapy.maps.MapAxis`
             Reconstructed energy axis.
-        observation: `DataStoreObservation`
+        observation: `~gammapy.data.DataStoreObservation`
             Observation to compute effective area for.
 
         Returns
         -------
-        background : `CountsSpectrum`
+        background : `~gammapy.spectrum.CountsSpectrum`
             Background spectrum
         """
         if not isinstance(region, CircleSkyRegion):
@@ -123,14 +123,14 @@ class SpectrumDatasetMaker:
         ----------
         region : `~regions.SkyRegion`
             Region to compute background effective area.
-        energy_axis_true : `MapAxis`
+        energy_axis_true : `~gammapy.maps.MapAxis`
             True energy axis.
-        observation: `DataStoreObservation`
+        observation: `~gammapy.data.DataStoreObservation`
             Observation to compute effective area for.
 
         Returns
         -------
-        aeff : `EffectiveAreaTable`
+        aeff : `~gammapy.irf.EffectiveAreaTable`
             Effective area table.
         """
         offset = observation.pointing_radec.separation(region.center)
@@ -155,20 +155,19 @@ class SpectrumDatasetMaker:
 
         Parameters
         ----------
-        position : `SkyCoord`
+        position : `~astropy.coordinates.SkyCoord`
             Position to compute energy dispersion for.
-        energy_axis : `MapAxis`
+        energy_axis : `~gammapy.maps.MapAxis`
             Reconstructed energy axis.
-        energy_axis_true : `MapAxis`
+        energy_axis_true : `~gammapy.maps.MapAxis`
             True energy axis.
-        observation: `DataStoreObservation`
+        observation: `~gammapy.data.DataStoreObservation`
             Observation to compute edisp for.
 
         Returns
         -------
-        edisp : `EnergyDispersion`
+        edisp : `~gammapy.irf.EnergyDispersion`
             Energy dispersion
-
         """
         offset = observation.pointing_radec.separation(position)
         return observation.edisp.to_energy_dispersion(
@@ -180,14 +179,14 @@ class SpectrumDatasetMaker:
 
         Parameters
         ----------
-        dataset : `SpectrumDataset`
+        dataset : `~gammapy.spectrum.SpectrumDataset`
             Spectrum dataset.
-        observation: `DataStoreObservation`
+        observation: `~gammapy.data.DataStoreObservation`
             Observation to reduce.
 
         Returns
         -------
-        dataset : `SpectrumDataset`
+        dataset : `~gammapy.spectrum.SpectrumDataset`
             Spectrum dataset.
         """
         kwargs = {

@@ -85,7 +85,7 @@ Objectives
 ==========
 
 * Users should be able to run an analysis (1D and 3D) on a given time interval, independent of the time intervals of the single observations.
-* We should support event selections before starting the analysis steps (event phase, event type, ...) and possibly allow for custom selections, e.g. `MC_ID` in the current CTA 1DC.
+* We should support event selections before starting the analysis steps (event phase, event type, ...) and possibly allow for custom selections, e.g. ``MC_ID`` in the current CTA 1DC.
   For now we aim only for a time and phase filtering of events, a filtering on event type, for example, is more complex and is left for a future PIG.
 * We want to support more formats for the *observation library* (like ctools XML format)
 * We want to support observations (especially event lists) stored in memory
@@ -113,7 +113,7 @@ What others have
 With *Fermi-LAT*, you always have ``gtselect`` and ``gtmktime`` at the start
 (see `Fermi-LAT data preparation`_). Following analysis steps partly rely on
 "data sub space" DSS header keys for processing, which are stored in the output
-fits files of the `gtselect` and `gtmktime` step.
+fits files of the ``gtselect`` and ``gtmktime`` step.
 
 In *ctools*, every analysis starts with an "observation definition file" in XML
 format. One can then select observations with ``csobsselect``, creating a new
@@ -176,12 +176,12 @@ We split the implementation in two big steps:
 
     | **PRs**: ObservationList -> Observations, initialize with a list of ``DataStoreObservation``; implement ``__len__``, ``__getitem__``; adapt notebooks
 
-2. Scenario: Add an empty filter to an `Observation`
-    | **Given** a basic version of the `Observation` and `ObservationFilter` class
-    | **When** accessing `.events`, `.gti` of the `Observation`
+2. Scenario: Add an empty filter to an ``Observation``
+    | **Given** a basic version of the ``Observation`` and ``ObservationFilter`` class
+    | **When** accessing ``.events``, ``.gti`` of the ``Observation``
     | **Then** automatically apply the empty filter on the fly
 
-    | **PRs**: `DataStoreObservation` -> `Observation`; create `ObservationFilter` class; add an `ObservationFilter` to each `Observation`; develop basic API
+    | **PRs**: ``DataStoreObservation`` -> ``Observation``; create ``ObservationFilter`` class; add an ``ObservationFilter`` to each ``Observation``; develop basic API
 
 3. Scenario: filter an ``Observation`` by time
     | **Given** a user specified time interval

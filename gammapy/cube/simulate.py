@@ -182,10 +182,10 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        edisp_map : `~gammapy.cube.EdispMap`
-            Edisp map.
+        edisp_map : `~gammapy.cube.EDispMap`
+            Energy dispersion map
         events : `~gammapy.data.EventList`
-            Event list with the true energies.
+            Event list with the true energies
 
         Returns
         -------
@@ -217,7 +217,7 @@ class MapDatasetEventSampler:
 
         Returns
         -------
-        events : `EventList`
+        events : `~gammapy.data.EventList`
             Event list with reconstructed position columns.
         """
         coord = MapCoord(
