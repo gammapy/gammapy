@@ -140,6 +140,9 @@ def test_analysis_1d():
         type: 1d
         background:
             method: reflected
+        geom:
+            axes:
+                energy_true: {min: 0.01 TeV, max: 300 TeV, nbins: 109}
         on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
         containment_correction: false
     flux_points:
@@ -161,6 +164,63 @@ def test_analysis_1d():
 
     assert_allclose(dnde[0].value, 8.03604e-12, rtol=1e-2)
     assert_allclose(dnde[-1].value, 5.382879e-21, rtol=1e-2)
+
+@requires_data()
+def test_geom_analysis_1d():
+    cfg = """
+    observations:
+        datastore: $GAMMAPY_DATA/hess-dl3-dr1
+        obs_ids: [23523]
+    datasets:
+        type: 1d
+        background:
+            method: reflected
+        on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
+        geom:
+            axes:
+                energy: {min: 0.1 TeV, max: 30 TeV, nbins: 20}
+                energy_true: {min: 0.03 TeV, max: 100 TeV, nbins: 50}
+        containment_correction: false
+    flux_points:
+        energy: {min: 1 TeV, max: 50 TeV, nbins: 4}
+    """
+    config = get_example_config("1d")
+    analysis = Analysis(config)
+    analysis.update_config(cfg)
+    analysis.get_observations()
+    analysis.get_datasets()
+
+    assert len(analysis.datasets) == 1
+    assert len(analysis.datasets[0].aeff.energy.center) == 50
+    assert_allclose(analysis.datasets[0].aeff.energy.edges[0].to_value('TeV'), 0.03)
+    assert_allclose(analysis.datasets[0].aeff.energy.edges[-1].to_value('TeV'), 100)
+
+@requires_data()
+def test_geom_analysis_1d_no_etrue():
+    cfg = """
+    observations:
+        datastore: $GAMMAPY_DATA/hess-dl3-dr1
+        obs_ids: [23523]
+    datasets:
+        type: 1d
+        background:
+            method: reflected
+        on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
+        geom:
+            axes:
+                energy: {min: 0.1 TeV, max: 30 TeV, nbins: 20}
+    """
+    config = get_example_config("1d")
+    analysis = Analysis(config)
+    analysis.update_config(cfg)
+    analysis.get_observations()
+    analysis.get_datasets()
+
+#    print(analysis.datasets[0].counts.energy.edges)
+#    print(analysis.datasets[0].aeff.energy.edges)
+    assert len(analysis.datasets[0].aeff.energy.center) == 20
+    assert_allclose(analysis.datasets[0].aeff.energy.edges[0].to_value('TeV'), 0.1)
+    assert_allclose(analysis.datasets[0].aeff.energy.edges[-1].to_value('TeV'), 30)
 
 
 @requires_data()
@@ -184,8 +244,16 @@ def test_exclusion_region(tmp_path):
 @requires_dependency("iminuit")
 @requires_data()
 def test_analysis_1d_stacked():
+    cfg = """
+    datasets:
+        geom:
+            axes:
+                energy_true: {min: 0.03 TeV, max: 100 TeV, nbins: 50}
+    """
+
     config = get_example_config("1d")
     analysis = Analysis(config)
+    analysis.update_config(cfg)
     analysis.config.datasets.stack = True
     analysis.get_observations()
     analysis.get_datasets()
