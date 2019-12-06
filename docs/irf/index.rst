@@ -14,6 +14,7 @@ Introduction
 * Effective area (AEFF)
 * Energy dispersion (EDISP)
 * Point spread function (PSF)
+* Template background (BKG)
 
 Most of the formats defined at :ref:`gadf:iact-irf` are supported.  Otherwise,
 at the moment, there is very little support for Fermi-LAT or other instruments.
