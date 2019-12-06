@@ -45,27 +45,28 @@ Poisson data with background measurement
 ----------------------------------------
 
 If you not only have a  measurement of counts  :math:`n_{\mathrm{on}}` in the
-signal region, but also a measurement :math:`n_{\mathrm{off}}` in a background
-region you can write down the likelihood formula as
+ON region (assumed to contain signal and background), but also a measurement
+:math:`n_{\mathrm{off}}` in a OFF region (assumed to contain background only)
+you can write down the likelihood formula as
 
 .. math::
     L (n_{\mathrm{on}}, n_{\mathrm{off}}, \alpha; \mu_{\mathrm{sig}},
-    \mu_{\mathrm{bkg}}) = \frac{(\mu_{\mathrm{sig}}+\alpha
+    \mu_{\mathrm{bkg}}) = \frac{(\mu_{\mathrm{sig}}+
     \mu_{\mathrm{bkg}})^{n_{\mathrm{on}}}}{n_{\mathrm{on}} !}
-    \exp{(-(\mu_{\mathrm{sig}}+\alpha \mu_{\mathrm{bkg}}))}\times
-    \frac{(\mu_{\mathrm{bkg}})^{n_{\mathrm{off}}}}{n_{\mathrm{off}}
-    !}\exp{(-\mu_{\mathrm{bkg}})},
+    \exp{(-(\mu_{\mathrm{sig}}+ \mu_{\mathrm{bkg}}))}\times
+    \frac{(\mu_{\mathrm{bkg}}/\alpha)^{n_{\mathrm{off}}}}{n_{\mathrm{off}}
+    !}\exp{(-\mu_{\mathrm{bkg}}/\alpha)},
 
-where :math:`\mu_{\mathrm{sig}}` is the number of expected counts in the signal
-regions, and :math:`\mu_{\mathrm{bkg}}` is the number of expected counts in the
-background region, as defined in the :ref:`stats-introduction`. By taking two
+where :math:`\mu_{\mathrm{sig}}` and :math:`\mu_{\mathrm{bkg}}` are respectively
+the number of expected signal and background counts in the ON region,
+as defined in the :ref:`stats-introduction`. By taking two
 time the negative log likelihood and neglecting model independent and thus
 constant terms, we define the **WStat**.
 
 .. math::
-    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}}
-    - n_{\mathrm{on}} \log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}})}
-    - n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}})}\big)
+    W = 2 \big(\mu_{\mathrm{sig}} + (1 + 1/\alpha)\mu_{\mathrm{bkg}}
+    - n_{\mathrm{on}} \log{(\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}})}
+    - n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}}/alpha)}\big)
 
 In the most general case, where :math:`\mu_{\mathrm{src}}` and
 :math:`\mu_{\mathrm{bkg}}` are free the minimum of :math:`W` is at
