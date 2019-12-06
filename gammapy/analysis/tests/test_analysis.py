@@ -195,33 +195,6 @@ def test_geom_analysis_1d():
     assert_allclose(analysis.datasets[0].aeff.energy.edges[0].to_value('TeV'), 0.03)
     assert_allclose(analysis.datasets[0].aeff.energy.edges[-1].to_value('TeV'), 100)
 
-@requires_data()
-def test_geom_analysis_1d_no_etrue():
-    cfg = """
-    observations:
-        datastore: $GAMMAPY_DATA/hess-dl3-dr1
-        obs_ids: [23523]
-    datasets:
-        type: 1d
-        background:
-            method: reflected
-        on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
-        geom:
-            axes:
-                energy: {min: 0.1 TeV, max: 30 TeV, nbins: 20}
-    """
-    config = get_example_config("1d")
-    analysis = Analysis(config)
-    analysis.update_config(cfg)
-    analysis.get_observations()
-    analysis.get_datasets()
-
-#    print(analysis.datasets[0].counts.energy.edges)
-#    print(analysis.datasets[0].aeff.energy.edges)
-    assert len(analysis.datasets[0].aeff.energy.center) == 20
-    assert_allclose(analysis.datasets[0].aeff.energy.edges[0].to_value('TeV'), 0.1)
-    assert_allclose(analysis.datasets[0].aeff.energy.edges[-1].to_value('TeV'), 30)
-
 
 @requires_data()
 def test_exclusion_region(tmp_path):

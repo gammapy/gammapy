@@ -304,14 +304,7 @@ class Analysis:
         bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
         safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "aeff-max"])
 
-        # TODO : introduce config validation?
-#        try:
-        print(datasets_settings.geom.axes.energy_true.min)
         e_true = self._make_energy_axis(datasets_settings.geom.axes.energy_true).edges
-
- #       except:
- #           e_true = e_reco
- #           log.WARNING("True energy binning not properly set. Using reco energy binning.")
 
         reference = SpectrumDataset.create(
             e_reco=e_reco, e_true=e_true, region=on_region
