@@ -2,8 +2,29 @@
 
 .. _references:
 
-References
-==========
+Glossary and references
+=======================
+
+.. _glossary:
+
+Glossary
+--------
+
+.. [cash] The cash statistic is a Poisson fit statistic usually used when signal and background
+ can be modeled. It is defined as :math:`2 \times log(L)` See :ref:`cash`
+ in :ref:`fit statistics <fit-statistics>`.
+
+.. [dataset] dataset
+
+.. [MET] mission elapsed time; see also :ref:`MET_definition` in :ref:`time_handling`.
+
+.. [ReflectedBackground]
+
+.. [RingBackground]
+
+.. [wstat] The WSTAT is a Poisson fit statistic usually used for ON-OFF analysis. It is based on the
+ profile likelihood method where the unknown background parameters are marginalized. See :ref:`wstat`
+ in :ref:`fit statistics<_fit-statistics>`.
 
 .. _publications:
 
@@ -12,8 +33,6 @@ Publications
 
 This is the bibliography containing the literature references for the implemented methods
 referenced from the Gammapy docs.
-
-The best reference to TeV data analysis is Chapter 7 of Mathieu de Naurois's habilitation thesis.
 
 .. [Albert2007] `Albert et al. (2007) <https://ui.adsabs.harvard.edu/abs/2007NIMPA.583..494A>`_,
    "Unfolding of differential energy spectra in the MAGIC experiment",
@@ -69,12 +88,6 @@ Software references:
 .. [Mayer2015] `Michael Mayer (2015) <https://publishup.uni-potsdam.de/frontdoor/index/index/docId/7150>`_
    "Pulsar wind nebulae at high energies"
 
-.. _glossary:
-
-Glossary
---------
-
-.. [MET] mission elapsed time; see also :ref:`MET_definition` in :ref:`time_handling`.
 
 Other gamma-ray packages
 ------------------------

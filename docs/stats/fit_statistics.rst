@@ -32,6 +32,11 @@ TODO
 Poisson data
 ------------
 
+.. _cash:
+
+Poisson data with background model
+----------------------------------
+
 TODO
 
 .. _wstat:
