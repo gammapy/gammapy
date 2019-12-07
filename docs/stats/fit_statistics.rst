@@ -8,13 +8,40 @@ Fit statistics
 Introduction
 ------------
 
-This page describes common fit statistics used in gamma-ray astronomy. Results
-were tested against results from the `Sherpa`_ and `XSpec`_ X-ray analysis
-packages.
+This page describes the fit statistics used in gammapy. These fit statistics are
+used by datasets to perform model fitting and parameter estimation.
+
+Fit statistics in gammapy are all log-likelihood functions normalized like chi-squares,
+i.e. if :math:`L` is the likelihood function used, they follow the expression
+:math:`2 \times log L`.
 
 All functions compute per-bin statistics. If you want the summed statistics for
-all bins, call sum on the output array yourself. Here's an example for the
-`~gammapy.stats.cash` statistic::
+all bins, call sum on the output array yourself.
+
+
+.. _cash:
+
+Cash : Poisson data with background model
+-----------------------------------------
+
+The number of counts, :math:`n`, is a Poisson random variable of mean value
+:math:`\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}}`. The former is the expected
+number of counts from the source (the signal), the latter is the number of
+expected background counts, which is supposed to be known. We can write
+the likelihood :math:`L` and applying the expression above, we obtain
+the following formula for the Cash fit statistic:
+
+.. math::
+    C = 2 \times \left(\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}} - n \times log (\mu_{\mathrm{sig}}
+    + \mu_{\mathrm{bkg}}) \right)
+
+The Cash statistic is implemented in `~gammapy.stats.cash` and is used as a `stat`
+function by the `~gammapy.cube.MapDataset` and the `~gammapy.spectrum.SpectrumDataset`.
+
+
+Example
+^^^^^^^
+Here's an example for the `~gammapy.stats.cash` statistic::
 
     >>> from gammapy.stats import cash
     >>> data = [3, 5, 9]
@@ -24,23 +51,11 @@ all bins, call sum on the output array yourself. Here's an example for the
     >>> cash(data, model).sum()
     -27.678423645645118
 
-Gaussian data
--------------
-
-TODO
-
-
-.. _cash:
-
-Poisson data with background model: Cash
-----------------------------------------
-
-TODO
 
 .. _wstat:
 
-Poisson data with background measurement: WStat
------------------------------------------------
+WStat : Poisson data with background measurement
+------------------------------------------------
 
 In the absence of a reliable background model, it is possible to use a second
 measurement containing only background to estimate it.
@@ -70,6 +85,10 @@ The WStat fit statistics is given by the following formula:
 
 To see how to derive it see the :ref:`wstat derivation<wstat_derivation>`.
 
+The WStat statistic is implemented in `~gammapy.stats.wstat` and is used as a `stat`
+function by the `~gammapy.cube.MapDatasetOnOff` and the `~gammapy.spectrum.SpectrumDatasetOnOff`.
+
+
 Caveat
 ^^^^^^
 
@@ -84,8 +103,6 @@ Caveat
  performing spectral fits with WStat, it is recommended to randomize observations
  and check whether the resulting fitted parameters distributions are consistent
  with the input values.
-
-
 
 Example
 ^^^^^^^
