@@ -62,9 +62,10 @@ The WStat fit statistics is given by the following formula:
 
 .. math::
     W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
-    n_{\mathrm{on}} - n_{\mathrm{off}} -& n_{\mathrm{on}}
+    n_{\mathrm{on}} - n_{\mathrm{off}} - & n_{\mathrm{on}}
     (\log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}}) -
-    \log{(n_{\mathrm{on}})}})\\ -& n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}})} -
+    \log{(n_{\mathrm{on}})}})\\
+    -& n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}})} -
     \log{(n_{\mathrm{off}})})\big)
 
 To see how to derive it see the :ref:`wstat derivation<wstat_derivation>`.
@@ -73,16 +74,16 @@ Caveat
 ^^^^^^
 
 - Since WStat takes into account background estimation uncertainties and makes no
-assumption such as a background model, it usually gives larger statistical
-uncertainties on the fitted parameters. If a background model exists, to properly
-compare with parameters estimated using the Cash statistics, one should include
-some systematic uncertainty on the background model.
+ assumption such as a background model, it usually gives larger statistical
+ uncertainties on the fitted parameters. If a background model exists, to properly
+ compare with parameters estimated using the Cash statistics, one should include
+ some systematic uncertainty on the background model.
 
 - Note also that at very low counts, WStat is known to result in biased estimates.
-This can be an issue when studying the high energy behaviour of faint sources. When
-performing spectral fits with WStat, it is recommended to randomize observations
-and check whether the resulting fitted parameters distributions are consistent
-with the input values.
+ This can be an issue when studying the high energy behaviour of faint sources. When
+ performing spectral fits with WStat, it is recommended to randomize observations
+ and check whether the resulting fitted parameters distributions are consistent
+ with the input values.
 
 
 
