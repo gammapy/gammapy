@@ -8,13 +8,40 @@ Fit statistics
 Introduction
 ------------
 
-This page describes common fit statistics used in gamma-ray astronomy. Results
-were tested against results from the `Sherpa`_ and `XSpec`_ X-ray analysis
-packages.
+This page describes the fit statistics used in gammapy. These fit statistics are
+used by datasets to perform model fitting and parameter estimation.
+
+Fit statistics in gammapy are all log-likelihood functions normalized like chi-squares,
+i.e. if :math:`L` is the likelihood function used, they follow the expression
+:math:`2 \times log L`.
 
 All functions compute per-bin statistics. If you want the summed statistics for
-all bins, call sum on the output array yourself. Here's an example for the
-`~gammapy.stats.cash` statistic::
+all bins, call sum on the output array yourself.
+
+
+.. _cash:
+
+Cash : Poisson data with background model
+-----------------------------------------
+
+The number of counts, :math:`n`, is a Poisson random variable of mean value
+:math:`\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}}`. The former is the expected
+number of counts from the source (the signal), the latter is the number of
+expected background counts, which is supposed to be known. We can write
+the likelihood :math:`L` and applying the expression above, we obtain
+the following formula for the Cash fit statistic:
+
+.. math::
+    C = 2 \times \left(\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}} - n \times log (\mu_{\mathrm{sig}}
+    + \mu_{\mathrm{bkg}}) \right)
+
+The Cash statistic is implemented in `~gammapy.stats.cash` and is used as a `stat`
+function by the `~gammapy.cube.MapDataset` and the `~gammapy.spectrum.SpectrumDataset`.
+
+
+Example
+^^^^^^^
+Here's an example for the `~gammapy.stats.cash` statistic::
 
     >>> from gammapy.stats import cash
     >>> data = [3, 5, 9]
@@ -24,209 +51,58 @@ all bins, call sum on the output array yourself. Here's an example for the
     >>> cash(data, model).sum()
     -27.678423645645118
 
-Gaussian data
--------------
-
-TODO
-
-Poisson data
-------------
-
-.. _cash:
-
-Poisson data with background model
-----------------------------------
-
-TODO
 
 .. _wstat:
 
-Poisson data with background measurement
-----------------------------------------
+WStat : Poisson data with background measurement
+------------------------------------------------
 
-If you not only have a  measurement of counts  :math:`n_{\mathrm{on}}` in the
-signal region, but also a measurement :math:`n_{\mathrm{off}}` in a background
-region you can write down the likelihood formula as
+In the absence of a reliable background model, it is possible to use a second
+measurement containing only background to estimate it.
 
-.. math::
-    L (n_{\mathrm{on}}, n_{\mathrm{off}}, \alpha; \mu_{\mathrm{sig}},
-    \mu_{\mathrm{bkg}}) = \frac{(\mu_{\mathrm{sig}}+\alpha
-    \mu_{\mathrm{bkg}})^{n_{\mathrm{on}}}}{n_{\mathrm{on}} !}
-    \exp{(-(\mu_{\mathrm{sig}}+\alpha \mu_{\mathrm{bkg}}))}\times
-    \frac{(\mu_{\mathrm{bkg}})^{n_{\mathrm{off}}}}{n_{\mathrm{off}}
-    !}\exp{(-\mu_{\mathrm{bkg}})},
+In the OFF region, which contains background only, the number of counts
+:math:`n_{\mathrm{off}}` is a Poisson random variable of mean value
+:math:`\mu_{\mathrm{bkg}}`
+In the ON region which contains signal and background contribution, the number
+of counts, :math:`n_{\mathrm{on}}`, is a Poisson random variable of mean value
+:math:`\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}}`, where :math:`\alpha` is
+the ratio of the ON and OFF region acceptances.
 
-where :math:`\mu_{\mathrm{sig}}` is the number of expected counts in the signal
-regions, and :math:`\mu_{\mathrm{bkg}}` is the number of expected counts in the
-background region, as defined in the :ref:`stats-introduction`. By taking two
-time the negative log likelihood and neglecting model independent and thus
-constant terms, we define the **WStat**.
+It is possible define a likelihood function and marginalize it over the unknown
+:math:`\mu_{\mathrm{bkg}}` to obtain :math:`\mu_{\mathrm{sig}}`.
+This yields the so-called WStat or ON-OFF statistics which is traditionally used
+for ON-OFF measurements in ground based gamma-ray astronomy.
 
-.. math::
-    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}}
-    - n_{\mathrm{on}} \log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}})}
-    - n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}})}\big)
-
-In the most general case, where :math:`\mu_{\mathrm{src}}` and
-:math:`\mu_{\mathrm{bkg}}` are free the minimum of :math:`W` is at
-
-.. math::
-    \mu_{\mathrm{sig}} = n_{\mathrm{on}} - \alpha\,n_{\mathrm{off}} \\
-    \mu_{\mathrm{bkg}} = n_{\mathrm{off}}
-
-
-Profile Likelihood
-^^^^^^^^^^^^^^^^^^
-
-Most of the times you probably won't have a model in order to get
-:math:`\mu_{\mathrm{bkg}}`. The strategy in this case is to treat
-:math:`\mu_{\mathrm{bkg}}` as so-called nuisance parameter, i.e. a free
-parameter that is of no physical interest.  Of course you don't want an
-additional free parameter for each bin during a fit. Therefore one calculates an
-estimator for :math:`\mu_{\mathrm{bkg}}` by analytically minimizing the
-likelihood function. This is called 'profile likelihood'.
-
-.. math::
-    \frac{\mathrm d \log L}{\mathrm d \mu_{\mathrm{bkg}}} = 0
-
-This yields a quadratic equation for :math:`\mu_{\mathrm{bkg}}`
-
-.. math::
-    \frac{\alpha\,n_{\mathrm{on}}}{\mu_{\mathrm{sig}}+\alpha
-    \mu_{\mathrm{bkg}}} + \frac{n_{\mathrm{off}}}{\mu_{\mathrm{bkg}}} - (\alpha
-    + 1) = 0
-
-with the solution
-
-.. math::
-    \mu_{\mathrm{bkg}} = \frac{C + D}{2\alpha(\alpha + 1)}
-
-where
-
-.. math::
-    C = \alpha(n_{\mathrm{on}} + n_{\mathrm{off}}) - (\alpha+1)\mu_{\mathrm{sig}} \\
-    D^2 = C^2 + 4 (\alpha+1)\alpha n_{\mathrm{off}} \mu_{\mathrm{sig}}
-
-Goodness of fit
-^^^^^^^^^^^^^^^
-
-The best-fit value of the WStat as defined now contains no information about the
-goodness of the fit. We consider the likelihood of the data
-:math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}` under the expectation of
-:math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}`,
-
-.. math::
-    L (n_{\mathrm{on}}, n_{\mathrm{off}}; n_{\mathrm{on}}, n_{\mathrm{off}}) =
-    \frac{n_{\mathrm{on}}^{n_{\mathrm{on}}}}{n_{\mathrm{on}} !}
-    \exp{(-n_{\mathrm{on}})}\times
-    \frac{n_{\mathrm{off}}^{n_{\mathrm{off}}}}{n_{\mathrm{off}} !}
-    \exp{(-n_{\mathrm{off}})}
-
-and add twice the log likelihood
-
-.. math::
-     2 \log L (n_{\mathrm{on}}, n_{\mathrm{off}}; n_{\mathrm{on}},
-     n_{\mathrm{off}}) = 2 (n_{\mathrm{on}} ( \log{(n_{\mathrm{on}})} - 1 ) +
-     n_{\mathrm{off}} ( \log{(n_{\mathrm{off}})} - 1))
-
-to WStat. In doing so, we are computing the likelihood ratio:
-
-.. math::
-    -2 \log \frac{L(n_{\mathrm{on}},n_{\mathrm{off}},\alpha;
-    \mu_{\mathrm{sig}},\mu_{\mathrm{bkg}})}
-    {L(n_{\mathrm{on}},n_{\mathrm{off}};n_{\mathrm{on}},n_{\mathrm{off}})}
-
-Intuitively, this log-likelihood ratio should asymptotically behave like a
-chi-square with ``m-n`` degrees of freedom, where ``m`` is the number of
-measurements and ``n`` the number of model parameters.
-
-Final result
-^^^^^^^^^^^^
+The WStat fit statistics is given by the following formula:
 
 .. math::
     W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
-    n_{\mathrm{on}} - n_{\mathrm{off}} - n_{\mathrm{on}}
+    n_{\mathrm{on}} - n_{\mathrm{off}} - & n_{\mathrm{on}}
     (\log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}}) -
-    \log{(n_{\mathrm{on}})}}) - n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}})} -
+    \log{(n_{\mathrm{on}})}})\\
+    -& n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}})} -
     \log{(n_{\mathrm{off}})})\big)
 
-Special cases
-^^^^^^^^^^^^^
+To see how to derive it see the :ref:`wstat derivation<wstat_derivation>`.
 
-The above formula is undefined if :math:`n_{\mathrm{on}}` or
-:math:`n_{\mathrm{off}}` are equal to zero, because of the :math:`n\log{{n}}`
-terms, that were introduced by adding the goodness of fit terms. These cases are
-treated as follows.
+The WStat statistic is implemented in `~gammapy.stats.wstat` and is used as a `stat`
+function by the `~gammapy.cube.MapDatasetOnOff` and the `~gammapy.spectrum.SpectrumDatasetOnOff`.
 
-If :math:`n_{\mathrm{on}} = 0` the likelihood formulae read
 
-.. math::
-    L (0, n_{\mathrm{off}}, \alpha; \mu_{\mathrm{sig}}, \mu_{\mathrm{bkg}}) =
-    \exp{(-(\mu_{\mathrm{sig}}+\alpha \mu_{\mathrm{bkg}}))}\times
-    \frac{(\mu_{\mathrm{bkg}})^{n_{\mathrm{off}}}}{n_{\mathrm{off}}
-    !}\exp{(-\mu_{\mathrm{bkg}})},
+Caveat
+^^^^^^
 
-and
+- Since WStat takes into account background estimation uncertainties and makes no
+ assumption such as a background model, it usually gives larger statistical
+ uncertainties on the fitted parameters. If a background model exists, to properly
+ compare with parameters estimated using the Cash statistics, one should include
+ some systematic uncertainty on the background model.
 
-.. math::
-    L (0, n_{\mathrm{off}}; 0, n_{\mathrm{off}}) =
-    \frac{n_{\mathrm{off}}^{n_{\mathrm{off}}}}{n_{\mathrm{off}} !}
-    \exp{(-n_{\mathrm{off}})}
-
-WStat is derived by taking 2 times the negative log likelihood and adding the
-goodness of fit term as ever
-
-.. math::
-    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
-    n_{\mathrm{off}} - n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}})} -
-    \log{(n_{\mathrm{off}})})\big)
-
-Note that this is the limit of the original Wstat formula for
-:math:`n_{\mathrm{on}} \rightarrow 0`.
-
-The analytical result for
-:math:`\mu_{\mathrm{bkg}}` in this case reads:
-
-.. math::
-    \mu_{\mathrm{bkg}} = \frac{n_{\mathrm{off}}}{\alpha + 1}
-
-When inserting this into the WStat we find the simplified expression.
-
-.. math::
-    W = 2\big(\mu_{\mathrm{sig}} + n_{\mathrm{off}} \log{(1 + \alpha)}\big)
-
-If :math:`n_{\mathrm{off}} = 0` Wstat becomes
-
-.. math::
-    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
-    n_{\mathrm{on}} - n_{\mathrm{on}} (\log{(\mu_{\mathrm{sig}} + \alpha
-    \mu_{\mathrm{bkg}}) - \log{(n_{\mathrm{on}})}})
-
-and
-
-.. math::
-    \mu_{\mathrm{bkg}} = \frac{n_{\mathrm{on}}}{1+\alpha} -
-    \frac{\mu_{\mathrm{sig}}}{\alpha}
-
-For :math:`\mu_{\mathrm{sig}} > n_{\mathrm{on}} (\frac{\alpha}{1 + \alpha})`,
-:math:`\mu_{\mathrm{bkg}}` becomes negative which is unphysical.
-
-Therefore we distinct two cases. The physical one where
-
-:math:`\mu_{\mathrm{sig}} < n_{\mathrm{on}} (\frac{\alpha}{1 + \alpha})`.
-
-is straightforward and gives
-
-.. math::
-    W = -2\big(\mu_{\mathrm{sig}} \left(\frac{1}{\alpha}\right) +
-    n_{\mathrm{on}} \log{\left(\frac{\alpha}{1 + \alpha}\right)\big)}
-
-For the unphysical case, we set :math:`\mu_{\mathrm{bkg}}=0` and arrive at
-
-.. math::
-    W = 2\big(\mu_{\mathrm{sig}} + n_{\mathrm{on}}(\log{(n_{\mathrm{on}})} -
-    \log{(\mu_{\mathrm{sig}})} - 1)\big)
-
+- Note also that at very low counts, WStat is known to result in biased estimates.
+ This can be an issue when studying the high energy behaviour of faint sources. When
+ performing spectral fits with WStat, it is recommended to randomize observations
+ and check whether the resulting fitted parameters distributions are consistent
+ with the input values.
 
 Example
 ^^^^^^^
