@@ -304,8 +304,10 @@ class Analysis:
         bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
         safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "aeff-max"])
 
+        e_true = self._make_energy_axis(datasets_settings.geom.axes.energy_true).edges
+
         reference = SpectrumDataset.create(
-            e_reco=e_reco, e_true=np.logspace(-2, 2.5, 109) * u.TeV, region=on_region
+            e_reco=e_reco, e_true=e_true, region=on_region
         )
 
         datasets = []
