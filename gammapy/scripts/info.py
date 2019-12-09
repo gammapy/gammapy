@@ -35,7 +35,7 @@ GAMMAPY_DEPENDENCIES = [
     "parfive",
 ]
 
-GAMMAPY_ENV_VARIABLES = ["GAMMAPY_DATA", "GAMMAPY_EXTRA"]
+GAMMAPY_ENV_VARIABLES = ["GAMMAPY_DATA"]
 
 
 @click.command(name="info")
