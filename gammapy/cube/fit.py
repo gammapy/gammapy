@@ -14,8 +14,8 @@ from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
-from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
+from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.spectrum import SpectrumDataset
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
