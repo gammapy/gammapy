@@ -66,6 +66,10 @@
     - gammapy_maps
 - name: modeling
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/modeling.ipynb
+- name: modeling_2D
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/modelin_2D.ipynb
+  datasets:
+    - cta-1dc
 - name: models
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/models.ipynb
 - name: light_curve
