@@ -54,10 +54,6 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/hess.ipynb
   datasets:
     - hess-dl3-dr1
-- name: image_analysis
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/image_analysis.ipynb
-  datasets:
-    - cta-1dc
 - name: maps
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/maps.ipynb
   datasets:
