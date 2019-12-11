@@ -204,5 +204,5 @@ def test_mde_meta():
 
     assert meta["MJDREFI"] == 51544
     assert meta["MJDREFF"] == 0.0007428703684126958
-    assert meta["TSTOP"] == 29999.999999720603
+    assert meta["TSTOP"] == 35999.99999979045
     assert meta["RADECSYS"] == "icrs"

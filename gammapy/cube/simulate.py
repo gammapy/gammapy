@@ -3,6 +3,7 @@
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
+import gammapy
 from gammapy.cube import (
     MapDataset,
     PSFMap,
@@ -253,7 +254,6 @@ class MapDatasetEventSampler:
         # See: https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
         meta = {}
         # TODO: currently additional meta data is missing
-        import gammapy
 
         meta["MJDREFI"] = int(dataset.gti.time_ref.mjd)
         meta["MJDREFF"] = dataset.gti.time_ref.mjd % 1
@@ -268,20 +268,16 @@ class MapDatasetEventSampler:
         meta["OBS_ID"] = observation.obs_id
 
         meta["TSTART"] = (
-            ((dataset.gti.time_start.mjd - dataset.gti.time_ref.mjd) * u.day)
-            .to(u.s)
-            .value[0]
+            ((observation.tstart.mjd - dataset.gti.time_ref.mjd) * u.day).to(u.s).value
         )
         meta["TSTOP"] = (
-            ((dataset.gti.time_stop.mjd - dataset.gti.time_ref.mjd) * u.day)
-            .to(u.s)
-            .value[0]
+            ((observation.tstop.mjd - dataset.gti.time_ref.mjd) * u.day).to(u.s).value
         )
-        meta["ONTIME"] = dataset.gti.time_sum.value
-        meta["LIVETIME"] = observation.gti.time_sum.value
-        meta["DEADC"] = dataset.gti.time_sum.value / observation.gti.time_sum.value
-        meta["RA_PNT"] = observation.pointing_radec.icrs.ra.value
-        meta["DEC_PNT"] = observation.pointing_radec.icrs.dec.value
+        meta["ONTIME"] = observation.observation_time_duration.to("s").value
+        meta["LIVETIME"] = observation.observation_live_time_duration.to("s").value
+        meta["DEADC"] = observation.observation_dead_time_fraction
+        meta["RA_PNT"] = observation.pointing_radec.icrs.ra.deg
+        meta["DEC_PNT"] = observation.pointing_radec.icrs.dec.deg
 
         meta["EQUINOX"] = "J2000"
         meta["RADECSYS"] = "icrs"
@@ -295,20 +291,24 @@ class MapDatasetEventSampler:
 
         meta["OBSERVER"] = ""
         meta["CREATED"] = ""
-        meta["OBJECT"] = dataset.name
+        meta["OBJECT"] = ""
         meta["RA_OBJ"] = ""
         meta["DEC_OBJ"] = ""
         meta["OBS_MODE"] = ""
         meta["EV_CLASS"] = ""
         meta["TELAPSE"] = ""
 
-        meta["GEOLON"] = ""
-        meta["GEOLAT"] = ""
-        meta["ALTITUDE"] = ""
+        meta["GEOLON"] = 0
+        meta["GEOLAT"] = 0
+        meta["ALTITUDE"] = 0
+
+        for idx, model in enumerate(dataset.models):
+            meta["MID{:05d}".format(idx + 1)] = idx + 1
+            meta["MMN{:05d}".format(idx + 1)] = model.name
 
         return meta
 
-    def run(self, dataset, observation=None, edisp="True"):
+    def run(self, dataset, observation=None):
         """Run the event sampler, applying IRF corrections.
 
         Parameters
@@ -329,11 +329,10 @@ class MapDatasetEventSampler:
         events_src = self.sample_sources(dataset)
         events_src = self.sample_psf(dataset.psf, events_src)
 
-        if edisp == "True":
-            events_src = self.sample_edisp(dataset.edisp, events_src)
+        events_src = self.sample_edisp(dataset.edisp, events_src)
 
         events = EventList.stack([events_bkg, events_src])
-        #         events.table["EVENT_ID"] =
+        events.table["EVENT_ID"] = np.arange(len(events.table))
         events.table.meta = self.event_list_meta(dataset, observation)
 
         return events
