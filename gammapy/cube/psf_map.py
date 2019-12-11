@@ -219,27 +219,21 @@ class PSFMap:
                 "EnergyDependentTablePSF can be extracted at one single position only."
             )
 
-        # axes ordering fixed. Could be changed.
-        pix_ener = np.arange(self.psf_map.geom.axes[1].nbin)
-        pix_rad = np.arange(self.psf_map.geom.axes[0].nbin)
+        energy = self.psf_map.geom.get_axis_by_name("energy").center
+        rad = self.psf_map.geom.get_axis_by_name("theta").center
 
-        # Convert position to pixels
-        pix_lon, pix_lat = self.psf_map.geom.to_image().coord_to_pix(position)
+        coords = {
+            "skycoord": position,
+            "energy": energy.reshape((-1, 1, 1, 1)),
+            "theta": rad.reshape((1, -1, 1, 1))
+        }
 
-        # Build the pixels tuple
-        pix = np.meshgrid(pix_lon, pix_lat, pix_rad, pix_ener)
-
-        # Interpolate in the PSF map. Squeeze to remove dimensions of length 1
-        psf_values = np.squeeze(
-            self.psf_map.interp_by_pix(pix) * u.Unit(self.psf_map.unit)
-        )
-
-        energies = self.psf_map.geom.axes[1].center
-        rad = self.psf_map.geom.axes[0].center
+        data = self.psf_map.interp_by_coord(coords)
+        psf_values = u.Quantity(data[:, :, 0, 0], unit=self.psf_map.unit, copy=False)
 
         if self.exposure_map is not None:
             exposure_3d = self.exposure_map.slice_by_idx({"theta": 0})
-            coords = {"skycoord": position, "energy": energies.reshape((-1, 1, 1))}
+            coords = {"skycoord": position, "energy": energy.reshape((-1, 1, 1))}
             data = exposure_3d.interp_by_coord(coords).squeeze()
             exposure = data * self.exposure_map.unit
         else:
@@ -247,7 +241,7 @@ class PSFMap:
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(
-            energy=energies, rad=rad, psf_value=psf_values.T, exposure=exposure
+            energy=energy, rad=rad, psf_value=psf_values, exposure=exposure
         )
 
     def get_psf_kernel(self, position, geom, max_radius=None, factor=4):
