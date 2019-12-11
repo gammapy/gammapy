@@ -603,3 +603,13 @@ def test_map_sampling():
     assert coords["lon"].unit == "deg"
     assert coords["lat"].unit == "deg"
     assert coords["energy"].unit == "TeV"
+
+
+def test_map_interp_one_bin():
+    m = WcsNDMap.create(npix=(2, 1))
+    m.data = np.array([1, 2])
+
+    coords = {"lon": 0, "lat": 0}
+    data = m.interp_by_coord(coords)
+    assert_allclose(data, 1.5)
+

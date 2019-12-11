@@ -17,6 +17,8 @@ class ScaledRegularGridInterpolator:
     The values are scaled before the interpolation and back-scaled after the
     interpolation.
 
+    Dimensions of length 1 are ignored in the interpolation of the data.
+
     Parameters
     ----------
     points : tuple of `~numpy.ndarray` or `~astropy.units.Quantity`
@@ -50,9 +52,10 @@ class ScaledRegularGridInterpolator:
 
         self.scale_points = [interpolation_scale(scale) for scale in points_scale]
         self.scale = interpolation_scale(values_scale)
+        self._include_dim = [len(p) > 1 for p in points]
 
-        points_scaled = tuple([scale(p) for p, scale in zip(points, self.scale_points)])
-        values_scaled = self.scale(values)
+        points_scaled = tuple([scale(p) for p, scale, _ in zip(points, self.scale_points, self._include_dim) if _])
+        values_scaled = self.scale(values).squeeze()
         self.axis = axis
 
         if extrapolate:
@@ -60,6 +63,7 @@ class ScaledRegularGridInterpolator:
             kwargs.setdefault("fill_value", None)
 
         if axis is None:
+            # print(points_scaled, values_scaled)
             self._interpolate = scipy.interpolate.RegularGridInterpolator(
                 points=points_scaled, values=values_scaled, **kwargs
             )
@@ -82,7 +86,7 @@ class ScaledRegularGridInterpolator:
             Clip values at zero after interpolation.
         """
 
-        points = tuple([scale(p) for scale, p in zip(self.scale_points, points)])
+        points = tuple([scale(p) for scale, p, _ in zip(self.scale_points, points, self._include_dim) if _])
 
         if self.axis is None:
             points = np.broadcast_arrays(*points)
@@ -95,6 +99,7 @@ class ScaledRegularGridInterpolator:
 
         if clip:
             values = np.clip(values, 0, np.inf)
+
         return values
 
 

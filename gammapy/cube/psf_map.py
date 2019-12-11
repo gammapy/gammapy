@@ -232,9 +232,8 @@ class PSFMap:
         psf_values = u.Quantity(data[:, :, 0, 0], unit=self.psf_map.unit, copy=False)
 
         if self.exposure_map is not None:
-            exposure_3d = self.exposure_map.slice_by_idx({"theta": 0})
-            coords = {"skycoord": position, "energy": energy.reshape((-1, 1, 1))}
-            data = exposure_3d.interp_by_coord(coords).squeeze()
+            coords = {"skycoord": position, "energy": energy.reshape((-1, 1, 1)), "theta": 0 * u.deg}
+            data = self.exposure_map.interp_by_coord(coords).squeeze()
             exposure = data * self.exposure_map.unit
         else:
             exposure = None
