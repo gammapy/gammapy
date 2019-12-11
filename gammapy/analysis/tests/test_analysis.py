@@ -165,6 +165,7 @@ def test_analysis_1d():
     assert_allclose(dnde[0].value, 8.03604e-12, rtol=1e-2)
     assert_allclose(dnde[-1].value, 5.382879e-21, rtol=1e-2)
 
+
 @requires_data()
 def test_geom_analysis_1d():
     cfg = """
@@ -192,8 +193,8 @@ def test_geom_analysis_1d():
 
     assert len(analysis.datasets) == 1
     assert len(analysis.datasets[0].aeff.energy.center) == 50
-    assert_allclose(analysis.datasets[0].aeff.energy.edges[0].to_value('TeV'), 0.03)
-    assert_allclose(analysis.datasets[0].aeff.energy.edges[-1].to_value('TeV'), 100)
+    assert_allclose(analysis.datasets[0].aeff.energy.edges[0].to_value("TeV"), 0.03)
+    assert_allclose(analysis.datasets[0].aeff.energy.edges[-1].to_value("TeV"), 100)
 
 
 @requires_data()
