@@ -86,6 +86,10 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/pulsar_analysis.ipynb
   datasets:
     - cta-1dc
+- name: ring_background
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/ring_background.ipynb
+  datasets:
+    - hess-dl3-dr1
 - name: sed_fitting
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/sed_fitting.ipynb
   datasets:
