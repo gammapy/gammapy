@@ -202,7 +202,7 @@ def test_mde_meta():
     events = test_mde_run()
     meta = events.table.meta
 
-    assert meta["MJDREFI"] == 51544
-    assert meta["MJDREFF"] == 0.0007428703684126958
-    assert meta["TSTOP"] == 35999.99999979045
+    assert meta["RA_PNT"] == 266.4049882865447
+    assert meta["ONTIME"] == 36000.0
+    assert meta["OBS_ID"] == 1001
     assert meta["RADECSYS"] == "icrs"

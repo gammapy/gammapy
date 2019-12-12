@@ -253,17 +253,13 @@ class MapDatasetEventSampler:
         """
         # See: https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
         meta = {}
-        # TODO: currently additional meta data is missing
 
-        meta["MJDREFI"] = int(dataset.gti.time_ref.mjd)
-        meta["MJDREFF"] = dataset.gti.time_ref.mjd % 1
-        meta["TIMEUNIT"] = "s"
-        meta["TIMESYS"] = "TT"
-        meta["TIMEREF"] = "LOCAL"
-        #         meta["DATE-OBS"] = dataset.gti.time_start.isot[0][0:10]
-        #         meta["DATE-END"] = dataset.gti.time_stop.isot[0][0:10]
-        meta["TIME-OBS"] = dataset.gti.time_start.isot[0]
-        meta["TIME-END"] = dataset.gti.time_stop.isot[0]
+        meta["HDUCLAS1"] = "EVENTS"
+        meta[
+            "HDUDOC"
+        ] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
+        meta["HDUVER"] = "0.2"
+        meta["HDUCLASS"] = "GADF"
 
         meta["OBS_ID"] = observation.obs_id
 
@@ -276,27 +272,39 @@ class MapDatasetEventSampler:
         meta["ONTIME"] = observation.observation_time_duration.to("s").value
         meta["LIVETIME"] = observation.observation_live_time_duration.to("s").value
         meta["DEADC"] = observation.observation_dead_time_fraction
+
         meta["RA_PNT"] = observation.pointing_radec.icrs.ra.deg
         meta["DEC_PNT"] = observation.pointing_radec.icrs.dec.deg
 
         meta["EQUINOX"] = "J2000"
         meta["RADECSYS"] = "icrs"
         # TO DO: these keywords should be taken from the IRF of the dataset
-        meta["ORIGIN"] = ""
+        meta["ORIGIN"] = "Gammapy"
         meta["TELESCOP"] = ""
         meta["INSTRUME"] = ""
         #
-
         meta["CREATOR"] = "Gammapy {}".format(gammapy.__version__)
 
-        meta["OBSERVER"] = ""
-        meta["CREATED"] = ""
-        meta["OBJECT"] = ""
-        meta["RA_OBJ"] = ""
-        meta["DEC_OBJ"] = ""
-        meta["OBS_MODE"] = ""
-        meta["EV_CLASS"] = ""
-        meta["TELAPSE"] = ""
+        #        TO COMPLETE
+        #        meta["OBSERVER"] = ""
+        #        meta["CREATED"] = ""
+        #        meta["OBJECT"] = ""
+        #        meta["RA_OBJ"] = ""
+        #        meta["DEC_OBJ"] = ""
+        #        meta["OBS_MODE"] = ""
+        #        meta["EV_CLASS"] = ""
+        #        meta["TELAPSE"] = ""
+        #
+        #        meta["MJDREFI"] = int(dataset.gti.time_ref.mjd)
+        #        meta["MJDREFF"] = dataset.gti.time_ref.mjd % 1
+        #        meta["TIMEUNIT"] = "s"
+        #        meta["TIMESYS"] = "TT"
+        #        meta["TIMEREF"] = "LOCAL"
+        #        #         meta["DATE-OBS"] = dataset.gti.time_start.isot[0][0:10]
+        #        #         meta["DATE-END"] = dataset.gti.time_stop.isot[0][0:10]
+        #        meta["TIME-OBS"] = dataset.gti.time_start.isot[0]
+        #        meta["TIME-END"] = dataset.gti.time_stop.isot[0]
+        #
 
         meta["GEOLON"] = 0
         meta["GEOLAT"] = 0
