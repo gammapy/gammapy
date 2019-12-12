@@ -366,7 +366,9 @@ class EDispMap:
 
         sample_edisp = InverseCDFSampler(pdf_edisp, axis=1, random_state=random_state)
         pix_edisp = sample_edisp.sample_axis()
-        energy_reco = migra_axis.pix_to_coord(pix_edisp)
+        migra = migra_axis.pix_to_coord(pix_edisp)
+
+        energy_reco = map_coord["energy"] * migra
 
         return MapCoord.create({"skycoord": map_coord.skycoord, "energy": energy_reco})
 

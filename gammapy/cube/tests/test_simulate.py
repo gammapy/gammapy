@@ -162,7 +162,7 @@ def test_mde_sample_edisp():
     events = sampler.sample_edisp(edisp_map, events)
 
     assert len(events.table) == 726
-    assert_allclose(events.table["ENERGY"][0], 1.0600765557667795, rtol=1e-5)
+    assert_allclose(events.table["ENERGY"][0], 10.2162, rtol=1e-5)
     assert events.table["ENERGY"].unit == "TeV"
 
     assert_allclose(events.table["RA_TRUE"][0], 266.3541109343822, rtol=1e-5)

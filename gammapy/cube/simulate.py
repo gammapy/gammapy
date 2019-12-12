@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations"""
 import numpy as np
+import copy
 import astropy.units as u
 from astropy.table import Table
 import gammapy
@@ -140,6 +141,7 @@ class MapDatasetEventSampler:
         """
         events_all = []
         for idx, evaluator in enumerate(dataset._evaluators):
+            evaluator = copy.deepcopy(evaluator)
             evaluator.edisp = None
             evaluator.psf = None
             npred = evaluator.compute_npred()
@@ -203,7 +205,7 @@ class MapDatasetEventSampler:
         )
 
         coords_reco = edisp_map.sample_coord(coord, self.random_state)
-        events.table["ENERGY"] = coords_reco["energy"] * u.TeV
+        events.table["ENERGY"] = coords_reco["energy"]
         return events
 
     def sample_psf(self, psf_map, events):

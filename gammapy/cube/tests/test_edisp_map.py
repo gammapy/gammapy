@@ -132,7 +132,8 @@ def test_sample_coord():
     coords_corrected = edisp_map.sample_coord(map_coord=coords)
 
     assert len(coords_corrected["energy"]) == 2
-    assert_allclose(coords_corrected["energy"], [0.9961658, 1.11269299], rtol=1e-5)
+    assert coords_corrected["energy"].unit == "TeV"
+    assert_allclose(coords_corrected["energy"].value, [0.9961658, 3.338079], rtol=1e-5)
 
 
 @pytest.mark.parametrize("position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"])
