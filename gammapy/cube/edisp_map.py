@@ -391,7 +391,7 @@ class EDispMap:
         migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
 
         geom = WcsGeom.create(
-            npix=(4, 2), proj="CAR", binsz=90, axes=[migra_axis, energy_axis_true]
+            npix=(2, 1), proj="CAR", binsz=180, axes=[migra_axis, energy_axis_true]
         )
 
         return cls.from_geom(geom)

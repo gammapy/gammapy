@@ -409,7 +409,7 @@ class PSFMap:
         rad_axis = MapAxis.from_nodes(table_psf.rad, name="theta")
 
         geom = WcsGeom.create(
-            npix=(4, 2), proj="CAR", binsz=180, axes=[rad_axis, energy_axis]
+            npix=(2, 1), proj="CAR", binsz=180, axes=[rad_axis, energy_axis]
         )
         coords = geom.get_coord()
 
