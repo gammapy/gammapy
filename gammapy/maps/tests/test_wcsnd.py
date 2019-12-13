@@ -341,6 +341,18 @@ def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes, keepd
     if m.geom.is_regular:
         assert_allclose(np.nansum(m.data), np.nansum(msum.data))
 
+    # Check summing over a specific axis
+    ax1 = MapAxis.from_nodes([1, 2, 3, 4], name="ax1")
+    ax2 = MapAxis.from_nodes([5, 6, 7], name="ax2")
+    ax3 = MapAxis.from_nodes([8, 9], name="ax3")
+    geom = WcsGeom.create(npix=(5, 5), axes=[ax1, ax2, ax3])
+    m1 = Map.from_geom(geom=geom)
+    m1.data = np.ones(m1.data.shape)
+    m2 = m1.sum_over_axes(axes=["ax1"], keepdims=True)
+
+    assert_allclose(m2.geom.data_shape, m2.geom.data_shape)
+    assert_allclose(m2.data[0][0][0][0][0], 4.0)
+
 
 @pytest.mark.parametrize(
     ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
@@ -614,4 +626,3 @@ def test_map_interp_one_bin():
 
     assert data.shape == (2,)
     assert_allclose(data, 1.5)
-

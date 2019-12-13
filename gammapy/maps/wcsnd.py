@@ -205,7 +205,7 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
 
-    def sum_over_axes(self, keepdims=False):
+    def sum_over_axes(self, axes="all", keepdims=False):
         """To sum map values over all non-spatial axes.
 
         Parameters
@@ -219,10 +219,10 @@ class WcsNDMap(WcsMap):
         map_out : WcsNDMap
             Map with non-spatial axes summed over
         """
-        return self.reduce_over_axes(func=np.add, keepdims=keepdims)
+        return self.reduce_over_axes(func=np.add, axes=axes, keepdims=keepdims)
 
-    def reduce_over_axes(self, func, keepdims=False):
-        """Reduce map over all non spatial axes
+    def reduce_over_axes(self, func, axes="all", keepdims=False):
+        """Reduce map over non-spatial axes
 
         Parameters
         ----------
@@ -231,21 +231,36 @@ class WcsNDMap(WcsMap):
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
             the map with a single bin
+        axes: list of MapAxis
 
         Returns
         -------
-        map_out : WcsNDMap
+        map_out : ~WcsNDMap
             Map with non-spatial axes reduced
         """
-        axis = tuple(range(self.data.ndim - 2))
+
+        # The axes to reduce over
+        axes_reduce = []  # indices of the axes to reduce over
+        len_ax = self.data.ndim - 2
+        if axes == "all":
+            axes_reduce = range(len_ax)
+        else:
+            for ax in axes:
+                axes_reduce.append(self.geom.get_axis_index_by_name(ax))
+        axes_reduce = list(axes_reduce)
+
         geom = self.geom.to_image()
-        if keepdims:
-            for ax in self.geom.axes:
-                geom = geom.to_cube([ax.squash()])
+        for ind in range(len_ax):
+            if ind in axes_reduce:
+                if keepdims:
+                    geom = geom.to_cube([self.geom.axes[ind].squash()])
+            else:
+                geom = geom.to_cube([self.geom.axes[ind]])
+
+        ax = tuple(np.subtract(len_ax - 1, axes_reduce))
         data = func.reduce(
-            self.data, axis=axis, keepdims=keepdims, where=~np.isnan(self.data)
+            self.data, axis=ax, keepdims=keepdims, where=~np.isnan(self.data)
         )
-        # TODO: summing over the axis can change the unit, handle this correctly
         return self._init_copy(geom=geom, data=data)
 
     def pad(self, pad_width, mode="constant", cval=0, order=1):
