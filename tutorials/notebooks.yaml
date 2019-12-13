@@ -54,10 +54,6 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/hess.ipynb
   datasets:
     - hess-dl3-dr1
-- name: image_analysis
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/image_analysis.ipynb
-  datasets:
-    - cta-1dc
 - name: maps
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/maps.ipynb
   datasets:
@@ -66,6 +62,10 @@
     - gammapy_maps
 - name: modeling
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/modeling.ipynb
+- name: modeling_2D
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/modelin_2D.ipynb
+  datasets:
+    - cta-1dc
 - name: models
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/models.ipynb
 - name: light_curve
@@ -82,6 +82,10 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/pulsar_analysis.ipynb
   datasets:
     - cta-1dc
+- name: ring_background
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/ring_background.ipynb
+  datasets:
+    - hess-dl3-dr1
 - name: sed_fitting
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/sed_fitting.ipynb
   datasets:

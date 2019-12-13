@@ -1165,8 +1165,8 @@ class MapDatasetOnOff(MapDataset):
             A MapDatasetOnOff containing zero filled maps
         """
         maps = {}
-        for name in ["counts", "counts_off", "acceptance", "acceptance_off"]:
-            maps[name] = Map.from_geom(geom, unit="")
+        for aname in ["counts", "counts_off", "acceptance", "acceptance_off"]:
+            maps[aname] = Map.from_geom(geom, unit="")
 
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
         edisp = EDispMap.from_geom(geom_edisp)
