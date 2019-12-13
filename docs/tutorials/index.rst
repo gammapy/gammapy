@@ -43,7 +43,8 @@ Notebooks
    ../notebooks/light_curve_flare.ipynb
    ../notebooks/cta_sensitivity.ipynb
    ../notebooks/spectrum_simulation.ipynb
-   ../notebooks/image_analysis.ipynb
+   ../notebooks/modeling_2D.ipynb
+   ../notebooks/ring_background.ipynb
    ../notebooks/overview.ipynb
    ../notebooks/maps.ipynb
    ../notebooks/modeling.ipynb
@@ -74,8 +75,9 @@ interface and with the lower level API:
 
 *2-dim sky image analysis*
 
-- `2D map analysis <../notebooks/image_analysis.html>`__ | *image_analysis.ipynb*
+- `Ring background map creation <../notebooks/ring_background.html>`__ | *ring_background.ipynb*
 - `Source detection <../notebooks/detect.html>`__ | *detect.ipynb*
+- `2D map fitting <../notebooks/modeling_2D.html>`__ | *modeling_2D.ipynb*
 
 *1-dim spectral analysis*
 
