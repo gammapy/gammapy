@@ -350,7 +350,7 @@ def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes, keepd
     m1.data = np.ones(m1.data.shape)
     m2 = m1.sum_over_axes(axes=["ax1"], keepdims=True)
 
-    assert_allclose(m2.geom.data_shape, m2.geom.data_shape)
+    assert_allclose(m2.geom.data_shape, (2,3,1,5,5))
     assert_allclose(m2.data[0][0][0][0][0], 4.0)
 
 
