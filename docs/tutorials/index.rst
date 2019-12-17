@@ -77,6 +77,7 @@ The following tutorials expose common tasks.
 - `Fermi-LAT with Gammapy <../notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
 
 *1D spectral analysis*
+
 - `Spectral analysis  <../notebooks/spectrum_analysis.html>`__ | *spectrum_analysis.ipynb*
 - `Flux point fitting <../notebooks/sed_fitting.html>`__ | *sed_fitting.ipynb*
 
@@ -100,7 +101,8 @@ The following tutorials expose common tasks.
 - `1D spectrum simulation <../notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
 - `3D map simulation <../notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
 
-**Advanced tutorials**
+Advanced tutorials
+------------------
 
 .. toctree::
    :hidden:
@@ -119,9 +121,7 @@ The following tutorials expose common tasks.
 
 
 - `Source detection <../notebooks/detect.html>`__ | *detect.ipynb*
-
 - `Multi instrument joint 3D and 1D analysis <../notebooks/analysis_mwl.html>`__ | *analysis_mwl.ipynb*
-
 - `Point source sensitivity <../notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
 
 
