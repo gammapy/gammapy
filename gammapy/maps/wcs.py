@@ -776,6 +776,37 @@ class WcsGeom(Geom):
             cutout_info=self.cutout_info,
         )
 
+    def drop(self, axis):
+        """Drop an axis from the geom.
+
+        Parameters
+        ----------
+        axis : str
+            Name of the axis to remove.
+
+        Returns
+            -------
+        geom : `Geom`
+            New geom with the axis removed.
+        """
+        _ = self.get_axis_by_name(axis)
+        npix = (np.max(self._npix[0]), np.max(self._npix[1]))
+        cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
+
+        axes = []
+        for ax in copy.deepcopy(self.axes):
+            if ax.name == axis:
+                continue
+            axes.append(ax)
+
+        return self.__class__(
+            self._wcs.deepcopy(),
+            npix,
+            cdelt=cdelt,
+            axes=axes,
+            cutout_info=self.cutout_info,
+        )
+
     def pad(self, pad_width):
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)

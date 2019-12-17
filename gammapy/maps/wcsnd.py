@@ -205,7 +205,7 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
 
-    def sum_over_axes(self, keepdims=False):
+    def sum_over_axes(self, axes=None, keepdims=False):
         """To sum map values over all non-spatial axes.
 
         Parameters
@@ -213,39 +213,73 @@ class WcsNDMap(WcsMap):
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
             the map with a single bin
+        axes: list
+            Names of MapAxis to reduce over
+            If None, all will summed over
 
         Returns
         -------
-        map_out : WcsNDMap
+        map_out : `~WcsNDMap`
             Map with non-spatial axes summed over
         """
-        return self.reduce_over_axes(func=np.add, keepdims=keepdims)
+        return self.reduce_over_axes(func=np.add, axes=axes, keepdims=keepdims)
 
-    def reduce_over_axes(self, func, keepdims=False):
-        """Reduce map over all non spatial axes
+    def reduce_over_axes(self, func=np.add, keepdims=False, axes=None):
+        """Reduce map over non-spatial axes
 
         Parameters
         ----------
-        func : ~numpy.ufunc
+        func : `~numpy.ufunc`
+            Function to use for reducing the data.
+        keepdims : bool, optional
+            If this is set to true, the axes which are summed over are left in
+            the map with a single bin
+        axes: list
+            Names of MapAxis to reduce over
+            If None, all will reduced
+
+        Returns
+        -------
+        map_out : `~WcsNDMap`
+            Map with non-spatial axes reduced
+        """
+        if axes is None:
+            axes = [ax.name for ax in self.geom.axes]
+
+        map_out = self.copy()
+        for ax in axes:
+            map_out = map_out.reduce(ax, func=func, keepdims=keepdims)
+        return map_out
+
+    def reduce(self, axis, func=np.add, keepdims=False):
+        """Reduce map over a single non-spatial axis
+
+        Parameters
+        ----------
+        axis: str
+            The name of the axis to reduce over
+        func : `~numpy.ufunc`
             Function to use for reducing the data.
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
             the map with a single bin
 
+
         Returns
         -------
-        map_out : WcsNDMap
-            Map with non-spatial axes reduced
+        map_out : `~WcsNDMap`
+            Map with the given non-spatial axes reduced
         """
-        axis = tuple(range(self.data.ndim - 2))
-        geom = self.geom.to_image()
         if keepdims:
-            for ax in self.geom.axes:
-                geom = geom.to_cube([ax.squash()])
+            geom = self.geom.squash(axis=axis)
+        else:
+            geom = self.geom.drop(axis=axis)
+
+        names = [ax.name for ax in reversed(self.geom.axes)]
+        idx = names.index(axis)
         data = func.reduce(
-            self.data, axis=axis, keepdims=keepdims, where=~np.isnan(self.data)
+            self.data, axis=idx, keepdims=keepdims, where=~np.isnan(self.data)
         )
-        # TODO: summing over the axis can change the unit, handle this correctly
         return self._init_copy(geom=geom, data=data)
 
     def pad(self, pad_width, mode="constant", cval=0, order=1):
