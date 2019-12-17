@@ -219,17 +219,17 @@ class WcsNDMap(WcsMap):
 
         Returns
         -------
-        map_out : WcsNDMap
+        map_out : `~WcsNDMap`
             Map with non-spatial axes summed over
         """
         return self.reduce_over_axes(func=np.add, axes=axes, keepdims=keepdims)
 
-    def reduce_over_axes(self, func, axes=None, keepdims=False):
+    def reduce_over_axes(self, func=np.add, keepdims=False, axes=None):
         """Reduce map over non-spatial axes
 
         Parameters
         ----------
-        func : ~numpy.ufunc
+        func : `~numpy.ufunc`
             Function to use for reducing the data.
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
@@ -240,7 +240,7 @@ class WcsNDMap(WcsMap):
 
         Returns
         -------
-        map_out : ~WcsNDMap
+        map_out : `~WcsNDMap`
             Map with non-spatial axes reduced
         """
         if axes is None:
@@ -248,7 +248,7 @@ class WcsNDMap(WcsMap):
 
         map_out = self.copy()
         for ax in axes:
-            map_out = map_out.reduce(ax, keepdims=keepdims)
+            map_out = map_out.reduce(ax, func=func, keepdims=keepdims)
         return map_out
 
     def reduce(self, axis, func=np.add, keepdims=False):
@@ -258,7 +258,7 @@ class WcsNDMap(WcsMap):
         ----------
         axis: str
             The name of the axis to reduce over
-        func : ~numpy.ufunc
+        func : `~numpy.ufunc`
             Function to use for reducing the data.
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
@@ -267,7 +267,7 @@ class WcsNDMap(WcsMap):
 
         Returns
         -------
-        map_out : ~WcsNDMap
+        map_out : `~WcsNDMap`
             Map with the given non-spatial axes reduced
         """
         if keepdims:
