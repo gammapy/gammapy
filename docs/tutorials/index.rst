@@ -61,17 +61,12 @@ Core tutorials
    ../notebooks/spectrum_simulation.ipynb
    ../notebooks/modeling_2D.ipynb
    ../notebooks/ring_background.ipynb
-   ../notebooks/overview.ipynb
-   ../notebooks/maps.ipynb
-   ../notebooks/modeling.ipynb
-   ../notebooks/models.ipynb
-   ../notebooks/catalog.ipynb
-
 
 The following tutorials expose common tasks.
 
 *Accessing and exploring DL3 data*
 
+- `Overview <../notebooks/overview.html>`__  | *overview.ipynb*
 - `CTA with Gammapy <../notebooks/cta.html>`__ | *cta.ipynb*
 - `H.E.S.S. with Gammapy <../notebooks/hess.html>`__ |  *hess.ipynb*
 - `Fermi-LAT with Gammapy <../notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
@@ -107,7 +102,7 @@ Advanced tutorials
 .. toctree::
    :hidden:
 
-       ../notebooks/analysis_mwl.ipynb
+   ../notebooks/analysis_mwl.ipynb
    ../notebooks/detect.ipynb
    ../notebooks/cta_sensitivity.ipynb
    ../notebooks/spectrum_simulation.ipynb
@@ -119,19 +114,31 @@ Advanced tutorials
    ../notebooks/models.ipynb
    ../notebooks/catalog.ipynb
 
+*Image analysis*
 
 - `Source detection <../notebooks/detect.html>`__ | *detect.ipynb*
+
+*Multi-instrument analysis*
+
 - `Multi instrument joint 3D and 1D analysis <../notebooks/analysis_mwl.html>`__ | *analysis_mwl.ipynb*
+
+*Sensitivity estimation and observation simulation*
+
 - `Point source sensitivity <../notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
 
+*Modeling and fitting in gammapy*
 
-**Gammapy package**
-
-- `Overview <../notebooks/overview.html>`__  | *overview.ipynb*
-- `Maps <../notebooks/maps.html>`__  | *maps.ipynb*
 - `Modeling and Fitting <../notebooks/modeling.html>`__  | *modeling.ipynb*
 - `Models Gallery <../notebooks/models.html>`__  | *models.ipynb*
+
+*Working with catalogs*
+
 - `Source catalogs <../notebooks/catalog.html>`__  | *catalog.ipynb*
+
+*Working with gammapy maps*
+
+- `Maps <../notebooks/maps.html>`__  | *maps.ipynb*
+
 
 .. _tutorials_scripts:
 
