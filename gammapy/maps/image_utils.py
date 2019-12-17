@@ -19,7 +19,7 @@ def _fftconvolve_wrap(kernel, data):
         norm = kernel.array.sum()
         return norm * scipy.ndimage.gaussian_filter(data, width)
     else:
-        return scipy.signal.fftconvolve(data, kernel.array, mode="same")
+        return scipy.signal.fftconvolve(data.astype(np.float32), kernel.array, mode="same")
 
 
 def scale_cube(data, kernels):

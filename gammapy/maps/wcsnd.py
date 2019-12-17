@@ -588,7 +588,7 @@ class WcsNDMap(WcsMap):
 
         for img, idx in self.iter_by_image():
             idx = Ellipsis if kernel.ndim == 2 else idx
-            convolved_data[idx] = conv_function(img, kernel[idx], **kwargs)
+            convolved_data[idx] = conv_function(img.astype(np.float32), kernel[idx], **kwargs)
 
         return self._init_copy(data=convolved_data)
 
