@@ -69,7 +69,6 @@ The following tutorials expose common tasks.
 - `Overview <../notebooks/overview.html>`__  | *overview.ipynb*
 - `CTA with Gammapy <../notebooks/cta.html>`__ | *cta.ipynb*
 - `H.E.S.S. with Gammapy <../notebooks/hess.html>`__ |  *hess.ipynb*
-- `Fermi-LAT with Gammapy <../notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
 
 *1D spectral analysis*
 
@@ -121,6 +120,7 @@ Advanced tutorials
 *Multi-instrument analysis*
 
 - `Multi instrument joint 3D and 1D analysis <../notebooks/analysis_mwl.html>`__ | *analysis_mwl.ipynb*
+- `A Fermi-LAT analysis with Gammapy <../notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
 
 *Sensitivity estimation and observation simulation*
 
