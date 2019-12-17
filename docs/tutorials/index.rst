@@ -21,37 +21,14 @@ handbook`_ and the `Astropy Hands-On Tutorial`_.
 
 .. _tutorials_notebooks:
 
-Notebooks
----------
+Getting started
+---------------
 
 .. toctree::
    :hidden:
 
    ../notebooks/analysis_1.ipynb
    ../notebooks/analysis_2.ipynb
-   ../notebooks/cta.ipynb
-   ../notebooks/hess.ipynb
-   ../notebooks/fermi_lat.ipynb
-   ../notebooks/cta_data_analysis.ipynb
-   ../notebooks/analysis_3d.ipynb
-   ../notebooks/analysis_mwl.ipynb
-   ../notebooks/simulate_3d.ipynb
-   ../notebooks/detect.ipynb
-   ../notebooks/spectrum_analysis.ipynb
-   ../notebooks/sed_fitting.ipynb
-   ../notebooks/light_curve.ipynb
-   ../notebooks/light_curve_flare.ipynb
-   ../notebooks/cta_sensitivity.ipynb
-   ../notebooks/spectrum_simulation.ipynb
-   ../notebooks/modeling_2D.ipynb
-   ../notebooks/ring_background.ipynb
-   ../notebooks/overview.ipynb
-   ../notebooks/maps.ipynb
-   ../notebooks/modeling.ipynb
-   ../notebooks/models.ipynb
-   ../notebooks/catalog.ipynb
-
-**Getting started**
 
 The following tutorials show how to use gammapy to perform a complete data analysis,
 here a simple 3D cube analysis of the Crab. They show the gammapy workflow from data selection
@@ -65,7 +42,31 @@ what is happening 'under-the-hood':
 - `Lower level analysis <../notebooks/analysis_2.html>`__ | *analysis_2.ipynb*
 
 
-**Core tutorials**
+Core tutorials
+--------------
+
+.. toctree::
+   :hidden:
+
+   ../notebooks/cta.ipynb
+   ../notebooks/hess.ipynb
+   ../notebooks/fermi_lat.ipynb
+   ../notebooks/cta_data_analysis.ipynb
+   ../notebooks/analysis_3d.ipynb
+   ../notebooks/simulate_3d.ipynb
+   ../notebooks/spectrum_analysis.ipynb
+   ../notebooks/sed_fitting.ipynb
+   ../notebooks/light_curve.ipynb
+   ../notebooks/light_curve_flare.ipynb
+   ../notebooks/spectrum_simulation.ipynb
+   ../notebooks/modeling_2D.ipynb
+   ../notebooks/ring_background.ipynb
+   ../notebooks/overview.ipynb
+   ../notebooks/maps.ipynb
+   ../notebooks/modeling.ipynb
+   ../notebooks/models.ipynb
+   ../notebooks/catalog.ipynb
+
 
 The following tutorials expose common tasks.
 
@@ -100,6 +101,22 @@ The following tutorials expose common tasks.
 - `3D map simulation <../notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
 
 **Advanced tutorials**
+
+.. toctree::
+   :hidden:
+
+       ../notebooks/analysis_mwl.ipynb
+   ../notebooks/detect.ipynb
+   ../notebooks/cta_sensitivity.ipynb
+   ../notebooks/spectrum_simulation.ipynb
+   ../notebooks/modeling_2D.ipynb
+   ../notebooks/ring_background.ipynb
+   ../notebooks/overview.ipynb
+   ../notebooks/maps.ipynb
+   ../notebooks/modeling.ipynb
+   ../notebooks/models.ipynb
+   ../notebooks/catalog.ipynb
+
 
 - `Source detection <../notebooks/detect.html>`__ | *detect.ipynb*
 
