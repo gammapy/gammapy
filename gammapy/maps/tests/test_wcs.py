@@ -308,7 +308,7 @@ def test_wcsgeom_drop():
     ax1 = MapAxis.from_nodes([1, 2, 3], name="ax1")
     ax2 = MapAxis.from_nodes([1, 2], name="ax2")
     ax3 = MapAxis.from_nodes([1, 2, 3, 4], name="ax2")
-    geom = WcsGeom.create(npix=(3, 3), axes=[ax1,ax2,ax3])
+    geom = WcsGeom.create(npix=(3, 3), axes=[ax1, ax2, ax3])
     geom_drop = geom.drop(axis="ax1")
     assert geom_drop.data_shape == (4, 2, 3, 3)
 
