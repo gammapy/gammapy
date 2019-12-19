@@ -32,7 +32,7 @@ class Map(abc.ABC):
     """
 
     def __init__(self, geom, data, meta=None, unit=""):
-        self._geom = geom
+        self.geom = geom
         self.data = data
         self.unit = unit
 
@@ -58,6 +58,10 @@ class Map(abc.ABC):
     def geom(self):
         """Map geometry (`~gammapy.maps.Geom`)"""
         return self._geom
+
+    @geom.setter
+    def geom(self, val):
+        self._geom = val
 
     @property
     def data(self):
@@ -215,11 +219,14 @@ class Map(abc.ABC):
 
             from .hpx import HpxGeom
             from .wcs import WcsGeom
+            from .region import RegionGeom
 
             if isinstance(geom, HpxGeom):
                 map_type = "hpx"
             elif isinstance(geom, WcsGeom):
                 map_type = "wcs"
+            elif isinstance(geom, RegionGeom):
+                map_type = "region"
             else:
                 raise ValueError("Unrecognized geom type.")
 
@@ -281,7 +288,12 @@ class Map(abc.ABC):
 
             return HpxNDMap
         elif map_type == "hpx-sparse":
-            raise NotImplementedError()
+            from .hpxsparse import HpxSparseMap
+
+            return HpxSparseMap
+        elif map_type == "region":
+            from .regionnd import RegionNDMap
+            return RegionNDMap
         else:
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
@@ -359,6 +371,48 @@ class Map(abc.ABC):
         coords = map_in.geom.get_coord()
         vals = u.Quantity(map_in.get_by_idx(idx), map_in.unit)
         self.fill_by_coord(coords, vals)
+
+    def reproject(self, geom, order=1, mode="interp"):
+        """Reproject this map to a different geometry.
+
+        Only spatial axes are reprojected, if you would like to reproject
+        non-spatial axes consider using `Map.interp_by_coord()` instead.
+
+        Parameters
+        ----------
+        geom : `Geom`
+            Geometry of projection.
+        mode : {'interp', 'exact'}
+            Method for reprojection.  'interp' method interpolates at pixel
+            centers.  'exact' method integrates over intersection of pixels.
+        order : int or str
+            Order of interpolating polynomial (0 = nearest-neighbor, 1 =
+            linear, 2 = quadratic, 3 = cubic).
+
+        Returns
+        -------
+        map : `Map`
+            Reprojected map.
+        """
+        if geom.is_image:
+            axes = [ax.copy() for ax in self.geom.axes]
+            geom = geom.copy(axes=axes)
+        else:
+            axes_eq = geom.ndim == self.geom.ndim
+            axes_eq &= np.all(
+                [ax0 == ax1 for ax0, ax1 in zip(geom.axes, self.geom.axes)]
+            )
+
+            if not axes_eq:
+                raise ValueError(
+                    "Map and target geometry non-spatial axes must match."
+                    "Use interp_by_coord to interpolate in non-spatial axes."
+                )
+
+        if geom.is_hpx:
+            return self._reproject_to_hpx(geom, mode=mode, order=order)
+        else:
+            return self._reproject_to_wcs(geom, mode=mode, order=order)
 
     @abc.abstractmethod
     def pad(self, pad_width, mode="constant", cval=0, order=1):
