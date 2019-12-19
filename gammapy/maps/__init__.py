@@ -11,3 +11,5 @@ from .profile import *
 from .wcs import *
 from .wcsmap import *
 from .wcsnd import *
+from .region import *
+from .regionnd import *

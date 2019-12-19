@@ -4,9 +4,10 @@ from astropy.wcs.utils import proj_plane_pixel_area
 from regions import CircleSkyRegion
 from gammapy.utils.regions import make_region
 import copy
-from .geom import Geom, axes_pix_to_coord, pix_tuple_to_idx, make_axes, frame_to_coordsys
+from .geom import Geom, pix_tuple_to_idx, make_axes, frame_to_coordsys
 from .wcs import WcsGeom
 from .base import MapCoord
+from .utils import INVALID_INDEX
 
 
 class RegionGeom(Geom):
@@ -27,14 +28,19 @@ class RegionGeom(Geom):
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, None)
     projection = "TAN"
+    binsz = 1e-3
 
     def __init__(self, region, axes=None, wcs=None):
         self._region = region
         self._axes = make_axes(axes)
 
+        if axes is not None:
+            if len(axes) > 1 or axes[0].name != "energy":
+                raise ValueError("RegionGeom currently only supports an energy axes.")
+
         if wcs is None:
             wcs = WcsGeom.create(
-                skydir=region.center, binsz=0.001, width=self.width, proj=self.projection
+                skydir=region.center, binsz=self.binsz, width=self.width, proj=self.projection
             ).wcs
 
         self._wcs = wcs
@@ -46,7 +52,7 @@ class RegionGeom(Geom):
         if isinstance(self.region, CircleSkyRegion):
             return 2 * self.region.radius
         else:
-            raise ValueError("Only circular regions supported")
+            raise ValueError("Currently only circular regions supported")
 
     @property
     def region(self):
@@ -74,13 +80,12 @@ class RegionGeom(Geom):
         """Center skydir"""
         return self.region.center
 
-    def contains(self, position):
+    def contains(self, coords):
         idx = self.coord_to_idx(coords)
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
     def separation(self, position):
-        coord = self.get_coord()
-        return coord.skycoord.separation(position)
+        return self.center_skydir.separation(position)
 
     @property
     def data_shape(self):
@@ -150,15 +155,14 @@ class RegionGeom(Geom):
         lon = np.where((-0.5 < pix[0]) & (pix[0] < 0.5), self.center_skydir.l.deg, np.nan * u.deg) * u.deg
         lat = np.where((-0.5 < pix[1]) & (pix[1] < 0.5), self.center_skydir.b.deg, np.nan * u.deg) * u.deg
         coords = (lon, lat)
-        coords += tuple(axes_pix_to_coord(self.axes, pix[self._slice_non_spatial_axes]))
+
+        for p, ax in zip(pix[self._slice_non_spatial_axes], self.axes):
+            coords += (ax.pix_to_coord(p),)
+
         return coords
 
     def pix_to_idx(self, pix, clip=True):
         idxs = list(pix_tuple_to_idx(pix))
-        if True:
-            idxs[0] = np.where((-0.5 < pix[0]) & (pix[0] < 0.5), [0], [-1])
-            idxs[1] = np.where((-0.5 < pix[1]) & (pix[1] < 0.5), [0], [-1])
-            idxs[2] = np.clip(idxs[2], 0, self.axes[0].nbin - 1)
         return tuple(idxs)
 
     def coord_to_pix(self, coords):
@@ -195,7 +199,13 @@ class RegionGeom(Geom):
         ----------
         region : str or `~regions.SkyRegion`
             Region
+        axes : list of `MapAxis`
+            Non spatial axes.
 
+        Returns
+        -------
+        geom : `RegionGeom`
+            Region geometry
         """
         if isinstance(region, str):
             region = make_region(region)
@@ -209,6 +219,7 @@ class RegionGeom(Geom):
 
         return (
             f"{self.__class__.__name__}\n\n"
+            f"\tregion     : {self.region.__class__.__name__}\n"
             f"\taxes       : {axes}\n"
             f"\tshape      : {self.data_shape[::-1]}\n"
             f"\tndim       : {self.ndim}\n"
