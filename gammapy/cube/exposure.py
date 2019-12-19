@@ -75,4 +75,6 @@ def _map_spectrum_weight(map, spectrum=None):
         emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
     )
     weights /= weights.sum()
-    return map * weights.reshape((-1, 1, 1))
+    shape = np.ones(len(map.geom.data_shape))
+    shape[0] = -1
+    return map * weights.reshape(shape.astype(int))

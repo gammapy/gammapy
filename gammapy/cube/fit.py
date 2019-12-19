@@ -925,7 +925,7 @@ class MapDataset(Dataset):
 
         # TODO: add edisp and psf
         edisp = None
-        psf = None
+        psf = self.psf.to_image()
 
         return self.__class__(
             counts=counts,
