@@ -328,7 +328,7 @@ class Map(abc.ABC):
             yield self.data[idx[::-1]], idx[::-1]
 
     @abc.abstractmethod
-    def sum_over_axes(self, keepdims=False):
+    def sum_over_axes(self, axes=None, keepdims=False):
         """Reduce to a 2D image by summing over non-spatial dimensions."""
         pass
 
