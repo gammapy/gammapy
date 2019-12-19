@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
-from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from gammapy.irf import EffectiveAreaTable, EDispKernel
 from gammapy.maps import MapAxis
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import (
@@ -119,7 +119,7 @@ class TestSpectrumDataset:
 
     def test_set_model(self):
         aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
-        edisp = EnergyDispersion.from_diagonal_response(
+        edisp = EDispKernel.from_diagonal_response(
             self.src.energy.edges, self.src.energy.edges
         )
         dataset = SpectrumDataset(
@@ -173,7 +173,7 @@ class TestSpectrumDataset:
 
     def test_spectrum_dataset_stack_diagonal_safe_mask(self):
         aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
-        edisp = EnergyDispersion.from_diagonal_response(
+        edisp = EDispKernel.from_diagonal_response(
             self.src.energy.edges, self.src.energy.edges
         )
         livetime = self.livetime
@@ -220,7 +220,7 @@ class TestSpectrumDataset:
 
     def test_spectrum_dataset_stack_nondiagonal_no_bkg(self):
         aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
-        edisp1 = EnergyDispersion.from_gauss(
+        edisp1 = EDispKernel.from_gauss(
             self.src.energy.edges, self.src.energy.edges, 0.1, 0.0
         )
         livetime = self.livetime
@@ -232,7 +232,7 @@ class TestSpectrumDataset:
         aeff2 = EffectiveAreaTable(
             self.src.energy.edges[:-1], self.src.energy.edges[1:], aeff.data.data
         )
-        edisp2 = EnergyDispersion.from_gauss(
+        edisp2 = EDispKernel.from_gauss(
             self.src.energy.edges, self.src.energy.edges, 0.2, 0.0
         )
         dataset2 = SpectrumDataset(
@@ -265,7 +265,7 @@ class TestSpectrumOnOff:
         ehi = ereco[1:]
         self.e_reco = ereco
         self.aeff = EffectiveAreaTable(etrue[:-1], etrue[1:], np.ones(9) * u.cm ** 2)
-        self.edisp = EnergyDispersion.from_diagonal_response(etrue, ereco)
+        self.edisp = EDispKernel.from_diagonal_response(etrue, ereco)
 
         data = np.ones(elo.shape)
         data[-1] = 0  # to test stats calculation with empty bins
@@ -598,7 +598,7 @@ def make_observation_list():
         energy_lo=energy[:-1], energy_hi=energy[1:], data=dataoff_2
     )
     aeff = EffectiveAreaTable.from_constant(energy, "1 cm2")
-    edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
+    edisp = EDispKernel.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
 
     time_ref = Time("2010-01-01")
     gti1 = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]}, time_ref=time_ref)

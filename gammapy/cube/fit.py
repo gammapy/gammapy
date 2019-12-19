@@ -11,7 +11,7 @@ from gammapy.cube.edisp_map import EDispMap
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
-from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from gammapy.irf import EffectiveAreaTable, EDispKernel
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
@@ -647,7 +647,7 @@ class MapDataset(Dataset):
             ]
 
         if self.edisp is not None:
-            if isinstance(self.edisp, EnergyDispersion):
+            if isinstance(self.edisp, EDispKernel):
                 hdus = self.edisp.to_hdulist()
                 hdus["MATRIX"].name = "edisp_matrix"
                 hdus["EBOUNDS"].name = "edisp_matrix_ebounds"
@@ -712,7 +712,7 @@ class MapDataset(Dataset):
             kwargs["background_model"] = BackgroundModel(background_map)
 
         if "EDISP_MATRIX" in hdulist:
-            kwargs["edisp"] = EnergyDispersion.from_hdulist(
+            kwargs["edisp"] = EDispKernel.from_hdulist(
                 hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
             )
         if "EDISP" in hdulist:
@@ -877,7 +877,7 @@ class MapDataset(Dataset):
                 aeff.data.data *= containment.squeeze()
 
         if self.edisp is not None:
-            if isinstance(self.edisp, EnergyDispersion):
+            if isinstance(self.edisp, EDispKernel):
                 edisp = self.edisp
             else:
                 edisp = self.edisp.get_energy_dispersion(
@@ -1330,7 +1330,7 @@ class MapDatasetOnOff(MapDataset):
             init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
 
         if "EDISP_MATRIX" in hdulist:
-            init_kwargs["edisp"] = EnergyDispersion.from_hdulist(
+            init_kwargs["edisp"] = EDispKernel.from_hdulist(
                 hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
             )
 

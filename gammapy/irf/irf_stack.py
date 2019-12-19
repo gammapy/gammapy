@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from astropy.units import Quantity
 from .effective_area import EffectiveAreaTable
-from .energy_dispersion import EnergyDispersion
+from .energy_dispersion import EDispKernel
 
 __all__ = ["IRFStacker"]
 
@@ -110,7 +110,7 @@ class IRFStacker:
 
         e_true = self.list_edisp[0].e_true.edges
         e_reco = self.list_edisp[0].e_reco.edges
-        self.stacked_edisp = EnergyDispersion(
+        self.stacked_edisp = EDispKernel(
             e_true_lo=e_true[:-1],
             e_true_hi=e_true[1:],
             e_reco_lo=e_reco[:-1],

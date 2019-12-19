@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import Angle
-from gammapy.irf import EnergyDispersion, EnergyDispersion2D
+from gammapy.irf import EDispKernel, EnergyDispersion2D
 from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -15,7 +15,7 @@ class TestEnergyDispersion:
         self.e_reco = self.e_true
         self.resolution = 0.1
         self.bias = 0
-        self.edisp = EnergyDispersion.from_gauss(
+        self.edisp = EDispKernel.from_gauss(
             e_true=self.e_true,
             e_reco=self.e_reco,
             pdf_threshold=1e-7,
@@ -27,7 +27,7 @@ class TestEnergyDispersion:
         e_true = [0.5, 1, 2, 4, 6] * u.TeV
         e_reco = [2, 4, 6] * u.TeV
 
-        edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
+        edisp = EDispKernel.from_diagonal_response(e_true, e_reco)
 
         assert edisp.pdf_matrix.shape == (4, 2)
         expected = [[0, 0], [0, 0], [1, 0], [0, 1]]
@@ -35,7 +35,7 @@ class TestEnergyDispersion:
         assert_equal(edisp.pdf_matrix, expected)
 
         # Test square matrix
-        edisp = EnergyDispersion.from_diagonal_response(e_true)
+        edisp = EDispKernel.from_diagonal_response(e_true)
         assert_allclose(edisp.e_reco.edges.value, e_true.value)
         assert edisp.e_reco.unit == "TeV"
         assert_equal(edisp.pdf_matrix[0][0], 1)
@@ -43,7 +43,7 @@ class TestEnergyDispersion:
         assert edisp.pdf_matrix.sum() == 4
 
     def test_str(self):
-        assert "EnergyDispersion" in str(self.edisp)
+        assert "EDispKernel" in str(self.edisp)
 
     def test_evaluate(self):
         # Check for correct normalization
@@ -72,7 +72,7 @@ class TestEnergyDispersion:
         indices = np.array([[1, 3, 6], [3, 3, 2]])
         desired = self.edisp.pdf_matrix[indices]
         self.edisp.write(tmp_path / "tmp.fits")
-        edisp2 = EnergyDispersion.read(tmp_path / "tmp.fits")
+        edisp2 = EDispKernel.read(tmp_path / "tmp.fits")
         actual = edisp2.pdf_matrix[indices]
         assert_allclose(actual, desired)
 
@@ -195,6 +195,6 @@ class TestEnergyDispersion2D:
 def test_get_bias_energy():
     """Obs read from file"""
     rmffile = "$GAMMAPY_DATA/joint-crab/spectra/hess/rmf_obs23523.fits"
-    edisp = EnergyDispersion.read(rmffile)
+    edisp = EDispKernel.read(rmffile)
     thresh_lo = edisp.get_bias_energy(0.1)
     assert_allclose(thresh_lo.to("TeV").value, 0.9174, rtol=1e-4)

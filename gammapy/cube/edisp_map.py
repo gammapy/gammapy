@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
-from gammapy.irf import EnergyDispersion
+from gammapy.irf import EDispKernel
 from gammapy.maps import Map, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 
@@ -270,7 +270,7 @@ class EDispMap:
         e_lo, e_hi = e_true_edges[:-1], e_true_edges[1:]
         ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
 
-        return EnergyDispersion(
+        return EDispKernel(
             e_true_lo=e_lo,
             e_true_hi=e_hi,
             e_reco_lo=ereco_lo,
