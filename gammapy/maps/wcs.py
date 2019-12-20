@@ -478,10 +478,7 @@ class WcsGeom(Geom):
         wcs : `~WcsGeom`
             WCS geometry object.
         """
-        wcs = WCS(header)
-        naxis = wcs.naxis
-        for i in range(naxis - 2):
-            wcs = wcs.dropaxis(2)
+        wcs = WCS(header, naxis=(1, 2))
 
         axes = find_and_read_bands(hdu_bands)
         shape = tuple([ax.nbin for ax in axes])
