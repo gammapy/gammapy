@@ -821,6 +821,9 @@ class MapDataset(Dataset):
         EnergyDispersion is obtained at the on_region center.
         Only regions with centers are supported.
 
+        The model is not exported to the ~gammapy.spectrum.SpectrumDataset.
+        It must be set after the dataset extraction.
+        
         Parameters
         ----------
         on_region : `~regions.SkyRegion`
