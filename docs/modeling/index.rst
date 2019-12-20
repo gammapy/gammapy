@@ -24,6 +24,8 @@ In general the models are grouped into the following categories:
 The models follow a naming scheme which contains the category as a suffix to the class
 name.
 
+.. include:: gallery/index.rst
+
 Getting Started
 ===============
 
