@@ -62,7 +62,7 @@ Core tutorials
    ../notebooks/modeling_2D.ipynb
    ../notebooks/ring_background.ipynb
 
-The following tutorials expose common tasks.
+The following tutorials expose common analysis tasks.
 
 *Accessing and exploring DL3 data*
 
@@ -70,7 +70,7 @@ The following tutorials expose common tasks.
 - `CTA with Gammapy <../notebooks/cta.html>`__ | *cta.ipynb*
 - `H.E.S.S. with Gammapy <../notebooks/hess.html>`__ |  *hess.ipynb*
 
-*1D spectral analysis*
+*1-dim spectral analysis*
 
 - `Spectral analysis  <../notebooks/spectrum_analysis.html>`__ | *spectrum_analysis.ipynb*
 - `Flux point fitting <../notebooks/sed_fitting.html>`__ | *sed_fitting.ipynb*
@@ -90,7 +90,7 @@ The following tutorials expose common tasks.
 - `Light curves <../notebooks/light_curve.html>`__ | *light_curve.ipynb*
 - `Light curves for flares <../notebooks/light_curve_flare.html>`__ | *light_curve_flare.ipynb*
 
-*Simulations, Sensitivity, Observability*
+*Simulations*
 
 - `1D spectrum simulation <../notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
 - `3D map simulation <../notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
@@ -104,7 +104,6 @@ Advanced tutorials
    ../notebooks/analysis_mwl.ipynb
    ../notebooks/detect.ipynb
    ../notebooks/cta_sensitivity.ipynb
-   ../notebooks/spectrum_simulation.ipynb
    ../notebooks/modeling_2D.ipynb
    ../notebooks/ring_background.ipynb
    ../notebooks/overview.ipynb
@@ -113,16 +112,19 @@ Advanced tutorials
    ../notebooks/models.ipynb
    ../notebooks/catalog.ipynb
 
-*Image analysis*
+The following tutorials expose how to perform more complex analyses or they demonstrate how to use the
+Gammapy API.
 
-- `Source detection <../notebooks/detect.html>`__ | *detect.ipynb*
+*Source detection*
+
+- `How to detect unknown sources and build a simple upper limit map <../notebooks/detect.html>`__ | *detect.ipynb*
 
 *Multi-instrument analysis*
 
 - `Multi instrument joint 3D and 1D analysis <../notebooks/analysis_mwl.html>`__ | *analysis_mwl.ipynb*
 - `A Fermi-LAT analysis with Gammapy <../notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
 
-*Sensitivity estimation and observation simulation*
+*Sensitivity estimation*
 
 - `Point source sensitivity <../notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
 
