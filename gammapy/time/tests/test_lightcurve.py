@@ -224,8 +224,8 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert_allclose(lightcurve.table["norm_errp"], [0.044231, 0.04377], rtol=1e-5)
     assert_allclose(lightcurve.table["norm_errn"], [0.04374, 0.043226], rtol=1e-5)
     assert_allclose(lightcurve.table["norm_ul"], [1.077213, 1.036237], rtol=1e-5)
-    assert_allclose(lightcurve.table["sqrt_ts"], [26.773925, 25.796426], rtol=1e-5)
-    assert_allclose(lightcurve.table["ts"], [716.843084, 665.455601], rtol=1e-5)
+    assert_allclose(lightcurve.table["sqrt_ts"], [26.773925, 25.796426], rtol=1e-4)
+    assert_allclose(lightcurve.table["ts"], [716.843084, 665.455601], rtol=1e-4)
     assert_allclose(lightcurve.table[0]["norm_scan"], [0.2, 1.0, 5.0])
     assert_allclose(
         lightcurve.table[0]["stat_scan"],
@@ -326,7 +326,7 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     assert_allclose(lightcurve.table["stat"], [46.177981], rtol=1e-5)
     assert_allclose(lightcurve.table["norm"], [0.968049], rtol=1e-5)
     assert_allclose(lightcurve.table["norm_err"], [0.030929], rtol=1e-4)
-    assert_allclose(lightcurve.table["ts"], [1381.880757], rtol=1e-5)
+    assert_allclose(lightcurve.table["ts"], [1381.880757], rtol=1e-4)
 
 
 @requires_data()
@@ -404,8 +404,8 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(lightcurve.table["ref_e2dnde"], [1e-11, 1e-11])
     assert_allclose(lightcurve.table["stat"], [-87332.44842, -89904.010197], rtol=1e-5)
     assert_allclose(lightcurve.table["norm_err"], [0.044114, 0.04362], rtol=1e-3)
-    assert_allclose(lightcurve.table["sqrt_ts"], [38.243713, 39.351595], atol=0.01)
-    assert_allclose(lightcurve.table["ts"], [1462.581621, 1548.548039], atol=0.01)
+    assert_allclose(lightcurve.table["sqrt_ts"], [38.243713, 39.351595], rtol=1e-4)
+    assert_allclose(lightcurve.table["ts"], [1462.581621, 1548.548039], rtol=1e-4)
 
     datasets = get_map_datasets()
     time_intervals2 = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
@@ -426,4 +426,4 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(lightcurve2.table["stat"], [-177236.416479], rtol=1e-5)
     assert_allclose(lightcurve2.table["norm_err"], [0.031006], rtol=1e-3)
     assert_allclose(lightcurve.table["counts"], [46782, 47389])
-    assert_allclose(lightcurve2.table["ts"], [3011.056469], atol=0.01)
+    assert_allclose(lightcurve2.table["ts"], [3011.056469], rtol=1e-4)
