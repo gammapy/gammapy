@@ -262,38 +262,3 @@ class PSFKernel:
     def write(self, *args, **kwargs):
         """Write the Map object which contains the PSF kernel to file."""
         self.psf_kernel_map.write(*args, **kwargs)
-
-    def make_image(self, exposures, spectrum=None):
-        """Make a 2D PSF from a PSF kernel.
-
-        The PSF Kernel is first weighed with a spectrum and an array of exposures.
-        The PSF is also normalised after summation.
-
-        Parameters
-        ----------
-        exposures : `~numpy.ndarray`
-            An array of exposures for the same true energies as the PSF kernel
-        spectrum : `~gammapy.modeling.models.SpectralModel`
-            Spectral model to compute the weights.
-            Default is power-law with spectral index of 2.
-
-        Returns
-        -------
-        psf2D : `~gammapy.maps.Map`
-            Weighted 2D psf
-        """
-        if spectrum is None:
-            spectrum = PowerLawSpectralModel(index=2.0)
-
-        energy_axis = self.psf_kernel_map.geom.get_axis_by_name("energy")
-        energy_width = np.diff(energy_axis.edges)
-        weights = spectrum(energy_axis.center) * energy_width * exposures
-        weights /= weights.sum()
-
-        psf_weighted = self.psf_kernel_map.copy()
-        for img, idx in psf_weighted.iter_by_image():
-            img *= weights[idx].value
-
-        psf2D = psf_weighted.sum_over_axes()
-        psf2D.data = psf2D.data / psf2D.data.sum()
-        return PSFKernel(psf2D)

@@ -7,6 +7,8 @@ from gammapy.irf import EnergyDependentTablePSF
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .psf_kernel import PSFKernel
+from .exposure import _map_spectrum_weight
+from gammapy.modeling.models import PowerLawSpectralModel
 
 __all__ = ["make_psf_map", "PSFMap"]
 
@@ -225,14 +227,18 @@ class PSFMap:
         coords = {
             "skycoord": position,
             "energy": energy.reshape((-1, 1, 1, 1)),
-            "theta": rad.reshape((1, -1, 1, 1))
+            "theta": rad.reshape((1, -1, 1, 1)),
         }
 
         data = self.psf_map.interp_by_coord(coords)
         psf_values = u.Quantity(data[:, :, 0, 0], unit=self.psf_map.unit, copy=False)
 
         if self.exposure_map is not None:
-            coords = {"skycoord": position, "energy": energy.reshape((-1, 1, 1)), "theta": 0 * u.deg}
+            coords = {
+                "skycoord": position,
+                "energy": energy.reshape((-1, 1, 1)),
+                "theta": 0 * u.deg,
+            }
             data = self.exposure_map.interp_by_coord(coords).squeeze()
             exposure = data * self.exposure_map.unit
         else:
@@ -448,3 +454,34 @@ class PSFMap:
         psf_map = self.psf_map.cutout(position, width, mode)
         exposure_map = self.exposure_map.cutout(position, width, mode)
         return self.__class__(psf_map=psf_map, exposure_map=exposure_map)
+
+    def to_image(self, spectrum=None, keepdims=True):
+        """Reduce to a 2-D map after weighing
+        with the associated exposure and a spectrum
+
+        Parameters
+        ----------
+        spectrum : `~gammapy.modeling.models.SpectralModel`, optional
+            Spectral model to compute the weights.
+            Default is power-law with spectral index of 2.
+        keepdims : bool, optional
+            If True, the energy axis is kept with one bin.
+            If False, the axis is removed
+
+
+        Returns:
+        ---------
+        psf_out: `PSFMap`
+            `PSFMap` with the energy axis summed over
+        """
+        if spectrum is None:
+            spectrum = PowerLawSpectralModel(index=2.0)
+
+        exp_weighed = _map_spectrum_weight(self.exposure_map, spectrum)
+        exposure = exp_weighed.sum_over_axes(axes=["energy"], keepdims=keepdims)
+
+        psf_data = exp_weighed.data * self.psf_map.data / exposure.data
+        psf_map = Map.from_geom(geom=self.psf_map.geom, data=psf_data)
+
+        psf = psf_map.sum_over_axes(axes=["energy"], keepdims=keepdims)
+        return self.__class__(psf_map=psf, exposure_map=exposure)

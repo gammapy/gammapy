@@ -369,3 +369,12 @@ def test_psf_map_from_table_psf(position):
 
     assert_allclose(table_psf_new.exposure.value, table_psf.exposure.value)
     assert table_psf_new.exposure.unit == "cm2 s"
+
+
+def test_to_image():
+    psfmap = make_test_psfmap(0.15 * u.deg)
+
+    psf2D = psfmap.to_image()
+    assert_allclose(psf2D.psf_map.geom.data_shape, (1, 50, 25, 25))
+    assert_allclose(psf2D.exposure_map.geom.data_shape, (1, 1, 25, 25))
+    assert_allclose(psf2D.psf_map.data[0][0][12][12], 23255.41204827, rtol=1e-2)
