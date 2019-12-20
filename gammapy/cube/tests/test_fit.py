@@ -193,6 +193,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
     assert spectrum_dataset.data_shape == (2,)
     assert spectrum_dataset.background.energy.nbin == 2
     assert spectrum_dataset.aeff.energy.nbin == 3
+    assert spectrum_dataset.aeff.data.data.unit == 'm2'
     assert spectrum_dataset.edisp.e_reco.nbin == 2
     assert spectrum_dataset.edisp.e_true.nbin == 3
 

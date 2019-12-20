@@ -855,7 +855,7 @@ class MapDataset(Dataset):
             aeff = EffectiveAreaTable(
                 energy_lo=exposure.energy.edges[:-1],
                 energy_hi=exposure.energy.edges[1:],
-                data=exposure.data / livetime,
+                data=exposure.quantity / livetime,
             )
         else:
             aeff = None
