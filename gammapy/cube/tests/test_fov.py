@@ -48,7 +48,7 @@ def exclusion_mask(geom):
 
 
 @pytest.fixture(scope="session")
-def test_dataset(geom, observation):
+def obs_dataset(geom, observation):
     safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
     map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
 
@@ -66,58 +66,58 @@ def test_fov_bkg_maker_incorrect_method():
 
 
 @requires_data()
-def test_fov_bkg_maker_scale(test_dataset, exclusion_mask):
+def test_fov_bkg_maker_scale(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
 
-    my_dataset = test_dataset.copy()
-    dataset = fov_bkg_maker.run(my_dataset)
+    test_dataset = obs_dataset.copy()
+    dataset = fov_bkg_maker.run(test_dataset)
 
     assert_allclose(dataset.background_model.norm.value, 0.83078, rtol=1e-4)
     assert_allclose(dataset.background_model.tilt.value, 0.0, rtol=1e-4)
 
 
 @requires_data()
-def test_fov_bkg_maker_fit(test_dataset, exclusion_mask):
+def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
-    my_dataset = test_dataset.copy()
-    dataset = fov_bkg_maker.run(my_dataset)
+    test_dataset = obs_dataset.copy()
+    dataset = fov_bkg_maker.run(test_dataset)
 
     assert_allclose(dataset.background_model.norm.value, 0.8307, rtol=1e-4)
     assert_allclose(dataset.background_model.tilt.value, 0.0, rtol=1e-4)
 
 
 @requires_data()
-def test_fov_bkg_maker_fit_with_tilt(test_dataset, exclusion_mask):
+def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
-    my_dataset = test_dataset.copy()
-    my_dataset.background_model.tilt.frozen = False
-    dataset = fov_bkg_maker.run(my_dataset)
+    test_dataset = obs_dataset.copy()
+    test_dataset.background_model.tilt.frozen = False
+    dataset = fov_bkg_maker.run(test_dataset)
 
     assert_allclose(dataset.background_model.norm.value, 0.9034, rtol=1e-4)
     assert_allclose(dataset.background_model.tilt.value, 0.0728, rtol=1e-4)
 
 
 @requires_data()
-def test_fov_bkg_maker_fit_fail(test_dataset, exclusion_mask):
+def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
-    my_dataset = test_dataset.copy()
+    test_dataset = obs_dataset.copy()
     # Putting negative background model to prevent convergence
-    my_dataset.background_model.map.data *= -1
-    dataset = fov_bkg_maker.run(my_dataset)
+    test_dataset.background_model.map.data *= -1
+    dataset = fov_bkg_maker.run(test_dataset)
 
     assert_allclose(dataset.background_model.norm.value, 1, rtol=1e-4)
 
 
 @requires_data()
-def test_fov_bkg_maker_scale_fail(test_dataset, exclusion_mask):
+def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
 
-    my_dataset = test_dataset.copy()
+    test_dataset = obs_dataset.copy()
     # Putting negative background model to prevent correct scaling
-    my_dataset.background_model.map.data *= -1
-    dataset = fov_bkg_maker.run(my_dataset)
+    test_dataset.background_model.map.data *= -1
+    dataset = fov_bkg_maker.run(test_dataset)
 
     assert_allclose(dataset.background_model.norm.value, 1, rtol=1e-4)

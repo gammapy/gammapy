@@ -30,7 +30,7 @@ class FoVBackgroundMaker:
             self.method = method
         else:
             raise ValueError(
-                f"{method} is not a correct method for FoVBackgroundMaker."
+                f"Incorrect method for FoVBackgroundMaker: {method}."
             )
         self.exclusion_mask = exclusion_mask
 
