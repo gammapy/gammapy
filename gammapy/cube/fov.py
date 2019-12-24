@@ -1,10 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """FoV background estimation."""
 import numpy as np
-from astropy.convolution import Ring2DKernel, Tophat2DKernel
-from astropy.coordinates import Angle
-from gammapy.cube.fit import MapDatasetOnOff
-from gammapy.maps import Map, scale_cube
+from gammapy.modeling import Fit
 
 __all__ = ["FoVBackgroundMaker"]
 
@@ -31,4 +28,8 @@ class FoVBackgroundMaker:
             Input map dataset.
 
         """
-         
+        mask_safe = dataset.mask_safe
+        
+        # Here we assume that the model is only the background model
+        # TODO : freeze all model components not related to background model?
+        fit = Fit([dataset])
