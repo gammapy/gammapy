@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """FoV background estimation."""
-import numpy as np
+from gammapy.maps import Map
 from gammapy.modeling import Fit
 
 __all__ = ["FoVBackgroundMaker"]
@@ -28,7 +28,15 @@ class FoVBackgroundMaker:
             Input map dataset.
 
         """
-        mask_safe = dataset.mask_safe
+        mask_fit = dataset.mask_fit
+
+        mask_map = Map.from_geom(dataset.counts.geom)
+        if self.exclusion_mask is not None:
+            coords = dataset.counts.geom.get_coord()
+            vals = self.exclusion_mask.get_by_coord(coords)
+            mask_map.data += vals
+
+        dataset.mask_fit = mask_map.data.astype('bool')
 
         # Here we assume that the model is only the background model
         # TODO : freeze all model components not related to background model?
@@ -37,4 +45,5 @@ class FoVBackgroundMaker:
         if fit_result.success == False:
             print("FoVBackgroundMaker failed. No fit convergence.")
 
+        dataset.mask_fit = mask_fit
         return dataset

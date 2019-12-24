@@ -24,7 +24,7 @@ def geom():
     return WcsGeom.create(
         skydir=SkyCoord(83.633, 22.014, unit="deg"),
         binsz=0.02,
-        width=(10, 10),
+        width=(5, 5),
         coordsys="GAL",
         proj="CAR",
         axes=[energy_axis],
@@ -35,7 +35,7 @@ def geom():
 def exclusion_mask(geom):
     """Example mask for testing."""
     pos = SkyCoord(83.633, 22.014, unit="deg", frame="icrs")
-    region = CircleSkyRegion(pos, Angle(0.15, "deg"))
+    region = CircleSkyRegion(pos, Angle(0.3, "deg"))
     exclusion = WcsNDMap.from_geom(geom)
     exclusion.data = geom.region_mask([region], inside=False)
     return exclusion
@@ -53,17 +53,30 @@ def test_fov_bkg_maker(geom, observations, exclusion_mask):
         cutout = reference.cutout(obs.pointing_radec, width="4 deg")
         dataset = map_dataset_maker.run(cutout, obs)
         dataset = safe_mask_maker.run(dataset, obs)
-
         dataset = fov_bkg_maker.run(dataset)
+
         datasets.append(dataset)
 
-#    mask = dataset.mask_safe
-#    assert_allclose(datasets[0].counts_off.data[mask].sum(), 2511333)
-#    assert_allclose(datasets[1].counts_off.data[mask].sum(), 2143577.0)
-#    assert_allclose(datasets[0].acceptance_off.data[mask].sum(), 2961300, rtol=1e-5)
-#    assert_allclose(datasets[1].acceptance_off.data[mask].sum(), 2364657.2, rtol=1e-5)
-    assert_allclose(datasets[0].background_model.norm.value, 0.98, rtol=1e-2)
-    assert_allclose(
-        datasets[0].exposure.data[0][100][100], 806254444.8480084, rtol=1e-5
-    )
-    assert 1==0
+    assert_allclose(datasets[0].background_model.norm.value, 0.8307, rtol=1e-4)
+    assert_allclose(datasets[0].background_model.tilt.value, 0.0, rtol = 1e-4)
+
+@requires_data()
+def test_fov_bkg_maker_with_tilt(geom, observations, exclusion_mask):
+    fov_bkg_maker = FoVBackgroundMaker(exclusion_mask=exclusion_mask)
+    safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
+    map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
+
+    reference = MapDataset.create(geom)
+    datasets = []
+
+    for obs in observations:
+        cutout = reference.cutout(obs.pointing_radec, width="4 deg")
+        dataset = map_dataset_maker.run(cutout, obs)
+        dataset.background_model.tilt.frozen = False
+        dataset = safe_mask_maker.run(dataset, obs)
+        dataset = fov_bkg_maker.run(dataset)
+
+        datasets.append(dataset)
+
+    assert_allclose(datasets[0].background_model.norm.value, 0.9034, rtol=1e-4)
+    assert_allclose(datasets[0].background_model.tilt.value, 0.0728, rtol = 1e-4)
