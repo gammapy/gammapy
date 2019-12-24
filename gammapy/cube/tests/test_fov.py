@@ -4,7 +4,8 @@ from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from gammapy.cube import MapDataset
-from gammapy.cube.make import MapDatasetMaker, SafeMaskMaker, FoVBackgroundMaker
+from gammapy.cube.make import MapDatasetMaker, SafeMaskMaker
+from gammapy.cube.fov import FoVBackgroundMaker
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
 from gammapy.utils.testing import requires_data
@@ -56,12 +57,13 @@ def test_fov_bkg_maker(geom, observations, exclusion_mask):
         dataset = fov_bkg_maker.run(dataset)
         datasets.append(dataset)
 
-    mask = dataset.mask_safe
-    assert_allclose(datasets[0].counts_off.data[mask].sum(), 2511333)
-    assert_allclose(datasets[1].counts_off.data[mask].sum(), 2143577.0)
-    assert_allclose(datasets[0].acceptance_off.data[mask].sum(), 2961300, rtol=1e-5)
-    assert_allclose(datasets[1].acceptance_off.data[mask].sum(), 2364657.2, rtol=1e-5)
-    assert_allclose(datasets[0].alpha.data[0][100][100], 0.00063745599, rtol=1e-5)
+#    mask = dataset.mask_safe
+#    assert_allclose(datasets[0].counts_off.data[mask].sum(), 2511333)
+#    assert_allclose(datasets[1].counts_off.data[mask].sum(), 2143577.0)
+#    assert_allclose(datasets[0].acceptance_off.data[mask].sum(), 2961300, rtol=1e-5)
+#    assert_allclose(datasets[1].acceptance_off.data[mask].sum(), 2364657.2, rtol=1e-5)
+    assert_allclose(datasets[0].background_model.norm.value, 0.98, rtol=1e-2)
     assert_allclose(
         datasets[0].exposure.data[0][100][100], 806254444.8480084, rtol=1e-5
     )
+    assert 1==0

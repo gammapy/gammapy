@@ -29,7 +29,12 @@ class FoVBackgroundMaker:
 
         """
         mask_safe = dataset.mask_safe
-        
+
         # Here we assume that the model is only the background model
         # TODO : freeze all model components not related to background model?
         fit = Fit([dataset])
+        fit_result = fit.run()
+        if fit_result.success == False:
+            print("FoVBackgroundMaker failed. No fit convergence.")
+
+        return dataset
