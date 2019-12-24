@@ -8,7 +8,7 @@ from gammapy.cube.fov import FoVBackgroundMaker
 from gammapy.cube.make import MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -76,6 +76,7 @@ def test_fov_bkg_maker_scale(obs_dataset, exclusion_mask):
     assert_allclose(dataset.background_model.tilt.value, 0.0, rtol=1e-4)
 
 
+@requires_dependency("iminuit")
 @requires_data()
 def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
@@ -87,6 +88,7 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     assert_allclose(dataset.background_model.tilt.value, 0.0, rtol=1e-4)
 
 
+@requires_dependency("iminuit")
 @requires_data()
 def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
@@ -99,6 +101,7 @@ def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
     assert_allclose(dataset.background_model.tilt.value, 0.0728, rtol=1e-4)
 
 
+@requires_dependency("iminuit")
 @requires_data()
 def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
