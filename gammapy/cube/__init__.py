@@ -4,9 +4,9 @@ from .background import *
 from .edisp_map import *
 from .exposure import *
 from .fit import *
+from .fov import *
 from .make import *
 from .psf_kernel import *
 from .psf_map import *
 from .ring import *
-from .fov import *
 from .simulate import *

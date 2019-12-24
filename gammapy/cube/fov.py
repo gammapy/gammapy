@@ -8,15 +8,30 @@ __all__ = ["FoVBackgroundMaker"]
 
 log = logging.getLogger(__name__)
 
+
 class FoVBackgroundMaker:
     """Normalize template background on the whole field-of-view.
 
+    The dataset background model can be simply scaled (method="scale") or fitted (method="fit")
+    on the dataset counts.
+
+    The normalization is performed outside the exclusion mask taht is passed on init.
+
     Parameters
     ----------
+    method : str in ['fit', 'scale']
+        the normalization method to be applied. Default 'fit'.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask
     """
-    def __init__(self, exclusion_mask=None):
+
+    def __init__(self, method="fit", exclusion_mask=None):
+        if method in ["fit", "scale"]:
+            self.method = method
+        else:
+            raise ValueError(
+                f"{method} is not a correct method for FoVBackgroundMaker."
+            )
         self.exclusion_mask = exclusion_mask
 
     def run(self, dataset):
@@ -31,21 +46,52 @@ class FoVBackgroundMaker:
 
         """
         mask_fit = dataset.mask_fit
+        dataset.mask_fit = self._reproject_exclusion_mask(dataset)
 
+        if self.method is "fit":
+            self._fit_bkg(dataset)
+        else:
+            self._scale_bkg(dataset)
+
+        dataset.mask_fit = mask_fit
+        return dataset
+
+    def _reproject_exclusion_mask(self, dataset):
+        """Reproject the exclusion on the dataset geometry"""
         mask_map = Map.from_geom(dataset.counts.geom)
         if self.exclusion_mask is not None:
             coords = dataset.counts.geom.get_coord()
             vals = self.exclusion_mask.get_by_coord(coords)
             mask_map.data += vals
 
-        dataset.mask_fit = mask_map.data.astype('bool')
+        return mask_map.data.astype("bool")
+
+    def _fit_bkg(self, dataset):
+        """Fit the FoV background model on the dataset counts data"""
 
         # Here we assume that the model is only the background model
         # TODO : freeze all model components not related to background model?
         fit = Fit([dataset])
         fit_result = fit.run()
         if fit_result.success == False:
-            log.info("FoVBackgroundMaker failed. No fit convergence for {dataset.name}.")
+            log.info(
+                f"FoVBackgroundMaker failed. No fit convergence for {dataset.name}."
+            )
 
-        dataset.mask_fit = mask_fit
-        return dataset
+    def _scale_bkg(self, dataset):
+        """Fit the FoV background model on the dataset counts data"""
+        mask = dataset.mask
+        count_tot = dataset.counts.data[mask].sum()
+        bkg_tot = dataset.background_model.map.data[mask].sum()
+
+        if count_tot <= 0.0:
+            log.info(
+                "FoVBackgroundMaker failed. No counts found outside exlcusion mask for {dataset.name}."
+            )
+        elif bkg_tot <= 0.0:
+            log.info(
+                "FoVBackgroundMaker failed. No positive background found outside exlcusion mask for {dataset.name}."
+            )
+        else:
+            scale = count_tot / bkg_tot
+            dataset.background_model.norm.value = scale
