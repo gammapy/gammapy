@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """FoV background estimation."""
+import logging
 from gammapy.maps import Map
 from gammapy.modeling import Fit
 
 __all__ = ["FoVBackgroundMaker"]
 
+log = logging.getLogger(__name__)
 
 class FoVBackgroundMaker:
     """Normalize template background on the whole field-of-view.
@@ -43,7 +45,7 @@ class FoVBackgroundMaker:
         fit = Fit([dataset])
         fit_result = fit.run()
         if fit_result.success == False:
-            print("FoVBackgroundMaker failed. No fit convergence.")
+            log.info("FoVBackgroundMaker failed. No fit convergence for {dataset.name}.")
 
         dataset.mask_fit = mask_fit
         return dataset

@@ -80,3 +80,25 @@ def test_fov_bkg_maker_with_tilt(geom, observations, exclusion_mask):
 
     assert_allclose(datasets[0].background_model.norm.value, 0.9034, rtol=1e-4)
     assert_allclose(datasets[0].background_model.tilt.value, 0.0728, rtol = 1e-4)
+
+@requires_data()
+def test_fov_bkg_maker_fail(geom, observations, exclusion_mask):
+    fov_bkg_maker = FoVBackgroundMaker(exclusion_mask=exclusion_mask)
+    safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
+    map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
+
+    reference = MapDataset.create(geom)
+    datasets = []
+
+    for obs in observations[:1]:
+        cutout = reference.cutout(obs.pointing_radec, width="4 deg")
+        dataset = map_dataset_maker.run(cutout, obs)
+        dataset = safe_mask_maker.run(dataset, obs)
+        # Putting negative background model to prevent convergence
+        dataset.background_model.map.data *= -1
+        #TODO : assert on log.warning
+        dataset = fov_bkg_maker.run(dataset)
+
+        datasets.append(dataset)
+
+    assert_allclose(datasets[0].background_model.norm.value, 1, rtol=1e-4)
