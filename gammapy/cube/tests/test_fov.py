@@ -42,6 +42,10 @@ def exclusion_mask(geom):
     return exclusion
 
 
+def test_fov_bkg_maker_incorrect_method():
+    with pytest.raises(ValueError):
+        FoVBackgroundMaker(method="bad")
+
 @requires_data()
 def test_fov_bkg_maker_scale(geom, observations, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)

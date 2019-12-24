@@ -73,7 +73,7 @@ class FoVBackgroundMaker:
         # TODO : freeze all model components not related to background model?
         fit = Fit([dataset])
         fit_result = fit.run()
-        if fit_result.success == False:
+        if fit_result.success is False:
             log.info(
                 f"FoVBackgroundMaker failed. No fit convergence for {dataset.name}."
             )
