@@ -12,11 +12,11 @@ from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")
-def observations():
+def observation():
     """Example observation list for testing."""
     datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
-    obs_ids = [23523]
-    return datastore.get_observations(obs_ids)
+    obs_id = 23523
+    return datastore.obs(obs_id)
 
 
 @pytest.fixture(scope="session")
@@ -33,6 +33,11 @@ def geom():
 
 
 @pytest.fixture(scope="session")
+def reference(geom):
+    return MapDataset.create(geom)
+
+
+@pytest.fixture(scope="session")
 def exclusion_mask(geom):
     """Example mask for testing."""
     pos = SkyCoord(83.633, 22.014, unit="deg", frame="icrs")
@@ -42,115 +47,77 @@ def exclusion_mask(geom):
     return exclusion
 
 
+@pytest.fixture(scope="session")
+def test_dataset(geom, observation):
+    safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
+    map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
+
+    reference = MapDataset.create(geom)
+    cutout = reference.cutout(observation.pointing_radec, width="4 deg")
+
+    dataset = map_dataset_maker.run(cutout, observation)
+    dataset = safe_mask_maker.run(dataset, observation)
+    return dataset
+
+
 def test_fov_bkg_maker_incorrect_method():
     with pytest.raises(ValueError):
         FoVBackgroundMaker(method="bad")
 
+
 @requires_data()
-def test_fov_bkg_maker_scale(geom, observations, exclusion_mask):
+def test_fov_bkg_maker_scale(test_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
-    safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
-    map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
 
-    reference = MapDataset.create(geom)
-    datasets = []
+    my_dataset = test_dataset.copy()
+    dataset = fov_bkg_maker.run(my_dataset)
 
-    for obs in observations:
-        cutout = reference.cutout(obs.pointing_radec, width="4 deg")
-        dataset = map_dataset_maker.run(cutout, obs)
-        dataset = safe_mask_maker.run(dataset, obs)
-        dataset = fov_bkg_maker.run(dataset)
-
-        datasets.append(dataset)
-
-    assert_allclose(datasets[0].background_model.norm.value, 0.83078, rtol=1e-4)
-    assert_allclose(datasets[0].background_model.tilt.value, 0.0, rtol=1e-4)
+    assert_allclose(dataset.background_model.norm.value, 0.83078, rtol=1e-4)
+    assert_allclose(dataset.background_model.tilt.value, 0.0, rtol=1e-4)
 
 
 @requires_data()
-def test_fov_bkg_maker_fit(geom, observations, exclusion_mask):
+def test_fov_bkg_maker_fit(test_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
-    safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
-    map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
 
-    reference = MapDataset.create(geom)
-    datasets = []
+    my_dataset = test_dataset.copy()
+    dataset = fov_bkg_maker.run(my_dataset)
 
-    for obs in observations:
-        cutout = reference.cutout(obs.pointing_radec, width="4 deg")
-        dataset = map_dataset_maker.run(cutout, obs)
-        dataset = safe_mask_maker.run(dataset, obs)
-        dataset = fov_bkg_maker.run(dataset)
-
-        datasets.append(dataset)
-
-    assert_allclose(datasets[0].background_model.norm.value, 0.8307, rtol=1e-4)
-    assert_allclose(datasets[0].background_model.tilt.value, 0.0, rtol=1e-4)
+    assert_allclose(dataset.background_model.norm.value, 0.8307, rtol=1e-4)
+    assert_allclose(dataset.background_model.tilt.value, 0.0, rtol=1e-4)
 
 
 @requires_data()
-def test_fov_bkg_maker_fit_with_tilt(geom, observations, exclusion_mask):
+def test_fov_bkg_maker_fit_with_tilt(test_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
-    safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
-    map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
 
-    reference = MapDataset.create(geom)
-    datasets = []
+    my_dataset = test_dataset.copy()
+    my_dataset.background_model.tilt.frozen = False
+    dataset = fov_bkg_maker.run(my_dataset)
 
-    for obs in observations:
-        cutout = reference.cutout(obs.pointing_radec, width="4 deg")
-        dataset = map_dataset_maker.run(cutout, obs)
-        dataset.background_model.tilt.frozen = False
-        dataset = safe_mask_maker.run(dataset, obs)
-        dataset = fov_bkg_maker.run(dataset)
-
-        datasets.append(dataset)
-
-    assert_allclose(datasets[0].background_model.norm.value, 0.9034, rtol=1e-4)
-    assert_allclose(datasets[0].background_model.tilt.value, 0.0728, rtol=1e-4)
+    assert_allclose(dataset.background_model.norm.value, 0.9034, rtol=1e-4)
+    assert_allclose(dataset.background_model.tilt.value, 0.0728, rtol=1e-4)
 
 
 @requires_data()
-def test_fov_bkg_maker_fit_fail(geom, observations, exclusion_mask):
+def test_fov_bkg_maker_fit_fail(test_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
-    safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
-    map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
 
-    reference = MapDataset.create(geom)
-    datasets = []
+    my_dataset = test_dataset.copy()
+    # Putting negative background model to prevent convergence
+    my_dataset.background_model.map.data *= -1
+    dataset = fov_bkg_maker.run(my_dataset)
 
-    for obs in observations:
-        cutout = reference.cutout(obs.pointing_radec, width="4 deg")
-        dataset = map_dataset_maker.run(cutout, obs)
-        dataset = safe_mask_maker.run(dataset, obs)
-        # Putting negative background model to prevent convergence
-        dataset.background_model.map.data *= -1
-        # TODO : assert on log.warning
-        dataset = fov_bkg_maker.run(dataset)
-
-        datasets.append(dataset)
-
-    assert_allclose(datasets[0].background_model.norm.value, 1, rtol=1e-4)
+    assert_allclose(dataset.background_model.norm.value, 1, rtol=1e-4)
 
 
 @requires_data()
-def test_fov_bkg_maker_scale_fail(geom, observations, exclusion_mask):
-    fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
-    safe_mask_maker = SafeMaskMaker(methods=["offset-max"], offset_max="2 deg")
-    map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
+def test_fov_bkg_maker_scale_fail(test_dataset, exclusion_mask):
+    fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
 
-    reference = MapDataset.create(geom)
-    datasets = []
+    my_dataset = test_dataset.copy()
+    # Putting negative background model to prevent correct scaling
+    my_dataset.background_model.map.data *= -1
+    dataset = fov_bkg_maker.run(my_dataset)
 
-    for obs in observations:
-        cutout = reference.cutout(obs.pointing_radec, width="4 deg")
-        dataset = map_dataset_maker.run(cutout, obs)
-        dataset = safe_mask_maker.run(dataset, obs)
-        # Putting negative background model to prevent convergence
-        dataset.background_model.map.data *= -1
-        # TODO : assert on log.warning
-        dataset = fov_bkg_maker.run(dataset)
-
-        datasets.append(dataset)
-
-    assert_allclose(datasets[0].background_model.norm.value, 1, rtol=1e-4)
+    assert_allclose(dataset.background_model.norm.value, 1, rtol=1e-4)
