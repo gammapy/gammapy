@@ -1,3 +1,5 @@
+.. _model-gallery:
+
 Model gallery
 =============
 

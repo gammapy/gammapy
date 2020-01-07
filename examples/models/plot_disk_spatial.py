@@ -1,14 +1,41 @@
 """
 Disk Spatial Model
 ==================
-Plot the disk spatial model.
+
+By default, the model is symmetric, i.e. a disk:
+
+.. math::
+
+    \\phi(lon, lat) = \\frac{1}{2 \\pi (1 - \\cos{r_0}) } \\cdot
+            \\begin{cases}
+                1 & \\text{for } \\theta \\leq r_0 \\
+                0 & \\text{for } \\theta > r_0
+            \\end{cases}
+
+where :math:`\\theta` is the sky separation. To improve fit convergence of the
+model, the sharp edges is smoothed using `~scipy.special.erf`.
+
+In case an eccentricity (`e`) and rotation angle (:math:`\phi`) are passed,
+then the model is an elongated disk (i.e. an ellipse), with a major semiaxis of length :math:`r_0`
+and position angle :math:`\phi` (increaing counter-clockwise from the North direction).
+
+The model is defined on the celestial sphere, with a normalization defined by:
+
+.. math::
+
+    \\int_{4\pi}\phi(\\text{lon}, \\text{lat}) \,d\\Omega = 1\,.
 """
+
+#%%
+# Example plot
+# ------------
+# Here is an example plot of the model:
+
 
 import numpy as np
 import matplotlib.pyplot as plt
 from gammapy.maps import Map, WcsGeom
-from gammapy.modeling.models import DiskSpatialModel
-
+from gammapy.modeling.models import DiskSpatialModel, SkyModel, SkyModels, PowerLawSpectralModel
 
 model = DiskSpatialModel(
     lon_0="2 deg",
@@ -40,3 +67,16 @@ ax.plot(
 ax.vlines(x=2, color="r", linestyle="--", transform=transform, ymin=0, ymax=5)
 ax.text(2.15, 2.3, r"$\phi$", transform=transform)
 plt.show()
+
+#%%
+# YAML representation
+# -------------------
+# Here is an example YAML file using the model:
+
+pwl = PowerLawSpectralModel()
+gauss = DiskSpatialModel()
+
+model = SkyModel(spectral_model=pwl, spatial_model=gauss)
+models = SkyModels([model])
+
+print(models.to_yaml())

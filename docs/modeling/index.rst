@@ -13,7 +13,7 @@ Introduction
 
 `gammapy.modeling` contains all the functionality related to modeling and fitting
 data. This includes spectral, spatial and temporal model classes, as well as the fit
-and parameter API. A list of available model can be found further down this page.
+and parameter API. An overview of all the available models can be found in the :ref:`model-gallery`.
 In general the models are grouped into the following categories:
 
 - `~gammapy.modeling.models.SpectralModel`: models to describe spectral shapes of sources
@@ -24,7 +24,6 @@ In general the models are grouped into the following categories:
 The models follow a naming scheme which contains the category as a suffix to the class
 name.
 
-.. include:: gallery/index.rst
 
 Getting Started
 ===============

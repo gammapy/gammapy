@@ -198,8 +198,11 @@ suppress_warnings = ["ref.citation"]
 
 
 sphinx_gallery_conf = {
-     "examples_dirs": "../examples/models",   # path to your example scripts
-     "gallery_dirs": "modeling/gallery",  # path to where to save gallery generated output
-     "download_all_examples": False,
-     "capture_repr": ()
+    "examples_dirs": "../examples/models",   # path to your example scripts
+    "gallery_dirs": "modeling/gallery",  # path to where to save gallery generated output
+    "download_all_examples": False,
+    "capture_repr": (),
+    "min_reported_time": False,
+    "show_memory": False,
+    "line_numbers": True,
 }
