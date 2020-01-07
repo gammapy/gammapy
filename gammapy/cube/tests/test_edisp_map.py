@@ -104,7 +104,7 @@ def test_edisp_map_to_energydispersion():
     position = SkyCoord(0, 0, unit="deg")
     e_reco = np.logspace(-0.3, 0.2, 200) * u.TeV
 
-    edisp = edmap.get_energy_dispersion(position, e_reco)
+    edisp = edmap.get_edisp_kernel(position, e_reco)
     # Note that the bias and resolution are rather poorly evaluated on an EnergyDispersion object
     assert_allclose(edisp.get_bias(e_true=1.0 * u.TeV), 0.0, atol=3e-2)
     assert_allclose(edisp.get_resolution(e_true=1.0 * u.TeV), 0.2, atol=3e-2)
@@ -143,7 +143,7 @@ def test_edisp_from_diagonal_response(position):
     edisp_map = EDispMap.from_diagonal_response(energy_axis_true)
 
     e_reco = energy_axis_true.edges
-    edisp_kernel = edisp_map.get_energy_dispersion(position, e_reco=e_reco)
+    edisp_kernel = edisp_map.get_edisp_kernel(position, e_reco=e_reco)
 
     sum_kernel = np.sum(edisp_kernel.data.data, axis=1).data
 

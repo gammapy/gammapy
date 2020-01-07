@@ -336,8 +336,8 @@ class SpectrumEvaluator:
         Spectral model
     aeff : `~gammapy.irf.EffectiveAreaTable`
         EffectiveArea
-    edisp : `~gammapy.irf.EnergyDispersion`, optional
-        EnergyDispersion
+    edisp : `~gammapy.irf.EDispKernel`, optional
+        Energy dispersion kernel.
     livetime : `~astropy.units.Quantity`
         Observation duration (may be contained in aeff)
     e_true : `~astropy.units.Quantity`, optional
@@ -353,7 +353,7 @@ class SpectrumEvaluator:
         import numpy as np
         import astropy.units as u
         import matplotlib.pyplot as plt
-        from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+        from gammapy.irf import EffectiveAreaTable, EDispKernel
         from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
         from gammapy.spectrum import SpectrumEvaluator
 
@@ -361,7 +361,7 @@ class SpectrumEvaluator:
         e_reco = np.logspace(-2, 2, 73) * u.TeV
 
         aeff = EffectiveAreaTable.from_parametrization(energy=e_true)
-        edisp = EnergyDispersion.from_gauss(e_true=e_true, e_reco=e_reco, sigma=0.3, bias=0)
+        edisp = EDispKernel.from_gauss(e_true=e_true, e_reco=e_reco, sigma=0.3, bias=0)
 
         pwl = PowerLawSpectralModel(index=2.3, amplitude="2.5e-12 cm-2 s-1 TeV-1", reference="1 TeV")
         model = SkyModel(spectral_model=pwl)

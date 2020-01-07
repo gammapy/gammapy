@@ -9,7 +9,7 @@ from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
-class TestEnergyDispersion:
+class TestEDispKernel:
     def setup(self):
         self.e_true = np.logspace(0, 1, 101) * u.TeV
         self.e_reco = self.e_true

@@ -166,7 +166,7 @@ class SpectrumDatasetMaker:
 
         Returns
         -------
-        edisp : `~gammapy.irf.EnergyDispersion`
+        edisp : `~gammapy.irf.EDispKernel`
             Energy dispersion
         """
         offset = observation.pointing_radec.separation(position)

@@ -30,7 +30,7 @@ Effective area    AEFF_2D              `~gammapy.irf.EffectiveAreaTable2D`      
 Effective area    ARF                  `~gammapy.irf.EffectiveAreaTable`                 `GCTAAeffArf`_
 ----------------- -------------------- ------------------------------------------------- ----------------------------
 Energy dispersion EDISP_2D             `~gammapy.irf.EnergyDispersion2D`                 `GCTAEdisp2D`_
-Energy dispersion RMF                  `~gammapy.irf.EnergyDispersion`                   `GCTAEdispRMF`_
+Energy dispersion RMF                  `~gammapy.irf.EDispKernel`                        `GCTAEdispRMF`_
 ----------------- -------------------- ------------------------------------------------- ----------------------------
 PSF               PSF_2D_GAUSS         `~gammapy.irf.EnergyDependentMultiGaussPSF`       `GCTAPsf2D`_
 PSF               PSF_2D_KING          `~gammapy.irf.PSFKing`                            `GCTAPsfKing`_

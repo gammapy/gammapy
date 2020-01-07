@@ -41,7 +41,7 @@ class IRFStacker:
     list_livetime : list
         list of `~astropy.units.Quantity` (livetime)
     list_edisp : list
-        list of `~gammapy.irf.EnergyDispersion`
+        list of `~gammapy.irf.EDispKernel`
     list_low_threshold : list
         list of low energy threshold, optional for effective area mean computation
     list_high_threshold : list
@@ -86,7 +86,7 @@ class IRFStacker:
 
     def stack_edisp(self):
         """
-        Compute mean energy dispersion (`~gammapy.irf.EnergyDispersion`).
+        Compute mean energy dispersion (`~gammapy.irf.EDispKernel`).
         """
         reco_bins = self.list_edisp[0].e_reco.nbin
         true_bins = self.list_edisp[0].e_true.nbin

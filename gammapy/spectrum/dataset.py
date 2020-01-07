@@ -38,7 +38,7 @@ class SpectrumDataset(Dataset):
         Livetime
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
-    edisp : `~gammapy.irf.EnergyDispersion`
+    edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
     background : `~gammapy.spectrum.CountsSpectrum`
         Background to use for the fit.
@@ -548,7 +548,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Livetime
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
-    edisp : `~gammapy.irf.EnergyDispersion`
+    edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
     mask_safe : `~numpy.array`
         Mask defining the safe data range.

@@ -105,7 +105,7 @@ class EDispMap:
         # Get an Energy Dispersion (1D) at any position in the image
         pos = SkyCoord(2.0, 2.5, unit="deg")
         e_reco = np.logspace(-1.0, 1.0, 10) * u.TeV
-        edisp = edisp_map.get_energy_dispersion(pos=pos, e_reco=e_reco)
+        edisp = edisp_map.get_edisp_kernel(pos=pos, e_reco=e_reco)
 
         # Write map to disk
         edisp_map.write("edisp_map.fits")
@@ -196,7 +196,7 @@ class EDispMap:
         hdulist = self.to_hdulist(**kwargs)
         hdulist.writeto(filename, overwrite=overwrite)
 
-    def get_energy_dispersion(self, position, e_reco, migra_step=5e-3):
+    def get_edisp_kernel(self, position, e_reco, migra_step=5e-3):
         """Get energy dispersion at a given position.
 
         Parameters
