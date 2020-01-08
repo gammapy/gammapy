@@ -8,6 +8,11 @@
 # to install our own Python.
 language: c
 
+compiler: gcc
+
+cache:
+  - ccache
+
 os:
     - linux
 
@@ -39,12 +44,9 @@ env:
         - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy parfive pydantic'
 
         - CONDA_CHANNELS='conda-forge sherpa'
-
-        - FETCH_GAMMAPY_EXTRA=false
         - FETCH_GAMMAPY_DATA=true
         - TEST_COVERAGE=false
         - TEST_PACKAGING=false
-        - TEST_FERMIPY=false
         - RUN_INSTALL=true
 
 stages:
@@ -75,10 +77,10 @@ matrix:
                CONDA_DEPENDENCIES='Cython click regions'
                PIP_DEPENDENCIES='pytest-astropy parfive pydantic'
 
-        # Run tests without GAMMAPY_EXTRA available
+        # Run tests without GAMMAPY_DATA available
         - stage: Initial tests
           env: CMD='make test'
-               FETCH_GAMMAPY_EXTRA=false FETCH_GAMMAPY_DATA=false
+               FETCH_GAMMAPY_DATA=false
 
         # Build docs
         - env: CMD='make docs-all'
@@ -130,11 +132,6 @@ install:
       fi
 
 script:
-    - if $FETCH_GAMMAPY_EXTRA; then
-          git clone https://github.com/gammapy/gammapy-extra.git ${HOME}/gammapy-extra;
-          export GAMMAPY_EXTRA=${HOME}/gammapy-extra;
-      fi
-
     - if $FETCH_GAMMAPY_DATA; then
           export GAMMAPY_DATA=${HOME}/gammapy-data;
           pip install -e .;
