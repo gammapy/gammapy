@@ -2,7 +2,7 @@
 """FoV background estimation."""
 import logging
 from gammapy.maps import Map
-from gammapy.modeling import Fit
+from gammapy.modeling import Fit, Datasets
 
 __all__ = ["FoVBackgroundMaker"]
 
@@ -15,23 +15,24 @@ class FoVBackgroundMaker:
     The dataset background model can be simply scaled (method="scale") or fitted (method="fit")
     on the dataset counts.
 
-    The normalization is performed outside the exclusion mask taht is passed on init.
+    The normalization is performed outside the exclusion mask that is passed on init.
+
+    If a SkyModel is set on the input dataset and method is 'fit', its are frozen during
+    the fov normalization fit.
 
     Parameters
     ----------
     method : str in ['fit', 'scale']
-        the normalization method to be applied. Default 'fit'.
+        the normalization method to be applied. Default 'scale'.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask
     """
 
-    def __init__(self, method="fit", exclusion_mask=None):
+    def __init__(self, method="scale", exclusion_mask=None):
         if method in ["fit", "scale"]:
             self.method = method
         else:
-            raise ValueError(
-                f"Incorrect method for FoVBackgroundMaker: {method}."
-            )
+            raise ValueError(f"Incorrect method for FoVBackgroundMaker: {method}.")
         self.exclusion_mask = exclusion_mask
 
     def run(self, dataset):
@@ -69,14 +70,25 @@ class FoVBackgroundMaker:
     def _fit_bkg(self, dataset):
         """Fit the FoV background model on the dataset counts data"""
 
-        # Here we assume that the model is only the background model
-        # TODO : freeze all model components not related to background model?
-        fit = Fit([dataset])
+        # freeze all model components not related to background model
+        datasets = Datasets([dataset])
+
+        parameters_frozen = []
+        for par in datasets.parameters:
+            parameters_frozen.append(par.frozen)
+            if par not in dataset.background_model.parameters:
+                par.frozen = True
+
+        fit = Fit(datasets)
         fit_result = fit.run()
         if fit_result.success is False:
             log.info(
                 f"FoVBackgroundMaker failed. No fit convergence for {dataset.name}."
             )
+
+        # Unfreeze parameters
+        for i, par in enumerate(datasets.parameters):
+            par.frozen = parameters_frozen[i]
 
     def _scale_bkg(self, dataset):
         """Fit the FoV background model on the dataset counts data"""

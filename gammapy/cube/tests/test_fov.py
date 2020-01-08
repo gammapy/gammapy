@@ -9,6 +9,11 @@ from gammapy.cube.make import MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
 from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.modeling.models import (
+    GaussianSpatialModel,
+    PowerLawSpectralModel,
+    SkyModel,
+)
 
 
 @pytest.fixture(scope="session")
@@ -83,6 +88,31 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
 
     test_dataset = obs_dataset.copy()
     dataset = fov_bkg_maker.run(test_dataset)
+
+    assert_allclose(dataset.background_model.norm.value, 0.8307, rtol=1e-4)
+    assert_allclose(dataset.background_model.tilt.value, 0.0, rtol=1e-4)
+
+
+@requires_data()
+@requires_dependency("iminuit")
+def test_fov_bkg_maker_fit_with_source_model(obs_dataset, exclusion_mask):
+    fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
+
+    test_dataset = obs_dataset.copy()
+    spatial_model = GaussianSpatialModel(
+        lon_0="0.2 deg", lat_0="0.1 deg", sigma="0.2 deg", frame="galactic"
+    )
+    spectral_model = PowerLawSpectralModel(
+        index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
+    )
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+    test_dataset.models = model
+    dataset = fov_bkg_maker.run(test_dataset)
+
+    # Here we check that source parameters are correctly thawed after fit.
+    assert dataset.models.parameters["index"].frozen is False
+    assert dataset.models.parameters["lon_0"].frozen is False
+    assert dataset.background_model.norm.frozen is False
 
     assert_allclose(dataset.background_model.norm.value, 0.8307, rtol=1e-4)
     assert_allclose(dataset.background_model.tilt.value, 0.0, rtol=1e-4)
