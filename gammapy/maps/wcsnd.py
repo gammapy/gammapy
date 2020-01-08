@@ -618,7 +618,7 @@ class WcsNDMap(WcsMap):
                 self.geom.pixel_scales.deg, kmap.geom.pixel_scales.deg, rtol=1e-5
             ):
                 raise ValueError("Pixel size of kernel and map not compatible.")
-            kernel = kmap.data
+            kernel = kmap.data.astype(np.float32)
 
         for img, idx in self.iter_by_image():
             idx = Ellipsis if kernel.ndim == 2 else idx
