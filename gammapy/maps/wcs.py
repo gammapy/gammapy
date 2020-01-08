@@ -460,6 +460,7 @@ class WcsGeom(Geom):
             yrefpix=refpix[1],
         )
         wcs = WCS(header)
+        wcs.wcs.datfix()
         return cls(wcs, npix, cdelt=binsz, axes=axes)
 
     @classmethod
