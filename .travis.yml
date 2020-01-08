@@ -8,11 +8,6 @@
 # to install our own Python.
 language: c
 
-compiler: gcc
-
-cache:
-  - ccache
-
 os:
     - linux
 
