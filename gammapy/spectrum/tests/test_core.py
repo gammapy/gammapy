@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.units import Quantity
-from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from gammapy.irf import EffectiveAreaTable, EDispKernel
 from gammapy.maps import MapAxis
 from gammapy.modeling.models import (
     PowerLawSpectralModel,
@@ -88,7 +88,7 @@ def get_test_cases():
                 spectral_model=PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1")
             ),
             aeff=EffectiveAreaTable.from_parametrization(e_true),
-            edisp=EnergyDispersion.from_gauss(
+            edisp=EDispKernel.from_gauss(
                 e_reco=e_reco, e_true=e_true, bias=0, sigma=0.2
             ),
             livetime="10 h",

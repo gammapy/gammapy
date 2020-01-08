@@ -11,10 +11,10 @@ from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 
-__all__ = ["EnergyDispersion", "EnergyDispersion2D"]
+__all__ = ["EDispKernel", "EnergyDispersion2D"]
 
 
-class EnergyDispersion:
+class EDispKernel:
     """Energy dispersion matrix.
 
     Data format specification: :ref:`gadf:ogip-rmf`
@@ -833,7 +833,7 @@ class EnergyDispersion2D:
         e_lo, e_hi = e_true[:-1], e_true[1:]
         ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
 
-        return EnergyDispersion(
+        return EDispKernel(
             e_true_lo=e_lo,
             e_true_hi=e_hi,
             e_reco_lo=ereco_lo,

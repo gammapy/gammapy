@@ -19,7 +19,7 @@ class SensitivityEstimator:
     ----------
     arf : `~gammapy.irf.EffectiveAreaTable`
         1D effective area
-    rmf : `~gammapy.irf.EnergyDispersion`
+    rmf : `~gammapy.irf.EDispKernel`
         energy dispersion table
     bkg : `~gammapy.spectrum.CountsSpectrum`
         the background array

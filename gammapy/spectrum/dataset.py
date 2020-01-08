@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
-from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
+from gammapy.irf import EffectiveAreaTable, EDispKernel, IRFStacker
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import SkyModel, SkyModels
 from gammapy.stats import cash, significance_on_off, wstat
@@ -38,7 +38,7 @@ class SpectrumDataset(Dataset):
         Livetime
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
-    edisp : `~gammapy.irf.EnergyDispersion`
+    edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
     background : `~gammapy.spectrum.CountsSpectrum`
         Background to use for the fit.
@@ -433,7 +433,7 @@ class SpectrumDataset(Dataset):
         aeff = EffectiveAreaTable(
             e_true[:-1], e_true[1:], np.zeros(e_true[:-1].shape) * u.m ** 2
         )
-        edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
+        edisp = EDispKernel.from_diagonal_response(e_true, e_reco)
         mask_safe = np.zeros_like(counts.data, "bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
         livetime = gti.time_sum
@@ -548,7 +548,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Livetime
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
-    edisp : `~gammapy.irf.EnergyDispersion`
+    edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
     mask_safe : `~numpy.array`
         Mask defining the safe data range.
@@ -709,7 +709,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         aeff = EffectiveAreaTable(
             e_true[:-1], e_true[1:], np.zeros(e_true[:-1].shape) * u.m ** 2
         )
-        edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
+        edisp = EDispKernel.from_diagonal_response(e_true, e_reco)
         mask_safe = np.zeros_like(counts.data, "bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
         livetime = gti.time_sum
@@ -1037,7 +1037,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         try:
             rmffile = phafile.replace("pha", "rmf")
-            energy_dispersion = EnergyDispersion.read(dirname / rmffile)
+            energy_dispersion = EDispKernel.read(dirname / rmffile)
         except OSError:
             # TODO : Add logger and echo warning
             energy_dispersion = None

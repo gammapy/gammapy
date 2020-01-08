@@ -631,7 +631,7 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        edisp : `gammapy.irf.EnergyDispersion`
+        edisp : `gammapy.irf.EDispKernel`
             Energy dispersion matrix
 
         Returns

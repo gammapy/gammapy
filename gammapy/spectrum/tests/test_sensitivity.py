@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from gammapy.irf import EffectiveAreaTable, EDispKernel
 from gammapy.spectrum import CountsSpectrum, SensitivityEstimator
 from gammapy.utils.testing import requires_data
 
@@ -18,7 +18,7 @@ def sens():
     arf = EffectiveAreaTable(energy_lo=elo, energy_hi=ehi, data=area)
 
     ereco = np.logspace(0, 1, 5) * u.TeV
-    rmf = EnergyDispersion.from_diagonal_response(etrue, ereco)
+    rmf = EDispKernel.from_diagonal_response(etrue, ereco)
 
     bkg_array = np.ones(4)
     bkg_array[-1] = 1e-3

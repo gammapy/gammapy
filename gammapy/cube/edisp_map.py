@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
-from gammapy.irf import EnergyDispersion
+from gammapy.irf import EDispKernel
 from gammapy.maps import Map, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 
@@ -105,7 +105,7 @@ class EDispMap:
         # Get an Energy Dispersion (1D) at any position in the image
         pos = SkyCoord(2.0, 2.5, unit="deg")
         e_reco = np.logspace(-1.0, 1.0, 10) * u.TeV
-        edisp = edisp_map.get_energy_dispersion(pos=pos, e_reco=e_reco)
+        edisp = edisp_map.get_edisp_kernel(pos=pos, e_reco=e_reco)
 
         # Write map to disk
         edisp_map.write("edisp_map.fits")
@@ -196,7 +196,7 @@ class EDispMap:
         hdulist = self.to_hdulist(**kwargs)
         hdulist.writeto(filename, overwrite=overwrite)
 
-    def get_energy_dispersion(self, position, e_reco, migra_step=5e-3):
+    def get_edisp_kernel(self, position, e_reco, migra_step=5e-3):
         """Get energy dispersion at a given position.
 
         Parameters
@@ -270,7 +270,7 @@ class EDispMap:
         e_lo, e_hi = e_true_edges[:-1], e_true_edges[1:]
         ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
 
-        return EnergyDispersion(
+        return EDispKernel(
             e_true_lo=e_lo,
             e_true_hi=e_hi,
             e_reco_lo=ereco_lo,

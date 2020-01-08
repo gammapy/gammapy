@@ -11,7 +11,7 @@ from gammapy.cube.edisp_map import EDispMap
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
-from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from gammapy.irf import EffectiveAreaTable, EDispKernel
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
@@ -51,10 +51,10 @@ class MapDataset(Dataset):
         Exposure cube
     mask_fit : `~gammapy.maps.WcsNDMap`
         Mask to apply to the likelihood for fitting.
-    psf : `~gammapy.cube.PSFKernel`
+    psf : `~gammapy.cube.PSFKernel` or `~gammapy.cube.PSFMap`
         PSF kernel
-    edisp : `~gammapy.irf.EnergyDispersion`
-        Energy dispersion
+    edisp : `~gammapy.irf.EDispKernel` or `~gammapy.cube.EDispMap`
+        Energy dispersion kernel
     background_model : `~gammapy.modeling.models.BackgroundModel`
         Background model to use for the fit.
     evaluation_mode : {"local", "global"}
@@ -647,7 +647,7 @@ class MapDataset(Dataset):
             ]
 
         if self.edisp is not None:
-            if isinstance(self.edisp, EnergyDispersion):
+            if isinstance(self.edisp, EDispKernel):
                 hdus = self.edisp.to_hdulist()
                 hdus["MATRIX"].name = "edisp_matrix"
                 hdus["EBOUNDS"].name = "edisp_matrix_ebounds"
@@ -712,7 +712,7 @@ class MapDataset(Dataset):
             kwargs["background_model"] = BackgroundModel(background_map)
 
         if "EDISP_MATRIX" in hdulist:
-            kwargs["edisp"] = EnergyDispersion.from_hdulist(
+            kwargs["edisp"] = EDispKernel.from_hdulist(
                 hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
             )
         if "EDISP" in hdulist:
@@ -818,7 +818,7 @@ class MapDataset(Dataset):
         Effective area is taken from the average exposure divided by the livetime.
         Here we assume it is the sum of the GTIs.
 
-        EnergyDispersion is obtained at the on_region center.
+        The energy dispersion kernel is obtained at the on_region center.
         Only regions with centers are supported.
 
         The model is not exported to the ~gammapy.spectrum.SpectrumDataset.
@@ -877,10 +877,10 @@ class MapDataset(Dataset):
                 aeff.data.data *= containment.squeeze()
 
         if self.edisp is not None:
-            if isinstance(self.edisp, EnergyDispersion):
+            if isinstance(self.edisp, EDispKernel):
                 edisp = self.edisp
             else:
-                edisp = self.edisp.get_energy_dispersion(
+                edisp = self.edisp.get_edisp_kernel(
                     on_region.center, self._energy_axis.edges
                 )
         else:
@@ -1015,7 +1015,7 @@ class MapDatasetOnOff(MapDataset):
         Mask to apply to the likelihood for fitting.
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
-    edisp : `~gammapy.irf.EnergyDispersion`
+    edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
     background_model : `~gammapy.modeling.models.BackgroundModel`
         Background model to use for the fit.
@@ -1330,7 +1330,7 @@ class MapDatasetOnOff(MapDataset):
             init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
 
         if "EDISP_MATRIX" in hdulist:
-            init_kwargs["edisp"] = EnergyDispersion.from_hdulist(
+            init_kwargs["edisp"] = EDispKernel.from_hdulist(
                 hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
             )
 
@@ -1371,7 +1371,7 @@ class MapEvaluator:
         Exposure map
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
-    edisp : `~gammapy.irf.EnergyDispersion`
+    edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
@@ -1426,7 +1426,7 @@ class MapEvaluator:
 
         if isinstance(edisp, EDispMap):
             e_reco = geom.get_axis_by_name("energy").edges
-            self.edisp = edisp.get_energy_dispersion(self.model.position, e_reco=e_reco)
+            self.edisp = edisp.get_edisp_kernel(self.model.position, e_reco=e_reco)
         else:
             self.edisp = edisp
 

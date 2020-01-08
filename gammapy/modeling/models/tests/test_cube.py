@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.cube import PSFKernel
 from gammapy.cube.fit import MapEvaluator
-from gammapy.irf import EnergyDispersion
+from gammapy.irf import EDispKernel
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     BackgroundModel,
@@ -75,7 +75,7 @@ def background(geom):
 def edisp(geom, geom_true):
     e_reco = geom.get_axis_by_name("energy").edges
     e_true = geom_true.get_axis_by_name("energy").edges
-    return EnergyDispersion.from_diagonal_response(e_true=e_true, e_reco=e_reco)
+    return EDispKernel.from_diagonal_response(e_true=e_true, e_reco=e_reco)
 
 
 @pytest.fixture(scope="session")

@@ -387,7 +387,7 @@ class SafeMaskMaker:
             if position is None:
                 position = dataset.counts.geom.center_skydir
             e_reco = dataset.counts.geom.get_axis_by_name("energy").edges
-            edisp = edisp.get_energy_dispersion(position, e_reco)
+            edisp = edisp.get_edisp_kernel(position, e_reco)
             counts = dataset.counts.geom
         else:
             counts = dataset.counts
