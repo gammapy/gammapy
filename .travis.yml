@@ -98,10 +98,6 @@ matrix:
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
                PIP_DEPENDENCIES='git+http://github.com/sherpa/sherpa.git#egg=sherpa pytest-astropy parfive pydantic'
 
-        # Test Fermipy master against gammapy master
-        - env: PYTHON_VERSION=3.6 CMD='pip install .'
-               TEST_FERMIPY=true
-
         # Test Jupyter notebooks
         - env: PYTHON_VERSION=3.6 CMD='make test-nb'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_DOCS
@@ -150,12 +146,6 @@ script:
       fi
 
     - $CMD
-
-    - if $TEST_FERMIPY; then
-          git clone https://github.com/fermiPy/fermipy.git;
-          cd fermipy;
-          pytest -v;
-      fi
 
 after_success:
     - if $TEST_COVERAGE; then
