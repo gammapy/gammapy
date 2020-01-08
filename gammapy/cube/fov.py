@@ -98,11 +98,11 @@ class FoVBackgroundMaker:
 
         if count_tot <= 0.0:
             log.info(
-                "FoVBackgroundMaker failed. No counts found outside exlcusion mask for {dataset.name}."
+                f"FoVBackgroundMaker failed. No counts found outside exclusion mask for {dataset.name}."
             )
         elif bkg_tot <= 0.0:
             log.info(
-                "FoVBackgroundMaker failed. No positive background found outside exlcusion mask for {dataset.name}."
+                f"FoVBackgroundMaker failed. No positive background found outside exclusion mask for {dataset.name}."
             )
         else:
             scale = count_tot / bkg_tot

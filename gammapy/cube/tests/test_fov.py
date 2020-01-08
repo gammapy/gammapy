@@ -143,7 +143,6 @@ def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask):
 
     assert_allclose(dataset.background_model.norm.value, 1, rtol=1e-4)
 
-
 @requires_data()
 def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
