@@ -1407,6 +1407,56 @@ class MapDatasetOnOff(MapDataset):
             gti=dataset.gti,
         )
 
+    def cutout(self, position, width, mode="trim"):
+        """Cutout map dataset.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the region in (lon, lat) in that specific order.
+            If only one value is passed, a square region is extracted.
+        mode : {'trim', 'partial', 'strict'}
+            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+
+        Returns
+        -------
+        cutout : `MapDatasetOnOff`
+            Cutout map dataset.
+        """
+        kwargs = {"gti": self.gti}
+        cutout_kwargs = {"position": position, "width": width, "mode": mode}
+
+        if self.counts is not None:
+            kwargs["counts"] = self.counts.cutout(**cutout_kwargs)
+
+        if self.counts_off is not None:
+            kwargs["counts_off"] = self.counts_off.cutout(**cutout_kwargs)
+
+        if self.exposure is not None:
+            kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
+
+        if self.acceptance is not None:
+            kwargs["acceptance"] = self.acceptance.cutout(**cutout_kwargs)
+
+        if self.acceptance_off is not None:
+            kwargs["acceptance_off"] = self.acceptance_off.cutout(**cutout_kwargs)
+
+        if self.edisp is not None:
+            kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
+
+        if self.psf is not None:
+            kwargs["psf"] = self.psf.cutout(**cutout_kwargs)
+
+        if self.mask_safe is not None:
+            kwargs["mask_safe"] = self.mask_safe.cutout(**cutout_kwargs)
+
+        if self.mask_fit is not None:
+            kwargs["mask_fit"] = self.mask_fit.cutout(**cutout_kwargs)
+
+        return self.__class__(**kwargs)
+
 
 class MapEvaluator:
     """Sky model evaluation on maps.

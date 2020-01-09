@@ -688,7 +688,7 @@ def test_datasets_io_no_model(tmpdir):
 
 
 @requires_data()
-def test_mapdatasetonoff_to_spectrum_dataset(sky_model, images):
+def test_mapdatasetonoff_to_spectrum_dataset(images):
     e_reco = MapAxis.from_bounds(0.1, 10.0, 1, name="energy", unit=u.TeV, interp="log")
     new_images = dict()
     for key, image in images.items():
@@ -714,3 +714,19 @@ def test_mapdatasetonoff_to_spectrum_dataset(sky_model, images):
 
     excess = spectrum_dataset.excess.data[0]
     assert_allclose(excess, excess_true, atol=1e-6)
+
+
+@requires_data()
+def test_mapdatasetonoff_cutout(images):
+    dataset = get_map_dataset_onoff(images)
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+    dataset.gti = gti
+
+    cutout_dataset = dataset.cutout(
+        images["counts"].geom.center_skydir, ["1 deg", "1 deg"]
+    )
+
+    assert cutout_dataset.counts.data.shape == (50, 50)
+    assert cutout_dataset.counts_off.data.shape == (50, 50)
+    assert cutout_dataset.acceptance.data.shape == (50, 50)
+    assert cutout_dataset.acceptance_off.data.shape == (50, 50)
