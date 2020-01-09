@@ -16,7 +16,7 @@ from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
 from gammapy.modeling.parameter import _get_parameters_str
-from gammapy.spectrum import SpectrumDataset
+from gammapy.spectrum import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
@@ -1350,6 +1350,62 @@ class MapDatasetOnOff(MapDataset):
             gti = GTI(Table.read(hdulist, hdu="GTI"))
             init_kwargs["gti"] = gti
         return cls(**init_kwargs)
+
+    def to_spectrum_dataset(self, on_region, containment_correction=False):
+        """Return a ~gammapy.spectrum.SpectrumDatasetOnOff from on_region.
+
+        Counts and OFF counts are summed in the on_region.
+
+        Acceptance is the average of all acceptances while acceptance OFF
+        is taken such that number of excess is preserved in the on_region.
+
+        Effective area is taken from the average exposure divided by the livetime.
+        Here we assume it is the sum of the GTIs.
+
+        The energy dispersion kernel is obtained at the on_region center.
+        Only regions with centers are supported.
+
+        The model is not exported to the ~gammapy.spectrum.SpectrumDataset.
+        It must be set after the dataset extraction.
+
+        Parameters
+        ----------
+        on_region : `~regions.SkyRegion`
+            the input ON region on which to extract the spectrum
+        containment_correction : bool
+            Apply containment correction for point sources and circular on regions
+
+        Returns
+        -------
+        dataset : `~gammapy.spectrum.SpectrumDatasetOnOff`
+            the resulting reduced dataset
+        """
+        dataset = super().to_spectrum_dataset(on_region, containment_correction)
+
+        if self.counts_off is not None:
+            counts_off = self.counts_off.get_spectrum(on_region, np.sum)
+        else:
+            counts_off = None
+
+        if self.acceptance is not None:
+            acceptance = self.acceptance.get_spectrum(on_region, np.mean)
+            background = self.background.get_spectrum(on_region, np.sum)
+            acceptance_off = acceptance * counts_off / background
+        else:
+            acceptance = None
+            acceptance_off = None
+
+        return SpectrumDatasetOnOff(
+            counts=dataset.counts,
+            counts_off=counts_off,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            name=dataset.name,
+            aeff=dataset.aeff,
+            edisp=dataset.edisp,
+            livetime=dataset.livetime,
+            gti=dataset.gti,
+        )
 
 
 class MapEvaluator:
