@@ -730,3 +730,4 @@ def test_mapdatasetonoff_cutout(images):
     assert cutout_dataset.counts_off.data.shape == (50, 50)
     assert cutout_dataset.acceptance.data.shape == (50, 50)
     assert cutout_dataset.acceptance_off.data.shape == (50, 50)
+    assert cutout_dataset.background_model is None

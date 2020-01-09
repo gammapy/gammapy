@@ -1428,34 +1428,18 @@ class MapDatasetOnOff(MapDataset):
         kwargs = {"gti": self.gti}
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
 
-        if self.counts is not None:
-            kwargs["counts"] = self.counts.cutout(**cutout_kwargs)
+        cutout_dataset = super().cutout(**cutout_kwargs)
 
         if self.counts_off is not None:
-            kwargs["counts_off"] = self.counts_off.cutout(**cutout_kwargs)
-
-        if self.exposure is not None:
-            kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
+            cutout_dataset.counts_off = self.counts_off.cutout(**cutout_kwargs)
 
         if self.acceptance is not None:
-            kwargs["acceptance"] = self.acceptance.cutout(**cutout_kwargs)
+            cutout_dataset.acceptance = self.acceptance.cutout(**cutout_kwargs)
 
         if self.acceptance_off is not None:
-            kwargs["acceptance_off"] = self.acceptance_off.cutout(**cutout_kwargs)
+            cutout_dataset.acceptance_off = self.acceptance_off.cutout(**cutout_kwargs)
 
-        if self.edisp is not None:
-            kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
-
-        if self.psf is not None:
-            kwargs["psf"] = self.psf.cutout(**cutout_kwargs)
-
-        if self.mask_safe is not None:
-            kwargs["mask_safe"] = self.mask_safe.cutout(**cutout_kwargs)
-
-        if self.mask_fit is not None:
-            kwargs["mask_fit"] = self.mask_fit.cutout(**cutout_kwargs)
-
-        return self.__class__(**kwargs)
+        return cutout_dataset
 
 
 class MapEvaluator:
