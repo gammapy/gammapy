@@ -7,7 +7,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
-from astropy.wcs.utils import proj_plane_pixel_scales
+from astropy.wcs.utils import proj_plane_pixel_scales, wcs_to_celestial_frame, celestial_frame_to_wcs
 from regions import SkyRegion
 from .geom import (
     Geom,
@@ -77,87 +77,6 @@ def get_resampled_wcs(wcs, factor, downsampled):
     return wcs
 
 
-# TODO: remove this function, move code to the one caller below
-def _make_image_header(
-    nxpix=100,
-    nypix=100,
-    binsz=0.1,
-    xref=0,
-    yref=0,
-    proj="CAR",
-    frame="galactic",
-    xrefpix=None,
-    yrefpix=None,
-):
-    """Generate a FITS header from scratch.
-
-    Uses the same parameter names as the Fermi tool gtbin.
-
-    If no reference pixel position is given it is assumed ot be
-    at the center of the image.
-
-    Parameters
-    ----------
-    nxpix : int, optional
-        Number of pixels in x axis. Default is 100.
-    nypix : int, optional
-        Number of pixels in y axis. Default is 100.
-    binsz : float, optional
-        Bin size for x and y axes in units of degrees. Default is 0.1.
-    xref : float, optional
-        Coordinate system value at reference pixel for x axis. Default is 0.
-    yref : float, optional
-        Coordinate system value at reference pixel for y axis. Default is 0.
-    proj : string, optional
-        Projection type. Default is 'CAR' (cartesian).
-    frame : {'CEL', 'GAL'}, optional
-        Coordinate system. Default is 'GAL' (Galactic).
-    xrefpix : float, optional
-        Coordinate system reference pixel for x axis. Default is None.
-    yrefpix: float, optional
-        Coordinate system reference pixel for y axis. Default is None.
-
-    Returns
-    -------
-    header : `~astropy.io.fits.Header`
-        Header
-    """
-    nxpix = int(nxpix)
-    nypix = int(nypix)
-    if not xrefpix:
-        xrefpix = (nxpix + 1) / 2.0
-    if not yrefpix:
-        yrefpix = (nypix + 1) / 2.0
-
-    if frame in ["fk5", "fk4", "icrs"]:
-        ctype1, ctype2 = "RA---", "DEC--"
-    elif frame == "galactic":
-        ctype1, ctype2 = "GLON-", "GLAT-"
-    else:
-        raise ValueError(f"Unsupported frame: {frame!r}")
-
-    pars = {
-        "NAXIS": 2,
-        "NAXIS1": nxpix,
-        "NAXIS2": nypix,
-        "CTYPE1": ctype1 + proj,
-        "CRVAL1": xref,
-        "CRPIX1": xrefpix,
-        "CUNIT1": "deg",
-        "CDELT1": -binsz,
-        "CTYPE2": ctype2 + proj,
-        "CRVAL2": yref,
-        "CRPIX2": yrefpix,
-        "CUNIT2": "deg",
-        "CDELT2": binsz,
-    }
-
-    header = fits.Header()
-    header.update(pars)
-
-    return header
-
-
 class WcsGeom(Geom):
     """Geometry class for WCS maps.
 
@@ -188,8 +107,8 @@ class WcsGeom(Geom):
 
     def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, cutout_info=None):
         self._wcs = wcs
-        self._frame = get_coordys(wcs)
-        self._projection = get_projection(wcs)
+        self._frame = wcs_to_celestial_frame(wcs).name
+        self._projection = wcs.wcs.ctype[0][5:]
         self._axes = make_axes(axes)
 
         if cdelt is None:
@@ -418,11 +337,11 @@ class WcsGeom(Geom):
         >>> geom = WcsGeom.create(npix=([100,200],[100,200]), binsz=0.1, axes=[axis])
         """
         if skydir is None:
-            xref, yref = (0.0, 0.0)
+            crval = (0.0, 0.0)
         elif isinstance(skydir, tuple):
-            xref, yref = skydir
+            crval = skydir
         elif isinstance(skydir, SkyCoord):
-            xref, yref, frame = skycoord_to_lonlat(skydir, frame=frame)
+            crval, frame = skycoord_to_lonlat(skydir, frame=frame)
         else:
             raise ValueError(f"Invalid type for skydir: {type(skydir)!r}")
 
@@ -446,20 +365,19 @@ class WcsGeom(Geom):
             npix = cast_to_shape(npix, shape, int)
 
         if refpix is None:
-            refpix = (None, None)
+            nxpix = int(npix[0].flat[0])
+            nypix = int(npix[1].flat[0])
+            crpix = ((nxpix + 1) / 2.0, (nypix + 1) / 2.0)
 
-        header = _make_image_header(
-            nxpix=npix[0].flat[0],
-            nypix=npix[1].flat[0],
-            binsz=binsz[0].flat[0],
-            xref=float(xref),
-            yref=float(yref),
-            proj=proj,
-            frame=frame,
-            xrefpix=refpix[0],
-            yrefpix=refpix[1],
-        )
-        wcs = WCS(header)
+        # get frame class
+        frame = SkyCoord(np.nan, np.nan, frame=frame, unit="deg").frame
+        wcs = celestial_frame_to_wcs(frame, projection=proj)
+        wcs.wcs.crpix = crpix
+        wcs.wcs.crval = crval
+
+        cdelt = binsz[0].flat[0]
+        wcs.wcs.cdelt = (-cdelt, cdelt)
+        wcs.array_shape = npix[0].flat[0], npix[1].flat[0]
         wcs.wcs.datfix()
         return cls(wcs, npix, cdelt=binsz, axes=axes)
 
@@ -1155,15 +1073,3 @@ def world2pix(wcs, cdelt, crpix, coord):
         (pix[1] - (wcs.wcs.crpix[1] - 1.0)) * pix_ratio[1] + crpix[1] - 1.0,
     )
 
-
-def get_projection(wcs):
-    return wcs.wcs.ctype[0][5:]
-
-
-def get_coordys(wcs):
-    if "RA" in wcs.wcs.ctype[0]:
-        return "icrs"
-    elif "GLON" in wcs.wcs.ctype[0]:
-        return "galactic"
-    else:
-        raise ValueError("Unrecognized WCS coordinate system.")
