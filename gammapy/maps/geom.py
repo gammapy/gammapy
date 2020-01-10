@@ -170,9 +170,9 @@ def get_shape(param):
 
 
 def coordsys_to_frame(coordsys):
-    if coordsys in ["CEL", "C", "fk5", "fk4", "icrs"]:
+    if coordsys in ["CEL", "fk5", "fk4", "icrs"]:
         return "icrs"
-    elif coordsys in ["GAL", "G", "galactic"]:
+    elif coordsys in ["GAL", "galactic"]:
         return "galactic"
     else:
         raise ValueError(f"Unrecognized coordinate system: {coordsys!r}")
