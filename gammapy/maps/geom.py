@@ -805,7 +805,7 @@ class MapCoord:
     ----------
     data : `dict` of `~numpy.ndarray`
         Dictionary of coordinate arrays.
-    frame : {'CEL', 'GAL', None}
+    frame : {"icrs", "galactic", None}
         Spatial coordinate system.  If None then the coordinate system
         will be set to the native coordinate system of the geometry.
     match_by_name : bool

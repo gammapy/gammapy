@@ -21,16 +21,16 @@ pytest.importorskip("healpy")
 
 hpx_allsky_test_geoms = [
     # 2D All-sky
-    (8, False, "GAL", None, None),
+    (8, False, "galactic", None, None),
     # 3D All-sky
-    (8, False, "GAL", None, [MapAxis(np.logspace(0.0, 3.0, 4))]),
+    (8, False, "galactic", None, [MapAxis(np.logspace(0.0, 3.0, 4))]),
     # 3D All-sky w/ variable pixel size
-    ([2, 4, 8], False, "GAL", None, [MapAxis(np.logspace(0.0, 3.0, 4))]),
+    ([2, 4, 8], False, "galactic", None, [MapAxis(np.logspace(0.0, 3.0, 4))]),
     # 4D All-sky
     (
         8,
         False,
-        "GAL",
+        "galactic",
         None,
         [
             MapAxis(np.logspace(0.0, 3.0, 3), name="axis0"),
@@ -41,14 +41,14 @@ hpx_allsky_test_geoms = [
 
 hpx_partialsky_test_geoms = [
     # 2D Partial-sky
-    (8, False, "GAL", "DISK(110.,75.,10.)", None),
+    (8, False, "galactic", "DISK(110.,75.,10.)", None),
     # 3D Partial-sky
-    (8, False, "GAL", "DISK(110.,75.,10.)", [MapAxis(np.logspace(0.0, 3.0, 4))]),
+    (8, False, "galactic", "DISK(110.,75.,10.)", [MapAxis(np.logspace(0.0, 3.0, 4))]),
     # 3D Partial-sky w/ variable pixel size
     (
         [8, 16, 32],
         False,
-        "GAL",
+        "galactic",
         "DISK(110.,75.,10.)",
         [MapAxis(np.logspace(0.0, 3.0, 4))],
     ),
@@ -56,7 +56,7 @@ hpx_partialsky_test_geoms = [
     (
         [[8, 16, 32], [8, 8, 16]],
         False,
-        "GAL",
+        "galactic",
         "DISK(110.,75.,10.)",
         [
             MapAxis(np.logspace(0.0, 3.0, 3), name="axis0"),
@@ -166,24 +166,24 @@ def test_hpx_global_to_local():
     ax1 = np.linspace(0.0, 1.0, 3)
 
     # 2D All-sky
-    hpx = HpxGeom(16, False, "GAL")
+    hpx = HpxGeom(16, False, "galactic")
     assert_allclose(hpx[0], np.array([0]))
     assert_allclose(hpx[633], np.array([633]))
     assert_allclose(hpx[0, 633], np.array([0, 633]))
     assert_allclose(hpx[np.array([0, 633])], np.array([0, 633]))
 
     # 3D All-sky
-    hpx = HpxGeom(16, False, "GAL", axes=[ax0])
+    hpx = HpxGeom(16, False, "galactic", axes=[ax0])
     assert_allclose(
         hpx[(np.array([177, 177]), np.array([0, 1]))], np.array([177, 177 + 3072])
     )
 
     # 2D Partial-sky
-    hpx = HpxGeom(64, False, "GAL", region="DISK(110.,75.,2.)")
+    hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)")
     assert_allclose(hpx[0, 633, 706], np.array([-1, 0, 2]))
 
     # 3D Partial-sky
-    hpx = HpxGeom(64, False, "GAL", region="DISK(110.,75.,2.)", axes=[ax0])
+    hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
     assert_allclose(hpx[633], np.array([0]))
     assert_allclose(hpx[49859], np.array([19]))
     assert_allclose(hpx[0, 633, 706, 49859, 49935], np.array([-1, 0, 2, 19, 21]))
@@ -196,7 +196,7 @@ def test_hpx_global_to_local():
     )
 
     # 3D Partial-sky w/ variable bin size
-    hpx = HpxGeom([32, 64], False, "GAL", region="DISK(110.,75.,2.)", axes=[ax0])
+    hpx = HpxGeom([32, 64], False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
 
     assert_allclose(hpx[191], np.array([0]))
     assert_allclose(hpx[12995], np.array([6]))
@@ -208,7 +208,7 @@ def test_hpx_global_to_local():
 
     # 4D Partial-sky w/ variable bin size
     hpx = HpxGeom(
-        [[16, 32], [32, 64]], False, "GAL", region="DISK(110.,75.,2.)", axes=[ax0, ax1]
+        [[16, 32], [32, 64]], False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0, ax1]
     )
     assert_allclose(hpx[3263], np.array([1]))
     assert_allclose(hpx[28356], np.array([11]))
@@ -216,26 +216,26 @@ def test_hpx_global_to_local():
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_allsky_test_geoms
+    ("nside", "nested", "coordsys", "region", "axes"), hpx_allsky_test_geoms
 )
-def test_hpxgeom_init_with_pix(nside, nested, frame, region, axes):
-    geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
+def test_hpxgeom_init_with_pix(nside, nested, coordsys, region, axes):
+    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
 
     idx0 = geom.get_idx(flat=True)
     idx1 = tuple([t[::10] for t in idx0])
-    geom = HpxGeom(nside, nested, frame, region=idx0, axes=axes)
+    geom = HpxGeom(nside, nested, coordsys, region=idx0, axes=axes)
     assert_allclose(idx0, geom.get_idx(flat=True))
     assert_allclose(len(idx0[0]), np.sum(geom.npix))
-    geom = HpxGeom(nside, nested, frame, region=idx1, axes=axes)
+    geom = HpxGeom(nside, nested, coordsys, region=idx1, axes=axes)
     assert_allclose(idx1, geom.get_idx(flat=True))
     assert_allclose(len(idx1[0]), np.sum(geom.npix))
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
+    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
 )
-def test_hpxgeom_to_slice(nside, nested, frame, region, axes):
-    geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
+def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
+    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
     slices = tuple([slice(1, 2) for i in range(2, geom.ndim)])
     geom_slice = geom.to_slice(slices)
     assert_allclose(geom_slice.ndim, 2)
@@ -251,7 +251,7 @@ def test_hpxgeom_to_slice(nside, nested, frame, region, axes):
 
     # Test slicing with explicit geometry
     geom = HpxGeom(
-        nside, nested, frame, region=tuple([t[::3] for t in idx]), axes=axes
+        nside, nested, coordsys, region=tuple([t[::3] for t in idx]), axes=axes
     )
     geom_slice = geom.to_slice(slices)
     assert_allclose(geom_slice.ndim, 2)
@@ -267,10 +267,10 @@ def test_hpxgeom_to_slice(nside, nested, frame, region, axes):
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
+    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
 )
-def test_hpxgeom_get_pix(nside, nested, frame, region, axes):
-    geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
+def test_hpxgeom_get_pix(nside, nested, coordsys, region, axes):
+    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
     idx = geom.get_idx(local=False, flat=True)
     idx_local = geom.get_idx(local=True, flat=True)
     assert_allclose(idx, geom.local_to_global(idx_local))
@@ -282,12 +282,12 @@ def test_hpxgeom_get_pix(nside, nested, frame, region, axes):
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
+    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
 )
-def test_hpxgeom_coord_to_idx(nside, nested, frame, region, axes):
+def test_hpxgeom_coord_to_idx(nside, nested, coordsys, region, axes):
     import healpy as hp
 
-    geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
+    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
     lon = np.array([112.5, 135.0, 105.0])
     lat = np.array([75.3, 75.3, 74.6])
     coords = make_test_coords(geom, lon, lat)
@@ -330,24 +330,24 @@ def test_hpxgeom_coord_to_pix():
 
     # 2D all-sky
     coords = (lon, lat)
-    hpx = HpxGeom(64, False, "GAL")
+    hpx = HpxGeom(64, False, "galactic")
     assert_allclose(hpx.coord_to_pix(coords)[0], pix64)
 
     # 2D partial-sky
     coords = (lon, lat)
-    hpx = HpxGeom(64, False, "GAL", region="DISK(110.,75.,2.)")
+    hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)")
     assert_allclose(hpx.coord_to_pix(coords)[0], pix64)
 
     # 3D partial-sky
     coords = (lon, lat, z0)
-    hpx = HpxGeom(64, False, "GAL", region="DISK(110.,75.,2.)", axes=[ax0])
+    hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
     assert_allclose(hpx.coord_to_pix(coords), (pix64, np.array([0, 1, 2])))
 
     # 3D partial-sky w/ variable bin size
     coords = (lon, lat, z0)
     nside = [16, 32, 64]
-    hpx_bins = [HpxGeom(n, False, "GAL", region="DISK(110.,75.,2.)") for n in nside]
-    hpx = HpxGeom(nside, False, "GAL", region="DISK(110.,75.,2.)", axes=[ax0])
+    hpx_bins = [HpxGeom(n, False, "galactic", region="DISK(110.,75.,2.)") for n in nside]
+    hpx = HpxGeom(nside, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
     for i, (x, y, z) in enumerate(np.vstack(coords).T):
         pix0 = hpx.coord_to_pix((np.array([x]), np.array([y]), np.array([z])))
         pix1 = hpx_bins[i].coord_to_pix((np.array([x]), np.array([y])))
@@ -355,7 +355,7 @@ def test_hpxgeom_coord_to_pix():
 
     # 4D partial-sky
     coords = (lon, lat, z0, z1)
-    hpx = HpxGeom(64, False, "GAL", region="DISK(110.,75.,2.)", axes=[ax0, ax1])
+    hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0, ax1])
     assert_allclose(
         hpx.coord_to_pix(coords), (pix64, np.array([0, 1, 2]), np.array([0, 1, 2]))
     )
@@ -385,11 +385,11 @@ def test_hpx_get_hpxregion_size():
 
 
 def test_hpxgeom_get_hpxregion_dir():
-    refdir = get_hpxregion_dir("DISK(110.,75.,2.)", "GAL")
+    refdir = get_hpxregion_dir("DISK(110.,75.,2.)", "galactic")
     assert_allclose(refdir.l.deg, 110.0)
     assert_allclose(refdir.b.deg, 75.0)
 
-    refdir = get_hpxregion_dir(None, "GAL")
+    refdir = get_hpxregion_dir(None, "galactic")
     assert_allclose(refdir.l.deg, 0.0)
     assert_allclose(refdir.b.deg, 0.0)
 
@@ -397,11 +397,11 @@ def test_hpxgeom_get_hpxregion_dir():
 def test_hpxgeom_make_wcs():
     ax0 = np.linspace(0.0, 3.0, 4)
 
-    hpx = HpxGeom(64, False, "GAL", region="DISK(110.,75.,2.)")
+    hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)")
     wcs = hpx.make_wcs()
     assert_allclose(wcs.wcs.wcs.crval, np.array([110.0, 75.0]))
 
-    hpx = HpxGeom(64, False, "GAL", region="DISK(110.,75.,2.)", axes=[ax0])
+    hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
     wcs = hpx.make_wcs()
     assert_allclose(wcs.wcs.wcs.crval, np.array([110.0, 75.0]))
 
@@ -410,33 +410,33 @@ def test_hpxgeom_get_coord():
     ax0 = np.linspace(0.0, 3.0, 4)
 
     # 2D all-sky
-    hpx = HpxGeom(16, False, "GAL")
+    hpx = HpxGeom(16, False, "galactic")
     c = hpx.get_coord()
     assert_allclose(c[0][:3], np.array([45.0, 135.0, 225.0]))
     assert_allclose(c[1][:3], np.array([87.075819, 87.075819, 87.075819]))
 
     # 3D all-sky
-    hpx = HpxGeom(16, False, "GAL", axes=[ax0])
+    hpx = HpxGeom(16, False, "galactic", axes=[ax0])
     c = hpx.get_coord()
     assert_allclose(c[0][0, :3], np.array([45.0, 135.0, 225.0]))
     assert_allclose(c[1][0, :3], np.array([87.075819, 87.075819, 87.075819]))
     assert_allclose(c[2][0, :3], np.array([0.5, 0.5, 0.5]))
 
     # 2D partial-sky
-    hpx = HpxGeom(64, False, "GAL", region="DISK(110.,75.,2.)")
+    hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)")
     c = hpx.get_coord()
     assert_allclose(c[0][:3], np.array([107.5, 112.5, 106.57894737]))
     assert_allclose(c[1][:3], np.array([76.813533, 76.813533, 76.07742]))
 
     # 3D partial-sky
-    hpx = HpxGeom(64, False, "GAL", region="DISK(110.,75.,2.)", axes=[ax0])
+    hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
     c = hpx.get_coord()
     assert_allclose(c[0][0, :3], np.array([107.5, 112.5, 106.57894737]))
     assert_allclose(c[1][0, :3], np.array([76.813533, 76.813533, 76.07742]))
     assert_allclose(c[2][0, :3], np.array([0.5, 0.5, 0.5]))
 
     # 3D partial-sky w/ variable bin size
-    hpx = HpxGeom([16, 32, 64], False, "GAL", region="DISK(110.,75.,2.)", axes=[ax0])
+    hpx = HpxGeom([16, 32, 64], False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
     c = hpx.get_coord(flat=True)
     assert_allclose(c[0][:3], np.array([117.0, 103.5, 112.5]))
     assert_allclose(c[1][:3], np.array([75.340734, 75.340734, 75.340734]))
@@ -462,7 +462,7 @@ def test_hpxgeom_contains(nside, nested, frame, region, axes):
 
 def test_make_hpx_to_wcs_mapping():
     ax0 = np.linspace(0.0, 1.0, 3)
-    hpx = HpxGeom(16, False, "GAL", region="DISK(110.,75.,2.)")
+    hpx = HpxGeom(16, False, "galactic", region="DISK(110.,75.,2.)")
     # FIXME construct explicit WCS projection here
     wcs = hpx.make_wcs()
     hpx2wcs = make_hpx_to_wcs_mapping(hpx, wcs)
@@ -553,7 +553,7 @@ def test_make_hpx_to_wcs_mapping():
         ),
     )
 
-    hpx = HpxGeom([8, 16], False, "GAL", region="DISK(110.,75.,2.)", axes=[ax0])
+    hpx = HpxGeom([8, 16], False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
     hpx2wcs = make_hpx_to_wcs_mapping(hpx, wcs)
     assert_allclose(
         hpx2wcs[0],
@@ -648,7 +648,7 @@ def test_hpxgeom_from_header():
         "ORDER": 6,
         "PIXTYPE": "HEALPIX",
         "ORDERING": "RING",
-        "COORDSYS": "CEL",
+        "COORDSYS": "icrs",
         "TTYPE1": "PIX",
         "TFORM1": "K",
         "TTYPE2": "CHANNEL1",
@@ -726,7 +726,7 @@ def test_hpxgeom_downsample(nside, nested, frame, region, axes):
 
 
 def test_hpxgeom_solid_angle():
-    geom = HpxGeom.create(nside=8, frame="GAL", axes=[MapAxis.from_edges([0, 2, 3])])
+    geom = HpxGeom.create(nside=8, frame="galactic", axes=[MapAxis.from_edges([0, 2, 3])])
 
     solid_angle = geom.solid_angle()
 
@@ -741,10 +741,10 @@ def test_geom_repr():
 
 
 hpx_equality_test_geoms = [
-    (16, False, "GAL", None, True),
-    (16, True, "GAL", None, False),
-    (8, False, "GAL", None, False),
-    (16, False, "CEL", None, False),
+    (16, False, "galactic", None, True),
+    (16, True, "galactic", None, False),
+    (8, False, "galactic", None, False),
+    (16, False, "icrs", None, False),
 ]
 
 
@@ -752,7 +752,7 @@ hpx_equality_test_geoms = [
     ("nside", "nested", "frame", "region", "result"), hpx_equality_test_geoms
 )
 def test_hpxgeom_equal(nside, nested, frame, region, result):
-    geom0 = HpxGeom(16, False, "GAL", region=None)
+    geom0 = HpxGeom(16, False, "galactic", region=None)
     geom1 = HpxGeom(nside, nested, frame, region=region)
 
     assert (geom0 == geom1) is result

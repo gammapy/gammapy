@@ -430,7 +430,7 @@ def test_wcsndmap_downsample_axis():
 
 
 def test_coadd_unit():
-    geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", frame="GAL")
+    geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", frame="galactic")
     m1 = WcsNDMap(geom, data=np.ones((10, 10)), unit="m2")
     m2 = WcsNDMap(geom, data=np.ones((10, 10)), unit="cm2")
 
@@ -445,7 +445,7 @@ def test_smooth(kernel):
         MapAxis(np.logspace(0.0, 3.0, 3), interp="log"),
         MapAxis(np.logspace(1.0, 3.0, 4), interp="lin"),
     ]
-    geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", frame="GAL", axes=axes)
+    geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", frame="galactic", axes=axes)
     m = WcsNDMap(geom, data=np.ones(geom.data_shape), unit="m2")
 
     desired = m.data.sum()
@@ -459,7 +459,7 @@ def test_smooth(kernel):
 def test_make_cutout(mode):
     pos = SkyCoord(0, 0, unit="deg", frame="galactic")
     geom = WcsGeom.create(
-        npix=(10, 10), binsz=1, skydir=pos, proj="CAR", frame="GAL", axes=axes2
+        npix=(10, 10), binsz=1, skydir=pos, proj="CAR", frame="galactic", axes=axes2
     )
     m = WcsNDMap(geom, data=np.ones((3, 2, 10, 10)), unit="m2")
     cutout = m.cutout(position=pos, width=(2.0, 3.0) * u.deg, mode=mode)
@@ -538,7 +538,7 @@ def test_get_spectrum():
     axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
 
     geom = WcsGeom.create(
-        skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], frame="GAL"
+        skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], frame="galactic"
     )
 
     m = Map.from_geom(geom)
@@ -566,7 +566,7 @@ def get_npred_map():
         skydir=position,
         width="2 deg",
         axes=[energy_axis],
-        frame="GAL",
+        frame="galactic",
         unit="cm2 s",
     )
 

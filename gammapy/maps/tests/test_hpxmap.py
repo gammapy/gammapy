@@ -15,18 +15,18 @@ pytest.importorskip("healpy")
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log")]
 
 hpx_test_allsky_geoms = [
-    (8, False, "GAL", None, None),
-    (8, False, "GAL", None, axes1),
-    ([4, 8], False, "GAL", None, axes1),
+    (8, False, "galactic", None, None),
+    (8, False, "galactic", None, axes1),
+    ([4, 8], False, "galactic", None, axes1),
 ]
 
 hpx_test_partialsky_geoms = [
-    ([4, 8], False, "GAL", "DISK(110.,75.,30.)", axes1),
-    (8, False, "GAL", "DISK(110.,75.,10.)", [MapAxis(np.logspace(0.0, 3.0, 4))]),
+    ([4, 8], False, "galactic", "DISK(110.,75.,30.)", axes1),
+    (8, False, "galactic", "DISK(110.,75.,10.)", [MapAxis(np.logspace(0.0, 3.0, 4))]),
     (
         8,
         False,
-        "GAL",
+        "galactic",
         "DISK(110.,75.,10.)",
         [
             MapAxis(np.logspace(0.0, 3.0, 4), name="axis0"),
@@ -107,7 +107,7 @@ def test_hpxmap_read_write_fgst(tmp_path):
     axis = MapAxis.from_bounds(100.0, 1000.0, 4, name="energy", unit="MeV")
 
     # Test Counts Cube
-    m = create_map(8, False, "GAL", None, [axis])
+    m = create_map(8, False, "galactic", None, [axis])
     m.write(path, conv="fgst-ccube", overwrite=True)
     with fits.open(path, memmap=False) as hdulist:
         assert "SKYMAP" in hdulist

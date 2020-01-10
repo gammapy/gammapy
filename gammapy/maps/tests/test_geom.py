@@ -94,8 +94,8 @@ def test_mapaxis_slice(nodes, interp, node_type):
 
 def test_mapcoords_create():
     # From existing MapCoord
-    coords_cel = MapCoord.create((0.0, 1.0), frame="CEL")
-    coords_gal = MapCoord.create(coords_cel, frame="GAL")
+    coords_cel = MapCoord.create((0.0, 1.0), frame="icrs")
+    coords_gal = MapCoord.create(coords_cel, frame="galactic")
     assert_allclose(coords_gal.lon, coords_cel.skycoord.galactic.l.deg)
     assert_allclose(coords_gal.lat, coords_cel.skycoord.galactic.b.deg)
 
@@ -196,11 +196,11 @@ def test_mapcoords_to_frame():
     skycoord_cel = SkyCoord(lon, lat, unit="deg", frame="icrs")
     skycoord_gal = SkyCoord(lon, lat, unit="deg", frame="galactic")
 
-    coords = MapCoord.create(dict(lon=lon, lat=lat, energy=energy), frame="CEL")
-    assert coords.frame == "CEL"
+    coords = MapCoord.create(dict(lon=lon, lat=lat, energy=energy), frame="icrs")
+    assert coords.frame == "icrs"
     assert_allclose(coords.skycoord.transform_to("icrs").ra.deg, skycoord_cel.ra.deg)
     assert_allclose(coords.skycoord.transform_to("icrs").dec.deg, skycoord_cel.dec.deg)
-    coords = coords.to_frame("GAL")
+    coords = coords.to_frame("galactic")
     assert coords.frame == "galactic"
     assert_allclose(
         coords.skycoord.transform_to("galactic").l.deg, skycoord_cel.galactic.l.deg
@@ -209,11 +209,11 @@ def test_mapcoords_to_frame():
         coords.skycoord.transform_to("galactic").b.deg, skycoord_cel.galactic.b.deg
     )
 
-    coords = MapCoord.create(dict(lon=lon, lat=lat, energy=energy), frame="GAL")
-    assert coords.frame == "GAL"
+    coords = MapCoord.create(dict(lon=lon, lat=lat, energy=energy), frame="galactic")
+    assert coords.frame == "galactic"
     assert_allclose(coords.skycoord.transform_to("galactic").l.deg, skycoord_gal.l.deg)
     assert_allclose(coords.skycoord.transform_to("galactic").b.deg, skycoord_gal.b.deg)
-    coords = coords.to_frame("CEL")
+    coords = coords.to_frame("icrs")
     assert coords.frame == "icrs"
     assert_allclose(
         coords.skycoord.transform_to("icrs").ra.deg, skycoord_gal.icrs.ra.deg

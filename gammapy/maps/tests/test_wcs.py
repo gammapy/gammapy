@@ -484,7 +484,7 @@ def test_read_write(tmp_path, node_type, interp):
 )
 def test_wcs_geom_to_binsz(npix, binsz, frame, proj, skypos, axes, result):
     geom = WcsGeom.create(
-        skydir=skydir, npix=10, binsz=0.1, proj="CAR", frame="GAL", axes=test_axis1
+        skydir=skydir, npix=10, binsz=0.1, proj="CAR", frame="galactic", axes=test_axis1
     )
 
     geom_new = geom.to_binsz(binsz=0.5)

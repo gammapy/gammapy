@@ -448,7 +448,6 @@ class WcsGeom(Geom):
         if refpix is None:
             refpix = (None, None)
 
-        print(frame)
         header = _make_image_header(
             nxpix=npix[0].flat[0],
             nypix=npix[1].flat[0],
