@@ -129,9 +129,9 @@ def _make_image_header(
     if not yrefpix:
         yrefpix = (nypix + 1) / 2.0
 
-    if frame in ["CEL", "fk5", "fk4", "icrs"]:
+    if frame in ["fk5", "fk4", "icrs"]:
         ctype1, ctype2 = "RA---", "DEC--"
-    elif frame in ["GAL", "galactic"]:
+    elif frame == "galactic":
         ctype1, ctype2 = "GLON-", "GLAT-"
     else:
         raise ValueError(f"Unsupported frame: {frame!r}")
@@ -355,7 +355,7 @@ class WcsGeom(Geom):
         npix=None,
         binsz=0.5,
         proj="CAR",
-        frame="CEL",
+        frame="icrs",
         refpix=None,
         axes=None,
         skydir=None,
@@ -422,7 +422,7 @@ class WcsGeom(Geom):
         elif isinstance(skydir, tuple):
             xref, yref = skydir
         elif isinstance(skydir, SkyCoord):
-            xref, yref, frame = skycoord_to_lonlat(skydir, coordsys=frame)
+            xref, yref, frame = skycoord_to_lonlat(skydir, frame=frame)
         else:
             raise ValueError(f"Invalid type for skydir: {type(skydir)!r}")
 

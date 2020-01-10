@@ -9,7 +9,6 @@ from astropy.units import Quantity
 from .geom import (
     Geom,
     MapCoord,
-    coordsys_to_frame,
     find_and_read_bands,
     make_axes,
     pix_tuple_to_idx,
@@ -343,12 +342,10 @@ def get_hpxregion_dir(region, frame):
     ----------
     region : str
         A string describing a HEALPIX region
-    frame : {'CEL', 'GAL'}
+    frame : {'icrs', 'galactic'}
         Coordinate system
     """
     import healpy as hp
-
-    frame = coordsys_to_frame(frame)
 
     if region is None:
         return SkyCoord(0.0, 0.0, frame=frame, unit="deg")
@@ -1221,7 +1218,7 @@ class HpxGeom(Geom):
         elif isinstance(skydir, tuple):
             lon, lat = skydir
         elif isinstance(skydir, SkyCoord):
-            lon, lat, frame = skycoord_to_lonlat(skydir, coordsys=frame)
+            lon, lat, frame = skycoord_to_lonlat(skydir, frame=frame)
         else:
             raise ValueError(f"Invalid type for skydir: {type(skydir)!r}")
 
@@ -1461,15 +1458,13 @@ class HpxGeom(Geom):
         """Compute the reference direction for this geometry."""
         import healpy as hp
 
-        frame = coordsys_to_frame(self.frame)
-
         if self.region == "explicit":
             idx = unravel_hpx_index(self._ipix, self._maxpix)
             nside = self._get_nside(idx)
             vec = hp.pix2vec(nside, idx[0], nest=self.nest)
             vec = np.array([np.mean(t) for t in vec])
             lonlat = hp.vec2ang(vec, lonlat=True)
-            return SkyCoord(lonlat[0], lonlat[1], frame=frame, unit="deg")
+            return SkyCoord(lonlat[0], lonlat[1], frame=self.frame, unit="deg")
 
         return get_hpxregion_dir(self.region, self.frame)
 
@@ -1482,8 +1477,7 @@ class HpxGeom(Geom):
             idx = unravel_hpx_index(self._ipix, self._maxpix)
             nside = self._get_nside(idx)
             ang = hp.pix2ang(nside, idx[0], nest=self.nest, lonlat=True)
-            frame = coordsys_to_frame(self.frame)
-            dirs = SkyCoord(ang[0], ang[1], unit="deg", frame=frame)
+            dirs = SkyCoord(ang[0], ang[1], unit="deg", frame=self.frame)
             return np.max(dirs.separation(self.center_skydir).deg)
 
         return get_hpxregion_size(self.region)

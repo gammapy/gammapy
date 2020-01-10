@@ -169,17 +169,7 @@ def get_shape(param):
     return max([np.array(p, ndmin=1).shape for p in param])
 
 
-def coordsys_to_frame(coordsys):
-    if coordsys in ["CEL", "fk5", "fk4", "icrs"]:
-        return "icrs"
-    elif coordsys in ["GAL", "galactic"]:
-        return "galactic"
-    else:
-        raise ValueError(f"Unrecognized coordinate system: {coordsys!r}")
-
-
-# TODO: remove (or improve)
-def skycoord_to_lonlat(skycoord, coordsys=None):
+def skycoord_to_lonlat(skycoord, frame=None):
     """Convert SkyCoord to lon, lat, frame.
 
     Returns
@@ -189,15 +179,10 @@ def skycoord_to_lonlat(skycoord, coordsys=None):
     lat : `~numpy.ndarray`
         Latitude in degrees.
     """
-    if coordsys:
-        frame = coordsys_to_frame(coordsys)
+    if frame:
         skycoord = skycoord.transform_to(frame)
 
     return skycoord.data.lon.deg, skycoord.data.lat.deg, skycoord.frame.name
-
-
-def lonlat_to_skycoord(lon, lat, coordsys):
-    return SkyCoord(lon, lat, frame=coordsys_to_frame(coordsys), unit="deg")
 
 
 def pix_tuple_to_idx(pix):
@@ -882,7 +867,7 @@ class MapCoord:
     @property
     def skycoord(self):
         return SkyCoord(
-            self.lon, self.lat, unit="deg", frame=coordsys_to_frame(self.frame)
+            self.lon, self.lat, unit="deg", frame=self.frame
         )
 
     @classmethod
@@ -911,35 +896,14 @@ class MapCoord:
         return cls(coords_dict, frame=frame, match_by_name=False)
 
     @classmethod
-    def _from_skycoord(cls, coords, frame=None):
-        """Create from vector of `~astropy.coordinates.SkyCoord`.
-
-        Parameters
-        ----------
-        coords : tuple
-            Coordinate tuple with first element of type
-            `~astropy.coordinates.SkyCoord`.
-        frame : {'CEL', 'GAL', None}
-            Spatial coordinate system of output `~MapCoord` object.
-            If None the coordinate system will be set to the frame of
-            the `~astropy.coordinates.SkyCoord` object.
-        """
-        skycoord = coords[0]
-        coords = (skycoord.data.lon.deg, skycoord.data.lat.deg) + coords[1:]
-        coords = cls._from_lonlat(coords, frame=skycoord.frame.name)
-
-        if frame is None:
-            return coords
-        else:
-            return coords.to_frame(frame)
-
-    @classmethod
     def _from_tuple(cls, coords, frame=None):
         """Create from tuple of coordinate vectors."""
         if isinstance(coords[0], (list, np.ndarray)) or np.isscalar(coords[0]):
             return cls._from_lonlat(coords, frame=frame)
         elif isinstance(coords[0], SkyCoord):
-            return cls._from_skycoord(coords, frame=frame)
+            lon, lat, frame = skycoord_to_lonlat(coords[0], frame=frame)
+            coords = (lon, lat) + coords[1:]
+            return cls._from_lonlat(coords, frame=frame)
         else:
             raise TypeError(f"Type not supported: {type(coords)!r}")
 
@@ -949,7 +913,7 @@ class MapCoord:
         if "lon" in coords and "lat" in coords:
             return cls(coords, frame=frame)
         elif "skycoord" in coords:
-            lon, lat, frame = skycoord_to_lonlat(coords["skycoord"], coordsys=frame)
+            lon, lat, frame = skycoord_to_lonlat(coords["skycoord"], frame=frame)
             coords_dict = {"lon": lon, "lat": lat}
             for k, v in coords.items():
                 if k == "skycoord":
@@ -1000,7 +964,7 @@ class MapCoord:
         elif isinstance(data, (list, tuple)):
             return cls._from_tuple(data, frame=frame)
         elif isinstance(data, SkyCoord):
-            return cls._from_skycoord((data,), frame=frame)
+            return cls._from_tuple((data,), frame=frame)
         else:
             raise TypeError(f"Unsupported input type: {type(data)!r}")
 
@@ -1020,8 +984,7 @@ class MapCoord:
         if frame == self.frame:
             return copy.deepcopy(self)
         else:
-            skycoord = lonlat_to_skycoord(self.lon, self.lat, self.frame)
-            lon, lat, frame = skycoord_to_lonlat(skycoord, coordsys=frame)
+            lon, lat, frame = skycoord_to_lonlat(self.skycoord, frame=frame)
             data = copy.deepcopy(self._data)
             if isinstance(self.lon, u.Quantity):
                 lon = u.Quantity(lon, unit="deg", copy=False)

@@ -6,7 +6,6 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis
-from gammapy.maps.geom import coordsys_to_frame
 from gammapy.maps.utils import fill_poisson
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
@@ -152,7 +151,7 @@ def test_hpxmap_set_get_by_coord(nside, nested, frame, region, axes):
     m = create_map(nside, nested, frame, region, axes)
     coords = m.geom.get_coord(flat=True)
     skydir = SkyCoord(
-        coords[0], coords[1], unit="deg", frame=coordsys_to_frame(m.geom.frame)
+        coords[0], coords[1], unit="deg", frame=m.geom.frame
     )
     skydir_cel = skydir.transform_to("icrs")
     skydir_gal = skydir.transform_to("galactic")
