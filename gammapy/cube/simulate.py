@@ -201,7 +201,7 @@ class MapDatasetEventSampler:
                 "lat": events.table["DEC_TRUE"].quantity,
                 "energy": events.table["ENERGY_TRUE"].quantity,
             },
-            coordsys="icrs",
+            frame="icrs",
         )
 
         coords_reco = edisp_map.sample_coord(coord, self.random_state)
@@ -229,7 +229,7 @@ class MapDatasetEventSampler:
                 "lat": events.table["DEC_TRUE"].quantity,
                 "energy": events.table["ENERGY_TRUE"].quantity,
             },
-            coordsys="icrs",
+            frame="icrs",
         )
 
         coords_reco = psf_map.sample_coord(coord, self.random_state)

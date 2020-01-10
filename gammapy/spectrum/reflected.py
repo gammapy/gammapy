@@ -143,13 +143,13 @@ class ReflectedRegionsFinder:
         reference_map : `~gammapy.maps.WcsNDMap`
             Map containing the region
         """
-        coordsys = frame_to_coordsys(region.center.frame.name)
+        frame = frame_to_coordsys(region.center.frame.name)
 
         # width is the full width of an image (not the radius)
         width = 4 * region.center.separation(center) + Angle(min_width)
 
         return WcsNDMap.create(
-            skydir=center, binsz=binsz, width=width, coordsys=coordsys, proj="TAN"
+            skydir=center, binsz=binsz, width=width, frame=frame, proj="TAN"
         )
 
     @staticmethod

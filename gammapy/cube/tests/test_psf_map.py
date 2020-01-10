@@ -196,11 +196,11 @@ def test_sample_coord():
 
     coords_in = MapCoord(
         {"lon": [0, 0] * u.deg, "lat": [0, 0.5] * u.deg, "energy": [1, 3] * u.TeV},
-        coordsys="CEL",
+        frame="CEL",
     )
 
     coords = psf_map.sample_coord(map_coord=coords_in)
-    assert coords.coordsys == "CEL"
+    assert coords.frame == "icrs"
     assert len(coords.lon) == 2
     assert_allclose(coords.lon, [3.599708e02, 7.749678e-02], rtol=1e-3)
     assert_allclose(coords.lat, [-0.055216, 0.439184], rtol=1e-3)
@@ -212,7 +212,7 @@ def test_sample_coord_gauss():
     lon, lat = np.zeros(10000) * u.deg, np.zeros(10000) * u.deg
     energy = np.ones(10000) * u.TeV
     coords_in = MapCoord.create(
-        {"lon": lon, "lat": lat, "energy": energy}, coordsys="CEL"
+        {"lon": lon, "lat": lat, "energy": energy}, frame="CEL"
     )
     coords = psf_map.sample_coord(coords_in)
 

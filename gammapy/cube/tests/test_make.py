@@ -23,7 +23,7 @@ def geom(ebounds, binsz=0.5):
     skydir = SkyCoord(0, -1, unit="deg", frame="galactic")
     energy_axis = MapAxis.from_edges(ebounds, name="energy", unit="TeV", interp="log")
     return WcsGeom.create(
-        skydir=skydir, binsz=binsz, width=(10, 5), coordsys="GAL", axes=[energy_axis]
+        skydir=skydir, binsz=binsz, width=(10, 5), frame="GAL", axes=[energy_axis]
     )
 
 

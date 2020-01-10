@@ -31,7 +31,7 @@ def geom():
         skydir=SkyCoord(83.633, 22.014, unit="deg"),
         binsz=0.02,
         width=(5, 5),
-        coordsys="GAL",
+        frame="GAL",
         proj="CAR",
         axes=[energy_axis],
     )

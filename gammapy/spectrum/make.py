@@ -43,9 +43,9 @@ class SpectrumDatasetMaker:
     @staticmethod
     def geom_ref(region):
         """Reference geometry to project region"""
-        coordsys = frame_to_coordsys(region.center.frame.name)
+        frame = frame_to_coordsys(region.center.frame.name)
         return WcsGeom.create(
-            skydir=region.center, npix=(1, 1), binsz=1, proj="TAN", coordsys=coordsys
+            skydir=region.center, npix=(1, 1), binsz=1, proj="TAN", frame=frame
         )
 
     def make_counts(self, region, energy_axis, observation):

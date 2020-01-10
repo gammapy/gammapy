@@ -29,7 +29,7 @@ class SkyModelBase(Model):
         return self.evaluate(lon, lat, energy)
 
     def evaluate_geom(self, geom):
-        coords = geom.get_coord(coordsys=self.frame)
+        coords = geom.get_coord(frame=self.frame)
         return self(coords.lon, coords.lat, coords["energy"])
 
 
