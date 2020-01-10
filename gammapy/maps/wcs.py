@@ -163,7 +163,7 @@ class WcsGeom(Geom):
     def frame(self):
         """Coordinate system of the projection.
 
-        Galactic ('GAL') or Equatorial ('CEL').
+        Galactic ("galactic") or Equatorial ("icrs").
         """
         return self._frame
 
@@ -311,8 +311,8 @@ class WcsGeom(Geom):
             Sky position of map center.  Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map.
-        frame : {'CEL', 'GAL'}, optional
-            Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
+        frame : {"icrs", "galactic"}, optional
+            Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
         axes : list
             List of non-spatial axes.
         proj : string, optional

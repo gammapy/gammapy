@@ -545,7 +545,7 @@ class HpxGeom(Geom):
     nest : bool
         True -> 'NESTED', False -> 'RING' indexing scheme
     frame : str
-        Coordinate system, 'CEL' | 'GAL'
+        Coordinate system, "icrs" | "galactic"
     region : str or tuple
         Spatial geometry for partial-sky maps.  If none the map will
         encompass the whole sky.  String input will be parsed
@@ -1178,8 +1178,8 @@ class HpxGeom(Geom):
             value.  This option is superseded by nside.
         nest : bool
             True for HEALPIX "NESTED" indexing scheme, False for "RING" scheme
-        frame : {'CEL', 'GAL'}, optional
-            Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
+        frame : {"icrs", "galactic"}, optional
+            Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
         skydir : tuple or `~astropy.coordinates.SkyCoord`
             Sky position of map center.  Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the

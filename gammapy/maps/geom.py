@@ -934,7 +934,7 @@ class MapCoord:
         ----------
         data : tuple, dict, `MapCoord` or `~astropy.coordinates.SkyCoord`
             Object containing coordinate arrays.
-        frame : {'CEL', 'GAL', None}, optional
+        frame : {"icrs", "galactic", None}, optional
             Set the coordinate system for longitude and latitude. If
             None longitude and latitude will be assumed to be in
             the coordinate system native to a given map geometry.
@@ -973,8 +973,8 @@ class MapCoord:
 
         Parameters
         ----------
-        frame : {'CEL', 'GAL'}
-            Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
+        frame : {"icrs", "galactic"}
+            Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
 
         Returns
         -------

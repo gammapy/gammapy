@@ -116,8 +116,8 @@ class Map(abc.ABC):
         Parameters
         ----------
         frame : str
-            Coordinate system, either Galactic ('GAL') or Equatorial
-            ('CEL').
+            Coordinate system, either Galactic ("galactic") or Equatorial
+            ("icrs").
         map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse'}
             Map type.  Selects the class that will be used to
             instantiate the map.

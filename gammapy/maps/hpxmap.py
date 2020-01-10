@@ -60,8 +60,8 @@ class HpxMap(Map):
             value.  This option is superseded by nside.
         nest : bool
             True for HEALPix "NESTED" indexing scheme, False for "RING" scheme.
-        frame : {'CEL', 'GAL'}, optional
-            Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
+        frame : {"icrs", "galactic"}, optional
+            Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
         skydir : tuple or `~astropy.coordinates.SkyCoord`
             Sky position of map center.  Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
