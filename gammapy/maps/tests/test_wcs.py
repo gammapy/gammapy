@@ -16,17 +16,17 @@ axes2 = [
 skydir = SkyCoord(110.0, 75.0, unit="deg", frame="icrs")
 
 wcs_allsky_test_geoms = [
-    (None, 10.0, "GAL", "AIT", skydir, None),
-    (None, 10.0, "GAL", "AIT", skydir, axes1),
-    (None, [10.0, 20.0], "GAL", "AIT", skydir, axes1),
-    (None, 10.0, "GAL", "AIT", skydir, axes2),
-    (None, [[10.0, 20.0, 30.0], [10.0, 20.0, 30.0]], "GAL", "AIT", skydir, axes2),
+    (None, 10.0, "galactic", "AIT", skydir, None),
+    (None, 10.0, "galactic", "AIT", skydir, axes1),
+    (None, [10.0, 20.0], "galactic", "AIT", skydir, axes1),
+    (None, 10.0, "galactic", "AIT", skydir, axes2),
+    (None, [[10.0, 20.0, 30.0], [10.0, 20.0, 30.0]], "galactic", "AIT", skydir, axes2),
 ]
 
 wcs_partialsky_test_geoms = [
-    (10, 0.1, "GAL", "AIT", skydir, None),
-    (10, 0.1, "GAL", "AIT", skydir, axes1),
-    (10, [0.1, 0.2], "GAL", "AIT", skydir, axes1),
+    (10, 0.1, "galactic", "AIT", skydir, None),
+    (10, 0.1, "galactic", "AIT", skydir, axes1),
+    (10, [0.1, 0.2], "galactic", "AIT", skydir, axes1),
 ]
 
 wcs_test_geoms = wcs_allsky_test_geoms + wcs_partialsky_test_geoms
@@ -150,7 +150,7 @@ def test_wcsgeom_solid_angle():
         skydir=(0, 0),
         npix=(npix, npix),
         binsz=binsz,
-        frame="GAL",
+        frame="galactic",
         proj="CAR",
         axes=[MapAxis.from_edges([0, 2, 3])],
     )
@@ -170,7 +170,7 @@ def test_wcsgeom_solid_angle():
 
 def test_wcsgeom_solid_angle_symmetry():
     geom = WcsGeom.create(
-        skydir=(0, 0), frame="GAL", npix=(3, 3), binsz=20.0 * u.deg
+        skydir=(0, 0), frame="galactic", npix=(3, 3), binsz=20.0 * u.deg
     )
 
     sa = geom.solid_angle()
@@ -186,7 +186,7 @@ def test_wcsgeom_solid_angle_ait():
     # Pixels that don't correspond to locations on ths sky
     # should have solid angles set to NaN
     ait_geom = WcsGeom.create(
-        skydir=(0, 0), width=(360, 180), binsz=20, frame="GAL", proj="AIT"
+        skydir=(0, 0), width=(360, 180), binsz=20, frame="galactic", proj="AIT"
     )
     solid_angle = ait_geom.solid_angle().to_value("deg2")
 
@@ -203,7 +203,7 @@ def test_wcsgeom_separation():
         skydir=(0, 0),
         npix=10,
         binsz=0.1,
-        frame="GAL",
+        frame="galactic",
         proj="CAR",
         axes=[MapAxis.from_edges([0, 2, 3])],
     )
@@ -226,7 +226,7 @@ def test_cutout():
         skydir=(0, 0),
         npix=10,
         binsz=0.1,
-        frame="GAL",
+        frame="galactic",
         proj="CAR",
         axes=[MapAxis.from_edges([0, 2, 3])],
     )
@@ -267,7 +267,7 @@ def test_cutout_info():
 
 def test_wcsgeom_get_coord():
     geom = WcsGeom.create(
-        skydir=(0, 0), npix=(4, 3), binsz=1, frame="GAL", proj="CAR"
+        skydir=(0, 0), npix=(4, 3), binsz=1, frame="galactic", proj="CAR"
     )
     coord = geom.get_coord(mode="edges")
     assert_allclose(coord.lon[0, 0].value, 2)
@@ -315,7 +315,7 @@ def test_wcsgeom_drop():
 
 def test_wcsgeom_get_pix_coords():
     geom = WcsGeom.create(
-        skydir=(0, 0), npix=(4, 3), binsz=1, frame="GAL", proj="CAR", axes=axes1
+        skydir=(0, 0), npix=(4, 3), binsz=1, frame="galactic", proj="CAR", axes=axes1
     )
     idx_center = geom.get_pix(mode="center")
 
@@ -331,7 +331,7 @@ def test_wcsgeom_get_pix_coords():
 
 def test_geom_repr():
     geom = WcsGeom.create(
-        skydir=(0, 0), npix=(10, 4), binsz=50, frame="GAL", proj="AIT"
+        skydir=(0, 0), npix=(10, 4), binsz=50, frame="galactic", proj="AIT"
     )
     assert geom.__class__.__name__ in repr(geom)
 
@@ -339,7 +339,7 @@ def test_geom_repr():
 def test_geom_refpix():
     refpix = (400, 300)
     geom = WcsGeom.create(
-        skydir=(0, 0), npix=(800, 600), refpix=refpix, binsz=0.1, frame="GAL"
+        skydir=(0, 0), npix=(800, 600), refpix=refpix, binsz=0.1, frame="galactic"
     )
     assert_allclose(geom.wcs.wcs.crpix, refpix)
 
@@ -432,13 +432,13 @@ skydir2 = SkyCoord(110.0, 75.0 + 1e-8, unit="deg", frame="icrs")
 skydir3 = SkyCoord(110.0, 75.0 + 1e-3, unit="deg", frame="icrs")
 
 compatibility_test_geoms = [
-    (10, 0.1, "GAL", "CAR", skydir, test_axis1, True),
-    (10, 0.1, "GAL", "CAR", skydir2, test_axis1, True),
-    (10, 0.1, "GAL", "CAR", skydir3, test_axis1, False),
-    (10, 0.1, "GAL", "TAN", skydir, test_axis1, False),
-    (8, 0.1, "GAL", "CAR", skydir, test_axis1, False),
-    (10, 0.1, "GAL", "CAR", skydir, test_axis2, False),
-    (10, 0.1, "GAL", "CAR", skydir.galactic, test_axis1, True),
+    (10, 0.1, "galactic", "CAR", skydir, test_axis1, True),
+    (10, 0.1, "galactic", "CAR", skydir2, test_axis1, True),
+    (10, 0.1, "galactic", "CAR", skydir3, test_axis1, False),
+    (10, 0.1, "galactic", "TAN", skydir, test_axis1, False),
+    (8, 0.1, "galactic", "CAR", skydir, test_axis1, False),
+    (10, 0.1, "galactic", "CAR", skydir, test_axis2, False),
+    (10, 0.1, "galactic", "CAR", skydir.galactic, test_axis1, True),
 ]
 
 
@@ -448,7 +448,7 @@ compatibility_test_geoms = [
 )
 def test_wcs_geom_equal(npix, binsz, frame, proj, skypos, axes, result):
     geom0 = WcsGeom.create(
-        skydir=skydir, npix=10, binsz=0.1, proj="CAR", frame="GAL", axes=test_axis1
+        skydir=skydir, npix=10, binsz=0.1, proj="CAR", frame="galactic", axes=test_axis1
     )
     geom1 = WcsGeom.create(
         skydir=skypos, npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes

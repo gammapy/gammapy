@@ -39,7 +39,7 @@ def make_datasets_example():
         skydir=(0, 0),
         binsz=0.1,
         width=(1, 1),
-        coordsys="GAL",
+        frame="galactic",
         proj="CAR",
         axes=[energy_axis],
     )
@@ -47,7 +47,7 @@ def make_datasets_example():
         skydir=(1, 0),
         binsz=0.1,
         width=(1, 1),
-        coordsys="GAL",
+        frame="galactic",
         proj="CAR",
         axes=[energy_axis],
     )

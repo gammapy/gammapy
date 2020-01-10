@@ -56,7 +56,7 @@ def test_sky_gaussian():
 
     # test the normalization for an elongated Gaussian near the Galactic Plane
     m_geom_1 = WcsGeom.create(
-        binsz=0.05, width=(20, 20), skydir=(2, 2), frame="GAL", proj="AIT"
+        binsz=0.05, width=(20, 20), skydir=(2, 2), frame="galactic", proj="AIT"
     )
     coords = m_geom_1.get_coord()
     solid_angle = m_geom_1.solid_angle()
@@ -118,7 +118,7 @@ def test_sky_disk():
 
     # test the normalization for an elongated ellipse near the Galactic Plane
     m_geom_1 = WcsGeom.create(
-        binsz=0.015, width=(20, 20), skydir=(2, 2), frame="GAL", proj="AIT"
+        binsz=0.015, width=(20, 20), skydir=(2, 2), frame="galactic", proj="AIT"
     )
     coords = m_geom_1.get_coord()
     solid_angle = m_geom_1.solid_angle()
@@ -146,7 +146,7 @@ def test_sky_disk():
 
     # test the normalization for a disk (ellipse with e=0) at the Galactic Pole
     m_geom_2 = WcsGeom.create(
-        binsz=0.1, width=(6, 6), skydir=(0, 90), frame="GAL", proj="AIT"
+        binsz=0.1, width=(6, 6), skydir=(0, 90), frame="galactic", proj="AIT"
     )
     coords = m_geom_2.get_coord()
     lon = coords.lon
@@ -262,7 +262,7 @@ def test_evaluate_on_fk5_map():
 
 
 def test_evaluate_fk5_model():
-    geom = WcsGeom.create(width=(5, 5), binsz=0.1, frame="CEL")
+    geom = WcsGeom.create(width=(5, 5), binsz=0.1, frame="icrs")
     model = GaussianSpatialModel(
         lon_0="0 deg", lat_0="0 deg", sigma="0.1 deg", frame="fk5"
     )

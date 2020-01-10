@@ -566,7 +566,7 @@ class HpxGeom(Geom):
     is_hpx = True
 
     def __init__(
-        self, nside, nest=True, frame="CEL", region=None, axes=None, sparse=False
+        self, nside, nest=True, frame="icrs", region=None, axes=None, sparse=False
     ):
 
         # FIXME: Figure out what to do when sparse=True
@@ -1162,7 +1162,7 @@ class HpxGeom(Geom):
         nside=None,
         binsz=None,
         nest=True,
-        frame="CEL",
+        frame="icrs",
         region=None,
         axes=None,
         skydir=None,
@@ -1321,7 +1321,7 @@ class HpxGeom(Geom):
         try:
             frame = header[conv.frame]
         except KeyError:
-            frame = header.get("COORDSYS", "CEL")
+            frame = header.get("COORDSYS", "icrs")
 
         try:
             region = header["HPX_REG"]
@@ -1391,7 +1391,7 @@ class HpxGeom(Geom):
         header["LASTPIX"] = np.max(self._maxpix) - 1
         header["HPX_CONV"] = conv.convname.upper()
 
-        if self.frame == "CEL":
+        if self.frame == "icrs":
             header["EQUINOX"] = (2000.0, "Equinox of RA & DEC specifications")
 
         if self.region:
@@ -1649,12 +1649,6 @@ class HpxGeom(Geom):
     def contains(self, coords):
         idx = self.coord_to_idx(coords)
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
-
-    def get_skydirs(self):
-        """Get the sky coordinates of all the pixels in this geometry."""
-        coords = self.get_coord()
-        frame = "galactic" if self.frame == "GAL" else "icrs"
-        return SkyCoord(coords[0], coords[1], unit="deg", frame=frame)
 
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).

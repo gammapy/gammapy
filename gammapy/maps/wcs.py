@@ -85,7 +85,7 @@ def _make_image_header(
     xref=0,
     yref=0,
     proj="CAR",
-    frame="GAL",
+    frame="galactic",
     xrefpix=None,
     yrefpix=None,
 ):
@@ -1162,8 +1162,8 @@ def get_projection(wcs):
 
 def get_coordys(wcs):
     if "RA" in wcs.wcs.ctype[0]:
-        return "CEL"
+        return "icrs"
     elif "GLON" in wcs.wcs.ctype[0]:
-        return "GAL"
+        return "galactic"
     else:
         raise ValueError("Unrecognized WCS coordinate system.")

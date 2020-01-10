@@ -58,7 +58,7 @@ def simulate_map_dataset(random_state=0):
     energy_axis = MapAxis.from_edges(edges=edges, name="energy", interp="log")
 
     geom = WcsGeom.create(
-        skydir=skydir, width=(4, 4), binsz=0.1, axes=[energy_axis], frame="GAL"
+        skydir=skydir, width=(4, 4), binsz=0.1, axes=[energy_axis], frame="galactic"
     )
 
     gauss = GaussianSpatialModel(

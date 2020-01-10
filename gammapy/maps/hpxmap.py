@@ -37,7 +37,7 @@ class HpxMap(Map):
         binsz=None,
         nest=True,
         map_type="hpx",
-        frame="CEL",
+        frame="icrs",
         data=None,
         skydir=None,
         width=None,

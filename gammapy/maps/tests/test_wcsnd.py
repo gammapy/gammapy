@@ -28,19 +28,19 @@ axes2 = [
 skydir = SkyCoord(110.0, 75.0, unit="deg", frame="icrs")
 
 wcs_allsky_test_geoms = [
-    (None, 10.0, "GAL", "AIT", skydir, None),
-    (None, 10.0, "GAL", "AIT", skydir, axes1),
-    (None, [10.0, 20.0], "GAL", "AIT", skydir, axes1),
-    (None, 10.0, "GAL", "AIT", skydir, axes2),
-    (None, [[10.0, 20.0, 30.0], [10.0, 20.0, 30.0]], "GAL", "AIT", skydir, axes2),
+    (None, 10.0, "galactic", "AIT", skydir, None),
+    (None, 10.0, "galactic", "AIT", skydir, axes1),
+    (None, [10.0, 20.0], "galactic", "AIT", skydir, axes1),
+    (None, 10.0, "galactic", "AIT", skydir, axes2),
+    (None, [[10.0, 20.0, 30.0], [10.0, 20.0, 30.0]], "galactic", "AIT", skydir, axes2),
 ]
 
 wcs_partialsky_test_geoms = [
-    (10, 1.0, "GAL", "AIT", skydir, None),
-    (10, 1.0, "GAL", "AIT", skydir, axes1),
-    (10, [1.0, 2.0], "GAL", "AIT", skydir, axes1),
-    (10, 1.0, "GAL", "AIT", skydir, axes2),
-    (10, [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]], "GAL", "AIT", skydir, axes2),
+    (10, 1.0, "galactic", "AIT", skydir, None),
+    (10, 1.0, "galactic", "AIT", skydir, axes1),
+    (10, [1.0, 2.0], "galactic", "AIT", skydir, axes1),
+    (10, 1.0, "galactic", "AIT", skydir, axes2),
+    (10, [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]], "galactic", "AIT", skydir, axes2),
 ]
 
 wcs_test_geoms = wcs_allsky_test_geoms + wcs_partialsky_test_geoms
@@ -98,7 +98,7 @@ def test_wcsndmap_read_write_fgst(tmp_path):
     path = tmp_path / "tmp.fits"
 
     axis = MapAxis.from_bounds(100.0, 1000.0, 4, name="energy", unit="MeV")
-    geom = WcsGeom.create(npix=10, binsz=1.0, proj="AIT", frame="GAL", axes=[axis])
+    geom = WcsGeom.create(npix=10, binsz=1.0, proj="AIT", frame="galactic", axes=[axis])
 
     # Test Counts Cube
     m = WcsNDMap(geom)

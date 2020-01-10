@@ -28,7 +28,7 @@ class WcsMap(Map):
         binsz=0.1,
         width=None,
         proj="CAR",
-        frame="CEL",
+        frame="icrs",
         refpix=None,
         axes=None,
         skydir=None,

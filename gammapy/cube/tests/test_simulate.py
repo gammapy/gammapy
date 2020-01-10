@@ -42,7 +42,7 @@ def test_simulate():
         np.logspace(-1, 1.0, 20), unit="TeV", name="energy", interp="log"
     )
     geom = WcsGeom.create(
-        skydir=(0, 0), binsz=0.025, width=(1, 1), frame="GAL", axes=[axis]
+        skydir=(0, 0), binsz=0.025, width=(1, 1), frame="galactic", axes=[axis]
     )
 
     # Define some observation parameters
@@ -80,7 +80,7 @@ def dataset():
     skymodel = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
     geom = WcsGeom.create(
-        skydir=position, binsz=1, width="5 deg", frame="GAL", axes=[energy_axis]
+        skydir=position, binsz=1, width="5 deg", frame="galactic", axes=[energy_axis]
     )
 
     t_min = 0 * u.s
