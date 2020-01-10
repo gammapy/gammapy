@@ -37,7 +37,7 @@ class HpxMap(Map):
         binsz=None,
         nest=True,
         map_type="hpx",
-        coordsys="CEL",
+        frame="CEL",
         data=None,
         skydir=None,
         width=None,
@@ -60,7 +60,7 @@ class HpxMap(Map):
             value.  This option is superseded by nside.
         nest : bool
             True for HEALPix "NESTED" indexing scheme, False for "RING" scheme.
-        coordsys : {'CEL', 'GAL'}, optional
+        frame : {'CEL', 'GAL'}, optional
             Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
         skydir : tuple or `~astropy.coordinates.SkyCoord`
             Sky position of map center.  Can be either a SkyCoord
@@ -90,7 +90,7 @@ class HpxMap(Map):
             nside=nside,
             binsz=binsz,
             nest=nest,
-            coordsys=coordsys,
+            frame=frame,
             region=region,
             axes=axes,
             skydir=skydir,

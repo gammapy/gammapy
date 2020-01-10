@@ -216,26 +216,26 @@ def test_hpx_global_to_local():
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes"), hpx_allsky_test_geoms
+    ("nside", "nested", "frame", "region", "axes"), hpx_allsky_test_geoms
 )
-def test_hpxgeom_init_with_pix(nside, nested, coordsys, region, axes):
-    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
+def test_hpxgeom_init_with_pix(nside, nested, frame, region, axes):
+    geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
 
     idx0 = geom.get_idx(flat=True)
     idx1 = tuple([t[::10] for t in idx0])
-    geom = HpxGeom(nside, nested, coordsys, region=idx0, axes=axes)
+    geom = HpxGeom(nside, nested, frame, region=idx0, axes=axes)
     assert_allclose(idx0, geom.get_idx(flat=True))
     assert_allclose(len(idx0[0]), np.sum(geom.npix))
-    geom = HpxGeom(nside, nested, coordsys, region=idx1, axes=axes)
+    geom = HpxGeom(nside, nested, frame, region=idx1, axes=axes)
     assert_allclose(idx1, geom.get_idx(flat=True))
     assert_allclose(len(idx1[0]), np.sum(geom.npix))
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
+    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
 )
-def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
-    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
+def test_hpxgeom_to_slice(nside, nested, frame, region, axes):
+    geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
     slices = tuple([slice(1, 2) for i in range(2, geom.ndim)])
     geom_slice = geom.to_slice(slices)
     assert_allclose(geom_slice.ndim, 2)
@@ -251,7 +251,7 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
 
     # Test slicing with explicit geometry
     geom = HpxGeom(
-        nside, nested, coordsys, region=tuple([t[::3] for t in idx]), axes=axes
+        nside, nested, frame, region=tuple([t[::3] for t in idx]), axes=axes
     )
     geom_slice = geom.to_slice(slices)
     assert_allclose(geom_slice.ndim, 2)
@@ -267,10 +267,10 @@ def test_hpxgeom_to_slice(nside, nested, coordsys, region, axes):
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
+    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
 )
-def test_hpxgeom_get_pix(nside, nested, coordsys, region, axes):
-    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
+def test_hpxgeom_get_pix(nside, nested, frame, region, axes):
+    geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
     idx = geom.get_idx(local=False, flat=True)
     idx_local = geom.get_idx(local=True, flat=True)
     assert_allclose(idx, geom.local_to_global(idx_local))
@@ -282,12 +282,12 @@ def test_hpxgeom_get_pix(nside, nested, coordsys, region, axes):
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
+    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
 )
-def test_hpxgeom_coord_to_idx(nside, nested, coordsys, region, axes):
+def test_hpxgeom_coord_to_idx(nside, nested, frame, region, axes):
     import healpy as hp
 
-    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
+    geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
     lon = np.array([112.5, 135.0, 105.0])
     lat = np.array([75.3, 75.3, 74.6])
     coords = make_test_coords(geom, lon, lat)
@@ -444,10 +444,10 @@ def test_hpxgeom_get_coord():
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
+    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
 )
-def test_hpxgeom_contains(nside, nested, coordsys, region, axes):
-    geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
+def test_hpxgeom_contains(nside, nested, frame, region, axes):
+    geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
     coords = geom.get_coord(flat=True)
     assert_allclose(geom.contains(coords), np.ones_like(coords[0], dtype=bool))
 
@@ -659,16 +659,16 @@ def test_hpxgeom_from_header():
     header.update(pars)
     hpx = HpxGeom.from_header(header)
 
-    assert hpx.coordsys == pars["COORDSYS"]
+    assert hpx.frame == pars["COORDSYS"]
     assert hpx.nest is False
     assert_allclose(hpx.nside, np.array([64]))
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
+    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
 )
-def test_hpxgeom_read_write(tmp_path, nside, nested, coordsys, region, axes):
-    geom0 = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
+def test_hpxgeom_read_write(tmp_path, nside, nested, frame, region, axes):
+    geom0 = HpxGeom(nside, nested, frame, region=region, axes=axes)
     hdu_bands = geom0.make_bands_hdu(hdu="BANDS")
     hdu_prim = fits.PrimaryHDU()
     hdu_prim.header.update(geom0.make_header())
@@ -682,15 +682,15 @@ def test_hpxgeom_read_write(tmp_path, nside, nested, coordsys, region, axes):
     assert_allclose(geom0.nside, geom1.nside)
     assert_allclose(geom0.npix, geom1.npix)
     assert_allclose(geom0.nest, geom1.nest)
-    assert geom0.coordsys == geom1.coordsys
+    assert geom0.frame == geom1.frame
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
+    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
 )
-def test_hpxgeom_upsample(nside, nested, coordsys, region, axes):
+def test_hpxgeom_upsample(nside, nested, frame, region, axes):
     # NESTED
-    geom = HpxGeom(nside, True, coordsys, region=region, axes=axes)
+    geom = HpxGeom(nside, True, frame, region=region, axes=axes)
     geom_up = geom.upsample(2)
     assert_allclose(2 * geom.nside, geom_up.nside)
     assert_allclose(4 * geom.npix, geom_up.npix)
@@ -698,7 +698,7 @@ def test_hpxgeom_upsample(nside, nested, coordsys, region, axes):
     assert np.all(geom.contains(coords))
 
     # RING
-    geom = HpxGeom(nside, False, coordsys, region=region, axes=axes)
+    geom = HpxGeom(nside, False, frame, region=region, axes=axes)
     geom_up = geom.upsample(2)
     assert_allclose(2 * geom.nside, geom_up.nside)
     assert_allclose(4 * geom.npix, geom_up.npix)
@@ -707,18 +707,18 @@ def test_hpxgeom_upsample(nside, nested, coordsys, region, axes):
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
+    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
 )
-def test_hpxgeom_downsample(nside, nested, coordsys, region, axes):
+def test_hpxgeom_downsample(nside, nested, frame, region, axes):
     # NESTED
-    geom = HpxGeom(nside, True, coordsys, region=region, axes=axes)
+    geom = HpxGeom(nside, True, frame, region=region, axes=axes)
     geom_down = geom.downsample(2)
     assert_allclose(geom.nside, 2 * geom_down.nside)
     coords = geom.get_coord(flat=True)
     assert np.all(geom_down.contains(coords))
 
     # RING
-    geom = HpxGeom(nside, False, coordsys, region=region, axes=axes)
+    geom = HpxGeom(nside, False, frame, region=region, axes=axes)
     geom_down = geom.downsample(2)
     assert_allclose(geom.nside, 2 * geom_down.nside)
     coords = geom.get_coord(flat=True)
@@ -726,7 +726,7 @@ def test_hpxgeom_downsample(nside, nested, coordsys, region, axes):
 
 
 def test_hpxgeom_solid_angle():
-    geom = HpxGeom.create(nside=8, coordsys="GAL", axes=[MapAxis.from_edges([0, 2, 3])])
+    geom = HpxGeom.create(nside=8, frame="GAL", axes=[MapAxis.from_edges([0, 2, 3])])
 
     solid_angle = geom.solid_angle()
 
@@ -749,11 +749,11 @@ hpx_equality_test_geoms = [
 
 
 @pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "result"), hpx_equality_test_geoms
+    ("nside", "nested", "frame", "region", "result"), hpx_equality_test_geoms
 )
-def test_hpxgeom_equal(nside, nested, coordsys, region, result):
+def test_hpxgeom_equal(nside, nested, frame, region, result):
     geom0 = HpxGeom(16, False, "GAL", region=None)
-    geom1 = HpxGeom(nside, nested, coordsys, region=region)
+    geom1 = HpxGeom(nside, nested, frame, region=region)
 
     assert (geom0 == geom1) is result
     assert (geom0 != geom1) is not result

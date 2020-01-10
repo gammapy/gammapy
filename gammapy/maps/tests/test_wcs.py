@@ -33,20 +33,20 @@ wcs_test_geoms = wcs_allsky_test_geoms + wcs_partialsky_test_geoms
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsgeom_init(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsgeom_init(npix, binsz, frame, proj, skydir, axes):
     WcsGeom.create(
-        npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, skydir=skydir, proj=proj, frame=frame, axes=axes
     )
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsgeom_get_pix(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsgeom_get_pix(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, skydir=skydir, proj=proj, frame=frame, axes=axes
     )
     pix = geom.get_idx()
     if axes is not None:
@@ -59,21 +59,21 @@ def test_wcsgeom_get_pix(npix, binsz, coordsys, proj, skydir, axes):
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsgeom_test_pix_to_coord(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsgeom_test_pix_to_coord(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, skydir=skydir, proj=proj, frame=frame, axes=axes
     )
     assert_allclose(geom.get_coord()[0], geom.pix_to_coord(geom.get_idx())[0])
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsgeom_test_coord_to_idx(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
     )
     assert_allclose(geom.get_idx()[0], geom.coord_to_idx(geom.get_coord())[0])
 
@@ -89,11 +89,11 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsgeom_read_write(tmp_path, npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsgeom_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
     geom0 = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
     )
 
     hdu_bands = geom0.make_bands_hdu(hdu="BANDS")
@@ -107,13 +107,13 @@ def test_wcsgeom_read_write(tmp_path, npix, binsz, coordsys, proj, skydir, axes)
         geom1 = WcsGeom.from_header(hdulist[0].header, hdulist["BANDS"])
 
     assert_allclose(geom0.npix, geom1.npix)
-    assert geom0.coordsys == geom1.coordsys
+    assert geom0.frame == geom1.frame
 
 
 def test_wcsgeom_to_hdulist():
-    npix, binsz, coordsys, proj, skydir, axes = wcs_test_geoms[3]
+    npix, binsz, frame, proj, skydir, axes = wcs_test_geoms[3]
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
     )
 
     hdu = geom.make_bands_hdu(hdu="TEST")
@@ -122,11 +122,11 @@ def test_wcsgeom_to_hdulist():
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsgeom_contains(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsgeom_contains(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, skydir=skydir, proj=proj, frame=frame, axes=axes
     )
     coords = geom.get_coord()
     m = np.isfinite(coords[0])
@@ -150,7 +150,7 @@ def test_wcsgeom_solid_angle():
         skydir=(0, 0),
         npix=(npix, npix),
         binsz=binsz,
-        coordsys="GAL",
+        frame="GAL",
         proj="CAR",
         axes=[MapAxis.from_edges([0, 2, 3])],
     )
@@ -170,7 +170,7 @@ def test_wcsgeom_solid_angle():
 
 def test_wcsgeom_solid_angle_symmetry():
     geom = WcsGeom.create(
-        skydir=(0, 0), coordsys="GAL", npix=(3, 3), binsz=20.0 * u.deg
+        skydir=(0, 0), frame="GAL", npix=(3, 3), binsz=20.0 * u.deg
     )
 
     sa = geom.solid_angle()
@@ -186,7 +186,7 @@ def test_wcsgeom_solid_angle_ait():
     # Pixels that don't correspond to locations on ths sky
     # should have solid angles set to NaN
     ait_geom = WcsGeom.create(
-        skydir=(0, 0), width=(360, 180), binsz=20, coordsys="GAL", proj="AIT"
+        skydir=(0, 0), width=(360, 180), binsz=20, frame="GAL", proj="AIT"
     )
     solid_angle = ait_geom.solid_angle().to_value("deg2")
 
@@ -203,7 +203,7 @@ def test_wcsgeom_separation():
         skydir=(0, 0),
         npix=10,
         binsz=0.1,
-        coordsys="GAL",
+        frame="GAL",
         proj="CAR",
         axes=[MapAxis.from_edges([0, 2, 3])],
     )
@@ -226,7 +226,7 @@ def test_cutout():
         skydir=(0, 0),
         npix=10,
         binsz=0.1,
-        coordsys="GAL",
+        frame="GAL",
         proj="CAR",
         axes=[MapAxis.from_edges([0, 2, 3])],
     )
@@ -267,7 +267,7 @@ def test_cutout_info():
 
 def test_wcsgeom_get_coord():
     geom = WcsGeom.create(
-        skydir=(0, 0), npix=(4, 3), binsz=1, coordsys="GAL", proj="CAR"
+        skydir=(0, 0), npix=(4, 3), binsz=1, frame="GAL", proj="CAR"
     )
     coord = geom.get_coord(mode="edges")
     assert_allclose(coord.lon[0, 0].value, 2)
@@ -315,7 +315,7 @@ def test_wcsgeom_drop():
 
 def test_wcsgeom_get_pix_coords():
     geom = WcsGeom.create(
-        skydir=(0, 0), npix=(4, 3), binsz=1, coordsys="GAL", proj="CAR", axes=axes1
+        skydir=(0, 0), npix=(4, 3), binsz=1, frame="GAL", proj="CAR", axes=axes1
     )
     idx_center = geom.get_pix(mode="center")
 
@@ -331,7 +331,7 @@ def test_wcsgeom_get_pix_coords():
 
 def test_geom_repr():
     geom = WcsGeom.create(
-        skydir=(0, 0), npix=(10, 4), binsz=50, coordsys="GAL", proj="AIT"
+        skydir=(0, 0), npix=(10, 4), binsz=50, frame="GAL", proj="AIT"
     )
     assert geom.__class__.__name__ in repr(geom)
 
@@ -339,7 +339,7 @@ def test_geom_repr():
 def test_geom_refpix():
     refpix = (400, 300)
     geom = WcsGeom.create(
-        skydir=(0, 0), npix=(800, 600), refpix=refpix, binsz=0.1, coordsys="GAL"
+        skydir=(0, 0), npix=(800, 600), refpix=refpix, binsz=0.1, frame="GAL"
     )
     assert_allclose(geom.wcs.wcs.crpix, refpix)
 
@@ -443,15 +443,15 @@ compatibility_test_geoms = [
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skypos", "axes", "result"),
+    ("npix", "binsz", "frame", "proj", "skypos", "axes", "result"),
     compatibility_test_geoms,
 )
-def test_wcs_geom_equal(npix, binsz, coordsys, proj, skypos, axes, result):
+def test_wcs_geom_equal(npix, binsz, frame, proj, skypos, axes, result):
     geom0 = WcsGeom.create(
-        skydir=skydir, npix=10, binsz=0.1, proj="CAR", coordsys="GAL", axes=test_axis1
+        skydir=skydir, npix=10, binsz=0.1, proj="CAR", frame="GAL", axes=test_axis1
     )
     geom1 = WcsGeom.create(
-        skydir=skypos, npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+        skydir=skypos, npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
     )
 
     assert (geom0 == geom1) is result
@@ -479,12 +479,12 @@ def test_read_write(tmp_path, node_type, interp):
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skypos", "axes", "result"),
+    ("npix", "binsz", "frame", "proj", "skypos", "axes", "result"),
     compatibility_test_geoms,
 )
-def test_wcs_geom_to_binsz(npix, binsz, coordsys, proj, skypos, axes, result):
+def test_wcs_geom_to_binsz(npix, binsz, frame, proj, skypos, axes, result):
     geom = WcsGeom.create(
-        skydir=skydir, npix=10, binsz=0.1, proj="CAR", coordsys="GAL", axes=test_axis1
+        skydir=skydir, npix=10, binsz=0.1, proj="CAR", frame="GAL", axes=test_axis1
     )
 
     geom_new = geom.to_binsz(binsz=0.5)

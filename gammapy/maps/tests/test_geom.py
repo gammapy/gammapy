@@ -94,8 +94,8 @@ def test_mapaxis_slice(nodes, interp, node_type):
 
 def test_mapcoords_create():
     # From existing MapCoord
-    coords_cel = MapCoord.create((0.0, 1.0), coordsys="CEL")
-    coords_gal = MapCoord.create(coords_cel, coordsys="GAL")
+    coords_cel = MapCoord.create((0.0, 1.0), frame="CEL")
+    coords_gal = MapCoord.create(coords_cel, frame="GAL")
     assert_allclose(coords_gal.lon, coords_cel.skycoord.galactic.l.deg)
     assert_allclose(coords_gal.lat, coords_cel.skycoord.galactic.b.deg)
 
@@ -105,7 +105,7 @@ def test_mapcoords_create():
     assert_allclose(coords.lat, 1.0)
     assert_allclose(coords[0], 0.0)
     assert_allclose(coords[1], 1.0)
-    assert coords.coordsys is None
+    assert coords.frame is None
     assert coords.ndim == 2
 
     # 3D Tuple of scalars
@@ -113,7 +113,7 @@ def test_mapcoords_create():
     assert_allclose(coords[0], 0.0)
     assert_allclose(coords[1], 1.0)
     assert_allclose(coords[2], 2.0)
-    assert coords.coordsys is None
+    assert coords.frame is None
     assert coords.ndim == 3
 
     # 2D Tuple w/ NaN coordinates
@@ -133,25 +133,25 @@ def test_mapcoords_create():
     coords = MapCoord.create((skycoord_cel,))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
-    assert coords.coordsys == "CEL"
+    assert coords.frame == "CEL"
     assert coords.ndim == 2
 
     coords = MapCoord.create((skycoord_gal,))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
-    assert coords.coordsys == "GAL"
+    assert coords.frame == "GAL"
     assert coords.ndim == 2
 
     # SkyCoord
     coords = MapCoord.create(skycoord_cel)
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
-    assert coords.coordsys == "CEL"
+    assert coords.frame == "CEL"
     assert coords.ndim == 2
     coords = MapCoord.create(skycoord_gal)
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
-    assert coords.coordsys == "GAL"
+    assert coords.frame == "GAL"
     assert coords.ndim == 2
 
     # 2D dict w/ vectors
@@ -172,7 +172,7 @@ def test_mapcoords_create():
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
     assert_allclose(coords["energy"], energy)
-    assert coords.coordsys == "CEL"
+    assert coords.frame == "icrs"
     assert coords.ndim == 3
 
     # 3D dict  w/ vectors
@@ -190,18 +190,18 @@ def test_mapcoords_create():
     assert coords["energy"].unit == "TeV"
 
 
-def test_mapcoords_to_coordsys():
+def test_mapcoords_to_frame():
     lon, lat = np.array([0.0, 1.0]), np.array([2.0, 3.0])
     energy = np.array([100.0, 1000.0])
     skycoord_cel = SkyCoord(lon, lat, unit="deg", frame="icrs")
     skycoord_gal = SkyCoord(lon, lat, unit="deg", frame="galactic")
 
-    coords = MapCoord.create(dict(lon=lon, lat=lat, energy=energy), coordsys="CEL")
-    assert coords.coordsys == "CEL"
+    coords = MapCoord.create(dict(lon=lon, lat=lat, energy=energy), frame="CEL")
+    assert coords.frame == "CEL"
     assert_allclose(coords.skycoord.transform_to("icrs").ra.deg, skycoord_cel.ra.deg)
     assert_allclose(coords.skycoord.transform_to("icrs").dec.deg, skycoord_cel.dec.deg)
-    coords = coords.to_coordsys("GAL")
-    assert coords.coordsys == "GAL"
+    coords = coords.to_frame("GAL")
+    assert coords.frame == "galactic"
     assert_allclose(
         coords.skycoord.transform_to("galactic").l.deg, skycoord_cel.galactic.l.deg
     )
@@ -209,12 +209,12 @@ def test_mapcoords_to_coordsys():
         coords.skycoord.transform_to("galactic").b.deg, skycoord_cel.galactic.b.deg
     )
 
-    coords = MapCoord.create(dict(lon=lon, lat=lat, energy=energy), coordsys="GAL")
-    assert coords.coordsys == "GAL"
+    coords = MapCoord.create(dict(lon=lon, lat=lat, energy=energy), frame="GAL")
+    assert coords.frame == "GAL"
     assert_allclose(coords.skycoord.transform_to("galactic").l.deg, skycoord_gal.l.deg)
     assert_allclose(coords.skycoord.transform_to("galactic").b.deg, skycoord_gal.b.deg)
-    coords = coords.to_coordsys("CEL")
-    assert coords.coordsys == "CEL"
+    coords = coords.to_frame("CEL")
+    assert coords.frame == "icrs"
     assert_allclose(
         coords.skycoord.transform_to("icrs").ra.deg, skycoord_gal.icrs.ra.deg
     )

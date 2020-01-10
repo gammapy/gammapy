@@ -482,7 +482,7 @@ class WcsNDMap(WcsMap):
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
 
-        ax.text(0, ymax, self.geom.coordsys + " coords")
+        ax.text(0, ymax, self.geom.frame + " coords")
 
         # Grid and ticks
         glon_spacing, glat_spacing = 45, 15
@@ -733,4 +733,4 @@ class WcsNDMap(WcsMap):
         axes_names = ["lon", "lat"] + [ax.name for ax in self.geom.axes]
         cdict = OrderedDict(zip(axes_names, coords))
 
-        return MapCoord.create(cdict, coordsys=self.geom.coordsys)
+        return MapCoord.create(cdict, frame=self.geom.frame)

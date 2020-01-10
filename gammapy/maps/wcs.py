@@ -17,6 +17,7 @@ from .geom import (
     make_axes,
     pix_tuple_to_idx,
     skycoord_to_lonlat,
+    frame_to_coordsys
 )
 from .utils import INVALID_INDEX, slice_to_str, str_to_slice
 
@@ -85,7 +86,7 @@ def _make_image_header(
     xref=0,
     yref=0,
     proj="CAR",
-    coordsys="GAL",
+    frame="GAL",
     xrefpix=None,
     yrefpix=None,
 ):
@@ -110,7 +111,7 @@ def _make_image_header(
         Coordinate system value at reference pixel for y axis. Default is 0.
     proj : string, optional
         Projection type. Default is 'CAR' (cartesian).
-    coordsys : {'CEL', 'GAL'}, optional
+    frame : {'CEL', 'GAL'}, optional
         Coordinate system. Default is 'GAL' (Galactic).
     xrefpix : float, optional
         Coordinate system reference pixel for x axis. Default is None.
@@ -129,12 +130,12 @@ def _make_image_header(
     if not yrefpix:
         yrefpix = (nypix + 1) / 2.0
 
-    if coordsys == "CEL":
+    if frame == "CEL":
         ctype1, ctype2 = "RA---", "DEC--"
-    elif coordsys == "GAL":
+    elif frame == "GAL":
         ctype1, ctype2 = "GLON-", "GLAT-"
     else:
-        raise ValueError(f"Unsupported coordsys: {coordsys!r}")
+        raise ValueError(f"Unsupported frame: {frame!r}")
 
     pars = {
         "NAXIS": 2,
@@ -188,7 +189,7 @@ class WcsGeom(Geom):
 
     def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, cutout_info=None):
         self._wcs = wcs
-        self._coordsys = get_coordys(wcs)
+        self._frame = get_coordys(wcs)
         self._projection = get_projection(wcs)
         self._axes = make_axes(axes)
 
@@ -241,12 +242,12 @@ class WcsGeom(Geom):
         return self._wcs
 
     @property
-    def coordsys(self):
+    def frame(self):
         """Coordinate system of the projection.
 
         Galactic ('GAL') or Equatorial ('CEL').
         """
-        return self._coordsys
+        return self._frame
 
     @property
     def cutout_info(self):
@@ -355,7 +356,7 @@ class WcsGeom(Geom):
         npix=None,
         binsz=0.5,
         proj="CAR",
-        coordsys="CEL",
+        frame="CEL",
         refpix=None,
         axes=None,
         skydir=None,
@@ -392,7 +393,7 @@ class WcsGeom(Geom):
             Sky position of map center.  Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map.
-        coordsys : {'CEL', 'GAL'}, optional
+        frame : {'CEL', 'GAL'}, optional
             Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
         axes : list
             List of non-spatial axes.
@@ -422,7 +423,7 @@ class WcsGeom(Geom):
         elif isinstance(skydir, tuple):
             xref, yref = skydir
         elif isinstance(skydir, SkyCoord):
-            xref, yref, frame = skycoord_to_lonlat(skydir, coordsys=coordsys)
+            xref, yref, frame = skycoord_to_lonlat(skydir, coordsys=frame)
         else:
             raise ValueError(f"Invalid type for skydir: {type(skydir)!r}")
 
@@ -448,6 +449,7 @@ class WcsGeom(Geom):
         if refpix is None:
             refpix = (None, None)
 
+        print(frame)
         header = _make_image_header(
             nxpix=npix[0].flat[0],
             nypix=npix[1].flat[0],
@@ -455,7 +457,7 @@ class WcsGeom(Geom):
             xref=float(xref),
             yref=float(yref),
             proj=proj,
-            coordsys=coordsys,
+            frame=frame_to_coordsys(frame),
             xrefpix=refpix[0],
             yrefpix=refpix[1],
         )
@@ -618,7 +620,7 @@ class WcsGeom(Geom):
             _[~m] = INVALID_INDEX.float
         return pix
 
-    def get_coord(self, idx=None, flat=False, mode="center", coordsys=None):
+    def get_coord(self, idx=None, flat=False, mode="center", frame=None):
         """Get map coordinates from the geometry.
 
         Parameters
@@ -641,13 +643,13 @@ class WcsGeom(Geom):
         axes_names = ["lon", "lat"] + [ax.name for ax in self.axes]
         cdict = dict(zip(axes_names, coords))
 
-        if coordsys is None:
-            coordsys = self.coordsys
+        if frame is None:
+            frame = self.frame
 
-        return MapCoord.create(cdict, coordsys=self.coordsys).to_coordsys(coordsys)
+        return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
 
     def coord_to_pix(self, coords):
-        coords = MapCoord.create(coords, coordsys=self.coordsys)
+        coords = MapCoord.create(coords, frame=self.frame)
 
         if coords.size == 0:
             return tuple([np.array([]) for i in range(coords.ndim)])
@@ -882,7 +884,7 @@ class WcsGeom(Geom):
             binsz=binsz,
             width=self.width,
             proj=self.projection,
-            coordsys=self.coordsys,
+            frame=self.frame,
             axes=copy.deepcopy(self.axes),
         )
 
@@ -1062,7 +1064,7 @@ class WcsGeom(Geom):
             f"\taxes       : {axes}\n"
             f"\tshape      : {self.data_shape[::-1]}\n"
             f"\tndim       : {self.ndim}\n"
-            f"\tcoordsys   : {self.coordsys}\n"
+            f"\tframe   : {self.frame}\n"
             f"\tprojection : {self.projection}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
             f"\twidth      : {self.width[0][0]:.1f} x {self.width[1][0]:.1f}\n"

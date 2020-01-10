@@ -179,9 +179,9 @@ def coordsys_to_frame(coordsys):
 
 
 def frame_to_coordsys(frame):
-    if frame in ["fk5", "fk4", "icrs"]:
+    if frame in ["fk5", "fk4", "icrs", "CEL"]:
         return "CEL"
-    elif frame == "galactic":
+    elif frame in ["galactic", "GAL"]:
         return "GAL"
     else:
         raise ValueError(f"Unrecognized coordinate system: {frame!r}")
@@ -202,7 +202,7 @@ def skycoord_to_lonlat(skycoord, coordsys=None):
         frame = coordsys_to_frame(coordsys)
         skycoord = skycoord.transform_to(frame)
 
-    return skycoord.data.lon.deg, skycoord.data.lat.deg, skycoord.frame
+    return skycoord.data.lon.deg, skycoord.data.lat.deg, skycoord.frame.name
 
 
 def lonlat_to_skycoord(lon, lat, coordsys):
@@ -814,7 +814,7 @@ class MapCoord:
     ----------
     data : `dict` of `~numpy.ndarray`
         Dictionary of coordinate arrays.
-    coordsys : {'CEL', 'GAL', None}
+    frame : {'CEL', 'GAL', None}
         Spatial coordinate system.  If None then the coordinate system
         will be set to the native coordinate system of the geometry.
     match_by_name : bool
@@ -822,7 +822,7 @@ class MapCoord:
         If false coordinates will be matched by index.
     """
 
-    def __init__(self, data, coordsys=None, match_by_name=True):
+    def __init__(self, data, frame=None, match_by_name=True):
 
         if "lon" not in data or "lat" not in data:
             raise ValueError("data dictionary must contain axes named 'lon' and 'lat'.")
@@ -830,7 +830,7 @@ class MapCoord:
         data = {k: np.atleast_1d(np.asanyarray(v)) for k, v in data.items()}
         vals = np.broadcast_arrays(*data.values(), subok=True)
         self._data = dict(zip(data.keys(), vals))
-        self._coordsys = coordsys
+        self._frame = frame
         self._match_by_name = match_by_name
 
     def __getitem__(self, key):
@@ -879,9 +879,9 @@ class MapCoord:
         return phi
 
     @property
-    def coordsys(self):
+    def frame(self):
         """Coordinate system (str)."""
-        return self._coordsys
+        return self._frame
 
     @property
     def match_by_name(self):
@@ -891,11 +891,11 @@ class MapCoord:
     @property
     def skycoord(self):
         return SkyCoord(
-            self.lon, self.lat, unit="deg", frame=coordsys_to_frame(self.coordsys)
+            self.lon, self.lat, unit="deg", frame=coordsys_to_frame(self.frame)
         )
 
     @classmethod
-    def _from_lonlat(cls, coords, coordsys=None):
+    def _from_lonlat(cls, coords, frame=None):
         """Create a `~MapCoord` from a tuple of coordinate vectors.
 
         The first two elements of the tuple should be longitude and latitude in degrees.
@@ -917,10 +917,10 @@ class MapCoord:
         else:
             raise ValueError("Unrecognized input type.")
 
-        return cls(coords_dict, coordsys=coordsys, match_by_name=False)
+        return cls(coords_dict, frame=frame, match_by_name=False)
 
     @classmethod
-    def _from_skycoord(cls, coords, coordsys=None):
+    def _from_skycoord(cls, coords, frame=None):
         """Create from vector of `~astropy.coordinates.SkyCoord`.
 
         Parameters
@@ -928,51 +928,51 @@ class MapCoord:
         coords : tuple
             Coordinate tuple with first element of type
             `~astropy.coordinates.SkyCoord`.
-        coordsys : {'CEL', 'GAL', None}
+        frame : {'CEL', 'GAL', None}
             Spatial coordinate system of output `~MapCoord` object.
             If None the coordinate system will be set to the frame of
             the `~astropy.coordinates.SkyCoord` object.
         """
         skycoord = coords[0]
-        coordsys_skycoord = frame_to_coordsys(skycoord.frame.name)
+        frame_skycoord = frame_to_coordsys(skycoord.frame.name)
         coords = (skycoord.data.lon.deg, skycoord.data.lat.deg) + coords[1:]
-        coords = cls._from_lonlat(coords, coordsys=coordsys_skycoord)
+        coords = cls._from_lonlat(coords, frame=frame_skycoord)
 
-        if coordsys is None:
+        if frame is None:
             return coords
         else:
-            return coords.to_coordsys(coordsys)
+            return coords.to_frame(frame)
 
     @classmethod
-    def _from_tuple(cls, coords, coordsys=None):
+    def _from_tuple(cls, coords, frame=None):
         """Create from tuple of coordinate vectors."""
         if isinstance(coords[0], (list, np.ndarray)) or np.isscalar(coords[0]):
-            return cls._from_lonlat(coords, coordsys=coordsys)
+            return cls._from_lonlat(coords, frame=frame)
         elif isinstance(coords[0], SkyCoord):
-            return cls._from_skycoord(coords, coordsys=coordsys)
+            return cls._from_skycoord(coords, frame=frame)
         else:
             raise TypeError(f"Type not supported: {type(coords)!r}")
 
     @classmethod
-    def _from_dict(cls, coords, coordsys=None):
+    def _from_dict(cls, coords, frame=None):
         """Create from a dictionary of coordinate vectors."""
         if "lon" in coords and "lat" in coords:
-            return cls(coords, coordsys=coordsys)
+            return cls(coords, frame=frame)
         elif "skycoord" in coords:
-            lon, lat, frame = skycoord_to_lonlat(coords["skycoord"], coordsys=coordsys)
+            lon, lat, frame = skycoord_to_lonlat(coords["skycoord"], coordsys=frame)
             coords_dict = {"lon": lon, "lat": lat}
             for k, v in coords.items():
                 if k == "skycoord":
                     continue
                 coords_dict[k] = v
-            if coordsys is None:
-                coordsys = frame_to_coordsys(frame.name)
-            return cls(coords_dict, coordsys=coordsys)
+            if frame is None:
+                frame = frame_to_frame(frame.name)
+            return cls(coords_dict, frame=frame)
         else:
             raise ValueError("coords dict must contain 'lon'/'lat' or 'skycoord'.")
 
     @classmethod
-    def create(cls, data, coordsys=None):
+    def create(cls, data, frame=None):
         """Create a new `~MapCoord` object.
 
         This method can be used to create either unnamed (with tuple input)
@@ -982,7 +982,7 @@ class MapCoord:
         ----------
         data : tuple, dict, `MapCoord` or `~astropy.coordinates.SkyCoord`
             Object containing coordinate arrays.
-        coordsys : {'CEL', 'GAL', None}, optional
+        frame : {'CEL', 'GAL', None}, optional
             Set the coordinate system for longitude and latitude. If
             None longitude and latitude will be assumed to be in
             the coordinate system native to a given map geometry.
@@ -1003,25 +1003,25 @@ class MapCoord:
         >>> c = MapCoord.create(dict(skycoord=skycoord,energy=energy))
         """
         if isinstance(data, cls):
-            if data.coordsys is None or coordsys == data.coordsys:
+            if data.frame is None or frame == data.frame:
                 return data
             else:
-                return data.to_coordsys(coordsys)
+                return data.to_frame(frame)
         elif isinstance(data, dict):
-            return cls._from_dict(data, coordsys=coordsys)
+            return cls._from_dict(data, frame=frame)
         elif isinstance(data, (list, tuple)):
-            return cls._from_tuple(data, coordsys=coordsys)
+            return cls._from_tuple(data, frame=frame)
         elif isinstance(data, SkyCoord):
-            return cls._from_skycoord((data,), coordsys=coordsys)
+            return cls._from_skycoord((data,), frame=frame)
         else:
             raise TypeError(f"Unsupported input type: {type(data)!r}")
 
-    def to_coordsys(self, coordsys):
+    def to_frame(self, frame):
         """Convert to a different coordinate frame.
 
         Parameters
         ----------
-        coordsys : {'CEL', 'GAL'}
+        frame : {'CEL', 'GAL'}
             Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
 
         Returns
@@ -1029,11 +1029,11 @@ class MapCoord:
         coords : `~MapCoord`
             A coordinates object.
         """
-        if coordsys == self.coordsys:
+        if frame == self.frame:
             return copy.deepcopy(self)
         else:
-            skycoord = lonlat_to_skycoord(self.lon, self.lat, self.coordsys)
-            lon, lat, frame = skycoord_to_lonlat(skycoord, coordsys=coordsys)
+            skycoord = lonlat_to_skycoord(self.lon, self.lat, self.frame)
+            lon, lat, frame = skycoord_to_lonlat(skycoord, coordsys=frame)
             data = copy.deepcopy(self._data)
             if isinstance(self.lon, u.Quantity):
                 lon = u.Quantity(lon, unit="deg", copy=False)
@@ -1043,7 +1043,7 @@ class MapCoord:
 
             data["lon"] = lon
             data["lat"] = lat
-            return self.__class__(data, coordsys, self._match_by_name)
+            return self.__class__(data, frame, self._match_by_name)
 
     def apply_mask(self, mask):
         """Return a masked copy of this coordinate object.
@@ -1059,7 +1059,7 @@ class MapCoord:
             A coordinates object.
         """
         data = {k: v[mask] for k, v in self._data.items()}
-        return self.__class__(data, self.coordsys, self._match_by_name)
+        return self.__class__(data, self.frame, self._match_by_name)
 
     def copy(self):
         """Copy `MapCoord` object."""
@@ -1071,7 +1071,7 @@ class MapCoord:
             f"\taxes     : {list(self._data.keys())}\n"
             f"\tshape    : {self.shape[::-1]}\n"
             f"\tndim     : {self.ndim}\n"
-            f"\tcoordsys : {self.coordsys}\n"
+            f"\tframe : {self.frame}\n"
         )
 
 

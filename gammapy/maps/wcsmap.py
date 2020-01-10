@@ -28,7 +28,7 @@ class WcsMap(Map):
         binsz=0.1,
         width=None,
         proj="CAR",
-        coordsys="CEL",
+        frame="CEL",
         refpix=None,
         axes=None,
         skydir=None,
@@ -63,7 +63,7 @@ class WcsMap(Map):
             Sky position of map center.  Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map.
-        coordsys : {'CEL', 'GAL'}, optional
+        frame : {'CEL', 'GAL'}, optional
             Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
         axes : list
             List of non-spatial axes.
@@ -94,7 +94,7 @@ class WcsMap(Map):
             width=width,
             proj=proj,
             skydir=skydir,
-            coordsys=coordsys,
+            frame=frame,
             refpix=refpix,
             axes=axes,
         )

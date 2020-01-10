@@ -102,7 +102,7 @@ class SpatialModel(Model):
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
-        coords = geom.get_coord(coordsys=self.frame)
+        coords = geom.get_coord(frame=self.frame)
         return self(coords.lon, coords.lat)
 
     def to_dict(self):

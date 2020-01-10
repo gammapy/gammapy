@@ -35,7 +35,7 @@ def checkerboard_image():
     data[slice(0, nypix + 1, 2), slice(0, nxpix + 1, 2)] = 0.5
     data[slice(1, nypix + 1, 2), slice(1, nxpix + 1, 2)] = 0.5
 
-    geom = WcsGeom.create(npix=(nxpix, nypix), coordsys="GAL", binsz=0.02)
+    geom = WcsGeom.create(npix=(nxpix, nypix), frame="GAL", binsz=0.02)
     return WcsNDMap(geom=geom, data=data, unit="cm-2 s-1")
 
 
