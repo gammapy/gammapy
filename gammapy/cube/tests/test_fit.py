@@ -193,7 +193,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
     assert spectrum_dataset.data_shape == (2,)
     assert spectrum_dataset.background.energy.nbin == 2
     assert spectrum_dataset.aeff.energy.nbin == 3
-    assert spectrum_dataset.aeff.data.data.unit == 'm2'
+    assert spectrum_dataset.aeff.data.data.unit == "m2"
     assert spectrum_dataset.edisp.e_reco.nbin == 2
     assert spectrum_dataset.edisp.e_true.nbin == 3
 
@@ -499,6 +499,7 @@ def images():
         "acceptance": WcsNDMap.read(filename, hdu="ONEXPOSURE"),
         "acceptance_off": WcsNDMap.read(filename, hdu="OFFEXPOSURE"),
         "exposure": WcsNDMap.read(filename, hdu="EXPGAMMAMAP"),
+        "background": WcsNDMap.read(filename, hdu="BACKGROUND"),
     }
 
 
@@ -684,3 +685,49 @@ def test_datasets_io_no_model(tmpdir):
 
     filename_2 = tmpdir / "test_data_2.fits"
     assert filename_2.exists()
+
+
+@requires_data()
+def test_mapdatasetonoff_to_spectrum_dataset(images):
+    e_reco = MapAxis.from_bounds(0.1, 10.0, 1, name="energy", unit=u.TeV, interp="log")
+    new_images = dict()
+    for key, image in images.items():
+        new_images[key] = Map.from_geom(
+            image.geom.to_cube([e_reco]), data=image.data[np.newaxis, :, :]
+        )
+    dataset = get_map_dataset_onoff(new_images)
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+    dataset.gti = gti
+
+    on_region = CircleSkyRegion(
+        center=dataset.counts.geom.center_skydir, radius=0.1 * u.deg
+    )
+    spectrum_dataset = dataset.to_spectrum_dataset(on_region)
+
+    assert spectrum_dataset.counts.data[0] == 8
+    assert spectrum_dataset.data_shape == (1,)
+    assert spectrum_dataset.counts_off.data[0] == 33914
+    assert_allclose(spectrum_dataset.alpha.data[0], 0.0002143, atol=1e-7)
+
+    excess_map = new_images["counts"] - new_images["background"]
+    excess_true = excess_map.get_spectrum(on_region, np.sum).data[0]
+
+    excess = spectrum_dataset.excess.data[0]
+    assert_allclose(excess, excess_true, atol=1e-6)
+
+
+@requires_data()
+def test_mapdatasetonoff_cutout(images):
+    dataset = get_map_dataset_onoff(images)
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+    dataset.gti = gti
+
+    cutout_dataset = dataset.cutout(
+        images["counts"].geom.center_skydir, ["1 deg", "1 deg"]
+    )
+
+    assert cutout_dataset.counts.data.shape == (50, 50)
+    assert cutout_dataset.counts_off.data.shape == (50, 50)
+    assert cutout_dataset.acceptance.data.shape == (50, 50)
+    assert cutout_dataset.acceptance_off.data.shape == (50, 50)
+    assert cutout_dataset.background_model is None
