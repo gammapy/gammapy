@@ -1425,7 +1425,6 @@ class MapDatasetOnOff(MapDataset):
         cutout : `MapDatasetOnOff`
             Cutout map dataset.
         """
-        kwargs = {"gti": self.gti}
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
 
         cutout_dataset = super().cutout(**cutout_kwargs)
