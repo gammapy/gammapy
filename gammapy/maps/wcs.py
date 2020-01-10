@@ -341,7 +341,8 @@ class WcsGeom(Geom):
         elif isinstance(skydir, tuple):
             crval = skydir
         elif isinstance(skydir, SkyCoord):
-            crval, frame = skycoord_to_lonlat(skydir, frame=frame)
+            xref, yref, frame = skycoord_to_lonlat(skydir, frame=frame)
+            crval = (xref, yref)
         else:
             raise ValueError(f"Invalid type for skydir: {type(skydir)!r}")
 
@@ -367,16 +368,17 @@ class WcsGeom(Geom):
         if refpix is None:
             nxpix = int(npix[0].flat[0])
             nypix = int(npix[1].flat[0])
-            crpix = ((nxpix + 1) / 2.0, (nypix + 1) / 2.0)
+            refpix = ((nxpix + 1) / 2.0, (nypix + 1) / 2.0)
 
         # get frame class
         frame = SkyCoord(np.nan, np.nan, frame=frame, unit="deg").frame
         wcs = celestial_frame_to_wcs(frame, projection=proj)
-        wcs.wcs.crpix = crpix
+        wcs.wcs.crpix = refpix
         wcs.wcs.crval = crval
 
         cdelt = binsz[0].flat[0]
         wcs.wcs.cdelt = (-cdelt, cdelt)
+
         wcs.array_shape = npix[0].flat[0], npix[1].flat[0]
         wcs.wcs.datfix()
         return cls(wcs, npix, cdelt=binsz, axes=axes)
