@@ -17,7 +17,6 @@ from .geom import (
     make_axes,
     pix_tuple_to_idx,
     skycoord_to_lonlat,
-    frame_to_coordsys
 )
 from .utils import INVALID_INDEX, slice_to_str, str_to_slice
 
@@ -130,9 +129,9 @@ def _make_image_header(
     if not yrefpix:
         yrefpix = (nypix + 1) / 2.0
 
-    if frame == "CEL":
+    if frame in ["CEL", "fk5", "fk4", "icrs"]:
         ctype1, ctype2 = "RA---", "DEC--"
-    elif frame == "GAL":
+    elif frame in ["GAL", "galactic"]:
         ctype1, ctype2 = "GLON-", "GLAT-"
     else:
         raise ValueError(f"Unsupported frame: {frame!r}")
@@ -457,7 +456,7 @@ class WcsGeom(Geom):
             xref=float(xref),
             yref=float(yref),
             proj=proj,
-            frame=frame_to_coordsys(frame),
+            frame=frame,
             xrefpix=refpix[0],
             yrefpix=refpix[1],
         )

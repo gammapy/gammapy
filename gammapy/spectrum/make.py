@@ -4,7 +4,6 @@ import numpy as np
 from astropy import units as u
 from regions import CircleSkyRegion
 from gammapy.maps import WcsGeom
-from gammapy.maps.geom import frame_to_coordsys
 from .core import CountsSpectrum
 from .dataset import SpectrumDataset
 
@@ -43,7 +42,7 @@ class SpectrumDatasetMaker:
     @staticmethod
     def geom_ref(region):
         """Reference geometry to project region"""
-        frame = frame_to_coordsys(region.center.frame.name)
+        frame = region.center.frame.name
         return WcsGeom.create(
             skydir=region.center, npix=(1, 1), binsz=1, proj="TAN", frame=frame
         )

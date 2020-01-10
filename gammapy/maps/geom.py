@@ -178,15 +178,6 @@ def coordsys_to_frame(coordsys):
         raise ValueError(f"Unrecognized coordinate system: {coordsys!r}")
 
 
-def frame_to_coordsys(frame):
-    if frame in ["fk5", "fk4", "icrs", "CEL"]:
-        return "CEL"
-    elif frame in ["galactic", "GAL"]:
-        return "GAL"
-    else:
-        raise ValueError(f"Unrecognized coordinate system: {frame!r}")
-
-
 # TODO: remove (or improve)
 def skycoord_to_lonlat(skycoord, coordsys=None):
     """Convert SkyCoord to lon, lat, frame.
@@ -934,9 +925,8 @@ class MapCoord:
             the `~astropy.coordinates.SkyCoord` object.
         """
         skycoord = coords[0]
-        frame_skycoord = frame_to_coordsys(skycoord.frame.name)
         coords = (skycoord.data.lon.deg, skycoord.data.lat.deg) + coords[1:]
-        coords = cls._from_lonlat(coords, frame=frame_skycoord)
+        coords = cls._from_lonlat(coords, frame=skycoord.frame.name)
 
         if frame is None:
             return coords
@@ -965,8 +955,6 @@ class MapCoord:
                 if k == "skycoord":
                     continue
                 coords_dict[k] = v
-            if frame is None:
-                frame = frame_to_frame(frame.name)
             return cls(coords_dict, frame=frame)
         else:
             raise ValueError("coords dict must contain 'lon'/'lat' or 'skycoord'.")

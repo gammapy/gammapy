@@ -133,25 +133,25 @@ def test_mapcoords_create():
     coords = MapCoord.create((skycoord_cel,))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
-    assert coords.frame == "CEL"
+    assert coords.frame == "icrs"
     assert coords.ndim == 2
 
     coords = MapCoord.create((skycoord_gal,))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
-    assert coords.frame == "GAL"
+    assert coords.frame == "galactic"
     assert coords.ndim == 2
 
     # SkyCoord
     coords = MapCoord.create(skycoord_cel)
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
-    assert coords.frame == "CEL"
+    assert coords.frame == "icrs"
     assert coords.ndim == 2
     coords = MapCoord.create(skycoord_gal)
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
-    assert coords.frame == "GAL"
+    assert coords.frame == "galactic"
     assert coords.ndim == 2
 
     # 2D dict w/ vectors

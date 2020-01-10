@@ -5,7 +5,6 @@ from astropy import units as u
 from astropy.coordinates import Angle
 from regions import PixCoord
 from gammapy.maps import WcsNDMap
-from gammapy.maps.geom import frame_to_coordsys
 from gammapy.utils.regions import list_to_compound_region
 from .core import CountsSpectrum
 from .dataset import SpectrumDatasetOnOff
@@ -143,7 +142,7 @@ class ReflectedRegionsFinder:
         reference_map : `~gammapy.maps.WcsNDMap`
             Map containing the region
         """
-        frame = frame_to_coordsys(region.center.frame.name)
+        frame = region.center.frame.name
 
         # width is the full width of an image (not the radius)
         width = 4 * region.center.separation(center) + Angle(min_width)
