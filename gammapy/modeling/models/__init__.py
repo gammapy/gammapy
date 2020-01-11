@@ -9,13 +9,13 @@ from .temporal import *
 
 
 class Registry(list):
-    """Gammapy model registry class."""
+    """Gammapy registry class."""
 
     def get_cls(self, tag):
         for cls in self:
             if hasattr(cls, "tag") and cls.tag == tag:
                 return cls
-        raise KeyError(f"No model found with tag: {tag!r}")
+        raise KeyError(f"No class found with tag: {tag!r}")
 
 
 SPATIAL_MODELS = Registry(

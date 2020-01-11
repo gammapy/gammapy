@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from gammapy.modeling.serialize import models_to_dict, dict_to_models
 
+__all__ = ["datasets_to_dict", "dict_to_datasets"]
+
 
 def datasets_to_dict(datasets, path, prefix, overwrite):
     """Convert datasets to dicts for serialization.
