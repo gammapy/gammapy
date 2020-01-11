@@ -9,15 +9,15 @@ from gammapy.spectrum import CountsSpectrum, SensitivityEstimator, SpectrumDatas
 
 @pytest.fixture()
 def spectrum_dataset():
-    etrue = np.logspace(0, 1, 21) * u.TeV
-    ereco = np.logspace(0, 1, 5) * u.TeV
-    aeff = EffectiveAreaTable.from_constant(value=1e6 * u.m ** 2, energy=etrue)
-    edisp = EDispKernel.from_diagonal_response(etrue, ereco)
+    e_true = np.logspace(0, 1, 21) * u.TeV
+    e_reco = np.logspace(0, 1, 5) * u.TeV
+    aeff = EffectiveAreaTable.from_constant(value=1e6 * u.m ** 2, energy=e_true)
+    edisp = EDispKernel.from_diagonal_response(e_true, e_reco)
 
     data = 3600 * np.ones(4)
     data[-1] *= 1e-3
     background = CountsSpectrum(
-        energy_lo=ereco[:-1], energy_hi=ereco[1:], data=data
+        energy_lo=e_reco[:-1], energy_hi=e_reco[1:], data=data
     )
     return SpectrumDataset(
         aeff=aeff,

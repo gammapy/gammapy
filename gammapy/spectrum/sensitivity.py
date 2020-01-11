@@ -36,11 +36,11 @@ class SensitivityEstimator:
         spectrum=None,
         alpha=0.2,
         sigma=5.0,
-        gamma_min=10.0,
+        gamma_min=10,
     ):
 
         if spectrum is None:
-            spectrum = PowerLawSpectralModel()
+            spectrum = PowerLawSpectralModel(index=2, amplitude="1 cm-2 s-1 TeV-1")
 
         self.spectrum = spectrum
         self.alpha = alpha
@@ -90,7 +90,7 @@ class SensitivityEstimator:
         return dnde.quantity.to("erg / (cm2 s)")
 
     def _get_criterion(self, excess):
-        is_gamma_limited = excess < self.gamma_min
+        is_gamma_limited = excess == self.gamma_min
         criterion = np.chararray(excess.shape, itemsize=12)
         criterion[is_gamma_limited] = "gamma"
         criterion[~is_gamma_limited] = "significance"
