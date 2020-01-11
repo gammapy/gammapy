@@ -14,21 +14,21 @@ def spectrum_dataset():
     aeff = EffectiveAreaTable.from_constant(value=1e6 * u.m ** 2, energy=etrue)
     edisp = EDispKernel.from_diagonal_response(etrue, ereco)
 
-    data = np.ones(4)
-    data[-1] = 1e-3
+    data = 3600 * np.ones(4)
+    data[-1] *= 1e-3
     background = CountsSpectrum(
-        energy_lo=ereco[:-1], energy_hi=ereco[1:], data=data, unit="s-1"
+        energy_lo=ereco[:-1], energy_hi=ereco[1:], data=data
     )
     return SpectrumDataset(
         aeff=aeff,
-        livetime="5h",
+        livetime="1h",
         edisp=edisp,
         background=background
     )
 
 
 def test_cta_sensitivity_estimator(spectrum_dataset):
-    sens = SensitivityEstimator()
+    sens = SensitivityEstimator(gamma_min=20, alpha=0.2)
     table = sens.run(spectrum_dataset)
 
     assert len(table) == 4
