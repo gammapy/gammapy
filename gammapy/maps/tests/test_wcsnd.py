@@ -28,30 +28,30 @@ axes2 = [
 skydir = SkyCoord(110.0, 75.0, unit="deg", frame="icrs")
 
 wcs_allsky_test_geoms = [
-    (None, 10.0, "GAL", "AIT", skydir, None),
-    (None, 10.0, "GAL", "AIT", skydir, axes1),
-    (None, [10.0, 20.0], "GAL", "AIT", skydir, axes1),
-    (None, 10.0, "GAL", "AIT", skydir, axes2),
-    (None, [[10.0, 20.0, 30.0], [10.0, 20.0, 30.0]], "GAL", "AIT", skydir, axes2),
+    (None, 10.0, "galactic", "AIT", skydir, None),
+    (None, 10.0, "galactic", "AIT", skydir, axes1),
+    (None, [10.0, 20.0], "galactic", "AIT", skydir, axes1),
+    (None, 10.0, "galactic", "AIT", skydir, axes2),
+    (None, [[10.0, 20.0, 30.0], [10.0, 20.0, 30.0]], "galactic", "AIT", skydir, axes2),
 ]
 
 wcs_partialsky_test_geoms = [
-    (10, 1.0, "GAL", "AIT", skydir, None),
-    (10, 1.0, "GAL", "AIT", skydir, axes1),
-    (10, [1.0, 2.0], "GAL", "AIT", skydir, axes1),
-    (10, 1.0, "GAL", "AIT", skydir, axes2),
-    (10, [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]], "GAL", "AIT", skydir, axes2),
+    (10, 1.0, "galactic", "AIT", skydir, None),
+    (10, 1.0, "galactic", "AIT", skydir, axes1),
+    (10, [1.0, 2.0], "galactic", "AIT", skydir, axes1),
+    (10, 1.0, "galactic", "AIT", skydir, axes2),
+    (10, [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]], "galactic", "AIT", skydir, axes2),
 ]
 
 wcs_test_geoms = wcs_allsky_test_geoms + wcs_partialsky_test_geoms
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_init(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsndmap_init(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
     )
     m0 = WcsNDMap(geom)
     coords = m0.geom.get_coord()
@@ -61,11 +61,11 @@ def test_wcsndmap_init(npix, binsz, coordsys, proj, skydir, axes):
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_read_write(tmp_path, npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsndmap_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
     )
     path = tmp_path / "tmp.fits"
 
@@ -98,7 +98,7 @@ def test_wcsndmap_read_write_fgst(tmp_path):
     path = tmp_path / "tmp.fits"
 
     axis = MapAxis.from_bounds(100.0, 1000.0, 4, name="energy", unit="MeV")
-    geom = WcsGeom.create(npix=10, binsz=1.0, proj="AIT", coordsys="GAL", axes=[axis])
+    geom = WcsGeom.create(npix=10, binsz=1.0, proj="AIT", frame="galactic", axes=[axis])
 
     # Test Counts Cube
     m = WcsNDMap(geom)
@@ -152,11 +152,11 @@ def test_wcs_nd_map_data_transpose_issue(tmp_path):
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_set_get_by_pix(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsndmap_set_get_by_pix(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, skydir=skydir, proj=proj, frame=frame, axes=axes
     )
     m = WcsNDMap(geom)
     coords = m.geom.get_coord()
@@ -178,11 +178,11 @@ def test_get_by_coord_bool_int():
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_set_get_by_coord(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsndmap_set_get_by_coord(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, skydir=skydir, proj=proj, frame=frame, axes=axes
     )
     m = WcsNDMap(geom)
     coords = m.geom.get_coord()
@@ -210,7 +210,7 @@ def test_wcsndmap_set_get_by_coord(npix, binsz, coordsys, proj, skydir, axes):
     if axes:
         for i, ax in enumerate(axes):
             coords_dict[ax.name] = coords[i + 2]
-    map_coords = MapCoord.create(coords_dict, coordsys=coordsys)
+    map_coords = MapCoord.create(coords_dict, frame=frame)
     m.set_by_coord(map_coords, coords[0])
     assert_allclose(coords[0].value, m.get_by_coord(map_coords))
 
@@ -233,11 +233,11 @@ def qconcatenate(q_1, q_2):
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_fill_by_coord(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsndmap_fill_by_coord(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, skydir=skydir, proj=proj, frame=frame, axes=axes
     )
     m = WcsNDMap(geom)
     coords = m.geom.get_coord()
@@ -261,11 +261,11 @@ def test_wcsndmap_fill_by_coord(npix, binsz, coordsys, proj, skydir, axes):
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_coadd(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsndmap_coadd(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, skydir=skydir, proj=proj, frame=frame, axes=axes
     )
     m0 = WcsNDMap(geom)
     m1 = WcsNDMap(geom.upsample(2))
@@ -279,11 +279,11 @@ def test_wcsndmap_coadd(npix, binsz, coordsys, proj, skydir, axes):
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_interp_by_coord(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsndmap_interp_by_coord(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, skydir=skydir, proj=proj, frame=frame, axes=axes
     )
     m = WcsNDMap(geom)
     coords = m.geom.get_coord(flat=True)
@@ -326,12 +326,12 @@ def test_wcsndmap_interp_by_coord_fill_value():
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
 @pytest.mark.parametrize("keepdims", [True, False])
-def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes, keepdims):
+def test_wcsndmap_sum_over_axes(npix, binsz, frame, proj, skydir, axes, keepdims):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
     )
     m = WcsNDMap(geom)
     coords = m.geom.get_coord()
@@ -343,11 +343,11 @@ def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes, keepd
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_pad(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsndmap_pad(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
     )
     m = WcsNDMap(geom)
     m2 = m.pad(1, mode="constant", cval=2.2)
@@ -370,22 +370,22 @@ def test_wcsndmap_pad_cval():
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_crop(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsndmap_crop(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
     )
     m = WcsNDMap(geom)
     m.crop(1)
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_downsample(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsndmap_downsample(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
     )
     m = WcsNDMap(geom, unit="m2")
     # Check whether we can downsample
@@ -396,11 +396,11 @@ def test_wcsndmap_downsample(npix, binsz, coordsys, proj, skydir, axes):
 
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_upsample(npix, binsz, coordsys, proj, skydir, axes):
+def test_wcsndmap_upsample(npix, binsz, frame, proj, skydir, axes):
     geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
     )
     m = WcsNDMap(geom, unit="m2")
     m2 = m.upsample(2, preserve_counts=True)
@@ -430,7 +430,7 @@ def test_wcsndmap_downsample_axis():
 
 
 def test_coadd_unit():
-    geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", coordsys="GAL")
+    geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", frame="galactic")
     m1 = WcsNDMap(geom, data=np.ones((10, 10)), unit="m2")
     m2 = WcsNDMap(geom, data=np.ones((10, 10)), unit="cm2")
 
@@ -445,7 +445,7 @@ def test_smooth(kernel):
         MapAxis(np.logspace(0.0, 3.0, 3), interp="log"),
         MapAxis(np.logspace(1.0, 3.0, 4), interp="lin"),
     ]
-    geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", coordsys="GAL", axes=axes)
+    geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", frame="galactic", axes=axes)
     m = WcsNDMap(geom, data=np.ones(geom.data_shape), unit="m2")
 
     desired = m.data.sum()
@@ -459,7 +459,7 @@ def test_smooth(kernel):
 def test_make_cutout(mode):
     pos = SkyCoord(0, 0, unit="deg", frame="galactic")
     geom = WcsGeom.create(
-        npix=(10, 10), binsz=1, skydir=pos, proj="CAR", coordsys="GAL", axes=axes2
+        npix=(10, 10), binsz=1, skydir=pos, proj="CAR", frame="galactic", axes=axes2
     )
     m = WcsNDMap(geom, data=np.ones((3, 2, 10, 10)), unit="m2")
     cutout = m.cutout(position=pos, width=(2.0, 3.0) * u.deg, mode=mode)
@@ -538,7 +538,7 @@ def test_get_spectrum():
     axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
 
     geom = WcsGeom.create(
-        skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], coordsys="GAL"
+        skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], frame="galactic"
     )
 
     m = Map.from_geom(geom)
@@ -566,7 +566,7 @@ def get_npred_map():
         skydir=position,
         width="2 deg",
         axes=[energy_axis],
-        coordsys="GAL",
+        frame="galactic",
         unit="cm2 s",
     )
 

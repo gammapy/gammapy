@@ -48,7 +48,7 @@ models = sky_model_1 + sky_model_2
 # Define map geometry
 axis = MapAxis.from_edges(np.logspace(-1.0, 1.0, 10), unit="TeV", name="energy")
 geom = WcsGeom.create(
-    skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
+    skydir=(0, 0), binsz=0.02, width=(2, 2), frame="galactic", axes=[axis]
 )
 
 

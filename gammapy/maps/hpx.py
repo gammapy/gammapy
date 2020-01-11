@@ -9,7 +9,6 @@ from astropy.units import Quantity
 from .geom import (
     Geom,
     MapCoord,
-    coordsys_to_frame,
     find_and_read_bands,
     make_axes,
     pix_tuple_to_idx,
@@ -39,7 +38,7 @@ class HpxConv:
         self.hduname = kwargs.get("hduname", "SKYMAP")
         self.bands_hdu = kwargs.get("bands_hdu", "EBOUNDS")
         self.quantity_type = kwargs.get("quantity_type", "integral")
-        self.coordsys = kwargs.get("coordsys", "COORDSYS")
+        self.frame = kwargs.get("frame", "COORDSYS")
 
     def colname(self, indx):
         return f"{self.colstring}{indx}"
@@ -75,7 +74,7 @@ HPX_FITS_CONVENTIONS["galprop"] = HpxConv(
     hduname="SKYMAP2",
     bands_hdu="ENERGIES",
     quantity_type="differential",
-    coordsys="COORDTYPE",
+    frame="COORDTYPE",
 )
 HPX_FITS_CONVENTIONS["galprop2"] = HpxConv(
     "galprop",
@@ -336,19 +335,17 @@ def parse_hpxregion(region):
         return [m.group(1)] + re.split(",", m.group(2))
 
 
-def get_hpxregion_dir(region, coordsys):
+def get_hpxregion_dir(region, frame):
     """Get the reference direction for a HEALPIX region string.
 
     Parameters
     ----------
     region : str
         A string describing a HEALPIX region
-    coordsys : {'CEL', 'GAL'}
+    frame : {'icrs', 'galactic'}
         Coordinate system
     """
     import healpy as hp
-
-    frame = coordsys_to_frame(coordsys)
 
     if region is None:
         return SkyCoord(0.0, 0.0, frame=frame, unit="deg")
@@ -547,8 +544,8 @@ class HpxGeom(Geom):
         non-spatial axes.
     nest : bool
         True -> 'NESTED', False -> 'RING' indexing scheme
-    coordsys : str
-        Coordinate system, 'CEL' | 'GAL'
+    frame : str
+        Coordinate system, "icrs" | "galactic"
     region : str or tuple
         Spatial geometry for partial-sky maps.  If none the map will
         encompass the whole sky.  String input will be parsed
@@ -566,7 +563,7 @@ class HpxGeom(Geom):
     is_hpx = True
 
     def __init__(
-        self, nside, nest=True, coordsys="CEL", region=None, axes=None, sparse=False
+        self, nside, nest=True, frame="icrs", region=None, axes=None, sparse=False
     ):
 
         # FIXME: Figure out what to do when sparse=True
@@ -583,7 +580,7 @@ class HpxGeom(Geom):
 
         self._order = nside_to_order(self._nside)
         self._nest = nest
-        self._coordsys = coordsys
+        self._frame = frame
         self._maxpix = 12 * self._nside * self._nside
         self._maxpix = self._maxpix * np.ones(self.shape_axes, dtype=int)
         self._sparse = sparse
@@ -763,7 +760,7 @@ class HpxGeom(Geom):
     def coord_to_pix(self, coords):
         import healpy as hp
 
-        coords = MapCoord.create(coords, coordsys=self.coordsys)
+        coords = MapCoord.create(coords, frame=self.frame)
         theta, phi = coords.theta, coords.phi
 
         c = self.coord_to_tuple(coords)
@@ -879,7 +876,7 @@ class HpxGeom(Geom):
         else:
             region = self.region
 
-        return self.__class__(nside, self.nest, self.coordsys, region, axes)
+        return self.__class__(nside, self.nest, self.frame, region, axes)
 
     @property
     def axes(self):
@@ -929,8 +926,8 @@ class HpxGeom(Geom):
         return self._npix
 
     @property
-    def coordsys(self):
-        return self._coordsys
+    def frame(self):
+        return self._frame
 
     @property
     def projection(self):
@@ -1002,7 +999,7 @@ class HpxGeom(Geom):
 
         axes = copy.deepcopy(self.axes)
         return self.__class__(
-            2 ** order, self.nest, coordsys=self.coordsys, region=self.region, axes=axes
+            2 ** order, self.nest, frame=self.frame, region=self.region, axes=axes
         )
 
     def to_swapped(self):
@@ -1017,14 +1014,14 @@ class HpxGeom(Geom):
         return self.__class__(
             self.nside,
             not self.nest,
-            coordsys=self.coordsys,
+            frame=self.frame,
             region=self.region,
             axes=axes,
         )
 
     def to_image(self):
         return self.__class__(
-            np.max(self.nside), self.nest, coordsys=self.coordsys, region=self.region
+            np.max(self.nside), self.nest, frame=self.frame, region=self.region
         )
 
     def to_cube(self, axes):
@@ -1032,7 +1029,7 @@ class HpxGeom(Geom):
         return self.__class__(
             np.max(self.nside),
             self.nest,
-            coordsys=self.coordsys,
+            frame=self.frame,
             region=self.region,
             axes=axes,
         )
@@ -1070,7 +1067,7 @@ class HpxGeom(Geom):
         return self.__class__(
             self.nside.copy(),
             self.nest,
-            coordsys=self.coordsys,
+            frame=self.frame,
             region=idx,
             axes=copy.deepcopy(self.axes),
         )
@@ -1097,7 +1094,7 @@ class HpxGeom(Geom):
         return self.__class__(
             self.nside.copy(),
             self.nest,
-            coordsys=self.coordsys,
+            frame=self.frame,
             region=idx,
             axes=copy.deepcopy(self.axes),
         )
@@ -1110,7 +1107,7 @@ class HpxGeom(Geom):
             return self.__class__(
                 self.nside * factor,
                 self.nest,
-                coordsys=self.coordsys,
+                frame=self.frame,
                 region=self.region,
                 axes=copy.deepcopy(self.axes),
             )
@@ -1126,7 +1123,7 @@ class HpxGeom(Geom):
         return self.__class__(
             self.nside * factor,
             self.nest,
-            coordsys=self.coordsys,
+            frame=self.frame,
             region=tuple(idx),
             axes=copy.deepcopy(self.axes),
         )
@@ -1139,7 +1136,7 @@ class HpxGeom(Geom):
             return self.__class__(
                 self.nside // factor,
                 self.nest,
-                coordsys=self.coordsys,
+                frame=self.frame,
                 region=self.region,
                 axes=copy.deepcopy(self.axes),
             )
@@ -1151,7 +1148,7 @@ class HpxGeom(Geom):
         return self.__class__(
             self.nside // factor,
             self.nest,
-            coordsys=self.coordsys,
+            frame=self.frame,
             region=tuple(idx),
             axes=copy.deepcopy(self.axes),
         )
@@ -1162,7 +1159,7 @@ class HpxGeom(Geom):
         nside=None,
         binsz=None,
         nest=True,
-        coordsys="CEL",
+        frame="icrs",
         region=None,
         axes=None,
         skydir=None,
@@ -1181,8 +1178,8 @@ class HpxGeom(Geom):
             value.  This option is superseded by nside.
         nest : bool
             True for HEALPIX "NESTED" indexing scheme, False for "RING" scheme
-        coordsys : {'CEL', 'GAL'}, optional
-            Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
+        frame : {"icrs", "galactic"}, optional
+            Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
         skydir : tuple or `~astropy.coordinates.SkyCoord`
             Sky position of map center.  Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
@@ -1221,14 +1218,14 @@ class HpxGeom(Geom):
         elif isinstance(skydir, tuple):
             lon, lat = skydir
         elif isinstance(skydir, SkyCoord):
-            lon, lat, frame = skycoord_to_lonlat(skydir, coordsys=coordsys)
+            lon, lat, frame = skycoord_to_lonlat(skydir, frame=frame)
         else:
             raise ValueError(f"Invalid type for skydir: {type(skydir)!r}")
 
         if region is None and width is not None:
             region = f"DISK({lon},{lat},{width/2})"
 
-        return cls(nside, nest=nest, coordsys=coordsys, region=region, axes=axes)
+        return cls(nside, nest=nest, frame=frame, region=region, axes=axes)
 
     @staticmethod
     def identify_hpx_convention(header):
@@ -1319,9 +1316,9 @@ class HpxGeom(Geom):
             raise ValueError("Failed to extract NSIDE or ORDER.")
 
         try:
-            coordsys = header[conv.coordsys]
+            frame = header[conv.frame]
         except KeyError:
-            coordsys = header.get("COORDSYS", "CEL")
+            frame = header.get("COORDSYS", "icrs")
 
         try:
             region = header["HPX_REG"]
@@ -1331,7 +1328,7 @@ class HpxGeom(Geom):
             except KeyError:
                 region = None
 
-        return cls(nside, nest, coordsys=coordsys, region=region, axes=axes)
+        return cls(nside, nest, frame=frame, region=region, axes=axes)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
@@ -1381,7 +1378,7 @@ class HpxGeom(Geom):
             header["TELESCOP"] = "GLAST"
             header["INSTRUME"] = "LAT"
 
-        header[conv.coordsys] = self.coordsys
+        header[conv.frame] = self.frame
         header["PIXTYPE"] = "HEALPIX"
         header["ORDERING"] = self.ordering
         header["INDXSCHM"] = indxschm
@@ -1391,7 +1388,7 @@ class HpxGeom(Geom):
         header["LASTPIX"] = np.max(self._maxpix) - 1
         header["HPX_CONV"] = conv.convname.upper()
 
-        if self.coordsys == "CEL":
+        if self.frame == "icrs":
             header["EQUINOX"] = (2000.0, "Equinox of RA & DEC specifications")
 
         if self.region:
@@ -1461,17 +1458,15 @@ class HpxGeom(Geom):
         """Compute the reference direction for this geometry."""
         import healpy as hp
 
-        frame = coordsys_to_frame(self.coordsys)
-
         if self.region == "explicit":
             idx = unravel_hpx_index(self._ipix, self._maxpix)
             nside = self._get_nside(idx)
             vec = hp.pix2vec(nside, idx[0], nest=self.nest)
             vec = np.array([np.mean(t) for t in vec])
             lonlat = hp.vec2ang(vec, lonlat=True)
-            return SkyCoord(lonlat[0], lonlat[1], frame=frame, unit="deg")
+            return SkyCoord(lonlat[0], lonlat[1], frame=self.frame, unit="deg")
 
-        return get_hpxregion_dir(self.region, self.coordsys)
+        return get_hpxregion_dir(self.region, self.frame)
 
     def _get_region_size(self):
         import healpy as hp
@@ -1482,8 +1477,7 @@ class HpxGeom(Geom):
             idx = unravel_hpx_index(self._ipix, self._maxpix)
             nside = self._get_nside(idx)
             ang = hp.pix2ang(nside, idx[0], nest=self.nest, lonlat=True)
-            frame = coordsys_to_frame(self.coordsys)
-            dirs = SkyCoord(ang[0], ang[1], unit="deg", frame=frame)
+            dirs = SkyCoord(ang[0], ang[1], unit="deg", frame=self.frame)
             return np.max(dirs.separation(self.center_skydir).deg)
 
         return get_hpxregion_size(self.region)
@@ -1539,7 +1533,7 @@ class HpxGeom(Geom):
         return WcsGeom.create(
             width=width,
             binsz=binsz,
-            coordsys=self.coordsys,
+            frame=self.frame,
             axes=axes,
             skydir=self.center_skydir,
             proj=proj,
@@ -1644,17 +1638,11 @@ class HpxGeom(Geom):
         for i, axis in enumerate(self.axes):
             cdict[axis.name] = coords[i + 2]
 
-        return MapCoord.create(cdict, coordsys=self.coordsys)
+        return MapCoord.create(cdict, frame=self.frame)
 
     def contains(self, coords):
         idx = self.coord_to_idx(coords)
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
-
-    def get_skydirs(self):
-        """Get the sky coordinates of all the pixels in this geometry."""
-        coords = self.get_coord()
-        frame = "galactic" if self.coordsys == "GAL" else "icrs"
-        return SkyCoord(coords[0], coords[1], unit="deg", frame=frame)
 
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
@@ -1677,7 +1665,7 @@ class HpxGeom(Geom):
             f"\tndim       : {self.ndim}\n"
             f"\tnside      : {self.nside[0]}\n"
             f"\tnested     : {self.nest}\n"
-            f"\tcoordsys   : {self.coordsys}\n"
+            f"\tframe   : {self.frame}\n"
             f"\tprojection : {self.projection}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
         )
@@ -1701,7 +1689,7 @@ class HpxGeom(Geom):
 
         return (
             self.nside == other.nside
-            and self.coordsys == other.coordsys
+            and self.frame == other.frame
             and self.order == other.order
             and self.nest == other.nest
         )

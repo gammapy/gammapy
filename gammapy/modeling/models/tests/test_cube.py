@@ -38,7 +38,7 @@ def sky_model():
 def diffuse_model():
     axis = MapAxis.from_nodes([0.1, 100], name="energy", unit="TeV", interp="log")
     m = Map.create(
-        npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", coordsys="GAL"
+        npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )
     m.data += 42
     return SkyDiffuseCube(m)
@@ -47,13 +47,13 @@ def diffuse_model():
 @pytest.fixture(scope="session")
 def geom():
     axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
-    return WcsGeom.create(skydir=(0, 0), npix=(5, 4), coordsys="GAL", axes=[axis])
+    return WcsGeom.create(skydir=(0, 0), npix=(5, 4), frame="galactic", axes=[axis])
 
 
 @pytest.fixture(scope="session")
 def geom_true():
     axis = MapAxis.from_edges(np.logspace(-1, 1, 4), unit=u.TeV, name="energy")
-    return WcsGeom.create(skydir=(0, 0), npix=(5, 4), coordsys="GAL", axes=[axis])
+    return WcsGeom.create(skydir=(0, 0), npix=(5, 4), frame="galactic", axes=[axis])
 
 
 @pytest.fixture(scope="session")

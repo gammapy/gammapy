@@ -248,7 +248,7 @@ class HpxNDMap(HpxMap):
 
     def interp_by_coord(self, coords, interp=1):
         # inherited docstring
-        coords = MapCoord.create(coords, coordsys=self.geom.coordsys)
+        coords = MapCoord.create(coords, frame=self.geom.frame)
 
         order = interp_to_order(interp)
         if order == 1:

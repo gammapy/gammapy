@@ -7,7 +7,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
-from astropy.wcs.utils import proj_plane_pixel_scales
+from astropy.wcs.utils import proj_plane_pixel_scales, wcs_to_celestial_frame, celestial_frame_to_wcs
 from regions import SkyRegion
 from .geom import (
     Geom,
@@ -77,87 +77,6 @@ def get_resampled_wcs(wcs, factor, downsampled):
     return wcs
 
 
-# TODO: remove this function, move code to the one caller below
-def _make_image_header(
-    nxpix=100,
-    nypix=100,
-    binsz=0.1,
-    xref=0,
-    yref=0,
-    proj="CAR",
-    coordsys="GAL",
-    xrefpix=None,
-    yrefpix=None,
-):
-    """Generate a FITS header from scratch.
-
-    Uses the same parameter names as the Fermi tool gtbin.
-
-    If no reference pixel position is given it is assumed ot be
-    at the center of the image.
-
-    Parameters
-    ----------
-    nxpix : int, optional
-        Number of pixels in x axis. Default is 100.
-    nypix : int, optional
-        Number of pixels in y axis. Default is 100.
-    binsz : float, optional
-        Bin size for x and y axes in units of degrees. Default is 0.1.
-    xref : float, optional
-        Coordinate system value at reference pixel for x axis. Default is 0.
-    yref : float, optional
-        Coordinate system value at reference pixel for y axis. Default is 0.
-    proj : string, optional
-        Projection type. Default is 'CAR' (cartesian).
-    coordsys : {'CEL', 'GAL'}, optional
-        Coordinate system. Default is 'GAL' (Galactic).
-    xrefpix : float, optional
-        Coordinate system reference pixel for x axis. Default is None.
-    yrefpix: float, optional
-        Coordinate system reference pixel for y axis. Default is None.
-
-    Returns
-    -------
-    header : `~astropy.io.fits.Header`
-        Header
-    """
-    nxpix = int(nxpix)
-    nypix = int(nypix)
-    if not xrefpix:
-        xrefpix = (nxpix + 1) / 2.0
-    if not yrefpix:
-        yrefpix = (nypix + 1) / 2.0
-
-    if coordsys == "CEL":
-        ctype1, ctype2 = "RA---", "DEC--"
-    elif coordsys == "GAL":
-        ctype1, ctype2 = "GLON-", "GLAT-"
-    else:
-        raise ValueError(f"Unsupported coordsys: {coordsys!r}")
-
-    pars = {
-        "NAXIS": 2,
-        "NAXIS1": nxpix,
-        "NAXIS2": nypix,
-        "CTYPE1": ctype1 + proj,
-        "CRVAL1": xref,
-        "CRPIX1": xrefpix,
-        "CUNIT1": "deg",
-        "CDELT1": -binsz,
-        "CTYPE2": ctype2 + proj,
-        "CRVAL2": yref,
-        "CRPIX2": yrefpix,
-        "CUNIT2": "deg",
-        "CDELT2": binsz,
-    }
-
-    header = fits.Header()
-    header.update(pars)
-
-    return header
-
-
 class WcsGeom(Geom):
     """Geometry class for WCS maps.
 
@@ -188,8 +107,8 @@ class WcsGeom(Geom):
 
     def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, cutout_info=None):
         self._wcs = wcs
-        self._coordsys = get_coordys(wcs)
-        self._projection = get_projection(wcs)
+        self._frame = wcs_to_celestial_frame(wcs).name
+        self._projection = wcs.wcs.ctype[0][5:]
         self._axes = make_axes(axes)
 
         if cdelt is None:
@@ -241,12 +160,12 @@ class WcsGeom(Geom):
         return self._wcs
 
     @property
-    def coordsys(self):
+    def frame(self):
         """Coordinate system of the projection.
 
-        Galactic ('GAL') or Equatorial ('CEL').
+        Galactic ("galactic") or Equatorial ("icrs").
         """
-        return self._coordsys
+        return self._frame
 
     @property
     def cutout_info(self):
@@ -355,7 +274,7 @@ class WcsGeom(Geom):
         npix=None,
         binsz=0.5,
         proj="CAR",
-        coordsys="CEL",
+        frame="icrs",
         refpix=None,
         axes=None,
         skydir=None,
@@ -392,8 +311,8 @@ class WcsGeom(Geom):
             Sky position of map center.  Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map.
-        coordsys : {'CEL', 'GAL'}, optional
-            Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
+        frame : {"icrs", "galactic"}, optional
+            Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
         axes : list
             List of non-spatial axes.
         proj : string, optional
@@ -418,11 +337,12 @@ class WcsGeom(Geom):
         >>> geom = WcsGeom.create(npix=([100,200],[100,200]), binsz=0.1, axes=[axis])
         """
         if skydir is None:
-            xref, yref = (0.0, 0.0)
+            crval = (0.0, 0.0)
         elif isinstance(skydir, tuple):
-            xref, yref = skydir
+            crval = skydir
         elif isinstance(skydir, SkyCoord):
-            xref, yref, frame = skycoord_to_lonlat(skydir, coordsys=coordsys)
+            xref, yref, frame = skycoord_to_lonlat(skydir, frame=frame)
+            crval = (xref, yref)
         else:
             raise ValueError(f"Invalid type for skydir: {type(skydir)!r}")
 
@@ -446,20 +366,20 @@ class WcsGeom(Geom):
             npix = cast_to_shape(npix, shape, int)
 
         if refpix is None:
-            refpix = (None, None)
+            nxpix = int(npix[0].flat[0])
+            nypix = int(npix[1].flat[0])
+            refpix = ((nxpix + 1) / 2.0, (nypix + 1) / 2.0)
 
-        header = _make_image_header(
-            nxpix=npix[0].flat[0],
-            nypix=npix[1].flat[0],
-            binsz=binsz[0].flat[0],
-            xref=float(xref),
-            yref=float(yref),
-            proj=proj,
-            coordsys=coordsys,
-            xrefpix=refpix[0],
-            yrefpix=refpix[1],
-        )
-        wcs = WCS(header)
+        # get frame class
+        frame = SkyCoord(np.nan, np.nan, frame=frame, unit="deg").frame
+        wcs = celestial_frame_to_wcs(frame, projection=proj)
+        wcs.wcs.crpix = refpix
+        wcs.wcs.crval = crval
+
+        cdelt = binsz[0].flat[0]
+        wcs.wcs.cdelt = (-cdelt, cdelt)
+
+        wcs.array_shape = npix[0].flat[0], npix[1].flat[0]
         wcs.wcs.datfix()
         return cls(wcs, npix, cdelt=binsz, axes=axes)
 
@@ -618,7 +538,7 @@ class WcsGeom(Geom):
             _[~m] = INVALID_INDEX.float
         return pix
 
-    def get_coord(self, idx=None, flat=False, mode="center", coordsys=None):
+    def get_coord(self, idx=None, flat=False, mode="center", frame=None):
         """Get map coordinates from the geometry.
 
         Parameters
@@ -641,13 +561,13 @@ class WcsGeom(Geom):
         axes_names = ["lon", "lat"] + [ax.name for ax in self.axes]
         cdict = dict(zip(axes_names, coords))
 
-        if coordsys is None:
-            coordsys = self.coordsys
+        if frame is None:
+            frame = self.frame
 
-        return MapCoord.create(cdict, coordsys=self.coordsys).to_coordsys(coordsys)
+        return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
 
     def coord_to_pix(self, coords):
-        coords = MapCoord.create(coords, coordsys=self.coordsys)
+        coords = MapCoord.create(coords, frame=self.frame)
 
         if coords.size == 0:
             return tuple([np.array([]) for i in range(coords.ndim)])
@@ -882,7 +802,7 @@ class WcsGeom(Geom):
             binsz=binsz,
             width=self.width,
             proj=self.projection,
-            coordsys=self.coordsys,
+            frame=self.frame,
             axes=copy.deepcopy(self.axes),
         )
 
@@ -1062,7 +982,7 @@ class WcsGeom(Geom):
             f"\taxes       : {axes}\n"
             f"\tshape      : {self.data_shape[::-1]}\n"
             f"\tndim       : {self.ndim}\n"
-            f"\tcoordsys   : {self.coordsys}\n"
+            f"\tframe   : {self.frame}\n"
             f"\tprojection : {self.projection}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
             f"\twidth      : {self.width[0][0]:.1f} x {self.width[1][0]:.1f}\n"
@@ -1155,15 +1075,3 @@ def world2pix(wcs, cdelt, crpix, coord):
         (pix[1] - (wcs.wcs.crpix[1] - 1.0)) * pix_ratio[1] + crpix[1] - 1.0,
     )
 
-
-def get_projection(wcs):
-    return wcs.wcs.ctype[0][5:]
-
-
-def get_coordys(wcs):
-    if "RA" in wcs.wcs.ctype[0]:
-        return "CEL"
-    elif "GLON" in wcs.wcs.ctype[0]:
-        return "GAL"
-    else:
-        raise ValueError("Unrecognized WCS coordinate system.")

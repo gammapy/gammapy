@@ -266,7 +266,7 @@ transformed to match the coordinate system of the map.
 
     skycoord = SkyCoord(lon, lat, unit='deg', frame='galactic')
     m = Map.create(binsz=0.1, map_type='wcs', width=10.0,
-                  coordsys='GAL', axes=[energy_axis])
+                  frame="galactic", axes=[energy_axis])
 
     m.set_by_coord((skycoord, energy), [0.5, 1.5])
     m.get_by_coord((skycoord, energy))
@@ -504,7 +504,7 @@ This example shows how to fill a counts cube from an event list:
 
     energy_axis = MapAxis.from_bounds(10., 2E3, 12, interp='log', name='energy', unit='GeV')
     m = WcsNDMap.create(binsz=0.1, width=10.0, skydir=(0, 0),
-                        coordsys='GAL', axes=[energy_axis])
+                        frame="galactic", axes=[energy_axis])
 
     events = EventList.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz")
 
@@ -512,17 +512,21 @@ This example shows how to fill a counts cube from an event list:
     m.write('ccube.fits', conv='fgst-ccube')
 
 To make a counts map, create an empty map with a geometry of your choice
-and then fill it using this function::
+and then fill it using this function
+
+.. code-block::
 
     from gammapy.maps import Map
     from gammapy.data import EventList
     events = EventList.read('$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits')
-    counts = Map.create(coordsys='GAL', skydir=(0, 0), binsz=0.1, npix=(120, 100))
+    counts = Map.create(frame="galactic", skydir=(0, 0), binsz=0.1, npix=(120, 100))
     counts.fill_events(events)
     counts.plot()
 
 If you have a given map already, and want to make a counts image
-with the same geometry (not using the pixel data from the original map), do this::
+with the same geometry (not using the pixel data from the original map), do this
+
+.. code-block::
 
     from gammapy.maps import Map
     from gammapy.data import EventList

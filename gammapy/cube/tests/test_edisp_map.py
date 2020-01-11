@@ -126,7 +126,7 @@ def test_sample_coord():
 
     coords = MapCoord(
         {"lon": [0, 0] * u.deg, "lat": [0, 0.5] * u.deg, "energy": [1, 3] * u.TeV},
-        coordsys="CEL",
+        frame="icrs",
     )
 
     coords_corrected = edisp_map.sample_coord(map_coord=coords)

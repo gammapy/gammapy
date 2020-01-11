@@ -20,11 +20,11 @@ following example shows how to create an all-sky 2D HEALPix image:
 
     from gammapy.maps import HpxGeom, HpxNDMap, HpxMap
     # Create a HEALPix geometry of NSIDE=16
-    geom = HpxGeom(16, coordsys='GAL')
+    geom = HpxGeom(16, frame="galactic")
     m = HpxNDMap(geom)
 
     # Equivalent factory method call
-    m = HpxMap.create(nside=16, coordsys='GAL')
+    m = HpxMap.create(nside=16, frame="galactic")
 
 Partial-sky maps can be created by passing a ``region`` argument to the map
 geometry constructor or by setting the ``width`` argument to the
@@ -36,7 +36,7 @@ geometry constructor or by setting the ``width`` argument to the
     from astropy.coordinates import SkyCoord
 
     # Create a partial-sky HEALPix geometry of NSIDE=16
-    geom = HpxGeom(16, region='DISK(0.0,5.0,10.0)', coordsys='GAL')
+    geom = HpxGeom(16, region='DISK(0.0,5.0,10.0)', frame="galactic")
     m = HpxNDMap(geom)
 
     # Equivalent factory method call

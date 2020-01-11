@@ -223,9 +223,9 @@ class Analysis:
             )
             geom_params["skydir"] = skydir
         if skydir_settings.frame == "icrs":
-            geom_params["coordsys"] = "CEL"
+            geom_params["frame"] = "icrs"
         if skydir_settings.frame == "galactic":
-            geom_params["coordsys"] = "GAL"
+            geom_params["frame"] = "galactic"
         axes = [self._make_energy_axis(geom_settings.axes.energy)]
         geom_params["axes"] = axes
         geom_params["binsz"] = geom_settings.wcs.binsize

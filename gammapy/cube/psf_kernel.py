@@ -23,7 +23,7 @@ def _make_kernel_geom(geom, max_radius):
         binsz=binsz,
         npix=npix,
         proj=geom.projection,
-        coordsys=geom.coordsys,
+        frame=geom.frame,
         axes=geom.axes,
     )
 

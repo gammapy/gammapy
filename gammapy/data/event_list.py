@@ -619,7 +619,7 @@ class EventList(EventListBase):
             "width": (7, 7),
             "binsz": 0.1,
             "proj": "TAN",
-            "coordsys": "GAL",
+            "frame": "galactic",
             "skydir": self.pointing_radec,
         }
         m = WcsNDMap.create(**opts)
@@ -661,7 +661,7 @@ class EventListLAT(EventListBase):
         """Quick look counts map sky plot."""
         from gammapy.maps import WcsNDMap
 
-        m = WcsNDMap.create(npix=(360, 180), binsz=1.0, proj="AIT", coordsys="GAL")
+        m = WcsNDMap.create(npix=(360, 180), binsz=1.0, proj="AIT", frame="galactic")
         m.fill_by_coord(self.radec)
         m.plot(stretch="sqrt")
 

@@ -115,9 +115,9 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-        coordsys : str
-            Coordinate system, either Galactic ('GAL') or Equatorial
-            ('CEL').
+        frame : str
+            Coordinate system, either Galactic ("galactic") or Equatorial
+            ("icrs").
         map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse'}
             Map type.  Selects the class that will be used to
             instantiate the map.
@@ -605,7 +605,7 @@ class Map(abc.ABC):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        coords = MapCoord.create(coords, coordsys=self.geom.coordsys)
+        coords = MapCoord.create(coords, frame=self.geom.frame)
         pix = self.geom.coord_to_pix(coords)
         vals = self.get_by_pix(pix)
         return vals

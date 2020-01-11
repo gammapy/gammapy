@@ -33,7 +33,7 @@ def geom():
         skydir=(266.40498829, -28.93617776),
         binsz=0.02,
         width=(2, 2),
-        coordsys="CEL",
+        frame="icrs",
         axes=[axis],
     )
 
@@ -46,7 +46,7 @@ def geom_etrue():
         skydir=(266.40498829, -28.93617776),
         binsz=0.02,
         width=(2, 2),
-        coordsys="CEL",
+        frame="icrs",
         axes=[axis],
     )
 
@@ -56,7 +56,7 @@ def geom_image():
     ebounds_true = np.logspace(-1.0, 1.0, 2)
     axis = MapAxis.from_edges(ebounds_true, name="energy", unit=u.TeV, interp="log")
     return WcsGeom.create(
-        skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
+        skydir=(0, 0), binsz=0.02, width=(2, 2), frame="galactic", axes=[axis]
     )
 
 
@@ -167,7 +167,7 @@ def test_different_exposure_unit(sky_model, geom):
         skydir=(266.40498829, -28.93617776),
         binsz=0.02,
         width=(2, 2),
-        coordsys="CEL",
+        frame="icrs",
         axes=[axis],
     )
 
@@ -202,7 +202,7 @@ def test_to_image(geom):
     ebounds = np.logspace(-1.0, 1.0, 3)
     axis = MapAxis.from_edges(ebounds, name="energy", unit=u.TeV, interp="log")
     geom = WcsGeom.create(
-        skydir=(0, 0), binsz=0.5, width=(1, 1), coordsys="CEL", axes=[axis]
+        skydir=(0, 0), binsz=0.5, width=(1, 1), frame="icrs", axes=[axis]
     )
     dataset = MapDataset.create(geom)
 
