@@ -21,7 +21,7 @@ from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
-from .exposure import _map_spectrum_weight
+from gammapy.cube.exposure import _map_spectrum_weight
 
 __all__ = ["MapDataset", "MapDatasetOnOff"]
 

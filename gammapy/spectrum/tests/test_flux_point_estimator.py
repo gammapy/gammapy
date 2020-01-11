@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDataset, MapDatasetMaker
+from gammapy.cube import MapDatasetMaker
 from gammapy.data import Observation
 from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
@@ -15,7 +15,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.spectrum import FluxPointsEstimator
-from gammapy.datasets import SpectrumDatasetOnOff
+from gammapy.datasets import SpectrumDatasetOnOff, MapDataset
 from gammapy.spectrum.core import SpectrumEvaluator
 from gammapy.utils.testing import requires_data, requires_dependency
 

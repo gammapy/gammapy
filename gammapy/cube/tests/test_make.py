@@ -5,8 +5,8 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.cube import MapDataset, MapDatasetMaker, RingBackgroundMaker, SafeMaskMaker
-from gammapy.cube.fit import MapDatasetOnOff
+from gammapy.cube import MapDatasetMaker, RingBackgroundMaker, SafeMaskMaker
+from gammapy.datasets.fit import MapDatasetOnOff, MapDataset
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data

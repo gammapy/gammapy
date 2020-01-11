@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.cube import PSFKernel
-from gammapy.cube.fit import MapEvaluator
+from gammapy.datasets.fit import MapEvaluator
 from gammapy.irf import EDispKernel
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (

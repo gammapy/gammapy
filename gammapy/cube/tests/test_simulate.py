@@ -4,10 +4,9 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDataset, MapDatasetEventSampler, simulate_dataset
-from gammapy.cube.tests.test_edisp_map import make_edisp_map_test
-from gammapy.cube.tests.test_fit import get_map_dataset
-from gammapy.cube.tests.test_psf_map import make_test_psfmap
+from gammapy.cube import MapDatasetEventSampler, simulate_dataset
+from gammapy.datasets.tests.test_fit import get_map_dataset
+from gammapy.datasets import MapDataset
 from gammapy.data import GTI, Observation
 from gammapy.irf import load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom

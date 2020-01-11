@@ -388,7 +388,7 @@ class EDispMap:
         edisp_map : `EDispMap`
             Energy dispersion map.
         """
-        from .fit import MIGRA_AXIS_DEFAULT
+        from gammapy.datasets.fit import MIGRA_AXIS_DEFAULT
 
         migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
 

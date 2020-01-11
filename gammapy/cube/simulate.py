@@ -6,7 +6,6 @@ import astropy.units as u
 from astropy.table import Table
 import gammapy
 from gammapy.cube import (
-    MapDataset,
     PSFMap,
     make_map_background_irf,
     make_map_exposure_true_energy,
@@ -61,6 +60,7 @@ def simulate_dataset(
     dataset : `~gammapy.cube.MapDataset`
         A dataset of the simulated observation.
     """
+    from gammapy.datasets import MapDataset
     background = make_map_background_irf(
         pointing=pointing, ontime=livetime, bkg=irfs["bkg"], geom=geom
     )

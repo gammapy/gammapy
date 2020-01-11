@@ -6,7 +6,7 @@ from astropy.table import Table
 from regions import CircleSkyRegion
 import yaml
 from gammapy.analysis.config import AnalysisConfig
-from gammapy.cube import MapDataset, MapDatasetMaker, SafeMaskMaker
+from gammapy.cube import MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
@@ -19,7 +19,7 @@ from gammapy.spectrum import (
     ReflectedRegionsBackgroundMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.datasets import SpectrumDataset
+from gammapy.datasets import SpectrumDataset, MapDataset
 from gammapy.utils.scripts import make_path
 
 __all__ = ["Analysis"]

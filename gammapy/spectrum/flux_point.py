@@ -844,7 +844,7 @@ class FluxPointsEstimator:
                 par.frozen = True
 
     def _freeze_empty_background(self):
-        from gammapy.cube import MapDataset
+        from gammapy.datasets import MapDataset
 
         counts_all = self.estimate_counts()["counts"]
 
