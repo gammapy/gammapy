@@ -10,7 +10,8 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.spectrum import CountsSpectrum
+from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import requires_data, requires_dependency
 

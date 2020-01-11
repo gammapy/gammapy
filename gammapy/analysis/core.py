@@ -17,9 +17,9 @@ from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
     ReflectedRegionsBackgroundMaker,
-    SpectrumDataset,
     SpectrumDatasetMaker,
 )
+from gammapy.datasets import SpectrumDataset
 from gammapy.utils.scripts import make_path
 
 __all__ = ["Analysis"]

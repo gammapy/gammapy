@@ -8,7 +8,6 @@ from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .psf_kernel import PSFKernel
 from .exposure import _map_spectrum_weight
-from gammapy.modeling.models import PowerLawSpectralModel
 
 __all__ = ["make_psf_map", "PSFMap"]
 
@@ -474,6 +473,8 @@ class PSFMap:
         psf_out: `PSFMap`
             `PSFMap` with the energy axis summed over
         """
+        from gammapy.modeling.models import PowerLawSpectralModel
+
         if spectrum is None:
             spectrum = PowerLawSpectralModel(index=2.0)
 

@@ -13,7 +13,7 @@ from gammapy.stats import cash, significance_on_off, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
-from .core import CountsSpectrum, SpectrumEvaluator
+from gammapy.spectrum.core import CountsSpectrum, SpectrumEvaluator
 
 __all__ = [
     "SpectrumDatasetOnOff",

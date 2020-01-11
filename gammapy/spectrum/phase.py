@@ -2,7 +2,7 @@
 import numpy as np
 from gammapy.data import EventList
 from .core import CountsSpectrum
-from .dataset import SpectrumDatasetOnOff
+
 
 __all__ = ["PhaseBackgroundMaker"]
 
@@ -98,6 +98,8 @@ class PhaseBackgroundMaker:
         dataset_on_off : `SpectrumDatasetOnOff`
             On off dataset.
         """
+        from gammapy.datasets.dataset import SpectrumDatasetOnOff
+
         counts_off = self.make_counts_off(dataset, observation)
         counts = self.make_counts(dataset, observation)
         acceptance = np.sum([_[1] - _[0] for _ in self.on_phase])

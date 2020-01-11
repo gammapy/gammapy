@@ -5,7 +5,6 @@ from astropy import units as u
 from regions import CircleSkyRegion
 from gammapy.maps import WcsGeom
 from .core import CountsSpectrum
-from .dataset import SpectrumDataset
 
 __all__ = ["SpectrumDatasetMaker"]
 
@@ -188,6 +187,8 @@ class SpectrumDatasetMaker:
         dataset : `~gammapy.spectrum.SpectrumDataset`
             Spectrum dataset.
         """
+        from gammapy.datasets.dataset import SpectrumDataset
+
         kwargs = {
             "name": f"{observation.obs_id}",
             "gti": observation.gti,

@@ -15,7 +15,6 @@ from gammapy.modeling.models import (
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
-from .dataset import SpectrumDatasetOnOff
 
 __all__ = ["FluxPoints", "FluxPointsEstimator", "FluxPointsDataset"]
 
@@ -869,6 +868,8 @@ class FluxPointsEstimator:
     @property
     def e_groups(self):
         """Energy grouping table `~astropy.table.Table`"""
+        from gammapy.datasets.dataset import SpectrumDatasetOnOff
+
         dataset = self.datasets[0]
         if isinstance(dataset, SpectrumDatasetOnOff):
             energy_axis = dataset.counts.energy

@@ -17,7 +17,7 @@ from gammapy.datasets import Dataset
 from gammapy.modeling import Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
 from gammapy.modeling.parameter import _get_parameters_str
-from gammapy.spectrum import SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path

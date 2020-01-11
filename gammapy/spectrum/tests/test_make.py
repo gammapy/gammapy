@@ -10,9 +10,9 @@ from gammapy.data import DataStore
 from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.spectrum import (
     ReflectedRegionsBackgroundMaker,
-    SpectrumDataset,
     SpectrumDatasetMaker,
 )
+from gammapy.datasets import SpectrumDataset
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 

@@ -17,7 +17,8 @@ from gammapy.modeling.models import (
     SkyModel,
     SkyModels,
 )
-from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.spectrum import CountsSpectrum
+from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import (
     assert_time_allclose,

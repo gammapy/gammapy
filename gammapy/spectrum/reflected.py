@@ -7,7 +7,6 @@ from regions import PixCoord
 from gammapy.maps import WcsNDMap
 from gammapy.utils.regions import list_to_compound_region
 from .core import CountsSpectrum
-from .dataset import SpectrumDatasetOnOff
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundMaker"]
 
@@ -349,6 +348,8 @@ class ReflectedRegionsBackgroundMaker:
         dataset_on_off : `SpectrumDatasetOnOff`
             On off dataset.
         """
+        from gammapy.datasets.dataset import SpectrumDatasetOnOff
+
         counts_off, acceptance_off = self.make_counts_off(dataset, observation)
 
         return SpectrumDatasetOnOff(
