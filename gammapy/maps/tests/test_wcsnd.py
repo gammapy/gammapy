@@ -9,7 +9,6 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.cube import PSFKernel
-from gammapy.datasets.fit import MapEvaluator
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.maps.utils import fill_poisson
@@ -555,6 +554,8 @@ def test_get_spectrum():
 
 
 def get_npred_map():
+    from gammapy.datasets.map import MapEvaluator
+
     position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
     energy_axis = MapAxis.from_bounds(
         1, 100, nbin=30, unit="TeV", name="energy", interp="log"
