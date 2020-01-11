@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
 from astropy.table import Table
 from astropy import units as u
 from .core import Dataset
 from gammapy.modeling.models import SkyModels, SkyModel
 from gammapy.modeling import Parameters
-from gammapy.spectrum import FluxPoints
 
+
+log = logging.getLogger(__name__)
 
 __all__ = ["FluxPointsDataset"]
 
@@ -129,6 +131,8 @@ class FluxPointsDataset(Dataset):
         dataset : `FluxPointsDataset`
             Flux point datasets.
         """
+        from gammapy.spectrum import FluxPoints
+
         models = [model for model in models if model.name in data["models"]]
         # TODO: assumes that the model is a skymodel
         # so this will work only when this change will be effective

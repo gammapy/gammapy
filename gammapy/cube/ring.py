@@ -202,7 +202,7 @@ class AdaptiveRingBackgroundMaker:
             On off dataset.
         """
         from gammapy.datasets import MapDatasetOnOff
-        
+
         cubes = self.make_cubes(dataset)
         acceptance, acceptance_off, counts_off = self._reduce_cubes(cubes, dataset)
 
@@ -318,6 +318,8 @@ class RingBackgroundMaker:
         dataset_on_off : `~gammapy.cube.fit.MapDatasetOnOff`
             On off dataset.
         """
+        from gammapy.datasets import MapDatasetOnOff
+
         maps_off = self.make_maps_off(dataset)
         acceptance = dataset.background_model.map
 
