@@ -10,11 +10,10 @@ from gammapy.cube import MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
-from gammapy.datasets import Datasets
+from gammapy.datasets import Datasets, FluxPointsDataset
 from gammapy.modeling.models import SkyModels
 from gammapy.modeling.serialize import dict_to_models
 from gammapy.spectrum import (
-    FluxPointsDataset,
     FluxPointsEstimator,
     ReflectedRegionsBackgroundMaker,
     SpectrumDatasetMaker,

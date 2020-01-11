@@ -7,6 +7,8 @@ from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
 from gammapy.maps import WcsNDMap
 from gammapy.modeling.parameter import Parameters
+from .io import datasets_to_dict, dict_to_datasets
+
 
 __all__ = ["Dataset", "Datasets"]
 
@@ -158,8 +160,6 @@ class Datasets(collections.abc.Sequence):
         dataset : 'gammapy.modeling.Datasets'
             Datasets
         """
-        from gammapy.modeling.serialize import dict_to_datasets
-
         components = read_yaml(make_path(filemodel))
         data_list = read_yaml(make_path(filedata))
         datasets = dict_to_datasets(data_list, components)
@@ -177,8 +177,6 @@ class Datasets(collections.abc.Sequence):
         overwrite : bool
             overwrite datasets FITS files
         """
-        from gammapy.modeling.serialize import datasets_to_dict
-
         path = make_path(path)
 
         datasets_dict, components_dict = datasets_to_dict(self, path, prefix, overwrite)
