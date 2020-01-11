@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import astropy.units as u
+import numpy as np
 from astropy.table import Column, Table
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import excess_matching_significance_on_off
-from .core import SpectrumEvaluator
+
 
 __all__ = ["SensitivityEstimator"]
 
@@ -17,24 +17,12 @@ class SensitivityEstimator:
 
     Parameters
     ----------
-    arf : `~gammapy.irf.EffectiveAreaTable`
-        1D effective area
-    rmf : `~gammapy.irf.EDispKernel`
-        energy dispersion table
-    bkg : `~gammapy.spectrum.CountsSpectrum`
-        the background array
-    livetime : `~astropy.units.Quantity`
-        Livetime (object with the units of time), e.g. 5*u.h
-    index : float, optional
-        Index of the spectral shape (Power-law), should be positive (>0)
     alpha : float, optional
         On/OFF normalization
     sigma : float, optional
         Minimum significance
     gamma_min : float, optional
         Minimum number of gamma-rays
-    bkg_sys : float, optional
-        Fraction of Background systematics relative to the number of ON counts
 
     Notes
     -----
@@ -45,73 +33,84 @@ class SensitivityEstimator:
 
     def __init__(
         self,
-        arf,
-        rmf,
-        bkg,
-        livetime,
-        index=2.0,
+        spectrum=None,
         alpha=0.2,
         sigma=5.0,
         gamma_min=10.0,
-        bkg_sys=0.05,
     ):
-        self.arf = arf
-        self.rmf = rmf
-        self.bkg = bkg
-        self.livetime = u.Quantity(livetime).to("s")
-        self.index = index
+
+        if spectrum is None:
+            spectrum = PowerLawSpectralModel()
+
+        self.spectrum = spectrum
         self.alpha = alpha
         self.sigma = sigma
         self.gamma_min = gamma_min
-        self.bkg_sys = bkg_sys
 
-        self._results_table = None
+    def estimate_min_excess(self, dataset):
+        """Estimate minimum excess to reach the given significance.
 
-    @property
-    def results_table(self):
-        """Results table (`~astropy.table.Table`)."""
-        return self._results_table
+        Parameters
+        ----------
+        dataset : `SpectrumDataset`
+            Spectrum dataset
 
-    def run(self):
-        """Run the computation."""
-        # TODO: let the user decide on energy binning
-        # then integrate bkg model and gamma over those energy bins.
-        energy = self.rmf.e_reco.center
-
-        bkg_counts = (self.bkg.quantity.to("1/s") * self.livetime).value
-
+        Return
+        ------
+        excess : `CountsSpectrum`
+            Minimal excess
+        """
+        n_off = dataset.background.data / self.alpha
         excess_counts = excess_matching_significance_on_off(
-            n_off=bkg_counts / self.alpha, alpha=self.alpha, significance=self.sigma
+            n_off=n_off, alpha=self.alpha, significance=self.sigma
         )
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
+        return dataset.counts.copy(data=excess_counts)
 
-        model = PowerLawSpectralModel(
-            index=self.index, amplitude="1 cm-2 s-1 TeV-1", reference="1 TeV"
-        )
+    def estimate_min_e2dnde(self, excess, dataset):
+        """Estimate dnde from given min. excess
 
-        # TODO: simplify the following computation
-        predictor = SpectrumEvaluator(
-            SkyModel(spectral_model=model),
-            aeff=self.arf,
-            edisp=self.rmf,
-            livetime=self.livetime,
-        )
-        counts = predictor.compute_npred().data
-        phi_0 = excess_counts / counts
+        Parameters
+        ----------
 
-        dnde_model = model(energy=energy)
-        diff_flux = (phi_0 * dnde_model * energy ** 2).to("erg / (cm2 s)")
 
-        # TODO: take self.bkg_sys into account
-        # and add a criterion 'bkg sys'
-        criterion = []
-        for idx in range(len(energy)):
-            if is_gamma_limited[idx]:
-                c = "gamma"
-            else:
-                c = "significance"
-            criterion.append(c)
+        """
+        energy = dataset.counts.energy.center
+
+        dataset.model = SkyModel(spectral_model=self.spectrum)
+        npred = dataset.npred()
+
+        phi_0 = excess / npred
+
+        dnde_model = self.spectrum(energy=energy)
+        dnde = (phi_0 * dnde_model * energy ** 2).to("erg / (cm2 s)")
+        return dnde
+
+    def _get_criterion(self, excess):
+        is_gamma_limited = excess < self.gamma_min
+        criterion = np.chararray(excess.shape, itemsize=12)
+        criterion[is_gamma_limited] = "gamma"
+        criterion[~is_gamma_limited] = "significance"
+        return criterion
+
+    def run(self, dataset):
+        """Run the sensitivty estimation
+
+        Parameters
+        ----------
+        dataset : `SpectrumDataset`
+            Dataset to compute sensitivty for.
+
+        Returns
+        -------
+        sensitivity : `~astropy.table.Table`
+            Sensitivity table
+        """
+        energy = dataset.edisp.e_reco.center
+        excess = self.estimate_min_excess(dataset)
+        e2dnde = self.estimate_min_dnde(excess, dataset)
+        criterion = self._get_criterion(excess)
 
         table = Table(
             [
@@ -122,19 +121,19 @@ class SensitivityEstimator:
                     description="Reconstructed Energy",
                 ),
                 Column(
-                    data=diff_flux,
+                    data=e2dnde,
                     name="e2dnde",
                     format="5g",
                     description="Energy squared times differential flux",
                 ),
                 Column(
-                    data=excess_counts,
+                    data=excess,
                     name="excess",
                     format="5g",
                     description="Number of excess counts in the bin",
                 ),
                 Column(
-                    data=bkg_counts,
+                    data=dataset.background.dat,
                     name="background",
                     format="5g",
                     description="Number of background counts in the bin",
@@ -146,5 +145,4 @@ class SensitivityEstimator:
                 ),
             ]
         )
-        self._results_table = table
         return table
