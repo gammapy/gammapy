@@ -8,7 +8,6 @@ from gammapy.modeling.models import BackgroundModel
 from .background import make_map_background_irf
 from .edisp_map import make_edisp_map
 from .exposure import make_map_exposure_true_energy
-from gammapy.datasets import MapDataset, MapDatasetOnOff
 from .psf_map import make_psf_map
 
 __all__ = ["MapDatasetMaker", "SafeMaskMaker"]
@@ -214,6 +213,7 @@ class MapDatasetMaker:
         dataset : `~gammapy.cube.MapDataset`
             Map dataset.
         """
+        from gammapy.datasets import MapDataset
         kwargs = {"name": f"obs_{observation.obs_id}", "gti": observation.gti}
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
@@ -358,7 +358,8 @@ class SafeMaskMaker:
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
-        if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
+        from gammapy.datasets import MapDataset
+        if isinstance(dataset, MapDataset):
             raise NotImplementedError(
                 "'aeff-max' method currently only supported for spectral datasets"
             )
@@ -380,9 +381,11 @@ class SafeMaskMaker:
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
+        from gammapy.datasets import MapDataset
+
         edisp = dataset.edisp
 
-        if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
+        if isinstance(dataset, MapDataset):
             position = self.position
             if position is None:
                 position = dataset.counts.geom.center_skydir
@@ -413,8 +416,9 @@ class SafeMaskMaker:
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
+        from gammapy.datasets import MapDataset
 
-        if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
+        if isinstance(dataset, MapDataset):
             background_spectrum = dataset.background_model.map.get_spectrum()
             counts = dataset.counts.geom
         else:
@@ -440,6 +444,8 @@ class SafeMaskMaker:
         dataset : `Dataset`
             Dataset with defined safe range mask.
         """
+        from gammapy.datasets import MapDataset
+
         mask_safe = np.ones(dataset.data_shape, dtype=bool)
 
         if "offset-max" in self.methods:
@@ -457,7 +463,7 @@ class SafeMaskMaker:
         if "bkg-peak" in self.methods:
             mask_safe &= self.make_mask_energy_bkg_peak(dataset)
 
-        if isinstance(dataset, (MapDataset, MapDatasetOnOff)):
+        if isinstance(dataset, MapDataset):
             mask_safe = Map.from_geom(dataset._geom, data=mask_safe)
 
         dataset.mask_safe = mask_safe
