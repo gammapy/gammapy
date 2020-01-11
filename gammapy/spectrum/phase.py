@@ -98,7 +98,7 @@ class PhaseBackgroundMaker:
         dataset_on_off : `SpectrumDatasetOnOff`
             On off dataset.
         """
-        from gammapy.datasets.dataset import SpectrumDatasetOnOff
+        from gammapy.datasets import SpectrumDatasetOnOff
 
         counts_off = self.make_counts_off(dataset, observation)
         counts = self.make_counts(dataset, observation)

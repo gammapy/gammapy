@@ -868,7 +868,7 @@ class FluxPointsEstimator:
     @property
     def e_groups(self):
         """Energy grouping table `~astropy.table.Table`"""
-        from gammapy.datasets.dataset import SpectrumDatasetOnOff
+        from gammapy.datasets import SpectrumDatasetOnOff
 
         dataset = self.datasets[0]
         if isinstance(dataset, SpectrumDatasetOnOff):

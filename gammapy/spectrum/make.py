@@ -187,7 +187,7 @@ class SpectrumDatasetMaker:
         dataset : `~gammapy.spectrum.SpectrumDataset`
             Spectrum dataset.
         """
-        from gammapy.datasets.dataset import SpectrumDataset
+        from gammapy.datasets import SpectrumDataset
 
         kwargs = {
             "name": f"{observation.obs_id}",

@@ -1,2 +1,2 @@
 from .core import *
-from .dataset import *
+from .spectrum import *
