@@ -6,7 +6,8 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EDispKernel, IRFStacker
-from gammapy.modeling import Dataset, Parameters
+from gammapy.modeling import Parameters
+from gammapy.datasets import Dataset
 from gammapy.modeling.models import SkyModel, SkyModels
 from gammapy.stats import cash, significance_on_off, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds

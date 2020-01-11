@@ -2,7 +2,8 @@
 """FoV background estimation."""
 import logging
 from gammapy.maps import Map
-from gammapy.modeling import Fit, Datasets
+from gammapy.modeling import Fit
+from gammapy.datasets import Datasets
 
 __all__ = ["FoVBackgroundMaker"]
 

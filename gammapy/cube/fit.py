@@ -13,7 +13,8 @@ from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EDispKernel
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling import Dataset, Parameters
+from gammapy.datasets import Dataset
+from gammapy.modeling import Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.spectrum import SpectrumDataset, SpectrumDatasetOnOff

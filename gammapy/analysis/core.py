@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high-level interface API"""
 import logging
-import numpy as np
-from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
@@ -11,7 +9,8 @@ from gammapy.analysis.config import AnalysisConfig
 from gammapy.cube import MapDataset, MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling import Datasets, Fit
+from gammapy.modeling import Fit
+from gammapy.datasets import Datasets
 from gammapy.modeling.models import SkyModels
 from gammapy.modeling.serialize import dict_to_models
 from gammapy.spectrum import (

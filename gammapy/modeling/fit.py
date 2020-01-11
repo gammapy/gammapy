@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 from astropy.utils import lazyproperty
-from .datasets import Datasets
+from gammapy.datasets import Datasets
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
 from .scipy import confidence_scipy, covariance_scipy, optimize_scipy
 from .sherpa import covariance_sherpa, optimize_sherpa

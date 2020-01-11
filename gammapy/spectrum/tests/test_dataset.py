@@ -8,7 +8,8 @@ from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EDispKernel
 from gammapy.maps import MapAxis
-from gammapy.modeling import Datasets, Fit
+from gammapy.modeling import Fit
+from gammapy.datasets import Datasets
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     ExpCutoffPowerLawSpectralModel,
