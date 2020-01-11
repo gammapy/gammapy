@@ -66,7 +66,9 @@ class SensitivityEstimator:
         )
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
-        return dataset.counts.copy(data=excess_counts)
+        excess = dataset.background.copy()
+        excess.data = excess_counts
+        return excess
 
     def estimate_min_e2dnde(self, excess, dataset):
         """Estimate dnde from given min. excess
@@ -76,16 +78,16 @@ class SensitivityEstimator:
 
 
         """
-        energy = dataset.counts.energy.center
+        energy = dataset.background.energy.center
 
-        dataset.model = SkyModel(spectral_model=self.spectrum)
+        dataset.models = SkyModel(spectral_model=self.spectrum)
         npred = dataset.npred()
 
         phi_0 = excess / npred
 
         dnde_model = self.spectrum(energy=energy)
-        dnde = (phi_0 * dnde_model * energy ** 2).to("erg / (cm2 s)")
-        return dnde
+        dnde = (phi_0 * dnde_model * energy ** 2)
+        return dnde.quantity.to("erg / (cm2 s)")
 
     def _get_criterion(self, excess):
         is_gamma_limited = excess < self.gamma_min
@@ -109,8 +111,8 @@ class SensitivityEstimator:
         """
         energy = dataset.edisp.e_reco.center
         excess = self.estimate_min_excess(dataset)
-        e2dnde = self.estimate_min_dnde(excess, dataset)
-        criterion = self._get_criterion(excess)
+        e2dnde = self.estimate_min_e2dnde(excess, dataset)
+        criterion = self._get_criterion(excess.data)
 
         table = Table(
             [
@@ -133,7 +135,7 @@ class SensitivityEstimator:
                     description="Number of excess counts in the bin",
                 ),
                 Column(
-                    data=dataset.background.dat,
+                    data=dataset.background.data,
                     name="background",
                     format="5g",
                     description="Number of background counts in the bin",
