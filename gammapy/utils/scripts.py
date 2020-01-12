@@ -1,45 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utils to create scripts and command-line tools"""
-import logging
 import os.path
-import sys
 from pathlib import Path
 import yaml
 
 __all__ = ["read_yaml", "write_yaml", "make_path", "recursive_merge_dicts"]
-
-
-def _configure_root_logger(level="info", format=None):
-    """Configure root log level and format.
-
-    This is a helper function that can be called form
-    """
-    log = logging.getLogger()  # Get root logger
-
-    # Set log level
-    # level = getattr(logging, level.upper())
-    numeric_level = getattr(logging, level.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise ValueError(f"Invalid log level: {level}")
-    log.setLevel(level=numeric_level)
-
-    # Format log handler
-    if not format:
-        # format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
-        format = "%(levelname)-8s %(message)s [%(name)s]"
-    formatter = logging.Formatter(format)
-
-    # Not sure why there sometimes is a handler attached to the root logger,
-    # and sometimes not, i.e. why this is needed:
-    # https://github.com/gammapy/gammapy/pull/318/files#r36453321
-    if len(log.handlers) == 0:
-        handler = logging.StreamHandler(sys.stderr)
-        handler.setLevel(numeric_level)
-        log.addHandler(handler)
-
-    log.handlers[0].setFormatter(formatter)
-
-    return log
 
 
 def read_yaml(filename, logger=None):
