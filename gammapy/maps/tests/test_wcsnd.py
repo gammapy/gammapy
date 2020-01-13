@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from astropy.convolution import Gaussian2DKernel
+from astropy.convolution import Gaussian2DKernel, Box2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
@@ -50,9 +50,7 @@ wcs_test_geoms = wcs_allsky_test_geoms + wcs_partialsky_test_geoms
     ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
 def test_wcsndmap_init(npix, binsz, frame, proj, skydir, axes):
-    geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
-    )
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
     m0 = WcsNDMap(geom)
     coords = m0.geom.get_coord()
     m0.set_by_coord(coords, coords[1])
@@ -64,9 +62,7 @@ def test_wcsndmap_init(npix, binsz, frame, proj, skydir, axes):
     ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
 def test_wcsndmap_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
-    geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
-    )
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
     path = tmp_path / "tmp.fits"
 
     m0 = WcsNDMap(geom)
@@ -330,9 +326,7 @@ def test_wcsndmap_interp_by_coord_fill_value():
 )
 @pytest.mark.parametrize("keepdims", [True, False])
 def test_wcsndmap_sum_over_axes(npix, binsz, frame, proj, skydir, axes, keepdims):
-    geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
-    )
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
     m = WcsNDMap(geom)
     coords = m.geom.get_coord()
     m.fill_by_coord(coords, coords[0].value)
@@ -346,9 +340,7 @@ def test_wcsndmap_sum_over_axes(npix, binsz, frame, proj, skydir, axes, keepdims
     ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
 def test_wcsndmap_pad(npix, binsz, frame, proj, skydir, axes):
-    geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
-    )
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
     m = WcsNDMap(geom)
     m2 = m.pad(1, mode="constant", cval=2.2)
     if not geom.is_allsky:
@@ -373,9 +365,7 @@ def test_wcsndmap_pad_cval():
     ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
 def test_wcsndmap_crop(npix, binsz, frame, proj, skydir, axes):
-    geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
-    )
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
     m = WcsNDMap(geom)
     m.crop(1)
 
@@ -384,9 +374,7 @@ def test_wcsndmap_crop(npix, binsz, frame, proj, skydir, axes):
     ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
 def test_wcsndmap_downsample(npix, binsz, frame, proj, skydir, axes):
-    geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
-    )
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
     m = WcsNDMap(geom, unit="m2")
     # Check whether we can downsample
     if np.all(np.mod(geom.npix[0], 2) == 0) and np.all(np.mod(geom.npix[1], 2) == 0):
@@ -399,9 +387,7 @@ def test_wcsndmap_downsample(npix, binsz, frame, proj, skydir, axes):
     ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
 def test_wcsndmap_upsample(npix, binsz, frame, proj, skydir, axes):
-    geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes
-    )
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
     m = WcsNDMap(geom, unit="m2")
     m2 = m.upsample(2, preserve_counts=True)
     assert_allclose(np.nansum(m.data), np.nansum(m2.data))
@@ -445,7 +431,9 @@ def test_smooth(kernel):
         MapAxis(np.logspace(0.0, 3.0, 3), interp="log"),
         MapAxis(np.logspace(1.0, 3.0, 4), interp="lin"),
     ]
-    geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", frame="galactic", axes=axes)
+    geom = WcsGeom.create(
+        npix=(10, 10), binsz=1, proj="CAR", frame="galactic", axes=axes
+    )
     m = WcsNDMap(geom, data=np.ones(geom.data_shape), unit="m2")
 
     desired = m.data.sum()
@@ -506,8 +494,13 @@ def test_convolve_nd():
     assert psf_kernel.psf_kernel_map.data.shape == (3, 101, 101)
 
     mc = m.convolve(psf_kernel)
-
     assert_allclose(mc.data.sum(axis=(1, 2)), [0, 1, 1], atol=1e-5)
+
+    kernel_2d = Box2DKernel(3, mode="center")
+    kernel_2d.normalize("peak")
+    mc = m.convolve(kernel_2d.array)
+    assert_allclose(mc.data[0, :, :].sum(), 0, atol=1e-5)
+    assert_allclose(mc.data[1, :, :].sum(), 9, atol=1e-5)
 
 
 def test_convolve_pixel_scale_error():
