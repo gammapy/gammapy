@@ -873,9 +873,8 @@ class MapDataset(Dataset):
                 raise ValueError("No PSFMap set. Containement correction impossible")
             else:
                 psf = self.psf.get_energy_dependent_table_psf(on_region.center)
-                containment = psf.containment(aeff.energy.center, self.region.radius)
+                containment = psf.containment(aeff.energy.center, on_region.radius)
                 aeff.data.data *= containment.squeeze()
-
         if self.edisp is not None:
             if isinstance(self.edisp, EDispKernel):
                 edisp = self.edisp

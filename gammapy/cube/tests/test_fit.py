@@ -186,16 +186,24 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
 
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
     dataset_ref.gti = gti
-    on_region = CircleSkyRegion(center=geom.center_skydir, radius=0.1 * u.deg)
+    on_region = CircleSkyRegion(center=geom.center_skydir, radius=0.05 * u.deg)
     spectrum_dataset = dataset_ref.to_spectrum_dataset(on_region)
+    spectrum_dataset_corrected = dataset_ref.to_spectrum_dataset(
+        on_region, containment_correction=True
+    )
 
     assert np.sum(spectrum_dataset.counts.data) == 1
     assert spectrum_dataset.data_shape == (2,)
     assert spectrum_dataset.background.energy.nbin == 2
     assert spectrum_dataset.aeff.energy.nbin == 3
-    assert spectrum_dataset.aeff.data.data.unit == 'm2'
+    assert spectrum_dataset.aeff.data.data.unit == "m2"
+    assert_allclose(spectrum_dataset.aeff.data.data.value[1], 853023.423047, rtol=1e-5)
     assert spectrum_dataset.edisp.e_reco.nbin == 2
     assert spectrum_dataset.edisp.e_true.nbin == 3
+    assert spectrum_dataset_corrected.aeff.data.data.unit == "m2"
+    assert_allclose(
+        spectrum_dataset_corrected.aeff.data.data.value[1], 559476.3357, rtol=1e-5
+    )
 
 
 def test_to_image(geom):
