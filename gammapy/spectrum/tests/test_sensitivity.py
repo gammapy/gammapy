@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import EffectiveAreaTable, EDispKernel
-from gammapy.spectrum import CountsSpectrum, SensitivityEstimator, SpectrumDataset
+from gammapy.spectrum import CountsSpectrum, SensitivityEstimator, SpectrumDataset, SpectrumDatasetOnOff
 
 
 @pytest.fixture()
@@ -28,8 +28,11 @@ def spectrum_dataset():
 
 
 def test_cta_sensitivity_estimator(spectrum_dataset):
-    sens = SensitivityEstimator(gamma_min=20, alpha=0.2)
-    table = sens.run(spectrum_dataset)
+    dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
+        dataset=spectrum_dataset, acceptance=1, acceptance_off=5
+    )
+    sens = SensitivityEstimator(gamma_min=20)
+    table = sens.run(dataset_on_off)
 
     assert len(table) == 4
     assert table.colnames == ["energy", "e2dnde", "excess", "background", "criterion"]

@@ -11,30 +11,30 @@ __all__ = ["SensitivityEstimator"]
 class SensitivityEstimator:
     """Estimate differential sensitivity.
 
-    Uses a 1D spectral analysis and on / off measurement.
+    This class allows to determine for each reconstructed energy bin the flux
+    associated to the number of gamma-ray events for which the significance is
+    ``sigma``, and being larger than ``gamma_min`` and ``bkg_sys`` percent
+    larger than the number of background events in the ON region.
 
-    For a usage example see `cta_sensitivity.html <../notebooks/cta_sensitivity.html>`__
 
     Parameters
     ----------
-    alpha : float, optional
-        On/OFF normalization
+    spectrum : `SpectralModel`
+        Spectral model assumption
     sigma : float, optional
         Minimum significance
     gamma_min : float, optional
         Minimum number of gamma-rays
 
-    Notes
-    -----
-    This class allows to determine for each reconstructed energy bin the flux associated to the number of gamma-ray
-    events for which the significance is ``sigma``, and being larger than ``gamma_min`` and ``bkg_sys`` percent larger than the
-    number of background events in the ON region.
+    Examples
+    --------
+    For a usage example see `cta_sensitivity.html <../notebooks/cta_sensitivity.html>`__
+
     """
 
     def __init__(
         self,
         spectrum=None,
-        alpha=0.2,
         sigma=5.0,
         gamma_min=10,
     ):
@@ -43,7 +43,6 @@ class SensitivityEstimator:
             spectrum = PowerLawSpectralModel(index=2, amplitude="1 cm-2 s-1 TeV-1")
 
         self.spectrum = spectrum
-        self.alpha = alpha
         self.sigma = sigma
         self.gamma_min = gamma_min
 
@@ -60,9 +59,9 @@ class SensitivityEstimator:
         excess : `CountsSpectrum`
             Minimal excess
         """
-        n_off = dataset.background.data / self.alpha
+        n_off = dataset.counts_off.data
         excess_counts = excess_matching_significance_on_off(
-            n_off=n_off, alpha=self.alpha, significance=self.sigma
+            n_off=n_off, alpha=dataset.alpha, significance=self.sigma
         )
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
@@ -75,8 +74,15 @@ class SensitivityEstimator:
 
         Parameters
         ----------
+        excess : `CountsSpectrum`
+            Minimal excess
+        dataset : `SpectrumDataset`
+            Spectrum dataset
 
-
+        Return
+        ------
+        e2dnde : `~astropy.units.Quantity`
+            Minimal differential flux.
         """
         energy = dataset.background.energy.center
 
@@ -101,7 +107,7 @@ class SensitivityEstimator:
 
         Parameters
         ----------
-        dataset : `SpectrumDataset`
+        dataset : `SpectrumDatasetOnOff`
             Dataset to compute sensitivty for.
 
         Returns
@@ -114,7 +120,7 @@ class SensitivityEstimator:
         e2dnde = self.estimate_min_e2dnde(excess, dataset)
         criterion = self._get_criterion(excess.data)
 
-        table = Table(
+        return Table(
             [
                 Column(
                     data=energy,
@@ -147,4 +153,3 @@ class SensitivityEstimator:
                 ),
             ]
         )
-        return table
