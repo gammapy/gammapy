@@ -13,7 +13,7 @@ from regions import (
     PointSkyRegion,
     PolygonSkyRegion,
 )
-from gammapy.maps import Map
+from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Model, Parameter
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
@@ -112,6 +112,32 @@ class SpatialModel(Model):
         data["parameters"] = data.pop("parameters")
         return data
 
+    def plot(self, ax=None, geom=None, **kwargs):
+        """Plot spatial model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        geom : `~gammapy.maps.WcsGeom`, optional
+            Geom to use for plotting.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
+        if geom is None:
+            width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
+            geom = WcsGeom.create(skydir=self.position, frame=self.frame, width=width, binsz=0.02)
+
+        data = self.evaluate_geom(geom)
+        m = Map.from_geom(geom, data=data.value, unit=data.unit)
+        _, ax, _ = m.plot(ax=ax, **kwargs)
+        return ax
+
 
 class PointSpatialModel(SpatialModel):
     r"""Point Source.
@@ -164,45 +190,7 @@ class PointSpatialModel(SpatialModel):
 class GaussianSpatialModel(SpatialModel):
     r"""Two-dimensional Gaussian model.
 
-    By default, the Gaussian is symmetric:
-
-    .. math::
-        \phi(\text{lon}, \text{lat}) = N \times \exp\left\{-\frac{1}{2}
-            \frac{1-\cos \theta}{1-\cos \sigma}\right\}\,,
-
-    where :math:`\theta` is the sky separation to the model center. In this case, the
-    Gaussian is normalized to 1 on the sphere:
-
-    .. math::
-        N = \frac{1}{4\pi a\left[1-\exp(-1/a)\right]}\,,\,\,\,\,
-        a = 1-\cos \sigma\,.
-
-    In the limit of small :math:`\theta` and :math:`\sigma`, this definition
-    reduces to the usual form:
-
-    .. math::
-        \phi(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma^2} \exp{\left(-\frac{1}{2}
-            \frac{\theta^2}{\sigma^2}\right)}\,.
-
-    In case an eccentricity (:math:`e`) and rotation angle (:math:`\phi`) are passed,
-    then the model is an elongated Gaussian, whose evaluation is performed as in the symmetric case
-    but using the effective radius of the Gaussian:
-
-    .. math::
-        \sigma_{eff}(\text{lon}, \text{lat}) = \sqrt{
-            (\sigma_M \sin(\Delta \phi))^2 +
-            (\sigma_m \cos(\Delta \phi))^2
-        }.
-
-    Here, :math:`\sigma_M` (:math:`\sigma_m`) is the major (minor) semiaxis of the Gaussian, and
-    :math:`\Delta \phi` is the difference between `phi`, the position angle of the Gaussian, and the
-    position angle of the evaluation point.
-
-    **Caveat:** For the asymmetric Gaussian, the model is normalized to 1 on the plane, i.e. in small angle
-    approximation: :math:`N = 1/(2 \pi \sigma_M \sigma_m)`. This means that for huge elongated Gaussians on the sky
-    this model is not correctly normalized. However, this approximation is perfectly acceptable for the more
-    common case of models with modest dimensions: indeed, the error introduced by normalizing on the plane
-    rather than on the sphere is below 0.1\% for Gaussians with radii smaller than ~ 5 deg.
+    For more information see :ref:`gaussian-spatial-model`.
 
     Parameters
     ----------
@@ -268,26 +256,7 @@ class GaussianSpatialModel(SpatialModel):
 class DiskSpatialModel(SpatialModel):
     r"""Constant disk model.
 
-    By default, the model is symmetric, i.e. a disk:
-
-    .. math::
-        \phi(lon, lat) = \frac{1}{2 \pi (1 - \cos{r_0}) } \cdot
-                \begin{cases}
-                    1 & \text{for } \theta \leq r_0 \\
-                    0 & \text{for } \theta > r_0
-                \end{cases}
-
-    where :math:`\theta` is the sky separation. To improve fit convergence of the
-    model, the sharp edges is smoothed using `~scipy.special.erf`.
-
-    In case an eccentricity (`e`) and rotation angle (:math:`\phi`) are passed,
-    then the model is an elongated disk (i.e. an ellipse), with a major semiaxis of length :math:`r_0`
-    and position angle :math:`\phi` (increaing counter-clockwise from the North direction).
-
-    The model is defined on the celestial sphere, with a normalization defined by:
-
-    .. math::
-        \int_{4\pi}\phi(\text{lon}, \text{lat}) \,d\Omega = 1\,.
+    For more information see :ref:`disk-spatial-model`.
 
     Parameters
     ----------
@@ -410,7 +379,7 @@ class ShellSpatialModel(SpatialModel):
     lon_0 = Parameter("lon_0", "0 deg")
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
     radius = Parameter("radius", "1 deg")
-    width = Parameter("width", "1 deg")
+    width = Parameter("width", "0.2 deg")
 
     @property
     def evaluation_radius(self):
@@ -444,6 +413,7 @@ class ShellSpatialModel(SpatialModel):
             center=self.position,
             inner_radius=self.radius.quantity,
             outer_radius=self.radius.quantity + self.width.quantity,
+
             **kwargs
         )
 
