@@ -1,4 +1,6 @@
-"""
+r"""
+.. _disk-spatial-model:
+
 Disk Spatial Model
 ==================
 
@@ -6,13 +8,13 @@ By default, the model is symmetric, i.e. a disk:
 
 .. math::
 
-    \\phi(lon, lat) = \\frac{1}{2 \\pi (1 - \\cos{r_0}) } \\cdot
-            \\begin{cases}
-                1 & \\text{for } \\theta \\leq r_0 \\
-                0 & \\text{for } \\theta > r_0
-            \\end{cases}
+    \phi(lon, lat) = \frac{1}{2 \pi (1 - \cos{r_0}) } \cdot
+            \begin{cases}
+                1 & \text{for } \theta \leq r_0 \
+                0 & \text{for } \theta > r_0
+            \end{cases}
 
-where :math:`\\theta` is the sky separation. To improve fit convergence of the
+where :math:`\theta` is the sky separation. To improve fit convergence of the
 model, the sharp edges is smoothed using `~scipy.special.erf`.
 
 In case an eccentricity (`e`) and rotation angle (:math:`\phi`) are passed,
@@ -23,7 +25,7 @@ The model is defined on the celestial sphere, with a normalization defined by:
 
 .. math::
 
-    \\int_{4\pi}\phi(\\text{lon}, \\text{lat}) \,d\\Omega = 1\,.
+    \int_{4\pi}\phi(\text{lon}, \text{lat}) \,d\Omega = 1\,.
 """
 
 #%%
@@ -33,40 +35,32 @@ The model is defined on the celestial sphere, with a normalization defined by:
 
 
 import numpy as np
-import matplotlib.pyplot as plt
-from gammapy.maps import Map, WcsGeom
-from gammapy.modeling.models import DiskSpatialModel, SkyModel, SkyModels, PowerLawSpectralModel
+from astropy.coordinates import Angle
+from gammapy.modeling.models import (
+    DiskSpatialModel,
+    SkyModel,
+    SkyModels,
+    PowerLawSpectralModel,
+)
 
+phi = Angle("30 deg")
 model = DiskSpatialModel(
-    lon_0="2 deg",
-    lat_0="2 deg",
-    r_0="1 deg",
-    e=0.8,
-    phi="30 deg",
-    frame="galactic",
+    lon_0="2 deg", lat_0="2 deg", r_0="1 deg", e=0.8, phi="30 deg", frame="galactic",
 )
 
-m_geom = WcsGeom.create(
-    binsz=0.01, width=(3, 3), skydir=(2, 2), coordsys="GAL", proj="AIT"
-)
-coords = m_geom.get_coord()
-vals = model(coords.lon, coords.lat)
-skymap = Map.from_geom(m_geom, data=vals.value)
+ax = model.plot()
 
-_, ax, _ = skymap.plot()
+# illustrate size parameter
+region = model.to_region().to_pixel(ax.wcs)
+artist = region.as_artist(facecolor="none", edgecolor="red")
+ax.add_artist(artist)
 
 transform = ax.get_transform("galactic")
 ax.scatter(2, 2, transform=transform, s=20, edgecolor="red", facecolor="red")
 ax.text(1.7, 1.85, r"$(l_0, b_0)$", transform=transform, ha="center")
-ax.plot(
-    [2, 2 + np.sin(np.pi / 6)],
-    [2, 2 + np.cos(np.pi / 6)],
-    color="r",
-    transform=transform,
-)
+ax.plot([2, 2 + np.sin(phi)], [2, 2 + np.cos(phi)], color="r", transform=transform)
 ax.vlines(x=2, color="r", linestyle="--", transform=transform, ymin=0, ymax=5)
 ax.text(2.15, 2.3, r"$\phi$", transform=transform)
-plt.show()
 
 #%%
 # YAML representation
