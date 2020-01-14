@@ -351,16 +351,9 @@ class ReflectedRegionsBackgroundMaker:
         """
         counts_off, acceptance_off = self.make_counts_off(dataset, observation)
 
-        return SpectrumDatasetOnOff(
-            counts=dataset.counts,
-            counts_off=counts_off,
-            gti=dataset.gti,
-            name=dataset.name,
-            livetime=dataset.livetime,
-            edisp=dataset.edisp,
-            aeff=dataset.aeff,
+        return SpectrumDatasetOnOff.from_spectrum_dataset(
+            dataset=dataset,
             acceptance=1,
             acceptance_off=acceptance_off,
-            mask_safe=dataset.mask_safe,
-            mask_fit=dataset.mask_fit,
+            counts_off=counts_off
         )

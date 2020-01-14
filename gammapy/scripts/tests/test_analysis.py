@@ -17,6 +17,6 @@ def test_cli_analysis_run(tmp_path):
     config = get_example_config("1d")
     config.write(path_config)
     path_datasets = tmp_path / "datasets"
-    args = ["analysis", "run", f"--filename={path_config}", f"--out={path_datasets}"]
+    args = ["analysis", "run", f"--filename={path_config}", f"--out={path_datasets}", "--overwrite"]
     run_cli(cli, args)
     assert path_datasets.exists()

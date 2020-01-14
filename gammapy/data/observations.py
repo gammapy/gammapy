@@ -427,7 +427,7 @@ class Observation:
     def create(
         cls,
         pointing,
-        obs_id=None,
+        obs_id=0,
         livetime=None,
         tstart=None,
         tstop=None,
@@ -460,10 +460,8 @@ class Observation:
         obs : `gammapy.data.Observation`
         """
         tstart = tstart or Quantity(0.0, "hr")
-        tstop = (tstart + livetime) or tstop
+        tstop = (tstart + Quantity(livetime)) or tstop
         gti = GTI.create([tstart], [tstop])
-        obs_id = obs_id or 1
-
         return cls(
             obs_id=obs_id,
             pointing=pointing.icrs,

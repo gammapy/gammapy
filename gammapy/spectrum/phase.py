@@ -103,19 +103,14 @@ class PhaseBackgroundMaker:
         acceptance = np.sum([_[1] - _[0] for _ in self.on_phase])
         acceptance_off = np.sum([_[1] - _[0] for _ in self.off_phase])
 
-        return SpectrumDatasetOnOff(
-            counts=counts,
+        dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
+            dataset=dataset,
             counts_off=counts_off,
-            gti=dataset.gti,
-            name=dataset.name,
-            livetime=dataset.livetime,
-            edisp=dataset.edisp,
-            aeff=dataset.aeff,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
-            mask_safe=dataset.mask_safe,
-            mask_fit=dataset.mask_fit,
         )
+        dataset_on_off.counts = counts
+        return dataset_on_off
 
     @staticmethod
     def _check_intervals(intervals):
