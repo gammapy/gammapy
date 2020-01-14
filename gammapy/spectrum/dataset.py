@@ -1181,6 +1181,46 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         dataset.models = models
         return dataset
 
+    @classmethod
+    def from_spectrum_dataset(cls, dataset, acceptance, acceptance_off, counts_off=None):
+        """Create spectrum dataseton off from another dataset.
+
+        Parameters
+        ----------
+        dataset : `SpectrumDataset`
+            Spectrum dataset defining counts, edisp, aeff, livetime etc.
+        acceptance : `~numpy.array` or float
+            Relative background efficiency in the on region.
+        acceptance_off : `~numpy.array` or float
+            Relative background efficiency in the off region.
+        counts_off : `~gammapy.spectrum.CountsSpectrum`
+            Off counts spectrum . If the dataset provides a background model,
+            and no off counts are defined. The off counts are deferred from
+            counts_off / alpha.
+
+        Returns
+        -------
+        dataset : `SpectrumDatasetOnOff`
+            Spectrum dataset on off.
+
+        """
+        if counts_off is None and dataset.background is not None:
+            alpha = acceptance / acceptance_off
+            counts_off = dataset.background / alpha
+
+        return cls(
+            counts=dataset.counts,
+            aeff=dataset.aeff,
+            counts_off=counts_off,
+            edisp=dataset.edisp,
+            livetime=dataset.livetime,
+            mask_safe=dataset.mask_safe,
+            mask_fit=dataset.mask_fit,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            gti=dataset.gti,
+        )
+
 
 def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS", hdu3="GTI"):
     """Create from `~astropy.io.fits.HDUList`."""
