@@ -1219,6 +1219,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             gti=dataset.gti,
+            name=dataset.name
         )
 
 
