@@ -105,7 +105,6 @@ class PhaseBackgroundMaker:
 
         dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
             dataset=dataset,
-            counts=counts,
             counts_off=counts_off,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
