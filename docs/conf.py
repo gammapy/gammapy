@@ -60,6 +60,7 @@ extensions.extend(
         "sphinx_click.ext",
         "IPython.sphinxext.ipython_console_highlighting",
         "sphinx.ext.mathjax",
+        "sphinx_gallery.gen_gallery",
     ]
 )
 nbsphinx_execute = "never"
@@ -194,3 +195,14 @@ automodsumm_inherited_members = True
 suppress_warnings = ["ref.citation"]
 
 # nitpicky = True
+
+
+sphinx_gallery_conf = {
+    "examples_dirs": "../examples/models",   # path to your example scripts
+    "gallery_dirs": "modeling/gallery",  # path to where to save gallery generated output
+    "download_all_examples": False,
+    "capture_repr": (),
+    "min_reported_time": False,
+    "show_memory": False,
+    "line_numbers": True,
+}
