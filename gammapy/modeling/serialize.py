@@ -19,7 +19,7 @@ def models_to_dict(models):
         Python list of Model objects
     """
     # update shared parameters names for serialization
-    _rename_shared_parameters(models)
+    _update_link_reference(models)
 
     models_data = []
     for model in models:
@@ -28,13 +28,10 @@ def models_to_dict(models):
         if model_data not in models_data:
             models_data.append(model_data)
 
-    # restore shared parameters names after serialization
-    _restore_shared_parameters(models)
-
     return {"components": models_data}
 
 
-def _rename_shared_parameters(models):
+def _update_link_reference(models):
     params_list = []
     params_shared = []
     for model in models:
@@ -44,13 +41,7 @@ def _rename_shared_parameters(models):
             elif param not in params_shared:
                 params_shared.append(param)
     for k, param in enumerate(params_shared):
-        param.name = param.name + "@shared_" + str(k)
-
-
-def _restore_shared_parameters(models):
-    for model in models:
-        for param in model.parameters:
-            param.name = param.name.split("@")[0]
+        param.linkage = param.name + "@shared_" + str(k)
 
 
 def dict_to_models(data, link=True):
@@ -87,9 +78,10 @@ def _link_shared_parameters(models):
     for model in models:
         for param in model.parameters:
             name = param.name
-            if "@" in name:
-                if name in shared_register:
-                    new_param = shared_register[name]
+            linkage = param.linkage
+            if linkage != "":
+                if linkage in shared_register:
+                    new_param = shared_register[linkage]
                     model.parameters.link(name, new_param)
                     if isinstance(model, SkyModel):
                         spatial_params = model.spatial_model.parameters
@@ -99,8 +91,7 @@ def _link_shared_parameters(models):
                         elif name in spectral_params.names:
                             spectral_params.link(name, new_param)
                 else:
-                    param.name = name.split("@")[0]
-                    shared_register[name] = param
+                    shared_register[linkage] = param
 
 
 def datasets_to_dict(datasets, path, prefix, overwrite):
