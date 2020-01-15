@@ -48,15 +48,15 @@ def test_compute_ts_map(input_dataset):
     """Minimal test of compute_ts_image"""
     kernel = Gaussian2DKernel(5)
 
-    ts_estimator = TSMapEstimator(input_dataset, method="leastsq iter", threshold=1)
-    result = ts_estimator.run(kernel=kernel)
+    ts_estimator = TSMapEstimator(method="leastsq iter", threshold=1)
+    result = ts_estimator.run(input_dataset, kernel=kernel)
 
     assert "leastsq iter" in repr(ts_estimator)
-    assert_allclose(result["ts"].data[99, 99], 1714.23, rtol=1e-2)
-    assert_allclose(result["niter"].data[99, 99], 3)
-    assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
+    assert_allclose(result["ts"].data[0,99, 99], 1714.23, rtol=1e-2)
+    assert_allclose(result["niter"].data[0,99, 99], 3)
+    assert_allclose(result["flux"].data[0,99, 99], 1.02e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[0,99, 99], 3.84e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[0,99, 99], 1.10e-09, rtol=1e-2)
 
 
 @requires_data()
@@ -77,10 +77,10 @@ def test_compute_ts_map_downsampled(input_dataset):
 
 
 @requires_data()
-def test_large_kernel(input_maps):
+def test_large_kernel(input_dataset):
     """Minimal test of compute_ts_image"""
     kernel = Gaussian2DKernel(100)
     ts_estimator = TSMapEstimator()
 
     with pytest.raises(ValueError):
-        ts_estimator.run(input_maps, kernel=kernel)
+        ts_estimator.run(input_dataset, kernel=kernel)

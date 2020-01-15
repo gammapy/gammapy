@@ -125,7 +125,6 @@ class TSMapEstimator:
 
     def __init__(
         self,
-        dataset,
         method="root brentq",
         error_method="covar",
         error_sigma=1,
@@ -134,8 +133,6 @@ class TSMapEstimator:
         threshold=None,
         rtol=0.001,
     ):
-        # TODO add typecheck
-        self.dataset = dataset
 
         if method not in ["root brentq", "root newton", "leastsq iter"]:
             raise ValueError(f"Not a valid method: '{method}'")
@@ -167,10 +164,11 @@ class TSMapEstimator:
         Returns
         -------
         flux_approx : `~gammapy.maps.WcsNDMap`
-            Approximate flux map.
+            Approximate flux map (2D).
         """
         flux = dataset.counts - dataset.background_model.evaluate()
-        flux /= dataset.exposure
+        flux = flux.sum_over_axes(keepdims=False)
+        flux /= dataset.exposure.sum_over_axes(keepdims=False)
         flux /= np.sum(kernel.array ** 2)
         return flux.convolve(kernel.array)
 
@@ -237,7 +235,7 @@ class TSMapEstimator:
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return map_ts.copy(data=sqrt_ts)
 
-    def run(self, kernel, which="all", downsampling_factor=None):
+    def run(self, dataset, kernel, which="all", downsampling_factor=None):
         """
         Run TS map estimation.
 
@@ -261,7 +259,15 @@ class TSMapEstimator:
             Result maps.
         """
         p = self.parameters
-        if (np.array(kernel.shape) > np.array(self.dataset.counts.data.shape[1:])).any():
+
+        # First create 2D map arrays
+        # prepare dtype for cython methods
+
+        counts = np.squeeze(dataset.counts.data.astype(float))
+        background = np.squeeze(dataset.background_model.evaluate().data.astype(float))
+        exposure = np.squeeze(dataset.exposure.data.astype(float))
+
+        if (np.array(kernel.shape) > np.array(dataset.counts.data.shape[1:])).any():
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
                 " size of the kernel"
@@ -270,7 +276,7 @@ class TSMapEstimator:
         if downsampling_factor:
             maps_downsampled = {}
 
-            shape = self.dataset.counts.data.shape
+            shape = dataset.counts.data.shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
 
             for name, map_ in maps.items():
@@ -288,23 +294,22 @@ class TSMapEstimator:
 
         result = {}
         for name in which:
-            data = np.nan * np.ones_like(self.dataset.counts.data)
-            result[name] = self.dataset.counts.copy(data=data)
+            data = np.nan * np.ones_like(dataset.counts.data)
+            result[name] = dataset.counts.copy(data=data)
 
-        mask = self.mask_default(self.dataset, kernel)
+        mask = self.mask_default(dataset, kernel)
 
-        if self.dataset.mask is not None:
-            mask.data &= self.dataset.mask.data
+        if dataset.mask is not None:
+            mask.data &= dataset.mask.data
 
         if p["threshold"] or p["method"] == "root newton":
-            flux = np.squeeze(self.flux_default(self.dataset, kernel).data)
+            flux = self.flux_default(dataset, kernel).data
         else:
             flux = None
 
-        # prepare dtype for cython methods
-        counts = np.squeeze(self.dataset.counts.data.astype(float))
-        background = np.squeeze(self.dataset.background_model.evaluate().data.astype(float))
-        exposure = np.squeeze(self.dataset.exposure.data.astype(float))
+        counts = np.squeeze(dataset.counts.data.astype(float))
+        background = np.squeeze(dataset.background_model.evaluate().data.astype(float))
+        exposure = np.squeeze(dataset.exposure.data.astype(float))
 
         # Compute null statistics per pixel for the whole image
         c_0 = cash(counts, background)
@@ -333,19 +338,16 @@ class TSMapEstimator:
         positions = list(zip(x, y))
         results = list(map(wrap, positions))
 
-        print(len(results))
-        print(len(positions))
-
         # Set TS values at given positions
         j, i = zip(*positions)
         for name in ["ts", "flux", "niter"]:
-            result[name].data[j, i] = [_[name] for _ in results]
+            result[name].data[:,j, i] = [_[name] for _ in results]
 
         if "flux_err" in which:
-            result["flux_err"].data[j, i] = [_["flux_err"] for _ in results]
+            result["flux_err"].data[:,j, i] = [_["flux_err"] for _ in results]
 
         if "flux_ul" in which:
-            result["flux_ul"].data[j, i] = [_["flux_ul"] for _ in results]
+            result["flux_ul"].data[:,j, i] = [_["flux_ul"] for _ in results]
 
         # Compute sqrt(TS) values
         if "sqrt_ts" in which:
