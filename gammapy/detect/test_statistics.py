@@ -235,6 +235,9 @@ class TSMapEstimator:
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return map_ts.copy(data=sqrt_ts)
 
+    @staticmethod
+    def downsample_dataset(dataset, downsampling_factor):
+        """Downsample MapDataset."""
     def run(self, dataset, kernel, which="all", downsampling_factor=None):
         """
         Run TS map estimation.
@@ -260,31 +263,36 @@ class TSMapEstimator:
         """
         p = self.parameters
 
-        # First create 2D map arrays
-        # prepare dtype for cython methods
-
-        counts = np.squeeze(dataset.counts.data.astype(float))
-        background = np.squeeze(dataset.background_model.evaluate().data.astype(float))
-        exposure = np.squeeze(dataset.exposure.data.astype(float))
-
         if (np.array(kernel.shape) > np.array(dataset.counts.data.shape[1:])).any():
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
                 " size of the kernel"
             )
 
-        if downsampling_factor:
-            maps_downsampled = {}
+        # First prepare the mask
+        mask = self.mask_default(dataset, kernel)
 
-            shape = dataset.counts.data.shape
+        if dataset.mask is not None:
+            mask.data &= dataset.mask.data
+
+        # First create 2D map arrays
+        counts = dataset.counts.sum_over_axes(keepdims=False)
+        background = dataset.background_model.evaluate().sum_over_axes(keepdims=False)
+        exposure = dataset.exposure.sum_over_axes(keepdims=False)
+
+        if downsampling_factor:
+            shape = counts.shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
 
-            for name, map_ in maps.items():
-                preserve_counts = name in ["counts", "background", "exclusion"]
-                maps_downsampled[name] = map_.pad(pad_width).downsample(
-                    downsampling_factor, preserve_counts=preserve_counts
+            counts = counts.pad(pad_width).downsample(
+                    downsampling_factor, preserve_counts=True
                 )
-            maps = maps_downsampled
+            background = background.pad(pad_width).downsample(
+                    downsampling_factor, preserve_counts=True
+                )
+            exposure = exposure.pad(pad_width).downsample(
+                    downsampling_factor, preserve_counts=False
+                )
 
         if not isinstance(kernel, Kernel2D):
             kernel = CustomKernel(kernel)
@@ -294,34 +302,30 @@ class TSMapEstimator:
 
         result = {}
         for name in which:
-            data = np.nan * np.ones_like(dataset.counts.data)
-            result[name] = dataset.counts.copy(data=data)
-
-        mask = self.mask_default(dataset, kernel)
-
-        if dataset.mask is not None:
-            mask.data &= dataset.mask.data
+            data = np.nan * np.ones_like(counts.data)
+            result[name] = counts.copy(data=data)
 
         if p["threshold"] or p["method"] == "root newton":
             flux = self.flux_default(dataset, kernel).data
         else:
             flux = None
 
-        counts = np.squeeze(dataset.counts.data.astype(float))
-        background = np.squeeze(dataset.background_model.evaluate().data.astype(float))
-        exposure = np.squeeze(dataset.exposure.data.astype(float))
+        # prepare dtype for cython methods
+        counts_array = counts.data.astype(float)
+        background_array = background.data.astype(float)
+        exposure_array = exposure.data.astype(float)
 
         # Compute null statistics per pixel for the whole image
-        c_0 = cash(counts, background)
+        c_0 = cash(counts_array, background_array)
 
         error_method = p["error_method"] if "flux_err" in which else "none"
         ul_method = p["ul_method"] if "flux_ul" in which else "none"
 
         wrap = functools.partial(
             _ts_value,
-            counts=counts,
-            exposure=exposure,
-            background=background,
+            counts=counts_array,
+            exposure=exposure_array,
+            background=background_array,
             c_0=c_0,
             kernel=kernel,
             flux=flux,
@@ -341,13 +345,13 @@ class TSMapEstimator:
         # Set TS values at given positions
         j, i = zip(*positions)
         for name in ["ts", "flux", "niter"]:
-            result[name].data[:,j, i] = [_[name] for _ in results]
+            result[name].data[j, i] = [_[name] for _ in results]
 
         if "flux_err" in which:
-            result["flux_err"].data[:,j, i] = [_["flux_err"] for _ in results]
+            result["flux_err"].data[j, i] = [_["flux_err"] for _ in results]
 
         if "flux_ul" in which:
-            result["flux_ul"].data[:,j, i] = [_["flux_ul"] for _ in results]
+            result["flux_ul"].data[j, i] = [_["flux_ul"] for _ in results]
 
         # Compute sqrt(TS) values
         if "sqrt_ts" in which:

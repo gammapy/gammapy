@@ -52,11 +52,11 @@ def test_compute_ts_map(input_dataset):
     result = ts_estimator.run(input_dataset, kernel=kernel)
 
     assert "leastsq iter" in repr(ts_estimator)
-    assert_allclose(result["ts"].data[0,99, 99], 1714.23, rtol=1e-2)
-    assert_allclose(result["niter"].data[0,99, 99], 3)
-    assert_allclose(result["flux"].data[0,99, 99], 1.02e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[0,99, 99], 3.84e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[0,99, 99], 1.10e-09, rtol=1e-2)
+    assert_allclose(result["ts"].data[99, 99], 1714.23, rtol=1e-2)
+    assert_allclose(result["niter"].data[99, 99], 3)
+    assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
 
 
 @requires_data()
