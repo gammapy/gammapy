@@ -68,7 +68,7 @@ def f_cash(x, counts, background, model):
 
 
 class TSMapEstimator:
-    r"""Compute TS map using different optimization methods.
+    r"""Compute TS map from a MapDataset using different optimization methods.
 
     The map is computed fitting by a single parameter amplitude fit. The fit is
     simplified by finding roots of the the derivative of the fit statistics using
@@ -125,6 +125,7 @@ class TSMapEstimator:
 
     def __init__(
         self,
+        dataset,
         method="root brentq",
         error_method="covar",
         error_sigma=1,
@@ -133,6 +134,8 @@ class TSMapEstimator:
         threshold=None,
         rtol=0.001,
     ):
+        # TODO add typecheck
+        self.dataset = dataset
 
         if method not in ["root brentq", "root newton", "leastsq iter"]:
             raise ValueError(f"Not a valid method: '{method}'")
@@ -151,33 +154,34 @@ class TSMapEstimator:
         }
 
     @staticmethod
-    def flux_default(maps, kernel):
+    def flux_default(dataset, kernel):
         """Estimate default flux map using a given kernel.
 
         Parameters
         ----------
-        maps : dict
-            Input sky maps. Requires "counts", "background" and "exposure" maps.
-        kernel : `astropy.convolution.Kernel2D`
+        dataset : `~gammapy.cube.MapDataset`
+            Input dataset.
+        kernel : `~stropy.convolution.Kernel2D`
             Source model kernel.
 
         Returns
         -------
-        flux_approx : `gammapy.maps.WcsNDMap`
+        flux_approx : `~gammapy.maps.WcsNDMap`
             Approximate flux map.
         """
-        flux = (maps["counts"].data - maps["background"].data) / maps["exposure"].data
-        flux = maps["counts"].copy(data=flux / np.sum(kernel.array ** 2))
+        flux = dataset.counts - dataset.background_model.evaluate()
+        flux /= dataset.exposure
+        flux /= np.sum(kernel.array ** 2)
         return flux.convolve(kernel.array)
 
     @staticmethod
-    def mask_default(maps, kernel):
+    def mask_default(dataset, kernel):
         """Compute default mask where to estimate TS values.
 
         Parameters
         ----------
-        maps : dict
-            Input sky maps. Requires "background" and "exposure".
+        dataset : `~gammapy.maps.MapDataset`
+            Input dataset. Requires "background" and "exposure".
         kernel : `astropy.convolution.Kernel2D`
             Source model kernel.
 
@@ -186,22 +190,23 @@ class TSMapEstimator:
         mask : `gammapy.maps.WcsNDMap`
             Mask map.
         """
-        mask = np.zeros(maps["exposure"].data.shape, dtype=int)
+        mask = np.zeros(dataset.exposure.data.shape, dtype=int)
 
         # mask boundary
         slice_x = slice(kernel.shape[1] // 2, -kernel.shape[1] // 2 + 1)
         slice_y = slice(kernel.shape[0] // 2, -kernel.shape[0] // 2 + 1)
-        mask[slice_y, slice_x] = 1
+        mask[:,slice_y, slice_x] = 1
 
         # positions where exposure == 0 are not processed
-        mask &= maps["exposure"].data > 0
+        mask &= dataset.exposure.data > 0
 
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
         # to fail, this is a temporary fix
-        mask[maps["background"].data == 0] = 0
+        background = dataset.background_model.evaluate().data
+        mask[background == 0] = 0
 
-        return maps["exposure"].copy(data=mask.astype("int"))
+        return dataset.exposure.copy(data=mask.astype("int"))
 
     @staticmethod
     def sqrt_ts(map_ts):
@@ -232,16 +237,15 @@ class TSMapEstimator:
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return map_ts.copy(data=sqrt_ts)
 
-    def run(self, maps, kernel, which="all", downsampling_factor=None):
+    def run(self, kernel, which="all", downsampling_factor=None):
         """
         Run TS map estimation.
 
-        Requires "counts", "exposure" and "background" map to run.
+        Requires a MapDataset with counts, exposure and background_model
+        properly set to run.
 
         Parameters
         ----------
-        maps : dict
-            Input sky maps.
         kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
             Source model kernel.
         which : list of str or 'all'
@@ -257,8 +261,7 @@ class TSMapEstimator:
             Result maps.
         """
         p = self.parameters
-
-        if (np.array(kernel.shape) > np.array(maps["counts"].data.shape)).any():
+        if (np.array(kernel.shape) > np.array(self.dataset.counts.data.shape[1:])).any():
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
                 " size of the kernel"
@@ -267,7 +270,7 @@ class TSMapEstimator:
         if downsampling_factor:
             maps_downsampled = {}
 
-            shape = maps["counts"].data.shape
+            shape = self.dataset.counts.data.shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
 
             for name, map_ in maps.items():
@@ -285,23 +288,23 @@ class TSMapEstimator:
 
         result = {}
         for name in which:
-            data = np.nan * np.ones_like(maps["counts"].data)
-            result[name] = maps["counts"].copy(data=data)
+            data = np.nan * np.ones_like(self.dataset.counts.data)
+            result[name] = self.dataset.counts.copy(data=data)
 
-        mask = self.mask_default(maps, kernel)
+        mask = self.mask_default(self.dataset, kernel)
 
-        if "mask" in maps:
-            mask.data &= maps["mask"].data
+        if self.dataset.mask is not None:
+            mask.data &= self.dataset.mask.data
 
         if p["threshold"] or p["method"] == "root newton":
-            flux = self.flux_default(maps, kernel).data
+            flux = np.squeeze(self.flux_default(self.dataset, kernel).data)
         else:
             flux = None
 
         # prepare dtype for cython methods
-        counts = maps["counts"].data.astype(float)
-        background = maps["background"].data.astype(float)
-        exposure = maps["exposure"].data.astype(float)
+        counts = np.squeeze(self.dataset.counts.data.astype(float))
+        background = np.squeeze(self.dataset.background_model.evaluate().data.astype(float))
+        exposure = np.squeeze(self.dataset.exposure.data.astype(float))
 
         # Compute null statistics per pixel for the whole image
         c_0 = cash(counts, background)
@@ -326,10 +329,12 @@ class TSMapEstimator:
             rtol=p["rtol"],
         )
 
-        x, y = np.where(mask.data)
+        x, y = np.where(np.squeeze(mask.data))
         positions = list(zip(x, y))
-
         results = list(map(wrap, positions))
+
+        print(len(results))
+        print(len(positions))
 
         # Set TS values at given positions
         j, i = zip(*positions)
