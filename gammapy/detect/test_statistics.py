@@ -173,13 +173,15 @@ class TSMapEstimator:
         return flux.convolve(kernel.array)
 
     @staticmethod
-    def mask_default(counts, exposure, background, kernel):
+    def mask_default(exposure, background, kernel):
         """Compute default mask where to estimate TS values.
 
         Parameters
         ----------
-        dataset : `~gammapy.maps.MapDataset`
-            Input dataset. Requires "background" and "exposure".
+        exposure : `~gammapy.maps.Map`
+            Input exposure map.
+        background : `~gammapy.maps.Map`
+            Input background map.
         kernel : `astropy.convolution.Kernel2D`
             Source model kernel.
 
@@ -271,7 +273,7 @@ class TSMapEstimator:
         background = dataset.npred().sum_over_axes(keepdims=False)
         exposure = dataset.exposure.sum_over_axes(keepdims=False)
         if dataset.mask is not None:
-            mask = dataset.mask.sum_over_axes(keepdims=False)
+            mask = counts.copy(data=(dataset.mask.sum(axis=0)>0).astype('int'))
         else:
             mask = counts.copy(data=np.ones_like(counts).astype('int'))
 
@@ -293,7 +295,7 @@ class TSMapEstimator:
                 )
             mask.data = mask.data.astype('int')
 
-        mask.data &= self.mask_default(counts, exposure, background, kernel).data
+        mask.data &= self.mask_default(exposure, background, kernel).data
 
         if not isinstance(kernel, Kernel2D):
             kernel = CustomKernel(kernel)

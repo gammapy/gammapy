@@ -36,10 +36,20 @@ def input_dataset():
     )
     background_model = BackgroundModel(background)
 
+    # add mask
+    mask2D = np.ones_like(background2D.data).astype("bool")
+    mask2D[0:40,:] = False
+    mask = Map.from_geom(
+                background2D.geom.to_cube([energy]),
+                data=mask2D[np.newaxis,:,:],
+    )
+
+
     return MapDataset(
         counts=counts,
         exposure=exposure,
         background_model=background_model,
+        mask_safe=mask
     )
 
 
@@ -58,6 +68,8 @@ def test_compute_ts_map(input_dataset):
     assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
     assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
 
+    # Check mask is correctly taken into account
+    assert np.isnan(result["ts"].data[30,40])
 
 @requires_data()
 def test_compute_ts_map_downsampled(input_dataset):
@@ -74,6 +86,9 @@ def test_compute_ts_map_downsampled(input_dataset):
     assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
     assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
+    
+    # Check mask is correctly taken into account
+    assert np.isnan(result["ts"].data[30,40])
 
 
 @requires_data()
