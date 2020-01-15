@@ -166,7 +166,7 @@ class TSMapEstimator:
         flux_approx : `~gammapy.maps.WcsNDMap`
             Approximate flux map (2D).
         """
-        flux = dataset.counts - dataset.background_model.evaluate()
+        flux = dataset.counts - dataset.npred()
         flux = flux.sum_over_axes(keepdims=False)
         flux /= dataset.exposure.sum_over_axes(keepdims=False)
         flux /= np.sum(kernel.array ** 2)
@@ -268,7 +268,7 @@ class TSMapEstimator:
 
         # First create 2D map arrays
         counts = dataset.counts.sum_over_axes(keepdims=False)
-        background = dataset.background_model.evaluate().sum_over_axes(keepdims=False)
+        background = dataset.npred().sum_over_axes(keepdims=False)
         exposure = dataset.exposure.sum_over_axes(keepdims=False)
         if dataset.mask is not None:
             mask = dataset.mask.sum_over_axes(keepdims=False)
