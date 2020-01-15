@@ -173,7 +173,7 @@ class TSMapEstimator:
         return flux.convolve(kernel.array)
 
     @staticmethod
-    def mask_default(dataset, kernel):
+    def mask_default(counts, exposure, background, kernel):
         """Compute default mask where to estimate TS values.
 
         Parameters
@@ -188,23 +188,22 @@ class TSMapEstimator:
         mask : `gammapy.maps.WcsNDMap`
             Mask map.
         """
-        mask = np.zeros(dataset.exposure.data.shape, dtype=int)
+        mask = np.zeros(exposure.data.shape, dtype=int)
 
         # mask boundary
         slice_x = slice(kernel.shape[1] // 2, -kernel.shape[1] // 2 + 1)
         slice_y = slice(kernel.shape[0] // 2, -kernel.shape[0] // 2 + 1)
-        mask[:,slice_y, slice_x] = 1
+        mask[slice_y, slice_x] = 1
 
         # positions where exposure == 0 are not processed
-        mask &= dataset.exposure.data > 0
+        mask &= exposure.data > 0
 
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
         # to fail, this is a temporary fix
-        background = dataset.background_model.evaluate().data
         mask[background == 0] = 0
 
-        return dataset.exposure.copy(data=mask.astype("int"))
+        return exposure.copy(data=mask.astype("int"))
 
     @staticmethod
     def sqrt_ts(map_ts):
@@ -235,9 +234,6 @@ class TSMapEstimator:
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return map_ts.copy(data=sqrt_ts)
 
-    @staticmethod
-    def downsample_dataset(dataset, downsampling_factor):
-        """Downsample MapDataset."""
     def run(self, dataset, kernel, which="all", downsampling_factor=None):
         """
         Run TS map estimation.
@@ -269,19 +265,18 @@ class TSMapEstimator:
                 " size of the kernel"
             )
 
-        # First prepare the mask
-        mask = self.mask_default(dataset, kernel)
-
-        if dataset.mask is not None:
-            mask.data &= dataset.mask.data
 
         # First create 2D map arrays
         counts = dataset.counts.sum_over_axes(keepdims=False)
         background = dataset.background_model.evaluate().sum_over_axes(keepdims=False)
         exposure = dataset.exposure.sum_over_axes(keepdims=False)
+        if dataset.mask is not None:
+            mask = dataset.mask.sum_over_axes(keepdims=False)
+        else:
+            mask = counts.copy(data=np.ones_like(counts).astype('int'))
 
         if downsampling_factor:
-            shape = counts.shape
+            shape = counts.data.shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
 
             counts = counts.pad(pad_width).downsample(
@@ -293,6 +288,12 @@ class TSMapEstimator:
             exposure = exposure.pad(pad_width).downsample(
                     downsampling_factor, preserve_counts=False
                 )
+            mask = mask.pad(pad_width).downsample(
+                    downsampling_factor, preserve_counts=False
+                )
+            mask.data = mask.data.astype('int')
+
+        mask.data &= self.mask_default(counts, exposure, background, kernel).data
 
         if not isinstance(kernel, Kernel2D):
             kernel = CustomKernel(kernel)
