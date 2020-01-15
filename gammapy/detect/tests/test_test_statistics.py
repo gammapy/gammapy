@@ -86,7 +86,7 @@ def test_compute_ts_map_downsampled(input_dataset):
     assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
     assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
-    
+
     # Check mask is correctly taken into account
     assert np.isnan(result["ts"].data[30,40])
 
@@ -99,3 +99,10 @@ def test_large_kernel(input_dataset):
 
     with pytest.raises(ValueError):
         ts_estimator.run(input_dataset, kernel=kernel)
+
+def test_incorrect_method():
+    kernel = Gaussian2DKernel(10)
+    with pytest.raises(ValueError):
+        TSMapEstimator(method="bad")
+    with pytest.raises(ValueError):
+        TSMapEstimator(error_method="bad")
