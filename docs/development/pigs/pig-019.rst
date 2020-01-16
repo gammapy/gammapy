@@ -1,0 +1,134 @@
+.. include:: ../../references.txt
+
+.. _pig-019:
+
+********************************************
+PIG 19 - Gammapy package structure Follow Up
+********************************************
+
+* Author: Axel Donath, Régis Terrier
+* Created: Jan 16, 2019
+* Accepted:
+* Status:
+* Discussion:
+
+Abstract
+========
+
+Following the proposal in _`pig-016` the subpackages ``gammapy.image``
+and ``gammapy.background`` were removed and a new ``gammapy.modeling``
+sub-package was introduced. These changes followed the general idea
+of rather giving up the separation between 1D, 2D and 3D analysis
+use-cases and instead structuring the package by concept. In this
+sense ``gammapy.modeling`` now contains all models, including base
+classes (``Model``) a container classes (``SkyModels``), a registry
+object ``MODELS`` and many sub-classes.
+
+The outlook in _`pig-016` already proposed the possibility to make
+further changes to the package structure leading in the same direction.
+This PIG now proposes these changes in more detail.
+
+Proposal
+========
+
+Introduce gammapy.datasets
+--------------------------
+The ``Dataset`` abstraction is now the central data container for any
+likelihood based analysis in Gammapy. It includes a base-class (``Dataset``)
+a container class (``Datasets``) and many specific implementations
+such as the ``MapDataset``, ``SpectrumDataset`` or ``FluxPointsDataset``.
+Currently the different sub-classes are implemented in different
+sub-packages ``gammapy.cube``, ``gammapy.spectrum`` while the base and
+container class are defined in ``gammapy.modeling``, where also a
+dataset registry is defined.
+
+This scattered implementation of the sub-classes seems non-intuitive
+and leads to practical problems such as circular imports. Currently the
+dataset registry (defined in ``gammapy.modeling.serialize``) imports
+from ``gammapy.spectrum`` and ``gammapy.cube``, while the latter
+sub-modules import the ``Dataset`` base class from ``gammapy.modeling``.
+Another minor problem occurs in documentation, where there is no obvious
+place to document the concept of a dataset.
+
+For this reason we propose to introduce a ``gammapy.datasets`` sub-package
+and move the base class, the container class, the registry and existing
+implementations of sub-classes there.
+
+
+Introduce gammapy.makers
+------------------------
+In the past year we introduced a configurable and flexible ``Maker`` system
+for data reduction in gammapy, currently implemented in ``gammapy.spectrum``
+and ``gammapy.cube``. A common ``SafeMaskMaker`` is implemented in ``gammapy.cube``
+but used for spectral data reduction as well. The documentation is currently split
+between ``gammapy.cube`` and ``gammapy.spectrum`` and partly duplicated in
+multiple tutorials. While already being in use, the system is not yet fully developed.
+A common ``Maker`` base class, a container class such as ``Makers`` and a ``MAKERS``
+registry is still missing.
+
+In analogy to the datasets we propose to introduce a ``gammapy.makers`` sub-package
+as a common namespace for all data-reduction related functionality. This gives
+again an obvious place to define a common API using base classes and defining
+registry and container class as well. All existing ``Maker`` classes should
+be moved there.
+
+
+Introduce gammapy.estimators
+----------------------------
+Gammapy already defines a number of ``Estimator`` classes. In general an
+estimator can be seen as a higher level maker class, taking a dataset
+on input and computing derived outputs from it, mostly based on likelihood
+fits. Again those classes are split among multiple sub-packages, such
+as ``gammapy.spectrum``, ``gammapy.time``, ``gammapy.detect`` and ``gammapy.maps``.
+
+
+The existing estimator classes can be mainly divided into two groups;
+
+- Flux estimators such as the ``LightCurveEstimator`` and ``FluxPointsEstimator``
+where the output is a table like object.
+- Map estimators such as the ``TSMapEstimator`` or the ``ASmoothEstimator``
+where the output is a ``Map`` or dict of ``Map`` object.
+
+No clear API definition via a common base class, nor a registry for such
+makers exists. Already now there is code duplication between the
+``LightCurveEstimator`` and ``FluxPointsEstimator``, which could be
+resolved by a common ``FluxEstimator`` base class (see `GH 2555`_).
+
+For this reason we propose to introduce a ``gammapy.estimators`` sub-package
+to group all existing estimator classes into the same namespace. This
+provides the possibility in future to define a common API via base classes,
+introducing general higher-level estimators and a common configuration
+system.
+
+
+Introduce gammapy.visualisation
+-------------------------------
+To group plotting and data visualisation related functionality in a single
+namespace we propose to introduce
+
+
+Resolve gammapy.detect
+----------------------
+Once the ``TSMapEstimator``, ``LiMaMapEstimator``, ``ASmoothMapEstimator``
+and ``KernelBackgroundMapEstimator`` have been moved to ``gammapy.estimators``
+the ``gammapy.detect`` package can be resolved.
+
+Alternatives
+------------
+An alternative approach could be to introduce a ``gammapy.core``
+sub-package that contains all base-classes, container classes
+and registries.
+
+
+Outlook
+=======
+
+
+
+
+Decision
+========
+
+
+
+.. _GH 2555: https://github.com/gammapy/gammapy/issues/2555
