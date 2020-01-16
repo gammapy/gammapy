@@ -267,33 +267,32 @@ class TSMapEstimator:
                 " size of the kernel"
             )
 
-
         # First create 2D map arrays
         counts = dataset.counts.sum_over_axes(keepdims=False)
         background = dataset.npred().sum_over_axes(keepdims=False)
         exposure = dataset.exposure.sum_over_axes(keepdims=False)
         if dataset.mask is not None:
-            mask = counts.copy(data=(dataset.mask.sum(axis=0)>0).astype('int'))
+            mask = counts.copy(data=(dataset.mask.sum(axis=0) > 0).astype("int"))
         else:
-            mask = counts.copy(data=np.ones_like(counts).astype('int'))
+            mask = counts.copy(data=np.ones_like(counts).astype("int"))
 
         if downsampling_factor:
             shape = counts.data.shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
 
             counts = counts.pad(pad_width).downsample(
-                    downsampling_factor, preserve_counts=True
-                )
+                downsampling_factor, preserve_counts=True
+            )
             background = background.pad(pad_width).downsample(
-                    downsampling_factor, preserve_counts=True
-                )
+                downsampling_factor, preserve_counts=True
+            )
             exposure = exposure.pad(pad_width).downsample(
-                    downsampling_factor, preserve_counts=False
-                )
+                downsampling_factor, preserve_counts=False
+            )
             mask = mask.pad(pad_width).downsample(
-                    downsampling_factor, preserve_counts=False
-                )
-            mask.data = mask.data.astype('int')
+                downsampling_factor, preserve_counts=False
+            )
+            mask.data = mask.data.astype("int")
 
         mask.data &= self.mask_default(exposure, background, kernel).data
 

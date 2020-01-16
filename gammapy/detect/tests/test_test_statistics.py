@@ -9,47 +9,46 @@ from gammapy.cube import MapDataset
 from gammapy.utils.testing import requires_data
 from gammapy.modeling.models import BackgroundModel
 
+
 @pytest.fixture(scope="session")
 def input_dataset():
     filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz"
 
-    energy = MapAxis.from_energy_bounds("0.1 TeV","1 TeV",1)
+    energy = MapAxis.from_energy_bounds("0.1 TeV", "1 TeV", 1)
 
     counts2D = Map.read(filename, hdu="counts")
     counts = Map.from_geom(
-                counts2D.geom.to_cube([energy]),
-                data=counts2D.data[np.newaxis,:,:],
-                unit=counts2D.unit
+        counts2D.geom.to_cube([energy]),
+        data=counts2D.data[np.newaxis, :, :],
+        unit=counts2D.unit,
     )
     exposure2D = Map.read(filename, hdu="exposure")
     exposure = Map.from_geom(
-                exposure2D.geom.to_cube([energy]),
-                data=exposure2D.data[np.newaxis,:,:],
-                unit=exposure2D.unit
+        exposure2D.geom.to_cube([energy]),
+        data=exposure2D.data[np.newaxis, :, :],
+        unit=exposure2D.unit,
     )
 
     background2D = Map.read(filename, hdu="background")
     background = Map.from_geom(
-                background2D.geom.to_cube([energy]),
-                data=background2D.data[np.newaxis,:,:],
-                unit=background2D.unit
+        background2D.geom.to_cube([energy]),
+        data=background2D.data[np.newaxis, :, :],
+        unit=background2D.unit,
     )
     background_model = BackgroundModel(background)
 
     # add mask
     mask2D = np.ones_like(background2D.data).astype("bool")
-    mask2D[0:40,:] = False
+    mask2D[0:40, :] = False
     mask = Map.from_geom(
-                background2D.geom.to_cube([energy]),
-                data=mask2D[np.newaxis,:,:],
+        background2D.geom.to_cube([energy]), data=mask2D[np.newaxis, :, :],
     )
-
 
     return MapDataset(
         counts=counts,
         exposure=exposure,
         background_model=background_model,
-        mask_safe=mask
+        mask_safe=mask,
     )
 
 
@@ -69,7 +68,8 @@ def test_compute_ts_map(input_dataset):
     assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
 
     # Check mask is correctly taken into account
-    assert np.isnan(result["ts"].data[30,40])
+    assert np.isnan(result["ts"].data[30, 40])
+
 
 @requires_data()
 def test_compute_ts_map_downsampled(input_dataset):
@@ -88,7 +88,7 @@ def test_compute_ts_map_downsampled(input_dataset):
     assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
 
     # Check mask is correctly taken into account
-    assert np.isnan(result["ts"].data[30,40])
+    assert np.isnan(result["ts"].data[30, 40])
 
 
 @requires_data()
@@ -100,8 +100,8 @@ def test_large_kernel(input_dataset):
     with pytest.raises(ValueError):
         ts_estimator.run(input_dataset, kernel=kernel)
 
+
 def test_incorrect_method():
-    kernel = Gaussian2DKernel(10)
     with pytest.raises(ValueError):
         TSMapEstimator(method="bad")
     with pytest.raises(ValueError):
