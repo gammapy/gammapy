@@ -3,7 +3,7 @@
 .. _pig-019:
 
 ********************************************
-PIG 19 - Gammapy package structure Follow Up
+PIG 19 - Gammapy package structure follow up
 ********************************************
 
 * Author: Axel Donath, Régis Terrier
@@ -15,18 +15,24 @@ PIG 19 - Gammapy package structure Follow Up
 Abstract
 ========
 
-Following the proposal in _`pig-016` the subpackages ``gammapy.image``
+Following the proposal in :ref:`pig-016` the subpackages ``gammapy.image``
 and ``gammapy.background`` were removed and a new ``gammapy.modeling``
 sub-package was introduced. These changes followed the general idea
 of rather giving up the separation between 1D, 2D and 3D analysis
 use-cases and instead structuring the package by concept. In this
 sense ``gammapy.modeling`` now contains all models, including base
 classes (``Model``) a container classes (``SkyModels``), a registry
-object ``MODELS`` and many sub-classes.
+object ``MODELS`` and many sub-classes. A previous step in this
+direction was made by introducing the ``gammapy.maps`` sub-package
+which resovled the distinction between the 2D and 3D data structures
+and replaced it with a general ND map structure. The outlook in :ref:`pig-016`
+already proposed the possibility to make further changes to the package
+structure leading in the same direction. This PIG now proposes these
+changes in more detail, especially introducing new ``gammapy.datasets``,
+``gammapy.makers`` and (``gammapy.estimators``?) sub-packages.
 
-The outlook in _`pig-016` already proposed the possibility to make
-further changes to the package structure leading in the same direction.
-This PIG now proposes these changes in more detail.
+This package structure is also used for the established modeling and
+fitting package `sherpa`_.
 
 Proposal
 ========
@@ -51,8 +57,8 @@ Another minor problem occurs in documentation, where there is no obvious
 place to document the concept of a dataset.
 
 For this reason we propose to introduce a ``gammapy.datasets`` sub-package
-and move the base class, the container class, the registry and existing
-implementations of sub-classes there.
+and move the base class, the container class, the registry, existing
+implementations of sub-classes and I/O related functionality there.
 
 
 Introduce gammapy.makers
@@ -70,11 +76,13 @@ In analogy to the datasets we propose to introduce a ``gammapy.makers`` sub-pack
 as a common namespace for all data-reduction related functionality. This gives
 again an obvious place to define a common API using base classes and defining
 registry and container class as well. All existing ``Maker`` classes should
-be moved there.
+be moved there. Later a common base class, a registry and a container class
+as well as common configuration and serialisation handling can be moved there.
 
 
-Introduce gammapy.estimators
-----------------------------
+
+Introduce gammapy.estimators?
+-----------------------------
 Gammapy already defines a number of ``Estimator`` classes. In general an
 estimator can be seen as a higher level maker class, taking a dataset
 on input and computing derived outputs from it, mostly based on likelihood
@@ -85,9 +93,10 @@ as ``gammapy.spectrum``, ``gammapy.time``, ``gammapy.detect`` and ``gammapy.maps
 The existing estimator classes can be mainly divided into two groups;
 
 - Flux estimators such as the ``LightCurveEstimator`` and ``FluxPointsEstimator``
-where the output is a table like object.
+  where the output is a table like object.
+
 - Map estimators such as the ``TSMapEstimator`` or the ``ASmoothEstimator``
-where the output is a ``Map`` or dict of ``Map`` object.
+  where the output is a ``Map`` or dict of ``Map`` object.
 
 No clear API definition via a common base class, nor a registry for such
 makers exists. Already now there is code duplication between the
@@ -104,20 +113,37 @@ system.
 Introduce gammapy.visualisation
 -------------------------------
 To group plotting and data visualisation related functionality in a single
-namespace we propose to introduce
+namespace we propose to introduce ``gammapy.visualisation``. The model of
+a separate sub-package for plotting was adopted by many other large
+astronomical python packages, such as `astropy`_, `sunpy`_, `ctapipe`_
+and `sherpa`_. So far the plotting functionality in Gammapy is limited
+and mostly attached to data objects such as datasets, maps and irfs.
+Introducing ``gammapy.visualisation`` would be a possibility to
+maintain plotting related code independently and move existing functionality
+such as ``MapPanelPlotter`` or ``colormap_hess`` etc. to a common namespace.
 
 
-Resolve gammapy.detect
-----------------------
-Once the ``TSMapEstimator``, ``LiMaMapEstimator``, ``ASmoothMapEstimator``
-and ``KernelBackgroundMapEstimator`` have been moved to ``gammapy.estimators``
-the ``gammapy.detect`` package can be resolved.
+Resolve gammapy.detect?
+-----------------------
+If we introduce ``gammapy.estimators`` and the  ``TSMapEstimator``,
+``LiMaMapEstimator``, ``ASmoothMapEstimator`` and ``KernelBackgroundMapEstimator``
+have been moved the ``gammapy.detect`` package can be resolved.
+
+
+Minor changes
+-------------
+Where to move ``PSFKernel`` and ``EDispKernel``, ``EDispMap`` and
+``PSFMap``?
+
 
 Alternatives
 ------------
 An alternative approach could be to introduce a ``gammapy.core``
 sub-package that contains all base-classes, container classes
 and registries.
+
+Introduce a ``subpackage/plotting.py`` file, where plotting related
+functionality lives.
 
 
 Outlook
@@ -132,3 +158,7 @@ Decision
 
 
 .. _GH 2555: https://github.com/gammapy/gammapy/issues/2555
+.. _ctapipe: https://github.com/cta-observatory/ctapipe
+.. _sherpa: https://github.com/sherpa/sherpa
+.. _astropy: https://github.com/astropy/astropy
+.. _sunpy: https://github.com/sunpy/sunpy
