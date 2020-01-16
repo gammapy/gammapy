@@ -1,28 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from gammapy.maps import ImageProfile, ImageProfileEstimator, WcsGeom, WcsNDMap
-from gammapy.maps.profile import compute_binning
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_dependency,
 )
-
-
-@requires_dependency("pandas")
-def test_compute_binning():
-    data = [1, 3, 2, 2, 4]
-    bin_edges = compute_binning(data, n_bins=3, method="equal width")
-    assert_allclose(bin_edges, [1, 2, 3, 4])
-
-    bin_edges = compute_binning(data, n_bins=3, method="equal entries")
-    # TODO: create test-cases that have been verified by hand here!
-    assert_allclose(bin_edges, [1, 2, 2.66666667, 4])
 
 
 @pytest.fixture(scope="session")

@@ -10,47 +10,6 @@ from astropy.table import Table
 __all__ = ["ImageProfile", "ImageProfileEstimator"]
 
 
-def compute_binning(data, n_bins, method="equal width", eps=1e-10):
-    """Computes 1D array of bin edges.
-
-    The range of the bin_edges is always [min(data), max(data)]
-
-    Note that bin_edges has n_bins bins, i.e. length n_bins + 1.
-
-    Parameters
-    ----------
-    data : array_like
-        Data to be binned (any dimension)
-    n_bins : int
-        Number of bins
-    method : str
-        One of: 'equal width', 'equal entries'
-    eps : float
-        added to range so that the max data point is inside the
-        last bin. If eps=0 it falls on the right edge of the last
-        data point and thus would be not contained.
-
-    Returns
-    -------
-    bin_edges : 1D ndarray
-        Array of bin edges.
-    """
-    data = np.asanyarray(data)
-
-    if method == "equal width":
-        bin_edges = np.linspace(np.nanmin(data), np.nanmax(data), n_bins + 1)
-    elif method == "equal entries":
-        # We use np.percentile to achieve equal number of entries per bin
-        # It takes a list of quantiles in the range [0, 100] as input
-        quantiles = list(np.linspace(0, 100, n_bins + 1))
-        bin_edges = np.percentile(data, quantiles)
-    else:
-        raise ValueError(f"Invalid method: {method!r}")
-
-    bin_edges[-1] += eps
-    return bin_edges
-
-
 # TODO: implement measuring profile along arbitrary directions
 # TODO: think better about error handling. e.g. MC based methods
 class ImageProfileEstimator:
