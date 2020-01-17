@@ -1,63 +1,28 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from astropy.units import Quantity
 from .interpolation import LogScale
 
-__all__ = ["integrate_spectrum"]
+__all__ = ["evaluate_integral_pwl", "trapz_loglog"]
 
 
-def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
-    """Integrate 1d function using the log-log trapezoidal rule.
+def evaluate_integral_pwl(emin, emax, index, amplitude, reference):
+    """Evaluate pwl integral (static function)."""
+    val = -1 * index + 1
 
-    If scalar values for xmin and xmax are passed an oversampled grid is generated using the
-    ``ndecade`` keyword argument. If xmin and xmax arrays are passed, no
-    oversampling is performed and the integral is computed in the provided
-    grid.
+    prefactor = amplitude * reference / val
+    upper = np.power((emax / reference), val)
+    lower = np.power((emin / reference), val)
+    integral = prefactor * (upper - lower)
 
-    Parameters
-    ----------
-    func : callable
-        Function to integrate.
-    xmin : `~astropy.units.Quantity` or array-like
-        Integration range minimum
-    xmax : `~astropy.units.Quantity` or array-like
-        Integration range minimum
-    ndecade : int, optional
-        Number of grid points per decade used for the integration.
-        Default : 100.
-    intervals : bool, optional
-        Return integrals in the grid not the sum, default: False
-    """
-    is_quantity = False
-    if isinstance(xmin, Quantity):
-        unit = xmin.unit
-        xmin = xmin.value
-        xmax = xmax.to_value(unit)
-        is_quantity = True
+    mask = np.isclose(val, 0)
 
-    if np.isscalar(xmin):
-        logmin = np.log10(xmin)
-        logmax = np.log10(xmax)
-        n = int((logmax - logmin) * ndecade)
-        x = np.logspace(logmin, logmax, n)
-    else:
-        x = np.append(xmin, xmax[-1])
+    if mask.any():
+        integral[mask] = (amplitude * reference * np.log(emax / emin))[mask]
 
-    if is_quantity:
-        x = x * unit
-
-    y = func(x)
-
-    val = _trapz_loglog(y, x, intervals=intervals)
-
-    return val
+    return integral
 
 
-# This function is copied over from https://github.com/zblz/naima/blob/master/naima/utils.py#L261
-# and slightly modified to allow use with the uncertainties package
-
-
-def _trapz_loglog(y, x, axis=-1, intervals=False):
+def trapz_loglog(y, x, axis=-1):
     """Integrate using the composite trapezoidal rule in log-log space.
 
     Integrate `y` (`x`) along given axis in loglog space.
@@ -70,16 +35,12 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
         Independent variable to integrate over.
     axis : int, optional
         Specify the axis.
-    intervals : bool, optional
-        Return array of shape x not the total integral, default: False
 
     Returns
     -------
     trapz : float
         Definite integral as approximated by trapezoidal rule in loglog space.
     """
-    from gammapy.modeling.models import PowerLawSpectralModel
-
     # see https://stackoverflow.com/a/56840428
     x, y = np.moveaxis(x, axis, 0), np.moveaxis(y, axis, 0)
 
@@ -91,15 +52,10 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
     index = -log(vals_emin / vals_emax) / log(emin / emax)
     index[np.isnan(index)] = np.inf
 
-    integral = PowerLawSpectralModel.evaluate_integral(
+    return evaluate_integral_pwl(
         emin=emin,
         emax=emax,
         index=index,
         reference=emin,
         amplitude=vals_emin
     )
-
-    if intervals:
-        return integral
-
-    return integral.sum(axis=axis)

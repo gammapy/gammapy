@@ -245,19 +245,19 @@ def test_models(spectrum):
     model = spectrum["model"]
     energy = 2 * u.TeV
     value = model(energy)
-    assert_quantity_allclose(value, spectrum["val_at_2TeV"])
+    assert_quantity_allclose(value, spectrum["val_at_2TeV"], rtol=1e-7)
     if "val_at_3TeV" in spectrum:
         energy = 3 * u.TeV
         value = model(energy)
-        assert_quantity_allclose(value, spectrum["val_at_3TeV"])
+        assert_quantity_allclose(value, spectrum["val_at_3TeV"], rtol=1e-7)
 
     emin = 1 * u.TeV
     emax = 10 * u.TeV
     assert_quantity_allclose(
-        model.integral(emin=emin, emax=emax), spectrum["integral_1_10TeV"]
+        model.integral(emin=emin, emax=emax), spectrum["integral_1_10TeV"], rtol=1e-5
     )
     assert_quantity_allclose(
-        model.energy_flux(emin=emin, emax=emax), spectrum["eflux_1_10TeV"]
+        model.energy_flux(emin=emin, emax=emax), spectrum["eflux_1_10TeV"], rtol=1e-5
     )
 
     if "e_peak" in spectrum:
