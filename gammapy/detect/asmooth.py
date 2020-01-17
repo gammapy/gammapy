@@ -114,18 +114,23 @@ class ASmooth:
         pixel_scale = counts.geom.pixel_scales.mean()
         kernels = self.kernels(pixel_scale)
 
+        # Check dimensionality
+        counts_map = counts.sum_over_axes(keepdims=False)
+
         cubes = {}
-        cubes["counts"] = scale_cube(counts.data, kernels)
+        cubes["counts"] = scale_cube(counts_map.data, kernels)
 
         if background is not None:
-            cubes["background"] = scale_cube(background.data, kernels)
+            background_map = background.sum_over_axes(keepdims=False)
+            cubes["background"] = scale_cube(background_map.data, kernels)
         else:
             # TODO: Estimate background with asmooth method
             raise ValueError("Background estimation required.")
 
         if exposure is not None:
-            flux = (counts.data - background.data) / exposure.data
-            cubes["flux"] = scale_cube(flux, kernels)
+            exposure_map = exposure.sum_over_axes(keepdims=False)
+            flux = (counts_map - background_map) / exposure_map
+            cubes["flux"] = scale_cube(flux.data, kernels)
 
         cubes["significance"] = self._significance_cube(
             cubes, method=self.parameters["method"]
@@ -141,14 +146,16 @@ class ASmooth:
             # set remaining pixels with significance < threshold to mean value
             if key in ["counts", "background"]:
                 mask = np.isnan(data)
-                data[mask] = np.mean(locals()[key].data[mask])
-            result[key] = WcsNDMap(counts.geom, data)
+                data[mask] = np.mean(locals()[key + "_map"].data[mask])
+                result[key] = WcsNDMap(counts_map.geom, data, unit=counts_map.unit)
+            elif key == "scale":
+                result[key] = WcsNDMap(counts_map.geom, data, unit="deg")
 
         if exposure is not None:
             data = smoothed["flux"]
             mask = np.isnan(data)
-            data[mask] = np.mean(flux[mask])
-            result["flux"] = WcsNDMap(counts.geom, data)
+            data[mask] = np.mean(flux.data[mask])
+            result["flux"] = WcsNDMap(counts_map.geom, data, unit=flux.unit)
 
         return result
 
