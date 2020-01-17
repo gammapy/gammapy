@@ -205,7 +205,7 @@ class TSMapEstimator:
         # to fail, this is a temporary fix
         mask[background == 0] = 0
 
-        return exposure.copy(data=mask.astype("int"))
+        return exposure.copy(data=mask.astype("int"), unit='')
 
     @staticmethod
     def sqrt_ts(map_ts):
@@ -307,8 +307,10 @@ class TSMapEstimator:
             data = np.nan * np.ones_like(counts.data)
             result[name] = counts.copy(data=data)
 
+        flux_map = self.flux_default(dataset, kernel)
+
         if p["threshold"] or p["method"] == "root newton":
-            flux = self.flux_default(dataset, kernel).data
+            flux = flux_map.data
         else:
             flux = None
 
@@ -366,6 +368,14 @@ class TSMapEstimator:
                     factor=downsampling_factor, preserve_counts=False, order=order
                 )
                 result[name] = result[name].crop(crop_width=pad_width)
+
+        # Set correct units
+        if "flux" in which:
+            result["flux"].unit = flux_map.unit
+        if "flux_err" in which:
+            result["flux_err"].unit = flux_map.unit
+        if "flux_ul" in which:
+            result["flux_ul"].unit = flux_map.unit
 
         return result
 
