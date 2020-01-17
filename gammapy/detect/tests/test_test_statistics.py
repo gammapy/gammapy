@@ -27,7 +27,7 @@ def input_dataset():
     exposure = Map.from_geom(
         exposure2D.geom.to_cube([energy]),
         data=exposure2D.data[np.newaxis, :, :],
-        unit="cm2s",   # no unit in header?
+        unit="cm2s",  # no unit in header?
     )
 
     background2D = Map.read(filename, hdu="background")
@@ -64,6 +64,29 @@ def test_compute_ts_map(input_dataset):
     assert "leastsq iter" in repr(ts_estimator)
     assert_allclose(result["ts"].data[99, 99], 1714.23, rtol=1e-2)
     assert_allclose(result["niter"].data[99, 99], 3)
+    assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
+
+    assert result["flux"].unit == u.Unit("cm-2s-1")
+    assert result["flux_err"].unit == u.Unit("cm-2s-1")
+    assert result["flux_ul"].unit == u.Unit("cm-2s-1")
+
+    # Check mask is correctly taken into account
+    assert np.isnan(result["ts"].data[30, 40])
+
+
+@requires_data()
+def test_compute_ts_map_newton(input_dataset):
+    """Minimal test of compute_ts_image"""
+    kernel = Gaussian2DKernel(5)
+
+    ts_estimator = TSMapEstimator(method="root newton", threshold=1)
+    result = ts_estimator.run(input_dataset, kernel=kernel)
+
+    assert "root newton" in repr(ts_estimator)
+    assert_allclose(result["ts"].data[99, 99], 1714.23, rtol=1e-2)
+    assert_allclose(result["niter"].data[99, 99], 0)
     assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
     assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
