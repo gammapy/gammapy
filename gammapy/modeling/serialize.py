@@ -41,7 +41,7 @@ def _update_link_reference(models):
             elif param not in params_shared:
                 params_shared.append(param)
     for k, param in enumerate(params_shared):
-        param.linkage = param.name + "@shared_" + str(k)
+        param._link_label_io = param.name + "@shared_" + str(k)
 
 
 def dict_to_models(data, link=True):
@@ -78,10 +78,10 @@ def _link_shared_parameters(models):
     for model in models:
         for param in model.parameters:
             name = param.name
-            linkage = param.linkage
-            if linkage != "":
-                if linkage in shared_register:
-                    new_param = shared_register[linkage]
+            link_label = param._link_label_io
+            if link_label is not None:
+                if link_label in shared_register:
+                    new_param = shared_register[link_label]
                     model.parameters.link(name, new_param)
                     if isinstance(model, SkyModel):
                         spatial_params = model.spatial_model.parameters
@@ -91,7 +91,7 @@ def _link_shared_parameters(models):
                         elif name in spectral_params.names:
                             spectral_params.link(name, new_param)
                 else:
-                    shared_register[linkage] = param
+                    shared_register[link_label] = param
 
 
 def datasets_to_dict(datasets, path, prefix, overwrite):

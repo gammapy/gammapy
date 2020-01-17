@@ -67,18 +67,10 @@ class Parameter:
     """
 
     def __init__(
-        self,
-        name,
-        factor,
-        unit="",
-        scale=1,
-        min=np.nan,
-        max=np.nan,
-        frozen=False,
-        linkage="",
+        self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False
     ):
         self.name = name
-        self.linkage = linkage
+        self._link_label_io = None
         self.scale = scale
 
         # TODO: move this to a setter method that can be called from `__set__` also!
@@ -217,8 +209,7 @@ class Parameter:
         return (
             f"{self.__class__.__name__}(name={self.name!r}, value={self.value!r}, "
             f"factor={self.factor!r}, scale={self.scale!r}, unit={self.unit!r}, "
-            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r}, "
-            f"linkage={self.linkage!r}, id={hex(id(self))})"
+            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r}, id={hex(id(self))})"
         )
 
     def copy(self):
@@ -227,15 +218,17 @@ class Parameter:
 
     def to_dict(self):
         """Convert to dict."""
-        return {
+        output = {
             "name": self.name,
             "value": self.value,
             "unit": self.unit.to_string("fits"),
             "min": self.min,
             "max": self.max,
             "frozen": self.frozen,
-            "linkage": self.linkage,
         }
+        if self._link_label_io is not None:
+            output["link"] = self._link_label_io
+        return output
 
     def autoscale(self, method="scale10"):
         """Autoscale the parameters.
@@ -460,7 +453,6 @@ class Parameters(collections.abc.Sequence):
                 min=float(par.get("min", np.nan)),
                 max=float(par.get("max", np.nan)),
                 frozen=par.get("frozen", False),
-                linkage=par.get("linkage", ""),
             )
             parameters.append(parameter)
 
@@ -479,7 +471,7 @@ class Parameters(collections.abc.Sequence):
             parameter.min = float(par.get("min", parameter.min))
             parameter.max = float(par.get("max", parameter.max))
             parameter.frozen = par.get("frozen", parameter.frozen)
-            parameter.linkage = par.get("linkage", parameter.linkage)
+            parameter._link_label_io = par.get("link", parameter._link_label_io)
 
         if "covariance" in data:
             self.covariance = np.array(data["covariance"])
