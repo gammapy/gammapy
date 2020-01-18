@@ -3,8 +3,8 @@
 IRF Theory
 ==========
 
-Modeling expected number of detected events
--------------------------------------------
+Modeling the expected number of detected events
+-----------------------------------------------
 
 To model the expected number of events a gamma-ray source should produce on a detector
 one has to model its effect using an instrument responce function (IRF). In general,
@@ -39,12 +39,11 @@ be simplified as the product of three independent functions:
 where:
 
 * :math:`A_{eff}(p, E)` is the effective collection area of the detector  (unit: :math:`m^2`). It is the product
-of the detector collection area times its detection efficiency at true energy :math:`E` and position :math`p`.
-* :math:`PSF(p_{rec}|p, E)` is the point spread function (unit: :math:`sr^{-1}`). It gives the probability
-of measuring position :math:`p_{rec}` when the true position is :math:`p` as a function of true energy :math:`E`.
+  of the detector collection area times its detection efficiency at true energy :math:`E` and position :math:`p`.
+* :math:`PSF(p_{rec}|p, E)` is the point spread function (unit: :math:`sr^{-1}`). It gives the probability of
+  measuring position :math:`p_{rec}` when the true position is :math:`p` as a function of true energy :math:`E`.
 * :math:`Edisp(E_{rec}|p, E)` is the energy dispersion (unit: :math:`TeV^{-1}`). It gives the probability to
-reconstruct the photon at energy :math:`E_{rec}` when the true energy is :math:`E` as a function of position
-:math:`p`.
+  reconstruct the photon at energy :math:`E_{rec}` when the true energy is :math:`E` as a function of position :math:`p`.
 
 The implicit assumption here is that energy dispersion and PSF are completely independent. This is not totally
 valid in some situations.
