@@ -75,6 +75,7 @@ sub-pages:
     theory
     aeff
     edisp
+    psf
 
 Reference/API
 =============
