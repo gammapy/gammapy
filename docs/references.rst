@@ -10,17 +10,52 @@ Glossary and references
 Glossary
 --------
 
+.. [1D_analysis] or spectral analysis where data are reduced to a simple 1D geometry along the reconstructed
+ energy axis. In Cherenkov astronomy, this is classically performed with a OFF background measurement.
+
+.. [3D_analysis] or cube analysis, where data are reduced to a 3D cube with spatial coordinates and energy
+ axes. In gammapy, these cube are represented by `Map` objects (see :ref:`maps`) and contained in a `MapDataset`
+ object.
+
+.. [aeff] is short for effective area, the IRF representing the detector collection area. See :ref:`irf-aeff`.
+
 .. [cash] The cash statistic is a Poisson fit statistic usually used when signal and background
  can be modeled. It is defined as :math:`2 \times log(L)` See :ref:`cash`
  in :ref:`fit statistics <fit-statistics>`.
 
 .. [dataset] dataset
 
+.. [edisp] is short for energy dispersion, the IRF that represents the probability of measuring a
+ given reconstructed energy as a function of the true photon energy. See :ref:`irf-edisp`
+
+.. [GTI] Good Time Interval: an continuous time interval of data acquisition. In CTA, they also represent
+ time intervals where the IRFs are supposed to be constant.
+
+.. [IRF] short for Instrument Response Function. They are used to model the probability to detect a photon with
+ a number of measured characteristics. See :ref:`irf-theory` and :ref:`irf` in :ref:`gammapy.irf`.
+
+.. [joint_analysis] In a joint analysis individual observations are reduced to datasets and are modeled
+ all together to extract physical informations through model fitting. This is opposed to stacked analysis.
+
 .. [MET] mission elapsed time; see also :ref:`MET_definition` in :ref:`time_handling`.
+
+.. [reco_energy] The reconstructed (or measured) energy (often written `e_reco`) is the energy of the measured
+ photon by contrast with its actual true energy. Measured quantities such as counts are represented along a
+ reco energy axis.
 
 .. [ReflectedBackground]
 
 .. [RingBackground]
+
+.. [stacked_analysis] in a stacked analysis individual observations are reduced to datasets which are then
+ stacked to produce a single reduced dataset. The latter is then used to obtain physical information through
+ model fitting. Some approximations must be made to perform dataset stacking (e.g. loss of individual
+ background normalization, averaging of instrument responses, loss of information outside region of interest
+ etc), but this can reduce very significantly the computing and memory cost.
+
+.. [True_energy] The true energy (often written `e_true`) is the energy of the incident photon by
+ contrast with the energy reconstructed by the instrument. Instrument response functions are represented
+ along a true energy axis.
 
 .. [wstat] The WSTAT is a Poisson fit statistic usually used for ON-OFF analysis. It is based on the
  profile likelihood method where the unknown background parameters are marginalized. See :ref:`wstat`
