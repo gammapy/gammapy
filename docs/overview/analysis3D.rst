@@ -1,4 +1,6 @@
-.. _analysis_3D:
+.. include:: ../references.txt
+
+.. _overview_analysis_3D:
 
 3D analysis in VHE astronomy
 ============================

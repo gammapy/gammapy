@@ -1,13 +1,13 @@
+.. include:: ../references.txt
+
 .. _overview_DL3:
 
 The Data Level 3 (DL3) format
 =============================
 
-The data level 3  FITS files consisting of event lists,
-instrument response information (effective area, point spread function, energy
-dispersion, background) and extra information concerning the observation
+The data level 3 FITS files consisting of event lists and extra information concerning the observation
 (pointing direction, time), as well as two index tables that list the
-observations and declare which response should be used with which event data
+observations and declare which response should be used with which event data.
 
 Data levels in CTA
 ------------------
@@ -24,10 +24,14 @@ Add a figure here.
 Instrument response functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Note: the current IACT DL3 data model
-and format is a prototype (documented at `gadf`_), in the coming years CTA will
-develop and define it's release data format, and Gammapy and other IACTs will
-adapt to that.
+For each observation, instrument response functions (namely effective area, point spread function, energy
+dispersion, background) are distributed. Some details about the origin of these functions are given
+in :ref:`irf_theory`. The functions are stored in the form of multidimensional tables giving the IRF
+value as a function of position in the field-of-view and energy of the incident photon.
+
+The formats used are discussed and described in `gadf`_. This format is still a prototype. In the coming
+years CTA will develop and define it's release data format, and Gammapy  will adapt to that.
+
 
 Application in gammapy
 ----------------------
@@ -45,12 +49,12 @@ A convenient way to do this is to use the high level interface, see :ref:`gammap
 Example notebooks
 ^^^^^^^^^^^^^^^^^
 
-* CTA DL3 handling <notebooks/cta.html>`__
-* HESS Data Release 1 handling <notebooks/hess.html>`__
+* `CTA DL3 handling <../notebooks/cta.html>`__
+* `HESS Data Release 1 handling <../notebooks/hess.html>`__
 
 Relevant API
 ^^^^^^^^^^^^
 
-* :ref:`gammapy.data<data API documentation>`
-* :ref:`gammapy.irf <irf API documentation>`
+* :ref:`gammapy.data API documentation<data>`
+* :ref:`gammapy.irf API documentation<irf>`
 
