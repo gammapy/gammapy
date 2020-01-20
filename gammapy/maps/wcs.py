@@ -1023,7 +1023,9 @@ class WcsGeom(Geom):
                 return False
 
         # check WCS consistency with a priori tolerance of 1e-6
-        return self.wcs.wcs.compare(other.wcs.wcs, tolerance=1e-6)
+        # cmp=1 parameter ensures no comparison with ancillary information
+        # see https://github.com/astropy/astropy/pull/4522/files
+        return self.wcs.wcs.compare(other.wcs.wcs, cmp=1, tolerance=1e-6)
 
     def __ne__(self, other):
         return not self.__eq__(other)
