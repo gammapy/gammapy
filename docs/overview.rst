@@ -88,16 +88,7 @@ dispersion, background) and extra information concerning the observation
 (pointing direction, time), as well as two index tables that list the
 observations and declare which response should be used with which event data.
 
-The main classes in Gammapy to access that DL3 data are the
-`~gammapy.data.DataStore`, `~gammapy.data.DataStoreObservation`,
-`~gammapy.data.Observations`, `~gammapy.data.EventList` and various other
-classes. To learn how to work with this data, and how to reduce it to the
-datasets level, see :ref:`gammapy.analysis <analysis>`, :ref:`gammapy.data
-<data>`, :ref:`gammapy.irf <irf>`, :ref:`gammapy.cube <cube>`,
-:ref:`gammapy.spectrum <spectrum>`. Note that the current IACT DL3 data model
-and format is a prototype (documented at `gadf`_), in the coming years CTA will
-develop and define it's release data format, and Gammapy and other IACTs will
-adapt to that.
+
 
 There are many data reduction options, but the main ones are whether to do a 3D
 cube analysis or a 1D spectral analysis, and whether to keep individual
