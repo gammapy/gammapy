@@ -1120,7 +1120,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             "name": self.name,
             "type": self.tag,
             "models": models,
-            "likelihood": self.stat_type,
             "filename": filename,
         }
 

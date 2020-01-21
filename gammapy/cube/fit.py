@@ -784,9 +784,6 @@ class MapDataset(Dataset):
 
         models_list = [model for model in models if model.name in model_names]
         dataset.models = SkyModels(models_list)
-        if "likelihood" in data:
-            dataset.stat_type = data["likelihood"]
-
         return dataset
 
     def to_dict(self, filename=""):
@@ -799,7 +796,6 @@ class MapDataset(Dataset):
         return {
             "name": self.name,
             "type": self.tag,
-            "likelihood": self.stat_type,
             "models": models,
             "background": self.background_model.name,
             "filename": str(filename),
