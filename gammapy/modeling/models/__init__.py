@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Built-in models in Gammapy."""
+from .core import *
 from .cube import *
 from .spatial import *
 from .spectral import *

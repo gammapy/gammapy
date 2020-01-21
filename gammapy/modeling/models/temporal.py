@@ -6,10 +6,11 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
-from gammapy.modeling import Model, Parameter
+from gammapy.modeling import Parameter
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
+from .core import Model
 
 
 # TODO: make this a small ABC to define a uniform interface.

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import astropy.units as u
-from .parameter import Parameter, Parameters
+from gammapy.modeling import Parameter, Parameters
 
 __all__ = ["Model"]
 
@@ -97,7 +97,7 @@ class Model:
         >>> type(spectral_model)
         gammapy.modeling.models.spectral.PowerLaw2SpectralModel
         """
-        from .models import MODELS
+        from . import MODELS
 
         cls = MODELS.get_cls(tag)
         return cls(*args, **kwargs)

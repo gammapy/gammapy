@@ -7,8 +7,9 @@ import numpy as np
 import astropy.units as u
 import yaml
 from gammapy.maps import Map
-from gammapy.modeling import Model, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
+from gammapy.modeling import Parameter, Parameters
+from .core import Model
 
 
 class SkyModelBase(Model):

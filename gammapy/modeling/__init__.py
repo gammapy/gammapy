@@ -2,6 +2,6 @@
 """Models and fitting."""
 from .datasets import *
 from .fit import *
-from .model import *
 from .parameter import *
 from .sampling import *
+from .models.core import *
