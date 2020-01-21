@@ -9,7 +9,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     ScaleSpectralModel,
     SkyModel,
-    SkyModels,
+    Models,
 )
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_name, make_path
@@ -1149,7 +1149,7 @@ class FluxPointsDataset(Dataset):
 
     Parameters
     ----------
-    models : `~gammapy.modeling.models.SkyModels`
+    models : `~gammapy.modeling.models.Models`
         Models (only spectral part needs to be set)
     data : `~gammapy.spectrum.FluxPoints`
         Flux points.
@@ -1207,7 +1207,7 @@ class FluxPointsDataset(Dataset):
     @models.setter
     def models(self, value):
         if value is not None:
-            self._models = SkyModels(value)
+            self._models = Models(value)
         else:
             self._models = None
 

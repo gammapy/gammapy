@@ -14,7 +14,7 @@ from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
-from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
+from gammapy.modeling.models import BackgroundModel, SkyModel, Models
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.spectrum import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.stats import cash, cash_sum_cython, wstat
@@ -43,7 +43,7 @@ class MapDataset(Dataset):
 
     Parameters
     ----------
-    models : `~gammapy.modeling.models.SkyModels`
+    models : `~gammapy.modeling.models.Models`
         Source sky models.
     counts : `~gammapy.maps.WcsNDMap`
         Counts cube
@@ -217,13 +217,13 @@ class MapDataset(Dataset):
 
     @property
     def models(self):
-        """Models (`~gammapy.modeling.models.SkyModels`)."""
+        """Models (`~gammapy.modeling.models.Models`)."""
         return self._models
 
     @models.setter
     def models(self, value):
         if value is not None:
-            self._models = SkyModels(value)
+            self._models = Models(value)
         else:
             self._models = None
 
@@ -789,7 +789,7 @@ class MapDataset(Dataset):
                     dataset.background_model = background_model
 
         models_list = [model for model in models if model.name in model_names]
-        dataset.models = SkyModels(models_list)
+        dataset.models = Models(models_list)
         return dataset
 
     def to_dict(self, filename=""):
@@ -992,7 +992,7 @@ class MapDatasetOnOff(MapDataset):
 
     Parameters
     ----------
-    models : `~gammapy.modeling.models.SkyModels`
+    models : `~gammapy.modeling.models.Models`
         Source sky models.
     counts : `~gammapy.maps.WcsNDMap`
         Counts cube

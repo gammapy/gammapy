@@ -75,7 +75,7 @@ __all__ = [
     "TEMPORAL_MODELS",
     "SPECTRAL_MODELS",
     "SkyModelBase",
-    "SkyModels",
+    "Models",
     "SkyModel",
     "SkyDiffuseCube",
     "BackgroundModel",

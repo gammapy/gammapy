@@ -8,17 +8,17 @@ from gammapy.maps import Map
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.scripts import make_path
-from .core import Model, SkyModels
+from .core import Model, Models
 
 
 class SkyModelBase(Model):
     """Sky model base class"""
 
     def __add__(self, other):
-        if isinstance(other, (SkyModels, list)):
-            return SkyModels([self, *other])
+        if isinstance(other, (Models, list)):
+            return Models([self, *other])
         elif isinstance(other, (SkyModel, SkyDiffuseCube)):
-            return SkyModels([self, other])
+            return Models([self, other])
         else:
             raise TypeError(f"Invalid type: {other!r}")
 

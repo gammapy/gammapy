@@ -7,7 +7,7 @@ import astropy.units as u
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.scripts import make_path
 
-__all__ = ["Model", "SkyModels"]
+__all__ = ["Model", "Models"]
 
 
 class Model:
@@ -107,24 +107,23 @@ class Model:
         return cls(*args, **kwargs)
 
 
-class SkyModels(collections.abc.Sequence):
+class Models(collections.abc.Sequence):
     """Sky model collection.
 
     Parameters
     ----------
-    skymodels : `SkyModel`, list of `SkyModel` or `SkyModels`
+    models : `SkyModel`, list of `SkyModel` or `Models`
         Sky models
     """
-
-    def __init__(self, skymodels):
-        if isinstance(skymodels, SkyModels):
-            models = skymodels._skymodels
-        elif isinstance(skymodels, SkyModel):
-            models = [skymodels]
-        elif isinstance(skymodels, list):
-            models = skymodels
+    def __init__(self, models):
+        if isinstance(models, Models):
+            models = models._models
+        elif isinstance(models, Model):
+            models = [models]
+        elif isinstance(models, list):
+            models = models
         else:
-            raise TypeError(f"Invalid type: {skymodels!r}")
+            raise TypeError(f"Invalid type: {models!r}")
 
         unique_names = []
         for model in models:
@@ -132,15 +131,15 @@ class SkyModels(collections.abc.Sequence):
                 raise (ValueError("SkyModel names must be unique"))
             unique_names.append(model.name)
 
-        self._skymodels = models
+        self._models = models
 
     @property
     def parameters(self):
-        return Parameters.from_stack([_.parameters for _ in self._skymodels])
+        return Parameters.from_stack([_.parameters for _ in self._models])
 
     @property
     def names(self):
-        return [m.name for m in self._skymodels]
+        return [m.name for m in self._models]
 
     @classmethod
     def read(cls, filename):
@@ -154,8 +153,8 @@ class SkyModels(collections.abc.Sequence):
         from gammapy.modeling.serialize import dict_to_models
 
         data = yaml.safe_load(yaml_str)
-        skymodels = dict_to_models(data)
-        return cls(skymodels)
+        models = dict_to_models(data)
+        return cls(models)
 
     def write(self, path, overwrite=False):
         """Write to YAML file."""
@@ -168,7 +167,7 @@ class SkyModels(collections.abc.Sequence):
         """Convert to YAML string."""
         from gammapy.modeling.serialize import models_to_dict
 
-        data = models_to_dict(self._skymodels)
+        data = models_to_dict(self._models)
         return yaml.dump(
             data, sort_keys=False, indent=4, width=80, default_flow_style=None
         )
@@ -176,29 +175,29 @@ class SkyModels(collections.abc.Sequence):
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"
 
-        for idx, skymodel in enumerate(self):
-            str_ += f"Component {idx}: {skymodel}\n\n\t\n\n"
+        for idx, model in enumerate(self):
+            str_ += f"Component {idx}: {model}\n\n\t\n\n"
 
         return str_
 
     def __add__(self, other):
-        if isinstance(other, (SkyModels, list)):
-            return SkyModels([*self, *other])
-        elif isinstance(other, (SkyModel, SkyDiffuseCube)):
-            return SkyModels([*self, other])
+        if isinstance(other, (Models, list)):
+            return Models([*self, *other])
+        elif isinstance(other, Model):
+            return Models([*self, other])
         else:
             raise TypeError(f"Invalid type: {other!r}")
 
     def __getitem__(self, val):
         if isinstance(val, int):
-            return self._skymodels[val]
+            return self._models[val]
         elif isinstance(val, str):
-            for idx, model in enumerate(self._skymodels):
+            for idx, model in enumerate(self._models):
                 if val == model.name:
-                    return self._skymodels[idx]
+                    return self._models[idx]
             raise IndexError(f"No model: {val!r}")
         else:
             raise TypeError(f"Invalid type: {type(val)!r}")
 
     def __len__(self):
-        return len(self._skymodels)
+       return len(self._models)

@@ -14,7 +14,7 @@ from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     PowerLawSpectralModel,
     SkyModel,
-    SkyModels,
+    Models,
 )
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
@@ -132,7 +132,7 @@ class TestSpectrumDataset:
         dataset.models = model
         assert dataset.models["test"] is model
 
-        models = SkyModels([model])
+        models = Models([model])
         dataset.models = models
         assert dataset.models["test"] is model
 
@@ -147,7 +147,7 @@ class TestSpectrumDataset:
         model_1 = SkyModel(spectral_model=pwl_1)
         model_2 = SkyModel(spectral_model=pwl_2)
 
-        dataset.models = SkyModels([model_1, model_2])
+        dataset.models = Models([model_1, model_2])
 
         npred = dataset.npred()
 

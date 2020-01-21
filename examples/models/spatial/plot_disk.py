@@ -39,7 +39,7 @@ from astropy.coordinates import Angle
 from gammapy.modeling.models import (
     DiskSpatialModel,
     SkyModel,
-    SkyModels,
+    Models,
     PowerLawSpectralModel,
 )
 
@@ -71,6 +71,6 @@ pwl = PowerLawSpectralModel()
 gauss = DiskSpatialModel()
 
 model = SkyModel(spectral_model=pwl, spatial_model=gauss)
-models = SkyModels([model])
+models = Models([model])
 
 print(models.to_yaml())

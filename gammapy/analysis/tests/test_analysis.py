@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.maps import Map
-from gammapy.modeling.models import SkyModels
+from gammapy.modeling.models import Models
 from gammapy.utils.testing import requires_data, requires_dependency
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
@@ -124,7 +124,7 @@ def test_set_models():
     analysis.get_datasets()
     models_str = Path(MODEL_FILE).read_text()
     analysis.set_models(models=models_str)
-    assert isinstance(analysis.models, SkyModels) is True
+    assert isinstance(analysis.models, Models) is True
     with pytest.raises(TypeError):
         analysis.set_models(0)
 

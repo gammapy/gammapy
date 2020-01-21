@@ -7,8 +7,9 @@ from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
 from gammapy.modeling import Dataset, Parameters
-from gammapy.modeling.models import SkyModel, SkyModels
 from gammapy.stats import cash, significance_on_off, significance, wstat
+from gammapy.modeling.models import SkyModel, Models
+from gammapy.stats import cash, significance_on_off, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
@@ -30,7 +31,7 @@ class SpectrumDataset(Dataset):
 
     Parameters
     ----------
-    models : `~gammapy.modeling.models.SkyModels`
+    models : `~gammapy.modeling.models.Models`
         Fit model
     counts : `~gammapy.spectrum.CountsSpectrum`
         Counts spectrum
@@ -176,13 +177,13 @@ class SpectrumDataset(Dataset):
 
     @property
     def models(self):
-        """Models (`gammapy.modeling.models.SkyModels`)."""
+        """Models (`gammapy.modeling.models.Models`)."""
         return self._models
 
     @models.setter
     def models(self, value):
         if value is not None:
-            self._models = SkyModels(value)
+            self._models = Models(value)
         else:
             self._models = None
 
@@ -620,7 +621,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     Parameters
     ----------
-    models : `~gammapy.modeling.models.SkyModels`
+    models : `~gammapy.modeling.models.Models`
         Fit model
     counts : `~gammapy.spectrum.CountsSpectrum`
         ON Counts spectrum

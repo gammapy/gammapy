@@ -15,7 +15,7 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    SkyModels,
+    Models,
 )
 from gammapy.utils.testing import requires_data
 
@@ -53,7 +53,7 @@ def test_simulate():
     )
 
     assert isinstance(dataset, MapDataset)
-    assert isinstance(dataset.models, SkyModels)
+    assert isinstance(dataset.models, Models)
 
     assert dataset.counts.data.dtype is np.dtype("int")
     assert_allclose(dataset.counts.data[5, 20, 20], 2)
