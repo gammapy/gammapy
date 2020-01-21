@@ -176,30 +176,18 @@ class SpectrumDataset(Dataset):
 
     @models.setter
     def models(self, value):
-        if value is None or isinstance(value, SkyModels):
-            models = value
-        elif isinstance(value, list):
-            models = SkyModels(value)
-        elif isinstance(value, SkyModel):
-            models = SkyModels([value])
+        if value is not None:
+            self._models = SkyModels(value)
         else:
-            raise TypeError(f"Invalid: {value!r}")
-
-        self._models = models
-
-        self._make_evaluators()
-
-    def _make_evaluators(self):
-        if self.models is None:
-            self._evaluators = []
-            return
+            self._models = None
 
         evaluators = []
-        for model in self.models:
-            evaluator = SpectrumEvaluator(
-                model=model, livetime=self.livetime, aeff=self.aeff, edisp=self.edisp
-            )
-            evaluators.append(evaluator)
+        if self.models is not None:
+            for model in self.models:
+                evaluator = SpectrumEvaluator(
+                    model=model, livetime=self.livetime, aeff=self.aeff, edisp=self.edisp
+                )
+                evaluators.append(evaluator)
 
         self._evaluators = evaluators
 

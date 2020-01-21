@@ -1200,16 +1200,10 @@ class FluxPointsDataset(Dataset):
 
     @models.setter
     def models(self, value):
-        if isinstance(value, SkyModels):
-            models = value
-        elif isinstance(value, list):
-            models = SkyModels(value)
-        elif isinstance(value, SkyModel):
-            models = SkyModels([value])
+        if value is not None:
+            self._models = SkyModels(value)
         else:
-            raise TypeError(f"Invalid: {value!r}")
-
-        self._models = models
+            self._models = None
 
     @property
     def parameters(self):

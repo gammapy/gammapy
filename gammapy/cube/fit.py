@@ -88,6 +88,7 @@ class MapDataset(Dataset):
     ):
         if mask_fit is not None and mask_fit.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
+
         if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
@@ -102,6 +103,9 @@ class MapDataset(Dataset):
         self.name = name
         self.mask_safe = mask_safe
         self.gti = gti
+
+        # check whether a reference geom is defined
+        _ = self._geom
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
@@ -213,27 +217,18 @@ class MapDataset(Dataset):
 
     @models.setter
     def models(self, value):
-        if value is None or isinstance(value, SkyModels):
-            models = value
-        elif isinstance(value, SkyModel):
-            models = SkyModels([value])
+        if value is not None:
+            self._models = SkyModels(value)
         else:
-            raise TypeError(f"Invalid: {value!r}")
-
-        self._models = models
-
-        self._make_evaluators()
-
-    def _make_evaluators(self):
-        if self.models is None:
-            self._evaluators = []
-            return
+            self._models = None
 
         evaluators = []
-        for model in self.models:
-            evaluator = MapEvaluator(model, evaluation_mode=self.evaluation_mode)
-            evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
-            evaluators.append(evaluator)
+
+        if self.models is not None:
+            for model in self.models:
+                evaluator = MapEvaluator(model, evaluation_mode=self.evaluation_mode)
+                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+                evaluators.append(evaluator)
 
         self._evaluators = evaluators
 
@@ -252,18 +247,18 @@ class MapDataset(Dataset):
 
     @property
     def _geom(self):
+        """Main analysis geometry"""
         if self.counts is not None:
             return self.counts.geom
         elif self.background_model is not None:
             return self.background_model.map.geom
-        elif self.exposure:
-            return self.exposure.geom
+        elif self.mask_safe is not None:
+            return self.mask_safe.geom
+        elif self.mask_fit is not None:
+            return self.mask_fit.geom
         else:
-            raise ValueError("No map available to extract shape")
-
-    @property
-    def _energy_axis(self):
-        return self._geom.get_axis_by_name("energy")
+            raise ValueError("Either 'counts', 'background_model', 'mask_fit'"
+                             " or 'mask_safe' must be defined.")
 
     @property
     def data_shape(self):
@@ -836,32 +831,28 @@ class MapDataset(Dataset):
         dataset : `~gammapy.spectrum.SpectrumDataset`
             the resulting reduced dataset
         """
+        kwargs = {"gti": self.gti, "name": self.name}
+
         if self.gti is not None:
-            livetime = self.gti.time_sum
+            kwargs["livetime"] = self.gti.time_sum
         else:
             raise ValueError("No GTI in `MapDataset`, cannot compute livetime")
 
         if self.counts is not None:
-            counts = self.counts.get_spectrum(on_region, np.sum)
-        else:
-            counts = None
+            kwargs["counts"] = self.counts.get_spectrum(on_region, np.sum)
 
         if self.background_model is not None:
-            background = self.background_model.evaluate().get_spectrum(
+            kwargs["background"] = self.background_model.evaluate().get_spectrum(
                 on_region, np.sum
             )
-        else:
-            background = None
 
         if self.exposure is not None:
             exposure = self.exposure.get_spectrum(on_region, np.mean)
-            aeff = EffectiveAreaTable(
+            kwargs["aeff"] = EffectiveAreaTable(
                 energy_lo=exposure.energy.edges[:-1],
                 energy_hi=exposure.energy.edges[1:],
-                data=exposure.quantity / livetime,
+                data=exposure.quantity / kwargs["livetime"],
             )
-        else:
-            aeff = None
 
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
@@ -873,27 +864,19 @@ class MapDataset(Dataset):
                 raise ValueError("No PSFMap set. Containement correction impossible")
             else:
                 psf = self.psf.get_energy_dependent_table_psf(on_region.center)
-                containment = psf.containment(aeff.energy.center, on_region.radius)
-                aeff.data.data *= containment.squeeze()
+                containment = psf.containment(kwargs["aeff"].energy.center, on_region.radius)
+                kwargs["aeff"].data.data *= containment.squeeze()
         if self.edisp is not None:
             if isinstance(self.edisp, EDispKernel):
                 edisp = self.edisp
             else:
+                axis = self._geom.get_axis_by_name("energy")
                 edisp = self.edisp.get_edisp_kernel(
-                    on_region.center, self._energy_axis.edges
+                    on_region.center, e_reco=axis.edges
                 )
-        else:
-            edisp = None
+            kwargs["edisp"] = edisp
 
-        return SpectrumDataset(
-            counts=counts,
-            background=background,
-            aeff=aeff,
-            edisp=edisp,
-            livetime=livetime,
-            gti=self.gti,
-            name=self.name,
-        )
+        return SpectrumDataset(**kwargs)
 
     def to_image(self, spectrum=None):
         """Create images by summing over the energy axis.

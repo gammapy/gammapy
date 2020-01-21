@@ -38,15 +38,21 @@ class SkyModels(collections.abc.Sequence):
 
     Parameters
     ----------
-    skymodels : list of `SkyModel`
+    skymodels : `SkyModel`, list of `SkyModel` or `SkyModels`
         Sky models
     """
 
     def __init__(self, skymodels):
-        if not isinstance(skymodels, list):
-            raise TypeError(f"Not a list: {skymodels!r}")
+        if isinstance(skymodels, SkyModels):
+            models = skymodels._skymodels
+        elif isinstance(skymodels, SkyModel):
+            models = [skymodels]
+        elif isinstance(skymodels, list):
+            models = skymodels
+        else:
+            raise TypeError(f"Invalid type: {skymodels!r}")
 
-        self._skymodels = skymodels
+        self._skymodels = models
 
     @property
     def parameters(self):
