@@ -866,6 +866,7 @@ class MapDataset(Dataset):
                 psf = self.psf.get_energy_dependent_table_psf(on_region.center)
                 containment = psf.containment(kwargs["aeff"].energy.center, on_region.radius)
                 kwargs["aeff"].data.data *= containment.squeeze()
+
         if self.edisp is not None:
             if isinstance(self.edisp, EDispKernel):
                 edisp = self.edisp
@@ -1292,46 +1293,46 @@ class MapDatasetOnOff(MapDataset):
         dataset : `MapDataset`
             Map dataset.
         """
-        init_kwargs = {}
-        init_kwargs["name"] = name
+        kwargs = {}
+        kwargs["name"] = name
         if "COUNTS" in hdulist:
-            init_kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
+            kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
 
         if "COUNTS_OFF" in hdulist:
-            init_kwargs["counts_off"] = Map.from_hdulist(hdulist, hdu="counts_off")
+            kwargs["counts_off"] = Map.from_hdulist(hdulist, hdu="counts_off")
 
         if "ACCEPTANCE" in hdulist:
-            init_kwargs["acceptance"] = Map.from_hdulist(hdulist, hdu="acceptance")
+            kwargs["acceptance"] = Map.from_hdulist(hdulist, hdu="acceptance")
 
         if "ACCEPTANCE_OFF" in hdulist:
-            init_kwargs["acceptance_off"] = Map.from_hdulist(
+            kwargs["acceptance_off"] = Map.from_hdulist(
                 hdulist, hdu="acceptance_off"
             )
 
         if "EXPOSURE" in hdulist:
-            init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
+            kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
 
         if "EDISP_MATRIX" in hdulist:
-            init_kwargs["edisp"] = EDispKernel.from_hdulist(
+            kwargs["edisp"] = EDispKernel.from_hdulist(
                 hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
             )
 
         if "PSF_KERNEL" in hdulist:
             psf_map = Map.from_hdulist(hdulist, hdu="psf_kernel")
-            init_kwargs["psf"] = PSFKernel(psf_map)
+            kwargs["psf"] = PSFKernel(psf_map)
 
         if "MASK_SAFE" in hdulist:
             mask_safe_map = Map.from_hdulist(hdulist, hdu="mask_safe")
-            init_kwargs["mask_safe"] = mask_safe_map.data.astype(bool)
+            kwargs["mask_safe"] = mask_safe_map.data.astype(bool)
 
         if "MASK_FIT" in hdulist:
             mask_fit_map = Map.from_hdulist(hdulist, hdu="mask_fit")
-            init_kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
+            kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
 
         if "GTI" in hdulist:
             gti = GTI(Table.read(hdulist, hdu="GTI"))
-            init_kwargs["gti"] = gti
-        return cls(**init_kwargs)
+            kwargs["gti"] = gti
+        return cls(**kwargs)
 
     def to_spectrum_dataset(self, on_region, containment_correction=False):
         """Return a ~gammapy.spectrum.SpectrumDatasetOnOff from on_region.
@@ -1364,29 +1365,17 @@ class MapDatasetOnOff(MapDataset):
         """
         dataset = super().to_spectrum_dataset(on_region, containment_correction)
 
+        kwargs = {}
         if self.counts_off is not None:
-            counts_off = self.counts_off.get_spectrum(on_region, np.sum)
-        else:
-            counts_off = None
+            kwargs["counts_off"] = self.counts_off.get_spectrum(on_region, np.sum)
 
         if self.acceptance is not None:
-            acceptance = self.acceptance.get_spectrum(on_region, np.mean)
+            kwargs["acceptance"] = self.acceptance.get_spectrum(on_region, np.mean)
             background = self.background.get_spectrum(on_region, np.sum)
-            acceptance_off = acceptance * counts_off / background
-        else:
-            acceptance = None
-            acceptance_off = None
+            kwargs["acceptance_off"] = kwargs["acceptance"] * kwargs["counts_off"] / background
 
-        return SpectrumDatasetOnOff(
-            counts=dataset.counts,
-            counts_off=counts_off,
-            acceptance=acceptance,
-            acceptance_off=acceptance_off,
-            name=dataset.name,
-            aeff=dataset.aeff,
-            edisp=dataset.edisp,
-            livetime=dataset.livetime,
-            gti=dataset.gti,
+        return SpectrumDatasetOnOff.from_spectrum_dataset(
+            dataset=dataset, **kwargs
         )
 
     def cutout(self, position, width, mode="trim"):
