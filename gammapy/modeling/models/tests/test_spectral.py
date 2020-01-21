@@ -209,16 +209,6 @@ TEST_MODELS.append(
 
 TEST_MODELS.append(
     dict(
-        name="compound4",
-        model=TEST_MODELS[0]["model"] - 0.1 * TEST_MODELS[0]["val_at_2TeV"],
-        val_at_2TeV=0.9 * TEST_MODELS[0]["val_at_2TeV"],
-        integral_1_10TeV=2.1919819216346936 * u.Unit("cm-2 s-1"),
-        eflux_1_10TeV=2.6322140512045697 * u.Unit("TeV cm-2 s-1"),
-    )
-)
-
-TEST_MODELS.append(
-    dict(
         name="compound6",
         model=TEST_MODELS[8]["model"] + u.Quantity(4, "cm-2 s-1 TeV-1"),
         val_at_2TeV=TEST_MODELS[8]["val_at_2TeV"] * 2,
@@ -383,7 +373,7 @@ def test_ecpl_integrate():
     # regression test to check the numerical integration for small energy bins
     ecpl = ExpCutoffPowerLawSpectralModel()
     value = ecpl.integral(1 * u.TeV, 1.1 * u.TeV)
-    assert_quantity_allclose(value, 8.380714e-14 * u.Unit("s-1 cm-2"))
+    assert_quantity_allclose(value, 8.380761e-14 * u.Unit("s-1 cm-2"))
 
 
 def test_pwl_pivot_energy():
@@ -477,16 +467,16 @@ class TestNaimaModel:
         model = NaimaSpectralModel(radiative_model)
 
         val_at_2TeV = 4.347836316893546e-12 * u.Unit("cm-2 s-1 TeV-1")
-        integral_1_10TeV = 1.5958109911918303e-11 * u.Unit("cm-2 s-1")
-        eflux_1_10TeV = 2.851281562480875e-11 * u.Unit("TeV cm-2 s-1")
+        integral_1_10TeV = 1.595813e-11 * u.Unit("cm-2 s-1")
+        eflux_1_10TeV = 2.851283e-11 * u.Unit("TeV cm-2 s-1")
 
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
         assert_quantity_allclose(
-            model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV
+            model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV, rtol=1e-5
         )
         assert_quantity_allclose(
-            model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV
+            model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV, rtol=1e-5
         )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
@@ -502,16 +492,16 @@ class TestNaimaModel:
         model = NaimaSpectralModel(radiative_model)
 
         val_at_2TeV = 1.0565840392550432e-24 * u.Unit("cm-2 s-1 TeV-1")
-        integral_1_10TeV = 4.4491861907713736e-13 * u.Unit("cm-2 s-1")
-        eflux_1_10TeV = 4.594120986691428e-13 * u.Unit("TeV cm-2 s-1")
+        integral_1_10TeV = 4.449303e-13 * u.Unit("cm-2 s-1")
+        eflux_1_10TeV = 4.594242e-13 * u.Unit("TeV cm-2 s-1")
 
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
         assert_quantity_allclose(
-            model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV
+            model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV, rtol=1e-5
         )
         assert_quantity_allclose(
-            model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV
+            model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV, rtol=1e-5
         )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape

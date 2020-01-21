@@ -442,7 +442,7 @@ class MapAxis:
         return cls(nodes, **kwargs)
 
     @classmethod
-    def from_energy_bounds(cls, emin, emax, nbin, per_decade=False, unit=None):
+    def from_energy_bounds(cls, emin, emax, nbin, unit=None, per_decade=False):
         """Make an energy axis.
 
         Used frequently also to make energy grids, by making
@@ -454,10 +454,10 @@ class MapAxis:
             Energy range
         nbin : int
             Number of bins
-        per_decade : bool
-            Whether `nbin` is given per decade.
         unit : `~astropy.units.Unit`
             Energy unit
+        per_decade : bool
+            Whether `nbin` is given per decade.
 
         Returns
         -------

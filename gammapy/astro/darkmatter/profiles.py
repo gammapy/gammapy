@@ -4,7 +4,7 @@ import abc
 import numpy as np
 import astropy.units as u
 from gammapy.modeling import Parameter, Parameters
-from gammapy.utils.integrate import integrate_spectrum
+from gammapy.modeling.models.spectral import integrate_spectrum
 
 __all__ = [
     "DMProfile",

@@ -52,7 +52,7 @@ def test_crab_spectrum(spec):
     assert_quantity_allclose(dnde, spec["dnde"])
 
     flux = crab_spectrum.integral(1 * u.TeV, 1e3 * u.TeV)
-    assert_quantity_allclose(flux, spec["flux"])
+    assert_quantity_allclose(flux, spec["flux"], rtol=1e-6)
 
     index = crab_spectrum.spectral_index(2 * u.TeV)
     assert_quantity_allclose(index, spec["index"], rtol=1e-5)
