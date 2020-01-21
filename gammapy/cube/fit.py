@@ -69,7 +69,7 @@ class MapDataset(Dataset):
         GTI of the observation or union of GTI if it is a stacked observation
     """
 
-    likelihood_type = "cash"
+    stat_type = "cash"
     tag = "MapDataset"
 
     def __init__(
@@ -156,7 +156,7 @@ class MapDataset(Dataset):
         str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
 
         # likelihood section
-        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.likelihood_type)
+        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.stat_type)
 
         stat = np.nan
         if self.counts is not None and (
@@ -784,9 +784,6 @@ class MapDataset(Dataset):
 
         models_list = [model for model in models if model.name in model_names]
         dataset.models = SkyModels(models_list)
-        if "likelihood" in data:
-            dataset.likelihood_type = data["likelihood"]
-
         return dataset
 
     def to_dict(self, filename=""):
@@ -799,7 +796,6 @@ class MapDataset(Dataset):
         return {
             "name": self.name,
             "type": self.tag,
-            "likelihood": self.likelihood_type,
             "models": models,
             "background": self.background_model.name,
             "filename": str(filename),
@@ -1014,7 +1010,7 @@ class MapDatasetOnOff(MapDataset):
         GTI of the observation or union of GTI if it is a stacked observation
     """
 
-    likelihood_type = "wstat"
+    stat_type = "wstat"
     tag = "MapDatasetOnOff"
 
     def __init__(
