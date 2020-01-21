@@ -739,3 +739,20 @@ def test_mapdatasetonoff_cutout(images):
     assert cutout_dataset.acceptance.data.shape == (50, 50)
     assert cutout_dataset.acceptance_off.data.shape == (50, 50)
     assert cutout_dataset.background_model is None
+
+
+def test_map_dataset_geom(geom, sky_model):
+    e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
+    dataset = MapDataset.create(geom, energy_axis_true=e_true)
+    dataset.counts = None
+    dataset.background_model = None
+
+    dataset.models = sky_model
+
+    npred = dataset.npred()
+    assert npred.geom == geom
+
+    dataset.mask_safe = None
+
+    with pytest.raises(ValueError):
+        dataset._geom
