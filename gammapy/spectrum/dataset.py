@@ -56,7 +56,7 @@ class SpectrumDataset(Dataset):
     SpectrumDatasetOnOff, FluxPointsDataset, gammapy.cube.MapDataset
     """
 
-    likelihood_type = "cash"
+    stat_type = "cash"
     tag = "SpectrumDataset"
 
     def __init__(
@@ -145,7 +145,7 @@ class SpectrumDataset(Dataset):
         str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
 
         # likelihood section
-        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.likelihood_type)
+        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.stat_type)
 
         stat = np.nan
         if self.models is not None and self.counts is not None:
@@ -556,7 +556,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     SpectrumDataset, FluxPointsDataset, MapDataset
     """
 
-    likelihood_type = "wstat"
+    stat_type = "wstat"
     tag = "SpectrumDatasetOnOff"
 
     def __init__(
@@ -1120,7 +1120,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             "name": self.name,
             "type": self.tag,
             "models": models,
-            "likelihood": self.likelihood_type,
+            "likelihood": self.stat_type,
             "filename": filename,
         }
 
