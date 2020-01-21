@@ -68,7 +68,7 @@ def f_cash(x, counts, background, model):
 
 
 class TSMapEstimator:
-    r"""Compute TS map using different optimization methods.
+    r"""Compute TS map from a MapDataset using different optimization methods.
 
     The map is computed fitting by a single parameter amplitude fit. The fit is
     simplified by finding roots of the the derivative of the fit statistics using
@@ -151,33 +151,37 @@ class TSMapEstimator:
         }
 
     @staticmethod
-    def flux_default(maps, kernel):
+    def flux_default(dataset, kernel):
         """Estimate default flux map using a given kernel.
 
         Parameters
         ----------
-        maps : dict
-            Input sky maps. Requires "counts", "background" and "exposure" maps.
-        kernel : `astropy.convolution.Kernel2D`
+        dataset : `~gammapy.cube.MapDataset`
+            Input dataset.
+        kernel : `~stropy.convolution.Kernel2D`
             Source model kernel.
 
         Returns
         -------
-        flux_approx : `gammapy.maps.WcsNDMap`
-            Approximate flux map.
+        flux_approx : `~gammapy.maps.WcsNDMap`
+            Approximate flux map (2D).
         """
-        flux = (maps["counts"].data - maps["background"].data) / maps["exposure"].data
-        flux = maps["counts"].copy(data=flux / np.sum(kernel.array ** 2))
+        flux = dataset.counts - dataset.npred()
+        flux = flux.sum_over_axes(keepdims=False)
+        flux /= dataset.exposure.sum_over_axes(keepdims=False)
+        flux /= np.sum(kernel.array ** 2)
         return flux.convolve(kernel.array)
 
     @staticmethod
-    def mask_default(maps, kernel):
+    def mask_default(exposure, background, kernel):
         """Compute default mask where to estimate TS values.
 
         Parameters
         ----------
-        maps : dict
-            Input sky maps. Requires "background" and "exposure".
+        exposure : `~gammapy.maps.Map`
+            Input exposure map.
+        background : `~gammapy.maps.Map`
+            Input background map.
         kernel : `astropy.convolution.Kernel2D`
             Source model kernel.
 
@@ -186,7 +190,7 @@ class TSMapEstimator:
         mask : `gammapy.maps.WcsNDMap`
             Mask map.
         """
-        mask = np.zeros(maps["exposure"].data.shape, dtype=int)
+        mask = np.zeros(exposure.data.shape, dtype=int)
 
         # mask boundary
         slice_x = slice(kernel.shape[1] // 2, -kernel.shape[1] // 2 + 1)
@@ -194,14 +198,14 @@ class TSMapEstimator:
         mask[slice_y, slice_x] = 1
 
         # positions where exposure == 0 are not processed
-        mask &= maps["exposure"].data > 0
+        mask &= exposure.data > 0
 
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
         # to fail, this is a temporary fix
-        mask[maps["background"].data == 0] = 0
+        mask[background == 0] = 0
 
-        return maps["exposure"].copy(data=mask.astype("int"))
+        return exposure.copy(data=mask.astype("int"), unit='')
 
     @staticmethod
     def sqrt_ts(map_ts):
@@ -232,16 +236,15 @@ class TSMapEstimator:
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return map_ts.copy(data=sqrt_ts)
 
-    def run(self, maps, kernel, which="all", downsampling_factor=None):
+    def run(self, dataset, kernel, which="all", downsampling_factor=None):
         """
         Run TS map estimation.
 
-        Requires "counts", "exposure" and "background" map to run.
+        Requires a MapDataset with counts, exposure and background_model
+        properly set to run.
 
         Parameters
         ----------
-        maps : dict
-            Input sky maps.
         kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
             Source model kernel.
         which : list of str or 'all'
@@ -258,24 +261,40 @@ class TSMapEstimator:
         """
         p = self.parameters
 
-        if (np.array(kernel.shape) > np.array(maps["counts"].data.shape)).any():
+        if (np.array(kernel.shape) > np.array(dataset.counts.data.shape[1:])).any():
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
                 " size of the kernel"
             )
 
-        if downsampling_factor:
-            maps_downsampled = {}
+        # First create 2D map arrays
+        counts = dataset.counts.sum_over_axes(keepdims=False)
+        background = dataset.npred().sum_over_axes(keepdims=False)
+        exposure = dataset.exposure.sum_over_axes(keepdims=False)
+        if dataset.mask is not None:
+            mask = counts.copy(data=(dataset.mask.sum(axis=0) > 0).astype("int"))
+        else:
+            mask = counts.copy(data=np.ones_like(counts).astype("int"))
 
-            shape = maps["counts"].data.shape
+        if downsampling_factor:
+            shape = counts.data.shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
 
-            for name, map_ in maps.items():
-                preserve_counts = name in ["counts", "background", "exclusion"]
-                maps_downsampled[name] = map_.pad(pad_width).downsample(
-                    downsampling_factor, preserve_counts=preserve_counts
-                )
-            maps = maps_downsampled
+            counts = counts.pad(pad_width).downsample(
+                downsampling_factor, preserve_counts=True
+            )
+            background = background.pad(pad_width).downsample(
+                downsampling_factor, preserve_counts=True
+            )
+            exposure = exposure.pad(pad_width).downsample(
+                downsampling_factor, preserve_counts=False
+            )
+            mask = mask.pad(pad_width).downsample(
+                downsampling_factor, preserve_counts=False
+            )
+            mask.data = mask.data.astype("int")
+
+        mask.data &= self.mask_default(exposure, background, kernel).data
 
         if not isinstance(kernel, Kernel2D):
             kernel = CustomKernel(kernel)
@@ -285,35 +304,32 @@ class TSMapEstimator:
 
         result = {}
         for name in which:
-            data = np.nan * np.ones_like(maps["counts"].data)
-            result[name] = maps["counts"].copy(data=data)
+            data = np.nan * np.ones_like(counts.data)
+            result[name] = counts.copy(data=data)
 
-        mask = self.mask_default(maps, kernel)
-
-        if "mask" in maps:
-            mask.data &= maps["mask"].data
+        flux_map = self.flux_default(dataset, kernel)
 
         if p["threshold"] or p["method"] == "root newton":
-            flux = self.flux_default(maps, kernel).data
+            flux = flux_map.data
         else:
             flux = None
 
         # prepare dtype for cython methods
-        counts = maps["counts"].data.astype(float)
-        background = maps["background"].data.astype(float)
-        exposure = maps["exposure"].data.astype(float)
+        counts_array = counts.data.astype(float)
+        background_array = background.data.astype(float)
+        exposure_array = exposure.data.astype(float)
 
         # Compute null statistics per pixel for the whole image
-        c_0 = cash(counts, background)
+        c_0 = cash(counts_array, background_array)
 
         error_method = p["error_method"] if "flux_err" in which else "none"
         ul_method = p["ul_method"] if "flux_ul" in which else "none"
 
         wrap = functools.partial(
             _ts_value,
-            counts=counts,
-            exposure=exposure,
-            background=background,
+            counts=counts_array,
+            exposure=exposure_array,
+            background=background_array,
             c_0=c_0,
             kernel=kernel,
             flux=flux,
@@ -326,9 +342,8 @@ class TSMapEstimator:
             rtol=p["rtol"],
         )
 
-        x, y = np.where(mask.data)
+        x, y = np.where(np.squeeze(mask.data))
         positions = list(zip(x, y))
-
         results = list(map(wrap, positions))
 
         # Set TS values at given positions
@@ -353,6 +368,14 @@ class TSMapEstimator:
                     factor=downsampling_factor, preserve_counts=False, order=order
                 )
                 result[name] = result[name].crop(crop_width=pad_width)
+
+        # Set correct units
+        if "flux" in which:
+            result["flux"].unit = flux_map.unit
+        if "flux_err" in which:
+            result["flux_err"].unit = flux_map.unit
+        if "flux_ul" in which:
+            result["flux_ul"].unit = flux_map.unit
 
         return result
 
