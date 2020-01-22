@@ -102,6 +102,7 @@ class Datasets(collections.abc.Sequence):
     def __init__(self, datasets):
         if isinstance(datasets, Datasets):
             datasets = list(datasets)
+            dataset_list = datasets
         elif isinstance(datasets, list):
             dataset_list = []
             for data in datasets:
@@ -109,8 +110,6 @@ class Datasets(collections.abc.Sequence):
                     dataset_list += list(data)
                 elif isinstance(data, Dataset):
                     dataset_list.append(data)
-                else:
-                    raise TypeError(f"Invalid type: {datasets!r}")
         else:
             raise TypeError(f"Invalid type: {datasets!r}")
 
