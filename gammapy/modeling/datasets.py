@@ -2,8 +2,9 @@
 import abc
 import collections.abc
 import copy
+from warnings import warn
 import numpy as np
-from gammapy.utils.scripts import make_path, read_yaml, write_yaml
+from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
 from ..maps import WcsNDMap
 from .parameter import Parameters
@@ -63,9 +64,14 @@ class Dataset(abc.ABC):
     def stat_array(self):
         """Statistic array, one value per data point."""
 
-    def copy(self):
+    def copy(self, name=None):
         """A deep copy."""
-        return copy.deepcopy(self)
+        new = copy.deepcopy(self)
+        if name is None:
+            new.name = make_name()
+        else:
+            new.name = name
+        return new
 
     @staticmethod
     def _compute_residuals(data, model, method="diff"):
@@ -95,11 +101,20 @@ class Datasets(collections.abc.Sequence):
 
     def __init__(self, datasets):
         if isinstance(datasets, Datasets):
-            self._datasets = list(datasets)
+            datasets = list(datasets)
         elif isinstance(datasets, list):
-            self._datasets = datasets
+            pass
         else:
             raise TypeError(f"Invalid type: {datasets!r}")
+
+        unique_names = []
+        for dataset in datasets:
+            while dataset.name in unique_names:
+                dataset.name = make_name()  # replace duplicate
+                warn("Dateset names must be unique, auto-replaced duplicates")
+            unique_names.append(dataset.name)
+
+        self._datasets = datasets
 
     @property
     def parameters(self):

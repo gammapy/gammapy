@@ -11,7 +11,7 @@ from gammapy.cube.edisp_map import EDispMap
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
-from gammapy.irf import EffectiveAreaTable, EDispKernel
+from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
@@ -19,7 +19,7 @@ from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.spectrum import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
-from gammapy.utils.scripts import make_path
+from gammapy.utils.scripts import make_name, make_path
 from .exposure import _map_spectrum_weight
 
 __all__ = ["MapDataset", "MapDatasetOnOff"]
@@ -81,7 +81,7 @@ class MapDataset(Dataset):
         psf=None,
         edisp=None,
         background_model=None,
-        name="",
+        name=None,
         evaluation_mode="local",
         mask_safe=None,
         gti=None,
@@ -100,9 +100,13 @@ class MapDataset(Dataset):
         self.edisp = edisp
         self.background_model = background_model
         self.models = models
-        self.name = name
         self.mask_safe = mask_safe
         self.gti = gti
+
+        if name is None:
+            self.name = make_name()
+        else:
+            self.name = name
 
         # check whether a reference geom is defined
         _ = self._geom
@@ -257,8 +261,10 @@ class MapDataset(Dataset):
         elif self.mask_fit is not None:
             return self.mask_fit.geom
         else:
-            raise ValueError("Either 'counts', 'background_model', 'mask_fit'"
-                             " or 'mask_safe' must be defined.")
+            raise ValueError(
+                "Either 'counts', 'background_model', 'mask_fit'"
+                " or 'mask_safe' must be defined."
+            )
 
     @property
     def data_shape(self):
@@ -814,7 +820,7 @@ class MapDataset(Dataset):
 
         The model is not exported to the ~gammapy.spectrum.SpectrumDataset.
         It must be set after the dataset extraction.
-        
+
         Parameters
         ----------
         on_region : `~regions.SkyRegion`
@@ -860,7 +866,9 @@ class MapDataset(Dataset):
                 raise ValueError("No PSFMap set. Containement correction impossible")
             else:
                 psf = self.psf.get_energy_dependent_table_psf(on_region.center)
-                containment = psf.containment(kwargs["aeff"].energy.center, on_region.radius)
+                containment = psf.containment(
+                    kwargs["aeff"].energy.center, on_region.radius
+                )
                 kwargs["aeff"].data.data *= containment.squeeze()
 
         if self.edisp is not None:
@@ -868,9 +876,7 @@ class MapDataset(Dataset):
                 edisp = self.edisp
             else:
                 axis = self._geom.get_axis_by_name("energy")
-                edisp = self.edisp.get_edisp_kernel(
-                    on_region.center, e_reco=axis.edges
-                )
+                edisp = self.edisp.get_edisp_kernel(on_region.center, e_reco=axis.edges)
             kwargs["edisp"] = edisp
 
         return SpectrumDataset(**kwargs)
@@ -1301,9 +1307,7 @@ class MapDatasetOnOff(MapDataset):
             kwargs["acceptance"] = Map.from_hdulist(hdulist, hdu="acceptance")
 
         if "ACCEPTANCE_OFF" in hdulist:
-            kwargs["acceptance_off"] = Map.from_hdulist(
-                hdulist, hdu="acceptance_off"
-            )
+            kwargs["acceptance_off"] = Map.from_hdulist(hdulist, hdu="acceptance_off")
 
         if "EXPOSURE" in hdulist:
             kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
@@ -1368,11 +1372,11 @@ class MapDatasetOnOff(MapDataset):
         if self.acceptance is not None:
             kwargs["acceptance"] = self.acceptance.get_spectrum(on_region, np.mean)
             background = self.background.get_spectrum(on_region, np.sum)
-            kwargs["acceptance_off"] = kwargs["acceptance"] * kwargs["counts_off"] / background
+            kwargs["acceptance_off"] = (
+                kwargs["acceptance"] * kwargs["counts_off"] / background
+            )
 
-        return SpectrumDatasetOnOff.from_spectrum_dataset(
-            dataset=dataset, **kwargs
-        )
+        return SpectrumDatasetOnOff.from_spectrum_dataset(dataset=dataset, **kwargs)
 
     def cutout(self, position, width, mode="trim"):
         """Cutout map dataset.

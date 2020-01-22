@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import astropy.units as u
+from gammapy.utils.scripts import make_name
 from .parameter import Parameter, Parameters
 
 __all__ = ["Model"]
@@ -54,9 +55,14 @@ class Model:
         """Parameters (`~gammapy.modeling.Parameters`)"""
         return self._parameters
 
-    def copy(self):
+    def copy(self, name=None):
         """A deep copy."""
-        return copy.deepcopy(self)
+        new = copy.deepcopy(self)
+        if name is None:
+            new.name = make_name()
+        else:
+            new.name = name
+        return new
 
     def __str__(self):
         return f"{self.__class__.__name__}\n\n{self.parameters.to_table()}"

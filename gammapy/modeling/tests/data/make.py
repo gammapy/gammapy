@@ -24,7 +24,7 @@ DATA_PATH = Path("./")
 
 def make_example_2():
     spatial = GaussianSpatialModel(lon_0="0 deg", lat_0="0 deg", sigma="1 deg")
-    model = SkyModel(spatial, PowerLawSpectralModel())
+    model = SkyModel(PowerLawSpectralModel(), spatial)
     models = SkyModels([model])
     models.write(DATA_PATH / "example2.yaml")
 

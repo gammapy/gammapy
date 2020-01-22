@@ -3,12 +3,13 @@
 import collections.abc
 import copy
 from pathlib import Path
+from warnings import warn
 import numpy as np
 import astropy.units as u
 import yaml
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
-from gammapy.utils.scripts import make_path
+from gammapy.utils.scripts import make_name, make_path
 
 
 class SkyModelBase(Model):
@@ -51,6 +52,13 @@ class SkyModels(collections.abc.Sequence):
             models = skymodels
         else:
             raise TypeError(f"Invalid type: {skymodels!r}")
+
+        unique_names = []
+        for model in models:
+            while model.name in unique_names:
+                model.name = make_name()  # replace duplicate
+                warn("SkyModel names must be unique, auto-replaced duplicates")
+            unique_names.append(model.name)
 
         self._skymodels = models
 
@@ -141,13 +149,17 @@ class SkyModel(SkyModelBase):
 
     tag = "SkyModel"
 
-    def __init__(self, spectral_model, spatial_model=None, name="source"):
-        self.name = name
+    def __init__(self, spectral_model, spatial_model=None, name=None):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
         super().__init__()
         # TODO: this hack is needed for compound models to work
         self.__dict__.pop("_parameters")
+
+        if name is None:
+            self.name = make_name()
+        else:
+            self.name = name
 
     @property
     def parameters(self):
@@ -253,7 +265,7 @@ class SkyModel(SkyModelBase):
 
         kwargs.setdefault("spatial_model", spatial_model)
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
-        kwargs.setdefault("name", self.name + "-copy")
+        kwargs.setdefault("name", make_name())
         return self.__class__(**kwargs)
 
     def to_dict(self):
@@ -327,10 +339,14 @@ class SkyDiffuseCube(SkyModelBase):
         reference=reference.quantity,
         meta=None,
         interp_kwargs=None,
-        name="diffuse",
+        name=None,
         filename=None,
     ):
-        self.name = name
+
+        if name is None:
+            self.name = make_name()
+        else:
+            self.name = name
         axis = map.geom.get_axis_by_name("energy")
 
         if axis.node_type != "center":
@@ -463,7 +479,7 @@ class BackgroundModel(Model):
         norm=norm.quantity,
         tilt=tilt.quantity,
         reference=reference.quantity,
-        name="background",
+        name=None,
         filename=None,
     ):
         axis = map.geom.get_axis_by_name("energy")
@@ -471,8 +487,13 @@ class BackgroundModel(Model):
             raise ValueError('Need an integrated map, energy axis node_type="edges"')
 
         self.map = map
-        self.name = name
+
+        if name is None:
+            self.name = make_name()
+        else:
+            self.name = name
         self.filename = filename
+
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
     @property

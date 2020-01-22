@@ -12,7 +12,7 @@ from gammapy.modeling.models import (
     SkyModels,
 )
 from gammapy.utils.interpolation import interpolate_profile
-from gammapy.utils.scripts import make_path
+from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
 from .dataset import SpectrumDatasetOnOff
 
@@ -1181,11 +1181,16 @@ class FluxPointsDataset(Dataset):
     stat_type = "chi2"
     tag = "FluxPointsDataset"
 
-    def __init__(self, models, data, mask_fit=None, mask_safe=None, name=""):
+    def __init__(self, models, data, mask_fit=None, mask_safe=None, name=None):
         self.data = data
         self.mask_fit = mask_fit
-        self.name = name
         self.models = models
+
+        if name is None:
+            self.name = make_name()
+        else:
+            self.name = name
+
         if data.sed_type != "dnde":
             raise ValueError("Currently only flux points of type 'dnde' are supported.")
 

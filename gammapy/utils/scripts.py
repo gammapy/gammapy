@@ -2,6 +2,7 @@
 """Utils to create scripts and command-line tools"""
 import os.path
 from pathlib import Path
+from uuid import uuid4
 import yaml
 
 __all__ = ["read_yaml", "write_yaml", "make_path", "recursive_merge_dicts"]
@@ -51,6 +52,10 @@ def write_yaml(dictionary, filename, logger=None, sort_keys=True):
     if logger is not None:
         logger.info(f"Writing {path}")
     path.write_text(text)
+
+
+def make_name():
+    return uuid4().hex[:8]
 
 
 def make_path(path):

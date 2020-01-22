@@ -5,13 +5,13 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
-from gammapy.irf import EffectiveAreaTable, EDispKernel, IRFStacker
+from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import SkyModel, SkyModels
 from gammapy.stats import cash, significance_on_off, significance, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
-from gammapy.utils.scripts import make_path
+from gammapy.utils.scripts import make_name, make_path
 from .core import CountsSpectrum, SpectrumEvaluator
 
 __all__ = [
@@ -69,7 +69,7 @@ class SpectrumDataset(Dataset):
         background=None,
         mask_safe=None,
         mask_fit=None,
-        name="",
+        name=None,
         gti=None,
     ):
 
@@ -88,8 +88,12 @@ class SpectrumDataset(Dataset):
         self.background = background
         self.models = models
         self.mask_safe = mask_safe
-        self.name = name
         self.gti = gti
+
+        if name is None:
+            self.name = make_name()
+        else:
+            self.name = name
 
     def __str__(self):
         str_ = self.__class__.__name__
