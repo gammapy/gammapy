@@ -103,15 +103,25 @@ class Datasets(collections.abc.Sequence):
         if isinstance(datasets, Datasets):
             datasets = list(datasets)
         elif isinstance(datasets, list):
-            pass
+            dataset_list = []
+            for data in datasets:
+                if isinstance(data, Datasets):
+                    dataset_list + list(data)
+                elif isinstance(data, Dataset):
+                    dataset_list.append(data)
+                else:
+                    raise TypeError(f"Invalid type: {datasets!r}")
         else:
             raise TypeError(f"Invalid type: {datasets!r}")
 
         unique_names = []
-        for dataset in datasets:
+        renamed = False
+        for dataset in dataset_list:
             while dataset.name in unique_names:
                 dataset.name = make_name()  # replace duplicate
-                warn("Dateset names must be unique, auto-replaced duplicates")
+                if renamed is False:
+                    warn("Dataset names must be unique, auto-replaced duplicates")
+                    renamed = True  # avoid repetition
             unique_names.append(dataset.name)
 
         self._datasets = datasets

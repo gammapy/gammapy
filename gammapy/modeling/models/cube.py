@@ -54,10 +54,13 @@ class SkyModels(collections.abc.Sequence):
             raise TypeError(f"Invalid type: {skymodels!r}")
 
         unique_names = []
+        renamed = False
         for model in models:
             while model.name in unique_names:
                 model.name = make_name()  # replace duplicate
-                warn("SkyModel names must be unique, auto-replaced duplicates")
+                if renamed is False:
+                    warn("SkyModel names must be unique, auto-replaced duplicates")
+                    renamed = True  # avoid repetition
             unique_names.append(model.name)
 
         self._skymodels = models
