@@ -6,6 +6,8 @@ import astropy.units as u
 from gammapy.irf import EDispKernel
 from gammapy.maps import Map, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
+from scipy.integrate import cumtrapz
+from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 
 __all__ = ["make_edisp_map", "EDispMap"]
 
@@ -196,7 +198,7 @@ class EDispMap:
         hdulist = self.to_hdulist(**kwargs)
         hdulist.writeto(filename, overwrite=overwrite)
 
-    def get_edisp_kernel(self, position, e_reco, migra_step=5e-3):
+    def get_edisp_kernel(self, position, e_reco, migra_step=1e-3):
         """Get energy dispersion at a given position.
 
         Parameters
@@ -219,62 +221,46 @@ class EDispMap:
                 "EnergyDispersion can be extracted at one single position only."
             )
 
-        # axes ordering fixed. Could be changed.
-        pix_ener = np.arange(self.edisp_map.geom.axes[1].nbin)
+        energy_axis = self.edisp_map.geom.get_axis_by_name("energy")
+        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
 
-        # Define a vector of migration with mig_step step
-        mrec_min = self.edisp_map.geom.axes[0].edges[0]
-        mrec_max = self.edisp_map.geom.axes[0].edges[-1]
-        mig_array = np.arange(mrec_min, mrec_max, migra_step)
-        pix_migra = (mig_array - mrec_min) / mrec_max * self.edisp_map.geom.axes[0].nbin
+        # upsample the migra axis for better precision
+        factor = int(migra_axis.bin_width.mean() / migra_step)
+        migra_axis_upsampled = migra_axis.upsample(factor=factor)
 
-        # Convert position to pixels
-        pix_lon, pix_lat = self.edisp_map.geom.to_image().coord_to_pix(position)
+        coords = {
+            "skycoord": position,
+            "migra": migra_axis_upsampled.edges.reshape((-1, 1, 1, 1)),
+            "energy": energy_axis.center.reshape((1, -1, 1, 1)),
+        }
 
-        # Build the pixels tuple
-        pix = np.meshgrid(pix_lon, pix_lat, pix_migra, pix_ener)
         # Interpolate in the EDisp map. Squeeze to remove dimensions of length 1
-        edisp_values = self.edisp_map.interp_by_pix(pix) * u.Unit(self.edisp_map.unit)
-        edisp_values = np.squeeze(edisp_values, axis=(0, 1))
+        values = self.edisp_map.interp_by_coord(coords) * self.edisp_map.unit
+        edisp_values = values.squeeze()
 
-        e_trues = self.edisp_map.geom.axes[1].center
         data = []
 
-        for i, e_true in enumerate(e_trues):
-            # We now perform integration over migra
-            # The code is adapted from `~gammapy.EnergyDispersion2D.get_response`
-
+        for idx, e_true in enumerate(energy_axis.center):
             # migration value of e_reco bounds
-            migra_e_reco = e_reco / e_true
+            migra = e_reco / e_true
 
             # Compute normalized cumulative sum to prepare integration
-            tmp = np.nan_to_num(
-                np.cumsum(edisp_values[:, i]) / np.sum(edisp_values[:, i])
-            )
-
-            # Determine positions (bin indices) of e_reco bounds in migration array
-            pos_mig = np.digitize(migra_e_reco, mig_array) - 1
-            # We ensure that no negative values are found
-            pos_mig = np.maximum(pos_mig, 0)
+            tmp = cumtrapz(edisp_values[:, idx], migra_axis_upsampled.edges, initial=0)
+            _ = np.interp(migra, migra_axis_upsampled.edges, tmp)
 
             # We compute the difference between 2 successive bounds in e_reco
             # to get integral over reco energy bin
-            integral = np.diff(tmp[pos_mig])
+            integral = np.diff(_)
 
-            data.append(integral)
+            data.append(integral / integral.sum())
 
-        data = np.asarray(data)
-        # EnergyDispersion uses edges of true energy bins
-        e_true_edges = self.edisp_map.geom.axes[1].edges
-
-        e_lo, e_hi = e_true_edges[:-1], e_true_edges[1:]
-        ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
+        data = np.clip(data, a_min=0, a_max=np.inf)
 
         return EDispKernel(
-            e_true_lo=e_lo,
-            e_true_hi=e_hi,
-            e_reco_lo=ereco_lo,
-            e_reco_hi=ereco_hi,
+            e_true_lo=energy_axis.edges[:-1],
+            e_true_hi=energy_axis.edges[1:],
+            e_reco_lo=e_reco[:-1],
+            e_reco_hi=e_reco[1:],
             data=data,
         )
 
@@ -354,12 +340,12 @@ class EDispMap:
             Sequence of Edisp-corrected coordinates of the input map_coord map.
         """
         random_state = get_random_state(random_state)
-        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
+        migra_axis = self.edisp_map.geom.get_axis_by_name("migra").upsample(5)
 
         coord = {
             "skycoord": map_coord.skycoord.reshape(-1, 1),
             "energy": map_coord["energy"].reshape(-1, 1),
-            "migra": migra_axis.center,
+            "migra": migra_axis.edges[:-1],
         }
 
         pdf_edisp = self.edisp_map.interp_by_coord(coord)
