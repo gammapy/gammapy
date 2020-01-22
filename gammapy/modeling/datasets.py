@@ -106,7 +106,7 @@ class Datasets(collections.abc.Sequence):
             dataset_list = []
             for data in datasets:
                 if isinstance(data, Datasets):
-                    dataset_list + list(data)
+                    dataset_list += list(data)
                 elif isinstance(data, Dataset):
                     dataset_list.append(data)
                 else:
