@@ -7,10 +7,50 @@ import scipy.special
 import astropy.units as u
 from astropy.table import Table
 from gammapy.maps import MapAxis
+from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.modeling import Model, Parameter, Parameters
-from gammapy.utils.integrate import integrate_spectrum
+from gammapy.utils.integrate import evaluate_integral_pwl, trapz_loglog
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
+
+
+def integrate_spectrum(func, emin, emax, ndecade=100, intervals=False):
+    """Integrate 1d function using the log-log trapezoidal rule.
+
+    If scalar values for xmin and xmax are passed an oversampled grid is generated using the
+    ``ndecade`` keyword argument. If xmin and xmax arrays are passed, no
+    oversampling is performed and the integral is computed in the provided
+    grid.
+
+    Parameters
+    ----------
+    func : callable
+        Function to integrate.
+    emin : `~astropy.units.Quantity`
+        Integration range minimum
+    emax : `~astropy.units.Quantity`
+        Integration range minimum
+    ndecade : int, optional
+        Number of grid points per decade used for the integration.
+        Default : 100.
+    intervals : bool, optional
+        Return integrals in the grid not the sum, default: False
+    """
+    if emin.isscalar and emax.isscalar:
+        energies = MapAxis.from_energy_bounds(
+            emin=emin, emax=emax, nbin=ndecade, per_decade=True
+        ).edges
+    else:
+        energies = edges_from_lo_hi(emin, emax)
+
+    values = func(energies)
+
+    integral = trapz_loglog(values, energies)
+
+    if intervals:
+        return integral
+
+    return integral.sum()
 
 
 class SpectralModel(Model):
@@ -415,28 +455,12 @@ class PowerLawSpectralModel(SpectralModel):
     index = Parameter("index", 2.0)
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
     reference = Parameter("reference", "1 TeV", frozen=True)
+    evaluate_integral = staticmethod(evaluate_integral_pwl)
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference):
         """Evaluate the model (static function)."""
         return amplitude * np.power((energy / reference), -index)
-
-    @staticmethod
-    def evaluate_integral(emin, emax, index, amplitude, reference):
-        """Evaluate the model integral (static function)."""
-        val = -1 * index + 1
-
-        prefactor = amplitude * reference / val
-        upper = np.power((emax / reference), val)
-        lower = np.power((emin / reference), val)
-        integral = prefactor * (upper - lower)
-
-        mask = np.isclose(val, 0)
-
-        if mask.any():
-            integral[mask] = (amplitude * reference * np.log(emax / emin))[mask]
-
-        return integral
 
     @staticmethod
     def evaluate_energy_flux(emin, emax, index, amplitude, reference):

@@ -1,19 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from astropy.units import Quantity
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.utils.integrate import integrate_spectrum
+from gammapy.utils.integrate import evaluate_integral_pwl, trapz_loglog
 from gammapy.utils.testing import assert_quantity_allclose
 
 
-def test_integrate_spectrum():
-    """
-    Test numerical integration against analytical solution.
-    """
-    emin = Quantity(1, "TeV")
-    emax = Quantity(10, "TeV")
+def test_trapz_loglog():
+    energy = Quantity([1, 10], "TeV")
     pwl = PowerLawSpectralModel(index=2.3)
 
-    ref = pwl.integral(emin=emin, emax=emax)
+    ref = pwl.integral(emin=energy[0], emax=energy[1])
 
-    val = integrate_spectrum(pwl, emin, emax)
+    val = trapz_loglog(pwl(energy), energy)
     assert_quantity_allclose(val, ref)

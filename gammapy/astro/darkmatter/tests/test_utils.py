@@ -31,5 +31,5 @@ def test_dmfluxmap(jfact):
     diff_flux = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel)
     int_flux = (jfact * diff_flux.integral(emin=emin, emax=emax)).to("cm-2 s-1")
     actual = int_flux[5, 5]
-    desired = 1.94839226e-12 / u.cm ** 2 / u.s
+    desired = 1.948518e-12 / u.cm ** 2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-5)
