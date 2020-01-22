@@ -648,7 +648,7 @@ def test_hpxgeom_from_header():
         "ORDER": 6,
         "PIXTYPE": "HEALPIX",
         "ORDERING": "RING",
-        "COORDSYS": "icrs",
+        "COORDSYS": "CEL",
         "TTYPE1": "PIX",
         "TFORM1": "K",
         "TTYPE2": "CHANNEL1",
@@ -659,7 +659,7 @@ def test_hpxgeom_from_header():
     header.update(pars)
     hpx = HpxGeom.from_header(header)
 
-    assert hpx.frame == pars["COORDSYS"]
+    assert hpx.frame == "icrs"
     assert hpx.nest is False
     assert_allclose(hpx.nside, np.array([64]))
 

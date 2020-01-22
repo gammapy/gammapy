@@ -4,6 +4,24 @@ from astropy.io import fits
 from gammapy.utils.random import get_random_state
 
 
+def coordsys_to_frame(coordsys):
+    if coordsys in ["CEL", "C"]:
+        return "icrs"
+    elif coordsys in ["GAL", "G"]:
+        return "galactic"
+    else:
+        raise ValueError(f"Unknown coordinate system: '{coordsys}'")
+
+
+def frame_to_coordsys(frame):
+    if frame in ["icrs", "fk5", "fk4"]:
+        return "CEL"
+    elif frame in ["galactic"]:
+        return "GAL"
+    else:
+        raise ValueError(f"Unknown coordinate frame '{frame}'")
+
+
 class InvalidValue:
     """Class to define placeholder for invalid array values."""
 

@@ -14,7 +14,7 @@ from .geom import (
     pix_tuple_to_idx,
     skycoord_to_lonlat,
 )
-from .utils import INVALID_INDEX
+from .utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
 from .wcs import WcsGeom
 
 # Not sure if we should expose this in the docs or not:
@@ -1316,7 +1316,7 @@ class HpxGeom(Geom):
             raise ValueError("Failed to extract NSIDE or ORDER.")
 
         try:
-            frame = header[conv.frame]
+            frame = coordsys_to_frame(header[conv.frame])
         except KeyError:
             frame = header.get("COORDSYS", "icrs")
 
@@ -1378,7 +1378,7 @@ class HpxGeom(Geom):
             header["TELESCOP"] = "GLAST"
             header["INSTRUME"] = "LAT"
 
-        header[conv.frame] = self.frame
+        header[conv.frame] = frame_to_coordsys(self.frame)
         header["PIXTYPE"] = "HEALPIX"
         header["ORDERING"] = self.ordering
         header["INDXSCHM"] = indxschm
