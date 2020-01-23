@@ -188,7 +188,6 @@ def test_map_maker_obs(observations):
     assert map_dataset.psf.psf_map.data.shape == (3, 66, 5, 10)
     assert map_dataset.psf.exposure_map.data.shape == (3, 1, 5, 10)
     assert_allclose(map_dataset.gti.time_delta, 1800.0 * u.s)
-    assert map_dataset.name == "obs_110380"
 
 
 @requires_data()

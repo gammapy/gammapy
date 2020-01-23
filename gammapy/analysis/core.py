@@ -328,7 +328,7 @@ class Analysis:
 
         if self.config.datasets.stack:
             stacked = self.datasets.stack_reduce()
-            stacked.name = "stacked"
+            stacked._name = "stacked"
             self.datasets = Datasets([stacked])
 
     @staticmethod
