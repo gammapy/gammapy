@@ -241,7 +241,7 @@ class MapDatasetMaker:
             edisp = self.make_edisp(dataset.edisp.edisp_map.geom, observation)
             kwargs["edisp"] = edisp
 
-        return MapDataset(**kwargs)
+        return MapDataset(**kwargs, name=dataset.name)
 
 
 class SafeMaskMaker:

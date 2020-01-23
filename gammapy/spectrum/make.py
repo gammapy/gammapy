@@ -214,4 +214,4 @@ class SpectrumDatasetMaker:
                 region.center, energy_axis, energy_axis_true, observation
             )
 
-        return SpectrumDataset(**kwargs)
+        return SpectrumDataset(**kwargs, name=dataset.name)

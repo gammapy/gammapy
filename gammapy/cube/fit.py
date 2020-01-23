@@ -408,7 +408,7 @@ class MapDataset(Dataset):
             **kwargs,
         )
 
-    def stack(self, other, name=None):
+    def stack(self, other):
         """Stack another dataset in place.
 
         Parameters
@@ -416,8 +416,6 @@ class MapDataset(Dataset):
         other: `~gammapy.cube.MapDataset`
             Map dataset to be stacked with this one.
         """
-        name=make_name(name)
-        self._name = name
         
         if self.counts and other.counts:
             self.counts *= self.mask_safe
@@ -437,7 +435,7 @@ class MapDataset(Dataset):
             other_bkg = other.background_model.evaluate()
             bkg.stack(other_bkg, weights=other.mask_safe)
 
-            self.background_model = BackgroundModel(bkg, name=name)
+            self.background_model = BackgroundModel(bkg, name=self.name)
 
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)
@@ -834,7 +832,6 @@ class MapDataset(Dataset):
         dataset : `~gammapy.spectrum.SpectrumDataset`
             the resulting reduced dataset
         """
-        name = make_name(name)
         kwargs = {"gti": self.gti, "name": name}
 
         if self.gti is not None:
