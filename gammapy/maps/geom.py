@@ -420,6 +420,7 @@ class MapAxis:
             Interpolation method used to transform between axis and pixel
             coordinates.  Default: 'lin'.
         """
+        nbin = int(nbin)
         interp = kwargs.setdefault("interp", "lin")
         node_type = kwargs.setdefault("node_type", "edges")
 
