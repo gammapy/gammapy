@@ -1186,10 +1186,7 @@ class FluxPointsDataset(Dataset):
         self.mask_fit = mask_fit
         self.models = models
 
-        if name is None:
-            self.name = make_name()
-        else:
-            self.name = name
+        self._name = make_name(name)
 
         if data.sed_type != "dnde":
             raise ValueError("Currently only flux points of type 'dnde' are supported.")
@@ -1198,6 +1195,10 @@ class FluxPointsDataset(Dataset):
             mask_safe = np.isfinite(data.table["dnde"])
 
         self.mask_safe = mask_safe
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def models(self):

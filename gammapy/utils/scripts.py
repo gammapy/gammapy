@@ -4,6 +4,8 @@ import os.path
 from pathlib import Path
 from uuid import uuid4
 import yaml
+from base64 import urlsafe_b64encode
+import codecs
 
 __all__ = ["read_yaml", "write_yaml", "make_path", "recursive_merge_dicts"]
 
@@ -54,9 +56,11 @@ def write_yaml(dictionary, filename, logger=None, sort_keys=True):
     path.write_text(text)
 
 
-def make_name():
-    return uuid4().hex[:8]
-
+def make_name(name=None):
+    if name is None:
+        return urlsafe_b64encode(codecs.decode(uuid4().hex, 'hex')).decode()[:8]
+    else:
+        return name
 
 def make_path(path):
     """Expand environment variables on `~pathlib.Path` construction.

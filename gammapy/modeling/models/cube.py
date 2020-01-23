@@ -3,7 +3,6 @@
 import collections.abc
 import copy
 from pathlib import Path
-from warnings import warn
 import numpy as np
 import astropy.units as u
 import yaml
@@ -54,14 +53,11 @@ class SkyModels(collections.abc.Sequence):
             raise TypeError(f"Invalid type: {skymodels!r}")
 
         unique_names = []
-        renamed = False
         for model in models:
-            while model.name in unique_names:
-                model.name = make_name()  # replace duplicate
-                if renamed is False:
-                    warn("SkyModel names must be unique, auto-replaced duplicates")
-                    renamed = True  # avoid repetition
+            if model.name in unique_names:
+                raise(ValueError("SkyModel names must be unique"))
             unique_names.append(model.name)
+
 
         self._skymodels = models
 
@@ -159,11 +155,12 @@ class SkyModel(SkyModelBase):
         # TODO: this hack is needed for compound models to work
         self.__dict__.pop("_parameters")
 
-        if name is None:
-            self.name = make_name()
-        else:
-            self.name = name
+        self._name = make_name(name)
 
+    @property
+    def name(self):
+        return self._name
+        
     @property
     def parameters(self):
         parameters = []
@@ -259,7 +256,7 @@ class SkyModel(SkyModelBase):
 
         return value
 
-    def copy(self, **kwargs):
+    def copy(self,name=None, **kwargs):
         """Copy SkyModel"""
         if self.spatial_model is not None:
             spatial_model = self.spatial_model.copy()
@@ -268,7 +265,7 @@ class SkyModel(SkyModelBase):
 
         kwargs.setdefault("spatial_model", spatial_model)
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
-        kwargs.setdefault("name", make_name())
+        kwargs.setdefault("name", make_name(name))
         return self.__class__(**kwargs)
 
     def to_dict(self):
@@ -346,10 +343,8 @@ class SkyDiffuseCube(SkyModelBase):
         filename=None,
     ):
 
-        if name is None:
-            self.name = make_name()
-        else:
-            self.name = name
+        self._name = make_name(name)
+
         axis = map.geom.get_axis_by_name("energy")
 
         if axis.node_type != "center":
@@ -371,6 +366,10 @@ class SkyDiffuseCube(SkyModelBase):
 
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
+    @property
+    def name(self):
+        return self._name
+    
     @classmethod
     def read(cls, filename, **kwargs):
         """Read map from FITS file.
@@ -491,13 +490,14 @@ class BackgroundModel(Model):
 
         self.map = map
 
-        if name is None:
-            self.name = make_name()
-        else:
-            self.name = name
+        self._name = make_name(name)
         self.filename = filename
 
         super().__init__(norm=norm, tilt=tilt, reference=reference)
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def energy_center(self):

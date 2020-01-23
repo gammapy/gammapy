@@ -58,11 +58,10 @@ class Model:
     def copy(self, name=None):
         """A deep copy."""
         new = copy.deepcopy(self)
-        if name is None:
-            new.name = make_name()
-        else:
-            new.name = name
+        if hasattr(new, "_name"):
+            new._name = make_name(name)
         return new
+
 
     def __str__(self):
         return f"{self.__class__.__name__}\n\n{self.parameters.to_table()}"

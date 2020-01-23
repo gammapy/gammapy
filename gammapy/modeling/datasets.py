@@ -67,10 +67,7 @@ class Dataset(abc.ABC):
     def copy(self, name=None):
         """A deep copy."""
         new = copy.deepcopy(self)
-        if name is None:
-            new.name = make_name()
-        else:
-            new.name = name
+        new._name = make_name(name)
         return new
 
     @staticmethod
@@ -114,13 +111,9 @@ class Datasets(collections.abc.Sequence):
             raise TypeError(f"Invalid type: {datasets!r}")
 
         unique_names = []
-        renamed = False
         for dataset in dataset_list:
-            while dataset.name in unique_names:
-                dataset.name = make_name()  # replace duplicate
-                if renamed is False:
-                    warn("Dataset names must be unique, auto-replaced duplicates")
-                    renamed = True  # avoid repetition
+            if dataset.name in unique_names:
+                raise(ValueError("Dataset names must be unique"))
             unique_names.append(dataset.name)
 
         self._datasets = datasets

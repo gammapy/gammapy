@@ -103,14 +103,15 @@ class MapDataset(Dataset):
         self.mask_safe = mask_safe
         self.gti = gti
 
-        if name is None:
-            self.name = make_name()
-        else:
-            self.name = name
+        self._name = make_name(name)
 
         # check whether a reference geom is defined
         _ = self._geom
 
+    @property
+    def name(self):
+        return self._name
+    
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
         str_ += "\n"
@@ -407,7 +408,7 @@ class MapDataset(Dataset):
             **kwargs,
         )
 
-    def stack(self, other):
+    def stack(self, other, name=None):
         """Stack another dataset in place.
 
         Parameters
@@ -415,7 +416,9 @@ class MapDataset(Dataset):
         other: `~gammapy.cube.MapDataset`
             Map dataset to be stacked with this one.
         """
-
+        name=make_name(name)
+        self._name = name
+        
         if self.counts and other.counts:
             self.counts *= self.mask_safe
             self.counts.stack(other.counts, weights=other.mask_safe)
@@ -434,9 +437,7 @@ class MapDataset(Dataset):
             other_bkg = other.background_model.evaluate()
             bkg.stack(other_bkg, weights=other.mask_safe)
 
-            self.background_model = BackgroundModel(
-                bkg, name=self.background_model.name
-            )
+            self.background_model = BackgroundModel(bkg, name=name)
 
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)
@@ -807,7 +808,7 @@ class MapDataset(Dataset):
             "filename": str(filename),
         }
 
-    def to_spectrum_dataset(self, on_region, containment_correction=False):
+    def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
         """Return a ~gammapy.spectrum.SpectrumDataset from on_region.
 
         Counts and background are summed in the on_region.
@@ -833,7 +834,8 @@ class MapDataset(Dataset):
         dataset : `~gammapy.spectrum.SpectrumDataset`
             the resulting reduced dataset
         """
-        kwargs = {"gti": self.gti, "name": self.name}
+        name = make_name(name)
+        kwargs = {"gti": self.gti, "name": name}
 
         if self.gti is not None:
             kwargs["livetime"] = self.gti.time_sum
@@ -881,7 +883,7 @@ class MapDataset(Dataset):
 
         return SpectrumDataset(**kwargs)
 
-    def to_image(self, spectrum=None):
+    def to_image(self, spectrum=None, name=None):
         """Create images by summing over the energy axis.
 
         Exposure is weighted with an assumed spectrum,
@@ -901,6 +903,7 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset containing images.
         """
+        name = make_name(name)
         counts = self.counts * self.mask_safe
         background = self.background_model.evaluate() * self.mask_safe
 
@@ -922,15 +925,15 @@ class MapDataset(Dataset):
         return self.__class__(
             counts=counts,
             exposure=exposure,
-            background_model=BackgroundModel(background),
+            background_model=BackgroundModel(background,name=name),
             mask_safe=mask_image,
             edisp=edisp,
             psf=psf,
             gti=self.gti,
-            name=self.name,
+            name=name,
         )
 
-    def cutout(self, position, width, mode="trim"):
+    def cutout(self, position, width, mode="trim", name=None):
         """Cutout map dataset.
 
         Parameters
@@ -948,7 +951,8 @@ class MapDataset(Dataset):
         cutout : `MapDataset`
             Cutout map dataset.
         """
-        kwargs = {"gti": self.gti}
+        name = make_name(name)
+        kwargs = {"gti": self.gti, "name": name}
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
 
         if self.counts is not None:
@@ -959,7 +963,7 @@ class MapDataset(Dataset):
 
         if self.background_model is not None:
             bkg_map = self.background_model.map.cutout(**cutout_kwargs)
-            bkg_model = BackgroundModel(bkg_map)
+            bkg_model = BackgroundModel(bkg_map, name=name)
             factors = [par.factor for par in self.background_model.parameters]
             bkg_model.parameters.set_parameter_factors(factors)
             kwargs["background_model"] = bkg_model
@@ -1031,7 +1035,7 @@ class MapDatasetOnOff(MapDataset):
         psf=None,
         edisp=None,
         background_model=None,
-        name="",
+        name=None,
         evaluation_mode="local",
         mask_safe=None,
         gti=None,
@@ -1057,10 +1061,11 @@ class MapDatasetOnOff(MapDataset):
         self.psf = psf
         self.edisp = edisp
         self.models = models
-        self.name = name
+        self._name = make_name(name)
         self.mask_safe = mask_safe
         self.gti = gti
 
+    
     def __str__(self):
         str_ = super().__str__()
 

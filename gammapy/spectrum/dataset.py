@@ -90,10 +90,11 @@ class SpectrumDataset(Dataset):
         self.mask_safe = mask_safe
         self.gti = gti
 
-        if name is None:
-            self.name = make_name()
-        else:
-            self.name = name
+        self._name = make_name(name)
+        
+    @property
+    def name(self):
+        return self._name
 
     def __str__(self):
         str_ = self.__class__.__name__
@@ -660,7 +661,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         mask_fit=None,
         acceptance=None,
         acceptance_off=None,
-        name="",
+        name=None,
         gti=None,
     ):
 
@@ -685,7 +686,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
-        self.name = name
+        self._name = make_name(name)
         self.gti = gti
 
     def __str__(self):
