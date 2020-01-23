@@ -260,7 +260,7 @@ class Analysis:
                 dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
                 if "background" in self.config.datasets.map_selection:
-                    dataset.background_model.name = f"bkg_{dataset.name}"
+                    dataset.background_model._name = f"bkg_{dataset.name}"
                     # TODO remove this once dataset and model have unique identifiers
                 log.debug(dataset)
                 stacked.stack(dataset)
@@ -273,7 +273,7 @@ class Analysis:
                 dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
                 if "background" in self.config.datasets.map_selection:
-                    dataset.background_model.name = f"bkg_{dataset.name}"
+                    dataset.background_model._name = f"bkg_{dataset.name}"
                     # TODO remove this once dataset and model have unique identifiers
                 log.debug(dataset)
                 datasets.append(dataset)

@@ -300,7 +300,7 @@ class MapDataset(Dataset):
         geom_psf,
         geom_edisp,
         reference_time="2000-01-01",
-        name="",
+        name=None,
         **kwargs,
     ):
         """
@@ -360,7 +360,7 @@ class MapDataset(Dataset):
         rad_axis=None,
         binsz_irf=None,
         reference_time="2000-01-01",
-        name="",
+        name=None,
         **kwargs,
     ):
         """Create a MapDataset object with zero filled maps.
@@ -686,7 +686,7 @@ class MapDataset(Dataset):
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, name=""):
+    def from_hdulist(cls, hdulist, name=None):
         """Create map dataset from list of HDUs.
 
         Parameters
@@ -757,7 +757,7 @@ class MapDataset(Dataset):
         self.to_hdulist().writeto(make_path(filename), overwrite=overwrite)
 
     @classmethod
-    def read(cls, filename, name=""):
+    def read(cls, filename, name=None):
         """Read map dataset from file.
 
         Parameters
@@ -1131,7 +1131,7 @@ class MapDatasetOnOff(MapDataset):
         geom_psf,
         geom_edisp,
         reference_time="2000-01-01",
-        name="",
+        name=None,
         **kwargs,
     ):
         """
@@ -1283,7 +1283,7 @@ class MapDatasetOnOff(MapDataset):
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, name=""):
+    def from_hdulist(cls, hdulist, name=None):
         """Create map dataset from list of HDUs.
 
         Parameters
