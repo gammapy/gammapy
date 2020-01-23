@@ -102,6 +102,7 @@ Advanced tutorials
    :hidden:
 
    ../notebooks/analysis_mwl.ipynb
+   ../notebooks/extended_source_spectral_analysis.ipynb
    ../notebooks/detect.ipynb
    ../notebooks/cta_sensitivity.ipynb
    ../notebooks/modeling_2D.ipynb
@@ -118,6 +119,10 @@ Gammapy API.
 *Source detection*
 
 - `How to detect unknown sources and build a simple upper limit map <../notebooks/detect.html>`__ | *detect.ipynb*
+
+*Spectral analysis*
+
+- `How to extract the 1D spectrum of an extended source <../notebooks/extended_source_spectral_analysis.html>`__ | *extended_source_spectral_analysis.ipynb*
 
 *Multi-instrument analysis*
 
