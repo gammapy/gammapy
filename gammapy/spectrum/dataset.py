@@ -1110,15 +1110,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         info_dict : dict
             Dictionary with summary info.
         """
-        info = dict()
+        info = super().info_dict(in_safe_energy_range)
         mask = self.mask_safe if in_safe_energy_range else slice(None)
-
-        info["name"] = self.name
-        info["livetime"] = self.livetime.copy()
 
         # TODO: handle energy dependent a_on / a_off
         info["a_on"] = self.acceptance[0].copy()
-        info["n_on"] = self.counts.data[mask].sum()
 
         if self.counts_off is not None:
             info["n_off"] = self.counts_off.data[mask].sum()
@@ -1128,16 +1124,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             info["a_off"] = 1
 
         info["alpha"] = self.alpha[0].copy()
-        info["background"] = self.background.data[mask].sum()
-        info["excess"] = self.excess.data[mask].sum()
         info["significance"] = significance_on_off(
             self.counts.data[mask].sum(),
             self.counts_off.data[mask].sum(),
             self.alpha[0],
         )
 
-        info["background_rate"] = info["background"] / info["livetime"]
-        info["gamma_rate"] = info["excess"] / info["livetime"]
         return info
 
     def to_dict(self, filename, *args, **kwargs):
