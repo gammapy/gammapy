@@ -464,18 +464,15 @@ class MapAxis:
         axis : `MapAxis`
             Axis with name "energy" and interp "log".
         """
+        emin = u.Quantity(emin, unit)
+        emax = u.Quantity(emax, unit)
+
         if unit is None:
-            emin = u.Quantity(emin)
-            emax = u.Quantity(emax)
             unit = emax.unit
             emin = emin.to(unit)
-        else:
-            unit = u.Unit(unit)
-            emin = u.Quantity(emin, unit)
-            emax = u.Quantity(emax, unit)
 
         if per_decade:
-            nbin = np.ceil(np.log10(emax / emin) * nbin)
+            nbin = np.ceil(np.log10(emax / emin).value * nbin)
 
         return cls.from_bounds(
             emin.value, emax.value, nbin=nbin, unit=unit, interp="log", name="energy"

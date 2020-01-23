@@ -27,7 +27,7 @@ addons:
 env:
     global:
         - PYTHON_VERSION=3.7
-        - NUMPY_VERSION=1.17.3
+        - NUMPY_VERSION=stable
         - ASTROPY_VERSION=stable
         - ASTROPY_USE_SYSTEM_PYTEST=1
 
