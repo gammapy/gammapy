@@ -60,11 +60,7 @@ def test_asmooth_dataset(input_dataset):
     scales = ASmooth.make_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 
     asmooth = ASmooth(kernel=kernel, scales=scales, method="simple", threshold=2.5)
-    smoothed = asmooth.run(
-        input_dataset.counts,
-        input_dataset.background_model.evaluate(),
-        input_dataset.exposure,
-    )
+    smoothed = asmooth.run(input_dataset)
 
     assert smoothed["flux"].data.shape == (40, 50)
     assert smoothed["flux"].unit == u.Unit("cm-2s-1")

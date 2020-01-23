@@ -5,6 +5,7 @@ from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.maps import WcsNDMap, scale_cube
 from gammapy.stats import significance
+from gammapy.cube import MapDatasetOnOff
 
 __all__ = ["ASmooth"]
 
@@ -88,19 +89,14 @@ class ASmooth:
             )
         return scube
 
-    def run(self, counts, background=None, exposure=None):
+    def run(self, dataset):
         """
-        Run image smoothing.
+        Run adaptive smoothing on input MapDataset.
 
         Parameters
         ----------
-        counts : `~gammapy.maps.WcsNDMap`
-            Counts map
-        background : `~gammapy.maps.WcsNDMap`
-            Background map
-        exposure : `~gammapy.maps.WcsNDMap`
-            Exposure map
-
+        dataset : `~gammapy.cube.MapDataset` or `~gammapy.cube.MapDatasetOnOff`
+            the input dataset (with one bin in energy at most)
         Returns
         -------
         images : dict of `~gammapy.maps.WcsNDMap`
@@ -111,6 +107,13 @@ class ASmooth:
                 * 'scales'
                 * 'significance'.
         """
+        counts = dataset.counts
+        exposure = dataset.exposure
+        background = dataset.npred()
+
+        if isinstance(dataset, MapDatasetOnOff):
+            background += dataset.background
+
         pixel_scale = counts.geom.pixel_scales.mean()
         kernels = self.kernels(pixel_scale)
 
