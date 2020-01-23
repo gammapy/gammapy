@@ -128,6 +128,10 @@ class Datasets(collections.abc.Sequence):
         return parameters.unique_parameters
 
     @property
+    def names(self):
+        return [d.name for d in self._datasets]
+
+    @property
     def is_all_same_type(self):
         """Whether all contained datasets are of the same type"""
         return len(set(_.__class__ for _ in self)) == 1

@@ -213,7 +213,10 @@ class TestSkyModels:
 
         with pytest.raises(IndexError):
             sky_models["spam"]
-
+     
+    @staticmethod
+    def test_names(sky_models): 
+        assert sky_models.names == ["source-2", "source-3"]
 
 class TestSkyModel:
     @staticmethod

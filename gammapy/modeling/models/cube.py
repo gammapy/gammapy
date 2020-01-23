@@ -64,6 +64,10 @@ class SkyModels(collections.abc.Sequence):
     def parameters(self):
         return Parameters.from_stack([_.parameters for _ in self._skymodels])
 
+    @property
+    def names(self):
+        return [m.name for m in self._skymodels]
+    
     @classmethod
     def read(cls, filename):
         """Read from YAML file."""
