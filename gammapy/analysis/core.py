@@ -313,7 +313,7 @@ class Analysis:
         datasets = []
         for obs in self.observations:
             log.info(f"Processing observation {obs.obs_id}")
-            dataset = dataset_maker.run(reference, obs)
+            dataset = dataset_maker.run(reference.copy(), obs)
             dataset = bkg_maker.run(dataset, obs)
             if dataset.counts_off is None:
                 log.info(
