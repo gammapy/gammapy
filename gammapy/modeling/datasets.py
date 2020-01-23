@@ -2,7 +2,6 @@
 import abc
 import collections.abc
 import copy
-from warnings import warn
 import numpy as np
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
@@ -113,7 +112,7 @@ class Datasets(collections.abc.Sequence):
         unique_names = []
         for dataset in dataset_list:
             if dataset.name in unique_names:
-                raise(ValueError("Dataset names must be unique"))
+                raise (ValueError("Dataset names must be unique"))
             unique_names.append(dataset.name)
 
         self._datasets = datasets

@@ -91,7 +91,7 @@ class SpectrumDataset(Dataset):
         self.gti = gti
 
         self._name = make_name(name)
-        
+
     @property
     def name(self):
         return self._name

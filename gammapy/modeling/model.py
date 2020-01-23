@@ -62,7 +62,6 @@ class Model:
             new._name = make_name(name)
         return new
 
-
     def __str__(self):
         return f"{self.__class__.__name__}\n\n{self.parameters.to_table()}"
 

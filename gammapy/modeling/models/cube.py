@@ -55,9 +55,8 @@ class SkyModels(collections.abc.Sequence):
         unique_names = []
         for model in models:
             if model.name in unique_names:
-                raise(ValueError("SkyModel names must be unique"))
+                raise (ValueError("SkyModel names must be unique"))
             unique_names.append(model.name)
-
 
         self._skymodels = models
 
@@ -160,7 +159,7 @@ class SkyModel(SkyModelBase):
     @property
     def name(self):
         return self._name
-        
+
     @property
     def parameters(self):
         parameters = []
@@ -256,7 +255,7 @@ class SkyModel(SkyModelBase):
 
         return value
 
-    def copy(self,name=None, **kwargs):
+    def copy(self, name=None, **kwargs):
         """Copy SkyModel"""
         if self.spatial_model is not None:
             spatial_model = self.spatial_model.copy()
@@ -369,7 +368,7 @@ class SkyDiffuseCube(SkyModelBase):
     @property
     def name(self):
         return self._name
-    
+
     @classmethod
     def read(cls, filename, **kwargs):
         """Read map from FITS file.

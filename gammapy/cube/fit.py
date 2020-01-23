@@ -111,7 +111,7 @@ class MapDataset(Dataset):
     @property
     def name(self):
         return self._name
-    
+
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
         str_ += "\n"
@@ -416,7 +416,7 @@ class MapDataset(Dataset):
         other: `~gammapy.cube.MapDataset`
             Map dataset to be stacked with this one.
         """
-        
+
         if self.counts and other.counts:
             self.counts *= self.mask_safe
             self.counts.stack(other.counts, weights=other.mask_safe)
@@ -922,7 +922,7 @@ class MapDataset(Dataset):
         return self.__class__(
             counts=counts,
             exposure=exposure,
-            background_model=BackgroundModel(background,name=name),
+            background_model=BackgroundModel(background, name=name),
             mask_safe=mask_image,
             edisp=edisp,
             psf=psf,
@@ -1062,7 +1062,6 @@ class MapDatasetOnOff(MapDataset):
         self.mask_safe = mask_safe
         self.gti = gti
 
-    
     def __str__(self):
         str_ = super().__str__()
 
