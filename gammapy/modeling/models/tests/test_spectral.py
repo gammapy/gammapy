@@ -16,6 +16,7 @@ from gammapy.modeling.models import (
     NaimaSpectralModel,
     PowerLaw2SpectralModel,
     PowerLawSpectralModel,
+    SmoothBrokenPowerLawSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     TemplateSpectralModel,
 )
@@ -192,6 +193,20 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(3.026342, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(7.38652453, "TeV cm-2 s-1"),
         e_peak=1.7677669529663684 * u.TeV,
+    ),
+    dict(
+        name="sbpl",
+        model=SmoothBrokenPowerLawSpectralModel(
+            index1=1.5 * u.Unit(""),
+            index2=2.5 * u.Unit(""),
+            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            ebreak=0.5 * u.TeV,
+            reference=1 * u.TeV,
+            beta=1,
+        ),
+        val_at_2TeV=u.Quantity(0.28284271247461906, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(0.9956923907948155, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(2.2372256145972207, "TeV cm-2 s-1"),
     ),
 ]
 
