@@ -243,6 +243,18 @@ def test_to_image(geom):
     desired = np.array([[False, True], [True, True]])
     assert (dataset_im.mask_safe.data == desired).all()
 
+    # Check that missing entries in the dataset do not break
+    dataset_copy = dataset.copy()
+    dataset_copy.exposure = None
+    dataset_copy.background_model = None
+    dataset_im = dataset_copy.to_image()
+    assert dataset_im.exposure is None
+    assert dataset_im.background_model is None
+
+    dataset_copy = dataset.copy()
+    dataset_copy.counts = None
+    dataset_im = dataset_copy.to_image()
+    assert dataset_im.counts is None
 
 @requires_data()
 def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
