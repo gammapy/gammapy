@@ -205,7 +205,7 @@ class Datasets(collections.abc.Sequence):
         write_yaml(datasets_dict, path / f"{prefix}_datasets.yaml", sort_keys=False)
         write_yaml(components_dict, path / f"{prefix}_models.yaml", sort_keys=False)
 
-    def stack_reduce(self):
+    def stack_reduce(self,name=None):
         """Reduce the Datasets to a unique Dataset by stacking them together.
 
         This works only if all Dataset are of the same type and if a proper
@@ -221,7 +221,7 @@ class Datasets(collections.abc.Sequence):
                 "Stacking impossible: all Datasets contained are not of a unique type."
             )
 
-        dataset = self[0].copy()
+        dataset = self[0].copy(name=name)
         for ds in self[1:]:
             dataset.stack(ds)
         return dataset

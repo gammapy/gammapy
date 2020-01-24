@@ -606,7 +606,7 @@ class MapDataset(Dataset):
         else:
             return cash_sum_cython(counts.ravel(), npred.ravel())
 
-    def fake(self, random_state="random-seed"):
+    def fake(self, random_state="random-seed", name=None):
         """Simulate fake counts for the current model and reduced IRFs.
 
         This method overwrites the counts defined on the dataset object.
@@ -617,6 +617,7 @@ class MapDataset(Dataset):
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
         """
+        self._name = make_name(name)
         random_state = get_random_state(random_state)
         npred = self.npred()
         npred.data = random_state.poisson(npred.data)
@@ -1234,7 +1235,7 @@ class MapDatasetOnOff(MapDataset):
         """Total likelihood given the current model parameters."""
         return Dataset.stat_sum(self)
 
-    def fake(self, background_model, random_state="random-seed"):
+    def fake(self, background_model, random_state="random-seed", name=None):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.
 
         This method overwrites the counts defined on the dataset object.
@@ -1245,6 +1246,7 @@ class MapDatasetOnOff(MapDataset):
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
         """
+        self._name = make_name(name)
         random_state = get_random_state(random_state)
         npred = self.npred()
         npred.data = random_state.poisson(npred.data)
