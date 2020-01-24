@@ -676,7 +676,7 @@ class EnergyDispersion2D:
 
         migra_edges = edges_from_lo_hi(migra_lo, migra_hi)
         migra_axis = MapAxis.from_edges(
-            migra_edges, interp="log", name="migra", unit=""
+            migra_edges, interp="lin", name="migra", unit=""
         )
 
         # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
