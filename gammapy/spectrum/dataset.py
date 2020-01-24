@@ -8,7 +8,7 @@ from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EDispKernel, IRFStacker
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import SkyModel, SkyModels
-from gammapy.stats import cash, significance_on_off, wstat
+from gammapy.stats import cash, significance_on_off, significance, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
@@ -185,7 +185,10 @@ class SpectrumDataset(Dataset):
         if self.models is not None:
             for model in self.models:
                 evaluator = SpectrumEvaluator(
-                    model=model, livetime=self.livetime, aeff=self.aeff, edisp=self.edisp
+                    model=model,
+                    livetime=self.livetime,
+                    aeff=self.aeff,
+                    edisp=self.edisp,
                 )
                 evaluators.append(evaluator)
 
@@ -228,13 +231,19 @@ class SpectrumDataset(Dataset):
         """Shape of the counts data"""
         return (self._energy_axis.nbin,)
 
-    def npred(self):
-        """Return npred map (model + background)"""
+    def npred_sig(self):
+        """Predicted counts from source model (`CountsSpectrum`)."""
         data = np.zeros(self.data_shape)
         npred = self._as_counts_spectrum(data)
 
         for evaluator in self._evaluators:
             npred += evaluator.compute_npred()
+
+        return npred
+
+    def npred(self):
+        """Return npred map (model + background)"""
+        npred = self.npred_sig()
 
         if self.background:
             npred += self.background
@@ -326,7 +335,7 @@ class SpectrumDataset(Dataset):
 
         ax = plt.gca() if ax is None else ax
 
-        self.npred().plot(ax=ax, label="mu_src", energy_unit=self._e_unit)
+        self.npred_sig().plot(ax=ax, label="mu_src", energy_unit=self._e_unit)
         self.excess.plot(ax=ax, label="Excess", fmt=".", energy_unit=self._e_unit)
 
         e_min, e_max = self.energy_range
@@ -515,6 +524,82 @@ class SpectrumDataset(Dataset):
         if self.livetime is not None:
             self.livetime += other.livetime
 
+    def peek(self, figsize=(16, 4)):
+        """Quick-look summary plots."""
+        import matplotlib.pyplot as plt
+
+        e_min, e_max = self.energy_range
+
+        _, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=figsize)
+
+        ax1.set_title("Counts")
+        energy_unit = "TeV"
+
+        if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
+            self.background.plot_hist(
+                ax=ax1, label="alpha * N_off", color="darkblue", energy_unit=energy_unit
+            )
+        elif self.background is not None:
+            self.background.plot_hist(
+                ax=ax1, label="background", color="darkblue", energy_unit=energy_unit
+            )
+
+        self.counts.plot_hist(
+            ax=ax1,
+            label="n_on",
+            color="darkred",
+            energy_unit=energy_unit,
+            show_energy=(e_min, e_max),
+        )
+
+        ax1.set_xlim(
+            0.7 * e_min.to_value(energy_unit), 1.3 * e_max.to_value(energy_unit)
+        )
+        ax1.legend(numpoints=1)
+
+        ax2.set_title("Effective Area")
+        e_unit = self.aeff.energy.unit
+        self.aeff.plot(ax=ax2, show_energy=(e_min, e_max))
+        ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
+
+        ax3.set_title("Energy Dispersion")
+        if self.edisp is not None:
+            self.edisp.plot_matrix(ax=ax3)
+
+        # TODO: optimize layout
+        plt.subplots_adjust(wspace=0.3)
+
+    def info_dict(self, in_safe_energy_range=True):
+        """Info dict with summary statistics, summed over energy
+
+        Parameters
+        ----------
+        in_safe_energy_range : bool
+            Whether to sum only in the safe energy range
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info.
+        """
+        info = dict()
+        mask = self.mask_safe if in_safe_energy_range else slice(None)
+
+        info["name"] = self.name
+        info["livetime"] = self.livetime.copy()
+
+        info["n_on"] = self.counts.data[mask].sum()
+
+        info["background"] = self.background.data[mask].sum()
+        info["excess"] = self.excess.data[mask].sum()
+        info["significance"] = significance(
+            self.counts.data[mask].sum(), self.background.data[mask].sum(),
+        )
+
+        info["background_rate"] = info["background"] / info["livetime"]
+        info["gamma_rate"] = info["excess"] / info["livetime"]
+        return info
+
 
 class SpectrumDatasetOnOff(SpectrumDataset):
     """Spectrum dataset for on-off likelihood fitting.
@@ -619,16 +704,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     def alpha(self):
         """Exposure ratio between signal and background regions"""
         return self.acceptance / self.acceptance_off
-
-    def npred_sig(self):
-        """Predicted counts from source model (`CountsSpectrum`)."""
-        data = np.zeros(self.data_shape)
-        npred = self._as_counts_spectrum(data)
-
-        for evaluator in self._evaluators:
-            npred += evaluator.compute_npred()
-
-        return npred
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
@@ -844,47 +919,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         super().stack(other)
 
-    def peek(self, figsize=(16, 4)):
-        """Quick-look summary plots."""
-        import matplotlib.pyplot as plt
-
-        e_min, e_max = self.energy_range
-
-        _, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=figsize)
-
-        ax1.set_title("Counts")
-        energy_unit = "TeV"
-
-        if self.counts_off is not None:
-            self.background.plot_hist(
-                ax=ax1, label="alpha * n_off", color="darkblue", energy_unit=energy_unit
-            )
-
-        self.counts.plot_hist(
-            ax=ax1,
-            label="n_on",
-            color="darkred",
-            energy_unit=energy_unit,
-            show_energy=(e_min, e_max),
-        )
-
-        ax1.set_xlim(
-            0.7 * e_min.to_value(energy_unit), 1.3 * e_max.to_value(energy_unit)
-        )
-        ax1.legend(numpoints=1)
-
-        ax2.set_title("Effective Area")
-        e_unit = self.aeff.energy.unit
-        self.aeff.plot(ax=ax2, show_energy=(e_min, e_max))
-        ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
-
-        ax3.set_title("Energy Dispersion")
-        if self.edisp is not None:
-            self.edisp.plot_matrix(ax=ax3)
-
-        # TODO: optimize layout
-        plt.subplots_adjust(wspace=0.3)
-
     def to_ogip_files(self, outdir=None, use_sherpa=False, overwrite=False):
         """Write OGIP files.
 
@@ -1076,15 +1110,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         info_dict : dict
             Dictionary with summary info.
         """
-        info = dict()
+        info = super().info_dict(in_safe_energy_range)
         mask = self.mask_safe if in_safe_energy_range else slice(None)
-
-        info["name"] = self.name
-        info["livetime"] = self.livetime.copy()
 
         # TODO: handle energy dependent a_on / a_off
         info["a_on"] = self.acceptance[0].copy()
-        info["n_on"] = self.counts.data[mask].sum()
 
         if self.counts_off is not None:
             info["n_off"] = self.counts_off.data[mask].sum()
@@ -1094,16 +1124,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             info["a_off"] = 1
 
         info["alpha"] = self.alpha[0].copy()
-        info["background"] = self.background.data[mask].sum()
-        info["excess"] = self.excess.data[mask].sum()
         info["significance"] = significance_on_off(
             self.counts.data[mask].sum(),
             self.counts_off.data[mask].sum(),
             self.alpha[0],
         )
 
-        info["background_rate"] = info["background"] / info["livetime"]
-        info["gamma_rate"] = info["excess"] / info["livetime"]
         return info
 
     def to_dict(self, filename, *args, **kwargs):
@@ -1169,7 +1195,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         return dataset
 
     @classmethod
-    def from_spectrum_dataset(cls, dataset, acceptance, acceptance_off, counts_off=None):
+    def from_spectrum_dataset(
+        cls, dataset, acceptance, acceptance_off, counts_off=None
+    ):
         """Create spectrum dataseton off from another dataset.
 
         Parameters
@@ -1206,7 +1234,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             gti=dataset.gti,
-            name=dataset.name
+            name=dataset.name,
         )
 
 

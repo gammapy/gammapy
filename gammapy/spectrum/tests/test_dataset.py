@@ -68,6 +68,7 @@ class TestSpectrumDataset:
             aeff=aeff,
             livetime=self.livetime,
             background=self.bkg,
+            name="test",
         )
 
     def test_data_shape(self):
@@ -252,6 +253,31 @@ class TestSpectrumDataset:
         )
         assert_allclose(dataset1.edisp.get_bias(1 * u.TeV), 0.0, atol=1e-3)
         assert_allclose(dataset1.edisp.get_resolution(1 * u.TeV), 0.1581, atol=1e-2)
+
+    def test_info_dict(self):
+        info_dict = self.dataset.info_dict()
+
+        assert_allclose(info_dict["n_on"], 907010)
+        assert_allclose(info_dict["background"], 3000.0)
+
+        assert_allclose(info_dict["significance"], 2924.522174)
+        assert_allclose(info_dict["excess"], 904010)
+        assert_allclose(info_dict["livetime"].value, 1e2)
+
+        assert info_dict["name"] == "test"
+
+    @requires_dependency("matplotlib")
+    def test_peek(self):
+        with mpl_plot_check():
+            self.dataset.peek()
+        self.dataset.edisp = None
+        with mpl_plot_check():
+            self.dataset.peek()
+
+    @requires_dependency("matplotlib")
+    def test_plot_fit(self):
+        with mpl_plot_check():
+            self.dataset.plot_fit()
 
 
 class TestSpectrumOnOff:
