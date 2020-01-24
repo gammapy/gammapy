@@ -976,15 +976,16 @@ class EnergyDispersion2D:
         if offset is None:
             offset = Angle(1, "deg")
 
-        e_true = self.data.axis("e_true").edges
-        migra = self.data.axis("migra").edges
+        e_true = self.data.axis("e_true")
+        migra = self.data.axis("migra")
 
-        x = e_true.value
-        y = migra.value
+        x = e_true.edges.value
+        y = migra.edges.value
+
         z = self.data.evaluate(
             offset=offset,
-            e_true=e_true.reshape(1, -1, 1),
-            migra=migra.reshape(1, 1, -1),
+            e_true=e_true.center.reshape(1, -1, 1),
+            migra=migra.center.reshape(1, 1, -1),
         ).value[0]
 
         caxes = ax.pcolormesh(x, y, z.T, **kwargs)
