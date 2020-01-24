@@ -374,7 +374,7 @@ class SkyDiffuseCube(SkyModelBase):
         return self._name
 
     @classmethod
-    def read(cls, filename, **kwargs):
+    def read(cls, filename,name=None, **kwargs):
         """Read map from FITS file.
 
         The default unit used if none is found in the file is ``cm-2 s-1 MeV-1 sr-1``.
@@ -383,11 +383,15 @@ class SkyDiffuseCube(SkyModelBase):
         ----------
         filename : str
             FITS image filename.
+        name : str
+            Name of the output model
+            The default used if none is filename.
         """
         m = Map.read(filename, **kwargs)
         if m.unit == "":
             m.unit = "cm-2 s-1 MeV-1 sr-1"
-        name = Path(filename).stem
+        if name is None:
+            name = Path(filename).stem
         return cls(m, name=name, filename=filename)
 
     def _interpolate(self, lon, lat, energy):
