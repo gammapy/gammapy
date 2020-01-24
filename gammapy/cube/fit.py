@@ -910,12 +910,8 @@ class MapDataset(Dataset):
             mask_safe = self.mask_safe
             mask_image = mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
 
-        counts = self.counts * mask_safe
-        background = self.background_model.evaluate() * mask_safe
-
-
         if self.counts is not None:
-            counts = self.counts * self.mask_safe
+            counts = self.counts * mask_safe
             counts = counts.sum_over_axes(keepdims=True)
         else:
             counts = None
@@ -927,7 +923,7 @@ class MapDataset(Dataset):
             exposure = None
 
         if self.background_model is not None:
-            background = self.background_model.evaluate() * self.mask_safe
+            background = self.background_model.evaluate() * mask_safe
             background = background.sum_over_axes(keepdims=True)
             bkg_model = BackgroundModel(background)
         else:
@@ -944,11 +940,7 @@ class MapDataset(Dataset):
         return self.__class__(
             counts=counts,
             exposure=exposure,
-<<<<<<< HEAD
-            background_model=BackgroundModel(background, name=name),
-=======
             background_model=bkg_model,
->>>>>>> Add modif to MapDataset
             mask_safe=mask_image,
             edisp=edisp,
             psf=psf,
