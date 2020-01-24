@@ -5,13 +5,13 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
-from gammapy.irf import EffectiveAreaTable, EDispKernel, IRFStacker
+from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import SkyModel, SkyModels
 from gammapy.stats import cash, significance_on_off, significance, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
-from gammapy.utils.scripts import make_path
+from gammapy.utils.scripts import make_name, make_path
 from .core import CountsSpectrum, SpectrumEvaluator
 
 __all__ = [
@@ -69,7 +69,7 @@ class SpectrumDataset(Dataset):
         background=None,
         mask_safe=None,
         mask_fit=None,
-        name="",
+        name=None,
         gti=None,
     ):
 
@@ -88,8 +88,13 @@ class SpectrumDataset(Dataset):
         self.background = background
         self.models = models
         self.mask_safe = mask_safe
-        self.name = name
         self.gti = gti
+
+        self._name = make_name(name)
+
+    @property
+    def name(self):
+        return self._name
 
     def __str__(self):
         str_ = self.__class__.__name__
@@ -264,7 +269,7 @@ class SpectrumDataset(Dataset):
         excess = self.counts.data - self.background.data
         return self._as_counts_spectrum(excess)
 
-    def fake(self, random_state="random-seed"):
+    def fake(self, random_state="random-seed", name=None):
         """Simulate fake counts for the current model and reduced irfs.
 
         This method overwrites the counts defined on the dataset object.
@@ -275,6 +280,7 @@ class SpectrumDataset(Dataset):
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
         """
+        self._name = make_name(name)
         random_state = get_random_state(random_state)
         npred = self.npred()
         npred.data = random_state.poisson(npred.data)
@@ -403,7 +409,9 @@ class SpectrumDataset(Dataset):
         return ax
 
     @classmethod
-    def create(cls, e_reco, e_true=None, region=None, reference_time="2000-01-01"):
+    def create(
+        cls, e_reco, e_true=None, region=None, reference_time="2000-01-01", name=None
+    ):
         """Creates empty spectrum dataset.
 
         Empty containers are created with the correct geometry.
@@ -443,6 +451,7 @@ class SpectrumDataset(Dataset):
             background=background,
             livetime=livetime,
             gti=gti,
+            name=name,
         )
 
     def stack(self, other):
@@ -656,7 +665,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         mask_fit=None,
         acceptance=None,
         acceptance_off=None,
-        name="",
+        name=None,
         gti=None,
     ):
 
@@ -681,7 +690,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
-        self.name = name
+        self._name = make_name(name)
         self.gti = gti
 
     def __str__(self):
@@ -716,7 +725,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         )
         return np.nan_to_num(on_stat_)
 
-    def fake(self, background_model, random_state="random-seed"):
+    def fake(self, background_model, random_state="random-seed", name=None):
         """Simulate fake counts for the current model and reduced irfs.
 
         This method overwrites the counts and off counts defined on the dataset object.
@@ -730,6 +739,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
         """
+        self._name = make_name(name)
         random_state = get_random_state(random_state)
 
         npred_sig = self.npred_sig()
@@ -745,7 +755,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.counts_off = npred_off
 
     @classmethod
-    def create(cls, e_reco, e_true=None, region=None, reference_time="2000-01-01"):
+    def create(
+        cls, e_reco, e_true=None, region=None, reference_time="2000-01-01", name=None
+    ):
         """Create empty SpectrumDatasetOnOff.
 
         Empty containers are created with the correct geometry.
@@ -789,6 +801,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             acceptance_off=acceptance_off,
             livetime=livetime,
             gti=gti,
+            name=name,
         )
 
     @classmethod

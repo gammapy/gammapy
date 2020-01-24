@@ -214,7 +214,7 @@ class MapDatasetMaker:
         dataset : `~gammapy.cube.MapDataset`
             Map dataset.
         """
-        kwargs = {"name": f"obs_{observation.obs_id}", "gti": observation.gti}
+        kwargs = {"gti": observation.gti}
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
         mask_safe.data |= True
@@ -241,7 +241,7 @@ class MapDatasetMaker:
             edisp = self.make_edisp(dataset.edisp.edisp_map.geom, observation)
             kwargs["edisp"] = edisp
 
-        return MapDataset(**kwargs)
+        return MapDataset(name=dataset.name, **kwargs)
 
 
 class SafeMaskMaker:

@@ -34,3 +34,7 @@ def test_datasets_str(datasets):
 def test_datasets_getitem(datasets):
     assert datasets["test-1"].name == "test-1"
     assert datasets["test-2"].name == "test-2"
+
+
+def test_names(datasets):
+    assert datasets.names == ["test-1", "test-2"]

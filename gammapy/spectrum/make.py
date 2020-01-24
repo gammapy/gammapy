@@ -189,7 +189,6 @@ class SpectrumDatasetMaker:
             Spectrum dataset.
         """
         kwargs = {
-            "name": f"{observation.obs_id}",
             "gti": observation.gti,
             "livetime": observation.observation_live_time_duration,
         }
@@ -214,4 +213,4 @@ class SpectrumDatasetMaker:
                 region.center, energy_axis, energy_axis_true, observation
             )
 
-        return SpectrumDataset(**kwargs)
+        return SpectrumDataset(name=dataset.name, **kwargs)

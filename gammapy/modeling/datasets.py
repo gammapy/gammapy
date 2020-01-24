@@ -3,7 +3,7 @@ import abc
 import collections.abc
 import copy
 import numpy as np
-from gammapy.utils.scripts import make_path, read_yaml, write_yaml
+from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
 from ..maps import WcsNDMap
 from .parameter import Parameters
@@ -63,9 +63,11 @@ class Dataset(abc.ABC):
     def stat_array(self):
         """Statistic array, one value per data point."""
 
-    def copy(self):
+    def copy(self, name=None):
         """A deep copy."""
-        return copy.deepcopy(self)
+        new = copy.deepcopy(self)
+        new._name = make_name(name)
+        return new
 
     @staticmethod
     def _compute_residuals(data, model, method="diff"):
@@ -95,11 +97,25 @@ class Datasets(collections.abc.Sequence):
 
     def __init__(self, datasets):
         if isinstance(datasets, Datasets):
-            self._datasets = list(datasets)
+            datasets = list(datasets)
+            dataset_list = datasets
         elif isinstance(datasets, list):
-            self._datasets = datasets
+            dataset_list = []
+            for data in datasets:
+                if isinstance(data, Datasets):
+                    dataset_list += list(data)
+                elif isinstance(data, Dataset):
+                    dataset_list.append(data)
         else:
             raise TypeError(f"Invalid type: {datasets!r}")
+
+        unique_names = []
+        for dataset in dataset_list:
+            if dataset.name in unique_names:
+                raise (ValueError("Dataset names must be unique"))
+            unique_names.append(dataset.name)
+
+        self._datasets = datasets
 
     @property
     def parameters(self):
@@ -110,6 +126,10 @@ class Datasets(collections.abc.Sequence):
         """
         parameters = Parameters.from_stack(_.parameters for _ in self)
         return parameters.unique_parameters
+
+    @property
+    def names(self):
+        return [d.name for d in self._datasets]
 
     @property
     def is_all_same_type(self):
@@ -185,7 +205,7 @@ class Datasets(collections.abc.Sequence):
         write_yaml(datasets_dict, path / f"{prefix}_datasets.yaml", sort_keys=False)
         write_yaml(components_dict, path / f"{prefix}_models.yaml", sort_keys=False)
 
-    def stack_reduce(self):
+    def stack_reduce(self, name=None):
         """Reduce the Datasets to a unique Dataset by stacking them together.
 
         This works only if all Dataset are of the same type and if a proper
@@ -201,7 +221,7 @@ class Datasets(collections.abc.Sequence):
                 "Stacking impossible: all Datasets contained are not of a unique type."
             )
 
-        dataset = self[0].copy()
+        dataset = self[0].copy(name=name)
         for ds in self[1:]:
             dataset.stack(ds)
         return dataset
@@ -222,7 +242,7 @@ class Datasets(collections.abc.Sequence):
         if not self.is_all_same_type:
             raise ValueError("Info table not supported for mixed dataset type.")
 
-        stacked = self[0].copy()
+        stacked = self[0].copy(name="stacked")
 
         rows = [stacked.info_dict()]
 

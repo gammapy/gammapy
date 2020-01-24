@@ -8,7 +8,7 @@ import astropy.units as u
 import yaml
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
-from gammapy.utils.scripts import make_path
+from gammapy.utils.scripts import make_name, make_path
 
 
 class SkyModelBase(Model):
@@ -52,11 +52,21 @@ class SkyModels(collections.abc.Sequence):
         else:
             raise TypeError(f"Invalid type: {skymodels!r}")
 
+        unique_names = []
+        for model in models:
+            if model.name in unique_names:
+                raise (ValueError("SkyModel names must be unique"))
+            unique_names.append(model.name)
+
         self._skymodels = models
 
     @property
     def parameters(self):
         return Parameters.from_stack([_.parameters for _ in self._skymodels])
+
+    @property
+    def names(self):
+        return [m.name for m in self._skymodels]
 
     @classmethod
     def read(cls, filename):
@@ -141,13 +151,18 @@ class SkyModel(SkyModelBase):
 
     tag = "SkyModel"
 
-    def __init__(self, spectral_model, spatial_model=None, name="source"):
-        self.name = name
+    def __init__(self, spectral_model, spatial_model=None, name=None):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
         super().__init__()
         # TODO: this hack is needed for compound models to work
         self.__dict__.pop("_parameters")
+
+        self._name = make_name(name)
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def parameters(self):
@@ -244,7 +259,7 @@ class SkyModel(SkyModelBase):
 
         return value
 
-    def copy(self, **kwargs):
+    def copy(self, name=None, **kwargs):
         """Copy SkyModel"""
         if self.spatial_model is not None:
             spatial_model = self.spatial_model.copy()
@@ -253,7 +268,7 @@ class SkyModel(SkyModelBase):
 
         kwargs.setdefault("spatial_model", spatial_model)
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
-        kwargs.setdefault("name", self.name + "-copy")
+        kwargs.setdefault("name", make_name(name))
         return self.__class__(**kwargs)
 
     def to_dict(self):
@@ -327,10 +342,12 @@ class SkyDiffuseCube(SkyModelBase):
         reference=reference.quantity,
         meta=None,
         interp_kwargs=None,
-        name="diffuse",
+        name=None,
         filename=None,
     ):
-        self.name = name
+
+        self._name = make_name(name)
+
         axis = map.geom.get_axis_by_name("energy")
 
         if axis.node_type != "center":
@@ -352,8 +369,12 @@ class SkyDiffuseCube(SkyModelBase):
 
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
+    @property
+    def name(self):
+        return self._name
+
     @classmethod
-    def read(cls, filename, **kwargs):
+    def read(cls, filename,name=None, **kwargs):
         """Read map from FITS file.
 
         The default unit used if none is found in the file is ``cm-2 s-1 MeV-1 sr-1``.
@@ -362,11 +383,15 @@ class SkyDiffuseCube(SkyModelBase):
         ----------
         filename : str
             FITS image filename.
+        name : str
+            Name of the output model
+            The default used if none is filename.
         """
         m = Map.read(filename, **kwargs)
         if m.unit == "":
             m.unit = "cm-2 s-1 MeV-1 sr-1"
-        name = Path(filename).stem
+        if name is None:
+            name = Path(filename).stem
         return cls(m, name=name, filename=filename)
 
     def _interpolate(self, lon, lat, energy):
@@ -400,9 +425,11 @@ class SkyDiffuseCube(SkyModelBase):
         val = norm * self._cached_value * tilt_factor.value
         return u.Quantity(val, self.map.unit, copy=False)
 
-    def copy(self):
+    def copy(self, name=None):
         """A shallow copy"""
-        return copy.copy(self)
+        new = copy.copy(self)
+        new._name = make_name(name)
+        return new
 
     @property
     def position(self):
@@ -463,7 +490,7 @@ class BackgroundModel(Model):
         norm=norm.quantity,
         tilt=tilt.quantity,
         reference=reference.quantity,
-        name="background",
+        name=None,
         filename=None,
     ):
         axis = map.geom.get_axis_by_name("energy")
@@ -471,9 +498,15 @@ class BackgroundModel(Model):
             raise ValueError('Need an integrated map, energy axis node_type="edges"')
 
         self.map = map
-        self.name = name
+
+        self._name = make_name(name)
         self.filename = filename
+
         super().__init__(norm=norm, tilt=tilt, reference=reference)
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def energy_center(self):
@@ -518,6 +551,12 @@ class BackgroundModel(Model):
         model = cls(map=map, name=data["name"])
         model._update_from_dict(data)
         return model
+
+    def copy(self, name=None):
+        """A deep copy."""
+        new = copy.deepcopy(self)
+        new._name = make_name(name)
+        return new
 
 
 def create_fermi_isotropic_diffuse_model(filename, **kwargs):

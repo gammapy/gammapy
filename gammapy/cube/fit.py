@@ -11,7 +11,7 @@ from gammapy.cube.edisp_map import EDispMap
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
-from gammapy.irf import EffectiveAreaTable, EDispKernel
+from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
@@ -19,7 +19,7 @@ from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.spectrum import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
-from gammapy.utils.scripts import make_path
+from gammapy.utils.scripts import make_name, make_path
 from .exposure import _map_spectrum_weight
 
 __all__ = ["MapDataset", "MapDatasetOnOff"]
@@ -81,7 +81,7 @@ class MapDataset(Dataset):
         psf=None,
         edisp=None,
         background_model=None,
-        name="",
+        name=None,
         evaluation_mode="local",
         mask_safe=None,
         gti=None,
@@ -100,12 +100,17 @@ class MapDataset(Dataset):
         self.edisp = edisp
         self.background_model = background_model
         self.models = models
-        self.name = name
         self.mask_safe = mask_safe
         self.gti = gti
 
+        self._name = make_name(name)
+
         # check whether a reference geom is defined
         _ = self._geom
+
+    @property
+    def name(self):
+        return self._name
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
@@ -257,8 +262,10 @@ class MapDataset(Dataset):
         elif self.mask_fit is not None:
             return self.mask_fit.geom
         else:
-            raise ValueError("Either 'counts', 'background_model', 'mask_fit'"
-                             " or 'mask_safe' must be defined.")
+            raise ValueError(
+                "Either 'counts', 'background_model', 'mask_fit'"
+                " or 'mask_safe' must be defined."
+            )
 
     @property
     def data_shape(self):
@@ -293,7 +300,7 @@ class MapDataset(Dataset):
         geom_psf,
         geom_edisp,
         reference_time="2000-01-01",
-        name="",
+        name=None,
         **kwargs,
     ):
         """
@@ -353,7 +360,7 @@ class MapDataset(Dataset):
         rad_axis=None,
         binsz_irf=None,
         reference_time="2000-01-01",
-        name="",
+        name=None,
         **kwargs,
     ):
         """Create a MapDataset object with zero filled maps.
@@ -428,9 +435,7 @@ class MapDataset(Dataset):
             other_bkg = other.background_model.evaluate()
             bkg.stack(other_bkg, weights=other.mask_safe)
 
-            self.background_model = BackgroundModel(
-                bkg, name=self.background_model.name
-            )
+            self.background_model = BackgroundModel(bkg, name=self.name)
 
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)
@@ -601,7 +606,7 @@ class MapDataset(Dataset):
         else:
             return cash_sum_cython(counts.ravel(), npred.ravel())
 
-    def fake(self, random_state="random-seed"):
+    def fake(self, random_state="random-seed", name=None):
         """Simulate fake counts for the current model and reduced IRFs.
 
         This method overwrites the counts defined on the dataset object.
@@ -612,6 +617,7 @@ class MapDataset(Dataset):
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
         """
+        self._name = make_name(name)
         random_state = get_random_state(random_state)
         npred = self.npred()
         npred.data = random_state.poisson(npred.data)
@@ -681,7 +687,7 @@ class MapDataset(Dataset):
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, name=""):
+    def from_hdulist(cls, hdulist, name=None):
         """Create map dataset from list of HDUs.
 
         Parameters
@@ -752,7 +758,7 @@ class MapDataset(Dataset):
         self.to_hdulist().writeto(make_path(filename), overwrite=overwrite)
 
     @classmethod
-    def read(cls, filename, name=""):
+    def read(cls, filename, name=None):
         """Read map dataset from file.
 
         Parameters
@@ -801,7 +807,7 @@ class MapDataset(Dataset):
             "filename": str(filename),
         }
 
-    def to_spectrum_dataset(self, on_region, containment_correction=False):
+    def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
         """Return a ~gammapy.spectrum.SpectrumDataset from on_region.
 
         Counts and background are summed in the on_region.
@@ -814,7 +820,7 @@ class MapDataset(Dataset):
 
         The model is not exported to the ~gammapy.spectrum.SpectrumDataset.
         It must be set after the dataset extraction.
-        
+
         Parameters
         ----------
         on_region : `~regions.SkyRegion`
@@ -827,7 +833,7 @@ class MapDataset(Dataset):
         dataset : `~gammapy.spectrum.SpectrumDataset`
             the resulting reduced dataset
         """
-        kwargs = {"gti": self.gti, "name": self.name}
+        kwargs = {"gti": self.gti, "name": name}
 
         if self.gti is not None:
             kwargs["livetime"] = self.gti.time_sum
@@ -860,7 +866,9 @@ class MapDataset(Dataset):
                 raise ValueError("No PSFMap set. Containement correction impossible")
             else:
                 psf = self.psf.get_energy_dependent_table_psf(on_region.center)
-                containment = psf.containment(kwargs["aeff"].energy.center, on_region.radius)
+                containment = psf.containment(
+                    kwargs["aeff"].energy.center, on_region.radius
+                )
                 kwargs["aeff"].data.data *= containment.squeeze()
 
         if self.edisp is not None:
@@ -868,14 +876,12 @@ class MapDataset(Dataset):
                 edisp = self.edisp
             else:
                 axis = self._geom.get_axis_by_name("energy")
-                edisp = self.edisp.get_edisp_kernel(
-                    on_region.center, e_reco=axis.edges
-                )
+                edisp = self.edisp.get_edisp_kernel(on_region.center, e_reco=axis.edges)
             kwargs["edisp"] = edisp
 
         return SpectrumDataset(**kwargs)
 
-    def to_image(self, spectrum=None):
+    def to_image(self, spectrum=None, name=None):
         """Create images by summing over the energy axis.
 
         Exposure is weighted with an assumed spectrum,
@@ -895,6 +901,7 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset containing images.
         """
+        name = make_name(name)
         counts = self.counts * self.mask_safe
         background = self.background_model.evaluate() * self.mask_safe
 
@@ -916,15 +923,15 @@ class MapDataset(Dataset):
         return self.__class__(
             counts=counts,
             exposure=exposure,
-            background_model=BackgroundModel(background),
+            background_model=BackgroundModel(background, name=name),
             mask_safe=mask_image,
             edisp=edisp,
             psf=psf,
             gti=self.gti,
-            name=self.name,
+            name=name,
         )
 
-    def cutout(self, position, width, mode="trim"):
+    def cutout(self, position, width, mode="trim", name=None):
         """Cutout map dataset.
 
         Parameters
@@ -942,7 +949,8 @@ class MapDataset(Dataset):
         cutout : `MapDataset`
             Cutout map dataset.
         """
-        kwargs = {"gti": self.gti}
+        name = make_name(name)
+        kwargs = {"gti": self.gti, "name": name}
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
 
         if self.counts is not None:
@@ -953,7 +961,7 @@ class MapDataset(Dataset):
 
         if self.background_model is not None:
             bkg_map = self.background_model.map.cutout(**cutout_kwargs)
-            bkg_model = BackgroundModel(bkg_map)
+            bkg_model = BackgroundModel(bkg_map, name=name)
             factors = [par.factor for par in self.background_model.parameters]
             bkg_model.parameters.set_parameter_factors(factors)
             kwargs["background_model"] = bkg_model
@@ -1025,7 +1033,7 @@ class MapDatasetOnOff(MapDataset):
         psf=None,
         edisp=None,
         background_model=None,
-        name="",
+        name=None,
         evaluation_mode="local",
         mask_safe=None,
         gti=None,
@@ -1051,7 +1059,7 @@ class MapDatasetOnOff(MapDataset):
         self.psf = psf
         self.edisp = edisp
         self.models = models
-        self.name = name
+        self._name = make_name(name)
         self.mask_safe = mask_safe
         self.gti = gti
 
@@ -1124,7 +1132,7 @@ class MapDatasetOnOff(MapDataset):
         geom_psf,
         geom_edisp,
         reference_time="2000-01-01",
-        name="",
+        name=None,
         **kwargs,
     ):
         """
@@ -1227,7 +1235,7 @@ class MapDatasetOnOff(MapDataset):
         """Total likelihood given the current model parameters."""
         return Dataset.stat_sum(self)
 
-    def fake(self, background_model, random_state="random-seed"):
+    def fake(self, background_model, random_state="random-seed", name=None):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.
 
         This method overwrites the counts defined on the dataset object.
@@ -1238,6 +1246,7 @@ class MapDatasetOnOff(MapDataset):
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
         """
+        self._name = make_name(name)
         random_state = get_random_state(random_state)
         npred = self.npred()
         npred.data = random_state.poisson(npred.data)
@@ -1276,7 +1285,7 @@ class MapDatasetOnOff(MapDataset):
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, name=""):
+    def from_hdulist(cls, hdulist, name=None):
         """Create map dataset from list of HDUs.
 
         Parameters
@@ -1301,9 +1310,7 @@ class MapDatasetOnOff(MapDataset):
             kwargs["acceptance"] = Map.from_hdulist(hdulist, hdu="acceptance")
 
         if "ACCEPTANCE_OFF" in hdulist:
-            kwargs["acceptance_off"] = Map.from_hdulist(
-                hdulist, hdu="acceptance_off"
-            )
+            kwargs["acceptance_off"] = Map.from_hdulist(hdulist, hdu="acceptance_off")
 
         if "EXPOSURE" in hdulist:
             kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
@@ -1368,11 +1375,11 @@ class MapDatasetOnOff(MapDataset):
         if self.acceptance is not None:
             kwargs["acceptance"] = self.acceptance.get_spectrum(on_region, np.mean)
             background = self.background.get_spectrum(on_region, np.sum)
-            kwargs["acceptance_off"] = kwargs["acceptance"] * kwargs["counts_off"] / background
+            kwargs["acceptance_off"] = (
+                kwargs["acceptance"] * kwargs["counts_off"] / background
+            )
 
-        return SpectrumDatasetOnOff.from_spectrum_dataset(
-            dataset=dataset, **kwargs
-        )
+        return SpectrumDatasetOnOff.from_spectrum_dataset(dataset=dataset, **kwargs)
 
     def cutout(self, position, width, mode="trim"):
         """Cutout map dataset.
