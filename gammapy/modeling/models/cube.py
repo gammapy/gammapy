@@ -421,9 +421,11 @@ class SkyDiffuseCube(SkyModelBase):
         val = norm * self._cached_value * tilt_factor.value
         return u.Quantity(val, self.map.unit, copy=False)
 
-    def copy(self):
+    def copy(self, name=None):
         """A shallow copy"""
-        return copy.copy(self)
+        new = copy.copy(self)
+        new._name = make_name(name)
+        return new
 
     @property
     def position(self):
@@ -545,6 +547,12 @@ class BackgroundModel(Model):
         model = cls(map=map, name=data["name"])
         model._update_from_dict(data)
         return model
+
+    def copy(self, name=None):
+        """A deep copy."""
+        new = copy.deepcopy(self)
+        new._name = make_name(name)
+        return new
 
 
 def create_fermi_isotropic_diffuse_model(filename, **kwargs):

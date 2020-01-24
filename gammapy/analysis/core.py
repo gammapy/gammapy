@@ -259,9 +259,6 @@ class Analysis:
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                 dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
-                if "background" in self.config.datasets.map_selection:
-                    dataset.background_model._name = f"bkg_{dataset.name}"
-                    # TODO remove this once dataset and model have unique identifiers
                 log.debug(dataset)
                 stacked.stack(dataset)
             datasets = [stacked]
@@ -272,9 +269,6 @@ class Analysis:
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                 dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
-                if "background" in self.config.datasets.map_selection:
-                    dataset.background_model._name = f"bkg_{dataset.name}"
-                    # TODO remove this once dataset and model have unique identifiers
                 log.debug(dataset)
                 datasets.append(dataset)
         self.datasets = Datasets(datasets)
@@ -327,8 +321,7 @@ class Analysis:
         self.datasets = Datasets(datasets)
 
         if self.config.datasets.stack:
-            stacked = self.datasets.stack_reduce()
-            stacked._name = "stacked"
+            stacked = self.datasets.stack_reduce(name="stacked")
             self.datasets = Datasets([stacked])
 
     @staticmethod

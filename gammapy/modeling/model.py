@@ -55,12 +55,9 @@ class Model:
         """Parameters (`~gammapy.modeling.Parameters`)"""
         return self._parameters
 
-    def copy(self, name=None):
+    def copy(self):
         """A deep copy."""
-        new = copy.deepcopy(self)
-        if hasattr(new, "_name"):
-            new._name = make_name(name)
-        return new
+        return copy.deepcopy(self)
 
     def __str__(self):
         return f"{self.__class__.__name__}\n\n{self.parameters.to_table()}"

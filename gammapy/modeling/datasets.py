@@ -242,7 +242,7 @@ class Datasets(collections.abc.Sequence):
         if not self.is_all_same_type:
             raise ValueError("Info table not supported for mixed dataset type.")
 
-        stacked = self[0].copy()
+        stacked = self[0].copy(name="stacked")
 
         rows = [stacked.info_dict()]
 
