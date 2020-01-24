@@ -762,7 +762,7 @@ def test_map_dataset_geom(geom, sky_model):
     with pytest.raises(ValueError):
         dataset._geom
 
-
+@requires_data()
 def test_names(geom, geom_etrue, sky_model):
 
     m = Map.from_geom(geom)
