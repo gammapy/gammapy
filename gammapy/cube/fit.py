@@ -902,15 +902,21 @@ class MapDataset(Dataset):
             Map dataset containing images.
         """
         name = make_name(name)
-        counts = self.counts * self.mask_safe
-        background = self.background_model.evaluate() * self.mask_safe
+
+        if self.mask_safe is None:
+            mask_safe = 1
+            mask_image = None
+        else:
+            mask_safe = self.mask_safe
+            mask_image = mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
+
+        counts = self.counts * mask_safe
+        background = self.background_model.evaluate() * mask_safe
 
         counts = counts.sum_over_axes(keepdims=True)
         exposure = _map_spectrum_weight(self.exposure, spectrum)
         exposure = exposure.sum_over_axes(keepdims=True)
         background = background.sum_over_axes(keepdims=True)
-
-        mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
 
         # TODO: add edisp and psf
         edisp = None
