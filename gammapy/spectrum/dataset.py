@@ -409,7 +409,9 @@ class SpectrumDataset(Dataset):
         return ax
 
     @classmethod
-    def create(cls, e_reco, e_true=None, region=None, reference_time="2000-01-01"):
+    def create(
+        cls, e_reco, e_true=None, region=None, reference_time="2000-01-01", name=None
+    ):
         """Creates empty spectrum dataset.
 
         Empty containers are created with the correct geometry.
@@ -449,6 +451,7 @@ class SpectrumDataset(Dataset):
             background=background,
             livetime=livetime,
             gti=gti,
+            name=name,
         )
 
     def stack(self, other):
@@ -752,7 +755,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.counts_off = npred_off
 
     @classmethod
-    def create(cls, e_reco, e_true=None, region=None, reference_time="2000-01-01"):
+    def create(
+        cls, e_reco, e_true=None, region=None, reference_time="2000-01-01", name=None
+    ):
         """Create empty SpectrumDatasetOnOff.
 
         Empty containers are created with the correct geometry.
@@ -796,6 +801,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             acceptance_off=acceptance_off,
             livetime=livetime,
             gti=gti,
+            name=name,
         )
 
     @classmethod

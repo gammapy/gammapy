@@ -159,8 +159,9 @@ class TestSpectrumDataset:
     def test_spectrumdataset_create(self):
         e_reco = u.Quantity([0.1, 1, 10.0], "TeV")
         e_true = u.Quantity([0.05, 0.5, 5, 20.0], "TeV")
-        empty_dataset = SpectrumDataset.create(e_reco, e_true)
+        empty_dataset = SpectrumDataset.create(e_reco, e_true, name="test")
 
+        assert empty_dataset.name == "test"
         assert empty_dataset.counts.total_counts == 0
         assert empty_dataset.data_shape[0] == 2
         assert empty_dataset.background.total_counts == 0
@@ -480,7 +481,7 @@ class TestSpectrumOnOff:
         ehi = self.on_counts.energy.edges[1:]
         data = np.ones(self.on_counts.data.shape)
         background_model = CountsSpectrum(elo, ehi, data)
-        dataset.fake(background_model=background_model, random_state=314)
+        dataset.fake(background_model=background_model, random_state=314, name="fake")
 
         assert real_dataset.counts.data.shape == dataset.counts.data.shape
         assert real_dataset.counts_off.data.shape == dataset.counts_off.data.shape
@@ -492,6 +493,7 @@ class TestSpectrumOnOff:
         assert real_dataset.acceptance_off.mean() == dataset.acceptance_off.mean()
         assert dataset.counts_off.data.sum() == 39
         assert dataset.counts.data.sum() == 5
+        assert dataset.name == "fake"
 
     def test_info_dict(self):
         info_dict = self.dataset.info_dict()
@@ -746,7 +748,7 @@ def test_datasets_stack_reduce():
         ds = SpectrumDatasetOnOff.from_ogip_files(filename.format(obs))
         dataset_list.append(ds)
     datasets = Datasets(dataset_list)
-    stacked = datasets.stack_reduce()
+    stacked = datasets.stack_reduce(name="stacked")
     assert_allclose(stacked.livetime.to_value("s"), 6313.8116406202325)
 
     info_table = datasets.info_table()
@@ -754,6 +756,7 @@ def test_datasets_stack_reduce():
 
     info_table_cum = datasets.info_table(cumulative=True)
     assert_allclose(info_table_cum["n_on"], [124, 250, 369, 459])
+    assert stacked.name == "stacked"
 
 
 def test_spectrum_dataset_on_off_to_yaml(tmpdir):

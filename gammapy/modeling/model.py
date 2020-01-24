@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import astropy.units as u
-from gammapy.utils.scripts import make_name
 from .parameter import Parameter, Parameters
 
 __all__ = ["Model"]

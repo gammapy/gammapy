@@ -21,6 +21,7 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    SkyModels,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -676,6 +677,7 @@ def test_stack_onoff_cutout(geom_image):
     assert_allclose(dataset.counts_off.data.sum(), dataset_cutout.counts_off.data.sum())
     assert_allclose(dataset.alpha.data.sum(), dataset_cutout.alpha.data.sum())
     assert_allclose(dataset.exposure.data.sum(), dataset_cutout.exposure.data.sum())
+    assert dataset_cutout.name != dataset.name
 
 
 def test_datasets_io_no_model(tmpdir):
@@ -723,6 +725,8 @@ def test_mapdatasetonoff_to_spectrum_dataset(images):
     excess = spectrum_dataset.excess.data[0]
     assert_allclose(excess, excess_true, atol=1e-6)
 
+    assert spectrum_dataset.name != dataset.name
+
 
 @requires_data()
 def test_mapdatasetonoff_cutout(images):
@@ -739,6 +743,7 @@ def test_mapdatasetonoff_cutout(images):
     assert cutout_dataset.acceptance.data.shape == (50, 50)
     assert cutout_dataset.acceptance_off.data.shape == (50, 50)
     assert cutout_dataset.background_model is None
+    assert cutout_dataset.name != dataset.name
 
 
 def test_map_dataset_geom(geom, sky_model):
@@ -756,3 +761,37 @@ def test_map_dataset_geom(geom, sky_model):
 
     with pytest.raises(ValueError):
         dataset._geom
+
+
+def test_names(geom, geom_etrue, sky_model):
+
+    m = Map.from_geom(geom)
+    m.quantity = 0.2 * np.ones(m.data.shape)
+    background_model1 = BackgroundModel(m, name="bkg1")
+    assert background_model1.name == "bkg1"
+
+    c_map1 = Map.from_geom(geom)
+    c_map1.quantity = 0.3 * np.ones(c_map1.data.shape)
+
+    model1 = sky_model.copy()
+    assert model1.name != sky_model.name
+    model1 = sky_model.copy(name="model1")
+    assert model1.name == "model1"
+    model2 = sky_model.copy(name="model2")
+
+    dataset1 = MapDataset(
+        counts=c_map1,
+        background_model=background_model1,
+        models=SkyModels([model1, model2]),
+        exposure=get_exposure(geom_etrue),
+    )
+
+    dataset2 = dataset1.copy()
+    assert dataset2.name != dataset1.name
+    assert dataset2.background_model
+    dataset2 = dataset1.copy(name="dataset2")
+    assert dataset2.name == "dataset2"
+    assert dataset2.background_model.name == "bkg1"
+    assert dataset1.background_model is not dataset2.background_model
+    assert dataset1.models.names == dataset2.models.names
+    assert dataset1.models is not dataset2.models
