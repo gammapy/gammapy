@@ -12,7 +12,7 @@ from gammapy.cube import MapDataset, MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
-from gammapy.modeling.models import SkyModels
+from gammapy.modeling.models import Models
 from gammapy.modeling.serialize import dict_to_models
 from gammapy.spectrum import (
     FluxPointsDataset,
@@ -138,18 +138,18 @@ class Analysis:
 
         Parameters
         ----------
-        models : `~gammapy.modeling.models.SkyModels` or str
-            SkyModels object or YAML models string
+        models : `~gammapy.modeling.models.Models` or str
+            Models object or YAML models string
         """
         if not self.datasets or len(self.datasets) == 0:
             raise RuntimeError("Missing datasets")
 
         log.info(f"Reading model.")
         if isinstance(models, str):
-            # FIXME: SkyModels should offer a method to create from YAML str
+            # FIXME: Models should offer a method to create from YAML str
             models = yaml.safe_load(models)
-            self.models = SkyModels(dict_to_models(models))
-        elif isinstance(models, SkyModels):
+            self.models = Models(dict_to_models(models))
+        elif isinstance(models, Models):
             self.models = models
         else:
             raise TypeError(f"Invalid type: {models!r}")
@@ -162,7 +162,7 @@ class Analysis:
     def read_models(self, path):
         """Read models from YAML file."""
         path = make_path(path)
-        models = SkyModels.read(path)
+        models = Models.read(path)
         self.set_models(models)
 
     def run_fit(self, optimize_opts=None):

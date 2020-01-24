@@ -7,7 +7,7 @@ from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Datasets, Model
-from gammapy.modeling.models import MODELS, AbsorbedSpectralModel, Absorption, SkyModels
+from gammapy.modeling.models import MODELS, AbsorbedSpectralModel, Absorption, Models
 from gammapy.modeling.serialize import dict_to_models
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
@@ -87,10 +87,10 @@ def test_dict_to_skymodels():
 def test_sky_models_io(tmp_path):
     # TODO: maybe change to a test case where we create a model programatically?
     filename = get_pkg_data_filename("data/examples.yaml")
-    models = SkyModels.read(filename)
+    models = Models.read(filename)
 
     models.write(tmp_path / "tmp.yaml")
-    models = SkyModels.read(tmp_path / "tmp.yaml")
+    models = Models.read(tmp_path / "tmp.yaml")
 
     assert_allclose(models.parameters["lat_0"].min, -90.0)
 
@@ -126,7 +126,7 @@ def test_datasets_to_io(tmp_path):
         dataset0.models["gll_iem_v06_cutout"] == dataset1.models["gll_iem_v06_cutout"]
     )
 
-    assert isinstance(dataset0.models, SkyModels)
+    assert isinstance(dataset0.models, Models)
     assert len(dataset0.models) == 2
     assert dataset0.models[0].name == "gc"
     assert dataset0.models[1].name == "gll_iem_v06_cutout"
@@ -259,6 +259,6 @@ def test_all_model_instances(model):
 @requires_data()
 def test_missing_parameters():
     filename = get_pkg_data_filename("data/examples.yaml")
-    models = SkyModels.read(filename)
+    models = Models.read(filename)
     assert models["source1"].spatial_model.e in models.parameters
     assert len(models["source1"].spatial_model.parameters) == 6

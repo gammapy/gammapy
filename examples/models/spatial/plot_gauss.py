@@ -50,7 +50,7 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    SkyModels,
+    Models,
 )
 
 
@@ -86,6 +86,6 @@ pwl = PowerLawSpectralModel()
 gauss = GaussianSpatialModel()
 
 model = SkyModel(spectral_model=pwl, spatial_model=gauss)
-models = SkyModels([model])
+models = Models([model])
 
 print(models.to_yaml())

@@ -5,7 +5,7 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
-from gammapy.modeling.models import Model, SkyModel, SkyModels
+from gammapy.modeling.models import Model, SkyModel, Models
 from gammapy.spectrum import FluxPoints
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
@@ -531,7 +531,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 )
                 models.append(model)
 
-            return SkyModels(models)
+            return Models(models)
         else:
             return SkyModel(
                 spatial_model=self.spatial_model(),

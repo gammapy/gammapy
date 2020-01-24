@@ -14,9 +14,10 @@ from regions import (
     PolygonSkyRegion,
 )
 from gammapy.maps import Map, WcsGeom
-from gammapy.modeling import Model, Parameter
+from gammapy.modeling import Parameter
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
+from .core import Model
 
 log = logging.getLogger(__name__)
 

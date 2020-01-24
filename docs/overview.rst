@@ -106,7 +106,7 @@ Datasets
 
 Datasets in Gammapy contain reduced data, models, and the likelihood function
 fit statistic for a given set of model parameters. All datasets contain a
-`~gammapy.modeling.models.SkyModels` container with one or more
+`~gammapy.modeling.models.Models` container with one or more
 `~gammapy.modeling.models.SkyModel` objects that represent additive emission
 components.
 
@@ -150,7 +150,7 @@ Assuming you have prepared your gamma-ray data as a set of
 `~gammapy.modeling.Dataset` objects (see :ref:`overview_datasets` above), and
 stored one or more datasets in a `~gammapy.modeling.Datasets` container, you are
 all set for modeling and fitting. Either via a YAML config file, or via Python
-code, define the `~gammapy.modeling.models.SkyModels` to use, which is a list of
+code, define the `~gammapy.modeling.models.Models` to use, which is a list of
 `~gammapy.modeling.models.SkyModel` objects representing additive emission
 components, usually sources or diffuse emission, although a single source can
 also be modeled by multiple components if you want. The
@@ -164,7 +164,7 @@ datasets, Gammapy is very flexible.
 The `~gammapy.modeling.Fit` class provides methods to fit, i.e. optimise
 parameters and estimate parameter errors and correlations. It interfaces with a
 `~gammapy.modeling.Datasets` object, which in turn is connected to a
-`~gammapy.modeling.models.SkyModels` object, which has a
+`~gammapy.modeling.models.Models` object, which has a
 `~gammapy.modeling.Parameters` object, which contains the model parameters.
 Currently ``iminuit`` is used as modeling and fitting backend, in the future we
 plan to support other optimiser and error estimation methods, e.g. from
@@ -220,7 +220,7 @@ that don't have an energy axis (e.g. in :ref:`gammapy.detect <detect>`), and
 partly with 3D cubes with a single energy bin, e.g. for modeling and fitting,
 see the `2D map analysis tutorial <notebooks/image_analysis.html>`__.
 
-For 1D spectral modeling and fitting, `~gammapy.modeling.models.SkyModels` are
+For 1D spectral modeling and fitting, `~gammapy.modeling.models.Models` are
 used, to provide uniformity within Gammapy, and to allow in future versions of
 Gammapy for advanced use cases where a sky region based analysis is used
 resulting in 1D counts spetra, but the modeling is done with a spatial model

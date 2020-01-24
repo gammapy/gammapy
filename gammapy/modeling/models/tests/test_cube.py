@@ -15,7 +15,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyDiffuseCube,
     SkyModel,
-    SkyModels,
+    Models,
     create_fermi_isotropic_diffuse_model,
 )
 from gammapy.utils.testing import requires_data
@@ -98,14 +98,14 @@ def diffuse_evaluator(diffuse_model, exposure, psf, edisp):
 def sky_models(sky_model):
     sky_model_2 = sky_model.copy(name="source-2")
     sky_model_3 = sky_model.copy(name="source-3")
-    return SkyModels([sky_model_2, sky_model_3])
+    return Models([sky_model_2, sky_model_3])
 
 
 @pytest.fixture(scope="session")
 def sky_models_2(sky_model):
     sky_model_4 = sky_model.copy(name="source-4")
     sky_model_5 = sky_model.copy(name="source-5")
-    return SkyModels([sky_model_4, sky_model_5])
+    return Models([sky_model_4, sky_model_5])
 
 
 def test_sky_model_init():
@@ -120,12 +120,12 @@ def test_sky_model_init():
 def test_sky_model_spatial_none_io(tmpdir):
     pwl = PowerLawSpectralModel()
     model = SkyModel(spectral_model=pwl, name="test")
-    models = SkyModels([model])
+    models = Models([model])
 
     filename = tmpdir / "test-models-none.yaml"
     models.write(filename)
 
-    models = SkyModels.read(filename)
+    models = Models.read(filename)
 
     assert models["test"].spatial_model is None
 
@@ -142,27 +142,27 @@ def test_sky_model_spatial_none_evaluate(geom):
 
 def test_skymodel_addition(sky_model, sky_models, sky_models_2, diffuse_model):
     models = sky_model + sky_model.copy()
-    assert isinstance(models, SkyModels)
+    assert isinstance(models, Models)
     assert len(models) == 2
 
     models = sky_model + sky_models
-    assert isinstance(models, SkyModels)
+    assert isinstance(models, Models)
     assert len(models) == 3
 
     models = sky_models + sky_model
-    assert isinstance(models, SkyModels)
+    assert isinstance(models, Models)
     assert len(models) == 3
 
     models = sky_models + diffuse_model
-    assert isinstance(models, SkyModels)
+    assert isinstance(models, Models)
     assert len(models) == 3
 
     models = sky_models + sky_models_2
-    assert isinstance(models, SkyModels)
+    assert isinstance(models, Models)
     assert len(models) == 4
 
     models = sky_model + sky_models
-    assert isinstance(models, SkyModels)
+    assert isinstance(models, Models)
     assert len(models) == 3
 
 

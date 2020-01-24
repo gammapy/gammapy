@@ -21,7 +21,7 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    SkyModels,
+    Models,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -799,7 +799,7 @@ def test_names(geom, geom_etrue, sky_model):
     dataset1 = MapDataset(
         counts=c_map1,
         background_model=background_model1,
-        models=SkyModels([model1, model2]),
+        models=Models([model1, model2]),
         exposure=get_exposure(geom_etrue),
     )
 

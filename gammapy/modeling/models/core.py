@@ -1,9 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
+import collections.abc
+import yaml
+from pathlib import Path
 import astropy.units as u
-from .parameter import Parameter, Parameters
+from gammapy.modeling import Parameter, Parameters
+from gammapy.utils.scripts import make_path
 
-__all__ = ["Model"]
+__all__ = ["Model", "Models"]
 
 
 class Model:
@@ -97,7 +101,103 @@ class Model:
         >>> type(spectral_model)
         gammapy.modeling.models.spectral.PowerLaw2SpectralModel
         """
-        from .models import MODELS
+        from . import MODELS
 
         cls = MODELS.get_cls(tag)
         return cls(*args, **kwargs)
+
+
+class Models(collections.abc.Sequence):
+    """Sky model collection.
+
+    Parameters
+    ----------
+    models : `SkyModel`, list of `SkyModel` or `Models`
+        Sky models
+    """
+    def __init__(self, models):
+        if isinstance(models, Models):
+            models = models._models
+        elif isinstance(models, Model):
+            models = [models]
+        elif isinstance(models, list):
+            models = models
+        else:
+            raise TypeError(f"Invalid type: {models!r}")
+
+        unique_names = []
+        for model in models:
+            if model.name in unique_names:
+                raise (ValueError("SkyModel names must be unique"))
+            unique_names.append(model.name)
+
+        self._models = models
+
+    @property
+    def parameters(self):
+        return Parameters.from_stack([_.parameters for _ in self._models])
+
+    @property
+    def names(self):
+        return [m.name for m in self._models]
+
+    @classmethod
+    def read(cls, filename):
+        """Read from YAML file."""
+        yaml_str = Path(filename).read_text()
+        return cls.from_yaml(yaml_str)
+
+    @classmethod
+    def from_yaml(cls, yaml_str):
+        """Create from YAML string."""
+        from gammapy.modeling.serialize import dict_to_models
+
+        data = yaml.safe_load(yaml_str)
+        models = dict_to_models(data)
+        return cls(models)
+
+    def write(self, path, overwrite=False):
+        """Write to YAML file."""
+        path = make_path(path)
+        if path.exists() and not overwrite:
+            raise IOError(f"File exists already: {path}")
+        path.write_text(self.to_yaml())
+
+    def to_yaml(self):
+        """Convert to YAML string."""
+        from gammapy.modeling.serialize import models_to_dict
+
+        data = models_to_dict(self._models)
+        return yaml.dump(
+            data, sort_keys=False, indent=4, width=80, default_flow_style=None
+        )
+
+    def __str__(self):
+        str_ = f"{self.__class__.__name__}\n\n"
+
+        for idx, model in enumerate(self):
+            str_ += f"Component {idx}: {model}\n\n\t\n\n"
+
+        return str_
+
+    def __add__(self, other):
+        if isinstance(other, (Models, list)):
+            return Models([*self, *other])
+        elif isinstance(other, Model):
+            return Models([*self, other])
+        else:
+            raise TypeError(f"Invalid type: {other!r}")
+
+    def __getitem__(self, val):
+        if isinstance(val, int):
+            return self._models[val]
+        elif isinstance(val, str):
+            for idx, model in enumerate(self._models):
+                if val == model.name:
+                    return self._models[idx]
+            raise IndexError(f"No model: {val!r}")
+        else:
+            raise TypeError(f"Invalid type: {type(val)!r}")
+
+    def __len__(self):
+       return len(self._models)
