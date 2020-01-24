@@ -629,6 +629,44 @@ class PowerLaw2SpectralModel(SpectralModel):
         return np.power(term.to_value(""), -1.0 / index) * emax
 
 
+class SmoothBrokenPowerLawSpectralModel(SpectralModel):
+    r"""Spectral smooth broken power-law model.
+
+    .. math::
+        \phi(E) = \phi_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma1}\left(1 + \frac{E}{E_{break}}^{\frac{\Gamma2-\Gamma1}{\beta}} \right)^{-\beta}
+
+    Parameters
+    ----------
+    index1 : `~astropy.units.Quantity`
+        :math:`\Gamma1`
+    index2 : `~astropy.units.Quantity`
+        :math:`\Gamma2`
+    amplitude : `~astropy.units.Quantity`
+        :math:`\phi_0`
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`
+    ebreak : `~astropy.units.Quantity`
+        :math:`E_{break}`
+    beta : `~astropy.units.Quantity`
+        :math:`\beta`
+    """
+
+    tag = "SmoothBrokenPowerLawSpectralModel"
+    index1 = Parameter("index1", 2.0)
+    index2 = Parameter("index2", 2.0)
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    ebreak = Parameter("ebreak", "1 TeV")
+    reference = Parameter("reference", "1 TeV", frozen=True)
+    beta = Parameter("beta", 1, frozen=True)
+
+    @staticmethod
+    def evaluate(energy, index1, index2, amplitude, ebreak, reference, beta):
+        """Evaluate the model (static function)."""
+        pwl = amplitude * (energy / reference) ** (-index1)
+        brk = (1 + (energy / ebreak) ** ((index2 - index1) / beta)) ** (-beta)
+        return pwl * brk
+
+
 class ExpCutoffPowerLawSpectralModel(SpectralModel):
     r"""Spectral exponential cutoff power-law model.
 

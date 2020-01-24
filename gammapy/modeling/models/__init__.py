@@ -36,6 +36,7 @@ SPECTRAL_MODELS = Registry(
         CompoundSpectralModel,
         PowerLawSpectralModel,
         PowerLaw2SpectralModel,
+        SmoothBrokenPowerLawSpectralModel,
         ExpCutoffPowerLawSpectralModel,
         ExpCutoffPowerLaw3FGLSpectralModel,
         SuperExpCutoffPowerLaw3FGLSpectralModel,
