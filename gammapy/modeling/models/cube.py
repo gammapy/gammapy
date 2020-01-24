@@ -67,7 +67,7 @@ class SkyModels(collections.abc.Sequence):
     @property
     def names(self):
         return [m.name for m in self._skymodels]
-    
+
     @classmethod
     def read(cls, filename):
         """Read from YAML file."""
