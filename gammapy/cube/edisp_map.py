@@ -222,7 +222,7 @@ class EDispMap:
 
         coords = {
             "skycoord": position,
-            "migra": migra_axis.center.reshape((-1, 1, 1, 1)),
+            "migra": migra_axis.edges[:-1].reshape((-1, 1, 1, 1)),
             "energy": energy_axis.center.reshape((1, -1, 1, 1)),
         }
 
@@ -237,17 +237,18 @@ class EDispMap:
             migra = e_reco / e_true
 
             cumsum = np.insert(edisp_values[:, idx], 0, 0).cumsum()
+            with np.errstate(invalid="ignore"):
+                cumsum = np.nan_to_num(cumsum / cumsum[-1])
+
             f = interp1d(
-                migra_axis.edges.value, cumsum, kind="quadratic",
-                bounds_error=False, fill_value=(0, cumsum[-1])
+                np.log(migra_axis.edges.value), cumsum, kind="linear",
+                bounds_error=False, fill_value=(0, 1)
             )
 
             # We compute the difference between 2 successive bounds in e_reco
             # to get integral over reco energy bin
-            integral = np.clip(np.diff(f(migra)), a_min=0, a_max=np.inf)
-
-            with np.errstate(invalid="ignore"):
-                data.append(np.nan_to_num(integral / integral.sum()))
+            integral = np.clip(np.diff(f(np.log(migra))), a_min=0, a_max=1)
+            data.append(integral)
 
         return EDispKernel(
             e_true_lo=energy_axis.edges[:-1],
@@ -312,11 +313,16 @@ class EDispMap:
 
         migra_axis = geom.get_axis_by_name("migra")
         edisp_map = Map.from_geom(geom, unit="")
-        loc = migra_axis.edges.searchsorted(1.0)
-        edisp_map.data[:, loc, :, :] = 1.0
+        migra_0 = migra_axis.coord_to_pix(1)
+
+        # distribute over two pixels
+        migra = geom.get_idx()[2]
+        data = np.abs(migra - migra_0)
+        data = np.where(data < 1, 1 - data, 0)
+        edisp_map.quantity = data
         return cls(edisp_map, exposure_edisp)
 
-    def sample_coord(self, map_coord, random_state=0, migra_oversampling=1):
+    def sample_coord(self, map_coord, random_state=0, migra_oversampling=5):
         """Apply the energy dispersion corrections on the coordinates of a set of simulated events.
 
         Parameters
@@ -340,7 +346,7 @@ class EDispMap:
         coord = {
             "skycoord": map_coord.skycoord.reshape(-1, 1),
             "energy": map_coord["energy"].reshape(-1, 1),
-            "migra": migra_axis.center,
+            "migra": migra_axis.edges[:-1],
         }
 
         pdf_edisp = self.edisp_map.interp_by_coord(coord)
