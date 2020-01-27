@@ -65,4 +65,4 @@ def test_axis_sampling():
     idx = sampler.sample_axis()
     x_sampled = np.interp(idx, np.arange(n_sampled), x)
 
-    assert_allclose(x_sampled, [0.01042147, 0.43061014], rtol=1e-5)
+    assert_allclose(x_sampled, [0.012266, 0.43081], rtol=1e-4)

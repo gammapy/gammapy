@@ -202,8 +202,8 @@ def test_sample_coord():
     coords = psf_map.sample_coord(map_coord=coords_in)
     assert coords.frame == "icrs"
     assert len(coords.lon) == 2
-    assert_allclose(coords.lon, [3.599708e02, 7.749678e-02], rtol=1e-3)
-    assert_allclose(coords.lat, [-0.055216, 0.439184], rtol=1e-3)
+    assert_allclose(coords.lon, [0.04262, 0.02797], rtol=1e-3)
+    assert_allclose(coords.lat, [-0.057826,  0.399912], rtol=1e-3)
 
 
 def test_sample_coord_gauss():
@@ -216,8 +216,8 @@ def test_sample_coord_gauss():
     )
     coords = psf_map.sample_coord(coords_in)
 
-    assert_allclose(np.mean(coords.skycoord.data.lon.wrap_at("180d").deg), 0, atol=1e-3)
-    assert_allclose(np.mean(coords.lat), 0, atol=1e-3)
+    assert_allclose(np.mean(coords.skycoord.data.lon.wrap_at("180d").deg), 0, atol=2e-3)
+    assert_allclose(np.mean(coords.lat), 0, atol=2e-3)
 
 
 def make_psf_map_obs(geom, obs):
