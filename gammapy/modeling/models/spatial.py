@@ -146,6 +146,8 @@ class SpatialModel(Model):
 class PointSpatialModel(SpatialModel):
     r"""Point Source.
 
+    For more information see :ref:`point-spatial-model`.
+
     .. math:: \phi(lon, lat) = \delta{(lon - lon_0, lat - lat_0)}
 
     Parameters
