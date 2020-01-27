@@ -6,7 +6,8 @@ import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from gammapy.detect import ASmooth
 from gammapy.modeling import Datasets
-from gammapy.maps import Map
+from gammapy.maps import Map, WcsNDMap
+from gammapy.cube import MapDatasetOnOff
 from gammapy.utils.testing import requires_data
 
 
@@ -79,3 +80,29 @@ def test_asmooth_dataset(input_dataset):
     for name in smoothed:
         actual = smoothed[name].data[20, 25]
         assert_allclose(actual, desired[name], rtol=1e-5)
+
+def test_asmooth_mapdatasetonoff():
+    kernel = Tophat2DKernel
+    scales = ASmooth.make_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
+
+    asmooth = ASmooth(kernel=kernel, scales=scales, method="simple", threshold=2.5)
+
+    counts = WcsNDMap.create(npix=(50,50), binsz=0.02, unit="")
+    counts += 1
+    counts_off = WcsNDMap.create(npix=(50,50), binsz=0.02, unit="")
+    counts_off += 3
+    acceptance = 1
+    acceptance_off = 3
+
+    dataset = MapDatasetOnOff(
+        counts=counts,
+        counts_off=counts_off,
+        acceptance=acceptance,
+        acceptance_off=acceptance_off
+    )
+
+    smoothed = asmooth.run(dataset)
+    assert_allclose(smoothed["counts"].data, 1)
+    assert_allclose(smoothed["background"].data, 1)
+    assert_allclose(smoothed["significance"].data, 0)
+
