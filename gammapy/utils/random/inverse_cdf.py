@@ -46,12 +46,19 @@ class InverseCDFSampler:
         index : tuple of `~numpy.ndarray`
             Coordinates of the drawn sample.
         """
-        choice = self.random_state.uniform(high=1, size=len(self.cdf))
+        choices = self.random_state.uniform(high=1, size=len(self.cdf))
+        shape_cdf = self.cdf.shape
 
-        # find the indices corresponding to this point on the CDF
-        index = np.argmin(np.abs(choice.reshape(-1, 1) - self.cdf), axis=self.axis)
+        cdf_all = np.insert(self.cdf, 0, 0, axis=1)
+        edges = np.arange(shape_cdf[1] + 1) - 0.5
 
-        return index + self.random_state.uniform(low=-0.5, high=0.5, size=len(self.cdf))
+        pix_coords = []
+
+        for cdf, choice in zip(cdf_all, choices):
+            pix = np.interp(choice, cdf, edges)
+            pix_coords.append(pix)
+
+        return np.array(pix_coords)
 
     def sample(self, size):
         """Draw sample from the given PDF.

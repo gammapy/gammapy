@@ -322,7 +322,7 @@ class EDispMap:
         edisp_map.quantity = data
         return cls(edisp_map, exposure_edisp)
 
-    def sample_coord(self, map_coord, random_state=0, migra_oversampling=5):
+    def sample_coord(self, map_coord, random_state=0):
         """Apply the energy dispersion corrections on the coordinates of a set of simulated events.
 
         Parameters
@@ -332,8 +332,6 @@ class EDispMap:
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
-        migra_oversampling : int
-            Migra axis oversampling factor.
 
         Returns
         -------
@@ -341,7 +339,7 @@ class EDispMap:
             Sequence of Edisp-corrected coordinates of the input map_coord map.
         """
         random_state = get_random_state(random_state)
-        migra_axis = self.edisp_map.geom.get_axis_by_name("migra").upsample(migra_oversampling)
+        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
 
         coord = {
             "skycoord": map_coord.skycoord.reshape(-1, 1),
