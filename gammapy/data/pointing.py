@@ -27,6 +27,10 @@ class FixedPointingInfo:
     >>> path = '$GAMMAPY_DATA/tests/pointing_table.fits.gz'
     >>> pointing_info = PointingInfo.read(path)
     >>> print(pointing_info)
+
+    Note: In order to reproduce the example you need the tests datasets folder.
+    You may download it with the command
+    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
     def __init__(self, meta):
@@ -120,6 +124,10 @@ class PointingInfo:
     >>> from gammapy.data import PointingInfo
     >>> pointing_info = PointingInfo.read('$GAMMAPY_DATA/tests/pointing_table.fits.gz')
     >>> print(pointing_info)
+
+    Note: In order to reproduce the example you need the tests datasets folder.
+    You may download it with the command
+    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
     def __init__(self, table):

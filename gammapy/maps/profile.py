@@ -48,6 +48,10 @@ class ImageProfileEstimator:
         smoothed = profile.smooth(kernel='gauss')
         smoothed.peek()
         plt.show()
+
+    Note: In order to reproduce the example you need the tests datasets folder.
+    You may download it with the command
+    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
     def __init__(self, x_edges=None, method="sum", axis="lon", center=None):

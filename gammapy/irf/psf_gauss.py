@@ -61,6 +61,10 @@ class EnergyDependentMultiGaussPSF:
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
         psf.plot_containment(0.68, show_safe_energy=False)
         plt.show()
+
+    Note: In order to reproduce the example you need the tests datasets folder.
+    You may download it with the command
+    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
     def __init__(

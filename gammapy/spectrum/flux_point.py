@@ -84,6 +84,10 @@ class FluxPoints:
         flux_points = FluxPoints.read(filename)
         flux_points.plot()
 
+    Note: In order to reproduce the example you need the tests datasets folder.
+    You may download it with the command
+    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
+
     An instance of `FluxPoints` can also be created by passing an instance of
     `astropy.table.Table`, which contains the required columns, such as `'e_ref'`
     and `'dnde'`. The corresponding `sed_type` has to be defined in the meta data
@@ -130,6 +134,9 @@ class FluxPoints:
         flux_points = FluxPoints(table)
         flux_points.plot()
 
+    Note: In order to reproduce the example you need the tests datasets folder.
+    You may download it with the command
+    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
     def __init__(self, table):
@@ -262,6 +269,10 @@ class FluxPoints:
         FluxPoints(sed_type="flux", n_points=24)
         >>> print(flux_points.drop_ul())
         FluxPoints(sed_type="flux", n_points=19)
+
+        Note: In order to reproduce the example you need the tests datasets folder.
+        You may download it with the command
+        ``gammapy download datasets --tests --out $GAMMAPY_DATA``
         """
         table_drop_ul = self.table[~self.is_ul]
         return self.__class__(table_drop_ul)
@@ -357,6 +368,10 @@ class FluxPoints:
         >>> flux_points = FluxPoints.read(filename)
         >>> model = PowerLawSpectralModel(index=2.2)
         >>> flux_points_dnde = flux_points.to_sed_type('dnde', model=model)
+
+        Note: In order to reproduce the example you need the tests datasets folder.
+        You may download it with the command
+        ``gammapy download datasets --tests --out $GAMMAPY_DATA``
         """
         # TODO: implement other directions.
         table = self.table.copy()
@@ -1176,6 +1191,10 @@ class FluxPointsDataset(Dataset):
         result = fit.run()
         print(result)
         print(result.parameters.to_table())
+
+    Note: In order to reproduce the example you need the tests datasets folder.
+    You may download it with the command
+    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
     stat_type = "chi2"
