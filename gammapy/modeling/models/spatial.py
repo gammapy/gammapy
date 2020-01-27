@@ -472,6 +472,8 @@ class TemplateSpatialModel(SpatialModel):
     This is for a 2D image. Use `~gammapy.modeling.models.SkyDiffuseCube` for 3D cubes with
     an energy axis.
 
+    For more information see :ref:`template-spatial-model`.
+
     Parameters
     ----------
     map : `~gammapy.maps.Map`
