@@ -380,7 +380,7 @@ class SpectralModel(Model):
 class ConstantSpectralModel(SpectralModel):
     r"""Constant model.
 
-    .. math:: \phi(E) = k
+    For more information see :ref:`constant-spectral-model`.
 
     Parameters
     ----------
