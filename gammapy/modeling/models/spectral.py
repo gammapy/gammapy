@@ -1071,7 +1071,7 @@ class ScaleSpectralModel(SpectralModel):
 class Absorption:
     r"""Gamma-ray absorption models.
 
-    Usually used as part of `AbsorbedSpectralModel`.
+    For more information see :ref:`absorption-spectral-model`.
 
     Parameters
     ----------
