@@ -29,10 +29,10 @@ although that approximation is still very good even for 10 deg radius shells.
 # Here is an example plot of the model:
 
 from gammapy.modeling.models import (
-    ShellSpatialModel,
-    SkyModel,
     Models,
     PowerLawSpectralModel,
+    ShellSpatialModel,
+    SkyModel,
 )
 
 model = ShellSpatialModel(

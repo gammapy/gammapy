@@ -38,9 +38,9 @@ import numpy as np
 from astropy.coordinates import Angle
 from gammapy.modeling.models import (
     DiskSpatialModel,
-    SkyModel,
     Models,
     PowerLawSpectralModel,
+    SkyModel,
 )
 
 phi = Angle("30 deg")

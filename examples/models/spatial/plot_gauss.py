@@ -54,9 +54,9 @@ from astropy.coordinates import Angle
 from gammapy.maps import WcsGeom
 from gammapy.modeling.models import (
     GaussianSpatialModel,
+    Models,
     PowerLawSpectralModel,
     SkyModel,
-    Models,
 )
 
 phi = Angle("30 deg")

@@ -13,10 +13,10 @@ This is a spatial model based on a 2D sky map provided as a template.
 # Here is an example plot of the model:
 from gammapy.maps import Map
 from gammapy.modeling.models import (
-    TemplateSpatialModel,
-    SkyModel,
     Models,
     PowerLawSpectralModel,
+    SkyModel,
+    TemplateSpatialModel,
 )
 
 filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"

@@ -17,15 +17,13 @@ The model is defined on the celestial sphere in the coordinate frame provided by
 # Here is an example plot of the model:
 
 from gammapy.modeling.models import (
-    PointSpatialModel,
-    SkyModel,
     Models,
+    PointSpatialModel,
     PowerLawSpectralModel,
+    SkyModel,
 )
 
-model = PointSpatialModel(
-    lon_0="23 deg", lat_0="32 deg", frame="galactic",
-)
+model = PointSpatialModel(lon_0="23 deg", lat_0="32 deg", frame="galactic",)
 
 ax = model.plot()
 
