@@ -4,7 +4,7 @@ r"""
 Point Spatial Model
 ===================
 
-This model is a delta function centered in lon_0, lat_0 parameters provided:
+This model is a delta function centered in *lon_0* and *lat_0* parameters provided:
 
 .. math:: \phi(lon, lat) = \delta{(lon - lon_0, lat - lat_0)}
 

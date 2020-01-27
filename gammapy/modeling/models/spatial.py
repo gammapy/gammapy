@@ -354,6 +354,8 @@ class DiskSpatialModel(SpatialModel):
 class ShellSpatialModel(SpatialModel):
     r"""Shell model.
 
+    For more information see :ref:`shell-spatial-model`.
+
     .. math::
         \phi(lon, lat) = \frac{3}{2 \pi (r_{out}^3 - r_{in}^3)} \cdot
                 \begin{cases}
