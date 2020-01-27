@@ -28,7 +28,7 @@ The model is defined on the celestial sphere, with a normalization defined by:
     \int_{4\pi}\phi(\text{lon}, \text{lat}) \,d\Omega = 1\,.
 """
 
-#%%
+# %%
 # Example plot
 # ------------
 # Here is an example plot of the model:
@@ -38,9 +38,9 @@ import numpy as np
 from astropy.coordinates import Angle
 from gammapy.modeling.models import (
     DiskSpatialModel,
-    SkyModel,
     Models,
     PowerLawSpectralModel,
+    SkyModel,
 )
 
 phi = Angle("30 deg")
@@ -62,7 +62,7 @@ ax.plot([2, 2 + np.sin(phi)], [2, 2 + np.cos(phi)], color="r", transform=transfo
 ax.vlines(x=2, color="r", linestyle="--", transform=transform, ymin=0, ymax=5)
 ax.text(2.15, 2.3, r"$\phi$", transform=transform)
 
-#%%
+# %%
 # YAML representation
 # -------------------
 # Here is an example YAML file using the model:

@@ -43,16 +43,21 @@ this model is not correctly normalized. However, this approximation is perfectly
 common case of models with modest dimensions: indeed, the error introduced by normalizing on the plane
 rather than on the sphere is below 0.1\% for Gaussians with radii smaller than ~ 5 deg.
 """
+
+# %%
+# Example plot
+# ------------
+# Here is an example plot of the model:
+
 import numpy as np
 from astropy.coordinates import Angle
 from gammapy.maps import WcsGeom
 from gammapy.modeling.models import (
     GaussianSpatialModel,
+    Models,
     PowerLawSpectralModel,
     SkyModel,
-    Models,
 )
-
 
 phi = Angle("30 deg")
 model = GaussianSpatialModel(
@@ -69,7 +74,6 @@ region = model.to_region().to_pixel(ax.wcs)
 artist = region.as_artist(facecolor="none", edgecolor="red")
 ax.add_artist(artist)
 
-
 transform = ax.get_transform("galactic")
 ax.scatter(2, 2, transform=transform, s=20, edgecolor="red", facecolor="red")
 ax.text(1.5, 1.85, r"$(l_0, b_0)$", transform=transform, ha="center")
@@ -77,7 +81,7 @@ ax.plot([2, 2 + np.sin(phi)], [2, 2 + np.cos(phi)], color="r", transform=transfo
 ax.vlines(x=2, color="r", linestyle="--", transform=transform, ymin=-5, ymax=5)
 ax.text(2.25, 2.45, r"$\phi$", transform=transform)
 
-#%%
+# %%
 # YAML representation
 # -------------------
 # Here is an example YAML file using the model:

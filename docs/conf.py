@@ -202,14 +202,14 @@ suppress_warnings = ["ref.citation"]
 sphinx_gallery_conf = {
     "examples_dirs": ["../examples/models"],   # path to your example scripts
     "gallery_dirs": ["modeling/gallery"],      # path to where to save gallery generated output
-    'within_subsection_order': FileNameSortKey,
+    "within_subsection_order": FileNameSortKey,
     "download_all_examples": False,
     "capture_repr": (),
     "min_reported_time": 10000,
     "show_memory": False,
     "line_numbers": False,
-    'reference_url': {
+    "reference_url": {
         # The module you locally document uses None
-        'gammapy': None,
-    }
+        "gammapy": None,
+    },
 }
