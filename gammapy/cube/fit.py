@@ -910,13 +910,24 @@ class MapDataset(Dataset):
             mask_safe = self.mask_safe
             mask_image = mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
 
-        counts = self.counts * mask_safe
-        background = self.background_model.evaluate() * mask_safe
+        if self.counts is not None:
+            counts = self.counts * mask_safe
+            counts = counts.sum_over_axes(keepdims=True)
+        else:
+            counts = None
 
-        counts = counts.sum_over_axes(keepdims=True)
-        exposure = _map_spectrum_weight(self.exposure, spectrum)
-        exposure = exposure.sum_over_axes(keepdims=True)
-        background = background.sum_over_axes(keepdims=True)
+        if self.exposure is not None:
+            exposure = _map_spectrum_weight(self.exposure, spectrum)
+            exposure = exposure.sum_over_axes(keepdims=True)
+        else:
+            exposure = None
+
+        if self.background_model is not None:
+            background = self.background_model.evaluate() * mask_safe
+            background = background.sum_over_axes(keepdims=True)
+            bkg_model = BackgroundModel(background)
+        else:
+            bkg_model = None
 
         # TODO: add edisp and psf
         edisp = None
@@ -929,7 +940,7 @@ class MapDataset(Dataset):
         return self.__class__(
             counts=counts,
             exposure=exposure,
-            background_model=BackgroundModel(background, name=name),
+            background_model=bkg_model,
             mask_safe=mask_image,
             edisp=edisp,
             psf=psf,
