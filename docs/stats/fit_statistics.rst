@@ -104,6 +104,7 @@ Caveat
  and check whether the resulting fitted parameters distributions are consistent
  with the input values.
 
+
 Example
 ^^^^^^^
 

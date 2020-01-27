@@ -21,7 +21,7 @@ mu_max = 50
 cl = 0.90
 
 x_bins = np.arange(0, n_bins_x)
-mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
+mu_bins = np.linspace(mu_min, mu_max, int(mu_max / step_width_mu + 1), endpoint=True)
 
 matrix = [poisson(mu + background).pmf(x_bins) for mu in mu_bins]
 

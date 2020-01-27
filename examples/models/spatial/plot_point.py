@@ -15,7 +15,8 @@ The model is defined on the celestial sphere in the coordinate frame provided by
 # Example plot
 # ------------
 # Here is an example plot of the model:
-
+from gammapy.maps import WcsGeom
+from astropy.coordinates import SkyCoord
 from gammapy.modeling.models import (
     Models,
     PointSpatialModel,
@@ -23,9 +24,12 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-model = PointSpatialModel(lon_0="23 deg", lat_0="32 deg", frame="galactic",)
+model = PointSpatialModel(lon_0="0.01 deg", lat_0="0.01 deg", frame="galactic",)
 
-model.plot()
+geom = WcsGeom.create(
+    skydir=SkyCoord("0d 0d", frame="galactic"), width=(1, 1), binsz=0.1
+)
+model.plot(geom=geom, add_cbar=True)
 
 #%%
 # YAML representation
@@ -35,7 +39,7 @@ model.plot()
 pwl = PowerLawSpectralModel()
 point = PointSpatialModel()
 
-model = SkyModel(spectral_model=pwl, spatial_model=point)
+model = SkyModel(spectral_model=pwl, spatial_model=point, name="pwl-point-model")
 models = Models([model])
 
 print(models.to_yaml())

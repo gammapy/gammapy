@@ -23,7 +23,7 @@ filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_
 m = Map.read(filename)
 model = TemplateSpatialModel(m)
 
-model.plot()
+model.plot(add_cbar=True)
 
 # %%
 # YAML representation
@@ -33,7 +33,7 @@ model.plot()
 pwl = PowerLawSpectralModel()
 template = TemplateSpatialModel(m)
 
-model = SkyModel(spectral_model=pwl, spatial_model=template)
+model = SkyModel(spectral_model=pwl, spatial_model=template, name="pwl-template-model")
 models = Models([model])
 
 print(models.to_yaml())

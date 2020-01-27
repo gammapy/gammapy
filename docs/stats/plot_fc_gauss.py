@@ -21,7 +21,7 @@ mu_max = 8
 cl = 0.90
 
 x_bins = np.linspace(-n_sigma * sigma, n_sigma * sigma, n_bins_x, endpoint=True)
-mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
+mu_bins = np.linspace(mu_min, mu_max, int(mu_max / step_width_mu + 1), endpoint=True)
 
 matrix = [
     dist / sum(dist)

@@ -22,7 +22,7 @@ from gammapy.modeling.models import (
 
 geom = WcsGeom.create(npix=(100,100), binsz=0.1)
 model = ConstantSpatialModel(value="42 sr-1")
-model.plot(geom=geom)
+model.plot(geom=geom, add_cbar=True)
 
 #%%
 # YAML representation
@@ -32,7 +32,7 @@ model.plot(geom=geom)
 pwl = PowerLawSpectralModel()
 constant = ConstantSpatialModel()
 
-model = SkyModel(spectral_model=pwl, spatial_model=constant)
+model = SkyModel(spectral_model=pwl, spatial_model=constant, name="pwl-constant-model")
 models = Models([model])
 
 print(models.to_yaml())

@@ -4,6 +4,8 @@ r"""
 Shell Spatial Model
 ===================
 
+This is a spatial model parametrizing a projected radiating shell.
+
 The shell spatial model is defined by the following equations:
 
 .. math::
@@ -39,7 +41,7 @@ model = ShellSpatialModel(
     lon_0="10 deg", lat_0="20 deg", radius="2 deg", width="0.5 deg", frame="galactic",
 )
 
-model.plot()
+model.plot(add_cbar=True)
 
 # %%
 # YAML representation
@@ -49,7 +51,7 @@ model.plot()
 pwl = PowerLawSpectralModel()
 shell = ShellSpatialModel()
 
-model = SkyModel(spectral_model=pwl, spatial_model=shell)
+model = SkyModel(spectral_model=pwl, spatial_model=shell, name="pwl-shell-model")
 models = Models([model])
 
 print(models.to_yaml())

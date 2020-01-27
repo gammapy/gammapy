@@ -3,6 +3,9 @@ r"""
 
 Gaussian Spatial Model
 ======================
+
+This is a spatial model parametrising a Gaussian function.
+
 By default, the Gaussian is symmetric:
 
 .. math::
@@ -67,7 +70,7 @@ model = GaussianSpatialModel(
 geom = WcsGeom.create(
     skydir=model.position, frame=model.frame, width=(4, 4), binsz=0.02
 )
-ax = model.plot(geom=geom)
+ax = model.plot(geom=geom, add_cbar=True)
 
 # illustrate size parameter
 region = model.to_region().to_pixel(ax.wcs)
@@ -89,7 +92,7 @@ ax.text(2.25, 2.45, r"$\phi$", transform=transform)
 pwl = PowerLawSpectralModel()
 gauss = GaussianSpatialModel()
 
-model = SkyModel(spectral_model=pwl, spatial_model=gauss)
+model = SkyModel(spectral_model=pwl, spatial_model=gauss, name="pwl-gauss-model")
 models = Models([model])
 
 print(models.to_yaml())

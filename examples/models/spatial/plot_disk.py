@@ -4,6 +4,8 @@ r"""
 Disk Spatial Model
 ==================
 
+This is a spatial model parametrising a disk.
+
 By default, the model is symmetric, i.e. a disk:
 
 .. math::
@@ -48,7 +50,7 @@ model = DiskSpatialModel(
     lon_0="2 deg", lat_0="2 deg", r_0="1 deg", e=0.8, phi="30 deg", frame="galactic",
 )
 
-ax = model.plot()
+ax = model.plot(add_cbar=True)
 
 # illustrate size parameter
 region = model.to_region().to_pixel(ax.wcs)
@@ -70,7 +72,7 @@ ax.text(2.15, 2.3, r"$\phi$", transform=transform)
 pwl = PowerLawSpectralModel()
 gauss = DiskSpatialModel()
 
-model = SkyModel(spectral_model=pwl, spatial_model=gauss)
+model = SkyModel(spectral_model=pwl, spatial_model=gauss, name="pwl-disk-model")
 models = Models([model])
 
 print(models.to_yaml())
