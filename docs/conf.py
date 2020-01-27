@@ -202,7 +202,7 @@ sphinx_gallery_conf = {
     "gallery_dirs": "modeling/gallery",  # path to where to save gallery generated output
     "download_all_examples": False,
     "capture_repr": (),
-    "min_reported_time": False,
+    "min_reported_time": 10000,
     "show_memory": False,
-    "line_numbers": True,
+    "line_numbers": False,
 }
