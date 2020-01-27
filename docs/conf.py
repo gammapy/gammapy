@@ -205,4 +205,8 @@ sphinx_gallery_conf = {
     "min_reported_time": 10000,
     "show_memory": False,
     "line_numbers": False,
+    'reference_url': {
+        # The module you locally document uses None
+        'gammapy': None,
+    }
 }
