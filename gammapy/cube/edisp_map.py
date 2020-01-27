@@ -241,7 +241,7 @@ class EDispMap:
                 cumsum = np.nan_to_num(cumsum / cumsum[-1])
 
             f = interp1d(
-                migra_axis.edges.value, cumsum, kind="quadratic",
+                migra_axis.edges.value, cumsum, kind="linear",
                 bounds_error=False, fill_value=(0, 1)
             )
 
@@ -346,7 +346,7 @@ class EDispMap:
         coord = {
             "skycoord": map_coord.skycoord.reshape(-1, 1),
             "energy": map_coord["energy"].reshape(-1, 1),
-            "migra": migra_axis.edges[:-1],
+            "migra": migra_axis.center,
         }
 
         pdf_edisp = self.edisp_map.interp_by_coord(coord)
