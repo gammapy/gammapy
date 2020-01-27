@@ -3,15 +3,15 @@ Gammapy examples folder
 
 This folder contains the following:
 
-* Example scripts for end-users are named `example_*.py`
-* Test scripts for developers are named `test_*.py`
-* Work in progress coding is done in scripts named `wip_*.py`
+* Python scripts tutorials that may be downloaded with `gammapy download scripts` command.
+* Python scripts needed by the sphinx-gallery extension to produce collections of examples use cases.
 
-The `test` and `wip` files are OK to have as a temp solution.
-It's useful to have an example or test script for debugging while implementing something.
-All code and tests should eventually go in the Gammapy package.
+Only the Python scripts declared in the `scripts.yaml` file are downloaded by the
+`gammapy download scripts` command. This list is versioned for each release of Gammapy
+as it is also the case for the Jupyter notebooks tutorials placed in the tutorials
+folder.
 
-Note that we also have example scripts in the `docs` folder and example IPython notebooks
-in the `tutorials` folder.
+There Python scripts needed by sphinx-gallery extension are placed in folders declared in
+the `sphinx_gallery_conf` variable in `docs/conf.py` script.
 
 See info at: https://docs.gammapy.org/
