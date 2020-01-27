@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 import astropy.io.fits as fits
 from gammapy.irf import EDispKernel
-from gammapy.maps import Map, MapCoord, WcsGeom
+from gammapy.maps import Map, MapCoord, WcsGeom, MapAxis
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from scipy.interpolate import interp1d
 
@@ -222,7 +222,7 @@ class EDispMap:
 
         coords = {
             "skycoord": position,
-            "migra": migra_axis.edges[:-1].reshape((-1, 1, 1, 1)),
+            "migra": migra_axis.center.reshape((-1, 1, 1, 1)),
             "energy": energy_axis.center.reshape((1, -1, 1, 1)),
         }
 
@@ -241,13 +241,13 @@ class EDispMap:
                 cumsum = np.nan_to_num(cumsum / cumsum[-1])
 
             f = interp1d(
-                np.log(migra_axis.edges.value), cumsum, kind="linear",
+                migra_axis.edges.value, cumsum, kind="quadratic",
                 bounds_error=False, fill_value=(0, 1)
             )
 
             # We compute the difference between 2 successive bounds in e_reco
             # to get integral over reco energy bin
-            integral = np.clip(np.diff(f(np.log(migra))), a_min=0, a_max=1)
+            integral = np.diff(np.clip(f(migra), a_min=0, a_max=1))
             data.append(integral)
 
         return EDispKernel(
@@ -375,9 +375,12 @@ class EDispMap:
         edisp_map : `EDispMap`
             Energy dispersion map.
         """
-        from .fit import MIGRA_AXIS_DEFAULT
+        migra_res = 1e-5
+        migra_axis_default = MapAxis.from_bounds(
+            1 - migra_res, 1 + migra_res, nbin=3, name="migra", node_type="edges"
+        )
 
-        migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
+        migra_axis = migra_axis or migra_axis_default
 
         geom = WcsGeom.create(
             npix=(2, 1), proj="CAR", binsz=180, axes=[migra_axis, energy_axis_true]
