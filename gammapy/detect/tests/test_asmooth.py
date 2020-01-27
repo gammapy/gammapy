@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
-from gammapy.detect import ASmooth
+from gammapy.detect import ASmoothEstimator
 from gammapy.modeling import Datasets
 from gammapy.maps import Map, WcsNDMap
 from gammapy.cube import MapDatasetOnOff
@@ -38,9 +38,9 @@ def input_dataset():
 @requires_data()
 def test_asmooth(input_maps):
     kernel = Tophat2DKernel
-    scales = ASmooth.make_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
+    scales = ASmoothEstimator.make_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 
-    asmooth = ASmooth(kernel=kernel, scales=scales, method="simple", threshold=2.5)
+    asmooth = ASmoothEstimator(kernel=kernel, scales=scales, method="simple", threshold=2.5)
     smoothed = asmooth.make_maps(input_maps["counts"], input_maps["background"])
 
     desired = {
@@ -58,9 +58,9 @@ def test_asmooth(input_maps):
 @requires_data()
 def test_asmooth_dataset(input_dataset):
     kernel = Tophat2DKernel
-    scales = ASmooth.make_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
+    scales = ASmoothEstimator.make_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 
-    asmooth = ASmooth(kernel=kernel, scales=scales, method="simple", threshold=2.5)
+    asmooth = ASmoothEstimator(kernel=kernel, scales=scales, method="simple", threshold=2.5)
     smoothed = asmooth.run(input_dataset)
 
     assert smoothed["flux"].data.shape == (40, 50)
@@ -83,12 +83,12 @@ def test_asmooth_dataset(input_dataset):
 
 def test_asmooth_mapdatasetonoff():
     kernel = Tophat2DKernel
-    scales = ASmooth.make_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
+    scales = ASmoothEstimator.make_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 
-    asmooth = ASmooth(kernel=kernel, scales=scales, method="simple", threshold=2.5)
+    asmooth = ASmoothEstimator(kernel=kernel, scales=scales, method="simple", threshold=2.5)
 
     counts = WcsNDMap.create(npix=(50,50), binsz=0.02, unit="")
-    counts += 1
+    counts += 2
     counts_off = WcsNDMap.create(npix=(50,50), binsz=0.02, unit="")
     counts_off += 3
     acceptance = 1
@@ -102,7 +102,7 @@ def test_asmooth_mapdatasetonoff():
     )
 
     smoothed = asmooth.run(dataset)
-    assert_allclose(smoothed["counts"].data, 1)
-    assert_allclose(smoothed["background"].data, 1)
-    assert_allclose(smoothed["significance"].data, np.nan)
+    assert_allclose(smoothed["counts"].data[25,25], 2)
+    assert_allclose(smoothed["background"].data[25,25], 1)
+    assert_allclose(smoothed["significance"].data[25,25], 4.391334)
 

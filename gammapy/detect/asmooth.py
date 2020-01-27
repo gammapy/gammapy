@@ -7,7 +7,7 @@ from gammapy.maps import WcsNDMap, scale_cube
 from gammapy.stats import significance
 from gammapy.cube import MapDatasetOnOff
 
-__all__ = ["ASmooth"]
+__all__ = ["ASmoothEstimator"]
 
 
 def _significance_asmooth(counts, background):
@@ -15,7 +15,7 @@ def _significance_asmooth(counts, background):
     return (counts - background) / np.sqrt(counts + background)
 
 
-class ASmooth:
+class ASmoothEstimator:
     """Adaptively smooth counts image.
 
     Achieves a roughly constant significance of features across the whole image.
