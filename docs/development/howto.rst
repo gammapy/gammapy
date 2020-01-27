@@ -925,6 +925,15 @@ sense, it is important to publish as stable docs those built with stable release
 versions of Gammapy so the links to Binder in the tutorials point to stable tagged
 Binder environments in the ``gammapy-webpage`` repository.
 
+Sphinx gallery extension
+------------------------
+
+The documentation built-in process uses the `sphinx-gallery <https://sphinx-gallery.github.io/stable/>`__
+extension to build galleries of illustrated examples on how to use Gammapy (i.e.
+:ref:`model-gallery`). The Python scripts used to produce the model gallery are placed in
+``examples/models`` and the configuration of the ``sphinx-gallery`` module is done in ``docs/conf.py``.
+
+
 Dealing with links and notebooks
 --------------------------------
 

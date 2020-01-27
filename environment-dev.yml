@@ -43,6 +43,7 @@ dependencies:
   - isort
   - setuptools_scm
   - sphinx-astropy
+  - sphinx-gallery
   - sphinx_rtd_theme
   - nbsphinx
   - sphinx-click
