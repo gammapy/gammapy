@@ -325,3 +325,10 @@ def test_arithmetics_after_serialization(tmp_path, interp):
     m_wcs += m_wcs_serialized
 
     assert_allclose(m_wcs.data, 2.0)
+
+
+def test_set_scalar():
+    m = Map.create(width=1)
+    m.data = 1
+    assert m.data.shape == (10, 10)
+    assert_allclose(m.data, 1)

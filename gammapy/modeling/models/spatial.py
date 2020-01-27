@@ -130,6 +130,9 @@ class SpatialModel(Model):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
+        if self.evaluation_radius is None and geom is None:
+            raise ValueError(f"{self.__class__.__name__} requires geom to be defined for plotting.")
+
         if geom is None:
             width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
             geom = WcsGeom.create(skydir=self.position, frame=self.frame, width=width, binsz=0.02)

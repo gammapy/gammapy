@@ -66,6 +66,9 @@ class Map(abc.ABC):
 
     @data.setter
     def data(self, val):
+        if np.isscalar(val):
+            val = val * np.ones(self.geom.data_shape)
+
         if val.shape != self.geom.data_shape:
             raise ValueError(
                 f"Shape {val.shape!r} does not match map data shape {self.geom.data_shape!r}"
