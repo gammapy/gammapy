@@ -23,7 +23,7 @@ filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_
 m = Map.read(filename)
 model = TemplateSpatialModel(m)
 
-ax = model.plot()
+model.plot()
 
 # %%
 # YAML representation

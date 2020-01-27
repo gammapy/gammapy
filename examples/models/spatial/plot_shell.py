@@ -39,7 +39,7 @@ model = ShellSpatialModel(
     lon_0="10 deg", lat_0="20 deg", radius="2 deg", width="0.5 deg", frame="galactic",
 )
 
-ax = model.plot()
+model.plot()
 
 # %%
 # YAML representation

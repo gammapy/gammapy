@@ -25,7 +25,7 @@ from gammapy.modeling.models import (
 
 model = PointSpatialModel(lon_0="23 deg", lat_0="32 deg", frame="galactic",)
 
-ax = model.plot()
+model.plot()
 
 #%%
 # YAML representation

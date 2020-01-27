@@ -412,6 +412,8 @@ class ShellSpatialModel(SpatialModel):
 class ConstantSpatialModel(SpatialModel):
     """Spatially constant (isotropic) spatial model.
 
+    For more information see :ref:`constant-spatial-model`.
+
     Parameters
     ----------
     value : `~astropy.units.Quantity`
