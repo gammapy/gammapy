@@ -14,6 +14,7 @@ This model takes a constant value along the spectral range.
 # ------------
 # Here is an example plot of the model:
 
+import matplotlib.pyplot as plt
 from astropy import units as u
 from gammapy.modeling.models import (
     Models,
@@ -23,7 +24,8 @@ from gammapy.modeling.models import (
 
 energy_range = [0.1, 100] * u.TeV
 k = ConstantSpectralModel(const="1 / (cm2 s TeV)")
-k.plot(energy_range);
+k.plot(energy_range)
+plt.grid(which="both");
 
 # %%
 # YAML representation
