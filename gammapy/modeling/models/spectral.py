@@ -400,7 +400,7 @@ class ConstantSpectralModel(SpectralModel):
 class CompoundSpectralModel(SpectralModel):
     """Arithmetic combination of two spectral models.
 
-    Itself again a spectral model.
+    For more information see :ref:`compound-spectral-model`.
     """
 
     tag = "CompoundSpectralModel"
