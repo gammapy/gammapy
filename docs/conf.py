@@ -13,6 +13,9 @@ from sphinx_astropy.conf import *
 from gammapy.utils.docs import gammapy_sphinx_ext_activate
 from gammapy.utils.docs import gammapy_sphinx_notebooks
 
+# Sphinx-gallery config
+from sphinx_gallery.sorting import FileNameSortKey
+
 # Get configuration information from setup.cfg
 from configparser import ConfigParser
 
@@ -200,6 +203,7 @@ suppress_warnings = ["ref.citation"]
 sphinx_gallery_conf = {
     "examples_dirs": "../examples/models",   # path to your example scripts
     "gallery_dirs": "modeling/gallery",  # path to where to save gallery generated output
+    'within_subsection_order': FileNameSortKey,
     "download_all_examples": False,
     "capture_repr": (),
     "min_reported_time": 10000,
