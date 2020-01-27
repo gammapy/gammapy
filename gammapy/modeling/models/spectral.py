@@ -1210,16 +1210,7 @@ class Absorption:
 class AbsorbedSpectralModel(SpectralModel):
     r"""Spectral model with EBL absorption.
 
-    The spectral model is evaluated, and then multiplied with an EBL
-    absorption factor given by
-
-    .. math::
-        \exp{ \left ( -\alpha \times \tau(E, z) \right )}
-
-    where :math:`\tau(E, z)` is the optical depth predicted by the model
-    (`Absorption`), which depends on the energy
-    of the gamma-rays and the redshift z of the source, and :math:`\alpha`
-    is a scale factor (default: 1) for the optical depth.
+    For more information see :ref:`absorbed-spectral-model`.
 
     Parameters
     ----------
