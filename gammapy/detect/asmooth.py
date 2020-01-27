@@ -178,7 +178,7 @@ class ASmooth:
                 mask = np.isnan(data)
                 data[mask] = np.mean(locals()[key + "_map"].data[mask])
                 result[key] = WcsNDMap(counts_map.geom, data, unit=counts_map.unit)
-            elif key == "scale":
+            else:
                 result[key] = WcsNDMap(counts_map.geom, data, unit="deg")
 
         if exposure_map is not None:
