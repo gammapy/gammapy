@@ -23,7 +23,7 @@ although that approximation is still very good even for 10 deg radius shells.
 
 """
 
-#%%
+# %%
 # Example plot
 # ------------
 # Here is an example plot of the model:
@@ -41,7 +41,7 @@ model = ShellSpatialModel(
 
 ax = model.plot()
 
-#%%
+# %%
 # YAML representation
 # -------------------
 # Here is an example YAML file using the model:

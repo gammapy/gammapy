@@ -11,7 +11,7 @@ This model is a delta function centered in *lon_0* and *lat_0* parameters provid
 The model is defined on the celestial sphere in the coordinate frame provided by the user.
 """
 
-#%%
+# %%
 # Example plot
 # ------------
 # Here is an example plot of the model:
