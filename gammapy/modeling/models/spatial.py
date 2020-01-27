@@ -148,8 +148,6 @@ class PointSpatialModel(SpatialModel):
 
     For more information see :ref:`point-spatial-model`.
 
-    .. math:: \phi(lon, lat) = \delta{(lon - lon_0, lat - lat_0)}
-
     Parameters
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
@@ -355,21 +353,6 @@ class ShellSpatialModel(SpatialModel):
     r"""Shell model.
 
     For more information see :ref:`shell-spatial-model`.
-
-    .. math::
-        \phi(lon, lat) = \frac{3}{2 \pi (r_{out}^3 - r_{in}^3)} \cdot
-                \begin{cases}
-                    \sqrt{r_{out}^2 - \theta^2} - \sqrt{r_{in}^2 - \theta^2} &
-                                 \text{for } \theta \lt r_{in} \\
-                    \sqrt{r_{out}^2 - \theta^2} &
-                                 \text{for } r_{in} \leq \theta \lt r_{out} \\
-                    0 & \text{for } \theta > r_{out}
-                \end{cases}
-
-    where :math:`\theta` is the sky separation and :math:`r_{\text{out}} = r_{\text{in}}` + width
-
-    Note that the normalization is a small angle approximation,
-    although that approximation is still very good even for 10 deg radius shells.
 
     Parameters
     ----------
