@@ -40,7 +40,7 @@ def test_asmooth(input_maps):
     scales = ASmooth.make_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 
     asmooth = ASmooth(kernel=kernel, scales=scales, method="simple", threshold=2.5)
-    smoothed = asmooth.run(input_maps["counts"], input_maps["background"])
+    smoothed = asmooth.make_maps(input_maps["counts"], input_maps["background"])
 
     desired = {
         "counts": 6.454327,

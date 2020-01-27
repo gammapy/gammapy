@@ -107,31 +107,58 @@ class ASmooth:
                 * 'scales'
                 * 'significance'.
         """
-        counts = dataset.counts
-        exposure = dataset.exposure
-        background = dataset.npred()
+        # Check dimensionality
+        counts = dataset.counts.sum_over_axes(keepdims=False)
 
+        background = dataset.npred()
         if isinstance(dataset, MapDatasetOnOff):
             background += dataset.background
+        background = background.sum_over_axes(keepdims=False)
 
-        pixel_scale = counts.geom.pixel_scales.mean()
+        if dataset.exposure is not None:
+            exposure = dataset.exposure.sum_over_axes(keepdims=False)
+        else:
+            exposure = None
+
+        return self.make_maps(counts, background, exposure)
+
+    def make_maps(self, counts_map, background_map, exposure_map = None):
+        """
+        Run adaptive smoothing on input Maps.
+
+        Parameters
+        ----------
+        counts_map : `~gammapy.maps.Map`
+            counts map
+        background_map : `~gammapy.maps.Map`
+            estimated background counts map
+        exposure_map : `~gammapy.maps.Map`
+            exposure map. If set, it will produce a flux smoothed map.
+
+        Returns
+        -------
+        images : dict of `~gammapy.maps.WcsNDMap`
+            Smoothed images; keys are:
+                * 'counts'
+                * 'background'
+                * 'flux' (optional)
+                * 'scales'
+                * 'significance'.
+        """
+
+        pixel_scale = counts_map.geom.pixel_scales.mean()
         kernels = self.kernels(pixel_scale)
-
-        # Check dimensionality
-        counts_map = counts.sum_over_axes(keepdims=False)
 
         cubes = {}
         cubes["counts"] = scale_cube(counts_map.data, kernels)
 
-        if background is not None:
-            background_map = background.sum_over_axes(keepdims=False)
+        if background_map is not None:
             cubes["background"] = scale_cube(background_map.data, kernels)
         else:
             # TODO: Estimate background with asmooth method
             raise ValueError("Background estimation required.")
 
-        if exposure is not None:
-            exposure_map = exposure.sum_over_axes(keepdims=False)
+        if exposure_map is not None:
             flux = (counts_map - background_map) / exposure_map
             cubes["flux"] = scale_cube(flux.data, kernels)
 
@@ -154,7 +181,7 @@ class ASmooth:
             elif key == "scale":
                 result[key] = WcsNDMap(counts_map.geom, data, unit="deg")
 
-        if exposure is not None:
+        if exposure_map is not None:
             data = smoothed["flux"]
             mask = np.isnan(data)
             data[mask] = np.mean(flux.data[mask])
