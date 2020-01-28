@@ -62,7 +62,7 @@ def test_simulate():
         dataset.background_model.map.data[5, 20, 20], 0.9765545345855245, rtol=1e-5
     )
     assert_allclose(dataset.psf.psf_map.data[5, 5, 0, 0], 91987.862)
-    assert_allclose(dataset.edisp.data.data[10, 10], 0.859455, rtol=1e-5)
+    assert_allclose(dataset.edisp.data.data[10, 10], 0.864096, rtol=1e-5)
 
 
 @pytest.fixture(scope="session")

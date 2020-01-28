@@ -252,7 +252,7 @@ class TestSpectrumDataset:
         assert_allclose(
             dataset1.aeff.data.data.to_value("m2"), aeff.data.data.to_value("m2")
         )
-        assert_allclose(dataset1.edisp.get_bias(1 * u.TeV), 0.0, atol=1e-3)
+        assert_allclose(dataset1.edisp.get_bias(1 * u.TeV), 0.0, atol=1.2e-3)
         assert_allclose(dataset1.edisp.get_resolution(1 * u.TeV), 0.1581, atol=1e-2)
 
     def test_info_dict(self):
