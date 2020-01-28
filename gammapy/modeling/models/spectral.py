@@ -547,11 +547,7 @@ class PowerLawSpectralModel(SpectralModel):
 class PowerLaw2SpectralModel(SpectralModel):
     r"""Spectral power-law model with integral as amplitude parameter.
 
-    See also: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
-
-    .. math::
-        \phi(E) = F_0 \cdot \frac{\Gamma + 1}{E_{0, max}^{-\Gamma + 1}
-         - E_{0, min}^{-\Gamma + 1}} \cdot E^{-\Gamma}
+    For more information see :ref:`powerlaw2-spectral-model`.
 
     Parameters
     ----------
