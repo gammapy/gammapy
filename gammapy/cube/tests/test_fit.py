@@ -154,7 +154,7 @@ def test_fake(sky_model, geom, geom_etrue):
 
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
     assert_allclose(real_dataset.counts.data.sum(), 8220.399727)
-    assert_allclose(dataset.counts.data.sum(), 8365)
+    assert_allclose(dataset.counts.data.sum(), 8375)
 
 
 @requires_data()
@@ -355,21 +355,21 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     npred = dataset_1.npred().data.sum()
     assert_allclose(npred, 6220.529956, rtol=1e-3)
-    assert_allclose(result.total_stat, 27040.706975, rtol=1e-3)
+    assert_allclose(result.total_stat, 26008.040889, rtol=1e-3)
 
     pars = result.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("lon_0"), 0.002651, rtol=1e-2)
+    assert_allclose(pars.error("lon_0"), 0.002622, rtol=1e-2)
 
     assert_allclose(pars["index"].value, 3, rtol=1e-2)
-    assert_allclose(pars.error("index"), 0.023899, rtol=1e-2)
+    assert_allclose(pars.error("index"), 0.028967, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error("amplitude"), 3.450585e-13, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 4.086756e-13, rtol=1e-2)
 
     # background norm 1
     assert_allclose(pars[8].value, 0.5, rtol=1e-2)
-    assert_allclose(pars.error(pars[8]), 0.015759, rtol=1e-2)
+    assert_allclose(pars.error(pars[8]), 0.0156, rtol=1e-2)
 
     # background norm 2
     assert_allclose(pars[11].value, 1, rtol=1e-2)
@@ -381,7 +381,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_2.mask_safe = Map.from_geom(geom, data=mask_safe)
 
     stat = fit.datasets.stat_sum()
-    assert_allclose(stat, 14952.78696)
+    assert_allclose(stat, 14447.196919)
 
     # test model evaluation outside image
 

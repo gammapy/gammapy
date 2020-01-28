@@ -133,7 +133,7 @@ def test_sample_coord():
 
     assert len(coords_corrected["energy"]) == 2
     assert coords_corrected["energy"].unit == "TeV"
-    assert_allclose(coords_corrected["energy"].value, [0.9961658, 3.338079], rtol=1e-5)
+    assert_allclose(coords_corrected["energy"].value, [1.024664, 3.34484], rtol=1e-5)
 
 
 @pytest.mark.parametrize("position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"])

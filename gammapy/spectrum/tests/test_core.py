@@ -92,7 +92,7 @@ def get_test_cases():
                 e_reco=e_reco, e_true=e_true, bias=0, sigma=0.2
             ),
             livetime="10 h",
-            npred=1437.454202,
+            npred=1437.494815,
         ),
         dict(
             model=SkyModel(

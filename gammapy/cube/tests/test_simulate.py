@@ -62,7 +62,7 @@ def test_simulate():
         dataset.background_model.map.data[5, 20, 20], 0.9765545345855245, rtol=1e-5
     )
     assert_allclose(dataset.psf.psf_map.data[5, 5, 0, 0], 91987.862)
-    assert_allclose(dataset.edisp.data.data[10, 10], 0.859455, rtol=1e-5)
+    assert_allclose(dataset.edisp.data.data[10, 10], 0.864096, rtol=1e-5)
 
 
 @pytest.fixture(scope="session")
@@ -145,7 +145,7 @@ def test_mde_sample_psf(dataset):
     assert_allclose(events.table["RA"][0], 266.909362, rtol=1e-5)
     assert events.table["RA"].unit == "deg"
 
-    assert_allclose(events.table["DEC"][0], -29.031458, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -29.039877, rtol=1e-5)
     assert events.table["DEC"].unit == "deg"
 
 
@@ -156,7 +156,7 @@ def test_mde_sample_edisp(dataset):
     events = sampler.sample_edisp(dataset.edisp, events)
 
     assert len(events.table) == 2407
-    assert_allclose(events.table["ENERGY"][0], 0.535733, rtol=1e-5)
+    assert_allclose(events.table["ENERGY"][0], 2.24502, rtol=1e-5)
     assert events.table["ENERGY"].unit == "TeV"
 
     assert_allclose(events.table["RA_TRUE"][0], 266.912888, rtol=1e-5)
