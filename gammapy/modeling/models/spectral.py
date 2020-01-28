@@ -726,11 +726,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
 class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     r"""Spectral exponential cutoff power-law model used for 3FGL.
 
-    Note that the parametrization is different from `ExpCutoffPowerLawSpectralModel`:
-
-    .. math::
-        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma}
-                  \exp \left( \frac{E_0 - E}{E_{C}} \right)
+    For more information see :ref:`exp-cutoff-powerlaw-3fgl-spectral-model`.
 
     Parameters
     ----------
