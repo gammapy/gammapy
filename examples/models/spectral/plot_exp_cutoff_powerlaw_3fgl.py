@@ -10,7 +10,7 @@ This model is defined by the following equation:
     \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma}
               \exp \left( \frac{E_0 - E}{E_{C}} \right)
 
-Note that the parametrization is different from `ExpCutoffPowerLawSpectralModel`
+Note that the parametrization is different from `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel`
 """
 
 # %%
