@@ -1372,8 +1372,7 @@ class NaimaSpectralModel(SpectralModel):
 class GaussianSpectralModel(SpectralModel):
     r"""Gaussian spectral model.
 
-    .. math::
-        \phi(E) = \frac{N_0}{\sigma \sqrt{2\pi}}  \exp{ \frac{- \left( E-\bar{E} \right)^2 }{2 \sigma^2} }
+    For more information see :ref:`gaussian-spectral-model`.
 
     Parameters
     ----------
