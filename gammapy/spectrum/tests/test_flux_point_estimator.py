@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from gammapy.cube import MapDataset, MapDatasetMaker
-from gammapy.data import Observation
+from gammapy.data import MemoryObservation
 from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -67,7 +67,7 @@ def simulate_map_dataset(random_state=0):
     pwl = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=gauss, spectral_model=pwl, name="source")
 
-    obs = Observation.create(pointing=skydir, livetime=1 * u.h, irfs=irfs)
+    obs = MemoryObservation.create(pointing=skydir, livetime=1 * u.h, irfs=irfs)
     empty = MapDataset.create(geom)
     maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
     dataset = maker.run(empty, obs)
