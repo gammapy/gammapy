@@ -4,7 +4,9 @@ r"""
 Exponential Cutoff Powerlaw Spectral Model
 ==========================================
 
-This model is defined by the following equation:
+This model parametrises a cutoff power law spectrum.
+
+It is defined by the following equation:
 
 .. math::
     \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma} \exp(- {(\lambda E})^{\alpha})

@@ -4,7 +4,9 @@ r"""
 Log Parabola Spectral Model
 ===========================
 
-This model is defined by the following equation:
+This model parametrises a log parabola spectrum.
+
+It is defined by the following equation:
 
 .. math::
         \phi(E) = \phi_0 \left( \frac{E}{E_0} \right) ^ {

@@ -4,7 +4,9 @@ r"""
 Gaussian Spectral Model
 =======================
 
-This model is defined by the following equation:
+This model parametrises a gaussian spectrum.
+
+It is defined by the following equation:
 
 .. math::
     \phi(E) = \frac{N_0}{\sigma \sqrt{2\pi}}  \exp{ \frac{- \left( E-\bar{E} \right)^2 }{2 \sigma^2} }

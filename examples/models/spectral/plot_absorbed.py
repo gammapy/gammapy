@@ -4,6 +4,8 @@ r"""
 Absorbed Spectral Model
 =======================
 
+This model evaluates absorbed spectral model.
+
 The spectral model is evaluated, and then multiplied with an EBL
 absorption factor given by
 

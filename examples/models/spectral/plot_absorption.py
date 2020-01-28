@@ -4,7 +4,8 @@ r"""
 Absorption Spectral Model
 =========================
 
-This kind of models represent EBL absorption models.
+This model represents EBL absorption models.
+
 They are usually used as part of `~gammapy.modeling.models.AbsorbedSpectralModel`
 """
 

@@ -4,9 +4,10 @@ r"""
 Naima Spectral Model
 =======================
 
-This class provides an interface with the models defined in the `~naima.models` module.
+This class provides an interface with the models defined in the naima models module.
+
 The model accepts as a positional argument a `Naima <https://naima.readthedocs.io/en/latest/>`_
-radiative model instance, used to compute the non-thermal emission from populations of
+radiative `~naima.models` instance, used to compute the non-thermal emission from populations of
 relativistic electrons or protons due to interactions with the ISM or with radiation and magnetic fields.
 
 One of the advantages provided by this class consists in the possibility of performing a maximum
