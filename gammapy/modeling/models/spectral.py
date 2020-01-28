@@ -671,8 +671,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
 class ExpCutoffPowerLawSpectralModel(SpectralModel):
     r"""Spectral exponential cutoff power-law model.
 
-    .. math::
-        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma} \exp(- {(\lambda E})^{\alpha})
+    For more information see :ref:`exp-cutoff-powerlaw-spectral-model`.
 
     Parameters
     ----------
