@@ -19,6 +19,7 @@ from gammapy.modeling.models import (
     create_fermi_isotropic_diffuse_model,
 )
 from gammapy.utils.testing import requires_data
+from copy import deepcopy
 
 
 @pytest.fixture(scope="session")
@@ -217,6 +218,34 @@ class TestSkyModels:
     @staticmethod
     def test_names(sky_models):
         assert sky_models.names == ["source-2", "source-3"]
+
+
+@requires_data()
+def test_SkyModels_mutation(sky_model, sky_models, sky_models_2):
+    mods = sky_models
+
+    mods.insert(0, sky_model)
+    assert mods.names == ["source-1", "source-2", "source-3"]
+
+    mods.extend(sky_models_2)
+    assert mods.names == ["source-1", "source-2", "source-3", "source-4", "source-5"]
+
+    mod3 = mods[3]
+    mods.remove(mods[3])
+    assert mods.names == ["source-1", "source-2", "source-3", "source-5"]
+    mods.append(mod3)
+    assert mods.names == ["source-1", "source-2", "source-3", "source-5", "source-4"]
+    mods.pop(3)
+    assert mods.names == ["source-1", "source-2", "source-3", "source-4"]
+
+    with pytest.raises(ValueError, match="Model names must be unique"):
+        mods.append(sky_model)
+    with pytest.raises(ValueError, match="Model names must be unique"):
+        mods.insert(0, sky_model)
+    with pytest.raises(ValueError, match="Model names must be unique"):
+        mods.extend(sky_models_2)
+    with pytest.raises(ValueError, match="Model names must be unique"):
+        sky_models + sky_models_2
 
 
 class TestSkyModel:

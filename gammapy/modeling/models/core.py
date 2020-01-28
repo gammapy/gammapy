@@ -107,7 +107,7 @@ class Model:
         return cls(*args, **kwargs)
 
 
-class Models(collections.abc.Sequence):
+class Models(collections.abc.MutableSequence):
     """Sky model collection.
 
     Parameters
@@ -115,6 +115,7 @@ class Models(collections.abc.Sequence):
     models : `SkyModel`, list of `SkyModel` or `Models`
         Sky models
     """
+
     def __init__(self, models):
         if isinstance(models, Models):
             models = models._models
@@ -128,7 +129,7 @@ class Models(collections.abc.Sequence):
         unique_names = []
         for model in models:
             if model.name in unique_names:
-                raise (ValueError("SkyModel names must be unique"))
+                raise (ValueError("Model names must be unique"))
             unique_names.append(model.name)
 
         self._models = models
@@ -182,22 +183,43 @@ class Models(collections.abc.Sequence):
 
     def __add__(self, other):
         if isinstance(other, (Models, list)):
+            dupl = [_ for _ in other if _.name in self.names]
+            if dupl != []:
+                raise (ValueError("Model names must be unique"))
             return Models([*self, *other])
         elif isinstance(other, Model):
+            if other.name in self.names:
+                raise (ValueError("Model names must be unique"))
             return Models([*self, other])
         else:
             raise TypeError(f"Invalid type: {other!r}")
 
-    def __getitem__(self, val):
-        if isinstance(val, int):
-            return self._models[val]
-        elif isinstance(val, str):
+    def __getitem__(self, key):
+        return self._models[self._get_idx(key)]
+
+    def __delitem__(self, key):
+        del self._models[self._get_idx(key)]
+
+    def __setitem__(self, key, model):
+        if model.name in self.names:
+            raise (ValueError("Model names must be unique"))
+        self._models[self._get_idx(key)] = model
+
+    def insert(self, idx, model):
+        if model.name in self.names:
+            raise (ValueError("Model names must be unique"))
+        self._models.insert(idx, model)
+
+    def _get_idx(self, key):
+        if isinstance(key, (int, slice)):
+            return key
+        elif isinstance(key, str):
             for idx, model in enumerate(self._models):
-                if val == model.name:
-                    return self._models[idx]
-            raise IndexError(f"No model: {val!r}")
+                if key == model.name:
+                    return idx
+            raise IndexError(f"No dataset: {key!r}")
         else:
-            raise TypeError(f"Invalid type: {type(val)!r}")
+            raise TypeError(f"Invalid type: {type(key)!r}")
 
     def __len__(self):
-       return len(self._models)
+        return len(self._models)
