@@ -17,8 +17,6 @@ They are usually used as part of `~gammapy.modeling.models.AbsorbedSpectralModel
 import matplotlib.pyplot as plt
 from astropy import units as u
 from gammapy.modeling.models import (
-    Models,
-    SkyModel,
     Absorption
 )
 

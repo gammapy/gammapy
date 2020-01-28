@@ -882,13 +882,7 @@ class LogParabolaSpectralModel(SpectralModel):
 class TemplateSpectralModel(SpectralModel):
     """A model generated from a table of energy and value arrays.
 
-    the units returned will be the units of the values array provided at
-    initialization. The model will return values interpolated in
-    log-space, returning 0 for energies outside of the limits of the provided
-    energy array.
-
-    Class implementation follows closely what has been done in
-    `naima.models.TemplateSpectralModel`
+    For more information see :ref:`template-spectral-model`.
 
     Parameters
     ----------
