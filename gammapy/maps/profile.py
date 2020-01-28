@@ -32,12 +32,12 @@ class ImageProfileEstimator:
     center region::
 
         import matplotlib.pyplot as plt
-        from gammapy.image import ImageProfileEstimator
+        from gammapy.maps import ImageProfileEstimator
         from gammapy.maps import Map
         from astropy import units as u
 
         # load example data
-        filename = '$GAMMAPY_DATA/tests/unbundled/fermi/fermi_counts.fits.gz'
+        filename = '$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz'
         fermi_cts = Map.read(filename)
 
         # set up profile estimator and run
@@ -48,10 +48,6 @@ class ImageProfileEstimator:
         smoothed = profile.smooth(kernel='gauss')
         smoothed.peek()
         plt.show()
-
-    Note: In order to reproduce the example you need the tests datasets folder.
-    You may download it with the command
-    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
     def __init__(self, x_edges=None, method="sum", axis="lon", center=None):

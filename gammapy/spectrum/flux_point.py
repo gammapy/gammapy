@@ -80,13 +80,9 @@ class FluxPoints:
     flux points given in one of the formats documented above::
 
         from gammapy.spectrum import FluxPoints
-        filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
+        filename = '$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits'
         flux_points = FluxPoints.read(filename)
         flux_points.plot()
-
-    Note: In order to reproduce the example you need the tests datasets folder.
-    You may download it with the command
-    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
 
     An instance of `FluxPoints` can also be created by passing an instance of
     `astropy.table.Table`, which contains the required columns, such as `'e_ref'`
