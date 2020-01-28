@@ -135,8 +135,11 @@ class MapDataset(Dataset):
 
         exposure_min, exposure_max, exposure_unit = np.nan, np.nan, ""
         if self.exposure is not None:
-            mask = self.mask_safe.reduce_over_axes(np.logical_or).data
-            if not mask.any():
+            if self.mask_safe is not None:
+                mask = self.mask_safe.reduce_over_axes(np.logical_or).data
+                if not mask.any():
+                    mask = None
+            else:
                 mask = None
             exposure_min = np.min(self.exposure.data[..., mask])
             exposure_max = np.max(self.exposure.data[..., mask])
@@ -1439,9 +1442,11 @@ class MapDatasetOnOff(MapDataset):
         cutout : `MapDatasetOnOff`
             Cutout map dataset.
         """
-        cutout_kwargs = {"position": position, "width": width, "mode": mode, "name": name}
+        cutout_kwargs = {"position": position, "width": width, "mode": mode, "name":name}
 
         cutout_dataset = super().cutout(**cutout_kwargs)
+
+        del cutout_kwargs["name"]
 
         if self.counts_off is not None:
             cutout_dataset.counts_off = self.counts_off.cutout(**cutout_kwargs)
@@ -1477,7 +1482,7 @@ class MapDatasetOnOff(MapDataset):
             Map dataset containing images.
         """
         dataset = super().to_image(spectrum, name)
-        
+
         return dataset
 
 class MapEvaluator:
