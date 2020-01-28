@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-from gammapy.data import DataStore, Observation
+from gammapy.data import DataStore, MemoryObservation
 from gammapy.irf import load_cta_irfs
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
@@ -137,6 +137,25 @@ def test_observations_select_time(
 
 
 @requires_data()
+def test_observations_mutation(data_store):
+    obs_ids = data_store.obs_table["OBS_ID"][:8]
+    obss = data_store.get_observations(obs_ids)
+    print(obss.ids)
+
+    obs_id = data_store.obs_table["OBS_ID"][8]
+    obs = data_store.get_observations([obs_id])[0]
+
+    obss.append(obs)
+    obss.insert(0, obs)
+    obss.pop(0)
+    obs3 = obss[3]
+    obss.pop(obss.ids[3])
+    obss.insert(3, obs3)
+    obss.extend([obs])
+    obss.remove(obs)
+
+
+@requires_data()
 def test_observations_select_time_time_intervals_list(data_store):
     obs_ids = data_store.obs_table["OBS_ID"][:8]
     obss = data_store.get_observations(obs_ids)
@@ -167,7 +186,7 @@ def test_observation():
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
 
-    obs = Observation.create(
+    obs = MemoryObservation.create(
         pointing, livetime=livetime, irfs=irfs, deadtime_fraction=0.1
     )
 

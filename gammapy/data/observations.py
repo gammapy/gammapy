@@ -16,12 +16,16 @@ from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
 
-__all__ = ["DataStoreObservation", "Observations", "Observation"]
+__all__ = ["Observation", "DataStoreObservation", "MemoryObservation", "Observations"]
 
 log = logging.getLogger(__name__)
 
 
-class DataStoreObservation:
+class Observation:
+    """Observation base class."""
+
+
+class DataStoreObservation(Observation):
     """IACT data store observation.
 
     Parameters
@@ -293,7 +297,7 @@ class DataStoreObservation:
         return checker.run(checks=checks)
 
 
-class Observations(collections.abc.Sequence):
+class Observations(collections.abc.MutableSequence):
     """Container class that holds a list of observations.
 
     Parameters
@@ -306,10 +310,16 @@ class Observations(collections.abc.Sequence):
         self._observations = observations or []
 
     def __getitem__(self, key):
-        if isinstance(key, str):
-            key = self.ids.index(key)
+        return self._observations[self._get_idx(key)]
 
-        return self._observations[key]
+    def __delitem__(self, key):
+        del self._observations[self._get_idx(key)]
+
+    def __setitem__(self, key, obs):
+        self._observations[self._get_idx(key)] = obs
+
+    def insert(self, idx, obs):
+        self._observations.insert(idx, obs)
 
     def __len__(self):
         return len(self._observations)
@@ -320,6 +330,11 @@ class Observations(collections.abc.Sequence):
         for obs in self:
             s += str(obs)
         return s
+
+    def _get_idx(self, key):
+        if isinstance(key, str):
+            key = self.ids.index(key)
+        return key
 
     @property
     def ids(self):
@@ -352,7 +367,7 @@ class Observations(collections.abc.Sequence):
         return self.__class__(new_obs_list)
 
 
-class Observation:
+class MemoryObservation(Observation):
     """In-memory observation.
 
     Parameters
@@ -457,7 +472,7 @@ class Observation:
 
         Returns
         -------
-        obs : `gammapy.data.Observation`
+        obs : `gammapy.data.MemoryObservation`
         """
         tstart = tstart or Quantity(0.0, "hr")
         tstop = (tstart + Quantity(livetime)) or tstop

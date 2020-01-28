@@ -8,7 +8,7 @@ from gammapy.cube import MapDataset, MapDatasetEventSampler, simulate_dataset
 from gammapy.cube.tests.test_edisp_map import make_edisp_map_test
 from gammapy.cube.tests.test_fit import get_map_dataset
 from gammapy.cube.tests.test_psf_map import make_test_psfmap
-from gammapy.data import GTI, Observation
+from gammapy.data import GTI, MemoryObservation
 from gammapy.irf import load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -175,7 +175,7 @@ def test_mde_run(dataset):
     )
     livetime = 10.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
-    obs = Observation.create(
+    obs = MemoryObservation.create(
         obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
     )
 
