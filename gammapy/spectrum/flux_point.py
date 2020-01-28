@@ -80,7 +80,7 @@ class FluxPoints:
     flux points given in one of the formats documented above::
 
         from gammapy.spectrum import FluxPoints
-        filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
+        filename = '$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits'
         flux_points = FluxPoints.read(filename)
         flux_points.plot()
 
@@ -130,6 +130,9 @@ class FluxPoints:
         flux_points = FluxPoints(table)
         flux_points.plot()
 
+    Note: In order to reproduce the example you need the tests datasets folder.
+    You may download it with the command
+    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
     def __init__(self, table):
@@ -262,6 +265,10 @@ class FluxPoints:
         FluxPoints(sed_type="flux", n_points=24)
         >>> print(flux_points.drop_ul())
         FluxPoints(sed_type="flux", n_points=19)
+
+        Note: In order to reproduce the example you need the tests datasets folder.
+        You may download it with the command
+        ``gammapy download datasets --tests --out $GAMMAPY_DATA``
         """
         table_drop_ul = self.table[~self.is_ul]
         return self.__class__(table_drop_ul)
@@ -357,6 +364,10 @@ class FluxPoints:
         >>> flux_points = FluxPoints.read(filename)
         >>> model = PowerLawSpectralModel(index=2.2)
         >>> flux_points_dnde = flux_points.to_sed_type('dnde', model=model)
+
+        Note: In order to reproduce the example you need the tests datasets folder.
+        You may download it with the command
+        ``gammapy download datasets --tests --out $GAMMAPY_DATA``
         """
         # TODO: implement other directions.
         table = self.table.copy()
@@ -1176,6 +1187,10 @@ class FluxPointsDataset(Dataset):
         result = fit.run()
         print(result)
         print(result.parameters.to_table())
+
+    Note: In order to reproduce the example you need the tests datasets folder.
+    You may download it with the command
+    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
     stat_type = "chi2"

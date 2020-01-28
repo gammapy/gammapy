@@ -117,6 +117,10 @@ class PhaseCurveTemplateTemporalModel(TemporalModel):
         table = Table.read(filename)
         phase_curve = PhaseCurveTemplateTemporalModel(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
 
+    Note: In order to reproduce the example you need the tests datasets folder.
+    You may download it with the command
+    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
+
     Use it to compute a phase and evaluate the phase curve model for a given time:
 
     >>> phase_curve.phase(time=46300.0)
