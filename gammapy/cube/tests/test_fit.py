@@ -259,6 +259,7 @@ def test_to_image(geom):
     dataset_im = dataset_copy.to_image()
     assert dataset_im.counts is None
 
+
 @requires_data()
 def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset = get_map_dataset(sky_model, geom, geom_etrue)
@@ -777,16 +778,17 @@ def test_mapdatasetonoff_cutout(images):
     assert cutout_dataset.background_model is None
     assert cutout_dataset.name != dataset.name
 
+
 @requires_data()
 def test_mapdatasetonoff_to_image():
-    axis = MapAxis.from_energy_bounds(1,10,2, unit="TeV")
-    geom = WcsGeom.create(npix=(10,10),binsz=0.05,axes=[axis])
+    axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV")
+    geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
 
-    counts = Map.from_geom(geom, data=np.ones((2,10,10)))
-    counts_off = Map.from_geom(geom, data=np.ones((2,10,10)))
-    acceptance = Map.from_geom(geom, data=np.ones((2,10,10)))
-    acceptance_off = Map.from_geom(geom, data=np.ones((2,10,10)))
-    acceptance_off*=2
+    counts = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    counts_off = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance_off = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance_off *= 2
 
     dataset = MapDatasetOnOff(
         counts=counts,
@@ -798,20 +800,21 @@ def test_mapdatasetonoff_to_image():
 
     assert image_dataset.counts.data.shape == (1, 10, 10)
     assert image_dataset.acceptance_off.data.shape == (1, 10, 10)
-    assert_allclose(image_dataset.acceptance,2)
-    assert_allclose(image_dataset.acceptance_off,4)
-    assert_allclose(image_dataset.counts_off,2)
+    assert_allclose(image_dataset.acceptance, 2)
+    assert_allclose(image_dataset.acceptance_off, 4)
+    assert_allclose(image_dataset.counts_off, 2)
     assert image_dataset.name != dataset.name
 
     # Try with a safe_mask
-    mask_safe = Map.from_geom(geom, data=np.ones((2,10,10),dtype='bool'))
-    mask_safe.data[0]=0
+    mask_safe = Map.from_geom(geom, data=np.ones((2, 10, 10), dtype="bool"))
+    mask_safe.data[0] = 0
     dataset.mask_safe = mask_safe
     image_dataset = dataset.to_image()
 
-    assert_allclose(image_dataset.acceptance,1)
-    assert_allclose(image_dataset.acceptance_off,2)
-    assert_allclose(image_dataset.counts_off,1)
+    assert_allclose(image_dataset.acceptance, 1)
+    assert_allclose(image_dataset.acceptance_off, 2)
+    assert_allclose(image_dataset.counts_off, 1)
+
 
 def test_map_dataset_geom(geom, sky_model):
     e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
@@ -828,6 +831,7 @@ def test_map_dataset_geom(geom, sky_model):
 
     with pytest.raises(ValueError):
         dataset._geom
+
 
 @requires_data()
 def test_names(geom, geom_etrue, sky_model):

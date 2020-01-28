@@ -1442,7 +1442,12 @@ class MapDatasetOnOff(MapDataset):
         cutout : `MapDatasetOnOff`
             Cutout map dataset.
         """
-        cutout_kwargs = {"position": position, "width": width, "mode": mode, "name":name}
+        cutout_kwargs = {
+            "position": position,
+            "width": width,
+            "mode": mode,
+            "name": name,
+        }
 
         cutout_dataset = super().cutout(**cutout_kwargs)
 
@@ -1500,21 +1505,22 @@ class MapDatasetOnOff(MapDataset):
             background = self.background * mask_safe
             background = background.sum_over_axes(keepdims=True)
             kwargs["acceptance_off"] = (
-                    kwargs["acceptance"] * kwargs["counts_off"] / background
+                kwargs["acceptance"] * kwargs["counts_off"] / background
             )
-        kwargs["counts"]=dataset.counts
-        kwargs["exposure"]=dataset.exposure
+        kwargs["counts"] = dataset.counts
+        kwargs["exposure"] = dataset.exposure
         # A priori these are None
-        kwargs["psf"]=dataset.psf
-        kwargs["edisp"]=dataset.edisp
+        kwargs["psf"] = dataset.psf
+        kwargs["edisp"] = dataset.edisp
         # We keep name
-        kwargs["name"]=dataset.name
-        kwargs["mask_fit"]=dataset.mask_fit
-        kwargs["mask_safe"]=dataset.mask_safe
-        kwargs["gti"]=dataset.gti
-        kwargs["evaluation_mode"]=dataset.evaluation_mode
+        kwargs["name"] = dataset.name
+        kwargs["mask_fit"] = dataset.mask_fit
+        kwargs["mask_safe"] = dataset.mask_safe
+        kwargs["gti"] = dataset.gti
+        kwargs["evaluation_mode"] = dataset.evaluation_mode
 
         return MapDatasetOnOff(**kwargs)
+
 
 class MapEvaluator:
     """Sky model evaluation on maps.
