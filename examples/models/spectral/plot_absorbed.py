@@ -43,12 +43,12 @@ reference = 1 * u.TeV
 pwl = PowerLawSpectralModel(index=index, amplitude=amplitude, reference=reference)
 
 # EBL + PWL model
-absorbed = AbsorbedSpectralModel(
+model = AbsorbedSpectralModel(
     spectral_model=pwl, absorption=absorption, parameter=redshift
 )
 
 energy_range = [0.1, 100] * u.TeV
-absorbed.plot(energy_range)
+model.plot(energy_range)
 plt.grid(which="both");
 
 # %%
@@ -56,7 +56,7 @@ plt.grid(which="both");
 # -------------------
 # Here is an example YAML file using the model:
 
-model = SkyModel(spectral_model=absorbed)
+model = SkyModel(spectral_model=model, name="absorbed-model")
 models = Models([model])
 
 print(models.to_yaml())

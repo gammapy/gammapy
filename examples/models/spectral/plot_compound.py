@@ -26,8 +26,8 @@ import operator
 energy_range = [0.1, 100] * u.TeV
 pwl = PowerLawSpectralModel(index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV")
 lp = LogParabolaSpectralModel(amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2.0, beta=1.0)
-compound = CompoundSpectralModel(pwl, lp, operator.add)
-compound.plot(energy_range)
+model = CompoundSpectralModel(pwl, lp, operator.add)
+model.plot(energy_range)
 plt.grid(which="both");
 
 # %%
@@ -35,7 +35,7 @@ plt.grid(which="both");
 # -------------------
 # Here is an example YAML file using the model:
 
-model = SkyModel(spectral_model=compound)
+model = SkyModel(spectral_model=model, name="compound-model")
 models = Models([model])
 
 print(models.to_yaml())

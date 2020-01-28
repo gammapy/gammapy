@@ -44,7 +44,7 @@ plt.grid(which="both");
 # -------------------
 # Here is an example YAML file using the model:
 
-model = SkyModel(spectral_model=model)
+model = SkyModel(spectral_model=model, name="super-exp-cutoff-power-law-3fgl-model")
 models = Models([model])
 
 print(models.to_yaml())

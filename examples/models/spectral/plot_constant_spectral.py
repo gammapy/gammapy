@@ -23,8 +23,8 @@ from gammapy.modeling.models import (
 )
 
 energy_range = [0.1, 100] * u.TeV
-k = ConstantSpectralModel(const="1 / (cm2 s TeV)")
-k.plot(energy_range)
+model = ConstantSpectralModel(const="1 / (cm2 s TeV)")
+model.plot(energy_range)
 plt.grid(which="both");
 
 # %%
@@ -32,7 +32,7 @@ plt.grid(which="both");
 # -------------------
 # Here is an example YAML file using the model:
 
-model = SkyModel(spectral_model=k)
+model = SkyModel(spectral_model=model, name="constant-model")
 models = Models([model])
 
 print(models.to_yaml())
