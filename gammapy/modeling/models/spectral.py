@@ -791,16 +791,7 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 4FGL.
 
-    This model parametrisation is very similar, but slightly different from
-    `SuperExpCutoffPowerLaw3FGLSpectralModel` or `ExpCutoffPowerLaw3FGLSpectralModel`.
-
-    See Equation (3) in https://arxiv.org/pdf/1902.10045.pdf
-
-    .. math::
-        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
-                  \exp \left(
-                      a \left( E_0 ^{\Gamma_2} - E^{\Gamma_2} \right)
-                  \right)
+    For more information see :ref:`super-exp-cutoff-powerlaw-4fgl-spectral-model`.
 
     Parameters
     ----------
