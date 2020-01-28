@@ -141,6 +141,9 @@ def test_map_dataset_str(sky_model, geom, geom_etrue):
     assert "(frozen)" in str(dataset)
     assert "background" in str(dataset)
 
+    dataset.mask_safe = None
+    assert "MapDataset" in str(dataset)
+
 
 @requires_data()
 def test_fake(sky_model, geom, geom_etrue):
