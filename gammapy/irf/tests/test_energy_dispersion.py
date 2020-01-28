@@ -53,12 +53,12 @@ class TestEDispKernel:
     def test_apply(self):
         counts = np.arange(len(self.e_true) - 1)
         actual = self.edisp.apply(counts)
-        assert_allclose(actual[0], 1.862299, atol=1e-3)
+        assert_allclose(actual[0], 1.853746, atol=1e-3)
 
         counts = np.arange(len(self.e_true) - 4)
         with pytest.raises(ValueError):
             self.edisp.apply(counts)
-        assert_allclose(actual[0], 1.862299, atol=1e-3)
+        assert_allclose(actual[0], 1.853746, atol=1e-3)
 
     def test_get_bias(self):
         bias = self.edisp.get_bias(3.34 * u.TeV)
@@ -134,7 +134,7 @@ class TestEnergyDispersion2D:
     def test_get_response(self):
         pdf = self.edisp2.get_response(offset=0.7 * u.deg, e_true=1 * u.TeV)
         assert_allclose(pdf.sum(), 1)
-        assert_allclose(pdf.max(), 0.0130256, rtol=1e-5)
+        assert_allclose(pdf.max(), 0.010421, rtol=1e-4)
 
     def test_exporter(self):
         # Check RMF exporter
