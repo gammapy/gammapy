@@ -243,7 +243,7 @@ class Analysis:
         log.info("Creating datasets.")
 
         maker = MapDatasetMaker(selection=self.config.datasets.map_selection)
-        maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=offset_max)
+        maker_safe_mask = SafeMaskMaker(methods=self.config.datasets.safe_mask.methods, offset_max=offset_max)
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
         if self.config.datasets.stack:

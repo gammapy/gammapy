@@ -68,6 +68,19 @@ class FrameEnum(str, Enum):
 class BackgroundMethodEnum(str, Enum):
     reflected = "reflected"
 
+class SafeMaskMethodsEnum(str, Enum):
+    aeff_default = "aeff-default"
+    aeff_max = "aeff-max"
+    edisp_bias = "edisp-bias"
+    offset_max = "offset-max"
+    bkg_peak = "bkg-peak"
+
+class SafeMaskOptionsEnum(dict, Enum):
+     aeff_default = {""}
+     aeff_max = {"aeff_percent":10}
+     edisp_bias = {"bias_percent":10, "position":None}
+     offset_max = {"offset_max": "3 deg"}
+     bkg_peak = {""}
 
 class MapSelectionEnum(str, Enum):
     counts = "counts"
@@ -131,6 +144,9 @@ class BackgroundConfig(GammapyBaseConfig):
     method: BackgroundMethodEnum = BackgroundMethodEnum.reflected
     exclusion: FilePath = None
 
+class SafeMaskConfig(GammapyBaseConfig):
+    methods: List[SafeMaskMethodsEnum] = [SafeMaskMethodsEnum.aeff_default]
+    options: List[SafeMaskOptionsEnum] = [SafeMaskOptionsEnum.aeff_default]
 
 class EnergyAxesConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig()
@@ -165,6 +181,7 @@ class DatasetsConfig(GammapyBaseConfig):
     geom: GeomConfig = GeomConfig()
     map_selection: List[MapSelectionEnum] = MapDatasetMaker.available_selection
     background: BackgroundConfig = BackgroundConfig()
+    safe_mask: SafeMaskConfig = SafeMaskConfig()
     on_region: SpatialCircleConfig = SpatialCircleConfig()
     containment_correction: bool = True
 
