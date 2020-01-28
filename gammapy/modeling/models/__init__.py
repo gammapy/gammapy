@@ -18,6 +18,15 @@ class Registry(list):
                 return cls
         raise KeyError(f"No model found with tag: {tag!r}")
 
+    def __str__(self):
+        info = "Registry\n"
+        info += "--------\n\n"
+
+        for item in self:
+            info += f"\t{item.tag}\n"
+
+        return info.expandtabs(tabsize=4)
+
 
 SPATIAL_MODELS = Registry(
     [
