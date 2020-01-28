@@ -843,20 +843,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
 class LogParabolaSpectralModel(SpectralModel):
     r"""Spectral log parabola model.
 
-    .. math::
-        \phi(E) = \phi_0 \left( \frac{E}{E_0} \right) ^ {
-          - \alpha - \beta \log{ \left( \frac{E}{E_0} \right) }
-        }
-
-    Note that :math:`log` refers to the natural logarithm. This is consistent
-    with the `Fermi Science Tools
-    <https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html>`_
-    and `ctools
-    <http://cta.irap.omp.eu/ctools-devel/users/user_manual/getting_started/models.html#log-parabola>`_.
-    The `Sherpa <http://cxc.harvard.edu/sherpa/ahelp/logparabola.html_
-    package>`_ package, however, uses :math:`log_{10}`. If you have
-    parametrization based on :math:`log_{10}` you can use the
-    :func:`~gammapy.modeling.models.LogParabolaSpectralModel.from_log10` method.
+    For more information see :ref:`logparabola-spectral-model`.
 
     Parameters
     ----------
