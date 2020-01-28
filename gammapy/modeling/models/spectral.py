@@ -380,7 +380,7 @@ class SpectralModel(Model):
 class ConstantSpectralModel(SpectralModel):
     r"""Constant model.
 
-    .. math:: \phi(E) = k
+    For more information see :ref:`constant-spectral-model`.
 
     Parameters
     ----------
@@ -400,7 +400,7 @@ class ConstantSpectralModel(SpectralModel):
 class CompoundSpectralModel(SpectralModel):
     """Arithmetic combination of two spectral models.
 
-    Itself again a spectral model.
+    For more information see :ref:`compound-spectral-model`.
     """
 
     tag = "CompoundSpectralModel"
@@ -439,8 +439,7 @@ class CompoundSpectralModel(SpectralModel):
 class PowerLawSpectralModel(SpectralModel):
     r"""Spectral power-law model.
 
-    .. math::
-        \phi(E) = \phi_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma}
+    For more information see :ref:`powerlaw-spectral-model`.
 
     Parameters
     ----------
@@ -548,11 +547,7 @@ class PowerLawSpectralModel(SpectralModel):
 class PowerLaw2SpectralModel(SpectralModel):
     r"""Spectral power-law model with integral as amplitude parameter.
 
-    See also: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
-
-    .. math::
-        \phi(E) = F_0 \cdot \frac{\Gamma + 1}{E_{0, max}^{-\Gamma + 1}
-         - E_{0, min}^{-\Gamma + 1}} \cdot E^{-\Gamma}
+    For more information see :ref:`powerlaw2-spectral-model`.
 
     Parameters
     ----------
@@ -633,8 +628,7 @@ class PowerLaw2SpectralModel(SpectralModel):
 class SmoothBrokenPowerLawSpectralModel(SpectralModel):
     r"""Spectral smooth broken power-law model.
 
-    .. math::
-        \phi(E) = \phi_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma1}\left(1 + \frac{E}{E_{break}}^{\frac{\Gamma2-\Gamma1}{\beta}} \right)^{-\beta}
+    For more information see :ref:`smooth-broken-powerlaw-spectral-model`.
 
     Parameters
     ----------
@@ -671,8 +665,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
 class ExpCutoffPowerLawSpectralModel(SpectralModel):
     r"""Spectral exponential cutoff power-law model.
 
-    .. math::
-        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma} \exp(- {(\lambda E})^{\alpha})
+    For more information see :ref:`exp-cutoff-powerlaw-spectral-model`.
 
     Parameters
     ----------
@@ -727,11 +720,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
 class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     r"""Spectral exponential cutoff power-law model used for 3FGL.
 
-    Note that the parametrization is different from `ExpCutoffPowerLawSpectralModel`:
-
-    .. math::
-        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma}
-                  \exp \left( \frac{E_0 - E}{E_{C}} \right)
+    For more information see :ref:`exp-cutoff-powerlaw-3fgl-spectral-model`.
 
     Parameters
     ----------
@@ -761,6 +750,8 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 
 class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 3FGL.
+
+    For more information see :ref:`super-exp-cutoff-powerlaw-3fgl-spectral-model`.
 
     .. math::
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
@@ -800,16 +791,7 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 4FGL.
 
-    This model parametrisation is very similar, but slightly different from
-    `SuperExpCutoffPowerLaw3FGLSpectralModel` or `ExpCutoffPowerLaw3FGLSpectralModel`.
-
-    See Equation (3) in https://arxiv.org/pdf/1902.10045.pdf
-
-    .. math::
-        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
-                  \exp \left(
-                      a \left( E_0 ^{\Gamma_2} - E^{\Gamma_2} \right)
-                  \right)
+    For more information see :ref:`super-exp-cutoff-powerlaw-4fgl-spectral-model`.
 
     Parameters
     ----------
@@ -848,20 +830,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
 class LogParabolaSpectralModel(SpectralModel):
     r"""Spectral log parabola model.
 
-    .. math::
-        \phi(E) = \phi_0 \left( \frac{E}{E_0} \right) ^ {
-          - \alpha - \beta \log{ \left( \frac{E}{E_0} \right) }
-        }
-
-    Note that :math:`log` refers to the natural logarithm. This is consistent
-    with the `Fermi Science Tools
-    <https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html>`_
-    and `ctools
-    <http://cta.irap.omp.eu/ctools-devel/users/user_manual/getting_started/models.html#log-parabola>`_.
-    The `Sherpa <http://cxc.harvard.edu/sherpa/ahelp/logparabola.html_
-    package>`_ package, however, uses :math:`log_{10}`. If you have
-    parametrization based on :math:`log_{10}` you can use the
-    :func:`~gammapy.modeling.models.LogParabolaSpectralModel.from_log10` method.
+    For more information see :ref:`logparabola-spectral-model`.
 
     Parameters
     ----------
@@ -913,13 +882,7 @@ class LogParabolaSpectralModel(SpectralModel):
 class TemplateSpectralModel(SpectralModel):
     """A model generated from a table of energy and value arrays.
 
-    the units returned will be the units of the values array provided at
-    initialization. The model will return values interpolated in
-    log-space, returning 0 for energies outside of the limits of the provided
-    energy array.
-
-    Class implementation follows closely what has been done in
-    `naima.models.TemplateSpectralModel`
+    For more information see :ref:`template-spectral-model`.
 
     Parameters
     ----------
@@ -1071,7 +1034,7 @@ class ScaleSpectralModel(SpectralModel):
 class Absorption:
     r"""Gamma-ray absorption models.
 
-    Usually used as part of `AbsorbedSpectralModel`.
+    For more information see :ref:`absorption-spectral-model`.
 
     Parameters
     ----------
@@ -1210,16 +1173,7 @@ class Absorption:
 class AbsorbedSpectralModel(SpectralModel):
     r"""Spectral model with EBL absorption.
 
-    The spectral model is evaluated, and then multiplied with an EBL
-    absorption factor given by
-
-    .. math::
-        \exp{ \left ( -\alpha \times \tau(E, z) \right )}
-
-    where :math:`\tau(E, z)` is the optical depth predicted by the model
-    (`Absorption`), which depends on the energy
-    of the gamma-rays and the redshift z of the source, and :math:`\alpha`
-    is a scale factor (default: 1) for the optical depth.
+    For more information see :ref:`absorbed-spectral-model`.
 
     Parameters
     ----------
@@ -1306,19 +1260,7 @@ class AbsorbedSpectralModel(SpectralModel):
 class NaimaSpectralModel(SpectralModel):
     r"""A wrapper for Naima models.
 
-    This class provides an interface with the models defined in the `~naima.models` module.
-    The model accepts as a positional argument a `Naima <https://naima.readthedocs.io/en/latest/>`_
-    radiative model instance, used to compute the non-thermal emission from populations of
-    relativistic electrons or protons due to interactions with the ISM or with radiation and magnetic fields.
-
-    One of the advantages provided by this class consists in the possibility of performing a maximum
-    likelihood spectral fit of the model's parameters directly on observations, as opposed to the MCMC
-    `fit to flux points <https://naima.readthedocs.io/en/latest/mcmc.html>`_ featured in
-    Naima. All the parameters defining the parent population of charged particles are stored as
-    `~gammapy.modeling.Parameter` and left free by default. In case that the radiative model is `
-    ~naima.radiative.Synchrotron`, the magnetic field strength may also be fitted. Parameters can be
-    freezed/unfreezed before the fit, and maximum/minimum values can be set to limit the parameters space to
-    the physically interesting region.
+    For more information see :ref:`naima-spectral-model`.
 
     Parameters
     ----------
@@ -1386,8 +1328,7 @@ class NaimaSpectralModel(SpectralModel):
 class GaussianSpectralModel(SpectralModel):
     r"""Gaussian spectral model.
 
-    .. math::
-        \phi(E) = \frac{N_0}{\sigma \sqrt{2\pi}}  \exp{ \frac{- \left( E-\bar{E} \right)^2 }{2 \sigma^2} }
+    For more information see :ref:`gaussian-spectral-model`.
 
     Parameters
     ----------

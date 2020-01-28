@@ -54,8 +54,8 @@ class SensitivityEstimator:
         dataset : `SpectrumDataset`
             Spectrum dataset
 
-        Return
-        ------
+        Returns
+        -------
         excess : `CountsSpectrum`
             Minimal excess
         """
@@ -79,8 +79,8 @@ class SensitivityEstimator:
         dataset : `SpectrumDataset`
             Spectrum dataset
 
-        Return
-        ------
+        Returns
+        -------
         e2dnde : `~astropy.units.Quantity`
             Minimal differential flux.
         """

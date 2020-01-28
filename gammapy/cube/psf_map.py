@@ -469,9 +469,9 @@ class PSFMap:
             If False, the axis is removed
 
 
-        Returns:
-        ---------
-        psf_out: `PSFMap`
+        Returns
+        -------
+        psf_out : `PSFMap`
             `PSFMap` with the energy axis summed over
         """
         if spectrum is None:
