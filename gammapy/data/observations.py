@@ -21,11 +21,11 @@ __all__ = ["Observation", "DataStoreObservation", "MemoryObservation", "Observat
 log = logging.getLogger(__name__)
 
 
-class Observation:
+class ObservationBase:
     """Observation base class."""
 
 
-class DataStoreObservation(Observation):
+class DataStoreObservation(ObservationBase):
     """IACT data store observation.
 
     Parameters
@@ -367,7 +367,7 @@ class Observations(collections.abc.MutableSequence):
         return self.__class__(new_obs_list)
 
 
-class MemoryObservation(Observation):
+class Observation(ObservationBase):
     """In-memory observation.
 
     Parameters

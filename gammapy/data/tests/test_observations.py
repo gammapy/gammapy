@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-from gammapy.data import DataStore, MemoryObservation
+from gammapy.data import DataStore, Observation
 from gammapy.irf import load_cta_irfs
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
@@ -186,7 +186,7 @@ def test_observation():
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
 
-    obs = MemoryObservation.create(
+    obs = Observation.create(
         pointing, livetime=livetime, irfs=irfs, deadtime_fraction=0.1
     )
 
