@@ -628,8 +628,7 @@ class PowerLaw2SpectralModel(SpectralModel):
 class SmoothBrokenPowerLawSpectralModel(SpectralModel):
     r"""Spectral smooth broken power-law model.
 
-    .. math::
-        \phi(E) = \phi_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma1}\left(1 + \frac{E}{E_{break}}^{\frac{\Gamma2-\Gamma1}{\beta}} \right)^{-\beta}
+    For more information see :ref:`smooth-broken-powerlaw-spectral-model`.
 
     Parameters
     ----------

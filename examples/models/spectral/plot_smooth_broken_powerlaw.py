@@ -1,16 +1,15 @@
 r"""
-.. _exp-cutoff-powerlaw-3fgl-spectral-model:
+.. _smooth-broken-powerlaw-spectral-model:
 
-Exponential Cutoff Powerlaw Spectral Model used for 3FGL
-========================================================
+Smooth Broken Power Law Spectral Model
+======================================
 
-This model parametrises a cutoff power law spectrum used for 3FGL.
+This model parametrises a smooth broken power law spectrum.
 
 It is defined by the following equation:
 
 .. math::
-    \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma}
-              \exp \left( \frac{E_0 - E}{E_{C}} \right)
+    \phi(E) = \phi_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma1}\left(1 + \frac{E}{E_{break}}^{\frac{\Gamma2-\Gamma1}{\beta}} \right)^{-\beta}
 """
 
 # %%
@@ -23,15 +22,17 @@ from astropy import units as u
 from gammapy.modeling.models import (
     Models,
     SkyModel,
-    ExpCutoffPowerLaw3FGLSpectralModel,
+    SmoothBrokenPowerLawSpectralModel,
 )
 
 energy_range = [0.1, 100] * u.TeV
-model = ExpCutoffPowerLaw3FGLSpectralModel(
-    index=2.3 * u.Unit(""),
+model = SmoothBrokenPowerLawSpectralModel(
+    index1=1.5 * u.Unit(""),
+    index2=2.5 * u.Unit(""),
     amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+    ebreak=0.5 * u.TeV,
     reference=1 * u.TeV,
-    ecut=10 * u.TeV,
+    beta=1,
 )
 model.plot(energy_range)
 plt.grid(which="both");
@@ -43,5 +44,8 @@ plt.grid(which="both");
 
 model = SkyModel(spectral_model=model)
 models = Models([model])
+
+print(models.to_yaml())
+
 
 print(models.to_yaml())
