@@ -1478,18 +1478,27 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        dataset : `MapDataset`
+        dataset : `MapDatasetOnOff`
             Map dataset containing images.
         """
         dataset = super().to_image(spectrum, name)
 
+        if self.mask_safe is None:
+            mask_safe = 1
+        else:
+            mask_safe = self.mask_safe
+
         kwargs = {}
+
         if self.counts_off is not None:
-            kwargs["counts_off"] = self.counts_off.sum_over_axes(keepdims=True)
+            counts_off = self.counts_off * mask_safe
+            kwargs["counts_off"] = counts_off.sum_over_axes(keepdims=True)
 
         if self.acceptance is not None:
-            kwargs["acceptance"] = self.acceptance.reduce_over_axes(func=np.mean, keepdims=True)
-            background = self.background.sum_over_axes(keepdims=True)
+            acceptance = self.acceptance * mask_safe
+            kwargs["acceptance"] = acceptance.sum_over_axes(keepdims=True)
+            background = self.background * mask_safe
+            background = background.sum_over_axes(keepdims=True)
             kwargs["acceptance_off"] = (
                     kwargs["acceptance"] * kwargs["counts_off"] / background
             )

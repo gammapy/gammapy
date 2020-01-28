@@ -775,20 +775,40 @@ def test_mapdatasetonoff_cutout(images):
     assert cutout_dataset.name != dataset.name
 
 @requires_data()
-def test_mapdatasetonoff_to_image(images):
-    dataset = get_map_dataset_onoff(images)
-    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
-    dataset.gti = gti
+def test_mapdatasetonoff_to_image():
+    axis = MapAxis.from_energy_bounds(1,10,2, unit="TeV")
+    geom = WcsGeom.create(npix=(10,10),binsz=0.05,axes=[axis])
 
+    counts = Map.from_geom(geom, data=np.ones((2,10,10)))
+    counts_off = Map.from_geom(geom, data=np.ones((2,10,10)))
+    acceptance = Map.from_geom(geom, data=np.ones((2,10,10)))
+    acceptance_off = Map.from_geom(geom, data=np.ones((2,10,10)))
+    acceptance_off*=2
+
+    dataset = MapDatasetOnOff(
+        counts=counts,
+        counts_off=counts_off,
+        acceptance=acceptance,
+        acceptance_off=acceptance_off,
+    )
     image_dataset = dataset.to_image()
 
-    assert image_dataset.counts.data.shape == (1, 50, 50)
-    assert cutout_dataset.counts_off.data.shape == (50, 50)
-    assert cutout_dataset.acceptance.data.shape == (50, 50)
-    assert cutout_dataset.acceptance_off.data.shape == (50, 50)
-    assert cutout_dataset.background_model is None
+    assert image_dataset.counts.data.shape == (1, 10, 10)
+    assert image_dataset.acceptance_off.data.shape == (1, 10, 10)
+    assert_allclose(image_dataset.acceptance,2)
+    assert_allclose(image_dataset.acceptance_off,4)
+    assert_allclose(image_dataset.counts_off,2)
     assert image_dataset.name != dataset.name
 
+    # Try with a safe_mask
+    mask_safe = Map.from_geom(geom, data=np.ones((2,10,10),dtype='bool'))
+    mask_safe.data[0]=0
+    dataset.mask_safe = mask_safe
+    image_dataset = dataset.to_image()
+
+    assert_allclose(image_dataset.acceptance,1)
+    assert_allclose(image_dataset.acceptance_off,2)
+    assert_allclose(image_dataset.counts_off,1)
 
 def test_map_dataset_geom(geom, sky_model):
     e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
