@@ -439,8 +439,7 @@ class CompoundSpectralModel(SpectralModel):
 class PowerLawSpectralModel(SpectralModel):
     r"""Spectral power-law model.
 
-    .. math::
-        \phi(E) = \phi_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma}
+    For more information see :ref:`powerlaw-spectral-model`.
 
     Parameters
     ----------
