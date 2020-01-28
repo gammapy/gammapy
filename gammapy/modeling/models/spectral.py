@@ -1279,19 +1279,7 @@ class AbsorbedSpectralModel(SpectralModel):
 class NaimaSpectralModel(SpectralModel):
     r"""A wrapper for Naima models.
 
-    This class provides an interface with the models defined in the `~naima.models` module.
-    The model accepts as a positional argument a `Naima <https://naima.readthedocs.io/en/latest/>`_
-    radiative model instance, used to compute the non-thermal emission from populations of
-    relativistic electrons or protons due to interactions with the ISM or with radiation and magnetic fields.
-
-    One of the advantages provided by this class consists in the possibility of performing a maximum
-    likelihood spectral fit of the model's parameters directly on observations, as opposed to the MCMC
-    `fit to flux points <https://naima.readthedocs.io/en/latest/mcmc.html>`_ featured in
-    Naima. All the parameters defining the parent population of charged particles are stored as
-    `~gammapy.modeling.Parameter` and left free by default. In case that the radiative model is `
-    ~naima.radiative.Synchrotron`, the magnetic field strength may also be fitted. Parameters can be
-    freezed/unfreezed before the fit, and maximum/minimum values can be set to limit the parameters space to
-    the physically interesting region.
+    For more information see :ref:`naima-spectral-model`.
 
     Parameters
     ----------
