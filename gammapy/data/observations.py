@@ -16,7 +16,7 @@ from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
 
-__all__ = ["Observation", "DataStoreObservation", "MemoryObservation", "Observations"]
+__all__ = ["ObservationBase", "DataStoreObservation", "Observation", "Observations"]
 
 log = logging.getLogger(__name__)
 
