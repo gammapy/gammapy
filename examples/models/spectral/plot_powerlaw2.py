@@ -47,6 +47,3 @@ model = SkyModel(spectral_model=model)
 models = Models([model])
 
 print(models.to_yaml())
-
-
-print(models.to_yaml())

@@ -40,8 +40,3 @@ plt.ylim(1e-4, 2)
 plt.title(f"EBL models (z={redshift})")
 plt.grid(which="both")
 plt.legend(loc="best");
-
-# %%
-# YAML representation
-# -------------------
-# Here is an example YAML file using the model:
