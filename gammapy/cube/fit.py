@@ -1483,7 +1483,29 @@ class MapDatasetOnOff(MapDataset):
         """
         dataset = super().to_image(spectrum, name)
 
-        return dataset
+        kwargs = {}
+        if self.counts_off is not None:
+            kwargs["counts_off"] = self.counts_off.sum_over_axes(keepdims=True)
+
+        if self.acceptance is not None:
+            kwargs["acceptance"] = self.acceptance.reduce_over_axes(func=np.mean, keepdims=True)
+            background = self.background.sum_over_axes(keepdims=True)
+            kwargs["acceptance_off"] = (
+                    kwargs["acceptance"] * kwargs["counts_off"] / background
+            )
+        kwargs["counts"]=dataset.counts
+        kwargs["exposure"]=dataset.exposure
+        # A priori these are None
+        kwargs["psf"]=dataset.psf
+        kwargs["edisp"]=dataset.edisp
+        # We keep name
+        kwargs["name"]=dataset.name
+        kwargs["mask_fit"]=dataset.mask_fit
+        kwargs["mask_safe"]=dataset.mask_safe
+        kwargs["gti"]=dataset.gti
+        kwargs["evaluation_mode"]=dataset.evaluation_mode
+
+        return MapDatasetOnOff(**kwargs)
 
 class MapEvaluator:
     """Sky model evaluation on maps.

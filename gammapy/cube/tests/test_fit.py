@@ -774,6 +774,21 @@ def test_mapdatasetonoff_cutout(images):
     assert cutout_dataset.background_model is None
     assert cutout_dataset.name != dataset.name
 
+@requires_data()
+def test_mapdatasetonoff_to_image(images):
+    dataset = get_map_dataset_onoff(images)
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+    dataset.gti = gti
+
+    image_dataset = dataset.to_image()
+
+    assert image_dataset.counts.data.shape == (1, 50, 50)
+    assert cutout_dataset.counts_off.data.shape == (50, 50)
+    assert cutout_dataset.acceptance.data.shape == (50, 50)
+    assert cutout_dataset.acceptance_off.data.shape == (50, 50)
+    assert cutout_dataset.background_model is None
+    assert image_dataset.name != dataset.name
+
 
 def test_map_dataset_geom(geom, sky_model):
     e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
