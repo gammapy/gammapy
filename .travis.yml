@@ -43,6 +43,7 @@ env:
         - TEST_COVERAGE=false
         - TEST_PACKAGING=false
         - RUN_INSTALL=true
+        - DEBUG=true
 
 stages:
    # Do the style check and a single test job, don't proceed if it fails
