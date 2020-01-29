@@ -123,17 +123,17 @@ class ASmoothMapEstimator:
 
         return self.estimate_maps(counts, background, exposure)
 
-    def estimate_maps(self, counts_map, background_map, exposure_map = None):
+    def estimate_maps(self, counts, background, exposure = None):
         """
         Run adaptive smoothing on input Maps.
 
         Parameters
         ----------
-        counts_map : `~gammapy.maps.Map`
+        counts : `~gammapy.maps.Map`
             counts map
-        background_map : `~gammapy.maps.Map`
+        background : `~gammapy.maps.Map`
             estimated background counts map
-        exposure_map : `~gammapy.maps.Map`
+        exposure : `~gammapy.maps.Map`
             exposure map. If set, it will produce a flux smoothed map.
 
         Returns
@@ -147,20 +147,20 @@ class ASmoothMapEstimator:
                 * 'significance'.
         """
 
-        pixel_scale = counts_map.geom.pixel_scales.mean()
+        pixel_scale = counts.geom.pixel_scales.mean()
         kernels = self.kernels(pixel_scale)
 
         cubes = {}
-        cubes["counts"] = scale_cube(counts_map.data, kernels)
+        cubes["counts"] = scale_cube(counts.data, kernels)
 
-        if background_map is not None:
-            cubes["background"] = scale_cube(background_map.data, kernels)
+        if background is not None:
+            cubes["background"] = scale_cube(background.data, kernels)
         else:
             # TODO: Estimate background with asmooth method
             raise ValueError("Background estimation required.")
 
-        if exposure_map is not None:
-            flux = (counts_map - background_map) / exposure_map
+        if exposure is not None:
+            flux = (counts - background) / exposure
             cubes["flux"] = scale_cube(flux.data, kernels)
 
         cubes["significance"] = self._significance_cube(
@@ -178,15 +178,15 @@ class ASmoothMapEstimator:
             if key in ["counts", "background"]:
                 mask = np.isnan(data)
                 data[mask] = np.mean(locals()[key + "_map"].data[mask])
-                result[key] = WcsNDMap(counts_map.geom, data, unit=counts_map.unit)
+                result[key] = WcsNDMap(counts.geom, data, unit=counts.unit)
             else:
-                result[key] = WcsNDMap(counts_map.geom, data, unit="deg")
+                result[key] = WcsNDMap(counts.geom, data, unit="deg")
 
-        if exposure_map is not None:
+        if exposure is not None:
             data = smoothed["flux"]
             mask = np.isnan(data)
             data[mask] = np.mean(flux.data[mask])
-            result["flux"] = WcsNDMap(counts_map.geom, data, unit=flux.unit)
+            result["flux"] = WcsNDMap(counts.geom, data, unit=flux.unit)
 
         return result
 
