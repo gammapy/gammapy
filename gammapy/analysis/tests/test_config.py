@@ -23,7 +23,6 @@ def test_config_default_types():
     assert config.datasets.geom.wcs.skydir.lat is None
     assert isinstance(config.datasets.geom.wcs.binsize, Angle)
     assert isinstance(config.datasets.geom.wcs.binsize_irf, Angle)
-    assert isinstance(config.datasets.geom.selection.offset_max, Angle)
     assert isinstance(config.datasets.geom.axes.energy.min, Quantity)
     assert isinstance(config.datasets.geom.axes.energy.max, Quantity)
     assert isinstance(config.datasets.geom.axes.energy_true.min, Quantity)
