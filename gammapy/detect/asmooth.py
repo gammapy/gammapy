@@ -27,19 +27,17 @@ class ASmoothMapEstimator:
 
     Parameters
     ----------
+    scales : `~astropy.units.Quantity`
+        Smoothing scales.
     kernel : `astropy.convolution.Kernel`
         Smoothing kernel.
     method : {'simple', 'asmooth', 'lima'}
         Significance estimation method.
     threshold : float
         Significance threshold.
-    scales : `~astropy.units.Quantity`
-        Smoothing scales.
     """
 
-    def __init__(
-        self, kernel=Gaussian2DKernel, method="simple", threshold=5, scales=None
-    ):
+    def __init__(self, scales, kernel=Gaussian2DKernel, method="simple", threshold=5):
         self.parameters = {
             "kernel": kernel,
             "method": method,
@@ -62,10 +60,10 @@ class ASmoothMapEstimator:
             List of `~astropy.convolution.Kernel`
         """
         p = self.parameters
-        scales = p["scales"].to("deg") / Angle(pixel_scale).deg
+        scales = p["scales"].to_value("deg") / Angle(pixel_scale).deg
 
         kernels = []
-        for scale in scales.value:
+        for scale in scales: #.value:
             kernel = p["kernel"](scale, mode="oversample")
             # TODO: check if normalizing here makes sense
             kernel.normalize("peak")
@@ -109,6 +107,10 @@ class ASmoothMapEstimator:
                 * 'significance'.
         """
         # Check dimensionality
+        if len(dataset.data_shape)==3:
+            if dataset.data_shape[0] != 1:
+                raise ValueError("ASmoothMapEstimator.run() requires a dataset with 1 energy bin at most.")
+
         counts = dataset.counts.sum_over_axes(keepdims=False)
 
         background = dataset.npred()
@@ -177,7 +179,7 @@ class ASmoothMapEstimator:
             # set remaining pixels with significance < threshold to mean value
             if key in ["counts", "background"]:
                 mask = np.isnan(data)
-                data[mask] = np.mean(locals()[key + "_map"].data[mask])
+                data[mask] = np.mean(locals()[key].data[mask])
                 result[key] = WcsNDMap(counts.geom, data, unit=counts.unit)
             else:
                 result[key] = WcsNDMap(counts.geom, data, unit="deg")

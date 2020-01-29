@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
@@ -36,7 +35,7 @@ def test_asmooth(input_maps):
     kernel = Tophat2DKernel
     scales = ASmoothMapEstimator.get_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 
-    asmooth = ASmoothMapEstimator(kernel=kernel, scales=scales, method="simple", threshold=2.5)
+    asmooth = ASmoothMapEstimator(scales=scales, kernel=kernel,  method="simple", threshold=2.5)
     smoothed = asmooth.estimate_maps(input_maps["counts"], input_maps["background"])
 
     desired = {
@@ -56,7 +55,7 @@ def test_asmooth_dataset(input_dataset):
     kernel = Tophat2DKernel
     scales = ASmoothMapEstimator.get_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 
-    asmooth = ASmoothMapEstimator(kernel=kernel, scales=scales, method="simple", threshold=2.5)
+    asmooth = ASmoothMapEstimator(scales=scales, kernel=kernel,  method="simple", threshold=2.5)
     smoothed = asmooth.run(input_dataset)
 
     assert smoothed["flux"].data.shape == (40, 50)
