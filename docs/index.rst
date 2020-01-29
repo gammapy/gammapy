@@ -21,6 +21,7 @@ or request a feature, or need help with anything Gammapy-related.
     :maxdepth: 1
 
     overview
+    overview/DL3
     install/index
     getting-started
     tutorials/index

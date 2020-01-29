@@ -112,6 +112,7 @@ Using `gammapy.stats`
 
     feldman_cousins
     fit_statistics
+    wstat_derivation
 
 Reference/API
 =============

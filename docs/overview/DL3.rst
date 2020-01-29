@@ -26,7 +26,7 @@ Instrument response functions
 
 For each observation, instrument response functions (namely effective area, point spread function, energy
 dispersion, background) are distributed. Some details about the origin of these functions are given
-in :ref:`irf_theory`. The functions are stored in the form of multidimensional tables giving the IRF
+in :ref:`irf-theory`. The functions are stored in the form of multidimensional tables giving the IRF
 value as a function of position in the field-of-view and energy of the incident photon.
 
 The formats used are discussed and described in `gadf`_. This format is still a prototype. In the coming

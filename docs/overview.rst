@@ -82,11 +82,12 @@ Data reduction
 --------------
 
 As already mentioned in the :ref:`overview_workflow` section above, IACT
-analysis starts with data level 3 (DL3) FITS files consisting of event lists,
-instrument response information (effective area, point spread function, energy
-dispersion, background) and extra information concerning the observation
-(pointing direction, time), as well as two index tables that list the
-observations and declare which response should be used with which event data.
+analysis starts with :ref:`data level 3 <overview_DL3>` (DL3) FITS files
+consisting of event lists, instrument response information (effective area,
+point spread function, energy dispersion, background) and extra information
+concerning the observation (pointing direction, time), as well as two index
+tables that list the observations and declare which response should be used
+with which event data.
 
 
 

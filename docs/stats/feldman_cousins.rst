@@ -81,9 +81,6 @@ lines is not simply connected. These artefacts are corrected with
 
     >>> gstats.fc_fix_limits(LowerLimitNum, UpperLimitNum)
 
-The following script in the ``examples`` directory demonstrates the problem:
-:download:`example_fc_demonstrate_artefact.py
-<../../examples/example_fc_demonstrate_artefact.py>`
 
 For mu = 0.745 the 90% acceptance interval is [0,8] and for mu = 0.750 it is
 [1,8]. A lot of the fast algorithms that do not compute the full confidence belt
@@ -143,13 +140,3 @@ fixed here, so the result is known):
     mu_upper_limit = gstats.fc_find_limit(1.7, UpperLimitNum, mu_bins)
     # mu_upper_limit == 2.7
 
-Verification
-------------
-
-To verify that the numerical solution is working, the example plots can also be
-produced using the analytical solution. They look consistent. The scripts for
-the analytical solution are given in the ``examples`` directory:
-:download:`example_fc_poisson_analytical.py
-<../../examples/example_fc_poisson_analytical.py>`
-:download:`example_fc_gauss_analytical.py
-<../../examples/example_fc_gauss_analytical.py>`

@@ -83,7 +83,7 @@ The WStat fit statistics is given by the following formula:
     -& n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}})} -
     \log{(n_{\mathrm{off}})})\big)
 
-To see how to derive it see the :ref:`wstat derivation<wstat_derivation>`.
+To see how to derive it see the :ref:`wstat derivation <wstat_derivation>`.
 
 The WStat statistic is implemented in `~gammapy.stats.wstat` and is used as a `stat`
 function by the `~gammapy.cube.MapDatasetOnOff` and the `~gammapy.spectrum.SpectrumDatasetOnOff`.

@@ -89,7 +89,7 @@ of the differences between the relevant time scales ``UT1``, ``UTC`` and ``TT``.
 Mission elapsed times (MET)
 ---------------------------
 
-[MET]_ time references are times representing UTC seconds after a specific
+:term:`MET` time references are times representing UTC seconds after a specific
 origin. Each experiment may have a different MET origin that should be included
 in the header of the corresponding data files. For more details see `Fermi-LAT
 time systems in a nutshell`_.
@@ -106,7 +106,7 @@ Time differences
 ----------------
 
 TODO: discuss when to use `~astropy.time.TimeDelta` or `~astropy.units.Quantity`
-or [MET]_ floats and where one needs to convert between those and what to watch
+or :term:`MET` floats and where one needs to convert between those and what to watch
 out for.
 
 
