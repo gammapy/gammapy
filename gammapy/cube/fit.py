@@ -135,8 +135,11 @@ class MapDataset(Dataset):
 
         exposure_min, exposure_max, exposure_unit = np.nan, np.nan, ""
         if self.exposure is not None:
-            mask = self.mask_safe.reduce_over_axes(np.logical_or).data
-            if not mask.any():
+            if self.mask_safe is not None:
+                mask = self.mask_safe.reduce_over_axes(np.logical_or).data
+                if not mask.any():
+                    mask = None
+            else:
                 mask = None
             exposure_min = np.min(self.exposure.data[..., mask])
             exposure_max = np.max(self.exposure.data[..., mask])
@@ -616,6 +619,8 @@ class MapDataset(Dataset):
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
+        name : str
+            Name of the new dataset.
         """
         self._name = make_name(name)
         random_state = get_random_state(random_state)
@@ -694,6 +699,8 @@ class MapDataset(Dataset):
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             List of HDUs.
+        name : str
+            Name of the new dataset.
 
         Returns
         -------
@@ -765,6 +772,8 @@ class MapDataset(Dataset):
         ----------
         filename : str
             Filename to read from.
+        name : str
+            Name of the new dataset.
 
         Returns
         -------
@@ -827,6 +836,8 @@ class MapDataset(Dataset):
             the input ON region on which to extract the spectrum
         containment_correction : bool
             Apply containment correction for point sources and circular on regions
+        name : str
+            Name of the new dataset.
 
         Returns
         -------
@@ -895,6 +906,8 @@ class MapDataset(Dataset):
         spectrum : `~gammapy.modeling.models.SpectralModel`
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
+        name : str
+            Name of the new dataset.
 
         Returns
         -------
@@ -960,6 +973,8 @@ class MapDataset(Dataset):
             If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+        name : str
+            Name of the new dataset.
 
         Returns
         -------
@@ -1033,6 +1048,9 @@ class MapDatasetOnOff(MapDataset):
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
+    name : str
+        Name of the dataset.
+
     """
 
     stat_type = "wstat"
@@ -1262,6 +1280,8 @@ class MapDatasetOnOff(MapDataset):
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
+        name : str
+            Name of the new dataset.
         """
         self._name = make_name(name)
         random_state = get_random_state(random_state)
@@ -1309,6 +1329,8 @@ class MapDatasetOnOff(MapDataset):
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             List of HDUs.
+        name : str
+            Name of the new dataset.
 
         Returns
         -------
@@ -1354,7 +1376,7 @@ class MapDatasetOnOff(MapDataset):
             kwargs["gti"] = gti
         return cls(**kwargs)
 
-    def to_spectrum_dataset(self, on_region, containment_correction=False):
+    def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
         """Return a ~gammapy.spectrum.SpectrumDatasetOnOff from on_region.
 
         Counts and OFF counts are summed in the on_region.
@@ -1377,13 +1399,15 @@ class MapDatasetOnOff(MapDataset):
             the input ON region on which to extract the spectrum
         containment_correction : bool
             Apply containment correction for point sources and circular on regions
+        name : str
+            Name of the new dataset.
 
         Returns
         -------
         dataset : `~gammapy.spectrum.SpectrumDatasetOnOff`
             the resulting reduced dataset
         """
-        dataset = super().to_spectrum_dataset(on_region, containment_correction)
+        dataset = super().to_spectrum_dataset(on_region, containment_correction, name)
 
         kwargs = {}
         if self.counts_off is not None:
@@ -1398,7 +1422,7 @@ class MapDatasetOnOff(MapDataset):
 
         return SpectrumDatasetOnOff.from_spectrum_dataset(dataset=dataset, **kwargs)
 
-    def cutout(self, position, width, mode="trim"):
+    def cutout(self, position, width, mode="trim", name=None):
         """Cutout map dataset.
 
         Parameters
@@ -1410,15 +1434,24 @@ class MapDatasetOnOff(MapDataset):
             If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+        name : str
+            Name of the new dataset.
 
         Returns
         -------
         cutout : `MapDatasetOnOff`
             Cutout map dataset.
         """
-        cutout_kwargs = {"position": position, "width": width, "mode": mode}
+        cutout_kwargs = {
+            "position": position,
+            "width": width,
+            "mode": mode,
+            "name": name,
+        }
 
         cutout_dataset = super().cutout(**cutout_kwargs)
+
+        del cutout_kwargs["name"]
 
         if self.counts_off is not None:
             cutout_dataset.counts_off = self.counts_off.cutout(**cutout_kwargs)
@@ -1430,6 +1463,63 @@ class MapDatasetOnOff(MapDataset):
             cutout_dataset.acceptance_off = self.acceptance_off.cutout(**cutout_kwargs)
 
         return cutout_dataset
+
+    def to_image(self, spectrum=None, name=None):
+        """Create images by summing over the energy axis.
+
+        Exposure is weighted with an assumed spectrum,
+        resulting in a weighted mean exposure image.
+
+        Currently the PSFMap and EdispMap are dropped from the
+        resulting image dataset.
+
+        Parameters
+        ----------
+        spectrum : `~gammapy.modeling.models.SpectralModel`
+            Spectral model to compute the weights.
+            Default is power-law with spectral index of 2.
+        name : str
+            Name of the new dataset.
+
+        Returns
+        -------
+        dataset : `MapDatasetOnOff`
+            Map dataset containing images.
+        """
+        dataset = super().to_image(spectrum, name)
+
+        if self.mask_safe is None:
+            mask_safe = 1
+        else:
+            mask_safe = self.mask_safe
+
+        kwargs = {}
+
+        if self.counts_off is not None:
+            counts_off = self.counts_off * mask_safe
+            kwargs["counts_off"] = counts_off.sum_over_axes(keepdims=True)
+
+        if self.acceptance is not None:
+            acceptance = self.acceptance * mask_safe
+            kwargs["acceptance"] = acceptance.sum_over_axes(keepdims=True)
+            background = self.background * mask_safe
+            background = background.sum_over_axes(keepdims=True)
+            kwargs["acceptance_off"] = (
+                kwargs["acceptance"] * kwargs["counts_off"] / background
+            )
+        kwargs["counts"] = dataset.counts
+        kwargs["exposure"] = dataset.exposure
+        # A priori these are None
+        kwargs["psf"] = dataset.psf
+        kwargs["edisp"] = dataset.edisp
+        # We keep name
+        kwargs["name"] = dataset.name
+        kwargs["mask_fit"] = dataset.mask_fit
+        kwargs["mask_safe"] = dataset.mask_safe
+        kwargs["gti"] = dataset.gti
+        kwargs["evaluation_mode"] = dataset.evaluation_mode
+
+        return MapDatasetOnOff(**kwargs)
 
 
 class MapEvaluator:
