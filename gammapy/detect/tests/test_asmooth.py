@@ -60,7 +60,7 @@ def test_asmooth_dataset(input_dataset):
     # First check that is fails if don't use to_image()
     with pytest.raises(ValueError):
         asmooth.run(input_dataset)
-        
+
     smoothed = asmooth.run(input_dataset.to_image())
 
     assert smoothed["flux"].data.shape == (40, 50)
