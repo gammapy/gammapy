@@ -21,7 +21,6 @@ DOCS_FILE = CONFIG_PATH / "docs.yaml"
 
 log = logging.getLogger(__name__)
 
-
 class AngleType(Angle):
     @classmethod
     def __get_validators__(cls):
@@ -75,12 +74,13 @@ class SafeMaskMethodsEnum(str, Enum):
     offset_max = "offset-max"
     bkg_peak = "bkg-peak"
 
-class SafeMaskOptionsEnum(dict, Enum):
-     aeff_default = {""}
-     aeff_max = {"aeff_percent":10}
-     edisp_bias = {"bias_percent":10, "position":None}
-     offset_max = {"offset_max": "3 deg"}
-     bkg_peak = {""}
+#class SafeMaskOptionsEnum(dict, Enum):
+#     aeff_default = {"test":""}
+#     aeff_max = {"aeff_percent":10}
+#     edisp_bias = {"bias_percent":10, "position":None}
+#     offset_max = {"offset_max": "3 deg"}
+#     bkg_peak = {"test" : ""}
+
 
 class MapSelectionEnum(str, Enum):
     counts = "counts"
@@ -144,18 +144,18 @@ class BackgroundConfig(GammapyBaseConfig):
     method: BackgroundMethodEnum = BackgroundMethodEnum.reflected
     exclusion: FilePath = None
 
+class SafeMaskSettingsConfig(GammapyBaseConfig):
+    offset_max: AngleType = "2.5 deg"
+    aeff_percent: float = 10
+    bias_percent: float = 10
+
 class SafeMaskConfig(GammapyBaseConfig):
     methods: List[SafeMaskMethodsEnum] = [SafeMaskMethodsEnum.aeff_default]
-    options: List[SafeMaskOptionsEnum] = [SafeMaskOptionsEnum.aeff_default]
+    settings: SafeMaskSettingsConfig = SafeMaskSettingsConfig()
 
 class EnergyAxesConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig()
     energy_true: EnergyAxisConfig = EnergyAxisConfig()
-
-
-class SelectionConfig(GammapyBaseConfig):
-    offset_max: AngleType = "2.5 deg"
-
 
 class FovConfig(GammapyBaseConfig):
     width: AngleType = "5 deg"
@@ -171,7 +171,6 @@ class WcsConfig(GammapyBaseConfig):
 
 class GeomConfig(GammapyBaseConfig):
     wcs: WcsConfig = WcsConfig()
-    selection: SelectionConfig = SelectionConfig()
     axes: EnergyAxesConfig = EnergyAxesConfig()
 
 
