@@ -7,7 +7,7 @@ from gammapy.maps import WcsNDMap, scale_cube
 from gammapy.stats import significance
 from gammapy.cube import MapDatasetOnOff
 
-__all__ = ["ASmoothEstimator"]
+__all__ = ["ASmoothMapEstimator"]
 
 
 def _significance_asmooth(counts, background):
@@ -15,7 +15,7 @@ def _significance_asmooth(counts, background):
     return (counts - background) / np.sqrt(counts + background)
 
 
-class ASmoothEstimator:
+class ASmoothMapEstimator:
     """Adaptively smooth counts image.
 
     Achieves a roughly constant significance of features across the whole image.
@@ -92,6 +92,7 @@ class ASmoothEstimator:
     def run(self, dataset):
         """
         Run adaptive smoothing on input MapDataset.
+        The latter should have
 
         Parameters
         ----------
@@ -120,9 +121,9 @@ class ASmoothEstimator:
         else:
             exposure = None
 
-        return self.make_maps(counts, background, exposure)
+        return self.estimate_maps(counts, background, exposure)
 
-    def make_maps(self, counts_map, background_map, exposure_map = None):
+    def estimate_maps(self, counts_map, background_map, exposure_map = None):
         """
         Run adaptive smoothing on input Maps.
 
@@ -226,7 +227,7 @@ class ASmoothEstimator:
         return smoothed
 
     @staticmethod
-    def make_scales(n_scales, factor=np.sqrt(2), kernel=Gaussian2DKernel):
+    def get_scales(n_scales, factor=np.sqrt(2), kernel=Gaussian2DKernel):
         """Create list of Gaussian widths."""
         if kernel == Gaussian2DKernel:
             sigma_0 = 1.0 / np.sqrt(9 * np.pi)
