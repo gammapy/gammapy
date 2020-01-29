@@ -27,7 +27,7 @@ def input_dataset():
     )
     dataset = datasets[0]
     dataset.psf = None
-    return dataset.to_image()
+    return dataset
 
 
 @requires_data()
@@ -56,7 +56,12 @@ def test_asmooth_dataset(input_dataset):
     scales = ASmoothMapEstimator.get_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 
     asmooth = ASmoothMapEstimator(scales=scales, kernel=kernel,  method="simple", threshold=2.5)
-    smoothed = asmooth.run(input_dataset)
+
+    # First check that is fails if don't use to_image()
+    with pytest.raises(ValueError):
+        asmooth.run(input_dataset)
+        
+    smoothed = asmooth.run(input_dataset.to_image())
 
     assert smoothed["flux"].data.shape == (40, 50)
     assert smoothed["flux"].unit == u.Unit("cm-2s-1")
