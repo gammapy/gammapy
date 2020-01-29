@@ -136,7 +136,7 @@ Gammapy API.
 *Modeling and fitting in gammapy*
 
 - `Modeling and Fitting <../notebooks/modeling.html>`__  | *modeling.ipynb*
-- `Models Gallery <../notebooks/models.html>`__  | *models.ipynb*
+- `Models <../notebooks/models.html>`__  | *models.ipynb*
 
 *Working with catalogs*
 
