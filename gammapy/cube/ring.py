@@ -209,17 +209,16 @@ class AdaptiveRingBackgroundMaker:
         not_has_off_acceptance = acceptance_off.data <= 0
         mask_safe.data[not_has_off_acceptance] = 0
 
-        return MapDatasetOnOff(
-            counts=dataset.counts,
+        dataset_on_off = MapDatasetOnOff.from_map_dataset(
+            dataset=dataset,
             counts_off=counts_off,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
-            exposure=dataset.exposure,
-            psf=dataset.psf,
             name=dataset.name,
-            mask_safe=mask_safe,
-            gti=dataset.gti,
         )
+
+        dataset_on_off.mask_safe = mask_safe
+        return dataset_on_off
 
 
 class RingBackgroundMaker:
@@ -318,23 +317,20 @@ class RingBackgroundMaker:
             On off dataset.
         """
         maps_off = self.make_maps_off(dataset)
-        acceptance = dataset.background_model.map
+        maps_off["acceptance"] = dataset.background_model.map
 
         mask_safe = dataset.mask_safe.copy()
         not_has_off_acceptance = maps_off["acceptance_off"].data <= 0
         mask_safe.data[not_has_off_acceptance] = 0
 
-        return MapDatasetOnOff(
-            counts=dataset.counts,
-            counts_off=maps_off["counts_off"],
-            acceptance=acceptance,
-            acceptance_off=maps_off["acceptance_off"],
-            exposure=dataset.exposure,
-            psf=dataset.psf,
+        dataset_on_off = MapDatasetOnOff.from_map_dataset(
+            dataset=dataset,
             name=dataset.name,
-            mask_safe=dataset.mask_safe,
-            gti=dataset.gti,
+            **maps_off
         )
+
+        dataset_on_off.mask_safe = mask_safe
+        return dataset_on_off
 
     def __str__(self):
         return (

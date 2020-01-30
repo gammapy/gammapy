@@ -322,37 +322,26 @@ class MapDataset(Dataset):
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
-            Name of the dataset.
+            Name of the returned dataset.
 
         Returns
         -------
         empty_maps : `MapDataset`
             A MapDataset containing zero filled maps
         """
-        counts = Map.from_geom(geom, unit="")
+        kwargs = kwargs.copy()
+        kwargs["name"] = name
+        kwargs["counts"] = Map.from_geom(geom, unit="")
 
         background = Map.from_geom(geom, unit="")
-        background_model = BackgroundModel(background)
+        kwargs["background_model"] = BackgroundModel(background)
+        kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
+        kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
+        kwargs["psf"] = PSFMap.from_geom(geom_psf)
+        kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
+        kwargs["mask_safe"] = Map.from_geom(geom, unit="", dtype=bool)
 
-        exposure = Map.from_geom(geom_exposure, unit="m2 s")
-        edisp = EDispMap.from_geom(geom_edisp)
-        psf = PSFMap.from_geom(geom_psf)
-
-        gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
-
-        mask_safe = Map.from_geom(geom, unit="", dtype=bool)
-
-        return cls(
-            counts=counts,
-            exposure=exposure,
-            psf=psf,
-            edisp=edisp,
-            background_model=background_model,
-            gti=gti,
-            mask_safe=mask_safe,
-            name=name,
-            **kwargs,
-        )
+        return cls(**kwargs)
 
     @classmethod
     def create(
@@ -383,7 +372,7 @@ class MapDataset(Dataset):
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
-            Name of the dataset.
+            Name of the returned dataset.
 
         Returns
         -------
@@ -433,12 +422,8 @@ class MapDataset(Dataset):
             self.exposure.stack(other.exposure, weights=mask_image_other)
 
         if self.background_model and other.background_model:
-            bkg = self.background_model.evaluate()
-            bkg *= self.mask_safe
-            other_bkg = other.background_model.evaluate()
-            bkg.stack(other_bkg, weights=other.mask_safe)
-
-            self.background_model = BackgroundModel(bkg, name=self.name)
+            self.background_model.map *= self.mask_safe
+            self.background_model.stack(other.background_model, other.mask_safe)
 
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)
@@ -609,7 +594,7 @@ class MapDataset(Dataset):
         else:
             return cash_sum_cython(counts.ravel(), npred.ravel())
 
-    def fake(self, random_state="random-seed", name=None):
+    def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
 
         This method overwrites the counts defined on the dataset object.
@@ -619,10 +604,7 @@ class MapDataset(Dataset):
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
-        name : str
-            Name of the new dataset.
         """
-        self._name = make_name(name)
         random_state = get_random_state(random_state)
         npred = self.npred()
         npred.data = random_state.poisson(npred.data)
@@ -914,52 +896,33 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset containing images.
         """
-        name = make_name(name)
+        kwargs = {}
+        kwargs["name"] = make_name(name)
+        kwargs["gti"] = self.gti
 
-        if self.mask_safe is None:
-            mask_safe = 1
-            mask_image = None
-        else:
+        if self.mask_safe is not None:
             mask_safe = self.mask_safe
-            mask_image = mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
+            kwargs["mask_safe"] = mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
+        else:
+            mask_safe = 1
 
         if self.counts is not None:
             counts = self.counts * mask_safe
-            counts = counts.sum_over_axes(keepdims=True)
-        else:
-            counts = None
+            kwargs["counts"] = counts.sum_over_axes(keepdims=True)
 
         if self.exposure is not None:
             exposure = _map_spectrum_weight(self.exposure, spectrum)
-            exposure = exposure.sum_over_axes(keepdims=True)
-        else:
-            exposure = None
+            kwargs["exposure"] = exposure.sum_over_axes(keepdims=True)
 
         if self.background_model is not None:
             background = self.background_model.evaluate() * mask_safe
             background = background.sum_over_axes(keepdims=True)
-            bkg_model = BackgroundModel(background)
-        else:
-            bkg_model = None
-
-        # TODO: add edisp and psf
-        edisp = None
+            kwargs["background_model"] = BackgroundModel(background)
 
         if self.psf is not None:
-            psf = self.psf.to_image()
-        else:
-            psf = None
+            kwargs["psf"] = self.psf.to_image()
 
-        return self.__class__(
-            counts=counts,
-            exposure=exposure,
-            background_model=bkg_model,
-            mask_safe=mask_image,
-            edisp=edisp,
-            psf=psf,
-            gti=self.gti,
-            name=name,
-        )
+        return self.__class__(**kwargs)
 
     def cutout(self, position, width, mode="trim", name=None):
         """Cutout map dataset.
@@ -992,11 +955,7 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
         if self.background_model is not None:
-            bkg_map = self.background_model.map.cutout(**cutout_kwargs)
-            bkg_model = BackgroundModel(bkg_map, name=name)
-            factors = [par.factor for par in self.background_model.parameters]
-            bkg_model.parameters.set_parameter_factors(factors)
-            kwargs["background_model"] = bkg_model
+            kwargs["background_model"] = self.background_model.cutout(**cutout_kwargs, name=name)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
@@ -1186,39 +1145,75 @@ class MapDatasetOnOff(MapDataset):
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
-            Name of the dataset.
+            Name of the returned dataset.
 
         Returns
         -------
         empty_maps : `MapDatasetOnOff`
             A MapDatasetOnOff containing zero filled maps
         """
-        maps = {}
-        for aname in ["counts", "counts_off", "acceptance", "acceptance_off"]:
-            maps[aname] = Map.from_geom(geom, unit="")
+        kwargs = kwargs.copy()
+        kwargs["name"] = name
 
-        exposure = Map.from_geom(geom_exposure, unit="m2 s")
-        edisp = EDispMap.from_geom(geom_edisp)
-        psf = PSFMap.from_geom(geom_psf)
+        for key in ["counts", "counts_off", "acceptance", "acceptance_off"]:
+            kwargs[key] = Map.from_geom(geom, unit="")
 
-        gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
+        kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
+        kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
+        kwargs["psf"] = PSFMap.from_geom(geom_psf)
+        kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
+        kwargs["mask_safe"] = Map.from_geom(geom, dtype=bool)
 
-        mask_safe = Map.from_geom(geom, dtype=bool)
+        return cls(**kwargs)
+
+    @classmethod
+    def from_map_dataset(
+        cls, dataset, acceptance, acceptance_off, counts_off=None, name=None
+    ):
+        """Create spectrum dataseton off from another dataset.
+
+        Parameters
+        ----------
+        dataset : `MapDataset`
+            Spectrum dataset defining counts, edisp, aeff, livetime etc.
+        acceptance : `Map`
+            Relative background efficiency in the on region.
+        acceptance_off : `Map`
+            Relative background efficiency in the off region.
+        counts_off : `Map`
+            Off counts map . If the dataset provides a background model,
+            and no off counts are defined. The off counts are deferred from
+            counts_off / alpha.
+        name : str
+            Name of the returned dataset.
+
+        Returns
+        -------
+        dataset : `MapDatasetOnOff`
+            Map dataset on off.
+
+        """
+        kwargs = {"name": name}
+
+        if counts_off is None and dataset.background_model is not None:
+            alpha = acceptance / acceptance_off
+            kwargs["counts_off"] = dataset.background_model.evaluate() / alpha
 
         return cls(
-            counts=maps["counts"],
-            counts_off=maps["counts_off"],
-            acceptance=maps["acceptance"],
-            acceptance_off=maps["acceptance_off"],
-            exposure=exposure,
-            psf=psf,
-            edisp=edisp,
-            gti=gti,
-            mask_safe=mask_safe,
-            name=name,
-            **kwargs,
+            counts=dataset.counts,
+            exposure=dataset.exposure,
+            counts_off=counts_off,
+            edisp=dataset.edisp,
+            gti=dataset.gti,
+            mask_safe=dataset.mask_safe,
+            mask_fit=dataset.mask_fit,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            name=dataset.name,
+            evaluation_mode=dataset.evaluation_mode
         )
 
+    @property
     def _is_stackable(self):
         """Check if the Dataset contains enough information to be stacked"""
         if (
@@ -1249,7 +1244,7 @@ class MapDatasetOnOff(MapDataset):
         if not isinstance(other, MapDatasetOnOff):
             raise TypeError("Incompatible types for MapDatasetOnOff stacking")
 
-        if not self._is_stackable() or not other._is_stackable():
+        if not self._is_stackable or not other._is_stackable:
             raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
 
         # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
@@ -1270,7 +1265,7 @@ class MapDatasetOnOff(MapDataset):
         """Total likelihood given the current model parameters."""
         return Dataset.stat_sum(self)
 
-    def fake(self, background_model, random_state="random-seed", name=None):
+    def fake(self, background_model, random_state="random-seed"):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.
 
         This method overwrites the counts defined on the dataset object.
@@ -1280,10 +1275,7 @@ class MapDatasetOnOff(MapDataset):
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
-        name : str
-            Name of the new dataset.
         """
-        self._name = make_name(name)
         random_state = get_random_state(random_state)
         npred = self.npred()
         npred.data = random_state.poisson(npred.data)
@@ -1486,14 +1478,13 @@ class MapDatasetOnOff(MapDataset):
         dataset : `MapDatasetOnOff`
             Map dataset containing images.
         """
+        kwargs = {"name": name}
         dataset = super().to_image(spectrum, name)
 
-        if self.mask_safe is None:
-            mask_safe = 1
-        else:
+        if self.mask_safe is not None:
             mask_safe = self.mask_safe
-
-        kwargs = {}
+        else:
+            mask_safe = 1
 
         if self.counts_off is not None:
             counts_off = self.counts_off * mask_safe
@@ -1502,24 +1493,14 @@ class MapDatasetOnOff(MapDataset):
         if self.acceptance is not None:
             acceptance = self.acceptance * mask_safe
             kwargs["acceptance"] = acceptance.sum_over_axes(keepdims=True)
+
             background = self.background * mask_safe
             background = background.sum_over_axes(keepdims=True)
             kwargs["acceptance_off"] = (
                 kwargs["acceptance"] * kwargs["counts_off"] / background
             )
-        kwargs["counts"] = dataset.counts
-        kwargs["exposure"] = dataset.exposure
-        # A priori these are None
-        kwargs["psf"] = dataset.psf
-        kwargs["edisp"] = dataset.edisp
-        # We keep name
-        kwargs["name"] = dataset.name
-        kwargs["mask_fit"] = dataset.mask_fit
-        kwargs["mask_safe"] = dataset.mask_safe
-        kwargs["gti"] = dataset.gti
-        kwargs["evaluation_mode"] = dataset.evaluation_mode
 
-        return MapDatasetOnOff(**kwargs)
+        return self.from_map_dataset(dataset, **kwargs)
 
 
 class MapEvaluator:

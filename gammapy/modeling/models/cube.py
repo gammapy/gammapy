@@ -461,6 +461,52 @@ class BackgroundModel(Model):
         new._name = make_name(name)
         return new
 
+    def cutout(self, position, width, mode="trim", name=None):
+        """Cutout background model.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the region in (lon, lat) in that specific order.
+            If only one value is passed, a square region is extracted.
+        mode : {'trim', 'partial', 'strict'}
+            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+        name : str
+            Name of the returned background model.
+
+        Returns
+        -------
+        cutout : `BackgroundModel`
+            Cutout background model.
+        """
+        cutout_kwargs = {"position": position, "width": width, "mode": mode}
+
+        bkg_map = self.map.cutout(**cutout_kwargs)
+        model = self.__class__(bkg_map, name=name)
+        model.parameters.update_from_dict(self.parameters.to_dict())
+        return model
+
+    def stack(self, other, weights=None):
+        """Stack background model in place.
+
+        Stacking the background model resets the current parameters values.
+
+        Parameters
+        ----------
+        other : `BackgroundModel`
+            Other background model.
+        """
+        bkg = self.evaluate()
+        other_bkg = other.evaluate()
+        bkg.stack(other_bkg, weights=weights)
+        self.map = bkg
+
+        # reset parameter values
+        self.norm.value = 1
+        self.tilt.value = 0
+
 
 def create_fermi_isotropic_diffuse_model(filename, **kwargs):
     """Read Fermi isotropic diffuse model.

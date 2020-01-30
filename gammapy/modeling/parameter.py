@@ -473,8 +473,9 @@ class Parameters(collections.abc.Sequence):
             parameter.frozen = par.get("frozen", parameter.frozen)
             parameter._link_label_io = par.get("link", parameter._link_label_io)
 
-        if "covariance" in data:
-            self.covariance = np.array(data["covariance"])
+        covariance = data.get("covariance")
+        if covariance is not None:
+            self.covariance = np.array(covariance)
 
     def error(self, parname):
         """Get parameter error.
