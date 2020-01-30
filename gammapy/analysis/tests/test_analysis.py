@@ -144,6 +144,9 @@ def test_analysis_1d():
             axes:
                 energy_true: {min: 0.01 TeV, max: 300 TeV, nbins: 109}
         on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
+        safe_mask:
+            methods: [aeff-default, edisp-bias]
+            settings: {bias_percent: 10.0}
         containment_correction: false
     flux_points:
         energy: {min: 1 TeV, max: 50 TeV, nbins: 4}
@@ -162,8 +165,8 @@ def test_analysis_1d():
     dnde = analysis.flux_points.data.table["dnde"].quantity
     assert dnde.unit == "cm-2 s-1 TeV-1"
 
-    assert_allclose(dnde[0].value, 8.03604e-12, rtol=1e-2)
-    assert_allclose(dnde[-1].value, 5.382879e-21, rtol=1e-2)
+    assert_allclose(dnde[0].value, 8.116854e-12, rtol=1e-2)
+    assert_allclose(dnde[-1].value, 5.540578e-21, rtol=1e-2)
 
 
 @requires_data()
