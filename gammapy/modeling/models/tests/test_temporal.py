@@ -6,6 +6,8 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.modeling.models import (
+    SkyModel,
+    PowerLawSpectralModel,
     ConstantTemporalModel,
     LightCurveTemplateTemporalModel,
     PhaseCurveTemplateTemporalModel,
@@ -19,7 +21,7 @@ def phase_curve():
     path = make_path("$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits")
     table = Table.read(path)
     return PhaseCurveTemplateTemporalModel(
-        table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7
+        table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, filename=str(path)
     )
 
 
@@ -76,13 +78,20 @@ def ph_curve(x, amplitude=0.5, x0=0.01):
     return 100.0 + amplitude * np.sin(2 * np.pi * (x - x0) / 1.0)
 
 
-def test_time_sampling():
+def test_time_sampling(tmp_path):
     time = np.arange(0, 10, 0.06) * u.hour
 
     table = Table()
     table["TIME"] = time
     table["NORM"] = rate(time)
     temporal_model = LightCurveTemplateTemporalModel(table)
+
+    filename = str(make_path(tmp_path / "tmp.fits"))
+    temporal_model.write(path=filename)
+    model_read = temporal_model.read(filename)
+    assert temporal_model.filename == filename
+    assert model_read.filename == filename
+    assert_allclose(model_read.table["TIME"].quantity.value, time.value)
 
     t_ref = "2010-01-01T00:00:00"
     t_min = "2010-01-01T00:00:00"
@@ -156,3 +165,45 @@ def test_phase_time_sampling():
 
     assert len(sampler) == 2
     assert_allclose(sampler.value, [8525.00102763, 11362.44044883], rtol=1e-5)
+
+
+@requires_data()
+def test_to_dict(phase_curve, light_curve):
+
+    out = phase_curve.to_dict()
+    assert out["type"] == "PhaseCurveTemplateTemporalModel"
+    assert len(out["parameters"]) == 5
+    assert out["parameters"][0]["name"] == "time_0"
+    assert "phasecurve_LSI_DC.fits" in out["filename"]
+
+    out = light_curve.to_dict()
+    assert out["type"] == "LightCurveTemplateTemporalModel"
+    assert "lightcrv_PKSB1222+216.fits" in out["filename"]
+
+
+def test_with_skymodel(phase_curve, light_curve):
+
+    sky_model = SkyModel(spectral_model=PowerLawSpectralModel())
+    out = sky_model.to_dict()
+    assert "temporal" not in out
+
+    sky_model = SkyModel(
+        spectral_model=PowerLawSpectralModel(), temporal_model=phase_curve
+    )
+    sky_model2 = sky_model.copy()
+    assert sky_model2.temporal_model.tag == "PhaseCurveTemplateTemporalModel"
+    assert sky_model2.temporal_model.parameters.names == [
+        "time_0",
+        "phase_0",
+        "f0",
+        "f1",
+        "f2",
+    ]
+
+    sky_model = SkyModel(
+        spectral_model=PowerLawSpectralModel(), temporal_model=light_curve
+    )
+    assert sky_model.temporal_model.tag == "LightCurveTemplateTemporalModel"
+
+    out = sky_model.to_dict()
+    assert "temporal" in out
