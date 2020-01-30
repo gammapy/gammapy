@@ -137,6 +137,32 @@ def test_observations_select_time(
 
 
 @requires_data()
+def test_observations_mutation(data_store):
+    obs_ids = data_store.obs_table["OBS_ID"][:4]
+    obss = data_store.get_observations(obs_ids)
+    assert obss.ids == ["20136", "20137", "20151", "20275"]
+
+    obs_id = data_store.obs_table["OBS_ID"][4]
+    obs = data_store.get_observations([obs_id])[0]
+
+    obss.append(obs)
+    assert obss.ids == ["20136", "20137", "20151", "20275", "20282"]
+    obss.insert(0, obs)
+    assert obss.ids == ["20282", "20136", "20137", "20151", "20275", "20282"]
+    obss.pop(0)
+    assert obss.ids == ["20136", "20137", "20151", "20275", "20282"]
+    obs3 = obss[3]
+    obss.pop(obss.ids[3])
+    assert obss.ids == ["20136", "20137", "20151", "20282"]
+    obss.insert(3, obs3)
+    assert obss.ids == ["20136", "20137", "20151", "20275", "20282"]
+    obss.extend([obs])
+    assert obss.ids == ["20136", "20137", "20151", "20275", "20282", "20282"]
+    obss.remove(obs)
+    assert obss.ids == ["20136", "20137", "20151", "20275", "20282"]
+
+
+@requires_data()
 def test_observations_select_time_time_intervals_list(data_store):
     obs_ids = data_store.obs_table["OBS_ID"][:8]
     obss = data_store.get_observations(obs_ids)
