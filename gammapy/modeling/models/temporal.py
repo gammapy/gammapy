@@ -151,9 +151,7 @@ class PhaseCurveTemplateTemporalModel(TemporalModel):
         if filename is not None:
             filename = str(make_path(filename))
         self.filename = filename
-        super().__init__(
-            time_0=time_0, phase_0=phase_0, f0=f0, f1=f1, f2=f2, filename=filename
-        )
+        super().__init__(time_0=time_0, phase_0=phase_0, f0=f0, f1=f1, f2=f2)
 
     def phase(self, time):
         """Evaluate phase for a given time.
