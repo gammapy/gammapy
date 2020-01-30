@@ -422,12 +422,8 @@ class MapDataset(Dataset):
             self.exposure.stack(other.exposure, weights=mask_image_other)
 
         if self.background_model and other.background_model:
-            bkg = self.background_model.evaluate()
-            bkg *= self.mask_safe
-            other_bkg = other.background_model.evaluate()
-            bkg.stack(other_bkg, weights=other.mask_safe)
-
-            self.background_model = BackgroundModel(bkg, name=self.name)
+            self.background_model.map *= self.mask_safe
+            self.background_model.stack(other.background_model, other.mask_safe)
 
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)
@@ -598,7 +594,7 @@ class MapDataset(Dataset):
         else:
             return cash_sum_cython(counts.ravel(), npred.ravel())
 
-    def fake(self, random_state="random-seed", name=None):
+    def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
 
         This method overwrites the counts defined on the dataset object.
@@ -608,10 +604,7 @@ class MapDataset(Dataset):
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
-        name : str
-            Name of the new dataset.
         """
-        self._name = make_name(name)
         random_state = get_random_state(random_state)
         npred = self.npred()
         npred.data = random_state.poisson(npred.data)
@@ -962,11 +955,7 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
         if self.background_model is not None:
-            bkg_map = self.background_model.map.cutout(**cutout_kwargs)
-            bkg_model = BackgroundModel(bkg_map, name=name)
-            factors = [par.factor for par in self.background_model.parameters]
-            bkg_model.parameters.set_parameter_factors(factors)
-            kwargs["background_model"] = bkg_model
+            kwargs["background_model"] = self.background_model.cutout(**cutout_kwargs, name=name)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
@@ -1224,6 +1213,7 @@ class MapDatasetOnOff(MapDataset):
             evaluation_mode=dataset.evaluation_mode
         )
 
+    @property
     def _is_stackable(self):
         """Check if the Dataset contains enough information to be stacked"""
         if (
@@ -1254,7 +1244,7 @@ class MapDatasetOnOff(MapDataset):
         if not isinstance(other, MapDatasetOnOff):
             raise TypeError("Incompatible types for MapDatasetOnOff stacking")
 
-        if not self._is_stackable() or not other._is_stackable():
+        if not self._is_stackable or not other._is_stackable:
             raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
 
         # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
@@ -1275,7 +1265,7 @@ class MapDatasetOnOff(MapDataset):
         """Total likelihood given the current model parameters."""
         return Dataset.stat_sum(self)
 
-    def fake(self, background_model, random_state="random-seed", name=None):
+    def fake(self, background_model, random_state="random-seed"):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.
 
         This method overwrites the counts defined on the dataset object.
@@ -1285,10 +1275,7 @@ class MapDatasetOnOff(MapDataset):
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
-        name : str
-            Name of the new dataset.
         """
-        self._name = make_name(name)
         random_state = get_random_state(random_state)
         npred = self.npred()
         npred.data = random_state.poisson(npred.data)
