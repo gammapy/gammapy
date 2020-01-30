@@ -195,6 +195,7 @@ def test_mde_run(dataset):
     assert meta["RADECSYS"] == "icrs"
 
 
+@requires_data()
 def test_mde_run_switchoff(dataset):
     irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
