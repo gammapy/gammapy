@@ -186,15 +186,15 @@ class SkyModel(SkyModelBase):
             spatial_model = self.spatial_model.copy()
         else:
             spatial_model = None
-        if self.temporal_data is not None:
-            temporal_data = self.temporal_data.copy()
+        if self.temporal_model is not None:
+            temporal_model = self.temporal_model.copy()
         else:
-            temporal_data = None
+            temporal_model = None
 
         kwargs.setdefault("name", make_name(name))
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
         kwargs.setdefault("spatial_model", spatial_model)
-        kwargs.setdefault("temporal_model", temporal_data)
+        kwargs.setdefault("temporal_model", temporal_model)
 
         return self.__class__(**kwargs)
 
