@@ -86,7 +86,7 @@ class Dataset(abc.ABC):
         return residuals
 
 
-class Datasets(collections.abc.Sequence):
+class Datasets(collections.abc.MutableSequence):
     """Dataset collection.
 
     Parameters
@@ -257,16 +257,38 @@ class Datasets(collections.abc.Sequence):
 
         return table_from_row_data(rows=rows)
 
-    def __getitem__(self, val):
-        if isinstance(val, (int, slice)):
-            return self._datasets[val]
-        elif isinstance(val, str):
-            for idx, dataset in enumerate(self._datasets):
-                if val == dataset.name:
-                    return self._datasets[idx]
-            raise IndexError(f"No dataset: {val!r}")
+    def __getitem__(self, key):
+        return self._datasets[self._get_idx(key)]
+
+    def __delitem__(self, key):
+        del self._datasets[self._get_idx(key)]
+
+    def __setitem__(self, key, dataset):
+        if isinstance(dataset, Dataset):
+            if dataset.name in self.names:
+                raise (ValueError("Dataset names must be unique"))
+            self._datasets[self._get_idx(key)] = dataset
         else:
-            raise TypeError(f"Invalid type: {type(val)!r}")
+            raise TypeError(f"Invalid type: {type(dataset)!r}")
+
+    def insert(self, idx, dataset):
+        if isinstance(dataset, Dataset):
+            if dataset.name in self.names:
+                raise (ValueError("Dataset names must be unique"))
+            self._datasets.insert(idx, dataset)
+        else:
+            raise TypeError(f"Invalid type: {type(dataset)!r}")
+
+    def _get_idx(self, key):
+        if isinstance(key, (int, slice)):
+            return key
+        elif isinstance(key, str):
+            for idx, dataset in enumerate(self._datasets):
+                if key == dataset.name:
+                    return idx
+            raise IndexError(f"No dataset: {key!r}")
+        else:
+            raise TypeError(f"Invalid type: {type(key)!r}")
 
     def __len__(self):
         return len(self._datasets)

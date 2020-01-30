@@ -38,3 +38,30 @@ def test_datasets_getitem(datasets):
 
 def test_names(datasets):
     assert datasets.names == ["test-1", "test-2"]
+
+
+def test_Datasets_mutation():
+    dat = MyDataset(name="test-1")
+    dats = Datasets([MyDataset(name="test-2"), MyDataset(name="test-3")])
+    dats2 = Datasets([MyDataset(name="test-4"), MyDataset(name="test-5")])
+
+    dats.insert(0, dat)
+    assert dats.names == ["test-1", "test-2", "test-3"]
+
+    dats.extend(dats2)
+    assert dats.names == ["test-1", "test-2", "test-3", "test-4", "test-5"]
+
+    dat3 = dats[3]
+    dats.remove(dats[3])
+    assert dats.names == ["test-1", "test-2", "test-3", "test-5"]
+    dats.append(dat3)
+    assert dats.names == ["test-1", "test-2", "test-3", "test-5", "test-4"]
+    dats.pop(3)
+    assert dats.names == ["test-1", "test-2", "test-3", "test-4"]
+
+    with pytest.raises(ValueError, match="Dataset names must be unique"):
+        dats.append(dat)
+    with pytest.raises(ValueError, match="Dataset names must be unique"):
+        dats.insert(0, dat)
+    with pytest.raises(ValueError, match="Dataset names must be unique"):
+        dats.extend(dats2)
