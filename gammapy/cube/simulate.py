@@ -321,36 +321,32 @@ class MapDatasetEventSampler:
     def run(self, dataset, observation=None):
         """Run the event sampler, applying IRF corrections.
 
-            Parameters
-            ----------
-            dataset : `~gammapy.cube.MapDataset`
-                Map dataset
-            observation : `~gammapy.data.Observation`
-                In memory observation.
-            edisp : Bool
-                It allows to include or exclude the Edisp in the simulation.
+        Parameters
+        ----------
+        dataset : `~gammapy.cube.MapDataset`
+            Map dataset
+        observation : `~gammapy.data.Observation`
+            In memory observation.
+        edisp : Bool
+            It allows to include or exclude the Edisp in the simulation.
 
-            Returns
-            -------
-            events : `~gammapy.data.EventList`
-                Event list.
+        Returns
+        -------
+        events : `~gammapy.data.EventList`
+            Event list.
         """
         events_src = self.sample_sources(dataset)
 
         if dataset.psf:
             events_src = self.sample_psf(dataset.psf, events_src)
         else:
-            events_src.table.add_columns(
-                (events_src.table["RA_TRUE"].data, events_src.table["DEC_TRUE"].data),
-                names=("RA", "DEC"),
-            )
+            events_src.table["RA"] = events_src.table["RA_TRUE"]
+            events_src.table["DEC"] = events_src.table["DEC_TRUE"]
 
         if dataset.edisp:
             events_src = self.sample_edisp(dataset.edisp, events_src)
         else:
-            events_src.table.add_column(
-                events_src.table["ENERGY_TRUE"].data, name="ENERGY"
-            )
+            events_src.table["ENERGY"] = events_src.table["ENERGY_TRUE"]
 
         if dataset.background_model:
             events_bkg = self.sample_background(dataset)
