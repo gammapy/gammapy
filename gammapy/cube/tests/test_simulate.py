@@ -213,9 +213,9 @@ def test_mde_run_switchoff(dataset):
     events = sampler.run(dataset=dataset, observation=obs)
 
     assert len(events.table) == 2407
-    assert_allclose(events.table["ENERGY_TRUE"][0], 2.2450239000119323, rtol=1e-5)
-    assert_allclose(events.table["RA_TRUE"][0], 266.9128884464542, rtol=1e-5)
-    assert_allclose(events.table["DEC_TRUE"][0], -29.034641131874313, rtol=1e-5)
+    assert_allclose(events.table["ENERGY"][0], 2.2450239000119323, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 266.9128884464542, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -29.034641131874313, rtol=1e-5)
 
     meta = events.table.meta
 

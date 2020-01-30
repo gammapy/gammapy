@@ -339,9 +339,18 @@ class MapDatasetEventSampler:
 
         if dataset.psf:
             events_src = self.sample_psf(dataset.psf, events_src)
+        else:
+            events_src.table.add_columns(
+                (events_src.table["RA_TRUE"].data, events_src.table["DEC_TRUE"].data),
+                names=("RA", "DEC"),
+            )
 
         if dataset.edisp:
             events_src = self.sample_edisp(dataset.edisp, events_src)
+        else:
+            events_src.table.add_column(
+                events_src.table["ENERGY_TRUE"].data, name="ENERGY"
+            )
 
         if dataset.background_model:
             events_bkg = self.sample_background(dataset)
