@@ -46,7 +46,7 @@ them into a file that you can edit to start a new analysis from the modified con
     >>> config.write("config.yaml")
     >>> config = AnalysisConfig.read("config.yaml")
 
-You can start with the built-in default analysis configuration and update it by
+You can also start with the built-in default analysis configuration and update it by
 passing values for just the parameters you want to set, using the
 ``AnalysisConfig.from_yaml`` method:
 
@@ -58,36 +58,33 @@ passing values for just the parameters you want to set, using the
             level: warning
     """)
 
+Once you have your configuration defined you may start an `analysis` instance:
+
+.. code-block:: python
+
+    analysis = Analysis(config)
+
 The hierarchical structure of the tens of parameters needed may be hard to follow. You can
-print as a *how-to* documentation a helping sample config file with example values for all
-the sections and parameters or only for one specific section or group of parameters.
+print your analysis config as a mean to display its format and syntax, the parameters
+and units allowed, as well as the different sections where they belong in the config structure.
 
 .. code-block:: python
 
-    >>> print(config)
+    >>> print(analysis.config)
 
-At any moment you can change the value of one specific parameter needed in the analysis.
-
-.. code-block:: python
-
-    >>> config.datasets.geom.wcs.skydir.frame = "galactic"
-
-It is also possible to add new configuration parameters and values or overwrite the ones already
-defined in your session analysis. In this case you may use the `analysis.update_config()` method
-using a custom nested dictionary or custom YAML file (i.e. re-use a config file for specific
-sections and/or from a previous analysis).:
+At any moment you may add or change the value of one specific parameter needed in your analysis.
 
 .. code-block:: python
 
-    >>> config_dict = {"data": {"datastore": "$GAMMAPY_DATA/hess-dl3-dr1"}}
-    >>> analysis.update_config(config_dict)
-    >>> analysis.update_config(filename="fit.yaml")
-
-In the following you may find more detailed information on the different sections which
-compose the YAML formatted nested configuration settings hierarchy.
+    >>> analysis.config.datasets.geom.wcs.skydir.frame = "galactic"
 
 General settings
 ----------------
+
+In the following you may find more detailed information on the different sections which
+compose the YAML formatted nested configuration settings hierarchy. The different
+high-level analysis commands exposed may be reproduced within the
+`First analysis <../notebooks/analysis_1.html>`__ tutorial.
 
 The ``general`` section comprises information related with the ``log`` configuration,
 as well as the output folder where all file outputs and datasets will be stored, declared
@@ -99,7 +96,7 @@ Observations selection
 ----------------------
 
 The observations used in the analysis may be selected from a ``datastore`` declared in the
-``data`` section of the settings, using also different parameters and values to
+``observations`` section of the settings, using also different parameters and values to
 create a composed filter.
 
 .. gp-howto-hli:: observations
@@ -110,17 +107,14 @@ The observations are stored as a list of `~gammapy.data.DataStoreObservation` ob
 .. code-block:: python
 
     >>> analysis.get_observations()
-    >>> list(analysis.observations)
-    [<gammapy.data.observations.DataStoreObservation at 0x11e040320>,
-     <gammapy.data.observations.DataStoreObservation at 0x11153d550>,
-     <gammapy.data.observations.DataStoreObservation at 0x110a84160>,
-     <gammapy.data.observations.DataStoreObservation at 0x110a84b38>]
+    >>> analysis.observations.ids
+    ['23592', '23523', '23526', '23559']
 
 Data reduction and datasets
 ---------------------------
 
 The data reduction process needs a choice of a dataset type, declared as ``1d`` or ``3d``
-in the ``datasets`` section of the settings. For the estimation of the background in a ``1d``
+in the ``type`` parameter of ``datasets`` section of the settings. For the estimation of the background in a ``1d``
 use case, a background ``method`` is needed, other parameters related like the ``on_region``
 and ``exclusion`` FITS file may be also present. Parameters for geometry are also needed and
 declared in this section, as well as a boolean flag ``stack``.
@@ -135,7 +129,7 @@ stored in the ``background`` property.
 .. code-block:: python
 
     >>> analysis.get_datasets()
-    >>> analysis.datasets.info_table()
+    >>> print(analysis.datasets)
 
 Model
 -----
@@ -146,7 +140,7 @@ datasets.
 
 .. code-block:: python
 
-    >>> analysis.read_model("model.yaml")
+    >>> analysis.read_models("model.yaml")
 
 If you have a `~gammapy.modeling.models.Models` object, or a YAML string representing
 one, you can use the `~gammapy.analysis.Analysis.set_models` method:
@@ -183,23 +177,15 @@ is stored in the ``flux_points`` property as a `~gammapy.spectrum.FluxPoints` ob
 
 .. code-block:: python
 
-    >>> analysis.get_flux_points()
+    >>> analysis.get_flux_points(source="crab")
     INFO:gammapy.analysis.analysis:Calculating flux points.
     INFO:gammapy.analysis.analysis:
-          e_ref               ref_flux                 dnde                 dnde_ul                dnde_err        is_ul
-           TeV              1 / (cm2 s)          1 / (cm2 s TeV)        1 / (cm2 s TeV)        1 / (cm2 s TeV)
-    ------------------ ---------------------- ---------------------- ---------------------- ---------------------- -----
-    1.1364636663857248   5.82540193791155e-12 1.6945571729283257e-11 2.0092001005968464e-11  1.491004091925887e-12 False
-    1.3768571648527583 2.0986802770569557e-12 1.1137098968561381e-11 1.4371773951168255e-11  1.483696107656724e-12 False
-    1.6681005372000581 3.0592927032553813e-12  8.330762241576842e-12   9.97704078861513e-12  7.761855010963746e-13 False
-    2.1544346900318834  1.991366151205521e-12  3.749504881244244e-12  4.655825384923802e-12  4.218641798406146e-13 False
-    2.6101572156825363  7.174167397335237e-13 2.3532638339895766e-12 3.2547227459669707e-12   4.05804720903438e-13 False
-    3.1622776601683777 1.0457942646403696e-12 1.5707172671966065e-12 2.0110274930777325e-12 2.0291499028818014e-13 False
-     3.831186849557287 3.7676160725948056e-13  6.988070884720634e-13 1.0900735920193252e-12 1.6898704308171627e-13 False
-    4.6415888336127775  5.492137361542478e-13 4.2471136559991427e-13  6.095655421226728e-13  8.225678668637978e-14 False
-     5.994842503189405 3.5749624179174077e-13 2.2261366353081893e-13  3.350617464903039e-13  4.898878805758816e-14 False
-      7.26291750173621 1.2879288326657447e-13 2.5317668601400673e-13 4.0803852787540073e-13  6.601201499048379e-14 False
-      8.79922543569107  1.877442373267013e-13  7.097738087032472e-14  1.254638299336029e-13 2.2705519890120373e-14 False
+          e_ref               ref_flux        ...        dnde_err        is_ul
+           TeV              1 / (cm2 s)       ...    1 / (cm2 s TeV)
+    ------------------ ---------------------- ... ---------------------- -----
+    1.4125375446227544  1.928877387452331e-11 ... 1.2505519776748809e-12 False
+    3.1622776601683795  7.426613493860134e-12 ...  2.106743519478604e-13 False
+      7.07945784384138 1.4907957189689605e-12 ...   4.74857915062012e-14 False
     >>> analysis.flux_points.peek()
 
 Residuals
