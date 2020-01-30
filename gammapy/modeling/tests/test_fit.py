@@ -2,13 +2,13 @@
 """Unit tests for the Fit class"""
 import pytest
 from numpy.testing import assert_allclose
-from gammapy.modeling import Fit, Parameter, Parameters
+from gammapy.modeling import Fit, Parameter, Parameters, Dataset
 from gammapy.utils.testing import requires_dependency
 
 pytest.importorskip("iminuit")
 
 
-class MyDataset:
+class MyDataset(Dataset):
     def __init__(self, name=""):
         self.name = name
         self.parameters = Parameters(
@@ -32,7 +32,9 @@ class MyDataset:
             + ((z - z_opt) / z_err) ** 2
         )
 
-
+    def stat_array(self):
+        """Statistic array, one value per data point."""
+    
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_run(backend):
     dataset = MyDataset()
