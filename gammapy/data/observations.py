@@ -9,23 +9,314 @@ from gammapy.irf import Background3D
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.table import table_row_to_dict
 from gammapy.utils.testing import Checker
-from gammapy.utils.time import time_ref_from_dict
 from ..irf import load_cta_irfs
 from .event_list import EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
 
-__all__ = ["ObservationBase", "DataStoreObservation", "Observation", "Observations"]
+__all__ = ["DataStoreObservation", "Observation", "Observations"]
 
 log = logging.getLogger(__name__)
 
 
-class ObservationBase:
-    """Observation base class."""
+class Observation:
+    """In-memory observation.
+
+    Parameters
+    ----------
+    obs_id : int
+        Observation id
+    obs_info : dict
+        Observation info dict
+    aeff : `~gammapy.irf.EffectiveAreaTable2D`
+        Effective area
+    edisp : `~gammapy.irf.EnergyDispersion2D`
+        Energy dispersion
+    psf : `~gammapy.irf.PSF3D`
+        Point spread function
+    bkg : `~gammapy.irf.Background3D`
+        Background rate model
+    gti : `~gammapy.data.GTI`
+        Table with GTI start and stop time
+    events : `~gammapy.data.EventList`
+        Event list
+    """
+    def __init__(
+        self,
+        obs_id=None,
+        obs_info=None,
+        gti=None,
+        aeff=None,
+        edisp=None,
+        psf=None,
+        bkg=None,
+        events=None,
+    ):
+        self.obs_id = obs_id
+        self.obs_info = obs_info
+        self.aeff = aeff
+        self.edisp = edisp
+        self.psf = psf
+        self.bkg = bkg
+        self.gti = gti
+        self.events = events
+
+    @staticmethod
+    def _get_obs_info(pointing, deadtime_fraction):
+        """Create obs info dict from in memory data"""
+        return {
+            "RA_PNT": pointing.icrs.ra.deg,
+            "DEC_PNT": pointing.icrs.dec.deg,
+            "DEADC": 1 - deadtime_fraction,
+        }
+
+    @classmethod
+    def create(
+        cls,
+        pointing,
+        obs_id=0,
+        livetime=None,
+        tstart=None,
+        tstop=None,
+        irfs=None,
+        deadtime_fraction=0.0,
+    ):
+        """Create an observation.
+
+        User must either provide the livetime, or the start and stop times.
+
+        Parameters
+        ----------
+        pointing : `~astropy.coordinates.SkyCoord`
+            Pointing position
+        obs_id : int
+            Observation ID as identifier
+        livetime : ~astropy.units.Quantity`
+            Livetime exposure of the simulated observation
+        tstart : `~astropy.units.Quantity`
+            Start time of observation
+        tstop : `~astropy.units.Quantity`
+            Stop time of observation
+        irfs : dict
+            IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`
+        deadtime_fraction : float, optional
+            Deadtime fraction, defaults to 0
+
+        Returns
+        -------
+        obs : `gammapy.data.MemoryObservation`
+        """
+        if "DataStore" in cls.__name__:
+            raise ValueError("DataStoreObservation cannot be created in memory")
+
+        tstart = tstart or Quantity(0.0, "hr")
+        tstop = (tstart + Quantity(livetime)) or tstop
+        gti = GTI.create([tstart], [tstop])
+
+        obs_info = cls._get_obs_info(pointing=pointing, deadtime_fraction=deadtime_fraction)
+
+        return cls(
+            obs_id=obs_id,
+            obs_info=obs_info,
+            gti=gti,
+            aeff=irfs.get("aeff"),
+            bkg=irfs.get("bkg"),
+            edisp=irfs.get("edisp"),
+            psf=irfs.get("psf"),
+        )
+
+    @classmethod
+    def from_caldb(
+        cls,
+        pointing,
+        obs_id=None,
+        livetime=None,
+        tstart=None,
+        tstop=None,
+        caldb="prod2",
+        irf="South0.5hr",
+        deadtime_fraction=0.0,
+    ):
+        """Create an observation using IRFs from a given CTA CALDB.
+
+        Parameters
+        ----------
+        pointing : `~astropy.coordinates.SkyCoord`
+            Pointing position
+        obs_id : int
+            Observation ID as identifier
+        livetime : ~astropy.units.Quantity`
+            Livetime exposure of the simulated observation
+        tstart : `~astropy.units.Quantity`
+            Start time of observation
+        tstop : `~astropy.units.Quantity`
+            Stop time of observation
+        caldb : str
+            Calibration database
+        irf : str
+            Type of Instrumental response function.
+        deadtime_fraction : float, optional
+            Deadtime fraction, defaults to 0
+
+        Returns
+        -------
+        obs : `gammapy.data.Observation`
+        """
+        from .data_store import CalDBIRF
+
+        irf_loc = CalDBIRF("CTA", caldb, irf)
+        filename = irf_loc.file_dir + irf_loc.file_name
+        irfs = load_cta_irfs(filename)
+        return cls.create(
+            pointing=pointing,
+            obs_id=obs_id,
+            livetime=livetime,
+            tstart=tstart,
+            tstop=tstop,
+            irfs=irfs,
+            deadtime_fraction=deadtime_fraction,
+        )
+
+    @property
+    def tstart(self):
+        """Observation start time (`~astropy.time.Time`)."""
+        return self.gti.time_start[0]
+
+    @property
+    def tstop(self):
+        """Observation stop time (`~astropy.time.Time`)."""
+        return self.gti.time_stop[0]
+
+    @property
+    def observation_time_duration(self):
+        """Observation time duration in seconds (`~astropy.units.Quantity`).
+
+        The wall time, including dead-time.
+        """
+        return self.gti.time_sum
+
+    @property
+    def observation_live_time_duration(self):
+        """Live-time duration in seconds (`~astropy.units.Quantity`).
+
+        The dead-time-corrected observation time.
+
+        Computed as ``t_live = t_observation * (1 - f_dead)``
+        where ``f_dead`` is the dead-time fraction.
+        """
+        return self.observation_time_duration * (1 - self.observation_dead_time_fraction)
+
+    @property
+    def observation_dead_time_fraction(self):
+        """Dead-time fraction (float).
+
+        Defined as dead-time over observation time.
+
+        Dead-time is defined as the time during the observation
+        where the detector didn't record events:
+        https://en.wikipedia.org/wiki/Dead_time
+        https://ui.adsabs.harvard.edu/abs/2004APh....22..285F
+
+        The dead-time fraction is used in the live-time computation,
+        which in turn is used in the exposure and flux computation.
+        """
+        return 1 - self.obs_info["DEADC"]
+
+    @property
+    def pointing_radec(self):
+        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        lon, lat = self.obs_info.get("RA_PNT", np.nan), self.obs_info.get("DEC_PNT", np.nan)
+        return SkyCoord(lon, lat, unit="deg", frame="icrs")
+
+    @property
+    def pointing_altaz(self):
+        """Pointing ALT / AZ sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        alt, az = self.obs_info.get("ALT_PNT", np.nan), self.obs_info.get("AZ_PNT", np.nan)
+        return SkyCoord(az, alt, unit="deg", frame="altaz")
+
+    @property
+    def pointing_zen(self):
+        """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
+        return Quantity(self.obs_info.get("ZEN_PNT", np.nan), unit="deg")
+
+    @property
+    def fixed_pointing_info(self):
+        """Fixed pointing info for this observation (`FixedPointingInfo`)."""
+        return FixedPointingInfo(self.events.table.meta)
+
+    @property
+    def target_radec(self):
+        """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        lon, lat = self.obs_info.get("RA_OBJ", np.nan), self.obs_info.get("DEC_OBJ", np.nan)
+        return SkyCoord(lon, lat, unit="deg", frame="icrs")
+
+    @property
+    def observatory_earth_location(self):
+        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        return earth_location_from_dict(self.obs_info)
+
+    @property
+    def muoneff(self):
+        """Observation muon efficiency."""
+        return self.obs_info.get("MUONEFF", 1)
+
+    def __str__(self):
+        ra = self.pointing_radec.ra.deg
+        dec = self.pointing_radec.dec.deg
+
+        pointing = f"{ra:.1f} deg, {dec:.1f} deg\n"
+        # TODO: Which target was observed?
+        # TODO: print info about available HDUs for this observation ...
+        return (
+            f"{self.__class__.__name__}\n\n"
+            f"\tobs id            : {self.obs_id} \n "
+            f"\ttstart            : {self.tstart.mjd:.2f}\n"
+            f"\ttstop             : {self.tstop.mjd:.2f}\n"
+            f"\tduration          : {self.observation_time_duration:.2f}\n"
+            f"\tpointing (icrs)   : {pointing}\n"
+            f"\tdeadtime fraction : {self.observation_dead_time_fraction:.1%}\n"
+        )
+
+    def peek(self, figsize=(12, 10)):
+        """Quick-look plots in a few panels.
+
+        Parameters
+        ----------
+        figszie : tuple
+            Figure size
+        """
+        import matplotlib.pyplot as plt
+
+        fig, ((ax_aeff, ax_bkg), (ax_psf, ax_edisp)) = plt.subplots(
+            nrows=2,
+            ncols=2,
+            figsize=figsize,
+            gridspec_kw={"wspace": 0.25, "hspace": 0.25},
+        )
+
+        self.aeff.plot(ax=ax_aeff)
+
+        try:
+            if isinstance(self.bkg, Background3D):
+                bkg = self.bkg.to_2d()
+            else:
+                bkg = self.bkg
+
+            bkg.plot(ax=ax_bkg)
+        except IndexError:
+            logging.warning(f"No background model found for obs {self.obs_id}.")
+
+        self.psf.plot_containment_vs_energy(ax=ax_psf)
+        self.edisp.plot_bias(ax=ax_edisp, add_cbar=True)
+
+        ax_aeff.set_title("Effective area")
+        ax_bkg.set_title("Background rate")
+        ax_psf.set_title("Point spread function")
+        ax_edisp.set_title("Energy dispersion")
 
 
-class DataStoreObservation(ObservationBase):
+class DataStoreObservation(Observation):
     """IACT data store observation.
 
     Parameters
@@ -48,21 +339,6 @@ class DataStoreObservation(ObservationBase):
         self.obs_id = obs_id
         self.data_store = data_store
         self.obs_filter = obs_filter or ObservationFilter()
-
-    def __str__(self):
-        ss = f"Info for OBS_ID = {self.obs_id}\n"
-        ss += f"- Start time: {self.tstart.mjd:.2f}\n"
-        ss += "- Pointing pos: RA {:.2f} / Dec {:.2f}\n".format(
-            self.pointing_radec.ra, self.pointing_radec.dec
-        )
-        ss += f"- Observation duration: {self.observation_time_duration}\n"
-        ss += "- Dead-time fraction: {:5.3f} %\n".format(
-            100 * self.observation_dead_time_fraction
-        )
-
-        # TODO: Which target was observed?
-        # TODO: print info about available HDUs for this observation ...
-        return ss
 
     def location(self, hdu_type=None, hdu_class=None):
         """HDU location object.
@@ -146,126 +422,6 @@ class DataStoreObservation(ObservationBase):
         """Observation information (`dict`)."""
         row = self.data_store.obs_table.select_obs_id(obs_id=self.obs_id)[0]
         return table_row_to_dict(row)
-
-    @property
-    def tstart(self):
-        """Observation start time (`~astropy.time.Time`)."""
-        met_ref = time_ref_from_dict(self.data_store.obs_table.meta)
-        met = Quantity(self.obs_info["TSTART"].astype("float64"), "second")
-        time = met_ref + met
-        return time
-
-    @property
-    def tstop(self):
-        """Observation stop time (`~astropy.time.Time`)."""
-        met_ref = time_ref_from_dict(self.data_store.obs_table.meta)
-        met = Quantity(self.obs_info["TSTOP"].astype("float64"), "second")
-        time = met_ref + met
-        return time
-
-    @property
-    def observation_time_duration(self):
-        """Observation time duration in seconds (`~astropy.units.Quantity`).
-
-        The wall time, including dead-time.
-        """
-        return self.gti.time_sum
-
-    @property
-    def observation_live_time_duration(self):
-        """Live-time duration in seconds (`~astropy.units.Quantity`).
-
-        The dead-time-corrected observation time.
-
-        Computed as ``t_live = t_observation * (1 - f_dead)``
-        where ``f_dead`` is the dead-time fraction.
-        """
-        return self.gti.time_sum * (1 - self.observation_dead_time_fraction)
-
-    @property
-    def observation_dead_time_fraction(self):
-        """Dead-time fraction (float).
-
-        Defined as dead-time over observation time.
-
-        Dead-time is defined as the time during the observation
-        where the detector didn't record events:
-        https://en.wikipedia.org/wiki/Dead_time
-        https://ui.adsabs.harvard.edu/abs/2004APh....22..285F
-
-        The dead-time fraction is used in the live-time computation,
-        which in turn is used in the exposure and flux computation.
-        """
-        return 1 - self.obs_info["DEADC"]
-
-    @property
-    def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        lon, lat = self.obs_info["RA_PNT"], self.obs_info["DEC_PNT"]
-        return SkyCoord(lon, lat, unit="deg", frame="icrs")
-
-    @property
-    def pointing_altaz(self):
-        """Pointing ALT / AZ sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        alt, az = self.obs_info["ALT_PNT"], self.obs_info["AZ_PNT"]
-        return SkyCoord(az, alt, unit="deg", frame="altaz")
-
-    @property
-    def pointing_zen(self):
-        """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
-        return Quantity(self.obs_info["ZEN_PNT"], unit="deg")
-
-    @property
-    def fixed_pointing_info(self):
-        """Fixed pointing info for this observation (`FixedPointingInfo`)."""
-        return FixedPointingInfo(self.events.table.meta)
-
-    @property
-    def target_radec(self):
-        """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        lon, lat = self.obs_info["RA_OBJ"], self.obs_info["DEC_OBJ"]
-        return SkyCoord(lon, lat, unit="deg", frame="icrs")
-
-    @property
-    def observatory_earth_location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        return earth_location_from_dict(self.obs_info)
-
-    @property
-    def muoneff(self):
-        """Observation muon efficiency."""
-        return self.obs_info["MUONEFF"]
-
-    def peek(self, figsize=(12, 10)):
-        """Quick-look plots in a few panels."""
-        import matplotlib.pyplot as plt
-
-        fig, ((ax_aeff, ax_bkg), (ax_psf, ax_edisp)) = plt.subplots(
-            nrows=2,
-            ncols=2,
-            figsize=figsize,
-            gridspec_kw={"wspace": 0.25, "hspace": 0.25},
-        )
-
-        self.aeff.plot(ax=ax_aeff)
-
-        try:
-            if isinstance(self.bkg, Background3D):
-                bkg = self.bkg.to_2d()
-            else:
-                bkg = self.bkg
-
-            bkg.plot(ax=ax_bkg)
-        except IndexError:
-            logging.warning(f"No background model found for obs {self.obs_id}.")
-
-        self.psf.plot_containment_vs_energy(ax=ax_psf)
-        self.edisp.plot_bias(ax=ax_edisp, add_cbar=True)
-
-        ax_aeff.set_title("Effective area")
-        ax_bkg.set_title("Background rate")
-        ax_psf.set_title("Point spread function")
-        ax_edisp.set_title("Energy dispersion")
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.
@@ -371,180 +527,6 @@ class Observations(collections.abc.MutableSequence):
                     new_obs_list.append(new_obs)
 
         return self.__class__(new_obs_list)
-
-
-class Observation(ObservationBase):
-    """In-memory observation.
-
-    Parameters
-    ----------
-    obs_id : int
-        Observation ID as identifier
-    pointing : `~astropy.coordinates.SkyCoord`
-        Pointing position in icrs coordinates
-    aeff : `~gammapy.irf.EffectiveAreaTable2D`
-        Effective area used for simulating the observation
-    edisp : `~gammapy.irf.EnergyDispersion2D`
-        Energy dispersion IRF for simulating the observation
-    psf : `~gammapy.irf.PSF3D`
-        PSF IRF  used for simulating the observation
-    bkg : `~gammapy.irf.Background3D`
-        Background rate model
-    gti : `~gammapy.data.GTI`
-        Table with GTI start and stop time
-    deadtime : float, optional
-        Deadtime fraction, defaults to 0
-    """
-
-    def __init__(
-        self,
-        obs_id=None,
-        gti=None,
-        pointing=None,
-        aeff=None,
-        edisp=None,
-        psf=None,
-        bkg=None,
-        deadtime_fraction=0.0,
-    ):
-        self.obs_id = obs_id
-        self.pointing_radec = pointing
-        self.aeff = aeff
-        self.edisp = edisp
-        self.psf = psf
-        self.bkg = bkg
-        self.gti = gti
-        self.observation_dead_time_fraction = deadtime_fraction
-
-    def __str__(self):
-        ss = "Info for OBS_ID = {}\n".format(self.obs_id)
-
-        ss += "- Pointing pos: RA {:.2f} / Dec {:.2f}\n".format(
-            self.pointing_radec.ra, self.pointing_radec.dec
-        )
-
-        ss += "- Livetime duration: {}\n".format(self.observation_live_time_duration)
-        return ss
-
-    @property
-    def tstart(self):
-        return self.gti.time_start[0]
-
-    @property
-    def tstop(self):
-        return self.gti.time_stop[0]
-
-    @property
-    def observation_time_duration(self):
-        return self.gti.time_delta[0]
-
-    @property
-    def observation_live_time_duration(self):
-        return self.observation_time_duration * (
-            1 - self.observation_dead_time_fraction
-        )
-
-    @classmethod
-    def create(
-        cls,
-        pointing,
-        obs_id=0,
-        livetime=None,
-        tstart=None,
-        tstop=None,
-        irfs=None,
-        deadtime_fraction=0.0,
-    ):
-        """Create an observation.
-
-        User must either provide the livetime, or the start and stop times.
-
-        Parameters
-        ----------
-        pointing : `~astropy.coordinates.SkyCoord`
-            Pointing position
-        obs_id : int
-            Observation ID as identifier
-        livetime : ~astropy.units.Quantity`
-            Livetime exposure of the simulated observation
-        tstart : `~astropy.units.Quantity`
-            Start time of observation
-        tstop : `~astropy.units.Quantity`
-            Stop time of observation
-        irfs : dict
-            IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`
-        deadtime_fraction : float, optional
-            Deadtime fraction, defaults to 0
-
-        Returns
-        -------
-        obs : `gammapy.data.MemoryObservation`
-        """
-        tstart = tstart or Quantity(0.0, "hr")
-        tstop = (tstart + Quantity(livetime)) or tstop
-        gti = GTI.create([tstart], [tstop])
-        return cls(
-            obs_id=obs_id,
-            pointing=pointing.icrs,
-            gti=gti,
-            aeff=irfs.get("aeff"),
-            bkg=irfs.get("bkg"),
-            edisp=irfs.get("edisp"),
-            psf=irfs.get("psf"),
-            deadtime_fraction=deadtime_fraction,
-        )
-
-    @classmethod
-    def from_caldb(
-        cls,
-        pointing,
-        obs_id=None,
-        livetime=None,
-        tstart=None,
-        tstop=None,
-        caldb="prod2",
-        irf="South0.5hr",
-        deadtime_fraction=0.0,
-    ):
-        """Create an observation using IRFs from a given CTA CALDB.
-
-        Parameters
-        ----------
-        pointing : `~astropy.coordinates.SkyCoord`
-            Pointing position
-        obs_id : int
-            Observation ID as identifier
-        livetime : ~astropy.units.Quantity`
-            Livetime exposure of the simulated observation
-        tstart : `~astropy.units.Quantity`
-            Start time of observation
-        tstop : `~astropy.units.Quantity`
-            Stop time of observation
-        caldb : str
-            Calibration database
-        irf : str
-            Type of Instrumental response function.
-        deadtime_fraction : float, optional
-            Deadtime fraction, defaults to 0
-
-        Returns
-        -------
-        obs : `gammapy.data.Observation`
-        """
-        from .data_store import CalDBIRF
-
-        irf_loc = CalDBIRF("CTA", caldb, irf)
-        filename = irf_loc.file_dir + irf_loc.file_name
-        irfs = load_cta_irfs(filename)
-        cls.create(
-            pointing=pointing,
-            obs_id=obs_id,
-            livetime=livetime,
-            tstart=tstart,
-            tstop=tstop,
-            irfs=irfs,
-            deadtime_fraction=deadtime_fraction,
-        )
 
 
 class ObservationChecker(Checker):

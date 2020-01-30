@@ -140,8 +140,8 @@ def assert_skycoord_allclose(actual, desired):
     """
     assert isinstance(actual, SkyCoord)
     assert isinstance(desired, SkyCoord)
-    assert_allclose(actual.data.lon.value, desired.data.lon.value)
-    assert_allclose(actual.data.lat.value, desired.data.lat.value)
+    assert_allclose(actual.data.lon.deg, desired.data.lon.deg)
+    assert_allclose(actual.data.lat.deg, desired.data.lat.deg)
 
 
 def assert_time_allclose(actual, desired, atol=1e-3):
