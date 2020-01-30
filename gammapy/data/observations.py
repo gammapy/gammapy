@@ -316,10 +316,16 @@ class Observations(collections.abc.MutableSequence):
         del self._observations[self._get_idx(key)]
 
     def __setitem__(self, key, obs):
-        self._observations[self._get_idx(key)] = obs
+        if isinstance(obs, (Observation, DataStoreObservation)):
+            self._observations[self._get_idx(key)] = obs
+        else:
+            raise TypeError(f"Invalid type: {type(obs)!r}")
 
     def insert(self, idx, obs):
-        self._observations.insert(idx, obs)
+        if isinstance(obs, (Observation, DataStoreObservation)):
+            self._observations.insert(idx, obs)
+        else:
+            raise TypeError(f"Invalid type: {type(obs)!r}")
 
     def __len__(self):
         return len(self._observations)
