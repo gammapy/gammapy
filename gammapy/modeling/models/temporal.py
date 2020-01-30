@@ -137,9 +137,23 @@ class PhaseCurveTemplateTemporalModel(TemporalModel):
     f1 = Parameter("f1", 0)
     f2 = Parameter("f2", 0)
 
-    def __init__(self, table, time_0, phase_0, f0, f1=0, f2=0):
+    def __init__(
+        self,
+        table,
+        time_0=time_0.quantity,
+        phase_0=phase_0.quantity,
+        f0=f0.quantity,
+        f1=f1.quantity,
+        f2=f2.quantity,
+        filename=None,
+    ):
         self.table = table
-        super().__init__(time_0=time_0, phase_0=phase_0, f0=f0, f1=f1, f2=f2)
+        if filename is not None:
+            filename = str(make_path(filename))
+        self.filename = filename
+        super().__init__(
+            time_0=time_0, phase_0=phase_0, f0=f0, f1=f1, f2=f2, filename=filename
+        )
 
     def phase(self, time):
         """Evaluate phase for a given time.
@@ -232,6 +246,31 @@ class PhaseCurveTemplateTemporalModel(TemporalModel):
 
         return t_min + time
 
+    @classmethod
+    def read(cls, path):
+        """Read lightcurve model table from FITS file.
+
+        TODO: This doesn't read the XML part of the model yet.
+        """
+        filename = make_path(path)
+        return cls(Table.read(filename), filename=filename)
+
+    @classmethod
+    def from_dict(cls, data):
+        model = cls.read(data["filename"])
+        model._update_from_dict(data)
+        return model
+
+    def to_dict(self, overwrite=False):
+        """Create dict for YAML serilisation"""
+        if self.filename is None:
+            raise ValueError(f"filename is required for {self.tag} serialization")
+        else:
+            self.table.write(self.filename)
+        data = super().to_dict()
+        data["filename"] = self.filename
+        return data
+
 
 class LightCurveTemplateTemporalModel(TemporalModel):
     """Temporal light curve model.
@@ -282,8 +321,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     tag = "LightCurveTemplateTemporalModel"
 
-    def __init__(self, table):
+    def __init__(self, table, filename=None):
         self.table = table
+        if filename is not None:
+            filename = str(make_path(filename))
+        self.filename = filename
         super().__init__()
 
     def __str__(self):
@@ -295,14 +337,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             f"Norm min: {norm.min()}\n"
             f"Norm max: {norm.max()}\n"
         )
-
-    @classmethod
-    def read(cls, path):
-        """Read lightcurve model table from FITS file.
-
-        TODO: This doesn't read the XML part of the model yet.
-        """
-        return cls(Table.read(make_path(path)))
 
     @lazyproperty
     def _interpolator(self):
@@ -402,3 +436,24 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
 
         return t_min + time
+
+    @classmethod
+    def read(cls, path):
+        """Read lightcurve model table from FITS file.
+
+        TODO: This doesn't read the XML part of the model yet.
+        """
+        filename = make_path(path)
+        return cls(Table.read(filename), filename=filename)
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls.read(data["filename"])
+
+    def to_dict(self, overwrite=False):
+        """Create dict for YAML serilisation"""
+        if self.filename is None:
+            raise ValueError(f"filename is required for {self.tag} serialization")
+        else:
+            self.table.write(self.filename, overwrite=False)
+        return {"type": self.tag, "filename": self.filename}
