@@ -1193,31 +1193,19 @@ class MapDatasetOnOff(MapDataset):
         empty_maps : `MapDatasetOnOff`
             A MapDatasetOnOff containing zero filled maps
         """
-        maps = {}
-        for aname in ["counts", "counts_off", "acceptance", "acceptance_off"]:
-            maps[aname] = Map.from_geom(geom, unit="")
+        kwargs = kwargs.copy()
+        kwargs["name"] = name
 
-        exposure = Map.from_geom(geom_exposure, unit="m2 s")
-        edisp = EDispMap.from_geom(geom_edisp)
-        psf = PSFMap.from_geom(geom_psf)
+        for key in ["counts", "counts_off", "acceptance", "acceptance_off"]:
+            kwargs[key] = Map.from_geom(geom, unit="")
 
-        gti = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
+        kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
+        kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
+        kwargs["psf"] = PSFMap.from_geom(geom_psf)
+        kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
+        kwargs["mask_safe"] = Map.from_geom(geom, dtype=bool)
 
-        mask_safe = Map.from_geom(geom, dtype=bool)
-
-        return cls(
-            counts=maps["counts"],
-            counts_off=maps["counts_off"],
-            acceptance=maps["acceptance"],
-            acceptance_off=maps["acceptance_off"],
-            exposure=exposure,
-            psf=psf,
-            edisp=edisp,
-            gti=gti,
-            mask_safe=mask_safe,
-            name=name,
-            **kwargs,
-        )
+        return cls(**kwargs)
 
     def _is_stackable(self):
         """Check if the Dataset contains enough information to be stacked"""
