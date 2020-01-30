@@ -526,7 +526,7 @@ def test_stack(geom, geom_etrue):
     )
     dataset1.stack(dataset2)
     assert_allclose(dataset1.counts.data.sum(), 7987)
-    assert_allclose(dataset1.background_model.map.data.sum(), 5988)
+    assert_allclose(dataset1.background_model.map.data.sum(), 5987)
     assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
     assert_allclose(dataset1.mask_safe.data.sum(), 20000)
 

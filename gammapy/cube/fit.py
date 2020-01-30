@@ -1482,9 +1482,9 @@ class MapDatasetOnOff(MapDataset):
         dataset = super().to_image(spectrum, name)
 
         if self.mask_safe is not None:
-            mask_safe = 1
-        else:
             mask_safe = self.mask_safe
+        else:
+            mask_safe = 1
 
         if self.counts_off is not None:
             counts_off = self.counts_off * mask_safe
