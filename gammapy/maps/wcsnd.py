@@ -672,9 +672,13 @@ class WcsNDMap(WcsMap):
         geom_cutout = self.geom.cutout(position=position, width=width, mode=mode)
 
         slices = geom_cutout.cutout_info["parent-slices"]
+        parent_slices = Ellipsis, slices[0], slices[1]
+
+        slices = geom_cutout.cutout_info["cutout-slices"]
         cutout_slices = Ellipsis, slices[0], slices[1]
 
-        data = self.data[cutout_slices]
+        data = np.zeros(shape=geom_cutout.data_shape)
+        data[cutout_slices] = self.data[parent_slices]
 
         return self._init_copy(geom=geom_cutout, data=data)
 
