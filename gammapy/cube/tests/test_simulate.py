@@ -182,10 +182,41 @@ def test_mde_run(dataset):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
 
-    assert len(events.table) == 2349
-    assert_allclose(events.table["ENERGY"][0], 1.894698, rtol=1e-5)
-    assert_allclose(events.table["RA"][0], 266.454448, rtol=1e-5)
-    assert_allclose(events.table["DEC"][0], -30.870316, rtol=1e-5)
+    assert len(events.table) == 2422
+    assert_allclose(events.table["ENERGY"][0], 1.56446303986587, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 268.8180057255861, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -28.45051813404372, rtol=1e-5)
+
+    meta = events.table.meta
+
+    assert meta["RA_PNT"] == 266.4049882865447
+    assert meta["ONTIME"] == 36000.0
+    assert meta["OBS_ID"] == 1001
+    assert meta["RADECSYS"] == "icrs"
+
+
+@requires_data()
+def test_mde_run_switchoff(dataset):
+    irfs = load_cta_irfs(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    livetime = 10.0 * u.hr
+    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    obs = Observation.create(
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+    )
+
+    dataset.psf = None
+    dataset.edisp = None
+    dataset.background_model = None
+
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.run(dataset=dataset, observation=obs)
+
+    assert len(events.table) == 2407
+    assert_allclose(events.table["ENERGY"][0], 2.2450239000119323, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 266.9128884464542, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -29.034641131874313, rtol=1e-5)
 
     meta = events.table.meta
 

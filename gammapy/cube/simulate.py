@@ -335,13 +335,25 @@ class MapDatasetEventSampler:
         events : `~gammapy.data.EventList`
             Event list.
         """
-        events_bkg = self.sample_background(dataset)
         events_src = self.sample_sources(dataset)
-        events_src = self.sample_psf(dataset.psf, events_src)
 
-        events_src = self.sample_edisp(dataset.edisp, events_src)
+        if dataset.psf:
+            events_src = self.sample_psf(dataset.psf, events_src)
+        else:
+            events_src.table["RA"] = events_src.table["RA_TRUE"]
+            events_src.table["DEC"] = events_src.table["DEC_TRUE"]
 
-        events = EventList.stack([events_bkg, events_src])
+        if dataset.edisp:
+            events_src = self.sample_edisp(dataset.edisp, events_src)
+        else:
+            events_src.table["ENERGY"] = events_src.table["ENERGY_TRUE"]
+
+        if dataset.background_model:
+            events_bkg = self.sample_background(dataset)
+            events = EventList.stack([events_bkg, events_src])
+        else:
+            events = events_src
+
         events.table["EVENT_ID"] = np.arange(len(events.table))
         events.table.meta = self.event_list_meta(dataset, observation)
 
