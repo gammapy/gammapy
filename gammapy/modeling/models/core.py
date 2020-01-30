@@ -201,9 +201,14 @@ class Models(collections.abc.MutableSequence):
         del self._models[self._get_idx(key)]
 
     def __setitem__(self, key, model):
-        if model.name in self.names:
-            raise (ValueError("Model names must be unique"))
-        self._models[self._get_idx(key)] = model
+        from gammapy.modeling.models import SkyModel, SkyDiffuseCube
+
+        if isinstance(model, (SkyModel, SkyDiffuseCube)):
+            if model.name in self.names:
+                raise (ValueError("Model names must be unique"))
+            self._models[self._get_idx(key)] = model
+        else:
+            raise TypeError(f"Invalid type: {model!r}")
 
     def insert(self, idx, model):
         if model.name in self.names:

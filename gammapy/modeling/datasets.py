@@ -264,14 +264,20 @@ class Datasets(collections.abc.MutableSequence):
         del self._datasets[self._get_idx(key)]
 
     def __setitem__(self, key, dataset):
-        if dataset.name in self.names:
-            raise (ValueError("Dataset names must be unique"))
-        self._datasets[self._get_idx(key)] = dataset
+        if isinstance(dataset, Dataset):
+            if dataset.name in self.names:
+                raise (ValueError("Dataset names must be unique"))
+            self._datasets[self._get_idx(key)] = dataset
+        else:
+            raise TypeError(f"Invalid type: {type(dataset)!r}")
 
     def insert(self, idx, dataset):
-        if dataset.name in self.names:
-            raise (ValueError("Dataset names must be unique"))
-        self._datasets.insert(idx, dataset)
+        if isinstance(dataset, Dataset):
+            if dataset.name in self.names:
+                raise (ValueError("Dataset names must be unique"))
+            self._datasets.insert(idx, dataset)
+        else:
+            raise TypeError(f"Invalid type: {type(dataset)!r}")
 
     def _get_idx(self, key):
         if isinstance(key, (int, slice)):
