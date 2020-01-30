@@ -41,6 +41,9 @@ datasets:
     background:
         method: reflected
         exclusion:    # fits file for exclusion mask
+    safe_mask:
+            methods: ['aeff-default','offset-max' ]
+            settings: {offset_max: 2.5 deg, aeff_percent: 10.0, bias_percent: 10.0}
     on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
     containment_correction: true
 
