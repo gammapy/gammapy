@@ -1255,11 +1255,11 @@ class MapDatasetOnOff(MapDataset):
         # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
         tmp_factor = (self.alpha * self.counts_off).copy()
         tmp_factor.data[~self.mask_safe.data] = 0
-        tmp_factor.stack(other.alpha * other.counts_off, weights=other.mask_safe.data)
+        tmp_factor.stack(other.alpha * other.counts_off, weights=other.mask_safe)
 
         # Stack the off counts (in place)
         self.counts_off.data[~self.mask_safe.data] = 0
-        self.counts_off.stack(other.counts_off, weights=other.mask_safe.data)
+        self.counts_off.stack(other.counts_off, weights=other.mask_safe)
 
         self.acceptance_off = self.counts_off / tmp_factor
         self.acceptance.data = np.ones(self.data_shape)
