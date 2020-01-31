@@ -196,7 +196,7 @@ from astropy.coordinates import Angle, EarthLocation
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
-from .scripts import make_path
+
 
 __all__ = ["energy_axis_to_ebounds", "earth_location_from_dict"]
 
@@ -220,48 +220,6 @@ def fits_header_to_meta_dict(header):
     meta.pop("HISTORY", None)
 
     return meta
-
-
-def _fits_table_to_table(hdu):
-    """Convert `astropy.io.fits.BinTableHDU` to `astropy.table.Table`.
-
-    See `table_to_fits_table` to convert in the other direction and
-    :ref:`utils-fits-tables` for a description and examples.
-
-    TODO: The name of the table is stored in the Table meta information
-    under the ``name`` keyword.
-
-    Additional column information ``description`` and ``ucd`` can will be
-    read from the header and stored in the column.meta attribute.
-
-    Parameters
-    ----------
-    hdu : `~astropy.io.fits.BinTableHDU`
-        FITS bin table containing the astropy table columns
-
-    Returns
-    -------
-    table : `~astropy.table.Table`
-        astropy table containing the desired columns
-    """
-    # Re-use Astropy BinTableHDU -> Table implementation
-    table = Table.read(hdu)
-
-    # In addition, copy over extra column meta-data from the HDU
-    for idx, colname in enumerate(hdu.columns.names):
-        idx = str(idx + 1)
-        col = table[colname]
-
-        # Unit is already handled correctly in Astropy since a long time
-        # col.unit = hdu.columns[colname].unit
-
-        description = hdu.header.pop("TCOMM" + idx, None)
-        col.meta["description"] = description
-
-        ucd = hdu.header.pop("TUCD" + idx, None)
-        col.meta["ucd"] = ucd
-
-    return table
 
 
 def energy_axis_to_ebounds(energy):
