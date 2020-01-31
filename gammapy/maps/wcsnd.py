@@ -690,7 +690,8 @@ class WcsNDMap(WcsMap):
         other : `WcsNDMap`
             Other map to stack
         weights : `WcsNDMap`
-            Array to be used as weights.
+            Array to be used as weights. The spatial geometry must be equivalent
+            to `other` and additional axes must be broadcastable.
         """
         if self.geom == other.geom:
             parent_slices, cutout_slices = None, None
@@ -708,6 +709,9 @@ class WcsNDMap(WcsMap):
         data = other.data[cutout_slices]
 
         if weights is not None:
+            if not other.geom.to_image() == weights.geom.to_image():
+                raise ValueError("Incompatible spatial geoms between map and weights")
+
             data = data * weights.data[cutout_slices]
 
         self.data[parent_slices] += data
