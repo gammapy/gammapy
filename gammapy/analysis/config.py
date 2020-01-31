@@ -120,6 +120,7 @@ class TimeRangeConfig(GammapyBaseConfig):
 
 class FluxPointsConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig()
+    source: str = "source"
     params: dict = {}
 
 class FitConfig(GammapyBaseConfig):
