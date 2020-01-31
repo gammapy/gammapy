@@ -180,7 +180,7 @@ def test_to_dict(phase_curve, light_curve):
     assert out["type"] == "LightCurveTemplateTemporalModel"
     assert "lightcrv_PKSB1222+216.fits" in out["filename"]
 
-
+@requires_data()
 def test_with_skymodel(phase_curve, light_curve):
 
     sky_model = SkyModel(spectral_model=PowerLawSpectralModel())

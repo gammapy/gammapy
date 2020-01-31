@@ -5,6 +5,7 @@ from astropy.coordinates import Angle
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.analysis.config import AnalysisConfig, FrameEnum, GeneralConfig
+from pydantic import ValidationError
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 DOC_FILE = CONFIG_PATH / "docs.yaml"
@@ -23,11 +24,11 @@ def test_config_default_types():
     assert config.datasets.geom.wcs.skydir.lat is None
     assert isinstance(config.datasets.geom.wcs.binsize, Angle)
     assert isinstance(config.datasets.geom.wcs.binsize_irf, Angle)
-    assert isinstance(config.datasets.geom.selection.offset_max, Angle)
     assert isinstance(config.datasets.geom.axes.energy.min, Quantity)
     assert isinstance(config.datasets.geom.axes.energy.max, Quantity)
     assert isinstance(config.datasets.geom.axes.energy_true.min, Quantity)
     assert isinstance(config.datasets.geom.axes.energy_true.max, Quantity)
+    assert isinstance(config.datasets.geom.selection.offset_max, Angle)
     assert isinstance(config.fit.fit_range.min, Quantity)
     assert isinstance(config.fit.fit_range.max, Quantity)
 
@@ -87,3 +88,12 @@ def test_get_doc_sections():
     config = AnalysisConfig()
     doc = config._get_doc_sections()
     assert "general" in doc.keys()
+
+
+def test_safe_mask_config_validation():
+    config = AnalysisConfig()
+    # Check empty list is accepted
+    config.datasets.safe_mask.methods = []
+
+    with pytest.raises(ValidationError):
+        config.datasets.safe_mask.methods = ['bad']

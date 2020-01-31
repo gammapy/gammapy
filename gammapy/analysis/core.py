@@ -243,7 +243,10 @@ class Analysis:
         log.info("Creating datasets.")
 
         maker = MapDatasetMaker(selection=self.config.datasets.map_selection)
-        maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=offset_max)
+
+        safe_mask_selection = self.config.datasets.safe_mask.methods
+        safe_mask_settings = self.config.datasets.safe_mask.settings
+        maker_safe_mask = SafeMaskMaker(methods=safe_mask_selection, **safe_mask_settings)
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
         if self.config.datasets.stack:
@@ -289,7 +292,11 @@ class Analysis:
             exclusion_region = Map.read(datasets_settings.background.exclusion)
             bkg_maker_config["exclusion_mask"] = exclusion_region
         bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
-        safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "aeff-max"])
+
+
+        safe_mask_selection = self.config.datasets.safe_mask.methods
+        safe_mask_settings = self.config.datasets.safe_mask.settings
+        safe_mask_maker = SafeMaskMaker(methods=safe_mask_selection, **safe_mask_settings)
 
         e_true = self._make_energy_axis(datasets_settings.geom.axes.energy_true).edges
 

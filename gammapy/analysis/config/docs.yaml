@@ -34,8 +34,6 @@ datasets:
             binsize: 0.1 deg
             fov: {width: 7 deg, height: 5 deg}
             binsize_irf: 0.1 deg
-        selection:
-            offset_max: 2.5 deg
         axes:
             energy: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
             energy_true: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
@@ -43,6 +41,9 @@ datasets:
     background:
         method: reflected
         exclusion:    # fits file for exclusion mask
+    safe_mask:
+            methods: ['aeff-default','offset-max' ]
+            settings: {offset_max: 2.5 deg}
     on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
     containment_correction: true
 
