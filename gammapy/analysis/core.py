@@ -239,13 +239,13 @@ class Analysis:
                 geom_settings.axes.energy_true
             )
         geom_irf["binsz_irf"] = geom_settings.wcs.binsize_irf.to("deg").value
+        offset_max = geom_settings.selection.offset_max
         log.info("Creating datasets.")
 
         maker = MapDatasetMaker(selection=self.config.datasets.map_selection)
 
         safe_mask_selection = self.config.datasets.safe_mask.methods
-        safe_mask_settings = self.config.datasets.safe_mask.settings.dict()
-        offset_max = safe_mask_settings['offset_max']
+        safe_mask_settings = self.config.datasets.safe_mask.settings
         maker_safe_mask = SafeMaskMaker(methods=safe_mask_selection, **safe_mask_settings)
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
@@ -295,7 +295,7 @@ class Analysis:
 
 
         safe_mask_selection = self.config.datasets.safe_mask.methods
-        safe_mask_settings = self.config.datasets.safe_mask.settings.dict()
+        safe_mask_settings = self.config.datasets.safe_mask.settings
         safe_mask_maker = SafeMaskMaker(methods=safe_mask_selection, **safe_mask_settings)
 
         e_true = self._make_energy_axis(datasets_settings.geom.axes.energy_true).edges

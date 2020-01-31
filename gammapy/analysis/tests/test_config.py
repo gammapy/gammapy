@@ -28,8 +28,7 @@ def test_config_default_types():
     assert isinstance(config.datasets.geom.axes.energy.max, Quantity)
     assert isinstance(config.datasets.geom.axes.energy_true.min, Quantity)
     assert isinstance(config.datasets.geom.axes.energy_true.max, Quantity)
-    assert isinstance(config.datasets.safe_mask.settings.offset_max, Angle)
-    assert isinstance(config.datasets.safe_mask.settings.aeff_percent, float)
+    assert isinstance(config.datasets.geom.selection.offset_max, Angle)
     assert isinstance(config.fit.fit_range.min, Quantity)
     assert isinstance(config.fit.fit_range.max, Quantity)
 
@@ -98,5 +97,3 @@ def test_safe_mask_config_validation():
 
     with pytest.raises(ValidationError):
         config.datasets.safe_mask.methods = ['bad']
-    with pytest.raises(ValidationError):
-        config.datasets.safe_mask.settings.offset_max = 3

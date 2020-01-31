@@ -143,6 +143,9 @@ class EnergyAxesConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig()
     energy_true: EnergyAxisConfig = EnergyAxisConfig()
 
+class SelectionConfig(GammapyBaseConfig):
+    offset_max: AngleType = "2.5 deg"
+
 class FovConfig(GammapyBaseConfig):
     width: AngleType = "5 deg"
     height: AngleType = "5 deg"
@@ -157,6 +160,7 @@ class WcsConfig(GammapyBaseConfig):
 
 class GeomConfig(GammapyBaseConfig):
     wcs: WcsConfig = WcsConfig()
+    selection: SelectionConfig = SelectionConfig()
     axes: EnergyAxesConfig = EnergyAxesConfig()
 
 
