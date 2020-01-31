@@ -3,19 +3,6 @@ import pytest
 import numpy as np
 from astropy.io import fits
 from astropy.table import Column, Table
-from gammapy.utils.fits import SmartHDUList
-
-
-def make_test_hdu_list():
-    return fits.HDUList(
-        [
-            fits.PrimaryHDU(),
-            fits.BinTableHDU(name="TABLE1"),
-            fits.ImageHDU(name="IMAGE1", data=np.zeros(shape=(1, 2, 3))),
-            fits.BinTableHDU(name="TABLE2"),
-            fits.ImageHDU(name="IMAGE2", data=np.zeros(shape=(4, 5))),
-        ]
-    )
 
 
 # TODO: merge this fixture with the one in `test_table.py`.
@@ -28,63 +15,6 @@ def table():
     t["b"].meta["ucd"] = "spam"
     t["c"] = Column(["x", "yy"], "c")
     return t
-
-
-class TestSmartHDUList:
-    def setup(self):
-        self.hdus = SmartHDUList(hdu_list=make_test_hdu_list())
-
-        self.names = ["PRIMARY", "TABLE1", "IMAGE1", "TABLE2", "IMAGE2"]
-        self.numbers = list(range(5))
-
-    def test_names(self):
-        assert self.hdus.names == self.names
-
-    def test_fits_get_hdu(self):
-        def g(hdu=None, hdu_type=None):
-            """Short helper function, to save some typing."""
-            return self.hdus.get_hdu(hdu, hdu_type).name
-
-        # Make a few valid queries, and assert that the right result comes back
-
-        for number, name in zip(self.numbers, self.names):
-            assert g(hdu=name) == name
-            assert g(hdu=name.lower()) == name
-            assert g(hdu=number) == name
-
-        assert g(hdu_type="image") == "IMAGE1"
-        assert g(hdu_type="table") == "TABLE1"
-
-        # Call the method incorrectly, and assert that ValueError is raised:
-
-        with pytest.raises(ValueError):
-            g()
-
-        with pytest.raises(ValueError) as excinfo:
-            g(hdu_type="bad value")
-        assert "Invalid hdu_type=bad value" == str(excinfo.value)
-
-        # Query for non-existent HDUs, and assert that KeyError is raised:
-
-        with pytest.raises(KeyError):
-            g(hdu=["bad", "type"])
-
-        with pytest.raises(KeyError):
-            g(hdu="kronka lonka")
-
-        with pytest.raises(KeyError):
-            g(hdu=42)
-
-    def test_fits_get_hdu_index(self):
-        # We test almost everything above via `test_fits_get_hdu`
-        # Here we just add a single test for `get_hdu_index` to
-        # make sure it returns an int index all right.
-        assert self.hdus.get_hdu_index(hdu="TABLE2") == 3
-
-    def test_read_write(self, tmp_path):
-        self.hdus.write(tmp_path / "tmp.fits")
-        hdus2 = SmartHDUList.open(tmp_path / "tmp.fits")
-        assert self.hdus.names == hdus2.names
 
 
 def test_table_fits_io_astropy(table):
