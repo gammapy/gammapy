@@ -12,7 +12,6 @@ __all__ = [
     "requires_data",
     "mpl_plot_check",
     "assert_quantity_allclose",
-    "assert_wcs_allclose",
     "assert_skycoord_allclose",
     "assert_time_allclose",
     "Checker",
@@ -125,12 +124,6 @@ def run_cli(cli, args, exit_code=0):
         sys.stderr.write(result.output)
 
     return result
-
-
-def assert_wcs_allclose(wcs1, wcs2):
-    """Assert all-close for `astropy.wcs.WCS` objects."""
-    # TODO: implement properly
-    assert_allclose(wcs1.wcs.cdelt, wcs2.wcs.cdelt)
 
 
 def assert_skycoord_allclose(actual, desired):
