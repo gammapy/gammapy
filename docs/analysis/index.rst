@@ -177,7 +177,8 @@ is stored in the ``flux_points`` property as a `~gammapy.spectrum.FluxPoints` ob
 
 .. code-block:: python
 
-    >>> analysis.get_flux_points(source="crab")
+    >>> analysis.config.flux_points.source="crab"
+    >>> analysis.get_flux_points()
     INFO:gammapy.analysis.analysis:Calculating flux points.
     INFO:gammapy.analysis.analysis:
           e_ref               ref_flux        ...        dnde_err        is_ul

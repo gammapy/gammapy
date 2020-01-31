@@ -55,4 +55,5 @@ fit:
 # Flux estimation process /optional
 flux_points:
     energy: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
+    source: "source"
     params: {}
