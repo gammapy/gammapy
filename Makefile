@@ -125,7 +125,7 @@ polish: black isort trailing-spaces clean-nb;
 flake8:
 	flake8 $(PROJECT) \
 	--exclude=gammapy/extern,gammapy/conftest.py,__init__.py \
-	--ignore=E501
+	--ignore=E501,W503
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff
