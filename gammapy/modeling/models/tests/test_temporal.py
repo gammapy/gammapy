@@ -16,6 +16,7 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
 
+@requires_data()
 @pytest.fixture(scope="session")
 def phase_curve():
     path = make_path("$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits")
