@@ -76,22 +76,30 @@ def dict_to_models(data, link=True):
 def _link_shared_parameters(models):
     shared_register = {}
     for model in models:
-        for param in model.parameters:
-            name = param.name
-            link_label = param._link_label_io
-            if link_label is not None:
-                if link_label in shared_register:
-                    new_param = shared_register[link_label]
-                    model.parameters.link(name, new_param)
-                    if isinstance(model, SkyModel):
-                        spatial_params = model.spatial_model.parameters
-                        spectral_params = model.spectral_model.parameters
-                        if name in spatial_params.names:
-                            spatial_params.link(name, new_param)
-                        elif name in spectral_params.names:
-                            spectral_params.link(name, new_param)
-                else:
-                    shared_register[link_label] = param
+        if isinstance(model, SkyModel):
+            submodels = [
+                model.spectral_model,
+                model.spatial_model,
+                model.temporal_model,
+            ]
+            for submodel in submodels:
+                if submodel is not None:
+                    shared_register = _set_link(shared_register, submodel)
+        else:
+            shared_register = _set_link(shared_register, model)
+
+
+def _set_link(shared_register, model):
+    for param in model.parameters:
+        name = param.name
+        link_label = param._link_label_io
+        if link_label is not None:
+            if link_label in shared_register:
+                new_param = shared_register[link_label]
+                model.parameters.link(name, new_param)
+            else:
+                shared_register[link_label] = param
+    return shared_register
 
 
 def datasets_to_dict(datasets, path, prefix, overwrite):

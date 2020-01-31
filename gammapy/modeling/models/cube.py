@@ -40,23 +40,26 @@ class SkyModel(SkyModelBase):
     It has `~gammapy.modeling.Parameters`
     combining the spatial and spectral parameters.
 
-    TODO: add possibility to have a temporal model component also.
-
     Parameters
     ----------
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model
     spatial_model : `~gammapy.modeling.models.SpatialModel`
         Spatial model (must be normalised to integrate to 1)
+    temporal_model : `~gammapy.modeling.models.temporalModel`
+        Temporal model
     name : str
         Model identifier
     """
 
     tag = "SkyModel"
 
-    def __init__(self, spectral_model, spatial_model=None, name=None):
+    def __init__(
+        self, spectral_model, spatial_model=None, temporal_model=None, name=None
+    ):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
+        self.temporal_model = temporal_model
         super().__init__()
         # TODO: this hack is needed for compound models to work
         self.__dict__.pop("_parameters")
@@ -105,6 +108,19 @@ class SkyModel(SkyModelBase):
         self._spectral_model = model
 
     @property
+    def temporal_model(self):
+        """`~gammapy.modeling.models.TemporalModel`"""
+        return self._temporal_model
+
+    @temporal_model.setter
+    def temporal_model(self, model):
+        from .temporal import TemporalModel
+
+        if not (model is None or isinstance(model, TemporalModel)):
+            raise TypeError(f"Invalid type: {model!r}")
+        self._temporal_model = model
+
+    @property
     def position(self):
         """`~astropy.coordinates.SkyCoord`"""
         return self.spatial_model.position
@@ -123,6 +139,7 @@ class SkyModel(SkyModelBase):
             f"{self.__class__.__name__}("
             f"spatial_model={self.spatial_model!r}, "
             f"spectral_model={self.spectral_model!r})"
+            f"temporal_model={self.temporal_model!r})"
         )
 
     def evaluate(self, lon, lat, energy):
@@ -146,6 +163,7 @@ class SkyModel(SkyModelBase):
             Model value at the given point.
         """
         value = self.spectral_model(energy)  # pylint:disable=not-callable
+        # TODO: case if self.temporal_model is not None, introduce time in arguments ?
 
         if self.spatial_model is not None:
             value = value * self.spatial_model(lon, lat)  # pylint:disable=not-callable
@@ -156,7 +174,7 @@ class SkyModel(SkyModelBase):
         """Evaluate model on `~gammapy.maps.Geom`."""
         energy = geom.get_axis_by_name("energy").center[:, np.newaxis, np.newaxis]
         value = self.spectral_model(energy)
-
+        # TODO: case with temporal_model is not None
         if self.spatial_model is not None:
             value = value * self.spatial_model.evaluate_geom(geom.to_image())
 
@@ -168,10 +186,16 @@ class SkyModel(SkyModelBase):
             spatial_model = self.spatial_model.copy()
         else:
             spatial_model = None
+        if self.temporal_model is not None:
+            temporal_model = self.temporal_model.copy()
+        else:
+            temporal_model = None
 
-        kwargs.setdefault("spatial_model", spatial_model)
-        kwargs.setdefault("spectral_model", self.spectral_model.copy())
         kwargs.setdefault("name", make_name(name))
+        kwargs.setdefault("spectral_model", self.spectral_model.copy())
+        kwargs.setdefault("spatial_model", spatial_model)
+        kwargs.setdefault("temporal_model", temporal_model)
+
         return self.__class__(**kwargs)
 
     def to_dict(self):
@@ -183,29 +207,42 @@ class SkyModel(SkyModelBase):
 
         if self.spatial_model is not None:
             data["spatial"] = self.spatial_model.to_dict()
+        if self.temporal_model is not None:
+            data["temporal"] = self.temporal_model.to_dict()
 
         return data
 
     @classmethod
     def from_dict(cls, data):
         """Create SkyModel from dict"""
-        from gammapy.modeling.models import SPATIAL_MODELS, SPECTRAL_MODELS
+        from gammapy.modeling.models import (
+            SPATIAL_MODELS,
+            SPECTRAL_MODELS,
+            TEMPORAL_MODELS,
+        )
 
         model_class = SPECTRAL_MODELS.get_cls(data["spectral"]["type"])
         spectral_model = model_class.from_dict(data["spectral"])
 
         spatial_data = data.get("spatial")
-
         if spatial_data is not None:
             model_class = SPATIAL_MODELS.get_cls(spatial_data["type"])
             spatial_model = model_class.from_dict(spatial_data)
         else:
             spatial_model = None
 
+        temporal_data = data.get("temporal")
+        if temporal_data is not None:
+            model_class = TEMPORAL_MODELS.get_cls(temporal_data["type"])
+            temporal_model = model_class.from_dict(temporal_data)
+        else:
+            temporal_model = None
+
         return cls(
             name=data["name"],
             spatial_model=spatial_model,
             spectral_model=spectral_model,
+            temporal_model=temporal_model,
         )
 
 
@@ -277,7 +314,7 @@ class SkyDiffuseCube(SkyModelBase):
         return self._name
 
     @classmethod
-    def read(cls, filename,name=None, **kwargs):
+    def read(cls, filename, name=None, **kwargs):
         """Read map from FITS file.
 
         The default unit used if none is found in the file is ``cm-2 s-1 MeV-1 sr-1``.

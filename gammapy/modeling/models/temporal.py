@@ -18,6 +18,29 @@ class TemporalModel(Model):
     """Temporal model base class."""
 
 
+# TODO: make this a small ABC to define a uniform interface.
+class TemplateTemporalModel(TemporalModel):
+    """Template temporal model base class."""
+
+    @classmethod
+    def read(cls, path):
+        """Read lightcurve model table from FITS file.
+
+        TODO: This doesn't read the XML part of the model yet.
+        """
+        filename = str(make_path(path))
+        return cls(Table.read(filename), filename=filename)
+
+    def write(self, path=None, overwrite=False):
+        if path is None:
+            path = self.filename
+        if path is None:
+            raise ValueError(f"filename is required for {self.tag}")
+        else:
+            self.filename = str(make_path(path))
+            self.table.write(self.filename, overwrite=overwrite)
+
+
 class ConstantTemporalModel(TemporalModel):
     """Constant temporal model.
 
@@ -77,7 +100,7 @@ class ConstantTemporalModel(TemporalModel):
         return t_min + time_delta
 
 
-class PhaseCurveTemplateTemporalModel(TemporalModel):
+class PhaseCurveTemplateTemporalModel(TemplateTemporalModel):
     r"""Temporal phase curve model.
 
     Phase for a given time is computed as:
@@ -137,8 +160,20 @@ class PhaseCurveTemplateTemporalModel(TemporalModel):
     f1 = Parameter("f1", 0)
     f2 = Parameter("f2", 0)
 
-    def __init__(self, table, time_0, phase_0, f0, f1=0, f2=0):
+    def __init__(
+        self,
+        table,
+        time_0=time_0.quantity,
+        phase_0=phase_0.quantity,
+        f0=f0.quantity,
+        f1=f1.quantity,
+        f2=f2.quantity,
+        filename=None,
+    ):
         self.table = table
+        if filename is not None:
+            filename = str(make_path(filename))
+        self.filename = filename
         super().__init__(time_0=time_0, phase_0=phase_0, f0=f0, f1=f1, f2=f2)
 
     def phase(self, time):
@@ -232,8 +267,20 @@ class PhaseCurveTemplateTemporalModel(TemporalModel):
 
         return t_min + time
 
+    @classmethod
+    def from_dict(cls, data):
+        model = cls.read(data["filename"])
+        model._update_from_dict(data)
+        return model
 
-class LightCurveTemplateTemporalModel(TemporalModel):
+    def to_dict(self, overwrite=False):
+        """Create dict for YAML serilisation"""
+        data = super().to_dict()
+        data["filename"] = self.filename
+        return data
+
+
+class LightCurveTemplateTemporalModel(TemplateTemporalModel):
     """Temporal light curve model.
 
     The lightcurve is given as a table with columns ``time`` and ``norm``.
@@ -282,8 +329,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     tag = "LightCurveTemplateTemporalModel"
 
-    def __init__(self, table):
+    def __init__(self, table, filename=None):
         self.table = table
+        if filename is not None:
+            filename = str(make_path(filename))
+        self.filename = filename
         super().__init__()
 
     def __str__(self):
@@ -295,14 +345,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             f"Norm min: {norm.min()}\n"
             f"Norm max: {norm.max()}\n"
         )
-
-    @classmethod
-    def read(cls, path):
-        """Read lightcurve model table from FITS file.
-
-        TODO: This doesn't read the XML part of the model yet.
-        """
-        return cls(Table.read(make_path(path)))
 
     @lazyproperty
     def _interpolator(self):
@@ -402,3 +444,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
 
         return t_min + time
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls.read(data["filename"])
+
+    def to_dict(self, overwrite=False):
+        """Create dict for YAML serilisation"""
+        return {"type": self.tag, "filename": self.filename}
