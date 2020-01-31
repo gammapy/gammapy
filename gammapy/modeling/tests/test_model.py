@@ -2,7 +2,7 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.modeling import Model, Parameter
+from gammapy.modeling.models import Model, Parameter
 
 
 class MyModel(Model):

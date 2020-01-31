@@ -6,8 +6,8 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling import Datasets, Model
-from gammapy.modeling.models import MODELS, AbsorbedSpectralModel, Absorption, Models
+from gammapy.modeling import Datasets
+from gammapy.modeling.models import MODELS, AbsorbedSpectralModel, Absorption, Models, Model
 from gammapy.modeling.serialize import dict_to_models
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
