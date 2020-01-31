@@ -9,7 +9,6 @@ from gammapy.modeling.models import (
     Models,
     PowerLawSpectralModel,
     ScaleSpectralModel,
-    SkyModel,
 )
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_name, make_path

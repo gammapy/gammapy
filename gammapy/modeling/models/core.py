@@ -5,7 +5,6 @@ from pathlib import Path
 import astropy.units as u
 import yaml
 from gammapy.modeling import Parameter, Parameters
-from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_path
 
 __all__ = ["Model", "Models"]

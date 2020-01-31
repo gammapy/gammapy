@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from astropy.units import Quantity
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.utils.integrate import evaluate_integral_pwl, trapz_loglog
+from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.testing import assert_quantity_allclose
 
 

@@ -14,8 +14,7 @@ from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
-from gammapy.modeling.models import BackgroundModel, Models, SkyModel
-from gammapy.modeling.parameter import _get_parameters_str
+from gammapy.modeling.models import BackgroundModel, Models
 from gammapy.spectrum import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
