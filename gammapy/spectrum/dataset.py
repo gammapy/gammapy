@@ -98,8 +98,9 @@ class SpectrumDataset(Dataset):
         return self._name
 
     def __str__(self):
-        str_ = self.__class__.__name__
-        str_ += "\n\n"
+        str_ = self.__class__.__name__ + "\n"
+        str_ += "-" * len(self.__class__.__name__) + "\n"
+        str_ += "\n"
 
         str_ += "\t{:32}: {} \n\n".format("Name", self.name)
 
@@ -167,13 +168,9 @@ class SpectrumDataset(Dataset):
         str_ += "\t{:32}: {}\n\n".format("Number of free parameters", n_free_pars)
 
         if self.models is not None:
-            str_ += "\t{:32}: {}\n".format("Model type", self.models.__class__.__name__)
-            info = str(self.models.parameters)
-            lines = info.split("\n")
-            for line in lines[2:-1]:
-                str_ += "\t" + line.replace(":", "\t:") + "\n"
+            str_ += "\t" + "\n\t".join(str(self.models).split("\n")[2:])
 
-        return str_.expandtabs(tabsize=4)
+        return str_.expandtabs(tabsize=2)
 
     @property
     def models(self):
@@ -697,12 +694,16 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     def __str__(self):
         str_ = super().__str__()
 
+        str_list = str_.split("\n")
+
         acceptance = np.nan
         if self.acceptance is not None:
             acceptance = np.mean(self.acceptance)
 
-        str_ += "\t{:32}: {}\n".format("Acceptance mean:", acceptance)
-        return str_.expandtabs(tabsize=4)
+        str_acc = "\t{:32}: {}\n".format("Acceptance mean:", acceptance)
+        str_list.insert(16, str_acc)
+        str_ = "\n".join(str_list)
+        return str_.expandtabs(tabsize=2)
 
     @property
     def background(self):
