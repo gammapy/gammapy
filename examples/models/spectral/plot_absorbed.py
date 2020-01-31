@@ -50,6 +50,7 @@ model = AbsorbedSpectralModel(
 energy_range = [0.1, 100] * u.TeV
 model.plot(energy_range)
 plt.grid(which="both")
+plt.ylim(1e-24, 1e-8)
 
 # %%
 # YAML representation

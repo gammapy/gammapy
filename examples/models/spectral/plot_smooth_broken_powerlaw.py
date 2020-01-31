@@ -23,11 +23,11 @@ from gammapy.modeling.models import Models, SkyModel, SmoothBrokenPowerLawSpectr
 
 energy_range = [0.1, 100] * u.TeV
 model = SmoothBrokenPowerLawSpectralModel(
-    index1=1.5 * u.Unit(""),
-    index2=2.5 * u.Unit(""),
-    amplitude=4 / u.cm ** 2 / u.s / u.TeV,
-    ebreak=0.5 * u.TeV,
-    reference=1 * u.TeV,
+    index1=1.5,
+    index2=2.5,
+    amplitude="1e-12 TeV-1 cm-2 s-1",
+    ebreak="1 TeV",
+    reference="1 TeV",
     beta=1,
 )
 model.plot(energy_range)

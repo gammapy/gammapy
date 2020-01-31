@@ -32,14 +32,15 @@ from gammapy.modeling.models import (
 
 energy_range = [0.1, 100] * u.TeV
 model = SuperExpCutoffPowerLaw4FGLSpectralModel(
-    index_1=1.5,
+    index_1=1,
     index_2=2,
-    amplitude=1 / u.cm ** 2 / u.s / u.TeV,
-    reference=1 * u.TeV,
+    amplitude="1e-12 TeV-1 cm-2 s-1",
+    reference="1 TeV",
     expfactor=1e-2,
 )
 model.plot(energy_range)
 plt.grid(which="both")
+plt.ylim(1e-24, 1e-10)
 
 # %%
 # YAML representation

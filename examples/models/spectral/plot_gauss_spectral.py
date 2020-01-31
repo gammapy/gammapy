@@ -24,10 +24,11 @@ from gammapy.modeling.models import GaussianSpectralModel, Models, SkyModel
 
 energy_range = [0.1, 100] * u.TeV
 model = GaussianSpectralModel(
-    norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2 * u.TeV
+    norm="1e-2 cm-2 s-1", mean=2 * u.TeV, sigma=0.2 * u.TeV
 )
 model.plot(energy_range)
 plt.grid(which="both")
+plt.ylim(1e-24, 1e-1)
 
 # %%
 # YAML representation

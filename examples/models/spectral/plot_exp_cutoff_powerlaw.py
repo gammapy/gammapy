@@ -24,9 +24,9 @@ from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel, Models, SkyM
 
 energy_range = [0.1, 100] * u.TeV
 model = ExpCutoffPowerLawSpectralModel(
-    amplitude=2.076183759227292e-12 * u.Unit("cm-2 s-1 TeV-1"),
-    index=1.8763343736076483,
-    lambda_=0.08703226432146616 * u.Unit("TeV-1"),
+    amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
+    index=2,
+    lambda_=0.1 * u.Unit("TeV-1"),
     reference=1 * u.TeV,
 )
 model.plot(energy_range)
