@@ -150,7 +150,7 @@ def test_map_maker_ring(observations):
     )
 
     for obs in observations:
-        cutout = stacked.cutout(position=obs.pointing_radec, width="4 deg")
+        cutout = stacked.cutout(position=obs.pointing_radec, width="4 deg", mode='partial')
         dataset = map_dataset_maker.run(cutout, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
@@ -160,7 +160,7 @@ def test_map_maker_ring(observations):
         stacked.stack(dataset_on_off)
 
     assert_allclose(np.nansum(stacked.counts.data), 34366, rtol=1e-2)
-    assert_allclose(np.nansum(stacked.acceptance_off.data), 434.36, rtol=1e-2)
+    assert_allclose(np.nansum(stacked.acceptance_off.data), 278.142796, rtol=1e-2)
 
 
 @requires_data()
