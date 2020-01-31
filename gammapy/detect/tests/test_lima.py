@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 from numpy.testing import assert_allclose
 from astropy.convolution import Tophat2DKernel
-from gammapy.detect import compute_lima_image, compute_lima_on_off_image
+from gammapy.detect import compute_lima_image, compute_lima_on_off_image, SignificanceMapEstimator
 from gammapy.maps import Map
 from gammapy.utils.testing import requires_data
 
@@ -48,3 +49,10 @@ def test_compute_lima_on_off_image():
 
     # Set boundary to NaN in reference image
     assert_allclose(actual, desired, atol=1e-5)
+
+def test_significance_map_estimator_incorrect_dataset():
+    estimator = SignificanceMapEstimator('0.1 deg')
+
+    with pytest.raises(ValueError):
+        estimator.run('bad')
+
