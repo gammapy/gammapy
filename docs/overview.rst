@@ -240,3 +240,9 @@ What next?
 You now have an overview of Gammapy. We suggest you continue by tring it out,
 following the instructions in :ref:`install`, :ref:`getting-started` and then
 the first and second analysis tutorials at :ref:`tutorials`.
+
+.. toctree::
+    :caption: Overview Subsections
+    :maxdepth: 1
+
+    overview/DL3

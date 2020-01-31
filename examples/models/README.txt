@@ -3,4 +3,4 @@
 Model gallery
 =============
 
-Below is a gallery of example models
+The model gallery provides a visual overview of the available models in Gammapy.

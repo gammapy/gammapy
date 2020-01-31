@@ -69,7 +69,7 @@ class Model:
     @classmethod
     def from_dict(cls, data):
         params = {
-            x["name"].split("@")[0]: x["value"] * u.Unit(x["unit"])
+            x["name"]: x["value"] * u.Unit(x["unit"])
             for x in data["parameters"]
         }
 

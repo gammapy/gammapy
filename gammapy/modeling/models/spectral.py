@@ -1324,6 +1324,10 @@ class NaimaSpectralModel(SpectralModel):
         unit = 1 / (energy.unit * u.cm ** 2 * u.s)
         return dnde.to(unit)
 
+    @classmethod
+    def from_dict(cls, data):
+        raise NotImplementedError("Currently the NaimaSpectralModel cannot be read from YAML")
+
 
 class GaussianSpectralModel(SpectralModel):
     r"""Gaussian spectral model.
