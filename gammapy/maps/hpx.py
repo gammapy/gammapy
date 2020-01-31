@@ -212,45 +212,6 @@ def hpx_to_coords(h, shape):
     return np.vstack((x, z))
 
 
-def make_hpx_to_wcs_mapping_centers(hpx, wcs):
-    """Make the mapping data needed to from from HPX pixelization to a WCS-based array.
-
-    Parameters
-    ----------
-    hpx : `~gammapy.maps.HpxGeom`
-        The HEALPIX geometry.
-    wcs : `~gammapy.maps.WcsGeom`
-        The WCS geometry.
-
-    Returns
-    -------
-    ipixs : array(nx,ny)
-        HEALPIX pixel indices for each WCS pixel
-        -1 indicates the wcs pixel does not contain the center of a HEALPIX pixel
-    mult_val : array
-        (nx,ny) of 1.
-    npix : tuple
-        (nx,ny) with the shape of the WCS grid
-    """
-    npix = (int(wcs.wcs.crpix[0] * 2), int(wcs.wcs.crpix[1] * 2))
-    mult_val = np.ones(npix).T.flatten()
-    sky_crds = hpx.get_sky_coords()
-    pix_crds = wcs.wcs_world2pix(sky_crds, 0).astype(int)
-    ipixs = -1 * np.ones(npix, int).T.flatten()
-    pix_index = npix[1] * pix_crds[0:, 0] + pix_crds[0:, 1]
-
-    if hpx._ipix is None:
-        for ipix, pix_crd in enumerate(pix_index):
-            ipixs[pix_crd] = ipix
-    else:
-        for pix_crd, ipix in zip(pix_index, hpx._ipix):
-            ipixs[pix_crd] = ipix
-
-    ipixs = ipixs.reshape(npix).T.flatten()
-
-    return ipixs, mult_val, npix
-
-
 def make_hpx_to_wcs_mapping(hpx, wcs):
     """Make the pixel mapping from HPX- to a WCS-based geometry.
 
