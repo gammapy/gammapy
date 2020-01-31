@@ -201,27 +201,6 @@ from astropy.units import Quantity
 __all__ = ["energy_axis_to_ebounds", "earth_location_from_dict"]
 
 
-def fits_header_to_meta_dict(header):
-    """Convert `astropy.io.fits.Header` to `dict`.
-
-    This is a lossy conversion, only key, value is stored
-    (and not e.g. comments for each FITS "card").
-    Also, "COMMENT" and "HISTORY" cards are completely removed.
-    """
-    meta = dict(header)
-
-    # Drop problematic header content, i.e. values of type
-    # `astropy.io.fits.header._HeaderCommentaryCards`
-    # Handling this well and preserving it is a bit complicated, see
-    # See https://github.com/astropy/astropy/blob/master/astropy/io/fits/connect.py
-    # for how `astropy.table.Table.read` does it
-    # and see https://github.com/gammapy/gammapy/issues/701
-    meta.pop("COMMENT", None)
-    meta.pop("HISTORY", None)
-
-    return meta
-
-
 def energy_axis_to_ebounds(energy):
     """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
 
