@@ -13,7 +13,7 @@ datasets:
             fov: {width: 5 deg, height: 5 deg}
             binsize_irf: 0.2 deg
         selection:
-          offset_max: 2.5 deg
+            offset_max: 2.5 deg
         axes:
             energy: {min: 1 TeV, max: 10 TeV, nbins: 4}
             energy_true: {min: 1 TeV, max: 10 TeV, nbins: 5}
