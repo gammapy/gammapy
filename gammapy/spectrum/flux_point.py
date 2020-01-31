@@ -1306,53 +1306,47 @@ class FluxPointsDataset(Dataset):
         }
 
     def __str__(self):
-        str_ = f"{self.__class__.__name__}: \n"
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += "-" * len(self.__class__.__name__) + "\n"
         str_ += "\n"
-        if self.models is None:
-            str_ += "\t{:32}:   {} \n".format("Model Name", "No Model")
-        else:
-            str_ += "\t{:32}:   {} \n".format("Total flux points", len(self.data.table))
-            str_ += "\t{:32}:   {} \n".format(
-                "Points used for the fit", self.mask.sum()
-            )
-            str_ += "\t{:32}:   {} \n".format(
-                "Excluded for safe energy range", (~self.mask_safe).sum()
-            )
-            if self.mask_fit is None:
-                str_ += "\t{:32}:   {} \n".format("Excluded by user", "0")
-            else:
-                str_ += "\t{:32}:   {} \n".format(
-                    "Excluded by user", (~self.mask_fit).sum()
-                )
-            str_ += "\t{:32}:   {}\n".format(
-                "Model Name", self.models.__class__.__name__
-            )
-            str_ += "\t{:32}:   {}\n".format("N parameters", len(self.parameters))
-            str_ += "\t{:32}:   {}\n".format(
-                "N free parameters", len(self.parameters.free_parameters)
-            )
-            str_ += "\tList of parameters\n"
-            for par in self.parameters:
-                if par.frozen:
-                    if par.name == "amplitude":
-                        str_ += "\t \t {:14} (Frozen):   {:.2e} {} \n".format(
-                            par.name, par.value, par.unit
-                        )
-                    else:
-                        str_ += "\t \t {:14} (Frozen):   {:.2f} {} \n".format(
-                            par.name, par.value, par.unit
-                        )
-                else:
-                    if par.name == "amplitude":
-                        str_ += "\t \t {:23}:   {:.2e} {} \n".format(
-                            par.name, par.value, par.unit
-                        )
-                    else:
-                        str_ += "\t \t {:23}:   {:.2f} {} \n".format(
-                            par.name, par.value, par.unit
-                        )
-            str_ += "\t{:32}:   {:.2f}\n".format("Likelihood value", self.stat_sum())
-        return str_
+
+        str_ += "\t{:32}: {} \n\n".format("Name", self.name)
+
+        # data section
+        n_bins = 0
+        if self.data is not None:
+            n_bins = len(self.data.table)
+        str_ += "\t{:32}: {} \n".format("Number of total flux points", n_bins)
+
+        n_fit_bins = 0
+        if self.mask is not None:
+            n_fit_bins = np.sum(self.mask.data)
+        str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
+
+        # likelihood section
+        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.stat_type)
+
+        stat = np.nan
+        if self.data is not None and self.models is not None:
+            stat = self.stat_sum()
+        str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
+
+        # model section
+        n_models = 0
+        if self.models is not None:
+            n_models = len(self.models)
+
+        str_ += "\t{:32}: {} \n".format("Number of models", n_models)
+
+        str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.parameters))
+        str_ += "\t{:32}: {}\n\n".format(
+            "Number of free parameters", len(self.parameters.free_parameters)
+        )
+
+        if self.models is not None:
+            str_ += "\t" + "\n\t".join(str(self.models).split("\n")[2:])
+
+        return str_.expandtabs(tabsize=2)
 
     def data_shape(self):
         """Shape of the flux points data (tuple)."""
