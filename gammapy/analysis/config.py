@@ -74,7 +74,6 @@ class SafeMaskMethodsEnum(str, Enum):
     offset_max = "offset-max"
     bkg_peak = "bkg-peak"
 
-
 class MapSelectionEnum(str, Enum):
     counts = "counts"
     exposure = "exposure"
@@ -93,7 +92,6 @@ class GammapyBaseConfig(BaseModel):
             Quantity: lambda v: f"{v.value} {v.unit}",
             Time: lambda v: f"{v.value}",
         }
-
 
 class SkyCoordConfig(GammapyBaseConfig):
     frame: FrameEnum = None
@@ -137,14 +135,9 @@ class BackgroundConfig(GammapyBaseConfig):
     method: BackgroundMethodEnum = BackgroundMethodEnum.reflected
     exclusion: FilePath = None
 
-class SafeMaskSettingsConfig(GammapyBaseConfig):
-    offset_max: AngleType = "2.5 deg"
-    aeff_percent: float = 10
-    bias_percent: float = 10
-
 class SafeMaskConfig(GammapyBaseConfig):
     methods: List[SafeMaskMethodsEnum] = [SafeMaskMethodsEnum.aeff_default]
-    settings: SafeMaskSettingsConfig = SafeMaskSettingsConfig()
+    settings: dict = {}
 
 class EnergyAxesConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig()
