@@ -114,6 +114,7 @@ class MapDataset(Dataset):
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
+        str_ += "-" * len(self.__class__.__name__) + "\n"
         str_ += "\n"
 
         str_ += "\t{:32}: {} \n\n".format("Name", self.name)
@@ -188,35 +189,17 @@ class MapDataset(Dataset):
             "Number of free parameters", len(self.parameters.free_parameters)
         )
 
-        components = []
+        models = Models()
 
         if self.models is not None:
-            components += self.models
+            models.extend(self.models)
 
         if self.background_model is not None:
-            components += [self.background_model]
+            models.append(self.background_model)
 
-        for idx, model in enumerate(components):
-            str_ += f"\tComponent {idx}: \n"
-            str_ += "\t\t{:28}: {}\n".format("Name", model.name)
-            str_ += "\t\t{:28}: {}\n".format("Type", model.__class__.__name__)
+        str_ += "\t" + "\n\t".join(str(self.models).split("\n")[2:])
 
-            if isinstance(model, SkyModel):
-                str_ += "\t\t{:28}: {}\n".format(
-                    "Spatial  model type", model.spatial_model.__class__.__name__
-                )
-                str_ += "\t\t{:28}: {}\n".format(
-                    "Spectral model type", model.spectral_model.__class__.__name__
-                )
-
-            str_ += "\t\tParameters:\n"
-            info = _get_parameters_str(model.parameters)
-            lines = info.split("\n")
-            str_ += "\t\t" + "\n\t\t".join(lines[:-1])
-
-            str_ += "\n\n"
-
-        return str_.expandtabs(tabsize=4)
+        return str_.expandtabs(tabsize=2)
 
     @property
     def models(self):
