@@ -74,13 +74,6 @@ class SafeMaskMethodsEnum(str, Enum):
     offset_max = "offset-max"
     bkg_peak = "bkg-peak"
 
-#class SafeMaskOptionsEnum(dict, Enum):
-#     aeff_default = {"test":""}
-#     aeff_max = {"aeff_percent":10}
-#     edisp_bias = {"bias_percent":10, "position":None}
-#     offset_max = {"offset_max": "3 deg"}
-#     bkg_peak = {"test" : ""}
-
 
 class MapSelectionEnum(str, Enum):
     counts = "counts"
