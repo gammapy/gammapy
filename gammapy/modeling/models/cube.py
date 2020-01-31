@@ -9,6 +9,7 @@ from gammapy.utils.scripts import make_name, make_path
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.scripts import make_path
 from .core import Model, Models
+from gammapy.modeling.parameter import _get_parameters_str
 
 
 class SkyModelBase(Model):
@@ -186,6 +187,7 @@ class SkyModel(SkyModelBase):
             spatial_model = self.spatial_model.copy()
         else:
             spatial_model = None
+
         if self.temporal_model is not None:
             temporal_model = self.temporal_model.copy()
         else:
@@ -207,6 +209,7 @@ class SkyModel(SkyModelBase):
 
         if self.spatial_model is not None:
             data["spatial"] = self.spatial_model.to_dict()
+
         if self.temporal_model is not None:
             data["temporal"] = self.temporal_model.to_dict()
 
@@ -244,6 +247,38 @@ class SkyModel(SkyModelBase):
             spectral_model=spectral_model,
             temporal_model=temporal_model,
         )
+
+    def __str__(self):
+        str_ = self.__class__.__name__ + "\n\n"
+        str_ += "\t{:26}: {}\n".format("Name", self.name)
+
+        str_ += "\t{:26}: {}\n".format(
+            "Spectral model type", self.spectral_model.tag
+        )
+
+        if self.spatial_model is not None:
+            spatial_type = self.spatial_model.tag
+        else:
+            spatial_type = "None"
+        str_ += "\t{:26}: {}\n".format(
+            "Spatial  model type", spatial_type
+        )
+
+        if self.temporal_model is not None:
+            temporal_type = self.temporal_model.tag
+        else:
+            temporal_type = ""
+        str_ += "\t{:26}: {}\n".format(
+            "Temporal model type", temporal_type
+        )
+
+        str_ += "\tParameters:\n"
+        info = _get_parameters_str(self.parameters)
+        lines = info.split("\n")
+        str_ += "\t" + "\n\t".join(lines[:-1])
+
+        str_ += "\n\n"
+        return str_.expandtabs(tabsize=2)
 
 
 class SkyDiffuseCube(SkyModelBase):
@@ -401,6 +436,17 @@ class SkyDiffuseCube(SkyModelBase):
         data["parameters"] = data.pop("parameters")
         return data
 
+    def __str__(self):
+        str_ = self.__class__.__name__ + "\n\n"
+        str_ += "\t{:26}: {}\n".format("Name", self.name)
+        str_ += "\tParameters:\n"
+        info = _get_parameters_str(self.parameters)
+        lines = info.split("\n")
+        str_ += "\t" + "\n\t".join(lines[:-1])
+
+        str_ += "\n\n"
+        return str_.expandtabs(tabsize=2)
+
 
 class BackgroundModel(Model):
     """Background model.
@@ -543,6 +589,18 @@ class BackgroundModel(Model):
         # reset parameter values
         self.norm.value = 1
         self.tilt.value = 0
+
+    def __str__(self):
+        str_ = self.__class__.__name__ + "\n\n"
+        str_ += "\t{:26}: {}\n".format("Name", self.name)
+        str_ += "\tParameters:\n"
+        info = _get_parameters_str(self.parameters)
+        lines = info.split("\n")
+        str_ += "\t" + "\n\t".join(lines[:-1])
+
+        str_ += "\n\n"
+        return str_.expandtabs(tabsize=2)
+
 
 
 def create_fermi_isotropic_diffuse_model(filename, **kwargs):
