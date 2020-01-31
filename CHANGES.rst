@@ -1,8 +1,116 @@
-.. _gammapy_1p0_release:
+.. _gammapy_0p16_release:
 
-1.0 (unreleased)
-----------------
-- Planned for Jan 2020
+0.16 (Jan 31, 2020)
+-------------------
+
+Summary
++++++++
+
+- Released Jan 31, 2020
+- 8 contrinutors
+- 60 pull requests (not all listed below)
+
+**What's new**
+
+For Gammapy v0.16 a ``FoVBackgroundMaker`` was implemented, which supports
+different methods of adapting the norm and tilt of a filed of view background
+model to the data.
+
+To provide a visual overview of the available models in Gammapy a
+`model gallery <modeling/gallery/index.rst>`__ was added. A general introduction
+on how to work with the different models is now avilable in a dedicated `models tutorial <notebooks/models.html>`__.
+The spectral analysis of an extended source is demonstrated in the newly
+added `extended source spectral analysis tutorial <notebooks/extended_source_spectral_analysis.ipynb>`__.
+
+The ``coordsys`` attribute of ``WcsGeom`` and ``HpxGeom`` was
+renamed to ``frame`` and now supports arbitrary Astropy coordinate
+frames.
+
+The ``Datasets`` and ``Models`` container objects now required unique
+names of the objects contained. By default unique identifier are generated
+in the model and dataset objects. The ``Datasets``, ``Models`` as well
+as ``Observations`` container classes, were extend to now support
+in place ``.append()``, ``.extend()`` and ``.insert()`` operations.
+
+For Gammapy v0.16 the API of the ``SensitivityEstimator`` and ``TSMapEstimator``
+was adapted to take a ``MapDataset`` or ``MapDatasetOnOff`` as input.
+The ``ASmooth`` class was renamed to ``ASmoothMapEstimator`` and also
+adapted to work with ``MapDataset`` and ``MapDatasetOnOff``.
+
+To further improve API consistency the ``EnergyDispersion`` class
+was renamed to ``EDispKernel`` and the ``SkyModels``class was
+renamed to a more general ``Models`` class. Agian this release contains
+several API breaking changes and removal of non-essential parts of Gammapy
+(see PR list below). These changes are required to finally arrive at a more
+consistent and stable API for Gammapy v1.0. Thanks for your understanding!
+
+
+**Contributors:**
+
+In alphabetical order by first name:
+
+- Atreyee Sinha
+- Axel Donath
+- Brigitta Sipocz
+- Bruno Khelifi
+- Christoph Deil
+- Fabio Pintore
+- José Enrique Ruiz
+- Luca Giunti
+- Quentin Remy
+- Régis Terrier
+
+Pull Requests
++++++++++++++
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy v0.16 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.16+is%3Aclosed>`__.
+
+
+
+- [#2752] Add temporal model support to SkyModel (Quentin Remy)
+- [#2755] Fix WcsNDMap and MapDataset cutout to support mode='partial' (Régis Terrier)
+- [#2753] Make DataStoreObservation inherit from Observation (Axel Donath)
+- [#2751] Add checks for edisp, psf and bkg in MapDatasetEventSampler.run() (Fabio Pintore)
+- [#2750] Clean up MapDataset / BackgroundModel code (Axel Donath)
+- [#2746] Rework models notebook (Axel Donath)
+- [#2743] Add a MapDatasetOnOff.to_image() method (Régis Terrier)
+- [#2742] Add spectral models to gallery (José Enrique Ruiz)
+- [#2741] Adapt ASmooth to work with datasets and rename it to ASmoothMapEstimator (Axel Donath)
+- [#2739] Simplify and fix EDispMap.get_edisp_kernel() (Axel Donath)
+- [#2738] Unify analysis notebooks introductions (Régis Terrier)
+- [#2737] Add spatial models in models gallery (José Enrique Ruiz)
+- [#2735] Change configuration for sphinx gallery (José Enrique Ruiz)
+- [#2733] Handle MapDataset.to_image() without counts or background (Axel Donath)
+- [#2731] Add SmoothBrokenPowerLawSpectralModel (Axel Donath)
+- [#2730] Add an extended source spectral analysis tutorial (Régis Terrier)
+- [#2729] Unify SpectrumDataset and SpectrumDatasetOnOff overview methods (Axel Donath)
+- [#2728] Add auto-generated unique names (Quentin Remy)
+- [#2727] Rename SkyModels to Models (Axel Donath)
+- [#2726] Rename likelihood_type to stat_type (Axel Donath)
+- [#2725] Simplify trapz_loglog integrate method (Axel Donath)
+- [#2723] Add time scale info in GTI.__repr__ (Régis Terrier)
+- [#2719] Remove use of simulate_dataset from mcmc tutorial (Axel Donath)
+- [#2718] Adapt TSMapEstimator to take a MapDataset as input (Régis Terrier)
+- [#2715] Refactor sensitivity estimator (Axel Donath)
+- [#2713] Fix 3d array convolution with 2d kernel (Quentin Remy)
+- [#2712] Fix containment correction in MapDataset.to_spectrum_dataset (Régis Terrier)
+- [#2711] Remove Stats class (Axel Donath)
+- [#2709] Rename coordsys to frame in gammapy.maps (Axel Donath)
+- [#2707] Implement MapDatasetOnOff.to_spectrum_dataset() and .cutout() (Régis Terrier)
+- [#2705] Rename EnergyDispersion to EDispKernel (Axel Donath)
+- [#2703] Use sphinx gallery for a model gallery (Axel Donath)
+- [#2697] Add FoVBackgroundMaker class (Régis Terrier)
+- [#2692] Add PSF handling to MapDataset.to_image() (Atreyee)
+- [#2687] Allow interpolation of single bin axes in ScaledRegularGridInterpolator (Axel Donath)
+- [#2685] Move custom model tutorial to models notebook (Quentin Remy)
+- [#2684] Clean up image analysis tutorials (Atreyee Sinha)
+- [#2681] Update source detection notebook (Quentin Remy)
+- [#2674] Rewrite fit statistic rst page (Régis Terrier)
+- [#2673] Remove hard coded true energy axis in 1D HLI (Régis Terrier)
+- [#2672] Change lightcurve flare notebook to PKS 2155 flare (Régis Terrier)
+- [#2667] Add MapDatasetEventSampler.event_list_meta() and .run() method (Fabio Pintore)
 
 
 
