@@ -17,18 +17,18 @@ def _get_parameters_str(parameters):
 
     for par in parameters:
         if par.name == "amplitude":
-            line = "\t{:12} {:11}: {:.2e} {} {}\n"
+            line = "\t{:12} {:11}: {:10.2e} {} {:<12s}\n"
         else:
-            line = "\t{:12} {:11}: {:.3f} {} {}\n"
+            line = "\t{:12} {:11}: {:7.3f} {} {:<12s}\n"
 
         frozen = "(frozen)" if par.frozen else ""
         try:
-            error = "+/- {:.2f}".format(parameters.get_error(par))
+            error = "+/- {:7.2f}".format(parameters.get_error(par))
         except AttributeError:
             error = ""
 
         str_ += line.format(par.name, frozen, par.value, error, par.unit)
-    return str_
+    return str_.expandtabs(tabsize=2)
 
 
 class Parameter:
