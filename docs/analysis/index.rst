@@ -188,6 +188,14 @@ is stored in the ``flux_points`` property as a `~gammapy.spectrum.FluxPoints` ob
       7.07945784384138 1.4907957189689605e-12 ...   4.74857915062012e-14 False
     >>> analysis.flux_points.peek()
 
+You may set fine-grained optional parameters for the `~gammapy.spectrum.FluxPointsEstimator` in the
+``flux_points.params`` settings.
+
+.. code-block:: python
+
+    >>>  analysis.config.flux_points.params["reoptimize"]=True
+
+
 Residuals
 ---------
 
