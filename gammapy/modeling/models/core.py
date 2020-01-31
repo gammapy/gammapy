@@ -5,6 +5,7 @@ import yaml
 from pathlib import Path
 import astropy.units as u
 from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_path
 
 __all__ = ["Model", "Models"]
@@ -62,9 +63,6 @@ class Model:
         """A deep copy."""
         return copy.deepcopy(self)
 
-    def __str__(self):
-        return f"{self.__class__.__name__}\n\n{self.parameters.to_table()}"
-
     def to_dict(self):
         """Create dict for YAML serialisation"""
         return {"type": self.tag, "parameters": self.parameters.to_dict()["parameters"]}
@@ -106,6 +104,9 @@ class Model:
         cls = MODELS.get_cls(tag)
         return cls(*args, **kwargs)
 
+    def __str__(self):
+        return f"{self.__class__.__name__}\n\n{self.parameters.to_table()}"
+
 
 class Models(collections.abc.MutableSequence):
     """Sky model collection.
@@ -116,7 +117,10 @@ class Models(collections.abc.MutableSequence):
         Sky models
     """
 
-    def __init__(self, models):
+    def __init__(self, models=None):
+        if models is None:
+            models = []
+
         if isinstance(models, Models):
             models = models._models
         elif isinstance(models, Model):
@@ -177,9 +181,10 @@ class Models(collections.abc.MutableSequence):
         str_ = f"{self.__class__.__name__}\n\n"
 
         for idx, model in enumerate(self):
-            str_ += f"Component {idx}: {model}\n\n\t\n\n"
+            str_ += f"Component {idx}: "
+            str_ += str(model)
 
-        return str_
+        return str_.expandtabs(tabsize=2)
 
     def __add__(self, other):
         if isinstance(other, (Models, list)):
