@@ -185,27 +185,20 @@ class Analysis:
         self.fit_result = self.fit.run(optimize_opts=optimize_opts)
         log.info(self.fit_result)
 
-    def get_flux_points(self, source="source"):
-        """Calculate flux points for a specific model component.
-
-        Parameters
-        ----------
-        source : string
-            Name of the model component where to calculate the flux points.
-        """
+    def get_flux_points(self):
+        """Calculate flux points for a specific model component."""
         if not self.fit:
             raise RuntimeError("No results available from Fit.")
 
         fp_settings = self.config.flux_points
-        # TODO: add "source" to config
         log.info("Calculating flux points.")
         e_edges = self._make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
-            e_edges=e_edges, datasets=self.datasets, source=source
+            e_edges=e_edges, datasets=self.datasets, source=fp_settings.source, **fp_settings.params
         )
         fp = flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
-        self.flux_points = FluxPointsDataset(data=fp, models=self.models[source])
+        self.flux_points = FluxPointsDataset(data=fp, models=self.models[fp_settings.source])
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
 

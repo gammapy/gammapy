@@ -177,7 +177,8 @@ is stored in the ``flux_points`` property as a `~gammapy.spectrum.FluxPoints` ob
 
 .. code-block:: python
 
-    >>> analysis.get_flux_points(source="crab")
+    >>> analysis.config.flux_points.source="crab"
+    >>> analysis.get_flux_points()
     INFO:gammapy.analysis.analysis:Calculating flux points.
     INFO:gammapy.analysis.analysis:
           e_ref               ref_flux        ...        dnde_err        is_ul
@@ -187,6 +188,14 @@ is stored in the ``flux_points`` property as a `~gammapy.spectrum.FluxPoints` ob
     3.1622776601683795  7.426613493860134e-12 ...  2.106743519478604e-13 False
       7.07945784384138 1.4907957189689605e-12 ...   4.74857915062012e-14 False
     >>> analysis.flux_points.peek()
+
+You may set fine-grained optional parameters for the `~gammapy.spectrum.FluxPointsEstimator` in the
+``flux_points.params`` settings.
+
+.. code-block:: python
+
+    >>>  analysis.config.flux_points.params["reoptimize"]=True
+
 
 Residuals
 ---------
