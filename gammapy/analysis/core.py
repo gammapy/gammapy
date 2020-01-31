@@ -194,11 +194,16 @@ class Analysis:
         log.info("Calculating flux points.")
         e_edges = self._make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
-            e_edges=e_edges, datasets=self.datasets, source=fp_settings.source, **fp_settings.params
+            e_edges=e_edges,
+            datasets=self.datasets,
+            source=fp_settings.source,
+            **fp_settings.params,
         )
         fp = flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
-        self.flux_points = FluxPointsDataset(data=fp, models=self.models[fp_settings.source])
+        self.flux_points = FluxPointsDataset(
+            data=fp, models=self.models[fp_settings.source]
+        )
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
 
@@ -246,7 +251,9 @@ class Analysis:
 
         safe_mask_selection = self.config.datasets.safe_mask.methods
         safe_mask_settings = self.config.datasets.safe_mask.settings
-        maker_safe_mask = SafeMaskMaker(methods=safe_mask_selection, **safe_mask_settings)
+        maker_safe_mask = SafeMaskMaker(
+            methods=safe_mask_selection, **safe_mask_settings
+        )
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
         if self.config.datasets.stack:
@@ -293,10 +300,11 @@ class Analysis:
             bkg_maker_config["exclusion_mask"] = exclusion_region
         bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
 
-
         safe_mask_selection = self.config.datasets.safe_mask.methods
         safe_mask_settings = self.config.datasets.safe_mask.settings
-        safe_mask_maker = SafeMaskMaker(methods=safe_mask_selection, **safe_mask_settings)
+        safe_mask_maker = SafeMaskMaker(
+            methods=safe_mask_selection, **safe_mask_settings
+        )
 
         e_true = self._make_energy_axis(datasets_settings.geom.axes.energy_true).edges
 

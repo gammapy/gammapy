@@ -131,11 +131,15 @@ class SpatialModel(Model):
             Axis
         """
         if self.evaluation_radius is None and geom is None:
-            raise ValueError(f"{self.__class__.__name__} requires geom to be defined for plotting.")
+            raise ValueError(
+                f"{self.__class__.__name__} requires geom to be defined for plotting."
+            )
 
         if geom is None:
             width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
-            geom = WcsGeom.create(skydir=self.position, frame=self.frame, width=width, binsz=0.02)
+            geom = WcsGeom.create(
+                skydir=self.position, frame=self.frame, width=width, binsz=0.02
+            )
 
         data = self.evaluate_geom(geom)
         m = Map.from_geom(geom, data=data.value, unit=data.unit)
@@ -253,7 +257,7 @@ class GaussianSpatialModel(SpatialModel):
             height=2 * self.sigma.quantity,
             width=2 * minor_axis,
             angle=self.phi.quantity,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -345,7 +349,7 @@ class DiskSpatialModel(SpatialModel):
             height=2 * self.r_0.quantity,
             width=2 * minor_axis,
             angle=self.phi.quantity,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -404,8 +408,7 @@ class ShellSpatialModel(SpatialModel):
             center=self.position,
             inner_radius=self.radius.quantity,
             outer_radius=self.radius.quantity + self.width.quantity,
-
-            **kwargs
+            **kwargs,
         )
 
 
@@ -447,7 +450,7 @@ class ConstantSpatialModel(SpatialModel):
             height=np.nan * u.deg,
             width=np.nan * u.deg,
             angle=np.nan * u.deg,
-            **kwargs
+            **kwargs,
         )
 
 

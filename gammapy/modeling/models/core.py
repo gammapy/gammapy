@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import copy
 import collections.abc
-import yaml
+import copy
 from pathlib import Path
 import astropy.units as u
+import yaml
 from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_path

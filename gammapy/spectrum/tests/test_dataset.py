@@ -6,15 +6,15 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
-from gammapy.irf import EffectiveAreaTable, EDispKernel
+from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import MapAxis
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     ExpCutoffPowerLawSpectralModel,
+    Models,
     PowerLawSpectralModel,
     SkyModel,
-    Models,
 )
 from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state

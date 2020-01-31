@@ -7,7 +7,11 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
-from astropy.wcs.utils import proj_plane_pixel_scales, wcs_to_celestial_frame, celestial_frame_to_wcs
+from astropy.wcs.utils import (
+    celestial_frame_to_wcs,
+    proj_plane_pixel_scales,
+    wcs_to_celestial_frame,
+)
 from regions import SkyRegion
 from .geom import (
     Geom,
@@ -1076,4 +1080,3 @@ def world2pix(wcs, cdelt, crpix, coord):
         (pix[0] - (wcs.wcs.crpix[0] - 1.0)) * pix_ratio[0] + crpix[0] - 1.0,
         (pix[1] - (wcs.wcs.crpix[1] - 1.0)) * pix_ratio[1] + crpix[1] - 1.0,
     )
-

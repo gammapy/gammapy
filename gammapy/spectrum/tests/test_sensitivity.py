@@ -3,8 +3,13 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.irf import EffectiveAreaTable, EDispKernel
-from gammapy.spectrum import CountsSpectrum, SensitivityEstimator, SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.irf import EDispKernel, EffectiveAreaTable
+from gammapy.spectrum import (
+    CountsSpectrum,
+    SensitivityEstimator,
+    SpectrumDataset,
+    SpectrumDatasetOnOff,
+)
 
 
 @pytest.fixture()
@@ -16,15 +21,8 @@ def spectrum_dataset():
 
     data = 3600 * np.ones(4)
     data[-1] *= 1e-3
-    background = CountsSpectrum(
-        energy_lo=e_reco[:-1], energy_hi=e_reco[1:], data=data
-    )
-    return SpectrumDataset(
-        aeff=aeff,
-        livetime="1h",
-        edisp=edisp,
-        background=background
-    )
+    background = CountsSpectrum(energy_lo=e_reco[:-1], energy_hi=e_reco[1:], data=data)
+    return SpectrumDataset(aeff=aeff, livetime="1h", edisp=edisp, background=background)
 
 
 def test_cta_sensitivity_estimator(spectrum_dataset):

@@ -19,9 +19,9 @@ from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import (
     BackgroundModel,
     GaussianSpatialModel,
+    Models,
     PowerLawSpectralModel,
     SkyModel,
-    Models,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 

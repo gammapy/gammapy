@@ -14,7 +14,7 @@ from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
-from gammapy.modeling.models import BackgroundModel, SkyModel, Models
+from gammapy.modeling.models import BackgroundModel, Models, SkyModel
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.spectrum import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.stats import cash, cash_sum_cython, wstat
@@ -885,7 +885,9 @@ class MapDataset(Dataset):
 
         if self.mask_safe is not None:
             mask_safe = self.mask_safe
-            kwargs["mask_safe"] = mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
+            kwargs["mask_safe"] = mask_safe.reduce_over_axes(
+                func=np.logical_or, keepdims=True
+            )
         else:
             mask_safe = 1
 
@@ -938,7 +940,9 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
         if self.background_model is not None:
-            kwargs["background_model"] = self.background_model.cutout(**cutout_kwargs, name=name)
+            kwargs["background_model"] = self.background_model.cutout(
+                **cutout_kwargs, name=name
+            )
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
@@ -1193,7 +1197,7 @@ class MapDatasetOnOff(MapDataset):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             name=dataset.name,
-            evaluation_mode=dataset.evaluation_mode
+            evaluation_mode=dataset.evaluation_mode,
         )
 
     @property

@@ -877,7 +877,9 @@ class EnergyDispersion2D:
         # migration value of e_reco bounds
         migra = e_reco / e_true
 
-        values = self.data.evaluate(offset=offset, e_true=e_true, migra=migra_axis.center)
+        values = self.data.evaluate(
+            offset=offset, e_true=e_true, migra=migra_axis.center
+        )
 
         cumsum = np.insert(values, 0, 0).cumsum()
 
@@ -885,8 +887,11 @@ class EnergyDispersion2D:
             cumsum = np.nan_to_num(cumsum / cumsum[-1])
 
         f = interp1d(
-            migra_axis.edges.value, cumsum, kind="linear",
-            bounds_error=False, fill_value=(0, 1)
+            migra_axis.edges.value,
+            cumsum,
+            kind="linear",
+            bounds_error=False,
+            fill_value=(0, 1),
         )
 
         # We compute the difference between 2 successive bounds in e_reco

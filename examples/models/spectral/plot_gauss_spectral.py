@@ -18,20 +18,16 @@ It is defined by the following equation:
 # ------------
 # Here is an example plot of the model:
 
-import matplotlib.pyplot as plt
 from astropy import units as u
-from gammapy.modeling.models import (
-    Models,
-    SkyModel,
-    GaussianSpectralModel,
-)
+import matplotlib.pyplot as plt
+from gammapy.modeling.models import GaussianSpectralModel, Models, SkyModel
 
 energy_range = [0.1, 100] * u.TeV
 model = GaussianSpectralModel(
     norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2 * u.TeV
 )
 model.plot(energy_range)
-plt.grid(which="both");
+plt.grid(which="both")
 
 # %%
 # YAML representation

@@ -14,13 +14,13 @@ This model is a spatially constant model.
 
 from gammapy.maps import WcsGeom
 from gammapy.modeling.models import (
-    Models,
     ConstantSpatialModel,
+    Models,
     PowerLawSpectralModel,
     SkyModel,
 )
 
-geom = WcsGeom.create(npix=(100,100), binsz=0.1)
+geom = WcsGeom.create(npix=(100, 100), binsz=0.1)
 model = ConstantSpatialModel(value="42 sr-1")
 model.plot(geom=geom, add_cbar=True)
 

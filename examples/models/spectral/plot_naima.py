@@ -28,14 +28,11 @@ the physically interesting region.
 # Here we create and plot a spectral model that convolves an `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel`
 # electron distribution with an `InverseCompton` radiative model, in the presence of multiple seed photon fields.
 
-import naima
-import matplotlib.pyplot as plt
 from astropy import units as u
-from gammapy.modeling.models import (
-    Models,
-    SkyModel,
-    NaimaSpectralModel,
-)
+import matplotlib.pyplot as plt
+import naima
+from gammapy.modeling.models import Models, NaimaSpectralModel, SkyModel
+
 particle_distribution = naima.models.ExponentialCutoffPowerLaw(
     1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV
 )
@@ -58,13 +55,11 @@ model.plot(label="IC (total)", **opts)
 
 # Plot the separate contributions from each seed photon field
 for seed, ls in zip(["CMB", "FIR"], ["-", "--"]):
-    model = NaimaSpectralModel(
-        radiative_model, seed=seed, distance=1.5 * u.kpc
-    )
+    model = NaimaSpectralModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
     model.plot(label=f"IC ({seed})", ls=ls, color="gray", **opts)
 
 plt.legend(loc="best")
-plt.grid(which="both");
+plt.grid(which="both")
 
 # %%
 # YAML representation

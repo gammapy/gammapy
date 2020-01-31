@@ -53,9 +53,5 @@ def trapz_loglog(y, x, axis=-1):
     index[np.isnan(index)] = np.inf
 
     return evaluate_integral_pwl(
-        emin=emin,
-        emax=emax,
-        index=index,
-        reference=emin,
-        amplitude=vals_emin
+        emin=emin, emax=emax, index=index, reference=emin, amplitude=vals_emin
     )

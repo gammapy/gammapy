@@ -20,13 +20,9 @@ See also: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.h
 # ------------
 # Here is an example plot of the model:
 
-import matplotlib.pyplot as plt
 from astropy import units as u
-from gammapy.modeling.models import (
-    Models,
-    SkyModel,
-    PowerLaw2SpectralModel,
-)
+import matplotlib.pyplot as plt
+from gammapy.modeling.models import Models, PowerLaw2SpectralModel, SkyModel
 
 energy_range = [0.1, 100] * u.TeV
 model = PowerLaw2SpectralModel(
@@ -36,7 +32,7 @@ model = PowerLaw2SpectralModel(
     emax=10 * u.TeV,
 )
 model.plot(energy_range)
-plt.grid(which="both");
+plt.grid(which="both")
 
 # %%
 # YAML representation

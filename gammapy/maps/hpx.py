@@ -1012,11 +1012,7 @@ class HpxGeom(Geom):
         """
         axes = copy.deepcopy(self.axes)
         return self.__class__(
-            self.nside,
-            not self.nest,
-            frame=self.frame,
-            region=self.region,
-            axes=axes,
+            self.nside, not self.nest, frame=self.frame, region=self.region, axes=axes,
         )
 
     def to_image(self):

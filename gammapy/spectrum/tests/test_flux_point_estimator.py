@@ -176,7 +176,7 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, [[44638, 0], [1898, 0], [258, 0]])
 
         actual = fp.table["norm_ul"].data
-        assert_allclose(actual, [1.14644 , 1.035613, 1.156623], rtol=1e-2)
+        assert_allclose(actual, [1.14644, 1.035613, 1.156623], rtol=1e-2)
 
         actual = fp.table["sqrt_ts"].data
         assert_allclose(actual, [17.475586, 27.891336, 19.149109], rtol=1e-2)
@@ -185,7 +185,7 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, [0.2, 1, 5])
 
         actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-        assert_allclose(actual, [1.816254e+02, 2.037276e-02, 1.992444e+03], rtol=1e-2)
+        assert_allclose(actual, [1.816254e02, 2.037276e-02, 1.992444e03], rtol=1e-2)
 
     @staticmethod
     @requires_dependency("iminuit")

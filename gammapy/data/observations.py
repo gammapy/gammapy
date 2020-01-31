@@ -42,6 +42,7 @@ class Observation:
     events : `~gammapy.data.EventList`
         Event list
     """
+
     def __init__(
         self,
         obs_id=None,
@@ -114,7 +115,9 @@ class Observation:
         tstop = (tstart + Quantity(livetime)) or tstop
         gti = GTI.create([tstart], [tstop])
 
-        obs_info = cls._get_obs_info(pointing=pointing, deadtime_fraction=deadtime_fraction)
+        obs_info = cls._get_obs_info(
+            pointing=pointing, deadtime_fraction=deadtime_fraction
+        )
 
         return cls(
             obs_id=obs_id,
@@ -205,7 +208,9 @@ class Observation:
         Computed as ``t_live = t_observation * (1 - f_dead)``
         where ``f_dead`` is the dead-time fraction.
         """
-        return self.observation_time_duration * (1 - self.observation_dead_time_fraction)
+        return self.observation_time_duration * (
+            1 - self.observation_dead_time_fraction
+        )
 
     @property
     def observation_dead_time_fraction(self):
@@ -226,13 +231,19 @@ class Observation:
     @property
     def pointing_radec(self):
         """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        lon, lat = self.obs_info.get("RA_PNT", np.nan), self.obs_info.get("DEC_PNT", np.nan)
+        lon, lat = (
+            self.obs_info.get("RA_PNT", np.nan),
+            self.obs_info.get("DEC_PNT", np.nan),
+        )
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
     @property
     def pointing_altaz(self):
         """Pointing ALT / AZ sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        alt, az = self.obs_info.get("ALT_PNT", np.nan), self.obs_info.get("AZ_PNT", np.nan)
+        alt, az = (
+            self.obs_info.get("ALT_PNT", np.nan),
+            self.obs_info.get("AZ_PNT", np.nan),
+        )
         return SkyCoord(az, alt, unit="deg", frame="altaz")
 
     @property
@@ -248,7 +259,10 @@ class Observation:
     @property
     def target_radec(self):
         """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        lon, lat = self.obs_info.get("RA_OBJ", np.nan), self.obs_info.get("DEC_OBJ", np.nan)
+        lon, lat = (
+            self.obs_info.get("RA_OBJ", np.nan),
+            self.obs_info.get("DEC_OBJ", np.nan),
+        )
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
     @property

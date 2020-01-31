@@ -355,5 +355,5 @@ class ReflectedRegionsBackgroundMaker:
             dataset=dataset,
             acceptance=1,
             acceptance_off=acceptance_off,
-            counts_off=counts_off
+            counts_off=counts_off,
         )

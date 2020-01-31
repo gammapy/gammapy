@@ -3,9 +3,9 @@
 import numpy as np
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
+from gammapy.cube import MapDatasetOnOff
 from gammapy.maps import WcsNDMap, scale_cube
 from gammapy.stats import significance
-from gammapy.cube import MapDatasetOnOff
 
 __all__ = ["ASmoothMapEstimator"]
 
@@ -63,7 +63,7 @@ class ASmoothMapEstimator:
         scales = p["scales"].to_value("deg") / Angle(pixel_scale).deg
 
         kernels = []
-        for scale in scales: #.value:
+        for scale in scales:  # .value:
             kernel = p["kernel"](scale, mode="oversample")
             # TODO: check if normalizing here makes sense
             kernel.normalize("peak")
@@ -107,9 +107,11 @@ class ASmoothMapEstimator:
                 * 'significance'.
         """
         # Check dimensionality
-        if len(dataset.data_shape)==3:
+        if len(dataset.data_shape) == 3:
             if dataset.data_shape[0] != 1:
-                raise ValueError("ASmoothMapEstimator.run() requires a dataset with 1 energy bin at most.")
+                raise ValueError(
+                    "ASmoothMapEstimator.run() requires a dataset with 1 energy bin at most."
+                )
 
         counts = dataset.counts.sum_over_axes(keepdims=False)
 
@@ -125,7 +127,7 @@ class ASmoothMapEstimator:
 
         return self.estimate_maps(counts, background, exposure)
 
-    def estimate_maps(self, counts, background, exposure = None):
+    def estimate_maps(self, counts, background, exposure=None):
         """
         Run adaptive smoothing on input Maps.
 

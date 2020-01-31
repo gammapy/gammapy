@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations"""
-import numpy as np
 import copy
+import numpy as np
 import astropy.units as u
 from astropy.table import Table
 import gammapy

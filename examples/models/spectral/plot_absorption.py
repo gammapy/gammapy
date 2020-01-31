@@ -14,11 +14,9 @@ They are usually used as part of `~gammapy.modeling.models.AbsorbedSpectralModel
 # ------------
 # Here we illustrate how to create and plot EBL absorption models for a redshift of 0.5:
 
-import matplotlib.pyplot as plt
 from astropy import units as u
-from gammapy.modeling.models import (
-    Absorption
-)
+import matplotlib.pyplot as plt
+from gammapy.modeling.models import Absorption
 
 redshift = 0.5
 dominguez = Absorption.read_builtin("dominguez").table_model(redshift)
@@ -37,4 +35,4 @@ plt.xlim(energy_range.value)
 plt.ylim(1e-4, 2)
 plt.title(f"EBL models (z={redshift})")
 plt.grid(which="both")
-plt.legend(loc="best");
+plt.legend(loc="best")

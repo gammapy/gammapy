@@ -54,7 +54,13 @@ class ScaledRegularGridInterpolator:
         self.scale = interpolation_scale(values_scale)
         self._include_dim = [len(p) > 1 for p in points]
 
-        points_scaled = tuple([scale(p) for p, scale, _ in zip(points, self.scale_points, self._include_dim) if _])
+        points_scaled = tuple(
+            [
+                scale(p)
+                for p, scale, _ in zip(points, self.scale_points, self._include_dim)
+                if _
+            ]
+        )
         values_scaled = self.scale(values).squeeze()
         self.axis = axis
 
@@ -86,7 +92,13 @@ class ScaledRegularGridInterpolator:
             Clip values at zero after interpolation.
         """
 
-        points = tuple([scale(p) for scale, p, _ in zip(self.scale_points, points, self._include_dim) if _])
+        points = tuple(
+            [
+                scale(p)
+                for scale, p, _ in zip(self.scale_points, points, self._include_dim)
+                if _
+            ]
+        )
 
         if self.axis is None:
             points = np.broadcast_arrays(*points)

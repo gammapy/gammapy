@@ -4,7 +4,6 @@ from astropy.table import Column, Table
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import excess_matching_significance_on_off
 
-
 __all__ = ["SensitivityEstimator"]
 
 
@@ -33,10 +32,7 @@ class SensitivityEstimator:
     """
 
     def __init__(
-        self,
-        spectrum=None,
-        sigma=5.0,
-        gamma_min=10,
+        self, spectrum=None, sigma=5.0, gamma_min=10,
     ):
 
         if spectrum is None:
@@ -92,7 +88,7 @@ class SensitivityEstimator:
         phi_0 = excess / npred
 
         dnde_model = self.spectrum(energy=energy)
-        dnde = (phi_0 * dnde_model * energy ** 2)
+        dnde = phi_0 * dnde_model * energy ** 2
         return dnde.quantity.to("erg / (cm2 s)")
 
     def _get_criterion(self, excess):

@@ -12,11 +12,11 @@ from gammapy.modeling import Datasets
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     GaussianSpatialModel,
+    Models,
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyDiffuseCube,
     SkyModel,
-    Models,
 )
 
 DATA_PATH = Path("./")

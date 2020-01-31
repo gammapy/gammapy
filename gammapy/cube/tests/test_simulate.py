@@ -13,9 +13,9 @@ from gammapy.irf import load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     GaussianSpatialModel,
+    Models,
     PowerLawSpectralModel,
     SkyModel,
-    Models,
 )
 from gammapy.utils.testing import requires_data
 

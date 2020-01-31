@@ -4,8 +4,8 @@ import pytest
 from astropy.coordinates import Angle
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.analysis.config import AnalysisConfig, FrameEnum, GeneralConfig
 from pydantic import ValidationError
+from gammapy.analysis.config import AnalysisConfig, FrameEnum, GeneralConfig
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 DOC_FILE = CONFIG_PATH / "docs.yaml"
@@ -96,4 +96,4 @@ def test_safe_mask_config_validation():
     config.datasets.safe_mask.methods = []
 
     with pytest.raises(ValidationError):
-        config.datasets.safe_mask.methods = ['bad']
+        config.datasets.safe_mask.methods = ["bad"]

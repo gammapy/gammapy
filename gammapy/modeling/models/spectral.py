@@ -8,8 +8,8 @@ import astropy.units as u
 from astropy.table import Table
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
-from gammapy.utils.integrate import evaluate_integral_pwl, trapz_loglog
 from gammapy.modeling import Parameter, Parameters
+from gammapy.utils.integrate import evaluate_integral_pwl, trapz_loglog
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .core import Model

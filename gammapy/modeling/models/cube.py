@@ -5,11 +5,10 @@ from pathlib import Path
 import numpy as np
 import astropy.units as u
 from gammapy.maps import Map
-from gammapy.utils.scripts import make_name, make_path
 from gammapy.modeling import Parameter, Parameters
-from gammapy.utils.scripts import make_path
-from .core import Model, Models
 from gammapy.modeling.parameter import _get_parameters_str
+from gammapy.utils.scripts import make_name, make_path
+from .core import Model, Models
 
 
 class SkyModelBase(Model):
@@ -252,25 +251,19 @@ class SkyModel(SkyModelBase):
         str_ = self.__class__.__name__ + "\n\n"
         str_ += "\t{:26}: {}\n".format("Name", self.name)
 
-        str_ += "\t{:26}: {}\n".format(
-            "Spectral model type", self.spectral_model.tag
-        )
+        str_ += "\t{:26}: {}\n".format("Spectral model type", self.spectral_model.tag)
 
         if self.spatial_model is not None:
             spatial_type = self.spatial_model.tag
         else:
             spatial_type = "None"
-        str_ += "\t{:26}: {}\n".format(
-            "Spatial  model type", spatial_type
-        )
+        str_ += "\t{:26}: {}\n".format("Spatial  model type", spatial_type)
 
         if self.temporal_model is not None:
             temporal_type = self.temporal_model.tag
         else:
             temporal_type = ""
-        str_ += "\t{:26}: {}\n".format(
-            "Temporal model type", temporal_type
-        )
+        str_ += "\t{:26}: {}\n".format("Temporal model type", temporal_type)
 
         str_ += "\tParameters:\n"
         info = _get_parameters_str(self.parameters)
@@ -600,7 +593,6 @@ class BackgroundModel(Model):
 
         str_ += "\n\n"
         return str_.expandtabs(tabsize=2)
-
 
 
 def create_fermi_isotropic_diffuse_model(filename, **kwargs):

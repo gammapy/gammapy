@@ -208,7 +208,11 @@ def test_hpx_global_to_local():
 
     # 4D Partial-sky w/ variable bin size
     hpx = HpxGeom(
-        [[16, 32], [32, 64]], False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0, ax1]
+        [[16, 32], [32, 64]],
+        False,
+        "galactic",
+        region="DISK(110.,75.,2.)",
+        axes=[ax0, ax1],
     )
     assert_allclose(hpx[3263], np.array([1]))
     assert_allclose(hpx[28356], np.array([11]))
@@ -231,9 +235,7 @@ def test_hpxgeom_init_with_pix(nside, nested, frame, region, axes):
     assert_allclose(len(idx1[0]), np.sum(geom.npix))
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxgeom_to_slice(nside, nested, frame, region, axes):
     geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
     slices = tuple([slice(1, 2) for i in range(2, geom.ndim)])
@@ -250,9 +252,7 @@ def test_hpxgeom_to_slice(nside, nested, frame, region, axes):
         assert_allclose(idx_slice, idx)
 
     # Test slicing with explicit geometry
-    geom = HpxGeom(
-        nside, nested, frame, region=tuple([t[::3] for t in idx]), axes=axes
-    )
+    geom = HpxGeom(nside, nested, frame, region=tuple([t[::3] for t in idx]), axes=axes)
     geom_slice = geom.to_slice(slices)
     assert_allclose(geom_slice.ndim, 2)
     assert_allclose(geom_slice.npix, np.squeeze(geom.npix[slices]))
@@ -266,9 +266,7 @@ def test_hpxgeom_to_slice(nside, nested, frame, region, axes):
         assert_allclose(idx_slice, idx)
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxgeom_get_pix(nside, nested, frame, region, axes):
     geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
     idx = geom.get_idx(local=False, flat=True)
@@ -281,9 +279,7 @@ def test_hpxgeom_get_pix(nside, nested, frame, region, axes):
         assert_allclose(idx_img, geom.local_to_global(idx_img_local))
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxgeom_coord_to_idx(nside, nested, frame, region, axes):
     import healpy as hp
 
@@ -346,7 +342,9 @@ def test_hpxgeom_coord_to_pix():
     # 3D partial-sky w/ variable bin size
     coords = (lon, lat, z0)
     nside = [16, 32, 64]
-    hpx_bins = [HpxGeom(n, False, "galactic", region="DISK(110.,75.,2.)") for n in nside]
+    hpx_bins = [
+        HpxGeom(n, False, "galactic", region="DISK(110.,75.,2.)") for n in nside
+    ]
     hpx = HpxGeom(nside, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
     for i, (x, y, z) in enumerate(np.vstack(coords).T):
         pix0 = hpx.coord_to_pix((np.array([x]), np.array([y]), np.array([z])))
@@ -436,16 +434,16 @@ def test_hpxgeom_get_coord():
     assert_allclose(c[2][0, :3], np.array([0.5, 0.5, 0.5]))
 
     # 3D partial-sky w/ variable bin size
-    hpx = HpxGeom([16, 32, 64], False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
+    hpx = HpxGeom(
+        [16, 32, 64], False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0]
+    )
     c = hpx.get_coord(flat=True)
     assert_allclose(c[0][:3], np.array([117.0, 103.5, 112.5]))
     assert_allclose(c[1][:3], np.array([75.340734, 75.340734, 75.340734]))
     assert_allclose(c[2][:3], np.array([0.5, 1.5, 1.5]))
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxgeom_contains(nside, nested, frame, region, axes):
     geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
     coords = geom.get_coord(flat=True)
@@ -664,9 +662,7 @@ def test_hpxgeom_from_header():
     assert_allclose(hpx.nside, np.array([64]))
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxgeom_read_write(tmp_path, nside, nested, frame, region, axes):
     geom0 = HpxGeom(nside, nested, frame, region=region, axes=axes)
     hdu_bands = geom0.make_bands_hdu(hdu="BANDS")
@@ -685,9 +681,7 @@ def test_hpxgeom_read_write(tmp_path, nside, nested, frame, region, axes):
     assert geom0.frame == geom1.frame
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxgeom_upsample(nside, nested, frame, region, axes):
     # NESTED
     geom = HpxGeom(nside, True, frame, region=region, axes=axes)
@@ -706,9 +700,7 @@ def test_hpxgeom_upsample(nside, nested, frame, region, axes):
     assert np.all(geom.contains(coords))
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxgeom_downsample(nside, nested, frame, region, axes):
     # NESTED
     geom = HpxGeom(nside, True, frame, region=region, axes=axes)
@@ -726,7 +718,9 @@ def test_hpxgeom_downsample(nside, nested, frame, region, axes):
 
 
 def test_hpxgeom_solid_angle():
-    geom = HpxGeom.create(nside=8, frame="galactic", axes=[MapAxis.from_edges([0, 2, 3])])
+    geom = HpxGeom.create(
+        nside=8, frame="galactic", axes=[MapAxis.from_edges([0, 2, 3])]
+    )
 
     solid_angle = geom.solid_angle()
 

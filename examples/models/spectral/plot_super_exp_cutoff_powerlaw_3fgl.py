@@ -20,8 +20,8 @@ It is defined by the following equation:
 # ------------
 # Here is an example plot of the model:
 
-import matplotlib.pyplot as plt
 from astropy import units as u
+import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
     Models,
     SkyModel,
@@ -37,7 +37,7 @@ model = SuperExpCutoffPowerLaw3FGLSpectralModel(
     ecut=30 * u.TeV,
 )
 model.plot(energy_range)
-plt.grid(which="both");
+plt.grid(which="both")
 
 # %%
 # YAML representation

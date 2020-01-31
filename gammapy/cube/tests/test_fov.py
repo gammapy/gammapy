@@ -8,12 +8,12 @@ from gammapy.cube.fov import FoVBackgroundMaker
 from gammapy.cube.make import MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
-from gammapy.utils.testing import requires_data, requires_dependency
 from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -142,6 +142,7 @@ def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask):
     dataset = fov_bkg_maker.run(test_dataset)
 
     assert_allclose(dataset.background_model.norm.value, 1, rtol=1e-4)
+
 
 @requires_data()
 def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask):

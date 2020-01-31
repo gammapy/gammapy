@@ -869,9 +869,7 @@ class MapCoord:
 
     @property
     def skycoord(self):
-        return SkyCoord(
-            self.lon, self.lat, unit="deg", frame=self.frame
-        )
+        return SkyCoord(self.lon, self.lat, unit="deg", frame=self.frame)
 
     @classmethod
     def _from_lonlat(cls, coords, frame=None):

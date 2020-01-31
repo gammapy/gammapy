@@ -2,13 +2,13 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.convolution import Gaussian2DKernel
 import astropy.units as u
+from astropy.convolution import Gaussian2DKernel
+from gammapy.cube import MapDataset
 from gammapy.detect import TSMapEstimator
 from gammapy.maps import Map, MapAxis
-from gammapy.cube import MapDataset
-from gammapy.utils.testing import requires_data
 from gammapy.modeling.models import BackgroundModel
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")

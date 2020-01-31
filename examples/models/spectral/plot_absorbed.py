@@ -23,14 +23,14 @@ redshift z of the source, and :math:`\alpha` is a scale factor
 # ------------
 # Here is an example plot of the model:
 
-import matplotlib.pyplot as plt
 from astropy import units as u
+import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
-    Models,
-    SkyModel,
-    Absorption,
     AbsorbedSpectralModel,
-    PowerLawSpectralModel
+    Absorption,
+    Models,
+    PowerLawSpectralModel,
+    SkyModel,
 )
 
 redshift = 0.117
@@ -49,7 +49,7 @@ model = AbsorbedSpectralModel(
 
 energy_range = [0.1, 100] * u.TeV
 model.plot(energy_range)
-plt.grid(which="both");
+plt.grid(which="both")
 
 # %%
 # YAML representation

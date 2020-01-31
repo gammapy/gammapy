@@ -205,7 +205,7 @@ class TSMapEstimator:
         # to fail, this is a temporary fix
         mask[background == 0] = 0
 
-        return exposure.copy(data=mask.astype("int"), unit='')
+        return exposure.copy(data=mask.astype("int"), unit="")
 
     @staticmethod
     def sqrt_ts(map_ts):

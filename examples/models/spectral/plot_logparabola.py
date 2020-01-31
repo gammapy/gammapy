@@ -30,13 +30,9 @@ parametrization based on :math:`log_{10}` you can use the
 # ------------
 # Here is an example plot of the model:
 
-import matplotlib.pyplot as plt
 from astropy import units as u
-from gammapy.modeling.models import (
-    Models,
-    SkyModel,
-    LogParabolaSpectralModel,
-)
+import matplotlib.pyplot as plt
+from gammapy.modeling.models import LogParabolaSpectralModel, Models, SkyModel
 
 energy_range = [0.1, 100] * u.TeV
 model = LogParabolaSpectralModel(
@@ -46,7 +42,7 @@ model = LogParabolaSpectralModel(
     beta=0.5 * u.Unit(""),
 )
 model.plot(energy_range)
-plt.grid(which="both");
+plt.grid(which="both")
 
 # %%
 # YAML representation

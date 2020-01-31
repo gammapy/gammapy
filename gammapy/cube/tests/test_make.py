@@ -150,7 +150,9 @@ def test_map_maker_ring(observations):
     )
 
     for obs in observations:
-        cutout = stacked.cutout(position=obs.pointing_radec, width="4 deg", mode='partial')
+        cutout = stacked.cutout(
+            position=obs.pointing_radec, width="4 deg", mode="partial"
+        )
         dataset = map_dataset_maker.run(cutout, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 

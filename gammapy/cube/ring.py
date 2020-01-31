@@ -324,9 +324,7 @@ class RingBackgroundMaker:
         mask_safe.data[not_has_off_acceptance] = 0
 
         dataset_on_off = MapDatasetOnOff.from_map_dataset(
-            dataset=dataset,
-            name=dataset.name,
-            **maps_off
+            dataset=dataset, name=dataset.name, **maps_off
         )
 
         dataset_on_off.mask_safe = mask_safe

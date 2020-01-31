@@ -1,12 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from copy import deepcopy
 import numpy as np
+from scipy.interpolate import interp1d
 import astropy.io.fits as fits
 from gammapy.irf import EDispKernel
-from gammapy.maps import Map, MapCoord, WcsGeom, MapAxis
+from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
-from scipy.interpolate import interp1d
-
 
 __all__ = ["make_edisp_map", "EDispMap"]
 
@@ -241,8 +240,11 @@ class EDispMap:
                 cumsum = np.nan_to_num(cumsum / cumsum[-1])
 
             f = interp1d(
-                migra_axis.edges.value, cumsum, kind="linear",
-                bounds_error=False, fill_value=(0, 1)
+                migra_axis.edges.value,
+                cumsum,
+                kind="linear",
+                bounds_error=False,
+                fill_value=(0, 1),
             )
 
             # We compute the difference between 2 successive bounds in e_reco

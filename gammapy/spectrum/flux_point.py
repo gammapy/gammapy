@@ -6,10 +6,10 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.modeling import Dataset, Datasets, Fit, Parameters
 from gammapy.modeling.models import (
+    Models,
     PowerLawSpectralModel,
     ScaleSpectralModel,
     SkyModel,
-    Models,
 )
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_name, make_path

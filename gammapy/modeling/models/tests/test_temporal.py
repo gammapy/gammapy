@@ -6,11 +6,11 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.modeling.models import (
-    SkyModel,
-    PowerLawSpectralModel,
     ConstantTemporalModel,
     LightCurveTemplateTemporalModel,
     PhaseCurveTemplateTemporalModel,
+    PowerLawSpectralModel,
+    SkyModel,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
@@ -179,6 +179,7 @@ def test_to_dict(phase_curve, light_curve):
     out = light_curve.to_dict()
     assert out["type"] == "LightCurveTemplateTemporalModel"
     assert "lightcrv_PKSB1222+216.fits" in out["filename"]
+
 
 @requires_data()
 def test_with_skymodel(phase_curve, light_curve):

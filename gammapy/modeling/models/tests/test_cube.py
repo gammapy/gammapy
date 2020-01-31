@@ -11,11 +11,11 @@ from gammapy.modeling.models import (
     BackgroundModel,
     ConstantSpectralModel,
     GaussianSpatialModel,
+    Models,
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyDiffuseCube,
     SkyModel,
-    Models,
     create_fermi_isotropic_diffuse_model,
 )
 from gammapy.utils.testing import requires_data

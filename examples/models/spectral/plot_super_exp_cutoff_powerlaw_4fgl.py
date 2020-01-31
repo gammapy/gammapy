@@ -22,8 +22,8 @@ See Equation (3) in https://arxiv.org/pdf/1902.10045.pdf
 # ------------
 # Here is an example plot of the model:
 
-import matplotlib.pyplot as plt
 from astropy import units as u
+import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
     Models,
     SkyModel,
@@ -39,7 +39,7 @@ model = SuperExpCutoffPowerLaw4FGLSpectralModel(
     expfactor=1e-2,
 )
 model.plot(energy_range)
-plt.grid(which="both");
+plt.grid(which="both")
 
 # %%
 # YAML representation

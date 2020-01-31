@@ -11,20 +11,20 @@ This model is a delta function centered in *lon_0* and *lat_0* parameters provid
 The model is defined on the celestial sphere in the coordinate frame provided by the user.
 """
 
+
+model = PointSpatialModel(lon_0="0.01 deg", lat_0="0.01 deg", frame="galactic",)
 # %%
 # Example plot
+from astropy.coordinates import SkyCoord
 # ------------
 # Here is an example plot of the model:
 from gammapy.maps import WcsGeom
-from astropy.coordinates import SkyCoord
 from gammapy.modeling.models import (
     Models,
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
 )
-
-model = PointSpatialModel(lon_0="0.01 deg", lat_0="0.01 deg", frame="galactic",)
 
 geom = WcsGeom.create(
     skydir=SkyCoord("0d 0d", frame="galactic"), width=(1, 1), binsz=0.1

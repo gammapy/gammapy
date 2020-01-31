@@ -43,13 +43,9 @@ def create_map(nside, nested, frame, region, axes):
     )
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_init(nside, nested, frame, region, axes):
-    geom = HpxGeom(
-        nside=nside, nest=nested, frame=frame, region=region, axes=axes
-    )
+    geom = HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes)
     shape = [int(np.max(geom.npix))]
     if axes:
         shape += [ax.nbin for ax in axes]
@@ -61,16 +57,12 @@ def test_hpxmap_init(nside, nested, frame, region, axes):
     assert_allclose(m.data, data)
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_create(nside, nested, frame, region, axes):
     create_map(nside, nested, frame, region, axes)
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_read_write(tmp_path, nside, nested, frame, region, axes):
     path = tmp_path / "tmp.fits"
 
@@ -127,9 +119,7 @@ def test_hpxmap_read_write_fgst(tmp_path):
     m2 = Map.read(path)
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_set_get_by_pix(nside, nested, frame, region, axes):
     m = create_map(nside, nested, frame, region, axes)
     coords = m.geom.get_coord(flat=True)
@@ -138,9 +128,7 @@ def test_hpxmap_set_get_by_pix(nside, nested, frame, region, axes):
     assert_allclose(coords[0], m.get_by_pix(idx))
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_set_get_by_coord(nside, nested, frame, region, axes):
     m = create_map(nside, nested, frame, region, axes)
     coords = m.geom.get_coord(flat=True)
@@ -150,9 +138,7 @@ def test_hpxmap_set_get_by_coord(nside, nested, frame, region, axes):
     # Test with SkyCoords
     m = create_map(nside, nested, frame, region, axes)
     coords = m.geom.get_coord(flat=True)
-    skydir = SkyCoord(
-        coords[0], coords[1], unit="deg", frame=m.geom.frame
-    )
+    skydir = SkyCoord(coords[0], coords[1], unit="deg", frame=m.geom.frame)
     skydir_cel = skydir.transform_to("icrs")
     skydir_gal = skydir.transform_to("galactic")
     m.set_by_coord((skydir_gal,) + tuple(coords[2:]), coords[0])
@@ -163,9 +149,7 @@ def test_hpxmap_set_get_by_coord(nside, nested, frame, region, axes):
     )
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_interp_by_coord(nside, nested, frame, region, axes):
     m = HpxNDMap(
         HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes)
@@ -190,9 +174,7 @@ def test_hpxmap_interp_by_coord_quantities():
     assert_allclose(val, 42, rtol=1e-2)
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_fill_by_coord(nside, nested, frame, region, axes):
     m = create_map(nside, nested, frame, region, axes)
     coords = m.geom.get_coord(flat=True)
@@ -201,9 +183,7 @@ def test_hpxmap_fill_by_coord(nside, nested, frame, region, axes):
     assert_allclose(m.get_by_coord(coords), 2.0 * coords[1])
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_to_wcs(nside, nested, frame, region, axes):
     m = HpxNDMap(
         HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes)
@@ -212,9 +192,7 @@ def test_hpxmap_to_wcs(nside, nested, frame, region, axes):
     m.to_wcs(sum_bands=True, oversample=2, normalize=False)
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_swap_scheme(nside, nested, frame, region, axes):
     m = HpxNDMap(
         HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes)
@@ -225,9 +203,7 @@ def test_hpxmap_swap_scheme(nside, nested, frame, region, axes):
     assert_allclose(m.get_by_coord(coords), m2.get_by_coord(coords))
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_ud_grade(nside, nested, frame, region, axes):
     m = HpxNDMap(
         HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes)
@@ -263,9 +239,7 @@ def test_hpxmap_crop(nside, nested, frame, region, axes):
     m.crop(1)
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_upsample(nside, nested, frame, region, axes):
     m = HpxNDMap(
         HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes),
@@ -279,9 +253,7 @@ def test_hpxmap_upsample(nside, nested, frame, region, axes):
     assert m.unit == m_up.unit
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_downsample(nside, nested, frame, region, axes):
     m = HpxNDMap(
         HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes),
@@ -293,9 +265,7 @@ def test_hpxmap_downsample(nside, nested, frame, region, axes):
     assert m.unit == m_down.unit
 
 
-@pytest.mark.parametrize(
-    ("nside", "nested", "frame", "region", "axes"), hpx_test_geoms
-)
+@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_sum_over_axes(nside, nested, frame, region, axes):
     m = HpxNDMap(
         HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes)

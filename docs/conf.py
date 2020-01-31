@@ -200,8 +200,10 @@ suppress_warnings = ["ref.citation"]
 # nitpicky = True
 
 sphinx_gallery_conf = {
-    "examples_dirs": ["../examples/models"],   # path to your example scripts
-    "gallery_dirs": ["modeling/gallery"],      # path to where to save gallery generated output
+    "examples_dirs": ["../examples/models"],  # path to your example scripts
+    "gallery_dirs": [
+        "modeling/gallery"
+    ],  # path to where to save gallery generated output
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": False,
     "capture_repr": (),
