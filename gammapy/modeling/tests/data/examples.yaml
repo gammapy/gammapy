@@ -99,6 +99,9 @@ components:
       min: .nan
       max: .nan
       frozen: true
+  temporal:
+    type: LightCurveTemplateTemporalModel
+    filename: $GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits
 - name: source2
   type: SkyModel
   spatial:

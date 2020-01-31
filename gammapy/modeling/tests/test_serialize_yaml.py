@@ -53,6 +53,7 @@ def test_dict_to_skymodels():
     model1 = models[1]
     assert model1.spectral_model.tag == "PowerLawSpectralModel"
     assert model1.spatial_model.tag == "DiskSpatialModel"
+    assert model1.temporal_model.tag == "LightCurveTemplateTemporalModel"
 
     pars1 = model1.parameters
     assert pars1["index"].value == 2.2
@@ -79,6 +80,7 @@ def test_dict_to_skymodels():
     assert model2.spatial_model.parameters["norm"].value == 1.0
     assert model2.spatial_model.normalize is False
     assert model2.spectral_model.parameters["norm"].value == 2.1
+
     # TODO problem of duplicate parameter name between TemplateSpatialModel and TemplateSpectralModel
     # assert model2.parameters["norm"].value == 2.1 # fail
 
