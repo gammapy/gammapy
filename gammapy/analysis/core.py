@@ -200,8 +200,9 @@ class Analysis:
         # TODO: add "source" to config
         log.info("Calculating flux points.")
         e_edges = self._make_energy_axis(fp_settings.energy).edges
+        fp_params = self.config.flux_points.params
         flux_point_estimator = FluxPointsEstimator(
-            e_edges=e_edges, datasets=self.datasets, source=source
+            e_edges=e_edges, datasets=self.datasets, source=source, **fp_params
         )
         fp = flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
