@@ -1773,18 +1773,3 @@ class HpxToWcsMapping:
 
         return wcs_data
 
-    def make_wcs_data_from_hpx_data(self, hpx_data, wcs, normalize=True):
-        """Create and fill a WCS map from the HEALPIX data using the pre-calculated mappings.
-
-        Parameters
-        ----------
-        hpx_data : TODO
-            The input HEALPIX data
-        wcs : TODO
-            The WCS object
-        normalize : bool
-            True -> preserve integral by splitting HEALPIX values between bins
-        """
-        wcs_data = np.zeros(wcs.npix)
-        self.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
-        return wcs_data
