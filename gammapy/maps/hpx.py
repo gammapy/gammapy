@@ -346,18 +346,6 @@ def nside_to_order(nside):
     return order
 
 
-def upix_to_pix(upix):
-    """Get the pixel index and nside from a unique pixel number."""
-    nside = np.power(2, np.floor(np.log2(upix / 4)) / 2).astype(int)
-    pix = upix - 4 * np.power(nside, 2)
-    return pix, nside
-
-
-def pix_to_upix(pix, nside):
-    """Compute the unique pixel number from the pixel number and nside."""
-    return pix + 4 * np.power(nside, 2)
-
-
 def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
     """Compute the indices of superpixels that contain a subpixel.
 
