@@ -384,6 +384,7 @@ def test_absorption():
     assert_allclose(dnde_err / dnde, 0.1)
 
 
+@requires_data()
 def test_absorbed_extrapolate():
     ebl_model = "dominguez"
     z = 0.001
