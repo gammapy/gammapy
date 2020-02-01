@@ -196,22 +196,6 @@ def hpx_to_axes(h, npix):
     return x, z
 
 
-def hpx_to_coords(h, shape):
-    """Generate an N x D list of pixel center coordinates.
-
-    ``N`` is the number of pixels and ``D`` is the dimensionality of the map.
-    """
-    x, z = hpx_to_axes(h, shape)
-
-    x = np.sqrt(x[0:-1] * x[1:])
-    z = z[:-1] + 0.5
-
-    x = np.ravel(np.ones(shape) * x[:, np.newaxis])
-    z = np.ravel(np.ones(shape) * z[np.newaxis, :])
-
-    return np.vstack((x, z))
-
-
 def make_hpx_to_wcs_mapping(hpx, wcs):
     """Make the pixel mapping from HPX- to a WCS-based geometry.
 
