@@ -13,10 +13,6 @@ def gauss_dist(x, mu, sigma):
     return stats.norm.pdf(x, mu, sigma)
 
 
-def po(x):
-    return x ** (-1.0 * 2)
-
-
 def test_uniform_dist_sampling():
     n_sampled = 1000
     x = np.linspace(-2, 2, n_sampled)
