@@ -1,3 +1,12 @@
+.. _gammapy_0p17_release:
+
+0.17 (Unreleased)
+-----------------
+
+Planned for March 18th 2020
+
+
+
 .. _gammapy_0p16_release:
 
 0.16 (Feb 1, 2020)
