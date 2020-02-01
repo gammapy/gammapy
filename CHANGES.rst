@@ -1,12 +1,12 @@
 .. _gammapy_0p16_release:
 
-0.16 (Jan 31, 2020)
+0.16 (Feb 1, 2020)
 -------------------
 
 Summary
 +++++++
 
-- Released Jan 31, 2020
+- Released Feb 1, 2020
 - 8 contributors
 - 61 pull requests (not all listed below)
 
