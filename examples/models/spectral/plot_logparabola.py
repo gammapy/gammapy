@@ -36,10 +36,7 @@ from gammapy.modeling.models import LogParabolaSpectralModel, Models, SkyModel
 
 energy_range = [0.1, 100] * u.TeV
 model = LogParabolaSpectralModel(
-    alpha=2.3,
-    amplitude="1e-12 cm-2 s-1 TeV-1",
-    reference=1 * u.TeV,
-    beta=0.5,
+    alpha=2.3, amplitude="1e-12 cm-2 s-1 TeV-1", reference=1 * u.TeV, beta=0.5,
 )
 model.plot(energy_range)
 plt.grid(which="both")

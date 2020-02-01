@@ -385,7 +385,7 @@ def test_absorption():
 
 
 def test_absorbed_extrapolate():
-    ebl_model = 'dominguez'
+    ebl_model = "dominguez"
     z = 0.001
     absorption = Absorption.read_builtin(ebl_model)
 
@@ -393,8 +393,7 @@ def test_absorbed_extrapolate():
         absorption.table_model(z)
 
     absorption = Absorption.read_builtin(
-        ebl_model,
-        interp_kwargs={"extrapolate": True, "points_scale": ("log", "lin")}
+        ebl_model, interp_kwargs={"extrapolate": True, "points_scale": ("log", "lin")}
     )
     model = absorption.table_model(z)
     assert_allclose(model(1 * u.TeV), 1)

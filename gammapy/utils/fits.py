@@ -197,7 +197,6 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 
-
 __all__ = ["energy_axis_to_ebounds", "earth_location_from_dict"]
 
 

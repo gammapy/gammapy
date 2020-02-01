@@ -1139,7 +1139,13 @@ class Absorption:
         # Get spectrum values
         table_spectra = Table.read(filename, hdu="SPECTRA")
         data = table_spectra["INTPSPEC"].data[idx, :]
-        return cls(energy=energy, param=param, data=data, filename=filename, interp_kwargs=interp_kwargs)
+        return cls(
+            energy=energy,
+            param=param,
+            data=data,
+            filename=filename,
+            interp_kwargs=interp_kwargs,
+        )
 
     @classmethod
     def read_builtin(cls, name, interp_kwargs=None):
@@ -1352,7 +1358,9 @@ class NaimaSpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
-        raise NotImplementedError("Currently the NaimaSpectralModel cannot be read from YAML")
+        raise NotImplementedError(
+            "Currently the NaimaSpectralModel cannot be read from YAML"
+        )
 
 
 class GaussianSpectralModel(SpectralModel):

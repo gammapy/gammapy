@@ -1744,4 +1744,3 @@ class HpxToWcsMapping:
             wcs_data[~valid] = np.nan
 
         return wcs_data
-
