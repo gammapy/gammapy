@@ -72,7 +72,7 @@ The following tutorials expose common analysis tasks.
 
 *1-dim spectral analysis*
 
-- `Spectral analysis  <../notebooks/spectrum_analysis.html>`__ | *spectrum_analysis.ipynb*
+- `Spectral analysis <../notebooks/spectrum_analysis.html>`__ | *spectrum_analysis.ipynb*
 - `Flux point fitting <../notebooks/sed_fitting.html>`__ | *sed_fitting.ipynb*
 
 *2-dim sky image analysis*
@@ -82,7 +82,7 @@ The following tutorials expose common analysis tasks.
 
 *3-dim sky cube analysis*
 
-- `CTA data analysis with Gammapy <../notebooks/cta_data_analysis.html>`__ | *cta_data_analysis.ipynb*
+- `CTA data analysis <../notebooks/cta_data_analysis.html>`__ | *cta_data_analysis.ipynb*
 - `3D analysis <../notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
 
 *Time-dependent analysis*
@@ -118,11 +118,11 @@ Gammapy API.
 
 *Source detection*
 
-- `How to detect unknown sources and build a simple upper limit map <../notebooks/detect.html>`__ | *detect.ipynb*
+- `Source detection and significance maps <../notebooks/detect.html>`__ | *detect.ipynb*
 
 *Spectral analysis*
 
-- `How to extract the 1D spectrum of an extended source <../notebooks/extended_source_spectral_analysis.html>`__ | *extended_source_spectral_analysis.ipynb*
+- `Spectral analysis of extended sources <../notebooks/extended_source_spectral_analysis.html>`__ | *extended_source_spectral_analysis.ipynb*
 
 *Multi-instrument analysis*
 
