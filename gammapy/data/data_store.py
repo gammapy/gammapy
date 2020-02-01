@@ -171,26 +171,6 @@ class DataStore:
         """
         return DataStoreMaker(paths).run()
 
-    @staticmethod
-    def _find_file(filename, dir):
-        """Find a file at an absolute or relative location.
-
-        - First tries ``Path(filename)``
-        - Second tries ``Path(dir) / filename``
-        - Raises ``OSError`` if both don't exist.
-        """
-        path1 = make_path(filename)
-        path2 = make_path(dir) / filename
-
-        if path1.is_file():
-            filename = path1
-        elif path2.is_file():
-            filename = path2
-        else:
-            raise OSError(f"File not found at {path1} or {path2}")
-
-        return filename
-
     def info(self, show=True):
         """Print some info."""
         s = "Data store:\n"
