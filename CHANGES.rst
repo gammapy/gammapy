@@ -7,13 +7,13 @@ Summary
 +++++++
 
 - Released Jan 31, 2020
-- 8 contrinutors
-- 60 pull requests (not all listed below)
+- 8 contributors
+- 61 pull requests (not all listed below)
 
 **What's new**
 
 For Gammapy v0.16 a ``FoVBackgroundMaker`` was implemented, which supports
-different methods of adapting the norm and tilt of a filed of view background
+different methods of adapting the norm and tilt of a field of view background
 model to the data.
 
 To provide a visual overview of the available models in Gammapy a
@@ -22,14 +22,18 @@ on how to work with the different models is now avilable in a dedicated `models 
 The spectral analysis of an extended source is demonstrated in the newly
 added `extended source spectral analysis tutorial <notebooks/extended_source_spectral_analysis.ipynb>`__.
 
+To further improve API consistency the ``EnergyDispersion`` class
+was renamed to ``EDispKernel`` and the ``SkyModels`` class was
+renamed to a more general ``Models`` class.
+
 The ``coordsys`` attribute of ``WcsGeom`` and ``HpxGeom`` was
 renamed to ``frame`` and now supports arbitrary Astropy coordinate
 frames.
 
-The ``Datasets`` and ``Models`` container objects now required unique
-names of the objects contained. By default unique identifier are generated
+The ``Datasets`` and ``Models`` container objects now require unique
+names of the objects contained. By default unique identifiers are generated
 in the model and dataset objects. The ``Datasets``, ``Models`` as well
-as ``Observations`` container classes, were extend to now support
+as ``Observations`` container classes, were extended to now support
 in place ``.append()``, ``.extend()`` and ``.insert()`` operations.
 
 For Gammapy v0.16 the API of the ``SensitivityEstimator`` and ``TSMapEstimator``
@@ -37,12 +41,10 @@ was adapted to take a ``MapDataset`` or ``MapDatasetOnOff`` as input.
 The ``ASmooth`` class was renamed to ``ASmoothMapEstimator`` and also
 adapted to work with ``MapDataset`` and ``MapDatasetOnOff``.
 
-To further improve API consistency the ``EnergyDispersion`` class
-was renamed to ``EDispKernel`` and the ``SkyModels``class was
-renamed to a more general ``Models`` class. Agian this release contains
-several API breaking changes and removal of non-essential parts of Gammapy
-(see PR list below). These changes are required to finally arrive at a more
-consistent and stable API for Gammapy v1.0. Thanks for your understanding!
+Again this release contains several API breaking changes and removal of
+non-essential parts of Gammapy (see PR list below). These changes are
+required to finally arrive at a more consistent and stable API for
+Gammapy v1.0. Thanks for your understanding!
 
 
 **Contributors:**
@@ -51,8 +53,6 @@ In alphabetical order by first name:
 
 - Atreyee Sinha
 - Axel Donath
-- Brigitta Sipocz
-- Bruno Khelifi
 - Christoph Deil
 - Fabio Pintore
 - José Enrique Ruiz
@@ -68,7 +68,8 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 See the complete `Gammapy v0.16 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.16+is%3Aclosed>`__.
 
 
-
+- [#2756] Add config params for get_flux_points method in High-level interface (José Enrique Ruiz)
+- [#2747] Modify Config and Analysis to support SafeMaskMaker (Régis Terrier)
 - [#2752] Add temporal model support to SkyModel (Quentin Remy)
 - [#2755] Fix WcsNDMap and MapDataset cutout to support mode='partial' (Régis Terrier)
 - [#2753] Make DataStoreObservation inherit from Observation (Axel Donath)
