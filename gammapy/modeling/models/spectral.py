@@ -1048,9 +1048,8 @@ class Absorption:
         Filename of the absorption model used for serialisation.
     interp_kwargs : dict
         Interpolation option passed to `ScaledRegularGridInterpolator`.
-        By default an error is thrown when absorption models are evaluated
-        outside their valid range. For extrapolation use
-        interp_kwargs = {"extrapolate": True, "points_scale": ("log", "lin")}
+        By default the models are extrapolated outside the range. To prevent
+        this and raise an error instead use interp_kwargs = {"extrapolate": False}
     """
 
     tag = "Absorption"
@@ -1064,7 +1063,7 @@ class Absorption:
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("points_scale", ("log", "lin"))
-        interp_kwargs.setdefault("extrapolate", False)
+        interp_kwargs.setdefault("extrapolate", True)
 
         self._evaluate = ScaledRegularGridInterpolator(
             points=(self.param, self.energy), values=data, **interp_kwargs

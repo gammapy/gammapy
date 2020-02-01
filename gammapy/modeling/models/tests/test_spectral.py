@@ -389,12 +389,6 @@ def test_absorbed_extrapolate():
     z = 0.001
     absorption = Absorption.read_builtin(ebl_model)
 
-    with pytest.raises(ValueError):
-        absorption.table_model(z)
-
-    absorption = Absorption.read_builtin(
-        ebl_model, interp_kwargs={"extrapolate": True, "points_scale": ("log", "lin")}
-    )
     model = absorption.table_model(z)
     assert_allclose(model(1 * u.TeV), 1)
 
