@@ -11,7 +11,6 @@ __all__ = [
     "sample_sphere_distance",
     "sample_powerlaw",
     "normalize",
-    "density",
     "draw",
     "pdf",
 ]
@@ -31,15 +30,6 @@ def pdf(func):
 
     def f(x):
         return x * func(x)
-
-    return f
-
-
-def density(func):
-    """Radial surface density of a given one dimensional PDF."""
-
-    def f(x):
-        return func(x) / x
 
     return f
 
