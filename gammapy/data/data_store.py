@@ -122,22 +122,6 @@ class DataStore:
         return cls(hdu_table=hdu_table, obs_table=obs_table)
 
     @classmethod
-    def from_config(cls, config):
-        """Create from a config dict."""
-        base_dir = config["base_dir"]
-        hdu_table_filename = config.get("hduindx", cls.DEFAULT_HDU_TABLE)
-        obs_table_filename = config.get("obsindx", cls.DEFAULT_OBS_TABLE)
-
-        hdu_table_filename = cls._find_file(hdu_table_filename, base_dir)
-        obs_table_filename = cls._find_file(obs_table_filename, base_dir)
-
-        return cls.from_files(
-            base_dir=base_dir,
-            hdu_table_filename=hdu_table_filename,
-            obs_table_filename=obs_table_filename,
-        )
-
-    @classmethod
     def from_events_files(cls, paths):
         """Create from a list of event filenames.
 
