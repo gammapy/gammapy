@@ -918,7 +918,7 @@ class TemplateSpectralModel(SpectralModel):
         meta=None,
     ):
         self.energy = energy
-        self.values = values
+        self.values = u.Quantity(values, copy=False)
         self.meta = dict() if meta is None else meta
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
@@ -1044,6 +1044,13 @@ class Absorption:
         Parameter node values
     data : `~astropy.units.Quantity`
         Model value
+    filename : str
+        Filename of the absorption model used for serialisation.
+    interp_kwargs : dict
+        Interpolation option passed to `ScaledRegularGridInterpolator`.
+        By default an error is thrown when absorption models are evaluated
+        outside their valid range. For extrapolation use
+        interp_kwargs = {"extrapolate": True, "points_scale": ("log", "lin")}
     """
 
     tag = "Absorption"
@@ -1057,6 +1064,7 @@ class Absorption:
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("points_scale", ("log", "lin"))
+        interp_kwargs.setdefault("extrapolate", False)
 
         self._evaluate = ScaledRegularGridInterpolator(
             points=(self.param, self.energy), values=data, **interp_kwargs
@@ -1094,7 +1102,7 @@ class Absorption:
             return cls(energy=energy, param=param, data=values)
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, interp_kwargs=None):
         """Build object from an XSPEC model.
 
         Todo: Format of XSPEC binary files should be referenced at https://gamma-astro-data-formats.readthedocs.io/en/latest/
@@ -1103,6 +1111,13 @@ class Absorption:
         ----------
         filename : str
             File containing the model.
+        interp_kwargs : dict
+            Interpolation option passed to `ScaledRegularGridInterpolator`.
+
+        Returns
+        -------
+        absorption : `Absorption`
+            Absorption model.
         """
         # Create EBL data array
         filename = make_path(filename)
@@ -1124,10 +1139,10 @@ class Absorption:
         # Get spectrum values
         table_spectra = Table.read(filename, hdu="SPECTRA")
         data = table_spectra["INTPSPEC"].data[idx, :]
-        return cls(energy=energy, param=param, data=data, filename=filename)
+        return cls(energy=energy, param=param, data=data, filename=filename, interp_kwargs=interp_kwargs)
 
     @classmethod
-    def read_builtin(cls, name):
+    def read_builtin(cls, name, interp_kwargs=None):
         """Read one of the built-in absorption models.
 
         Parameters
@@ -1143,21 +1158,32 @@ class Absorption:
             `Link <https://ui.adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`__
         .. [3] Finke et al., "Modeling the Extragalactic Background Light from Stars and Dust"
             `Link <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
+
+        Returns
+        -------
+        absorption : `Absorption`
+            Absorption model.
+
         """
         models = dict()
         models["franceschini"] = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
         models["dominguez"] = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
         models["finke"] = "$GAMMAPY_DATA/ebl/frd_abs.fits.gz"
 
-        return cls.read(models[name])
+        return cls.read(models[name], interp_kwargs=interp_kwargs)
 
     def table_model(self, parameter):
-        """Table model for a given parameter (`~gammapy.modeling.models.TemplateSpectralModel`).
+        """Table model for a given parameter value.
 
         Parameters
         ----------
         parameter : float
             Parameter value.
+
+        Returns
+        -------
+        template_model : `TemplateSpectralModel`
+            Template spectral model.
         """
         energy = self.energy
         values = self.evaluate(energy=energy, parameter=parameter)
@@ -1167,7 +1193,7 @@ class Absorption:
 
     def evaluate(self, energy, parameter):
         """Evaluate model for energy and parameter value."""
-        return self._evaluate((parameter, energy))
+        return np.clip(self._evaluate((parameter, energy)), 0, 1)
 
 
 class AbsorbedSpectralModel(SpectralModel):
