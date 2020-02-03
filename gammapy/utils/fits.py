@@ -206,14 +206,11 @@ class LazyFitsData(object):
 
     Parameters
     ----------
-    cls : object
-        Class to be instantiated.
     cache : bool
         Whether to cache the data.
     """
 
-    def __init__(self, cls, cache=True):
-        self.cls = cls
+    def __init__(self, cache=True):
         self.cache = cache
 
     def __set_name__(self, owner, name):
@@ -233,14 +230,10 @@ class LazyFitsData(object):
     def __set__(self, instance, value):
         from gammapy.data import HDULocation
 
-        if isinstance(value, self.cls) or value is None:
-            instance.__dict__[self.name] = value
-
-        elif isinstance(value, HDULocation):
+        if isinstance(value, HDULocation):
             instance.__dict__[self.name + "_hdu"] = value
-
         else:
-            raise ValueError(f"Either instance of {self.cls} or {HDULocation} required")
+            instance.__dict__[self.name] = value
 
 
 def energy_axis_to_ebounds(energy):

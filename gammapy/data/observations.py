@@ -10,7 +10,6 @@ from gammapy.irf import (
     Background3D, load_cta_irfs, Background2D, EffectiveAreaTable2D, EnergyDispersion2D, PSF3D, PSFKing, EnergyDependentMultiGaussPSF
 )
 from gammapy.utils.fits import earth_location_from_dict, LazyFitsData
-from gammapy.utils.table import table_row_to_dict
 from gammapy.utils.testing import Checker
 from .event_list import EventListChecker, EventList
 from .filters import ObservationFilter
@@ -46,12 +45,12 @@ class Observation:
     obs_filter : `ObservationFilter`
         Observation filter.
     """
-    aeff = LazyFitsData(cls=EffectiveAreaTable2D, cache=False)
-    edisp = LazyFitsData(cls=EnergyDispersion2D, cache=False)
-    psf= LazyFitsData(cls=(PSFKing, PSF3D, EnergyDependentMultiGaussPSF), cache=False)
-    bkg = LazyFitsData(cls=(Background2D, Background3D), cache=False)
-    _events = LazyFitsData(cls=EventList, cache=False)
-    _gti = LazyFitsData(cls=GTI, cache=False)
+    aeff = LazyFitsData(cache=False)
+    edisp = LazyFitsData(cache=False)
+    psf = LazyFitsData(cache=False)
+    bkg = LazyFitsData(cache=False)
+    _events = LazyFitsData(cache=False)
+    _gti = LazyFitsData(cache=False)
 
     def __init__(
         self,
