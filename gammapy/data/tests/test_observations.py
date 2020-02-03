@@ -22,8 +22,8 @@ def data_store():
 
 
 @requires_data()
-def test_data_store_observation(data_store):
-    """Test DataStoreObservation class"""
+def test_observation(data_store):
+    """Test Observation class"""
     obs = data_store.obs(23523)
 
     assert_time_allclose(obs.tstart, Time(53343.92234009259, scale="tt", format="mjd"))

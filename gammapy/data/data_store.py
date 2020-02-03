@@ -185,7 +185,7 @@ class DataStore:
             return s
 
     def obs(self, obs_id):
-        """Access a given `~gammapy.data.DataStoreObservation`.
+        """Access a given `~gammapy.data.Observation`.
 
         Parameters
         ----------
@@ -194,7 +194,7 @@ class DataStore:
 
         Returns
         -------
-        observation : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.Observation`
             Observation container
         """
         if obs_id not in self.obs_table["OBS_ID"]:
@@ -237,7 +237,7 @@ class DataStore:
         Returns
         -------
         observations : `~gammapy.data.Observations`
-            Container holding a list of `~gammapy.data.DataStoreObservation`
+            Container holding a list of `~gammapy.data.Observation`
         """
         if obs_id is None:
             obs_id = self.obs_table["OBS_ID"].data

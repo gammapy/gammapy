@@ -102,7 +102,7 @@ create a composed filter.
 .. gp-howto-hli:: observations
 
 You may use the `get_observations()` method to proceed to make the observation filtering.
-The observations are stored as a list of `~gammapy.data.DataStoreObservation` objects.
+The observations are stored as a list of `~gammapy.data.Observation` objects.
 
 .. code-block:: python
 

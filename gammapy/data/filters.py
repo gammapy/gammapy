@@ -25,7 +25,7 @@ class ObservationFilter:
 
     Examples
     --------
-    >>> from gammapy.data import ObservationFilter, DataStore, DataStoreObservation
+    >>> from gammapy.data import ObservationFilter, DataStore, Observation
     >>> from astropy.time import Time
     >>> from astropy.coordinates import Angle
     >>>
@@ -35,7 +35,8 @@ class ObservationFilter:
     >>> my_obs_filter = ObservationFilter(time_filter=time_filter, event_filters=[phase_filter])
     >>>
     >>> ds = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
-    >>> my_obs = DataStoreObservation(obs_id=111630, data_store=ds, obs_filter=my_obs_filter)
+    >>> my_obs = ds.obs(obs_id=111630)
+    >>> my_obs.obs_filter = my_obs_filter
     """
 
     EVENT_FILTER_TYPES = dict(sky_region="select_region", custom="select_parameter")

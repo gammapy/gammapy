@@ -37,7 +37,7 @@ Application in gammapy
 ----------------------
 
 The main classes in Gammapy to access the DL3 data library are the
-`~gammapy.data.DataStore` and `~gammapy.data.DataStoreObservation`.
+`~gammapy.data.DataStore` and `~gammapy.data.Observation`.
 They are used to store and retrieve dynamically the datasets
 relevant to any observation (event list in the form of an `~gammapy.data.EventList`,
 IRFs see :ref:`irf` and other relevant informations).

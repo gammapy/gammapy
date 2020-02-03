@@ -90,7 +90,7 @@ class PhaseBackgroundMaker:
         ----------
         dataset : `SpectrumDataset`
             Input dataset.
-        observation : `DataStoreObservation`
+        observation : `Observation`
             Data store observation.
 
         Returns

@@ -131,7 +131,7 @@ class Observation:
         obs : `gammapy.data.MemoryObservation`
         """
         if "DataStore" in cls.__name__:
-            raise ValueError("DataStoreObservation cannot be created in memory")
+            raise ValueError("Observation cannot be created in memory")
 
         tstart = tstart or Quantity(0.0, "hr")
         tstop = (tstart + Quantity(livetime)) or tstop
@@ -370,7 +370,7 @@ class Observation:
 
         Returns
         -------
-        new_obs : `~gammapy.data.DataStoreObservation`
+        new_obs : `~gammapy.data.Observation`
             A new observation instance of the specified time interval
         """
         new_obs_filter = self.obs_filter.copy()
@@ -386,7 +386,7 @@ class Observations(collections.abc.MutableSequence):
     Parameters
     ----------
     observations : list
-        A list of `~gammapy.data.DataStoreObservation`
+        A list of `~gammapy.data.Observation`
     """
 
     def __init__(self, observations=None):

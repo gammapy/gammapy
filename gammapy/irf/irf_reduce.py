@@ -12,7 +12,7 @@ def make_psf(observation, position, energy=None, rad=None):
 
     Parameters
     ----------
-    observation : `~gammapy.data.DataStoreObservation`
+    observation : `~gammapy.data.Observation`
         Observation for which to compute the PSF
     position : `~astropy.coordinates.SkyCoord`
         Position at which to compute the PSF

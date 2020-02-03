@@ -56,7 +56,7 @@ class SpectrumDatasetMaker:
             Region to compute counts spectrum for.
         energy_axis : `~gammapy.maps.MapAxis`
             Reconstructed energy axis.
-        observation: `~gammapy.data.DataStoreObservation`
+        observation: `~gammapy.data.Observation`
             Observation to compute effective area for.
 
         Returns
@@ -85,7 +85,7 @@ class SpectrumDatasetMaker:
             Region to compute background spectrum for.
         energy_axis : `~gammapy.maps.MapAxis`
             Reconstructed energy axis.
-        observation: `~gammapy.data.DataStoreObservation`
+        observation: `~gammapy.data.Observation`
             Observation to compute effective area for.
 
         Returns
@@ -124,7 +124,7 @@ class SpectrumDatasetMaker:
             Region to compute background effective area.
         energy_axis_true : `~gammapy.maps.MapAxis`
             True energy axis.
-        observation: `~gammapy.data.DataStoreObservation`
+        observation: `~gammapy.data.Observation`
             Observation to compute effective area for.
 
         Returns
@@ -160,7 +160,7 @@ class SpectrumDatasetMaker:
             Reconstructed energy axis.
         energy_axis_true : `~gammapy.maps.MapAxis`
             True energy axis.
-        observation: `~gammapy.data.DataStoreObservation`
+        observation: `~gammapy.data.Observation`
             Observation to compute edisp for.
 
         Returns
@@ -180,7 +180,7 @@ class SpectrumDatasetMaker:
         ----------
         dataset : `~gammapy.spectrum.SpectrumDataset`
             Spectrum dataset.
-        observation: `~gammapy.data.DataStoreObservation`
+        observation: `~gammapy.data.Observation`
             Observation to reduce.
 
         Returns
