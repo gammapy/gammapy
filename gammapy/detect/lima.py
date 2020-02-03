@@ -7,7 +7,11 @@ from astropy.convolution import Tophat2DKernel
 from gammapy.stats import significance, significance_on_off
 from gammapy.cube import MapDataset, MapDatasetOnOff
 
-__all__ = ["SignificanceMapEstimator", "compute_lima_image", "compute_lima_on_off_image"]
+__all__ = [
+    "SignificanceMapEstimator",
+    "compute_lima_image",
+    "compute_lima_on_off_image",
+]
 
 log = logging.getLogger(__name__)
 
@@ -21,6 +25,7 @@ class SignificanceMapEstimator:
     correlation_radius : ~astropy.coordinate.Angle
         correlation radius to use
     """
+
     def __init__(self, correlation_radius):
         self.radius = Angle(correlation_radius)
 
@@ -36,11 +41,13 @@ class SignificanceMapEstimator:
         dataset : `~gammapy.cube.MapDataset` or `~gammapy.cube.MapDataset`
             input dataset
         """
-        if not isinstance(dataset, MapDataset) and not isinstance(dataset, MapDatasetOnOff):
+        if not isinstance(dataset, MapDataset) and not isinstance(
+            dataset, MapDatasetOnOff
+        ):
             raise ValueError("Unsupported dataset type")
 
         pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
-        size = self.radius.deg/pixel_size
+        size = self.radius.deg / pixel_size
         kernel = Tophat2DKernel(size)
 
         if isinstance(dataset, MapDatasetOnOff):
@@ -49,15 +56,11 @@ class SignificanceMapEstimator:
                 dataset.counts_off,
                 dataset.acceptance,
                 dataset.acceptance_off,
-                kernel
+                kernel,
             )
         else:
             background = dataset.npred()
-            result = compute_lima_image(
-                dataset.counts,
-                background,
-                kernel
-            )
+            result = compute_lima_image(dataset.counts, background, kernel)
         return result
 
 
@@ -136,15 +139,15 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):
     n_on_conv = np.rint(n_on.convolve(kernel.array).data)
 
     with np.errstate(invalid="ignore", divide="ignore"):
-        background = a_on/a_off
+        background = a_on / a_off
     background *= n_off
-    background.data[a_off.data==0]=0.
+    background.data[a_off.data == 0] = 0.0
     background_conv = background.convolve(kernel.array).data
 
     n_off_conv = n_off.convolve(kernel.array).data
 
     with np.errstate(invalid="ignore", divide="ignore"):
-        alpha_conv = background_conv/n_off_conv
+        alpha_conv = background_conv / n_off_conv
 
     significance_conv = significance_on_off(
         n_on_conv, n_off_conv, alpha_conv, method="lima"

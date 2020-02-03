@@ -3,14 +3,19 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
-from gammapy.detect import compute_lima_image, compute_lima_on_off_image, SignificanceMapEstimator
+from gammapy.detect import (
+    compute_lima_image,
+    compute_lima_on_off_image,
+    SignificanceMapEstimator,
+)
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.cube import MapDataset, MapDatasetOnOff
 from gammapy.utils.testing import requires_data
 
+
 @pytest.fixture
 def simple_dataset():
-    axis = MapAxis.from_energy_bounds(0.1,10,1,unit="TeV")
+    axis = MapAxis.from_energy_bounds(0.1, 10, 1, unit="TeV")
     geom = WcsGeom.create(npix=50, binsz=0.02, axes=[axis])
     dataset = MapDataset.create(geom)
     dataset.mask_safe += 1
@@ -18,9 +23,10 @@ def simple_dataset():
     dataset.background_model.map += 1
     return dataset
 
+
 @pytest.fixture
 def simple_dataset_on_off():
-    axis = MapAxis.from_energy_bounds(0.1,10,1,unit="TeV")
+    axis = MapAxis.from_energy_bounds(0.1, 10, 1, unit="TeV")
     geom = WcsGeom.create(npix=50, binsz=0.02, axes=[axis])
     dataset = MapDatasetOnOff.create(geom)
     dataset.mask_safe += 1
@@ -76,26 +82,29 @@ def test_compute_lima_on_off_image():
     # n_off is convolved as well to ensure the method applies to true ON-OFF datasets
     assert_allclose(actual, desired, atol=0.2)
 
+
 def test_significance_map_estimator_incorrect_dataset():
-    estimator = SignificanceMapEstimator('0.1 deg')
+    estimator = SignificanceMapEstimator("0.1 deg")
 
     with pytest.raises(ValueError):
-        estimator.run('bad')
+        estimator.run("bad")
+
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
-    estimator = SignificanceMapEstimator(0.1*u.deg)
+    estimator = SignificanceMapEstimator(0.1 * u.deg)
     result = estimator.run(simple_dataset)
 
-    assert_allclose(result['counts'].data[0, 25,25], 162)
-    assert_allclose(result['excess'].data[0, 25,25], 81)
-    assert_allclose(result['background'].data[0, 25,25], 81)
-    assert_allclose(result['significance'].data[0, 25,25], 7.910732)
+    assert_allclose(result["counts"].data[0, 25, 25], 162)
+    assert_allclose(result["excess"].data[0, 25, 25], 81)
+    assert_allclose(result["background"].data[0, 25, 25], 81)
+    assert_allclose(result["significance"].data[0, 25, 25], 7.910732)
+
 
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     estimator = SignificanceMapEstimator(0.1 * u.deg)
     result = estimator.run(simple_dataset_on_off)
 
-    assert_allclose(result['n_on'].data[0, 25, 25], 162)
-    assert_allclose(result['excess'].data[0, 25, 25], 81)
-    assert_allclose(result['background'].data[0, 25, 25], 81)
-    assert_allclose(result['significance'].data[0, 25, 25], 5.246298)
+    assert_allclose(result["n_on"].data[0, 25, 25], 162)
+    assert_allclose(result["excess"].data[0, 25, 25], 81)
+    assert_allclose(result["background"].data[0, 25, 25], 81)
+    assert_allclose(result["significance"].data[0, 25, 25], 5.246298)
