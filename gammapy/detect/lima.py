@@ -36,22 +36,30 @@ class SignificanceMapEstimator:
         dataset : `~gammapy.cube.MapDataset` or `~gammapy.cube.MapDataset`
             input dataset
         """
-        if isinstance(dataset, MapDataset):
-            return self._run_mapdataset(dataset)
-        elif isinstance(dataset, MapDatasetOnOff):
-            return self._run_mapdataset_onoff(dataset)
-        else:
+        if not isinstance(dataset, MapDataset) and not isinstance(dataset, MapDatasetOnOff):
             raise ValueError("Unsupported dataset type")
 
-    def _run_mapdataset(self, dataset):
-        """Apply Li & Ma with known background"""
         pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
         size = self.radius.deg/pixel_size
         kernel = Tophat2DKernel(size)
 
-        counts = dataset.counts
-        background = dataset.npred()
-        return compute_lima_image(counts, background, kernel)
+        if isinstance(dataset, MapDataset):
+            background = dataset.npred()
+            result = compute_lima_image(
+                dataset.counts,
+                background,
+                kernel
+            )
+        else:
+            result = compute_lima_on_off_image(
+                dataset.counts,
+                dataset.counts_off,
+                dataset.acceptance,
+                dataset.acceptance_off,
+                kernel
+            )
+        return result
+
 
 def compute_lima_image(counts, background, kernel):
     """Compute Li & Ma significance and flux images for known background.
