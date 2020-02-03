@@ -1,16 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections.abc
 import logging
+import copy
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.irf import Background3D
-from gammapy.utils.fits import earth_location_from_dict
+from gammapy.irf import (
+    Background3D, load_cta_irfs, Background2D, EffectiveAreaTable2D, EnergyDispersion2D, PSF3D, PSFKing, EnergyDependentMultiGaussPSF
+)
+from gammapy.utils.fits import earth_location_from_dict, LazyFitsData
 from gammapy.utils.table import table_row_to_dict
 from gammapy.utils.testing import Checker
-from ..irf import load_cta_irfs
-from .event_list import EventListChecker
+from .event_list import EventListChecker, EventList
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
@@ -41,7 +43,15 @@ class Observation:
         Table with GTI start and stop time
     events : `~gammapy.data.EventList`
         Event list
+    obs_filter : `ObservationFilter`
+        Observation filter.
     """
+    aeff = LazyFitsData(cls=EffectiveAreaTable2D, cache=False)
+    edisp = LazyFitsData(cls=EnergyDispersion2D, cache=False)
+    psf= LazyFitsData(cls=(PSFKing, PSF3D, EnergyDependentMultiGaussPSF), cache=False)
+    bkg = LazyFitsData(cls=(Background2D, Background3D), cache=False)
+    _events = LazyFitsData(cls=EventList, cache=False)
+    _gti = LazyFitsData(cls=GTI, cache=False)
 
     def __init__(
         self,
@@ -53,6 +63,7 @@ class Observation:
         psf=None,
         bkg=None,
         events=None,
+        obs_filter=None,
     ):
         self.obs_id = obs_id
         self.obs_info = obs_info
@@ -60,8 +71,19 @@ class Observation:
         self.edisp = edisp
         self.psf = psf
         self.bkg = bkg
-        self.gti = gti
-        self.events = events
+        self._gti = gti
+        self._events = events
+        self.obs_filter = obs_filter or ObservationFilter()
+
+    @property
+    def events(self):
+        events = self.obs_filter.filter_events(self._events)
+        return events
+
+    @property
+    def gti(self):
+        events = self.obs_filter.filter_gti(self._gti)
+        return events
 
     @staticmethod
     def _get_obs_info(pointing, deadtime_fraction):
@@ -292,6 +314,14 @@ class Observation:
             f"\tdeadtime fraction : {self.observation_dead_time_fraction:.1%}\n"
         )
 
+    def check(self, checks="all"):
+        """Run checks.
+
+        This is a generator that yields a list of dicts.
+        """
+        checker = ObservationChecker(self)
+        return checker.run(checks=checks)
+
     def peek(self, figsize=(12, 10)):
         """Quick-look plots in a few panels.
 
@@ -328,6 +358,26 @@ class Observation:
         ax_bkg.set_title("Background rate")
         ax_psf.set_title("Point spread function")
         ax_edisp.set_title("Energy dispersion")
+
+    def select_time(self, time_interval):
+        """Select a time interval of the observation.
+
+        Parameters
+        ----------
+        time_interval : `astropy.time.Time`
+            Start and stop time of the selected time interval.
+            For now we only support a single time interval.
+
+        Returns
+        -------
+        new_obs : `~gammapy.data.DataStoreObservation`
+            A new observation instance of the specified time interval
+        """
+        new_obs_filter = self.obs_filter.copy()
+        new_obs_filter.time_filter = time_interval
+        obs = copy.deepcopy(self)
+        obs.obs_filter = new_obs_filter
+        return obs
 
 
 class DataStoreObservation(Observation):
@@ -437,34 +487,8 @@ class DataStoreObservation(Observation):
         row = self.data_store.obs_table.select_obs_id(obs_id=self.obs_id)[0]
         return table_row_to_dict(row)
 
-    def select_time(self, time_interval):
-        """Select a time interval of the observation.
 
-        Parameters
-        ----------
-        time_interval : `astropy.time.Time`
-            Start and stop time of the selected time interval.
-            For now we only support a single time interval.
 
-        Returns
-        -------
-        new_obs : `~gammapy.data.DataStoreObservation`
-            A new observation instance of the specified time interval
-        """
-        new_obs_filter = self.obs_filter.copy()
-        new_obs_filter.time_filter = time_interval
-
-        return self.__class__(
-            obs_id=self.obs_id, data_store=self.data_store, obs_filter=new_obs_filter
-        )
-
-    def check(self, checks="all"):
-        """Run checks.
-
-        This is a generator that yields a list of dicts.
-        """
-        checker = ObservationChecker(self)
-        return checker.run(checks=checks)
 
 
 class Observations(collections.abc.MutableSequence):
@@ -567,7 +591,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting events check")
 
         try:
-            events = self.observation.load("events")
+            events = self.observation.events
         except Exception:
             yield self._record(level="warning", msg="Loading events failed")
             return
@@ -579,7 +603,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting gti check")
 
         try:
-            gti = self.observation.load("gti")
+            gti = self.observation.gti
         except Exception:
             yield self._record(level="warning", msg="Loading GTI failed")
             return
@@ -630,7 +654,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting aeff check")
 
         try:
-            aeff = self.observation.load("aeff")
+            aeff = self.observation.aeff
         except Exception:
             yield self._record(level="warning", msg="Loading aeff failed")
             return
@@ -655,7 +679,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting edisp check")
 
         try:
-            edisp = self.observation.load("edisp")
+            edisp = self.observation.edisp
         except Exception:
             yield self._record(level="warning", msg="Loading edisp failed")
             return
@@ -668,7 +692,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting psf check")
 
         try:
-            self.observation.load("psf")
+            self.observation.psf
         except Exception:
             yield self._record(level="warning", msg="Loading psf failed")
             return

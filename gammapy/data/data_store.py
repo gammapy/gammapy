@@ -4,11 +4,12 @@ import subprocess
 from pathlib import Path
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from gammapy.utils.table import table_row_to_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from .hdu_index_table import HDUIndexTable
 from .obs_table import ObservationTable, ObservationTableChecker
-from .observations import DataStoreObservation, ObservationChecker, Observations
+from .observations import Observation, ObservationChecker, Observations
 
 __all__ = ["DataStore"]
 
@@ -196,7 +197,32 @@ class DataStore:
         observation : `~gammapy.data.DataStoreObservation`
             Observation container
         """
-        return DataStoreObservation(obs_id=int(obs_id), data_store=self)
+        if obs_id not in self.obs_table["OBS_ID"]:
+            raise ValueError(f"OBS_ID = {obs_id} not in obs index table.")
+
+        if obs_id not in self.hdu_table["OBS_ID"]:
+            raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
+
+        row = self.obs_table.select_obs_id(obs_id=obs_id)[0]
+        obs_info = table_row_to_dict(row)
+
+        aeff_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="aeff")
+        edisp_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="edisp")
+        bkg_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="bkg")
+        psf_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="psf")
+        events_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="events")
+        gti_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="gti")
+
+        return Observation(
+            obs_id=int(obs_id),
+            obs_info=obs_info,
+            bkg=bkg_hdu,
+            aeff=aeff_hdu,
+            edisp=edisp_hdu,
+            events=events_hdu,
+            gti=gti_hdu,
+            psf=psf_hdu,
+        )
 
     def get_observations(self, obs_id=None, skip_missing=False):
         """Generate a `~gammapy.data.Observations`.
