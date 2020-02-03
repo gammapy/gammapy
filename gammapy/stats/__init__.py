@@ -5,3 +5,4 @@ from .fit_statistics import *
 from .fit_statistics_cython import *
 from .normal import *
 from .poisson import *
+from .li_ma import *

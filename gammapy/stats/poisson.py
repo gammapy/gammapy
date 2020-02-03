@@ -121,13 +121,16 @@ def excess(n_on, n_off, alpha):
     return n_on - alpha * n_off
 
 
-def excess_error(n_on, n_off, alpha):
+def excess_error(n_on, n_off, alpha, method='lima'):
     r"""Estimate error on excess for an on-off measurement.
 
-    .. math::
-        \Delta\mu_{excess} = \sqrt{n_{on} + \alpha ^ 2 \times n_{off}}
+    The default ``method="lima"`` gives the error estimate following the methodology of
+    the Li & Ma paper [1]_.
 
-    TODO: Implement better error and limit estimates (Li & Ma, Rolke)!
+     For ``method="simple"``, the error estimate is given by:
+
+   .. math::
+        \Delta\mu_{excess} = \sqrt{n_{on} + \alpha ^ 2 \times n_{off}}
 
     Parameters
     ----------
@@ -137,6 +140,8 @@ def excess_error(n_on, n_off, alpha):
         Observed number of counts in the off region
     alpha : array_like
         On / off region exposure ratio for background events
+    method : {"lima", "simple"}
+        Method for significance estimation
 
     Returns
     -------
@@ -146,16 +151,24 @@ def excess_error(n_on, n_off, alpha):
     Examples
     --------
     >>> excess_error(n_on=10, n_off=20, alpha=0.1)
-    3.1937438845342623...
-    >>> excess_error(n_on=4, n_off=9, alpha=0.5)
+    3.203857421875...
+    >>> excess_error(n_on=4, n_off=9, alpha=0.5, method='simple')
     2.5
-    """
-    n_on = np.asanyarray(n_on, dtype=np.float64)
-    n_off = np.asanyarray(n_off, dtype=np.float64)
-    alpha = np.asanyarray(alpha, dtype=np.float64)
+    >>> excess_error(n_on=4, n_off=9, alpha=0.5, method='simple')
+    2.552490234375...
+   """
+    if method == "simple":
+       n_on = np.asanyarray(n_on, dtype=np.float64)
+       n_off = np.asanyarray(n_off, dtype=np.float64)
+       alpha = np.asanyarray(alpha, dtype=np.float64)
 
-    variance = n_on + (alpha ** 2) * n_off
-    return np.sqrt(variance)
+       variance = n_on + (alpha ** 2) * n_off
+       return np.sqrt(variance)
+    elif method == "lima":
+        from gammapy.stats.li_ma import lm_dexcess
+        return lm_dexcess(n_on, n_off, alpha)
+    else:
+        raise ValueError(f"Invalid method: {method}")
 
 
 def significance(n_on, mu_bkg, method="lima", n_on_min=1):
@@ -241,9 +254,8 @@ def _significance_simple(n_on, mu_bkg):
 
 
 def _significance_lima(n_on, mu_bkg):
-    sign = np.sign(n_on - mu_bkg)
-    val = np.sqrt(2) * np.sqrt(n_on * np.log(n_on / mu_bkg) - n_on + mu_bkg)
-    return sign * val
+    from gammapy.stats.li_ma import lm_significance
+    return lm_significance(n_on, mu_bkg)
 
 
 def significance_on_off(n_on, n_off, alpha, method="lima"):
@@ -303,7 +315,8 @@ def significance_on_off(n_on, n_off, alpha, method="lima"):
         if method == "simple":
             return _significance_simple_on_off(n_on, n_off, alpha)
         elif method == "lima":
-            return _significance_lima_on_off(n_on, n_off, alpha)
+            from gammapy.stats.li_ma import lm_significance_on_off
+            return lm_significance_on_off(n_on, n_off, alpha)
         elif method == "direct":
             return _significance_direct_on_off(n_on, n_off, alpha)
         else:
@@ -316,18 +329,6 @@ def _significance_simple_on_off(n_on, n_off, alpha):
     excess_error_ = excess_error(n_on, n_off, alpha)
 
     return excess_ / excess_error_
-
-
-def _significance_lima_on_off(n_on, n_off, alpha):
-    r"""Compute significance with the Li & Ma formula (17)."""
-    sign = np.sign(excess(n_on, n_off, alpha))
-
-    tt = (alpha + 1) / (n_on + n_off)
-    ll = n_on * np.log(n_on * tt / alpha)
-    mm = n_off * np.log(n_off * tt)
-    val = np.sqrt(np.abs(2 * (ll + mm)))
-
-    return sign * val
 
 
 def _significance_direct(n_on, mu_bkg):
