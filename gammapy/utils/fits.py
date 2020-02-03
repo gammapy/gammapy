@@ -197,7 +197,50 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 
-__all__ = ["energy_axis_to_ebounds", "earth_location_from_dict"]
+
+__all__ = ["energy_axis_to_ebounds", "earth_location_from_dict", "LazyFitsData"]
+
+
+class LazyFitsData(object):
+    """A lazy FITS data descriptor.
+
+    Parameters
+    ----------
+    cls : object
+        Class to be instantiated.
+    cache : bool
+        Whether to cache the data.
+    """
+
+    def __init__(self, cls, cache=True):
+        self.cls = cls
+        self.cache = cache
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, instance, objtype):
+        value = instance.__dict__.get(self.name)
+        if value is not None:
+            return value
+        else:
+            hdu_loc = instance.__dict__.get(self.name + "_hdu")
+            value = hdu_loc.load()
+            if self.cache:
+                instance.__dict__[self.name] = value
+            return value
+
+    def __set__(self, instance, value):
+        from gammapy.data import HDULocation
+
+        if isinstance(value, self.cls) or value is None:
+            instance.__dict__[self.name] = value
+
+        elif isinstance(value, HDULocation):
+            instance.__dict__[self.name + "_hdu"] = value
+
+        else:
+            raise ValueError(f"Either instance of {self.cls} or {HDULocation} required")
 
 
 def energy_axis_to_ebounds(energy):
