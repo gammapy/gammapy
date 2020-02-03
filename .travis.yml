@@ -38,7 +38,7 @@ env:
 
         - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-gallery sphinx-click sphinx_rtd_theme pytest-astropy parfive pydantic'
 
-        - CONDA_CHANNELS='conda-forge sherpa'
+        - CONDA_CHANNELS='astropy sherpa'
         - FETCH_GAMMAPY_DATA=true
         - TEST_COVERAGE=false
         - TEST_PACKAGING=false
