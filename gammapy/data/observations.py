@@ -17,7 +17,7 @@ from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
 
-__all__ = ["DataStoreObservation", "Observation", "Observations"]
+__all__ = ["Observation", "Observations"]
 
 log = logging.getLogger(__name__)
 
@@ -380,117 +380,6 @@ class Observation:
         return obs
 
 
-class DataStoreObservation(Observation):
-    """IACT data store observation.
-
-    Parameters
-    ----------
-    obs_id : int
-        Observation ID
-    data_store : `~gammapy.data.DataStore`
-        Data store
-    obs_filter : `~gammapy.data.ObservationFilter`, optional
-        Filter for the observation
-    """
-
-    def __init__(self, obs_id, data_store, obs_filter=None):
-        # Assert that `obs_id` is available
-        if obs_id not in data_store.obs_table["OBS_ID"]:
-            raise ValueError(f"OBS_ID = {obs_id} not in obs index table.")
-        if obs_id not in data_store.hdu_table["OBS_ID"]:
-            raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
-
-        self.obs_id = obs_id
-        self.data_store = data_store
-        self.obs_filter = obs_filter or ObservationFilter()
-
-    def location(self, hdu_type=None, hdu_class=None):
-        """HDU location object.
-
-        Parameters
-        ----------
-        hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
-        hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
-
-        Returns
-        -------
-        location : `~gammapy.data.HDULocation`
-            HDU location
-        """
-        return self.data_store.hdu_table.hdu_location(
-            obs_id=self.obs_id, hdu_type=hdu_type, hdu_class=hdu_class
-        )
-
-    def load(self, hdu_type=None, hdu_class=None):
-        """Load data file as appropriate object.
-
-        Parameters
-        ----------
-        hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
-        hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
-
-        Returns
-        -------
-        object : object
-            Object depends on type, e.g. for `events` it's a `~gammapy.data.EventList`.
-        """
-        location = self.location(hdu_type=hdu_type, hdu_class=hdu_class)
-        return location.load()
-
-    @property
-    def events(self):
-        """Load `gammapy.data.EventList` object and apply the filter."""
-        events = self.load(hdu_type="events")
-        return self.obs_filter.filter_events(events)
-
-    @property
-    def gti(self):
-        """Load `gammapy.data.GTI` object and apply the filter."""
-        try:
-            gti = self.load(hdu_type="gti")
-        except IndexError:
-            # For now we support data without GTI HDUs
-            # TODO: if GTI becomes required, we should drop this case
-            # CTA discussion in https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/issues/20
-            # Added in Gammapy in https://github.com/gammapy/gammapy/pull/1908
-            gti = self.data_store.obs_table.create_gti(obs_id=self.obs_id)
-
-        return self.obs_filter.filter_gti(gti)
-
-    @property
-    def aeff(self):
-        """Load effective area object."""
-        return self.load(hdu_type="aeff")
-
-    @property
-    def edisp(self):
-        """Load energy dispersion object."""
-        return self.load(hdu_type="edisp")
-
-    @property
-    def psf(self):
-        """Load point spread function object."""
-        return self.load(hdu_type="psf")
-
-    @property
-    def bkg(self):
-        """Load background object."""
-        return self.load(hdu_type="bkg")
-
-    @property
-    def obs_info(self):
-        """Observation information (`dict`)."""
-        row = self.data_store.obs_table.select_obs_id(obs_id=self.obs_id)[0]
-        return table_row_to_dict(row)
-
-
-
-
-
 class Observations(collections.abc.MutableSequence):
     """Container class that holds a list of observations.
 
@@ -510,13 +399,13 @@ class Observations(collections.abc.MutableSequence):
         del self._observations[self._get_idx(key)]
 
     def __setitem__(self, key, obs):
-        if isinstance(obs, (Observation, DataStoreObservation)):
+        if isinstance(obs, Observation):
             self._observations[self._get_idx(key)] = obs
         else:
             raise TypeError(f"Invalid type: {type(obs)!r}")
 
     def insert(self, idx, obs):
-        if isinstance(obs, (Observation, DataStoreObservation)):
+        if isinstance(obs, Observation):
             self._observations.insert(idx, obs)
         else:
             raise TypeError(f"Invalid type: {type(obs)!r}")
