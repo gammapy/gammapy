@@ -84,7 +84,7 @@ matrix:
         # Test conda build (which runs a bunch of useful tests after building the package)
         # See https://conda.io/docs/bdist_conda.html
         - env: CMD='python setup.py bdist_conda'
-               TEST_PACKAGING=true
+               TEST_PACKAGING=true CONDA_CHANNELS='astropy sherpa conda-forge'
 
         # Test with Astropy dev version
         - env: PYTHON_VERSION=3.6 ASTROPY_VERSION=dev CMD='make test'
