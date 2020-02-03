@@ -43,19 +43,19 @@ class SignificanceMapEstimator:
         size = self.radius.deg/pixel_size
         kernel = Tophat2DKernel(size)
 
-        if isinstance(dataset, MapDataset):
-            background = dataset.npred()
-            result = compute_lima_image(
-                dataset.counts,
-                background,
-                kernel
-            )
-        else:
+        if isinstance(dataset, MapDatasetOnOff):
             result = compute_lima_on_off_image(
                 dataset.counts,
                 dataset.counts_off,
                 dataset.acceptance,
                 dataset.acceptance_off,
+                kernel
+            )
+        else:
+            background = dataset.npred()
+            result = compute_lima_image(
+                dataset.counts,
+                background,
                 kernel
             )
         return result
@@ -134,17 +134,21 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):
     # fft convolution adds numerical noise, to ensure integer results we call
     # np.rint
     n_on_conv = np.rint(n_on.convolve(kernel.array).data)
-    a_on_conv = a_on.convolve(kernel.array).data
 
     with np.errstate(invalid="ignore", divide="ignore"):
-        alpha_conv = a_on_conv / a_off.data
+        background = a_on/a_off
+    background *= n_off
+    background.data[a_off.data==0]=0.
+    background_conv = background.convolve(kernel.array).data
+
+    n_off_conv = n_off.convolve(kernel.array).data
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        alpha_conv = background_conv/n_off_conv
 
     significance_conv = significance_on_off(
-        n_on_conv, n_off.data, alpha_conv, method="lima"
+        n_on_conv, n_off_conv, alpha_conv, method="lima"
     )
-
-    with np.errstate(invalid="ignore"):
-        background_conv = alpha_conv * n_off.data
     excess_conv = n_on_conv - background_conv
 
     return {
