@@ -37,22 +37,21 @@ class SignificanceMapEstimator:
             input dataset
         """
         if isinstance(dataset, MapDataset):
-            self._run_mapdataset(dataset)
+            return self._run_mapdataset(dataset)
         elif isinstance(dataset, MapDatasetOnOff):
-            self._run_mapdataset_onoff(dataset)
+            return self._run_mapdataset_onoff(dataset)
         else:
             raise ValueError("Unsupported dataset type")
 
     def _run_mapdataset(self, dataset):
         """Apply Li & Ma with known background"""
-        size = self.radius.deg/np.mean(dataset.counts.geom.wcs.wcs.cdelt)
+        pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
+        size = self.radius.deg/pixel_size
         kernel = Tophat2DKernel(size)
 
         counts = dataset.counts
         background = dataset.npred()
-
         return compute_lima_image(counts, background, kernel)
-    
 
 def compute_lima_image(counts, background, kernel):
     """Compute Li & Ma significance and flux images for known background.
@@ -86,7 +85,6 @@ def compute_lima_image(counts, background, kernel):
     background_conv = background.convolve(kernel.array).data
     excess_conv = counts_conv - background_conv
     significance_conv = significance(counts_conv, background_conv, method="lima")
-
     return {
         "significance": counts.copy(data=significance_conv),
         "counts": counts.copy(data=counts_conv),
