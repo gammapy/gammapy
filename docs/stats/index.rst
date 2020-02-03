@@ -81,6 +81,34 @@ Li \& Ma formula:
     >>> significance_on_off(n_on=18, n_off=97, alpha=1. / 10, method='lima')
     2.2421704424844875
 
+Error on an excess
+-------------------
+
+The computation of the error on an excess is of practical utility. Two
+possibilities are possible, either using the Li&Ma maximum likelihood
+estimate (the method per default) or using the following approximation:
+
+.. math::
+    error = \sqrt{n_{on} + \alpha^2 * n_{off}}.
+
+.. code-block:: python
+
+    >>> from gammapy.stats import excess_error
+    >>> excess_error(n_on=4, n_off=9, alpha=0.5, method='lima')
+    2.552490234375
+    >>> excess_error(n_on=4, n_off=9, alpha=0.5, method='simple')
+    2.5
+
+On can derive also the positive and negative errors of an excess following the Li&Ma methodology, as following:
+
+.. code-block:: python
+
+    >>> from gammapy.stats import lm_dexcess_up, , lm_dexcess_down
+    >>> lm_dexcess_up(n_on=30, n_off=10, alpha=0.9)
+    6.39453125
+    >>> lm_dexcess_down(n_on=30, n_off=10, alpha=0.9)
+    6.001953125
+
 Confidence Intervals
 --------------------
 
@@ -111,8 +139,8 @@ Using `gammapy.stats`
     :maxdepth: 1
 
     feldman_cousins
+    li_ma
     fit_statistics
-    wstat_derivation
 
 Reference/API
 =============
