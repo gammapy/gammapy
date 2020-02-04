@@ -1,21 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections.abc
 import logging
+import copy
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.irf import Background3D
-from gammapy.utils.fits import earth_location_from_dict
-from gammapy.utils.table import table_row_to_dict
+from gammapy.irf import Background3D, load_cta_irfs
+from gammapy.utils.fits import earth_location_from_dict, LazyFitsData
 from gammapy.utils.testing import Checker
-from ..irf import load_cta_irfs
 from .event_list import EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
 
-__all__ = ["DataStoreObservation", "Observation", "Observations"]
+__all__ = ["Observation", "Observations"]
 
 log = logging.getLogger(__name__)
 
@@ -41,7 +40,15 @@ class Observation:
         Table with GTI start and stop time
     events : `~gammapy.data.EventList`
         Event list
+    obs_filter : `ObservationFilter`
+        Observation filter.
     """
+    aeff = LazyFitsData(cache=False)
+    edisp = LazyFitsData(cache=False)
+    psf = LazyFitsData(cache=False)
+    bkg = LazyFitsData(cache=False)
+    _events = LazyFitsData(cache=False)
+    _gti = LazyFitsData(cache=False)
 
     def __init__(
         self,
@@ -53,6 +60,7 @@ class Observation:
         psf=None,
         bkg=None,
         events=None,
+        obs_filter=None,
     ):
         self.obs_id = obs_id
         self.obs_info = obs_info
@@ -60,8 +68,19 @@ class Observation:
         self.edisp = edisp
         self.psf = psf
         self.bkg = bkg
-        self.gti = gti
-        self.events = events
+        self._gti = gti
+        self._events = events
+        self.obs_filter = obs_filter or ObservationFilter()
+
+    @property
+    def events(self):
+        events = self.obs_filter.filter_events(self._events)
+        return events
+
+    @property
+    def gti(self):
+        events = self.obs_filter.filter_gti(self._gti)
+        return events
 
     @staticmethod
     def _get_obs_info(pointing, deadtime_fraction):
@@ -109,7 +128,7 @@ class Observation:
         obs : `gammapy.data.MemoryObservation`
         """
         if "DataStore" in cls.__name__:
-            raise ValueError("DataStoreObservation cannot be created in memory")
+            raise ValueError("Observation cannot be created in memory")
 
         tstart = tstart or Quantity(0.0, "hr")
         tstop = (tstart + Quantity(livetime)) or tstop
@@ -292,6 +311,14 @@ class Observation:
             f"\tdeadtime fraction : {self.observation_dead_time_fraction:.1%}\n"
         )
 
+    def check(self, checks="all"):
+        """Run checks.
+
+        This is a generator that yields a list of dicts.
+        """
+        checker = ObservationChecker(self)
+        return checker.run(checks=checks)
+
     def peek(self, figsize=(12, 10)):
         """Quick-look plots in a few panels.
 
@@ -329,114 +356,6 @@ class Observation:
         ax_psf.set_title("Point spread function")
         ax_edisp.set_title("Energy dispersion")
 
-
-class DataStoreObservation(Observation):
-    """IACT data store observation.
-
-    Parameters
-    ----------
-    obs_id : int
-        Observation ID
-    data_store : `~gammapy.data.DataStore`
-        Data store
-    obs_filter : `~gammapy.data.ObservationFilter`, optional
-        Filter for the observation
-    """
-
-    def __init__(self, obs_id, data_store, obs_filter=None):
-        # Assert that `obs_id` is available
-        if obs_id not in data_store.obs_table["OBS_ID"]:
-            raise ValueError(f"OBS_ID = {obs_id} not in obs index table.")
-        if obs_id not in data_store.hdu_table["OBS_ID"]:
-            raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
-
-        self.obs_id = obs_id
-        self.data_store = data_store
-        self.obs_filter = obs_filter or ObservationFilter()
-
-    def location(self, hdu_type=None, hdu_class=None):
-        """HDU location object.
-
-        Parameters
-        ----------
-        hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
-        hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
-
-        Returns
-        -------
-        location : `~gammapy.data.HDULocation`
-            HDU location
-        """
-        return self.data_store.hdu_table.hdu_location(
-            obs_id=self.obs_id, hdu_type=hdu_type, hdu_class=hdu_class
-        )
-
-    def load(self, hdu_type=None, hdu_class=None):
-        """Load data file as appropriate object.
-
-        Parameters
-        ----------
-        hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
-        hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
-
-        Returns
-        -------
-        object : object
-            Object depends on type, e.g. for `events` it's a `~gammapy.data.EventList`.
-        """
-        location = self.location(hdu_type=hdu_type, hdu_class=hdu_class)
-        return location.load()
-
-    @property
-    def events(self):
-        """Load `gammapy.data.EventList` object and apply the filter."""
-        events = self.load(hdu_type="events")
-        return self.obs_filter.filter_events(events)
-
-    @property
-    def gti(self):
-        """Load `gammapy.data.GTI` object and apply the filter."""
-        try:
-            gti = self.load(hdu_type="gti")
-        except IndexError:
-            # For now we support data without GTI HDUs
-            # TODO: if GTI becomes required, we should drop this case
-            # CTA discussion in https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/issues/20
-            # Added in Gammapy in https://github.com/gammapy/gammapy/pull/1908
-            gti = self.data_store.obs_table.create_gti(obs_id=self.obs_id)
-
-        return self.obs_filter.filter_gti(gti)
-
-    @property
-    def aeff(self):
-        """Load effective area object."""
-        return self.load(hdu_type="aeff")
-
-    @property
-    def edisp(self):
-        """Load energy dispersion object."""
-        return self.load(hdu_type="edisp")
-
-    @property
-    def psf(self):
-        """Load point spread function object."""
-        return self.load(hdu_type="psf")
-
-    @property
-    def bkg(self):
-        """Load background object."""
-        return self.load(hdu_type="bkg")
-
-    @property
-    def obs_info(self):
-        """Observation information (`dict`)."""
-        row = self.data_store.obs_table.select_obs_id(obs_id=self.obs_id)[0]
-        return table_row_to_dict(row)
-
     def select_time(self, time_interval):
         """Select a time interval of the observation.
 
@@ -448,23 +367,14 @@ class DataStoreObservation(Observation):
 
         Returns
         -------
-        new_obs : `~gammapy.data.DataStoreObservation`
+        new_obs : `~gammapy.data.Observation`
             A new observation instance of the specified time interval
         """
         new_obs_filter = self.obs_filter.copy()
         new_obs_filter.time_filter = time_interval
-
-        return self.__class__(
-            obs_id=self.obs_id, data_store=self.data_store, obs_filter=new_obs_filter
-        )
-
-    def check(self, checks="all"):
-        """Run checks.
-
-        This is a generator that yields a list of dicts.
-        """
-        checker = ObservationChecker(self)
-        return checker.run(checks=checks)
+        obs = copy.deepcopy(self)
+        obs.obs_filter = new_obs_filter
+        return obs
 
 
 class Observations(collections.abc.MutableSequence):
@@ -473,7 +383,7 @@ class Observations(collections.abc.MutableSequence):
     Parameters
     ----------
     observations : list
-        A list of `~gammapy.data.DataStoreObservation`
+        A list of `~gammapy.data.Observation`
     """
 
     def __init__(self, observations=None):
@@ -486,13 +396,13 @@ class Observations(collections.abc.MutableSequence):
         del self._observations[self._get_idx(key)]
 
     def __setitem__(self, key, obs):
-        if isinstance(obs, (Observation, DataStoreObservation)):
+        if isinstance(obs, Observation):
             self._observations[self._get_idx(key)] = obs
         else:
             raise TypeError(f"Invalid type: {type(obs)!r}")
 
     def insert(self, idx, obs):
-        if isinstance(obs, (Observation, DataStoreObservation)):
+        if isinstance(obs, Observation):
             self._observations.insert(idx, obs)
         else:
             raise TypeError(f"Invalid type: {type(obs)!r}")
@@ -567,7 +477,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting events check")
 
         try:
-            events = self.observation.load("events")
+            events = self.observation.events
         except Exception:
             yield self._record(level="warning", msg="Loading events failed")
             return
@@ -579,7 +489,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting gti check")
 
         try:
-            gti = self.observation.load("gti")
+            gti = self.observation.gti
         except Exception:
             yield self._record(level="warning", msg="Loading GTI failed")
             return
@@ -630,7 +540,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting aeff check")
 
         try:
-            aeff = self.observation.load("aeff")
+            aeff = self.observation.aeff
         except Exception:
             yield self._record(level="warning", msg="Loading aeff failed")
             return
@@ -655,7 +565,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting edisp check")
 
         try:
-            edisp = self.observation.load("edisp")
+            edisp = self.observation.edisp
         except Exception:
             yield self._record(level="warning", msg="Loading edisp failed")
             return
@@ -668,7 +578,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting psf check")
 
         try:
-            self.observation.load("psf")
+            self.observation.psf
         except Exception:
             yield self._record(level="warning", msg="Loading psf failed")
             return

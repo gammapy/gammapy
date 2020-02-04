@@ -17,7 +17,7 @@ class HDULocation:
 
     This represents one row in `HDUIndexTable`.
 
-    It's more a helper class, that is wrapped by `~gammapy.data.DataStoreObservation`,
+    It's more a helper class, that is wrapped by `~gammapy.data.Observation`,
     usually those objects will be used to access data.
 
     See also :ref:`gadf:hdu-index`.

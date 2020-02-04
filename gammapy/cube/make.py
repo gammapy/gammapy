@@ -53,7 +53,7 @@ class MapDatasetMaker:
         ----------
         geom : `~gammapy.maps.Geom`
             Reference map geom.
-        observation : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.Observation`
             Observation container.
 
         Returns
@@ -73,7 +73,7 @@ class MapDatasetMaker:
         ----------
         geom : `~gammapy.maps.Geom`
             Reference map geom.
-        observation : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.Observation`
             Observation container.
 
         Returns
@@ -96,7 +96,7 @@ class MapDatasetMaker:
         ----------
         geom : `~gammapy.maps.Geom`
             Reference geom.
-        observation : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.Observation`
             Observation container.
 
         Returns
@@ -118,7 +118,7 @@ class MapDatasetMaker:
         ----------
         geom : `~gammapy.maps.Geom`
             Reference geom.
-        observation : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.Observation`
             Observation container.
 
         Returns
@@ -153,7 +153,7 @@ class MapDatasetMaker:
         ----------
         geom : `~gammapy.maps.Geom`
             Reference geom.
-        observation : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.Observation`
             Observation container.
 
         Returns
@@ -177,7 +177,7 @@ class MapDatasetMaker:
         ----------
         geom : `~gammapy.maps.Geom`
             Reference geom.
-        observation : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.Observation`
             Observation container.
 
         Returns
@@ -206,7 +206,7 @@ class MapDatasetMaker:
         ----------
         dataset : `~gammapy.cube.MapDataset`
             Reference dataset.
-        observation : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.Observation`
             Observation
 
         Returns
@@ -303,7 +303,7 @@ class SafeMaskMaker:
         ----------
         dataset : `~gammapy.modeling.Dataset`
             Dataset to compute mask for.
-        observation: `~gammapy.data.DataStoreObservation`
+        observation: `~gammapy.data.Observation`
             Observation to compute mask for.
 
         Returns
@@ -322,7 +322,7 @@ class SafeMaskMaker:
         ----------
         dataset : `~gammapy.modeling.Dataset`
             Dataset to compute mask for.
-        observation: `~gammapy.data.DataStoreObservation`
+        observation: `~gammapy.data.Observation`
             Observation to compute mask for.
 
         Returns
@@ -432,7 +432,7 @@ class SafeMaskMaker:
         ----------
         dataset : `~gammapy.modeling.Dataset`
             Dataset to compute mask for.
-        observation: `~gammapy.data.DataStoreObservation`
+        observation: `~gammapy.data.Observation`
             Observation to compute mask for.
 
         Returns
