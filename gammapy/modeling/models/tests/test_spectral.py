@@ -531,6 +531,11 @@ class TestNaimaModel:
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
 
+        model.B.value = 3 #update B
+        val_at_2TeV = 5.1985064062296e-16 * u.Unit("cm-2 s-1 TeV-1")
+        value = model(self.energy)
+        assert_quantity_allclose(value, val_at_2TeV)
+
 
 class TestSpectralModelErrorPropagation:
     """Test spectral model error propagation.

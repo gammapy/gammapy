@@ -1342,6 +1342,9 @@ class NaimaSpectralModel(SpectralModel):
         for name, value in kwargs.items():
             setattr(self._particle_distribution, name, value)
 
+        if "B" in self.radiative_model.param_names:
+            self.radiative_model.B = self.B.quantity
+
         # Flattening the input energy list and later reshaping the flux list
         # prevents some radiative models from displaying broadcasting problems.
         if self.seed is None:
