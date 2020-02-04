@@ -6,12 +6,10 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.irf import (
-    Background3D, load_cta_irfs, Background2D, EffectiveAreaTable2D, EnergyDispersion2D, PSF3D, PSFKing, EnergyDependentMultiGaussPSF
-)
+from gammapy.irf import Background3D, load_cta_irfs
 from gammapy.utils.fits import earth_location_from_dict, LazyFitsData
 from gammapy.utils.testing import Checker
-from .event_list import EventListChecker, EventList
+from .event_list import EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
