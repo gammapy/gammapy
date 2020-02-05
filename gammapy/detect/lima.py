@@ -8,13 +8,13 @@ from gammapy.stats import significance, significance_on_off
 from gammapy.cube import MapDataset, MapDatasetOnOff
 
 __all__ = [
-    "LiMaSignificanceMapEstimator",
+    "LiMaMapEstimator",
 ]
 
 log = logging.getLogger(__name__)
 
 
-class LiMaSignificanceMapEstimator:
+class LiMaMapEstimator:
     """Computes correlated excess, significance for MapDatasets
 
 
@@ -38,10 +38,16 @@ class LiMaSignificanceMapEstimator:
         ----------
         dataset : `~gammapy.cube.MapDataset` or `~gammapy.cube.MapDataset`
             input dataset
+
+        Returns
+        -------
+        images : dict
+            Dictionary containing result maps
+            Keys are: significance, counts, background and excess for a MapDataset
+                      significance, n_on, background, excess, alpha otherwise
+
         """
-        if not isinstance(dataset, MapDataset) and not isinstance(
-            dataset, MapDatasetOnOff
-        ):
+        if not isinstance(dataset, MapDataset):
             raise ValueError("Unsupported dataset type")
 
         pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
