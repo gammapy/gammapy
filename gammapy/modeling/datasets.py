@@ -100,20 +100,16 @@ class Datasets(collections.abc.MutableSequence):
             datasets = []
 
         if isinstance(datasets, Datasets):
-            datasets = list(datasets)
-            dataset_list = datasets
+            datasets = datasets._datasets
         elif isinstance(datasets, list):
-            dataset_list = []
-            for data in datasets:
-                if isinstance(data, Datasets):
-                    dataset_list += list(data)
-                elif isinstance(data, Dataset):
-                    dataset_list.append(data)
+            datasets = datasets
+        elif isinstance(datasets, Dataset):
+            datasets = [datasets]
         else:
             raise TypeError(f"Invalid type: {datasets!r}")
 
         unique_names = []
-        for dataset in dataset_list:
+        for dataset in datasets:
             if dataset.name in unique_names:
                 raise (ValueError("Dataset names must be unique"))
             unique_names.append(dataset.name)
