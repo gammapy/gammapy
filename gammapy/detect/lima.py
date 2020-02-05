@@ -9,8 +9,6 @@ from gammapy.cube import MapDataset, MapDatasetOnOff
 
 __all__ = [
     "LiMaSignificanceMapEstimator",
-    "compute_lima_image",
-    "compute_lima_on_off_image",
 ]
 
 log = logging.getLogger(__name__)
@@ -51,7 +49,7 @@ class LiMaSignificanceMapEstimator:
         kernel = Tophat2DKernel(size)
 
         if isinstance(dataset, MapDatasetOnOff):
-            result = compute_lima_on_off_image(
+            result = self.__class__.compute_lima_on_off_image(
                 dataset.counts,
                 dataset.counts_off,
                 dataset.acceptance,
@@ -60,104 +58,105 @@ class LiMaSignificanceMapEstimator:
             )
         else:
             background = dataset.npred()
-            result = compute_lima_image(dataset.counts, background, kernel)
+            result = self.__class__.compute_lima_image(dataset.counts, background, kernel)
         return result
 
+    @staticmethod
+    def compute_lima_image(counts, background, kernel):
+        """Compute Li & Ma significance and flux images for known background.
 
-def compute_lima_image(counts, background, kernel):
-    """Compute Li & Ma significance and flux images for known background.
+        Parameters
+        ----------
+        counts : `~gammapy.maps.WcsNDMap`
+            Counts image
+        background : `~gammapy.maps.WcsNDMap`
+            Background image
+        kernel : `astropy.convolution.Kernel2D`
+            Convolution kernel
 
-    Parameters
-    ----------
-    counts : `~gammapy.maps.WcsNDMap`
-        Counts image
-    background : `~gammapy.maps.WcsNDMap`
-        Background image
-    kernel : `astropy.convolution.Kernel2D`
-        Convolution kernel
+        Returns
+        -------
+        images : dict
+            Dictionary containing result maps
+            Keys are: significance, counts, background and excess
 
-    Returns
-    -------
-    images : dict
-        Dictionary containing result maps
-        Keys are: significance, counts, background and excess
+        See Also
+        --------
+        gammapy.stats.significance
+        """
+        # Kernel is modified later make a copy here
+        kernel = copy.deepcopy(kernel)
+        kernel.normalize("peak")
 
-    See Also
-    --------
-    gammapy.stats.significance
-    """
-    # Kernel is modified later make a copy here
-    kernel = copy.deepcopy(kernel)
-    kernel.normalize("peak")
-
-    # fft convolution adds numerical noise, to ensure integer results we call
-    # np.rint
-    counts_conv = np.rint(counts.convolve(kernel.array).data)
-    background_conv = background.convolve(kernel.array).data
-    excess_conv = counts_conv - background_conv
-    significance_conv = significance(counts_conv, background_conv, method="lima")
-    return {
-        "significance": counts.copy(data=significance_conv),
-        "counts": counts.copy(data=counts_conv),
-        "background": counts.copy(data=background_conv),
-        "excess": counts.copy(data=excess_conv),
-    }
+        # fft convolution adds numerical noise, to ensure integer results we call
+        # np.rint
+        counts_conv = np.rint(counts.convolve(kernel.array).data)
+        background_conv = background.convolve(kernel.array).data
+        excess_conv = counts_conv - background_conv
+        significance_conv = significance(counts_conv, background_conv, method="lima")
+        return {
+            "significance": counts.copy(data=significance_conv),
+            "counts": counts.copy(data=counts_conv),
+            "background": counts.copy(data=background_conv),
+            "excess": counts.copy(data=excess_conv),
+        }
 
 
-def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):
-    """Compute Li & Ma significance and flux images for on-off observations.
+    @staticmethod
+    def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):
+        """Compute Li & Ma significance and flux images for on-off observations.
 
-    Parameters
-    ----------
-    n_on : `~gammapy.maps.WcsNDMap`
-        Counts image
-    n_off : `~gammapy.maps.WcsNDMap`
-        Off counts image
-    a_on : `~gammapy.maps.WcsNDMap`
-        Relative background efficiency in the on region
-    a_off : `~gammapy.maps.WcsNDMap`
-        Relative background efficiency in the off region
-    kernel : `astropy.convolution.Kernel2D`
-        Convolution kernel
+        Parameters
+        ----------
+        n_on : `~gammapy.maps.WcsNDMap`
+            Counts image
+        n_off : `~gammapy.maps.WcsNDMap`
+            Off counts image
+        a_on : `~gammapy.maps.WcsNDMap`
+            Relative background efficiency in the on region
+        a_off : `~gammapy.maps.WcsNDMap`
+            Relative background efficiency in the off region
+        kernel : `astropy.convolution.Kernel2D`
+            Convolution kernel
 
-    Returns
-    -------
-    images : dict
-        Dictionary containing result maps
-        Keys are: significance, n_on, background, excess, alpha
+        Returns
+        -------
+        images : dict
+            Dictionary containing result maps
+            Keys are: significance, n_on, background, excess, alpha
 
-    See Also
-    --------
-    gammapy.stats.significance_on_off
-    """
-    # Kernel is modified later make a copy here
-    kernel = copy.deepcopy(kernel)
-    kernel.normalize("peak")
+        See Also
+        --------
+        gammapy.stats.significance_on_off
+        """
+        # Kernel is modified later make a copy here
+        kernel = copy.deepcopy(kernel)
+        kernel.normalize("peak")
 
-    # fft convolution adds numerical noise, to ensure integer results we call
-    # np.rint
-    n_on_conv = np.rint(n_on.convolve(kernel.array).data)
+        # fft convolution adds numerical noise, to ensure integer results we call
+        # np.rint
+        n_on_conv = np.rint(n_on.convolve(kernel.array).data)
 
-    with np.errstate(invalid="ignore", divide="ignore"):
-        background = a_on / a_off
-    background *= n_off
-    background.data[a_off.data == 0] = 0.0
-    background_conv = background.convolve(kernel.array).data
+        with np.errstate(invalid="ignore", divide="ignore"):
+            background = a_on / a_off
+        background *= n_off
+        background.data[a_off.data == 0] = 0.0
+        background_conv = background.convolve(kernel.array).data
 
-    n_off_conv = n_off.convolve(kernel.array).data
+        n_off_conv = n_off.convolve(kernel.array).data
 
-    with np.errstate(invalid="ignore", divide="ignore"):
-        alpha_conv = background_conv / n_off_conv
+        with np.errstate(invalid="ignore", divide="ignore"):
+            alpha_conv = background_conv / n_off_conv
 
-    significance_conv = significance_on_off(
-        n_on_conv, n_off_conv, alpha_conv, method="lima"
-    )
-    excess_conv = n_on_conv - background_conv
+        significance_conv = significance_on_off(
+            n_on_conv, n_off_conv, alpha_conv, method="lima"
+        )
+        excess_conv = n_on_conv - background_conv
 
-    return {
-        "significance": n_on.copy(data=significance_conv),
-        "n_on": n_on.copy(data=n_on_conv),
-        "background": n_on.copy(data=background_conv),
-        "excess": n_on.copy(data=excess_conv),
-        "alpha": n_on.copy(data=alpha_conv),
-    }
+        return {
+            "significance": n_on.copy(data=significance_conv),
+            "n_on": n_on.copy(data=n_on_conv),
+            "background": n_on.copy(data=background_conv),
+            "excess": n_on.copy(data=excess_conv),
+            "alpha": n_on.copy(data=alpha_conv),
+        }

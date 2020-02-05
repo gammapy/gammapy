@@ -3,11 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
-from gammapy.detect import (
-    compute_lima_image,
-    compute_lima_on_off_image,
-    LiMaSignificanceMapEstimator,
-)
+from gammapy.detect import LiMaSignificanceMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.cube import MapDataset, MapDatasetOnOff
 from gammapy.utils.testing import requires_data
@@ -47,7 +43,7 @@ def test_compute_lima_image():
     background = Map.read(filename, hdu="background")
 
     kernel = Tophat2DKernel(5)
-    result_lima = compute_lima_image(counts, background, kernel)
+    result_lima = LiMaSignificanceMapEstimator.compute_lima_image(counts, background, kernel)
 
     assert_allclose(result_lima["significance"].data[100, 100], 30.814916, atol=1e-3)
     assert_allclose(result_lima["significance"].data[1, 1], 0.164, atol=1e-3)
@@ -66,7 +62,7 @@ def test_compute_lima_on_off_image():
     significance = Map.read(filename, hdu="SIGNIFICANCE")
 
     kernel = Tophat2DKernel(5)
-    results = compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel)
+    results = LiMaSignificanceMapEstimator.compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel)
 
     # Reproduce safe significance threshold from HESS software
     results["significance"].data[results["n_on"].data < 5] = 0
