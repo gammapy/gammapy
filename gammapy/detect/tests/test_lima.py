@@ -1,9 +1,36 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 from numpy.testing import assert_allclose
+import astropy.units as u
 from astropy.convolution import Tophat2DKernel
-from gammapy.detect import compute_lima_image, compute_lima_on_off_image
-from gammapy.maps import Map
+from gammapy.detect import LiMaMapEstimator
+from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.cube import MapDataset, MapDatasetOnOff
 from gammapy.utils.testing import requires_data
+
+
+@pytest.fixture
+def simple_dataset():
+    axis = MapAxis.from_energy_bounds(0.1, 10, 1, unit="TeV")
+    geom = WcsGeom.create(npix=50, binsz=0.02, axes=[axis])
+    dataset = MapDataset.create(geom)
+    dataset.mask_safe += 1
+    dataset.counts += 2
+    dataset.background_model.map += 1
+    return dataset
+
+
+@pytest.fixture
+def simple_dataset_on_off():
+    axis = MapAxis.from_energy_bounds(0.1, 10, 1, unit="TeV")
+    geom = WcsGeom.create(npix=50, binsz=0.02, axes=[axis])
+    dataset = MapDatasetOnOff.create(geom)
+    dataset.mask_safe += 1
+    dataset.counts += 2
+    dataset.counts_off += 1
+    dataset.acceptance += 1
+    dataset.acceptance_off += 1
+    return dataset
 
 
 @requires_data()
@@ -16,7 +43,7 @@ def test_compute_lima_image():
     background = Map.read(filename, hdu="background")
 
     kernel = Tophat2DKernel(5)
-    result_lima = compute_lima_image(counts, background, kernel)
+    result_lima = LiMaMapEstimator.compute_lima_image(counts, background, kernel)
 
     assert_allclose(result_lima["significance"].data[100, 100], 30.814916, atol=1e-3)
     assert_allclose(result_lima["significance"].data[1, 1], 0.164, atol=1e-3)
@@ -35,7 +62,7 @@ def test_compute_lima_on_off_image():
     significance = Map.read(filename, hdu="SIGNIFICANCE")
 
     kernel = Tophat2DKernel(5)
-    results = compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel)
+    results = LiMaMapEstimator.compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel)
 
     # Reproduce safe significance threshold from HESS software
     results["significance"].data[results["n_on"].data < 5] = 0
@@ -47,4 +74,33 @@ def test_compute_lima_on_off_image():
     desired = significance.crop(kernel.shape).data
 
     # Set boundary to NaN in reference image
-    assert_allclose(actual, desired, atol=1e-5)
+    # The absolute tolerance is low because the method used here is slightly different from the one used in HGPS
+    # n_off is convolved as well to ensure the method applies to true ON-OFF datasets
+    assert_allclose(actual, desired, atol=0.2)
+
+
+def test_significance_map_estimator_incorrect_dataset():
+    estimator = LiMaMapEstimator("0.1 deg")
+
+    with pytest.raises(ValueError):
+        estimator.run("bad")
+
+
+def test_significance_map_estimator_map_dataset(simple_dataset):
+    estimator = LiMaMapEstimator(0.1 * u.deg)
+    result = estimator.run(simple_dataset)
+
+    assert_allclose(result["counts"].data[0, 25, 25], 162)
+    assert_allclose(result["excess"].data[0, 25, 25], 81)
+    assert_allclose(result["background"].data[0, 25, 25], 81)
+    assert_allclose(result["significance"].data[0, 25, 25], 7.910732)
+
+
+def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
+    estimator = LiMaMapEstimator(0.1 * u.deg)
+    result = estimator.run(simple_dataset_on_off)
+
+    assert_allclose(result["n_on"].data[0, 25, 25], 162)
+    assert_allclose(result["excess"].data[0, 25, 25], 81)
+    assert_allclose(result["background"].data[0, 25, 25], 81)
+    assert_allclose(result["significance"].data[0, 25, 25], 5.246298)

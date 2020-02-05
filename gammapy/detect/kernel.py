@@ -5,7 +5,7 @@ import scipy.ndimage
 from astropy.convolution import CustomKernel, Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.maps import Map
-from .lima import compute_lima_image
+from .lima import LiMaMapEstimator
 
 log = logging.getLogger(__name__)
 
@@ -159,7 +159,7 @@ class KernelBackgroundEstimator:
 
     def _estimate_significance(self, counts, background):
         kernel = CustomKernel(self.kernel_src)
-        images = compute_lima_image(counts, background, kernel=kernel)
+        images = LiMaMapEstimator.compute_lima_image(counts, background, kernel=kernel)
         return images["significance"]
 
     def _estimate_exclusion(self, counts, significance):
