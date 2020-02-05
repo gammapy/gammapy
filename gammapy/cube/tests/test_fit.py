@@ -28,8 +28,7 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 
 @pytest.fixture
 def geom():
-    ebounds = np.logspace(-1.0, 1.0, 3)
-    axis = MapAxis.from_edges(ebounds, name="energy", unit=u.TeV, interp="log")
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
     return WcsGeom.create(
         skydir=(266.40498829, -28.93617776),
         binsz=0.02,
@@ -41,8 +40,7 @@ def geom():
 
 @pytest.fixture
 def geom_etrue():
-    ebounds_true = np.logspace(-1.0, 1.0, 4)
-    axis = MapAxis.from_edges(ebounds_true, name="energy", unit=u.TeV, interp="log")
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3)
     return WcsGeom.create(
         skydir=(266.40498829, -28.93617776),
         binsz=0.02,
@@ -552,15 +550,11 @@ def get_map_dataset_onoff(images, **kwargs):
     mask_safe = Map.from_geom(mask_geom, data=mask_data)
 
     return MapDatasetOnOff(
-        models=None,
         counts=images["counts"],
         counts_off=images["counts_off"],
         acceptance=images["acceptance"],
         acceptance_off=images["acceptance_off"],
         exposure=images["exposure"],
-        psf=None,
-        edisp=None,
-        mask_fit=None,
         mask_safe=mask_safe,
         **kwargs
     )
