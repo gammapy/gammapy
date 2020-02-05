@@ -818,11 +818,7 @@ class FluxPointsEstimator:
 
         dataset = self.datasets[0]
 
-        # TODO: this is complex and non-obvious behaviour. Simlify!
-        if len(dataset.models) > 1:
-            model = dataset.models[source].spectral_model
-        else:
-            model = dataset.models[0].spectral_model
+        model = dataset.models[source].spectral_model
 
         self.model = ScaleSpectralModel(model)
         self.model.norm.min = 0

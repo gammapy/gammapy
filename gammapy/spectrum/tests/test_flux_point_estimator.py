@@ -41,11 +41,11 @@ def simulate_spectrum_dataset(model, random_state=0):
 
 
 def create_fpe(model):
-    model = SkyModel(spectral_model=model)
+    model = SkyModel(spectral_model=model, name="source")
     dataset = simulate_spectrum_dataset(model)
     e_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.models = model
-    return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=11)
+    return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=11, source="source")
 
 
 def simulate_map_dataset(random_state=0):
@@ -211,11 +211,11 @@ class TestFluxPointsEstimator:
 
 def test_no_likelihood_contribution():
     dataset = simulate_spectrum_dataset(
-        SkyModel(spectral_model=PowerLawSpectralModel())
+        SkyModel(spectral_model=PowerLawSpectralModel(), name="source")
     )
     dataset.mask_safe = np.zeros(dataset.data_shape, dtype=bool)
 
-    fpe = FluxPointsEstimator([dataset], e_edges=[1, 3, 10] * u.TeV)
+    fpe = FluxPointsEstimator([dataset], e_edges=[1, 3, 10] * u.TeV, source="source")
     fp = fpe.run()
 
     assert np.isnan(fp.table["norm"]).all()
@@ -238,7 +238,7 @@ def test_mask_shape():
     dataset_2.edisp = None
 
     model = SkyModel(
-        spectral_model=PowerLawSpectralModel(), spatial_model=GaussianSpatialModel()
+        spectral_model=PowerLawSpectralModel(), spatial_model=GaussianSpatialModel(), name="source"
     )
 
     dataset_1.models = model

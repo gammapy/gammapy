@@ -211,7 +211,7 @@ class TestSkyModels:
         model = sky_models["source-3"]
         assert model.name == "source-3"
 
-        with pytest.raises(IndexError):
+        with pytest.raises(ValueError):
             sky_models["spam"]
 
     @staticmethod

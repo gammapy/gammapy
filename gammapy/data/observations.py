@@ -385,19 +385,18 @@ class Observations(collections.abc.MutableSequence):
     observations : list
         A list of `~gammapy.data.Observation`
     """
-
     def __init__(self, observations=None):
         self._observations = observations or []
 
     def __getitem__(self, key):
-        return self._observations[self._get_idx(key)]
+        return self._observations[self.index(key)]
 
     def __delitem__(self, key):
-        del self._observations[self._get_idx(key)]
+        del self._observations[self.index(key)]
 
     def __setitem__(self, key, obs):
         if isinstance(obs, Observation):
-            self._observations[self._get_idx(key)] = obs
+            self._observations[self.index(key)] = obs
         else:
             raise TypeError(f"Invalid type: {type(obs)!r}")
 
@@ -417,10 +416,15 @@ class Observations(collections.abc.MutableSequence):
             s += str(obs)
         return s
 
-    def _get_idx(self, key):
-        if isinstance(key, str):
-            key = self.ids.index(key)
-        return key
+    def index(self, key):
+        if isinstance(key, (int, slice)):
+            return key
+        elif isinstance(key, str):
+            return self.ids.index(key)
+        elif isinstance(key, Observation):
+            return self._observations.index(key)
+        else:
+            raise TypeError(f"Invalid type: {type(key)!r}")
 
     @property
     def ids(self):
@@ -451,6 +455,9 @@ class Observations(collections.abc.MutableSequence):
                     new_obs_list.append(new_obs)
 
         return self.__class__(new_obs_list)
+
+    def _ipython_key_completions_(self):
+        return self.ids
 
 
 class ObservationChecker(Checker):
