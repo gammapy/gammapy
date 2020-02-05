@@ -8,7 +8,7 @@ from gammapy.stats import significance, significance_on_off
 from gammapy.cube import MapDataset, MapDatasetOnOff
 
 __all__ = [
-    "SignificanceMapEstimator",
+    "LiMaSignificanceMapEstimator",
     "compute_lima_image",
     "compute_lima_on_off_image",
 ]
@@ -16,7 +16,7 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-class SignificanceMapEstimator:
+class LiMaSignificanceMapEstimator:
     """Computes correlated excess, significance for MapDatasets
 
 

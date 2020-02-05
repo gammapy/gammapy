@@ -6,7 +6,7 @@ from astropy.convolution import Tophat2DKernel
 from gammapy.detect import (
     compute_lima_image,
     compute_lima_on_off_image,
-    SignificanceMapEstimator,
+    LiMaSignificanceMapEstimator,
 )
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.cube import MapDataset, MapDatasetOnOff
@@ -84,14 +84,14 @@ def test_compute_lima_on_off_image():
 
 
 def test_significance_map_estimator_incorrect_dataset():
-    estimator = SignificanceMapEstimator("0.1 deg")
+    estimator = LiMaSignificanceMapEstimator("0.1 deg")
 
     with pytest.raises(ValueError):
         estimator.run("bad")
 
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
-    estimator = SignificanceMapEstimator(0.1 * u.deg)
+    estimator = LiMaSignificanceMapEstimator(0.1 * u.deg)
     result = estimator.run(simple_dataset)
 
     assert_allclose(result["counts"].data[0, 25, 25], 162)
@@ -101,7 +101,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
 
 
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
-    estimator = SignificanceMapEstimator(0.1 * u.deg)
+    estimator = LiMaSignificanceMapEstimator(0.1 * u.deg)
     result = estimator.run(simple_dataset_on_off)
 
     assert_allclose(result["n_on"].data[0, 25, 25], 162)
