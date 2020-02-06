@@ -208,6 +208,10 @@ class MapDataset(Dataset):
             for model in self.models:
                 if isinstance(model, BackgroundModel):
                     self.background_model = model
+                    break
+
+            for model in self.models:
+                if isinstance(model, BackgroundModel):
                     continue
 
                 evaluator = MapEvaluator(model, evaluation_mode=self.evaluation_mode)
@@ -933,7 +937,7 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
         if self.background_model is not None:
-            kwargs["background_model"] = self.background_model.cutout(
+            kwargs["models"] = self.background_model.cutout(
                 **cutout_kwargs, name=name
             )
 
