@@ -13,6 +13,7 @@ from gammapy.utils.integrate import evaluate_integral_pwl, trapz_loglog
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .core import Model
+import naima
 
 
 def integrate_spectrum(func, emin, emax, ndecade=100, intervals=False):
@@ -1305,17 +1306,21 @@ class NaimaSpectralModel(SpectralModel):
         in case of a `~naima.models.InverseCompton` model. It can be a subset of the
         `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
         of photon fields
+    nested_params : `gammapy.modeling.Parameters`
+        Additionnal parameters not supplied by the radiative model,
+        for now this is used  only for synchrotron self-compton model
     """
 
     tag = "NaimaSpectralModel"
 
-    def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
-        import naima
-
+    def __init__(
+        self, radiative_model, distance=1.0 * u.kpc, seed=None, nested_params=None
+    ):
         self.radiative_model = radiative_model
         self._particle_distribution = self.radiative_model.particle_distribution
         self.distance = u.Quantity(distance)
         self.seed = seed
+        self.nested_params = nested_params
 
         if isinstance(self._particle_distribution, naima.models.TableModel):
             param_names = ["amplitude"]
@@ -1335,7 +1340,42 @@ class NaimaSpectralModel(SpectralModel):
             parameter = Parameter("B", value)
             parameters.append(parameter)
 
+        # In case of a synchrotron self compton model, append B and Rpwn to the fittable parameters
+        if (
+            isinstance(self.radiative_model, naima.models.InverseCompton)
+            and "SSC" in self.radiative_model.seed_photon_fields
+        ):
+            parameters.append(self.nested_params["B"])
+            parameters.append(self.nested_params["Rpwn"])
+
         super()._init_from_parameters(parameters)
+
+    def _evaluate_ssc(
+        self, energy,
+    ):
+        """
+        Compute photon density spectrum from synchrotron emission for synchrotron self-compton model,
+        see "https://naima.readthedocs.io/en/latest/examples.html#crab-nebula-ssc-model"
+        
+        """
+        from astropy.constants import c
+
+        SYN = naima.models.Synchrotron(
+            self._particle_distribution,
+            B=self.B.quantity,
+            Eemax=self.radiative_model.Eemax,
+            Eemin=self.radiative_model.Eemin,
+        )
+
+        Esy = self.radiative_model.seed_photon_fields["SSC"]["energy"]
+        Lsy = SYN.flux(Esy, distance=0 * u.cm)  # use distance 0 to get luminosity
+        phn_sy = Lsy / (4 * np.pi * self.Rpwn.quantity ** 2 * c) * 2.24
+
+        self.radiative_model.seed_photon_fields["SSC"]["photon_density"] = phn_sy
+        dnde = self.radiative_model.flux(
+            energy, seed=self.seed, distance=self.distance
+        ) + SYN.flux(energy, distance=self.distance)
+        return dnde
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model."""
@@ -1345,14 +1385,17 @@ class NaimaSpectralModel(SpectralModel):
         if "B" in self.radiative_model.param_names:
             self.radiative_model.B = self.B.quantity
 
-        # Flattening the input energy list and later reshaping the flux list
-        # prevents some radiative models from displaying broadcasting problems.
-        if self.seed is None:
-            dnde = self.radiative_model.flux(energy.flatten(), distance=self.distance)
-        else:
+        if (
+            isinstance(self.radiative_model, naima.models.InverseCompton)
+            and "SSC" in self.radiative_model.seed_photon_fields
+        ):
+            dnde = self._evaluate_ssc(energy.flatten())
+        elif self.seed is not None:
             dnde = self.radiative_model.flux(
                 energy.flatten(), seed=self.seed, distance=self.distance
             )
+        else:
+            dnde = self.radiative_model.flux(energy.flatten(), distance=self.distance)
 
         dnde = dnde.reshape(energy.shape)
         unit = 1 / (energy.unit * u.cm ** 2 * u.s)

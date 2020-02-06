@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.maps import MapAxis
+from gammapy.modeling import Parameters, Parameter
 from gammapy.modeling.models import (
     SPECTRAL_MODELS,
     AbsorbedSpectralModel,
@@ -531,8 +532,60 @@ class TestNaimaModel:
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
 
-        model.B.value = 3 #update B
+        model.B.value = 3  # update B
         val_at_2TeV = 5.1985064062296e-16 * u.Unit("cm-2 s-1 TeV-1")
+        value = model(self.energy)
+        assert_quantity_allclose(value, val_at_2TeV)
+
+    def test_ssc(self):
+        import naima
+        from astropy.constants import c
+
+        ECBPL = naima.models.ExponentialCutoffBrokenPowerLaw(
+            amplitude=3.699e36 / u.eV,
+            e_0=1 * u.TeV,
+            e_break=0.265 * u.TeV,
+            alpha_1=1.5,
+            alpha_2=3.233,
+            e_cutoff=1863 * u.TeV,
+            beta=2.0,
+        )
+
+        B = 125 * u.uG
+        SYN = naima.radiative.Synchrotron(
+            ECBPL, B=B, Eemax=50 * u.PeV, Eemin=0.1 * u.GeV
+        )
+
+        # Compute photon density spectrum from synchrotron emission assuming R=2.1 pc
+        Rpwn = 2.1 * u.pc
+        Esy = np.logspace(-7, 9, 100) * u.eV
+        Lsy = SYN.flux(Esy, distance=0 * u.cm)  # use distance 0 to get luminosity
+        phn_sy = Lsy / (4 * np.pi * Rpwn ** 2 * c) * 2.24
+
+        radiative_model = naima.radiative.InverseCompton(
+            ECBPL,
+            seed_photon_fields=[
+                "CMB",
+                ["FIR", 70 * u.K, 0.5 * u.eV / u.cm ** 3],
+                ["NIR", 5000 * u.K, 1 * u.eV / u.cm ** 3],
+                ["SSC", Esy, phn_sy],
+            ],
+            Eemax=50 * u.PeV,
+            Eemin=0.1 * u.GeV,
+        )
+
+        nested_params = Parameters(
+            [Parameter("B", SYN.B), Parameter("Rpwn", Rpwn, frozen=True)]
+        )
+        model = NaimaSpectralModel(radiative_model, nested_params=nested_params)
+        assert_quantity_allclose(model.B.quantity, B)
+        assert_quantity_allclose(model.Rpwn.quantity, Rpwn)
+        val_at_2TeV = 1.6703761561806372e-11 * u.Unit("cm-2 s-1 TeV-1")
+        value = model(self.energy)
+        assert_quantity_allclose(value, val_at_2TeV)
+
+        model.B.value = 100
+        val_at_2TeV = 1.441331153167876e-11 * u.Unit("cm-2 s-1 TeV-1")
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
 
