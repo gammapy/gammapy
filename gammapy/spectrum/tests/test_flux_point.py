@@ -279,8 +279,7 @@ def test_flux_point_dataset_str(dataset):
 class TestFluxPointFit:
     @requires_dependency("iminuit")
     def test_fit_pwl_minuit(self, fit):
-        optimize_opts = {"backend": "minuit"}
-        result = fit.run(optimize_opts=optimize_opts)
+        result = fit.run(backend="minuit")
         self.assert_result(result)
 
     @requires_dependency("sherpa")
@@ -305,9 +304,8 @@ class TestFluxPointFit:
     @staticmethod
     @requires_dependency("iminuit")
     def test_stat_profile(fit):
-        optimize_opts = {"backend": "minuit"}
 
-        result = fit.run(optimize_opts=optimize_opts)
+        result = fit.run(backend="minuit")
 
         profile = fit.stat_profile("amplitude", nvalues=3, bounds=1)
 
