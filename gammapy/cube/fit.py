@@ -747,16 +747,18 @@ class MapDataset(Dataset):
         dataset = cls.read(data["filename"], name=data["name"])
         bkg_name = data["background"]
         model_names = data["models"]
+        models_list = [model for model in models if model.name in model_names]
+        models = Models(models_list)
+
         for component in components["components"]:
             if component["type"] == "BackgroundModel":
                 if component["name"] == bkg_name:
                     if "filename" not in component:
                         component["map"] = dataset.background_model.map
                     background_model = BackgroundModel.from_dict(component)
-                    dataset.background_model = background_model
+                    models.append(background_model)
 
-        models_list = [model for model in models if model.name in model_names]
-        dataset.models = Models(models_list)
+        dataset.models = models
         return dataset
 
     def to_dict(self, filename=""):

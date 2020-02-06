@@ -139,7 +139,15 @@ class MapDatasetEventSampler:
             Event list
         """
         events_all = []
-        for idx, evaluator in enumerate(dataset._evaluators):
+        # TODO: here we need to instanciate the evaluators once
+        _ = dataset.npred()
+
+        for idx, model in enumerate(dataset.models):
+            evaluator = dataset._evaluators.get(model.name)
+
+            if evaluator is None:
+                continue
+
             evaluator = copy.deepcopy(evaluator)
             evaluator.edisp = None
             evaluator.psf = None
