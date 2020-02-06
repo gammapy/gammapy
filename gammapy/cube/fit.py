@@ -122,7 +122,7 @@ class MapDataset(Dataset):
         str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
 
         npred = np.nan
-        if self.models is not None or self.background_model is not None:
+        if self.models is not None:
             npred = np.sum(self.npred().data)
         str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
 
@@ -165,9 +165,7 @@ class MapDataset(Dataset):
         str_ += "\t{:32}: {}\n".format("Fit statistic type", self.stat_type)
 
         stat = np.nan
-        if self.counts is not None and (
-            self.models is not None or self.background_model is not None
-        ):
+        if self.counts is not None and self.models is not None:
             stat = self.stat_sum()
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
@@ -176,11 +174,7 @@ class MapDataset(Dataset):
         if self.models is not None:
             n_models = len(self.models)
 
-        if self.background_model is not None:
-            n_models += 1
-
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
-
         str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.parameters))
         str_ += "\t{:32}: {}\n\n".format(
             "Number of free parameters", len(self.parameters.free_parameters)
