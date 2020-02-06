@@ -100,6 +100,7 @@ class MapDataset(Dataset):
         self.gti = gti
 
         self._name = make_name(name)
+        self._evaluators = {}
 
         # check whether a reference geom is defined
         _ = self._geom
@@ -202,36 +203,22 @@ class MapDataset(Dataset):
         else:
             self._models = None
 
-        evaluators = []
-
         if self.models is not None:
             for model in self.models:
                 if isinstance(model, BackgroundModel):
                     self.background_model = model
                     break
 
-            for model in self.models:
-                if isinstance(model, BackgroundModel):
-                    continue
-
-                evaluator = MapEvaluator(model, evaluation_mode=self.evaluation_mode)
-                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
-                evaluators.append(evaluator)
-
-        self._evaluators = evaluators
+    @property
+    def evaluators(self):
+        # this call is needed to trigger the setup of the evaluators
+        self.npred()
+        return self._evaluators
 
     @property
     def parameters(self):
         """List of parameters (`~gammapy.modeling.Parameters`)"""
-        parameters_list = []
-
-        if self.models:
-            parameters_list.append(self.models.parameters)
-
-        if self.background_model:
-            parameters_list.append(self.background_model.parameters)
-
-        return Parameters.from_stack(parameters_list)
+        return self.models.parameters
 
     @property
     def _geom(self):
@@ -263,7 +250,16 @@ class MapDataset(Dataset):
             npred_total += self.background_model.evaluate()
 
         if self.models:
-            for evaluator in self._evaluators:
+            for model in self.models:
+                if isinstance(model, BackgroundModel):
+                    continue
+
+                evaluator = self._evaluators.get(model.name)
+
+                if evaluator is None:
+                    evaluator = MapEvaluator(model=model, evaluation_mode=self.evaluation_mode)
+                    self._evaluators[model.name] = evaluator
+
                 # if the model component drifts out of its support the evaluator has
                 # has to be updated
                 if evaluator.needs_update:
@@ -1534,7 +1530,9 @@ class MapEvaluator:
     @property
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
-        if self.evaluation_mode == "global" or self.model.evaluation_radius is None:
+        if self.exposure is None:
+            return True
+        elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False
         else:
             position = self.model.position

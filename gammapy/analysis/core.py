@@ -144,16 +144,17 @@ class Analysis:
 
         log.info(f"Reading model.")
         if isinstance(models, str):
-            # FIXME: Models should offer a method to create from YAML str
-            models = yaml.safe_load(models)
-            self.models = Models(dict_to_models(models))
+            self.models = Models.from_yaml(models)
         elif isinstance(models, Models):
             self.models = models
         else:
             raise TypeError(f"Invalid type: {models!r}")
 
         for dataset in self.datasets:
-            dataset.models = self.models
+            if dataset.models is not None:
+                dataset.models.extend(self.models)
+            else:
+                dataset.models = self.models
 
         log.info(self.models)
 
