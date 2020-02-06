@@ -31,8 +31,8 @@ class Registry:
         },
         "covariance": {
             "minuit": covariance_iminuit,
-            "sherpa": covariance_sherpa,
-            "scipy": covariance_scipy,
+            #"sherpa": covariance_sherpa,
+            #"scipy": covariance_scipy,
         },
         "confidence": {
             "minuit": confidence_iminuit,
@@ -76,7 +76,7 @@ class Fit:
     def _parameters(self):
         return self.datasets.parameters
 
-    def run(self, optimize_opts=None, covariance_opts=None):
+    def run(self, backend="minuit", optimize_opts=None, covariance_opts=None):
         """
         Run all fitting steps.
 
@@ -94,18 +94,16 @@ class Fit:
         """
         if optimize_opts is None:
             optimize_opts = {}
-        optimize_result = self.optimize(**optimize_opts)
+        optimize_result = self.optimize(backend, **optimize_opts)
 
         if covariance_opts is None:
             covariance_opts = {}
 
-        covariance_opts.setdefault("backend", "minuit")
-
-        if covariance_opts["backend"] not in registry.register["covariance"]:
+        if backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
             return optimize_result
 
-        covariance_result = self.covariance(**covariance_opts)
+        covariance_result = self.covariance(backend, **covariance_opts)
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
         optimize_result._success = optimize_result.success and covariance_result.success
