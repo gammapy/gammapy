@@ -95,22 +95,21 @@ class Datasets(collections.abc.MutableSequence):
         Datasets
     """
 
-    def __init__(self, datasets):
+    def __init__(self, datasets=None):
+        if datasets is None:
+            datasets = []
+
         if isinstance(datasets, Datasets):
-            datasets = list(datasets)
-            dataset_list = datasets
+            datasets = datasets._datasets
         elif isinstance(datasets, list):
-            dataset_list = []
-            for data in datasets:
-                if isinstance(data, Datasets):
-                    dataset_list += list(data)
-                elif isinstance(data, Dataset):
-                    dataset_list.append(data)
+            datasets = datasets
+        elif isinstance(datasets, Dataset):
+            datasets = [datasets]
         else:
             raise TypeError(f"Invalid type: {datasets!r}")
 
         unique_names = []
-        for dataset in dataset_list:
+        for dataset in datasets:
             if dataset.name in unique_names:
                 raise (ValueError("Dataset names must be unique"))
             unique_names.append(dataset.name)
@@ -258,16 +257,16 @@ class Datasets(collections.abc.MutableSequence):
         return table_from_row_data(rows=rows)
 
     def __getitem__(self, key):
-        return self._datasets[self._get_idx(key)]
+        return self._datasets[self.index(key)]
 
     def __delitem__(self, key):
-        del self._datasets[self._get_idx(key)]
+        del self._datasets[self.index(key)]
 
     def __setitem__(self, key, dataset):
         if isinstance(dataset, Dataset):
             if dataset.name in self.names:
                 raise (ValueError("Dataset names must be unique"))
-            self._datasets[self._get_idx(key)] = dataset
+            self._datasets[self.index(key)] = dataset
         else:
             raise TypeError(f"Invalid type: {type(dataset)!r}")
 
@@ -279,14 +278,13 @@ class Datasets(collections.abc.MutableSequence):
         else:
             raise TypeError(f"Invalid type: {type(dataset)!r}")
 
-    def _get_idx(self, key):
+    def index(self, key):
         if isinstance(key, (int, slice)):
             return key
         elif isinstance(key, str):
-            for idx, dataset in enumerate(self._datasets):
-                if key == dataset.name:
-                    return idx
-            raise IndexError(f"No dataset: {key!r}")
+            return self.names.index(key)
+        elif isinstance(key, Dataset):
+            return self._datasets.index(key)
         else:
             raise TypeError(f"Invalid type: {type(key)!r}")
 

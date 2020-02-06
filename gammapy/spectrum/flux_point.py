@@ -772,7 +772,7 @@ class FluxPointsEstimator:
         Spectrum datasets.
     e_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
-    source : str
+    source : str or int
         For which source in the model to compute the flux points.
     norm_min : float
         Minimum value for the norm used for the fit statistic profile evaluation.
@@ -794,7 +794,7 @@ class FluxPointsEstimator:
         self,
         datasets,
         e_edges,
-        source="",
+        source=0,
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
@@ -818,11 +818,7 @@ class FluxPointsEstimator:
 
         dataset = self.datasets[0]
 
-        # TODO: this is complex and non-obvious behaviour. Simlify!
-        if len(dataset.models) > 1:
-            model = dataset.models[source].spectral_model
-        else:
-            model = dataset.models[0].spectral_model
+        model = dataset.models[source].spectral_model
 
         self.model = ScaleSpectralModel(model)
         self.model.norm.min = 0

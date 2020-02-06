@@ -277,7 +277,7 @@ class LightCurveEstimator:
         result : dict
             Dict with results for the flux point.
         """
-        self.fit = Fit([datasets])
+        self.fit = Fit(datasets)
 
         result = {
             "e_ref": self.e_ref,

@@ -262,7 +262,7 @@ class SkyModel(SkyModelBase):
         if self.temporal_model is not None:
             temporal_type = self.temporal_model.tag
         else:
-            temporal_type = ""
+            temporal_type = "None"
         str_ += "\t{:26}: {}\n".format("Temporal model type", temporal_type)
 
         str_ += "\tParameters:\n"

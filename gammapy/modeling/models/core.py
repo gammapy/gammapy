@@ -184,9 +184,6 @@ class Models(collections.abc.MutableSequence):
 
     def __add__(self, other):
         if isinstance(other, (Models, list)):
-            dupl = [_ for _ in other if _.name in self.names]
-            if dupl != []:
-                raise (ValueError("Model names must be unique"))
             return Models([*self, *other])
         elif isinstance(other, Model):
             if other.name in self.names:
@@ -196,10 +193,10 @@ class Models(collections.abc.MutableSequence):
             raise TypeError(f"Invalid type: {other!r}")
 
     def __getitem__(self, key):
-        return self._models[self._get_idx(key)]
+        return self._models[self.index(key)]
 
     def __delitem__(self, key):
-        del self._models[self._get_idx(key)]
+        del self._models[self.index(key)]
 
     def __setitem__(self, key, model):
         from gammapy.modeling.models import SkyModel, SkyDiffuseCube
@@ -207,7 +204,7 @@ class Models(collections.abc.MutableSequence):
         if isinstance(model, (SkyModel, SkyDiffuseCube)):
             if model.name in self.names:
                 raise (ValueError("Model names must be unique"))
-            self._models[self._get_idx(key)] = model
+            self._models[self.index(key)] = model
         else:
             raise TypeError(f"Invalid type: {model!r}")
 
@@ -216,16 +213,18 @@ class Models(collections.abc.MutableSequence):
             raise (ValueError("Model names must be unique"))
         self._models.insert(idx, model)
 
-    def _get_idx(self, key):
+    def index(self, key):
         if isinstance(key, (int, slice)):
             return key
         elif isinstance(key, str):
-            for idx, model in enumerate(self._models):
-                if key == model.name:
-                    return idx
-            raise IndexError(f"No dataset: {key!r}")
+            return self.names.index(key)
+        elif isinstance(key, Model):
+            return self._models.index(key)
         else:
             raise TypeError(f"Invalid type: {type(key)!r}")
 
     def __len__(self):
         return len(self._models)
+
+    def _ipython_key_completions_(self):
+        return self.names
