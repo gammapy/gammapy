@@ -120,9 +120,8 @@ def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, **kwargs):
     mask_fit = Map.from_geom(geom, data=mask_fit)
 
     return MapDataset(
-        models=sky_model,
+        models=[sky_model, background_model],
         exposure=exposure,
-        background_model=background_model,
         psf=psf,
         edisp=edisp,
         mask_fit=mask_fit,
@@ -221,7 +220,7 @@ def test_to_image(geom):
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz"
     )
     exposure = exposure.sum_over_axes(keepdims=True)
-    dataset = MapDataset(counts=counts, background_model=background, exposure=exposure)
+    dataset = MapDataset(counts=counts, models=[background], exposure=exposure)
     dataset_im = dataset.to_image()
     assert dataset_im.mask_safe is None
     assert dataset_im.counts.data.sum() == dataset.counts.data.sum()
@@ -297,7 +296,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset.write(tmp_path / "test.fits")
 
     dataset_new = MapDataset.read(tmp_path / "test.fits")
-    assert dataset_new.models is None
+    assert len(dataset_new.models) == 1
     assert dataset_new.mask.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
@@ -495,7 +494,7 @@ def test_from_geoms():
 def test_stack(geom, geom_etrue):
     m = Map.from_geom(geom)
     m.quantity = 0.2 * np.ones(m.data.shape)
-    background_model1 = BackgroundModel(m)
+    background_model1 = BackgroundModel(m, name="dataset-1-bkg")
     c_map1 = Map.from_geom(geom)
     c_map1.quantity = 0.3 * np.ones(c_map1.data.shape)
     mask1 = np.ones(m.data.shape, dtype=bool)
@@ -504,23 +503,25 @@ def test_stack(geom, geom_etrue):
 
     dataset1 = MapDataset(
         counts=c_map1,
-        background_model=background_model1,
+        models=[background_model1],
         exposure=get_exposure(geom_etrue),
         mask_safe=mask1,
+        name="dataset-1"
     )
 
     c_map2 = Map.from_geom(geom)
     c_map2.quantity = 0.1 * np.ones(c_map2.data.shape)
-    background_model2 = BackgroundModel(m, norm=0.5)
+    background_model2 = BackgroundModel(m, norm=0.5, name="dataset-2-bkg")
     mask2 = np.ones(m.data.shape, dtype=bool)
     mask2[0][3] = False
     mask2 = Map.from_geom(geom, data=mask2)
 
     dataset2 = MapDataset(
         counts=c_map2,
-        background_model=background_model2,
+        models=[background_model2],
         exposure=get_exposure(geom_etrue),
         mask_safe=mask2,
+        name="dataset-2"
     )
     dataset1.stack(dataset2)
     assert_allclose(dataset1.counts.data.sum(), 7987)
@@ -846,8 +847,7 @@ def test_names(geom, geom_etrue, sky_model):
 
     dataset1 = MapDataset(
         counts=c_map1,
-        background_model=background_model1,
-        models=Models([model1, model2]),
+        models=Models([model1, model2, background_model1]),
         exposure=get_exposure(geom_etrue),
     )
 
