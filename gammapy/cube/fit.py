@@ -54,8 +54,6 @@ class MapDataset(Dataset):
         PSF kernel
     edisp : `~gammapy.irf.EDispKernel` or `~gammapy.cube.EDispMap`
         Energy dispersion kernel
-    background_model : `~gammapy.modeling.models.BackgroundModel`
-        Background model to use for the fit.
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
         The "local" mode evaluates the model components on smaller grids to save computation time.
@@ -79,7 +77,6 @@ class MapDataset(Dataset):
         mask_fit=None,
         psf=None,
         edisp=None,
-        background_model=None,
         name=None,
         evaluation_mode="local",
         mask_safe=None,
@@ -91,15 +88,15 @@ class MapDataset(Dataset):
         if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
+        self.background_model = None
         self.evaluation_mode = evaluation_mode
         self.counts = counts
         self.exposure = exposure
         self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
-        self.background_model = background_model
-        self.models = models
         self.mask_safe = mask_safe
+        self.models = models
         self.gti = gti
 
         self._name = make_name(name)
@@ -188,15 +185,8 @@ class MapDataset(Dataset):
             "Number of free parameters", len(self.parameters.free_parameters)
         )
 
-        models = Models()
-
         if self.models is not None:
-            models.extend(self.models)
-
-        if self.background_model is not None:
-            models.append(self.background_model)
-
-        str_ += "\t" + "\n\t".join(str(self.models).split("\n")[2:])
+            str_ += "\t" + "\n\t".join(str(self.models).split("\n")[2:])
 
         return str_.expandtabs(tabsize=2)
 
@@ -216,6 +206,10 @@ class MapDataset(Dataset):
 
         if self.models is not None:
             for model in self.models:
+                if isinstance(model, BackgroundModel):
+                    self.background_model = model
+                    continue
+
                 evaluator = MapEvaluator(model, evaluation_mode=self.evaluation_mode)
                 evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
                 evaluators.append(evaluator)
@@ -316,7 +310,7 @@ class MapDataset(Dataset):
         kwargs["counts"] = Map.from_geom(geom, unit="")
 
         background = Map.from_geom(geom, unit="")
-        kwargs["background_model"] = BackgroundModel(background)
+        kwargs["models"] = Models([BackgroundModel(background)])
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
         kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
         kwargs["psf"] = PSFMap.from_geom(geom_psf)
@@ -681,7 +675,7 @@ class MapDataset(Dataset):
 
         if "BACKGROUND" in hdulist:
             background_map = Map.from_hdulist(hdulist, hdu="background")
-            kwargs["background_model"] = BackgroundModel(background_map)
+            kwargs["models"] = Models([BackgroundModel(background_map)])
 
         if "EDISP_MATRIX" in hdulist:
             kwargs["edisp"] = EDispKernel.from_hdulist(
@@ -901,7 +895,7 @@ class MapDataset(Dataset):
         if self.background_model is not None:
             background = self.background_model.evaluate() * mask_safe
             background = background.sum_over_axes(keepdims=True)
-            kwargs["background_model"] = BackgroundModel(background)
+            kwargs["models"] = Models([BackgroundModel(background)])
 
         if self.psf is not None:
             kwargs["psf"] = self.psf.to_image()
