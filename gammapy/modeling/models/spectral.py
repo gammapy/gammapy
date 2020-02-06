@@ -13,8 +13,6 @@ from gammapy.utils.integrate import evaluate_integral_pwl, trapz_loglog
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .core import Model
-import naima
-
 
 def integrate_spectrum(func, emin, emax, ndecade=100, intervals=False):
     """Integrate 1d function using the log-log trapezoidal rule.
@@ -1316,6 +1314,7 @@ class NaimaSpectralModel(SpectralModel):
     def __init__(
         self, radiative_model, distance=1.0 * u.kpc, seed=None, nested_params=None
     ):
+        import naima
         self.radiative_model = radiative_model
         self._particle_distribution = self.radiative_model.particle_distribution
         self.distance = u.Quantity(distance)
@@ -1359,6 +1358,7 @@ class NaimaSpectralModel(SpectralModel):
         
         """
         from astropy.constants import c
+        import naima
 
         SYN = naima.models.Synchrotron(
             self._particle_distribution,
@@ -1379,6 +1379,7 @@ class NaimaSpectralModel(SpectralModel):
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model."""
+        import naima
         for name, value in kwargs.items():
             setattr(self._particle_distribution, name, value)
 
