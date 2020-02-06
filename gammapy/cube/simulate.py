@@ -143,10 +143,10 @@ class MapDatasetEventSampler:
         _ = dataset.npred()
 
         for idx, model in enumerate(dataset.models):
-            evaluator = dataset._evaluators.get(model.name)
-
-            if evaluator is None:
+            if isinstance(model, BackgroundModel):
                 continue
+
+            evaluator = dataset.evaluators.get(model.name)
 
             evaluator = copy.deepcopy(evaluator)
             evaluator.edisp = None

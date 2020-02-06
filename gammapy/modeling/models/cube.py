@@ -594,6 +594,16 @@ class BackgroundModel(Model):
         str_ += "\n\n"
         return str_.expandtabs(tabsize=2)
 
+    @property
+    def position(self):
+        """`~astropy.coordinates.SkyCoord`"""
+        return self.map.geom.center_skydir
+
+    @property
+    def evaluation_radius(self):
+        """`~astropy.coordinates.Angle`"""
+        return np.max(self.map.geom.width) / 2.0
+
 
 def create_fermi_isotropic_diffuse_model(filename, **kwargs):
     """Read Fermi isotropic diffuse model.

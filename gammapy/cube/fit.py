@@ -211,8 +211,11 @@ class MapDataset(Dataset):
 
     @property
     def evaluators(self):
+        """Model evaluators"""
         # this call is needed to trigger the setup of the evaluators
-        self.npred()
+        if not self._evaluators:
+            self.npred()
+
         return self._evaluators
 
     @property
@@ -246,14 +249,8 @@ class MapDataset(Dataset):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
         npred_total = Map.from_geom(self._geom, dtype=float)
 
-        if self.background_model:
-            npred_total += self.background_model.evaluate()
-
         if self.models:
             for model in self.models:
-                if isinstance(model, BackgroundModel):
-                    continue
-
                 evaluator = self._evaluators.get(model.name)
 
                 if evaluator is None:
@@ -1523,6 +1520,11 @@ class MapEvaluator:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
 
         self.evaluation_mode = evaluation_mode
+
+        # TODO: this is preliminary solution until we have further unified the model handling
+        if isinstance(model, BackgroundModel):
+            self.compute_npred = model.evaluate
+            self.evaluation_mode = "global"
 
     @property
     def geom(self):
