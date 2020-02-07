@@ -1361,7 +1361,6 @@ class NaimaSpectralModel(SpectralModel):
         """
         Compute photon density spectrum from synchrotron emission for synchrotron self-compton model,
         see "https://naima.readthedocs.io/en/latest/examples.html#crab-nebula-ssc-model"
-        
         """
         from astropy.constants import c
         import naima

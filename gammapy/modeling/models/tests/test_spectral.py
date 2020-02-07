@@ -4,7 +4,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.maps import MapAxis
-from gammapy.modeling import Parameters, Parameter
 from gammapy.modeling.models import (
     SPECTRAL_MODELS,
     AbsorbedSpectralModel,
