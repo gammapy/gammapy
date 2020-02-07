@@ -14,6 +14,7 @@ from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .core import Model
 
+
 def integrate_spectrum(func, emin, emax, ndecade=100, intervals=False):
     """Integrate 1d function using the log-log trapezoidal rule.
 
@@ -1315,12 +1316,13 @@ class NaimaSpectralModel(SpectralModel):
         self, radiative_model, distance=1.0 * u.kpc, seed=None, nested_models=None
     ):
         import naima
+
         self.radiative_model = radiative_model
         self._particle_distribution = self.radiative_model.particle_distribution
         self.distance = u.Quantity(distance)
         self.seed = seed
         if nested_models is None:
-            nested_models={}
+            nested_models = {}
         self.nested_models = nested_models
 
         if isinstance(self._particle_distribution, naima.models.TableModel):
@@ -1347,9 +1349,9 @@ class NaimaSpectralModel(SpectralModel):
             and "SSC" in self.nested_models
         ):
             B = self.nested_models["SSC"]["B"]
-            Rpwn = self.nested_models["SSC"]["Rpwn"]
+            radius = self.nested_models["SSC"]["radius"]
             parameters.append(Parameter("B", B))
-            parameters.append(Parameter("Rpwn", Rpwn, frozen=True))
+            parameters.append(Parameter("radius", radius, frozen=True))
 
         super()._init_from_parameters(parameters)
 
@@ -1373,7 +1375,7 @@ class NaimaSpectralModel(SpectralModel):
 
         Esy = np.logspace(-7, 9, 100) * u.eV
         Lsy = SYN.flux(Esy, distance=0 * u.cm)  # use distance 0 to get luminosity
-        phn_sy = Lsy / (4 * np.pi * self.Rpwn.quantity ** 2 * c) * 2.24
+        phn_sy = Lsy / (4 * np.pi * self.radius.quantity ** 2 * c) * 2.24
 
         self.radiative_model.seed_photon_fields["SSC"]["photon_density"] = phn_sy
         dnde = self.radiative_model.flux(
@@ -1384,6 +1386,7 @@ class NaimaSpectralModel(SpectralModel):
     def evaluate(self, energy, **kwargs):
         """Evaluate the model."""
         import naima
+
         for name, value in kwargs.items():
             setattr(self._particle_distribution, name, value)
 
