@@ -538,7 +538,6 @@ class TestNaimaModel:
 
     def test_ssc(self):
         import naima
-        from astropy.constants import c
 
         ECBPL = naima.models.ExponentialCutoffBrokenPowerLaw(
             amplitude=3.699e36 / u.eV,
@@ -550,41 +549,30 @@ class TestNaimaModel:
             beta=2.0,
         )
 
-        B = 125 * u.uG
-        SYN = naima.radiative.Synchrotron(
-            ECBPL, B=B, Eemax=50 * u.PeV, Eemin=0.1 * u.GeV
-        )
-
-        # Compute photon density spectrum from synchrotron emission assuming R=2.1 pc
-        radius = 2.1 * u.pc
-        Esy = np.logspace(-7, 9, 100) * u.eV
-        Lsy = SYN.flux(Esy, distance=0 * u.cm)  # use distance 0 to get luminosity
-        phn_sy = Lsy / (4 * np.pi * radius ** 2 * c) * 2.24
-
         radiative_model = naima.radiative.InverseCompton(
             ECBPL,
             seed_photon_fields=[
                 "CMB",
                 ["FIR", 70 * u.K, 0.5 * u.eV / u.cm ** 3],
                 ["NIR", 5000 * u.K, 1 * u.eV / u.cm ** 3],
-                ["SSC", Esy, phn_sy],
             ],
             Eemax=50 * u.PeV,
             Eemin=0.1 * u.GeV,
         )
-
-        nested_models = {"SSC": {"B": SYN.B, "radius": radius}}
+        B = 125 * u.uG
+        radius = 2.1 * u.pc
+        nested_models = {"SSC": {"B": B, "radius": radius}}
         model = NaimaSpectralModel(radiative_model, nested_models=nested_models)
         assert_quantity_allclose(model.B.quantity, B)
         assert_quantity_allclose(model.radius.quantity, radius)
         val_at_2TeV = 1.6703761561806372e-11 * u.Unit("cm-2 s-1 TeV-1")
         value = model(self.energy)
-        assert_quantity_allclose(value, val_at_2TeV)
+        assert_quantity_allclose(value, val_at_2TeV, rtol=1e-5)
 
         model.B.value = 100
         val_at_2TeV = 1.441331153167876e-11 * u.Unit("cm-2 s-1 TeV-1")
         value = model(self.energy)
-        assert_quantity_allclose(value, val_at_2TeV)
+        assert_quantity_allclose(value, val_at_2TeV, rtol=1e-5)
 
 
 class TestSpectralModelErrorPropagation:
