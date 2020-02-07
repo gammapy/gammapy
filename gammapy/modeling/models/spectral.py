@@ -1382,7 +1382,7 @@ class NaimaSpectralModel(SpectralModel):
         phn_sy = Lsy / (4 * np.pi * self.radius.quantity ** 2 * c) * 2.24
         # The factor 2.24 comes from the assumption on uniform synchrotron
         # emissivity inside a sphere
-        
+
         if "SSC" not in self.radiative_model.seed_photon_fields:
             self.radiative_model.seed_photon_fields["SSC"] = {
                 "isotropic": True,
