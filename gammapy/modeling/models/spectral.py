@@ -1304,22 +1304,24 @@ class NaimaSpectralModel(SpectralModel):
         in case of a `~naima.models.InverseCompton` model. It can be a subset of the
         `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
         of photon fields
-    nested_params : `gammapy.modeling.Parameters`
-        Additionnal parameters not supplied by the radiative model,
+    nested_models : ditct
+        Additionnal parameters for nested models not supplied by the radiative model,
         for now this is used  only for synchrotron self-compton model
     """
 
     tag = "NaimaSpectralModel"
 
     def __init__(
-        self, radiative_model, distance=1.0 * u.kpc, seed=None, nested_params=None
+        self, radiative_model, distance=1.0 * u.kpc, seed=None, nested_models=None
     ):
         import naima
         self.radiative_model = radiative_model
         self._particle_distribution = self.radiative_model.particle_distribution
         self.distance = u.Quantity(distance)
         self.seed = seed
-        self.nested_params = nested_params
+        if nested_models is None:
+            nested_models={}
+        self.nested_models = nested_models
 
         if isinstance(self._particle_distribution, naima.models.TableModel):
             param_names = ["amplitude"]
@@ -1342,10 +1344,12 @@ class NaimaSpectralModel(SpectralModel):
         # In case of a synchrotron self compton model, append B and Rpwn to the fittable parameters
         if (
             isinstance(self.radiative_model, naima.models.InverseCompton)
-            and "SSC" in self.radiative_model.seed_photon_fields
+            and "SSC" in self.nested_models
         ):
-            parameters.append(self.nested_params["B"])
-            parameters.append(self.nested_params["Rpwn"])
+            B = self.nested_models["SSC"]["B"]
+            Rpwn = self.nested_models["SSC"]["Rpwn"]
+            parameters.append(Parameter("B", B))
+            parameters.append(Parameter("Rpwn", Rpwn, frozen=True))
 
         super()._init_from_parameters(parameters)
 
@@ -1367,7 +1371,7 @@ class NaimaSpectralModel(SpectralModel):
             Eemin=self.radiative_model.Eemin,
         )
 
-        Esy = self.radiative_model.seed_photon_fields["SSC"]["energy"]
+        Esy = np.logspace(-7, 9, 100) * u.eV
         Lsy = SYN.flux(Esy, distance=0 * u.cm)  # use distance 0 to get luminosity
         phn_sy = Lsy / (4 * np.pi * self.Rpwn.quantity ** 2 * c) * 2.24
 
@@ -1388,7 +1392,7 @@ class NaimaSpectralModel(SpectralModel):
 
         if (
             isinstance(self.radiative_model, naima.models.InverseCompton)
-            and "SSC" in self.radiative_model.seed_photon_fields
+            and "SSC" in self.nested_models
         ):
             dnde = self._evaluate_ssc(energy.flatten())
         elif self.seed is not None:

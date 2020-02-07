@@ -574,10 +574,8 @@ class TestNaimaModel:
             Eemin=0.1 * u.GeV,
         )
 
-        nested_params = Parameters(
-            [Parameter("B", SYN.B), Parameter("Rpwn", Rpwn, frozen=True)]
-        )
-        model = NaimaSpectralModel(radiative_model, nested_params=nested_params)
+        nested_models = {"SSC":{"B":SYN.B, "Rpwn":Rpwn}}
+        model = NaimaSpectralModel(radiative_model, nested_models=nested_models)
         assert_quantity_allclose(model.B.quantity, B)
         assert_quantity_allclose(model.Rpwn.quantity, Rpwn)
         val_at_2TeV = 1.6703761561806372e-11 * u.Unit("cm-2 s-1 TeV-1")
