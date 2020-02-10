@@ -67,7 +67,7 @@ class SpectrumDatasetMaker:
         edges = energy_axis.edges
 
         counts = CountsSpectrum(
-            energy_hi=edges[1:], energy_lo=edges[:-1], region=region
+            energy_hi=edges[1:], energy_lo=edges[:-1], region=region, wcs=self.geom_ref(region).wcs
         )
         events_region = observation.events.select_region(
             region, wcs=self.geom_ref(region).wcs
@@ -112,7 +112,7 @@ class SpectrumDatasetMaker:
         data *= observation.observation_time_duration
 
         return CountsSpectrum(
-            energy_hi=e_reco[1:], energy_lo=e_reco[:-1], data=data.to_value(""), unit=""
+            energy_hi=e_reco[1:], energy_lo=e_reco[:-1], data=data.to_value(""), unit="",
         )
 
     def make_aeff(self, region, energy_axis_true, observation):
