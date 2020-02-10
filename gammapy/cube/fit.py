@@ -202,6 +202,8 @@ class MapDataset(Dataset):
                 if isinstance(model, BackgroundModel):
                     self.background_model = model
                     break
+            else:
+                log.warning(f"No background model defined for dataset {self.name}")
 
     @property
     def evaluators(self):
@@ -891,7 +893,7 @@ class MapDataset(Dataset):
             kwargs["models"] = Models([BackgroundModel(background)])
 
         if self.psf is not None:
-            kwargs["psf"] = self.psf.to_image()
+            kwargs["psf"] = self.psf.to_image(spectrum=spectrum, keepdims=True)
 
         return self.__class__(**kwargs)
 

@@ -105,7 +105,8 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
         # TODO: this is super complex. Find or invent a better way!
         energy = energy_axis.center[idx[energy_idx]]
         vals = table_psf.evaluate(energy=energy, rad=rads).reshape(img.shape)
-        img += vals.value / vals.sum().value
+        with np.errstate(invalid="ignore"):
+            img += vals.value / vals.sum().value
 
     return kernel_map.downsample(factor, preserve_counts=True)
 
