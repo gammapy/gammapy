@@ -986,6 +986,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             hdu = fits.BinTableHDU(self.gti.table, name="GTI")
             hdulist.append(hdu)
 
+        if self.counts.region is not None and self.counts.wcs is not None:
+            region_table = self.counts._to_region_table()
+            region_hdu = fits.BinTableHDU(region_table, name="REGION")
+            hdulist.append(region_hdu)
+
         hdulist.writeto(outdir / phafile, overwrite=overwrite)
 
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
@@ -1004,6 +1009,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             hdulist = fits.HDUList(
                 [fits.PrimaryHDU(), hdu, self._ebounds_hdu(use_sherpa)]
             )
+            if self.counts_off.region is not None and self.counts_off.wcs is not None:
+                region_table = self.counts_off._to_region_table()
+                region_hdu = fits.BinTableHDU(region_table, name="REGION")
+                hdulist.append(region_hdu)
+
             hdulist.writeto(outdir / bkgfile, overwrite=overwrite)
 
         if self.edisp is not None:
@@ -1066,7 +1076,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             data = _read_ogip_hdulist(hdulist)
 
         counts = CountsSpectrum(
-            energy_hi=data["energy_hi"], energy_lo=data["energy_lo"], data=data["data"]
+            energy_hi=data["energy_hi"], energy_lo=data["energy_lo"], data=data["data"],region=data["region"],wcs=data["wcs"]
         )
 
         phafile = filename.name
@@ -1086,6 +1096,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
                     energy_hi=data_bkg["energy_hi"],
                     energy_lo=data_bkg["energy_lo"],
                     data=data_bkg["data"],
+                    region=data_bkg["region"],
+                    wcs=data_bkg["wcs"]
                 )
 
                 acceptance_off = data_bkg["backscal"]
@@ -1252,7 +1264,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         )
 
 
-def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS", hdu3="GTI"):
+def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS", hdu3="GTI", hdu4="REGION"):
     """Create from `~astropy.io.fits.HDUList`."""
     counts_table = Table.read(hdulist[hdu1])
     ebounds = Table.read(hdulist[hdu2])
@@ -1263,6 +1275,12 @@ def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS", hdu3="GTI"):
         gti = GTI(Table.read(hdulist[hdu3]))
     else:
         gti = None
+
+    if hdu4 in hdulist:
+        region, wcs = CountsSpectrum.read_region_table(hdulist[hdu4])
+    else:
+        region = None
+        wcs = None
 
     # Check if column are present in the header
     quality = None
@@ -1287,6 +1305,8 @@ def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS", hdu3="GTI"):
         obs_id=counts_table.meta["OBS_ID"],
         is_bkg=False,
         gti=gti,
+        region=region,
+        wcs=wcs,
     )
 
 

@@ -10,7 +10,7 @@ from regions import fits_region_objects_to_table, FITSRegionParser
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
-from gammapy.utils.regions import compound_region_to_list
+from gammapy.utils.regions import compound_region_to_list, list_to_compound_region
 from gammapy.utils.scripts import make_path
 
 __all__ = ["CountsSpectrum"]
@@ -79,6 +79,19 @@ class CountsSpectrum:
         self.data = quantity.value
         self.unit = quantity.unit
 
+    @staticmethod
+    def read_region_table(hdu):
+        """Read region table and convert it to region list."""
+        region_table = Table.read(hdu)
+        parser = FITSRegionParser(region_table)
+        pix_region = parser.shapes.to_regions()
+        wcs = WCS(region_table.meta)
+        regions = []
+        for reg in pix_region:
+            regions.append(reg.to_sky(wcs))
+        region = list_to_compound_region(regions)
+        return region, wcs
+
     @classmethod
     def from_hdulist(cls, hdulist, hdu1="COUNTS", hdu2="EBOUNDS", hdu3="REGION"):
         """Read from HDU list in OGIP format."""
@@ -87,13 +100,10 @@ class CountsSpectrum:
         ebounds = ebounds_to_energy_axis(hdulist[hdu2])
 
         # TODO: add region serilisation
-        region_table = Table.read(hdulist[hdu3])
-        parser = FITSRegionParser(region_table)
-        pix_region = parser.shapes.to_regions()
-        wcs = WCS(region_table.meta)
-        region = []
-        for reg in pix_region:
-            region.append(reg.to_sky(wcs))
+        region = None
+        wcs = None
+        if hdu3 in hdulist:
+            region, wcs =cls.read_region_table(hdulist[hdu3])
 
         return cls(data=counts, energy_lo=ebounds[:-1], energy_hi=ebounds[1:], region=region, wcs=wcs)
 
