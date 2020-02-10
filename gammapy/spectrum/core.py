@@ -5,6 +5,7 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
+from regions import fits_region_objects_to_table
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
@@ -104,7 +105,19 @@ class CountsSpectrum:
         names = ["CHANNEL", "COUNTS"]
         meta = {"name": "COUNTS"}
 
+
+
         return Table([channel, counts], names=names, meta=meta)
+
+    def _to_region_table(self):
+        """Export region to a FITS region table."""
+        region_list = compound_region_to_list(self.region)
+        pixel_region_list = []
+        for reg in region_list:
+            pixel_region_list.append(reg.to_pixel(self.wcs))
+        table = fits_region_objects_to_table(pixel_region_list)
+        table.meta.update(self.wcs.to_header())
+        return table
 
     def to_hdulist(self, use_sherpa=False):
         """Convert to `~astropy.io.fits.HDUList`.
@@ -122,7 +135,10 @@ class CountsSpectrum:
             energy = energy.to("keV")
 
         ebounds = energy_axis_to_ebounds(energy)
-        return fits.HDUList([fits.PrimaryHDU(), hdu, ebounds])
+
+        region_table = self._to_region_table()
+        region_hdu = fits.BinTableHDU(region_table, name='REGION')
+        return fits.HDUList([fits.PrimaryHDU(), hdu, ebounds, region_hdu])
 
     def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
