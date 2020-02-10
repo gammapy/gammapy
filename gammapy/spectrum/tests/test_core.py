@@ -55,6 +55,8 @@ class TestCountsSpectrum:
         self.spec.write(tmp_path / "tmp.fits")
         spec2 = CountsSpectrum.read(tmp_path / "tmp.fits")
         assert_quantity_allclose(spec2.energy.edges, self.bins)
+        assert len(spec2.region) == 2
+        assert_allclose(spec2.region[0].center.l,0.)
 
     def test_downsample(self):
         rebinned_spec = self.spec.downsample(2)

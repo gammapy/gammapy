@@ -5,7 +5,8 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from regions import fits_region_objects_to_table
+from astropy.wcs import WCS
+from regions import fits_region_objects_to_table, FITSRegionParser
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
@@ -79,20 +80,28 @@ class CountsSpectrum:
         self.unit = quantity.unit
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu1="COUNTS", hdu2="EBOUNDS"):
+    def from_hdulist(cls, hdulist, hdu1="COUNTS", hdu2="EBOUNDS", hdu3="REGION"):
         """Read from HDU list in OGIP format."""
         table = Table.read(hdulist[hdu1])
         counts = table["COUNTS"].data
         ebounds = ebounds_to_energy_axis(hdulist[hdu2])
 
         # TODO: add region serilisation
-        return cls(data=counts, energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
+        region_table = Table.read(hdulist[hdu3])
+        parser = FITSRegionParser(region_table)
+        pix_region = parser.shapes.to_regions()
+        wcs = WCS(region_table.meta)
+        region = []
+        for reg in pix_region:
+            region.append(reg.to_sky(wcs))
+
+        return cls(data=counts, energy_lo=ebounds[:-1], energy_hi=ebounds[1:], region=region, wcs=wcs)
 
     @classmethod
-    def read(cls, filename, hdu1="COUNTS", hdu2="EBOUNDS"):
+    def read(cls, filename, hdu1="COUNTS", hdu2="EBOUNDS", hdu3="REGION"):
         """Read from file."""
         with fits.open(make_path(filename), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
+            return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2, hdu3=hdu3)
 
     def to_table(self):
         """Convert to `~astropy.table.Table`.
