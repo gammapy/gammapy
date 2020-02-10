@@ -42,6 +42,9 @@ def test_hdu_index_table(hdu_index_table):
     location = hdu_index_table.hdu_location(obs_id=42, hdu_type="events")
     assert location.path().as_posix() == "spam/a/b"
 
+    location = hdu_index_table.hdu_location(obs_id=42, hdu_type="bkg")
+    assert location is None
+
     assert hdu_index_table.summary().startswith("HDU index table")
 
 

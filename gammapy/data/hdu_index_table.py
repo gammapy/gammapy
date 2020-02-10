@@ -180,9 +180,10 @@ class HDUIndexTable(Table):
         if len(idx) == 1:
             idx = idx[0]
         elif len(idx) == 0:
-            raise IndexError(
+            log.warning(
                 f"No HDU found matching: OBS_ID = {obs_id}, HDU_TYPE = {hdu_type}, HDU_CLASS = {hdu_class}"
             )
+            return None
         else:
             idx = idx[0]
             log.warning(
