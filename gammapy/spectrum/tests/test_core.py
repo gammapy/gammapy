@@ -5,8 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.units import Quantity
 from gammapy.irf import EDispKernel, EffectiveAreaTable
-from gammapy.maps import MapAxis
-from gammapy.maps import WcsGeom
+from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
