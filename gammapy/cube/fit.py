@@ -88,6 +88,9 @@ class MapDataset(Dataset):
         if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
+        self._name = make_name(name)
+        self._evaluators = {}
+
         self.background_model = None
         self.evaluation_mode = evaluation_mode
         self.counts = counts
@@ -98,9 +101,6 @@ class MapDataset(Dataset):
         self.mask_safe = mask_safe
         self.models = models
         self.gti = gti
-
-        self._name = make_name(name)
-        self._evaluators = {}
 
         # check whether a reference geom is defined
         _ = self._geom
