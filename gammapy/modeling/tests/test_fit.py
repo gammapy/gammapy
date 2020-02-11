@@ -40,9 +40,7 @@ class MyDataset(Dataset):
 def test_run(backend):
     dataset = MyDataset()
     fit = Fit([dataset])
-    result = fit.run(
-        optimize_opts={"backend": backend}, covariance_opts={"backend": backend}
-    )
+    result = fit.run(backend=backend)
     pars = result.parameters
 
     assert result.success is True
