@@ -31,6 +31,8 @@ class CountsSpectrum:
         Data unit
     region : `~regions.SkyRegion`
         Region the spectrum is defined for.
+    wcs : `~astropy.wcs.WCS`
+        the wcs system used to perform region based event selection
 
     Examples
     --------
@@ -51,7 +53,7 @@ class CountsSpectrum:
         spec.plot(show_poisson_errors=True)
     """
 
-    def __init__(self, energy_lo, energy_hi, data=None, unit="", region=None):
+    def __init__(self, energy_lo, energy_hi, data=None, unit="", region=None, wcs=None):
         e_edges = edges_from_lo_hi(energy_lo, energy_hi)
         self.energy = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
@@ -64,6 +66,7 @@ class CountsSpectrum:
 
         self.unit = u.Unit(unit)
         self.region = region
+        self.wcs = wcs
 
     @property
     def quantity(self):
