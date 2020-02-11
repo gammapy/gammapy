@@ -3,9 +3,9 @@ import numpy as np
 from scipy.optimize import brentq
 from gammapy.stats import wstat
 
-__all__ = ["WStat"]
+__all__ = ["WStatEstimator"]
 
-class WStat:
+class WStatEstimator:
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
     with unknown background.
 
