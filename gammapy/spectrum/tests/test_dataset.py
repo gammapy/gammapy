@@ -7,7 +7,7 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import (
     ConstantSpectralModel,
@@ -25,7 +25,7 @@ from gammapy.utils.testing import (
     requires_dependency,
 )
 from gammapy.utils.time import time_ref_to_dict
-
+from gammapy.utils.regions import make_region, compound_region_to_list
 
 @requires_dependency("iminuit")
 class TestSpectrumDataset:
@@ -294,16 +294,21 @@ class TestSpectrumOnOff:
         self.aeff = EffectiveAreaTable(etrue[:-1], etrue[1:], np.ones(9) * u.cm ** 2)
         self.edisp = EDispKernel.from_diagonal_response(etrue, ereco)
 
-        data = np.ones(elo.shape)
-        data[-1] = 0  # to test stats calculation with empty bins
-        self.on_counts = CountsSpectrum(elo, ehi, data)
-        self.off_counts = CountsSpectrum(elo, ehi, np.ones(elo.shape) * 10)
-
         start = u.Quantity([0], "s")
         stop = u.Quantity([1000], "s")
         time_ref = Time("2010-01-01 00:00:00.0")
         self.gti = GTI.create(start, stop, time_ref)
         self.livetime = self.gti.time_sum
+
+        self.on_region = make_region("icrs;circle(0.,1.,0.1)")
+        off_region = make_region("icrs;box(0.,1.,0.1, 0.2,30)")
+        self.off_region = off_region.union(make_region("icrs;box(-1.,-1.,0.1, 0.2,150)"))
+        self.wcs = WcsGeom.create(npix=300, binsz=0.01, frame='icrs').wcs
+
+        data = np.ones(elo.shape)
+        data[-1] = 0  # to test stats calculation with empty bins
+        self.on_counts = CountsSpectrum(elo, ehi, data, region=self.on_region, wcs=self.wcs)
+        self.off_counts = CountsSpectrum(elo, ehi, np.ones(elo.shape) * 10, region=self.off_region, wcs=self.wcs)
 
         self.dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
@@ -412,10 +417,17 @@ class TestSpectrumOnOff:
         dataset.to_ogip_files(outdir=tmp_path)
         newdataset = SpectrumDatasetOnOff.from_ogip_files(tmp_path / "pha_obstest.fits")
 
+        expected_regions = compound_region_to_list(self.off_counts.region)
+        regions = compound_region_to_list(newdataset.counts_off.region)
+
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert_allclose(self.off_counts.data, newdataset.counts_off.data)
         assert_allclose(self.edisp.pdf_matrix, newdataset.edisp.pdf_matrix)
         assert_time_allclose(newdataset.gti.time_start, dataset.gti.time_start)
+
+        assert len(regions) == len(expected_regions)
+        assert regions[0].center.is_equivalent_frame(expected_regions[0].center)
+        assert_allclose(regions[1].angle, expected_regions[1].angle)
 
     def test_to_from_ogip_files_no_edisp(self, tmp_path):
         dataset = SpectrumDatasetOnOff(

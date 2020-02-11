@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.units import Quantity
 from gammapy.irf import EDispKernel, EffectiveAreaTable
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
@@ -13,6 +13,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.spectrum import CountsSpectrum
 from gammapy.spectrum.core import SpectrumEvaluator
+from gammapy.utils.regions import make_region, compound_region_to_list
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
@@ -24,8 +25,14 @@ class TestCountsSpectrum:
     def setup(self):
         self.counts = [0, 0, 2, 5, 17, 3]
         self.bins = MapAxis.from_energy_bounds(1, 10, 6, "TeV").edges
+
+        # Create region and associated wcs
+        region = make_region("galactic;circle(0,1,0.5)")
+        self.region = region.union(make_region("galactic;box(1,-0.25,1.2,3.5,30)"))
+        self.wcs = WcsGeom.create(npix=500, binsz=0.01,skydir=(0,0), frame='galactic').wcs
+
         self.spec = CountsSpectrum(
-            data=self.counts, energy_lo=self.bins[:-1], energy_hi=self.bins[1:]
+            data=self.counts, energy_lo=self.bins[:-1], energy_hi=self.bins[1:], region=self.region, wcs=self.wcs
         )
 
     def test_wrong_init(self):
@@ -48,6 +55,12 @@ class TestCountsSpectrum:
         self.spec.write(tmp_path / "tmp.fits")
         spec2 = CountsSpectrum.read(tmp_path / "tmp.fits")
         assert_quantity_allclose(spec2.energy.edges, self.bins)
+        regions = compound_region_to_list(spec2.region)
+        assert len(regions) == 2
+        assert_allclose(regions[0].center.l.to_value("deg"),0.)
+        assert_allclose(regions[0].radius.to_value("deg"),0.5)
+        assert_allclose(regions[1].center.b.to_value("deg"),-0.25)
+        assert_allclose(regions[1].angle.to_value("deg"),30)
 
     def test_downsample(self):
         rebinned_spec = self.spec.downsample(2)

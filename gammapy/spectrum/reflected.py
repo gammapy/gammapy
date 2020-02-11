@@ -324,7 +324,7 @@ class ReflectedRegionsBackgroundMaker:
 
             edges = dataset.counts.energy.edges
             counts_off = CountsSpectrum(
-                energy_hi=edges[1:], energy_lo=edges[:-1], region=region_union
+                energy_hi=edges[1:], energy_lo=edges[:-1], region=region_union, wcs=wcs
             )
             counts_off.fill_events(events_off)
             acceptance_off = len(finder.reflected_regions)

@@ -5,10 +5,12 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
+from astropy.wcs import WCS
+from regions import fits_region_objects_to_table, FITSRegionParser
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
-from gammapy.utils.regions import compound_region_to_list
+from gammapy.utils.regions import compound_region_to_list, list_to_compound_region
 from gammapy.utils.scripts import make_path
 
 __all__ = ["CountsSpectrum"]
@@ -31,6 +33,8 @@ class CountsSpectrum:
         Data unit
     region : `~regions.SkyRegion`
         Region the spectrum is defined for.
+    wcs : `~astropy.wcs.WCS`
+        the wcs system used to perform region based event selection
 
     Examples
     --------
@@ -51,7 +55,7 @@ class CountsSpectrum:
         spec.plot(show_poisson_errors=True)
     """
 
-    def __init__(self, energy_lo, energy_hi, data=None, unit="", region=None):
+    def __init__(self, energy_lo, energy_hi, data=None, unit="", region=None, wcs=None):
         e_edges = edges_from_lo_hi(energy_lo, energy_hi)
         self.energy = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
@@ -64,6 +68,7 @@ class CountsSpectrum:
 
         self.unit = u.Unit(unit)
         self.region = region
+        self.wcs = wcs
 
     @property
     def quantity(self):
@@ -74,21 +79,39 @@ class CountsSpectrum:
         self.data = quantity.value
         self.unit = quantity.unit
 
+    @staticmethod
+    def read_region_table(hdu):
+        """Read region table and convert it to region list."""
+        region_table = Table.read(hdu)
+        parser = FITSRegionParser(region_table)
+        pix_region = parser.shapes.to_regions()
+        wcs = WCS(region_table.meta)
+        regions = []
+        for reg in pix_region:
+            regions.append(reg.to_sky(wcs))
+        region = list_to_compound_region(regions)
+        return region, wcs
+
     @classmethod
-    def from_hdulist(cls, hdulist, hdu1="COUNTS", hdu2="EBOUNDS"):
+    def from_hdulist(cls, hdulist, hdu1="COUNTS", hdu2="EBOUNDS", hdu3="REGION"):
         """Read from HDU list in OGIP format."""
         table = Table.read(hdulist[hdu1])
         counts = table["COUNTS"].data
         ebounds = ebounds_to_energy_axis(hdulist[hdu2])
 
         # TODO: add region serilisation
-        return cls(data=counts, energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
+        region = None
+        wcs = None
+        if hdu3 in hdulist:
+            region, wcs =cls.read_region_table(hdulist[hdu3])
+
+        return cls(data=counts, energy_lo=ebounds[:-1], energy_hi=ebounds[1:], region=region, wcs=wcs)
 
     @classmethod
-    def read(cls, filename, hdu1="COUNTS", hdu2="EBOUNDS"):
+    def read(cls, filename, hdu1="COUNTS", hdu2="EBOUNDS", hdu3="REGION"):
         """Read from file."""
         with fits.open(make_path(filename), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
+            return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2, hdu3=hdu3)
 
     def to_table(self):
         """Convert to `~astropy.table.Table`.
@@ -101,7 +124,19 @@ class CountsSpectrum:
         names = ["CHANNEL", "COUNTS"]
         meta = {"name": "COUNTS"}
 
+
+
         return Table([channel, counts], names=names, meta=meta)
+
+    def _to_region_table(self):
+        """Export region to a FITS region table."""
+        region_list = compound_region_to_list(self.region)
+        pixel_region_list = []
+        for reg in region_list:
+            pixel_region_list.append(reg.to_pixel(self.wcs))
+        table = fits_region_objects_to_table(pixel_region_list)
+        table.meta.update(self.wcs.to_header())
+        return table
 
     def to_hdulist(self, use_sherpa=False):
         """Convert to `~astropy.io.fits.HDUList`.
@@ -119,7 +154,10 @@ class CountsSpectrum:
             energy = energy.to("keV")
 
         ebounds = energy_axis_to_ebounds(energy)
-        return fits.HDUList([fits.PrimaryHDU(), hdu, ebounds])
+
+        region_table = self._to_region_table()
+        region_hdu = fits.BinTableHDU(region_table, name='REGION')
+        return fits.HDUList([fits.PrimaryHDU(), hdu, ebounds, region_hdu])
 
     def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
