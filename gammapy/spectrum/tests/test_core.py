@@ -13,7 +13,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.spectrum import CountsSpectrum
 from gammapy.spectrum.core import SpectrumEvaluator
-from gammapy.utils.regions import make_region
+from gammapy.utils.regions import make_region, compound_region_to_list
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
@@ -55,11 +55,12 @@ class TestCountsSpectrum:
         self.spec.write(tmp_path / "tmp.fits")
         spec2 = CountsSpectrum.read(tmp_path / "tmp.fits")
         assert_quantity_allclose(spec2.energy.edges, self.bins)
-        assert len(spec2.region) == 2
-        assert_allclose(spec2.region[0].center.l.to_value("deg"),0.)
-        assert_allclose(spec2.region[0].radius.to_value("deg"),0.5)
-        assert_allclose(spec2.region[1].center.b.to_value("deg"),-0.25)
-        assert_allclose(spec2.region[1].angle.to_value("deg"),30)
+        regions = compound_region_to_list(spec2.region)
+        assert len(regions) == 2
+        assert_allclose(regions[0].center.l.to_value("deg"),0.)
+        assert_allclose(regions[0].radius.to_value("deg"),0.5)
+        assert_allclose(regions[1].center.b.to_value("deg"),-0.25)
+        assert_allclose(regions[1].angle.to_value("deg"),30)
 
     def test_downsample(self):
         rebinned_spec = self.spec.downsample(2)
