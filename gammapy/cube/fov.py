@@ -64,6 +64,8 @@ class FoVBackgroundMaker:
             coords = dataset.counts.geom.get_coord()
             vals = self.exclusion_mask.get_by_coord(coords)
             mask_map.data += vals
+        else:
+            mask_map.data[...] = 1
 
         return mask_map.data.astype("bool")
 
