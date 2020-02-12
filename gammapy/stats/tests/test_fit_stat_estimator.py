@@ -85,3 +85,19 @@ def test_wstat_errors(n_on, n_off, alpha, result):
 
     assert_allclose(errn, result[0], atol=1e-5)
     assert_allclose(errp, result[1], atol=1e-5)
+
+values = [
+    (1, 2, 1,     [2.57939]),
+    (5, 1, 1,     [9.118247]),
+    (10, 5, 0.3,  [15.10175]),
+    (10, 23, 0.1, [14.263802]),
+    (1, 20,  1.0, [1.646071])
+]
+
+@pytest.mark.parametrize(("n_on",  "n_off", "alpha", "result"), values)
+def test_wstat_ul(n_on, n_off, alpha, result):
+    stat = WStatEstimator(n_on, n_off, alpha)
+    ul = stat.compute_upper_limit()
+
+    assert_allclose(ul, result[0], atol=1e-5)
+
