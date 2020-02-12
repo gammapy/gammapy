@@ -21,6 +21,9 @@ datasets:
     safe_mask:
         methods: ['offset-max']
         settings: {offset_max: 2.5 deg}
+    background:
+        method: fov_background
+        parameters: {method: 'scale'}
 
 fit:
     fit_range: {min: 1 TeV, max: 10 TeV}
