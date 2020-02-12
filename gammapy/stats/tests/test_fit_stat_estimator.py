@@ -52,3 +52,36 @@ def test_cash_ul(n_on, mu_bkg, result):
 
     assert_allclose(ul, result[0], atol=1e-5)
 
+values = [
+    (1, 2, 1,     [-1., -0.5829220133009171]),
+    (5, 1, 1,     [4., 1.7061745691234782]),
+    (10, 5, 0.3,  [8.5, 3.5853812867949024]),
+    (10, 23, 0.1, [7.7, 3.443415522820395]),
+    (1, 20,  1.0, [-19, -4.590373638528086])
+]
+
+@pytest.mark.parametrize(("n_on", "n_off", "alpha", "result"), values)
+def test_wstat_basic(n_on, n_off, alpha, result):
+    stat = WStatEstimator(n_on, n_off, alpha)
+    excess = stat.excess
+    significance = stat.significance
+
+    assert_allclose(excess, result[0])
+    assert_allclose(significance, result[1], atol=1e-5)
+
+values = [
+    (1, 2, 1,     [-1.942465, 1.762589]),
+    (5, 1, 1,     [-2.310459, 2.718807]),
+    (10, 5, 0.3,  [-2.932472, 3.55926]),
+    (10, 23, 0.1, [-2.884366, 3.533279]),
+    (1, 20,  1.0, [-4.897018, 4.299083])
+]
+
+@pytest.mark.parametrize(("n_on", "n_off", "alpha", "result"), values)
+def test_wstat_errors(n_on, n_off, alpha, result):
+    stat = WStatEstimator(n_on, n_off, alpha)
+    errn = stat.compute_errn()
+    errp = stat.compute_errp()
+
+    assert_allclose(errn, result[0], atol=1e-5)
+    assert_allclose(errp, result[1], atol=1e-5)

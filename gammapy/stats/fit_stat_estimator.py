@@ -14,11 +14,14 @@ class FitStatisticEstimator(abc.ABC):
     def compute_errn(self, n_sigma=1):
         min_range = self.excess - 2 * n_sigma * self.std
 
-        errn = brentq(
-            self._stat_fcn,
-            min_range,
-            self.excess,
-            args=(self.TS_max + n_sigma))
+        try:
+            errn = brentq(
+                self._stat_fcn,
+                min_range,
+                self.excess,
+                args=(self.TS_max + n_sigma))
+        except ValueError:
+            return -self.n_on
 
         return errn - self.excess
 
@@ -36,11 +39,12 @@ class FitStatisticEstimator(abc.ABC):
     def compute_upper_limit(self, n_sigma=3):
         min_range = np.maximum(0, self.excess)
         max_range = min_range + 2 * n_sigma * self.std
+        TS_ref = self._stat_fcn(min_range,0.)
         return brentq(
             self._stat_fcn,
             min_range,
             max_range,
-            args=(self.TS_max + n_sigma))
+            args=(TS_ref + n_sigma))
 
 
 class CashEstimator(FitStatisticEstimator):

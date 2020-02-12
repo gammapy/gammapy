@@ -3,6 +3,6 @@
 from .feldman_cousins import *
 from .fit_statistics import *
 from .fit_statistics_cython import *
+from .fit_stat_estimator import *
 from .normal import *
 from .poisson import *
-from .wstat import *
