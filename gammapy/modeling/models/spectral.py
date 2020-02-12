@@ -1305,17 +1305,25 @@ class NaimaSpectralModel(SpectralModel):
         in case of a `~naima.models.InverseCompton` model. It can be a subset of the
         `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
         of photon fields
+    nested_models : ditct
+        Additionnal parameters for nested models not supplied by the radiative model,
+        for now this is used  only for synchrotron self-compton model
     """
 
     tag = "NaimaSpectralModel"
 
-    def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
+    def __init__(
+        self, radiative_model, distance=1.0 * u.kpc, seed=None, nested_models=None
+    ):
         import naima
 
         self.radiative_model = radiative_model
         self._particle_distribution = self.radiative_model.particle_distribution
         self.distance = u.Quantity(distance)
         self.seed = seed
+        if nested_models is None:
+            nested_models = {}
+        self.nested_models = nested_models
 
         if isinstance(self._particle_distribution, naima.models.TableModel):
             param_names = ["amplitude"]
@@ -1335,24 +1343,82 @@ class NaimaSpectralModel(SpectralModel):
             parameter = Parameter("B", value)
             parameters.append(parameter)
 
+        # In case of a synchrotron self compton model, append B and Rpwn to the fittable parameters
+        if (
+            isinstance(self.radiative_model, naima.models.InverseCompton)
+            and "SSC" in self.nested_models
+        ):
+            B = self.nested_models["SSC"]["B"]
+            radius = self.nested_models["SSC"]["radius"]
+            parameters.append(Parameter("B", B))
+            parameters.append(Parameter("radius", radius, frozen=True))
+
         super()._init_from_parameters(parameters)
+
+    def _evaluate_ssc(
+        self, energy,
+    ):
+        """
+        Compute photon density spectrum from synchrotron emission for synchrotron self-compton model,
+        assuming uniform synchrotron emissivity inside a sphere of radius R
+        (see Section 4.1 of Atoyan & Aharonian 1996)
+
+        based on :
+        "https://naima.readthedocs.io/en/latest/examples.html#crab-nebula-ssc-model"
+
+        """
+        from astropy.constants import c
+        import naima
+
+        SYN = naima.models.Synchrotron(
+            self._particle_distribution,
+            B=self.B.quantity,
+            Eemax=self.radiative_model.Eemax,
+            Eemin=self.radiative_model.Eemin,
+        )
+
+        Esy = np.logspace(-7, 9, 100) * u.eV
+        Lsy = SYN.flux(Esy, distance=0 * u.cm)  # use distance 0 to get luminosity
+        phn_sy = Lsy / (4 * np.pi * self.radius.quantity ** 2 * c) * 2.24
+        # The factor 2.24 comes from the assumption on uniform synchrotron
+        # emissivity inside a sphere
+
+        if "SSC" not in self.radiative_model.seed_photon_fields:
+            self.radiative_model.seed_photon_fields["SSC"] = {
+                "isotropic": True,
+                "type": "array",
+                "energy": Esy,
+                "photon_density": phn_sy,
+            }
+        else:
+            self.radiative_model.seed_photon_fields["SSC"]["photon_density"] = phn_sy
+
+        dnde = self.radiative_model.flux(
+            energy, seed=self.seed, distance=self.distance
+        ) + SYN.flux(energy, distance=self.distance)
+        return dnde
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model."""
+        import naima
+
         for name, value in kwargs.items():
             setattr(self._particle_distribution, name, value)
 
         if "B" in self.radiative_model.param_names:
             self.radiative_model.B = self.B.quantity
 
-        # Flattening the input energy list and later reshaping the flux list
-        # prevents some radiative models from displaying broadcasting problems.
-        if self.seed is None:
-            dnde = self.radiative_model.flux(energy.flatten(), distance=self.distance)
-        else:
+        if (
+            isinstance(self.radiative_model, naima.models.InverseCompton)
+            and "SSC" in self.nested_models
+        ):
+            dnde = self._evaluate_ssc(energy.flatten())
+        elif self.seed is not None:
             dnde = self.radiative_model.flux(
                 energy.flatten(), seed=self.seed, distance=self.distance
             )
+        else:
+            dnde = self.radiative_model.flux(energy.flatten(), distance=self.distance)
 
         dnde = dnde.reshape(energy.shape)
         unit = 1 / (energy.unit * u.cm ** 2 * u.s)

@@ -531,10 +531,48 @@ class TestNaimaModel:
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
 
-        model.B.value = 3 #update B
+        model.B.value = 3  # update B
         val_at_2TeV = 5.1985064062296e-16 * u.Unit("cm-2 s-1 TeV-1")
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
+
+    def test_ssc(self):
+        import naima
+
+        ECBPL = naima.models.ExponentialCutoffBrokenPowerLaw(
+            amplitude=3.699e36 / u.eV,
+            e_0=1 * u.TeV,
+            e_break=0.265 * u.TeV,
+            alpha_1=1.5,
+            alpha_2=3.233,
+            e_cutoff=1863 * u.TeV,
+            beta=2.0,
+        )
+
+        radiative_model = naima.radiative.InverseCompton(
+            ECBPL,
+            seed_photon_fields=[
+                "CMB",
+                ["FIR", 70 * u.K, 0.5 * u.eV / u.cm ** 3],
+                ["NIR", 5000 * u.K, 1 * u.eV / u.cm ** 3],
+            ],
+            Eemax=50 * u.PeV,
+            Eemin=0.1 * u.GeV,
+        )
+        B = 125 * u.uG
+        radius = 2.1 * u.pc
+        nested_models = {"SSC": {"B": B, "radius": radius}}
+        model = NaimaSpectralModel(radiative_model, nested_models=nested_models)
+        assert_quantity_allclose(model.B.quantity, B)
+        assert_quantity_allclose(model.radius.quantity, radius)
+        val_at_2TeV = 1.6703761561806372e-11 * u.Unit("cm-2 s-1 TeV-1")
+        value = model(self.energy)
+        assert_quantity_allclose(value, val_at_2TeV, rtol=1e-5)
+
+        model.B.value = 100
+        val_at_2TeV = 1.441331153167876e-11 * u.Unit("cm-2 s-1 TeV-1")
+        value = model(self.energy)
+        assert_quantity_allclose(value, val_at_2TeV, rtol=1e-5)
 
 
 class TestSpectralModelErrorPropagation:
