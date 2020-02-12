@@ -59,7 +59,7 @@ def test_light_curve_str(light_curve):
 
 @requires_data()
 def test_light_curve_evaluate_norm_at_time(light_curve):
-    val = light_curve.evaluate_norm_at_time(46300)
+    val = light_curve.evaluate(46300)
     assert_allclose(val, 0.021192223042749835)
 
 
@@ -121,7 +121,7 @@ def test_time_sampling(tmp_path):
 
 
 def test_constant_temporal_model_sample():
-    temporal_model = ConstantTemporalModel(norm=10.0)
+    temporal_model = ConstantTemporalModel()
 
     t_ref = "2010-01-01T00:00:00"
     t_min = "2010-01-01T00:00:00"
@@ -137,10 +137,10 @@ def test_constant_temporal_model_sample():
     assert_allclose(sampler.value, [15805.82891311, 20597.45375153], rtol=1e-5)
 
 
-def test_constant_temporal_model_evaluate_norm_at_time():
-    temporal_model = ConstantTemporalModel(norm=10.0)
-    val = temporal_model.evaluate_norm_at_time(46300)
-    assert_allclose(val, 10.0, rtol=1e-5)
+def test_constant_temporal_model_evaluate():
+    temporal_model = ConstantTemporalModel()
+    val = temporal_model.evaluate(46300)
+    assert_allclose(val, 1.0, rtol=1e-5)
 
 
 def test_phase_time_sampling():
