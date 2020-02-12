@@ -481,7 +481,7 @@ class PSFMap:
         exposure = exp_weighed.sum_over_axes(axes=["energy"], keepdims=keepdims)
 
         psf_data = exp_weighed.data * self.psf_map.data / exposure.data
-        psf_map = Map.from_geom(geom=self.psf_map.geom, data=psf_data)
+        psf_map = Map.from_geom(geom=self.psf_map.geom, data=psf_data, unit="sr-1")
 
         psf = psf_map.sum_over_axes(axes=["energy"], keepdims=keepdims)
         return self.__class__(psf_map=psf, exposure_map=exposure)

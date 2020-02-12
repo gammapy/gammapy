@@ -72,7 +72,7 @@ def simulate_map_dataset(random_state=0):
     maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
     dataset = maker.run(empty, obs)
 
-    dataset.models = skymodel
+    dataset.models.append(skymodel)
     dataset.fake(random_state=random_state)
     return dataset
 

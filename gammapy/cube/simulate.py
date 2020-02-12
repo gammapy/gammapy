@@ -81,9 +81,8 @@ def simulate_dataset(
         edisp = None
 
     dataset = MapDataset(
-        models=skymodel,
+        models=[skymodel, background_model],
         exposure=exposure,
-        background_model=background_model,
         psf=psf_map,
         edisp=edisp,
     )
@@ -140,7 +139,15 @@ class MapDatasetEventSampler:
             Event list
         """
         events_all = []
-        for idx, evaluator in enumerate(dataset._evaluators):
+        # TODO: here we need to instanciate the evaluators once
+        _ = dataset.npred()
+
+        for idx, model in enumerate(dataset.models):
+            if isinstance(model, BackgroundModel):
+                continue
+
+            evaluator = dataset.evaluators.get(model.name)
+
             evaluator = copy.deepcopy(evaluator)
             evaluator.edisp = None
             evaluator.psf = None

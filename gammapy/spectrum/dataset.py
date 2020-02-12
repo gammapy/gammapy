@@ -125,7 +125,10 @@ class SpectrumDataset(Dataset):
 
         aeff_min, aeff_max, aeff_unit = np.nan, np.nan, ""
         if self.aeff is not None:
-            aeff_min = np.min(self.aeff.data.data.value[self.aeff.data.data.value > 0])
+            try:
+                aeff_min = np.min(self.aeff.data.data.value[self.aeff.data.data.value > 0])
+            except ValueError:
+                aeff_min = 0
             aeff_max = np.max(self.aeff.data.data.value)
             aeff_unit = self.aeff.data.data.unit
 

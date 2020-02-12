@@ -106,13 +106,13 @@ def test_fov_bkg_maker_fit_with_source_model(obs_dataset, exclusion_mask):
         index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
-    test_dataset.models = model
+    test_dataset.models.append(model)
     dataset = fov_bkg_maker.run(test_dataset)
 
     # Here we check that source parameters are correctly thawed after fit.
-    assert dataset.models.parameters["index"].frozen is False
-    assert dataset.models.parameters["lon_0"].frozen is False
-    assert dataset.background_model.norm.frozen is False
+    assert not dataset.models.parameters["index"].frozen
+    assert not dataset.models.parameters["lon_0"].frozen
+    assert not dataset.background_model.norm.frozen
 
     assert_allclose(dataset.background_model.norm.value, 0.8307, rtol=1e-4)
     assert_allclose(dataset.background_model.tilt.value, 0.0, rtol=1e-4)

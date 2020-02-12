@@ -54,8 +54,6 @@ class MapDataset(Dataset):
         PSF kernel
     edisp : `~gammapy.irf.EDispKernel` or `~gammapy.cube.EDispMap`
         Energy dispersion kernel
-    background_model : `~gammapy.modeling.models.BackgroundModel`
-        Background model to use for the fit.
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
         The "local" mode evaluates the model components on smaller grids to save computation time.
@@ -79,7 +77,6 @@ class MapDataset(Dataset):
         mask_fit=None,
         psf=None,
         edisp=None,
-        background_model=None,
         name=None,
         evaluation_mode="local",
         mask_safe=None,
@@ -91,18 +88,19 @@ class MapDataset(Dataset):
         if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
+        self._name = make_name(name)
+        self._evaluators = {}
+
+        self.background_model = None
         self.evaluation_mode = evaluation_mode
         self.counts = counts
         self.exposure = exposure
         self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
-        self.background_model = background_model
-        self.models = models
         self.mask_safe = mask_safe
+        self.models = models
         self.gti = gti
-
-        self._name = make_name(name)
 
         # check whether a reference geom is defined
         _ = self._geom
@@ -124,7 +122,7 @@ class MapDataset(Dataset):
         str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
 
         npred = np.nan
-        if self.models is not None or self.background_model is not None:
+        if self.models is not None:
             npred = np.sum(self.npred().data)
         str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
 
@@ -167,9 +165,7 @@ class MapDataset(Dataset):
         str_ += "\t{:32}: {}\n".format("Fit statistic type", self.stat_type)
 
         stat = np.nan
-        if self.counts is not None and (
-            self.models is not None or self.background_model is not None
-        ):
+        if self.counts is not None and self.models is not None:
             stat = self.stat_sum()
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
@@ -178,25 +174,14 @@ class MapDataset(Dataset):
         if self.models is not None:
             n_models = len(self.models)
 
-        if self.background_model is not None:
-            n_models += 1
-
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
-
         str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.parameters))
         str_ += "\t{:32}: {}\n\n".format(
             "Number of free parameters", len(self.parameters.free_parameters)
         )
 
-        models = Models()
-
         if self.models is not None:
-            models.extend(self.models)
-
-        if self.background_model is not None:
-            models.append(self.background_model)
-
-        str_ += "\t" + "\n\t".join(str(self.models).split("\n")[2:])
+            str_ += "\t" + "\n\t".join(str(self.models).split("\n")[2:])
 
         return str_.expandtabs(tabsize=2)
 
@@ -212,28 +197,27 @@ class MapDataset(Dataset):
         else:
             self._models = None
 
-        evaluators = []
-
         if self.models is not None:
             for model in self.models:
-                evaluator = MapEvaluator(model, evaluation_mode=self.evaluation_mode)
-                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
-                evaluators.append(evaluator)
+                if isinstance(model, BackgroundModel):
+                    self.background_model = model
+                    break
+            else:
+                log.warning(f"No background model defined for dataset {self.name}")
 
-        self._evaluators = evaluators
+    @property
+    def evaluators(self):
+        """Model evaluators"""
+        # this call is needed to trigger the setup of the evaluators
+        if not self._evaluators:
+            self.npred()
+
+        return self._evaluators
 
     @property
     def parameters(self):
         """List of parameters (`~gammapy.modeling.Parameters`)"""
-        parameters_list = []
-
-        if self.models:
-            parameters_list.append(self.models.parameters)
-
-        if self.background_model:
-            parameters_list.append(self.background_model.parameters)
-
-        return Parameters.from_stack(parameters_list)
+        return self.models.parameters
 
     @property
     def _geom(self):
@@ -261,11 +245,14 @@ class MapDataset(Dataset):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
         npred_total = Map.from_geom(self._geom, dtype=float)
 
-        if self.background_model:
-            npred_total += self.background_model.evaluate()
-
         if self.models:
-            for evaluator in self._evaluators:
+            for model in self.models:
+                evaluator = self._evaluators.get(model.name)
+
+                if evaluator is None:
+                    evaluator = MapEvaluator(model=model, evaluation_mode=self.evaluation_mode)
+                    self._evaluators[model.name] = evaluator
+
                 # if the model component drifts out of its support the evaluator has
                 # has to be updated
                 if evaluator.needs_update:
@@ -316,7 +303,7 @@ class MapDataset(Dataset):
         kwargs["counts"] = Map.from_geom(geom, unit="")
 
         background = Map.from_geom(geom, unit="")
-        kwargs["background_model"] = BackgroundModel(background)
+        kwargs["models"] = Models([BackgroundModel(background)])
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
         kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
         kwargs["psf"] = PSFMap.from_geom(geom_psf)
@@ -681,7 +668,7 @@ class MapDataset(Dataset):
 
         if "BACKGROUND" in hdulist:
             background_map = Map.from_hdulist(hdulist, hdu="background")
-            kwargs["background_model"] = BackgroundModel(background_map)
+            kwargs["models"] = Models([BackgroundModel(background_map)])
 
         if "EDISP_MATRIX" in hdulist:
             kwargs["edisp"] = EDispKernel.from_hdulist(
@@ -753,16 +740,18 @@ class MapDataset(Dataset):
         dataset = cls.read(data["filename"], name=data["name"])
         bkg_name = data["background"]
         model_names = data["models"]
+        models_list = [model for model in models if model.name in model_names]
+        models = Models(models_list)
+
         for component in components["components"]:
             if component["type"] == "BackgroundModel":
                 if component["name"] == bkg_name:
                     if "filename" not in component:
                         component["map"] = dataset.background_model.map
                     background_model = BackgroundModel.from_dict(component)
-                    dataset.background_model = background_model
+                    models.append(background_model)
 
-        models_list = [model for model in models if model.name in model_names]
-        dataset.models = Models(models_list)
+        dataset.models = models
         return dataset
 
     def to_dict(self, filename=""):
@@ -901,10 +890,10 @@ class MapDataset(Dataset):
         if self.background_model is not None:
             background = self.background_model.evaluate() * mask_safe
             background = background.sum_over_axes(keepdims=True)
-            kwargs["background_model"] = BackgroundModel(background)
+            kwargs["models"] = Models([BackgroundModel(background)])
 
         if self.psf is not None:
-            kwargs["psf"] = self.psf.to_image()
+            kwargs["psf"] = self.psf.to_image(spectrum=spectrum, keepdims=True)
 
         return self.__class__(**kwargs)
 
@@ -939,7 +928,7 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
         if self.background_model is not None:
-            kwargs["background_model"] = self.background_model.cutout(
+            kwargs["models"] = self.background_model.cutout(
                 **cutout_kwargs, name=name
             )
 
@@ -1528,6 +1517,11 @@ class MapEvaluator:
 
         self.evaluation_mode = evaluation_mode
 
+        # TODO: this is preliminary solution until we have further unified the model handling
+        if isinstance(model, BackgroundModel):
+            self.compute_npred = model.evaluate
+            self.evaluation_mode = "global"
+
     @property
     def geom(self):
         """True energy map geometry (`~gammapy.maps.Geom`)"""
@@ -1536,7 +1530,9 @@ class MapEvaluator:
     @property
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
-        if self.evaluation_mode == "global" or self.model.evaluation_radius is None:
+        if self.exposure is None:
+            return True
+        elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False
         else:
             position = self.model.position

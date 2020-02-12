@@ -227,7 +227,7 @@ class EDispMap:
 
         # Interpolate in the EDisp map. Squeeze to remove dimensions of length 1
         values = self.edisp_map.interp_by_coord(coords) * self.edisp_map.unit
-        edisp_values = values.squeeze()
+        edisp_values = values[:, :, 0, 0]
 
         data = []
 
