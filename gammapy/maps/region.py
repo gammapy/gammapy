@@ -28,7 +28,7 @@ class RegionGeom(Geom):
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, None)
     projection = "TAN"
-    binsz = 1e-5
+    binsz = 0.01
 
     def __init__(self, region, axes=None, wcs=None):
         self._region = region
@@ -165,8 +165,15 @@ class RegionGeom(Geom):
 
         return coords
 
-    def pix_to_idx(self, pix, clip=True):
+    def pix_to_idx(self, pix, clip=False):
         idxs = list(pix_tuple_to_idx(pix))
+
+        for i, idx in enumerate(idxs[self._slice_non_spatial_axes]):
+            if clip:
+                np.clip(idx, 0, self.axes[i].nbin - 1, out=idx)
+            else:
+                np.putmask(idx, (idx < 0) | (idx >= self.axes[i].nbin), -1)
+
         return tuple(idxs)
 
     def coord_to_pix(self, coords):

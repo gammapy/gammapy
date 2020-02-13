@@ -121,7 +121,7 @@ class Map(abc.ABC):
         frame : str
             Coordinate system, either Galactic ("galactic") or Equatorial
             ("icrs").
-        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse'}
+        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'region'}
             Map type.  Selects the class that will be used to
             instantiate the map.
         binsz : float or `~numpy.ndarray`
@@ -137,6 +137,8 @@ class Map(abc.ABC):
             Data unit.
         meta : `dict`
             Dictionary to store meta data.
+        region : `~regions.SkyRegion`
+            Sky region used for the region map.
 
         Returns
         -------
@@ -145,12 +147,16 @@ class Map(abc.ABC):
         """
         from .hpxmap import HpxMap
         from .wcsmap import WcsMap
+        from .regionnd import RegionNDMap
 
         map_type = kwargs.setdefault("map_type", "wcs")
         if "wcs" in map_type.lower():
             return WcsMap.create(**kwargs)
         elif "hpx" in map_type.lower():
             return HpxMap.create(**kwargs)
+        elif map_type == "region":
+            _ = kwargs.pop("map_type")
+            return RegionNDMap.create(**kwargs)
         else:
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 

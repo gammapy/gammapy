@@ -3,9 +3,10 @@ from astropy import units as u
 from .base import Map
 from .geom import pix_tuple_to_idx
 from .utils import INVALID_INDEX
+from .region import RegionGeom
 from astropy.visualization import quantity_support
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
-from gammapy.utils.regions import make_region, compound_region_to_list
+from gammapy.utils.regions import compound_region_to_list
 from gammapy.extern.skimage import block_reduce
 
 
@@ -68,6 +69,9 @@ class RegionNDMap(Map):
         ax.set_yscale("log")
         return ax
 
+    def plot_interactive(self):
+        raise NotImplementedError("Interactive plotting currently not support for RegionNDMap")
+
     def plot_region(self, ax=None, **kwargs):
         """Plot region
 
@@ -81,8 +85,10 @@ class RegionNDMap(Map):
         import matplotlib.pyplot as plt
         from matplotlib.collections import PatchCollection
 
-        ax = plt.gca() or ax
-        regions = compound_region_to_list(self.region)
+        if ax is None:
+            ax = plt.gca()
+
+        regions = compound_region_to_list(self.geom.region)
         artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
 
         patches = PatchCollection(artists, **kwargs)
@@ -90,15 +96,29 @@ class RegionNDMap(Map):
         return ax
 
     @classmethod
-    def create(cls, region, **kwargs):
+    def create(cls, region, axes=None, dtype="float32", meta=None, unit=""):
         """
+
+        Parameters
+        ----------
+        region : str or `~regions.SkyRegion`
+            Region specification
+        axes : list of `MapAxis`
+            Non spatial axes.
+        dtype : str
+            Data type, default is 'float32'
+        unit : str or `~astropy.units.Unit`
+            Data unit.
+        meta : `dict`
+            Dictionary to store meta data.
+
+        Returns
+        -------
+        map : `RegionNDMap`
+            Region map
         """
-        from .region import RegionGeom
-
-        if isinstance(region, str):
-            region = make_region(region)
-
-        return cls(region, **kwargs)
+        geom = RegionGeom.create(region=region, axes=axes)
+        return cls(geom=geom, dtype=dtype, unit=unit, meta=meta)
 
     def downsample(self, factor, preserve_counts=True, axis="energy"):
         geom = self.geom.downsample(factor=factor, axis=axis)
@@ -211,6 +231,7 @@ class RegionNDMap(Map):
             to `other` and additional axes must be broadcastable.
         """
         data = other.data
+        #TODO: handle region info here
 
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
