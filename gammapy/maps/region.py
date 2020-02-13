@@ -4,7 +4,7 @@ from astropy.wcs.utils import proj_plane_pixel_area
 from regions import CircleSkyRegion
 from gammapy.utils.regions import make_region
 import copy
-from .geom import Geom, pix_tuple_to_idx, make_axes, frame_to_coordsys
+from .geom import Geom, pix_tuple_to_idx, make_axes
 from .wcs import WcsGeom
 from .base import MapCoord
 from .utils import INVALID_INDEX
@@ -40,12 +40,16 @@ class RegionGeom(Geom):
 
         if wcs is None:
             wcs = WcsGeom.create(
-                skydir=region.center, binsz=self.binsz, width=self.width, proj=self.projection
+                skydir=region.center, binsz=self.binsz, width=self.width, proj=self.projection,
+                frame=self.frame
             ).wcs
 
         self._wcs = wcs
         self.ndim = len(self.data_shape)
-        self.coordsys = frame_to_coordsys(region.center.frame.name)
+
+    @property
+    def frame(self):
+        return self.region.center.frame.name
 
     @property
     def width(self):
@@ -98,7 +102,7 @@ class RegionGeom(Geom):
         ax_shape = [ax.nbin for ax in self.axes]
         return tuple(npix_shape + ax_shape)
 
-    def get_coord(self, coordsys=None):
+    def get_coord(self, frame=None):
         """Get map coordinates from the geometry.
 
         Returns
@@ -113,10 +117,10 @@ class RegionGeom(Geom):
             for ax in self.axes:
                 cdict[ax.name] = ax.center.reshape((-1, 1, 1))
 
-        if coordsys is None:
-            coordsys = self.coordsys
+        if frame is None:
+            frame = self.frame
 
-        return MapCoord.create(cdict, coordsys=self.coordsys).to_coordsys(coordsys)
+        return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
 
     def pad(self):
         raise NotImplementedError("Padding of `RegionGeom` not supported")
@@ -166,7 +170,7 @@ class RegionGeom(Geom):
         return tuple(idxs)
 
     def coord_to_pix(self, coords):
-        coords = MapCoord.create(coords, coordsys=self.coordsys)
+        coords = MapCoord.create(coords, frame=self.frame)
         in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
 
         x = np.zeros(coords.shape)

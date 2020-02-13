@@ -132,7 +132,7 @@ class RegionNDMap(Map):
     def pad(self):
         raise NotImplementedError("Pad is not supported by RegionNDMap")
 
-    def sum_over_axes(self):
+    def sum_over_axes(self, keepdims=True):
         axis = tuple(range(self.data.ndim - 2))
         geom = self.geom.to_image()
         if keepdims:
@@ -141,7 +141,6 @@ class RegionNDMap(Map):
         data = np.nansum(self.data, axis=axis, keepdims=keepdims)
         # TODO: summing over the axis can change the unit, handle this correctly
         return self._init_copy(geom=geom, data=data)
-        raise NotImplementedError
 
     def get_image_by_coord(self):
         raise NotImplementedError

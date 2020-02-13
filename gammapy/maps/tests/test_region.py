@@ -16,7 +16,7 @@ def region():
 
 def test_create(region):
     geom = RegionGeom.create(region)
-    assert geom.coordsys == "GAL"
+    assert geom.frame == "galactic"
     assert geom.projection == "TAN"
     assert not geom.is_image
     assert not geom.is_allsky
