@@ -6,6 +6,7 @@ from .utils import INVALID_INDEX
 from .utils import interp_to_order
 from astropy.visualization import quantity_support
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.regions import make_region
 
 
 class RegionNDMap(Map):
@@ -24,7 +25,6 @@ class RegionNDMap(Map):
     unit : str or `~astropy.units.Unit`
         The map unit
     """
-
     def __init__(self, geom, data=None, dtype="float32", meta=None, unit=""):
         if data is None:
             data = np.zeros(geom.data_shape, dtype=dtype)
@@ -35,7 +35,17 @@ class RegionNDMap(Map):
         self.unit = u.Unit(unit)
 
     def plot(self, ax=None):
-        """Plot map.
+        """Plot region map.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Axis used for plotting
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Axis used for plotting
         """
         import matplotlib.pyplot as plt
 
@@ -51,12 +61,14 @@ class RegionNDMap(Map):
         if axis.interp == "log":
             ax.set_xscale("log")
 
+        return ax
+
     @classmethod
     def create(cls, region, **kwargs):
         """
         """
         if isinstance(region, str):
-            region = None
+            region = make_region(region)
 
         return cls(region, **kwargs)
 
@@ -85,14 +97,7 @@ class RegionNDMap(Map):
     def interp_by_coord(self):
         raise NotImplementedError
 
-    def interp_by_pix(self, pix, interp=None, fill_value=None):
-        method_lookup = {0: "nearest", 1: "linear"}
-        order = interp_to_order(interp)
-        try:
-            method = method_lookup[order]
-        except KeyError:
-            raise ValueError(f"Invalid interpolation order: {order!r}")
-
+    def interp_by_pix(self, pix, method="linear", fill_value=None):
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
 
         if np.any(np.isfinite(self.data)):
@@ -102,7 +107,7 @@ class RegionNDMap(Map):
             data = self.data.T
 
         fn = ScaledRegularGridInterpolator(
-            grid_pix, data, fill_value=fill_value, bounds_error=False, method=method
+            grid_pix, data, fill_value=fill_value, method=method
         )
         return fn(tuple(pix), clip=False)
 
@@ -114,17 +119,17 @@ class RegionNDMap(Map):
 
     @staticmethod
     def read(cls, filename):
-        pass
+        raise NotImplementedError
 
     def write(self, filename):
-        pass
+        raise NotImplementedError
 
     def to_hdulist(self):
-        pass
+        raise NotImplementedError
 
     @classmethod
     def from_hdulist(cls):
-        pass
+        raise NotImplementedError
 
     def crop(self):
         raise NotImplementedError("Crop is not supported by RegionNDMap")
@@ -151,5 +156,22 @@ class RegionNDMap(Map):
     def get_image_by_pix(self):
         raise NotImplementedError
 
-    def stack(self, other):
-        self.data += other.data
+    def stack(self, other, weights=None):
+        """Stack cutout into map.
+
+        Parameters
+        ----------
+        other : `RegionNDMap`
+            Other map to stack
+        weights : `RegionNDMap`
+            Array to be used as weights. The spatial geometry must be equivalent
+            to `other` and additional axes must be broadcastable.
+        """
+        data = other.data
+
+        if weights is not None:
+            if not other.geom.to_image() == weights.geom.to_image():
+                raise ValueError("Incompatible geoms between map and weights")
+            data = data * weights.data
+
+        self.data += data
