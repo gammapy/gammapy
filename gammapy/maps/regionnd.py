@@ -215,17 +215,8 @@ class RegionNDMap(Map):
         # TODO: summing over the axis can change the unit, handle this correctly
         return self._init_copy(geom=geom, data=data)
 
-    def get_image_by_coord(self):
-        raise NotImplementedError
-
-    def get_image_by_idx(self):
-        raise NotImplementedError
-
-    def get_image_by_pix(self):
-        raise NotImplementedError
-
     def stack(self, other, weights=None):
-        """Stack cutout into map.
+        """Stack other region map into map.
 
         Parameters
         ----------
@@ -236,7 +227,7 @@ class RegionNDMap(Map):
             to `other` and additional axes must be broadcastable.
         """
         data = other.data
-        # TODO: handle region info here
+        # TODO: handle region stacking here
 
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():

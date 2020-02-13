@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from gammapy.maps import Map, MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.data import EventList
+from gammapy.irf import EDispKernel
 
 
 @pytest.fixture
@@ -109,5 +110,21 @@ def test_region_nd_map_fill_events(region_map):
     region_map.fill_events(events)
 
     assert_allclose(region_map.data.sum(), 665)
+
+
+def test_apply_edisp(region_map):
+    e_true = region_map.geom.axes[0].edges
+    e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3).edges
+
+    edisp = EDispKernel.from_diagonal_response(e_true=e_true, e_reco=e_reco)
+
+    m = region_map.apply_edisp(edisp)
+    assert m.geom.data_shape == (3, 1, 1)
+
+    e_reco = m.geom.axes[0].edges
+    assert e_reco.unit == "TeV"
+    assert_allclose(e_reco[[0, -1]].value, [1, 10])
+
+
 
 
