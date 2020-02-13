@@ -19,7 +19,7 @@ class TemporalModel(Model):
 
     def __call__(self, time):
         """Call evaluate method"""
-        # Works for Time object with a list, but not a list of Time objects
+        # Works for Time object list, but not a list of Time objects
         kwargs = {par.name: par.quantity for par in self.parameters}
         return self.evaluate(time.mjd, **kwargs)
 

@@ -1510,17 +1510,26 @@ class MapEvaluator:
         PSF kernel
     edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
+    times : `~astropy.time.Time`
+        Time of computation of temporal model
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
     """
 
     def __init__(
-        self, model=None, exposure=None, psf=None, edisp=None, evaluation_mode="local"
+        self,
+        model=None,
+        exposure=None,
+        psf=None,
+        edisp=None,
+        times=None,
+        evaluation_mode="local",
     ):
         self.model = model
         self.exposure = exposure
         self.psf = psf
         self.edisp = edisp
+        self.times = times
         self.contributes = True
 
         if evaluation_mode not in {"local", "global"}:
@@ -1599,7 +1608,7 @@ class MapEvaluator:
             Sky cube with data filled with evaluated model values.
             Units: ``cm-2 s-1 TeV-1 deg-2``
         """
-        return self.model.evaluate_geom(self.geom)
+        return self.model.evaluate_geom(self.geom, self.times)
 
     def compute_flux(self):
         """Compute model integral flux over map pixel volumes.

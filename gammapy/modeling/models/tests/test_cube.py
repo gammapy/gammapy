@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.time import Time
 from gammapy.cube import PSFKernel
 from gammapy.cube.fit import MapEvaluator
 from gammapy.irf import EDispKernel
@@ -14,6 +15,7 @@ from gammapy.modeling.models import (
     Models,
     PointSpatialModel,
     PowerLawSpectralModel,
+    ConstantTemporalModel,
     SkyDiffuseCube,
     SkyModel,
     create_fermi_isotropic_diffuse_model,
@@ -29,8 +31,12 @@ def sky_model():
     spectral_model = PowerLawSpectralModel(
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
+    temporal_model = ConstantTemporalModel()
     return SkyModel(
-        spatial_model=spatial_model, spectral_model=spectral_model, name="source-1"
+        temporal_model=temporal_model,
+        spatial_model=spatial_model,
+        spectral_model=spectral_model,
+        name="source-1",
     )
 
 
@@ -85,8 +91,13 @@ def psf(geom_true):
 
 
 @pytest.fixture(scope="session")
-def evaluator(sky_model, exposure, psf, edisp):
-    return MapEvaluator(sky_model, exposure, psf=psf, edisp=edisp)
+def time():
+    return Time(5, format="mjd")
+
+
+@pytest.fixture(scope="session")
+def evaluator(sky_model, exposure, psf, edisp, time):
+    return MapEvaluator(sky_model, exposure, psf=psf, edisp=edisp, times=time)
 
 
 @pytest.fixture(scope="session")
@@ -268,12 +279,12 @@ class TestSkyModel:
         assert p1 is p2
 
     @staticmethod
-    def test_evaluate_scalar(sky_model):
+    def test_evaluate_scalar(sky_model, time):
         lon = 3 * u.deg
         lat = 4 * u.deg
         energy = 1 * u.TeV
 
-        q = sky_model.evaluate(lon, lat, energy)
+        q = sky_model.evaluate(lon, lat, energy, time)
 
         assert q.unit == "cm-2 s-1 TeV-1 sr-1"
         assert np.isscalar(q.value)
@@ -284,10 +295,16 @@ class TestSkyModel:
         lon = 3 * u.deg * np.ones(shape=(3, 4))
         lat = 4 * u.deg * np.ones(shape=(3, 4))
         energy = [1, 1, 1, 1, 1] * u.TeV
+        times = Time([10, 20], format="mjd")
 
-        q = sky_model.evaluate(lon, lat, energy[:, np.newaxis, np.newaxis])
+        q = sky_model.evaluate(
+            lon,
+            lat,
+            energy[:, np.newaxis, np.newaxis],
+            times[:, np.newaxis, np.newaxis, np.newaxis],
+        )
 
-        assert q.shape == (5, 3, 4)
+        assert q.shape == (2, 5, 3, 4)
         assert_allclose(q.to_value("cm-2 s-1 TeV-1 deg-2"), 1.76879232e-13)
 
 
