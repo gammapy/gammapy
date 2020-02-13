@@ -215,11 +215,14 @@ class Map(abc.ABC):
 
             from .hpx import HpxGeom
             from .wcs import WcsGeom
+            from .region import RegionGeom
 
             if isinstance(geom, HpxGeom):
                 map_type = "hpx"
             elif isinstance(geom, WcsGeom):
                 map_type = "wcs"
+            elif isinstance(geom, RegionGeom):
+                map_type = "region"
             else:
                 raise ValueError("Unrecognized geom type.")
 
@@ -282,6 +285,10 @@ class Map(abc.ABC):
             return HpxNDMap
         elif map_type == "hpx-sparse":
             raise NotImplementedError()
+        elif map_type == "region":
+            from .regionnd import RegionNDMap
+
+            return RegionNDMap
         else:
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
@@ -919,6 +926,28 @@ class Map(abc.ABC):
         if "geom" in kwargs:
             raise ValueError("Can't copy and change geometry of the map.")
         return self._init_copy(**kwargs)
+
+    def apply_edisp(self, edisp):
+        """Apply energy dispersion to map. Requires energy axis.
+
+        Parameters
+        ----------
+        edisp : `gammapy.irf.EDispKernel`
+            Energy dispersion matrix
+
+        Returns
+        -------
+        map : `WcsNDMap`
+            Map with energy dispersion applied.
+        """
+        loc = self.geom.get_axis_index_by_name("energy")
+        data = np.rollaxis(self.data, loc, len(self.data.shape))
+        data = np.dot(data, edisp.pdf_matrix)
+        data = np.rollaxis(data, -1, loc)
+
+        e_reco_axis = edisp.e_reco.copy(name="energy")
+        geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
+        return self._init_copy(geom=geom_reco, data=data)
 
     def __repr__(self):
         geom = self.geom.__class__.__name__
