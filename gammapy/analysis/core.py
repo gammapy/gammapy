@@ -261,12 +261,12 @@ class Analysis:
         bkg_maker_config.update(self.config.datasets.background.parameters)
 
         bkg_method = self.config.datasets.background.method
-
         if bkg_method == "fov_background":
             log.debug(f"Creating FoVBackgroundMaker with arguments {bkg_maker_config}")
             bkg_maker = FoVBackgroundMaker(**bkg_maker_config)
         else:
             bkg_maker = None
+
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
         if self.config.datasets.stack:
@@ -311,11 +311,18 @@ class Analysis:
 
         maker_config["selection"] = ["counts", "aeff", "edisp"]
         dataset_maker = SpectrumDatasetMaker(**maker_config)
-        bkg_maker_config = {}
-        if datasets_settings.background.exclusion:
-            exclusion_region = Map.read(datasets_settings.background.exclusion)
-            bkg_maker_config["exclusion_mask"] = exclusion_region
-        bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
+
+        bkg_method = self.config.datasets.background.method
+        if bkg_method == "reflected":
+            bkg_maker_config = {}
+            if datasets_settings.background.exclusion:
+                exclusion_region = Map.read(datasets_settings.background.exclusion)
+                bkg_maker_config["exclusion_mask"] = exclusion_region
+            bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
+            log.debug(f"Creating ReflectedRegionsBackgroundMaker with arguments {bkg_maker_config}")
+        else:
+            bkg_maker = None
+            log.warning(f"No background maker set for 1d analysis. Check configuration.")
 
         safe_mask_selection = self.config.datasets.safe_mask.methods
         safe_mask_settings = self.config.datasets.safe_mask.settings
