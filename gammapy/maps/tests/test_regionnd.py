@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.maps import Map, MapAxis
-from gammapy.utils.testing import mpl_plot_check, requires_data
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.data import EventList
 from gammapy.irf import EDispKernel
 
@@ -31,6 +31,7 @@ def test_region_nd_map(region_map):
     assert "1 / TeV" in str(region_map)
 
 
+@requires_dependency("matplotlib")
 def test_region_nd_map_plot(region_map):
     import matplotlib.pyplot as plt
 
