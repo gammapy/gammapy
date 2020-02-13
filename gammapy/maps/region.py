@@ -28,7 +28,7 @@ class RegionGeom(Geom):
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, None)
     projection = "TAN"
-    binsz = 1e-3
+    binsz = 1e-5
 
     def __init__(self, region, axes=None, wcs=None):
         self._region = region
@@ -156,8 +156,8 @@ class RegionGeom(Geom):
         return self._init_copy(axes=axes)
 
     def pix_to_coord(self, pix):
-        lon = np.where((-0.5 < pix[0]) & (pix[0] < 0.5), self.center_skydir.l.deg, np.nan * u.deg) * u.deg
-        lat = np.where((-0.5 < pix[1]) & (pix[1] < 0.5), self.center_skydir.b.deg, np.nan * u.deg) * u.deg
+        lon = np.where((-0.5 < pix[0]) & (pix[0] < 0.5), self.center_skydir.data.lon, np.nan * u.deg)
+        lat = np.where((-0.5 < pix[1]) & (pix[1] < 0.5), self.center_skydir.data.lat, np.nan * u.deg)
         coords = (lon, lat)
 
         for p, ax in zip(pix[self._slice_non_spatial_axes], self.axes):
