@@ -343,6 +343,16 @@ class TestSkyDiffuseCube:
     def test_frame(diffuse_model):
         assert diffuse_model.frame == "galactic"
 
+    @staticmethod
+    def test_processing(diffuse_model):
+        assert diffuse_model.processing == {"psf": 1, "edisp": 1}
+        out = diffuse_model.to_dict()
+        assert "processing" not in out
+
+        diffuse_model.processing["edisp"] = 0
+        out = diffuse_model.to_dict()
+        assert out["processing"] == {"psf": 1, "edisp": 0}
+
 
 class TestSkyDiffuseCubeMapEvaluator:
     @staticmethod
