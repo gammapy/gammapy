@@ -1,13 +1,13 @@
+import copy
 import numpy as np
 from astropy import units as u
 from astropy.wcs.utils import proj_plane_pixel_area
 from regions import CircleSkyRegion
 from gammapy.utils.regions import make_region
-import copy
-from .geom import Geom, pix_tuple_to_idx, make_axes
-from .wcs import WcsGeom
 from .base import MapCoord
+from .geom import Geom, make_axes, pix_tuple_to_idx
 from .utils import INVALID_INDEX
+from .wcs import WcsGeom
 
 
 class RegionGeom(Geom):
@@ -22,6 +22,7 @@ class RegionGeom(Geom):
     wcs : `~astropy.wcs.WCS`
         Optional wcs object to project the region if needed.
     """
+
     is_image = False
     is_allsky = False
     is_hpx = False
@@ -40,8 +41,11 @@ class RegionGeom(Geom):
 
         if wcs is None:
             wcs = WcsGeom.create(
-                skydir=region.center, binsz=self.binsz, width=self.width, proj=self.projection,
-                frame=self.frame
+                skydir=region.center,
+                binsz=self.binsz,
+                width=self.width,
+                proj=self.projection,
+                frame=self.frame,
             ).wcs
 
         self._wcs = wcs
@@ -156,8 +160,16 @@ class RegionGeom(Geom):
         return self._init_copy(axes=axes)
 
     def pix_to_coord(self, pix):
-        lon = np.where((-0.5 < pix[0]) & (pix[0] < 0.5), self.center_skydir.data.lon, np.nan * u.deg)
-        lat = np.where((-0.5 < pix[1]) & (pix[1] < 0.5), self.center_skydir.data.lat, np.nan * u.deg)
+        lon = np.where(
+            (-0.5 < pix[0]) & (pix[0] < 0.5),
+            self.center_skydir.data.lon,
+            np.nan * u.deg,
+        )
+        lat = np.where(
+            (-0.5 < pix[1]) & (pix[1] < 0.5),
+            self.center_skydir.data.lat,
+            np.nan * u.deg,
+        )
         coords = (lon, lat)
 
         for p, ax in zip(pix[self._slice_non_spatial_axes], self.axes):

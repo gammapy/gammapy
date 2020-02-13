@@ -1,13 +1,13 @@
 import numpy as np
 from astropy import units as u
-from .base import Map
-from .geom import pix_tuple_to_idx
-from .utils import INVALID_INDEX
-from .region import RegionGeom
 from astropy.visualization import quantity_support
+from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.regions import compound_region_to_list
-from gammapy.extern.skimage import block_reduce
+from .base import Map
+from .geom import pix_tuple_to_idx
+from .region import RegionGeom
+from .utils import INVALID_INDEX
 
 
 class RegionNDMap(Map):
@@ -26,6 +26,7 @@ class RegionNDMap(Map):
     unit : str or `~astropy.units.Unit`
         The map unit
     """
+
     def __init__(self, geom, data=None, dtype="float32", meta=None, unit=""):
         if data is None:
             data = np.zeros(geom.data_shape, dtype=dtype)
@@ -53,7 +54,9 @@ class RegionNDMap(Map):
         ax = ax or plt.gca()
 
         if len(self.geom.axes) > 1:
-            raise TypeError("Use `.plot_interactive()` if more the one extra axis is present.")
+            raise TypeError(
+                "Use `.plot_interactive()` if more the one extra axis is present."
+            )
 
         axis = self.geom.axes[0]
         with quantity_support():
@@ -70,7 +73,9 @@ class RegionNDMap(Map):
         return ax
 
     def plot_interactive(self):
-        raise NotImplementedError("Interactive plotting currently not support for RegionNDMap")
+        raise NotImplementedError(
+            "Interactive plotting currently not support for RegionNDMap"
+        )
 
     def plot_region(self, ax=None, **kwargs):
         """Plot region
@@ -231,7 +236,7 @@ class RegionNDMap(Map):
             to `other` and additional axes must be broadcastable.
         """
         data = other.data
-        #TODO: handle region info here
+        # TODO: handle region info here
 
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
