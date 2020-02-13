@@ -70,6 +70,7 @@ class BackgroundMethodEnum(str, Enum):
     fov = "fov_background"
     no_background = "None"
 
+
 class SafeMaskMethodsEnum(str, Enum):
     aeff_default = "aeff-default"
     aeff_max = "aeff-max"
@@ -141,6 +142,7 @@ class BackgroundConfig(GammapyBaseConfig):
     method: BackgroundMethodEnum = BackgroundMethodEnum.reflected
     exclusion: FilePath = None
     parameters: dict = {}
+
 
 class SafeMaskConfig(GammapyBaseConfig):
     methods: List[SafeMaskMethodsEnum] = [SafeMaskMethodsEnum.aeff_default]

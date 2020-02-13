@@ -319,10 +319,14 @@ class Analysis:
                 exclusion_region = Map.read(datasets_settings.background.exclusion)
                 bkg_maker_config["exclusion_mask"] = exclusion_region
             bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
-            log.debug(f"Creating ReflectedRegionsBackgroundMaker with arguments {bkg_maker_config}")
+            log.debug(
+                f"Creating ReflectedRegionsBackgroundMaker with arguments {bkg_maker_config}"
+            )
         else:
             bkg_maker = None
-            log.warning(f"No background maker set for 1d analysis. Check configuration.")
+            log.warning(
+                f"No background maker set for 1d analysis. Check configuration."
+            )
 
         safe_mask_selection = self.config.datasets.safe_mask.methods
         safe_mask_settings = self.config.datasets.safe_mask.settings

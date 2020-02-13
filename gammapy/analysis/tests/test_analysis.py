@@ -245,6 +245,7 @@ def test_analysis_1d_stacked():
     assert_allclose(pars["index"].value, 2.76913, rtol=1e-2)
     assert_allclose(pars["amplitude"].value, 5.496388e-11, rtol=1e-2)
 
+
 @requires_data()
 def test_analysis_1d_no_bkg():
     cfg = """
@@ -269,6 +270,7 @@ def test_analysis_1d_no_bkg():
     analysis.get_datasets()
 
     assert isinstance(analysis.datasets[0], SpectrumDatasetOnOff) is False
+
 
 @requires_dependency("iminuit")
 @requires_data()
@@ -304,8 +306,11 @@ def test_analysis_3d_joint_datasets():
     analysis.get_datasets()
     assert len(analysis.datasets) == 2
     assert_allclose(analysis.datasets[0].background_model.norm.value, 1.031743694988066)
-    assert_allclose(analysis.datasets[0].background_model.tilt.value, 0.)
-    assert_allclose(analysis.datasets[1].background_model.norm.value, 0.9776349021876344)
+    assert_allclose(analysis.datasets[0].background_model.tilt.value, 0.0)
+    assert_allclose(
+        analysis.datasets[1].background_model.norm.value, 0.9776349021876344
+    )
+
 
 @requires_dependency("iminuit")
 @requires_data()
