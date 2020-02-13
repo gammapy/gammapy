@@ -28,6 +28,9 @@ def test_centers(region):
     assert_allclose(geom.center_skydir.b.deg, 0)
     assert_allclose(geom.center_pix, (0, 0))
 
+    values = [_.value for _ in geom.center_coord]
+    assert_allclose(values, (0, 0))
+
 
 def test_create_axis(region):
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
@@ -174,4 +177,3 @@ def test_to_cube_to_image(region):
 
     geom = geom_cube.to_image()
     assert geom.ndim == 2
-
