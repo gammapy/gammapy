@@ -103,9 +103,15 @@ class CountsSpectrum:
         region = None
         wcs = None
         if hdu3 in hdulist:
-            region, wcs =cls.read_region_table(hdulist[hdu3])
+            region, wcs = cls.read_region_table(hdulist[hdu3])
 
-        return cls(data=counts, energy_lo=ebounds[:-1], energy_hi=ebounds[1:], region=region, wcs=wcs)
+        return cls(
+            data=counts,
+            energy_lo=ebounds[:-1],
+            energy_hi=ebounds[1:],
+            region=region,
+            wcs=wcs,
+        )
 
     @classmethod
     def read(cls, filename, hdu1="COUNTS", hdu2="EBOUNDS", hdu3="REGION"):
@@ -123,8 +129,6 @@ class CountsSpectrum:
 
         names = ["CHANNEL", "COUNTS"]
         meta = {"name": "COUNTS"}
-
-
 
         return Table([channel, counts], names=names, meta=meta)
 
@@ -156,7 +160,7 @@ class CountsSpectrum:
         ebounds = energy_axis_to_ebounds(energy)
 
         region_table = self._to_region_table()
-        region_hdu = fits.BinTableHDU(region_table, name='REGION')
+        region_hdu = fits.BinTableHDU(region_table, name="REGION")
         return fits.HDUList([fits.PrimaryHDU(), hdu, ebounds, region_hdu])
 
     def write(self, filename, use_sherpa=False, **kwargs):
@@ -439,7 +443,7 @@ class SpectrumEvaluator:
     def apply_edisp(self, true_counts):
         from . import CountsSpectrum
 
-        if self.edisp is not None:
+        if self.edisp is not None and self.model.processing["edisp"] == True:
             cts = self.edisp.apply(true_counts)
             e_reco = self.edisp.e_reco.edges
         else:

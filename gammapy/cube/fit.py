@@ -250,7 +250,9 @@ class MapDataset(Dataset):
                 evaluator = self._evaluators.get(model.name)
 
                 if evaluator is None:
-                    evaluator = MapEvaluator(model=model, evaluation_mode=self.evaluation_mode)
+                    evaluator = MapEvaluator(
+                        model=model, evaluation_mode=self.evaluation_mode
+                    )
                     self._evaluators[model.name] = evaluator
 
                 # if the model component drifts out of its support the evaluator has
@@ -928,9 +930,7 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
         if self.background_model is not None:
-            kwargs["models"] = self.background_model.cutout(
-                **cutout_kwargs, name=name
-            )
+            kwargs["models"] = self.background_model.cutout(**cutout_kwargs, name=name)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
@@ -1646,9 +1646,9 @@ class MapEvaluator:
         """
         flux = self.compute_flux()
         npred = self.apply_exposure(flux)
-        if self.psf is not None:
+        if self.psf is not None and self.model.processing["psf"] == True:
             npred = self.apply_psf(npred)
-        if self.edisp is not None:
+        if self.edisp is not None and self.model.processing["edisp"] == True:
             npred = self.apply_edisp(npred)
 
         return npred
