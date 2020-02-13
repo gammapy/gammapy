@@ -115,3 +115,9 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/light_curve_flare.ipynb
   datasets:
     - hess-dl3-dr1
+- name: exclusion_mask
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/exclusion_mask.ipynb
+  datasets:
+    - catalogs
+    - fermi-3fhl-crab
+    
