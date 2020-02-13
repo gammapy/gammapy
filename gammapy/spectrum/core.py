@@ -443,7 +443,7 @@ class SpectrumEvaluator:
     def apply_edisp(self, true_counts):
         from . import CountsSpectrum
 
-        if self.edisp is not None and self.model.processing["edisp"] == True:
+        if self.edisp is not None and self.model.processing["edisp"] is True:
             cts = self.edisp.apply(true_counts)
             e_reco = self.edisp.e_reco.edges
         else:

@@ -14,8 +14,6 @@ from .core import Model, Models
 class SkyModelBase(Model):
     """Sky model base class"""
 
-    processing = {"psf": 1, "edisp": 1}
-
     def __add__(self, other):
         if isinstance(other, (Models, list)):
             return Models([self, *other])
@@ -34,12 +32,12 @@ class SkyModelBase(Model):
         coords = geom.get_coord(frame=self.frame)
         return self(coords.lon, coords.lat, coords["energy"])
 
-    def _update_processing(self, processing):
-        if processing in [None, "None"]:
-            self.processing = {"psf": 0, "edisp": 0}
+    def _update_apply_irf(self, apply_irf):
+        if apply_irf in [None, "None"]:
+            self.apply_irf = {"psf": False, "edisp": False}
         else:
-            for key in processing:
-                self.processing[key] = processing[key]
+            for key in apply_irf:
+                self.apply_irf[key] = apply_irf[key]
 
 
 class SkyModel(SkyModelBase):
@@ -69,7 +67,7 @@ class SkyModel(SkyModelBase):
         spatial_model=None,
         temporal_model=None,
         name=None,
-        processing={},
+        apply_irf={"psf": True, "edisp": True},
     ):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
@@ -79,7 +77,8 @@ class SkyModel(SkyModelBase):
         self.__dict__.pop("_parameters")
 
         self._name = make_name(name)
-        self._update_processing(processing)
+        self.apply_irf = {"psf": True, "edisp": True}
+        self._update_apply_irf(apply_irf)
 
     @property
     def name(self):
@@ -211,6 +210,7 @@ class SkyModel(SkyModelBase):
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
         kwargs.setdefault("spatial_model", spatial_model)
         kwargs.setdefault("temporal_model", temporal_model)
+        kwargs.setdefault("apply_irf", self.apply_irf)
 
         return self.__class__(**kwargs)
 
@@ -227,8 +227,8 @@ class SkyModel(SkyModelBase):
         if self.temporal_model is not None:
             data["temporal"] = self.temporal_model.to_dict()
 
-        if self.processing != {"psf": 1, "edisp": 1}:
-            data["processing"] = self.processing
+        if self.apply_irf != {"psf": True, "edisp": True}:
+            data["apply_irf"] = self.apply_irf
 
         return data
 
@@ -263,7 +263,7 @@ class SkyModel(SkyModelBase):
             spatial_model=spatial_model,
             spectral_model=spectral_model,
             temporal_model=temporal_model,
-            processing=data.get("processing", {}),
+            apply_irf=data.get("apply_irf", {"psf": True, "edisp": True}),
         )
 
     def __str__(self):
@@ -331,7 +331,7 @@ class SkyDiffuseCube(SkyModelBase):
         interp_kwargs=None,
         name=None,
         filename=None,
-        processing={},
+        apply_irf={"psf": True, "edisp": True},
     ):
 
         self._name = make_name(name)
@@ -354,7 +354,8 @@ class SkyDiffuseCube(SkyModelBase):
         #  remove this again
         self._cached_value = None
         self._cached_coordinates = (None, None, None)
-        self._update_processing(processing)
+        self.apply_irf = {"psf": True, "edisp": True}
+        self._update_apply_irf(apply_irf)
 
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
@@ -438,8 +439,8 @@ class SkyDiffuseCube(SkyModelBase):
     def from_dict(cls, data):
         model = cls.read(data["filename"])
         model._update_from_dict(data)
-        processing = data.get("processing", {})
-        model._update_processing(processing)
+        apply_irf = data.get("apply_irf", {"psf": True, "edisp": True})
+        model._update_apply_irf(apply_irf)
         return model
 
     def to_dict(self):
@@ -450,8 +451,8 @@ class SkyDiffuseCube(SkyModelBase):
 
         # Move parameters at the end
         data["parameters"] = data.pop("parameters")
-        if self.processing != {"psf": 1, "edisp": 1}:
-            data["processing"] = self.processing
+        if self.apply_irf != {"psf": True, "edisp": True}:
+            data["apply_irf"] = self.apply_irf
 
         return data
 

@@ -1646,9 +1646,9 @@ class MapEvaluator:
         """
         flux = self.compute_flux()
         npred = self.apply_exposure(flux)
-        if self.psf is not None and self.model.processing["psf"] == True:
+        if self.psf is not None and self.model.apply_irf["psf"] == True:
             npred = self.apply_psf(npred)
-        if self.edisp is not None and self.model.processing["edisp"] == True:
+        if self.edisp is not None and self.model.apply_irf["edisp"] == True:
             npred = self.apply_edisp(npred)
 
         return npred
