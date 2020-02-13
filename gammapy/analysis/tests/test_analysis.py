@@ -278,7 +278,9 @@ def test_analysis_3d_joint_datasets():
     analysis.get_observations()
     analysis.get_datasets()
     assert len(analysis.datasets) == 2
-
+    assert_allclose(analysis.datasets[0].background_model.norm.value, 1.031743694988066)
+    assert_allclose(analysis.datasets[0].background_model.tilt.value, 0.)
+    assert_allclose(analysis.datasets[1].background_model.norm.value, 0.9776349021876344)
 
 @requires_dependency("iminuit")
 @requires_data()

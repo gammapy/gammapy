@@ -259,7 +259,11 @@ class Analysis:
             exclusion_region = Map.read(self.config.datasets.background.exclusion)
             bkg_maker_config["exclusion_mask"] = exclusion_region
         bkg_maker_config.update(self.config.datasets.background.parameters)
-        if self.config.datasets.background.method == "fov_background":
+
+        bkg_method = self.config.datasets.background.method
+
+        if bkg_method == "fov_background":
+            log.debug(f"Creating FoVBackgroundMaker with arguments {bkg_maker_config}")
             bkg_maker = FoVBackgroundMaker(**bkg_maker_config)
         else:
             bkg_maker = None
@@ -283,6 +287,8 @@ class Analysis:
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                 dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
+                if bkg_maker is not None:
+                    dataset = bkg_maker.run(dataset)
                 log.debug(dataset)
                 datasets.append(dataset)
         self.datasets = Datasets(datasets)
