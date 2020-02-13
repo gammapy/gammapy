@@ -32,13 +32,6 @@ class SkyModelBase(Model):
         coords = geom.get_coord(frame=self.frame)
         return self(coords.lon, coords.lat, coords["energy"])
 
-    def _update_apply_irf(self, apply_irf):
-        if apply_irf in [None, "None"]:
-            self.apply_irf = {"psf": False, "edisp": False}
-        else:
-            for key in apply_irf:
-                self.apply_irf[key] = apply_irf[key]
-
 
 class SkyModel(SkyModelBase):
     """Sky model component.
@@ -67,7 +60,7 @@ class SkyModel(SkyModelBase):
         spatial_model=None,
         temporal_model=None,
         name=None,
-        apply_irf={"psf": True, "edisp": True},
+        apply_irf=None,
     ):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
@@ -78,7 +71,8 @@ class SkyModel(SkyModelBase):
 
         self._name = make_name(name)
         self.apply_irf = {"psf": True, "edisp": True}
-        self._update_apply_irf(apply_irf)
+        if apply_irf is not None:
+            self.apply_irf.update(apply_irf)
 
     @property
     def name(self):
@@ -331,7 +325,7 @@ class SkyDiffuseCube(SkyModelBase):
         interp_kwargs=None,
         name=None,
         filename=None,
-        apply_irf={"psf": True, "edisp": True},
+        apply_irf=None,
     ):
 
         self._name = make_name(name)
@@ -355,7 +349,8 @@ class SkyDiffuseCube(SkyModelBase):
         self._cached_value = None
         self._cached_coordinates = (None, None, None)
         self.apply_irf = {"psf": True, "edisp": True}
-        self._update_apply_irf(apply_irf)
+        if apply_irf is not None:
+            self.apply_irf.update(apply_irf)
 
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
@@ -440,7 +435,7 @@ class SkyDiffuseCube(SkyModelBase):
         model = cls.read(data["filename"])
         model._update_from_dict(data)
         apply_irf = data.get("apply_irf", {"psf": True, "edisp": True})
-        model._update_apply_irf(apply_irf)
+        model.apply_irf.update(apply_irf)
         return model
 
     def to_dict(self):

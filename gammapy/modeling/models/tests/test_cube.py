@@ -345,14 +345,14 @@ class TestSkyDiffuseCube:
 
     @staticmethod
     def test_processing(diffuse_model):
-        assert diffuse_model.processing == {"psf": True, "edisp": True}
+        assert diffuse_model.apply_irf == {"psf": True, "edisp": True}
         out = diffuse_model.to_dict()
-        assert "processing" not in out
+        assert "apply_irf" not in out
 
-        diffuse_model.processing["edisp"] = False
+        diffuse_model.apply_irf["edisp"] = False
         out = diffuse_model.to_dict()
-        assert out["processing"] == {"psf": True, "edisp": False}
-        diffuse_model.processing["edisp"] = True
+        assert out["apply_irf"] == {"psf": True, "edisp": False}
+        diffuse_model.apply_irf["edisp"] = True
 
 
 class TestSkyDiffuseCubeMapEvaluator:
