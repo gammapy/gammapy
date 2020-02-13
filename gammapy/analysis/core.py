@@ -340,12 +340,13 @@ class Analysis:
         for obs in self.observations:
             log.info(f"Processing observation {obs.obs_id}")
             dataset = dataset_maker.run(reference.copy(), obs)
-            dataset = bkg_maker.run(dataset, obs)
-            if dataset.counts_off is None:
-                log.info(
-                    f"No OFF region found for observation {obs.obs_id}. Discarding."
-                )
-                continue
+            if bkg_maker is not None:
+                dataset = bkg_maker.run(dataset, obs)
+                if dataset.counts_off is None:
+                    log.info(
+                        f"No OFF region found for observation {obs.obs_id}. Discarding."
+                    )
+                    continue
             dataset = safe_mask_maker.run(dataset, obs)
             log.debug(dataset)
             datasets.append(dataset)

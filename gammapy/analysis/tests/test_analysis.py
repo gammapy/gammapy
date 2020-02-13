@@ -7,6 +7,7 @@ from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.maps import Map
+from gammapy.spectrum import SpectrumDatasetOnOff
 from gammapy.modeling.models import Models
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -244,6 +245,30 @@ def test_analysis_1d_stacked():
     assert_allclose(pars["index"].value, 2.76913, rtol=1e-2)
     assert_allclose(pars["amplitude"].value, 5.496388e-11, rtol=1e-2)
 
+@requires_data()
+def test_analysis_1d_no_bkg():
+    cfg = """
+    observations:
+        datastore: $GAMMAPY_DATA/hess-dl3-dr1
+        obs_ids: [23523]
+    datasets:
+        type: 1d
+        background:
+            method: None
+        on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
+        geom:
+            axes:
+                energy: {min: 0.1 TeV, max: 30 TeV, nbins: 5}
+                energy_true: {min: 0.03 TeV, max: 100 TeV, nbins: 10}
+        containment_correction: false
+    """
+    config = get_example_config("1d")
+    analysis = Analysis(config)
+    analysis.update_config(cfg)
+    analysis.get_observations()
+    analysis.get_datasets()
+
+    assert isinstance(analysis.datasets[0], SpectrumDatasetOnOff) is False
 
 @requires_dependency("iminuit")
 @requires_data()
