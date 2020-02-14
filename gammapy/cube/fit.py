@@ -1645,7 +1645,10 @@ class MapEvaluator:
             Predicted counts on the map (in reco energy bins)
         """
         flux = self.compute_flux()
-        npred = self.apply_exposure(flux)
+        if self.model.apply_irf["exposure"] is True:
+            npred = self.apply_exposure(flux)
+        else:
+            npred = flux
         if self.psf is not None and self.model.apply_irf["psf"] == True:
             npred = self.apply_psf(npred)
         if self.edisp is not None and self.model.apply_irf["edisp"] == True:

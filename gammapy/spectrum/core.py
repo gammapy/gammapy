@@ -429,7 +429,7 @@ class SpectrumEvaluator:
         return self.apply_edisp(true_counts)
 
     def apply_aeff(self, integral_flux):
-        if self.aeff is not None:
+        if self.aeff is not None and self.model.apply_irf["exposure"] is True:
             cts = integral_flux * self.aeff.data.data
         else:
             cts = integral_flux

@@ -290,6 +290,17 @@ class TestSkyModel:
         assert q.shape == (5, 3, 4)
         assert_allclose(q.to_value("cm-2 s-1 TeV-1 deg-2"), 1.76879232e-13)
 
+    @staticmethod
+    def test_processing(sky_model):
+        assert sky_model.apply_irf == {"exposure": True, "psf": True, "edisp": True}
+        out = sky_model.to_dict()
+        assert "apply_irf" not in out
+
+        sky_model.apply_irf["edisp"] = False
+        out = sky_model.to_dict()
+        assert out["apply_irf"] == {"exposure": True, "psf": True, "edisp": False}
+        sky_model.apply_irf["edisp"] = True
+
 
 class TestSkyDiffuseCube:
     @staticmethod
@@ -345,13 +356,13 @@ class TestSkyDiffuseCube:
 
     @staticmethod
     def test_processing(diffuse_model):
-        assert diffuse_model.apply_irf == {"psf": True, "edisp": True}
+        assert diffuse_model.apply_irf == {"exposure": True, "psf": True, "edisp": True}
         out = diffuse_model.to_dict()
         assert "apply_irf" not in out
 
         diffuse_model.apply_irf["edisp"] = False
         out = diffuse_model.to_dict()
-        assert out["apply_irf"] == {"psf": True, "edisp": False}
+        assert out["apply_irf"] == {"exposure": True, "psf": True, "edisp": False}
         diffuse_model.apply_irf["edisp"] = True
 
 

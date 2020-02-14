@@ -70,7 +70,7 @@ class SkyModel(SkyModelBase):
         self.__dict__.pop("_parameters")
 
         self._name = make_name(name)
-        self.apply_irf = {"psf": True, "edisp": True}
+        self.apply_irf = {"exposure": True, "psf": True, "edisp": True}
         if apply_irf is not None:
             self.apply_irf.update(apply_irf)
 
@@ -221,7 +221,7 @@ class SkyModel(SkyModelBase):
         if self.temporal_model is not None:
             data["temporal"] = self.temporal_model.to_dict()
 
-        if self.apply_irf != {"psf": True, "edisp": True}:
+        if self.apply_irf != {"exposure": True, "psf": True, "edisp": True}:
             data["apply_irf"] = self.apply_irf
 
         return data
@@ -257,7 +257,9 @@ class SkyModel(SkyModelBase):
             spatial_model=spatial_model,
             spectral_model=spectral_model,
             temporal_model=temporal_model,
-            apply_irf=data.get("apply_irf", {"psf": True, "edisp": True}),
+            apply_irf=data.get(
+                "apply_irf", {"exposure": True, "psf": True, "edisp": True}
+            ),
         )
 
     def __str__(self):
@@ -348,7 +350,7 @@ class SkyDiffuseCube(SkyModelBase):
         #  remove this again
         self._cached_value = None
         self._cached_coordinates = (None, None, None)
-        self.apply_irf = {"psf": True, "edisp": True}
+        self.apply_irf = {"exposure": True, "psf": True, "edisp": True}
         if apply_irf is not None:
             self.apply_irf.update(apply_irf)
 
@@ -434,7 +436,9 @@ class SkyDiffuseCube(SkyModelBase):
     def from_dict(cls, data):
         model = cls.read(data["filename"])
         model._update_from_dict(data)
-        apply_irf = data.get("apply_irf", {"psf": True, "edisp": True})
+        apply_irf = data.get(
+            "apply_irf", {"exposure": True, "psf": True, "edisp": True}
+        )
         model.apply_irf.update(apply_irf)
         return model
 
@@ -446,7 +450,7 @@ class SkyDiffuseCube(SkyModelBase):
 
         # Move parameters at the end
         data["parameters"] = data.pop("parameters")
-        if self.apply_irf != {"psf": True, "edisp": True}:
+        if self.apply_irf != {"exposure": True, "psf": True, "edisp": True}:
             data["apply_irf"] = self.apply_irf
 
         return data
