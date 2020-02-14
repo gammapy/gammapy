@@ -1,14 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.stats import CashEvaluator, WStatEvaluator
+
+ref_array = np.ones((3,2,4))
 
 values = [
     (1, 2,    [-1., -0.78339367]),
     (5, 1,    [4., 2.84506224]),
     (10, 5,   [5., 1.96543726]),
     (100, 23, [77., 11.8294207]),
-    (1, 20,   [-19, -5.65760863])
+    (1, 20,   [-19, -5.65760863]),
+    (5*ref_array, 1*ref_array, [4., 2.84506224])
 ]
 
 @pytest.mark.parametrize(("n_on", "mu_bkg", "result"), values)
@@ -26,6 +30,7 @@ values = [
     (10, 5,   [-2.838105, 3.504033]),
     (100, 23, [-9.669482, 10.336074]),
     (1, 20,   [-1, 1.357677]),
+    (5 * ref_array, 1 * ref_array, [-1.915916, 2.581106])
 ]
 
 @pytest.mark.parametrize(("n_on", "mu_bkg", "result"), values)
@@ -43,6 +48,7 @@ values = [
     (10, 5,   [11.519662]),
     (100, 23, [95.334612]),
     (1, 20,   [1.575842]),
+    (5 * ref_array, 1 * ref_array, [8.931234])
 ]
 
 @pytest.mark.parametrize(("n_on", "mu_bkg", "result"), values)
@@ -57,7 +63,8 @@ values = [
     (5, 1, 1,     [4., 1.7061745691234782]),
     (10, 5, 0.3,  [8.5, 3.5853812867949024]),
     (10, 23, 0.1, [7.7, 3.443415522820395]),
-    (1, 20,  1.0, [-19, -4.590373638528086])
+    (1, 20,  1.0, [-19, -4.590373638528086]),
+    (5 * ref_array, 1 * ref_array, 1 * ref_array, [4., 1.7061745691234782])
 ]
 
 @pytest.mark.parametrize(("n_on", "n_off", "alpha", "result"), values)
@@ -74,7 +81,8 @@ values = [
     (5, 1, 1,     [-2.310459, 2.718807]),
     (10, 5, 0.3,  [-2.932472, 3.55926]),
     (10, 23, 0.1, [-2.884366, 3.533279]),
-    (1, 20,  1.0, [-4.897018, 4.299083])
+    (1, 20,  1.0, [-4.897018, 4.299083]),
+    (5 * ref_array, 1 * ref_array, 1 * ref_array, [-2.310459, 2.718807])
 ]
 
 @pytest.mark.parametrize(("n_on", "n_off", "alpha", "result"), values)
@@ -91,7 +99,8 @@ values = [
     (5, 1, 1,     [9.118247]),
     (10, 5, 0.3,  [15.10175]),
     (10, 23, 0.1, [14.263802]),
-    (1, 20,  1.0, [1.646071])
+    (1, 20,  1.0, [1.646071]),
+    (5 * ref_array, 1 * ref_array, 1 * ref_array, [9.118247])
 ]
 
 @pytest.mark.parametrize(("n_on",  "n_off", "alpha", "result"), values)

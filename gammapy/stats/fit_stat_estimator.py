@@ -59,7 +59,7 @@ class FitStatisticEvaluator(abc.ABC):
             errp[it.multi_index] = brentq(
                 self._stat_fcn,
                 self.excess[it.multi_index],
-                max_range,
+                max_range[it.multi_index],
                 args=(self.TS_max[it.multi_index] + n_sigma, it.multi_index)
             )
             it.iternext()
@@ -84,7 +84,8 @@ class FitStatisticEvaluator(abc.ABC):
         it = np.nditer(ul, flags=['multi_index'])
 
         while not it.finished:
-            TS_ref = self._stat_fcn(min_range[it.multi_index],0.)
+            TS_ref = self._stat_fcn(min_range[it.multi_index],0., it.multi_index)
+
             ul[it.multi_index] = brentq(
                 self._stat_fcn,
                 min_range[it.multi_index],
