@@ -332,11 +332,6 @@ class SkyDiffuseCube(SkyModelBase):
 
         self._name = make_name(name)
 
-        axis = map.geom.get_axis_by_name("energy")
-
-        if axis.node_type != "center":
-            raise ValueError('Need a map with energy axis node_type="center"')
-
         self.map = map
         self.meta = {} if meta is None else meta
         self.filename = filename

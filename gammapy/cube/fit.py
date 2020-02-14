@@ -1648,7 +1648,12 @@ class MapEvaluator:
         if self.model.apply_irf["exposure"] is True:
             npred = self.apply_exposure(flux)
         else:
-            npred = flux
+            geom_reco = self.geom.copy()
+            if self.edisp is not None:
+                e_reco_axis = self.edisp.e_reco.copy(name="energy")
+                geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
+            npred = Map.from_geom(geom_reco, data=flux.to_value(""), unit="")
+
         if self.psf is not None and self.model.apply_irf["psf"] == True:
             npred = self.apply_psf(npred)
         if self.edisp is not None and self.model.apply_irf["edisp"] == True:
