@@ -130,10 +130,7 @@ class CashEvaluator(FitStatisticEvaluator):
         return cash(self.n_on, self.n_on)
 
     def _stat_fcn(self, mu, delta=0, index=None):
-        if index is not None:
-            return cash(self.n_on[index], self.mu_bkg[index] + mu) - delta
-        else:
-            return cash(self.n_on, self.mu_bkg + mu) - delta
+        return cash(self.n_on[index], self.mu_bkg[index] + mu) - delta
 
 
 class WStatEvaluator(FitStatisticEvaluator):
@@ -174,8 +171,5 @@ class WStatEvaluator(FitStatisticEvaluator):
         return wstat(self.n_on, self.n_off, self.alpha, self.excess)
 
     def _stat_fcn(self, mu, delta=0, index=None):
-        if index is not None:
-            return wstat(self.n_on[index], self.n_off[index], self.alpha[index], mu) - delta
-        else:
-            return wstat(self.n_on, self.n_off, self.alpha, mu) - delta
+        return wstat(self.n_on[index], self.n_off[index], self.alpha[index], mu) - delta
 
