@@ -137,21 +137,6 @@ class CashEvaluator(FitStatisticEvaluator):
     def _stat_fcn(self, mu, delta=0, index=None):
         return cash(self.n_on[index], self.mu_bkg[index] + mu) - delta
 
-    @property
-    def _significance_direct(self):
-        """Compute significance directly via Poisson probability.
-
-        Reference: TODO (is this ever used?)
-        """
-        # Compute tail probability to see n_on or more counts
-        # Note that we're using ``k = n_on - 1`` to get the probability
-        # for n_on included or more, because `poisson.sf(k)` returns the
-        # probability for more than k, with k excluded
-        # For `n_on = 0` this returns `
-        probability = scipy.stats.poisson.sf(self.n_on - 1, self.mu_bkg)
-
-        # Convert probability to a significance
-        return scipy.stats.norm.isf(probability)
 
 class WStatEvaluator(FitStatisticEvaluator):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -192,30 +177,3 @@ class WStatEvaluator(FitStatisticEvaluator):
 
     def _stat_fcn(self, mu, delta=0, index=None):
         return wstat(self.n_on[index], self.n_off[index], self.alpha[index], mu) - delta
-
-    @property
-    def _significance_direct(self):
-        """Compute significance directly via Poisson probability.
-
-        Reference: https://ui.adsabs.harvard.edu/abs/1993NIMPA.328..570A
-
-        You can use this method for small n_on < 10.
-        In this case the Li & Ma formula isn't correct any more.
-        """
-        f = np.math.factorial
-        probability = np.ones_like(self.n_on, dtype='float64')
-
-        it = np.nditer(probability, flags=["multi_index"])
-        while not it.finished:
-            n_on = int(self.n_on[it.multi_index])
-            n_off = int(self.n_off[it.multi_index])
-            alpha = self.alpha[it.multi_index]
-            # Compute tail probability to see n_on or more counts
-            for n in range(0, n_on):
-                term_1 = alpha ** n / (1 + alpha) ** (n_off + n + 1)
-                term_2 = f(n_off + n) / (f(n) * f(n_off))
-                probability[it.multi_index] -= term_1 * term_2
-            it.iternext()
-
-        # Convert probability to a significance
-        return scipy.stats.norm.isf(probability)
