@@ -379,7 +379,11 @@ class PSFMap:
             "theta": rad_axis.center,
         }
 
-        pdf = self.psf_map.interp_by_coord(coord)
+        pdf = (
+            self.psf_map.interp_by_coord(coord)
+            * rad_axis.center.value
+            * rad_axis.bin_width.value
+        )
 
         sample_pdf = InverseCDFSampler(pdf, axis=1, random_state=random_state)
         pix_coord = sample_pdf.sample_axis()

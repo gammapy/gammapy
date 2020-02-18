@@ -137,13 +137,13 @@ def test_mde_sample_psf(dataset):
     events = sampler.sample_psf(dataset.psf, events)
 
     assert len(events.table) == 2407
-    assert_allclose(events.table["ENERGY_TRUE"][0], 2.245024, rtol=1e-5)
+    assert_allclose(events.table["ENERGY_TRUE"][0], 2.2450239, rtol=1e-5)
     assert events.table["ENERGY_TRUE"].unit == "TeV"
 
-    assert_allclose(events.table["RA"][0], 266.909362, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 266.895383, rtol=1e-5)
     assert events.table["RA"].unit == "deg"
 
-    assert_allclose(events.table["DEC"][0], -29.039877, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -29.052050, rtol=1e-5)
     assert events.table["DEC"].unit == "deg"
 
 
