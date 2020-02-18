@@ -367,15 +367,15 @@ class TestSkyDiffuseCube:
 
     @staticmethod
     def test_datasets_name(diffuse_model):
-        assert diffuse_model.datasets == "all"
+        assert diffuse_model.datasets_names == "all"
 
-        diffuse_model.datasets = ["1", "2"]
+        diffuse_model.datasets_names = ["1", "2"]
         out = diffuse_model.to_dict()
-        assert out["datasets"] == ["1", "2"]
+        assert out["datasets_names"] == ["1", "2"]
 
-        diffuse_model.datasets = "all"
+        diffuse_model.datasets_names = "all"
         out = diffuse_model.to_dict()
-        assert "datasets" not in out
+        assert "datasets_names" not in out
 
 
 class TestSkyDiffuseCubeMapEvaluator:
