@@ -132,8 +132,10 @@ have been moved the ``gammapy.detect`` package can be resolved.
 
 Minor changes
 -------------
-In addition propose to move the ``PSFKernel`` and ``EDispKernel``,
-``EDispMap`` and ``PSFMap`` to either ``gammapy.maps`` or ``gammapy.irf``.
+In addition we propose to move the ``PSFKernel``, ``EDispMap`` and ``PSFMap``
+classes to ``gammapy.irf``. Those classes represent a "reduced" IRF and are
+therefore similar to the existing ``EnergyDependentTablePSF`` or ``TablePSF``
+classes.
 
 
 Alternatives
@@ -149,8 +151,6 @@ Outlook
 Once the functionality on data reduction, datasets and estimators has been
 removed to the corresponding sub-packages, the ``gammapy.cube`` and ``gammapy.spectrum``
 packages can possibly be resolved.
-
-
 
 
 
