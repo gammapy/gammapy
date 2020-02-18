@@ -166,8 +166,8 @@ class TestSpectrumDataset:
         assert empty_dataset.data_shape[0] == 2
         assert empty_dataset.background.total_counts == 0
         assert empty_dataset.background.energy.nbin == 2
-        assert empty_dataset.aeff.data.axis("energy").nbin == 3
-        assert empty_dataset.edisp.data.axis("e_reco").nbin == 2
+        assert empty_dataset.aeff.data.axis("energy_true").nbin == 3
+        assert empty_dataset.edisp.data.axis("energy").nbin == 2
         assert empty_dataset.livetime.value == 0
         assert len(empty_dataset.gti.table) == 0
         assert empty_dataset.energy_range[0] is None

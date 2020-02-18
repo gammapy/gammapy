@@ -46,7 +46,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     # Compute EDisp values
     edisp_values = edisp.data.evaluate(
         offset=offset,
-        e_true=energy[:, np.newaxis, np.newaxis, np.newaxis],
+        energy_true=energy[:, np.newaxis, np.newaxis, np.newaxis],
         migra=migra[:, np.newaxis, np.newaxis],
     )
 
