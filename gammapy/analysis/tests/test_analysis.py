@@ -255,7 +255,7 @@ def test_analysis_1d_no_bkg():
     datasets:
         type: 1d
         background:
-            method: None
+            method: ''
         on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
         geom:
             axes:

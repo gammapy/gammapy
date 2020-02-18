@@ -68,7 +68,7 @@ class FrameEnum(str, Enum):
 class BackgroundMethodEnum(str, Enum):
     reflected = "reflected"
     fov = "fov_background"
-    no_background = "None"
+    no_background = ""
 
 
 class SafeMaskMethodsEnum(str, Enum):

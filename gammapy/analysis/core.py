@@ -254,18 +254,22 @@ class Analysis:
             methods=safe_mask_selection, **safe_mask_settings
         )
 
-        bkg_maker_config = {}
-        if self.config.datasets.background.exclusion:
-            exclusion_region = Map.read(self.config.datasets.background.exclusion)
-            bkg_maker_config["exclusion_mask"] = exclusion_region
-        bkg_maker_config.update(self.config.datasets.background.parameters)
-
         bkg_method = self.config.datasets.background.method
         if bkg_method == "fov_background":
-            log.debug(f"Creating FoVBackgroundMaker with arguments {bkg_maker_config}")
+            bkg_maker_config = {}
+            if self.config.datasets.background.exclusion:
+                exclusion_region = Map.read(self.config.datasets.background.exclusion)
+                bkg_maker_config["exclusion_mask"] = exclusion_region
+            bkg_maker_config.update(self.config.datasets.background.parameters)
+            log.debug(
+                f"Creating FoVBackgroundMaker with arguments {bkg_maker_config}"
+            )
             bkg_maker = FoVBackgroundMaker(**bkg_maker_config)
         else:
             bkg_maker = None
+            log.warning(
+                f"No background maker set for 1d analysis. Check configuration."
+            )
 
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
