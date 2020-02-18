@@ -22,6 +22,11 @@ class TemporalModel(Model):
 class TemplateTemporalModel(TemporalModel):
     """Template temporal model base class."""
 
+    def __call__(self, time):
+        """Call evaluate method"""
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        return self.evaluate(time.mjd, **kwargs)
+
     @classmethod
     def read(cls, path):
         """Read lightcurve model table from FITS file.
@@ -43,17 +48,11 @@ class TemplateTemporalModel(TemporalModel):
 
 class ConstantTemporalModel(TemporalModel):
     """Constant temporal model.
-
-    Parameters
-    ----------
-    norm : float
-        The normalization of the constant temporal model
     """
 
     tag = "ConstantTemporalModel"
-    norm = Parameter("norm", 1)
 
-    def evaluate_norm_at_time(self, time):
+    def evaluate(self, time):
         """Evaluate for a given time.
 
         Parameters
@@ -61,12 +60,8 @@ class ConstantTemporalModel(TemporalModel):
         time : array_like
             Time since the ``reference`` time.
 
-        Returns
-        -------
-        norm : float
-            Mean norm
         """
-        return np.ones_like(time) * self.norm.value
+        return np.ones_like(time)
 
     def sample_time(self, n_events, t_min, t_max, random_state=0):
         """Sample arrival times of events.
@@ -360,7 +355,7 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
     def _time(self):
         return self._time_ref + self.table["TIME"].data * u.s
 
-    def evaluate_norm_at_time(self, time, ext_mode=3):
+    def evaluate(self, time, ext_mode=3):
         """Evaluate for a given time.
 
         Parameters
@@ -437,7 +432,7 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         t_step = t_delta.to_value(time_unit)
         t = np.arange(0, t_stop, t_step)
 
-        pdf = self.evaluate_norm_at_time(t * time_unit)
+        pdf = self.evaluate(t * time_unit)
 
         sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
         time_pix = sampler.sample(n_events)[0]
