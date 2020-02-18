@@ -25,7 +25,7 @@ class EDispKernel:
     e_true_lo, e_true_hi : `~astropy.units.Quantity`
         True energy axis binning
     e_reco_lo, e_reco_hi : `~astropy.units.Quantity`
-        Reconstruced energy axis binning
+        Reconstructed energy axis binning
     data : array_like
         2-dim energy dispersion matrix
 
@@ -35,9 +35,9 @@ class EDispKernel:
 
         import numpy as np
         import astropy.units as u
-        from gammapy.irf import EnergyDispersion
+        from gammapy.irf import EDispKernel
         energy = np.logspace(0, 1, 101) * u.TeV
-        edisp = EnergyDispersion.from_gauss(
+        edisp = EDispKernel.from_gauss(
             e_true=energy, e_reco=energy,
             sigma=0.1, bias=0,
         )
@@ -70,10 +70,10 @@ class EDispKernel:
             interp_kwargs = self.default_interp_kwargs
 
         e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
-        e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="e_true")
+        e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="energy_true")
 
         e_reco_edges = edges_from_lo_hi(e_reco_lo, e_reco_hi)
-        e_reco_axis = MapAxis.from_edges(e_reco_edges, interp="log", name="e_reco")
+        e_reco_axis = MapAxis.from_edges(e_reco_edges, interp="log", name="energy")
 
         self.data = NDDataArray(
             axes=[e_true_axis, e_reco_axis], data=data, interp_kwargs=interp_kwargs
@@ -111,12 +111,12 @@ class EDispKernel:
     @property
     def e_reco(self):
         """Reconstructed energy axis (`~gammapy.maps.MapAxis`)"""
-        return self.data.axis("e_reco")
+        return self.data.axis("energy")
 
     @property
     def e_true(self):
         """True energy axis (`~gammapy.maps.MapAxis`)"""
-        return self.data.axis("e_true")
+        return self.data.axis("energy_true")
 
     @property
     def pdf_matrix(self):
@@ -673,7 +673,7 @@ class EnergyDispersion2D:
             interp_kwargs = self.default_interp_kwargs
 
         e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
-        e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="e_true")
+        e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="energy_true")
 
         migra_edges = edges_from_lo_hi(migra_lo, migra_hi)
         migra_axis = MapAxis.from_edges(
@@ -822,8 +822,8 @@ class EnergyDispersion2D:
             Energy dispersion matrix
         """
         offset = Angle(offset)
-        e_true = self.data.axis("e_true").edges if e_true is None else e_true
-        e_reco = self.data.axis("e_true").edges if e_reco is None else e_reco
+        e_true = self.data.axis("energy_true").edges if e_true is None else e_true
+        e_reco = self.data.axis("energy_true").edges if e_reco is None else e_reco
 
         data = []
         for energy in MapAxis.from_edges(e_true, interp="log").center:
@@ -878,7 +878,7 @@ class EnergyDispersion2D:
         migra = e_reco / e_true
 
         values = self.data.evaluate(
-            offset=offset, e_true=e_true, migra=migra_axis.center
+            offset=offset, energy_true=e_true, migra=migra_axis.center
         )
 
         cumsum = np.insert(values, 0, 0).cumsum()
@@ -937,7 +937,7 @@ class EnergyDispersion2D:
 
         for ener in e_true:
             for off in offset:
-                disp = self.data.evaluate(offset=off, e_true=ener, migra=migra)
+                disp = self.data.evaluate(offset=off, energy_true=ener, migra=migra)
                 label = f"offset = {off:.1f}\nenergy = {ener:.1f}"
                 ax.plot(migra, disp, label=label, **kwargs)
 
@@ -977,7 +977,7 @@ class EnergyDispersion2D:
         if offset is None:
             offset = Angle(1, "deg")
 
-        e_true = self.data.axis("e_true")
+        e_true = self.data.axis("energy_true")
         migra = self.data.axis("migra")
 
         x = e_true.edges.value
@@ -985,7 +985,7 @@ class EnergyDispersion2D:
 
         z = self.data.evaluate(
             offset=offset,
-            e_true=e_true.center.reshape(1, -1, 1),
+            energy_true=e_true.center.reshape(1, -1, 1),
             migra=migra.center.reshape(1, 1, -1),
         ).value[0]
 
@@ -1024,7 +1024,7 @@ class EnergyDispersion2D:
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
 
-        energy = self.data.axis("e_true").edges
+        energy = self.data.axis("energy_true").edges
         migra = self.data.axis("migra").edges
         theta = self.data.axis("offset").edges
 
