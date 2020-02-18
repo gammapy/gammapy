@@ -34,7 +34,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     edispmap : `~gammapy.cube.EDispMap`
         the resulting EDisp map
     """
-    energy_axis = geom.get_axis_by_name("energy")
+    energy_axis = geom.get_axis_by_name("energy_true")
     energy = energy_axis.center
 
     migra_axis = geom.get_axis_by_name("migra")
@@ -112,7 +112,7 @@ class EDispMap:
     """
 
     def __init__(self, edisp_map, exposure_map):
-        if edisp_map.geom.axes[1].name.upper() != "ENERGY":
+        if edisp_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
             raise ValueError("Incorrect energy axis position in input Map")
 
         if edisp_map.geom.axes[0].name.upper() != "MIGRA":
@@ -216,13 +216,13 @@ class EDispMap:
                 "EnergyDispersion can be extracted at one single position only."
             )
 
-        energy_axis = self.edisp_map.geom.get_axis_by_name("energy")
+        energy_axis = self.edisp_map.geom.get_axis_by_name("energy_true")
         migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
 
         coords = {
             "skycoord": position,
             "migra": migra_axis.center.reshape((-1, 1, 1, 1)),
-            "energy": energy_axis.center.reshape((1, -1, 1, 1)),
+            "energy_true": energy_axis.center.reshape((1, -1, 1, 1)),
         }
 
         # Interpolate in the EDisp map. Squeeze to remove dimensions of length 1
@@ -310,6 +310,9 @@ class EDispMap:
         edisp_map : `EDispMap`
             Energy dispersion map.
         """
+        if "energy_true" not in [ax.name for ax in geom.axes]:
+            raise ValueError("EDispMap requires true energy axis")
+
         geom_exposure_edisp = geom.squash(axis="migra")
         exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
 
@@ -345,7 +348,7 @@ class EDispMap:
 
         coord = {
             "skycoord": map_coord.skycoord.reshape(-1, 1),
-            "energy": map_coord["energy"].reshape(-1, 1),
+            "energy_true": map_coord["energy_true"].reshape(-1, 1),
             "migra": migra_axis.center,
         }
 
@@ -355,7 +358,7 @@ class EDispMap:
         pix_edisp = sample_edisp.sample_axis()
         migra = migra_axis.pix_to_coord(pix_edisp)
 
-        energy_reco = map_coord["energy"] * migra
+        energy_reco = map_coord["energy_true"] * migra
 
         return MapCoord.create({"skycoord": map_coord.skycoord, "energy": energy_reco})
 

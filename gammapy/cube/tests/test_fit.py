@@ -40,7 +40,7 @@ def geom():
 
 @pytest.fixture
 def geom_etrue():
-    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3)
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
     return WcsGeom.create(
         skydir=(266.40498829, -28.93617776),
         binsz=0.02,

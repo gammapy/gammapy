@@ -36,7 +36,7 @@ def make_edisp_map_test():
     energy_axis = MapAxis(
         nodes=[0.2, 0.7, 1.5, 2.0, 10.0],
         unit="TeV",
-        name="energy",
+        name="energy_true",
         node_type="edges",
         interp="log",
     )
@@ -59,7 +59,7 @@ def test_make_edisp_map():
     energy_axis = MapAxis(
         nodes=[0.2, 0.7, 1.5, 2.0, 10.0],
         unit="TeV",
-        name="energy",
+        name="energy_true",
         node_type="edges",
         interp="log",
     )
@@ -125,7 +125,7 @@ def test_sample_coord():
     edisp_map = make_edisp_map_test()
 
     coords = MapCoord(
-        {"lon": [0, 0] * u.deg, "lat": [0, 0.5] * u.deg, "energy": [1, 3] * u.TeV},
+        {"lon": [0, 0] * u.deg, "lat": [0, 0.5] * u.deg, "energy_true": [1, 3] * u.TeV},
         frame="icrs",
     )
 
@@ -139,7 +139,7 @@ def test_sample_coord():
 @pytest.mark.parametrize("position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"])
 def test_edisp_from_diagonal_response(position):
     position = SkyCoord(position)
-    energy_axis_true = MapAxis.from_energy_bounds("0.3 TeV", "10 TeV", nbin=31)
+    energy_axis_true = MapAxis.from_energy_bounds("0.3 TeV", "10 TeV", nbin=31, name="energy_true")
     edisp_map = EDispMap.from_diagonal_response(energy_axis_true)
 
     e_reco = energy_axis_true.edges

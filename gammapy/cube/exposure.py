@@ -29,7 +29,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
         Exposure map
     """
     offset = geom.separation(pointing)
-    energy = geom.get_axis_by_name("energy").center
+    energy = geom.get_axis_by_name("energy_true").center
 
     exposure = aeff.data.evaluate(
         offset=offset, energy_true=energy[:, np.newaxis, np.newaxis]

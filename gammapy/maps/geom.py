@@ -129,7 +129,9 @@ def axes_from_bands_hdu(hdu):
         if colnames[0] == "E_MIN":
             name = "energy"
         else:
-            name = colnames[0].split("_")[0].lower()
+            name = colnames[0].replace("_MIN", "")
+            #name = colnames[0].split("_")[0].lower()
+
         interp = bands.meta.get("INTERP{}".format(idx + 1), "lin")
 
         if node_type == "center":
@@ -443,7 +445,7 @@ class MapAxis:
         return cls(nodes, **kwargs)
 
     @classmethod
-    def from_energy_bounds(cls, emin, emax, nbin, unit=None, per_decade=False):
+    def from_energy_bounds(cls, emin, emax, nbin, unit=None, per_decade=False, name=None):
         """Make an energy axis.
 
         Used frequently also to make energy grids, by making
@@ -459,6 +461,8 @@ class MapAxis:
             Energy unit
         per_decade : bool
             Whether `nbin` is given per decade.
+        energy_true : bool
+            Whether energy is true energy
 
         Returns
         -------
@@ -475,8 +479,11 @@ class MapAxis:
         if per_decade:
             nbin = np.ceil(np.log10(emax / emin).value * nbin)
 
+        if name is None:
+            name = "energy"
+
         return cls.from_bounds(
-            emin.value, emax.value, nbin=nbin, unit=unit, interp="log", name="energy"
+            emin.value, emax.value, nbin=nbin, unit=unit, interp="log", name=name
         )
 
     @classmethod
