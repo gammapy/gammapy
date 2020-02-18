@@ -55,7 +55,12 @@ class SkyModel(SkyModelBase):
     tag = "SkyModel"
 
     def __init__(
-        self, spectral_model, spatial_model=None, temporal_model=None, name=None
+        self,
+        spectral_model,
+        spatial_model=None,
+        temporal_model=None,
+        name=None,
+        apply_irf=None,
     ):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
@@ -65,6 +70,9 @@ class SkyModel(SkyModelBase):
         self.__dict__.pop("_parameters")
 
         self._name = make_name(name)
+        self.apply_irf = {"exposure": True, "psf": True, "edisp": True}
+        if apply_irf is not None:
+            self.apply_irf.update(apply_irf)
 
     @property
     def name(self):
@@ -196,6 +204,7 @@ class SkyModel(SkyModelBase):
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
         kwargs.setdefault("spatial_model", spatial_model)
         kwargs.setdefault("temporal_model", temporal_model)
+        kwargs.setdefault("apply_irf", self.apply_irf)
 
         return self.__class__(**kwargs)
 
@@ -211,6 +220,9 @@ class SkyModel(SkyModelBase):
 
         if self.temporal_model is not None:
             data["temporal"] = self.temporal_model.to_dict()
+
+        if self.apply_irf != {"exposure": True, "psf": True, "edisp": True}:
+            data["apply_irf"] = self.apply_irf
 
         return data
 
@@ -245,6 +257,9 @@ class SkyModel(SkyModelBase):
             spatial_model=spatial_model,
             spectral_model=spectral_model,
             temporal_model=temporal_model,
+            apply_irf=data.get(
+                "apply_irf", {"exposure": True, "psf": True, "edisp": True}
+            ),
         )
 
     def __str__(self):
@@ -312,14 +327,10 @@ class SkyDiffuseCube(SkyModelBase):
         interp_kwargs=None,
         name=None,
         filename=None,
+        apply_irf=None,
     ):
 
         self._name = make_name(name)
-
-        axis = map.geom.get_axis_by_name("energy")
-
-        if axis.node_type != "center":
-            raise ValueError('Need a map with energy axis node_type="center"')
 
         self.map = map
         self.meta = {} if meta is None else meta
@@ -334,6 +345,9 @@ class SkyDiffuseCube(SkyModelBase):
         #  remove this again
         self._cached_value = None
         self._cached_coordinates = (None, None, None)
+        self.apply_irf = {"exposure": True, "psf": True, "edisp": True}
+        if apply_irf is not None:
+            self.apply_irf.update(apply_irf)
 
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
@@ -417,6 +431,10 @@ class SkyDiffuseCube(SkyModelBase):
     def from_dict(cls, data):
         model = cls.read(data["filename"])
         model._update_from_dict(data)
+        apply_irf = data.get(
+            "apply_irf", {"exposure": True, "psf": True, "edisp": True}
+        )
+        model.apply_irf.update(apply_irf)
         return model
 
     def to_dict(self):
@@ -427,6 +445,9 @@ class SkyDiffuseCube(SkyModelBase):
 
         # Move parameters at the end
         data["parameters"] = data.pop("parameters")
+        if self.apply_irf != {"exposure": True, "psf": True, "edisp": True}:
+            data["apply_irf"] = self.apply_irf
+
         return data
 
     def __str__(self):
