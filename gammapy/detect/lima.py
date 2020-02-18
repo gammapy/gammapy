@@ -42,9 +42,9 @@ class LiMaMapEstimator:
         Returns
         -------
         images : dict
-            Dictionary containing result maps
-            Keys are: significance, counts, background and excess for a MapDataset
-                      significance, n_on, background, excess, alpha otherwise
+            Dictionary containing result maps. Keys are: significance,
+            counts, background and excess for a MapDataset significance,
+            n_on, background, excess, alpha otherwise
 
         """
         if not isinstance(dataset, MapDataset):

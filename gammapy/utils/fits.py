@@ -217,6 +217,10 @@ class LazyFitsData(object):
         self.name = name
 
     def __get__(self, instance, objtype):
+        if instance is None:
+            # Accessed on a class, not an instance
+            return self
+
         value = instance.__dict__.get(self.name)
         if value is not None:
             return value

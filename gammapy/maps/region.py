@@ -10,6 +10,9 @@ from .utils import INVALID_INDEX
 from .wcs import WcsGeom
 
 
+__all__ = ["RegionGeom"]
+
+
 class RegionGeom(Geom):
     """Map geometry representing a region on the sky.
 

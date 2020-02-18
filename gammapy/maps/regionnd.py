@@ -10,13 +10,16 @@ from .region import RegionGeom
 from .utils import INVALID_INDEX
 
 
+__all__ = ["RegionNDMap"]
+
+
 class RegionNDMap(Map):
     """Region ND map
 
     Parameters
     ----------
     geom : `~gammapy.maps.RegionGeom`
-        WCS geometry object.
+        Region geometry object.
     data : `~numpy.ndarray`
         Data array. If none then an empty array will be allocated.
     dtype : str, optional

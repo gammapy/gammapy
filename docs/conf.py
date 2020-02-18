@@ -25,6 +25,7 @@ setup_cfg = dict(conf.items("metadata"))
 
 plot_html_show_source_link = False
 
+
 # -- General configuration ----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
