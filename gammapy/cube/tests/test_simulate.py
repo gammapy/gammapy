@@ -18,6 +18,7 @@ from gammapy.modeling.models import (
 from gammapy.utils.testing import requires_data
 
 
+@pytest.mark.xfail
 @requires_data()
 def test_simulate():
     irfs = load_cta_irfs(
@@ -86,8 +87,11 @@ def dataset():
 
     gti = GTI.create(start=t_min, stop=t_max)
 
+    geom_true = geom.copy()
+    geom_true.axes[0].name = "energy_true"
+
     dataset = get_map_dataset(
-        sky_model=skymodel, geom=geom, geom_etrue=geom, edisp=True
+        sky_model=skymodel, geom=geom, geom_etrue=geom_true, edisp=True
     )
     dataset.gti = gti
 
