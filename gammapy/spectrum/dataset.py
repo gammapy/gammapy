@@ -126,7 +126,9 @@ class SpectrumDataset(Dataset):
         aeff_min, aeff_max, aeff_unit = np.nan, np.nan, ""
         if self.aeff is not None:
             try:
-                aeff_min = np.min(self.aeff.data.data.value[self.aeff.data.data.value > 0])
+                aeff_min = np.min(
+                    self.aeff.data.data.value[self.aeff.data.data.value > 0]
+                )
             except ValueError:
                 aeff_min = 0
             aeff_max = np.max(self.aeff.data.data.value)
@@ -1079,7 +1081,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             data = _read_ogip_hdulist(hdulist)
 
         counts = CountsSpectrum(
-            energy_hi=data["energy_hi"], energy_lo=data["energy_lo"], data=data["data"],region=data["region"],wcs=data["wcs"]
+            energy_hi=data["energy_hi"],
+            energy_lo=data["energy_lo"],
+            data=data["data"],
+            region=data["region"],
+            wcs=data["wcs"],
         )
 
         phafile = filename.name
@@ -1100,7 +1106,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
                     energy_lo=data_bkg["energy_lo"],
                     data=data_bkg["data"],
                     region=data_bkg["region"],
-                    wcs=data_bkg["wcs"]
+                    wcs=data_bkg["wcs"],
                 )
 
                 acceptance_off = data_bkg["backscal"]
@@ -1166,15 +1172,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         outdir = Path(filename).parent
         filename = str(outdir / f"pha_obs{self.name}.fits")
 
-        if self.models is None:
-            models = []
-        else:
-            models = [_.name for _ in self.models]
-
         return {
             "name": self.name,
             "type": self.tag,
-            "models": models,
             "filename": filename,
         }
 
@@ -1212,10 +1212,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Spectrum dataset on off.
 
         """
-        models = [model for model in models if model.name in data["models"]]
-
-        # TODO: assumes that the model is a skymodel
-        # so this will work only when this change will be effective
+        models = [
+            model
+            for model in models
+            if data["name"] in model.datasets_names or model.datasets_names == "all"
+        ]
         filename = data["filename"]
 
         dataset = cls.from_ogip_files(filename=filename)
@@ -1267,7 +1268,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         )
 
 
-def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS", hdu3="GTI", hdu4="REGION"):
+def _read_ogip_hdulist(
+    hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS", hdu3="GTI", hdu4="REGION"
+):
     """Create from `~astropy.io.fits.HDUList`."""
     counts_table = Table.read(hdulist[hdu1])
     ebounds = Table.read(hdulist[hdu2])

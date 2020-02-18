@@ -740,14 +740,19 @@ class MapDataset(Dataset):
     def from_dict(cls, data, components, models):
         """Create from dicts and models list generated from YAML serialization."""
         dataset = cls.read(data["filename"], name=data["name"])
-        bkg_name = data["background"]
-        model_names = data["models"]
-        models_list = [model for model in models if model.name in model_names]
+        models_list = [
+            model
+            for model in models
+            if data["name"] in model.datasets_names or model.datasets_names == "all"
+        ]
         models = Models(models_list)
 
         for component in components["components"]:
             if component["type"] == "BackgroundModel":
-                if component["name"] == bkg_name:
+                if (
+                    dataset.name in component.get("datasets_names", [])
+                    or "datasets_names" not in component
+                ):
                     if "filename" not in component:
                         component["map"] = dataset.background_model.map
                     background_model = BackgroundModel.from_dict(component)
@@ -758,16 +763,9 @@ class MapDataset(Dataset):
 
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
-        if self.models is None:
-            models = []
-        else:
-            models = [_.name for _ in self.models]
-
         return {
             "name": self.name,
             "type": self.tag,
-            "models": models,
-            "background": self.background_model.name,
             "filename": str(filename),
         }
 

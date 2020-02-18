@@ -1267,9 +1267,11 @@ class FluxPointsDataset(Dataset):
         dataset : `FluxPointsDataset`
             Flux point datasets.
         """
-        models = [model for model in models if model.name in data["models"]]
-        # TODO: assumes that the model is a skymodel
-        # so this will work only when this change will be effective
+        models = [
+            model
+            for model in models
+            if data["name"] in model.datasets_names or model.datasets_names == "all"
+        ]
         table = Table.read(data["filename"])
         mask_fit = table["mask_fit"].data.astype("bool")
         mask_safe = table["mask_safe"].data.astype("bool")
@@ -1284,15 +1286,9 @@ class FluxPointsDataset(Dataset):
 
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
-        if self.models is not None:
-            models = [_.name for _ in self.models]
-        else:
-            models = []
-
         return {
             "name": self.name,
             "type": self.tag,
-            "models": models,
             "filename": str(filename),
         }
 
