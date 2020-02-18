@@ -568,7 +568,7 @@ class WcsNDMap(WcsMap):
         """
         from gammapy.spectrum import CountsSpectrum
 
-        energy_axis = self.geom.get_axis_by_name("energy")
+        energy_axis = self.geom.axes[0]
 
         if region:
             mask = self.geom.region_mask([region])

@@ -96,7 +96,7 @@ def energy_axis_from_fgst_template(hdu):
 
     nodes = bands[tag].data
 
-    return [MapAxis.from_nodes(nodes=nodes, name="energy", unit="MeV", interp="log")]
+    return [MapAxis.from_nodes(nodes=nodes, name="energy_true", unit="MeV", interp="log")]
 
 
 def axes_from_bands_hdu(hdu):

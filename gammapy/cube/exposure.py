@@ -70,7 +70,7 @@ def _map_spectrum_weight(map, spectrum=None):
         spectrum = PowerLawSpectralModel(index=2.0)
 
     # Compute weights vector
-    energy_edges = map.geom.get_axis_by_name("energy").edges
+    energy_edges = map.geom.get_axis_by_name("energy_true").edges
     weights = spectrum.integral(
         emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
     )

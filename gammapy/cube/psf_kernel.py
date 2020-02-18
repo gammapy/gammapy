@@ -94,7 +94,7 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
     factor : int
         the oversample factor to compute the PSF
     """
-    energy_axis = geom.get_axis_by_name("energy")
+    energy_axis = geom.get_axis_by_name("energy_true")
     energy_idx = geom.axes.index(energy_axis)
 
     # prepare map and compute distances to map center

@@ -946,7 +946,7 @@ class Map(abc.ABC):
         map : `WcsNDMap`
             Map with energy dispersion applied.
         """
-        loc = self.geom.get_axis_index_by_name("energy")
+        loc = self.geom.get_axis_index_by_name("energy_true")
         data = np.rollaxis(self.data, loc, len(self.data.shape))
         data = np.dot(data, edisp.pdf_matrix)
         data = np.rollaxis(data, -1, loc)

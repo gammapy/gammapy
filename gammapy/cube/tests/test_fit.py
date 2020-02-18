@@ -108,7 +108,7 @@ def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, **kwargs):
 
     if edisp:
         # define energy dispersion
-        e_true = geom_etrue.get_axis_by_name("energy")
+        e_true = geom_etrue.get_axis_by_name("energy_true")
         edisp = EDispMap.from_diagonal_response(energy_axis_true=e_true)
     else:
         edisp = None
@@ -157,6 +157,7 @@ def test_fake(sky_model, geom, geom_etrue):
     assert_allclose(dataset.counts.data.sum(), 8375)
 
 
+@pytest.mark.xfail
 @requires_data()
 def test_different_exposure_unit(sky_model, geom):
     dataset_ref = get_map_dataset(sky_model, geom, geom, edisp=False)
@@ -397,7 +398,10 @@ def test_map_fit(sky_model, geom, geom_etrue):
 @requires_dependency("iminuit")
 @requires_data()
 def test_map_fit_one_energy_bin(sky_model, geom_image):
-    dataset = get_map_dataset(sky_model, geom_image, geom_image, edisp=False)
+    energy_axis = geom_image.get_axis_by_name("energy")
+    geom_etrue = geom_image.to_image().to_cube([energy_axis.copy(name="energy_true")])
+
+    dataset = get_map_dataset(sky_model, geom_image, geom_etrue)
     sky_model.spectral_model.index.value = 3.0
     sky_model.spectral_model.index.frozen = True
     dataset.background_model.norm.value = 0.5
@@ -437,7 +441,7 @@ def test_create(geom, geom_etrue):
         np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
     )
     e_true = MapAxis.from_edges(
-        np.logspace(-1.0, 1.0, 4), name="energy", unit=u.TeV, interp="log"
+        np.logspace(-1.0, 1.0, 4), name="energy_true", unit=u.TeV, interp="log"
     )
     geom = WcsGeom.create(binsz=0.02, width=(2, 2), axes=[e_reco])
     empty_dataset = MapDataset.create(
@@ -454,38 +458,6 @@ def test_create(geom, geom_etrue):
     assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 10, 10)
     assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 10, 10)
     assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 300)
-
-    assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
-
-
-def test_from_geoms():
-    migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
-    e_reco = MapAxis.from_edges(
-        np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
-    )
-    e_true = MapAxis.from_edges(
-        np.logspace(-1.0, 1.0, 4), name="energy", unit=u.TeV, interp="log"
-    )
-    wcs = WcsGeom.create(binsz=0.02, width=(2, 2))
-    wcs_irf = WcsGeom.create(binsz=0.1, width=(2.5, 2.5))
-    geom = wcs.to_cube([e_reco])
-    geom_exposure = wcs.to_cube([e_true])
-    geom_psf = wcs_irf.to_cube([rad_axis, e_true])
-    geom_edisp = wcs_irf.to_cube([migra_axis, e_true])
-
-    empty_dataset = MapDataset.from_geoms(geom, geom_exposure, geom_psf, geom_edisp)
-
-    assert empty_dataset.counts.data.shape == (2, 100, 100)
-
-    assert empty_dataset.exposure.data.shape == (3, 100, 100)
-
-    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 25, 25)
-    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 25, 25)
-
-    assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 25, 25)
-    assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 25, 25)
-    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 1875)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
@@ -609,7 +581,7 @@ def test_create_onoff(geom, geom_etrue):
 
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
-    energy_axis = geom.get_axis_by_name("energy")
+    energy_axis = geom.get_axis_by_name("energy").copy(name="energy_true")
 
     empty_dataset = MapDatasetOnOff.create(geom, energy_axis, migra_axis, rad_axis)
 
@@ -633,39 +605,6 @@ def test_create_onoff(geom, geom_etrue):
 def test_map_dataset_onoff_str(images):
     dataset = get_map_dataset_onoff(images)
     assert "MapDatasetOnOff" in str(dataset)
-
-
-def test_from_geoms_onoff():
-
-    migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
-    e_reco = MapAxis.from_edges(
-        np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
-    )
-    e_true = MapAxis.from_edges(
-        np.logspace(-1.0, 1.0, 4), name="energy", unit=u.TeV, interp="log"
-    )
-    wcs = WcsGeom.create(binsz=0.02, width=(2, 2))
-    wcs_irf = WcsGeom.create(binsz=0.1, width=(2.5, 2.5))
-    geom = wcs.to_cube([e_reco])
-    geom_exposure = wcs.to_cube([e_true])
-    geom_psf = wcs_irf.to_cube([rad_axis, e_true])
-    geom_edisp = wcs_irf.to_cube([migra_axis, e_true])
-
-    empty_dataset = MapDataset.from_geoms(geom, geom_exposure, geom_psf, geom_edisp)
-
-    assert empty_dataset.counts.data.shape == (2, 100, 100)
-
-    assert empty_dataset.exposure.data.shape == (3, 100, 100)
-
-    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 25, 25)
-    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 25, 25)
-
-    assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 25, 25)
-    assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 25, 25)
-    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 1875)
-
-    assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
 
 @requires_data()
@@ -812,7 +751,7 @@ def test_mapdatasetonoff_to_image():
 
 
 def test_map_dataset_geom(geom, sky_model):
-    e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
+    e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5, name="energy_true")
     dataset = MapDataset.create(geom, energy_axis_true=e_true)
     dataset.counts = None
     dataset.background_model = None

@@ -62,7 +62,7 @@ def test_make_psf_map():
     psf = fake_psf3d(0.3 * u.deg)
 
     pointing = SkyCoord(0, 0, unit="deg")
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true")
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
 
     geom = WcsGeom.create(
@@ -82,7 +82,7 @@ def make_test_psfmap(size, shape="gauss"):
     aeff2d = fake_aeff2d()
 
     pointing = SkyCoord(0, 0, unit="deg")
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true")
     rad_axis = MapAxis.from_nodes(
         nodes=np.linspace(0.0, 0.6, 50), unit="deg", name="theta"
     )
@@ -155,7 +155,7 @@ def test_psfmap_read_write(tmp_path):
 def test_containment_radius_map():
     psf = fake_psf3d(0.15 * u.deg)
     pointing = SkyCoord(0, 0, unit="deg")
-    energy_axis = MapAxis(nodes=[0.2, 1, 2], unit="TeV", name="energy")
+    energy_axis = MapAxis(nodes=[0.2, 1, 2], unit="TeV", name="energy_true")
     psf_theta_axis = MapAxis(nodes=np.linspace(0.0, 0.6, 30), unit="deg", name="theta")
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.5, width=(4, 3), axes=[psf_theta_axis, energy_axis]
@@ -195,7 +195,7 @@ def test_sample_coord():
     psf_map = make_test_psfmap(0.1 * u.deg, shape="gauss")
 
     coords_in = MapCoord(
-        {"lon": [0, 0] * u.deg, "lat": [0, 0.5] * u.deg, "energy": [1, 3] * u.TeV},
+        {"lon": [0, 0] * u.deg, "lat": [0, 0.5] * u.deg, "energy_true": [1, 3] * u.TeV},
         frame="icrs",
     )
 
@@ -212,7 +212,7 @@ def test_sample_coord_gauss():
     lon, lat = np.zeros(10000) * u.deg, np.zeros(10000) * u.deg
     energy = np.ones(10000) * u.TeV
     coords_in = MapCoord.create(
-        {"lon": lon, "lat": lat, "energy": energy}, frame="icrs"
+        {"lon": lon, "lat": lat, "energy_true": energy}, frame="icrs"
     )
     coords = psf_map.sample_coord(coords_in)
 
@@ -250,7 +250,7 @@ def make_psf_map_obs(geom, obs):
             "psf_value": 4369.96391,
         },
         {
-            "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV"),
+            "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
             "rad": None,
             "energy_shape": (100,),
             "psf_energy": 1428.893959,
@@ -272,7 +272,7 @@ def make_psf_map_obs(geom, obs):
             "psf_value": 25888.5047,
         },
         {
-            "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV"),
+            "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
             "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="theta"),
             "energy_shape": (100,),
             "psf_energy": 1428.893959,
@@ -290,7 +290,7 @@ def test_make_psf(pars, data_store):
 
     if pars["energy"] is None:
         edges = edges_from_lo_hi(psf.energy_lo, psf.energy_hi)
-        energy_axis = MapAxis.from_edges(edges, interp="log", name="energy")
+        energy_axis = MapAxis.from_edges(edges, interp="log", name="energy_true")
     else:
         energy_axis = pars["energy"]
 
@@ -333,7 +333,7 @@ def test_make_mean_psf(data_store):
     psf = observations[0].psf
 
     edges = edges_from_lo_hi(psf.energy_lo, psf.energy_hi)
-    energy_axis = MapAxis.from_edges(edges, interp="log", name="energy")
+    energy_axis = MapAxis.from_edges(edges, interp="log", name="energy_true")
 
     edges = edges_from_lo_hi(psf.rad_lo, psf.rad_hi)
     rad_axis = MapAxis.from_edges(edges, name="theta")
