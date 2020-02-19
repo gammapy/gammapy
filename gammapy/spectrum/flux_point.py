@@ -1195,9 +1195,8 @@ class FluxPointsDataset(Dataset):
     def __init__(self, models, data, mask_fit=None, mask_safe=None, name=None):
         self.data = data
         self.mask_fit = mask_fit
-        self.models = models
-
         self._name = make_name(name)
+        self.models = models
 
         if data.sed_type != "dnde":
             raise ValueError("Currently only flux points of type 'dnde' are supported.")
@@ -1222,7 +1221,7 @@ class FluxPointsDataset(Dataset):
         else:
             if isinstance(models, SkyModel):
                 models = [models]
-            elif isinstance(models, Models):
+            elif isinstance(models, (Models,list)):
                 models = list(models)
             else:
                 raise TypeError("Invalid models")

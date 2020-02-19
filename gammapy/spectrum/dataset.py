@@ -86,11 +86,11 @@ class SpectrumDataset(Dataset):
         self.aeff = aeff
         self.edisp = edisp
         self.background = background
-        self.models = models
         self.mask_safe = mask_safe
         self.gti = gti
 
         self._name = make_name(name)
+        self.models = models
 
     @property
     def name(self):
@@ -188,7 +188,7 @@ class SpectrumDataset(Dataset):
         else:
             if isinstance(models, SkyModel):
                 models = [models]
-            elif isinstance(models, Models):
+            elif isinstance(models, (Models, list)):
                 models = list(models)
             else:
                 raise TypeError("Invalid models")
@@ -692,7 +692,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.mask_fit = mask_fit
         self.aeff = aeff
         self.edisp = edisp
-        self.models = models
         self.mask_safe = mask_safe
 
         if np.isscalar(acceptance):
@@ -705,6 +704,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.acceptance_off = acceptance_off
         self._name = make_name(name)
         self.gti = gti
+        self.models = models
 
     def __str__(self):
         str_ = super().__str__()
