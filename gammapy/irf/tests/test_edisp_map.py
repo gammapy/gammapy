@@ -75,15 +75,13 @@ def test_make_edisp_map():
 
 def test_edisp_map_to_from_hdulist():
     edmap = make_edisp_map_test()
-    hdulist = edmap.to_hdulist(edisp_hdu="EDISP", edisp_hdubands="BANDSEDISP")
+    hdulist = edmap.to_hdulist()
     assert "EDISP" in hdulist
-    assert "BANDSEDISP" in hdulist
-    assert "EXPMAP" in hdulist
-    assert "BANDSEXP" in hdulist
+    assert "EDISP_BANDS" in hdulist
+    assert "EDISP_EXPOSURE" in hdulist
+    assert "EDISP_EXPOSURE_BANDS" in hdulist
 
-    new_edmap = EDispMap.from_hdulist(
-        hdulist, edisp_hdu="EDISP", edisp_hdubands="BANDSEDISP"
-    )
+    new_edmap = EDispMap.from_hdulist(hdulist)
     assert_allclose(edmap.edisp_map.data, new_edmap.edisp_map.data)
     assert new_edmap.edisp_map.geom == edmap.edisp_map.geom
     assert new_edmap.exposure_map.geom == edmap.exposure_map.geom

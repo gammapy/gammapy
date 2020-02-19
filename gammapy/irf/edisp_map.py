@@ -1,16 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from copy import deepcopy
 import numpy as np
 from scipy.interpolate import interp1d
-import astropy.io.fits as fits
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .edisp_kernel import EDispKernel
+from .irf_map import IRFMap
 
 __all__ = ["EDispMap"]
 
 
-class EDispMap:
+class EDispMap(IRFMap):
     """Energy dispersion map.
 
     Parameters
@@ -64,6 +63,15 @@ class EDispMap:
         # Write map to disk
         edisp_map.write("edisp_map.fits")
     """
+    _hdu_name = "edisp"
+
+    @property
+    def edisp_map(self):
+        return self._irf_map
+
+    @edisp_map.setter
+    def edisp_map(self, value):
+        self._irf_map = value
 
     def __init__(self, edisp_map, exposure_map):
         if edisp_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
@@ -72,83 +80,7 @@ class EDispMap:
         if edisp_map.geom.axes[0].name.upper() != "MIGRA":
             raise ValueError("Incorrect migra axis position in input Map")
 
-        self.edisp_map = edisp_map
-        self.exposure_map = exposure_map
-
-    @classmethod
-    def from_hdulist(
-        cls,
-        hdulist,
-        edisp_hdu="EDISPMAP",
-        edisp_hdubands="BANDSEDISP",
-        exposure_hdu="EXPMAP",
-        exposure_hdubands="BANDSEXP",
-    ):
-        """Convert to `~astropy.io.fits.HDUList`.
-
-        Parameters
-        ----------
-        edisp_hdu : str
-            Name or index of the HDU with the edisp_map data.
-        edisp_hdubands : str
-            Name or index of the HDU with the edisp_map BANDS table.
-        exposure_hdu : str
-            Name or index of the HDU with the exposure_map data.
-        exposure_hdubands : str
-            Name or index of the HDU with the exposure_map BANDS table.
-        """
-        edisp_map = Map.from_hdulist(hdulist, edisp_hdu, edisp_hdubands, "auto")
-        if exposure_hdu in hdulist:
-            exposure_map = Map.from_hdulist(
-                hdulist, exposure_hdu, exposure_hdubands, "auto"
-            )
-        else:
-            exposure_map = None
-
-        return cls(edisp_map, exposure_map)
-
-    @classmethod
-    def read(cls, filename, **kwargs):
-        """Read an edisp_map from file and create an EDispMap object"""
-        with fits.open(filename, memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, **kwargs)
-
-    def to_hdulist(
-        self,
-        edisp_hdu="EDISPMAP",
-        edisp_hdubands="BANDSEDISP",
-        exposure_hdu="EXPMAP",
-        exposure_hdubands="BANDSEXP",
-    ):
-        """Convert to `~astropy.io.fits.HDUList`.
-
-        Parameters
-        ----------
-        edisp_hdu : str
-            Name or index of the HDU with the edisp_map data.
-        edisp_hdubands : str
-            Name or index of the HDU with the edisp_map BANDS table.
-        exposure_hdu : str
-            Name or index of the HDU with the exposure_map data.
-        exposure_hdubands : str
-            Name or index of the HDU with the exposure_map BANDS table.
-
-        Returns
-        -------
-        hdu_list : `~astropy.io.fits.HDUList`
-        """
-        hdulist = self.edisp_map.to_hdulist(hdu=edisp_hdu, hdu_bands=edisp_hdubands)
-        if self.exposure_map is not None:
-            new_hdulist = self.exposure_map.to_hdulist(
-                hdu=exposure_hdu, hdu_bands=exposure_hdubands
-            )
-            hdulist.extend(new_hdulist[1:])
-        return hdulist
-
-    def write(self, filename, overwrite=False, **kwargs):
-        """Write to fits"""
-        hdulist = self.to_hdulist(**kwargs)
-        hdulist.writeto(filename, overwrite=overwrite)
+        super().__init__(irf_map=edisp_map, exposure_map=exposure_map)
 
     def get_edisp_kernel(self, position, e_reco):
         """Get energy dispersion at a given position.
@@ -213,40 +145,6 @@ class EDispMap:
             e_reco_hi=e_reco[1:],
             data=data,
         )
-
-    def stack(self, other, weights=None):
-        """Stack EDispMap with another one in place.
-
-        Parameters
-        ----------
-        other : `~gammapy.cube.EDispMap`
-            Energy dispersion map to be stacked with this one.
-
-        """
-        if self.exposure_map is None or other.exposure_map is None:
-            raise ValueError("Missing exposure map for PSFMap.stack")
-
-        cutout_info = other.edisp_map.geom.cutout_info
-
-        if cutout_info is not None:
-            slices = cutout_info["parent-slices"]
-            parent_slices = Ellipsis, slices[0], slices[1]
-        else:
-            parent_slices = None
-
-        self.edisp_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self.edisp_map.stack(other.edisp_map * other.exposure_map.data, weights=weights)
-
-        # stack exposure map
-        self.exposure_map.stack(other.exposure_map, weights=weights)
-
-        with np.errstate(invalid="ignore"):
-            self.edisp_map.data[parent_slices] /= self.exposure_map.data[parent_slices]
-            self.edisp_map.data = np.nan_to_num(self.edisp_map.data)
-
-    def copy(self):
-        """Copy EDispMap"""
-        return deepcopy(self)
 
     @classmethod
     def from_geom(cls, geom):
@@ -344,25 +242,3 @@ class EDispMap:
         )
 
         return cls.from_geom(geom)
-
-    def cutout(self, position, width, mode="trim"):
-        """Cutout edisp map.
-
-        Parameters
-        ----------
-        position : `~astropy.coordinates.SkyCoord`
-            Center position of the cutout region.
-        width : tuple of `~astropy.coordinates.Angle`
-            Angular sizes of the region in (lon, lat) in that specific order.
-            If only one value is passed, a square region is extracted.
-        mode : {'trim', 'partial', 'strict'}
-            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
-
-        Returns
-        -------
-        cutout : `EdispMap`
-            Cutout edisp map.
-        """
-        edisp_map = self.edisp_map.cutout(position, width, mode)
-        exposure_map = self.exposure_map.cutout(position, width, mode)
-        return self.__class__(edisp_map=edisp_map, exposure_map=exposure_map)

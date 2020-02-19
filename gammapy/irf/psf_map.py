@@ -1,18 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from copy import deepcopy
 import numpy as np
-import astropy.io.fits as fits
 import astropy.units as u
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .psf_kernel import PSFKernel
 from .psf_table import EnergyDependentTablePSF
+from .irf_map import IRFMap
 
 __all__ = ["PSFMap"]
 
 
-class PSFMap:
+class PSFMap(IRFMap):
     """Class containing the Map of PSFs and allowing to interact with it.
 
     Parameters
@@ -66,6 +65,15 @@ class PSFMap:
         # Write map to disk
         psf_map.write('psf_map.fits')
     """
+    _hdu_name = "psf"
+
+    @property
+    def psf_map(self):
+        return self._irf_map
+
+    @psf_map.setter
+    def psf_map(self, value):
+        self._irf_map = value
 
     def __init__(self, psf_map, exposure_map=None):
         if psf_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
@@ -74,83 +82,7 @@ class PSFMap:
         if psf_map.geom.axes[0].name.upper() != "THETA":
             raise ValueError("Incorrect theta axis position in input Map")
 
-        self.psf_map = psf_map
-        self.exposure_map = exposure_map
-
-    @classmethod
-    def from_hdulist(
-        cls,
-        hdulist,
-        psf_hdu="PSFMAP",
-        psf_hdubands="BANDSPSF",
-        exposure_hdu="EXPMAP",
-        exposure_hdubands="BANDSEXP",
-    ):
-        """Convert to `~astropy.io.fits.HDUList`.
-
-        Parameters
-        ----------
-        psf_hdu : str
-            Name or index of the HDU with the psf_map data.
-        psf_hdubands : str
-            Name or index of the HDU with the psf_map BANDS table.
-        exposure_hdu : str
-            Name or index of the HDU with the exposure_map data.
-        exposure_hdubands : str
-            Name or index of the HDU with the exposure_map BANDS table.
-        """
-        psf_map = Map.from_hdulist(hdulist, psf_hdu, psf_hdubands, "auto")
-        if exposure_hdu in hdulist:
-            exposure_map = Map.from_hdulist(
-                hdulist, exposure_hdu, exposure_hdubands, "auto"
-            )
-        else:
-            exposure_map = None
-
-        return cls(psf_map, exposure_map)
-
-    @classmethod
-    def read(cls, filename, **kwargs):
-        """Read a psf_map from file and create a PSFMap object"""
-        with fits.open(filename, memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, **kwargs)
-
-    def to_hdulist(
-        self,
-        psf_hdu="PSFMAP",
-        psf_hdubands="BANDSPSF",
-        exposure_hdu="EXPMAP",
-        exposure_hdubands="BANDSEXP",
-    ):
-        """Convert to `~astropy.io.fits.HDUList`.
-
-        Parameters
-        ----------
-        psf_hdu : str
-            Name or index of the HDU with the psf_map data.
-        psf_hdubands : str
-            Name or index of the HDU with the psf_map BANDS table.
-        exposure_hdu : str
-            Name or index of the HDU with the exposure_map data.
-        exposure_hdubands : str
-            Name or index of the HDU with the exposure_map BANDS table.
-
-        Returns
-        -------
-        hdu_list : `~astropy.io.fits.HDUList`
-        """
-        hdulist = self.psf_map.to_hdulist(hdu=psf_hdu, hdu_bands=psf_hdubands)
-        if self.exposure_map is not None:
-            new_hdulist = self.exposure_map.to_hdulist(
-                hdu=exposure_hdu, hdu_bands=exposure_hdubands
-            )
-            hdulist.extend(new_hdulist[1:])
-        return hdulist
-
-    def write(self, filename, overwrite=False, **kwargs):
-        """Write to fits"""
-        hdulist = self.to_hdulist(**kwargs)
-        hdulist.writeto(filename, overwrite=overwrite)
+        super().__init__(irf_map=psf_map, exposure_map=exposure_map)
 
     def get_energy_dependent_table_psf(self, position):
         """Get energy-dependent PSF at a given position.
@@ -248,40 +180,6 @@ class PSFMap:
             m.fill_by_coord(coord, containment_radius)
 
         return m
-
-    def stack(self, other, weights=None):
-        """Stack PSFMap with another one in place.
-
-        Parameters
-        ----------
-        other : `~gammapy.cube.PSFMap`
-            the psfmap to be stacked with this one.
-
-        """
-        if self.exposure_map is None or other.exposure_map is None:
-            raise ValueError("Missing exposure map for PSFMap.stack")
-
-        cutout_info = other.psf_map.geom.cutout_info
-
-        if cutout_info is not None:
-            slices = cutout_info["parent-slices"]
-            parent_slices = Ellipsis, slices[0], slices[1]
-        else:
-            parent_slices = None
-
-        self.psf_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self.psf_map.stack(other.psf_map * other.exposure_map.data, weights=weights)
-
-        # stack exposure map
-        self.exposure_map.stack(other.exposure_map, weights=weights)
-
-        with np.errstate(invalid="ignore"):
-            self.psf_map.data[parent_slices] /= self.exposure_map.data[parent_slices]
-            self.psf_map.data = np.nan_to_num(self.psf_map.data)
-
-    def copy(self):
-        """Copy PSFMap"""
-        return deepcopy(self)
 
     @classmethod
     def from_geom(cls, geom):
@@ -387,28 +285,6 @@ class PSFMap:
         exposure_map = Map.from_geom(geom_exposure, unit="cm2 s")
         exposure_map.quantity += data
         return cls(psf_map=psf_map, exposure_map=exposure_map)
-
-    def cutout(self, position, width, mode="trim"):
-        """Cutout map psf map.
-
-        Parameters
-        ----------
-        position : `~astropy.coordinates.SkyCoord`
-            Center position of the cutout region.
-        width : tuple of `~astropy.coordinates.Angle`
-            Angular sizes of the region in (lon, lat) in that specific order.
-            If only one value is passed, a square region is extracted.
-        mode : {'trim', 'partial', 'strict'}
-            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
-
-        Returns
-        -------
-        cutout : `PSFMap`
-            Cutout psf map.
-        """
-        psf_map = self.psf_map.cutout(position, width, mode)
-        exposure_map = self.exposure_map.cutout(position, width, mode)
-        return self.__class__(psf_map=psf_map, exposure_map=exposure_map)
 
     def to_image(self, spectrum=None, keepdims=True):
         """Reduce to a 2-D map after weighing
