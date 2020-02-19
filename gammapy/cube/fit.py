@@ -257,6 +257,7 @@ class MapDataset(Dataset):
 
                 # if the model component drifts out of its support the evaluator has
                 # has to be updated
+
                 if evaluator.needs_update:
                     evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
 
@@ -1538,7 +1539,9 @@ class MapEvaluator:
     @property
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
-        if self.exposure is None:
+        if isinstance(self.model, BackgroundModel):
+            return False
+        elif self.exposure is None:
             return True
         elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False

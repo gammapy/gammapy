@@ -986,7 +986,7 @@ class WcsGeom(Geom):
             f"\taxes       : {axes}\n"
             f"\tshape      : {self.data_shape[::-1]}\n"
             f"\tndim       : {self.ndim}\n"
-            f"\tframe   : {self.frame}\n"
+            f"\tframe      : {self.frame}\n"
             f"\tprojection : {self.projection}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
             f"\twidth      : {self.width[0][0]:.1f} x {self.width[1][0]:.1f}\n"
