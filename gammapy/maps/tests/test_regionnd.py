@@ -10,7 +10,21 @@ from gammapy.irf import EDispKernel
 
 @pytest.fixture
 def region_map():
-    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6)
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6, name="energy")
+    m = Map.create(
+        region="icrs;circle(83.63, 21.51, 1)",
+        map_type="region",
+        axes=[axis],
+        unit="1/TeV",
+        dtype=np.int
+    )
+    m.data = np.arange(m.data.size).reshape(m.geom.data_shape)
+    return m
+
+
+@pytest.fixture
+def region_map_true():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6, name="energy_true")
     m = Map.create(
         region="icrs;circle(83.63, 21.51, 1)",
         map_type="region",
@@ -113,17 +127,18 @@ def test_region_nd_map_fill_events(region_map):
     assert_allclose(region_map.data.sum(), 665)
 
 
-def test_apply_edisp(region_map):
-    e_true = region_map.geom.axes[0].edges
+def test_apply_edisp(region_map_true):
+    e_true = region_map_true.geom.axes[0].edges
     e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3).edges
 
     edisp = EDispKernel.from_diagonal_response(e_true=e_true, e_reco=e_reco)
 
-    m = region_map.apply_edisp(edisp)
+    m = region_map_true.apply_edisp(edisp)
     assert m.geom.data_shape == (3, 1, 1)
 
     e_reco = m.geom.axes[0].edges
     assert e_reco.unit == "TeV"
+    assert m.geom.axes[0].name == "energy"
     assert_allclose(e_reco[[0, -1]].value, [1, 10])
 
 

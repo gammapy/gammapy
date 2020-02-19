@@ -671,7 +671,10 @@ class MapDataset(Dataset):
             kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
 
         if "EXPOSURE" in hdulist:
-            kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
+            exposure = Map.from_hdulist(hdulist, hdu="exposure")
+            if exposure.geom.axes[0].name == "energy":
+                exposure.geom.axes[0].name = "energy_true"
+            kwargs["exposure"] = exposure
 
         if "BACKGROUND" in hdulist:
             background_map = Map.from_hdulist(hdulist, hdu="background")

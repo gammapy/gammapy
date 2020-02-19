@@ -129,8 +129,7 @@ def axes_from_bands_hdu(hdu):
         if colnames[0] == "E_MIN":
             name = "energy"
         else:
-            name = colnames[0].replace("_MIN", "")
-            #name = colnames[0].split("_")[0].lower()
+            name = colnames[0].replace("_MIN", "").lower()
 
         interp = bands.meta.get("INTERP{}".format(idx + 1), "lin")
 

@@ -476,7 +476,7 @@ def test_convolve_vs_smooth():
 @requires_data()
 def test_convolve_nd():
     energy_axis = MapAxis.from_edges(
-        np.logspace(-1.0, 1.0, 4), unit="TeV", name="energy"
+        np.logspace(-1.0, 1.0, 4), unit="TeV", name="energy_true"
     )
     geom = WcsGeom.create(binsz=0.02 * u.deg, width=4.0 * u.deg, axes=[energy_axis])
     m = Map.from_geom(geom)
@@ -550,7 +550,7 @@ def test_get_spectrum():
 def get_npred_map():
     position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
     energy_axis = MapAxis.from_bounds(
-        1, 100, nbin=30, unit="TeV", name="energy", interp="log"
+        1, 100, nbin=30, unit="TeV", name="energy_true", interp="log"
     )
 
     exposure = Map.create(
@@ -586,7 +586,7 @@ def test_map_sampling():
     events = Table()
     events["RA_TRUE"] = skycoord.icrs.ra
     events["DEC_TRUE"] = skycoord.icrs.dec
-    events["ENERGY_TRUE"] = coords["energy"]
+    events["ENERGY_TRUE"] = coords["energy_true"]
 
     assert len(events) == 2
     assert_allclose(events["RA_TRUE"].data, [266.307081, 266.442255], rtol=1e-5)
@@ -595,7 +595,7 @@ def test_map_sampling():
 
     assert coords["lon"].unit == "deg"
     assert coords["lat"].unit == "deg"
-    assert coords["energy"].unit == "TeV"
+    assert coords["energy_true"].unit == "TeV"
 
 
 def test_map_interp_one_bin():

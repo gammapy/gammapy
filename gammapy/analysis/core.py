@@ -240,7 +240,7 @@ class Analysis:
         geom_irf = dict(energy_axis_true=None, binsz_irf=None)
         if geom_settings.axes.energy_true.min is not None:
             geom_irf["energy_axis_true"] = self._make_energy_axis(
-                geom_settings.axes.energy_true
+                geom_settings.axes.energy_true, name="energy_true"
             )
         geom_irf["binsz_irf"] = geom_settings.wcs.binsize_irf.to("deg").value
         offset_max = geom_settings.selection.offset_max
@@ -305,7 +305,7 @@ class Analysis:
             methods=safe_mask_selection, **safe_mask_settings
         )
 
-        e_true = self._make_energy_axis(datasets_settings.geom.axes.energy_true).edges
+        e_true = self._make_energy_axis(datasets_settings.geom.axes.energy_true, name="energy_true").edges
 
         reference = SpectrumDataset.create(
             e_reco=e_reco, e_true=e_true, region=on_region
@@ -332,9 +332,9 @@ class Analysis:
             self.datasets = Datasets([stacked])
 
     @staticmethod
-    def _make_energy_axis(axis):
+    def _make_energy_axis(axis, name="energy"):
         return MapAxis.from_bounds(
-            name="energy",
+            name=name,
             lo_bnd=axis.min.value,
             hi_bnd=axis.max.to_value(axis.min.unit),
             nbin=axis.nbins,

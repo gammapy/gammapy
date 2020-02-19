@@ -380,7 +380,7 @@ class SkyDiffuseCube(SkyModelBase):
         coord = {
             "lon": lon.to_value("deg"),
             "lat": lat.to_value("deg"),
-            "energy": energy,
+            "energy_true": energy,
         }
         return self.map.interp_by_coord(coord, **self._interp_kwargs)
 
