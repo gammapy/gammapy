@@ -7,7 +7,7 @@ from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
 from gammapy.modeling import Dataset, Parameters
-from gammapy.modeling.models import Models
+from gammapy.modeling.models import Models, SkyModel
 from gammapy.stats import cash, significance, significance_on_off, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
@@ -186,6 +186,12 @@ class SpectrumDataset(Dataset):
         if models is None:
             self._models = None
         else:
+            if isinstance(models, SkyModel):
+                models = [models]
+            elif isinstance(models, Models):
+                models = list(models)
+            else:
+                raise TypeError("Invalid models")
             models_list = [
                 model
                 for model in models

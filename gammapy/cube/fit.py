@@ -14,7 +14,7 @@ from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Dataset, Parameters
-from gammapy.modeling.models import BackgroundModel, Models
+from gammapy.modeling.models import BackgroundModel, Models, SkyModel
 from gammapy.spectrum import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
@@ -195,6 +195,12 @@ class MapDataset(Dataset):
         if models is None:
             self._models = None
         else:
+            if isinstance(models, (BackgroundModel, SkyModel)):
+                models = [models]
+            elif isinstance(models,(Models, list)):
+                models = list(models)
+            else:
+                raise TypeError("Invalid models")
             models_list = [
                 model
                 for model in models
