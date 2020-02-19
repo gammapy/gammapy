@@ -895,7 +895,9 @@ class MapDataset(Dataset):
             kwargs["models"] = Models([BackgroundModel(background)])
 
         if self.psf is not None:
-            kwargs["psf"] = self.psf.to_image(spectrum=spectrum, keepdims=True)
+            #TODO: implement PSFKernel.to_image()
+            if not isinstance(self.psf, PSFKernel):
+                kwargs["psf"] = self.psf.to_image(spectrum=spectrum, keepdims=True)
 
         return self.__class__(**kwargs)
 

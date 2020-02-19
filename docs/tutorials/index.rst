@@ -107,6 +107,7 @@ Advanced tutorials
    ../notebooks/cta_sensitivity.ipynb
    ../notebooks/modeling_2D.ipynb
    ../notebooks/ring_background.ipynb
+   ../notebooks/exclusion_mask.ipynb
    ../notebooks/overview.ipynb
    ../notebooks/maps.ipynb
    ../notebooks/modeling.ipynb
@@ -115,6 +116,10 @@ Advanced tutorials
 
 The following tutorials expose how to perform more complex analyses or they demonstrate how to use the
 Gammapy API.
+
+*Exclusion masks*
+
+- `How to create an exclusion mask <../notebooks/exclusion_mask.html>`__ | *exclusion_mask.ipynb*
 
 *Source detection*
 
