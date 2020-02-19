@@ -1211,11 +1211,16 @@ class FluxPointsDataset(Dataset):
         return self._models
 
     @models.setter
-    def models(self, value):
-        if value is not None:
-            self._models = Models(value)
-        else:
+    def models(self, models):
+        if models is None:
             self._models = None
+        else:
+            models_list = [
+                model
+                for model in models
+                if self.name in model.datasets_names or model.datasets_names == "all"
+            ]
+            self._models = Models(models_list)
 
     @property
     def parameters(self):
@@ -1267,11 +1272,7 @@ class FluxPointsDataset(Dataset):
         dataset : `FluxPointsDataset`
             Flux point datasets.
         """
-        models = [
-            model
-            for model in models
-            if data["name"] in model.datasets_names or model.datasets_names == "all"
-        ]
+
         table = Table.read(data["filename"])
         mask_fit = table["mask_fit"].data.astype("bool")
         mask_safe = table["mask_safe"].data.astype("bool")

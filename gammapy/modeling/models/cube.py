@@ -61,7 +61,7 @@ class SkyModel(SkyModelBase):
         temporal_model=None,
         name=None,
         apply_irf=None,
-        datasets_names=None,
+        datasets_names="all",
     ):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
@@ -74,10 +74,7 @@ class SkyModel(SkyModelBase):
         self.apply_irf = {"exposure": True, "psf": True, "edisp": True}
         if apply_irf is not None:
             self.apply_irf.update(apply_irf)
-        if datasets_names is not None:
-            self.datasets_names = datasets_names
-        else:
-            self.datasets_names = "all"
+        self.datasets_names = datasets_names
 
     @property
     def name(self):
@@ -338,7 +335,7 @@ class SkyDiffuseCube(SkyModelBase):
         name=None,
         filename=None,
         apply_irf=None,
-        datasets_names=None,
+        datasets_names="all",
     ):
 
         self._name = make_name(name)
@@ -359,10 +356,7 @@ class SkyDiffuseCube(SkyModelBase):
         self.apply_irf = {"exposure": True, "psf": True, "edisp": True}
         if apply_irf is not None:
             self.apply_irf.update(apply_irf)
-        if datasets_names is not None:
-            self.datasets_names = datasets_names
-        else:
-            self.datasets_names = "all"
+        self.datasets_names = datasets_names
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
     @property
@@ -510,7 +504,7 @@ class BackgroundModel(Model):
         reference=reference.quantity,
         name=None,
         filename=None,
-        datasets_names=None,
+        datasets_names="all",
     ):
         axis = map.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":
@@ -520,10 +514,7 @@ class BackgroundModel(Model):
 
         self._name = make_name(name)
         self.filename = filename
-        if datasets_names is not None:
-            self.datasets_names = datasets_names
-        else:
-            self.datasets_names = "all"
+        self.datasets_names = datasets_names
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
     @property

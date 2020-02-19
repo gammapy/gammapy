@@ -191,11 +191,16 @@ class MapDataset(Dataset):
         return self._models
 
     @models.setter
-    def models(self, value):
-        if value is not None:
-            self._models = Models(value)
-        else:
+    def models(self, models):
+        if models is None:
             self._models = None
+        else:
+            models_list = [
+                model
+                for model in models
+                if self.name in model.datasets_names or model.datasets_names == "all"
+            ]
+            self._models = Models(models_list)
 
         if self.models is not None:
             for model in self.models:
@@ -300,12 +305,13 @@ class MapDataset(Dataset):
         empty_maps : `MapDataset`
             A MapDataset containing zero filled maps
         """
+        name = make_name(name)
         kwargs = kwargs.copy()
         kwargs["name"] = name
         kwargs["counts"] = Map.from_geom(geom, unit="")
 
         background = Map.from_geom(geom, unit="")
-        kwargs["models"] = Models([BackgroundModel(background)])
+        kwargs["models"] = Models([BackgroundModel(background, datasets_names=[name])])
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
         kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
         kwargs["psf"] = PSFMap.from_geom(geom_psf)
@@ -660,6 +666,7 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset.
         """
+        name = make_name(name)
         kwargs = {"name": name}
 
         if "COUNTS" in hdulist:
@@ -670,7 +677,9 @@ class MapDataset(Dataset):
 
         if "BACKGROUND" in hdulist:
             background_map = Map.from_hdulist(hdulist, hdu="background")
-            kwargs["models"] = Models([BackgroundModel(background_map)])
+            kwargs["models"] = Models(
+                [BackgroundModel(background_map, datasets_names=[name])]
+            )
 
         if "EDISP_MATRIX" in hdulist:
             kwargs["edisp"] = EDispKernel.from_hdulist(
@@ -740,12 +749,6 @@ class MapDataset(Dataset):
     def from_dict(cls, data, components, models):
         """Create from dicts and models list generated from YAML serialization."""
         dataset = cls.read(data["filename"], name=data["name"])
-        models_list = [
-            model
-            for model in models
-            if data["name"] in model.datasets_names or model.datasets_names == "all"
-        ]
-        models = Models(models_list)
 
         for component in components["components"]:
             if component["type"] == "BackgroundModel":
@@ -867,8 +870,9 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset containing images.
         """
+        name = make_name(name)
         kwargs = {}
-        kwargs["name"] = make_name(name)
+        kwargs["name"] = name
         kwargs["gti"] = self.gti
 
         if self.mask_safe is not None:
@@ -890,7 +894,9 @@ class MapDataset(Dataset):
         if self.background_model is not None:
             background = self.background_model.evaluate() * mask_safe
             background = background.sum_over_axes(keepdims=True)
-            kwargs["models"] = Models([BackgroundModel(background)])
+            kwargs["models"] = Models(
+                [BackgroundModel(background, datasets_names=[name])]
+            )
 
         if self.psf is not None:
             kwargs["psf"] = self.psf.to_image(spectrum=spectrum, keepdims=True)

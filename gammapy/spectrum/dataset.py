@@ -182,11 +182,16 @@ class SpectrumDataset(Dataset):
         return self._models
 
     @models.setter
-    def models(self, value):
-        if value is not None:
-            self._models = Models(value)
-        else:
+    def models(self, models):
+        if models is None:
             self._models = None
+        else:
+            models_list = [
+                model
+                for model in models
+                if self.name in model.datasets_names or model.datasets_names == "all"
+            ]
+            self._models = Models(models_list)
 
         evaluators = []
         if self.models is not None:
@@ -1212,11 +1217,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Spectrum dataset on off.
 
         """
-        models = [
-            model
-            for model in models
-            if data["name"] in model.datasets_names or model.datasets_names == "all"
-        ]
+
         filename = data["filename"]
 
         dataset = cls.from_ogip_files(filename=filename)
