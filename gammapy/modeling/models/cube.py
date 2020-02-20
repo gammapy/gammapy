@@ -61,6 +61,7 @@ class SkyModel(SkyModelBase):
         temporal_model=None,
         name=None,
         apply_irf=None,
+        datasets_names="all",
     ):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
@@ -73,6 +74,7 @@ class SkyModel(SkyModelBase):
         self.apply_irf = {"exposure": True, "psf": True, "edisp": True}
         if apply_irf is not None:
             self.apply_irf.update(apply_irf)
+        self.datasets_names = datasets_names
 
     @property
     def name(self):
@@ -205,6 +207,7 @@ class SkyModel(SkyModelBase):
         kwargs.setdefault("spatial_model", spatial_model)
         kwargs.setdefault("temporal_model", temporal_model)
         kwargs.setdefault("apply_irf", self.apply_irf)
+        kwargs.setdefault("datasets_names", self.datasets_names)
 
         return self.__class__(**kwargs)
 
@@ -223,6 +226,9 @@ class SkyModel(SkyModelBase):
 
         if self.apply_irf != {"exposure": True, "psf": True, "edisp": True}:
             data["apply_irf"] = self.apply_irf
+
+        if self.datasets_names != "all":
+            data["datasets_names"] = self.datasets_names
 
         return data
 
@@ -260,6 +266,7 @@ class SkyModel(SkyModelBase):
             apply_irf=data.get(
                 "apply_irf", {"exposure": True, "psf": True, "edisp": True}
             ),
+            datasets_names=data.get("datasets_names", "all"),
         )
 
     def __str__(self):
@@ -328,6 +335,7 @@ class SkyDiffuseCube(SkyModelBase):
         name=None,
         filename=None,
         apply_irf=None,
+        datasets_names="all",
     ):
 
         self._name = make_name(name)
@@ -348,7 +356,7 @@ class SkyDiffuseCube(SkyModelBase):
         self.apply_irf = {"exposure": True, "psf": True, "edisp": True}
         if apply_irf is not None:
             self.apply_irf.update(apply_irf)
-
+        self.datasets_names = datasets_names
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
     @property
@@ -435,6 +443,8 @@ class SkyDiffuseCube(SkyModelBase):
             "apply_irf", {"exposure": True, "psf": True, "edisp": True}
         )
         model.apply_irf.update(apply_irf)
+        model.datasets_names = data.get("datasets_names", "all")
+
         return model
 
     def to_dict(self):
@@ -447,6 +457,8 @@ class SkyDiffuseCube(SkyModelBase):
         data["parameters"] = data.pop("parameters")
         if self.apply_irf != {"exposure": True, "psf": True, "edisp": True}:
             data["apply_irf"] = self.apply_irf
+        if self.datasets_names != "all":
+            data["datasets_names"] = self.datasets_names
 
         return data
 
@@ -492,6 +504,7 @@ class BackgroundModel(Model):
         reference=reference.quantity,
         name=None,
         filename=None,
+        datasets_names="all",
     ):
         axis = map.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":
@@ -501,7 +514,7 @@ class BackgroundModel(Model):
 
         self._name = make_name(name)
         self.filename = filename
-
+        self.datasets_names = datasets_names
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
     @property
@@ -537,6 +550,8 @@ class BackgroundModel(Model):
         if self.filename is not None:
             data["filename"] = self.filename
         data["parameters"] = data.pop("parameters")
+        if self.datasets_names != "all":
+            data["datasets_names"] = self.datasets_names
         return data
 
     @classmethod
@@ -547,8 +562,9 @@ class BackgroundModel(Model):
             map = data["map"]
         else:
             raise ValueError("Requires either filename or `Map` object")
-
-        model = cls(map=map, name=data["name"])
+        model = cls(
+            map=map, name=data["name"], datasets_names=data.get("datasets_names", "all")
+        )
         model._update_from_dict(data)
         return model
 

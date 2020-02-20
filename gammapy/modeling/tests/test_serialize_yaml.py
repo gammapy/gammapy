@@ -115,9 +115,9 @@ def test_datasets_to_io(tmp_path):
     datasets = Datasets.read(filedata, filemodel)
 
     assert len(datasets) == 2
-    assert len(datasets.parameters) == 22
 
     dataset0 = datasets[0]
+    assert dataset0.name == "gc"
     assert dataset0.counts.data.sum() == 6824
     assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
     assert dataset0.psf is not None
@@ -128,6 +128,7 @@ def test_datasets_to_io(tmp_path):
     assert dataset0.background_model.name == "background_irf_gc"
 
     dataset1 = datasets[1]
+    assert dataset1.name == "g09"
     assert dataset1.background_model.name == "background_irf_g09"
 
     assert (
@@ -150,6 +151,9 @@ def test_datasets_to_io(tmp_path):
     datasets_read = Datasets.read(
         tmp_path / "written_datasets.yaml", tmp_path / "written_models.yaml"
     )
+
+    assert len(datasets.parameters) == 22
+
     assert len(datasets_read) == 2
     dataset0 = datasets_read[0]
     assert dataset0.counts.data.sum() == 6824

@@ -5,7 +5,12 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.modeling import Dataset, Datasets, Fit, Parameters
-from gammapy.modeling.models import Models, PowerLawSpectralModel, ScaleSpectralModel
+from gammapy.modeling.models import (
+    Models,
+    SkyModel,
+    PowerLawSpectralModel,
+    ScaleSpectralModel,
+)
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -1190,9 +1195,8 @@ class FluxPointsDataset(Dataset):
     def __init__(self, models, data, mask_fit=None, mask_safe=None, name=None):
         self.data = data
         self.mask_fit = mask_fit
-        self.models = models
-
         self._name = make_name(name)
+        self.models = models
 
         if data.sed_type != "dnde":
             raise ValueError("Currently only flux points of type 'dnde' are supported.")
@@ -1211,11 +1215,22 @@ class FluxPointsDataset(Dataset):
         return self._models
 
     @models.setter
-    def models(self, value):
-        if value is not None:
-            self._models = Models(value)
-        else:
+    def models(self, models):
+        if models is None:
             self._models = None
+        else:
+            if isinstance(models, SkyModel):
+                models = [models]
+            elif isinstance(models, (Models,list)):
+                models = list(models)
+            else:
+                raise TypeError("Invalid models")
+            models_list = [
+                model
+                for model in models
+                if self.name in model.datasets_names or model.datasets_names == "all"
+            ]
+            self._models = Models(models_list)
 
     @property
     def parameters(self):
@@ -1267,9 +1282,7 @@ class FluxPointsDataset(Dataset):
         dataset : `FluxPointsDataset`
             Flux point datasets.
         """
-        models = [model for model in models if model.name in data["models"]]
-        # TODO: assumes that the model is a skymodel
-        # so this will work only when this change will be effective
+
         table = Table.read(data["filename"])
         mask_fit = table["mask_fit"].data.astype("bool")
         mask_safe = table["mask_safe"].data.astype("bool")
@@ -1284,15 +1297,9 @@ class FluxPointsDataset(Dataset):
 
     def to_dict(self, filename=""):
         """Convert to dict for YAML serialization."""
-        if self.models is not None:
-            models = [_.name for _ in self.models]
-        else:
-            models = []
-
         return {
             "name": self.name,
             "type": self.tag,
-            "models": models,
             "filename": str(filename),
         }
 
