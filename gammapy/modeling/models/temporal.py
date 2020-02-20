@@ -17,15 +17,15 @@ from .core import Model
 class TemporalModel(Model):
     """Temporal model base class."""
 
-
-# TODO: make this a small ABC to define a uniform interface.
-class TemplateTemporalModel(TemporalModel):
-    """Template temporal model base class."""
-
     def __call__(self, time):
         """Call evaluate method"""
         kwargs = {par.name: par.quantity for par in self.parameters}
         return self.evaluate(time.mjd, **kwargs)
+
+
+# TODO: make this a small ABC to define a uniform interface.
+class TemplateTemporalModel(TemporalModel):
+    """Template temporal model base class."""
 
     @classmethod
     def read(cls, path):

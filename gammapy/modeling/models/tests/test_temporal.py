@@ -59,7 +59,8 @@ def test_light_curve_str(light_curve):
 
 @requires_data()
 def test_light_curve_evaluate_norm_at_time(light_curve):
-    val = light_curve(46300)
+    t = Time(46300, format="mjd")
+    val = light_curve(t)
     assert_allclose(val, 0.021192223042749835)
 
 
@@ -139,7 +140,8 @@ def test_constant_temporal_model_sample():
 
 def test_constant_temporal_model_evaluate():
     temporal_model = ConstantTemporalModel()
-    val = temporal_model(46300)
+    t = Time(46300, format="mjd")
+    val = temporal_model(t)
     assert_allclose(val, 1.0, rtol=1e-5)
 
 
