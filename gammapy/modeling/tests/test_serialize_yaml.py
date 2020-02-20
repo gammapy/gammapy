@@ -127,8 +127,6 @@ def test_datasets_to_io(tmp_path):
 
     assert dataset0.background_model.name == "background_irf_gc"
 
-    print(datasets[0])
-
     dataset1 = datasets[1]
     assert dataset1.name == "g09"
     assert dataset1.background_model.name == "background_irf_g09"
