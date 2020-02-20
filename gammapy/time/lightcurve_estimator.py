@@ -108,7 +108,7 @@ class LightCurveEstimator:
         self,
         datasets,
         time_intervals=None,
-        source="",
+        source=0,
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
@@ -133,11 +133,7 @@ class LightCurveEstimator:
         self._check_and_sort_time_intervals(time_intervals)
 
         dataset = self.datasets[0]
-
-        if len(dataset.models) > 1:
-            model = dataset.models[source].spectral_model
-        else:
-            model = dataset.models[0].spectral_model
+        model = dataset.models[source].spectral_model
 
         self.model = ScaleSpectralModel(model)
         self.model.norm.min = 0
@@ -182,10 +178,7 @@ class LightCurveEstimator:
 
     def _set_scale_model(self, datasets):
         for dataset in datasets:
-            if len(dataset.models) > 1:
-                dataset.models[self.source].spectral_model = self.model
-            else:
-                dataset.models[0].spectral_model = self.model
+            dataset.models[self.source].spectral_model = self.model
 
     @property
     def ref_model(self):
@@ -241,7 +234,7 @@ class LightCurveEstimator:
 
             row = {"time_min": time_interval[0].mjd, "time_max": time_interval[1].mjd}
             interval_list_dataset = Datasets(
-                [self.datasets[int(_)].copy() for _ in index_dataset]
+                [self.datasets[int(_)].copy(name=self.datasets[int(_)].name) for _ in index_dataset]
             )
             self._set_scale_model(interval_list_dataset)
             row.update(

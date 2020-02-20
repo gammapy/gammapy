@@ -273,6 +273,8 @@ class SkyModel(SkyModelBase):
         str_ = self.__class__.__name__ + "\n\n"
         str_ += "\t{:26}: {}\n".format("Name", self.name)
 
+        str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
+
         str_ += "\t{:26}: {}\n".format("Spectral model type", self.spectral_model.tag)
 
         if self.spatial_model is not None:
@@ -465,6 +467,7 @@ class SkyDiffuseCube(SkyModelBase):
     def __str__(self):
         str_ = self.__class__.__name__ + "\n\n"
         str_ += "\t{:26}: {}\n".format("Name", self.name)
+        str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
         str_ += "\tParameters:\n"
         info = _get_parameters_str(self.parameters)
         lines = info.split("\n")
@@ -514,6 +517,11 @@ class BackgroundModel(Model):
 
         self._name = make_name(name)
         self.filename = filename
+
+        if isinstance(datasets_names, list):
+            if len(datasets_names) > 1:
+                raise ValueError("Currently background models can only be assigned to one dataset.")
+
         self.datasets_names = datasets_names
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
@@ -623,6 +631,8 @@ class BackgroundModel(Model):
     def __str__(self):
         str_ = self.__class__.__name__ + "\n\n"
         str_ += "\t{:26}: {}\n".format("Name", self.name)
+        str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
+
         str_ += "\tParameters:\n"
         info = _get_parameters_str(self.parameters)
         lines = info.split("\n")

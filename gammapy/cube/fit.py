@@ -170,15 +170,15 @@ class MapDataset(Dataset):
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
         # model section
-        n_models = 0
+        n_models, n_pars, n_free_pars = 0, 0, 0
         if self.models is not None:
             n_models = len(self.models)
+            n_pars = len(self.models.parameters)
+            n_free_pars = len(self.models.parameters.free_parameters)
 
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
-        str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.parameters))
-        str_ += "\t{:32}: {}\n\n".format(
-            "Number of free parameters", len(self.parameters.free_parameters)
-        )
+        str_ += "\t{:32}: {}\n".format("Number of parameters", n_pars)
+        str_ += "\t{:32}: {}\n\n".format("Number of free parameters", n_free_pars)
 
         if self.models is not None:
             str_ += "\t" + "\n\t".join(str(self.models).split("\n")[2:])
@@ -195,22 +195,11 @@ class MapDataset(Dataset):
         if models is None:
             self._models = None
         else:
-            if isinstance(models, (BackgroundModel, SkyModel)):
-                models = [models]
-            elif isinstance(models,(Models, list)):
-                models = list(models)
-            else:
-                raise TypeError("Invalid models")
-            models_list = [
-                model
-                for model in models
-                if self.name in model.datasets_names or model.datasets_names == "all"
-            ]
-            self._models = Models(models_list)
+            self._models = Models(models)
 
         if self.models is not None:
             for model in self.models:
-                if isinstance(model, BackgroundModel):
+                if isinstance(model, BackgroundModel) and self.name in model.datasets_names:
                     self.background_model = model
                     break
             else:
@@ -224,11 +213,6 @@ class MapDataset(Dataset):
             self.npred()
 
         return self._evaluators
-
-    @property
-    def parameters(self):
-        """List of parameters (`~gammapy.modeling.Parameters`)"""
-        return self.models.parameters
 
     @property
     def _geom(self):
@@ -258,6 +242,10 @@ class MapDataset(Dataset):
 
         if self.models:
             for model in self.models:
+                if model.datasets_names != "all":
+                    if self.name not in model.datasets_names:
+                        continue
+
                 evaluator = self._evaluators.get(model.name)
 
                 if evaluator is None:

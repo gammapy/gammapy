@@ -231,7 +231,9 @@ class MapDatasetMaker:
 
         if "background" in self.selection:
             background_map = self.make_background(dataset.counts.geom, observation)
-            kwargs["models"] = BackgroundModel(background_map, datasets_names=[dataset.name])
+            kwargs["models"] = BackgroundModel(
+                background_map, name=dataset.name + "-bkg", datasets_names=[dataset.name]
+            )
 
         if "psf" in self.selection:
             psf = self.make_psf(dataset.psf.psf_map.geom, observation)

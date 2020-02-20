@@ -1232,16 +1232,6 @@ class FluxPointsDataset(Dataset):
             ]
             self._models = Models(models_list)
 
-    @property
-    def parameters(self):
-        """List of parameters (`~gammapy.modeling.Parameters`)"""
-        parameters = []
-
-        for component in self.models:
-            parameters.append(component.spectral_model.parameters)
-
-        return Parameters.from_stack(parameters)
-
     def write(self, filename, overwrite=True, **kwargs):
         """Write flux point dataset to file.
 
@@ -1336,9 +1326,9 @@ class FluxPointsDataset(Dataset):
 
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
 
-        str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.parameters))
+        str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.models.parameters))
         str_ += "\t{:32}: {}\n\n".format(
-            "Number of free parameters", len(self.parameters.free_parameters)
+            "Number of free parameters", len(self.models.parameters.free_parameters)
         )
 
         if self.models is not None:
