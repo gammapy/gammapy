@@ -233,7 +233,7 @@ class SpectrumDataset(Dataset):
 
         if self.models:
             for model in self.models:
-                if model.datasets_names != "all":
+                if model.datasets_names is not None:
                     if self.name not in model.datasets_names:
                         continue
 

@@ -195,11 +195,14 @@ class MapDataset(Dataset):
         else:
             self._models = Models(models)
 
+        # TODO: clean this up (probably by removing)
         if self.models is not None:
             for model in self.models:
-                if isinstance(model, BackgroundModel) and self.name in model.datasets_names:
-                    self.background_model = model
-                    break
+                if isinstance(model, BackgroundModel):
+                    if model.datasets_names is not None:
+                        if self.name in model.datasets_names:
+                            self.background_model = model
+                            break
             else:
                 log.warning(f"No background model defined for dataset {self.name}")
         self._evaluators = {}
@@ -241,7 +244,7 @@ class MapDataset(Dataset):
 
         if self.models:
             for model in self.models:
-                if model.datasets_names != "all":
+                if model.datasets_names is not None:
                     if self.name not in model.datasets_names:
                         continue
 

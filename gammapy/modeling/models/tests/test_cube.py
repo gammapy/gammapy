@@ -367,13 +367,13 @@ class TestSkyDiffuseCube:
 
     @staticmethod
     def test_datasets_name(diffuse_model):
-        assert diffuse_model.datasets_names == "all"
+        assert diffuse_model.datasets_names is None
 
         diffuse_model.datasets_names = ["1", "2"]
         out = diffuse_model.to_dict()
         assert out["datasets_names"] == ["1", "2"]
 
-        diffuse_model.datasets_names = "all"
+        diffuse_model.datasets_names = None
         out = diffuse_model.to_dict()
         assert "datasets_names" not in out
 
