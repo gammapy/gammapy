@@ -89,8 +89,6 @@ class MapDataset(Dataset):
             raise ValueError("mask data must have dtype bool")
 
         self._name = make_name(name)
-        self._evaluators = {}
-
         self.background_model = None
         self.evaluation_mode = evaluation_mode
         self.counts = counts
@@ -204,6 +202,7 @@ class MapDataset(Dataset):
                     break
             else:
                 log.warning(f"No background model defined for dataset {self.name}")
+        self._evaluators = {}
 
     @property
     def evaluators(self):
@@ -306,7 +305,7 @@ class MapDataset(Dataset):
         kwargs["counts"] = Map.from_geom(geom, unit="")
 
         background = Map.from_geom(geom, unit="")
-        kwargs["models"] = Models([BackgroundModel(background, datasets_names=[name])])
+        kwargs["models"] = Models([BackgroundModel(background, name=name + "-bkg", datasets_names=[name])])
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
         kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
         kwargs["psf"] = PSFMap.from_geom(geom_psf)
@@ -939,7 +938,9 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
         if self.background_model is not None:
-            kwargs["models"] = self.background_model.cutout(**cutout_kwargs, name=name)
+            model = self.background_model.cutout(**cutout_kwargs, name=name + "-bkg")
+            model.datasets_names = [name]
+            kwargs["models"] = model
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)

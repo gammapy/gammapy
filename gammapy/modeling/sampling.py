@@ -28,7 +28,7 @@ def normal_prior(value, mean, sigma):
 
 def par_to_model(dataset, pars):
     """Update model in dataset with a list of free parameters factors"""
-    for i, p in enumerate(dataset.parameters.free_parameters):
+    for i, p in enumerate(dataset.models.parameters.free_parameters):
         p.factor = pars[i]
 
 
@@ -39,7 +39,7 @@ def ln_uniform_prior(dataset):
     Parameter limits should be done here through uniform prior ditributions
     """
     logprob = 0
-    for par in dataset.parameters.free_parameters:
+    for par in dataset.models.parameters.free_parameters:
         logprob += uniform_prior(par.value, par.min, par.max)
 
     return logprob
@@ -48,7 +48,7 @@ def ln_uniform_prior(dataset):
 def lnprob(pars, dataset):
     """Estimate the likelihood of a model including prior on parameters."""
     # Update model parameters factors inplace
-    for factor, par in zip(pars, dataset.parameters.free_parameters):
+    for factor, par in zip(pars, dataset.models.parameters.free_parameters):
         par.factor = factor
 
     lnprob_priors = ln_uniform_prior(dataset)
@@ -81,8 +81,8 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
     """
     import emcee
 
-    dataset.parameters.autoscale()  # Autoscale parameters
-    pars = [par.factor for par in dataset.parameters.free_parameters]
+    dataset.models.parameters.autoscale()  # Autoscale parameters
+    pars = [par.factor for par in dataset.models.parameters.free_parameters]
     ndim = len(pars)
 
     # Initialize walkers in a ball of relative size 0.5% in all dimensions if the
@@ -94,7 +94,7 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
     p0 = emcee.utils.sample_ball(pars, p0var, nwalkers)
 
     labels = []
-    for par in dataset.parameters.free_parameters:
+    for par in dataset.models.parameters.free_parameters:
         labels.append(par.name)
         if (par.min is np.nan) and (par.max is np.nan):
             log.warning(
@@ -129,7 +129,7 @@ def plot_trace(sampler, dataset):
     """
     import matplotlib.pyplot as plt
 
-    labels = [par.name for par in dataset.parameters.free_parameters]
+    labels = [par.name for par in dataset.models.parameters.free_parameters]
 
     fig, axes = plt.subplots(len(labels), sharex=True)
 
@@ -155,7 +155,7 @@ def plot_corner(sampler, dataset, nburn=0):
     """
     from corner import corner
 
-    labels = [par.name for par in dataset.parameters.free_parameters]
+    labels = [par.name for par in dataset.models.parameters.free_parameters]
 
     samples = sampler.chain[:, nburn:, :].reshape((-1, len(labels)))
 

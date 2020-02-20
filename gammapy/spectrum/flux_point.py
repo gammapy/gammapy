@@ -1219,18 +1219,7 @@ class FluxPointsDataset(Dataset):
         if models is None:
             self._models = None
         else:
-            if isinstance(models, SkyModel):
-                models = [models]
-            elif isinstance(models, (Models,list)):
-                models = list(models)
-            else:
-                raise TypeError("Invalid models")
-            models_list = [
-                model
-                for model in models
-                if self.name in model.datasets_names or model.datasets_names == "all"
-            ]
-            self._models = Models(models_list)
+            self._models = Models(models)
 
     def write(self, filename, overwrite=True, **kwargs):
         """Write flux point dataset to file.
@@ -1343,8 +1332,9 @@ class FluxPointsDataset(Dataset):
     def flux_pred(self):
         """Compute predicted flux."""
         flux = 0.0
-        for component in self.models:
-            flux += component.spectral_model(self.data.e_ref)
+        for model in self.models:
+            if self.name in model.datasets_names or model.datasets_names == "all":
+                flux += model.spectral_model(self.data.e_ref)
         return flux
 
     def stat_array(self):

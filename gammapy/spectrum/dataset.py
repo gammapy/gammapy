@@ -89,7 +89,6 @@ class SpectrumDataset(Dataset):
         self.mask_safe = mask_safe
         self.gti = gti
 
-        self._evaluators = {}
         self._name = make_name(name)
         self.models = models
 
@@ -197,6 +196,8 @@ class SpectrumDataset(Dataset):
             self._models = None
         else:
             self._models = Models(models)
+        # reset evaluators
+        self._evaluators = {}
 
     @property
     def mask_safe(self):
