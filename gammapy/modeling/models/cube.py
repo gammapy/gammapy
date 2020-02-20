@@ -384,6 +384,10 @@ class SkyDiffuseCube(SkyModelBase):
             m.unit = "cm-2 s-1 MeV-1 sr-1"
         if name is None:
             name = Path(filename).stem
+
+        if m.geom.axes[0].name == "energy":
+            m.geom.axes[0].name = "energy_true"
+
         return cls(m, name=name, filename=filename)
 
     def _interpolate(self, lon, lat, energy):
