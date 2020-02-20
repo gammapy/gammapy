@@ -39,7 +39,7 @@ class RegionGeom(Geom):
         self._axes = make_axes(axes)
 
         if axes is not None:
-            if len(axes) > 1 or axes[0].name != "energy":
+            if len(axes) > 1 or axes[0].name not in ["energy", "energy_true"]:
                 raise ValueError("RegionGeom currently only supports an energy axes.")
 
         if wcs is None:

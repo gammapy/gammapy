@@ -66,7 +66,7 @@ def geom(ebounds, binsz=0.5):
             # Test for different e_true and e_reco bins
             "geom": geom(ebounds=[0.1, 1, 10]),
             "e_true": MapAxis.from_edges(
-                [0.1, 0.5, 2.5, 10.0], name="energy", unit="TeV", interp="log"
+                [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
             ),
             "counts": 34366,
             "exposure": 9.951827e08,
@@ -79,7 +79,7 @@ def geom(ebounds, binsz=0.5):
             # Test for different e_true and e_reco and spatial bins
             "geom": geom(ebounds=[0.1, 1, 10]),
             "e_true": MapAxis.from_edges(
-                [0.1, 0.5, 2.5, 10.0], name="energy", unit="TeV", interp="log"
+                [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
             ),
             "counts": 34366,
             "exposure": 9.951827e08,
@@ -171,9 +171,8 @@ def test_map_maker_obs(observations):
 
     geom_reco = geom(ebounds=[0.1, 1, 10])
     e_true = MapAxis.from_edges(
-        [0.1, 0.5, 2.5, 10.0], name="energy", unit="TeV", interp="log"
+        [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
     )
-    geom_exp = geom(ebounds=[0.1, 0.5, 2.5, 10.0])
 
     reference = MapDataset.create(
         geom=geom_reco, energy_axis_true=e_true, binsz_irf=1.0
@@ -184,7 +183,6 @@ def test_map_maker_obs(observations):
     map_dataset = maker_obs.run(reference, observations[0])
     assert map_dataset.counts.geom == geom_reco
     assert map_dataset.background_model.map.geom == geom_reco
-    assert map_dataset.exposure.geom == geom_exp
     assert map_dataset.edisp.edisp_map.data.shape == (3, 48, 5, 10)
     assert map_dataset.edisp.exposure_map.data.shape == (3, 1, 5, 10)
     assert map_dataset.psf.psf_map.data.shape == (3, 66, 5, 10)

@@ -268,6 +268,7 @@ class MapDataset(Dataset):
 
                 # if the model component drifts out of its support the evaluator has
                 # has to be updated
+
                 if evaluator.needs_update:
                     evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
 
@@ -364,9 +365,14 @@ class MapDataset(Dataset):
         """
         migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
         rad_axis = rad_axis or RAD_AXIS_DEFAULT
-        energy_axis_true = energy_axis_true or geom.get_axis_by_name("energy")
-        binsz_irf = binsz_irf or BINSZ_IRF_DEFAULT
 
+        if energy_axis_true is not None:
+            if energy_axis_true.name != "energy_true":
+                raise ValueError("True enery axis name must be 'energy_true'")
+        else:
+            energy_axis_true = geom.get_axis_by_name("energy").copy(name="energy_true")
+
+        binsz_irf = binsz_irf or BINSZ_IRF_DEFAULT
         geom_image = geom.to_image()
         geom_exposure = geom_image.to_cube([energy_axis_true])
         geom_irf = geom_image.to_binsz(binsz=binsz_irf)
@@ -679,7 +685,10 @@ class MapDataset(Dataset):
             kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
 
         if "EXPOSURE" in hdulist:
-            kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
+            exposure = Map.from_hdulist(hdulist, hdu="exposure")
+            if exposure.geom.axes[0].name == "energy":
+                exposure.geom.axes[0].name = "energy_true"
+            kwargs["exposure"] = exposure
 
         if "BACKGROUND" in hdulist:
             background_map = Map.from_hdulist(hdulist, hdu="background")
@@ -1542,7 +1551,9 @@ class MapEvaluator:
     @property
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
-        if self.exposure is None:
+        if isinstance(self.model, BackgroundModel):
+            return False
+        elif self.exposure is None:
             return True
         elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False

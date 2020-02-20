@@ -40,7 +40,7 @@ def make_psf(observation, position, energy=None, rad=None):
         theta=offset, rad=rad
     ).evaluate(energy)
 
-    arf = observation.aeff.data.evaluate(offset=offset, energy=energy)
+    arf = observation.aeff.data.evaluate(offset=offset, energy_true=energy)
     exposure = arf * observation.observation_live_time_duration
 
     psf = EnergyDependentTablePSF(

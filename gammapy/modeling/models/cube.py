@@ -30,7 +30,7 @@ class SkyModelBase(Model):
 
     def evaluate_geom(self, geom):
         coords = geom.get_coord(frame=self.frame)
-        return self(coords.lon, coords.lat, coords["energy"])
+        return self(coords.lon, coords.lat, coords["energy_true"])
 
 
 class SkyModel(SkyModelBase):
@@ -182,7 +182,7 @@ class SkyModel(SkyModelBase):
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
-        energy = geom.get_axis_by_name("energy").center[:, np.newaxis, np.newaxis]
+        energy = geom.get_axis_by_name("energy_true").center[:, np.newaxis, np.newaxis]
         value = self.spectral_model(energy)
         # TODO: case with temporal_model is not None
         if self.spatial_model is not None:
@@ -388,7 +388,7 @@ class SkyDiffuseCube(SkyModelBase):
         coord = {
             "lon": lon.to_value("deg"),
             "lat": lat.to_value("deg"),
-            "energy": energy,
+            "energy_true": energy,
         }
         return self.map.interp_by_coord(coord, **self._interp_kwargs)
 

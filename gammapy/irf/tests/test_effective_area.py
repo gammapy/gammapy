@@ -25,18 +25,18 @@ class TestEffectiveAreaTable2D:
     @staticmethod
     @requires_data()
     def test(aeff):
-        assert aeff.data.axis("energy").nbin == 96
+        assert aeff.data.axis("energy_true").nbin == 96
         assert aeff.data.axis("offset").nbin == 6
         assert aeff.data.data.shape == (96, 6)
 
-        assert aeff.data.axis("energy").unit == "TeV"
+        assert aeff.data.axis("energy_true").unit == "TeV"
         assert aeff.data.axis("offset").unit == "deg"
         assert aeff.data.data.unit == "m2"
 
         assert_quantity_allclose(aeff.high_threshold, 100 * u.TeV, rtol=1e-3)
         assert_quantity_allclose(aeff.low_threshold, 0.870964 * u.TeV, rtol=1e-3)
 
-        test_val = aeff.data.evaluate(energy="14 TeV", offset="0.2 deg")
+        test_val = aeff.data.evaluate(energy_true="14 TeV", offset="0.2 deg")
         assert_allclose(test_val.value, 683177.5, rtol=1e-3)
 
         # Test ARF export
@@ -45,13 +45,13 @@ class TestEffectiveAreaTable2D:
         effareafrom2d = aeff.to_effective_area_table(offset, e_axis)
 
         energy = np.sqrt(e_axis[:-1] * e_axis[1:])
-        area = aeff.data.evaluate(energy=energy, offset=offset)
+        area = aeff.data.evaluate(energy_true=energy, offset=offset)
         effarea1d = EffectiveAreaTable(
             energy_lo=e_axis[:-1], energy_hi=e_axis[1:], data=area
         )
 
-        actual = effareafrom2d.data.evaluate(energy="2.34 TeV")
-        desired = effarea1d.data.evaluate(energy="2.34 TeV")
+        actual = effareafrom2d.data.evaluate(energy_true="2.34 TeV")
+        desired = effarea1d.data.evaluate(energy_true="2.34 TeV")
         assert_equal(actual, desired)
 
         # Test ARF export #2
@@ -93,7 +93,7 @@ class TestEffectiveAreaTable:
 
         test_aeff = 0.6 * arf.max_area
         node_above = np.where(arf.data.data > test_aeff)[0][0]
-        energy = arf.data.axis("energy")
+        energy = arf.data.axis("energy_true")
         ener_above = energy.center[node_above]
         ener_below = energy.center[node_above - 1]
         test_ener = arf.find_energy(test_aeff)
@@ -159,8 +159,8 @@ class TestEffectiveAreaTable:
             data=data,
         )
         hdu = aeff.to_fits()
-        assert_equal(hdu.data["ENERG_LO"][0], aeff.data.axis("energy").edges[:-1].value)
-        assert hdu.header["TUNIT1"] == aeff.data.axis("energy").unit
+        assert_equal(hdu.data["ENERG_LO"][0], aeff.data.axis("energy_true").edges[:-1].value)
+        assert hdu.header["TUNIT1"] == aeff.data.axis("energy_true").unit
 
 
 def test_compute_thresholds_from_parametrization():

@@ -20,7 +20,7 @@ def aeff():
 
 
 def geom(map_type, ebounds):
-    axis = MapAxis.from_edges(ebounds, name="energy", unit="TeV", interp="log")
+    axis = MapAxis.from_edges(ebounds, name="energy_true", unit="TeV", interp="log")
     if map_type == "wcs":
         return WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis])
     elif map_type == "hpx":
@@ -66,7 +66,7 @@ def test_make_map_exposure_true_energy(aeff, pars):
 
 
 def test_map_spectrum_weight():
-    axis = MapAxis.from_edges([0.1, 10, 1000], unit="TeV", name="energy")
+    axis = MapAxis.from_edges([0.1, 10, 1000], unit="TeV", name="energy_true")
     expo_map = WcsNDMap.create(npix=10, binsz=1, axes=[axis], unit="m2 s")
     expo_map.data += 1
     spectrum = ConstantSpectralModel(const="42 cm-2 s-1 TeV-1")

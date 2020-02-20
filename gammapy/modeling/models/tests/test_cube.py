@@ -36,7 +36,7 @@ def sky_model():
 
 @pytest.fixture(scope="session")
 def diffuse_model():
-    axis = MapAxis.from_nodes([0.1, 100], name="energy", unit="TeV", interp="log")
+    axis = MapAxis.from_nodes([0.1, 100], name="energy_true", unit="TeV", interp="log")
     m = Map.create(
         npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )
@@ -52,7 +52,7 @@ def geom():
 
 @pytest.fixture(scope="session")
 def geom_true():
-    axis = MapAxis.from_edges(np.logspace(-1, 1, 4), unit=u.TeV, name="energy")
+    axis = MapAxis.from_edges(np.logspace(-1, 1, 4), unit=u.TeV, name="energy_true")
     return WcsGeom.create(skydir=(0, 0), npix=(5, 4), frame="galactic", axes=[axis])
 
 
@@ -74,7 +74,7 @@ def background(geom):
 @pytest.fixture(scope="session")
 def edisp(geom, geom_true):
     e_reco = geom.get_axis_by_name("energy").edges
-    e_true = geom_true.get_axis_by_name("energy").edges
+    e_true = geom_true.get_axis_by_name("energy_true").edges
     return EDispKernel.from_diagonal_response(e_true=e_true, e_reco=e_reco)
 
 
@@ -130,14 +130,14 @@ def test_sky_model_spatial_none_io(tmpdir):
     assert models["test"].spatial_model is None
 
 
-def test_sky_model_spatial_none_evaluate(geom):
+def test_sky_model_spatial_none_evaluate(geom_true):
     pwl = PowerLawSpectralModel()
     model = SkyModel(spectral_model=pwl, name="test")
 
-    data = model.evaluate_geom(geom).to_value("cm-2 s-1 TeV-1")
+    data = model.evaluate_geom(geom_true).to_value("cm-2 s-1 TeV-1")
 
-    assert data.shape == (2, 1, 1)
-    assert_allclose(data[0], 3.305785e-12)
+    assert data.shape == (3, 1, 1)
+    assert_allclose(data[0], 1.256774e-11, rtol=1e-6)
 
 
 def test_skymodel_addition(sky_model, sky_models, sky_models_2, diffuse_model):
@@ -220,7 +220,7 @@ class TestSkyModels:
 
 
 @requires_data()
-def test_SkyModels_mutation(sky_model, sky_models, sky_models_2):
+def test_models_mutation(sky_model, sky_models, sky_models_2):
     mods = sky_models
 
     mods.insert(0, sky_model)
@@ -474,7 +474,7 @@ class TestSkyModelMapEvaluator:
 def test_sky_point_source():
     # Test special case of point source. Regression test for GH 2367.
 
-    energy_axis = MapAxis.from_edges([1, 10], unit="TeV", name="energy", interp="log")
+    energy_axis = MapAxis.from_edges([1, 10], unit="TeV", name="energy_true", interp="log")
     exposure = Map.create(
         skydir=(100, 70),
         npix=(4, 4),

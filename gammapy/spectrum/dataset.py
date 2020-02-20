@@ -238,10 +238,10 @@ class SpectrumDataset(Dataset):
         if self.counts is not None:
             e_axis = self.counts.energy
         elif self.edisp is not None:
-            e_axis = self.edisp.data.axis("e_reco")
+            e_axis = self.edisp.data.axis("energy")
         elif self.aeff is not None:
             # assume e_reco = e_true
-            e_axis = self.aeff.data.axis("energy")
+            e_axis = self.aeff.data.axis("energy_true")
         return e_axis
 
     @property

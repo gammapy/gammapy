@@ -86,7 +86,7 @@ def test_asmooth_dataset(input_dataset):
         assert_allclose(actual, desired[name], rtol=1e-5)
 
 
-def test_asmooth_mapdatasetonoff():
+def test_asmooth_map_dataset_on_off():
     kernel = Tophat2DKernel
     scales = ASmoothMapEstimator.get_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 

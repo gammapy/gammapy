@@ -149,8 +149,7 @@ class MapDatasetEventSampler:
             evaluator = dataset.evaluators.get(model.name)
 
             evaluator = copy.deepcopy(evaluator)
-            evaluator.edisp = None
-            evaluator.psf = None
+            evaluator.model.apply_irfs = {"psf": False, "edisp": False}
             npred = evaluator.compute_npred()
 
             temporal_model = ConstantTemporalModel()
@@ -206,7 +205,7 @@ class MapDatasetEventSampler:
             {
                 "lon": events.table["RA_TRUE"].quantity,
                 "lat": events.table["DEC_TRUE"].quantity,
-                "energy": events.table["ENERGY_TRUE"].quantity,
+                "energy_true": events.table["ENERGY_TRUE"].quantity,
             },
             frame="icrs",
         )
@@ -234,7 +233,7 @@ class MapDatasetEventSampler:
             {
                 "lon": events.table["RA_TRUE"].quantity,
                 "lat": events.table["DEC_TRUE"].quantity,
-                "energy": events.table["ENERGY_TRUE"].quantity,
+                "energy_true": events.table["ENERGY_TRUE"].quantity,
             },
             frame="icrs",
         )

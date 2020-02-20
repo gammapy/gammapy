@@ -15,11 +15,11 @@ def test_cta_irf():
     energy = Quantity(1, "TeV")
     offset = Quantity(3, "deg")
 
-    val = irf["aeff"].data.evaluate(energy=energy, offset=offset)
+    val = irf["aeff"].data.evaluate(energy_true=energy, offset=offset)
     assert_allclose(val.value, 545269.4675, rtol=1e-5)
     assert val.unit == "m2"
 
-    val = irf["edisp"].data.evaluate(offset=offset, e_true=energy, migra=1)
+    val = irf["edisp"].data.evaluate(offset=offset, energy_true=energy, migra=1)
     assert_allclose(val.value, 3183.6882, rtol=1e-5)
     assert val.unit == ""
 

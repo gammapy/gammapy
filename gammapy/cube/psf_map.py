@@ -37,7 +37,7 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     psfmap : `~gammapy.cube.PSFMap`
         the resulting PSF map
     """
-    energy_axis = geom.get_axis_by_name("energy")
+    energy_axis = geom.get_axis_by_name("energy_true")
     energy = energy_axis.center
 
     rad_axis = geom.get_axis_by_name("theta")
@@ -119,7 +119,7 @@ class PSFMap:
     """
 
     def __init__(self, psf_map, exposure_map=None):
-        if psf_map.geom.axes[1].name.upper() != "ENERGY":
+        if psf_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
             raise ValueError("Incorrect energy axis position in input Map")
 
         if psf_map.geom.axes[0].name.upper() != "THETA":
@@ -221,12 +221,12 @@ class PSFMap:
                 "EnergyDependentTablePSF can be extracted at one single position only."
             )
 
-        energy = self.psf_map.geom.get_axis_by_name("energy").center
+        energy = self.psf_map.geom.get_axis_by_name("energy_true").center
         rad = self.psf_map.geom.get_axis_by_name("theta").center
 
         coords = {
             "skycoord": position,
-            "energy": energy.reshape((-1, 1, 1, 1)),
+            "energy_true": energy.reshape((-1, 1, 1, 1)),
             "theta": rad.reshape((1, -1, 1, 1)),
         }
 
@@ -236,7 +236,7 @@ class PSFMap:
         if self.exposure_map is not None:
             coords = {
                 "skycoord": position,
-                "energy": energy.reshape((-1, 1, 1)),
+                "energy_true": energy.reshape((-1, 1, 1)),
                 "theta": 0 * u.deg,
             }
             data = self.exposure_map.interp_by_coord(coords).squeeze()
@@ -375,7 +375,7 @@ class PSFMap:
 
         coord = {
             "skycoord": map_coord.skycoord.reshape(-1, 1),
-            "energy": map_coord["energy"].reshape(-1, 1),
+            "energy_true": map_coord["energy_true"].reshape(-1, 1),
             "theta": rad_axis.center,
         }
 
@@ -395,7 +395,7 @@ class PSFMap:
             position_angle=position_angle, separation=separation
         )
         return MapCoord.create(
-            {"skycoord": event_positions, "energy": map_coord["energy"]}
+            {"skycoord": event_positions, "energy": map_coord["energy_true"]}
         )
 
     @classmethod
@@ -415,7 +415,7 @@ class PSFMap:
         psf_map : `PSFMap`
             Point spread function map.
         """
-        energy_axis = MapAxis.from_nodes(table_psf.energy, name="energy", interp="log")
+        energy_axis = MapAxis.from_nodes(table_psf.energy, name="energy_true", interp="log")
         rad_axis = MapAxis.from_nodes(table_psf.rad, name="theta")
 
         geom = WcsGeom.create(
@@ -424,7 +424,7 @@ class PSFMap:
         coords = geom.get_coord()
 
         # TODO: support broadcasting in .evaluate()
-        data = table_psf._interpolate((coords["energy"], coords["theta"])).to_value(
+        data = table_psf._interpolate((coords["energy_true"], coords["theta"])).to_value(
             "sr-1"
         )
         psf_map = Map.from_geom(geom, data=data, unit="sr-1")
@@ -482,10 +482,10 @@ class PSFMap:
             spectrum = PowerLawSpectralModel(index=2.0)
 
         exp_weighed = _map_spectrum_weight(self.exposure_map, spectrum)
-        exposure = exp_weighed.sum_over_axes(axes=["energy"], keepdims=keepdims)
+        exposure = exp_weighed.sum_over_axes(axes=["energy_true"], keepdims=keepdims)
 
         psf_data = exp_weighed.data * self.psf_map.data / exposure.data
         psf_map = Map.from_geom(geom=self.psf_map.geom, data=psf_data, unit="sr-1")
 
-        psf = psf_map.sum_over_axes(axes=["energy"], keepdims=keepdims)
+        psf = psf_map.sum_over_axes(axes=["energy_true"], keepdims=keepdims)
         return self.__class__(psf_map=psf, exposure_map=exposure)

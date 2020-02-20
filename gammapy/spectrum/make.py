@@ -193,7 +193,7 @@ class SpectrumDatasetMaker:
             "livetime": observation.observation_live_time_duration,
         }
         energy_axis = dataset.counts.energy
-        energy_axis_true = dataset.aeff.data.axis("energy")
+        energy_axis_true = dataset.aeff.data.axis("energy_true")
         region = dataset.counts.region
 
         if "counts" in self.selection:

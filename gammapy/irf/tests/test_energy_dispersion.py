@@ -47,7 +47,7 @@ class TestEDispKernel:
 
     def test_evaluate(self):
         # Check for correct normalization
-        pdf = self.edisp.data.evaluate(e_true=3.34 * u.TeV)
+        pdf = self.edisp.data.evaluate(energy_true=3.34 * u.TeV)
         assert_allclose(np.sum(pdf), 1, atol=1e-2)
 
     def test_apply(self):
@@ -116,7 +116,7 @@ class TestEnergyDispersion2D:
         migra = np.array([0.98, 0.97, 0.7])
         offset = [0.1, 0.2, 0.3, 0.4] * u.deg
         actual = self.edisp.data.evaluate(
-            e_true=energy.reshape(-1, 1, 1),
+            energy_true=energy.reshape(-1, 1, 1),
             migra=migra.reshape(1, -1, 1),
             offset=offset.reshape(1, 1, -1),
         )
@@ -125,7 +125,7 @@ class TestEnergyDispersion2D:
         # Check evaluation at all nodes
         actual = self.edisp.data.evaluate().shape
         desired = (
-            self.edisp.data.axis("e_true").nbin,
+            self.edisp.data.axis("energy_true").nbin,
             self.edisp.data.axis("migra").nbin,
             self.edisp.data.axis("offset").nbin,
         )
@@ -171,9 +171,9 @@ class TestEnergyDispersion2D:
         )
 
         hdu = edisp.to_fits()
-        energy = edisp.data.axis("e_true").edges
+        energy = edisp.data.axis("energy_true").edges
         assert_equal(hdu.data["ENERG_LO"][0], energy[:-1].value)
-        assert hdu.header["TUNIT1"] == edisp.data.axis("e_true").unit
+        assert hdu.header["TUNIT1"] == edisp.data.axis("energy_true").unit
 
     @requires_dependency("matplotlib")
     def test_plot_migration(self):

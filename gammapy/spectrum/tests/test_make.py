@@ -189,8 +189,8 @@ class TestSpectrumMakerChain:
         dataset = reflected_regions_bkg_maker.run(dataset, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
-        aeff_actual = dataset.aeff.data.evaluate(energy=5 * u.TeV)
-        edisp_actual = dataset.edisp.data.evaluate(e_true=5 * u.TeV, e_reco=5.2 * u.TeV)
+        aeff_actual = dataset.aeff.data.evaluate(energy_true=5 * u.TeV)
+        edisp_actual = dataset.edisp.data.evaluate(energy_true=5 * u.TeV, energy=5.2 * u.TeV)
 
         assert_quantity_allclose(aeff_actual, results["aeff"], rtol=1e-3)
         assert_quantity_allclose(edisp_actual, results["edisp"], rtol=1e-3)

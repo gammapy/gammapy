@@ -428,6 +428,7 @@ class ConstantSpatialModel(SpatialModel):
 
     frame = "icrs"
     evaluation_radius = None
+    position = SkyCoord("0 deg", "0 deg", frame=frame)
 
     def to_dict(self):
         """Create dict for YAML serilisation"""

@@ -29,10 +29,10 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
         Exposure map
     """
     offset = geom.separation(pointing)
-    energy = geom.get_axis_by_name("energy").center
+    energy = geom.get_axis_by_name("energy_true").center
 
     exposure = aeff.data.evaluate(
-        offset=offset, energy=energy[:, np.newaxis, np.newaxis]
+        offset=offset, energy_true=energy[:, np.newaxis, np.newaxis]
     )
     # TODO: Improve IRF evaluate to preserve energy axis if length 1
     # For now, we handle that case via this hack:
@@ -70,7 +70,7 @@ def _map_spectrum_weight(map, spectrum=None):
         spectrum = PowerLawSpectralModel(index=2.0)
 
     # Compute weights vector
-    energy_edges = map.geom.get_axis_by_name("energy").edges
+    energy_edges = map.geom.get_axis_by_name("energy_true").edges
     weights = spectrum.integral(
         emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
     )
