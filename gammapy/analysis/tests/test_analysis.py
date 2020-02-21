@@ -16,7 +16,7 @@ MODEL_FILE = CONFIG_PATH / "model.yaml"
 
 
 def get_example_config(which):
-    """Example config: which can be "1d" or "3d"."""
+    """Example config: which can be 1d or 3d."""
     return AnalysisConfig.read(CONFIG_PATH / f"example-{which}.yaml")
 
 
@@ -212,6 +212,7 @@ def test_exclusion_region(tmp_path):
     exclusion_mask.data = mask.astype(int)
     filename = tmp_path / "exclusion.fits"
     exclusion_mask.write(filename)
+    config.datasets.background.method = "reflected"
     config.datasets.background.exclusion = filename
 
     analysis.get_observations()
@@ -227,6 +228,8 @@ def test_analysis_1d_stacked():
         geom:
             axes:
                 energy_true: {min: 0.03 TeV, max: 100 TeV, nbins: 50}
+        background:
+            method: reflected
     """
 
     config = get_example_config("1d")
@@ -248,24 +251,8 @@ def test_analysis_1d_stacked():
 
 @requires_data()
 def test_analysis_1d_no_bkg():
-    cfg = """
-    observations:
-        datastore: $GAMMAPY_DATA/hess-dl3-dr1
-        obs_ids: [23523]
-    datasets:
-        type: 1d
-        background:
-            method: ''
-        on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
-        geom:
-            axes:
-                energy: {min: 0.1 TeV, max: 30 TeV, nbins: 5}
-                energy_true: {min: 0.03 TeV, max: 100 TeV, nbins: 10}
-        containment_correction: false
-    """
     config = get_example_config("1d")
     analysis = Analysis(config)
-    analysis.update_config(cfg)
     analysis.get_observations()
     analysis.get_datasets()
 

@@ -320,6 +320,7 @@ class Analysis:
             if datasets_settings.background.exclusion:
                 exclusion_region = Map.read(datasets_settings.background.exclusion)
                 bkg_maker_config["exclusion_mask"] = exclusion_region
+            bkg_maker_config.update(self.config.datasets.background.parameters)
             bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
             log.debug(
                 f"Creating ReflectedRegionsBackgroundMaker with arguments {bkg_maker_config}"

@@ -39,8 +39,8 @@ datasets:
             energy_true: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
     map_selection: ['counts', 'exposure', 'background', 'psf', 'edisp']
     background:
-        method: reflected   # also '' (no bkg estimation applied) or fov_background (for 3d)
-        exclusion:    # fits file for exclusion mask
+        method: reflected   # also fov_background
+        exclusion:          # fits file for exclusion mask
     safe_mask:
             methods: ['aeff-default','offset-max' ]
             settings: {offset_max: 2.5 deg}

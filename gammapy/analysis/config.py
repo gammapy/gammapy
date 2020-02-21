@@ -68,7 +68,6 @@ class FrameEnum(str, Enum):
 class BackgroundMethodEnum(str, Enum):
     reflected = "reflected"
     fov = "fov_background"
-    no_background = ""
 
 
 class SafeMaskMethodsEnum(str, Enum):
@@ -139,7 +138,7 @@ class FitConfig(GammapyBaseConfig):
 
 
 class BackgroundConfig(GammapyBaseConfig):
-    method: BackgroundMethodEnum = BackgroundMethodEnum.reflected
+    method: BackgroundMethodEnum = None
     exclusion: FilePath = None
     parameters: dict = {}
 
