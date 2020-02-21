@@ -67,6 +67,7 @@ class FrameEnum(str, Enum):
 
 class BackgroundMethodEnum(str, Enum):
     reflected = "reflected"
+    fov = "fov_background"
 
 
 class SafeMaskMethodsEnum(str, Enum):
@@ -129,7 +130,7 @@ class TimeRangeConfig(GammapyBaseConfig):
 class FluxPointsConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig()
     source: str = "source"
-    params: dict = {}
+    parameters: dict = {}
 
 
 class FitConfig(GammapyBaseConfig):
@@ -137,13 +138,14 @@ class FitConfig(GammapyBaseConfig):
 
 
 class BackgroundConfig(GammapyBaseConfig):
-    method: BackgroundMethodEnum = BackgroundMethodEnum.reflected
+    method: BackgroundMethodEnum = None
     exclusion: FilePath = None
+    parameters: dict = {}
 
 
 class SafeMaskConfig(GammapyBaseConfig):
     methods: List[SafeMaskMethodsEnum] = [SafeMaskMethodsEnum.aeff_default]
-    settings: dict = {}
+    parameters: dict = {}
 
 
 class EnergyAxesConfig(GammapyBaseConfig):

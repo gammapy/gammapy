@@ -39,11 +39,12 @@ datasets:
             energy_true: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
     map_selection: ['counts', 'exposure', 'background', 'psf', 'edisp']
     background:
-        method: reflected
-        exclusion:    # fits file for exclusion mask
+        method: reflected   # also fov_background
+        exclusion:          # fits file for exclusion mask
+        parameters: {}
     safe_mask:
             methods: ['aeff-default','offset-max' ]
-            settings: {offset_max: 2.5 deg}
+            parameters: {offset_max: 2.5 deg}
     on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
     containment_correction: true
 
@@ -57,4 +58,4 @@ fit:
 flux_points:
     energy: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
     source: "source"
-    params: {}
+    parameters: {}

@@ -42,6 +42,7 @@ def cli_make_config(filename, overwrite):
 def cli_run_analysis(filename, out, overwrite):
     """Performs automated data reduction process."""
     config = AnalysisConfig.read(filename)
+    config.datasets.background.method = "reflected"
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
