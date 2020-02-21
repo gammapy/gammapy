@@ -147,7 +147,7 @@ def test_analysis_1d():
         on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
         safe_mask:
             methods: [aeff-default, edisp-bias]
-            settings: {bias_percent: 10.0}
+            parameters: {bias_percent: 10.0}
         containment_correction: false
     flux_points:
         energy: {min: 1 TeV, max: 50 TeV, nbins: 4}

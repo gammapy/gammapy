@@ -130,7 +130,7 @@ class TimeRangeConfig(GammapyBaseConfig):
 class FluxPointsConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig()
     source: str = "source"
-    params: dict = {}
+    parameters: dict = {}
 
 
 class FitConfig(GammapyBaseConfig):
@@ -145,7 +145,7 @@ class BackgroundConfig(GammapyBaseConfig):
 
 class SafeMaskConfig(GammapyBaseConfig):
     methods: List[SafeMaskMethodsEnum] = [SafeMaskMethodsEnum.aeff_default]
-    settings: dict = {}
+    parameters: dict = {}
 
 
 class EnergyAxesConfig(GammapyBaseConfig):

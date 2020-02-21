@@ -197,7 +197,7 @@ class Analysis:
             e_edges=e_edges,
             datasets=self.datasets,
             source=fp_settings.source,
-            **fp_settings.params,
+            **fp_settings.parameters,
         )
         fp = flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
@@ -250,7 +250,7 @@ class Analysis:
         maker = MapDatasetMaker(selection=datasets_settings.map_selection)
 
         safe_mask_selection = datasets_settings.safe_mask.methods
-        safe_mask_settings = datasets_settings.safe_mask.settings
+        safe_mask_settings = datasets_settings.safe_mask.parameters
         maker_safe_mask = SafeMaskMaker(
             methods=safe_mask_selection, **safe_mask_settings
         )
@@ -333,7 +333,7 @@ class Analysis:
             )
 
         safe_mask_selection = datasets_settings.safe_mask.methods
-        safe_mask_settings = datasets_settings.safe_mask.settings
+        safe_mask_settings = datasets_settings.safe_mask.parameters
         safe_mask_maker = SafeMaskMaker(
             methods=safe_mask_selection, **safe_mask_settings
         )
