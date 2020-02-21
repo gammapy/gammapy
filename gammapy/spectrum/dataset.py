@@ -166,7 +166,7 @@ class SpectrumDataset(Dataset):
         n_pars, n_free_pars = 0, 0
         if self.models is not None:
             n_pars = len(self.models.parameters)
-            n_free_pars = len(self.parameters.free_parameters)
+            n_free_pars = len(self.models.parameters.free_parameters)
 
         str_ += "\t{:32}: {}\n".format("Number of parameters", n_pars)
         str_ += "\t{:32}: {}\n\n".format("Number of free parameters", n_free_pars)
@@ -175,6 +175,15 @@ class SpectrumDataset(Dataset):
             str_ += "\t" + "\n\t".join(str(self.models).split("\n")[2:])
 
         return str_.expandtabs(tabsize=2)
+
+    @property
+    def evaluators(self):
+        """Model evaluators"""
+        # this call is needed to trigger the setup of the evaluators
+        if not self._evaluators:
+            self.npred()
+
+        return self._evaluators
 
     @property
     def models(self):
@@ -186,31 +195,9 @@ class SpectrumDataset(Dataset):
         if models is None:
             self._models = None
         else:
-            if isinstance(models, SkyModel):
-                models = [models]
-            elif isinstance(models, (Models, list)):
-                models = list(models)
-            else:
-                raise TypeError("Invalid models")
-            models_list = [
-                model
-                for model in models
-                if self.name in model.datasets_names or model.datasets_names == "all"
-            ]
-            self._models = Models(models_list)
-
-        evaluators = []
-        if self.models is not None:
-            for model in self.models:
-                evaluator = SpectrumEvaluator(
-                    model=model,
-                    livetime=self.livetime,
-                    aeff=self.aeff,
-                    edisp=self.edisp,
-                )
-                evaluators.append(evaluator)
-
-        self._evaluators = evaluators
+            self._models = Models(models)
+        # reset evaluators
+        self._evaluators = {}
 
     @property
     def mask_safe(self):
@@ -222,16 +209,6 @@ class SpectrumDataset(Dataset):
     @mask_safe.setter
     def mask_safe(self, mask):
         self._mask_safe = mask
-
-    @property
-    def parameters(self):
-        """List of parameters (`~gammapy.modeling.Parameters`)"""
-        parameters = []
-
-        for component in self.models:
-            parameters.append(component.spectral_model.parameters)
-
-        return Parameters.from_stack(parameters)
 
     @property
     def _energy_axis(self):
@@ -254,8 +231,24 @@ class SpectrumDataset(Dataset):
         data = np.zeros(self.data_shape)
         npred = self._as_counts_spectrum(data)
 
-        for evaluator in self._evaluators:
-            npred += evaluator.compute_npred()
+        if self.models:
+            for model in self.models:
+                if model.datasets_names is not None:
+                    if self.name not in model.datasets_names:
+                        continue
+
+                evaluator = self._evaluators.get(model.name)
+
+                if evaluator is None:
+                    evaluator = SpectrumEvaluator(
+                        model=model,
+                        livetime=self.livetime,
+                        aeff=self.aeff,
+                        edisp=self.edisp,
+                    )
+                    self._evaluators[model.name] = evaluator
+
+                npred += evaluator.compute_npred()
 
         return npred
 
@@ -700,6 +693,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         if np.isscalar(acceptance_off):
             acceptance_off = np.ones(self.data_shape) * acceptance_off
 
+        self._evaluators = {}
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
         self._name = make_name(name)

@@ -1219,28 +1219,7 @@ class FluxPointsDataset(Dataset):
         if models is None:
             self._models = None
         else:
-            if isinstance(models, SkyModel):
-                models = [models]
-            elif isinstance(models, (Models,list)):
-                models = list(models)
-            else:
-                raise TypeError("Invalid models")
-            models_list = [
-                model
-                for model in models
-                if self.name in model.datasets_names or model.datasets_names == "all"
-            ]
-            self._models = Models(models_list)
-
-    @property
-    def parameters(self):
-        """List of parameters (`~gammapy.modeling.Parameters`)"""
-        parameters = []
-
-        for component in self.models:
-            parameters.append(component.spectral_model.parameters)
-
-        return Parameters.from_stack(parameters)
+            self._models = Models(models)
 
     def write(self, filename, overwrite=True, **kwargs):
         """Write flux point dataset to file.
@@ -1336,9 +1315,9 @@ class FluxPointsDataset(Dataset):
 
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
 
-        str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.parameters))
+        str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.models.parameters))
         str_ += "\t{:32}: {}\n\n".format(
-            "Number of free parameters", len(self.parameters.free_parameters)
+            "Number of free parameters", len(self.models.parameters.free_parameters)
         )
 
         if self.models is not None:
@@ -1353,8 +1332,11 @@ class FluxPointsDataset(Dataset):
     def flux_pred(self):
         """Compute predicted flux."""
         flux = 0.0
-        for component in self.models:
-            flux += component.spectral_model(self.data.e_ref)
+        for model in self.models:
+            if model.datasets_names is not None:
+                if self.name not in model.datasets_names:
+                    continue
+            flux += model.spectral_model(self.data.e_ref)
         return flux
 
     def stat_array(self):

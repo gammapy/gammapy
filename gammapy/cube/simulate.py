@@ -65,7 +65,7 @@ def simulate_dataset(
         pointing=pointing, ontime=livetime, bkg=irfs["bkg"], geom=geom
     )
 
-    background_model = BackgroundModel(background)
+    background_model = BackgroundModel(background, datasets_names=["dataset"])
 
     psf = irfs["psf"].to_energy_dependent_table_psf(theta=offset)
     psf_map = PSFMap.from_energy_dependent_table_psf(psf)
@@ -85,6 +85,7 @@ def simulate_dataset(
         exposure=exposure,
         psf=psf_map,
         edisp=edisp,
+        name="dataset"
     )
 
     npred_map = dataset.npred()

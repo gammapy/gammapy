@@ -136,16 +136,16 @@ def test_datasets_to_io(tmp_path):
     )
 
     assert isinstance(dataset0.models, Models)
-    assert len(dataset0.models) == 3
+    assert len(dataset0.models) == 5
     assert dataset0.models[0].name == "gc"
     assert dataset0.models[1].name == "gll_iem_v06_cutout"
 
     assert (
-        dataset0.models[0].parameters["reference"]
-        is dataset1.models[1].parameters["reference"]
+        dataset0.models["gc"].parameters["reference"]
+        is dataset1.models["g09"].parameters["reference"]
     )
 
-    assert_allclose(dataset1.models[1].parameters["lon_0"].value, 0.9, atol=0.1)
+    assert_allclose(dataset1.models["g09"].parameters["lon_0"].value, 0.9, atol=0.1)
 
     datasets.write(tmp_path, prefix="written")
     datasets_read = Datasets.read(

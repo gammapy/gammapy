@@ -87,8 +87,8 @@ class FoVBackgroundMaker:
             )
 
         # Unfreeze parameters
-        for i, par in enumerate(datasets.parameters):
-            par.frozen = parameters_frozen[i]
+        for idx, par in enumerate(datasets.parameters):
+            par.frozen = parameters_frozen[idx]
 
     def _scale_bkg(self, dataset):
         """Fit the FoV background model on the dataset counts data"""

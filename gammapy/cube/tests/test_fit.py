@@ -96,12 +96,12 @@ def sky_model():
     return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
-def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, **kwargs):
+def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, name="test", **kwargs):
     """Returns a MapDatasets"""
     # define background model
     m = Map.from_geom(geom)
     m.quantity = 0.2 * np.ones(m.data.shape)
-    background_model = BackgroundModel(m)
+    background_model = BackgroundModel(m, datasets_names=[name])
 
     psf = get_psf()
     exposure = get_exposure(geom_etrue)
@@ -125,6 +125,7 @@ def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, **kwargs):
         psf=psf,
         edisp=edisp,
         mask_fit=mask_fit,
+        name=name,
         **kwargs
     )
 
@@ -182,6 +183,7 @@ def test_different_exposure_unit(sky_model, geom):
 @requires_data()
 def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
     dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=True)
+    print(dataset_ref)
     dataset_ref.counts = dataset_ref.background_model.map * 0.0
     dataset_ref.counts.data[1, 50, 50] = 1
     dataset_ref.counts.data[1, 60, 50] = 1
@@ -215,13 +217,13 @@ def test_to_image(geom):
     background = Map.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-background-cube.fits.gz"
     )
-    background = BackgroundModel(background)
+    background = BackgroundModel(background, datasets_names=["fermi"])
 
     exposure = Map.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz"
     )
     exposure = exposure.sum_over_axes(keepdims=True)
-    dataset = MapDataset(counts=counts, models=[background], exposure=exposure)
+    dataset = MapDataset(counts=counts, models=[background], exposure=exposure, name="fermi")
     dataset_im = dataset.to_image()
     assert dataset_im.mask_safe is None
     assert dataset_im.counts.data.sum() == dataset.counts.data.sum()
@@ -337,11 +339,11 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 @requires_dependency("matplotlib")
 @requires_data()
 def test_map_fit(sky_model, geom, geom_etrue):
-    dataset_1 = get_map_dataset(sky_model, geom, geom_etrue, evaluation_mode="local")
+    dataset_1 = get_map_dataset(sky_model, geom, geom_etrue, evaluation_mode="local", name="test-1")
     dataset_1.background_model.norm.value = 0.5
     dataset_1.counts = dataset_1.npred()
 
-    dataset_2 = get_map_dataset(sky_model, geom, geom_etrue, evaluation_mode="global")
+    dataset_2 = get_map_dataset(sky_model, geom, geom_etrue, evaluation_mode="global", name="test-2")
     dataset_2.counts = dataset_2.npred()
 
     sky_model.parameters["sigma"].frozen = True
@@ -466,7 +468,7 @@ def test_create(geom, geom_etrue):
 def test_stack(geom, geom_etrue):
     m = Map.from_geom(geom)
     m.quantity = 0.2 * np.ones(m.data.shape)
-    background_model1 = BackgroundModel(m, name="dataset-1-bkg")
+    background_model1 = BackgroundModel(m, name="dataset-1-bkg", datasets_names=["dataset-1"])
     c_map1 = Map.from_geom(geom)
     c_map1.quantity = 0.3 * np.ones(c_map1.data.shape)
     mask1 = np.ones(m.data.shape, dtype=bool)
@@ -483,7 +485,7 @@ def test_stack(geom, geom_etrue):
 
     c_map2 = Map.from_geom(geom)
     c_map2.quantity = 0.1 * np.ones(c_map2.data.shape)
-    background_model2 = BackgroundModel(m, norm=0.5, name="dataset-2-bkg")
+    background_model2 = BackgroundModel(m, norm=0.5, name="dataset-2-bkg", datasets_names=["dataset-2"])
     mask2 = np.ones(m.data.shape, dtype=bool)
     mask2[0][3] = False
     mask2 = Map.from_geom(geom, data=mask2)
@@ -772,7 +774,7 @@ def test_names(geom, geom_etrue, sky_model):
 
     m = Map.from_geom(geom)
     m.quantity = 0.2 * np.ones(m.data.shape)
-    background_model1 = BackgroundModel(m, name="bkg1")
+    background_model1 = BackgroundModel(m, name="bkg1", datasets_names=["test"])
     assert background_model1.name == "bkg1"
 
     c_map1 = Map.from_geom(geom)
@@ -788,6 +790,7 @@ def test_names(geom, geom_etrue, sky_model):
         counts=c_map1,
         models=Models([model1, model2, background_model1]),
         exposure=get_exposure(geom_etrue),
+        name="test"
     )
 
     dataset2 = dataset1.copy()

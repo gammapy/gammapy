@@ -53,6 +53,7 @@ class SkyModel(SkyModelBase):
     """
 
     tag = "SkyModel"
+    _apply_irf_default = {"exposure": True, "psf": True, "edisp": True}
 
     def __init__(
         self,
@@ -61,7 +62,7 @@ class SkyModel(SkyModelBase):
         temporal_model=None,
         name=None,
         apply_irf=None,
-        datasets_names="all",
+        datasets_names=None,
     ):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
@@ -71,9 +72,11 @@ class SkyModel(SkyModelBase):
         self.__dict__.pop("_parameters")
 
         self._name = make_name(name)
-        self.apply_irf = {"exposure": True, "psf": True, "edisp": True}
-        if apply_irf is not None:
-            self.apply_irf.update(apply_irf)
+
+        if apply_irf is None:
+            apply_irf = self._apply_irf_default.copy()
+
+        self.apply_irf = apply_irf
         self.datasets_names = datasets_names
 
     @property
@@ -206,7 +209,7 @@ class SkyModel(SkyModelBase):
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
         kwargs.setdefault("spatial_model", spatial_model)
         kwargs.setdefault("temporal_model", temporal_model)
-        kwargs.setdefault("apply_irf", self.apply_irf)
+        kwargs.setdefault("apply_irf", self.apply_irf.copy())
         kwargs.setdefault("datasets_names", self.datasets_names)
 
         return self.__class__(**kwargs)
@@ -224,10 +227,10 @@ class SkyModel(SkyModelBase):
         if self.temporal_model is not None:
             data["temporal"] = self.temporal_model.to_dict()
 
-        if self.apply_irf != {"exposure": True, "psf": True, "edisp": True}:
+        if self.apply_irf != self._apply_irf_default:
             data["apply_irf"] = self.apply_irf
 
-        if self.datasets_names != "all":
+        if self.datasets_names is not None:
             data["datasets_names"] = self.datasets_names
 
         return data
@@ -263,15 +266,15 @@ class SkyModel(SkyModelBase):
             spatial_model=spatial_model,
             spectral_model=spectral_model,
             temporal_model=temporal_model,
-            apply_irf=data.get(
-                "apply_irf", {"exposure": True, "psf": True, "edisp": True}
-            ),
-            datasets_names=data.get("datasets_names", "all"),
+            apply_irf=data.get("apply_irf", cls._apply_irf_default),
+            datasets_names=data.get("datasets_names"),
         )
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n\n"
         str_ += "\t{:26}: {}\n".format("Name", self.name)
+
+        str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
 
         str_ += "\t{:26}: {}\n".format("Spectral model type", self.spectral_model.tag)
 
@@ -324,6 +327,8 @@ class SkyDiffuseCube(SkyModelBase):
     tilt = Parameter("tilt", 0, unit="", frozen=True)
     reference = Parameter("reference", "1 TeV", frozen=True)
 
+    _apply_irf_default = {"exposure": True, "psf": True, "edisp": True}
+
     def __init__(
         self,
         map,
@@ -335,7 +340,7 @@ class SkyDiffuseCube(SkyModelBase):
         name=None,
         filename=None,
         apply_irf=None,
-        datasets_names="all",
+        datasets_names=None,
     ):
 
         self._name = make_name(name)
@@ -353,9 +358,11 @@ class SkyDiffuseCube(SkyModelBase):
         #  remove this again
         self._cached_value = None
         self._cached_coordinates = (None, None, None)
-        self.apply_irf = {"exposure": True, "psf": True, "edisp": True}
-        if apply_irf is not None:
-            self.apply_irf.update(apply_irf)
+
+        if apply_irf is None:
+            apply_irf = self._apply_irf_default.copy()
+
+        self.apply_irf = apply_irf
         self.datasets_names = datasets_names
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
@@ -382,6 +389,10 @@ class SkyDiffuseCube(SkyModelBase):
             m.unit = "cm-2 s-1 MeV-1 sr-1"
         if name is None:
             name = Path(filename).stem
+
+        if m.geom.axes[0].name == "energy":
+            m.geom.axes[0].name = "energy_true"
+
         return cls(m, name=name, filename=filename)
 
     def _interpolate(self, lon, lat, energy):
@@ -439,11 +450,9 @@ class SkyDiffuseCube(SkyModelBase):
     def from_dict(cls, data):
         model = cls.read(data["filename"])
         model._update_from_dict(data)
-        apply_irf = data.get(
-            "apply_irf", {"exposure": True, "psf": True, "edisp": True}
-        )
+        apply_irf = data.get("apply_irf", cls._apply_irf_default)
         model.apply_irf.update(apply_irf)
-        model.datasets_names = data.get("datasets_names", "all")
+        model.datasets_names = data.get("datasets_names")
 
         return model
 
@@ -455,9 +464,11 @@ class SkyDiffuseCube(SkyModelBase):
 
         # Move parameters at the end
         data["parameters"] = data.pop("parameters")
-        if self.apply_irf != {"exposure": True, "psf": True, "edisp": True}:
+
+        if self.apply_irf != self._apply_irf_default:
             data["apply_irf"] = self.apply_irf
-        if self.datasets_names != "all":
+
+        if self.datasets_names is not None:
             data["datasets_names"] = self.datasets_names
 
         return data
@@ -465,6 +476,7 @@ class SkyDiffuseCube(SkyModelBase):
     def __str__(self):
         str_ = self.__class__.__name__ + "\n\n"
         str_ += "\t{:26}: {}\n".format("Name", self.name)
+        str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
         str_ += "\tParameters:\n"
         info = _get_parameters_str(self.parameters)
         lines = info.split("\n")
@@ -504,7 +516,7 @@ class BackgroundModel(Model):
         reference=reference.quantity,
         name=None,
         filename=None,
-        datasets_names="all",
+        datasets_names=None,
     ):
         axis = map.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":
@@ -514,6 +526,11 @@ class BackgroundModel(Model):
 
         self._name = make_name(name)
         self.filename = filename
+
+        if isinstance(datasets_names, list):
+            if len(datasets_names) > 1:
+                raise ValueError("Currently background models can only be assigned to one dataset.")
+
         self.datasets_names = datasets_names
         super().__init__(norm=norm, tilt=tilt, reference=reference)
 
@@ -547,11 +564,15 @@ class BackgroundModel(Model):
         data = {}
         data["name"] = self.name
         data.update(super().to_dict())
+
         if self.filename is not None:
             data["filename"] = self.filename
+
         data["parameters"] = data.pop("parameters")
-        if self.datasets_names != "all":
+
+        if self.datasets_names is not None:
             data["datasets_names"] = self.datasets_names
+
         return data
 
     @classmethod
@@ -563,7 +584,7 @@ class BackgroundModel(Model):
         else:
             raise ValueError("Requires either filename or `Map` object")
         model = cls(
-            map=map, name=data["name"], datasets_names=data.get("datasets_names", "all")
+            map=map, name=data["name"], datasets_names=data.get("datasets_names")
         )
         model._update_from_dict(data)
         return model
@@ -623,6 +644,8 @@ class BackgroundModel(Model):
     def __str__(self):
         str_ = self.__class__.__name__ + "\n\n"
         str_ += "\t{:26}: {}\n".format("Name", self.name)
+        str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
+
         str_ += "\tParameters:\n"
         info = _get_parameters_str(self.parameters)
         lines = info.split("\n")

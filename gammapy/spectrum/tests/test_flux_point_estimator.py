@@ -48,7 +48,7 @@ def create_fpe(model):
     return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=11, source="source")
 
 
-def simulate_map_dataset(random_state=0):
+def simulate_map_dataset(random_state=0, name=None):
     irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -68,7 +68,7 @@ def simulate_map_dataset(random_state=0):
     skymodel = SkyModel(spatial_model=gauss, spectral_model=pwl, name="source")
 
     obs = Observation.create(pointing=skydir, livetime=1 * u.h, irfs=irfs)
-    empty = MapDataset.create(geom)
+    empty = MapDataset.create(geom, name=name)
     maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
     dataset = maker.run(empty, obs)
 
@@ -96,9 +96,9 @@ def fpe_map_pwl():
 def fpe_map_pwl_reoptimize():
     dataset = simulate_map_dataset()
     e_edges = [1, 10] * u.TeV
-    dataset.parameters["lon_0"].frozen = True
-    dataset.parameters["lat_0"].frozen = True
-    dataset.parameters["index"].frozen = True
+    dataset.models.parameters["lon_0"].frozen = True
+    dataset.models.parameters["lat_0"].frozen = True
+    dataset.models.parameters["index"].frozen = True
     return FluxPointsEstimator(
         datasets=[dataset],
         e_edges=e_edges,

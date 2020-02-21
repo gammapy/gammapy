@@ -58,7 +58,7 @@ def obs_dataset(geom, observation):
     map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
 
     reference = MapDataset.create(geom)
-    cutout = reference.cutout(observation.pointing_radec, width="4 deg")
+    cutout = reference.cutout(observation.pointing_radec, width="4 deg", name="test-fov")
 
     dataset = map_dataset_maker.run(cutout, observation)
     dataset = safe_mask_maker.run(dataset, observation)
@@ -74,7 +74,7 @@ def test_fov_bkg_maker_incorrect_method():
 def test_fov_bkg_maker_scale(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
 
-    test_dataset = obs_dataset.copy()
+    test_dataset = obs_dataset.copy(name="test-fov")
     dataset = fov_bkg_maker.run(test_dataset)
 
     assert_allclose(dataset.background_model.norm.value, 0.83078, rtol=1e-4)
@@ -86,7 +86,7 @@ def test_fov_bkg_maker_scale(obs_dataset, exclusion_mask):
 def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
-    test_dataset = obs_dataset.copy()
+    test_dataset = obs_dataset.copy(name="test-fov")
     dataset = fov_bkg_maker.run(test_dataset)
 
     assert_allclose(dataset.background_model.norm.value, 0.8307, rtol=1e-4)
@@ -98,14 +98,14 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
 def test_fov_bkg_maker_fit_with_source_model(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
-    test_dataset = obs_dataset.copy()
+    test_dataset = obs_dataset.copy(name="test-fov")
     spatial_model = GaussianSpatialModel(
         lon_0="0.2 deg", lat_0="0.1 deg", sigma="0.2 deg", frame="galactic"
     )
     spectral_model = PowerLawSpectralModel(
         index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
-    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model, name="test-source")
     test_dataset.models.append(model)
     dataset = fov_bkg_maker.run(test_dataset)
 
@@ -123,7 +123,7 @@ def test_fov_bkg_maker_fit_with_source_model(obs_dataset, exclusion_mask):
 def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
-    test_dataset = obs_dataset.copy()
+    test_dataset = obs_dataset.copy(name="test-fov")
     test_dataset.background_model.tilt.frozen = False
     dataset = fov_bkg_maker.run(test_dataset)
 

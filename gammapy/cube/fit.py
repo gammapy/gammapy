@@ -89,8 +89,6 @@ class MapDataset(Dataset):
             raise ValueError("mask data must have dtype bool")
 
         self._name = make_name(name)
-        self._evaluators = {}
-
         self.background_model = None
         self.evaluation_mode = evaluation_mode
         self.counts = counts
@@ -170,15 +168,15 @@ class MapDataset(Dataset):
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
         # model section
-        n_models = 0
+        n_models, n_pars, n_free_pars = 0, 0, 0
         if self.models is not None:
             n_models = len(self.models)
+            n_pars = len(self.models.parameters)
+            n_free_pars = len(self.models.parameters.free_parameters)
 
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
-        str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.parameters))
-        str_ += "\t{:32}: {}\n\n".format(
-            "Number of free parameters", len(self.parameters.free_parameters)
-        )
+        str_ += "\t{:32}: {}\n".format("Number of parameters", n_pars)
+        str_ += "\t{:32}: {}\n\n".format("Number of free parameters", n_free_pars)
 
         if self.models is not None:
             str_ += "\t" + "\n\t".join(str(self.models).split("\n")[2:])
@@ -195,26 +193,19 @@ class MapDataset(Dataset):
         if models is None:
             self._models = None
         else:
-            if isinstance(models, (BackgroundModel, SkyModel)):
-                models = [models]
-            elif isinstance(models,(Models, list)):
-                models = list(models)
-            else:
-                raise TypeError("Invalid models")
-            models_list = [
-                model
-                for model in models
-                if self.name in model.datasets_names or model.datasets_names == "all"
-            ]
-            self._models = Models(models_list)
+            self._models = Models(models)
 
+        # TODO: clean this up (probably by removing)
         if self.models is not None:
             for model in self.models:
                 if isinstance(model, BackgroundModel):
-                    self.background_model = model
-                    break
+                    if model.datasets_names is not None:
+                        if self.name in model.datasets_names:
+                            self.background_model = model
+                            break
             else:
                 log.warning(f"No background model defined for dataset {self.name}")
+        self._evaluators = {}
 
     @property
     def evaluators(self):
@@ -224,11 +215,6 @@ class MapDataset(Dataset):
             self.npred()
 
         return self._evaluators
-
-    @property
-    def parameters(self):
-        """List of parameters (`~gammapy.modeling.Parameters`)"""
-        return self.models.parameters
 
     @property
     def _geom(self):
@@ -258,6 +244,10 @@ class MapDataset(Dataset):
 
         if self.models:
             for model in self.models:
+                if model.datasets_names is not None:
+                    if self.name not in model.datasets_names:
+                        continue
+
                 evaluator = self._evaluators.get(model.name)
 
                 if evaluator is None:
@@ -318,7 +308,7 @@ class MapDataset(Dataset):
         kwargs["counts"] = Map.from_geom(geom, unit="")
 
         background = Map.from_geom(geom, unit="")
-        kwargs["models"] = Models([BackgroundModel(background, datasets_names=[name])])
+        kwargs["models"] = Models([BackgroundModel(background, name=name + "-bkg", datasets_names=[name])])
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
         kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
         kwargs["psf"] = PSFMap.from_geom(geom_psf)
@@ -951,7 +941,9 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
         if self.background_model is not None:
-            kwargs["models"] = self.background_model.cutout(**cutout_kwargs, name=name)
+            model = self.background_model.cutout(**cutout_kwargs, name=name + "-bkg")
+            model.datasets_names = [name]
+            kwargs["models"] = model
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
