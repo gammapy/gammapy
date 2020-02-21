@@ -127,10 +127,8 @@ class Analysis:
 
         if datasets_settings.type == "1d":
             self._spectrum_extraction()
-        elif datasets_settings.type == "3d":
+        else:  # 3d
             self._map_making()
-        else:
-            ValueError(f"Invalid dataset type: {datasets_settings.type}")
 
     def set_models(self, models):
         """Set models on datasets.

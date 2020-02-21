@@ -6,10 +6,12 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.analysis import Analysis, AnalysisConfig
-from gammapy.maps import Map
+from gammapy.maps import Map, WcsNDMap
+from gammapy.cube import MapDataset
 from gammapy.spectrum import SpectrumDatasetOnOff
 from gammapy.modeling.models import Models
 from gammapy.utils.testing import requires_data, requires_dependency
+from pydantic.error_wrappers import ValidationError
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 MODEL_FILE = CONFIG_PATH / "model.yaml"
@@ -205,7 +207,6 @@ def test_geom_analysis_1d():
 def test_exclusion_region(tmp_path):
     config = get_example_config("1d")
     analysis = Analysis(config)
-
     exclusion_region = CircleSkyRegion(center=SkyCoord("85d 23d"), radius=1 * u.deg)
     exclusion_mask = Map.create(npix=(150, 150), binsz=0.05, skydir=SkyCoord("83d 22d"))
     mask = exclusion_mask.geom.region_mask([exclusion_region], inside=False)
@@ -214,10 +215,22 @@ def test_exclusion_region(tmp_path):
     exclusion_mask.write(filename)
     config.datasets.background.method = "reflected"
     config.datasets.background.exclusion = filename
-
     analysis.get_observations()
     analysis.get_datasets()
     assert len(analysis.datasets) == 2
+
+    config = get_example_config("3d")
+    analysis = Analysis(config)
+    analysis.get_observations()
+    analysis.get_datasets()
+    geom = analysis.datasets[0]._geom
+    exclusion = WcsNDMap.from_geom(geom)
+    exclusion.data = geom.region_mask([exclusion_region], inside=False).astype(int)
+    filename = tmp_path / "exclusion3d.fits"
+    exclusion.write(filename)
+    config.datasets.background.exclusion = filename
+    analysis.get_datasets()
+    assert len(analysis.datasets) == 1
 
 
 @requires_dependency("iminuit")
@@ -250,13 +263,19 @@ def test_analysis_1d_stacked():
 
 
 @requires_data()
-def test_analysis_1d_no_bkg():
+def test_analysis_no_bkg():
     config = get_example_config("1d")
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-
     assert isinstance(analysis.datasets[0], SpectrumDatasetOnOff) is False
+
+    config = get_example_config("3d")
+    config.datasets.background.method = None
+    analysis = Analysis(config)
+    analysis.get_observations()
+    analysis.get_datasets()
+    assert isinstance(analysis.datasets[0], MapDataset) is True
 
 
 @requires_dependency("iminuit")
@@ -312,3 +331,5 @@ def test_usage_errors():
         analysis.run_fit()
     with pytest.raises(RuntimeError):
         analysis.get_flux_points()
+    with pytest.raises(ValidationError):
+        analysis.config.datasets.type = "None"
