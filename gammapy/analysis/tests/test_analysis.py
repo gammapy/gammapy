@@ -5,13 +5,13 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.analysis import Analysis, AnalysisConfig
-from gammapy.maps import Map, WcsNDMap
-from gammapy.cube import MapDataset
-from gammapy.spectrum import SpectrumDatasetOnOff
-from gammapy.modeling.models import Models
-from gammapy.utils.testing import requires_data, requires_dependency
 from pydantic.error_wrappers import ValidationError
+from gammapy.analysis import Analysis, AnalysisConfig
+from gammapy.cube import MapDataset
+from gammapy.maps import Map, WcsNDMap
+from gammapy.modeling.models import Models
+from gammapy.spectrum import SpectrumDatasetOnOff
+from gammapy.utils.testing import requires_data, requires_dependency
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 MODEL_FILE = CONFIG_PATH / "model.yaml"

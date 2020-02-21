@@ -6,7 +6,7 @@ from astropy.table import Table
 from regions import CircleSkyRegion
 import yaml
 from gammapy.analysis.config import AnalysisConfig
-from gammapy.cube import MapDataset, MapDatasetMaker, SafeMaskMaker, FoVBackgroundMaker
+from gammapy.cube import FoVBackgroundMaker, MapDataset, MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
@@ -336,7 +336,9 @@ class Analysis:
             methods=safe_mask_selection, **safe_mask_settings
         )
 
-        e_true = self._make_energy_axis(datasets_settings.geom.axes.energy_true, name="energy_true").edges
+        e_true = self._make_energy_axis(
+            datasets_settings.geom.axes.energy_true, name="energy_true"
+        ).edges
 
         reference = SpectrumDataset.create(
             e_reco=e_reco, e_true=e_true, region=on_region
