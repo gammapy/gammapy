@@ -58,16 +58,20 @@ def test_light_curve_str(light_curve):
 
 
 @requires_data()
-def test_light_curve_evaluate_norm_at_time(light_curve):
-    t = Time(46300, format="mjd")
+def test_light_curve_evaluate(light_curve):
+    t = Time(59500, format="mjd")
     val = light_curve(t)
-    assert_allclose(val, 0.021192223042749835)
+    assert_allclose(val, 0.015512, rtol=1e-5)
+
+    t = Time(46300, format="mjd")
+    val = light_curve(t, ext=3)
+    assert_allclose(val, 0.01551196, rtol=1e-5)
 
 
 @requires_data()
 def test_light_curve_mean_norm_in_time_interval(light_curve):
-    val = light_curve.mean_norm_in_time_interval(46300, 46301)
-    assert_allclose(val, 0.021192284384617066)
+    val = light_curve.mean_norm_in_time_interval(59530, 59600)
+    assert_allclose(val, 0.030119, rtol=1e-5)
 
 
 def rate(x, c="1e4 s"):
@@ -85,6 +89,7 @@ def test_time_sampling(tmp_path):
     table = Table()
     table["TIME"] = time
     table["NORM"] = rate(time)
+    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT='hour')
     temporal_model = LightCurveTemplateTemporalModel(table)
 
     filename = str(make_path(tmp_path / "tmp.fits"))
@@ -103,21 +108,22 @@ def test_time_sampling(tmp_path):
     )
 
     sampler = u.Quantity((sampler - Time(t_ref)).sec, "s")
+    assert len(sampler) == 2
+    assert_allclose(sampler.value, [12661.65802564, 7826.92991], rtol=1e-5)
+
 
     table = Table()
     table["TIME"] = time
     table["NORM"] = np.ones(len(time))
+    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT='hour')
     temporal_model_uniform = LightCurveTemplateTemporalModel(table)
 
     sampler_uniform = temporal_model_uniform.sample_time(
         n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
     )
-
     sampler_uniform = u.Quantity((sampler_uniform - Time(t_ref)).sec, "s")
 
-    assert len(sampler) == 2
     assert len(sampler_uniform) == 2
-    assert_allclose(sampler.value, [12661.65802564, 26.9299098], rtol=1e-5)
     assert_allclose(sampler_uniform.value, [1261.65802564, 6026.9299098], rtol=1e-5)
 
 
