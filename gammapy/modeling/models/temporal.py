@@ -73,7 +73,7 @@ class ConstantTemporalModel(TemporalModel):
         Returns:
         norm: The model integrated flux
         """
-        return gti.time_sum
+        return gti.time_sum.value
 
     def sample_time(self, n_events, t_min, t_max, random_state=0):
         """Sample arrival times of events.
@@ -365,7 +365,9 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
 
     @lazyproperty
     def _time(self):
-        return self._time_ref + self.table["TIME"].data * getattr(u, self.table.meta['TIMEUNIT'])
+        return self._time_ref + self.table["TIME"].data * getattr(
+            u, self.table.meta["TIMEUNIT"]
+        )
 
     def evaluate(self, time, ext=0):
         """Evaluate for a given time.
@@ -389,7 +391,7 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         """
         return self._interpolator(time, ext=ext)
 
-    def integral(self, gti):
+    def integral(self, gti, **kwargs):
         """Evaluate the integrated flux within the given GTIs
 
         Parameters
@@ -401,8 +403,9 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         norm: The model integrated flux
         """
 
-        return 1
-
+        n1 = self._interpolator.antiderivative()(gti.time_stop.value)
+        n2 = self._interpolator.antiderivative()(gti.time_start.value)
+        return np.sum(n1 - n2) * 86400.0  # to return in units of sec
 
     def mean_norm_in_time_interval(self, time_min, time_max):
         """Compute mean ``norm`` in a given time interval.
@@ -445,7 +448,7 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         time : `~astropy.units.Quantity`
             Array with times of the sampled events.
         """
-        time_unit = getattr(u, self.table.meta['TIMEUNIT'])
+        time_unit = getattr(u, self.table.meta["TIMEUNIT"])
 
         t_min = Time(t_min)
         t_max = Time(t_max)

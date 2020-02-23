@@ -14,6 +14,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
+from gammapy.data.gti import GTI
 
 
 @pytest.fixture(scope="session")
@@ -89,7 +90,7 @@ def test_time_sampling(tmp_path):
     table = Table()
     table["TIME"] = time
     table["NORM"] = rate(time)
-    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT='hour')
+    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
     temporal_model = LightCurveTemplateTemporalModel(table)
 
     filename = str(make_path(tmp_path / "tmp.fits"))
@@ -111,11 +112,10 @@ def test_time_sampling(tmp_path):
     assert len(sampler) == 2
     assert_allclose(sampler.value, [12661.65802564, 7826.92991], rtol=1e-5)
 
-
     table = Table()
     table["TIME"] = time
     table["NORM"] = np.ones(len(time))
-    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT='hour')
+    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
     temporal_model_uniform = LightCurveTemplateTemporalModel(table)
 
     sampler_uniform = temporal_model_uniform.sample_time(
@@ -125,6 +125,22 @@ def test_time_sampling(tmp_path):
 
     assert len(sampler_uniform) == 2
     assert_allclose(sampler_uniform.value, [1261.65802564, 6026.9299098], rtol=1e-5)
+
+
+def test_lightcurve_temporal_model_integral():
+    time = np.arange(0, 10, 0.06) * u.hour
+    table = Table()
+    table["TIME"] = time
+    table["NORM"] = np.ones(len(time))
+    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
+    temporal_model = LightCurveTemplateTemporalModel(table)
+
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    gti = GTI.create(start, stop, reference_time=Time("2010-01-01T00:00:00"))
+
+    val = temporal_model.integral(gti)
+    assert_allclose(val, 2.5 * 86400, rtol=1e-5)
 
 
 def test_constant_temporal_model_sample():
@@ -149,6 +165,15 @@ def test_constant_temporal_model_evaluate():
     t = Time(46300, format="mjd")
     val = temporal_model(t)
     assert_allclose(val, 1.0, rtol=1e-5)
+
+
+def test_constant_temporal_model_integral():
+    temporal_model = ConstantTemporalModel()
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    gti = GTI.create(start, stop)
+    val = temporal_model.integral(gti)
+    assert_allclose(val, 2.5 * 86400, rtol=1e-5)
 
 
 def test_phase_time_sampling():
