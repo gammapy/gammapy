@@ -62,18 +62,20 @@ class ConstantTemporalModel(TemporalModel):
         """
         return np.ones_like(time)
 
-    def integral(self, gti):
-        """Evaluate the integrated flux within the given GTIs
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
 
         Parameters
-        -----------
-        gti: `~gammapy.data.GTI`
-            GTIs of the observation
-
-        Returns:
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+        Returns
+        -------
         norm: The model integrated flux
         """
-        return gti.time_sum.value
+        return u.Quantity(t_max.mjd - t_min.mjd, "day").to_value("s")
 
     def sample_time(self, n_events, t_min, t_max, random_state=0):
         """Sample arrival times of events.
@@ -391,21 +393,23 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         """
         return self._interpolator(time, ext=ext)
 
-    def integral(self, gti, **kwargs):
-        """Evaluate the integrated flux within the given GTIs
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
 
         Parameters
-        -----------
-        gti: `~gammapy.data.GTI`
-            GTIs of the observation
-
-        Returns:
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+        Returns
+        -------
         norm: The model integrated flux
         """
 
-        n1 = self._interpolator.antiderivative()(gti.time_stop.value)
-        n2 = self._interpolator.antiderivative()(gti.time_start.value)
-        return np.sum(n1 - n2) * 86400.0  # to return in units of sec
+        n1 = self._interpolator.antiderivative()(t_max.mjd)
+        n2 = self._interpolator.antiderivative()(t_min.mjd)
+        return u.Quantity(n1 - n2, "day").to_value("s")
 
     def mean_norm_in_time_interval(self, time_min, time_max):
         """Compute mean ``norm`` in a given time interval.

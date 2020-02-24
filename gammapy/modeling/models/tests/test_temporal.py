@@ -139,8 +139,9 @@ def test_lightcurve_temporal_model_integral():
     stop = [2, 3.5, 6] * u.day
     gti = GTI.create(start, stop, reference_time=Time("2010-01-01T00:00:00"))
 
-    val = temporal_model.integral(gti)
-    assert_allclose(val, 2.5 * 86400, rtol=1e-5)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 2.5 * 86400, rtol=1e-5)
 
 
 def test_constant_temporal_model_sample():
@@ -172,8 +173,9 @@ def test_constant_temporal_model_integral():
     start = [1, 3, 5] * u.day
     stop = [2, 3.5, 6] * u.day
     gti = GTI.create(start, stop)
-    val = temporal_model.integral(gti)
-    assert_allclose(val, 2.5 * 86400, rtol=1e-5)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 2.5 * 86400, rtol=1e-5)
 
 
 def test_phase_time_sampling():
