@@ -4,11 +4,10 @@ import numpy as np
 from astropy.coordinates import Angle
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map
-from gammapy.modeling.models import BackgroundModel
 from .background import make_map_background_irf
 from .edisp_map import make_edisp_map
 from .exposure import make_map_exposure_true_energy
-from .fit import MapDataset, MapDatasetOnOff
+from gammapy.datasets import MapDataset, MapDatasetOnOff
 from .psf_map import make_psf_map
 
 __all__ = ["MapDatasetMaker", "SafeMaskMaker"]
@@ -214,6 +213,8 @@ class MapDatasetMaker:
         dataset : `~gammapy.cube.MapDataset`
             Map dataset.
         """
+        from gammapy.modeling.models import BackgroundModel
+
         kwargs = {"gti": observation.gti}
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)

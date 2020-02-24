@@ -16,11 +16,10 @@ from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Parameters
 from gammapy.datasets import Dataset
 from gammapy.modeling.models import BackgroundModel, Models
-from gammapy.spectrum import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
-from .exposure import _map_spectrum_weight
+from gammapy.cube.exposure import _map_spectrum_weight
 
 __all__ = ["MapDataset", "MapDatasetOnOff"]
 
@@ -806,6 +805,8 @@ class MapDataset(Dataset):
         dataset : `~gammapy.spectrum.SpectrumDataset`
             the resulting reduced dataset
         """
+        from gammapy.spectrum import SpectrumDataset
+
         kwargs = {"gti": self.gti, "name": name}
 
         if self.gti is not None:
@@ -1388,6 +1389,8 @@ class MapDatasetOnOff(MapDataset):
         dataset : `~gammapy.spectrum.SpectrumDatasetOnOff`
             the resulting reduced dataset
         """
+        from gammapy.spectrum import SpectrumDatasetOnOff
+
         dataset = super().to_spectrum_dataset(on_region, containment_correction, name)
 
         kwargs = {}

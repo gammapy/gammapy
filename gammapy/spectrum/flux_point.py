@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.modeling import Fit
-from gammapy.datasets import Dataset, Datasets
+from gammapy.datasets import Dataset, Datasets, MapDataset
 from gammapy.modeling.models import (
     Models,
     SkyModel,
@@ -852,8 +852,6 @@ class FluxPointsEstimator:
                 par.frozen = True
 
     def _freeze_empty_background(self):
-        from gammapy.cube import MapDataset
-
         counts_all = self.estimate_counts()["counts"]
 
         for counts, dataset in zip(counts_all, self.datasets):

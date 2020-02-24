@@ -4,7 +4,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDataset, MapDatasetMaker
+from gammapy.cube import MapDatasetMaker
+from gammapy.datasets import MapDataset
 from gammapy.data import Observation
 from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom

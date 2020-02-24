@@ -5,8 +5,8 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 import gammapy
+from gammapy.datasets import MapDataset
 from gammapy.cube import (
-    MapDataset,
     PSFMap,
     make_map_background_irf,
     make_map_exposure_true_energy,

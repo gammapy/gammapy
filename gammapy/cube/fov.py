@@ -2,8 +2,6 @@
 """FoV background estimation."""
 import logging
 from gammapy.maps import Map
-from gammapy.modeling import Fit
-from gammapy.datasets import Datasets
 
 __all__ = ["FoVBackgroundMaker"]
 
@@ -72,6 +70,8 @@ class FoVBackgroundMaker:
 
     def _fit_bkg(self, dataset):
         """Fit the FoV background model on the dataset counts data"""
+        from gammapy.modeling import Fit
+        from gammapy.datasets import Datasets
 
         # freeze all model components not related to background model
         datasets = Datasets([dataset])

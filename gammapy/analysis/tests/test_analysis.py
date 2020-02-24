@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from pydantic.error_wrappers import ValidationError
 from gammapy.analysis import Analysis, AnalysisConfig
-from gammapy.cube import MapDataset
+from gammapy.datasets import MapDataset
 from gammapy.maps import Map, WcsNDMap
 from gammapy.modeling.models import Models
 from gammapy.spectrum import SpectrumDatasetOnOff
