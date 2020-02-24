@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
-from gammapy.cube import AdaptiveRingBackgroundMaker, RingBackgroundMaker
+from gammapy.makers import AdaptiveRingBackgroundMaker, RingBackgroundMaker
 from gammapy.cube.make import MapDatasetMaker, SafeMaskMaker
 from gammapy.datasets import MapDataset
 from gammapy.data import DataStore
@@ -40,11 +40,6 @@ def exclusion_mask(geom):
     exclusion = WcsNDMap.from_geom(geom)
     exclusion.data = geom.region_mask([region], inside=False)
     return exclusion
-
-
-@pytest.fixture(scope="session")
-def map_dataset_maker():
-    return
 
 
 @requires_data()

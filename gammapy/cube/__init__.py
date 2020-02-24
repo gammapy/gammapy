@@ -4,5 +4,4 @@ from .background import *
 from .exposure import *
 from .fov import *
 from .make import *
-from .ring import *
 from .simulate import *
