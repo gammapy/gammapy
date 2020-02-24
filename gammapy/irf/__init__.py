@@ -5,6 +5,7 @@ Instrument response functions (IRFs).
 from .background import *
 from .effective_area import *
 from .energy_dispersion import *
+from .edisp_map import *
 from .io import *
 from .irf_reduce import *
 from .irf_stack import *

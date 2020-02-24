@@ -6,13 +6,12 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.cube import (
-    EDispMap,
     PSFMap,
     make_map_exposure_true_energy,
 )
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.data import GTI
-from gammapy.irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
+from gammapy.irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF, EDispMap
 from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling import Fit
 from gammapy.datasets import Datasets
