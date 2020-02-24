@@ -5,7 +5,6 @@ from astropy import units as u
 from astropy.table import Table
 from gammapy.modeling.models import Models, SkyModel
 from gammapy.utils.scripts import make_name
-from gammapy.spectrum import FluxPoints
 from .core import Dataset
 
 log = logging.getLogger(__name__)
@@ -124,6 +123,7 @@ class FluxPointsDataset(Dataset):
         dataset : `FluxPointsDataset`
             Flux point datasets.
         """
+        from gammapy.spectrum import FluxPoints
 
         table = Table.read(data["filename"])
         mask_fit = table["mask_fit"].data.astype("bool")

@@ -2,7 +2,6 @@
 import logging
 import numpy as np
 from astropy.utils import lazyproperty
-from gammapy.datasets import Datasets
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
@@ -70,6 +69,8 @@ class Fit:
     """
 
     def __init__(self, datasets):
+        from gammapy.datasets import Datasets
+
         self.datasets = Datasets(datasets)
 
     @lazyproperty
