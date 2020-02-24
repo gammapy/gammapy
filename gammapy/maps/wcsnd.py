@@ -609,7 +609,7 @@ class WcsNDMap(WcsMap):
         map : `WcsNDMap`
             Convolved map.
         """
-        from gammapy.cube import PSFKernel
+        from gammapy.irf import PSFKernel
 
         conv_function = scipy.signal.fftconvolve if use_fft else scipy.ndimage.convolve
         convolved_data = np.empty(self.data.shape, dtype=np.float32)
