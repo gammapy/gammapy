@@ -180,7 +180,7 @@ class Datasets(collections.abc.MutableSequence):
         dataset : 'gammapy.modeling.Datasets'
             Datasets
         """
-        from gammapy.modeling.serialize import dict_to_datasets
+        from .io import dict_to_datasets
 
         components = read_yaml(make_path(filemodel))
         data_list = read_yaml(make_path(filedata))
@@ -199,8 +199,7 @@ class Datasets(collections.abc.MutableSequence):
         overwrite : bool
             overwrite datasets FITS files
         """
-        from gammapy.modeling.serialize import datasets_to_dict
-
+        from .io import datasets_to_dict
         path = make_path(path)
 
         datasets_dict, components_dict = datasets_to_dict(self, path, prefix, overwrite)
