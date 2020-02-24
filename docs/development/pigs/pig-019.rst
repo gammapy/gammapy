@@ -7,10 +7,10 @@ PIG 19 - Gammapy package structure follow up
 ********************************************
 
 * Author: Axel Donath, Régis Terrier
-* Created: Jan 16, 2019
-* Accepted:
-* Status:
-* Discussion:
+* Created: Jan 16, 2020
+* Accepted: Feb 24, 2020
+* Status: accepted
+* Discussion: `GH 2720`_
 
 Abstract
 ========
@@ -142,8 +142,8 @@ Alternatives
 ------------
 An alternative approach could be to introduce a ``gammapy.core``
 sub-package that contains all base-classes, container classes
-and registries. Introduce a ``subpackage/plotting.py`` file,
-where plotting related functionality lives.
+and registries. For each sub-package an ``subpackage/plotting.py`` file,
+could be introduced where plotting related functionality lives.
 
 
 Outlook
@@ -156,9 +156,17 @@ packages can possibly be resolved.
 
 Decision
 ========
+This PIG received only little feedback, but there was general agreement
+in `GH 2720`_ on the introduction of the ``gammapy.datasets`` and ``gammapy.makers``
+sub-packages as well as the location of irf maps. Those changes will be
+introduced first. There was some concern about the ``gammapy.estimators`` sub-package.
+For this reason the implementation of this will be delayed and can be re-discussed
+at the next Gammapy coding sprint in person. A final review announced on the Gammapy
+and CC mailing list did not yield any additional comments. Therefore the PIG
+was accepted on Feb 24, 2020.
 
 
-
+.. _GH 2720: https://github.com/gammapy/gammapy/pull/2720
 .. _GH 2555: https://github.com/gammapy/gammapy/issues/2555
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
 .. _sherpa: https://github.com/sherpa/sherpa
