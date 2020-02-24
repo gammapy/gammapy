@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from astropy.units import Quantity
 from .effective_area import EffectiveAreaTable
-from .energy_dispersion import EDispKernel
+from .edisp_kernel import EDispKernel
 
 __all__ = ["IRFStacker"]
 

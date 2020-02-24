@@ -3,9 +3,10 @@ from copy import deepcopy
 import numpy as np
 from scipy.interpolate import interp1d
 import astropy.io.fits as fits
-from gammapy.irf import EDispKernel
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
+from .edisp_kernel import EDispKernel
+
 
 __all__ = ["EDispMap"]
 
