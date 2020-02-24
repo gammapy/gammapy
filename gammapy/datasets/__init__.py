@@ -1,2 +1,2 @@
 from .core import *
-from .fit import *
+from .map import *

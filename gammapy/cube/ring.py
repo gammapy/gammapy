@@ -4,7 +4,7 @@ import itertools
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.datasets.fit import MapDatasetOnOff
+from gammapy.datasets import MapDatasetOnOff
 from gammapy.maps import Map, scale_cube
 
 __all__ = ["AdaptiveRingBackgroundMaker", "RingBackgroundMaker"]
