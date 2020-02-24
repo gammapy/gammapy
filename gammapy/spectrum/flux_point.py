@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.modeling import Fit
-from gammapy.datasets import Dataset, Datasets, MapDataset
+from gammapy.datasets import Dataset, Datasets, MapDataset, SpectrumDatasetOnOff
 from gammapy.modeling.models import (
     Models,
     SkyModel,
@@ -15,7 +15,6 @@ from gammapy.modeling.models import (
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
-from .dataset import SpectrumDatasetOnOff
 
 __all__ = ["FluxPoints", "FluxPointsEstimator", "FluxPointsDataset"]
 

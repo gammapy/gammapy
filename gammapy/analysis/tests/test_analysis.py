@@ -7,10 +7,9 @@ from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from pydantic.error_wrappers import ValidationError
 from gammapy.analysis import Analysis, AnalysisConfig
-from gammapy.datasets import MapDataset
+from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.maps import Map, WcsNDMap
 from gammapy.modeling.models import Models
-from gammapy.spectrum import SpectrumDatasetOnOff
 from gammapy.utils.testing import requires_data, requires_dependency
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"

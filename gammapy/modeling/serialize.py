@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
-from gammapy.datasets import MapDataset
-from gammapy.spectrum import FluxPointsDataset, SpectrumDatasetOnOff
+from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
+from gammapy.spectrum import FluxPointsDataset
 from .models import Registry, SkyDiffuseCube, SkyModel
 
 # TODO: move this elsewhere ?

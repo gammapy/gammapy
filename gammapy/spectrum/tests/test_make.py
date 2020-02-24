@@ -8,9 +8,9 @@ from regions import CircleSkyRegion
 from gammapy.cube import SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import WcsGeom, WcsNDMap
+from gammapy.datasets import SpectrumDataset
 from gammapy.spectrum import (
     ReflectedRegionsBackgroundMaker,
-    SpectrumDataset,
     SpectrumDatasetMaker,
 )
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
