@@ -17,9 +17,8 @@ from .core import Model
 class TemporalModel(Model):
     """Temporal model base class."""
 
-    def __call__(self, time):
+    def __call__(self, time, **kwargs):
         """Call evaluate method"""
-        kwargs = {par.name: par.quantity for par in self.parameters}
         return self.evaluate(time.mjd, **kwargs)
 
 
@@ -62,6 +61,21 @@ class ConstantTemporalModel(TemporalModel):
 
         """
         return np.ones_like(time)
+
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+        Returns
+        -------
+        norm: The model integrated flux
+        """
+        return u.Quantity(t_max.mjd - t_min.mjd, "day").to_value("s")
 
     def sample_time(self, n_events, t_min, t_max, random_state=0):
         """Sample arrival times of events.
@@ -280,7 +294,7 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
 
     The lightcurve is given as a table with columns ``time`` and ``norm``.
 
-    The ``norm`` is supposed to be a unite-less multiplicative factor in the model,
+    The ``norm`` is supposed to be a unit-less multiplicative factor in the model,
     to be multiplied with a spectral model.
 
     The model does linear interpolation for times between the given ``(time, norm)`` values.
@@ -314,7 +328,7 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
 
     Compute ``norm`` at a given time:
 
-    >>> light_curve.evaluate_norm_at_time(46300)
+    >>> light_curve.evaluate(46300)
     0.49059393580053845
 
     Compute mean ``norm`` in a given time interval:
@@ -342,10 +356,10 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         )
 
     @lazyproperty
-    def _interpolator(self):
-        x = self.table["TIME"].data
+    def _interpolator(self, ext=0):
+        x = self._time.value
         y = self.table["NORM"].data
-        return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1)
+        return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1, ext=ext)
 
     @lazyproperty
     def _time_ref(self):
@@ -353,17 +367,20 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
 
     @lazyproperty
     def _time(self):
-        return self._time_ref + self.table["TIME"].data * u.s
+        return self._time_ref + self.table["TIME"].data * getattr(
+            u, self.table.meta["TIMEUNIT"]
+        )
 
-    def evaluate(self, time, ext_mode=3):
+    def evaluate(self, time, ext=0):
         """Evaluate for a given time.
 
         Parameters
         ----------
         time : array_like
             Time since the ``reference`` time.
-        ext_mode : int or str, optional
-            Controls the extrapolation mode for elements not in the interval defined by the knot sequence.
+        ext : int or str, optional
+            Parameter passed to ~scipy.interpolate.InterpolatedUnivariateSpline
+            Controls the extrapolation mode for GTIs outside the range
             if ext=0 or ‘extrapolate’, return the extrapolated value.
             if ext=1 or ‘zeros’, return 0
             if ext=2 or ‘raise’, raise a ValueError
@@ -374,7 +391,25 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         -------
         norm : array_like
         """
-        return self._interpolator(time, ext=ext_mode)
+        return self._interpolator(time, ext=ext)
+
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+        Returns
+        -------
+        norm: The model integrated flux
+        """
+
+        n1 = self._interpolator.antiderivative()(t_max.mjd)
+        n2 = self._interpolator.antiderivative()(t_min.mjd)
+        return u.Quantity(n1 - n2, "day").to_value("s")
 
     def mean_norm_in_time_interval(self, time_min, time_max):
         """Compute mean ``norm`` in a given time interval.
@@ -417,7 +452,7 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         time : `~astropy.units.Quantity`
             Array with times of the sampled events.
         """
-        time_unit = u.second
+        time_unit = getattr(u, self.table.meta["TIMEUNIT"])
 
         t_min = Time(t_min)
         t_max = Time(t_max)
@@ -432,7 +467,7 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         t_step = t_delta.to_value(time_unit)
         t = np.arange(0, t_stop, t_step)
 
-        pdf = self.evaluate(t * time_unit)
+        pdf = self.evaluate(t)
 
         sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
         time_pix = sampler.sample(n_events)[0]
