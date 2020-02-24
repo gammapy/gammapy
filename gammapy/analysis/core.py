@@ -4,14 +4,13 @@ import logging
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
-import yaml
 from gammapy.analysis.config import AnalysisConfig
 from gammapy.cube import FoVBackgroundMaker, MapDataset, MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling import Datasets, Fit
+from gammapy.modeling import Fit
+from gammapy.datasets import Datasets
 from gammapy.modeling.models import Models
-from gammapy.modeling.serialize import dict_to_models
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,

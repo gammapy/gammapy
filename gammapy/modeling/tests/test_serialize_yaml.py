@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling import Datasets
+from gammapy.datasets import Datasets
 from gammapy.modeling.models import (
     MODELS,
     AbsorbedSpectralModel,

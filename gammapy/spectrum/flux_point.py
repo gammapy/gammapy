@@ -4,7 +4,8 @@ import numpy as np
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
-from gammapy.modeling import Dataset, Datasets, Fit, Parameters
+from gammapy.modeling import Fit
+from gammapy.datasets import Dataset, Datasets
 from gammapy.modeling.models import (
     Models,
     SkyModel,
