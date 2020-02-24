@@ -6,18 +6,19 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
-from gammapy.modeling import Dataset, Parameters
+from gammapy.datasets import Dataset
 from gammapy.modeling.models import Models, SkyModel
 from gammapy.stats import cash, significance, significance_on_off, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
-from .core import CountsSpectrum, SpectrumEvaluator
+from gammapy.maps import CountsSpectrum
 
 __all__ = [
     "SpectrumDatasetOnOff",
     "SpectrumDataset",
     "plot_spectrum_datasets_off_regions",
+    "SpectrumEvaluator"
 ]
 
 
@@ -1343,3 +1344,87 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None):
         handles.append(handle)
 
     plt.legend(handles=handles)
+
+
+class SpectrumEvaluator:
+    """Calculate number of predicted counts (``npred``).
+
+    The true and reconstructed energy binning are inferred from the provided IRFs.
+
+    Parameters
+    ----------
+    model : `~gammapy.modeling.models.SkyModel`
+        Spectral model
+    aeff : `~gammapy.irf.EffectiveAreaTable`
+        EffectiveArea
+    edisp : `~gammapy.irf.EDispKernel`, optional
+        Energy dispersion kernel.
+    livetime : `~astropy.units.Quantity`
+        Observation duration (may be contained in aeff)
+    e_true : `~astropy.units.Quantity`, optional
+        Desired energy axis of the prediced counts vector if no IRFs are given
+
+    Examples
+    --------
+    Calculate predicted counts in a desired reconstruced energy binning
+
+    .. plot::
+        :include-source:
+
+        import numpy as np
+        import astropy.units as u
+        import matplotlib.pyplot as plt
+        from gammapy.irf import EffectiveAreaTable, EDispKernel
+        from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+        from gammapy.spectrum import SpectrumEvaluator
+
+        e_true = np.logspace(-2, 2.5, 109) * u.TeV
+        e_reco = np.logspace(-2, 2, 73) * u.TeV
+
+        aeff = EffectiveAreaTable.from_parametrization(energy=e_true)
+        edisp = EDispKernel.from_gauss(e_true=e_true, e_reco=e_reco, sigma=0.3, bias=0)
+
+        pwl = PowerLawSpectralModel(index=2.3, amplitude="2.5e-12 cm-2 s-1 TeV-1", reference="1 TeV")
+        model = SkyModel(spectral_model=pwl)
+
+        predictor = SpectrumEvaluator(model=model, aeff=aeff, edisp=edisp, livetime="1 hour")
+        predictor.compute_npred().plot_hist()
+        plt.show()
+    """
+
+    def __init__(self, model, aeff=None, edisp=None, livetime=None):
+        self.model = model
+        self.aeff = aeff
+        self.edisp = edisp
+        self.livetime = livetime
+
+    def compute_npred(self):
+        e_true = self.aeff.energy.edges
+        integral_flux = self.model.spectral_model.integral(
+            emin=e_true[:-1], emax=e_true[1:], intervals=True
+        )
+
+        true_counts = self.apply_aeff(integral_flux)
+        return self.apply_edisp(true_counts)
+
+    def apply_aeff(self, integral_flux):
+        if self.aeff is not None and self.model.apply_irf["exposure"] is True:
+            cts = integral_flux * self.aeff.data.data
+        else:
+            cts = integral_flux
+
+        # Multiply with livetime if not already contained in aeff or model
+        if cts.unit.is_equivalent("s-1"):
+            cts *= self.livetime
+
+        return cts.to("")
+
+    def apply_edisp(self, true_counts):
+        if self.edisp is not None and self.model.apply_irf["edisp"] is True:
+            cts = self.edisp.apply(true_counts)
+            e_reco = self.edisp.e_reco.edges
+        else:
+            cts = true_counts
+            e_reco = self.aeff.energy.edges
+
+        return CountsSpectrum(data=cts, energy_lo=e_reco[:-1], energy_hi=e_reco[1:])

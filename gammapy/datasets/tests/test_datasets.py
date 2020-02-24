@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
-from gammapy.modeling import Datasets
-from .test_fit import MyDataset
+from gammapy.datasets import Datasets
+from gammapy.modeling.tests.test_fit import MyDataset
 
 
 @pytest.fixture(scope="session")

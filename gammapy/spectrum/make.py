@@ -3,9 +3,8 @@ import logging
 import numpy as np
 from astropy import units as u
 from regions import CircleSkyRegion
-from gammapy.maps import WcsGeom
-from .core import CountsSpectrum
-from .dataset import SpectrumDataset
+from gammapy.maps import WcsGeom, CountsSpectrum
+from gammapy.datasets import SpectrumDataset
 
 __all__ = ["SpectrumDatasetMaker"]
 

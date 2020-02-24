@@ -4,7 +4,6 @@ import itertools
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.cube.fit import MapDatasetOnOff
 from gammapy.maps import Map, scale_cube
 
 __all__ = ["AdaptiveRingBackgroundMaker", "RingBackgroundMaker"]
@@ -202,6 +201,8 @@ class AdaptiveRingBackgroundMaker:
         dataset_on_off : `~gammapy.cube.fit.MapDatasetOnOff`
             On off dataset.
         """
+        from gammapy.datasets import MapDatasetOnOff
+
         cubes = self.make_cubes(dataset)
         acceptance, acceptance_off, counts_off = self._reduce_cubes(cubes, dataset)
 
@@ -316,6 +317,8 @@ class RingBackgroundMaker:
         dataset_on_off : `~gammapy.cube.fit.MapDatasetOnOff`
             On off dataset.
         """
+        from gammapy.datasets import MapDatasetOnOff
+
         maps_off = self.make_maps_off(dataset)
         maps_off["acceptance"] = dataset.background_model.map
 

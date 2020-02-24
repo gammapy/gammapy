@@ -5,7 +5,6 @@ import astropy.io.fits as fits
 import astropy.units as u
 from gammapy.irf import EnergyDependentTablePSF
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
-from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .exposure import _map_spectrum_weight
 from .psf_kernel import PSFKernel
@@ -478,6 +477,8 @@ class PSFMap:
         psf_out : `PSFMap`
             `PSFMap` with the energy axis summed over
         """
+        from gammapy.modeling.models import PowerLawSpectralModel
+
         if spectrum is None:
             spectrum = PowerLawSpectralModel(index=2.0)
 

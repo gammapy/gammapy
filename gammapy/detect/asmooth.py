@@ -3,7 +3,7 @@
 import numpy as np
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.cube import MapDatasetOnOff
+from gammapy.datasets import MapDatasetOnOff
 from gammapy.maps import WcsNDMap, scale_cube
 from gammapy.stats import significance
 

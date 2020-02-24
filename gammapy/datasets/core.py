@@ -5,8 +5,8 @@ import copy
 import numpy as np
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
-from ..maps import WcsNDMap
-from .parameter import Parameters
+from gammapy.maps import WcsNDMap
+
 
 __all__ = ["Dataset", "Datasets"]
 
@@ -123,6 +123,9 @@ class Datasets(collections.abc.MutableSequence):
         Duplicate parameter objects have been removed.
         The order of the unique parameters remains.
         """
+        #TODO: remove this delayed import
+        from gammapy.modeling.parameter import Parameters
+
         parameters = Parameters.from_stack([_.models.parameters for _ in self])
         return parameters.unique_parameters
 
@@ -177,7 +180,7 @@ class Datasets(collections.abc.MutableSequence):
         dataset : 'gammapy.modeling.Datasets'
             Datasets
         """
-        from .serialize import dict_to_datasets
+        from .io import dict_to_datasets
 
         components = read_yaml(make_path(filemodel))
         data_list = read_yaml(make_path(filedata))
@@ -196,8 +199,7 @@ class Datasets(collections.abc.MutableSequence):
         overwrite : bool
             overwrite datasets FITS files
         """
-        from .serialize import datasets_to_dict
-
+        from .io import datasets_to_dict
         path = make_path(path)
 
         datasets_dict, components_dict = datasets_to_dict(self, path, prefix, overwrite)

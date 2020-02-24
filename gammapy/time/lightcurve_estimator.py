@@ -4,7 +4,8 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
-from gammapy.modeling import Datasets, Fit
+from gammapy.modeling import Fit
+from gammapy.datasets import Datasets
 from gammapy.modeling.models import ScaleSpectralModel
 from gammapy.spectrum import FluxPoints
 from gammapy.time import LightCurve

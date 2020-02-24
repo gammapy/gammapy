@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from gammapy.data import EventList
-from .core import CountsSpectrum
-from .dataset import SpectrumDatasetOnOff
+from gammapy.maps import CountsSpectrum
+from gammapy.datasets import SpectrumDatasetOnOff
 
 __all__ = ["PhaseBackgroundMaker"]
 

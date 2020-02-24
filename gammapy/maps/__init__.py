@@ -13,3 +13,4 @@ from .wcsmap import *
 from .wcsnd import *
 from .region import *
 from .regionnd import *
+from .counts_spectrum import *

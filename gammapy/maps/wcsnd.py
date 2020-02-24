@@ -15,6 +15,8 @@ from gammapy.utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
 from .utils import INVALID_INDEX, interp_to_order
 from .wcsmap import WcsGeom, WcsMap
+from .counts_spectrum import CountsSpectrum
+
 
 __all__ = ["WcsNDMap"]
 
@@ -566,8 +568,6 @@ class WcsNDMap(WcsMap):
         spectrum : `~gammapy.spectrum.CountsSpectrum`
             Spectrum in the given region.
         """
-        from gammapy.spectrum import CountsSpectrum
-
         energy_axis = self.geom.axes[0]
 
         if region:

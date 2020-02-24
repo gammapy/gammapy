@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Built-in models in Gammapy."""
+from gammapy.utils.registry import Registry
 from .core import *
 from .cube import *
 from .spatial import *
@@ -7,25 +8,6 @@ from .spectral import *
 from .spectral_cosmic_ray import *
 from .spectral_crab import *
 from .temporal import *
-
-
-class Registry(list):
-    """Gammapy model registry class."""
-
-    def get_cls(self, tag):
-        for cls in self:
-            if hasattr(cls, "tag") and cls.tag == tag:
-                return cls
-        raise KeyError(f"No model found with tag: {tag!r}")
-
-    def __str__(self):
-        info = "Registry\n"
-        info += "--------\n\n"
-
-        for item in self:
-            info += f"\t{item.tag}\n"
-
-        return info.expandtabs(tabsize=4)
 
 
 SPATIAL_MODELS = Registry(

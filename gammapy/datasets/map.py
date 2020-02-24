@@ -13,13 +13,15 @@ from gammapy.cube.psf_map import PSFMap
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling import Dataset, Parameters
-from gammapy.modeling.models import BackgroundModel, Models, SkyModel
-from gammapy.spectrum import SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.modeling import Parameters
+from gammapy.modeling.models import BackgroundModel, Models
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
-from .exposure import _map_spectrum_weight
+from gammapy.cube.exposure import _map_spectrum_weight
+from .core import Dataset
+from .spectrum import SpectrumDatasetOnOff, SpectrumDataset
+
 
 __all__ = ["MapDataset", "MapDatasetOnOff"]
 

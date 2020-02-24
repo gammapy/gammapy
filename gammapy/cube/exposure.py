@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from gammapy.maps import WcsNDMap
-from gammapy.modeling.models import PowerLawSpectralModel
 
 __all__ = ["make_map_exposure_true_energy"]
 
@@ -66,6 +65,8 @@ def _map_spectrum_weight(map, spectrum=None):
     map_weighted : `~gammapy.maps.Map`
         Weighted image
     """
+    from gammapy.modeling.models import PowerLawSpectralModel
+
     if spectrum is None:
         spectrum = PowerLawSpectralModel(index=2.0)
 

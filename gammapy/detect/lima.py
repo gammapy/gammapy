@@ -5,7 +5,7 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy.convolution import Tophat2DKernel
 from gammapy.stats import significance, significance_on_off
-from gammapy.cube import MapDataset, MapDatasetOnOff
+from gammapy.datasets import MapDataset, MapDatasetOnOff
 
 __all__ = [
     "LiMaMapEstimator",

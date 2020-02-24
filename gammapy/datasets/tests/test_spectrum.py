@@ -8,15 +8,19 @@ from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.modeling import Datasets, Fit
+from gammapy.modeling import Fit
+from gammapy.datasets import Datasets
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     ExpCutoffPowerLawSpectralModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
+    TemplateSpectralModel
 )
-from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.datasets.spectrum import SpectrumEvaluator
+from gammapy.maps import CountsSpectrum
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import (
     assert_time_allclose,
@@ -26,6 +30,7 @@ from gammapy.utils.testing import (
 )
 from gammapy.utils.time import time_ref_to_dict
 from gammapy.utils.regions import make_region, compound_region_to_list
+
 
 @requires_dependency("iminuit")
 class TestSpectrumDataset:
@@ -780,3 +785,59 @@ def test_spectrum_dataset_on_off_to_yaml(tmpdir):
     assert datasets_read[0].name == datasets[0].name
     assert datasets_read[1].name == datasets[1].name
     assert datasets_read[1].counts.data.sum() == datasets[1].counts.data.sum()
+
+
+def get_test_cases():
+    e_true = u.Quantity(np.logspace(-1, 2, 120), "TeV")
+    e_reco = u.Quantity(np.logspace(-1, 2, 100), "TeV")
+    return [
+        dict(
+            model=SkyModel(
+                spectral_model=PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1")
+            ),
+            aeff=EffectiveAreaTable.from_parametrization(e_true),
+            livetime="10 h",
+            npred=1448.05960,
+        ),
+        dict(
+            model=SkyModel(
+                spectral_model=PowerLawSpectralModel(
+                    reference="1 GeV", amplitude="1e-11 GeV-1 cm-2 s-1"
+                )
+            ),
+            aeff=EffectiveAreaTable.from_parametrization(e_true),
+            livetime="30 h",
+            npred=4.34417881,
+        ),
+        dict(
+            model=SkyModel(
+                spectral_model=PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1")
+            ),
+            aeff=EffectiveAreaTable.from_parametrization(e_true),
+            edisp=EDispKernel.from_gauss(
+                e_reco=e_reco, e_true=e_true, bias=0, sigma=0.2
+            ),
+            livetime="10 h",
+            npred=1437.494815,
+        ),
+        dict(
+            model=SkyModel(
+                spectral_model=TemplateSpectralModel(
+                    energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
+                    values=[4.0, 3.0, 1.0, 0.1] * u.Unit("TeV-1"),
+                )
+            ),
+            aeff=EffectiveAreaTable.from_constant([0.1, 0.2, 0.3, 0.4] * u.TeV, 1),
+            npred=0.554513062,
+        ),
+    ]
+
+
+@pytest.mark.parametrize("case", get_test_cases())
+def test_counts_predictor(case):
+    opts = case.copy()
+    del opts["npred"]
+    predictor = SpectrumEvaluator(**opts)
+    npred = predictor.compute_npred()
+    assert npred.unit == ""
+    assert_allclose(npred.total_counts, case["npred"])

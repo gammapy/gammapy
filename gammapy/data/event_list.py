@@ -285,7 +285,7 @@ class EventListBase:
         return MapAxis.from_energy_bounds(energy.min(), energy.max(), 50).edges
 
     def _counts_spectrum(self, ebounds):
-        from gammapy.spectrum import CountsSpectrum
+        from gammapy.maps import CountsSpectrum
 
         if not ebounds:
             ebounds = self._default_plot_ebounds()
