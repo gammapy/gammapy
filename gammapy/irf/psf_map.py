@@ -3,63 +3,14 @@ from copy import deepcopy
 import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
-from gammapy.irf import EnergyDependentTablePSF
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
-from .exposure import _map_spectrum_weight
+from gammapy.modeling.models import PowerLawSpectralModel
 from .psf_kernel import PSFKernel
+from .psf_table import EnergyDependentTablePSF
 
-__all__ = ["make_psf_map", "PSFMap"]
 
-
-def make_psf_map(psf, pointing, geom, exposure_map=None):
-    """Make a psf map for a single observation
-
-    Expected axes : rad and true energy in this specific order
-    The name of the rad MapAxis is expected to be 'rad'
-
-    Parameters
-    ----------
-    psf : `~gammapy.irf.PSF3D`
-        the PSF IRF
-    pointing : `~astropy.coordinates.SkyCoord`
-        the pointing direction
-    geom : `~gammapy.maps.Geom`
-        the map geom to be used. It provides the target geometry.
-        rad and true energy axes should be given in this specific order.
-    exposure_map : `~gammapy.maps.Map`, optional
-        the associated exposure map.
-        default is None
-
-    Returns
-    -------
-    psfmap : `~gammapy.cube.PSFMap`
-        the resulting PSF map
-    """
-    energy_axis = geom.get_axis_by_name("energy_true")
-    energy = energy_axis.center
-
-    rad_axis = geom.get_axis_by_name("theta")
-    rad = rad_axis.center
-
-    # Compute separations with pointing position
-    offset = geom.separation(pointing)
-
-    # Compute PSF values
-    # TODO: allow broadcasting in PSF3D.evaluate()
-    psf_values = psf._interpolate(
-        (
-            rad[:, np.newaxis, np.newaxis],
-            offset,
-            energy[:, np.newaxis, np.newaxis, np.newaxis],
-        )
-    )
-
-    # TODO: this probably does not ensure that probability is properly normalized in the PSFMap
-    # Create Map and fill relevant entries
-    data = psf_values.to_value("sr-1")
-    psfmap = Map.from_geom(geom, data=data, unit="sr-1")
-    return PSFMap(psfmap, exposure_map)
+__all__ = ["PSFMap"]
 
 
 class PSFMap:
@@ -477,7 +428,7 @@ class PSFMap:
         psf_out : `PSFMap`
             `PSFMap` with the energy axis summed over
         """
-        from gammapy.modeling.models import PowerLawSpectralModel
+        from gammapy.cube.exposure import _map_spectrum_weight
 
         if spectrum is None:
             spectrum = PowerLawSpectralModel(index=2.0)

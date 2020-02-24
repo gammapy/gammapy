@@ -5,8 +5,9 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
-from gammapy.cube import EDispMap, make_edisp_map, make_map_exposure_true_energy
-from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
+from gammapy.cube import make_map_exposure_true_energy
+from gammapy.cube.make import make_edisp_map
+from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D, EDispMap
 from gammapy.maps import MapAxis, MapCoord, WcsGeom
 
 

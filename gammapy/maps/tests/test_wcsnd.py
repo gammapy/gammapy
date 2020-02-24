@@ -8,9 +8,8 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
-from gammapy.cube import PSFKernel
 from gammapy.datasets.map import MapEvaluator
-from gammapy.irf import EnergyDependentMultiGaussPSF
+from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.maps.utils import fill_poisson
 from gammapy.modeling.models import (

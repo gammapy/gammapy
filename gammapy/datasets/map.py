@@ -7,9 +7,9 @@ from astropy.nddata.utils import NoOverlapError
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
-from gammapy.cube.edisp_map import EDispMap
-from gammapy.cube.psf_kernel import PSFKernel
-from gammapy.cube.psf_map import PSFMap
+from gammapy.irf.edisp_map import EDispMap
+from gammapy.irf.psf_kernel import PSFKernel
+from gammapy.irf.psf_map import PSFMap
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import Map, MapAxis

@@ -3,9 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.cube import PSFKernel
 from gammapy.datasets.map import MapEvaluator
-from gammapy.irf import EDispKernel
+from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     BackgroundModel,
