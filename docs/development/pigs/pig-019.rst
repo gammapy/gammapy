@@ -169,6 +169,4 @@ was accepted on Feb 24, 2020.
 .. _GH 2720: https://github.com/gammapy/gammapy/pull/2720
 .. _GH 2555: https://github.com/gammapy/gammapy/issues/2555
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
-.. _sherpa: https://github.com/sherpa/sherpa
-.. _astropy: https://github.com/astropy/astropy
 .. _sunpy: https://github.com/sunpy/sunpy

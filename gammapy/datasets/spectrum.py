@@ -1376,7 +1376,7 @@ class SpectrumEvaluator:
         import matplotlib.pyplot as plt
         from gammapy.irf import EffectiveAreaTable, EDispKernel
         from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-        from gammapy.spectrum import SpectrumEvaluator
+        from gammapy.datasets.spectrum import SpectrumEvaluator
 
         e_true = np.logspace(-2, 2.5, 109) * u.TeV
         e_reco = np.logspace(-2, 2, 73) * u.TeV

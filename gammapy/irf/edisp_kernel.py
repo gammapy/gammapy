@@ -10,6 +10,9 @@ from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 
 
+__all__ = ["EDispKernel"]
+
+
 class EDispKernel:
     """Energy dispersion matrix.
 

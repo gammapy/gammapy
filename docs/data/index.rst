@@ -2,9 +2,9 @@
 
 .. _data:
 
-****************************
-data - Data and observations
-****************************
+***************************************
+data - DL3 data access and observations
+***************************************
 
 .. currentmodule:: gammapy.data
 

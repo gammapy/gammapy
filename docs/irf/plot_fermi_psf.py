@@ -1,7 +1,6 @@
 """Plot Fermi PSF."""
 import matplotlib.pyplot as plt
-from gammapy.cube import PSFKernel
-from gammapy.irf import EnergyDependentTablePSF
+from gammapy.irf import EnergyDependentTablePSF, PSFKernel
 from gammapy.maps import WcsGeom
 
 filename = "$GAMMAPY_DATA/tests/unbundled/fermi/psf.fits"

@@ -6,7 +6,7 @@
 Reflected regions background
 ****************************
 
-.. currentmodule:: gammapy.spectrum
+.. currentmodule:: gammapy.makers
 
 Overview
 --------
@@ -39,7 +39,7 @@ complex region such as a `~regions.CircleAnnulusSkyRegion` a
 
 The following example shows how to create such regions:
 
-.. plot:: spectrum/create_region.py
+.. plot:: makers/create_region.py
     :include-source:
 
 The reflected region finder
@@ -53,7 +53,7 @@ This is useful to limit contamination by events leaking out the ON region. It
 also shows how to change the minimum distance between adjacent regions as well
 as the maximum number of reflected regions.
 
-.. plot:: spectrum/make_reflected_regions.py
+.. plot:: makers/make_reflected_regions.py
     :include-source:
 
 Using the reflected background estimator
@@ -65,7 +65,7 @@ In practice, the user does not usually need to directly interact with the
 and OFF events for an `~gammapy.data.Observations` object. The last example
 shows how to run it on a few observations with a rectangular region.
 
-.. plot:: spectrum/make_rectangular_reflected_background.py
+.. plot:: makers/make_rectangular_reflected_background.py
     :include-source:
 
 The following notebook shows an example using
