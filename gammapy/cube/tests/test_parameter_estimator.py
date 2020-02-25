@@ -26,9 +26,12 @@ def test_parameter_estimator_simple(crab_datasets_1d, PLmodel):
 
     estimator = ParameterEstimator(datasets)
 
-    result = estimator.run(PLmodel.amplitude, steps=["ts"])
+    result = estimator.run(PLmodel.amplitude, steps="all")
 
     # First make sure that parameters are correctly set on the dataset.models object
-    assert_allclose(result['value'], 5.142843823441639e-11)
-    assert_allclose(result['err'], 6.42467002840316e-12)
-    assert_allclose(result['delta_ts'], 353.2092043652601)
+    assert_allclose(result['value'], 5.142843823441639e-11, rtol=1e-4)
+    assert_allclose(result['err'], 6.42467002840316e-12, rtol=1e-4)
+    assert_allclose(result['delta_ts'], 353.2092043652601, rtol=1e-4)
+    assert_allclose(result['errp'], 6.703e-12, rtol=1e-3)
+    assert_allclose(result['errn'], 6.152e-12, rtol=1e-3)
+    # Add test for scan
