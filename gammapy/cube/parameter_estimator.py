@@ -168,13 +168,6 @@ class ParameterEstimator:
                 result.update({"ul": res["errp"] + value_max})
 
             if "scan" in steps:
-                min_range = value_max - self.scan_n_err * value_err
-                if not np.isnan(parameter.min):
-                    min_range = np.maximum(parameter.min, min_range)
-                    max_range = value_max + self.scan_n_err * value_err
-                if not np.isnan(parameter.max):
-                    max_range = np.minimum(parameter.max, max_range)
-
                 param_values = self._compute_scan_values(
                     value_max,
                     value_err,
