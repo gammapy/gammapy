@@ -107,7 +107,6 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     return EDispMap(edispmap, exposure_map)
 
 
-
 class MapDatasetMaker:
     """Make maps for a single IACT observation.
 
