@@ -6,16 +6,18 @@ from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.analysis.config import AnalysisConfig
 from gammapy.cube import MapDatasetMaker
-from gammapy.makers import SafeMaskMaker, FoVBackgroundMaker, ReflectedRegionsBackgroundMaker
+from gammapy.makers import (
+    SafeMaskMaker,
+    FoVBackgroundMaker,
+    ReflectedRegionsBackgroundMaker,
+    SpectrumDatasetMaker
+)
 from gammapy.datasets import Datasets, MapDataset, SpectrumDataset, FluxPointsDataset
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import Models
-from gammapy.spectrum import (
-    FluxPointsEstimator,
-    SpectrumDatasetMaker,
-)
+from gammapy.spectrum import FluxPointsEstimator
 from gammapy.utils.scripts import make_path
 
 __all__ = ["Analysis"]

@@ -9,8 +9,7 @@ from gammapy.makers import SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.datasets import SpectrumDataset
-from gammapy.makers import ReflectedRegionsBackgroundMaker
-from gammapy.spectrum import SpectrumDatasetMaker
+from gammapy.makers import ReflectedRegionsBackgroundMaker, SpectrumDatasetMaker
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
