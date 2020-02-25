@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections.abc
-import logging
 import copy
+import logging
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.irf import Background3D, load_cta_irfs
-from gammapy.utils.fits import earth_location_from_dict, LazyFitsData
+from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
 from gammapy.utils.testing import Checker
 from .event_list import EventListChecker
 from .filters import ObservationFilter
@@ -43,6 +43,7 @@ class Observation:
     obs_filter : `ObservationFilter`
         Observation filter.
     """
+
     aeff = LazyFitsData(cache=False)
     edisp = LazyFitsData(cache=False)
     psf = LazyFitsData(cache=False)
@@ -385,6 +386,7 @@ class Observations(collections.abc.MutableSequence):
     observations : list
         A list of `~gammapy.data.Observation`
     """
+
     def __init__(self, observations=None):
         self._observations = observations or []
 

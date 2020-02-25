@@ -4,8 +4,8 @@ import subprocess
 from pathlib import Path
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from gammapy.utils.table import table_row_to_dict
 from gammapy.utils.scripts import make_path
+from gammapy.utils.table import table_row_to_dict
 from gammapy.utils.testing import Checker
 from .hdu_index_table import HDUIndexTable
 from .obs_table import ObservationTable, ObservationTableChecker

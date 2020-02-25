@@ -9,7 +9,6 @@ from .spectral_cosmic_ray import *
 from .spectral_crab import *
 from .temporal import *
 
-
 SPATIAL_MODELS = Registry(
     [
         ConstantSpatialModel,

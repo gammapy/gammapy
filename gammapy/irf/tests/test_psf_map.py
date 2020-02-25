@@ -5,9 +5,9 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
-from gammapy.makers.utils import make_psf_map, make_map_exposure_true_energy
 from gammapy.data import DataStore
 from gammapy.irf import PSF3D, EffectiveAreaTable2D, EnergyDependentTablePSF, PSFMap
+from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import MapAxis, MapCoord, WcsGeom
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.testing import requires_data
@@ -62,7 +62,9 @@ def test_make_psf_map():
     psf = fake_psf3d(0.3 * u.deg)
 
     pointing = SkyCoord(0, 0, unit="deg")
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true")
+    energy_axis = MapAxis(
+        nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true"
+    )
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
 
     geom = WcsGeom.create(
@@ -82,7 +84,9 @@ def make_test_psfmap(size, shape="gauss"):
     aeff2d = fake_aeff2d()
 
     pointing = SkyCoord(0, 0, unit="deg")
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true")
+    energy_axis = MapAxis(
+        nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true"
+    )
     rad_axis = MapAxis.from_nodes(
         nodes=np.linspace(0.0, 0.6, 50), unit="deg", name="theta"
     )

@@ -11,19 +11,19 @@ from regions import (
     RectangleSkyRegion,
 )
 from gammapy.data import DataStore
-from gammapy.maps import WcsGeom, WcsNDMap
+from gammapy.datasets import SpectrumDataset
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     ReflectedRegionsFinder,
-    SpectrumDatasetMaker
+    SpectrumDatasetMaker,
 )
-from gammapy.datasets import SpectrumDataset
+from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.utils.regions import compound_region_to_list
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_data,
-    requires_dependency
+    requires_dependency,
 )
 
 

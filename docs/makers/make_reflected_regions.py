@@ -3,8 +3,8 @@ import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
-from gammapy.maps import WcsNDMap
 from gammapy.makers import ReflectedRegionsFinder
+from gammapy.maps import WcsNDMap
 
 # Exclude a rectangular region
 exclusion_mask = WcsNDMap.create(npix=(801, 701), binsz=0.01, skydir=(83.6, 23.0))

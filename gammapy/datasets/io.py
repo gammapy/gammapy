@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from gammapy.modeling.serialize import models_to_dict, dict_to_models
+from gammapy.modeling.serialize import dict_to_models, models_to_dict
 
 
 def datasets_to_dict(datasets, path, prefix, overwrite):

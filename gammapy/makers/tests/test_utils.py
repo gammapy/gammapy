@@ -2,20 +2,19 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.coordinates import EarthLocation, SkyCoord
 from astropy import units as u
+from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
+from gammapy.data import FixedPointingInfo
+from gammapy.irf import Background3D, EffectiveAreaTable2D
 from gammapy.makers.utils import (
     _map_spectrum_weight,
+    make_map_background_irf,
     make_map_exposure_true_energy,
-    make_map_background_irf
 )
-from gammapy.irf import EffectiveAreaTable2D
 from gammapy.maps import HpxGeom, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
 from gammapy.utils.testing import requires_data
-from gammapy.data import FixedPointingInfo
-from gammapy.irf import Background3D
 
 
 @pytest.fixture(scope="session")

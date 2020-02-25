@@ -225,4 +225,3 @@ def test_compute_flux_points_dnde_fermi():
         actual = flux_points.table["e2" + column].quantity
         desired = flux_points.table[column].quantity * flux_points.e_ref ** 2
         assert_quantity_allclose(actual[:-1], desired[:-1], rtol=1e-1)
-

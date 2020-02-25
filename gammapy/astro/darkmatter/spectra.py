@@ -5,8 +5,8 @@ import astropy.units as u
 from astropy.table import Table
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import SpectralModel, TemplateSpectralModel
-from gammapy.utils.scripts import make_path
 from gammapy.utils.interpolation import LogScale
+from gammapy.utils.scripts import make_path
 
 __all__ = ["PrimaryFlux", "DarkMatterAnnihilationSpectralModel"]
 
@@ -118,7 +118,11 @@ class PrimaryFlux:
         channel_name = self.channel_registry[self.channel]
         dN_dlogx = subtable[channel_name]
         dN_dE = dN_dlogx / (energies * np.log(10))
-        return TemplateSpectralModel(energy=energies, values=dN_dE, interp_kwargs={"fill_value":np.log(LogScale.tiny)})
+        return TemplateSpectralModel(
+            energy=energies,
+            values=dN_dE,
+            interp_kwargs={"fill_value": np.log(LogScale.tiny)},
+        )
 
 
 class DarkMatterAnnihilationSpectralModel(SpectralModel):

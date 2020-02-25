@@ -4,8 +4,8 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
-from gammapy.modeling import Fit
 from gammapy.datasets import Datasets
+from gammapy.modeling import Fit
 from gammapy.modeling.models import ScaleSpectralModel
 from gammapy.spectrum import FluxPoints
 from gammapy.time import LightCurve
@@ -235,7 +235,10 @@ class LightCurveEstimator:
 
             row = {"time_min": time_interval[0].mjd, "time_max": time_interval[1].mjd}
             interval_list_dataset = Datasets(
-                [self.datasets[int(_)].copy(name=self.datasets[int(_)].name) for _ in index_dataset]
+                [
+                    self.datasets[int(_)].copy(name=self.datasets[int(_)].name)
+                    for _ in index_dataset
+                ]
             )
             self._set_scale_model(interval_list_dataset)
             row.update(

@@ -96,7 +96,9 @@ def energy_axis_from_fgst_template(hdu):
 
     nodes = bands[tag].data
 
-    return [MapAxis.from_nodes(nodes=nodes, name="energy_true", unit="MeV", interp="log")]
+    return [
+        MapAxis.from_nodes(nodes=nodes, name="energy_true", unit="MeV", interp="log")
+    ]
 
 
 def axes_from_bands_hdu(hdu):
@@ -444,7 +446,9 @@ class MapAxis:
         return cls(nodes, **kwargs)
 
     @classmethod
-    def from_energy_bounds(cls, emin, emax, nbin, unit=None, per_decade=False, name=None):
+    def from_energy_bounds(
+        cls, emin, emax, nbin, unit=None, per_decade=False, name=None
+    ):
         """Make an energy axis.
 
         Used frequently also to make energy grids, by making

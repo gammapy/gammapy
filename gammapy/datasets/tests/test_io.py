@@ -5,7 +5,6 @@ from gammapy.modeling.models import Models
 from gammapy.utils.testing import requires_data
 
 
-
 @requires_data()
 def test_datasets_to_io(tmp_path):
     filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"

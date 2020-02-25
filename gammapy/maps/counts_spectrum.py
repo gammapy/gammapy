@@ -6,12 +6,12 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs import WCS
-from regions import fits_region_objects_to_table, FITSRegionParser
-from gammapy.maps import MapAxis
+from regions import FITSRegionParser, fits_region_objects_to_table
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
 from gammapy.utils.regions import compound_region_to_list, list_to_compound_region
 from gammapy.utils.scripts import make_path
+from .geom import MapAxis
 
 __all__ = ["CountsSpectrum"]
 

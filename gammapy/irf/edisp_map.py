@@ -7,7 +7,6 @@ from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .edisp_kernel import EDispKernel
 
-
 __all__ = ["EDispMap"]
 
 

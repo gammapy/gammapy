@@ -3,10 +3,9 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
-from gammapy.datasets import MapDatasetOnOff
+from gammapy.datasets import Datasets, MapDatasetOnOff
 from gammapy.detect import ASmoothMapEstimator
 from gammapy.maps import Map, WcsNDMap
-from gammapy.datasets import Datasets
 from gammapy.utils.testing import requires_data
 
 

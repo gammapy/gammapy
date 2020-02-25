@@ -473,7 +473,9 @@ class TestSkyModelMapEvaluator:
 def test_sky_point_source():
     # Test special case of point source. Regression test for GH 2367.
 
-    energy_axis = MapAxis.from_edges([1, 10], unit="TeV", name="energy_true", interp="log")
+    energy_axis = MapAxis.from_edges(
+        [1, 10], unit="TeV", name="energy_true", interp="log"
+    )
     exposure = Map.create(
         skydir=(100, 70),
         npix=(4, 4),

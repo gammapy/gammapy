@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
+from gammapy.data.gti import GTI
 from gammapy.modeling.models import (
     ConstantTemporalModel,
     LightCurveTemplateTemporalModel,
@@ -14,7 +15,6 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
-from gammapy.data.gti import GTI
 
 
 @pytest.fixture(scope="session")

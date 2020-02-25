@@ -529,7 +529,9 @@ class BackgroundModel(Model):
 
         if isinstance(datasets_names, list):
             if len(datasets_names) > 1:
-                raise ValueError("Currently background models can only be assigned to one dataset.")
+                raise ValueError(
+                    "Currently background models can only be assigned to one dataset."
+                )
 
         self.datasets_names = datasets_names
         super().__init__(norm=norm, tilt=tilt, reference=reference)

@@ -3,9 +3,9 @@ import pytest
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
-from gammapy.datasets import MapDataset
-from gammapy.makers import SafeMaskMaker, FoVBackgroundMaker, MapDatasetMaker
 from gammapy.data import DataStore
+from gammapy.datasets import MapDataset
+from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
     GaussianSpatialModel,
@@ -57,7 +57,9 @@ def obs_dataset(geom, observation):
     map_dataset_maker = MapDatasetMaker(selection=["counts", "background", "exposure"])
 
     reference = MapDataset.create(geom)
-    cutout = reference.cutout(observation.pointing_radec, width="4 deg", name="test-fov")
+    cutout = reference.cutout(
+        observation.pointing_radec, width="4 deg", name="test-fov"
+    )
 
     dataset = map_dataset_maker.run(cutout, observation)
     dataset = safe_mask_maker.run(dataset, observation)
@@ -104,7 +106,9 @@ def test_fov_bkg_maker_fit_with_source_model(obs_dataset, exclusion_mask):
     spectral_model = PowerLawSpectralModel(
         index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
-    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model, name="test-source")
+    model = SkyModel(
+        spatial_model=spatial_model, spectral_model=spectral_model, name="test-source"
+    )
     test_dataset.models.append(model)
     dataset = fov_bkg_maker.run(test_dataset)
 

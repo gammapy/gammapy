@@ -7,11 +7,11 @@ from astropy.nddata.utils import NoOverlapError
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
+from gammapy.data import GTI
+from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.irf.edisp_map import EDispMap
 from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
-from gammapy.data import GTI
-from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Parameters
 from gammapy.modeling.models import BackgroundModel, Models
@@ -19,8 +19,7 @@ from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
-from .spectrum import SpectrumDatasetOnOff, SpectrumDataset
-
+from .spectrum import SpectrumDataset, SpectrumDatasetOnOff
 
 __all__ = ["MapDataset", "MapDatasetOnOff"]
 
@@ -309,7 +308,9 @@ class MapDataset(Dataset):
         kwargs["counts"] = Map.from_geom(geom, unit="")
 
         background = Map.from_geom(geom, unit="")
-        kwargs["models"] = Models([BackgroundModel(background, name=name + "-bkg", datasets_names=[name])])
+        kwargs["models"] = Models(
+            [BackgroundModel(background, name=name + "-bkg", datasets_names=[name])]
+        )
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
         kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
         kwargs["psf"] = PSFMap.from_geom(geom_psf)
@@ -907,7 +908,7 @@ class MapDataset(Dataset):
             )
 
         if self.psf is not None:
-            #TODO: implement PSFKernel.to_image()
+            # TODO: implement PSFKernel.to_image()
             if not isinstance(self.psf, PSFKernel):
                 kwargs["psf"] = self.psf.to_image(spectrum=spectrum, keepdims=True)
 

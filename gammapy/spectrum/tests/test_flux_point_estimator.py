@@ -4,10 +4,11 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from gammapy.makers import MapDatasetMaker
-from gammapy.datasets import MapDataset
 from gammapy.data import Observation
+from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
+from gammapy.datasets.spectrum import SpectrumEvaluator
 from gammapy.irf import EffectiveAreaTable, load_cta_irfs
+from gammapy.makers import MapDatasetMaker
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
@@ -16,8 +17,6 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.spectrum import FluxPointsEstimator
-from gammapy.datasets import SpectrumDatasetOnOff
-from gammapy.datasets.spectrum import SpectrumEvaluator
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -47,7 +46,9 @@ def create_fpe(model):
     dataset = simulate_spectrum_dataset(model)
     e_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.models = model
-    return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=11, source="source")
+    return FluxPointsEstimator(
+        datasets=[dataset], e_edges=e_edges, norm_n_values=11, source="source"
+    )
 
 
 def simulate_map_dataset(random_state=0, name=None):
@@ -240,7 +241,9 @@ def test_mask_shape():
     dataset_2.edisp = None
 
     model = SkyModel(
-        spectral_model=PowerLawSpectralModel(), spatial_model=GaussianSpatialModel(), name="source"
+        spectral_model=PowerLawSpectralModel(),
+        spatial_model=GaussianSpatialModel(),
+        name="source",
     )
 
     dataset_1.models = model

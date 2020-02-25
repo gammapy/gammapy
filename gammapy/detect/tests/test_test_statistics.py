@@ -46,10 +46,7 @@ def input_dataset():
     )
 
     return MapDataset(
-        counts=counts,
-        exposure=exposure,
-        models=background_model,
-        mask_safe=mask,
+        counts=counts, exposure=exposure, models=background_model, mask_safe=mask,
     )
 
 

@@ -5,8 +5,8 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
+from gammapy.irf import EDispMap, EffectiveAreaTable2D, EnergyDispersion2D
 from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
-from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D, EDispMap
 from gammapy.maps import MapAxis, MapCoord, WcsGeom
 
 
@@ -139,7 +139,9 @@ def test_sample_coord():
 @pytest.mark.parametrize("position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"])
 def test_edisp_from_diagonal_response(position):
     position = SkyCoord(position)
-    energy_axis_true = MapAxis.from_energy_bounds("0.3 TeV", "10 TeV", nbin=31, name="energy_true")
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.3 TeV", "10 TeV", nbin=31, name="energy_true"
+    )
     edisp_map = EDispMap.from_diagonal_response(energy_axis_true)
 
     e_reco = energy_axis_true.edges

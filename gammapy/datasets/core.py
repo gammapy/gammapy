@@ -3,10 +3,9 @@ import abc
 import collections.abc
 import copy
 import numpy as np
+from gammapy.maps import WcsNDMap
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
-from gammapy.maps import WcsNDMap
-
 
 __all__ = ["Dataset", "Datasets"]
 
@@ -123,7 +122,7 @@ class Datasets(collections.abc.MutableSequence):
         Duplicate parameter objects have been removed.
         The order of the unique parameters remains.
         """
-        #TODO: remove this delayed import
+        # TODO: remove this delayed import
         from gammapy.modeling.parameter import Parameters
 
         parameters = Parameters.from_stack([_.models.parameters for _ in self])
@@ -200,6 +199,7 @@ class Datasets(collections.abc.MutableSequence):
             overwrite datasets FITS files
         """
         from .io import datasets_to_dict
+
         path = make_path(path)
 
         datasets_dict, components_dict = datasets_to_dict(self, path, prefix, overwrite)

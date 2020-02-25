@@ -178,7 +178,9 @@ class FluxPointsDataset(Dataset):
 
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
 
-        str_ += "\t{:32}: {}\n".format("Number of parameters", len(self.models.parameters))
+        str_ += "\t{:32}: {}\n".format(
+            "Number of parameters", len(self.models.parameters)
+        )
         str_ += "\t{:32}: {}\n\n".format(
             "Number of free parameters", len(self.models.parameters.free_parameters)
         )

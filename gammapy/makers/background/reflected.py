@@ -4,9 +4,9 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
 from regions import PixCoord
-from gammapy.maps import WcsNDMap, CountsSpectrum
-from gammapy.utils.regions import list_to_compound_region
 from gammapy.datasets import SpectrumDatasetOnOff
+from gammapy.maps import CountsSpectrum, WcsNDMap
+from gammapy.utils.regions import list_to_compound_region
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundMaker"]
 

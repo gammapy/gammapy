@@ -159,7 +159,9 @@ class TestEffectiveAreaTable:
             data=data,
         )
         hdu = aeff.to_fits()
-        assert_equal(hdu.data["ENERG_LO"][0], aeff.data.axis("energy_true").edges[:-1].value)
+        assert_equal(
+            hdu.data["ENERG_LO"][0], aeff.data.axis("energy_true").edges[:-1].value
+        )
         assert hdu.header["TUNIT1"] == aeff.data.axis("energy_true").unit
 
 

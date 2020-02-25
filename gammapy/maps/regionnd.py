@@ -9,7 +9,6 @@ from .geom import pix_tuple_to_idx
 from .region import RegionGeom
 from .utils import INVALID_INDEX
 
-
 __all__ = ["RegionNDMap"]
 
 

@@ -5,7 +5,6 @@ from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
 from gammapy.maps import Map
 
-
 __all__ = ["SafeMaskMaker"]
 
 

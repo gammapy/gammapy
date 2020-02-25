@@ -1,14 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from gammapy.datasets import MapDataset
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map
-from gammapy.datasets import MapDataset
 from gammapy.modeling.models import BackgroundModel
 from .utils import (
-    make_psf_map,
     make_edisp_map,
+    make_map_background_irf,
     make_map_exposure_true_energy,
-    make_map_background_irf
+    make_psf_map,
 )
 
 __all__ = ["MapDatasetMaker"]
@@ -232,7 +232,9 @@ class MapDatasetMaker:
         if "background" in self.selection:
             background_map = self.make_background(dataset.counts.geom, observation)
             kwargs["models"] = BackgroundModel(
-                background_map, name=dataset.name + "-bkg", datasets_names=[dataset.name]
+                background_map,
+                name=dataset.name + "-bkg",
+                datasets_names=[dataset.name],
             )
 
         if "psf" in self.selection:
@@ -244,5 +246,3 @@ class MapDatasetMaker:
             kwargs["edisp"] = edisp
 
         return MapDataset(name=dataset.name, **kwargs)
-
-

@@ -3,7 +3,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle
-from gammapy.irf import TablePSF, PSFKernel
+from gammapy.irf import PSFKernel, TablePSF
 from gammapy.maps import MapAxis, WcsGeom
 
 

@@ -6,22 +6,21 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
+from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.datasets.spectrum import SpectrumEvaluator
 from gammapy.irf import EDispKernel, EffectiveAreaTable
-from gammapy.maps import MapAxis, WcsGeom
+from gammapy.maps import CountsSpectrum, MapAxis, WcsGeom
 from gammapy.modeling import Fit
-from gammapy.datasets import Datasets
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     ExpCutoffPowerLawSpectralModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
-    TemplateSpectralModel
+    TemplateSpectralModel,
 )
-from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
-from gammapy.datasets.spectrum import SpectrumEvaluator
-from gammapy.maps import CountsSpectrum
 from gammapy.utils.random import get_random_state
+from gammapy.utils.regions import compound_region_to_list, make_region
 from gammapy.utils.testing import (
     assert_time_allclose,
     mpl_plot_check,
@@ -29,7 +28,6 @@ from gammapy.utils.testing import (
     requires_dependency,
 )
 from gammapy.utils.time import time_ref_to_dict
-from gammapy.utils.regions import make_region, compound_region_to_list
 
 
 @requires_dependency("iminuit")
@@ -307,13 +305,19 @@ class TestSpectrumOnOff:
 
         self.on_region = make_region("icrs;circle(0.,1.,0.1)")
         off_region = make_region("icrs;box(0.,1.,0.1, 0.2,30)")
-        self.off_region = off_region.union(make_region("icrs;box(-1.,-1.,0.1, 0.2,150)"))
-        self.wcs = WcsGeom.create(npix=300, binsz=0.01, frame='icrs').wcs
+        self.off_region = off_region.union(
+            make_region("icrs;box(-1.,-1.,0.1, 0.2,150)")
+        )
+        self.wcs = WcsGeom.create(npix=300, binsz=0.01, frame="icrs").wcs
 
         data = np.ones(elo.shape)
         data[-1] = 0  # to test stats calculation with empty bins
-        self.on_counts = CountsSpectrum(elo, ehi, data, region=self.on_region, wcs=self.wcs)
-        self.off_counts = CountsSpectrum(elo, ehi, np.ones(elo.shape) * 10, region=self.off_region, wcs=self.wcs)
+        self.on_counts = CountsSpectrum(
+            elo, ehi, data, region=self.on_region, wcs=self.wcs
+        )
+        self.off_counts = CountsSpectrum(
+            elo, ehi, np.ones(elo.shape) * 10, region=self.off_region, wcs=self.wcs
+        )
 
         self.dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,

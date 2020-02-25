@@ -4,8 +4,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
-from gammapy.maps import RegionGeom, MapAxis
 from regions import CircleSkyRegion
+from gammapy.maps import MapAxis, RegionGeom
 
 
 @pytest.fixture()
@@ -136,7 +136,7 @@ def test_upsample(region):
     geom = RegionGeom.create(region, axes=[axis])
     geom_up = geom.upsample(factor=2, axis="energy")
 
-    assert_allclose(geom_up.axes[0].edges.value, [1., 3.162278, 10.], rtol=1e-5)
+    assert_allclose(geom_up.axes[0].edges.value, [1.0, 3.162278, 10.0], rtol=1e-5)
 
 
 def test_downsample(region):
@@ -144,7 +144,7 @@ def test_downsample(region):
     geom = RegionGeom.create(region, axes=[axis])
     geom_down = geom.downsample(factor=2, axis="energy")
 
-    assert_allclose(geom_down.axes[0].edges.value, [1., 10.], rtol=1e-5)
+    assert_allclose(geom_down.axes[0].edges.value, [1.0, 10.0], rtol=1e-5)
 
 
 def test_repr(region):

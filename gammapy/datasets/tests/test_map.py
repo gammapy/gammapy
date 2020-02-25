@@ -5,12 +5,17 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.datasets import MapDataset, MapDatasetOnOff, Datasets
 from gammapy.data import GTI
-from gammapy.irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF, EDispMap, PSFMap
+from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
+from gammapy.irf import (
+    EDispMap,
+    EffectiveAreaTable2D,
+    EnergyDependentMultiGaussPSF,
+    PSFMap,
+)
+from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling import Fit
-from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.modeling.models import (
     BackgroundModel,
     GaussianSpatialModel,
@@ -218,7 +223,9 @@ def test_to_image(geom):
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz"
     )
     exposure = exposure.sum_over_axes(keepdims=True)
-    dataset = MapDataset(counts=counts, models=[background], exposure=exposure, name="fermi")
+    dataset = MapDataset(
+        counts=counts, models=[background], exposure=exposure, name="fermi"
+    )
     dataset_im = dataset.to_image()
     assert dataset_im.mask_safe is None
     assert dataset_im.counts.data.sum() == dataset.counts.data.sum()
@@ -334,11 +341,15 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 @requires_dependency("matplotlib")
 @requires_data()
 def test_map_fit(sky_model, geom, geom_etrue):
-    dataset_1 = get_map_dataset(sky_model, geom, geom_etrue, evaluation_mode="local", name="test-1")
+    dataset_1 = get_map_dataset(
+        sky_model, geom, geom_etrue, evaluation_mode="local", name="test-1"
+    )
     dataset_1.background_model.norm.value = 0.5
     dataset_1.counts = dataset_1.npred()
 
-    dataset_2 = get_map_dataset(sky_model, geom, geom_etrue, evaluation_mode="global", name="test-2")
+    dataset_2 = get_map_dataset(
+        sky_model, geom, geom_etrue, evaluation_mode="global", name="test-2"
+    )
     dataset_2.counts = dataset_2.npred()
 
     sky_model.parameters["sigma"].frozen = True
@@ -463,7 +474,9 @@ def test_create(geom, geom_etrue):
 def test_stack(geom, geom_etrue):
     m = Map.from_geom(geom)
     m.quantity = 0.2 * np.ones(m.data.shape)
-    background_model1 = BackgroundModel(m, name="dataset-1-bkg", datasets_names=["dataset-1"])
+    background_model1 = BackgroundModel(
+        m, name="dataset-1-bkg", datasets_names=["dataset-1"]
+    )
     c_map1 = Map.from_geom(geom)
     c_map1.quantity = 0.3 * np.ones(c_map1.data.shape)
     mask1 = np.ones(m.data.shape, dtype=bool)
@@ -475,12 +488,14 @@ def test_stack(geom, geom_etrue):
         models=[background_model1],
         exposure=get_exposure(geom_etrue),
         mask_safe=mask1,
-        name="dataset-1"
+        name="dataset-1",
     )
 
     c_map2 = Map.from_geom(geom)
     c_map2.quantity = 0.1 * np.ones(c_map2.data.shape)
-    background_model2 = BackgroundModel(m, norm=0.5, name="dataset-2-bkg", datasets_names=["dataset-2"])
+    background_model2 = BackgroundModel(
+        m, norm=0.5, name="dataset-2-bkg", datasets_names=["dataset-2"]
+    )
     mask2 = np.ones(m.data.shape, dtype=bool)
     mask2[0][3] = False
     mask2 = Map.from_geom(geom, data=mask2)
@@ -490,7 +505,7 @@ def test_stack(geom, geom_etrue):
         models=[background_model2],
         exposure=get_exposure(geom_etrue),
         mask_safe=mask2,
-        name="dataset-2"
+        name="dataset-2",
     )
     dataset1.stack(dataset2)
     assert_allclose(dataset1.counts.data.sum(), 7987)
@@ -785,7 +800,7 @@ def test_names(geom, geom_etrue, sky_model):
         counts=c_map1,
         models=Models([model1, model2, background_model1]),
         exposure=get_exposure(geom_etrue),
-        name="test"
+        name="test",
     )
 
     dataset2 = dataset1.copy()

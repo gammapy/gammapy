@@ -5,11 +5,14 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
-from gammapy.makers import SafeMaskMaker
 from gammapy.data import DataStore
-from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.datasets import SpectrumDataset
-from gammapy.makers import ReflectedRegionsBackgroundMaker, SpectrumDatasetMaker
+from gammapy.makers import (
+    ReflectedRegionsBackgroundMaker,
+    SafeMaskMaker,
+    SpectrumDatasetMaker,
+)
+from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
@@ -187,7 +190,9 @@ class TestSpectrumMakerChain:
         dataset = safe_mask_maker.run(dataset, obs)
 
         aeff_actual = dataset.aeff.data.evaluate(energy_true=5 * u.TeV)
-        edisp_actual = dataset.edisp.data.evaluate(energy_true=5 * u.TeV, energy=5.2 * u.TeV)
+        edisp_actual = dataset.edisp.data.evaluate(
+            energy_true=5 * u.TeV, energy=5.2 * u.TeV
+        )
 
         assert_quantity_allclose(aeff_actual, results["aeff"], rtol=1e-3)
         assert_quantity_allclose(edisp_actual, results["edisp"], rtol=1e-3)

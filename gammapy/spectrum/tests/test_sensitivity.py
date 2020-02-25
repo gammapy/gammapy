@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import CountsSpectrum
 from gammapy.spectrum import SensitivityEstimator
 

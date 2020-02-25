@@ -1,18 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.coordinates import SkyOffsetFrame
+from gammapy.data import FixedPointingInfo
+from gammapy.irf import EDispMap, PSFMap
 from gammapy.maps import Map, WcsNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.irf import PSFMap, EDispMap
-from gammapy.data import FixedPointingInfo
 from gammapy.utils.coordinates import sky_to_fov
-
 
 __all__ = [
     "make_map_background_irf",
     "make_edisp_map",
     "make_psf_map",
-    "make_map_exposure_true_energy"
+    "make_map_exposure_true_energy",
 ]
 
 

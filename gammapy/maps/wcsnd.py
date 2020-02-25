@@ -12,11 +12,10 @@ from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
+from .counts_spectrum import CountsSpectrum
 from .geom import MapCoord, pix_tuple_to_idx
 from .utils import INVALID_INDEX, interp_to_order
 from .wcsmap import WcsGeom, WcsMap
-from .counts_spectrum import CountsSpectrum
-
 
 __all__ = ["WcsNDMap"]
 

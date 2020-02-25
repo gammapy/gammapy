@@ -30,8 +30,8 @@ class Registry:
         },
         "covariance": {
             "minuit": covariance_iminuit,
-            #"sherpa": covariance_sherpa,
-            #"scipy": covariance_scipy,
+            # "sherpa": covariance_sherpa,
+            # "scipy": covariance_scipy,
         },
         "confidence": {
             "minuit": confidence_iminuit,

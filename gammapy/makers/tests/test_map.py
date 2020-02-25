@@ -3,10 +3,10 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.datasets import MapDataset
 from gammapy.data import DataStore
+from gammapy.datasets import MapDataset
+from gammapy.makers import MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.makers import SafeMaskMaker, MapDatasetMaker
 from gammapy.utils.testing import requires_data
 
 
@@ -152,4 +152,3 @@ def test_map_maker_obs(observations):
     assert map_dataset.psf.psf_map.data.shape == (3, 66, 5, 10)
     assert map_dataset.psf.exposure_map.data.shape == (3, 1, 5, 10)
     assert_allclose(map_dataset.gti.time_delta, 1800.0 * u.s)
-

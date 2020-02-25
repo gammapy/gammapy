@@ -9,7 +9,6 @@ from .geom import Geom, make_axes, pix_tuple_to_idx
 from .utils import INVALID_INDEX
 from .wcs import WcsGeom
 
-
 __all__ = ["RegionGeom"]
 
 

@@ -2,10 +2,10 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.maps import Map, MapAxis
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.data import EventList
 from gammapy.irf import EDispKernel
+from gammapy.maps import Map, MapAxis
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def region_map():
         map_type="region",
         axes=[axis],
         unit="1/TeV",
-        dtype=np.int
+        dtype=np.int,
     )
     m.data = np.arange(m.data.size).reshape(m.geom.data_shape)
     return m
@@ -30,7 +30,7 @@ def region_map_true():
         map_type="region",
         axes=[axis],
         unit="1/TeV",
-        dtype=np.int
+        dtype=np.int,
     )
     m.data = np.arange(m.data.size).reshape(m.geom.data_shape)
     return m
@@ -108,18 +108,18 @@ def test_region_nd_map_set(region_map):
     assert_allclose(region_map.data[[2, 3]], 42)
 
     region_map = region_map.copy()
-    region_map.set_by_pix((0, 0, [2.3, 3.7]),  [42, 42])
+    region_map.set_by_pix((0, 0, [2.3, 3.7]), [42, 42])
     assert_allclose(region_map.data[[2, 3]], 42)
 
     region_map = region_map.copy()
     energies = region_map.geom.axes[0].center
-    region_map.set_by_coord((83.63, 21.51, energies[[0, -1]]),  [42, 42])
+    region_map.set_by_coord((83.63, 21.51, energies[[0, -1]]), [42, 42])
     assert_allclose(region_map.data[[0, -1]], 42)
 
 
 @requires_data()
 def test_region_nd_map_fill_events(region_map):
-    filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     events = EventList.read(filename)
     region_map = Map.from_geom(region_map.geom)
     region_map.fill_events(events)
@@ -140,7 +140,3 @@ def test_apply_edisp(region_map_true):
     assert e_reco.unit == "TeV"
     assert m.geom.axes[0].name == "energy"
     assert_allclose(e_reco[[0, -1]].value, [1, 10])
-
-
-
-

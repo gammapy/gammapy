@@ -5,20 +5,20 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
-from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
 from gammapy.datasets import Dataset
+from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
+from gammapy.maps import CountsSpectrum
 from gammapy.modeling.models import Models, SkyModel
 from gammapy.stats import cash, significance, significance_on_off, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.maps import CountsSpectrum
 
 __all__ = [
     "SpectrumDatasetOnOff",
     "SpectrumDataset",
     "plot_spectrum_datasets_off_regions",
-    "SpectrumEvaluator"
+    "SpectrumEvaluator",
 ]
 
 

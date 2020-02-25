@@ -2,8 +2,8 @@
 """Unit tests for the Fit class"""
 import pytest
 from numpy.testing import assert_allclose
-from gammapy.modeling import Fit, Parameter
 from gammapy.datasets import Dataset
+from gammapy.modeling import Fit, Parameter
 from gammapy.modeling.models import Model, Models
 from gammapy.utils.testing import requires_dependency
 

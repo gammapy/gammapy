@@ -2,10 +2,10 @@
 import copy
 import logging
 import numpy as np
-from astropy.coordinates import Angle
 from astropy.convolution import Tophat2DKernel
-from gammapy.stats import significance, significance_on_off
+from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset, MapDatasetOnOff
+from gammapy.stats import significance, significance_on_off
 
 __all__ = [
     "LiMaMapEstimator",
@@ -64,7 +64,9 @@ class LiMaMapEstimator:
             )
         else:
             background = dataset.npred()
-            result = self.__class__.compute_lima_image(dataset.counts, background, kernel)
+            result = self.__class__.compute_lima_image(
+                dataset.counts, background, kernel
+            )
         return result
 
     @staticmethod
@@ -106,7 +108,6 @@ class LiMaMapEstimator:
             "background": counts.copy(data=background_conv),
             "excess": counts.copy(data=excess_conv),
         }
-
 
     @staticmethod
     def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):

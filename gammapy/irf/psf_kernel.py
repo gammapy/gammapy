@@ -7,7 +7,6 @@ from gammapy.maps import Map, WcsGeom
 from gammapy.utils.gauss import Gauss2DPDF
 from .psf_table import TablePSF
 
-
 __all__ = ["PSFKernel"]
 
 
