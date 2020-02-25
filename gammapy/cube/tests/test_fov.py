@@ -5,7 +5,8 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from gammapy.datasets import MapDataset
 from gammapy.cube.fov import FoVBackgroundMaker
-from gammapy.cube.make import MapDatasetMaker, SafeMaskMaker
+from gammapy.cube.make import MapDatasetMaker
+from gammapy.makers import SafeMaskMaker
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (

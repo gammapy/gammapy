@@ -3,10 +3,11 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDatasetMaker, SafeMaskMaker
+from gammapy.cube import MapDatasetMaker
 from gammapy.datasets import MapDataset
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.makers import SafeMaskMaker
 from gammapy.utils.testing import requires_data
 
 
@@ -153,39 +154,3 @@ def test_map_maker_obs(observations):
     assert map_dataset.psf.exposure_map.data.shape == (3, 1, 5, 10)
     assert_allclose(map_dataset.gti.time_delta, 1800.0 * u.s)
 
-
-@requires_data()
-def test_safe_mask_maker(observations):
-    obs = observations[0]
-
-    axis = MapAxis.from_bounds(
-        0.1, 10, nbin=16, unit="TeV", name="energy", interp="log"
-    )
-    geom = WcsGeom.create(npix=(11, 11), axes=[axis], skydir=obs.pointing_radec)
-
-    empty_dataset = MapDataset.create(geom=geom)
-    dataset_maker = MapDatasetMaker()
-    safe_mask_maker = SafeMaskMaker(
-        offset_max="3 deg", bias_percent=0.02, position=obs.pointing_radec
-    )
-
-    dataset = dataset_maker.run(empty_dataset, obs)
-
-    mask_offset = safe_mask_maker.make_mask_offset_max(dataset=dataset, observation=obs)
-    assert_allclose(mask_offset.sum(), 109)
-
-    mask_energy_aeff_default = safe_mask_maker.make_mask_energy_aeff_default(
-        dataset=dataset, observation=obs
-    )
-    assert_allclose(mask_energy_aeff_default.sum(), 1936)
-
-    mask_edisp_bias = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
-    assert_allclose(mask_edisp_bias.sum(), 121)
-
-    mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
-    assert_allclose(mask_bkg_peak.sum(), 1815)
-
-    with pytest.raises(NotImplementedError) as excinfo:
-        safe_mask_maker.make_mask_energy_aeff_max(dataset)
-
-    assert "only supported" in str(excinfo.value)
