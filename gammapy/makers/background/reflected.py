@@ -50,7 +50,7 @@ class ReflectedRegionsFinder:
     --------
     >>> from astropy.coordinates import SkyCoord, Angle
     >>> from regions import CircleSkyRegion
-    >>> from gammapy.spectrum import ReflectedRegionsFinder
+    >>> from gammapy.makers import ReflectedRegionsFinder
     >>> pointing = SkyCoord(83.2, 22.7, unit='deg', frame='icrs')
     >>> target_position = SkyCoord(80.2, 23.5, unit='deg', frame='icrs')
     >>> theta = Angle(0.4, 'deg')

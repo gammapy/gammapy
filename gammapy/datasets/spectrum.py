@@ -33,7 +33,7 @@ class SpectrumDataset(Dataset):
     ----------
     models : `~gammapy.modeling.models.Models`
         Fit model
-    counts : `~gammapy.spectrum.CountsSpectrum`
+    counts : `~gammapy.maps.CountsSpectrum`
         Counts spectrum
     livetime : `~astropy.units.Quantity`
         Livetime
@@ -41,7 +41,7 @@ class SpectrumDataset(Dataset):
         Effective area
     edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
-    background : `~gammapy.spectrum.CountsSpectrum`
+    background : `~gammapy.maps.CountsSpectrum`
         Background to use for the fit.
     mask_safe : `~numpy.ndarray`
         Mask defining the safe data range.
@@ -629,9 +629,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     ----------
     models : `~gammapy.modeling.models.Models`
         Fit model
-    counts : `~gammapy.spectrum.CountsSpectrum`
+    counts : `~gammapy.maps.CountsSpectrum`
         ON Counts spectrum
-    counts_off : `~gammapy.spectrum.CountsSpectrum`
+    counts_off : `~gammapy.maps.CountsSpectrum`
         OFF Counts spectrum
     livetime : `~astropy.units.Quantity`
         Livetime
@@ -744,7 +744,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         Parameters
         ----------
-        background_model : `~gammapy.spectrum.CountsSpectrum`
+        background_model : `~gammapy.maps.CountsSpectrum`
             BackgroundModel. In the future will be part of the SpectrumDataset Class.
             For the moment, a CountSpectrum.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
@@ -1240,7 +1240,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Relative background efficiency in the on region.
         acceptance_off : `~numpy.array` or float
             Relative background efficiency in the off region.
-        counts_off : `~gammapy.spectrum.CountsSpectrum`
+        counts_off : `~gammapy.maps.CountsSpectrum`
             Off counts spectrum . If the dataset provides a background model,
             and no off counts are defined. The off counts are deferred from
             counts_off / alpha.
