@@ -212,8 +212,8 @@ than `2 * offset_max`.
 
 
 
-Using `gammapy.cube`
-=====================
+Using `gammapy.makers`
+======================
 
 Gammapy tutorial notebooks that show examples using ``gammapy.makers``:
 
