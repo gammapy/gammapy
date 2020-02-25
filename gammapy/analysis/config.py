@@ -11,7 +11,7 @@ from astropy.units import Quantity
 import yaml
 from pydantic import BaseModel, FilePath
 from pydantic.utils import deep_update
-from gammapy.cube import MapDatasetMaker
+from gammapy.makers import MapDatasetMaker
 from gammapy.utils.scripts import make_path, read_yaml
 
 __all__ = ["AnalysisConfig"]

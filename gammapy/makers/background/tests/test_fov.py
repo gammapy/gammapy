@@ -4,8 +4,7 @@ from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from gammapy.datasets import MapDataset
-from gammapy.cube.fov import FoVBackgroundMaker
-from gammapy.cube.make import MapDatasetMaker, SafeMaskMaker
+from gammapy.makers import SafeMaskMaker, FoVBackgroundMaker, MapDatasetMaker
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (

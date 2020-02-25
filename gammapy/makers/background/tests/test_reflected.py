@@ -12,11 +12,11 @@ from regions import (
 )
 from gammapy.data import DataStore
 from gammapy.maps import WcsGeom, WcsNDMap
-from gammapy.spectrum import (
+from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     ReflectedRegionsFinder,
+    SpectrumDatasetMaker
 )
-from gammapy.spectrum.make import SpectrumDatasetMaker
 from gammapy.datasets import SpectrumDataset
 from gammapy.utils.regions import compound_region_to_list
 from gammapy.utils.testing import (

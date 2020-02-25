@@ -36,6 +36,8 @@ or request a feature, or need help with anything Gammapy-related.
     analysis/index
     modeling/index
     cube/index
+    datasets/index
+    makers/index
     spectrum/index
     time/index
     detect/index

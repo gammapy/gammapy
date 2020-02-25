@@ -41,7 +41,7 @@ class CountsSpectrum:
     .. plot::
         :include-source:
 
-        from gammapy.spectrum import CountsSpectrum
+        from gammapy.maps import CountsSpectrum
         import numpy as np
         import astropy.units as u
 

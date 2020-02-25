@@ -18,7 +18,6 @@ from gammapy.modeling.models import BackgroundModel, Models
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.cube.exposure import _map_spectrum_weight
 from .core import Dataset
 from .spectrum import SpectrumDatasetOnOff, SpectrumDataset
 
@@ -877,6 +876,8 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset containing images.
         """
+        from gammapy.makers.utils import _map_spectrum_weight
+
         name = make_name(name)
         kwargs = {}
         kwargs["name"] = name

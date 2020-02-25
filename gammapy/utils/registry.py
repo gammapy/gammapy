@@ -4,7 +4,7 @@ __all__ = ["Registry"]
 
 
 class Registry(list):
-    """Gammapy model registry class."""
+    """Registry class."""
 
     def get_cls(self, tag):
         for cls in self:
@@ -19,4 +19,4 @@ class Registry(list):
         for item in self:
             info += f"\t{item.tag}\n"
 
-        return info.expandtabs(tabsize=4)
+        return info.expandtabs(tabsize=2)

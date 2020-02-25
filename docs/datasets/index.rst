@@ -2,9 +2,9 @@
 
 .. _datasets:
 
-*******************
-datasets - Datasets
-*******************
+***************************
+datasets - Reduced datasets
+***************************
 
 .. currentmodule:: gammapy.datasets
 
@@ -19,3 +19,11 @@ Getting Started
 
 The `Dataset` class bundles reduced data, IRFs and model to perform
 likelihood fitting and joint-likelihood fitting.
+
+
+Reference/API
+=============
+
+.. automodapi:: gammapy.datasets
+    :no-inheritance-diagram:
+    :include-all-objects:
