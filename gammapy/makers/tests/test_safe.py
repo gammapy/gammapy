@@ -2,11 +2,10 @@
 import pytest
 from numpy.testing import assert_allclose
 from gammapy.data import DataStore
-from gammapy.cube import MapDatasetMaker
 from gammapy.datasets import MapDataset
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
-from gammapy.makers import SafeMaskMaker
+from gammapy.makers import SafeMaskMaker, MapDatasetMaker
 
 
 @pytest.fixture(scope="session")

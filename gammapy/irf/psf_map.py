@@ -428,7 +428,7 @@ class PSFMap:
         psf_out : `PSFMap`
             `PSFMap` with the energy axis summed over
         """
-        from gammapy.cube.exposure import _map_spectrum_weight
+        from gammapy.makers.utils import _map_spectrum_weight
 
         if spectrum is None:
             spectrum = PowerLawSpectralModel(index=2.0)

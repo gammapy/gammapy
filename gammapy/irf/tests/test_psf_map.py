@@ -5,8 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
-from gammapy.cube import make_map_exposure_true_energy
-from gammapy.cube.make import make_psf_map
+from gammapy.makers.utils import make_psf_map, make_map_exposure_true_energy
 from gammapy.data import DataStore
 from gammapy.irf import PSF3D, EffectiveAreaTable2D, EnergyDependentTablePSF, PSFMap
 from gammapy.maps import MapAxis, MapCoord, WcsGeom

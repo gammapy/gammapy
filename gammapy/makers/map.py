@@ -1,110 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
-from gammapy.irf import EnergyDependentMultiGaussPSF, EDispMap, PSFMap
+from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map
-from .background import make_map_background_irf
-from .exposure import make_map_exposure_true_energy
+from gammapy.datasets import MapDataset
+from gammapy.modeling.models import BackgroundModel
+from .utils import (
+    make_psf_map,
+    make_edisp_map,
+    make_map_exposure_true_energy,
+    make_map_background_irf
+)
 
 __all__ = ["MapDatasetMaker"]
 
 log = logging.getLogger(__name__)
-
-
-def make_psf_map(psf, pointing, geom, exposure_map=None):
-    """Make a psf map for a single observation
-
-    Expected axes : rad and true energy in this specific order
-    The name of the rad MapAxis is expected to be 'rad'
-
-    Parameters
-    ----------
-    psf : `~gammapy.irf.PSF3D`
-        the PSF IRF
-    pointing : `~astropy.coordinates.SkyCoord`
-        the pointing direction
-    geom : `~gammapy.maps.Geom`
-        the map geom to be used. It provides the target geometry.
-        rad and true energy axes should be given in this specific order.
-    exposure_map : `~gammapy.maps.Map`, optional
-        the associated exposure map.
-        default is None
-
-    Returns
-    -------
-    psfmap : `~gammapy.cube.PSFMap`
-        the resulting PSF map
-    """
-    energy_axis = geom.get_axis_by_name("energy_true")
-    energy = energy_axis.center
-
-    rad_axis = geom.get_axis_by_name("theta")
-    rad = rad_axis.center
-
-    # Compute separations with pointing position
-    offset = geom.separation(pointing)
-
-    # Compute PSF values
-    # TODO: allow broadcasting in PSF3D.evaluate()
-    psf_values = psf._interpolate(
-        (
-            rad[:, np.newaxis, np.newaxis],
-            offset,
-            energy[:, np.newaxis, np.newaxis, np.newaxis],
-        )
-    )
-
-    # TODO: this probably does not ensure that probability is properly normalized in the PSFMap
-    # Create Map and fill relevant entries
-    data = psf_values.to_value("sr-1")
-    psfmap = Map.from_geom(geom, data=data, unit="sr-1")
-    return PSFMap(psfmap, exposure_map)
-
-
-def make_edisp_map(edisp, pointing, geom, exposure_map=None):
-    """Make a edisp map for a single observation
-
-    Expected axes : migra and true energy in this specific order
-    The name of the migra MapAxis is expected to be 'migra'
-
-    Parameters
-    ----------
-    edisp : `~gammapy.irf.EnergyDispersion2D`
-        the 2D Energy Dispersion IRF
-    pointing : `~astropy.coordinates.SkyCoord`
-        the pointing direction
-    geom : `~gammapy.maps.Geom`
-        the map geom to be used. It provides the target geometry.
-        rad and true energy axes should be given in this specific order.
-    exposure_map : `~gammapy.maps.Map`, optional
-        the associated exposure map.
-        default is None
-
-    Returns
-    -------
-    edispmap : `~gammapy.cube.EDispMap`
-        the resulting EDisp map
-    """
-    energy_axis = geom.get_axis_by_name("energy_true")
-    energy = energy_axis.center
-
-    migra_axis = geom.get_axis_by_name("migra")
-    migra = migra_axis.center
-
-    # Compute separations with pointing position
-    offset = geom.separation(pointing)
-
-    # Compute EDisp values
-    edisp_values = edisp.data.evaluate(
-        offset=offset,
-        energy_true=energy[:, np.newaxis, np.newaxis, np.newaxis],
-        migra=migra[:, np.newaxis, np.newaxis],
-    )
-
-    # Create Map and fill relevant entries
-    data = edisp_values.to_value("")
-    edispmap = Map.from_geom(geom, data=data, unit="")
-    return EDispMap(edispmap, exposure_map)
 
 
 class MapDatasetMaker:
@@ -305,9 +214,6 @@ class MapDatasetMaker:
         dataset : `~gammapy.cube.MapDataset`
             Map dataset.
         """
-        from gammapy.datasets import MapDataset
-        from gammapy.modeling.models import BackgroundModel
-
         kwargs = {"gti": observation.gti}
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)

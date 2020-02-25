@@ -3,11 +3,10 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDatasetMaker
 from gammapy.datasets import MapDataset
 from gammapy.data import DataStore
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.makers import SafeMaskMaker
+from gammapy.makers import SafeMaskMaker, MapDatasetMaker
 from gammapy.utils.testing import requires_data
 
 
