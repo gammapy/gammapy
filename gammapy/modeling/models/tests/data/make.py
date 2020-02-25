@@ -5,10 +5,10 @@
 from pathlib import Path
 import numpy as np
 import astropy.units as u
-from gammapy.cube import MapDataset, MapDatasetMaker
+from gammapy.datasets import Datasets, MapDataset
+from gammapy.makers import MapDatasetMaker
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.modeling import Datasets
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     GaussianSpatialModel,

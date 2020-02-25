@@ -151,8 +151,7 @@ class Models(collections.abc.MutableSequence):
     @classmethod
     def from_yaml(cls, yaml_str):
         """Create from YAML string."""
-        from gammapy.modeling.serialize import dict_to_models
-
+        from .io import dict_to_models
         data = yaml.safe_load(yaml_str)
         models = dict_to_models(data)
         return cls(models)
@@ -166,8 +165,7 @@ class Models(collections.abc.MutableSequence):
 
     def to_yaml(self):
         """Convert to YAML string."""
-        from gammapy.modeling.serialize import models_to_dict
-
+        from .io import models_to_dict
         data = models_to_dict(self._models)
         return yaml.dump(
             data, sort_keys=False, indent=4, width=80, default_flow_style=None

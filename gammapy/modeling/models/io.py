@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
-from .models import SkyDiffuseCube, SkyModel
+from .cube import SkyDiffuseCube, SkyModel
 
 __all__ = ["models_to_dict", "dict_to_models"]
 

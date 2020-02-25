@@ -13,7 +13,7 @@ from gammapy.modeling.models import (
     Model,
     Models,
 )
-from gammapy.modeling.serialize import dict_to_models
+from gammapy.modeling.models.io import dict_to_models
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
