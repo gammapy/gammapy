@@ -32,7 +32,12 @@ class MapDatasetEventSampler:
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
 
         table = Table()
-        table["ENERGY_TRUE"] = coords["energy"]
+        try:
+            energy = coords["energy_true"]
+        except KeyError:
+            energy = coords["energy"]
+
+        table["ENERGY_TRUE"] = energy
         table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
         table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
 
@@ -65,7 +70,8 @@ class MapDatasetEventSampler:
             evaluator = dataset.evaluators.get(model.name)
 
             evaluator = copy.deepcopy(evaluator)
-            evaluator.model.apply_irfs = {"psf": False, "edisp": False}
+            evaluator.model.apply_irf["psf"] = False
+            evaluator.model.apply_irf["edisp"] = False
             npred = evaluator.compute_npred()
 
             temporal_model = ConstantTemporalModel()

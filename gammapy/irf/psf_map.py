@@ -344,7 +344,7 @@ class PSFMap:
             position_angle=position_angle, separation=separation
         )
         return MapCoord.create(
-            {"skycoord": event_positions, "energy": map_coord["energy_true"]}
+            {"skycoord": event_positions, "energy_true": map_coord["energy_true"]}
         )
 
     @classmethod
