@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 from gammapy.utils.testing import requires_data
 from gammapy.datasets import SpectrumDatasetOnOff, Datasets
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-from gammapy.cube import ParameterEstimator
+from gammapy.estimators import ParameterEstimator
 
 @pytest.fixture
 def crab_datasets_1d():
