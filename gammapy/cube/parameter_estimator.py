@@ -53,6 +53,7 @@ class ParameterEstimator:
 
     def __str__(self):
         s = f"{self.__class__.__name__}:\n"
+        s += str(self.datasets) + "\n"
         return s
 
     def _check_datasets(self, datasets):
@@ -89,7 +90,7 @@ class ParameterEstimator:
         else:
             value = np.nan
 
-        result = {"value": value,
+        result = {parameter.name: value,
                   "stat": fit_result.total_stat,
                   "success": fit_result.success}
 
@@ -150,7 +151,7 @@ class ParameterEstimator:
                 log.warning("Fit failed for parameter estimate, setting NaN.")
                 return result
 
-            value_max = result['value']
+            value_max = result[parameter.name]
             res = self.fit.covariance()
             value_err = res.parameters.error(parameter)
             result.update({"err": value_err})
@@ -177,6 +178,6 @@ class ParameterEstimator:
                 res = self.fit.stat_profile(
                     parameter, values=param_values, reoptimize=self.reoptimize
                 )
-                result.update({"value_scan": res["values"], "stat_scan": res["stat"]})
+                result.update({f"{parameter.name}_scan": res["values"], "stat_scan": res["stat"]})
         return result
 
