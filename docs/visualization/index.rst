@@ -1,11 +1,17 @@
-.. _image-plotting:
+.. include:: ../references.txt
 
-.. currentmodule:: gammapy.maps
+.. _visualization:
 
-Image plotting
-==============
+******************************************
+visualization - Plotting and Visualization
+******************************************
 
-`gammapy.maps` provides a few helper functions and classes to create
+.. currentmodule:: gammapy.visualization
+
+Getting Started
+===============
+
+`gammapy.visualization` provides a few helper functions and classes to create
 publication-quality images.
 
 Colormaps
@@ -14,4 +20,12 @@ Colormaps
 The following example shows how to plot images using colormaps that are commonly
 used in gamma-ray astronomy (`colormap_hess` and `colormap_milagro`).
 
-.. plot:: maps/colormap_example.py
+.. plot:: visualization/colormap_example.py
+
+
+Reference/API
+=============
+
+.. automodapi:: gammapy.visualization
+    :no-inheritance-diagram:
+    :include-all-objects:

@@ -5,7 +5,8 @@ from astropy.coordinates import SkyCoord
 from regions import RectangleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
-from gammapy.datasets import SpectrumDataset, plot_spectrum_datasets_off_regions
+from gammapy.datasets import SpectrumDataset
+from gammapy.visualization import plot_spectrum_datasets_off_regions
 from gammapy.makers import ReflectedRegionsBackgroundMaker, SpectrumDatasetMaker
 from gammapy.maps import Map
 
