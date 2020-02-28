@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 def cli_check():
     """Run checks for Gammapy"""
 
+
 @cli_check.command("logging")
 def cli_check_logging():
     """Check logging"""

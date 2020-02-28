@@ -80,7 +80,7 @@ jobs:
     displayName: 'Get GAMMAPY_DATA'
 
   - script: |
-      gammapy jupyter --src tutorials/
+      gammapy jupyter --src tutorials/ test
     displayName: 'Run jupyter notebook tests'
 
 
