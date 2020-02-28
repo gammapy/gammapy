@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
-from astropy.coordinates import Angle
-from gammapy.maps import Map, MapPanelPlotter, colormap_hess, colormap_milagro
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.visualization import colormap_hess, colormap_milagro
+from gammapy.utils.testing import requires_dependency
 
 
 def _check_cmap_rgb_vals(vals, cmap, vmin=0, vmax=1):
@@ -44,17 +43,3 @@ def test_colormap_milagro():
     ]
     _check_cmap_rgb_vals(vals, cmap)
 
-
-@requires_data()
-@requires_dependency("matplotlib")
-def test_map_panel_plotter():
-    import matplotlib.pyplot as plt
-
-    fig = plt.figure()
-    plotter = MapPanelPlotter(
-        figure=fig, xlim=Angle([-5, 5], "deg"), ylim=Angle([-2, 2], "deg"), npanels=2
-    )
-    map_image = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
-
-    with mpl_plot_check():
-        plotter.plot(map_image)
