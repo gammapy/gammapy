@@ -63,7 +63,7 @@ class SimplePulsar:
         return B_CONST * np.sqrt(self.P * self.P_dot)
 
 
-class Pulsar(SimplePulsar):
+class Pulsar:
     """Magnetic dipole spin-down pulsar model.
 
     Reference: http://www.cv.nrao.edu/course/astr534/Pulsars.html
