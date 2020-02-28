@@ -97,8 +97,12 @@ def test_asmooth_map_dataset_on_off():
     counts += 2
     counts_off = WcsNDMap.create(npix=(50, 50), binsz=0.02, unit="")
     counts_off += 3
-    acceptance = 1
-    acceptance_off = 3
+
+    acceptance = WcsNDMap.create(npix=(50, 50), binsz=0.02, unit="")
+    acceptance += 1
+
+    acceptance_off = WcsNDMap.create(npix=(50, 50), binsz=0.02, unit="")
+    acceptance_off += 3
 
     dataset = MapDatasetOnOff(
         counts=counts,
