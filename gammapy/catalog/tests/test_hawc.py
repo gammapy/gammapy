@@ -22,7 +22,7 @@ def cat():
 class TestSourceCatalog2HWC:
     @staticmethod
     def test_source_table(cat):
-        assert cat.name == "2hwc"
+        assert cat.tag == "2hwc"
         assert len(cat.table) == 40
 
     @staticmethod

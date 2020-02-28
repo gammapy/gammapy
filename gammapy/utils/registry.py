@@ -16,7 +16,9 @@ class Registry(list):
         info = "Registry\n"
         info += "--------\n\n"
 
+        len_max = max([len(_.tag) for _ in self])
+
         for item in self:
-            info += f"\t{item.tag}\n"
+            info += f"\t{item.tag:{len_max}s}: {item.__name__}\n"
 
         return info.expandtabs(tabsize=2)

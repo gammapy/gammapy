@@ -184,7 +184,7 @@ class SourceCatalog2HWC(SourceCatalog):
        On ADS: `2017ApJ...843...40A <https://ui.adsabs.harvard.edu/abs/2017ApJ...843...40A>`__
     """
 
-    name = "2hwc"
+    tag = "2hwc"
     """Catalog name"""
 
     description = "2HWC catalog from the HAWC observatory"

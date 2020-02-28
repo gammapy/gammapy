@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from gammapy.utils.registry import Registry
 from .fermi import (
     SourceCatalog2FHL,
     SourceCatalog3FGL,
@@ -11,13 +12,13 @@ from .hess import SourceCatalogHGPS
 
 __all__ = ["SOURCE_CATALOGS"]
 
-SOURCE_CATALOGS = {
-    "gamma-cat": SourceCatalogGammaCat,
-    "hgps": SourceCatalogHGPS,
-    "2hwc": SourceCatalog2HWC,
-    "3fgl": SourceCatalog3FGL,
-    "4fgl": SourceCatalog4FGL,
-    "2fhl": SourceCatalog2FHL,
-    "3fhl": SourceCatalog3FHL,
-}
+SOURCE_CATALOGS = Registry([
+    SourceCatalogGammaCat,
+    SourceCatalogHGPS,
+    SourceCatalog2HWC,
+    SourceCatalog3FGL,
+    SourceCatalog4FGL,
+    SourceCatalog2FHL,
+    SourceCatalog3FHL
+])
 """Registry of source catalogs in Gammapy."""
