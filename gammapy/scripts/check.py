@@ -7,7 +7,6 @@ for developers and the test runner from including it in test collection.
 import logging
 import warnings
 import click
-from gammapy import test
 
 log = logging.getLogger(__name__)
 
@@ -15,13 +14,6 @@ log = logging.getLogger(__name__)
 @click.group("check")
 def cli_check():
     """Run checks for Gammapy"""
-
-
-@cli_check.command("runtests")
-def cli_check_runtests():
-    """Run Gammapy tests"""
-    test(verbose=True)
-
 
 @cli_check.command("logging")
 def cli_check_logging():
