@@ -11,11 +11,6 @@ language: c
 os:
     - linux
 
-stage: Comprehensive tests
-
-# This is a signal to travis-ci to use the new build infrastructure
-sudo: false
-
 addons:
   apt:
     packages: &default_apt
@@ -50,7 +45,7 @@ stages:
    # Test docs, dev dependencies, and without optional dependencies
    - name: Comprehensive tests
 
-matrix:
+jobs:
 
     # Don't wait for allowed failures
     fast_finish: true
