@@ -26,6 +26,8 @@ def pytest_configure(config):
     """Print some info ..."""
     from gammapy.utils.testing import has_data
 
+    config.option.astropy_header = True
+
     print("")
     print("Gammapy test data availability:")
 
