@@ -32,7 +32,7 @@ the following sub-packages (e.g. `gammapy.spectrum`):
  utils        --- Utility functions and classes
 """
 
-__all__ = ["__version__", "test", "song"]
+__all__ = ["__version__", "song"]
 
 import pkg_resources
 
@@ -41,10 +41,6 @@ try:
 except pkg_resources.DistributionNotFound:
     # package is not installed
     pass
-
-
-def test():
-    raise NotImplementedError
 
 
 def song(karaoke=False):
