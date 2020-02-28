@@ -30,6 +30,10 @@ class ParameterEstimator:
         Number of values used to scan fit stat profile
     scan_n_err : float
         Range to scan in number of parameter error
+    scan_values : `numpy.ndarray`
+        Array of norm values to be used for the fit statistic profile.
+        If set to None, scan values are automatically calculated. Default is None.
+
     """
 
     def __init__(
@@ -39,13 +43,15 @@ class ParameterEstimator:
             sigma_ul=2,
             reoptimize=True,
             n_scan_values=30,
-            scan_n_err=3
+            scan_n_err=3,
+            scan_values=None,
     ):
         self.sigma = sigma
         self.sigma_ul = sigma_ul
         self.reoptimize = reoptimize
         self.n_scan_values = n_scan_values
         self.scan_n_err = scan_n_err
+        self.scan_values = scan_values
 
         self.datasets = self._check_datasets(datasets)
         self.fit = Fit(datasets)
@@ -169,14 +175,16 @@ class ParameterEstimator:
                 result.update({"ul": res["errp"] + value_max})
 
             if "scan" in steps:
-                param_values = self._compute_scan_values(
-                    value_max,
-                    value_err,
-                    parameter.min,
-                    parameter.max
-                )
+                if self.scan_values is None:
+                    self.scan_values = self._compute_scan_values(
+                        value_max,
+                        value_err,
+                        parameter.min,
+                        parameter.max
+                    )
+
                 res = self.fit.stat_profile(
-                    parameter, values=param_values, reoptimize=self.reoptimize
+                    parameter, values=self.scan_values, reoptimize=self.reoptimize
                 )
                 result.update({f"{parameter.name}_scan": res["values"], "stat_scan": res["stat"]})
         return result
