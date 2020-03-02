@@ -350,7 +350,7 @@ class SourceCatalogGammaCat(SourceCatalog):
     >>> source.flux_points.plot()
     """
 
-    name = "gamma-cat"
+    tag = "gamma-cat"
     description = "An open catalog of gamma-ray sources"
     source_object_class = SourceCatalogObjectGammaCat
 

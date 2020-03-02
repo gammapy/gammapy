@@ -598,7 +598,7 @@ class SourceCatalogHGPS(SourceCatalog):
     >>> cat.gaussian_component(83)
     """
 
-    name = "hgps"
+    tag = "hgps"
     """Source catalog name (str)."""
 
     description = "H.E.S.S. Galactic plane survey (HGPS) source catalog"

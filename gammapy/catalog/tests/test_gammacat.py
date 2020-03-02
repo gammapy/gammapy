@@ -59,7 +59,7 @@ def gammacat():
 @requires_data()
 class TestSourceCatalogGammaCat:
     def test_source_table(self, gammacat):
-        assert gammacat.name == "gamma-cat"
+        assert gammacat.tag == "gamma-cat"
         assert len(gammacat.table) == 162
 
     def test_positions(self, gammacat):
