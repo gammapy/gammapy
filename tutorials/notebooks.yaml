@@ -36,6 +36,7 @@
     - hess-dl3-dr1
 - name: fermi_lat
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/fermi_lat.ipynb
+  requires: healpy
   datasets:
     - fermi_3fhl
     - fermi-3fhl-gc
@@ -66,6 +67,7 @@
     - gammapy_maps
 - name: modeling
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/modeling.ipynb
+  requires: sherpa
 - name: modeling_2D
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/modelin_2D.ipynb
   datasets:

@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 from pathlib import Path
+import pkg_resources
 import yaml
 from gammapy.scripts.jupyter import notebook_test
 
@@ -16,6 +17,19 @@ def get_notebooks():
     path = Path("tutorials") / "notebooks.yaml"
     with path.open() as fh:
         return yaml.safe_load(fh)
+
+
+def requirement_missing(notebook):
+    """Check if one of the requirements is missing."""
+    if "requires" in notebook:
+        if notebook["requires"] is None:
+            return False
+        for package in notebook["requires"].split():
+            try:
+                pkg_resources.working_set.require(package)
+            except Exception:
+                return True
+    return False
 
 
 def main():
@@ -36,7 +50,9 @@ def main():
     shutil.copytree(path_empty_nbs, path_temp)
 
     for notebook in get_notebooks():
-
+        if requirement_missing(notebook):
+            log.info(f"Skipping notebook (requirement missing): {notebook['name']}")
+            continue
         filename = notebook["name"] + ".ipynb"
         path = path_temp / filename
 
