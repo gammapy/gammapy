@@ -30,9 +30,6 @@ class ParameterEstimator:
         Number of values used to scan fit stat profile
     scan_n_err : float
         Range to scan in number of parameter error
-    scan_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
-        If set to None, scan values are automatically calculated. Default is None.
 
     """
 
@@ -44,14 +41,12 @@ class ParameterEstimator:
             reoptimize=True,
             n_scan_values=30,
             scan_n_err=3,
-            scan_values=None,
     ):
         self.sigma = sigma
         self.sigma_ul = sigma_ul
         self.reoptimize = reoptimize
         self.n_scan_values = n_scan_values
         self.scan_n_err = scan_n_err
-        self.scan_values = scan_values
 
         self.datasets = self._check_datasets(datasets)
         self.fit = Fit(datasets)
@@ -114,7 +109,7 @@ class ParameterEstimator:
             return np.nan
         return result.total_stat
 
-    def run(self, parameter, steps="all", null_value=1e-150):
+    def run(self, parameter, steps="all", null_value=1e-150, scan_values=None):
         """Run the parameter estimator.
 
         Parameters
@@ -133,6 +128,10 @@ class ParameterEstimator:
         null_value : float
             the null value to be used for delta TS estimation.
             Default is 1e-150 since 0 can be an issue for some parameters.
+        scan_values : `numpy.ndarray`
+            Array of parameter values to be used for the fit statistic profile.
+            If set to None, scan values are automatically calculated. Default is None.
+
         Returns
         -------
         result : dict
@@ -175,8 +174,8 @@ class ParameterEstimator:
                 result.update({"ul": res["errp"] + value_max})
 
             if "scan" in steps:
-                if self.scan_values is None:
-                    self.scan_values = self._compute_scan_values(
+                if scan_values is None:
+                    scan_values = self._compute_scan_values(
                         value_max,
                         value_err,
                         parameter.min,
@@ -184,7 +183,7 @@ class ParameterEstimator:
                     )
 
                 res = self.fit.stat_profile(
-                    parameter, values=self.scan_values, reoptimize=self.reoptimize
+                    parameter, values=scan_values, reoptimize=self.reoptimize
                 )
                 result.update({f"{parameter.name}_scan": res["values"], "stat_scan": res["stat"]})
         return result

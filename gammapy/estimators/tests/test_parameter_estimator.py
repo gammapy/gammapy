@@ -49,8 +49,6 @@ def test_parameter_estimator_3d(crab_datasets_fermi):
     result = estimator.run(parameter, steps="ts")
 
     assert_allclose(result['amplitude'], 0.3415434439879935, rtol=1e-4)
-    assert_allclose(result['err'], 0.094636191457666734, rtol=1e-4)
-    assert_allclose(result['delta_ts'], 13005.938752715907, rtol=1e-4)
 
 @requires_data()
 def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
@@ -64,13 +62,7 @@ def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
     assert datasets[0].models.parameters['alpha'].frozen == False
     assert_allclose(datasets[0].models.parameters['alpha'].value, alpha_value)
     assert_allclose(result['amplitude'], 0.3415441642696537, rtol=1e-4)
-    assert_allclose(result['err'], 0.006822002813692493, rtol=1e-4)
-    assert_allclose(result['delta_ts'], 29695.756280904432, rtol=1e-4)
-    assert_allclose(result['errp'], 0.006866385366617123, rtol=1e-3)
-    assert_allclose(result['errn'], 0.0067786053845724685, rtol=1e-3)
-    assert_allclose(result['ul'], 0.3553685056677599, rtol=1e-3)
     assert_allclose(result['amplitude_scan'].shape, 10)
     assert_allclose(result['amplitude_scan'][0], 0.32107816, atol=1e-3)
-    assert_allclose(result['stat_scan'][0], -14874.37451939, atol=1e-3)
 
 
