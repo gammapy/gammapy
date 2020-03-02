@@ -6,6 +6,8 @@ from gammapy.datasets import SpectrumDatasetOnOff, Datasets
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.estimators import ParameterEstimator
 
+pytest.importorskip("iminuit")
+
 @pytest.fixture
 def crab_datasets_1d():
     filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
@@ -21,6 +23,7 @@ def PLmodel():
 def crab_datasets_fermi():
     return Datasets.read("$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml",
                                    "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml")
+
 
 @requires_data()
 def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
