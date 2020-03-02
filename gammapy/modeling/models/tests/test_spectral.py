@@ -208,6 +208,20 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(0.9956923907948155, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(2.2372256145972207, "TeV cm-2 s-1"),
     ),
+    dict(
+        name="sbpl-hard",
+        model=SmoothBrokenPowerLawSpectralModel(
+            index1=2.5 * u.Unit(""),
+            index2=1.5 * u.Unit(""),
+            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            ebreak=0.5 * u.TeV,
+            reference=1 * u.TeV,
+            beta=1,
+        ),
+        val_at_2TeV=u.Quantity(3.5355339059327378, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(13.522782989735022, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(40.06681812966845, "TeV cm-2 s-1"),
+    ),
 ]
 
 # Add compound models
