@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
 import numpy as np
-import scipy
 from scipy.optimize import brentq
 from gammapy.stats import wstat, cash
 
