@@ -6,13 +6,14 @@ import warnings
 import numpy as np
 import scipy.optimize
 from astropy.convolution import CustomKernel, Kernel2D
-from gammapy.stats import cash, cash_sum_cython
-from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
-from ._test_statistics_cython import (
-    _amplitude_bounds_cython,
-    _f_cash_root_cython,
-    _x_best_leastsq,
+from gammapy.stats import (
+    cash,
+    cash_sum_cython,
+    amplitude_bounds_cython,
+    f_cash_root_cython,
+    x_best_leastsq,
 )
+from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 
 __all__ = ["TSMapEstimator"]
 
@@ -518,7 +519,7 @@ def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=R
     niter : int
         Number of function evaluations needed for the fit.
     """
-    bounds = _amplitude_bounds_cython(counts, background, model)
+    bounds = amplitude_bounds_cython(counts, background, model)
     amplitude_min, amplitude_max, amplitude_min_total = bounds
 
     if not counts.sum() > 0:
@@ -528,7 +529,7 @@ def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=R
 
     x_old = 0
     for i in range(maxiter):
-        x = _x_best_leastsq(counts, background, model, weights)
+        x = x_best_leastsq(counts, background, model, weights)
         if abs((x - x_old) / x) < rtol:
             return max(x / FLUX_FACTOR, amplitude_min_total), i + 1
         else:
@@ -566,7 +567,7 @@ def _root_amplitude(counts, background, model, flux, rtol=RTOL):
         try:
             return (
                 scipy.optimize.newton(
-                    _f_cash_root_cython, flux, args=args, maxiter=MAX_NITER, tol=rtol
+                    f_cash_root_cython, flux, args=args, maxiter=MAX_NITER, tol=rtol
                 ),
                 0,
             )
@@ -597,7 +598,7 @@ def _root_amplitude_brentq(counts, background, model, rtol=RTOL):
         Number of function evaluations needed for the fit.
     """
     # Compute amplitude bounds and assert counts > 0
-    bounds = _amplitude_bounds_cython(counts, background, model)
+    bounds = amplitude_bounds_cython(counts, background, model)
     amplitude_min, amplitude_max, amplitude_min_total = bounds
 
     if not counts.sum() > 0:
@@ -608,7 +609,7 @@ def _root_amplitude_brentq(counts, background, model, rtol=RTOL):
         warnings.simplefilter("ignore")
         try:
             result = scipy.optimize.brentq(
-                _f_cash_root_cython,
+                f_cash_root_cython,
                 amplitude_min,
                 amplitude_max,
                 args=args,

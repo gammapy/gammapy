@@ -2,3 +2,4 @@
 """Estimators."""
 from .parameter_estimator import *
 from .lima_map import *
+from .ts_map import *
