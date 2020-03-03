@@ -5,10 +5,8 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.cube import MapDatasetEventSampler
 from gammapy.data import GTI, Observation
-from gammapy.datasets import MapDataset
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.irf import load_cta_irfs
-from gammapy.makers import MapDatasetMaker
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     GaussianSpatialModel,
