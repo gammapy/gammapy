@@ -63,14 +63,63 @@ These are references describing the available methods: [LiMa1983]_, [Cash1979]_,
 Getting Started
 ===============
 
-Li \& Ma Significance
----------------------
+General notions
+---------------
+
+Counts and fit statistics
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Gamma-ray measurements are counts, ``n_on``, containing both signal and background events.
+
+Estimation of number of signal events or of quantities in physical models is done through
+Poisson likelihood functions, the fit statistics. In gammapy, they are all log-likelihood
+functions normalized like chi-squares, i.e. if :math:`L` is the likelihood function used,
+they follow the expression :math:`2 \times log L`.
+
+When the expected number of background events, ``mu_bkg`` is known, the statistic function
+is ``Cash`` (see :ref:`_cash`). When the number of background events is unknown, one has to
+use a background estimate ``n_bkg`` taken from an OFF measurement where only background events
+are expected. In this case, the statistic function is ``WStat`` (see :ref:`_wstat`).
+
+These statistic functions are at the heart of the model fitting approach in gammapy. They are
+used to estimate the best fit values of model parameters and their associated confidence intervals.
+
+They are used also to estimate the excess counts significance, i.e. the probability that
+a given number of measured events ``n_on`` actually contains some signal events :math:`n_{excess}`,
+as well as the errors associated to this estimated number of signal counts. To do so, gammapy
+uses two classes: `~gammapy.stats.CashCountsStatistic` and `~gammapy.stats.WStatCountsStatistic`
+
+We show below how to use them.
+
+Estimating Delta TS
+^^^^^^^^^^^^^^^^^^^
+
+A classical approach to modeling and fitting relies on hypothesis testing. One wants to estimate whether
+an hypothesis :math:`H_1` is statistically preferred over the reference, or null-hypothesis, :math:`H_0`.
+
+The maximum log-likelihood ratio test provides a way to estimate the p-value of the data following :math:`H_1`
+rather than :math:`H_0`, when the two hypotheses are nested. We note this ratio :math:`\lambda = \frac{max L(X|{H_1})}{max L(X|H_0)}`
+
+The Wilks theorem shows that under some hypothesis, :math:`-2 \log \lambda` assymptotically follows a :math:`\chi^2`
+ distribution with :math:`n_{dof}` degrees of freedom, where :math:`n_{dof}` is the difference of free parameters
+between :math:`H_1` and :math:`H_0`.
+
+With the definition the fit statistics :math:`-2 \log \lambda` 
+
+Excess Significance
+-------------------
 [LiMa1983]_ (see equation 17)
+
+The method used to compute the likelihood ratio :math:`\lambda = \frac{L(X|{H_1})}{L(X|H_0)}`,
+ where the null hypothesis :math:`H_0` assumes no signal and the hypothesis :math:`H_1`
+ assumes a gamma-ray excess, using the Poisson statistics. Assymptotically, :math:`-2 \ln \lambda` follows a :math:`\chi^2`
+ distribution with 1 degree of freedom.
 
 As an example, assume you measured :math:`n_{on} = 18` counts in a region where
 you suspect a source might be present and :math:`n_{off} = 97` counts in a
 background control region where you assume no source is present and that is
 :math:`a_{off}/a_{on}=10` times larger than the on-region.
+
 
 Here's how you compute the statistical significance of your detection with the
 Li \& Ma formula:
