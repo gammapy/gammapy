@@ -7,7 +7,6 @@ from .hpx import *
 from .hpxmap import *
 from .hpxnd import *
 from .image_utils import *
-from .profile import *
 from .region import *
 from .regionnd import *
 from .wcs import *

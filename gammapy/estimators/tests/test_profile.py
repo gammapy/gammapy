@@ -4,7 +4,8 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
-from gammapy.maps import ImageProfile, ImageProfileEstimator, WcsGeom, WcsNDMap
+from gammapy.estimators import ImageProfile, ImageProfileEstimator
+from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
