@@ -200,7 +200,7 @@ class Fit:
             if backend == "minuit":
                 method = "hesse"
                 if hasattr(self, "minuit"):
-                    covariance_factors, info = compute(self.minuit, **kwargs)
+                    covariance_factors, info = compute(self.minuit)
                 else:
                     raise RuntimeError("To use minuit, you must first optimize.")
             else:
@@ -324,6 +324,8 @@ class Fit:
             if isinstance(bounds, tuple):
                 parmin, parmax = bounds
             else:
+                if np.isnan(parameters.error(parameter)):
+                    raise ValueError("Parameter error is not properly set.")
                 parerr = parameters.error(parameter)
                 parval = parameter.value
                 parmin, parmax = parval - bounds * parerr, parval + bounds * parerr
