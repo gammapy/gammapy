@@ -3,7 +3,7 @@
 import astropy.units as u
 from gammapy.modeling.models import AbsorbedSpectralModel
 from gammapy.modeling import Fit
-from gammapy.spectrum import SpectrumDatasetOnOff
+from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.utils.table import table_from_row_data
 from gammapy.astro.darkmatter import DarkMatterAnnihilationSpectralModel
 from scipy.optimize import brentq
@@ -190,7 +190,7 @@ class SigmaVEstimator:
 
         # default options in sv curve
         if stat_profile_opts is None:
-            stat_profile_opts = dict(bounds=5, nvalues=50)
+            stat_profile_opts = dict(bounds=(-25, 150), nvalues=50)
 
         # initialize data containers
         for ch in self.channels:
@@ -345,7 +345,6 @@ class SigmaVEstimator:
         j_best = None
         stat_profile_opts["parameter"] = "sv"
         dataset_loop.models.parameters["sv"].frozen = False
-
         if nuisance and dataset_loop.nuisance:
             prior = dataset_loop.nuisance["j"].value
             halfrange = dataset_loop.nuisance["width"] * dataset_loop.nuisance["sigmaj"].value
@@ -353,7 +352,7 @@ class SigmaVEstimator:
             dataset_loop.models.parameters["jfactor"].min = prior - halfrange
             dataset_loop.models.parameters["jfactor"].max = prior + halfrange
             fit = Fit([dataset_loop])
-            fit_result = fit.run(optimize_opts, covariance_opts)
+            fit_result = fit.run("minuit", optimize_opts, covariance_opts)
             sv_best = fit_result.parameters["sv"].value
             j_best = fit_result.parameters["jfactor"].value
             likemin = dataset_loop.stat_sum()
@@ -361,7 +360,7 @@ class SigmaVEstimator:
         else:
             dataset_loop.models.parameters["jfactor"].frozen = True
             fit = Fit([dataset_loop])
-            fit_result = fit.run(optimize_opts, covariance_opts)
+            fit_result = fit.run("minuit", optimize_opts, covariance_opts)
             sv_best = fit_result.parameters["sv"].value
             likemin = dataset_loop.stat_sum()
             statprofile = fit.stat_profile(**stat_profile_opts)
