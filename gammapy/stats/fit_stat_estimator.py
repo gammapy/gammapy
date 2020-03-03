@@ -4,10 +4,10 @@ import numpy as np
 from scipy.optimize import brentq
 from gammapy.stats import wstat, cash
 
-__all__ = ["WStatEvaluator", "CashEvaluator"]
+__all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
 
-class FitStatisticEvaluator(abc.ABC):
+class CountsStatistic(abc.ABC):
     @property
     def significance(self):
         """Return statistical significance of measured excess."""
@@ -98,7 +98,7 @@ class FitStatisticEvaluator(abc.ABC):
         return ul
 
 
-class CashEvaluator(FitStatisticEvaluator):
+class CashCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
     with known background.
 
@@ -137,7 +137,7 @@ class CashEvaluator(FitStatisticEvaluator):
         return cash(self.n_on[index], self.mu_bkg[index] + mu) - delta
 
 
-class WStatEvaluator(FitStatisticEvaluator):
+class WStatCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
     with unknown background.
 

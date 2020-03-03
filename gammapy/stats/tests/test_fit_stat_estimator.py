@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.stats import CashEvaluator, WStatEvaluator
+from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 
 ref_array = np.ones((3, 2, 4))
 
@@ -18,7 +18,7 @@ values = [
 
 @pytest.mark.parametrize(("n_on", "mu_bkg", "result"), values)
 def test_cash_basic(n_on, mu_bkg, result):
-    stat = CashEvaluator(n_on, mu_bkg)
+    stat = CashCountsStatistic(n_on, mu_bkg)
     excess = stat.excess
     significance = stat.significance
 
@@ -38,7 +38,7 @@ values = [
 
 @pytest.mark.parametrize(("n_on", "mu_bkg", "result"), values)
 def test_cash_errors(n_on, mu_bkg, result):
-    stat = CashEvaluator(n_on, mu_bkg)
+    stat = CashCountsStatistic(n_on, mu_bkg)
     errn = stat.compute_errn()
     errp = stat.compute_errp()
 
@@ -58,7 +58,7 @@ values = [
 
 @pytest.mark.parametrize(("n_on", "mu_bkg", "result"), values)
 def test_cash_ul(n_on, mu_bkg, result):
-    stat = CashEvaluator(n_on, mu_bkg)
+    stat = CashCountsStatistic(n_on, mu_bkg)
     ul = stat.compute_upper_limit()
 
     assert_allclose(ul, result[0], atol=1e-5)
@@ -76,7 +76,7 @@ values = [
 
 @pytest.mark.parametrize(("n_on", "n_off", "alpha", "result"), values)
 def test_wstat_basic(n_on, n_off, alpha, result):
-    stat = WStatEvaluator(n_on, n_off, alpha)
+    stat = WStatCountsStatistic(n_on, n_off, alpha)
     excess = stat.excess
     significance = stat.significance
 
@@ -96,7 +96,7 @@ values = [
 
 @pytest.mark.parametrize(("n_on", "n_off", "alpha", "result"), values)
 def test_wstat_errors(n_on, n_off, alpha, result):
-    stat = WStatEvaluator(n_on, n_off, alpha)
+    stat = WStatCountsStatistic(n_on, n_off, alpha)
     errn = stat.compute_errn()
     errp = stat.compute_errp()
 
@@ -116,7 +116,7 @@ values = [
 
 @pytest.mark.parametrize(("n_on", "n_off", "alpha", "result"), values)
 def test_wstat_ul(n_on, n_off, alpha, result):
-    stat = WStatEvaluator(n_on, n_off, alpha)
+    stat = WStatCountsStatistic(n_on, n_off, alpha)
     ul = stat.compute_upper_limit()
 
     assert_allclose(ul, result[0], atol=1e-5)
