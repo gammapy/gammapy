@@ -3,7 +3,8 @@ import logging
 import numpy as np
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
-from gammapy.maps import Map
+from gammapy.maps import Map, MapCoord
+from gammapy.irf import EffectiveAreaTable
 
 __all__ = ["SafeMaskMaker"]
 
@@ -113,11 +114,11 @@ class SafeMaskMaker:
         return mask
 
     def make_mask_energy_aeff_max(self, dataset):
-        """Make safe energy mask from aeff max.
+        """Make safe energy mask from effective area maximum value.
 
         Parameters
         ----------
-        dataset : `~gammapy.spectrum.SpectrumDataset` or `~gammapy.spectrum.SpectrumDatasetOnOff`
+        dataset : `~gammapy.modeling.Dataset`
             Dataset to compute mask for.
 
         Returns
@@ -125,17 +126,34 @@ class SafeMaskMaker:
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
-        if isinstance(dataset, MapDataset):
-            raise NotImplementedError(
-                "'aeff-max' method currently only supported for spectral datasets"
-            )
 
-        aeff_thres = self.aeff_percent / 100 * dataset.aeff.max_area
-        e_min = dataset.aeff.find_energy(aeff_thres)
-        return dataset.counts.energy_mask(emin=e_min)
+        if isinstance(dataset, MapDataset):
+            position = self.position
+            if position is None:
+                position = dataset.counts.geom.center_skydir
+            exposure = dataset.exposure
+            position = position.transform_to("icrs")
+            energy = exposure.geom.get_axis_by_name("energy_true")
+            coord = MapCoord.create(
+                (position.ra, position.dec, energy.center), frame="icrs"
+            )
+            exposure_1d = exposure.interp_by_coord(coord)
+            aeff = EffectiveAreaTable(
+                energy_lo=energy.edges[:-1],
+                energy_hi=energy.edges[1:],
+                data=exposure_1d,
+            )
+            counts = dataset.counts.geom
+        else:
+            aeff = dataset.aeff
+            counts = dataset.counts
+
+        aeff_thres = (self.aeff_percent / 100) * aeff.max_area
+        e_min = aeff.find_energy(aeff_thres)
+        return counts.energy_mask(emin=e_min)
 
     def make_mask_energy_edisp_bias(self, dataset):
-        """Make safe energy mask from aeff max.
+        """Make safe energy mask from energy dispersion bias.
 
         Parameters
         ----------
