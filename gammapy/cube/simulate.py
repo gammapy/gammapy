@@ -265,7 +265,7 @@ class MapDatasetEventSampler:
             Event list.
         """
         try:
-            dataset.models[1]
+          if dataset.models[1]:
             events_src = self.sample_sources(dataset)
 
             if dataset.psf:
