@@ -45,12 +45,12 @@ class Registry:
         if task not in cls.register:
             raise ValueError(f"Unknown task {task!r}")
 
-        task = cls.register[task]
+        backend_options = cls.register[task]
 
-        if backend not in task:
-            raise ValueError(f"Unknown method {task!r} for task {backend!r}")
+        if backend not in backend_options:
+            raise ValueError(f"Unknown backend {backend!r} for task {task!r}")
 
-        return task[backend]
+        return backend_options[backend]
 
 
 registry = Registry()
@@ -83,6 +83,8 @@ class Fit:
 
         Parameters
         ----------
+        backend : str
+            Backend used for fitting, default : minuit
         optimize_opts : dict
             Options passed to `Fit.optimize`.
         covariance_opts : dict
@@ -175,7 +177,7 @@ class Fit:
             **info,
         )
 
-    def covariance(self, backend="minuit"):
+    def covariance(self, backend="minuit", **kwargs):
         """Estimate the covariance matrix.
 
         Assumes that the model parameters are already optimised.
@@ -198,12 +200,12 @@ class Fit:
             if backend == "minuit":
                 method = "hesse"
                 if hasattr(self, "minuit"):
-                    covariance_factors, info = compute(self.minuit)
+                    covariance_factors, info = compute(self.minuit, **kwargs)
                 else:
                     raise RuntimeError("To use minuit, you must first optimize.")
             else:
                 method = ""
-                covariance_factors, info = compute(parameters, self.datasets.stat_sum)
+                covariance_factors, info = compute(parameters, self.datasets.stat_sum, **kwargs)
 
         parameters.set_covariance_factors(covariance_factors)
 
