@@ -24,7 +24,7 @@ class CountsStatistic(abc.ABC):
             Confidence level of the uncertainty expressed in number of sigma. Default is 1.
         """
         errn = np.zeros_like(self.n_on, dtype="float")
-        min_range = self.excess - 2 * n_sigma * self.std
+        min_range = self.excess - 2 * n_sigma * (self.std + 1)
 
         it = np.nditer(errn, flags=["multi_index"])
         while not it.finished:
@@ -53,7 +53,7 @@ class CountsStatistic(abc.ABC):
             Confidence level of the uncertainty expressed in number of sigma. Default is 1.
         """
         errp = np.zeros_like(self.n_on, dtype="float")
-        max_range = self.excess + 2 * n_sigma * self.std
+        max_range = self.excess + 2 * n_sigma * (self.std + 1)
 
         it = np.nditer(errp, flags=["multi_index"])
         while not it.finished:
@@ -81,7 +81,7 @@ class CountsStatistic(abc.ABC):
         ul = np.zeros_like(self.n_on, dtype="float")
 
         min_range = np.maximum(0, self.excess)
-        max_range = min_range + 2 * n_sigma * self.std
+        max_range = min_range + 2 * n_sigma * (self.std + 1)
         it = np.nditer(ul, flags=["multi_index"])
 
         while not it.finished:
@@ -121,7 +121,7 @@ class CashCountsStatistic(CountsStatistic):
     @property
     def std(self):
         """Approximate error."""
-        return np.sqrt(self.n_on + 1)
+        return np.sqrt(self.n_on)
 
     @property
     def TS_null(self):
