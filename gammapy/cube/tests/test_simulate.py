@@ -52,49 +52,6 @@ def dataset():
     return dataset
 
 
-@pytest.fixture(scope="session")
-def dataset_bkg():
-    LIVETIME = 1 * u.hr
-    position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
-    energy_axis = MapAxis.from_energy_bounds(
-        "0.1 TeV", "100 TeV", nbin=10, per_decade=True
-    )
-    energy_axis_true = MapAxis.from_energy_bounds(
-        "0.03 TeV", "300 TeV", nbin=20, per_decade=True, name="energy_true"
-    )
-    migra_axis = MapAxis.from_bounds(0.5, 2, nbin=150, node_type="edges", name="migra")
-
-    geom = WcsGeom.create(
-        skydir=position, binsz=0.1, width="5 deg", frame="galactic", axes=[energy_axis]
-    )
-
-    t_min = 0 * u.s
-    t_max = 30000 * u.s
-
-    gti = GTI.create(start=t_min, stop=t_max)
-
-    geom_true = geom.copy()
-    geom_true.axes[0].name = "energy_true"
-
-    IRF_FILE = (
-        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-    )
-    irfs = load_cta_irfs(IRF_FILE)
-    observation = Observation.create(
-        obs_id=1001, pointing=position, livetime=LIVETIME, irfs=irfs
-    )
-
-    empty = MapDataset.create(
-        geom, energy_axis_true=energy_axis_true, migra_axis=migra_axis
-    )
-    maker = MapDatasetMaker(selection=["exposure", "background"])
-    dataset_bkg = maker.run(empty, observation)
-
-    dataset_bkg.gti = gti
-
-    return dataset_bkg
-
-
 @requires_data()
 def test_mde_sample_sources(dataset):
     sampler = MapDatasetEventSampler(random_state=0)
@@ -126,24 +83,6 @@ def test_mde_sample_background(dataset):
     assert events.table["RA"].unit == "deg"
 
     assert_allclose(events.table["DEC"][0], -30.870316, rtol=1e-5)
-    assert events.table["DEC"].unit == "deg"
-
-    assert_allclose(events.table["MC_ID"][0], 0, rtol=1e-5)
-
-
-@requires_data()
-def test_mde_sample_background_only(dataset_bkg):
-    sampler = MapDatasetEventSampler(random_state=0)
-    events = sampler.sample_background(dataset=dataset_bkg)
-
-    assert len(events.table["ENERGY"]) == 65918
-    assert_allclose(events.table["ENERGY"][0], 0.1080101, rtol=1e-5)
-    assert events.table["ENERGY"].unit == "TeV"
-
-    assert_allclose(events.table["RA"][0], 267.076550, rtol=1e-5)
-    assert events.table["RA"].unit == "deg"
-
-    assert_allclose(events.table["DEC"][0], -31.521038, rtol=1e-5)
     assert events.table["DEC"].unit == "deg"
 
     assert_allclose(events.table["MC_ID"][0], 0, rtol=1e-5)
@@ -199,10 +138,20 @@ def test_mde_run(dataset):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
 
+    dataset_bkg = dataset.copy()
+    dataset_bkg.models = dataset_bkg.models[1]
+    events_bkg = sampler.run(dataset=dataset_bkg, observation=obs)
+
     assert len(events.table) == 2422
     assert_allclose(events.table["ENERGY"][0], 1.56446303986587, rtol=1e-5)
     assert_allclose(events.table["RA"][0], 268.8180057255861, rtol=1e-5)
     assert_allclose(events.table["DEC"][0], -28.45051813404372, rtol=1e-5)
+
+    assert len(events_bkg.table) == 12
+    assert_allclose(events_bkg.table["ENERGY"][0], 1.377619454, rtol=1e-5)
+    assert_allclose(events_bkg.table["RA"][0], 265.09135019, rtol=1e-5)
+    assert_allclose(events_bkg.table["DEC"][0], -30.631115659801, rtol=1e-5)
+    assert_allclose(events_bkg.table["MC_ID"][0], 0, rtol=1e-5)
 
     meta = events.table.meta
 

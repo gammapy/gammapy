@@ -264,8 +264,7 @@ class MapDatasetEventSampler:
         events : `~gammapy.data.EventList`
             Event list.
         """
-        try:
-          if dataset.models[1]:
+        if len(dataset.models) > 1:
             events_src = self.sample_sources(dataset)
 
             if dataset.psf:
@@ -285,10 +284,9 @@ class MapDatasetEventSampler:
             else:
                 events = events_src
 
-        except:
-            if dataset.background_model:
-                events_bkg = self.sample_background(dataset)
-                events = EventList.stack([events_bkg])
+        if len(dataset.models) == 1 and dataset.background_model is not None:
+            events_bkg = self.sample_background(dataset)
+            events = EventList.stack([events_bkg])
 
         events.table["EVENT_ID"] = np.arange(len(events.table))
         events.table.meta = self.event_list_meta(dataset, observation)
