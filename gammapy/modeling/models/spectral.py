@@ -657,6 +657,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
     @staticmethod
     def evaluate(energy, index1, index2, amplitude, ebreak, reference, beta):
         """Evaluate the model (static function)."""
+        beta *= np.sign(index2 - index1)
         pwl = amplitude * (energy / reference) ** (-index1)
         brk = (1 + (energy / ebreak) ** ((index2 - index1) / beta)) ** (-beta)
         return pwl * brk
