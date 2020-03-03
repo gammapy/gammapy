@@ -39,7 +39,6 @@ or request a feature, or need help with anything Gammapy-related.
     datasets/index
     makers/index
     estimators/index
-    spectrum/index
     time/index
     data/index
     irf/index
