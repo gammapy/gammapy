@@ -34,23 +34,23 @@ or request a feature, or need help with anything Gammapy-related.
     :maxdepth: 1
 
     analysis/index
-    modeling/index
-    cube/index
-    datasets/index
-    makers/index
-    estimators/index
-    time/index
     data/index
+    makers/index
+    datasets/index
+    modeling/index
+    estimators/index
+    cube/index
+    time/index
     irf/index
     maps/index
 
     catalog/index
     astro/index
 
-    stats/index
-    utils/index
     scripts/index
+    stats/index
     visualization/index
+    utils/index
 
 
 .. _gammapy_dev:

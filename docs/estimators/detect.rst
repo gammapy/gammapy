@@ -1,4 +1,4 @@
-.. include:: ../../references.txt
+.. include:: ../references.txt
 
 .. _detect:
 
