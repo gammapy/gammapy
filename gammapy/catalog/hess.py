@@ -6,7 +6,7 @@ from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from gammapy.modeling.models import Model, Models, SkyModel
-from gammapy.spectrum import FluxPoints
+from gammapy.estimators import FluxPoints
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_row_to_dict

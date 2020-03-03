@@ -8,7 +8,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from gammapy.modeling.models import Model, SkyModel
-from gammapy.spectrum import FluxPoints
+from gammapy.estimators import FluxPoints
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 

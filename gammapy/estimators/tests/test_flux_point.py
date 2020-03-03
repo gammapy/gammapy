@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.table import Table
 from gammapy.catalog.fermi import SourceCatalog3FGL
 from gammapy.modeling.models import SpectralModel, PowerLawSpectralModel
-from gammapy.spectrum import FluxPoints
+from gammapy.estimators import FluxPoints
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
