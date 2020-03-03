@@ -5,8 +5,10 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.cube import MapDatasetEventSampler
 from gammapy.data import GTI, Observation
+from gammapy.datasets import MapDataset
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.irf import load_cta_irfs
+from gammapy.makers import MapDatasetMaker
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     GaussianSpatialModel,
@@ -50,6 +52,49 @@ def dataset():
     return dataset
 
 
+@pytest.fixture(scope="session")
+def dataset_bkg():
+    LIVETIME = 1 * u.hr
+    position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
+    energy_axis = MapAxis.from_energy_bounds(
+        "0.1 TeV", "100 TeV", nbin=10, per_decade=True
+    )
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.03 TeV", "300 TeV", nbin=20, per_decade=True, name="energy_true"
+    )
+    migra_axis = MapAxis.from_bounds(0.5, 2, nbin=150, node_type="edges", name="migra")
+
+    geom = WcsGeom.create(
+        skydir=position, binsz=0.1, width="5 deg", frame="galactic", axes=[energy_axis]
+    )
+
+    t_min = 0 * u.s
+    t_max = 30000 * u.s
+
+    gti = GTI.create(start=t_min, stop=t_max)
+
+    geom_true = geom.copy()
+    geom_true.axes[0].name = "energy_true"
+
+    IRF_FILE = (
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    irfs = load_cta_irfs(IRF_FILE)
+    observation = Observation.create(
+        obs_id=1001, pointing=position, livetime=LIVETIME, irfs=irfs
+    )
+
+    empty = MapDataset.create(
+        geom, energy_axis_true=energy_axis_true, migra_axis=migra_axis
+    )
+    maker = MapDatasetMaker(selection=["exposure", "background"])
+    dataset_bkg = maker.run(empty, observation)
+
+    dataset_bkg.gti = gti
+
+    return dataset_bkg
+
+
 @requires_data()
 def test_mde_sample_sources(dataset):
     sampler = MapDatasetEventSampler(random_state=0)
@@ -81,6 +126,24 @@ def test_mde_sample_background(dataset):
     assert events.table["RA"].unit == "deg"
 
     assert_allclose(events.table["DEC"][0], -30.870316, rtol=1e-5)
+    assert events.table["DEC"].unit == "deg"
+
+    assert_allclose(events.table["MC_ID"][0], 0, rtol=1e-5)
+
+
+@requires_data()
+def test_mde_sample_background_only(dataset_bkg):
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.sample_background(dataset=dataset_bkg)
+
+    assert len(events.table["ENERGY"]) == 65918
+    assert_allclose(events.table["ENERGY"][0], 0.1080101, rtol=1e-5)
+    assert events.table["ENERGY"].unit == "TeV"
+
+    assert_allclose(events.table["RA"][0], 267.076550, rtol=1e-5)
+    assert events.table["RA"].unit == "deg"
+
+    assert_allclose(events.table["DEC"][0], -31.521038, rtol=1e-5)
     assert events.table["DEC"].unit == "deg"
 
     assert_allclose(events.table["MC_ID"][0], 0, rtol=1e-5)
