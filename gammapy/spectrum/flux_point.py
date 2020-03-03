@@ -4,7 +4,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
-from gammapy.datasets import Datasets, MapDataset, SpectrumDatasetOnOff
+from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, ScaleSpectralModel
 from gammapy.utils.interpolation import interpolate_profile
@@ -869,7 +869,7 @@ class FluxPointsEstimator:
     def e_groups(self):
         """Energy grouping table `~astropy.table.Table`"""
         dataset = self.datasets[0]
-        if isinstance(dataset, SpectrumDatasetOnOff):
+        if isinstance(dataset, SpectrumDataset):
             energy_axis = dataset.counts.energy
         else:
             energy_axis = dataset.counts.geom.get_axis_by_name("energy")
