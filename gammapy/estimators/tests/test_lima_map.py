@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from gammapy.datasets import MapDataset, MapDatasetOnOff
-from gammapy.detect import LiMaMapEstimator
+from gammapy.estimators import LiMaMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
 
