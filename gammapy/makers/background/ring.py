@@ -37,7 +37,7 @@ class AdaptiveRingBackgroundMaker:
 
     See Also
     --------
-    RingBackgroundMaker, gammapy.detect.KernelBackgroundEstimator
+    RingBackgroundMaker
     """
 
     def __init__(
@@ -239,7 +239,7 @@ class RingBackgroundMaker:
 
     See Also
     --------
-    gammapy.detect.KernelBackgroundEstimator, AdaptiveRingBackgroundEstimator
+    AdaptiveRingBackgroundEstimator
     """
 
     def __init__(self, r_in, width, exclusion_mask=None):
