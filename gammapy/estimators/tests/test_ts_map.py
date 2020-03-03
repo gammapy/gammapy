@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Gaussian2DKernel
 from gammapy.datasets import MapDataset
-from gammapy.detect import TSMapEstimator
+from gammapy.estimators import TSMapEstimator
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import BackgroundModel
 from gammapy.utils.testing import requires_data
