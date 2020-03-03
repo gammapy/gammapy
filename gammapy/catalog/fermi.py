@@ -15,7 +15,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
-from gammapy.spectrum import FluxPoints
+from gammapy.estimators import FluxPoints
 from gammapy.time import LightCurve
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
