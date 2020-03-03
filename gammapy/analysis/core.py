@@ -17,7 +17,7 @@ from gammapy.makers import (
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import Models
-from gammapy.spectrum import FluxPointsEstimator
+from gammapy.estimators import FluxPointsEstimator
 from gammapy.utils.scripts import make_path
 
 __all__ = ["Analysis"]

@@ -33,7 +33,8 @@ class FluxPointsDataset(Dataset):
 
         from gammapy.modeling import Fit
         from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-        from gammapy.spectrum import FluxPoints, FluxPointsDataset
+        from gammapy.estimators import FluxPoints
+        from gammapy.datasets import FluxPointsDataset
 
         filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
         flux_points = FluxPoints.read(filename)
@@ -123,7 +124,7 @@ class FluxPointsDataset(Dataset):
         dataset : `FluxPointsDataset`
             Flux point datasets.
         """
-        from gammapy.spectrum import FluxPoints
+        from gammapy.estimators import FluxPoints
 
         table = Table.read(data["filename"])
         mask_fit = table["mask_fit"].data.astype("bool")
