@@ -612,6 +612,58 @@ class TestSpectralFit:
         assert actual.unit == "cm-2 s-1 TeV-1"
         assert_allclose(actual.value, 5.200e-11, rtol=1e-3)
 
+    def test_stats(self):
+        dataset = self.datasets[0]
+        dataset.models = self.pwl
+
+        fit = Fit([dataset])
+        result = fit.run()
+
+        stats = dataset.stat_array()
+        actual = np.sum(stats[dataset.mask_safe])
+
+        desired = result.total_stat
+        assert_allclose(actual, desired)
+
+    def test_fit_range(self):
+        # Fit range not restriced fit range should be the thresholds
+        obs = self.datasets[0]
+        actual = obs.energy_range[0]
+
+        assert actual.unit == "keV"
+        assert_allclose(actual.value, 8.912509e08)
+
+    def test_no_edisp(self):
+        dataset = self.datasets[0]
+
+        # Bring aeff in RECO space
+        energy = dataset.counts.energy.center
+        data = dataset.aeff.data.evaluate(energy_true=energy)
+        e_edges = dataset.counts.energy.edges
+
+        dataset.aeff = EffectiveAreaTable(
+            data=data, energy_lo=e_edges[:-1], energy_hi=e_edges[1:]
+        )
+        dataset.edisp = None
+        dataset.models = self.pwl
+
+        fit = Fit([dataset])
+        result = fit.run()
+        assert_allclose(result.parameters["index"].value, 2.7961, atol=0.02)
+
+    def test_stacked_fit(self):
+        dataset = self.datasets[0].copy()
+        dataset.stack(self.datasets[1])
+        dataset.models = self.pwl
+
+        fit = Fit([dataset])
+        result = fit.run()
+        pars = result.parameters
+
+        assert_allclose(pars["index"].value, 2.7767, rtol=1e-3)
+        assert u.Unit(pars["amplitude"].unit) == "cm-2 s-1 TeV-1"
+        assert_allclose(pars["amplitude"].value, 5.191e-11, rtol=1e-3)
+
 
 def _read_hess_obs():
     path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
@@ -974,82 +1026,3 @@ class TestFit:
         profile = fit.stat_profile("index", values=values)
         actual = values[np.argmin(profile["stat"])]
         assert_allclose(actual, true_idx, rtol=0.01)
-
-
-@requires_dependency("iminuit")
-@requires_data()
-class TestSpectralFit:
-    """Test fit in astrophysical scenario"""
-
-    def setup(self):
-        path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
-        obs1 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits")
-        obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
-        self.obs_list = [obs1, obs2]
-
-        self.pwl = SkyModel(
-            spectral_model=PowerLawSpectralModel(
-                index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
-            )
-        )
-
-        self.ecpl = SkyModel(
-            spectral_model=ExpCutoffPowerLawSpectralModel(
-                index=2,
-                amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-                reference=1 * u.TeV,
-                lambda_=0.1 / u.TeV,
-            )
-        )
-
-    def test_stats(self):
-        dataset = self.obs_list[0]
-        dataset.models = self.pwl
-
-        fit = Fit([dataset])
-        result = fit.run()
-
-        stats = dataset.stat_array()
-        actual = np.sum(stats[dataset.mask_safe])
-
-        desired = result.total_stat
-        assert_allclose(actual, desired)
-
-    def test_fit_range(self):
-        # Fit range not restriced fit range should be the thresholds
-        obs = self.obs_list[0]
-        actual = obs.energy_range[0]
-
-        assert actual.unit == "keV"
-        assert_allclose(actual.value, 8.912509e08)
-
-    def test_no_edisp(self):
-        dataset = self.obs_list[0]
-
-        # Bring aeff in RECO space
-        energy = dataset.counts.energy.center
-        data = dataset.aeff.data.evaluate(energy_true=energy)
-        e_edges = dataset.counts.energy.edges
-
-        dataset.aeff = EffectiveAreaTable(
-            data=data, energy_lo=e_edges[:-1], energy_hi=e_edges[1:]
-        )
-        dataset.edisp = None
-        dataset.models = self.pwl
-
-        fit = Fit([dataset])
-        result = fit.run()
-        assert_allclose(result.parameters["index"].value, 2.7961, atol=0.02)
-
-    def test_stacked_fit(self):
-        dataset = self.obs_list[0].copy()
-        dataset.stack(self.obs_list[1])
-        dataset.models = self.pwl
-
-        fit = Fit([dataset])
-        result = fit.run()
-        pars = result.parameters
-
-        assert_allclose(pars["index"].value, 2.7767, rtol=1e-3)
-        assert u.Unit(pars["amplitude"].unit) == "cm-2 s-1 TeV-1"
-        assert_allclose(pars["amplitude"].value, 5.191e-11, rtol=1e-3)
