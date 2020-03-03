@@ -77,19 +77,16 @@ functions normalized like chi-squares, i.e. if :math:`L` is the likelihood funct
 they follow the expression :math:`2 \times log L`.
 
 When the expected number of background events, ``mu_bkg`` is known, the statistic function
-is ``Cash`` (see :ref:`_cash`). When the number of background events is unknown, one has to
+is ``Cash`` (see :ref:`cash`). When the number of background events is unknown, one has to
 use a background estimate ``n_bkg`` taken from an OFF measurement where only background events
-are expected. In this case, the statistic function is ``WStat`` (see :ref:`_wstat`).
+are expected. In this case, the statistic function is ``WStat`` (see :ref:`wstat`).
 
 These statistic functions are at the heart of the model fitting approach in gammapy. They are
 used to estimate the best fit values of model parameters and their associated confidence intervals.
 
 They are used also to estimate the excess counts significance, i.e. the probability that
 a given number of measured events ``n_on`` actually contains some signal events :math:`n_{excess}`,
-as well as the errors associated to this estimated number of signal counts. To do so, gammapy
-uses two classes: `~gammapy.stats.CashCountsStatistic` and `~gammapy.stats.WStatCountsStatistic`
-
-We show below how to use them.
+as well as the errors associated to this estimated number of signal counts.
 
 Estimating Delta TS
 ^^^^^^^^^^^^^^^^^^^
@@ -98,22 +95,30 @@ A classical approach to modeling and fitting relies on hypothesis testing. One w
 an hypothesis :math:`H_1` is statistically preferred over the reference, or null-hypothesis, :math:`H_0`.
 
 The maximum log-likelihood ratio test provides a way to estimate the p-value of the data following :math:`H_1`
-rather than :math:`H_0`, when the two hypotheses are nested. We note this ratio :math:`\lambda = \frac{max L(X|{H_1})}{max L(X|H_0)}`
+rather than :math:`H_0`, when the two hypotheses are nested.
+We note this ratio :math:`\lambda = \frac{max L(X|{H_1})}{max L(X|H_0)}`
 
 The Wilks theorem shows that under some hypothesis, :math:`-2 \log \lambda` assymptotically follows a :math:`\chi^2`
- distribution with :math:`n_{dof}` degrees of freedom, where :math:`n_{dof}` is the difference of free parameters
+distribution with :math:`n_{dof}` degrees of freedom, where :math:`n_{dof}` is the difference of free parameters
 between :math:`H_1` and :math:`H_0`.
 
-With the definition the fit statistics :math:`-2 \log \lambda` 
+With the definition the fit statistics :math:`-2 \log \lambda` is simply the difference of the fit statistic values for
+the two hypotheses, the delta TS (for test statistic).
+
+Counts Statistics
+-----------------
+
+To estimate the excess counts significance and errors, gammapy uses two classes for Poisson counts with
+and without known background: `~gammapy.stats.CashCountsStatistic` and `~gammapy.stats.WStatCountsStatistic`
+
+We show below how to use them.
 
 Excess Significance
--------------------
-[LiMa1983]_ (see equation 17)
+^^^^^^^^^^^^^^^^^^^
 
-The method used to compute the likelihood ratio :math:`\lambda = \frac{L(X|{H_1})}{L(X|H_0)}`,
- where the null hypothesis :math:`H_0` assumes no signal and the hypothesis :math:`H_1`
- assumes a gamma-ray excess, using the Poisson statistics. Assymptotically, :math:`-2 \ln \lambda` follows a :math:`\chi^2`
- distribution with 1 degree of freedom.
+To measure the significance of an excess, one can directly use the delta TS of the measurement with and
+without the excess. Taking the square root of the result yields the so-called Li & Ma significance
+[LiMa1983]_ (see equation 17).
 
 As an example, assume you measured :math:`n_{on} = 18` counts in a region where
 you suspect a source might be present and :math:`n_{off} = 97` counts in a
@@ -121,37 +126,49 @@ background control region where you assume no source is present and that is
 :math:`a_{off}/a_{on}=10` times larger than the on-region.
 
 
-Here's how you compute the statistical significance of your detection with the
-Li \& Ma formula:
+Here's how you compute the statistical significance of your detection:
 
 .. code-block:: python
 
-    >>> from gammapy.stats import significance_on_off
-    >>> significance_on_off(n_on=18, n_off=97, alpha=1. / 10, method='lima')
+    >>> from gammapy.stats import WStatCountsStatistic
+    >>> stat = WStatCountsStatistic(n_on=18, n_off=97, alpha=1. / 10)
+    >>> stat.excess
+    8.299999999999999
+    >>> stat.significance
     2.2421704424844875
 
-Confidence Intervals
---------------------
-
-Assume you measured 6 counts in a Poissonian counting experiment with an
-expected background :math:`b = 3`. Here's how you compute the 90% upper limit on
-the signal strength :math:`\mu`:
+Conversely, if you know that the expected number of background events is 9.5, you can use
+the Cash statistic and obtain the Li & Ma significance for known background:
 
 .. code-block:: python
 
-    import numpy as np
-    from scipy import stats
-    import gammapy.stats as gstats
+    >>> from gammapy.stats import CashCountsStatistic
+    >>> stat = CashCountsStatistic(n_on=18, mu_bkg=9.5)
+    >>> stat.excess
+    8.5
+    >>> stat.significance
+    2.4508934155585176
 
-    x_bins = np.arange(0, 100)
-    mu_bins = np.linspace(0, 50, 50 / 0.005 + 1, endpoint=True)
+Excess errors
+^^^^^^^^^^^^^
 
-    matrix = [stats.poisson(mu + 3).pmf(x_bins) for mu in mu_bins]
-    acceptance_intervals = gstats.fc_construct_acceptance_intervals_pdfs(matrix, 0.9)
-    LowerLimitNum, UpperLimitNum, _ = gstats.fc_get_limits(mu_bins, x_bins, acceptance_intervals)
-    mu_upper_limit = gstats.fc_find_limit(6, UpperLimitNum, mu_bins)
+You can also compute the confidence interval for the true excess based on the statistic value:
 
-The result is ``mu_upper_limit == 8.465``.
+If you are interested in 68% (1 :math:`\sigma`) confidence errors:
+
+.. code-block:: python
+
+    >>> from gammapy.stats import CashCountsStatistic
+    >>> stat = CashCountsStatistic(n_on=18, mu_bkg=9.5)
+    >>> stat.compute_errn()
+    -3.91606323
+    >>> stat.compute_errp()
+    4.5823187389960225
+
+
+Note that confidence intervals can be computed in a more robust manner following [Feldman1998]_.
+See :ref:`feldman_cousins`.
+
 
 Using `gammapy.stats`
 =====================
