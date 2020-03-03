@@ -2,6 +2,5 @@
 """Source detection and measurement methods."""
 from .asmooth import *
 from .find import *
-from .kernel import *
 from .lima import *
 from .test_statistics import *
