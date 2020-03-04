@@ -16,28 +16,6 @@ of datasets. A number of functions to test for variability and periodicity are a
 `~gammapy.time.variability` and `~gammapy.time.periodicity`. Finally, `gammapy.utils.time`
 contains low-level helper functions for time conversions.
 
-Lightcurve
-==========
-
-Gammapy uses a simple container for light curves: the `~gammapy.time.LightCurve` class. It stores
-the light curve in the form of a `~astropy.table.Table` and provides a few convenience methods,
-to create time objects and plots.
-
-The table structure follows the approach proposed in the gamma-ray-astro-formats_ webpage.
-
-.. _gamma-ray-astro-formats: https://gamma-astro-data-formats.readthedocs.io/en/latest/lightcurves/index.html
-
-The following example shows how to read a table that contains a lightcurve and then create a ``LightCurve`` object.
-The latter gives access to a number of utilities such as plots and access to times as `~astropy.time.Time` objects::
-
-    >>> from astropy.table import Table
-    >>> url = 'https://github.com/gammapy/gamma-cat/raw/master/input/data/2006/2006A%2526A...460..743A/tev-000119-lc.ecsv'
-    >>> table = Table.read(url, format='ascii.ecsv')
-    >>> from gammapy.time import LightCurve
-    >>> lc = LightCurve(table)
-    >>> lc.time[:2].iso
-    ['2004-05-23 01:47:08.160' '2004-05-23 02:17:31.200']
-    >>> lc.plot()
 
 
 
