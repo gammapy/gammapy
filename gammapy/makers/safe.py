@@ -132,11 +132,8 @@ class SafeMaskMaker:
             if position is None:
                 position = dataset.counts.geom.center_skydir
             exposure = dataset.exposure
-            position = position.transform_to("icrs")
             energy = exposure.geom.get_axis_by_name("energy_true")
-            coord = MapCoord.create(
-                (position.ra, position.dec, energy.center), frame="icrs"
-            )
+            coord = MapCoord.create({"skycoord": position, "energy_true": energy.center})
             exposure_1d = exposure.interp_by_coord(coord)
             aeff = EffectiveAreaTable(
                 energy_lo=energy.edges[:-1],
