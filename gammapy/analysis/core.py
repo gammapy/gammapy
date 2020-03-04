@@ -264,7 +264,7 @@ class Analysis:
         else:
             bkg_maker = None
             log.warning(
-                f"No background maker set for 1d analysis. Check configuration."
+                f"No background maker set for 3d analysis. Check configuration."
             )
 
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
