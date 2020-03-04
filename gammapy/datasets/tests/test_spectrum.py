@@ -30,238 +30,237 @@ from gammapy.utils.testing import (
 from gammapy.utils.time import time_ref_to_dict
 
 
+@pytest.fixture()
+def spectrum_dataset():
+    energy = np.logspace(-1, 1, 31) * u.TeV
+    livetime = 100 * u.s
+
+    pwl = PowerLawSpectralModel(
+            index=2.1,
+            amplitude="1e5 cm-2 s-1 TeV-1",
+            reference="0.1 TeV",
+        )
+
+    model = SkyModel(spectral_model=pwl, name="test-source")
+    aeff = EffectiveAreaTable.from_constant(energy, "1 cm2")
+
+    bkg_rate = np.ones(30) / u.s
+    data = bkg_rate * livetime
+
+    background = CountsSpectrum(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=data
+    )
+
+    dataset = SpectrumDataset(
+        models=model,
+        aeff=aeff,
+        livetime=livetime,
+        background=background,
+        name="test",
+    )
+    dataset.fake(random_state=23)
+    return dataset
+
+
+def test_data_shape(spectrum_dataset):
+    assert spectrum_dataset.data_shape[0] == 30
+
+
+def test_str(spectrum_dataset):
+    assert "SpectrumDataset" in str(spectrum_dataset)
+
+
+def test_energy_range(spectrum_dataset):
+    energy_range = spectrum_dataset.energy_range
+    assert energy_range.unit == u.TeV
+    assert_allclose(energy_range.to_value("TeV"), [0.1, 10.0])
+
+
+def test_info_dict(spectrum_dataset):
+    info_dict = spectrum_dataset.info_dict()
+
+    assert_allclose(info_dict["n_on"], 907010)
+    assert_allclose(info_dict["background"], 3000.0)
+
+    assert_allclose(info_dict["significance"], 2924.522174)
+    assert_allclose(info_dict["excess"], 904010)
+    assert_allclose(info_dict["livetime"].value, 1e2)
+
+    assert info_dict["name"] == "test"
+
+
+def test_incorrect_mask(spectrum_dataset):
+    mask_fit = np.ones(30, dtype=np.dtype("float"))
+    with pytest.raises(ValueError):
+        SpectrumDataset(
+            counts=spectrum_dataset.counts.copy(),
+            livetime="1h",
+            mask_fit=mask_fit,
+        )
+
+
+def test_set_model(spectrum_dataset):
+    spectrum_dataset = spectrum_dataset.copy()
+    spectral_model = PowerLawSpectralModel()
+    model = SkyModel(spectral_model=spectral_model, name="test")
+    spectrum_dataset.models = model
+    assert spectrum_dataset.models["test"] is model
+
+    models = Models([model])
+    spectrum_dataset.models = models
+    assert spectrum_dataset.models["test"] is model
+
+
+def test_npred_models():
+    e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3).edges
+    spectrum_dataset = SpectrumDataset.create(e_reco=e_reco)
+    spectrum_dataset.livetime = 1 * u.h
+    spectrum_dataset.aeff.data.data += 1e10 * u.Unit("cm2")
+
+    pwl_1 = PowerLawSpectralModel(index=2)
+    pwl_2 = PowerLawSpectralModel(index=2)
+    model_1 = SkyModel(spectral_model=pwl_1)
+    model_2 = SkyModel(spectral_model=pwl_2)
+
+    spectrum_dataset.models = Models([model_1, model_2])
+
+    npred = spectrum_dataset.npred()
+
+    assert_allclose(npred.data.sum(), 64.8)
+
+
 @requires_dependency("iminuit")
-class TestSpectrumDataset:
-    """Test fit on counts spectra without any IRFs"""
+def test_fit(spectrum_dataset):
+    """Simple CASH fit to the on vector"""
+    fit = Fit([spectrum_dataset])
+    result = fit.run()
 
-    def setup(self):
-        binning = np.logspace(-1, 1, 31) * u.TeV
+    # assert result.success
+    assert "minuit" in repr(result)
 
-        model = SkyModel(
-            spectral_model=PowerLawSpectralModel(
-                index=2.1,
-                amplitude=1e5 * u.Unit("cm-2 s-1 TeV-1"),
-                reference=0.1 * u.TeV,
-            )
-        )
+    npred = spectrum_dataset.npred().data.sum()
+    assert_allclose(npred, 907012.186399, rtol=1e-3)
+    assert_allclose(result.total_stat, -18087404.624, rtol=1e-3)
 
-        livetime = 100 * u.s
-        aeff = EffectiveAreaTable.from_constant(binning, "1 cm2")
+    pars = result.parameters
+    assert_allclose(pars["index"].value, 2.1, rtol=1e-2)
+    assert_allclose(pars.error("index"), 0.00127, rtol=1e-2)
 
-        bkg_rate = np.ones(30) / u.s
-        bkg_expected = (bkg_rate * livetime).to_value("")
+    assert_allclose(pars["amplitude"].value, 1e5, rtol=1e-3)
+    assert_allclose(pars.error("amplitude"), 153.450, rtol=1e-2)
 
-        background = CountsSpectrum(
-            energy_lo=binning[:-1], energy_hi=binning[1:], data=bkg_expected
-        )
 
-        dataset = SpectrumDataset(
-            models=model,
-            aeff=aeff,
-            livetime=livetime,
-            background=background,
-            name="test",
-        )
-        dataset.fake(random_state=23)
-        self.dataset = dataset
+def test_spectrum_spectrum_dataset_create():
+    e_reco = u.Quantity([0.1, 1, 10.0], "TeV")
+    e_true = u.Quantity([0.05, 0.5, 5, 20.0], "TeV")
+    empty_spectrum_dataset = SpectrumDataset.create(e_reco, e_true, name="test")
 
-    def test_data_shape(self):
-        assert self.dataset.data_shape[0] == 30
+    assert empty_spectrum_dataset.name == "test"
+    assert empty_spectrum_dataset.counts.total_counts == 0
+    assert empty_spectrum_dataset.data_shape[0] == 2
+    assert empty_spectrum_dataset.background.total_counts == 0
+    assert empty_spectrum_dataset.background.energy.nbin == 2
+    assert empty_spectrum_dataset.aeff.data.axis("energy_true").nbin == 3
+    assert empty_spectrum_dataset.edisp.data.axis("energy").nbin == 2
+    assert empty_spectrum_dataset.livetime.value == 0
+    assert len(empty_spectrum_dataset.gti.table) == 0
+    assert empty_spectrum_dataset.energy_range[0] is None
+    assert_allclose(empty_spectrum_dataset.mask_safe, 0)
 
-    def test_energy_range(self):
-        energy_range = self.dataset.energy_range
-        assert energy_range.unit == u.TeV
-        assert_allclose(energy_range.to_value("TeV"), [0.1, 10.0])
 
-    def test_cash(self):
-        """Simple CASH fit to the on vector"""
-        fit = Fit([self.dataset])
-        result = fit.run()
+def test_spectrum_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
+    energy = np.logspace(-1, 1, 31) * u.TeV
+    aeff = EffectiveAreaTable.from_parametrization(energy, "HESS")
+    edisp = EDispKernel.from_diagonal_response(energy, energy)
+    livetime = 100 * u.s
+    background = spectrum_dataset.background
+    spectrum_dataset1 = SpectrumDataset(
+        counts=spectrum_dataset.counts.copy(),
+        livetime=livetime,
+        aeff=aeff,
+        edisp=edisp,
+        background=background.copy()
+    )
 
-        # assert result.success
-        assert "minuit" in repr(result)
+    livetime2 = 0.5 * livetime
+    aeff2 = EffectiveAreaTable(
+        energy[:-1], energy[1:], 2 * aeff.data.data
+    )
+    bkg2 = CountsSpectrum(
+        energy[:-1],
+        energy[1:],
+        data=2 * background.data,
+    )
+    safe_mask2 = np.ones(spectrum_dataset.data_shape, bool)
+    safe_mask2[0] = False
+    spectrum_dataset2 = SpectrumDataset(
+        counts=spectrum_dataset.counts.copy(),
+        livetime=livetime2,
+        aeff=aeff2,
+        edisp=edisp,
+        background=bkg2,
+        mask_safe=safe_mask2,
+    )
+    spectrum_dataset1.stack(spectrum_dataset2)
 
-        npred = self.dataset.npred().data.sum()
-        assert_allclose(npred, 907012.186399, rtol=1e-3)
-        assert_allclose(result.total_stat, -18087404.624, rtol=1e-3)
+    reference = spectrum_dataset.counts.data
+    assert_allclose(spectrum_dataset1.counts.data[1:], reference[1:] * 2)
+    assert_allclose(spectrum_dataset1.counts.data[0], 141363)
+    assert spectrum_dataset1.livetime == 1.5 * livetime
+    assert_allclose(spectrum_dataset1.background.data[1:], 3 * background.data[1:])
+    assert_allclose(spectrum_dataset1.background.data[0], background.data[0])
+    assert_allclose(
+        spectrum_dataset1.aeff.data.data.to_value("m2"),
+        4.0 / 3 * aeff.data.data.to_value("m2"),
+    )
+    assert_allclose(spectrum_dataset1.edisp.pdf_matrix[1:], edisp.pdf_matrix[1:])
+    assert_allclose(spectrum_dataset1.edisp.pdf_matrix[0], 0.5 * edisp.pdf_matrix[0])
 
-        pars = result.parameters
-        assert_allclose(pars["index"].value, 2.1, rtol=1e-2)
-        assert_allclose(pars.error("index"), 0.00127, rtol=1e-2)
 
-        assert_allclose(pars["amplitude"].value, 1e5, rtol=1e-3)
-        assert_allclose(pars.error("amplitude"), 153.450, rtol=1e-2)
+def test_spectrum_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
+    energy = spectrum_dataset.counts.energy.edges
 
-    def test_fake(self):
-        """Test the fake dataset"""
-        real_dataset = self.dataset.copy()
-        self.dataset.fake(314)
-        assert real_dataset.counts.data.shape == self.dataset.counts.data.shape
-        assert real_dataset.background.data.sum() == self.dataset.background.data.sum()
-        assert int(real_dataset.counts.data.sum()) == 907010
-        assert self.dataset.counts.data.sum() == 907331
+    aeff = EffectiveAreaTable.from_parametrization(energy, "HESS")
+    edisp1 = EDispKernel.from_gauss(energy, energy, 0.1, 0)
+    livetime = 100 * u.s
+    spectrum_dataset1 = SpectrumDataset(
+        livetime=livetime, aeff=aeff, edisp=edisp1,
+    )
 
-    def test_incorrect_mask(self):
-        mask_fit = np.ones(30, dtype=np.dtype("float"))
-        with pytest.raises(ValueError):
-            SpectrumDataset(
-                counts=self.dataset.counts.copy(),
-                livetime="1h",
-                mask_fit=mask_fit,
-            )
+    livetime2 = livetime
+    aeff2 = EffectiveAreaTable(
+        energy[:-1], energy[1:], aeff.data.data
+    )
+    edisp2 = EDispKernel.from_gauss(energy, energy, 0.2, 0.0)
+    spectrum_dataset2 = SpectrumDataset(
+        counts=spectrum_dataset.counts.copy(),
+        livetime=livetime2,
+        aeff=aeff2,
+        edisp=edisp2,
+    )
+    spectrum_dataset1.stack(spectrum_dataset2)
 
-    def test_set_model(self):
-        dataset = self.dataset.copy()
-        spectral_model = PowerLawSpectralModel()
-        model = SkyModel(spectral_model=spectral_model, name="test")
-        dataset.models = model
-        assert dataset.models["test"] is model
+    assert spectrum_dataset1.counts is None
+    assert spectrum_dataset1.background is None
+    assert spectrum_dataset1.livetime == 2 * livetime
+    assert_allclose(
+        spectrum_dataset1.aeff.data.data.to_value("m2"), aeff.data.data.to_value("m2")
+    )
+    assert_allclose(spectrum_dataset1.edisp.get_bias(1 * u.TeV), 0.0, atol=1.2e-3)
+    assert_allclose(spectrum_dataset1.edisp.get_resolution(1 * u.TeV), 0.1581, atol=1e-2)
 
-        models = Models([model])
-        dataset.models = models
-        assert dataset.models["test"] is model
 
-    def test_npred_models(self):
-        e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3).edges
-        dataset = SpectrumDataset.create(e_reco=e_reco)
-        dataset.livetime = 1 * u.h
-        dataset.aeff.data.data += 1e10 * u.Unit("cm2")
+@requires_dependency("matplotlib")
+def test_peek(spectrum_dataset):
+    with mpl_plot_check():
+        spectrum_dataset.peek()
 
-        pwl_1 = PowerLawSpectralModel(index=2)
-        pwl_2 = PowerLawSpectralModel(index=2)
-        model_1 = SkyModel(spectral_model=pwl_1)
-        model_2 = SkyModel(spectral_model=pwl_2)
+    with mpl_plot_check():
+        spectrum_dataset.plot_fit()
 
-        dataset.models = Models([model_1, model_2])
-
-        npred = dataset.npred()
-
-        assert_allclose(npred.data.sum(), 64.8)
-
-    def test_str(self):
-        assert "SpectrumDataset" in str(self.dataset)
-
-    def test_spectrumdataset_create(self):
-        e_reco = u.Quantity([0.1, 1, 10.0], "TeV")
-        e_true = u.Quantity([0.05, 0.5, 5, 20.0], "TeV")
-        empty_dataset = SpectrumDataset.create(e_reco, e_true, name="test")
-
-        assert empty_dataset.name == "test"
-        assert empty_dataset.counts.total_counts == 0
-        assert empty_dataset.data_shape[0] == 2
-        assert empty_dataset.background.total_counts == 0
-        assert empty_dataset.background.energy.nbin == 2
-        assert empty_dataset.aeff.data.axis("energy_true").nbin == 3
-        assert empty_dataset.edisp.data.axis("energy").nbin == 2
-        assert empty_dataset.livetime.value == 0
-        assert len(empty_dataset.gti.table) == 0
-        assert empty_dataset.energy_range[0] is None
-        assert_allclose(empty_dataset.mask_safe, 0)
-
-    def test_spectrum_dataset_stack_diagonal_safe_mask(self):
-        energy = self.dataset.counts.energy.edges
-        aeff = EffectiveAreaTable.from_parametrization(energy, "HESS")
-        edisp = EDispKernel.from_diagonal_response(energy, energy)
-        livetime = 100 * u.s
-        background = self.dataset.background
-        dataset1 = SpectrumDataset(
-            counts=self.dataset.counts.copy(),
-            livetime=livetime,
-            aeff=aeff,
-            edisp=edisp,
-            background=background.copy()
-        )
-
-        livetime2 = 0.5 * livetime
-        aeff2 = EffectiveAreaTable(
-            energy[:-1], energy[1:], 2 * aeff.data.data
-        )
-        bkg2 = CountsSpectrum(
-            energy[:-1],
-            energy[1:],
-            data=2 * background.data,
-        )
-        safe_mask2 = np.ones(self.dataset.data_shape, bool)
-        safe_mask2[0] = False
-        dataset2 = SpectrumDataset(
-            counts=self.dataset.counts.copy(),
-            livetime=livetime2,
-            aeff=aeff2,
-            edisp=edisp,
-            background=bkg2,
-            mask_safe=safe_mask2,
-        )
-        dataset1.stack(dataset2)
-
-        reference = self.dataset.counts.data
-        assert_allclose(dataset1.counts.data[1:], reference[1:] * 2)
-        assert_allclose(dataset1.counts.data[0], 141363)
-        assert dataset1.livetime == 1.5 * livetime
-        assert_allclose(dataset1.background.data[1:], 3 * background.data[1:])
-        assert_allclose(dataset1.background.data[0], background.data[0])
-        assert_allclose(
-            dataset1.aeff.data.data.to_value("m2"),
-            4.0 / 3 * aeff.data.data.to_value("m2"),
-        )
-        assert_allclose(dataset1.edisp.pdf_matrix[1:], edisp.pdf_matrix[1:])
-        assert_allclose(dataset1.edisp.pdf_matrix[0], 0.5 * edisp.pdf_matrix[0])
-
-    def test_spectrum_dataset_stack_nondiagonal_no_bkg(self):
-        energy = self.dataset.counts.energy.edges
-
-        aeff = EffectiveAreaTable.from_parametrization(energy, "HESS")
-        edisp1 = EDispKernel.from_gauss(energy, energy, 0.1, 0)
-        livetime = 100 * u.s
-        dataset1 = SpectrumDataset(
-            livetime=livetime, aeff=aeff, edisp=edisp1,
-        )
-
-        livetime2 = livetime
-        aeff2 = EffectiveAreaTable(
-            energy[:-1], energy[1:], aeff.data.data
-        )
-        edisp2 = EDispKernel.from_gauss(energy, energy, 0.2, 0.0)
-        dataset2 = SpectrumDataset(
-            counts=self.dataset.counts.copy(),
-            livetime=livetime2,
-            aeff=aeff2,
-            edisp=edisp2,
-        )
-        dataset1.stack(dataset2)
-
-        assert dataset1.counts is None
-        assert dataset1.background is None
-        assert dataset1.livetime == 2 * livetime
-        assert_allclose(
-            dataset1.aeff.data.data.to_value("m2"), aeff.data.data.to_value("m2")
-        )
-        assert_allclose(dataset1.edisp.get_bias(1 * u.TeV), 0.0, atol=1.2e-3)
-        assert_allclose(dataset1.edisp.get_resolution(1 * u.TeV), 0.1581, atol=1e-2)
-
-    def test_info_dict(self):
-        info_dict = self.dataset.info_dict()
-
-        assert_allclose(info_dict["n_on"], 907010)
-        assert_allclose(info_dict["background"], 3000.0)
-
-        assert_allclose(info_dict["significance"], 2924.522174)
-        assert_allclose(info_dict["excess"], 904010)
-        assert_allclose(info_dict["livetime"].value, 1e2)
-
-        assert info_dict["name"] == "test"
-
-    @requires_dependency("matplotlib")
-    def test_peek(self):
-        with mpl_plot_check():
-            self.dataset.peek()
-        self.dataset.edisp = None
-        with mpl_plot_check():
-            self.dataset.peek()
-
-    @requires_dependency("matplotlib")
-    def test_plot_fit(self):
-        with mpl_plot_check():
-            self.dataset.plot_fit()
+    spectrum_dataset.edisp = None
+    with mpl_plot_check():
+        spectrum_dataset.peek()
 
 
 class TestSpectrumOnOff:
