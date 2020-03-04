@@ -6,12 +6,12 @@
 detect - Source detection
 *************************
 
-.. currentmodule:: gammapy.detect
+.. currentmodule:: gammapy.estimators
 
 Introduction
 ============
 
-The `gammapy.detect` submodule includes low level functions to compute
+The `gammapy.estimators` submodule includes low level functions to compute
 significance and test statistics images as well as some high level source
 detection method prototypes.
 
@@ -28,11 +28,11 @@ Computation of TS images
 .. gp-image:: detect/fermi_ts_image.png
     :width: 100%
 
-Test statistics image computed using `~gammapy.detect.TSMapEstimator` for an
+Test statistics image computed using `~gammapy.estimators.TSMapEstimator` for an
 example Fermi dataset.
 
-The `gammapy.detect` module includes a high performance
-`~gammapy.detect.TSMapEstimator` class to compute test statistics (TS) images
+The `gammapy.estimators` module includes a high performance
+`~gammapy.estimators.TSMapEstimator` class to compute test statistics (TS) images
 for gamma-ray data. The implementation is based on the method described
 in [Stewart2009]_.
 
@@ -52,25 +52,27 @@ center data:
 
 .. code-block:: python
 
-    from astropy.convolution import Gaussian2DKernel
-    from gammapy.detect import TSMapEstimator
+    from gammapy.estimators import TSMapEstimator
+    from gammapy.datasets import MapDataset
     from gammapy.maps import Map
-    from gammapy.cube import PSFKernel
+    from gammapy.irf import PSFKernel
+    from gammapy.modeling.models import BackgroundModel
 
-    counts =  Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
-    background = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-background.fits.gz")
-    exposure = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure.fits.gz")
+    counts =  Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts-cube.fits.gz")
+    background = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-background-cube.fits.gz")
+    exposure = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz")
 
-    maps = {
-        "counts": counts,
-        "background": background,
-        "exposure": exposure,
-    }
+    dataset = MapDataset(
+        counts=counts,
+        exposure=exposure,
+        models=[BackgroundModel(background, datasets_names=["fermi-3fhl-gc"])],
+        name="fermi-3fhl-gc"
+    )
 
     kernel = PSFKernel.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf.fits.gz")
 
     ts_estimator = TSMapEstimator()
-    result = ts_estimator.run(maps, kernel.data)
+    result = ts_estimator.run(dataset, kernel.data)
 
 The function returns an dictionary, that bundles all resulting maps. E.g. here's
 how to find the largest TS value:
@@ -86,21 +88,31 @@ Computation of Li & Ma significance images
 The method derived by [LiMa1983]_ is one of the standard methods to determine
 detection significances for gamma-ray sources. Using the same prepared Fermi
 dataset as above, the corresponding images can be computed using the
-`~gammapy.detect.compute_lima_image` function:
+`~gammapy.estimators.LiMaMapEstimator` class:
 
 .. code-block:: python
 
-    from astropy.convolution import Tophat2DKernel
+    from gammapy.estimators import LiMaMapEstimator
+    from gammapy.datasets import MapDataset
     from gammapy.maps import Map
-    from gammapy.detect import compute_lima_image
+    from gammapy.modeling.models import BackgroundModel
 
-    counts =  Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
-    background = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-background.fits.gz")
+    counts =  Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts-cube.fits.gz")
+    background = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-background-cube.fits.gz")
+    exposure = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz")
 
-    kernel = Tophat2DKernel(5)
-    result = compute_lima_image(counts, background, kernel)
+    dataset = MapDataset(
+        counts=counts,
+        exposure=exposure,
+        models=[BackgroundModel(background, datasets_names=["fermi-3fhl-gc"])],
+        name="fermi-3fhl-gc"
+    )
 
-The function returns a dictionary, that bundles all resulting images such as
+
+    lima_estimator = LiMaMapEstimator("0.2 deg")
+    result = lima_estimator.run(dataset)
+
+The function returns a dictionary, that bundles all resulting maps such as
 significance, flux and correlated counts and excess images.
 
 Using `gammapy.detect`
@@ -110,9 +122,3 @@ Using `gammapy.detect`
 
 * `Source detection <../notebooks/detect.html>`__
 
-Reference/API
-=============
-
-.. automodapi:: gammapy.detect
-    :no-inheritance-diagram:
-    :include-all-objects:

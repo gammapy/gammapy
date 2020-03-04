@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDatasetEventSampler
+from gammapy.datasets import MapDatasetEventSampler
 from gammapy.data import GTI, Observation
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.irf import load_cta_irfs
@@ -136,10 +136,20 @@ def test_mde_run(dataset):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
 
+    dataset_bkg = dataset.copy()
+    dataset_bkg.models = dataset_bkg.models[1]
+    events_bkg = sampler.run(dataset=dataset_bkg, observation=obs)
+
     assert len(events.table) == 2422
     assert_allclose(events.table["ENERGY"][0], 1.56446303986587, rtol=1e-5)
     assert_allclose(events.table["RA"][0], 268.8180057255861, rtol=1e-5)
     assert_allclose(events.table["DEC"][0], -28.45051813404372, rtol=1e-5)
+
+    assert len(events_bkg.table) == 12
+    assert_allclose(events_bkg.table["ENERGY"][0], 1.377619454, rtol=1e-5)
+    assert_allclose(events_bkg.table["RA"][0], 265.09135019, rtol=1e-5)
+    assert_allclose(events_bkg.table["DEC"][0], -30.631115659801, rtol=1e-5)
+    assert_allclose(events_bkg.table["MC_ID"][0], 0, rtol=1e-5)
 
     meta = events.table.meta
 

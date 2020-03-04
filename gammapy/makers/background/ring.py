@@ -4,7 +4,8 @@ import itertools
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.maps import Map, scale_cube
+from gammapy.maps import Map
+from gammapy.utils.array import scale_cube
 
 __all__ = ["AdaptiveRingBackgroundMaker", "RingBackgroundMaker"]
 
@@ -37,7 +38,7 @@ class AdaptiveRingBackgroundMaker:
 
     See Also
     --------
-    RingBackgroundMaker, gammapy.detect.KernelBackgroundEstimator
+    RingBackgroundMaker
     """
 
     def __init__(
@@ -239,7 +240,7 @@ class RingBackgroundMaker:
 
     See Also
     --------
-    gammapy.detect.KernelBackgroundEstimator, AdaptiveRingBackgroundEstimator
+    AdaptiveRingBackgroundEstimator
     """
 
     def __init__(self, r_in, width, exclusion_mask=None):

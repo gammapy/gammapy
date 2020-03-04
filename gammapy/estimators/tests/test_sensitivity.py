@@ -6,7 +6,7 @@ import astropy.units as u
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import CountsSpectrum
-from gammapy.spectrum import SensitivityEstimator
+from gammapy.estimators import SensitivityEstimator
 
 
 @pytest.fixture()

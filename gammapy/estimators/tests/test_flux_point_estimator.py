@@ -16,7 +16,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.spectrum import FluxPointsEstimator
+from gammapy.estimators import FluxPointsEstimator
 from gammapy.utils.testing import requires_data, requires_dependency
 
 

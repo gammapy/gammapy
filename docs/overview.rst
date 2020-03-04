@@ -51,7 +51,7 @@ dispersion (EDISP) information, combined in container objects called datasets
 
 The second step is then typically to model and fit the datasets, either
 individually, or in a joint likelihood analysis, using the
-`~gammapy.modeling.Dataset`, `~gammapy.modeling.Datasets`,
+`~gammapy.datasets.Dataset`, `~gammapy.datasets.Datasets`,
 `~gammapy.modeling.Fit` and model classes (see :ref:`overview_modeling` below).
 You can specify your model using a YAML model specification, or write Python
 code to specify which spectral and spatial models to use and what their rough
@@ -112,35 +112,34 @@ fit statistic for a given set of model parameters. All datasets contain a
 components.
 
 To model and fit data in Gammapy, you have to create a
-`~gammapy.modeling.Datasets` container object with one or multiple
-`~gammapy.modeling.Dataset` objects. Gammapy has built-in support to create and
-analyse the following datasets: `~gammapy.cube.MapDataset`,
-`~gammapy.cube.MapDatasetOnOff`, `~gammapy.spectrum.SpectrumDataset`,
-`~gammapy.spectrum.SpectrumDatasetOnOff` and
-`~gammapy.spectrum.FluxPointsDataset`.
+`~gammapy.datasets.Datasets` container object with one or multiple
+`~gammapy.datasets.Dataset` objects. Gammapy has built-in support to create and
+analyse the following datasets: `~gammapy.datasets.MapDataset`,
+`~gammapy.datasets.MapDatasetOnOff`, `~gammapy.datasets.SpectrumDataset`,
+`~gammapy.datasets.SpectrumDatasetOnOff` and
+`~gammapy.datasets.FluxPointsDataset`.
 
 The map datasets represent 3D cubes (`~gammapy.maps.WcsNDMap` objects) with two
 spatial and one energy axis. For 2D images the same map objects and map datasets
 are used, an energy axis is present but only has one energy bin. The
-`~gammapy.cube.MapDataset` contains a counzts map, background is modeled with a
+`~gammapy.datasets.MapDataset` contains a counzts map, background is modeled with a
 `~gammapy.modeling.models.BackgroundModel`, and the fit statistic used is
-``cash``. The `~gammapy.cube.MapDatasetOnOff` contains on and off count maps,
+``cash``. The `~gammapy.datasets.MapDatasetOnOff` contains on and off count maps,
 background is implicitly modeled via the off counts map, and the ``wstat`` fit
 statistic.
 
-The spectrum datasets represent 1D spectra (`~gammapy.spectrum.CountsSpectrum`
+The spectrum datasets represent 1D spectra (`~gammapy.maps.CountsSpectrum`
 objects) with an energy axis. There are no spatial axes or information, the 1D
 spectra are obtained for a given on region. The
-`~gammapy.spectrum.SpectrumDataset` contains a counts spectrum, background is
-modeled with a `~gammapy.spectrum.CountsSpectrum`, and the fit statistic used is
-``cash``. The `~gammapy.spectrum.SpectrumDatasetOnOff` contains on on and off
+`~gammapy.datasets.SpectrumDataset` contains a counts spectrum, background is
+modeled with a `~gammapy.maps.CountsSpectrum`, and the fit statistic used is
+``cash``. The `~gammapy.datasets.SpectrumDatasetOnOff` contains on on and off
 count spectra, background is implicitly modeled via the off counts spectrum, and
-the ``wstat`` fit statistic. The `~gammapy.spectrum.FluxPointsDataset` contains
-`~gammapy.spectrum.FluxPoints` and a spectral model, the fit statistic used is
+the ``wstat`` fit statistic. The `~gammapy.datasets.FluxPointsDataset` contains
+`~gammapy.estimatorsFluxPoints` and a spectral model, the fit statistic used is
 ``chi2``.
 
-To learn more about datasets, see :ref:`gammapy.cube <cube>`,
-:ref:`gammapy.spectrum <spectrum>` and :ref:`gammapy.modeling <modeling>`.
+To learn more about datasets, see :ref:`gammapy.datasets <datasets>` and :ref:`gammapy.modeling <modeling>`.
 
 .. _overview_modeling:
 
@@ -148,8 +147,8 @@ Modeling and Fitting
 --------------------
 
 Assuming you have prepared your gamma-ray data as a set of
-`~gammapy.modeling.Dataset` objects (see :ref:`overview_datasets` above), and
-stored one or more datasets in a `~gammapy.modeling.Datasets` container, you are
+`~gammapy.datasets.Dataset` objects (see :ref:`overview_datasets` above), and
+stored one or more datasets in a `~gammapy.datasets.Datasets` container, you are
 all set for modeling and fitting. Either via a YAML config file, or via Python
 code, define the `~gammapy.modeling.models.Models` to use, which is a list of
 `~gammapy.modeling.models.SkyModel` objects representing additive emission
@@ -164,7 +163,7 @@ datasets, Gammapy is very flexible.
 
 The `~gammapy.modeling.Fit` class provides methods to fit, i.e. optimise
 parameters and estimate parameter errors and correlations. It interfaces with a
-`~gammapy.modeling.Datasets` object, which in turn is connected to a
+`~gammapy.datasets.Datasets` object, which in turn is connected to a
 `~gammapy.modeling.models.Models` object, which has a
 `~gammapy.modeling.Parameters` object, which contains the model parameters.
 Currently ``iminuit`` is used as modeling and fitting backend, in the future we
@@ -213,7 +212,7 @@ this overview we only mentioned the most important concepts and parts to get
 started. To learn more, see the following sub packages and documentation pages:
 :ref:`gammapy.data <data>`, :ref:`gammapy.irf <irf>`, :ref:`gammapy.maps
 <maps>`, :ref:`gammapy.catalog <catalog>`, :ref:`gammapy.astro <astro>`,
-:ref:`gammapy.stats <stats>`, :ref:`gammapy.detect <detect>`,
+:ref:`gammapy.stats <stats>`,
 :ref:`gammapy.scripts <CLI>` (``gammapy`` command line tool).
 
 Note that in Gammapy, 2D image analyses are partly done with actual 2D images

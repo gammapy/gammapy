@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.detect import find_peaks
+from gammapy.estimators.utils import find_peaks
 from gammapy.maps import Map
 
 

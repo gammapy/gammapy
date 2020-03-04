@@ -30,7 +30,7 @@ def cat():
 class TestSourceCatalogHGPS:
     @staticmethod
     def test_source_table(cat):
-        assert cat.name == "hgps"
+        assert cat.tag == "hgps"
         assert len(cat.table) == 78
 
     @staticmethod

@@ -15,7 +15,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
-from gammapy.spectrum import FluxPoints
+from gammapy.estimators import FluxPoints
 from gammapy.time import LightCurve
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
@@ -1154,7 +1154,7 @@ class SourceCatalog3FGL(SourceCatalog):
     One source is represented by `~gammapy.catalog.SourceCatalogObject3FGL`.
     """
 
-    name = "3fgl"
+    tag = "3fgl"
     description = "LAT 4-year point source catalog"
     source_object_class = SourceCatalogObject3FGL
 
@@ -1196,7 +1196,7 @@ class SourceCatalog4FGL(SourceCatalog):
     One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
     """
 
-    name = "4fgl"
+    tag = "4fgl"
     description = "LAT 8-year point source catalog"
     source_object_class = SourceCatalogObject4FGL
 
@@ -1235,7 +1235,7 @@ class SourceCatalog2FHL(SourceCatalog):
     One source is represented by `~gammapy.catalog.SourceCatalogObject2FHL`.
     """
 
-    name = "2fhl"
+    tag = "2fhl"
     description = "LAT second high-energy source catalog"
     source_object_class = SourceCatalogObject2FHL
 
@@ -1269,7 +1269,7 @@ class SourceCatalog3FHL(SourceCatalog):
     One source is represented by `~gammapy.catalog.SourceCatalogObject3FHL`.
     """
 
-    name = "3fhl"
+    tag = "3fhl"
     description = "LAT third high-energy source catalog"
     source_object_class = SourceCatalogObject3FHL
 
