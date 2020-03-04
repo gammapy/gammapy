@@ -7,7 +7,7 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import LiMaMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
-
+from gammapy.modeling.models import BackgroundModel
 
 @pytest.fixture
 def simple_dataset():
@@ -41,8 +41,8 @@ def test_compute_lima_image():
     filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz"
     counts = Map.read(filename, hdu="counts")
     background = Map.read(filename, hdu="background")
-
-    kernel = Tophat2DKernel(5)
+    print(counts.geom.wcs)
+    kernel = Tophat2DKernel(5)  #0.1 deg
     result_lima = LiMaMapEstimator.compute_lima_image(counts, background, kernel)
 
     assert_allclose(result_lima["significance"].data[100, 100], 30.814916, atol=1e-3)
