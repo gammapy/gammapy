@@ -184,7 +184,7 @@ def test_background_model_io(tmpdir, background):
     bkg_dict = bkg.to_dict()
     bkg_read = bkg.from_dict(bkg_dict)
 
-    assert_allclose(bkg.evaluate().data.sum(), background.data.sum() * 2.0, rtol=1e-3)
+    assert_allclose(bkg_read.evaluate().data.sum(), background.data.sum() * 2.0, rtol=1e-3)
     assert bkg_read.filename == filename
 
 
