@@ -39,14 +39,13 @@ or request a feature, or need help with anything Gammapy-related.
     datasets/index
     modeling/index
     estimators/index
-    cube/index
     time/index
+
     irf/index
     maps/index
-
     catalog/index
-    astro/index
 
+    astro/index
     scripts/index
     stats/index
     visualization/index

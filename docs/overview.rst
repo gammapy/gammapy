@@ -139,7 +139,7 @@ the ``wstat`` fit statistic. The `~gammapy.datasets.FluxPointsDataset` contains
 `~gammapy.estimatorsFluxPoints` and a spectral model, the fit statistic used is
 ``chi2``.
 
-To learn more about datasets, see :ref:`gammapy.datasets <cube>` and :ref:`gammapy.modeling <modeling>`.
+To learn more about datasets, see :ref:`gammapy.datasets <datasets>` and :ref:`gammapy.modeling <modeling>`.
 
 .. _overview_modeling:
 

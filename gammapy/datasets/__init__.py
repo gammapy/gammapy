@@ -3,6 +3,7 @@ from .core import *
 from .flux_points import *
 from .map import *
 from .spectrum import *
+from .simulate import *
 
 DATASETS = Registry([
     MapDataset,
