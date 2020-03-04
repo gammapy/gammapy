@@ -2,9 +2,9 @@
 
 .. _detect:
 
-*************************
-detect - Source detection
-*************************
+**************************
+Flux and significance maps
+**************************
 
 .. currentmodule:: gammapy.estimators
 

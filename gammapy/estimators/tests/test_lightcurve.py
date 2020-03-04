@@ -1,26 +1,18 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-import datetime
 import pytest
+import datetime
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.table import Column, Table
 from astropy.time import Time
+from astropy.table import Table, Column
 from gammapy.data import GTI
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.estimators.tests.test_flux_point_estimator import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
 )
-from gammapy.time import LightCurve, LightCurveEstimator
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
-
-# time time_min time_max flux flux_err flux_ul
-# 48705.1757 48705.134 48705.2174 0.57 0.29 nan
-# 48732.89195 48732.8503 48732.9336 0.39 0.29 nan
-# 48734.0997 48734.058 48734.1414 0.48 0.29 nan
-# 48738.98535 48738.9437 48739.027 nan nan 0.97
-# 48741.0259 48740.9842 48741.0676 0.34 0.29 nan
+from gammapy.estimators import LightCurveEstimator, LightCurve
+from gammapy.utils.testing import requires_data, requires_dependency, mpl_plot_check
 
 
 @pytest.fixture(scope="session")
@@ -125,6 +117,9 @@ def test_lightcurve_plot_time(lc):
             [datetime.timedelta(1), datetime.timedelta(3.5)],
         ],
     )
+
+
+
 
 
 def get_spectrum_datasets():

@@ -23,6 +23,7 @@ An `Estimator` takes a reduced dataset as input.
     :maxdepth: 1
 
     detect
+    lightcurve
 
 
 Reference/API
