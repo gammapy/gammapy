@@ -15,11 +15,12 @@ from .core import Model
 
 # TODO: make this a small ABC to define a uniform interface.
 class TemporalModel(Model):
-    """Temporal model base class."""
+    """Temporal model base class.
+    evaluates on  astropy.time.Time objects"""
 
     def __call__(self, time, **kwargs):
         """Call evaluate method"""
-        return self.evaluate(time.mjd, **kwargs)
+        return self.evaluate(time, **kwargs)
 
 
 # TODO: make this a small ABC to define a uniform interface.
@@ -60,7 +61,7 @@ class ConstantTemporalModel(TemporalModel):
             Time since the ``reference`` time.
 
         """
-        return np.ones_like(time)
+        return np.ones_like(time.mjd)
 
     def integral(self, t_min, t_max):
         """Evaluate the integrated flux within the given time intervals
@@ -75,8 +76,8 @@ class ConstantTemporalModel(TemporalModel):
         -------
         norm: The model integrated flux
         """
-        sum_gti = np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
-        return u.Quantity(t_max.mjd - t_min.mjd, "day")/sum_gti
+
+        return u.Quantity(t_max.mjd - t_min.mjd, "day").to_value("s")
 
 
 
@@ -113,18 +114,76 @@ class ConstantTemporalModel(TemporalModel):
 
 
 class ExpDecayTemporalModel(TemporalModel):
-    """Temporal model with an exponential rise or fall.
+    r"""Temporal model with an exponential decay.
+
+    Parameters:
+        t0 : Decay time scale
+        t_ref: The reference time in mjd
+
+    ..math::
+            F(t) = exp(t - t_ref)/t0
+
         """
 
     tag = "ExponentialDecayTemporalModel"
 
+    t0 = Parameter("t0", "1 d", frozen=False)
+    t_ref = Parameter("t_ref", 55555, frozen=True)
 
-    def evaluate(self, time, t0):
-        return np.exp(time, t0)
+
+    def evaluate(self, time, t0, t_ref):
+        return np.exp(-(time.mjd - t_ref)/t0.to_value("d"))
 
 
-    def integral(self,):
+    def integral(self, t_min, t_max):
+        pars = self.parameters
+        t0 = pars["t0"].quantity
+        t_ref = pars["t_ref"].quantity
+        val = self.evaluate(t_max, t0, t_ref) - self.evaluate(t_min, t0, t_ref)
+        return u.Quantity(-t0 * val).to_value("s")
 
+
+class GaussianTemporalModel(TemporalModel):
+    r"""A Gaussian Temporal profile
+
+    Parameters:
+        t_ref: The reference time in mjd
+        sigma : `~astropy.units.Quantity`
+    """
+
+    tag = "GaussianTemporalModel"
+    t_ref = Parameter("t_ref", 55555, frozen=False)
+    sigma = Parameter("sigma", "1 d", frozen=False)
+
+
+    def evaluate(self, time, t_ref, sigma):
+
+        return 1.0 / np.exp(-((time.mjd - t_ref) ** 2) / (2 * sigma ** 2))
+
+
+    def integral(self, t_min, t_max, **kwargs):
+        r"""Integrate Gaussian analytically.
+
+        Parameters
+        ----------
+        t_min, t_max : `~astropy.time`
+            Lower and upper bound of integration range
+        """
+
+        pars = self.parameters
+        norm = pars["sigma"].quantity * np.sqrt(2 * np.pi)
+        u_min = norm *(
+                (t_min.mjd - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+        )
+        u_max = norm * (
+                (t_max.mjd - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+        )
+
+        return (
+                1.0
+                / 2
+                * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
+        )
 
 
 
@@ -217,19 +276,21 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         ----------
         time : array_like
             Time since the ``reference`` time.
-        ext : int or str, optional
+        ext : int or str, optional, default: 0
             Parameter passed to ~scipy.interpolate.InterpolatedUnivariateSpline
             Controls the extrapolation mode for GTIs outside the range
-            if ext=0 or ‘extrapolate’, return the extrapolated value.
-            if ext=1 or ‘zeros’, return 0
-            if ext=2 or ‘raise’, raise a ValueError
-            if ext=3 of ‘const’, return the boundary value.
-            The default value is 0.
+            0 or "extrapolate", return the extrapolated value.
+            1 or "zeros", return 0
+            2 or "raise", raise a ValueError
+            3 or "const", return the boundary value.
+
 
         Returns
         -------
         norm : array_like
         """
+        if isinstance(time, Time):
+            time = time.mjd
         return self._interpolator(time, ext=ext)
 
     def integral(self, t_min, t_max):
@@ -248,8 +309,7 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
 
         n1 = self._interpolator.antiderivative()(t_max.mjd)
         n2 = self._interpolator.antiderivative()(t_min.mjd)
-        sum_gti = np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
-        return u.Quantity(n1 - n2, "day")/sum_gti
+        return u.Quantity(n1 - n2, "day").to_value("s")
 
     def mean_norm_in_time_interval(self, time_min, time_max):
         """Compute mean ``norm`` in a given time interval.
