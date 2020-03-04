@@ -4,8 +4,10 @@ import logging
 import numpy as np
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
+from gammapy.maps import Map
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.stats import significance, significance_on_off
+from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 
 __all__ = [
     "LiMaMapEstimator",
@@ -13,6 +15,29 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+def convolved_map_dataset_counts_statistics(dataset, kernel):
+    # Kernel is modified later make a copy here
+    kernel = copy.deepcopy(kernel)
+    kernel.normalize("peak")
+
+    # fft convolution adds numerical noise, to ensure integer results we call
+    # np.rint
+    n_on_conv = np.rint(dataset.counts.convolve(kernel.array).data)
+
+    if isinstance(dataset, MapDatasetOnOff):
+        background = dataset.background
+        background.data[dataset.acceptance_off.data == 0] = 0.0
+        background_conv = background.convolve(kernel.array).data
+
+        n_off_conv = dataset.counts_off.convolve(kernel.array).data
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            alpha_conv = background_conv / n_off_conv
+
+        return WStatCountsStatistic(n_on_conv.data, n_off_conv.data, alpha_conv.data)
+    else:
+        background_conv = dataset.n_pred().convolve(kernel.array).data
+        return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
 class LiMaMapEstimator:
     """Computes correlated excess, significance for MapDatasets
@@ -24,10 +49,12 @@ class LiMaMapEstimator:
         correlation radius to use
     """
 
-    def __init__(self, correlation_radius):
+    def __init__(self, correlation_radius, nsigma=1, nsigma_ul=3):
         self.radius = Angle(correlation_radius)
+        self.nsigma = nsigma
+        self.nsigma_ul = nsigma_ul
 
-    def run(self, dataset):
+    def run(self, dataset, steps="all"):
         """Compute correlated excess, Li & Ma significance and flux maps
 
         This requires datasets with only 1 energy bins (image-like).
@@ -54,19 +81,29 @@ class LiMaMapEstimator:
         size = self.radius.deg / pixel_size
         kernel = Tophat2DKernel(size)
 
-        if isinstance(dataset, MapDatasetOnOff):
-            result = self.__class__.compute_lima_on_off_image(
-                dataset.counts,
-                dataset.counts_off,
-                dataset.acceptance,
-                dataset.acceptance_off,
-                kernel,
-            )
-        else:
-            background = dataset.npred()
-            result = self.__class__.compute_lima_image(
-                dataset.counts, background, kernel
-            )
+        geom = dataset.counts
+
+        counts_stat = convolved_map_dataset_counts_statistics(dataset, kernel)
+
+        excess = Map.from_geom(geom, data=counts_stat.excess)
+        significance = Map.from_geom(geom, data=counts_stat.significance)
+
+        result = {"excess": excess, "significance": significance}
+
+        if steps == "all":
+            steps = ["err", "errn-errp", "ul"]
+
+        if "err" in steps:
+            err = Map.from_geom(geom, data=counts_stat.error)
+            result.update({"err": err})
+        if "errn-errp" in steps:
+            errn = Map.from_geom(geom, data=counts_stat.compute_errn(self.nsigma))
+            errp = Map.from_geom(geom, data=counts_stat.compute_errp(self.nsigma))
+            result.update({"errn": errn, "errp": errp})
+
+        if "ul" in steps:
+            ul = Map.from_geom(geom, data=counts_stat.compute_upper_limit(self.nsigma_ul))
+            result.update({"ul": ul})
         return result
 
     @staticmethod
@@ -100,6 +137,7 @@ class LiMaMapEstimator:
         # np.rint
         counts_conv = np.rint(counts.convolve(kernel.array).data)
         background_conv = background.convolve(kernel.array).data
+
         excess_conv = counts_conv - background_conv
         significance_conv = significance(counts_conv, background_conv, method="lima")
         return {
