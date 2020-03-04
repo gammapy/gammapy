@@ -43,7 +43,10 @@ class MapDatasetEventSampler:
 
         time_start, time_stop, time_ref = (gti.time_start, gti.time_stop, gti.time_ref)
         time = temporal_model.sample_time(
-            n_events, time_start, time_stop, self.random_state
+            n_events=n_events,
+            t_min=time_start,
+            t_max=time_stop,
+            random_state=self.random_state,
         )
         table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).to("s")
         return table
@@ -74,7 +77,8 @@ class MapDatasetEventSampler:
             evaluator.model.apply_irf["edisp"] = False
             npred = evaluator.compute_npred()
 
-            temporal_model = ConstantTemporalModel()
+            # temporal_model = ConstantTemporalModel()
+            temporal_model = model.temporal_model
 
             table = self._sample_coord_time(npred, temporal_model, dataset.gti)
             table["MC_ID"] = idx + 1
