@@ -156,6 +156,6 @@ class FluxEstimator:
             "ref_e2dnde": self.ref_model(e_ref) * e_ref ** 2,
         }
 
-        result.update(self.estimator.run(self.model.parameters['norm'], steps, self.norm_values))
+        result.update(self.estimator.run(self.model.parameters['norm'], steps, null_value=0, scan_values=self.norm_values))
         return result
 
