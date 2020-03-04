@@ -177,6 +177,17 @@ def test_background_model(background):
     assert_allclose(bkg2.data.sum(), 7.352e-06, rtol=1e-3)
 
 
+def test_background_model_io(tmpdir, background):
+    filename = tmpdir / "test-bkg-file.fits"
+    bkg = BackgroundModel(background, norm=2.0, filename=filename)
+    bkg.map.write(filename, overwrite=True)
+    bkg_dict = bkg.to_dict()
+    bkg_read = bkg.from_dict(bkg_dict)
+
+    assert_allclose(bkg.evaluate().data.sum(), background.data.sum() * 2.0, rtol=1e-3)
+    assert bkg_read.filename == filename
+
+
 class TestSkyModels:
     @staticmethod
     def test_parameters(sky_models):

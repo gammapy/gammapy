@@ -586,7 +586,10 @@ class BackgroundModel(Model):
         else:
             raise ValueError("Requires either filename or `Map` object")
         model = cls(
-            map=map, name=data["name"], datasets_names=data.get("datasets_names")
+            map=map,
+            name=data["name"],
+            datasets_names=data.get("datasets_names"),
+            filename=data.get("filename"),
         )
         model._update_from_dict(data)
         return model
