@@ -2,7 +2,8 @@
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
-from gammapy.utils.random import sample_powerlaw, sample_sphere, sample_sphere_distance
+from astropy import units as u
+from gammapy.utils.random import sample_powerlaw, sample_sphere, sample_sphere_distance, sample_times
 from gammapy.utils.testing import assert_quantity_allclose
 
 
@@ -117,3 +118,25 @@ def test_sample_powerlaw():
 
     x = sample_powerlaw(x_min=0.1, x_max=10, gamma=2, size=2, random_state=random_state)
     assert_allclose(x, [0.14886601, 0.1873559])
+
+
+def test_random_times():
+    # An example without dead time.
+    rate = u.Quantity(10, "s^-1")
+    time = sample_times(size=100, rate=rate, random_state=0)
+    assert_allclose(time[0].sec, 0.07958745081631101)
+    assert_allclose(time[-1].sec, 9.186484131475076)
+
+    # An example with `return_diff=True`
+    rate = u.Quantity(10, "s^-1")
+    time = sample_times(size=100, rate=rate, return_diff=True, random_state=0)
+    assert_allclose(time[0].sec, 0.07958745081631101)
+    assert_allclose(time[-1].sec, 0.00047065345706976753)
+
+    # An example with dead time.
+    rate = u.Quantity(10, "Hz")
+    dead_time = u.Quantity(0.1, "second")
+    time = sample_times(size=100, rate=rate, dead_time=dead_time, random_state=0)
+    assert np.min(time) >= u.Quantity(0.1, "second")
+    assert_allclose(time[0].sec, 0.1 + 0.07958745081631101)
+    assert_allclose(time[-1].sec, 0.1 * 100 + 9.186484131475076)
