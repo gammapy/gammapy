@@ -77,9 +77,9 @@ class ConstantTemporalModel(TemporalModel):
         norm: The model integrated flux
         """
 
-        return u.Quantity(t_max.mjd - t_min.mjd, "day").to_value("s")
-
-
+        int = u.Quantity(t_max.mjd - t_min.mjd, "day")
+        norm = np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
+        return int / norm
 
     def sample_time(self, n_events, t_min, t_max, random_state=0):
         """Sample arrival times of events.
@@ -130,17 +130,17 @@ class ExpDecayTemporalModel(TemporalModel):
     t0 = Parameter("t0", "1 d", frozen=False)
     t_ref = Parameter("t_ref", 55555, frozen=True)
 
-
     def evaluate(self, time, t0, t_ref):
-        return np.exp(-(time.mjd - t_ref)/t0.to_value("d"))
-
+        return np.exp(-(time.mjd - t_ref) / t0.to_value("d"))
 
     def integral(self, t_min, t_max):
         pars = self.parameters
         t0 = pars["t0"].quantity
         t_ref = pars["t_ref"].quantity
         val = self.evaluate(t_max, t0, t_ref) - self.evaluate(t_min, t0, t_ref)
-        return u.Quantity(-t0 * val).to_value("s")
+        integ = u.Quantity(-t0 * val)
+        norm = np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
+        return (integ / norm).to_value("")
 
 
 class GaussianTemporalModel(TemporalModel):
@@ -155,11 +155,8 @@ class GaussianTemporalModel(TemporalModel):
     t_ref = Parameter("t_ref", 55555, frozen=False)
     sigma = Parameter("sigma", "1 d", frozen=False)
 
-
     def evaluate(self, time, t_ref, sigma):
-
         return 1.0 / np.exp(-((time.mjd - t_ref) ** 2) / (2 * sigma ** 2))
-
 
     def integral(self, t_min, t_max, **kwargs):
         r"""Integrate Gaussian analytically.
@@ -172,19 +169,18 @@ class GaussianTemporalModel(TemporalModel):
 
         pars = self.parameters
         norm = pars["sigma"].quantity * np.sqrt(2 * np.pi)
-        u_min = norm *(
-                (t_min.mjd - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+        u_min = norm * (
+            (t_min.mjd - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
         )
         u_max = norm * (
-                (t_max.mjd - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+            (t_max.mjd - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
         )
 
-        return (
-                1.0
-                / 2
-                * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
-        )
+        sum = np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
 
+        integ = 1.0 / 2 * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
+
+        return integ / sum
 
 
 class LightCurveTemplateTemporalModel(TemplateTemporalModel):
@@ -309,7 +305,8 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
 
         n1 = self._interpolator.antiderivative()(t_max.mjd)
         n2 = self._interpolator.antiderivative()(t_min.mjd)
-        return u.Quantity(n1 - n2, "day").to_value("s")
+        sum = np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
+        return u.Quantity(n1 - n2, "day") / sum
 
     def mean_norm_in_time_interval(self, time_min, time_max):
         """Compute mean ``norm`` in a given time interval.

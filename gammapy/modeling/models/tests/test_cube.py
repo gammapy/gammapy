@@ -6,6 +6,8 @@ import astropy.units as u
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.data.gti import GTI
+from astropy.time import Time
 from gammapy.modeling.models import (
     BackgroundModel,
     ConstantSpectralModel,
@@ -13,6 +15,7 @@ from gammapy.modeling.models import (
     Models,
     PointSpatialModel,
     PowerLawSpectralModel,
+    ConstantTemporalModel,
     SkyDiffuseCube,
     SkyModel,
     create_fermi_isotropic_diffuse_model,
@@ -28,9 +31,22 @@ def sky_model():
     spectral_model = PowerLawSpectralModel(
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
+    temporal_model = ConstantTemporalModel()
     return SkyModel(
-        spatial_model=spatial_model, spectral_model=spectral_model, name="source-1"
+        spatial_model=spatial_model,
+        spectral_model=spectral_model,
+        temporal_model=temporal_model,
+        name="source-1",
     )
+
+
+@pytest.fixture(scope="session")
+def gti():
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    t_ref = Time(55555, format="mjd")
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    return gti
 
 
 @pytest.fixture(scope="session")
@@ -84,8 +100,8 @@ def psf(geom_true):
 
 
 @pytest.fixture(scope="session")
-def evaluator(sky_model, exposure, psf, edisp):
-    return MapEvaluator(sky_model, exposure, psf=psf, edisp=edisp)
+def evaluator(sky_model, exposure, psf, edisp, gti):
+    return MapEvaluator(sky_model, exposure, psf=psf, edisp=edisp, gti=gti)
 
 
 @pytest.fixture(scope="session")
@@ -129,11 +145,11 @@ def test_sky_model_spatial_none_io(tmpdir):
     assert models["test"].spatial_model is None
 
 
-def test_sky_model_spatial_none_evaluate(geom_true):
+def test_sky_model_spatial_none_evaluate(geom_true, gti):
     pwl = PowerLawSpectralModel()
     model = SkyModel(spectral_model=pwl, name="test")
 
-    data = model.evaluate_geom(geom_true).to_value("cm-2 s-1 TeV-1")
+    data = model.evaluate_geom(geom_true, gti).to_value("cm-2 s-1 TeV-1")
 
     assert data.shape == (3, 1, 1)
     assert_allclose(data[0], 1.256774e-11, rtol=1e-6)
@@ -463,7 +479,7 @@ class TestSkyModelMapEvaluator:
         assert_allclose(out.data[0, 0, 0], 4.630845e-08, rtol=1e-5)
 
     @staticmethod
-    def test_compute_npred(evaluator):
+    def test_compute_npred(evaluator, gti):
         out = evaluator.compute_npred()
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 2.253073467739508e-06, rtol=1e-5)

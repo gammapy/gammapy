@@ -107,13 +107,13 @@ def test_lightcurve_temporal_model_integral():
     table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
     temporal_model = LightCurveTemplateTemporalModel(table)
 
-    start = [1, 3, 5] * u.day
-    stop = [2, 3.5, 6] * u.day
+    start = [1, 3, 5] * u.hour
+    stop = [2, 3.5, 6] * u.hour
     gti = GTI.create(start, stop, reference_time=Time("2010-01-01T00:00:00"))
 
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
-    assert_allclose(np.sum(val), 2.5 * 86400, rtol=1e-5)
+    assert_allclose(np.sum(val), 1.0, rtol=1e-5)
 
 
 def test_constant_temporal_model_sample():
@@ -147,14 +147,14 @@ def test_constant_temporal_model_integral():
     gti = GTI.create(start, stop)
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
-    assert_allclose(np.sum(val), 2.5 * 86400, rtol=1e-5)
+    assert_allclose(np.sum(val), 1.0, rtol=1e-5)
 
 
 def test_exponential_temporal_model_evaluate():
     temporal_model = ExpDecayTemporalModel()
     t = Time(46301, format="mjd")
     t_ref = 46300
-    t0 = 2.0*u.d
+    t0 = 2.0 * u.d
     val = temporal_model(t, t_ref=t_ref, t0=t0)
     assert_allclose(val, 0.6065306597126334, rtol=1e-5)
 
@@ -163,11 +163,11 @@ def test_exponential_temporal_model_integral():
     temporal_model = ExpDecayTemporalModel()
     start = [1, 3, 5] * u.day
     stop = [2, 3.5, 6] * u.day
-    t_ref = Time(55555, format='mjd')
+    t_ref = Time(55555, format="mjd")
     gti = GTI.create(start, stop, reference_time=t_ref)
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
-    assert_allclose(np.sum(val), 0.256196*86400, rtol=1e-5)
+    assert_allclose(np.sum(val), 0.1024784, rtol=1e-5)
 
 
 @requires_data()
