@@ -275,7 +275,7 @@ class SpectrumDataset(Dataset):
         excess = self.counts.data - self.background.data
         return self._as_counts_spectrum(excess)
 
-    def fake(self, random_state="random-seed", name=None):
+    def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
 
         This method overwrites the counts defined on the dataset object.
@@ -286,7 +286,6 @@ class SpectrumDataset(Dataset):
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
         """
-        self._name = make_name(name)
         random_state = get_random_state(random_state)
         npred = self.npred()
         npred.data = random_state.poisson(npred.data)
@@ -736,7 +735,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         )
         return np.nan_to_num(on_stat_)
 
-    def fake(self, background_model, random_state="random-seed", name=None):
+    def fake(self, background_model, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
 
         This method overwrites the counts and off counts defined on the dataset object.
@@ -750,7 +749,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
         """
-        self._name = make_name(name)
         random_state = get_random_state(random_state)
 
         npred_sig = self.npred_sig()
