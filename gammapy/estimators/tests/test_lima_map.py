@@ -90,19 +90,19 @@ def test_significance_map_estimator_incorrect_dataset():
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
     estimator = LiMaMapEstimator(0.1 * u.deg)
-    result = estimator.run(simple_dataset)
+    result = estimator.run(simple_dataset, steps=[])
 
     assert_allclose(result["counts"].data[0, 25, 25], 162)
     assert_allclose(result["excess"].data[0, 25, 25], 81)
     assert_allclose(result["background"].data[0, 25, 25], 81)
-    assert_allclose(result["significance"].data[0, 25, 25], 7.910732)
+    assert_allclose(result["significance"].data[0, 25, 25], 7.910732, atol=1e-5)
 
 
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     estimator = LiMaMapEstimator(0.1 * u.deg)
-    result = estimator.run(simple_dataset_on_off)
+    result = estimator.run(simple_dataset_on_off, steps=[])
 
-    assert_allclose(result["n_on"].data[0, 25, 25], 162)
+    assert_allclose(result["counts"].data[0, 25, 25], 162)
     assert_allclose(result["excess"].data[0, 25, 25], 81)
     assert_allclose(result["background"].data[0, 25, 25], 81)
-    assert_allclose(result["significance"].data[0, 25, 25], 5.246298)
+    assert_allclose(result["significance"].data[0, 25, 25], 5.246298, atol=1e-5)

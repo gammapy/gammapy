@@ -36,7 +36,7 @@ def convolved_map_dataset_counts_statistics(dataset, kernel):
 
         return WStatCountsStatistic(n_on_conv.data, n_off_conv.data, alpha_conv.data)
     else:
-        background_conv = dataset.n_pred().convolve(kernel.array).data
+        background_conv = dataset.npred().convolve(kernel.array).data
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
 class LiMaMapEstimator:
@@ -81,14 +81,16 @@ class LiMaMapEstimator:
         size = self.radius.deg / pixel_size
         kernel = Tophat2DKernel(size)
 
-        geom = dataset.counts
+        geom = dataset.counts.geom
 
         counts_stat = convolved_map_dataset_counts_statistics(dataset, kernel)
 
+        n_on = Map.from_geom(geom, data=counts_stat.n_on)
+        bkg = Map.from_geom(geom, data=counts_stat.n_on-counts_stat.excess)
         excess = Map.from_geom(geom, data=counts_stat.excess)
         significance = Map.from_geom(geom, data=counts_stat.significance)
 
-        result = {"excess": excess, "significance": significance}
+        result = {"counts": n_on, "background": bkg, "excess": excess, "significance": significance}
 
         if steps == "all":
             steps = ["err", "errn-errp", "ul"]
@@ -96,6 +98,7 @@ class LiMaMapEstimator:
         if "err" in steps:
             err = Map.from_geom(geom, data=counts_stat.error)
             result.update({"err": err})
+
         if "errn-errp" in steps:
             errn = Map.from_geom(geom, data=counts_stat.compute_errn(self.nsigma))
             errp = Map.from_geom(geom, data=counts_stat.compute_errp(self.nsigma))
