@@ -8,6 +8,7 @@ from .base import Map
 from .geom import pix_tuple_to_idx
 from .region import RegionGeom
 from .utils import INVALID_INDEX
+from .counts_spectrum import CountsSpectrum
 
 __all__ = ["RegionNDMap"]
 
@@ -237,3 +238,16 @@ class RegionNDMap(Map):
             data = data * weights.data
 
         self.data += data
+
+    @property
+    def counts_spectrum(self):
+        """Return (`CountsSpectrum`)"""
+        energy = self.geom.axes[0].edges
+        return CountsSpectrum(
+            data=self.data[:, 0, 0],
+            energy_hi=energy[1:],
+            energy_lo=energy[:-1],
+            region=self.geom.region,
+            unit=self.unit,
+        )
+

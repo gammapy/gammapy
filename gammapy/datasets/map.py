@@ -815,19 +815,20 @@ class MapDataset(Dataset):
             raise ValueError("No GTI in `MapDataset`, cannot compute livetime")
 
         if self.counts is not None:
-            kwargs["counts"] = self.counts.get_spectrum(on_region, np.sum)
+            kwargs["counts"] = self.counts.get_spectrum(on_region, np.sum).counts_spectrum
 
         if self.background_model is not None:
             kwargs["background"] = self.background_model.evaluate().get_spectrum(
                 on_region, np.sum
-            )
+            ).counts_spectrum
 
         if self.exposure is not None:
             exposure = self.exposure.get_spectrum(on_region, np.mean)
+            energy = exposure.geom.axes[0].edges
             kwargs["aeff"] = EffectiveAreaTable(
-                energy_lo=exposure.energy.edges[:-1],
-                energy_hi=exposure.energy.edges[1:],
-                data=exposure.quantity / kwargs["livetime"],
+                energy_lo=energy[:-1],
+                energy_hi=energy[1:],
+                data=exposure.quantity[:, 0, 0] / kwargs["livetime"],
             )
 
         if containment_correction:
@@ -1395,7 +1396,7 @@ class MapDatasetOnOff(MapDataset):
 
         kwargs = {}
         if self.counts_off is not None:
-            kwargs["counts_off"] = self.counts_off.get_spectrum(on_region, np.sum)
+            kwargs["counts_off"] = self.counts_off.get_spectrum(on_region, np.sum).counts_spectrum
 
         if self.acceptance is not None:
             kwargs["acceptance"] = self.acceptance.get_spectrum(on_region, np.mean)

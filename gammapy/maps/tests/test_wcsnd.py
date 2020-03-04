@@ -540,10 +540,10 @@ def test_get_spectrum():
     region = CircleSkyRegion(center=center, radius=1 * u.deg)
 
     spec = m.get_spectrum(region=region)
-    assert_allclose(spec.data, [13.0, 13.0, 13.0])
+    assert_allclose(spec.data.squeeze(), [13.0, 13.0, 13.0])
 
     spec = m.get_spectrum(region=region, func=np.mean)
-    assert_allclose(spec.data, [1.0, 1.0, 1.0])
+    assert_allclose(spec.data.squeeze(), [1.0, 1.0, 1.0])
 
 
 def get_npred_map():
