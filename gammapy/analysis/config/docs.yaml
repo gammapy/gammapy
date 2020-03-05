@@ -39,11 +39,11 @@ datasets:
             energy_true: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
     map_selection: ['counts', 'exposure', 'background', 'psf', 'edisp']
     background:
-        method: reflected   # also fov_background
+        method: ring        # also fov_background, reflected for 1d
         exclusion:          # fits file for exclusion mask
-        parameters: {}
+        parameters: {r_in: 0.3 deg, width: 0.3 deg} # ring
     safe_mask:
-            methods: ['aeff-default','offset-max' ]
+            methods: ['aeff-default', 'offset-max']
             parameters: {offset_max: 2.5 deg}
     on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
     containment_correction: true
