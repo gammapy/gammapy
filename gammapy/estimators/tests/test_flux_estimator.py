@@ -46,6 +46,7 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     estimator = FluxEstimator(fermi_datasets, reoptimize=True)
     result = estimator.run("1 GeV", "100 GeV", steps=["ts"])
 
+    print(estimator)
     assert_allclose(result["norm"], 1.00, atol=1e-3)
     assert_allclose(result["delta_ts"], 13005.938759, atol=1e-3)
     assert_allclose(result["err"], 0.01998, atol=1e-3)
@@ -62,3 +63,9 @@ def test_flux_estimator_1d(hess_datasets):
     assert_allclose(result["errn"], 0.078046, atol=1e-3)
     assert_allclose(result["errp"], 0.081665, atol=1e-3)
     assert_allclose(result["ul"], 1.431722, atol=1e-3)
+
+@requires_data()
+def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
+    fermi_datasets.append(hess_datasets[0])
+    with pytest.raises(ValueError):
+        FluxEstimator(fermi_datasets, source=0)

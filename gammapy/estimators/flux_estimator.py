@@ -55,10 +55,9 @@ class FluxEstimator(ParameterEstimator):
             reoptimize=True,
     ):
         # make a copy to not modify the input datasets
-        if not isinstance(datasets, Datasets):
-            datasets = Datasets(datasets)
+        datasets = self._check_datasets(datasets)
 
-        if not datasets.is_all_same_type and datasets.is_all_same_shape:
+        if not (datasets.is_all_same_type and datasets.is_all_same_shape):
             raise ValueError(
                 "Flux point estimation requires a list of datasets"
                 " of the same type and data shape."
