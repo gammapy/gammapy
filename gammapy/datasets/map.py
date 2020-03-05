@@ -252,7 +252,7 @@ class MapDataset(Dataset):
 
                 if evaluator is None:
                     evaluator = MapEvaluator(
-                        model=model, evaluation_mode=self.evaluation_mode
+                        model=model, evaluation_mode=self.evaluation_mode, gti=self.gti
                     )
                     self._evaluators[model.name] = evaluator
 
