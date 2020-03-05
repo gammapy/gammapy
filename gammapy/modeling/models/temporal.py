@@ -89,8 +89,8 @@ class ConstantTemporalModel(TemporalModel):
         norm: The model integrated flux
         """
 
-        int = u.Quantity(t_max.mjd - t_min.mjd, "day")
-        return int / self.time_sum(t_min, t_max)
+        integ = u.Quantity(t_max.mjd - t_min.mjd, "day")
+        return integ / self.time_sum(t_min, t_max)
 
     def sample_time(self, n_events, t_min, t_max, random_state=0):
         """Sample arrival times of events.
@@ -313,8 +313,7 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
 
         n1 = self._interpolator.antiderivative()(t_max.mjd)
         n2 = self._interpolator.antiderivative()(t_min.mjd)
-        sum = np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
-        return u.Quantity(n1 - n2, "day") / sum
+        return u.Quantity(n1 - n2, "day") / self.time_sum(t_min, t_max)
 
     def mean_norm_in_time_interval(self, time_min, time_max):
         """Compute mean ``norm`` in a given time interval.
