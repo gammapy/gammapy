@@ -10,7 +10,7 @@ __all__ = ["FluxEstimator"]
 
 log = logging.getLogger(__name__)
 
-class FluxEstimator:
+class FluxEstimator(ParameterEstimator):
     """Flux estimator.
 
     Estimates flux for a given list of datasets with their model in a given energy range.
@@ -64,9 +64,9 @@ class FluxEstimator:
                 " of the same type and data shape."
             )
 
-        self.datasets = datasets.copy()
+        datasets = datasets.copy()
 
-        dataset = self.datasets[0]
+        dataset = datasets[0]
 
         model = dataset.models[source].spectral_model
 
@@ -81,10 +81,10 @@ class FluxEstimator:
         self.norm_values = norm_values
 
         self.source = source
-        self._set_scale_model()
+        datasets = self._set_scale_model(datasets)
 
-        self.estimator = ParameterEstimator(
-            self.datasets,
+        super().__init__(
+            datasets,
             sigma,
             sigma_ul,
             reoptimize,
@@ -100,13 +100,14 @@ class FluxEstimator:
         s += str(self.model) + "\n"
         return s
 
-    def _set_scale_model(self):
+    def _set_scale_model(self, datasets):
         # set the model on all datasets
-        for dataset in self.datasets:
+        for dataset in datasets:
             if len(dataset.models) > 1:
                 dataset.models[self.source].spectral_model = self.model
             else:
                 dataset.models[0].spectral_model = self.model
+        return datasets
 
     def run(self, e_min, e_max, e_ref=None, steps="all"):
         """Estimate flux for a given energy range.
@@ -156,6 +157,6 @@ class FluxEstimator:
             "ref_e2dnde": self.ref_model(e_ref) * e_ref ** 2,
         }
 
-        result.update(self.estimator.run(self.model.parameters['norm'], steps, null_value=0, scan_values=self.norm_values))
+        result.update(super().run(self.model.parameters['norm'], steps, null_value=0, scan_values=self.norm_values))
         return result
 
