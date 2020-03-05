@@ -10,6 +10,7 @@ from gammapy.modeling.models import (
     ConstantTemporalModel,
     LightCurveTemplateTemporalModel,
     ExpDecayTemporalModel,
+    GaussianTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
 )
@@ -168,6 +169,26 @@ def test_exponential_temporal_model_integral():
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 0.1024784, rtol=1e-5)
+
+
+def test_gaussian_temporal_model_evaluate():
+    temporal_model = GaussianTemporalModel()
+    t = Time(46301, format="mjd")
+    t_ref = 46300
+    sigma = 2.0 * u.d
+    val = temporal_model(t, t_ref=t_ref, sigma=sigma)
+    assert_allclose(val, 0.882497, rtol=1e-5)
+
+
+def test_gaussian_temporal_model_integral():
+    temporal_model = GaussianTemporalModel(t_ref=50003, sigma="2.0 day")
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    t_ref = Time(50000, format="mjd")
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 0.160278, rtol=1e-5)
 
 
 @requires_data()

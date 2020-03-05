@@ -22,6 +22,9 @@ class TemporalModel(Model):
         """Call evaluate method"""
         return self.evaluate(time, **kwargs)
 
+    def time_sum(self, t_min, t_max):
+        return np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
+
 
 # TODO: make this a small ABC to define a uniform interface.
 class TemplateTemporalModel(TemporalModel):
@@ -78,8 +81,7 @@ class ConstantTemporalModel(TemporalModel):
         """
 
         int = u.Quantity(t_max.mjd - t_min.mjd, "day")
-        norm = np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
-        return int / norm
+        return int / self.time_sum(t_min, t_max)
 
     def sample_time(self, n_events, t_min, t_max, random_state=0):
         """Sample arrival times of events.
@@ -139,8 +141,7 @@ class ExpDecayTemporalModel(TemporalModel):
         t_ref = pars["t_ref"].quantity
         val = self.evaluate(t_max, t0, t_ref) - self.evaluate(t_min, t0, t_ref)
         integ = u.Quantity(-t0 * val)
-        norm = np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
-        return (integ / norm).to_value("")
+        return (integ / self.time_sum(t_min, t_max)).to_value("")
 
 
 class GaussianTemporalModel(TemporalModel):
@@ -156,7 +157,7 @@ class GaussianTemporalModel(TemporalModel):
     sigma = Parameter("sigma", "1 d", frozen=False)
 
     def evaluate(self, time, t_ref, sigma):
-        return 1.0 / np.exp(-((time.mjd - t_ref) ** 2) / (2 * sigma ** 2))
+        return np.exp(-((time.mjd - t_ref) ** 2) / (2 * sigma.to_value("d") ** 2))
 
     def integral(self, t_min, t_max, **kwargs):
         r"""Integrate Gaussian analytically.
@@ -170,17 +171,15 @@ class GaussianTemporalModel(TemporalModel):
         pars = self.parameters
         norm = pars["sigma"].quantity * np.sqrt(2 * np.pi)
         u_min = norm * (
-            (t_min.mjd - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+            (t_min.mjd - pars["t_ref"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
         )
         u_max = norm * (
-            (t_max.mjd - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+            (t_max.mjd - pars["t_ref"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
         )
 
-        sum = np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
-
         integ = 1.0 / 2 * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
-
-        return integ / sum
+        unit = getattr(pars["sigma"], "unit")
+        return integ / self.time_sum(t_min, t_max).to_value(unit)
 
 
 class LightCurveTemplateTemporalModel(TemplateTemporalModel):
