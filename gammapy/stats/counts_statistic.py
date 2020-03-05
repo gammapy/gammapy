@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
 import numpy as np
+from scipy.stats import chi2
 from scipy.optimize import brentq
 from gammapy.stats import wstat, cash
 
@@ -9,14 +10,20 @@ __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
 class CountsStatistic(abc.ABC):
     @property
-    def delta_TS(self):
+    def delta_ts(self):
         """Return TS difference of measured excess versus no excess."""
         return self.TS_null - self.TS_max
 
     @property
     def significance(self):
         """Return statistical significance of measured excess."""
-        return np.sign(self.excess) * np.sqrt(self.delta_TS)
+        return np.sign(self.excess) * np.sqrt(self.delta_ts)
+
+    @property
+    def p_value(self):
+        """Return p_value of measured excess."""
+        return chi2.sf(self.delta_ts, 1)
+
 
     def compute_errn(self, n_sigma=1.):
         """Compute downward excess uncertainties.
