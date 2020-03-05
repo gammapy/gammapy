@@ -90,6 +90,9 @@ class SkyModel(SkyModelBase):
         if self.spatial_model is not None:
             parameters.append(self.spatial_model.parameters)
 
+        if self.temporal_model is not None:
+            parameters.append(self.temporal_model.parameters)
+
         parameters.append(self.spectral_model.parameters)
         return Parameters.from_stack(parameters)
 
