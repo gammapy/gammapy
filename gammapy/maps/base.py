@@ -69,15 +69,10 @@ class Map(abc.ABC):
         if np.isscalar(val):
             val = val * np.ones(self.geom.data_shape)
 
-        if val.shape != self.geom.data_shape:
-            raise ValueError(
-                f"Shape {val.shape!r} does not match map data shape {self.geom.data_shape!r}"
-            )
-
         if isinstance(val, u.Quantity):
             raise TypeError("Map data must be a Numpy array. Set unit separately")
 
-        self._data = val
+        self._data = val.reshape(self.geom.data_shape)
 
     @property
     def unit(self):
