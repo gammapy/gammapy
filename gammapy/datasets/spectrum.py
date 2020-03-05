@@ -4,17 +4,15 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
-from astropy.coordinates import SkyCoord
 from gammapy.data import GTI
 from gammapy.datasets import Dataset
 from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
-from gammapy.maps import CountsSpectrum, RegionNDMap, MapAxis, RegionGeom
+from gammapy.maps import RegionNDMap, MapAxis, RegionGeom
 from gammapy.modeling.models import Models, SkyModel
 from gammapy.stats import cash, significance, significance_on_off, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
-from regions import CircleSkyRegion
 
 __all__ = [
     "SpectrumDatasetOnOff",
@@ -242,7 +240,7 @@ class SpectrumDataset(Dataset):
         return (self._energy_axis.nbin,)
 
     def npred_sig(self):
-        """Predicted counts from source model (`CountsSpectrum`)."""
+        """Predicted counts from source model (`RegionNDMap`)."""
         npred = RegionNDMap.from_geom(self._geom)
 
         if self.models:
@@ -279,15 +277,10 @@ class SpectrumDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
-    def _as_counts_spectrum(self, data):
-        energy = self._energy_axis.edges
-        return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
-
     @property
     def excess(self):
         """Excess (counts - alpha * counts_off)"""
-        excess = self.counts.data - self.background.data
-        return self._as_counts_spectrum(excess)
+        return self.counts - self.background
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
@@ -385,7 +378,7 @@ class SpectrumDataset(Dataset):
 
         Returns
         -------
-        residuals : `CountsSpectrum`
+        residuals : `RegionNDMap`
             Residual spectrum
         """
         residuals = self._compute_residuals(self.counts, self.npred(), method)
@@ -401,7 +394,7 @@ class SpectrumDataset(Dataset):
         method : {"diff", "diff/model", "diff/sqrt(model)"}
             Normalization used to compute the residuals, see `SpectrumDataset.residuals()`
         **kwargs : dict
-            Keywords passed to `CountsSpectrum.plot()`
+            Keywords passed to `RegionNDMap.plot()`
 
         Returns
         -------
@@ -646,9 +639,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     ----------
     models : `~gammapy.modeling.models.Models`
         Fit model
-    counts : `~gammapy.maps.CountsSpectrum`
+    counts : `~gammapy.maps.RegionNDMap`
         ON Counts spectrum
-    counts_off : `~gammapy.maps.CountsSpectrum`
+    counts_off : `~gammapy.maps.RegionNDMap`
         OFF Counts spectrum
     livetime : `~astropy.units.Quantity`
         Livetime
@@ -656,13 +649,13 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Effective area
     edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
-    mask_safe : `~numpy.array`
+    mask_safe : `~gammapy.maps.RegionNDMap`
         Mask defining the safe data range.
-    mask_fit : `~numpy.array`
+    mask_fit : `~gammapy.maps.RegionNDMap`
         Mask to apply to the likelihood for fitting.
-    acceptance : `~numpy.array` or float
+    acceptance : `~gammapy.maps.RegionNDMap` or float
         Relative background efficiency in the on region.
-    acceptance_off : `~numpy.array` or float
+    acceptance_off : `~gammapy.maps.RegionNDMap` or float
         Relative background efficiency in the off region.
     name : str
         Name of the dataset.
@@ -762,9 +755,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         Parameters
         ----------
-        background_model : `~gammapy.maps.CountsSpectrum`
-            BackgroundModel. In the future will be part of the SpectrumDataset Class.
-            For the moment, a CountSpectrum.
+        background_model : `~gammapy.maps.RegionNDMap`
+            Background model.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
@@ -1233,7 +1225,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Relative background efficiency in the on region.
         acceptance_off : `~numpy.array` or float
             Relative background efficiency in the off region.
-        counts_off : `~gammapy.maps.CountsSpectrum`
+        counts_off : `~gammapy.maps.RegionNDMap`
             Off counts spectrum . If the dataset provides a background model,
             and no off counts are defined. The off counts are deferred from
             counts_off / alpha.
@@ -1261,54 +1253,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             gti=dataset.gti,
             name=dataset.name,
         )
-
-
-def _read_ogip_hdulist(
-    hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS", hdu3="GTI", hdu4="REGION"
-):
-    """Create from `~astropy.io.fits.HDUList`."""
-    counts_table = Table.read(hdulist[hdu1])
-    ebounds = Table.read(hdulist[hdu2])
-    emin = ebounds["E_MIN"].quantity
-    emax = ebounds["E_MAX"].quantity
-
-    if hdu3 in hdulist:
-        gti = GTI(Table.read(hdulist[hdu3]))
-    else:
-        gti = None
-
-    if hdu4 in hdulist:
-        region, wcs = CountsSpectrum.read_region_table(hdulist[hdu4])
-    else:
-        region = None
-        wcs = None
-
-    # Check if column are present in the header
-    quality = None
-    areascal = None
-    backscal = None
-
-    if "QUALITY" in counts_table.colnames:
-        quality = counts_table["QUALITY"].data
-    if "AREASCAL" in counts_table.colnames:
-        areascal = counts_table["AREASCAL"].data
-    if "BACKSCAL" in counts_table.colnames:
-        backscal = counts_table["BACKSCAL"].data
-
-    return dict(
-        data=counts_table["COUNTS"],
-        backscal=backscal,
-        energy_lo=emin,
-        energy_hi=emax,
-        quality=quality,
-        areascal=areascal,
-        livetime=counts_table.meta["EXPOSURE"] * u.s,
-        obs_id=counts_table.meta["OBS_ID"],
-        is_bkg=False,
-        gti=gti,
-        region=region,
-        wcs=wcs,
-    )
 
 
 class SpectrumEvaluator:
