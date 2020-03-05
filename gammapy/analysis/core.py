@@ -9,6 +9,7 @@ from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, MapDataset, SpectrumDataset
 from gammapy.makers import (
     FoVBackgroundMaker,
+    RingBackgroundMaker,
     MapDatasetMaker,
     ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
@@ -249,15 +250,23 @@ class Analysis:
             methods=safe_mask_selection, **safe_mask_settings
         )
 
+        bkg_maker_config = {}
+        if datasets_settings.background.exclusion:
+            exclusion_region = Map.read(datasets_settings.background.exclusion)
+            bkg_maker_config["exclusion_mask"] = exclusion_region
+        bkg_maker_config.update(datasets_settings.background.parameters)
+
         bkg_method = datasets_settings.background.method
         if bkg_method == "fov_background":
-            bkg_maker_config = {}
-            if datasets_settings.background.exclusion:
-                exclusion_region = Map.read(datasets_settings.background.exclusion)
-                bkg_maker_config["exclusion_mask"] = exclusion_region
-            bkg_maker_config.update(datasets_settings.background.parameters)
-            log.debug(f"Creating FoVBackgroundMaker with arguments {bkg_maker_config}")
+            log.debug(
+                f"Creating FoVBackgroundMaker with arguments {bkg_maker_config}"
+            )
             bkg_maker = FoVBackgroundMaker(**bkg_maker_config)
+        elif bkg_method == "ring":
+            bkg_maker = RingBackgroundMaker(**bkg_maker_config)
+            log.debug(
+                f"Creating RingBackgroundMaker with arguments {bkg_maker_config}"
+            )
         else:
             bkg_maker = None
             log.warning(
@@ -309,13 +318,13 @@ class Analysis:
         maker_config["selection"] = ["counts", "aeff", "edisp"]
         dataset_maker = SpectrumDatasetMaker(**maker_config)
 
+        bkg_maker_config = {}
+        if datasets_settings.background.exclusion:
+            exclusion_region = Map.read(datasets_settings.background.exclusion)
+            bkg_maker_config["exclusion_mask"] = exclusion_region
+        bkg_maker_config.update(datasets_settings.background.parameters)
         bkg_method = datasets_settings.background.method
         if bkg_method == "reflected":
-            bkg_maker_config = {}
-            if datasets_settings.background.exclusion:
-                exclusion_region = Map.read(datasets_settings.background.exclusion)
-                bkg_maker_config["exclusion_mask"] = exclusion_region
-            bkg_maker_config.update(datasets_settings.background.parameters)
             bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
             log.debug(
                 f"Creating ReflectedRegionsBackgroundMaker with arguments {bkg_maker_config}"
