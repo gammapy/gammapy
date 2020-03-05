@@ -815,12 +815,12 @@ class MapDataset(Dataset):
             raise ValueError("No GTI in `MapDataset`, cannot compute livetime")
 
         if self.counts is not None:
-            kwargs["counts"] = self.counts.get_spectrum(on_region, np.sum).counts_spectrum
+            kwargs["counts"] = self.counts.get_spectrum(on_region, np.sum)
 
         if self.background_model is not None:
             kwargs["background"] = self.background_model.evaluate().get_spectrum(
                 on_region, np.sum
-            ).counts_spectrum
+            )
 
         if self.exposure is not None:
             exposure = self.exposure.get_spectrum(on_region, np.mean)
@@ -1396,7 +1396,7 @@ class MapDatasetOnOff(MapDataset):
 
         kwargs = {}
         if self.counts_off is not None:
-            kwargs["counts_off"] = self.counts_off.get_spectrum(on_region, np.sum).counts_spectrum
+            kwargs["counts_off"] = self.counts_off.get_spectrum(on_region, np.sum)
 
         if self.acceptance is not None:
             kwargs["acceptance"] = self.acceptance.get_spectrum(on_region, np.mean)
