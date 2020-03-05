@@ -38,7 +38,7 @@ def test_light_curve_evaluate(light_curve):
     assert_allclose(val, 0.015512, rtol=1e-5)
 
     t = Time(46300, format="mjd")
-    val = light_curve(t, ext=3)
+    val = light_curve.evaluate(t, ext=3)
     assert_allclose(val, 0.01551196, rtol=1e-5)
 
 
@@ -152,11 +152,11 @@ def test_constant_temporal_model_integral():
 
 
 def test_exponential_temporal_model_evaluate():
-    temporal_model = ExpDecayTemporalModel()
     t = Time(46301, format="mjd")
     t_ref = 46300
     t0 = 2.0 * u.d
-    val = temporal_model(t, t_ref=t_ref, t0=t0)
+    temporal_model = ExpDecayTemporalModel(t_ref=t_ref, t0=t0)
+    val = temporal_model(t)
     assert_allclose(val, 0.6065306597126334, rtol=1e-5)
 
 
@@ -172,11 +172,11 @@ def test_exponential_temporal_model_integral():
 
 
 def test_gaussian_temporal_model_evaluate():
-    temporal_model = GaussianTemporalModel()
     t = Time(46301, format="mjd")
     t_ref = 46300
     sigma = 2.0 * u.d
-    val = temporal_model(t, t_ref=t_ref, sigma=sigma)
+    temporal_model = GaussianTemporalModel(t_ref=t_ref, sigma=sigma)
+    val = temporal_model(t)
     assert_allclose(val, 0.882497, rtol=1e-5)
 
 

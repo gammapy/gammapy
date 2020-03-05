@@ -18,8 +18,9 @@ class TemporalModel(Model):
     """Temporal model base class.
     evaluates on  astropy.time.Time objects"""
 
-    def __call__(self, time, **kwargs):
+    def __call__(self, time):
         """Call evaluate method"""
+        kwargs = {par.name: par.quantity for par in self.parameters}
         return self.evaluate(time, **kwargs)
 
     def time_sum(self, t_min, t_max):
