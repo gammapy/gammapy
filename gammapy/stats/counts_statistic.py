@@ -9,14 +9,19 @@ __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
 class CountsStatistic(abc.ABC):
     @property
+    def delta_TS(self):
+        """Return TS difference of measured excess versus no excess."""
+        return self.TS_null - self.TS_max
+
+    @property
     def significance(self):
         """Return statistical significance of measured excess."""
-        return np.sign(self.excess) * np.sqrt(self.TS_null - self.TS_max)
+        return np.sign(self.excess) * np.sqrt(self.delta_TS)
 
-    def compute_errn(self, n_sigma=1):
+    def compute_errn(self, n_sigma=1.):
         """Compute downward excess uncertainties.
 
-        Searches the signal value for which the test statistics is n_sigma away from the maximum.
+        Searches the signal value for which the test statistics is n_sigma**2 away from the maximum.
 
         Parameters
         ----------
@@ -33,7 +38,7 @@ class CountsStatistic(abc.ABC):
                     self._stat_fcn,
                     min_range[it.multi_index],
                     self.excess[it.multi_index],
-                    args=(self.TS_max[it.multi_index] + n_sigma, it.multi_index),
+                    args=(self.TS_max[it.multi_index] + n_sigma**2, it.multi_index),
                 )
                 errn[it.multi_index] = res - self.excess[it.multi_index]
             except ValueError:
@@ -45,7 +50,7 @@ class CountsStatistic(abc.ABC):
     def compute_errp(self, n_sigma=1):
         """Compute upward excess uncertainties.
 
-        Searches the signal value for which the test statistics is n_sigma away from the maximum.
+        Searches the signal value for which the test statistics is n_sigma**2 away from the maximum.
 
         Parameters
         ----------
@@ -61,7 +66,7 @@ class CountsStatistic(abc.ABC):
                 self._stat_fcn,
                 self.excess[it.multi_index],
                 max_range[it.multi_index],
-                args=(self.TS_max[it.multi_index] + n_sigma, it.multi_index),
+                args=(self.TS_max[it.multi_index] + n_sigma**2, it.multi_index),
             )
             it.iternext()
 
@@ -70,7 +75,7 @@ class CountsStatistic(abc.ABC):
     def compute_upper_limit(self, n_sigma=3):
         """Compute upper limit on the signal.
 
-        Searches the signal value for which the test statistics is n_sigma away from the maximum
+        Searches the signal value for which the test statistics is n_sigma**2 away from the maximum
         or from 0 if the measured excess is negative.
 
         Parameters
@@ -91,7 +96,7 @@ class CountsStatistic(abc.ABC):
                 self._stat_fcn,
                 min_range[it.multi_index],
                 max_range[it.multi_index],
-                args=(TS_ref + n_sigma, it.multi_index),
+                args=(TS_ref + n_sigma**2, it.multi_index),
             )
             it.iternext()
 
