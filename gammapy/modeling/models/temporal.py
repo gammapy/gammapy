@@ -23,6 +23,15 @@ class TemporalModel(Model):
         return self.evaluate(time, **kwargs)
 
     def time_sum(self, t_min, t_max):
+        """
+        Total time between t_min and t_max
+
+        Parameters
+        ----------
+        t_min, t_max: `~astropy.time.Time`
+            Lower and upper bound of integration range
+
+        """
         return np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
 
 

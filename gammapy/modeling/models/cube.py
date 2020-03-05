@@ -414,7 +414,7 @@ class SkyDiffuseCube(SkyModelBase):
 
     def evaluate(self, lon, lat, energy, time=None):
         """Evaluate model.
-        time probably does not make sense here - passed just to match arguments
+        passing time does not make sense here - passed just to match arguments
         of SkyModel.evaluate"""
         is_cached_coord = [
             _ is coord for _, coord in zip((lon, lat, energy), self._cached_coordinates)
