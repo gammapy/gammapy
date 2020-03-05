@@ -4,16 +4,16 @@ from numpy.testing import assert_allclose
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
 from gammapy.estimators import FluxEstimator
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def fermi_datasets():
     fermi_datasets = Datasets.read("$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml",
                                    "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml")
     return fermi_datasets
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def hess_datasets():
     datasets = Datasets([])
     for obsid in [23523, 23526]:
@@ -26,6 +26,7 @@ def hess_datasets():
     return datasets
 
 @requires_data()
+@requires_dependency("iminuit")
 def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
     estimator = FluxEstimator(fermi_datasets, norm_n_values=5, norm_min=0.5, norm_max=2, reoptimize=False)
     result = estimator.run("1 GeV", "100 GeV")
@@ -40,6 +41,7 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
     assert_allclose(result["norm_scan"][-1], 2)
 
 @requires_data()
+@requires_dependency("iminuit")
 def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     estimator = FluxEstimator(fermi_datasets, reoptimize=True)
     result = estimator.run("1 GeV", "100 GeV", steps=["ts"])
@@ -49,6 +51,7 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     assert_allclose(result["err"], 0.01998, atol=1e-3)
 
 @requires_data()
+@requires_dependency("iminuit")
 def test_flux_estimator_1d(hess_datasets):
     estimator = FluxEstimator(hess_datasets, source="Crab")
     result = estimator.run('1 TeV', '10 TeV', steps=["ts", "errp-errn", "ul"])
