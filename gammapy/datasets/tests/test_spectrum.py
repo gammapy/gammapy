@@ -9,7 +9,7 @@ from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.datasets.spectrum import SpectrumEvaluator
 from gammapy.irf import EDispKernel, EffectiveAreaTable
-from gammapy.maps import CountsSpectrum, MapAxis, WcsGeom, RegionNDMap, RegionGeom
+from gammapy.maps import MapAxis, WcsGeom, RegionNDMap, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ConstantSpectralModel,
