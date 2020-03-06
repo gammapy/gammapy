@@ -102,6 +102,7 @@ class Observation:
         tstop=None,
         irfs=None,
         deadtime_fraction=0.0,
+        reference_time="2000-01-01",
     ):
         """Create an observation.
 
@@ -116,13 +117,15 @@ class Observation:
         livetime : ~astropy.units.Quantity`
             Livetime exposure of the simulated observation
         tstart : `~astropy.units.Quantity`
-            Start time of observation
-        tstop : `~astropy.units.Quantity`
+            Start time of observation w.r.t reference_time
+        tstop : `~astropy.units.Quantity` w.r.t reference_time
             Stop time of observation
         irfs : dict
             IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`
         deadtime_fraction : float, optional
             Deadtime fraction, defaults to 0
+        reference_time : `~astropy.time.Time`
+            the reference time to use in GTI definition
 
         Returns
         -------
@@ -133,7 +136,7 @@ class Observation:
 
         tstart = tstart or Quantity(0.0, "hr")
         tstop = (tstart + Quantity(livetime)) or tstop
-        gti = GTI.create([tstart], [tstop])
+        gti = GTI.create([tstart], [tstop], reference_time=reference_time)
 
         obs_info = cls._get_obs_info(
             pointing=pointing, deadtime_fraction=deadtime_fraction
