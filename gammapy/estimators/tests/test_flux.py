@@ -28,7 +28,7 @@ def hess_datasets():
 @requires_data()
 @requires_dependency("iminuit")
 def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
-    estimator = FluxEstimator(fermi_datasets, norm_n_values=5, norm_min=0.5, norm_max=2, reoptimize=False)
+    estimator = FluxEstimator(fermi_datasets, 0, norm_n_values=5, norm_min=0.5, norm_max=2, reoptimize=False)
     result = estimator.run("1 GeV", "100 GeV")
 
     assert_allclose(result["norm"], 1.00, atol=1e-3)
@@ -43,7 +43,7 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
 @requires_data()
 @requires_dependency("iminuit")
 def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
-    estimator = FluxEstimator(fermi_datasets, reoptimize=True)
+    estimator = FluxEstimator(fermi_datasets, 0, reoptimize=True)
     result = estimator.run("1 GeV", "100 GeV", steps=["ts"])
 
     print(estimator)

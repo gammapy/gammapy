@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from gammapy.modeling.models import ScaleSpectralModel
-from .parameter_estimator import ParameterEstimator
+from gammapy.estimators.parameter_estimator import ParameterEstimator
 
 log = logging.getLogger(__name__)
 
