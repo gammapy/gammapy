@@ -4,10 +4,7 @@ import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 
-__all__ = ["ParameterEstimator"]
-
 log = logging.getLogger(__name__)
-
 
 class ParameterEstimator:
     """Model parameter estimator.
