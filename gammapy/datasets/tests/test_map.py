@@ -197,7 +197,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
     )
 
     assert np.sum(spectrum_dataset.counts.data) == 1
-    assert spectrum_dataset.data_shape == (2,)
+    assert spectrum_dataset.data_shape == (2, 1, 1)
     assert spectrum_dataset.background.geom.axes[0].nbin == 2
     assert spectrum_dataset.aeff.energy.nbin == 3
     assert spectrum_dataset.aeff.data.data.unit == "m2"
@@ -694,7 +694,7 @@ def test_mapdatasetonoff_to_spectrum_dataset(images):
     spectrum_dataset = dataset.to_spectrum_dataset(on_region)
 
     assert spectrum_dataset.counts.data[0] == 8
-    assert spectrum_dataset.data_shape == (1,)
+    assert spectrum_dataset.data_shape == (1, 1, 1)
     assert spectrum_dataset.counts_off.data[0] == 33914
     assert_allclose(spectrum_dataset.alpha.data[0], 0.0002143, atol=1e-7)
 

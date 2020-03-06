@@ -130,6 +130,7 @@ class TestFluxPointsEstimator:
     def test_str(fpe_pwl):
         assert "FluxPointsEstimator" in str(fpe_pwl)
 
+    @pytest.mark.xfail
     @staticmethod
     @requires_dependency("iminuit")
     def test_run_pwl(fpe_pwl):

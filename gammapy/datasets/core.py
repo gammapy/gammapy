@@ -3,7 +3,7 @@ import abc
 import collections.abc
 import copy
 import numpy as np
-from gammapy.maps import WcsNDMap
+from gammapy.maps import Map
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
 
@@ -33,11 +33,11 @@ class Dataset(abc.ABC):
         """Combined fit and safe mask"""
         mask_safe = (
             self.mask_safe.data
-            if isinstance(self.mask_safe, WcsNDMap)
+            if isinstance(self.mask_safe, Map)
             else self.mask_safe
         )
         mask_fit = (
-            self.mask_fit.data if isinstance(self.mask_fit, WcsNDMap) else self.mask_fit
+            self.mask_fit.data if isinstance(self.mask_fit, Map) else self.mask_fit
         )
         if mask_safe is not None and mask_fit is not None:
             mask = mask_safe & mask_fit

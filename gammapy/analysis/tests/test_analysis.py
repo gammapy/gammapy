@@ -168,7 +168,7 @@ def test_analysis_1d():
     assert dnde.unit == "cm-2 s-1 TeV-1"
 
     assert_allclose(dnde[0].value, 8.116854e-12, rtol=1e-2)
-    assert_allclose(dnde[-1].value, 5.540578e-21, rtol=1e-2)
+    assert_allclose(dnde[-1].value, 4.023758e-20, rtol=1e-2)
 
 
 @requires_data()
