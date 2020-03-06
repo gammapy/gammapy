@@ -737,6 +737,18 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """Exposure ratio between signal and background regions"""
         return self.acceptance / self.acceptance_off
 
+    @property
+    def _geom(self):
+        """Main analysis geometry"""
+        if self.counts is not None:
+            return self.counts.geom
+        elif self.counts_off is not None:
+            return self.counts_off.geom
+        else:
+            raise ValueError(
+                "Either 'counts', 'counts_off' must be defined."
+            )
+
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
         mu_sig = self.npred_sig().data
