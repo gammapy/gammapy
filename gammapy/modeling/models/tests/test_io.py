@@ -182,9 +182,6 @@ def make_all_models():
     # TODO: yield Model.create("NaimaSpectralModel")
     # TODO: yield Model.create("ScaleSpectralModel")
     yield Model.create("ConstantTemporalModel")
-    yield Model.create(
-        "PhaseCurveTemplateTemporalModel", Table(), time_0=1, phase_0=2, f0=3
-    )  # TODO: add table content validation?
     yield Model.create("LightCurveTemplateTemporalModel", Table())
     yield Model.create(
         "SkyModel",

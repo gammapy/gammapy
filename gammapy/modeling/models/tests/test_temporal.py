@@ -9,40 +9,13 @@ from gammapy.data.gti import GTI
 from gammapy.modeling.models import (
     ConstantTemporalModel,
     LightCurveTemplateTemporalModel,
-    PhaseCurveTemplateTemporalModel,
+    ExpDecayTemporalModel,
+    GaussianTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
-
-
-@pytest.fixture(scope="session")
-def phase_curve():
-    path = make_path("$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits")
-    table = Table.read(path)
-    return PhaseCurveTemplateTemporalModel(
-        table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, filename=str(path)
-    )
-
-
-@requires_data()
-def test_phasecurve_phase(phase_curve):
-    time = 46300.0
-    phase = phase_curve.phase(time)
-    assert_allclose(phase, 0.7066006737999402)
-
-
-@requires_data()
-def test_phasecurve_evaluate(phase_curve):
-    time = 46300.0
-    value = phase_curve.evaluate_norm_at_time(time)
-    assert_allclose(value, 0.49059393580053845)
-
-    phase = phase_curve.phase(time)
-    value = phase_curve.evaluate_norm_at_phase(phase)
-    assert_allclose(value, 0.49059393580053845)
-
 
 # TODO: add light-curve test case from scratch
 # only use the FITS one for I/O (or not at all)
@@ -65,14 +38,8 @@ def test_light_curve_evaluate(light_curve):
     assert_allclose(val, 0.015512, rtol=1e-5)
 
     t = Time(46300, format="mjd")
-    val = light_curve(t, ext=3)
+    val = light_curve.evaluate(t, ext=3)
     assert_allclose(val, 0.01551196, rtol=1e-5)
-
-
-@requires_data()
-def test_light_curve_mean_norm_in_time_interval(light_curve):
-    val = light_curve.mean_norm_in_time_interval(59530, 59600)
-    assert_allclose(val, 0.030119, rtol=1e-5)
 
 
 def rate(x, c="1e4 s"):
@@ -135,13 +102,13 @@ def test_lightcurve_temporal_model_integral():
     table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
     temporal_model = LightCurveTemplateTemporalModel(table)
 
-    start = [1, 3, 5] * u.day
-    stop = [2, 3.5, 6] * u.day
+    start = [1, 3, 5] * u.hour
+    stop = [2, 3.5, 6] * u.hour
     gti = GTI.create(start, stop, reference_time=Time("2010-01-01T00:00:00"))
 
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
-    assert_allclose(np.sum(val), 2.5 * 86400, rtol=1e-5)
+    assert_allclose(np.sum(val), 1.0, rtol=1e-5)
 
 
 def test_constant_temporal_model_sample():
@@ -175,41 +142,51 @@ def test_constant_temporal_model_integral():
     gti = GTI.create(start, stop)
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
-    assert_allclose(np.sum(val), 2.5 * 86400, rtol=1e-5)
+    assert_allclose(np.sum(val), 1.0, rtol=1e-5)
 
 
-def test_phase_time_sampling():
-    time_0 = "2010-01-01T00:00:00"
-    phase = np.arange(0, 1, 0.01)
+def test_exponential_temporal_model_evaluate():
+    t = Time(46301, format="mjd")
+    t_ref = 46300
+    t0 = 2.0 * u.d
+    temporal_model = ExpDecayTemporalModel(t_ref=t_ref, t0=t0)
+    val = temporal_model(t)
+    assert_allclose(val, 0.6065306597126334, rtol=1e-5)
 
-    table = Table()
-    table["PHASE"] = phase
-    table["NORM"] = ph_curve(phase)
-    phase_model = PhaseCurveTemplateTemporalModel(
-        table, time_0=Time(time_0).mjd, phase_0=0.0, f0=2, f1=0.0, f2=0.0
-    )
 
-    t_min = "2010-01-01T00:00:00"
-    t_max = "2010-01-01T08:00:00"
+def test_exponential_temporal_model_integral():
+    temporal_model = ExpDecayTemporalModel()
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    t_ref = Time(55555, format="mjd")
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 0.1024784, rtol=1e-5)
 
-    sampler = phase_model.sample_time(
-        n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="0.01 s"
-    )
 
-    sampler = u.Quantity((sampler - Time(time_0)).sec, "s")
+def test_gaussian_temporal_model_evaluate():
+    t = Time(46301, format="mjd")
+    t_ref = 46300
+    sigma = 2.0 * u.d
+    temporal_model = GaussianTemporalModel(t_ref=t_ref, sigma=sigma)
+    val = temporal_model(t)
+    assert_allclose(val, 0.882497, rtol=1e-5)
 
-    assert len(sampler) == 2
-    assert_allclose(sampler.value, [8525.00102763, 11362.44044883], rtol=1e-5)
+
+def test_gaussian_temporal_model_integral():
+    temporal_model = GaussianTemporalModel(t_ref=50003, sigma="2.0 day")
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    t_ref = Time(50000, format="mjd")
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 0.160278, rtol=1e-5)
 
 
 @requires_data()
-def test_to_dict(phase_curve, light_curve):
-
-    out = phase_curve.to_dict()
-    assert out["type"] == "PhaseCurveTemplateTemporalModel"
-    assert len(out["parameters"]) == 5
-    assert out["parameters"][0]["name"] == "time_0"
-    assert "phasecurve_LSI_DC.fits" in out["filename"]
+def test_to_dict(light_curve):
 
     out = light_curve.to_dict()
     assert out["type"] == "LightCurveTemplateTemporalModel"
@@ -217,24 +194,11 @@ def test_to_dict(phase_curve, light_curve):
 
 
 @requires_data()
-def test_with_skymodel(phase_curve, light_curve):
+def test_with_skymodel(light_curve):
 
     sky_model = SkyModel(spectral_model=PowerLawSpectralModel())
     out = sky_model.to_dict()
     assert "temporal" not in out
-
-    sky_model = SkyModel(
-        spectral_model=PowerLawSpectralModel(), temporal_model=phase_curve
-    )
-    sky_model2 = sky_model.copy()
-    assert sky_model2.temporal_model.tag == "PhaseCurveTemplateTemporalModel"
-    assert sky_model2.temporal_model.parameters.names == [
-        "time_0",
-        "phase_0",
-        "f0",
-        "f1",
-        "f2",
-    ]
 
     sky_model = SkyModel(
         spectral_model=PowerLawSpectralModel(), temporal_model=light_curve

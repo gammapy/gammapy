@@ -15,11 +15,25 @@ from .core import Model
 
 # TODO: make this a small ABC to define a uniform interface.
 class TemporalModel(Model):
-    """Temporal model base class."""
+    """Temporal model base class.
+    evaluates on  astropy.time.Time objects"""
 
-    def __call__(self, time, **kwargs):
+    def __call__(self, time):
         """Call evaluate method"""
-        return self.evaluate(time.mjd, **kwargs)
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        return self.evaluate(time, **kwargs)
+
+    def time_sum(self, t_min, t_max):
+        """
+        Total time between t_min and t_max
+
+        Parameters
+        ----------
+        t_min, t_max: `~astropy.time.Time`
+            Lower and upper bound of integration range
+
+        """
+        return np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
 
 
 # TODO: make this a small ABC to define a uniform interface.
@@ -60,7 +74,7 @@ class ConstantTemporalModel(TemporalModel):
             Time since the ``reference`` time.
 
         """
-        return np.ones_like(time)
+        return np.ones_like(time.mjd)
 
     def integral(self, t_min, t_max):
         """Evaluate the integrated flux within the given time intervals
@@ -75,7 +89,9 @@ class ConstantTemporalModel(TemporalModel):
         -------
         norm: The model integrated flux
         """
-        return u.Quantity(t_max.mjd - t_min.mjd, "day").to_value("s")
+
+        integ = u.Quantity(t_max.mjd - t_min.mjd, "day")
+        return integ / self.time_sum(t_min, t_max)
 
     def sample_time(self, n_events, t_min, t_max, random_state=0):
         """Sample arrival times of events.
@@ -109,184 +125,73 @@ class ConstantTemporalModel(TemporalModel):
         return t_min + time_delta
 
 
-class PhaseCurveTemplateTemporalModel(TemplateTemporalModel):
-    r"""Temporal phase curve model.
-
-    Phase for a given time is computed as:
-
-    .. math::
-        \phi(t) = \phi_0 + f_0(t-t_0) + (1/2)f_1(t-t_0)^2 + (1/6)f_2(t-t_0)^3
-
-    Strictly periodic sources such as gamma-ray binaries have ``f1=0`` and ``f2=0``.
-    Sources like some pulsars where the period spins up or down have ``f1!=0``
-    and / or ``f2 !=0``. For a binary, ``f0`` should be calculated as 1/T,
-    where T is the period of the binary in unit of ``seconds``.
-
-    The "phase curve", i.e. multiplicative flux factor for a given phase is given
-    by a `~astropy.table.Table` of nodes ``(phase, norm)``, using linear interpolation
-    and circular behaviour, where ``norm(phase=0) == norm(phase=1)``.
+class ExpDecayTemporalModel(TemporalModel):
+    """Temporal model with an exponential decay.
 
     Parameters
     ----------
-    table : `~astropy.table.Table`
-        A table of 'PHASE' vs 'NORM' should be given
-    time_0 : float
-        The MJD value where phase is considered as 0.
-    phase_0 : float
-        Phase at the reference MJD
-    f0, f1, f2 : float
-        Derivatives of the function phi with time of order 1, 2, 3
-        in units of ``s^-1, s^-2 & s^-3``, respectively.
+        t0 : Decay time scale
+        t_ref: The reference time in mjd
 
-    Examples
-    --------
-    Create an example phase curve object::
+    ..math::
+            F(t) = exp(t - t_ref)/t0
 
-        from astropy.table import Table
-        from gammapy.utils.scripts import make_path
-        from gammapy.modeling.models import PhaseCurveTemplateTemporalModel
-        filename = make_path('$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits')
-        table = Table.read(filename)
-        phase_curve = PhaseCurveTemplateTemporalModel(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
-
-    Note: In order to reproduce the example you need the tests datasets folder.
-    You may download it with the command
-    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
-
-    Use it to compute a phase and evaluate the phase curve model for a given time:
-
-    >>> phase_curve.phase(time=46300.0)
-    0.7066006737999402
-    >>> phase_curve.evaluate_norm_at_time(46300)
-    0.49059393580053845
     """
 
-    tag = "PhaseCurveTemplateTemporalModel"
-    # TODO: allow parameters without default?
-    time_0 = Parameter("time_0", 0)
-    phase_0 = Parameter("phase_0", 0)
-    f0 = Parameter("f0", 0)
-    f1 = Parameter("f1", 0)
-    f2 = Parameter("f2", 0)
+    tag = "ExponentialDecayTemporalModel"
 
-    def __init__(
-        self,
-        table,
-        time_0=time_0.quantity,
-        phase_0=phase_0.quantity,
-        f0=f0.quantity,
-        f1=f1.quantity,
-        f2=f2.quantity,
-        filename=None,
-    ):
-        self.table = table
-        if filename is not None:
-            filename = str(make_path(filename))
-        self.filename = filename
-        super().__init__(time_0=time_0, phase_0=phase_0, f0=f0, f1=f1, f2=f2)
+    t0 = Parameter("t0", "1 d", frozen=False)
+    t_ref = Parameter("t_ref", 55555, frozen=True)
 
-    def phase(self, time):
-        """Evaluate phase for a given time.
+    def evaluate(self, time, t0, t_ref):
+        return np.exp(-(time.mjd - t_ref) / t0.to_value("d"))
 
-        Parameters
-        ----------
-        time : array_like
-
-        Returns
-        -------
-        phase : array_like
-        """
+    def integral(self, t_min, t_max):
         pars = self.parameters
-        time_0 = pars["time_0"].value
-        phase_0 = pars["phase_0"].value
-        f0 = pars["f0"].value
-        f1 = pars["f1"].value
-        f2 = pars["f2"].value
+        t0 = pars["t0"].quantity
+        t_ref = pars["t_ref"].quantity
+        val = self.evaluate(t_max, t0, t_ref) - self.evaluate(t_min, t0, t_ref)
+        integ = u.Quantity(-t0 * val)
+        return (integ / self.time_sum(t_min, t_max)).to_value("")
 
-        t = (time - time_0) * u.day.to(u.second)
-        phase = self._evaluate_phase(t, phase_0, f0, f1, f2)
-        return np.remainder(phase, 1)
 
-    @staticmethod
-    def _evaluate_phase(t, phase_0, f0, f1, f2):
-        return phase_0 + t * (f0 + t * (f1 / 2 + f2 / 6 * t))
+class GaussianTemporalModel(TemporalModel):
+    """A Gaussian Temporal profile
 
-    def evaluate_norm_at_time(self, time):
-        """Evaluate for a given time.
+    Parameters
+    ----------
+        t_ref: The reference time in mjd
+        sigma : `~astropy.units.Quantity`
+    """
 
-        Parameters
-        ----------
-        time : array_like
-            Time since the ``reference`` time.
+    tag = "GaussianTemporalModel"
+    t_ref = Parameter("t_ref", 55555, frozen=False)
+    sigma = Parameter("sigma", "1 d", frozen=False)
 
-        Returns
-        -------
-        norm : array_like
-        """
-        phase = self.phase(time)
-        return self.evaluate_norm_at_phase(phase)
+    def evaluate(self, time, t_ref, sigma):
+        return np.exp(-((time.mjd - t_ref) ** 2) / (2 * sigma.to_value("d") ** 2))
 
-    def evaluate_norm_at_phase(self, phase):
-        xp = self.table["PHASE"]
-        fp = self.table["NORM"]
-        return np.interp(x=phase, xp=xp, fp=fp, period=1)
-
-    def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
-        """Sample arrival times of events.
+    def integral(self, t_min, t_max, **kwargs):
+        r"""Integrate Gaussian analytically.
 
         Parameters
         ----------
-        n_events : int
-            Number of events to sample.
-        t_min : `~astropy.time.Time`
-            Start time of the sampling.
-        t_max : `~astropy.time.Time`
-            Stop time of the sampling.
-        t_delta : `~astropy.units.Quantity`
-            Time step used for sampling of the temporal model.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-            Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
-
-        Returns
-        -------
-        time : `~astropy.units.Quantity`
-            Array with times of the sampled events.
+        t_min, t_max : `~astropy.time`
+            Lower and upper bound of integration range
         """
-        time_unit = u.second
 
-        t_min = Time(t_min)
-        t_max = Time(t_max)
-        t_delta = u.Quantity(t_delta)
-        random_state = get_random_state(random_state)
+        pars = self.parameters
+        norm = pars["sigma"].quantity * np.sqrt(2 * np.pi)
+        u_min = norm * (
+            (t_min.mjd - pars["t_ref"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+        )
+        u_max = norm * (
+            (t_max.mjd - pars["t_ref"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+        )
 
-        ontime = u.Quantity((t_max - t_min).sec, "s")
-        t_stop = ontime.to_value(time_unit)
-
-        # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
-        #  is still incomplete, refactor once we change to recent numpy and astropy versions
-        t_step = t_delta.to_value(time_unit)
-        t = np.arange(0, t_stop, t_step)
-
-        pdf = self.evaluate_norm_at_time(t)
-
-        sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
-        time_pix = sampler.sample(n_events)[0]
-        time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
-
-        return t_min + time
-
-    @classmethod
-    def from_dict(cls, data):
-        model = cls.read(data["filename"])
-        model._update_from_dict(data)
-        return model
-
-    def to_dict(self, overwrite=False):
-        """Create dict for YAML serilisation"""
-        data = super().to_dict()
-        data["filename"] = self.filename
-        return data
+        integ = 1.0 / 2 * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
+        unit = getattr(pars["sigma"], "unit")
+        return integ / self.time_sum(t_min, t_max).to_value(unit)
 
 
 class LightCurveTemplateTemporalModel(TemplateTemporalModel):
@@ -378,19 +283,21 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         ----------
         time : array_like
             Time since the ``reference`` time.
-        ext : int or str, optional
+        ext : int or str, optional, default: 0
             Parameter passed to ~scipy.interpolate.InterpolatedUnivariateSpline
             Controls the extrapolation mode for GTIs outside the range
-            if ext=0 or ‘extrapolate’, return the extrapolated value.
-            if ext=1 or ‘zeros’, return 0
-            if ext=2 or ‘raise’, raise a ValueError
-            if ext=3 of ‘const’, return the boundary value.
-            The default value is 0.
+            0 or "extrapolate", return the extrapolated value.
+            1 or "zeros", return 0
+            2 or "raise", raise a ValueError
+            3 or "const", return the boundary value.
+
 
         Returns
         -------
         norm : array_like
         """
+        if isinstance(time, Time):
+            time = time.mjd
         return self._interpolator(time, ext=ext)
 
     def integral(self, t_min, t_max):
@@ -409,26 +316,7 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
 
         n1 = self._interpolator.antiderivative()(t_max.mjd)
         n2 = self._interpolator.antiderivative()(t_min.mjd)
-        return u.Quantity(n1 - n2, "day").to_value("s")
-
-    def mean_norm_in_time_interval(self, time_min, time_max):
-        """Compute mean ``norm`` in a given time interval.
-
-        TODO: vectorise, i.e. allow arrays of time intervals in a single call.
-
-        Parameters
-        ----------
-        time_min, time_max : float
-            Time interval
-
-        Returns
-        -------
-        norm : float
-            Mean norm
-        """
-        dt = time_max - time_min
-        integral = self._interpolator.integral(time_min, time_max)
-        return integral / dt
+        return u.Quantity(n1 - n2, "day") / self.time_sum(t_min, t_max)
 
     def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
         """Sample arrival times of events.

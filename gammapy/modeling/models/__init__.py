@@ -45,7 +45,6 @@ SPECTRAL_MODELS = Registry(
 TEMPORAL_MODELS = Registry(
     [
         ConstantTemporalModel,
-        PhaseCurveTemplateTemporalModel,
         LightCurveTemplateTemporalModel,
     ]
 )

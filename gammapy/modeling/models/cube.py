@@ -25,10 +25,10 @@ class SkyModelBase(Model):
     def __radd__(self, model):
         return self.__add__(model)
 
-    def __call__(self, lon, lat, energy):
-        return self.evaluate(lon, lat, energy)
+    def __call__(self, lon, lat, energy, time=None):
+        return self.evaluate(lon, lat, energy, time)
 
-    def evaluate_geom(self, geom):
+    def evaluate_geom(self, geom, gti=None):
         coords = geom.get_coord(frame=self.frame)
         return self(coords.lon, coords.lat, coords["energy_true"])
 
@@ -89,6 +89,9 @@ class SkyModel(SkyModelBase):
 
         if self.spatial_model is not None:
             parameters.append(self.spatial_model.parameters)
+
+        if self.temporal_model is not None:
+            parameters.append(self.temporal_model.parameters)
 
         parameters.append(self.spectral_model.parameters)
         return Parameters.from_stack(parameters)
@@ -155,7 +158,7 @@ class SkyModel(SkyModelBase):
             f"temporal_model={self.temporal_model!r})"
         )
 
-    def evaluate(self, lon, lat, energy):
+    def evaluate(self, lon, lat, energy, time=None):
         """Evaluate the model at given points.
 
         The model evaluation follows numpy broadcasting rules.
@@ -169,6 +172,8 @@ class SkyModel(SkyModelBase):
             Spatial coordinates
         energy : `~astropy.units.Quantity`
             Energy coordinate
+        time: `~astropy.time.Time`
+            Time co-ordinate
 
         Returns
         -------
@@ -181,15 +186,22 @@ class SkyModel(SkyModelBase):
         if self.spatial_model is not None:
             value = value * self.spatial_model(lon, lat)  # pylint:disable=not-callable
 
+        if (self.temporal_model is not None) and (time is not None):
+            value = value * self.temporal_model(time)
+
         return value
 
-    def evaluate_geom(self, geom):
+    def evaluate_geom(self, geom, gti=None):
         """Evaluate model on `~gammapy.maps.Geom`."""
         energy = geom.get_axis_by_name("energy_true").center[:, np.newaxis, np.newaxis]
         value = self.spectral_model(energy)
-        # TODO: case with temporal_model is not None
+
         if self.spatial_model is not None:
             value = value * self.spatial_model.evaluate_geom(geom.to_image())
+
+        if self.temporal_model is not None:
+            integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
+            value = value * np.sum(integral)
 
         return value
 
@@ -403,8 +415,10 @@ class SkyDiffuseCube(SkyModelBase):
         }
         return self.map.interp_by_coord(coord, **self._interp_kwargs)
 
-    def evaluate(self, lon, lat, energy):
-        """Evaluate model."""
+    def evaluate(self, lon, lat, energy, time=None):
+        """Evaluate model.
+        passing time does not make sense here - passed just to match arguments
+        of SkyModel.evaluate"""
         is_cached_coord = [
             _ is coord for _, coord in zip((lon, lat, energy), self._cached_coordinates)
         ]
