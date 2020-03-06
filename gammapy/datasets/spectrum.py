@@ -354,7 +354,7 @@ class SpectrumDataset(Dataset):
         ax = plt.gca() if ax is None else ax
 
         self.npred_sig().plot(ax=ax, label="mu_src")
-        self.excess.plot(ax=ax, label="Excess", fmt=".")
+        self.excess.plot(ax=ax, label="Excess")
 
         e_min, e_max = self.energy_range
         kwargs = {"color": "black", "linestyle": "dashed"}

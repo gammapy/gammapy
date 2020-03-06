@@ -65,14 +65,17 @@ class Map(abc.ABC):
         return self._data
 
     @data.setter
-    def data(self, val):
-        if np.isscalar(val):
-            val = val * np.ones(self.geom.data_shape)
+    def data(self, value):
+        if np.isscalar(value):
+            value = value * np.ones(self.geom.data_shape)
 
-        if isinstance(val, u.Quantity):
+        if isinstance(value, u.Quantity):
             raise TypeError("Map data must be a Numpy array. Set unit separately")
 
-        self._data = val.reshape(self.geom.data_shape)
+        if not value.shape == self.geom.data_shape:
+            value = value.reshape(self.geom.data_shape)
+
+        self._data = value
 
     @property
     def unit(self):
