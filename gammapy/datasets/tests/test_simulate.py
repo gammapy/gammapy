@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.table import Table
 from astropy.coordinates import SkyCoord
 from gammapy.datasets import MapDatasetEventSampler
 from gammapy.data import GTI, Observation
@@ -12,6 +14,7 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    LightCurveTemplateTemporalModel,
 )
 from gammapy.utils.testing import requires_data
 
@@ -28,14 +31,29 @@ def dataset():
     )
 
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
-    skymodel = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
+    t_min = 0 * u.s
+    t_max = 30000 * u.s
+
+    time = np.arange(t_max.value) * u.s
+    tau = u.Quantity("2e3 s")
+    norm = np.exp(-time / tau)
+
+    table = Table()
+    table["TIME"] = time
+    table["NORM"] = norm
+    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="s")
+    temporal_model = LightCurveTemplateTemporalModel(table)
+
+    skymodel = SkyModel(
+        spatial_model=spatial_model,
+        spectral_model=spectral_model,
+        temporal_model=temporal_model,
+    )
 
     geom = WcsGeom.create(
         skydir=position, binsz=1, width="5 deg", frame="galactic", axes=[energy_axis]
     )
-
-    t_min = 0 * u.s
-    t_max = 30000 * u.s
 
     gti = GTI.create(start=t_min, stop=t_max)
 
@@ -64,6 +82,9 @@ def test_mde_sample_sources(dataset):
 
     assert_allclose(events.table["DEC_TRUE"][0], -29.034641, rtol=1e-5)
     assert events.table["DEC_TRUE"].unit == "deg"
+
+    assert_allclose(events.table["TIME"][0], 2150.712124, rtol=1e-5)
+    assert events.table["TIME"].unit == "s"
 
     assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
 
@@ -96,10 +117,10 @@ def test_mde_sample_psf(dataset):
     assert_allclose(events.table["ENERGY_TRUE"][0], 2.2450239, rtol=1e-5)
     assert events.table["ENERGY_TRUE"].unit == "TeV"
 
-    assert_allclose(events.table["RA"][0], 266.895383, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 266.88654311, rtol=1e-5)
     assert events.table["RA"].unit == "deg"
 
-    assert_allclose(events.table["DEC"][0], -29.052050, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -29.01084895, rtol=1e-5)
     assert events.table["DEC"].unit == "deg"
 
 
@@ -140,15 +161,15 @@ def test_mde_run(dataset):
     dataset_bkg.models = dataset_bkg.models[1]
     events_bkg = sampler.run(dataset=dataset_bkg, observation=obs)
 
-    assert len(events.table) == 2422
-    assert_allclose(events.table["ENERGY"][0], 1.56446303986587, rtol=1e-5)
-    assert_allclose(events.table["RA"][0], 268.8180057255861, rtol=1e-5)
-    assert_allclose(events.table["DEC"][0], -28.45051813404372, rtol=1e-5)
+    assert len(events.table) == 2423
+    assert_allclose(events.table["ENERGY"][0], 3.582666040117894, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 263.876666324552, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -28.72531131917506, rtol=1e-5)
 
-    assert len(events_bkg.table) == 12
-    assert_allclose(events_bkg.table["ENERGY"][0], 1.377619454, rtol=1e-5)
-    assert_allclose(events_bkg.table["RA"][0], 265.09135019, rtol=1e-5)
-    assert_allclose(events_bkg.table["DEC"][0], -30.631115659801, rtol=1e-5)
+    assert len(events_bkg.table) == 16
+    assert_allclose(events_bkg.table["ENERGY"][0], 2.874495158620, rtol=1e-5)
+    assert_allclose(events_bkg.table["RA"][0], 264.56394364251, rtol=1e-5)
+    assert_allclose(events_bkg.table["DEC"][0], -28.676648107, rtol=1e-5)
     assert_allclose(events_bkg.table["MC_ID"][0], 0, rtol=1e-5)
 
     meta = events.table.meta
