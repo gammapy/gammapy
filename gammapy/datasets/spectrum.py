@@ -209,7 +209,10 @@ class SpectrumDataset(Dataset):
 
     @mask_safe.setter
     def mask_safe(self, mask):
-        self._mask_safe = mask
+        if mask is None or isinstance(mask, RegionNDMap):
+            self._mask_safe = mask
+        else:
+            raise ValueError(f"Must be `RegionNDMap` and not {type(mask)}")
 
     @property
     def _energy_axis(self):
@@ -237,7 +240,7 @@ class SpectrumDataset(Dataset):
     @property
     def data_shape(self):
         """Shape of the counts data"""
-        return (self._energy_axis.nbin,)
+        return self._geom.data_shape
 
     def npred_sig(self):
         """Predicted counts from source model (`RegionNDMap`)."""
@@ -335,7 +338,13 @@ class SpectrumDataset(Dataset):
 
     @property
     def _e_unit(self):
-        return self.counts.geom.axes[0].unit
+        return self._geom.axes[0].unit
+
+    def _plot_energy_range(self, ax):
+        e_min, e_max = self.energy_range
+        kwargs = {"color": "black", "linestyle": "dashed"}
+        ax.axvline(e_min.to_value(self._e_unit), label="fit range", **kwargs)
+        ax.axvline(e_max.to_value(self._e_unit), **kwargs)
 
     def plot_counts(self, ax=None):
         """Plot predicted and detected counts.
@@ -356,11 +365,7 @@ class SpectrumDataset(Dataset):
 
         self.npred_sig().plot(ax=ax, label="mu_src")
         self.excess.plot(ax=ax, label="Excess")
-
-        e_min, e_max = self.energy_range
-        kwargs = {"color": "black", "linestyle": "dashed"}
-        ax.axvline(e_min.to_value(self._e_unit), label="fit range", **kwargs)
-        ax.axvline(e_max.to_value(self._e_unit), **kwargs)
+        self._plot_energy_range(ax=ax)
 
         ax.legend(numpoints=1)
         ax.set_title("")
@@ -561,34 +566,31 @@ class SpectrumDataset(Dataset):
         _, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=figsize)
 
         ax1.set_title("Counts")
-        energy_unit = "TeV"
 
         if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
             self.background.plot_hist(
-                ax=ax1, label="alpha * N_off", color="darkblue", energy_unit=energy_unit
+                ax=ax1, label="alpha * N_off",
             )
         elif self.background is not None:
             self.background.plot_hist(
-                ax=ax1, label="background", color="darkblue", energy_unit=energy_unit
+                ax=ax1, label="background",
             )
 
         self.counts.plot_hist(
             ax=ax1,
             label="n_on",
-            color="darkred",
-            energy_unit=energy_unit,
-            show_energy=(e_min, e_max),
         )
 
-        ax1.set_xlim(
-            0.7 * e_min.to_value(energy_unit), 1.3 * e_max.to_value(energy_unit)
-        )
+        e_unit = e_min.unit
+        ax1.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
+        self._plot_energy_range(ax=ax1)
         ax1.legend(numpoints=1)
 
         ax2.set_title("Effective Area")
         e_unit = self.aeff.energy.unit
-        self.aeff.plot(ax=ax2, show_energy=(e_min, e_max))
+        self.aeff.plot(ax=ax2, )
         ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
+        self._plot_energy_range(ax=ax2)
 
         ax3.set_title("Energy Dispersion")
         if self.edisp is not None:
@@ -704,13 +706,15 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             data = np.ones(self._geom.data_shape) * acceptance
             acceptance = RegionNDMap.from_geom(self._geom, data=data)
 
+        self.acceptance = acceptance
+
         if np.isscalar(acceptance_off):
             data = np.ones(self._geom.data_shape) * acceptance_off
             acceptance_off = RegionNDMap.from_geom(self._geom, data=data)
 
-        self._evaluators = {}
-        self.acceptance = acceptance
         self.acceptance_off = acceptance_off
+
+        self._evaluators = {}
         self._name = make_name(name)
         self.gti = gti
         self.models = models
@@ -746,9 +750,13 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             return self.counts.geom
         elif self.counts_off is not None:
             return self.counts_off.geom
+        elif self.acceptance is not None:
+            return self.acceptance.geom
+        elif self.acceptance_off is not None:
+            return self.acceptance_off.geom
         else:
             raise ValueError(
-                "Either 'counts', 'counts_off' must be defined."
+                "Either 'counts', 'counts_off', 'acceptance' or 'acceptance_of' must be defined."
             )
 
     def stat_array(self):
@@ -987,8 +995,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         rmffile = phafile.replace("pha", "rmf")
 
         counts_table = self.counts.to_table()
-        counts_table["QUALITY"] = np.logical_not(self.mask_safe.data)
-        counts_table["BACKSCAL"] = self.acceptance.data
+        counts_table["QUALITY"] = np.logical_not(self.mask_safe.data[:, 0, 0])
+        counts_table["BACKSCAL"] = self.acceptance.data[:, 0, 0]
         counts_table["AREASCAL"] = np.ones(self.acceptance.data.size)
         meta = self._ogip_meta()
 
@@ -1017,8 +1025,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         if self.counts_off is not None:
             counts_off_table = self.counts_off.to_table()
-            counts_off_table["QUALITY"] = np.logical_not(self.mask_safe.data)
-            counts_off_table["BACKSCAL"] = self.acceptance_off.data
+            counts_off_table["QUALITY"] = np.logical_not(self.mask_safe.data[:, 0, 0])
+            counts_off_table["BACKSCAL"] = self.acceptance_off.data[:, 0, 0]
             counts_off_table["AREASCAL"] = np.ones(self.acceptance.data.size)
             meta = self._ogip_meta()
             meta["hduclas2"] = "BKG"

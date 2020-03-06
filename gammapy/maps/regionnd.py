@@ -47,6 +47,8 @@ class RegionNDMap(Map):
         ----------
         ax : `~matplotlib.pyplot.Axis`
             Axis used for plotting
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.errorbar`
 
         Returns
         -------
@@ -81,7 +83,7 @@ class RegionNDMap(Map):
         ax.set_yscale("log")
         return ax
 
-    def plot_hist(self, ax=None, energy_unit="TeV", show_energy=None, **kwargs):
+    def plot_hist(self, ax=None, **kwargs):
         """Plot as histogram.
 
         kwargs are forwarded to `~matplotlib.pyplot.hist`
@@ -90,28 +92,34 @@ class RegionNDMap(Map):
         ----------
         ax : `~matplotlib.axis` (optional)
             Axis instance to be used for the plot
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        show_energy : `~astropy.units.Quantity`, optional
-            Show energy, e.g. threshold, as vertical line
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.hist`
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Axis used for plotting
         """
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
-        kwargs.setdefault("lw", 2)
+
         kwargs.setdefault("histtype", "step")
-        weights = self.data[:, 0, 0]
+        kwargs.setdefault("lw", 2)
 
         axis = self.geom.axes[0]
-        bins = axis.edges.to_value(energy_unit)
-        x = axis.center.to_value(energy_unit)
-        ax.hist(x, bins=bins, weights=weights, **kwargs)
-        if show_energy is not None:
-            ener_val = u.Quantity(show_energy).to_value(energy_unit)
-            ax.vlines(ener_val, 0, 1.1 * max(self.data), linestyles="dashed")
-        ax.set_xlabel(f"Energy [{energy_unit}]")
-        ax.set_ylabel("Counts")
+
+        with quantity_support():
+            weights = self.data[:, 0, 0]
+            ax.hist(axis.center.value, bins=axis.edges.value, weights=weights, **kwargs)
+
+        ax.set_xlabel(axis.name.capitalize() + f" [{axis.unit}]")
+
+        if not self.unit.is_unity():
+            ax.set_ylabel(f"Data [{self.unit}]")
+
         ax.set_xscale("log")
+        ax.set_yscale("log")
         return ax
 
     def plot_interactive(self):
