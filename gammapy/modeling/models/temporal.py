@@ -126,16 +126,17 @@ class ConstantTemporalModel(TemporalModel):
 
 
 class ExpDecayTemporalModel(TemporalModel):
-    r"""Temporal model with an exponential decay.
+    """Temporal model with an exponential decay.
 
-    Parameters:
+    Parameters
+    ----------
         t0 : Decay time scale
         t_ref: The reference time in mjd
 
     ..math::
             F(t) = exp(t - t_ref)/t0
 
-        """
+    """
 
     tag = "ExponentialDecayTemporalModel"
 
@@ -155,9 +156,10 @@ class ExpDecayTemporalModel(TemporalModel):
 
 
 class GaussianTemporalModel(TemporalModel):
-    r"""A Gaussian Temporal profile
+    """A Gaussian Temporal profile
 
-    Parameters:
+    Parameters
+    ----------
         t_ref: The reference time in mjd
         sigma : `~astropy.units.Quantity`
     """
@@ -315,25 +317,6 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         n1 = self._interpolator.antiderivative()(t_max.mjd)
         n2 = self._interpolator.antiderivative()(t_min.mjd)
         return u.Quantity(n1 - n2, "day") / self.time_sum(t_min, t_max)
-
-    def mean_norm_in_time_interval(self, time_min, time_max):
-        """Compute mean ``norm`` in a given time interval.
-
-        TODO: vectorise, i.e. allow arrays of time intervals in a single call.
-
-        Parameters
-        ----------
-        time_min, time_max : float
-            Time interval
-
-        Returns
-        -------
-        norm : float
-            Mean norm
-        """
-        dt = time_max - time_min
-        integral = self._interpolator.integral(time_min, time_max)
-        return integral / dt
 
     def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
         """Sample arrival times of events.

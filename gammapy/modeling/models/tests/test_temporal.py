@@ -42,12 +42,6 @@ def test_light_curve_evaluate(light_curve):
     assert_allclose(val, 0.01551196, rtol=1e-5)
 
 
-@requires_data()
-def test_light_curve_mean_norm_in_time_interval(light_curve):
-    val = light_curve.mean_norm_in_time_interval(59530, 59600)
-    assert_allclose(val, 0.030119, rtol=1e-5)
-
-
 def rate(x, c="1e4 s"):
     c = u.Quantity(c)
     return np.exp(-x / c)
