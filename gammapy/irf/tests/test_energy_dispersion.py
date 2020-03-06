@@ -50,16 +50,6 @@ class TestEDispKernel:
         pdf = self.edisp.data.evaluate(energy_true=3.34 * u.TeV)
         assert_allclose(np.sum(pdf), 1, atol=1e-2)
 
-    def test_apply(self):
-        counts = np.arange(len(self.e_true) - 1)
-        actual = self.edisp.apply(counts)
-        assert_allclose(actual[0], 1.853746, atol=1e-3)
-
-        counts = np.arange(len(self.e_true) - 4)
-        with pytest.raises(ValueError):
-            self.edisp.apply(counts)
-        assert_allclose(actual[0], 1.853746, atol=1e-3)
-
     def test_get_bias(self):
         bias = self.edisp.get_bias(3.34 * u.TeV)
         assert_allclose(bias, self.bias, atol=1e-2)
