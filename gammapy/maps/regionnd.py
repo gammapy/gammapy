@@ -57,7 +57,7 @@ class RegionNDMap(Map):
 
         ax = ax or plt.gca()
 
-        kwargs.setdefault("drawstyle", "steps-mid")
+        kwargs.setdefault("fmt", ".")
 
         if len(self.geom.axes) > 1:
             raise TypeError(
@@ -65,13 +65,16 @@ class RegionNDMap(Map):
             )
 
         axis = self.geom.axes[0]
+
         with quantity_support():
-            ax.plot(axis.center, self.quantity.squeeze(), **kwargs)
+            xerr = (axis.center - axis.edges[:-1], axis.edges[1:] - axis.center)
+            ax.errorbar(axis.center, self.quantity.squeeze(), xerr=xerr, **kwargs)
 
         if axis.interp == "log":
             ax.set_xscale("log")
 
         ax.set_xlabel(axis.name.capitalize() + f" [{axis.unit}]")
+
         if not self.unit.is_unity():
             ax.set_ylabel(f"Data [{self.unit}]")
 

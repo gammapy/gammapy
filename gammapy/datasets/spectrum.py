@@ -331,7 +331,6 @@ class SpectrumDataset(Dataset):
 
         ax_residuals = plt.subplot(gs[5:, :])
         self.plot_residuals(ax=ax_residuals)
-        ax_residuals.set_yscale("linear")
         return ax_spectrum, ax_residuals
 
     @property
@@ -415,11 +414,12 @@ class SpectrumDataset(Dataset):
         )
         ax.axhline(0, color="black", lw=0.5)
 
-        ymax = 1.2 * np.nanmax(residuals.data)
-        ax.set_ylim(-ymax, ymax)
-
         ax.set_xlabel(f"Energy [{self._e_unit}]")
         ax.set_ylabel(f"Residuals ({label})")
+        ax.set_yscale("linear")
+
+        ymax = 1.2 * np.nanmax(residuals.data)
+        ax.set_ylim(-ymax, ymax)
         return ax
 
     @classmethod
