@@ -241,7 +241,7 @@ class SpectrumDataset(Dataset):
 
     def npred_sig(self):
         """Predicted counts from source model (`RegionNDMap`)."""
-        npred = RegionNDMap.from_geom(self._geom)
+        npred_total = RegionNDMap.from_geom(self._geom)
 
         if self.models:
             for model in self.models:
@@ -260,9 +260,10 @@ class SpectrumDataset(Dataset):
                     )
                     self._evaluators[model.name] = evaluator
 
-                npred += evaluator.compute_npred()
+                npred = evaluator.compute_npred()
+                npred_total.stack(npred)
 
-        return npred
+        return npred_total
 
     def npred(self):
         """Return npred map (model + background)"""
@@ -330,6 +331,7 @@ class SpectrumDataset(Dataset):
 
         ax_residuals = plt.subplot(gs[5:, :])
         self.plot_residuals(ax=ax_residuals)
+        ax_residuals.set_yscale("linear")
         return ax_spectrum, ax_residuals
 
     @property
@@ -1152,20 +1154,20 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         mask = self.mask_safe.data if in_safe_energy_range else slice(None)
 
         # TODO: handle energy dependent a_on / a_off
-        info["a_on"] = self.acceptance.data[0].copy()
+        info["a_on"] = self.acceptance.data[0, 0, 0].copy()
 
         if self.counts_off is not None:
             info["n_off"] = self.counts_off.data[mask].sum()
-            info["a_off"] = self.acceptance_off.data[0].copy()
+            info["a_off"] = self.acceptance_off.data[0, 0, 0].copy()
         else:
             info["n_off"] = 0
             info["a_off"] = 1
 
-        info["alpha"] = self.alpha.data[0].copy()
+        info["alpha"] = self.alpha.data[0, 0, 0].copy()
         info["significance"] = significance_on_off(
             self.counts.data[mask].sum(),
             self.counts_off.data[mask].sum(),
-            self.alpha.data[0],
+            self.alpha.data[0, 0, 0],
         )
 
         return info
@@ -1253,6 +1255,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             counts_off = dataset.background / alpha
 
         return cls(
+            models=dataset.models,
             counts=dataset.counts,
             aeff=dataset.aeff,
             counts_off=counts_off,
@@ -1318,11 +1321,13 @@ class SpectrumEvaluator:
         self.aeff = aeff
         self.edisp = edisp
         self.livetime = livetime
-        self.geom = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[aeff.energy])
+        self.geom = RegionGeom(region=None, axes=[aeff.energy])
+        self.energy = self.geom.get_axis_by_name("energy_true").edges
 
     def compute_npred(self):
-        energy = self.geom.get_axis_by_name("energy_true").edges
-        flux = self.model.spectral_model.integral(energy[:-1], energy[1:], intervals=True)
+        flux = self.model.spectral_model.integral(
+            self.energy[:-1], self.energy[1:], intervals=True
+        )
 
         if self.aeff is not None and self.model.apply_irf["exposure"]:
             npred = flux * self.aeff.data.data

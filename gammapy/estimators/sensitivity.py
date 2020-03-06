@@ -114,7 +114,7 @@ class SensitivityEstimator:
         energy = dataset.edisp.e_reco.center
         excess = self.estimate_min_excess(dataset)
         e2dnde = self.estimate_min_e2dnde(excess, dataset)
-        criterion = self._get_criterion(excess.data[:, 0, 0])
+        criterion = self._get_criterion(excess.data.squeeze())
 
         return Table(
             [
@@ -131,13 +131,13 @@ class SensitivityEstimator:
                     description="Energy squared times differential flux",
                 ),
                 Column(
-                    data=excess,
+                    data=excess.data.squeeze(),
                     name="excess",
                     format="5g",
                     description="Number of excess counts in the bin",
                 ),
                 Column(
-                    data=dataset.background.data,
+                    data=dataset.background.data.squeeze(),
                     name="background",
                     format="5g",
                     description="Number of background counts in the bin",
