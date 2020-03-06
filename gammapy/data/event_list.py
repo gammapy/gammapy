@@ -284,19 +284,22 @@ class EventListBase:
         energy = self.energy
         return MapAxis.from_energy_bounds(energy.min(), energy.max(), 50).edges
 
-    def _counts_spectrum(self, ebounds):
-        from gammapy.maps import CountsSpectrum
-
-        if not ebounds:
-            ebounds = self._default_plot_ebounds()
-        spec = CountsSpectrum(energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
-        spec.fill_energy(self.energy)
-        return spec
-
     def plot_energy(self, ax=None, ebounds=None, **kwargs):
         """Plot counts as a function of energy."""
-        spec = self._counts_spectrum(ebounds)
-        ax = spec.plot(ax=ax, **kwargs)
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        kwargs.setdefault("log", True)
+        kwargs.setdefault("histtype", "step")
+
+        if ebounds is None:
+            ebounds = self._default_plot_ebounds()
+
+        unit = ebounds.unit
+
+        plt.hist(self.energy.to_value(unit), bins=ebounds.value,  **kwargs)
+        plt.semilogx()
         return ax
 
     def plot_time(self, ax=None):
