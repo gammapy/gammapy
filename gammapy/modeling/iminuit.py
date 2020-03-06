@@ -50,9 +50,9 @@ def optimize_iminuit(parameters, function, **kwargs):
     strategy = kwargs.pop("strategy", 1)
     tol = kwargs.pop("tol", 0.1)
     minuit = Minuit(minuit_func.fcn, **kwargs)
-    minuit.migrad(**migrad_opts)
     minuit.tol = tol
     minuit.set_strategy(strategy)
+    minuit.migrad(**migrad_opts)
 
     factors = minuit.args
     info = {

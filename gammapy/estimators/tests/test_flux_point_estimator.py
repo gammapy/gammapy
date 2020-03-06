@@ -9,7 +9,7 @@ from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.datasets.spectrum import SpectrumEvaluator
 from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.makers import MapDatasetMaker
-from gammapy.maps import MapAxis, WcsGeom
+from gammapy.maps import MapAxis, WcsGeom, RegionGeom, RegionNDMap
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     GaussianSpatialModel,
@@ -22,16 +22,20 @@ from gammapy.utils.testing import requires_data, requires_dependency
 
 # TODO: use pregenerate data instead
 def simulate_spectrum_dataset(model, random_state=0):
-    energy = np.logspace(-0.5, 1.5, 21) * u.TeV
-    aeff = EffectiveAreaTable.from_parametrization(energy=energy)
+    edges = np.logspace(-0.5, 1.5, 21) * u.TeV
+    energy_axis = MapAxis.from_edges(edges, interp="log", name="energy")
+
+    aeff = EffectiveAreaTable.from_parametrization(energy=edges)
     bkg_model = SkyModel(
         spectral_model=PowerLawSpectralModel(
             index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1"
         )
     )
+    geom = RegionGeom(region=None, axes=[energy_axis])
+    acceptance = RegionNDMap.from_geom(geom=geom, data=1)
 
     dataset = SpectrumDatasetOnOff(
-        aeff=aeff, models=model, livetime=100 * u.h, acceptance=1, acceptance_off=5
+        aeff=aeff, models=model, livetime=100 * u.h, acceptance=acceptance, acceptance_off=5
     )
 
     eval = SpectrumEvaluator(model=bkg_model, aeff=aeff, livetime=100 * u.h)
@@ -84,7 +88,7 @@ def simulate_map_dataset(random_state=0, name=None):
 def fpe_map_pwl():
     dataset_1 = simulate_map_dataset()
     dataset_2 = dataset_1.copy()
-    dataset_2.mask_safe = np.zeros(dataset_2.data_shape).astype(bool)
+    dataset_2.mask_safe = RegionNDMap.from_geom(dataset_2.counts.geom, dtype=bool)
 
     e_edges = [0.1, 1, 10, 100] * u.TeV
     return FluxPointsEstimator(
@@ -216,7 +220,7 @@ def test_no_likelihood_contribution():
     dataset = simulate_spectrum_dataset(
         SkyModel(spectral_model=PowerLawSpectralModel(), name="source")
     )
-    dataset.mask_safe = np.zeros(dataset.data_shape, dtype=bool)
+    dataset.mask_safe = RegionNDMap.from_geom(dataset.counts.geom, dtype=bool)
 
     fpe = FluxPointsEstimator([dataset], e_edges=[1, 3, 10] * u.TeV, source="source")
     fp = fpe.run()

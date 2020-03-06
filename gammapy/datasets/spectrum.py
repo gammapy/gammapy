@@ -1330,7 +1330,7 @@ class SpectrumEvaluator:
         self.edisp = edisp
         self.livetime = livetime
         self.geom = RegionGeom(region=None, axes=[aeff.energy])
-        self.energy = self.geom.get_axis_by_name("energy_true").edges
+        self.energy = aeff.energy.edges
 
     def compute_npred(self):
         flux = self.model.spectral_model.integral(
