@@ -52,7 +52,7 @@ class SensitivityEstimator:
 
         Returns
         -------
-        excess : `CountsSpectrum`
+        excess : `RegionNDMap`
             Minimal excess
         """
         n_off = dataset.counts_off.data
@@ -70,7 +70,7 @@ class SensitivityEstimator:
 
         Parameters
         ----------
-        excess : `CountsSpectrum`
+        excess : `RegionNDMap`
             Minimal excess
         dataset : `SpectrumDataset`
             Spectrum dataset

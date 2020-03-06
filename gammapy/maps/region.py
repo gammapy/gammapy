@@ -2,7 +2,7 @@ import copy
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from astropy.wcs.utils import proj_plane_pixel_area
+from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
 from astropy.wcs import WCS
 from regions import CircleSkyRegion, fits_region_objects_to_table, FITSRegionParser
 from gammapy.utils.regions import make_region, compound_region_to_list, list_to_compound_region
@@ -57,7 +57,10 @@ class RegionGeom(Geom):
 
     @property
     def frame(self):
-        return self.region.center.frame.name
+        try:
+            return self.region.center.frame.name
+        except AttributeError:
+            return wcs_to_celestial_frame(self.wcs).name
 
     @property
     def width(self):
