@@ -2,11 +2,8 @@
 import logging
 import numpy as np
 from astropy import units as u
-from gammapy.datasets import Datasets
 from gammapy.modeling.models import ScaleSpectralModel
-from gammapy.estimators import ParameterEstimator
-
-__all__ = ["FluxEstimator"]
+from .parameter_estimator import ParameterEstimator
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +42,7 @@ class FluxEstimator(ParameterEstimator):
     def __init__(
             self,
             datasets,
-            source=0,
+            source,
             norm_min=0.2,
             norm_max=5,
             norm_n_values=11,
@@ -102,10 +99,7 @@ class FluxEstimator(ParameterEstimator):
     def _set_scale_model(self, datasets):
         # set the model on all datasets
         for dataset in datasets:
-            if len(dataset.models) > 1:
-                dataset.models[self.source].spectral_model = self.model
-            else:
-                dataset.models[0].spectral_model = self.model
+            dataset.models[self.source].spectral_model = self.model
         return datasets
 
     def run(self, e_min, e_max, e_ref=None, steps="all"):

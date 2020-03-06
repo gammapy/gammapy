@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
-from gammapy.estimators import FluxEstimator
+from gammapy.estimators.flux import FluxEstimator
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
