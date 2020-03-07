@@ -4,7 +4,7 @@ import copy
 from pathlib import Path
 import numpy as np
 import astropy.units as u
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_name, make_path
@@ -196,10 +196,10 @@ class SkyModel(SkyModelBase):
         energy = geom.get_axis_by_name("energy_true").center[:, np.newaxis, np.newaxis]
         value = self.spectral_model(energy)
 
-        if self.spatial_model is not None:
+        if self.spatial_model:
             value = value * self.spatial_model.evaluate_geom(geom.to_image())
 
-        if self.temporal_model is not None:
+        if self.temporal_model:
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
             value = value * np.sum(integral)
 
@@ -212,11 +212,13 @@ class SkyModel(SkyModelBase):
             energy[:-1], energy[1:], intervals=True
         ).reshape((-1, 1, 1))
 
-        if self.spatial_model is not None:
+        if self.spatial_model and not isinstance(geom, RegionGeom):
+            # TODO: integrate spatial model over region to correct for
+            #  containment
             geom_image = geom.to_image()
             value = value * self.spatial_model.integrate(geom_image).quantity
 
-        if self.temporal_model is not None:
+        if self.temporal_model:
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
             value = value * np.sum(integral)
 
