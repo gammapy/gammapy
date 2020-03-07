@@ -205,6 +205,23 @@ class SkyModel(SkyModelBase):
 
         return value
 
+    def integrate(self, geom, gti=None):
+        """Integrate model on `~gammapy.maps.Geom`."""
+        energy = geom.get_axis_by_name("energy_true").edges
+        value = self.spectral_model.integral(
+            energy[:-1], energy[1:], intervals=True
+        ).reshape((-1, 1, 1))
+
+        if self.spatial_model is not None:
+            geom_image = geom.to_image()
+            value = value * self.spatial_model.integrate(geom_image).quantity
+
+        if self.temporal_model is not None:
+            integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
+            value = value * np.sum(integral)
+
+        return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
+
     def copy(self, name=None, **kwargs):
         """Copy SkyModel"""
         if self.spatial_model is not None:
@@ -439,6 +456,13 @@ class SkyDiffuseCube(SkyModelBase):
 
         val = norm * self._cached_value * tilt_factor.value
         return u.Quantity(val, self.map.unit, copy=False)
+
+    def integrate(self, geom, gti=None):
+        """Integrate model on `~gammapy.maps.Geom`."""
+        # TODO: implement better integration method?
+        value = self.evaluate_geom(geom)
+        value = value * geom.bin_volume()
+        return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
 
     def copy(self, name=None):
         """A shallow copy"""
