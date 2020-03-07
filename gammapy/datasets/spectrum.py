@@ -13,6 +13,7 @@ from gammapy.stats import cash, significance, significance_on_off, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
+from .map import MapEvaluator
 
 __all__ = [
     "SpectrumDatasetOnOff",
@@ -253,10 +254,9 @@ class SpectrumDataset(Dataset):
                 evaluator = self._evaluators.get(model.name)
 
                 if evaluator is None:
-                    evaluator = SpectrumEvaluator(
+                    evaluator = MapEvaluator(
                         model=model,
-                        livetime=self.livetime,
-                        aeff=self.aeff,
+                        exposure=self.exposure,
                         edisp=self.edisp,
                     )
                     self._evaluators[model.name] = evaluator
@@ -283,6 +283,13 @@ class SpectrumDataset(Dataset):
     def excess(self):
         """Excess (counts - alpha * counts_off)"""
         return self.counts - self.background
+
+    @property
+    def exposure(self):
+        """Excess (aeff * livetime)"""
+        data = self.livetime * self.aeff.data.data
+        geom = RegionGeom(region=None, axes=[self.aeff.energy])
+        return RegionNDMap.from_geom(geom=geom, data=data.value, unit=data.unit)
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
