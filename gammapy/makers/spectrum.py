@@ -4,7 +4,7 @@ import numpy as np
 from astropy import units as u
 from regions import CircleSkyRegion
 from gammapy.datasets import SpectrumDataset
-from gammapy.maps import CountsSpectrum, WcsGeom
+from gammapy.maps import RegionNDMap, WcsGeom
 
 __all__ = ["SpectrumDatasetMaker"]
 
@@ -46,62 +46,44 @@ class SpectrumDatasetMaker:
             skydir=region.center, npix=(1, 1), binsz=1, proj="TAN", frame=frame
         )
 
-    def make_counts(self, region, energy_axis, observation):
-        """Make counts.
+    @staticmethod
+    def make_counts(geom, observation):
+        """Make counts map.
 
         Parameters
         ----------
-        region : `~regions.SkyRegion`
-            Region to compute counts spectrum for.
-        energy_axis : `~gammapy.maps.MapAxis`
-            Reconstructed energy axis.
-        observation: `~gammapy.data.Observation`
-            Observation to compute effective area for.
+        geom : `~gammapy.maps.RegionGeom`
+            Reference map geom.
+        observation : `~gammapy.data.Observation`
+            Observation container.
 
         Returns
         -------
-        counts : `~gammapy.spectrum.CountsSpectrum`
-            Counts spectrum
+        counts : `~gammapy.maps.RegionNDMap`
+            Counts map.
         """
-        edges = energy_axis.edges
-
-        counts = CountsSpectrum(
-            energy_hi=edges[1:],
-            energy_lo=edges[:-1],
-            region=region,
-            wcs=self.geom_ref(region).wcs,
-        )
-        events_region = observation.events.select_region(
-            region, wcs=self.geom_ref(region).wcs
-        )
-        counts.fill_events(events_region)
+        counts = RegionNDMap.from_geom(geom)
+        counts.fill_events(observation.events)
         return counts
 
     @staticmethod
-    def make_background(region, energy_axis, observation):
+    def make_background(geom, observation):
         """Make background.
 
         Parameters
         ----------
-        region : `~regions.SkyRegion`
-            Region to compute background spectrum for.
-        energy_axis : `~gammapy.maps.MapAxis`
-            Reconstructed energy axis.
+        geom : `~gammapy.maps.RegionGeom`
+            Reference map geom.
         observation: `~gammapy.data.Observation`
             Observation to compute effective area for.
 
         Returns
         -------
-        background : `~gammapy.spectrum.CountsSpectrum`
+        background : `~gammapy.spectrum.RegionNDMap`
             Background spectrum
         """
-        if not isinstance(region, CircleSkyRegion):
-            raise TypeError(
-                "Background computation only supported for circular regions."
-            )
-
-        offset = observation.pointing_radec.separation(region.center)
-        e_reco = energy_axis.edges
+        offset = observation.pointing_radec.separation(geom.center_skydir)
+        e_reco = geom.get_axis_by_name("energy").edges
 
         bkg = observation.bkg
 
@@ -109,16 +91,9 @@ class SpectrumDatasetMaker:
             fov_lon=0 * u.deg, fov_lat=offset, energy_reco=e_reco
         )
 
-        solid_angle = 2 * np.pi * (1 - np.cos(region.radius)) * u.sr
-        data *= solid_angle
+        data *= geom.solid_angle()
         data *= observation.observation_time_duration
-
-        return CountsSpectrum(
-            energy_hi=e_reco[1:],
-            energy_lo=e_reco[:-1],
-            data=data.to_value(""),
-            unit="",
-        )
+        return RegionNDMap.from_geom(geom=geom, data=data.to_value(""))
 
     def make_aeff(self, region, energy_axis_true, observation):
         """Make effective area.
@@ -197,16 +172,16 @@ class SpectrumDatasetMaker:
             "gti": observation.gti,
             "livetime": observation.observation_live_time_duration,
         }
-        energy_axis = dataset.counts.energy
+        energy_axis = dataset.counts.geom.get_axis_by_name("energy")
         energy_axis_true = dataset.aeff.data.axis("energy_true")
-        region = dataset.counts.region
+        region = dataset.counts.geom.region
 
         if "counts" in self.selection:
-            kwargs["counts"] = self.make_counts(region, energy_axis, observation)
+            kwargs["counts"] = self.make_counts(dataset.counts.geom, observation)
 
         if "background" in self.selection:
             kwargs["background"] = self.make_background(
-                region, energy_axis, observation
+                dataset.counts.geom, observation
             )
 
         if "aeff" in self.selection:

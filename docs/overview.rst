@@ -128,11 +128,11 @@ are used, an energy axis is present but only has one energy bin. The
 background is implicitly modeled via the off counts map, and the ``wstat`` fit
 statistic.
 
-The spectrum datasets represent 1D spectra (`~gammapy.maps.CountsSpectrum`
+The spectrum datasets represent 1D spectra (`~gammapy.maps.RegionNDMap`
 objects) with an energy axis. There are no spatial axes or information, the 1D
 spectra are obtained for a given on region. The
 `~gammapy.datasets.SpectrumDataset` contains a counts spectrum, background is
-modeled with a `~gammapy.maps.CountsSpectrum`, and the fit statistic used is
+modeled with a `~gammapy.maps.RegionNDMap`, and the fit statistic used is
 ``cash``. The `~gammapy.datasets.SpectrumDatasetOnOff` contains on on and off
 count spectra, background is implicitly modeled via the off counts spectrum, and
 the ``wstat`` fit statistic. The `~gammapy.datasets.FluxPointsDataset` contains

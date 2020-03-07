@@ -52,12 +52,12 @@ class SensitivityEstimator:
 
         Returns
         -------
-        excess : `CountsSpectrum`
+        excess : `RegionNDMap`
             Minimal excess
         """
         n_off = dataset.counts_off.data
         excess_counts = excess_matching_significance_on_off(
-            n_off=n_off, alpha=dataset.alpha, significance=self.sigma
+            n_off=n_off, alpha=dataset.alpha.data, significance=self.sigma
         )
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
@@ -70,7 +70,7 @@ class SensitivityEstimator:
 
         Parameters
         ----------
-        excess : `CountsSpectrum`
+        excess : `RegionNDMap`
             Minimal excess
         dataset : `SpectrumDataset`
             Spectrum dataset
@@ -80,7 +80,7 @@ class SensitivityEstimator:
         e2dnde : `~astropy.units.Quantity`
             Minimal differential flux.
         """
-        energy = dataset.background.energy.center
+        energy = dataset.background.geom.axes[0].center
 
         dataset.models = SkyModel(spectral_model=self.spectrum)
         npred = dataset.npred()
@@ -88,8 +88,8 @@ class SensitivityEstimator:
         phi_0 = excess / npred
 
         dnde_model = self.spectrum(energy=energy)
-        dnde = phi_0 * dnde_model * energy ** 2
-        return dnde.quantity.to("erg / (cm2 s)")
+        dnde = phi_0.data[:, 0, 0] * dnde_model * energy ** 2
+        return dnde.to("erg / (cm2 s)")
 
     def _get_criterion(self, excess):
         is_gamma_limited = excess == self.gamma_min
@@ -114,7 +114,7 @@ class SensitivityEstimator:
         energy = dataset.edisp.e_reco.center
         excess = self.estimate_min_excess(dataset)
         e2dnde = self.estimate_min_e2dnde(excess, dataset)
-        criterion = self._get_criterion(excess.data)
+        criterion = self._get_criterion(excess.data.squeeze())
 
         return Table(
             [
@@ -131,13 +131,13 @@ class SensitivityEstimator:
                     description="Energy squared times differential flux",
                 ),
                 Column(
-                    data=excess,
+                    data=excess.data.squeeze(),
                     name="excess",
                     format="5g",
                     description="Number of excess counts in the bin",
                 ),
                 Column(
-                    data=dataset.background.data,
+                    data=dataset.background.data.squeeze(),
                     name="background",
                     format="5g",
                     description="Number of background counts in the bin",

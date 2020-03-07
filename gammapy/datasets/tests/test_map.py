@@ -183,7 +183,7 @@ def test_different_exposure_unit(sky_model, geom):
 @requires_data()
 def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
     dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=True)
-    print(dataset_ref)
+
     dataset_ref.counts = dataset_ref.background_model.map * 0.0
     dataset_ref.counts.data[1, 50, 50] = 1
     dataset_ref.counts.data[1, 60, 50] = 1
@@ -197,8 +197,8 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
     )
 
     assert np.sum(spectrum_dataset.counts.data) == 1
-    assert spectrum_dataset.data_shape == (2,)
-    assert spectrum_dataset.background.energy.nbin == 2
+    assert spectrum_dataset.data_shape == (2, 1, 1)
+    assert spectrum_dataset.background.geom.axes[0].nbin == 2
     assert spectrum_dataset.aeff.energy.nbin == 3
     assert spectrum_dataset.aeff.data.data.unit == "m2"
     assert spectrum_dataset.edisp.e_reco.nbin == 2
@@ -694,7 +694,7 @@ def test_mapdatasetonoff_to_spectrum_dataset(images):
     spectrum_dataset = dataset.to_spectrum_dataset(on_region)
 
     assert spectrum_dataset.counts.data[0] == 8
-    assert spectrum_dataset.data_shape == (1,)
+    assert spectrum_dataset.data_shape == (1, 1, 1)
     assert spectrum_dataset.counts_off.data[0] == 33914
     assert_allclose(spectrum_dataset.alpha.data[0], 0.0002143, atol=1e-7)
 

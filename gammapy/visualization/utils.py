@@ -1,6 +1,6 @@
+import numpy as np
 
-
-__all__ = ["plot_spectrum_datasets_off_regions"]
+__all__ = ["plot_spectrum_datasets_off_regions", "plot_contour_line"]
 
 
 def plot_spectrum_datasets_off_regions(datasets, ax=None):
@@ -29,3 +29,27 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None):
         handles.append(handle)
 
     plt.legend(handles=handles)
+
+
+def plot_contour_line(ax, x, y, **kwargs):
+    """Plot smooth curve from contour points"""
+    from scipy.interpolate import CubicSpline
+
+    # close countour
+    xf = np.append(x, x[0])
+    yf = np.append(y, y[0])
+
+    # curve parametrization must be strictly increasing
+    # so we use the cumulative distance of each point from the first one
+    dist = np.sqrt(np.diff(xf) ** 2.0 + np.diff(yf) ** 2.0)
+    dist = [0] + list(dist)
+    t = np.cumsum(dist)
+    ts = np.linspace(0, t[-1], 50)
+
+    # 1D cubic spline interpolation
+    cs = CubicSpline(t, np.c_[xf, yf], bc_type="periodic")
+    out = cs(ts)
+
+    # plot
+    ax.plot(out[:, 0], out[:, 1], "-", **kwargs)
+    ax.plot(xf, yf, "+", color=kwargs["color"])

@@ -12,10 +12,11 @@ from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
-from .counts_spectrum import CountsSpectrum
 from .geom import MapCoord, pix_tuple_to_idx
 from .utils import INVALID_INDEX, interp_to_order
 from .wcsmap import WcsGeom, WcsMap
+from .regionnd import RegionNDMap, RegionGeom
+
 
 __all__ = ["WcsNDMap"]
 
@@ -564,7 +565,7 @@ class WcsNDMap(WcsMap):
 
         Returns
         -------
-        spectrum : `~gammapy.spectrum.CountsSpectrum`
+        spectrum : `~gammapy.maps.RegionNDMap`
             Spectrum in the given region.
         """
         energy_axis = self.geom.axes[0]
@@ -576,14 +577,8 @@ class WcsNDMap(WcsMap):
         else:
             data = func(self.data, axis=(1, 2))
 
-        edges = energy_axis.edges
-        return CountsSpectrum(
-            data=data,
-            energy_lo=edges[:-1],
-            energy_hi=edges[1:],
-            unit=self.unit,
-            region=region,
-        )
+        geom = RegionGeom(region=region, axes=[energy_axis])
+        return RegionNDMap(geom=geom, data=data.reshape(geom.data_shape), unit=self.unit)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """

@@ -824,10 +824,11 @@ class MapDataset(Dataset):
 
         if self.exposure is not None:
             exposure = self.exposure.get_spectrum(on_region, np.mean)
+            energy = exposure.geom.axes[0].edges
             kwargs["aeff"] = EffectiveAreaTable(
-                energy_lo=exposure.energy.edges[:-1],
-                energy_hi=exposure.energy.edges[1:],
-                data=exposure.quantity / kwargs["livetime"],
+                energy_lo=energy[:-1],
+                energy_hi=energy[1:],
+                data=exposure.quantity[:, 0, 0] / kwargs["livetime"],
             )
 
         if containment_correction:

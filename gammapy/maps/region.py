@@ -1,12 +1,14 @@
 import copy
 import numpy as np
 from astropy import units as u
-from astropy.wcs.utils import proj_plane_pixel_area
-from regions import CircleSkyRegion
-from gammapy.utils.regions import make_region
+from astropy.table import Table
+from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
+from astropy.wcs import WCS
+from regions import CircleSkyRegion, fits_region_objects_to_table, FITSRegionParser
+from gammapy.utils.regions import make_region, compound_region_to_list, list_to_compound_region
 from .base import MapCoord
-from .geom import Geom, make_axes, pix_tuple_to_idx
-from .utils import INVALID_INDEX
+from .geom import Geom, make_axes, pix_tuple_to_idx, MapAxis
+from .utils import INVALID_INDEX, edges_from_lo_hi
 from .wcs import WcsGeom
 
 __all__ = ["RegionGeom"]
@@ -41,7 +43,7 @@ class RegionGeom(Geom):
             if len(axes) > 1 or axes[0].name not in ["energy", "energy_true"]:
                 raise ValueError("RegionGeom currently only supports an energy axes.")
 
-        if wcs is None:
+        if wcs is None and region is not None:
             wcs = WcsGeom.create(
                 skydir=region.center,
                 binsz=self.binsz,
@@ -55,7 +57,10 @@ class RegionGeom(Geom):
 
     @property
     def frame(self):
-        return self.region.center.frame.name
+        try:
+            return self.region.center.frame.name
+        except AttributeError:
+            return wcs_to_celestial_frame(self.wcs).name
 
     @property
     def width(self):
@@ -66,6 +71,8 @@ class RegionGeom(Geom):
 
     @property
     def region(self):
+        if self._region is None:
+            raise ValueError("Region definition required.")
         return self._region
 
     @property
@@ -263,3 +270,54 @@ class RegionGeom(Geom):
 
         # TODO: compare regions
         return True
+
+    def _to_region_table(self):
+        """Export region to a FITS region table."""
+        region_list = compound_region_to_list(self.region)
+        pixel_region_list = []
+        for reg in region_list:
+            pixel_region_list.append(reg.to_pixel(self.wcs))
+        table = fits_region_objects_to_table(pixel_region_list)
+        table.meta.update(self.wcs.to_header())
+        return table
+
+    @classmethod
+    def from_hdulist(cls, hdulist, format="ogip"):
+        """Read region table and convert it to region list."""
+
+        if "REGION" in hdulist:
+            region_table = Table.read(hdulist["REGION"])
+            parser = FITSRegionParser(region_table)
+            pix_region = parser.shapes.to_regions()
+            wcs = WCS(region_table.meta)
+
+            regions = []
+            for reg in pix_region:
+                regions.append(reg.to_sky(wcs))
+            region = list_to_compound_region(regions)
+        else:
+            region, wcs = None, None
+
+        ebounds = Table.read(hdulist["EBOUNDS"])
+        emin = ebounds["E_MIN"].quantity
+        emax = ebounds["E_MAX"].quantity
+
+        edges = edges_from_lo_hi(emin, emax)
+        axis = MapAxis.from_edges(edges, interp="log", name="energy")
+        return cls(region=region, wcs=wcs, axes=[axis])
+
+    def energy_mask(self, emin=None, emax=None):
+        """Create a mask for a given energy range.
+
+        Parameters
+        ----------
+        emin, emax : `~astropy.units.Quantity`
+            Energy range
+        """
+        edges = self.axes[0].edges.reshape((-1, 1, 1))
+
+        # set default values
+        emin = emin if emin is not None else edges[0]
+        emax = emax if emax is not None else edges[-1]
+
+        return (edges[:-1] >= emin) & (edges[1:] <= emax)

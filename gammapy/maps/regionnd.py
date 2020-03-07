@@ -1,13 +1,15 @@
 import numpy as np
 from astropy import units as u
+from astropy.table import Table
 from astropy.visualization import quantity_support
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.regions import compound_region_to_list
 from .base import Map
-from .geom import pix_tuple_to_idx
+from .geom import pix_tuple_to_idx, MapAxis
 from .region import RegionGeom
 from .utils import INVALID_INDEX
+
 
 __all__ = ["RegionNDMap"]
 
@@ -38,13 +40,15 @@ class RegionNDMap(Map):
         self.meta = meta
         self.unit = u.Unit(unit)
 
-    def plot(self, ax=None):
+    def plot(self, ax=None, **kwargs):
         """Plot region map.
 
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axis`
             Axis used for plotting
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.errorbar`
 
         Returns
         -------
@@ -55,22 +59,66 @@ class RegionNDMap(Map):
 
         ax = ax or plt.gca()
 
+        kwargs.setdefault("fmt", ".")
+
         if len(self.geom.axes) > 1:
             raise TypeError(
                 "Use `.plot_interactive()` if more the one extra axis is present."
             )
 
         axis = self.geom.axes[0]
+
         with quantity_support():
-            ax.step(axis.center, self.quantity.squeeze())
+            xerr = (axis.center - axis.edges[:-1], axis.edges[1:] - axis.center)
+            ax.errorbar(axis.center, self.quantity.squeeze(), xerr=xerr, **kwargs)
 
         if axis.interp == "log":
             ax.set_xscale("log")
 
         ax.set_xlabel(axis.name.capitalize() + f" [{axis.unit}]")
+
         if not self.unit.is_unity():
             ax.set_ylabel(f"Data [{self.unit}]")
 
+        ax.set_yscale("log")
+        return ax
+
+    def plot_hist(self, ax=None, **kwargs):
+        """Plot as histogram.
+
+        kwargs are forwarded to `~matplotlib.pyplot.hist`
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axis` (optional)
+            Axis instance to be used for the plot
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.hist`
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Axis used for plotting
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        kwargs.setdefault("histtype", "step")
+        kwargs.setdefault("lw", 2)
+
+        axis = self.geom.axes[0]
+
+        with quantity_support():
+            weights = self.data[:, 0, 0]
+            ax.hist(axis.center.value, bins=axis.edges.value, weights=weights, **kwargs)
+
+        ax.set_xlabel(axis.name.capitalize() + f" [{axis.unit}]")
+
+        if not self.unit.is_unity():
+            ax.set_ylabel(f"Data [{self.unit}]")
+
+        ax.set_xscale("log")
         ax.set_yscale("log")
         return ax
 
@@ -103,7 +151,7 @@ class RegionNDMap(Map):
         return ax
 
     @classmethod
-    def create(cls, region, axes=None, dtype="float32", meta=None, unit=""):
+    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None):
         """
 
         Parameters
@@ -118,13 +166,15 @@ class RegionNDMap(Map):
             Data unit.
         meta : `dict`
             Dictionary to store meta data.
+        wcs : `~astropy.wcs.WCS`
+            WCS projection to use for local projections of the region
 
         Returns
         -------
         map : `RegionNDMap`
             Region map
         """
-        geom = RegionGeom.create(region=region, axes=axes)
+        geom = RegionGeom.create(region=region, axes=axes, wcs=wcs)
         return cls(geom=geom, dtype=dtype, unit=unit, meta=meta)
 
     def downsample(self, factor, preserve_counts=True, axis="energy"):
@@ -198,8 +248,15 @@ class RegionNDMap(Map):
         raise NotImplementedError
 
     @classmethod
-    def from_hdulist(cls):
-        raise NotImplementedError
+    def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS"):
+        """Create from `~astropy.io.fits.HDUList`."""
+        if format != "ogip":
+            raise ValueError("Only 'ogip' format supported")
+
+        table = Table.read(hdulist["SPECTRUM"])
+        geom = RegionGeom.from_hdulist(hdulist, format=format)
+
+        return cls(geom=geom, data=table[ogip_column], meta=table.meta)
 
     def crop(self):
         raise NotImplementedError("Crop is not supported by RegionNDMap")
@@ -237,3 +294,17 @@ class RegionNDMap(Map):
             data = data * weights.data
 
         self.data += data
+
+    def to_table(self):
+        """Convert to `~astropy.table.Table`.
+
+        Data format specification: :ref:`gadf:ogip-pha`
+        """
+        energy_axis = self.geom.axes[0]
+        channel = np.arange(energy_axis.nbin, dtype=np.int16)
+        counts = np.array(self.data[:, 0, 0], dtype=np.int32)
+
+        names = ["CHANNEL", "COUNTS"]
+        meta = {"name": "COUNTS"}
+
+        return Table([channel, counts], names=names, meta=meta)

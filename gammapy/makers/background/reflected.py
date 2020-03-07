@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.coordinates import Angle
 from regions import PixCoord
 from gammapy.datasets import SpectrumDatasetOnOff
-from gammapy.maps import CountsSpectrum, WcsNDMap
+from gammapy.maps import RegionGeom, WcsNDMap, RegionNDMap
 from gammapy.utils.regions import list_to_compound_region
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundMaker"]
@@ -289,7 +289,7 @@ class ReflectedRegionsBackgroundMaker:
             binsz=self.binsz,
             exclusion_mask=self.exclusion_mask,
             center=observation.pointing_radec,
-            region=dataset.counts.region,
+            region=dataset.counts.geom.region,
             min_distance=self.min_distance,
             min_distance_input=self.min_distance_input,
             max_region_number=self.max_region_number,
@@ -309,23 +309,20 @@ class ReflectedRegionsBackgroundMaker:
 
         Returns
         -------
-        counts_off : `CountsSpectrum`
+        counts_off : `RegionNDMap`
             Off counts.
         """
         finder = self._get_finder(dataset, observation)
         finder.run()
 
+        energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+
         if len(finder.reflected_regions) > 0:
             region_union = list_to_compound_region(finder.reflected_regions)
-
             wcs = finder.reference_map.geom.wcs
-            events_off = observation.events.select_region(region_union, wcs)
-
-            edges = dataset.counts.energy.edges
-            counts_off = CountsSpectrum(
-                energy_hi=edges[1:], energy_lo=edges[:-1], region=region_union, wcs=wcs
-            )
-            counts_off.fill_events(events_off)
+            geom = RegionGeom.create(region=region_union, axes=[energy_axis], wcs=wcs)
+            counts_off = RegionNDMap.from_geom(geom=geom)
+            counts_off.fill_events(observation.events)
             acceptance_off = len(finder.reflected_regions)
         else:
             # if no OFF regions are found, off is set to None and acceptance_off to zero

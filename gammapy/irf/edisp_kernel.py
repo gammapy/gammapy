@@ -82,29 +82,6 @@ class EDispKernel:
         ss += f"\n{self.data}"
         return ss
 
-    def apply(self, data):
-        """Apply energy dispersion.
-
-        Computes the matrix product of ``data``
-        (which typically is model flux or counts in true energy bins)
-        with the energy dispersion matrix.
-
-        Parameters
-        ----------
-        data : array_like
-            1-dim data array.
-
-        Returns
-        -------
-        convolved_data : array
-            1-dim data array after multiplication with the energy dispersion matrix
-        """
-        if len(data) != self.e_true.nbin:
-            raise ValueError(
-                f"Input size {len(data)} does not match true energy axis {self.e_true.nbin}"
-            )
-        return np.dot(data, self.data.data)
-
     @property
     def e_reco(self):
         """Reconstructed energy axis (`~gammapy.maps.MapAxis`)"""

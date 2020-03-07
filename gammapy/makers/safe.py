@@ -69,7 +69,7 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : `~gammapy.modeling.Dataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
         observation: `~gammapy.data.Observation`
             Observation to compute mask for.
@@ -88,7 +88,7 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : `~gammapy.modeling.Dataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
         observation: `~gammapy.data.Observation`
             Observation to compute mask for.
@@ -105,20 +105,14 @@ class SafeMaskMaker:
             log.warning(f"No thresholds defined for obs {observation}")
             e_min, e_max = None, None
 
-        # TODO: introduce RegionNDMap and simplify the code below
-        try:
-            mask = dataset.counts.energy_mask(emin=e_min, emax=e_max)
-        except AttributeError:
-            mask = dataset.counts.geom.energy_mask(emin=e_min, emax=e_max)
-
-        return mask
+        return dataset.counts.geom.energy_mask(emin=e_min, emax=e_max)
 
     def make_mask_energy_aeff_max(self, dataset):
         """Make safe energy mask from effective area maximum value.
 
         Parameters
         ----------
-        dataset : `~gammapy.modeling.Dataset`
+        dataset : ``~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
 
         Returns
@@ -126,6 +120,7 @@ class SafeMaskMaker:
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
+        geom = dataset._geom
 
         if isinstance(dataset, MapDataset):
             position = self.position
@@ -140,21 +135,19 @@ class SafeMaskMaker:
                 energy_hi=energy.edges[1:],
                 data=exposure_1d,
             )
-            counts = dataset.counts.geom
         else:
             aeff = dataset.aeff
-            counts = dataset.counts
 
         aeff_thres = (self.aeff_percent / 100) * aeff.max_area
         e_min = aeff.find_energy(aeff_thres)
-        return counts.energy_mask(emin=e_min)
+        return geom.energy_mask(emin=e_min)
 
     def make_mask_energy_edisp_bias(self, dataset):
         """Make safe energy mask from energy dispersion bias.
 
         Parameters
         ----------
-        dataset : `~gammapy.modeling.Dataset`
+        dataset : ``~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
 
         Returns
@@ -162,7 +155,7 @@ class SafeMaskMaker:
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
-        edisp = dataset.edisp
+        edisp, geom = dataset.edisp, dataset._geom
 
         if isinstance(dataset, MapDataset):
             position = self.position
@@ -170,12 +163,9 @@ class SafeMaskMaker:
                 position = dataset.counts.geom.center_skydir
             e_reco = dataset.counts.geom.get_axis_by_name("energy").edges
             edisp = edisp.get_edisp_kernel(position, e_reco)
-            counts = dataset.counts.geom
-        else:
-            counts = dataset.counts
 
         e_min = edisp.get_bias_energy(self.bias_percent / 100)
-        return counts.energy_mask(emin=e_min)
+        return geom.energy_mask(emin=e_min)
 
     @staticmethod
     def make_mask_energy_bkg_peak(dataset):
@@ -187,7 +177,7 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : `~gammapy.modeling.Dataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
 
         Returns
@@ -195,23 +185,24 @@ class SafeMaskMaker:
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
+        geom = dataset.counts.geom
+
         if isinstance(dataset, MapDataset):
             background_spectrum = dataset.background_model.map.get_spectrum()
-            counts = dataset.counts.geom
         else:
             background_spectrum = dataset.background
-            counts = dataset.counts
 
-        idx = np.argmax(background_spectrum.data)
-        e_min = background_spectrum.energy.edges[idx + 1]
-        return counts.energy_mask(emin=e_min)
+        idx = np.argmax(background_spectrum.data, axis=0)
+        energy_axis = geom.get_axis_by_name("energy")
+        e_min = energy_axis.pix_to_coord(idx)
+        return geom.energy_mask(emin=e_min)
 
     def run(self, dataset, observation=None):
         """Make safe data range mask.
 
         Parameters
         ----------
-        dataset : `~gammapy.modeling.Dataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
         observation: `~gammapy.data.Observation`
             Observation to compute mask for.
@@ -221,7 +212,7 @@ class SafeMaskMaker:
         dataset : `Dataset`
             Dataset with defined safe range mask.
         """
-        mask_safe = np.ones(dataset.data_shape, dtype=bool)
+        mask_safe = np.ones(dataset._geom.data_shape, dtype=bool)
 
         if "offset-max" in self.methods:
             mask_safe &= self.make_mask_offset_max(dataset, observation)
@@ -238,8 +229,5 @@ class SafeMaskMaker:
         if "bkg-peak" in self.methods:
             mask_safe &= self.make_mask_energy_bkg_peak(dataset)
 
-        if isinstance(dataset, MapDataset):
-            mask_safe = Map.from_geom(dataset._geom, data=mask_safe)
-
-        dataset.mask_safe = mask_safe
+        dataset.mask_safe = Map.from_geom(dataset._geom, data=mask_safe)
         return dataset

@@ -2,7 +2,7 @@
 import numpy as np
 from gammapy.data import EventList
 from gammapy.datasets import SpectrumDatasetOnOff
-from gammapy.maps import CountsSpectrum
+from gammapy.maps import RegionNDMap
 
 __all__ = ["PhaseBackgroundMaker"]
 
@@ -35,18 +35,15 @@ class PhaseBackgroundMaker:
 
     @staticmethod
     def _make_counts(dataset, observation, phases):
-        events = observation.events.select_region(dataset.counts.region)
 
         event_lists = []
         for interval in phases:
-            events = events.select_parameter(parameter="PHASE", band=interval)
+            events = observation.events.select_parameter(parameter="PHASE", band=interval)
             event_lists.append(events)
 
-        events_off = EventList.stack(event_lists)
-
-        edges = dataset.counts.energy.edges
-        counts = CountsSpectrum(energy_hi=edges[1:], energy_lo=edges[:-1])
-        counts.fill_events(events_off)
+        events = EventList.stack(event_lists)
+        counts = RegionNDMap.from_geom(dataset.counts.geom)
+        counts.fill_events(events)
         return counts
 
     def make_counts_off(self, dataset, observation):
@@ -61,7 +58,7 @@ class PhaseBackgroundMaker:
 
         Returns
         -------
-        counts_off : `CountsSpectrum`
+        counts_off : `RegionNDMap`
             Off counts.
         """
         return self._make_counts(dataset, observation, self.off_phase)
@@ -78,7 +75,7 @@ class PhaseBackgroundMaker:
 
         Returns
         -------
-        counts_off : `CountsSpectrum`
+        counts_off : `RegionNDMap`
             Off counts.
         """
         return self._make_counts(dataset, observation, self.on_phase)

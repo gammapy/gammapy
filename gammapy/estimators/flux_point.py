@@ -869,10 +869,7 @@ class FluxPointsEstimator:
     def e_groups(self):
         """Energy grouping table `~astropy.table.Table`"""
         dataset = self.datasets[0]
-        if isinstance(dataset, SpectrumDataset):
-            energy_axis = dataset.counts.energy
-        else:
-            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+        energy_axis = dataset.counts.geom.get_axis_by_name("energy")
         return energy_axis.group_table(self.e_edges)
 
     def __str__(self):

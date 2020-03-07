@@ -48,7 +48,7 @@ Exposure          EXPOSURE_3D          `~gammapy.maps.Map`                      
 ----------------- -------------------- ------------------------------------------------- ----------------------------
 Counts            3D                   `~gammapy.maps.Map`                               `GCTAEventCube`_
 Counts            Image                `~gammapy.maps.Map`                               `GSkyMap`_
-Counts            PHA                  `~gammapy.spectrum.CountsSpectrum`                `GPha`_
+Counts            PHA                  `~gammapy.maps.RegionNDMap`                       `GPha`_
 ================= ==================== ================================================= ============================
 
 .. _GEventList: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGEventList.html

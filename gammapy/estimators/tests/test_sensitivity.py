@@ -5,20 +5,20 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.irf import EDispKernel, EffectiveAreaTable
-from gammapy.maps import CountsSpectrum
+from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.estimators import SensitivityEstimator
 
 
 @pytest.fixture()
 def spectrum_dataset():
     e_true = np.logspace(0, 1, 21) * u.TeV
-    e_reco = np.logspace(0, 1, 5) * u.TeV
+    e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=4)
     aeff = EffectiveAreaTable.from_constant(value=1e6 * u.m ** 2, energy=e_true)
-    edisp = EDispKernel.from_diagonal_response(e_true, e_reco)
+    edisp = EDispKernel.from_diagonal_response(e_true, e_reco.edges)
 
-    data = 3600 * np.ones(4)
-    data[-1] *= 1e-3
-    background = CountsSpectrum(energy_lo=e_reco[:-1], energy_hi=e_reco[1:], data=data)
+    background = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[e_reco])
+    background.data += 3600
+    background.data[-1] *= 1e-3
     return SpectrumDataset(aeff=aeff, livetime="1h", edisp=edisp, background=background)
 
 
