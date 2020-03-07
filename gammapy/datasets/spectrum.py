@@ -18,7 +18,6 @@ from .map import MapEvaluator
 __all__ = [
     "SpectrumDatasetOnOff",
     "SpectrumDataset",
-    "SpectrumEvaluator",
 ]
 
 
@@ -1292,84 +1291,3 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             gti=dataset.gti,
             name=dataset.name,
         )
-
-
-class SpectrumEvaluator:
-    """Calculate number of predicted counts (``npred``).
-
-    The true and reconstructed energy binning are inferred from the provided IRFs.
-
-    Parameters
-    ----------
-    model : `~gammapy.modeling.models.SkyModel`
-        Spectral model
-    aeff : `~gammapy.irf.EffectiveAreaTable`
-        EffectiveArea
-    edisp : `~gammapy.irf.EDispKernel`, optional
-        Energy dispersion kernel.
-    livetime : `~astropy.units.Quantity`
-        Observation duration (may be contained in aeff)
-    e_true : `~astropy.units.Quantity`, optional
-        Desired energy axis of the prediced counts vector if no IRFs are given
-
-    Examples
-    --------
-    Calculate predicted counts in a desired reconstruced energy binning
-
-    .. plot::
-        :include-source:
-
-        import numpy as np
-        import astropy.units as u
-        import matplotlib.pyplot as plt
-        from gammapy.irf import EffectiveAreaTable, EDispKernel
-        from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-        from gammapy.datasets.spectrum import SpectrumEvaluator
-
-        e_true = np.logspace(-2, 2.5, 109) * u.TeV
-        e_reco = np.logspace(-2, 2, 73) * u.TeV
-
-        aeff = EffectiveAreaTable.from_parametrization(energy=e_true)
-        edisp = EDispKernel.from_gauss(e_true=e_true, e_reco=e_reco, sigma=0.3, bias=0)
-
-        pwl = PowerLawSpectralModel(index=2.3, amplitude="2.5e-12 cm-2 s-1 TeV-1", reference="1 TeV")
-        model = SkyModel(spectral_model=pwl)
-
-        predictor = SpectrumEvaluator(model=model, aeff=aeff, edisp=edisp, livetime="1 hour")
-        predictor.compute_npred().plot_hist()
-        plt.show()
-    """
-
-    def __init__(self, model, aeff=None, edisp=None, livetime=None):
-        self.model = model
-        self.aeff = aeff
-        self.edisp = edisp
-        self.livetime = livetime
-        self.geom = RegionGeom(region=None, axes=[aeff.energy])
-        self.energy = aeff.energy.edges
-
-    def compute_npred(self):
-        flux = self.model.spectral_model.integral(
-            self.energy[:-1], self.energy[1:], intervals=True
-        )
-
-        if self.aeff is not None and self.model.apply_irf["exposure"]:
-            npred = flux * self.aeff.data.data
-        else:
-            npred = flux
-
-        # Multiply with livetime if not already contained in aeff or model
-        if npred.unit.is_equivalent("s-1"):
-            npred *= self.livetime
-
-        npred = RegionNDMap.from_geom(self.geom, data=npred.to_value(""))
-
-        if self.edisp is not None and self.model.apply_irf["edisp"]:
-            npred = npred.apply_edisp(self.edisp)
-        else:
-            # TODO: handle this in a better way
-            geom = self.geom.copy()
-            geom.axes[0].name = "energy"
-            npred = RegionNDMap.from_geom(geom=geom, data=npred.data)
-
-        return npred
