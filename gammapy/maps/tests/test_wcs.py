@@ -368,12 +368,12 @@ def test_energy_mask():
 
     mask = geom.energy_mask(emax=30 * u.TeV)
     assert mask[0, 0, 0]
-    assert mask[1, 0, 0]
+    assert not mask[1, 0, 0]
     assert not mask[2, 0, 0]
 
-    mask = geom.energy_mask(emin=3 * u.TeV, emax=30 * u.TeV)
+    mask = geom.energy_mask(emin=3 * u.TeV, emax=40 * u.TeV)
     assert not mask[0, 0, 0]
-    assert not mask[-1, 0, 0]
+    assert not mask[2, 0, 0]
     assert mask[1, 0, 0]
 
 

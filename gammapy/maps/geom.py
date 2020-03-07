@@ -1547,21 +1547,25 @@ class Geom(abc.ABC):
     def energy_mask(self, emin=None, emax=None):
         """Create a mask for a given energy range.
 
+        The energy bin must be fully contained to be included in the mask.
+
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
             Energy range
+
+        Returns
+        -------
+        mask : `~numpy.ndarray`
+            Energy mask
         """
         # get energy axes and values
         energy_axis = self.get_axis_by_name("energy")
-        edges = energy_axis.edges
+        edges = energy_axis.edges.reshape((-1, 1, 1))
 
         # set default values
         emin = emin if emin is not None else edges[0]
         emax = emax if emax is not None else edges[-1]
 
-        # create mask
-        coords = self.get_coord()
-        mask = coords["energy"] > emin
-        mask &= coords["energy"] < emax
-        return mask
+        mask = (edges[:-1] >= emin) & (edges[1:] <= emax)
+        return np.broadcast_to(mask, shape=self.data_shape)

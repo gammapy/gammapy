@@ -305,19 +305,3 @@ class RegionGeom(Geom):
         edges = edges_from_lo_hi(emin, emax)
         axis = MapAxis.from_edges(edges, interp="log", name="energy")
         return cls(region=region, wcs=wcs, axes=[axis])
-
-    def energy_mask(self, emin=None, emax=None):
-        """Create a mask for a given energy range.
-
-        Parameters
-        ----------
-        emin, emax : `~astropy.units.Quantity`
-            Energy range
-        """
-        edges = self.axes[0].edges.reshape((-1, 1, 1))
-
-        # set default values
-        emin = emin if emin is not None else edges[0]
-        emax = emax if emax is not None else edges[-1]
-
-        return (edges[:-1] >= emin) & (edges[1:] <= emax)
