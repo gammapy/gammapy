@@ -31,8 +31,8 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
     estimator = FluxEstimator(fermi_datasets, 0, norm_n_values=5, norm_min=0.5, norm_max=2, reoptimize=False)
     result = estimator.run("1 GeV", "100 GeV")
 
-    assert_allclose(result["norm"], 1.00, atol=1e-3)
-    assert_allclose(result["delta_ts"], 29695.756278, atol=1e-3)
+    assert_allclose(result["norm"], 0.970614, atol=1e-3)
+    assert_allclose(result["delta_ts"], 29695.720611, atol=1e-3)
     assert_allclose(result["err"], 0.01998, atol=1e-3)
     assert_allclose(result["errn"], 0.0199, atol=1e-3)
     assert_allclose(result["errp"], 0.0199, atol=1e-3)
@@ -46,9 +46,8 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     estimator = FluxEstimator(fermi_datasets, 0, reoptimize=True)
     result = estimator.run("1 GeV", "100 GeV", steps=["ts"])
 
-    print(estimator)
-    assert_allclose(result["norm"], 1.00, atol=1e-3)
-    assert_allclose(result["delta_ts"], 13005.938759, atol=1e-3)
+    assert_allclose(result["norm"], 0.970614, atol=1e-3)
+    assert_allclose(result["delta_ts"], 13005.903067, atol=1e-3)
     assert_allclose(result["err"], 0.01998, atol=1e-3)
 
 @requires_data()

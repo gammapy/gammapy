@@ -154,8 +154,8 @@ def test_fake(sky_model, geom, geom_etrue):
     dataset.fake(314)
 
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
-    assert_allclose(real_dataset.counts.data.sum(), 8220.399727)
-    assert_allclose(dataset.counts.data.sum(), 8375)
+    assert_allclose(real_dataset.counts.data.sum(), 9525.755807)
+    assert_allclose(dataset.counts.data.sum(), 9723)
 
 
 @pytest.mark.xfail
@@ -364,22 +364,22 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert "minuit" in repr(result)
 
     npred = dataset_1.npred().data.sum()
-    assert_allclose(npred, 6220.529956, rtol=1e-3)
-    assert_allclose(result.total_stat, 26008.040889, rtol=1e-3)
+    assert_allclose(npred, 7525.790688, rtol=1e-3)
+    assert_allclose(result.total_stat, 21700.253246, rtol=1e-3)
 
     pars = result.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("lon_0"), 0.002622, rtol=1e-2)
+    assert_allclose(pars.error("lon_0"), 0.002244, rtol=1e-2)
 
     assert_allclose(pars["index"].value, 3, rtol=1e-2)
-    assert_allclose(pars.error("index"), 0.028967, rtol=1e-2)
+    assert_allclose(pars.error("index"), 0.024277, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error("amplitude"), 4.086756e-13, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 4.216154e-13, rtol=1e-2)
 
     # background norm 1
     assert_allclose(pars[8].value, 0.5, rtol=1e-2)
-    assert_allclose(pars.error(pars[8]), 0.0156, rtol=1e-2)
+    assert_allclose(pars.error(pars[8]), 0.015811, rtol=1e-2)
 
     # background norm 2
     assert_allclose(pars[11].value, 1, rtol=1e-2)
@@ -391,7 +391,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_2.mask_safe = Map.from_geom(geom, data=mask_safe)
 
     stat = fit.datasets.stat_sum()
-    assert_allclose(stat, 14447.196919)
+    assert_allclose(stat, 14824.282955)
 
     # test model evaluation outside image
 
@@ -426,19 +426,19 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
     assert result.success
 
     npred = dataset.npred().data.sum()
-    assert_allclose(npred, 4076.779039, rtol=1e-3)
-    assert_allclose(result.total_stat, 5722.439112, rtol=1e-3)
+    assert_allclose(npred, 16538.124036, rtol=1e-3)
+    assert_allclose(result.total_stat, -34844.125047, rtol=1e-3)
 
     pars = result.parameters
 
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("lon_0"), 0.00407, rtol=1e-2)
+    assert_allclose(pars.error("lon_0"), 0.001689, rtol=1e-2)
 
     assert_allclose(pars["sigma"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("sigma"), 0.00237, rtol=1e-2)
+    assert_allclose(pars.error("sigma"), 0.00092, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error("amplitude"), 1.901406e-13, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 8.127593e-14, rtol=1e-2)
 
 
 def test_create(geom, geom_etrue):
