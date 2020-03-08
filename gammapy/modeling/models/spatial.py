@@ -191,7 +191,7 @@ class PointSpatialModel(SpatialModel):
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
-        values = self.integrate(geom)
+        values = self.integrate(geom).data
         return values / geom.solid_angle()
 
     def integrate(self, geom):

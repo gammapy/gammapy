@@ -4,7 +4,12 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
 from astropy.wcs import WCS
-from regions import CircleSkyRegion, fits_region_objects_to_table, FITSRegionParser
+from regions import (
+    CircleSkyRegion,
+    fits_region_objects_to_table,
+    FITSRegionParser,
+    RectangleSkyRegion,
+)
 from gammapy.utils.regions import make_region, compound_region_to_list, list_to_compound_region
 from .base import MapCoord
 from .geom import Geom, make_axes, pix_tuple_to_idx, MapAxis
@@ -47,7 +52,6 @@ class RegionGeom(Geom):
             wcs = WcsGeom.create(
                 skydir=region.center,
                 binsz=self.binsz,
-                width=self.width,
                 proj=self.projection,
                 frame=self.frame,
             ).wcs
@@ -64,10 +68,11 @@ class RegionGeom(Geom):
 
     @property
     def width(self):
-        if isinstance(self.region, CircleSkyRegion):
-            return 2 * self.region.radius
-        else:
-            raise ValueError("Currently only circular regions supported")
+        """Width of the region"""
+        region_pix = self.region.to_pixel(self.wcs)
+        rectangle_pix = region_pix.bounding_box.to_region()
+        rectangle = rectangle_pix.to_sky(self.wcs)
+        return rectangle.width, rectangle.height
 
     @property
     def region(self):
@@ -98,8 +103,8 @@ class RegionGeom(Geom):
         return self.region.center
 
     def contains(self, coords):
-        idx = self.coord_to_idx(coords)
-        return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
+        coords = MapCoord.create(coords)
+        return self.region.contains(coords.skycoord, self.wcs)
 
     def separation(self, position):
         return self.center_skydir.separation(position)
@@ -273,6 +278,7 @@ class RegionGeom(Geom):
 
     def _to_region_table(self):
         """Export region to a FITS region table."""
+        #TODO: make this a to_hdulist() method
         region_list = compound_region_to_list(self.region)
         pixel_region_list = []
         for reg in region_list:

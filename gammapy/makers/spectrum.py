@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 from astropy import units as u
 from regions import CircleSkyRegion
 from gammapy.datasets import SpectrumDataset
-from gammapy.maps import RegionNDMap, WcsGeom
+from gammapy.maps import RegionNDMap
 
 __all__ = ["SpectrumDatasetMaker"]
 
@@ -36,15 +35,6 @@ class SpectrumDatasetMaker:
             selection = self.available_selection
 
         self.selection = selection
-
-    # TODO: move this to a RegionGeom class
-    @staticmethod
-    def geom_ref(region):
-        """Reference geometry to project region"""
-        frame = region.center.frame.name
-        return WcsGeom.create(
-            skydir=region.center, npix=(1, 1), binsz=1, proj="TAN", frame=frame
-        )
 
     @staticmethod
     def make_counts(geom, observation):
