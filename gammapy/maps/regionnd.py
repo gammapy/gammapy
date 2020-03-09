@@ -249,7 +249,23 @@ class RegionNDMap(Map):
 
     @classmethod
     def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS"):
-        """Create from `~astropy.io.fits.HDUList`."""
+        """Create from `~astropy.io.fits.HDUList`.
+
+
+        Parameters
+        ----------
+        hdulist : `~astropy.io.fits.HDUList`
+            HDU list.
+        format : {"ogip"}
+            Format specification
+        ogip_column : str
+            OGIP data format column
+
+        Returns
+        -------
+        region_nd_map : `RegionNDMap`
+            Region map.
+        """
         if format != "ogip":
             raise ValueError("Only 'ogip' format supported")
 
@@ -286,7 +302,9 @@ class RegionNDMap(Map):
             to `other` and additional axes must be broadcastable.
         """
         data = other.data
-        # TODO: handle region stacking here
+
+        # TODO: re-think stacking of regions. Is making the union reesonable?
+        self.geom.union(other.geom)
 
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():

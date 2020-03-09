@@ -4,6 +4,7 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
 from astropy.wcs import WCS
+from astropy.coordinates import SkyCoord
 from regions import (
     fits_region_objects_to_table,
     FITSRegionParser,
@@ -67,8 +68,15 @@ class RegionGeom(Geom):
     @property
     def width(self):
         """Width of bounding box of the region"""
-        region_pix = self.region.to_pixel(self.wcs)
-        rectangle_pix = region_pix.bounding_box.to_region()
+        regions = compound_region_to_list(self.region)
+        regions_pix = [_.to_pixel(self.wcs) for _ in regions]
+
+        bbox = regions_pix[0].bounding_box
+
+        for region_pix in regions_pix[1:]:
+            bbox = bbox.union(region_pix.bounding_box)
+
+        rectangle_pix = bbox.to_region()
         rectangle = rectangle_pix.to_sky(self.wcs)
         return u.Quantity([rectangle.width, rectangle.height])
 
@@ -98,7 +106,11 @@ class RegionGeom(Geom):
     @property
     def center_skydir(self):
         """Center skydir"""
-        return self.region.center
+        try:
+            return self.region.center
+        except AttributeError:
+            xp, yp = self.wcs.wcs.crpix
+            return SkyCoord.from_pixel(xp=xp, yp=yp, wcs=self.wcs)
 
     def contains(self, coords):
         coords = MapCoord.create(coords)
@@ -309,3 +321,13 @@ class RegionGeom(Geom):
         edges = edges_from_lo_hi(emin, emax)
         axis = MapAxis.from_edges(edges, interp="log", name="energy")
         return cls(region=region, wcs=wcs, axes=[axis])
+
+    def union(self, other):
+        """Stack a RegionGeom by making the union"""
+        if not self == other:
+            raise ValueError(
+                "Can only make union if extra axes are equivalent."
+            )
+
+        self._region = self.region.union(other.region)
+
