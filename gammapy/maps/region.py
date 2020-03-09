@@ -5,15 +5,13 @@ from astropy.table import Table
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
 from astropy.wcs import WCS
 from regions import (
-    CircleSkyRegion,
     fits_region_objects_to_table,
     FITSRegionParser,
-    RectangleSkyRegion,
 )
 from gammapy.utils.regions import make_region, compound_region_to_list, list_to_compound_region
 from .base import MapCoord
 from .geom import Geom, make_axes, pix_tuple_to_idx, MapAxis
-from .utils import INVALID_INDEX, edges_from_lo_hi
+from .utils import edges_from_lo_hi
 from .wcs import WcsGeom
 
 __all__ = ["RegionGeom"]
@@ -68,11 +66,11 @@ class RegionGeom(Geom):
 
     @property
     def width(self):
-        """Width of the region"""
+        """Width of bounding box of the region"""
         region_pix = self.region.to_pixel(self.wcs)
         rectangle_pix = region_pix.bounding_box.to_region()
         rectangle = rectangle_pix.to_sky(self.wcs)
-        return rectangle.width, rectangle.height
+        return u.Quantity([rectangle.width, rectangle.height])
 
     @property
     def region(self):

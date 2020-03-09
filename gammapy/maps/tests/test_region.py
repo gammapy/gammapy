@@ -32,6 +32,11 @@ def test_centers(region):
     assert_allclose(values, (0, 0))
 
 
+def test_width(region):
+    geom = RegionGeom.create(region)
+    assert_allclose(geom.width.value, [2.02, 2.02])
+
+
 def test_create_axis(region):
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
     geom = RegionGeom.create(region, axes=[axis])

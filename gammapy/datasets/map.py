@@ -14,7 +14,7 @@ from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Parameters
-from gammapy.modeling.models import BackgroundModel, Models, SkyModel
+from gammapy.modeling.models import BackgroundModel, Models
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
