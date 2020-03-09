@@ -49,6 +49,6 @@ def dict_to_datasets(data_list, components):
     datasets = []
 
     for data in data_list["datasets"]:
-        dataset = DATASETS.get_cls(data["type"]).from_dict(data, components, models)
+        dataset = DATASETS.get_cls(data["type"]).from_dict(data, models)
         datasets.append(dataset)
     return datasets

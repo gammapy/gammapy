@@ -60,7 +60,6 @@ def dict_to_models(data, link=True):
     models = []
     for component in data["components"]:
         model = MODELS.get_cls(component["type"]).from_dict(component)
-
         models.append(model)
 
     if link:
