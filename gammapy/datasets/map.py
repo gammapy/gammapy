@@ -760,8 +760,8 @@ class MapDataset(Dataset):
         for model in models:
             if (
                 isinstance(model, BackgroundModel)
-                and dataset.name in model.datasets_names
                 and model.filename is None
+                and dataset.name == model.datasets_names[0]
             ):
                 model.map = dataset.background_model.map
 
