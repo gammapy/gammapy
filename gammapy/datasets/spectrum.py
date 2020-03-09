@@ -233,9 +233,7 @@ class SpectrumDataset(Dataset):
         elif self.background is not None:
             return self.background.geom
         else:
-            raise ValueError(
-                "Either 'counts', 'background' must be defined."
-            )
+            raise ValueError("Either 'counts', 'background' must be defined.")
 
     @property
     def data_shape(self):
@@ -414,9 +412,7 @@ class SpectrumDataset(Dataset):
         residuals = self.residuals(method=method)
         label = self._residuals_labels[method]
 
-        residuals.plot(
-            ax=ax, color="black", **kwargs
-        )
+        residuals.plot(ax=ax, color="black", **kwargs)
         ax.axhline(0, color="black", lw=0.5)
 
         ax.set_xlabel(f"Energy [{self._e_unit}]")
@@ -577,8 +573,7 @@ class SpectrumDataset(Dataset):
             )
 
         self.counts.plot_hist(
-            ax=ax1,
-            label="n_on",
+            ax=ax1, label="n_on",
         )
 
         e_unit = e_min.unit
@@ -588,7 +583,7 @@ class SpectrumDataset(Dataset):
 
         ax2.set_title("Effective Area")
         e_unit = self.aeff.energy.unit
-        self.aeff.plot(ax=ax2, )
+        self.aeff.plot(ax=ax2,)
         ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
         self._plot_energy_range(ax=ax2)
 
@@ -820,7 +815,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             reference time of the dataset, Default is "2000-01-01"
         """
         dataset = super().create(
-            e_reco=e_reco, e_true=e_true, region=region, reference_time=reference_time, name=name
+            e_reco=e_reco,
+            e_true=e_true,
+            region=region,
+            reference_time=reference_time,
+            name=name,
         )
 
         counts_off = dataset.counts.copy()
@@ -831,7 +830,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         acceptance_off.data += 1
 
         return cls.from_spectrum_dataset(
-            dataset=dataset, acceptance=acceptance, acceptance_off=acceptance_off, counts_off=counts_off
+            dataset=dataset,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            counts_off=counts_off,
         )
 
     @classmethod
@@ -1037,7 +1039,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             hdulist = fits.HDUList(
                 [fits.PrimaryHDU(), hdu, self._ebounds_hdu(use_sherpa)]
             )
-            if self.counts_off.geom._region is not None and self.counts_off.geom.wcs is not None:
+            if (
+                self.counts_off.geom._region is not None
+                and self.counts_off.geom.wcs is not None
+            ):
                 region_table = self.counts_off.geom._to_region_table()
                 region_hdu = fits.BinTableHDU(region_table, name="REGION")
                 hdulist.append(region_hdu)
@@ -1102,13 +1107,17 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         with fits.open(filename, memmap=False) as hdulist:
             counts = RegionNDMap.from_hdulist(hdulist, format="ogip")
-            acceptance = RegionNDMap.from_hdulist(hdulist, format="ogip", ogip_column="BACKSCAL")
+            acceptance = RegionNDMap.from_hdulist(
+                hdulist, format="ogip", ogip_column="BACKSCAL"
+            )
             if "GTI" in hdulist:
                 gti = GTI(Table.read(hdulist["GTI"]))
             else:
                 gti = None
 
-            mask_safe = RegionNDMap.from_hdulist(hdulist, format="ogip", ogip_column="QUALITY")
+            mask_safe = RegionNDMap.from_hdulist(
+                hdulist, format="ogip", ogip_column="QUALITY"
+            )
             mask_safe.data = np.logical_not(mask_safe.data)
 
         phafile = filename.name
@@ -1124,7 +1133,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             bkgfile = phafile.replace("pha", "bkg")
             with fits.open(dirname / bkgfile, memmap=False) as hdulist:
                 counts_off = RegionNDMap.from_hdulist(hdulist, format="ogip")
-                acceptance_off = RegionNDMap.from_hdulist(hdulist, ogip_column="BACKSCAL")
+                acceptance_off = RegionNDMap.from_hdulist(
+                    hdulist, ogip_column="BACKSCAL"
+                )
         except OSError:
             # TODO : Add logger and echo warning
             counts_off, acceptance_off = None, None
@@ -1355,6 +1366,3 @@ class SpectrumEvaluator:
             npred = RegionNDMap.from_geom(geom=geom, data=npred.data)
 
         return npred
-
-
-

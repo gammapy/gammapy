@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
-from .cube import SkyDiffuseCube, SkyModel, BackgroundModel
+from .cube import SkyModel
 from gammapy.utils.scripts import make_name
 
 __all__ = ["models_to_dict", "dict_to_models"]
