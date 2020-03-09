@@ -163,3 +163,5 @@ class FluxEstimator(ParameterEstimator):
         result.update(super().run(self.model.parameters['norm'], steps, null_value=0, scan_values=self.norm_values))
         return result
 
+    def _return_nan_result(self, steps):
+        return super().run(self.model.parameters['norm'], steps)

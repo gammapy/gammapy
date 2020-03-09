@@ -906,6 +906,9 @@ class FluxPointsEstimator(FluxEstimator):
 
             self._contribute_to_stat |= mask.any()
 
+        if not self._contribute_to_stat:
+            return self._return_nan_result(steps)
+
         with self.datasets.parameters.restore_values:
 
             self._freeze_empty_background()

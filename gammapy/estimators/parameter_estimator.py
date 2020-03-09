@@ -101,7 +101,8 @@ class ParameterEstimator:
             parameter.value = null_value
             parameter.frozen = True
             result = self.fit.optimize()
-        if not result.success or result.message=="Optimization failed.":
+            print(result)
+        if not result.success:# or result.message=="Optimization failed.":
             log.warning("Fit failed for parameter null value, returning NaN. Check input null value.")
             return np.nan
         return result.total_stat
@@ -142,10 +143,6 @@ class ParameterEstimator:
             if steps == "all":
                 steps = ["err", "ts", "errp-errn", "ul", "scan"]
 
-            TS0 = np.nan
-            if "ts" in steps:
-                TS0 = self._estimate_ts_for_null_value(parameter, null_value)
-
             result = self._find_best_fit(parameter)
             TS1 = result['stat']
 
@@ -161,8 +158,11 @@ class ParameterEstimator:
                 result.update({f"{parameter.name}_err": value_err})
 
             if "ts" in steps:
+                TS0 = self._estimate_ts_for_null_value(parameter, null_value)
                 res = TS0 - TS1
                 result.update({"sqrt_ts":np.sqrt(res), "ts": res, "null_value": null_value})
+                # TODO: shouldn't need this. Try to remove.
+                self._find_best_fit(parameter)
 
             if "errp-errn" in steps:
                 res = self.fit.confidence(parameter=parameter, sigma=self.sigma)
@@ -186,4 +186,20 @@ class ParameterEstimator:
                 )
                 result.update({f"{parameter.name}_scan": res["values"], "stat_scan": res["stat"]})
         return result
+
+    def _return_nan_result(self, parameter, steps):
+        """Return dictionary filled with NaNs"""
+        result = {parameter.name: np.nan,
+                  "stat": np.nan,
+                  "success": np.nan}
+        if "err" in steps:
+            result.update({f"{parameter.name}_err": np.nan})
+        if "ts" in steps:
+            result.update({"sqrt_ts": np.nan, "ts": np.nan, "null_value": np.nan})
+        if "errp-errn" in steps:
+            result.update({f"{parameter.name}_errp": np.nan, f"{parameter.name}_errn": np.nan})
+        if "ul" in steps:
+            result.update({f"{parameter.name}_ul": np.nan})
+        if "scan" in steps:
+            result.update({f"{parameter.name}_scan": np.nan, "stat_scan": np.nan})
 
