@@ -1,4 +1,32 @@
 components:
+- name: background_irf
+  datasets_names: CTA-gc
+  type: BackgroundModel
+  parameters:
+  - name: norm
+    value: 1.01
+    factor: 1.01
+    scale: 1.0
+    unit: ''
+    min: 0.0
+    max: .nan
+    frozen: false
+  - name: tilt
+    value: 0.0
+    factor: 0.0
+    scale: 1.0
+    unit: ''
+    min: .nan
+    max: .nan
+    frozen: true
+  - name: reference
+    value: 1.0
+    factor: 1.0
+    scale: 1.0
+    unit: TeV
+    min: .nan
+    max: .nan
+    frozen: true
 - name: source0
   type: SkyModel
   spatial:
@@ -136,38 +164,9 @@ components:
       min: .nan
       max: .nan
       frozen: false
-- name: background_irf
-  id: CTA-gc
-  type: BackgroundModel
-  parameters:
-  - name: norm
-    value: 1.01
-    factor: 1.01
-    scale: 1.0
-    unit: ''
-    min: 0.0
-    max: .nan
-    frozen: false
-  - name: tilt
-    value: 0.0
-    factor: 0.0
-    scale: 1.0
-    unit: ''
-    min: .nan
-    max: .nan
-    frozen: true
-  - name: reference
-    value: 1.0
-    factor: 1.0
-    scale: 1.0
-    unit: TeV
-    min: .nan
-    max: .nan
-    frozen: true
 - name: cube_iem
-  id: global
   filename: $GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits
-  type: BackgroundModel
+  type: SkyDiffuseCube
   parameters:
   - name: norm
     value: 1.09

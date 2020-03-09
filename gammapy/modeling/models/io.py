@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
-from .cube import SkyDiffuseCube, SkyModel
+from .cube import SkyModel
+from gammapy.utils.scripts import make_name
 
 __all__ = ["models_to_dict", "dict_to_models"]
 
@@ -13,15 +14,20 @@ def models_to_dict(models):
     models : list
         Python list of Model objects
     """
-    # update shared parameters names for serialization
-    _update_link_reference(models)
+
+    # De-duplicate if model appears several times
+    unique_models = []
+    for model in models:
+        if model not in unique_models:
+            unique_models.append(model)
+
+    # update shared parameters refererence
+    _update_link_reference(unique_models)
 
     models_data = []
-    for model in models:
+    for model in unique_models:
         model_data = model.to_dict()
-        # De-duplicate if model appears several times
-        if model_data not in models_data:
-            models_data.append(model_data)
+        models_data.append(model_data)
 
     return {"components": models_data}
 
@@ -35,8 +41,8 @@ def _update_link_reference(models):
                 params_list.append(param)
             elif param not in params_shared:
                 params_shared.append(param)
-    for k, param in enumerate(params_shared):
-        param._link_label_io = param.name + "@shared_" + str(k)
+    for param in params_shared:
+        param._link_label_io = param.name + "@" + make_name()
 
 
 def dict_to_models(data, link=True):
@@ -49,18 +55,11 @@ def dict_to_models(data, link=True):
     link : bool
         check for shared parameters and link them
     """
+    from . import MODELS
+
     models = []
     for component in data["components"]:
-        # background models are created separately
-        if component["type"] == "BackgroundModel":
-            continue
-
-        if component["type"] == "SkyDiffuseCube":
-            model = SkyDiffuseCube.from_dict(component)
-
-        if component["type"] == "SkyModel":
-            model = SkyModel.from_dict(component)
-
+        model = MODELS.get_cls(component["type"]).from_dict(component)
         models.append(model)
 
     if link:
