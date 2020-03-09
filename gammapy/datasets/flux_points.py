@@ -107,15 +107,13 @@ class FluxPointsDataset(Dataset):
         table.write(filename, overwrite=overwrite, **kwargs)
 
     @classmethod
-    def from_dict(cls, data, components, models):
+    def from_dict(cls, data, models):
         """Create flux point dataset from dict.
 
         Parameters
         ----------
         data : dict
             Dict containing data to create dataset from.
-        components : list of dict
-            Not used.
         models : list of `SkyModel`
             List of model components.
 
