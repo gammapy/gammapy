@@ -7,12 +7,12 @@ from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 ref_array = np.ones((3, 2, 4))
 
 values = [
-    (1, 2, [-1.0, -0.78339367]),
-    (5, 1, [4.0, 2.84506224]),
-    (10, 5, [5.0, 1.96543726]),
-    (100, 23, [77.0, 11.8294207]),
-    (1, 20, [-19, -5.65760863]),
-    (5 * ref_array, 1 * ref_array, [4.0, 2.84506224]),
+    (1, 2, [-1.0, -0.78339367, 0.433396]),
+    (5, 1, [4.0, 2.84506224, 4.4402745934e-3]),
+    (10, 5, [5.0, 1.96543726, 0.049363650550]),
+    (100, 23, [77.0, 11.8294207, 2.75033324833345e-32]),
+    (1, 20, [-19, -5.65760863, 1.534966634510499e-08]),
+    (5 * ref_array, 1 * ref_array, [4.0, 2.84506224, 4.4402745934e-3]),
 ]
 
 
@@ -21,9 +21,11 @@ def test_cash_basic(n_on, mu_bkg, result):
     stat = CashCountsStatistic(n_on, mu_bkg)
     excess = stat.excess
     significance = stat.significance
+    p_value = stat.p_value
 
     assert_allclose(excess, result[0])
     assert_allclose(significance, result[1], atol=1e-5)
+    assert_allclose(p_value, result[2], atol=1e-5)
 
 
 values = [
@@ -47,12 +49,12 @@ def test_cash_errors(n_on, mu_bkg, result):
 
 
 values = [
-    (1, 2, [2.254931]),
-    (5, 1, [8.931234]),
-    (10, 5, [11.519662]),
-    (100, 23, [95.334612]),
-    (1, 20, [1.575842]),
-    (5 * ref_array, 1 * ref_array, [8.931234]),
+    (1, 2, [5.869898]),
+    (5, 1, [13.98959]),
+    (10, 5, [17.696064]),
+    (100, 23, [110.07206]),
+    (1, 20, [4.711538]),
+    (5 * ref_array, 1 * ref_array, [13.98959]),
 ]
 
 
@@ -65,12 +67,12 @@ def test_cash_ul(n_on, mu_bkg, result):
 
 
 values = [
-    (1, 2, 1, [-1.0, -0.5829220133009171]),
-    (5, 1, 1, [4.0, 1.7061745691234782]),
-    (10, 5, 0.3, [8.5, 3.5853812867949024]),
-    (10, 23, 0.1, [7.7, 3.443415522820395]),
-    (1, 20, 1.0, [-19, -4.590373638528086]),
-    (5 * ref_array, 1 * ref_array, 1 * ref_array, [4.0, 1.7061745691234782]),
+    (1, 2, 1, [-1.0, -0.5829220133009171, 0.55994580085]),
+    (5, 1, 1, [4.0, 1.7061745691234782, 0.087975582112]),
+    (10, 5, 0.3, [8.5, 3.5853812867949024, 3.365860865528742e-4]),
+    (10, 23, 0.1, [7.7, 3.443415522820395, 5.74416016688779e-4]),
+    (1, 20, 1.0, [-19, -4.590373638528086, 4.424532535784618e-06]),
+    (5 * ref_array, 1 * ref_array, 1 * ref_array, [4.0, 1.7061745691234782, 0.087975582112]),
 ]
 
 
@@ -79,9 +81,11 @@ def test_wstat_basic(n_on, n_off, alpha, result):
     stat = WStatCountsStatistic(n_on, n_off, alpha)
     excess = stat.excess
     significance = stat.significance
+    p_value = stat.p_value
 
     assert_allclose(excess, result[0])
     assert_allclose(significance, result[1], atol=1e-5)
+    assert_allclose(p_value, result[2], atol=1e-5)
 
 
 values = [
@@ -105,12 +109,12 @@ def test_wstat_errors(n_on, n_off, alpha, result):
 
 
 values = [
-    (1, 2, 1, [2.57939]),
-    (5, 1, 1, [9.118247]),
-    (10, 5, 0.3, [15.10175]),
-    (10, 23, 0.1, [14.263802]),
-    (1, 20, 1.0, [1.646071]),
-    (5 * ref_array, 1 * ref_array, 1 * ref_array, [9.118247]),
+    (1, 2, 1, [6.272627]),
+    (5, 1, 1, [14.222831]),
+    (10, 5, 0.3, [21.309229]),
+    (10, 23, 0.1, [20.45803]),
+    (1, 20, 1.0, [4.884418]),
+    (5 * ref_array, 1 * ref_array, 1 * ref_array, [14.222831]),
 ]
 
 
