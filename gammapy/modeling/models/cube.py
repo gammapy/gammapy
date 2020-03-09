@@ -4,7 +4,7 @@ import copy
 from pathlib import Path
 import numpy as np
 import astropy.units as u
-from gammapy.maps import Map
+from gammapy.maps import Map, RegionGeom, MapAxis, WcsGeom
 from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_name, make_path
@@ -542,7 +542,7 @@ class BackgroundModel(Model):
         self.filename = filename
 
         if isinstance(datasets_names, list):
-            if len(datasets_names) > 1:
+            if len(datasets_names) != 1:
                 raise ValueError(
                     "Currently background models can only be assigned to one dataset."
                 )
@@ -594,13 +594,20 @@ class BackgroundModel(Model):
     @classmethod
     def from_dict(cls, data):
         if "filename" in data:
-            map = Map.read(data["filename"])
+            bkg_map = Map.read(data["filename"])
         elif "map" in data:
-            map = data["map"]
+            bkg_map = data["map"]
         else:
-            raise ValueError("Requires either filename or `Map` object")
+            # TODO: for now create a fake map for serialization,
+            # uptdated in MapDataset.from_dict()
+            axis = MapAxis.from_edges(np.logspace(-1, 1, 1), unit=u.TeV, name="energy")
+            geom = WcsGeom.create(
+                skydir=(0, 0), npix=(1, 1), frame="galactic", axes=[axis]
+            )
+            bkg_map = Map.from_geom(geom)
+
         model = cls(
-            map=map,
+            map=bkg_map,
             name=data["name"],
             datasets_names=data.get("datasets_names"),
             filename=data.get("filename"),
