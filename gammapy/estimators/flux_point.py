@@ -825,11 +825,6 @@ class FluxPointsEstimator(FluxEstimator):
                 if dataset.background_model is not None:
                     dataset.background_model.parameters.freeze_all()
 
-    # TODO: move the property on FluxEstimator
-    #    @property
-    #    def datasets(self):
-    #        return self.datasets
-
     @property
     def e_groups(self):
         """Energy grouping table `~astropy.table.Table`"""

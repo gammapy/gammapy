@@ -45,9 +45,13 @@ class ParameterEstimator:
         self.n_scan_values = n_scan_values
         self.scan_n_err = scan_n_err
 
-        self.datasets = self._check_datasets(datasets)
+        self._datasets = self._check_datasets(datasets)
         self.fit = Fit(datasets)
         self.fit_result = None
+
+    @property
+    def datasets(self):
+        return self._datasets
 
     def __str__(self):
         s = f"{self.__class__.__name__}:\n"
@@ -101,7 +105,6 @@ class ParameterEstimator:
             parameter.value = null_value
             parameter.frozen = True
             result = self.fit.optimize()
-            print(result)
         if not result.success:# or result.message=="Optimization failed.":
             log.warning("Fit failed for parameter null value, returning NaN. Check input null value.")
             return np.nan
@@ -161,8 +164,8 @@ class ParameterEstimator:
                 TS0 = self._estimate_ts_for_null_value(parameter, null_value)
                 res = TS0 - TS1
                 result.update({"sqrt_ts":np.sqrt(res), "ts": res, "null_value": null_value})
-                # TODO: shouldn't need this. Try to remove.
-                self._find_best_fit(parameter)
+                # TODO: should not need this
+                self.fit.optimize()
 
             if "errp-errn" in steps:
                 res = self.fit.confidence(parameter=parameter, sigma=self.sigma)
