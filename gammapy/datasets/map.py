@@ -1558,6 +1558,7 @@ class MapEvaluator:
     @property
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
+        # TODO: simplify and clean up
         if isinstance(self.model, BackgroundModel):
             return False
         elif self.exposure is None:
@@ -1584,6 +1585,7 @@ class MapEvaluator:
         geom : `WcsGeom`
             Counts geom
         """
+        # TODO: simplify and clean up
         log.debug("Updating model evaluator")
         # cache current position of the model component
 
@@ -1680,7 +1682,7 @@ class MapEvaluator:
         if self.psf and self.model.apply_irf["psf"]:
             npred = self.apply_psf(npred)
 
-        if self.edisp and self.model.apply_irf["edisp"]:
+        if self.model.apply_irf["edisp"]:
             npred = self.apply_edisp(npred)
 
         return npred

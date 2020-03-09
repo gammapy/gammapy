@@ -68,6 +68,9 @@ class RegionGeom(Geom):
     @property
     def width(self):
         """Width of bounding box of the region"""
+        if self.region is None:
+            raise ValueError("Region definition required.")
+
         regions = compound_region_to_list(self.region)
         regions_pix = [_.to_pixel(self.wcs) for _ in regions]
 
@@ -82,8 +85,6 @@ class RegionGeom(Geom):
 
     @property
     def region(self):
-        if self._region is None:
-            raise ValueError("Region definition required.")
         return self._region
 
     @property
@@ -113,6 +114,9 @@ class RegionGeom(Geom):
             return SkyCoord.from_pixel(xp=xp, yp=yp, wcs=self.wcs)
 
     def contains(self, coords):
+        if self.region is None:
+            raise ValueError("Region definition required.")
+
         coords = MapCoord.create(coords)
         return self.region.contains(coords.skycoord, self.wcs)
 
@@ -157,6 +161,9 @@ class RegionGeom(Geom):
         raise NotImplementedError("Cropping of `RegionGeom` not supported")
 
     def solid_angle(self):
+        if self.region is None:
+            raise ValueError("Region definition required.")
+
         area = self.region.to_pixel(self.wcs).area
         solid_angle = area * proj_plane_pixel_area(self.wcs) * u.deg ** 2
         return solid_angle.to("sr")
@@ -213,6 +220,9 @@ class RegionGeom(Geom):
         return tuple(idxs)
 
     def coord_to_pix(self, coords):
+        if self.region is None:
+            raise ValueError("Region definition required.")
+
         coords = MapCoord.create(coords, frame=self.frame)
         in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
 
@@ -261,8 +271,12 @@ class RegionGeom(Geom):
 
     def __repr__(self):
         axes = ["lon", "lat"] + [_.name for _ in self.axes]
-        lon = self.center_skydir.data.lon.deg
-        lat = self.center_skydir.data.lat.deg
+        try:
+            frame = self.center_skydir.frame.name
+            lon = self.center_skydir.data.lon.deg
+            lat = self.center_skydir.data.lat.deg
+        except AttributeError:
+            frame, lon, lat = "", np.nan, np.nan
 
         return (
             f"{self.__class__.__name__}\n\n"
@@ -270,7 +284,7 @@ class RegionGeom(Geom):
             f"\taxes       : {axes}\n"
             f"\tshape      : {self.data_shape[::-1]}\n"
             f"\tndim       : {self.ndim}\n"
-            f"\tframe      : {self.center_skydir.frame.name}\n"
+            f"\tframe      : {frame}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
         )
 
@@ -288,6 +302,9 @@ class RegionGeom(Geom):
 
     def _to_region_table(self):
         """Export region to a FITS region table."""
+        if self.region is None:
+            raise ValueError("Region definition required.")
+
         #TODO: make this a to_hdulist() method
         region_list = compound_region_to_list(self.region)
         pixel_region_list = []
@@ -325,9 +342,14 @@ class RegionGeom(Geom):
     def union(self, other):
         """Stack a RegionGeom by making the union"""
         if not self == other:
+            print(self, other)
             raise ValueError(
                 "Can only make union if extra axes are equivalent."
             )
+        if other.region:
+            if self.region:
+                self._region = self.region.union(other.region)
+            else:
+                self._region = other.region
 
-        self._region = self.region.union(other.region)
 

@@ -272,7 +272,7 @@ class RegionNDMap(Map):
         table = Table.read(hdulist["SPECTRUM"])
         geom = RegionGeom.from_hdulist(hdulist, format=format)
 
-        return cls(geom=geom, data=table[ogip_column], meta=table.meta)
+        return cls(geom=geom, data=table[ogip_column].data, meta=table.meta)
 
     def crop(self):
         raise NotImplementedError("Crop is not supported by RegionNDMap")
@@ -303,8 +303,8 @@ class RegionNDMap(Map):
         """
         data = other.data
 
-        # TODO: re-think stacking of regions. Is making the union reesonable?
-        self.geom.union(other.geom)
+        # TODO: re-think stacking of regions. Is making the union reasonable?
+        # self.geom.union(other.geom)
 
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
