@@ -108,7 +108,8 @@ def fpe_map_pwl_reoptimize():
     e_edges = [1, 10] * u.TeV
     dataset.models.parameters["lon_0"].frozen = True
     dataset.models.parameters["lat_0"].frozen = True
-    dataset.models.parameters["index"].frozen = True
+#    dataset.models.parameters["index"].frozen = True
+    dataset.models.parameters["sigma"].frozen = True
     return FluxPointsEstimator(
         datasets=[dataset],
         e_edges=e_edges,
@@ -205,10 +206,10 @@ class TestFluxPointsEstimator:
         fp = fpe_map_pwl_reoptimize.run(steps=["err", "norm-scan", "ts"])
 
         actual = fp.table["norm"].data
-        assert_allclose(actual, 0.920866, rtol=1e-3)
+        assert_allclose(actual, 0.932607, rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, 0.058248, rtol=1e-2)
+        assert_allclose(actual, 0.052935, rtol=1e-2)
 
         actual = fp.table["sqrt_ts"].data
         assert_allclose(actual, 24.927798, rtol=1e-2)
@@ -217,7 +218,7 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, 1)
 
         actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-        assert_allclose(actual, 1.767799, rtol=1e-2)
+        assert_allclose(actual, 1.578256, rtol=1e-2)
 
 
 def test_no_likelihood_contribution():

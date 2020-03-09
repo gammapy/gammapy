@@ -103,6 +103,38 @@ class FluxEstimator(ParameterEstimator):
             dataset.models[self.source].spectral_model = self.model
         return datasets
 
+    def _prepare_result(self, e_min, e_max, e_ref):
+        """Prepare the result dictionnary"""
+        e_min = u.Quantity(e_min)
+        e_max = u.Quantity(e_max)
+
+        if e_ref is None:
+            # Put at log center of the bin
+            e_ref = np.sqrt(e_min * e_max)
+
+        return {
+            "e_ref": e_ref,
+            "e_min": e_min,
+            "e_max": e_max,
+            "ref_dnde": self.ref_model(e_ref),
+            "ref_flux": self.ref_model.integral(e_min, e_max),
+            "ref_eflux": self.ref_model.energy_flux(e_min, e_max),
+            "ref_e2dnde": self.ref_model(e_ref) * e_ref ** 2,
+            }
+
+    def _prepare_steps(self, steps):
+        """Adapt the steps to the ParameterEstimator format."""
+        if "norm-scan" in steps:
+            steps.remove("norm-scan")
+            steps.append("scan")
+        if "norm-err" in steps:
+            steps.remove("norm-err")
+            steps.append("err")
+        if steps == "all":
+            steps = ["err", "ts", "errp-errn", "ul", "scan"]
+        return steps
+
+
     def run(self, e_min, e_max, e_ref=None, steps="all"):
         """Estimate flux for a given energy range.
 
@@ -134,34 +166,14 @@ class FluxEstimator(ParameterEstimator):
         result : dict
             Dict with results for the flux point.
         """
-        e_min = u.Quantity(e_min)
-        e_max = u.Quantity(e_max)
-
-        if e_ref is None:
-            # Put at log center of the bin
-            e_ref = np.sqrt(e_min * e_max)
-
-        result = {
-            "e_ref": e_ref,
-            "e_min": e_min,
-            "e_max": e_max,
-            "ref_dnde": self.ref_model(e_ref),
-            "ref_flux": self.ref_model.integral(e_min, e_max),
-            "ref_eflux": self.ref_model.energy_flux(e_min, e_max),
-            "ref_e2dnde": self.ref_model(e_ref) * e_ref ** 2,
-        }
-
-        if "norm-scan" in steps:
-            steps.remove("norm-scan")
-            steps.append("scan")
-        if "norm-err" in steps:
-            steps.remove("norm-err")
-            steps.append("err")
-        if steps == "all":
-            steps = ["err", "ts", "errp-errn", "ul", "scan"]
+        steps = self._prepare_steps(steps)
+        result = self._prepare_result(e_min, e_max, e_ref)
 
         result.update(super().run(self.model.parameters['norm'], steps, null_value=0, scan_values=self.norm_values))
         return result
 
-    def _return_nan_result(self, steps):
-        return super().run(self.model.parameters['norm'], steps)
+    def _return_nan_result(self, e_min, e_max, e_ref=None, steps="all"):
+        steps = self._prepare_steps(steps)
+        result = self._prepare_result(e_min, e_max, e_ref)
+        result.update(super().run(self.model.parameters['norm'], steps))
+        return result
