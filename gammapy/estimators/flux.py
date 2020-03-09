@@ -153,7 +153,7 @@ class FluxEstimator(ParameterEstimator):
         steps : list of str
             Which steps to execute. Available options are:
 
-                * "err": estimate symmetric error.
+                * "norm-err": estimate symmetric error.
                 * "errn-errp": estimate asymmetric errors.
                 * "ul": estimate upper limits.
                 * "ts": estimate ts and sqrt(ts) values.
@@ -175,5 +175,16 @@ class FluxEstimator(ParameterEstimator):
     def _return_nan_result(self, e_min, e_max, e_ref=None, steps="all"):
         steps = self._prepare_steps(steps)
         result = self._prepare_result(e_min, e_max, e_ref)
-        result.update(super().run(self.model.parameters['norm'], steps))
+        result.update({"norm": np.nan, "stat": np.nan, "success": False})
+        if "err" in steps:
+            result.update({"norm_err": np.nan})
+        if "ts" in steps:
+            result.update({"sqrt_ts": np.nan, "ts": np.nan, "null_value": np.nan})
+        if "errp-errn" in steps:
+            result.update({"norm_errp": np.nan, "norm_errn": np.nan})
+        if "ul" in steps:
+            result.update({"norm_ul": np.nan})
+        if "scan" in steps:
+            nans = np.nan * np.empty_like(self.norm_values)
+            result.update({"norm_scan": nans, "stat_scan": nans})
         return result

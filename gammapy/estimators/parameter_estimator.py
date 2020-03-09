@@ -187,19 +187,3 @@ class ParameterEstimator:
                 result.update({f"{parameter.name}_scan": res["values"], "stat_scan": res["stat"]})
         return result
 
-    def _return_nan_result(self, parameter, steps):
-        """Return dictionary filled with NaNs"""
-        result = {parameter.name: np.nan,
-                  "stat": np.nan,
-                  "success": np.nan}
-        if "err" in steps:
-            result.update({f"{parameter.name}_err": np.nan})
-        if "ts" in steps:
-            result.update({"sqrt_ts": np.nan, "ts": np.nan, "null_value": np.nan})
-        if "errp-errn" in steps:
-            result.update({f"{parameter.name}_errp": np.nan, f"{parameter.name}_errn": np.nan})
-        if "ul" in steps:
-            result.update({f"{parameter.name}_ul": np.nan})
-        if "scan" in steps:
-            result.update({f"{parameter.name}_scan": np.nan, "stat_scan": np.nan})
-
