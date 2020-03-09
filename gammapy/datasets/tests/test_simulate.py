@@ -33,10 +33,10 @@ def dataset():
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
 
     t_min = 0 * u.s
-    t_max = 30000 * u.s
+    t_max = 1000 * u.s
 
     time = np.arange(t_max.value) * u.s
-    tau = u.Quantity("2e3 s")
+    tau = u.Quantity("2e2 s")
     norm = np.exp(-time / tau)
 
     table = Table()
@@ -83,7 +83,7 @@ def test_mde_sample_sources(dataset):
     assert_allclose(events.table["DEC_TRUE"][0], -29.034641, rtol=1e-5)
     assert events.table["DEC_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["TIME"][0], 2150.712124, rtol=1e-5)
+    assert_allclose(events.table["TIME"][0], 94.7121239, rtol=1e-5)
     assert events.table["TIME"].unit == "s"
 
     assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
