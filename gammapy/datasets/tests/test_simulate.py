@@ -148,7 +148,7 @@ def test_mde_run(dataset):
     irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
-    livetime = 10.0 * u.hr
+    livetime = 1.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
         obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
@@ -175,7 +175,7 @@ def test_mde_run(dataset):
     meta = events.table.meta
 
     assert meta["RA_PNT"] == 266.4049882865447
-    assert meta["ONTIME"] == 36000.0
+    assert meta["ONTIME"] == 3600.0
     assert meta["OBS_ID"] == 1001
     assert meta["RADECSYS"] == "icrs"
 
