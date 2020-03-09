@@ -12,6 +12,7 @@ from gammapy.modeling.models import (
     Absorption,
     Model,
     Models,
+    BackgroundModel,
 )
 from gammapy.modeling.models.io import dict_to_models
 from gammapy.utils.scripts import read_yaml, write_yaml
@@ -25,9 +26,13 @@ def test_dict_to_skymodels():
 
     models = dict_to_models(models_data)
 
-    assert len(models) == 3
+    assert len(models) == 5
 
     model0 = models[0]
+    assert isinstance(model0, BackgroundModel)
+    assert model0.name == "background_irf"
+
+    model0 = models[1]
     assert model0.spectral_model.tag == "ExpCutoffPowerLawSpectralModel"
     assert model0.spatial_model.tag == "PointSpatialModel"
 
@@ -55,7 +60,7 @@ def test_dict_to_skymodels():
     assert np.isnan(pars0["lambda_"].min)
     assert np.isnan(pars0["lambda_"].max)
 
-    model1 = models[1]
+    model1 = models[2]
     assert model1.spectral_model.tag == "PowerLawSpectralModel"
     assert model1.spatial_model.tag == "DiskSpatialModel"
     assert model1.temporal_model.tag == "LightCurveTemplateTemporalModel"
@@ -71,7 +76,7 @@ def test_dict_to_skymodels():
 
     assert pars1["r_0"].unit == "deg"
 
-    model2 = models[2]
+    model2 = models[3]
     assert_allclose(model2.spectral_model.energy.data, [34.171, 44.333, 57.517])
     assert model2.spectral_model.energy.unit == "MeV"
     assert_allclose(

@@ -600,7 +600,7 @@ class BackgroundModel(Model):
         else:
             # TODO: for now create a fake map for serialization,
             # uptdated in MapDataset.from_dict()
-            axis = MapAxis.from_edges(np.logspace(-1, 1, 1), unit=u.TeV, name="energy")
+            axis = MapAxis.from_edges(np.logspace(-1, 1, 2), unit=u.TeV, name="energy")
             geom = WcsGeom.create(
                 skydir=(0, 0), npix=(1, 1), frame="galactic", axes=[axis]
             )
