@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
+import astropy.units as u
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
 from gammapy.estimators.flux import FluxEstimator
@@ -54,7 +55,7 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
 @requires_data()
 @requires_dependency("iminuit")
 def test_flux_estimator_1d(hess_datasets):
-    estimator = FluxEstimator(hess_datasets, source="Crab", energy_range=['1 TeV','10 TeV'])
+    estimator = FluxEstimator(hess_datasets, source="Crab", energy_range=[1, 10]*u.TeV)
     result = estimator.run(steps=["err","ts", "errp-errn", "ul"])
 
     assert_allclose(result["norm"], 1.176789, atol=1e-3)
@@ -69,3 +70,10 @@ def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
     fermi_datasets.append(hess_datasets[0])
     with pytest.raises(ValueError):
         FluxEstimator(fermi_datasets, source=0)
+
+@requires_data()
+def test_flux_estimator_incorrect_energy_range(hess_datasets):
+    with pytest.raises(ValueError):
+        estimator = FluxEstimator(hess_datasets, source="Crab", energy_range=[1, 3, 10] * u.TeV)
+    with pytest.raises(ValueError):
+        estimator = FluxEstimator(hess_datasets, source="Crab", energy_range=[10, 1] * u.TeV)
