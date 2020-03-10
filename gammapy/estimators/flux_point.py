@@ -807,6 +807,7 @@ class FluxPointsEstimator(FluxEstimator):
         super().__init__(
             datasets,
             source,
+            e_edges[:2],
             norm_min,
             norm_max,
             norm_n_values,
@@ -891,6 +892,7 @@ class FluxPointsEstimator(FluxEstimator):
             Dict with results for the flux point.
         """
         e_min, e_max = e_group["energy_min"], e_group["energy_max"]
+        self.energy_range = [e_min, e_max]
 
         for dataset in self.datasets:
             dataset.mask_fit = self._energy_mask(e_group=e_group, dataset=dataset)
@@ -902,7 +904,7 @@ class FluxPointsEstimator(FluxEstimator):
             self._contribute_to_stat |= mask.any()
 
         if not self._contribute_to_stat:
-            result = self._return_nan_result(e_min, e_max, e_ref=None, steps=steps)
+            result = self._return_nan_result(steps=steps)
             result.update(self.estimate_counts())
             return result
 
@@ -910,7 +912,7 @@ class FluxPointsEstimator(FluxEstimator):
 
             self._freeze_empty_background()
 
-            result = super().run(e_min, e_max, e_ref=None, steps=steps)
+            result = super().run(steps=steps)
             result.update(self.estimate_counts())
         return result
 

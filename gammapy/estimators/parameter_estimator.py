@@ -108,7 +108,7 @@ class ParameterEstimator:
             parameter.value = null_value
             parameter.frozen = True
             result = self.fit.optimize()
-        if not result.success:# or result.message=="Optimization failed.":
+        if not result.success:
             log.warning("Fit failed for parameter null value, returning NaN. Check input null value.")
             return np.nan
         return result.total_stat

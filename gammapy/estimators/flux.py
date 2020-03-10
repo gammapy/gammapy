@@ -98,14 +98,14 @@ class FluxEstimator(ParameterEstimator):
 
     @energy_range.setter
     def energy_range(self, energy_range):
-        if len(energy_range) != 2:
-            raise ValueError("Invalid shape of energy_range.")
+        if len(energy_range)!=2:
+            raise ValueError("Incorrect size of energy_range")
 
         emin = u.Quantity(energy_range[0])
         emax = u.Quantity(energy_range[1])
+
         if emin >= emax:
             raise ValueError("Incorrect energy_range for Flux Estimator")
-
         self._energy_range = [emin, emax]
 
     @property

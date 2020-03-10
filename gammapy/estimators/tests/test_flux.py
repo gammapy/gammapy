@@ -69,7 +69,7 @@ def test_flux_estimator_1d(hess_datasets):
 def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
     fermi_datasets.append(hess_datasets[0])
     with pytest.raises(ValueError):
-        FluxEstimator(fermi_datasets, source=0)
+        FluxEstimator(fermi_datasets, source=0, energy_range=[1, 10]*u.TeV)
 
 @requires_data()
 def test_flux_estimator_incorrect_energy_range(hess_datasets):
