@@ -98,13 +98,20 @@ class FluxEstimator(ParameterEstimator):
 
     @energy_range.setter
     def energy_range(self, energy_range):
-        if len(energy_range) != 2 or energy_range[0]>=energy_range[1]:
-            raise ValueError("Invalid energy range for FluxEstimator")
-        self._energy_range = energy_range
+        if len(energy_range) != 2:
+            raise ValueError("Invalid shape of energy_range.")
+
+        emin = u.Quantity(energy_range[0])
+        emax = u.Quantity(energy_range[1])
+        if emin >= emax:
+            raise ValueError("Incorrect energy_range for Flux Estimator")
+
+        self._energy_range = [emin, emax]
 
     @property
     def e_ref(self):
-        return self.energy_range[0]
+        return np.sqrt(self.energy_range[0]*self.energy_range[1])
+
     @property
     def ref_model(self):
         return self.model.model
@@ -121,23 +128,16 @@ class FluxEstimator(ParameterEstimator):
             dataset.models[self.source].spectral_model = self.model
         return datasets
 
-    def _prepare_result(self, e_min, e_max, e_ref):
+    def _prepare_result(self):
         """Prepare the result dictionnary"""
-        e_min = u.Quantity(e_min)
-        e_max = u.Quantity(e_max)
-
-        if e_ref is None:
-            # Put at log center of the bin
-            e_ref = np.sqrt(e_min * e_max)
-
         return {
-            "e_ref": e_ref,
-            "e_min": e_min,
-            "e_max": e_max,
-            "ref_dnde": self.ref_model(e_ref),
-            "ref_flux": self.ref_model.integral(e_min, e_max),
-            "ref_eflux": self.ref_model.energy_flux(e_min, e_max),
-            "ref_e2dnde": self.ref_model(e_ref) * e_ref ** 2,
+            "e_ref": self.e_ref,
+            "e_min": self.energy_range[0],
+            "e_max": self.energy_range[1],
+            "ref_dnde": self.ref_model(self.e_ref),
+            "ref_flux": self.ref_model.integral(self.energy_range[0], self.energy_range[1]),
+            "ref_eflux": self.ref_model.energy_flux(self.energy_range[0], self.energy_range[1]),
+            "ref_e2dnde": self.ref_model(self.e_ref) * self.e_ref ** 2,
             }
 
     def _prepare_steps(self, steps):
@@ -153,7 +153,7 @@ class FluxEstimator(ParameterEstimator):
         return steps
 
 
-    def run(self, e_min, e_max, e_ref=None, steps="all"):
+    def run(self, steps="all"):
         """Estimate flux for a given energy range.
 
         The fit is performed in the energy range provided by the dataset masks.
@@ -178,14 +178,14 @@ class FluxEstimator(ParameterEstimator):
             Dict with results for the flux point.
         """
         steps = self._prepare_steps(steps)
-        result = self._prepare_result(e_min, e_max, e_ref)
+        result = self._prepare_result()
 
         result.update(super().run(self.model.parameters['norm'], steps, null_value=0, scan_values=self.norm_values))
         return result
 
-    def _return_nan_result(self, e_min, e_max, e_ref=None, steps="all"):
+    def _return_nan_result(self, steps="all"):
         steps = self._prepare_steps(steps)
-        result = self._prepare_result(e_min, e_max, e_ref)
+        result = self._prepare_result()
         result.update({"norm": np.nan, "stat": np.nan, "success": False})
         if "err" in steps:
             result.update({"norm_err": np.nan})
