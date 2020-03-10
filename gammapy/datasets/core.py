@@ -142,6 +142,12 @@ class Datasets(collections.abc.MutableSequence):
         """Whether all contained datasets have the same data shape"""
         return len(set(_.data_shape for _ in self)) == 1
 
+    @property
+    def is_all_same_energy_shape(self):
+        """Whether all contained datasets have the same data shape"""
+        return len(set(_.data_shape[0] for _ in self)) == 1
+
+
     def stat_sum(self):
         """Compute joint likelihood"""
         stat_sum = 0

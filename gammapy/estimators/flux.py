@@ -23,7 +23,9 @@ class FluxEstimator(ParameterEstimator):
     datasets : list of `~gammapy.spectrum.SpectrumDataset`
         Spectrum datasets.
     source : str or int
-        For which source in the model to compute the flux points.
+        For which source in the model to compute the flux.
+    energy_range : `~astropy.units.Quantity`
+        the energy interval on which to compute the flux
     norm_min : float
         Minimum value for the norm used for the fit statistic profile evaluation.
     norm_max : float
@@ -44,6 +46,7 @@ class FluxEstimator(ParameterEstimator):
             self,
             datasets,
             source,
+            energy_range,
             norm_min=0.2,
             norm_max=5,
             norm_n_values=11,
@@ -55,7 +58,7 @@ class FluxEstimator(ParameterEstimator):
         # make a copy to not modify the input datasets
         datasets = self._check_datasets(datasets)
 
-        if not datasets.is_all_same_type and datasets.is_all_same_shape:
+        if not datasets.is_all_same_type or not datasets.is_all_same_energy_shape:
             raise ValueError(
                 "Flux point estimation requires a list of datasets"
                 " of the same type and data shape."
@@ -80,6 +83,8 @@ class FluxEstimator(ParameterEstimator):
         self.source = source
         datasets = self._set_scale_model(datasets)
 
+        self.energy_range = energy_range
+
         super().__init__(
             datasets,
             sigma,
@@ -87,6 +92,19 @@ class FluxEstimator(ParameterEstimator):
             reoptimize,
         )
 
+    @property
+    def energy_range(self):
+        return self._energy_range
+
+    @energy_range.setter
+    def energy_range(self, energy_range):
+        if len(energy_range) != 2 or energy_range[0]>=energy_range[1]:
+            raise ValueError("Invalid energy range for FluxEstimator")
+        self._energy_range = energy_range
+
+    @property
+    def e_ref(self):
+        return self.energy_range[0]
     @property
     def ref_model(self):
         return self.model.model
@@ -143,13 +161,6 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        e_min : `~astropy.units.Quantity`
-            the minimum energy of the interval on which to compute the flux
-        e_max : `~astropy.units.Quantity`
-            the maximum energy of the interval on which to compute the flux
-        e_max : `~astropy.units.Quantity`
-            the reference energy at which to compute the flux.
-            If None, use sqrt(e_min * e_max). Default is None.
         steps : list of str
             Which steps to execute. Available options are:
 
