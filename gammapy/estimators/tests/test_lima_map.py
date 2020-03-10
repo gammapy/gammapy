@@ -54,8 +54,9 @@ def test_compute_lima_image():
     background_model = BackgroundModel(background)
     dataset = MapDataset(counts=counts)
     dataset.models =background_model
-    estimator = LiMaMapEstimator('0.1 deg')
-    result_lima = estimator.run(dataset, steps="err")
+
+    estimator = LiMaMapEstimator(dataset)
+    result_lima = estimator.run('0.1 deg', steps="err")
 
     assert_allclose(result_lima["significance"].data[:,100, 100], 30.814916, atol=1e-3)
     assert_allclose(result_lima["significance"].data[:,1, 1], 0.164, atol=1e-3)
@@ -68,18 +69,28 @@ def test_compute_lima_on_off_image():
     """
     filename = "$GAMMAPY_DATA/tests/unbundled/hess/survey/hess_survey_snippet.fits.gz"
     n_on = Map.read(filename, hdu="ON")
+    counts = image_to_cube(n_on, '1 TeV', '100 TeV')
     n_off = Map.read(filename, hdu="OFF")
+    counts_off = image_to_cube(n_off, '1 TeV', '100 TeV')
     a_on = Map.read(filename, hdu="ONEXPOSURE")
+    acceptance = image_to_cube(a_on, '1 TeV', '100 TeV')
     a_off = Map.read(filename, hdu="OFFEXPOSURE")
-    significance = Map.read(filename, hdu="SIGNIFICANCE")
-
-    kernel = Tophat2DKernel(5)
-    results = LiMaMapEstimator.compute_lima_on_off_image(
-        n_on, n_off, a_on, a_off, kernel
+    acceptance_off = image_to_cube(a_off, '1 TeV', '100 TeV')
+    dataset = MapDatasetOnOff(
+        counts=counts,
+        counts_off=counts_off,
+        acceptance=acceptance,
+        acceptance_off=acceptance_off
     )
 
+    significance = Map.read(filename, hdu="SIGNIFICANCE")
+    significance = image_to_cube(significance, '1 TeV', '10 TeV')
+    kernel = Tophat2DKernel(5)
+    estimator = LiMaMapEstimator(dataset)
+    results = estimator.run('0.1 deg', steps="err")
+
     # Reproduce safe significance threshold from HESS software
-    results["significance"].data[results["n_on"].data < 5] = 0
+    results["significance"].data[results["counts"].data < 5] = 0
 
     # crop the image at the boundaries, because the reference image
     # is cut out from a large map, there is no way to reproduce the
@@ -94,15 +105,12 @@ def test_compute_lima_on_off_image():
 
 
 def test_significance_map_estimator_incorrect_dataset():
-    estimator = LiMaMapEstimator("0.1 deg")
-
     with pytest.raises(ValueError):
-        estimator.run("bad")
-
+        estimator = LiMaMapEstimator("bad")
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
-    estimator = LiMaMapEstimator(0.1 * u.deg)
-    result = estimator.run(simple_dataset, steps=[])
+    estimator = LiMaMapEstimator(simple_dataset)
+    result = estimator.run(0.1 * u.deg, steps=[])
 
     assert_allclose(result["counts"].data[0, 25, 25], 162)
     assert_allclose(result["excess"].data[0, 25, 25], 81)
@@ -111,8 +119,8 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
 
 
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
-    estimator = LiMaMapEstimator(0.1 * u.deg)
-    result = estimator.run(simple_dataset_on_off, steps=[])
+    estimator = LiMaMapEstimator(simple_dataset_on_off)
+    result = estimator.run(0.1 * u.deg, steps=[])
 
     assert_allclose(result["counts"].data[0, 25, 25], 162)
     assert_allclose(result["excess"].data[0, 25, 25], 81)
