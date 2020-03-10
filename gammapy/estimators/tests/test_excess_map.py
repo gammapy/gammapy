@@ -119,10 +119,10 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
 
 
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
-    estimator = CorrelatedExcessMapEstimator(simple_dataset_on_off, 0.1 * u.deg)
+    estimator = CorrelatedExcessMapEstimator(simple_dataset_on_off, 0.11 * u.deg)
     result = estimator.run(steps=["ts"])
 
-    assert_allclose(result["counts"].data[0, 25, 25], 162)
-    assert_allclose(result["excess"].data[0, 25, 25], 81)
-    assert_allclose(result["background"].data[0, 25, 25], 81)
-    assert_allclose(result["significance"].data[0, 25, 25], 5.246298, atol=1e-5)
+    assert_allclose(result["counts"].data[0, 25, 25], 194)
+    assert_allclose(result["excess"].data[0, 25, 25], 97)
+    assert_allclose(result["background"].data[0, 25, 25], 97)
+    assert_allclose(result["significance"].data[0, 25, 25], 5.741116, atol=1e-5)
