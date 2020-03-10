@@ -46,7 +46,13 @@ class LiMaMapEstimator:
     Parameters
     ----------
     dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
-        input dataset
+        input image-like dataset
+    n_sigma : float
+        Confidence level for the asymmetric errors expressed in number of sigma.
+        Default is 1.
+    n_sigma_ul : float
+        Confidence level for the upper limits expressed in number of sigma.
+        Default is 3.
     """
 
     def __init__(self, dataset, nsigma=1, nsigma_ul=3):
@@ -65,22 +71,35 @@ class LiMaMapEstimator:
     def run(self, correlation_radius, steps="all"):
         """Compute correlated excess, Li & Ma significance and flux maps
 
-        This requires datasets with only 1 energy bins (image-like).
-        Usually you can obtain one with `dataset.to_image()`
-
-
         Parameters
         ----------
         correlation_radius : ~astropy.coordinate.Angle
             correlation radius to use
+        steps : list of str
+            Which steps to execute. Available options are:
+
+                * "ts": estimate delta TS and significance
+                * "err": estimate symmetric error
+                * "errn-errp": estimate asymmetric errors.
+                * "ul": estimate upper limits.
+
+            By default all steps are executed.
 
         Returns
         -------
         images : dict
-            Dictionary containing result maps. Keys are: significance,
-            counts, background and excess for a MapDataset significance,
-            n_on, background, excess, alpha otherwise
+            Dictionary containing result correlated maps. Keys are:
 
+                * counts : correlated counts map
+                * background : correlated background map
+                * excess : correlated excess map
+                * ts : delta TS map
+                * significance : sqrt(delta TS), or Li-Ma significance map
+                * err : symmetric error map (from covariance)
+                * errm : negative error map
+                * errp : positive error map
+                * ul : upper limit map
+             
         """
         self.radius = Angle(correlation_radius)
 
@@ -90,28 +109,32 @@ class LiMaMapEstimator:
 
         geom = self.dataset.counts.geom
 
-        counts_stat = convolved_map_dataset_counts_statistics(self.dataset, kernel)
+        self.counts_stat = convolved_map_dataset_counts_statistics(self.dataset, kernel)
 
-        n_on = Map.from_geom(geom, data=counts_stat.n_on)
-        bkg = Map.from_geom(geom, data=counts_stat.n_on-counts_stat.excess)
-        excess = Map.from_geom(geom, data=counts_stat.excess)
-        significance = Map.from_geom(geom, data=counts_stat.significance)
+        n_on = Map.from_geom(geom, data=self.counts_stat.n_on)
+        bkg = Map.from_geom(geom, data=self.counts_stat.n_on-self.counts_stat.excess)
+        excess = Map.from_geom(geom, data=self.counts_stat.excess)
 
-        result = {"counts": n_on, "background": bkg, "excess": excess, "significance": significance}
+        result = {"counts": n_on, "background": bkg, "excess": excess}
 
         if steps == "all":
-            steps = ["err", "errn-errp", "ul"]
+            steps = ["ts", "err", "errn-errp", "ul"]
+
+        if "ts" in steps:
+            tsmap = Map.from_geom(geom, data=self.counts_stat.delta_ts)
+            significance = Map.from_geom(geom, data=self.counts_stat.significance)
+            result.update({"ts": tsmap, "significance": significance})
 
         if "err" in steps:
-            err = Map.from_geom(geom, data=counts_stat.error)
+            err = Map.from_geom(geom, data=self.counts_stat.error)
             result.update({"err": err})
 
         if "errn-errp" in steps:
-            errn = Map.from_geom(geom, data=counts_stat.compute_errn(self.nsigma))
-            errp = Map.from_geom(geom, data=counts_stat.compute_errp(self.nsigma))
+            errn = Map.from_geom(geom, data=self.counts_stat.compute_errn(self.nsigma))
+            errp = Map.from_geom(geom, data=self.counts_stat.compute_errp(self.nsigma))
             result.update({"errn": errn, "errp": errp})
 
         if "ul" in steps:
-            ul = Map.from_geom(geom, data=counts_stat.compute_upper_limit(self.nsigma_ul))
+            ul = Map.from_geom(geom, data=self.counts_stat.compute_upper_limit(self.nsigma_ul))
             result.update({"ul": ul})
         return result
