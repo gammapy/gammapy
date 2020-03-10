@@ -16,6 +16,7 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 def convolved_map_dataset_counts_statistics(dataset, kernel):
+    """Return CountsDataset objects containing smoothed maps from the MapDataset"""
     # Kernel is modified later make a copy here
     kernel = copy.deepcopy(kernel)
     kernel.normalize("peak")

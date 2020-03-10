@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
+import numpy as np
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from gammapy.datasets import MapDataset, MapDatasetOnOff
@@ -8,6 +9,13 @@ from gammapy.estimators import LiMaMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
 from gammapy.modeling.models import BackgroundModel
+
+def image_to_cube(map, e_min, e_max):
+    e_min = u.Quantity(e_min)
+    e_max = u.Quantity(e_max)
+    axis = MapAxis.from_energy_bounds(e_min, e_max, nbin=1)
+    geom = map.geom.to_cube([axis])
+    return Map.from_geom(geom, data=map.data[np.newaxis,:,:])
 
 @pytest.fixture
 def simple_dataset():
@@ -40,13 +48,17 @@ def test_compute_lima_image():
     """
     filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz"
     counts = Map.read(filename, hdu="counts")
+    counts = image_to_cube(counts, '1 GeV', '100 GeV')
     background = Map.read(filename, hdu="background")
-    print(counts.geom.wcs)
-    kernel = Tophat2DKernel(5)  #0.1 deg
-    result_lima = LiMaMapEstimator.compute_lima_image(counts, background, kernel)
+    background = image_to_cube(background, '1 GeV', '100 GeV')
+    background_model = BackgroundModel(background)
+    dataset = MapDataset(counts=counts)
+    dataset.models =background_model
+    estimator = LiMaMapEstimator('0.1 deg')
+    result_lima = estimator.run(dataset, steps="err")
 
-    assert_allclose(result_lima["significance"].data[100, 100], 30.814916, atol=1e-3)
-    assert_allclose(result_lima["significance"].data[1, 1], 0.164, atol=1e-3)
+    assert_allclose(result_lima["significance"].data[:,100, 100], 30.814916, atol=1e-3)
+    assert_allclose(result_lima["significance"].data[:,1, 1], 0.164, atol=1e-3)
 
 
 @requires_data()
