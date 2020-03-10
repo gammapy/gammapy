@@ -84,9 +84,6 @@ class SigmaVEstimator:
         List of particle masses where the values of :math:`\sigma\nu` will be calculated.
     channels : list of strings allowed in `~gammapy.astro.darkmatter.PrimaryFlux`
         List of channels where the values of :math:`\sigma\nu` will be calculated.
-    background_model: `~gammapy.spectrum.CountsSpectrum`
-        BackgroundModel. In the future will be part of the SpectrumDataset Class.
-        For the moment, a CountSpectrum.
 
     Examples
     --------
@@ -100,11 +97,9 @@ class SigmaVEstimator:
         JFAC = 3.41e19 * u.Unit("GeV2 cm-5")
         flux_model = DarkMatterAnnihilationSpectralModel(mass=5000*u.GeV, channel="b", jfactor=JFAC)
 
-        # Define a background model for the off counts as a CountsSpectrum
-        bkg = CountsSpectrum(energy_min, energy_max, data=offcounts)
-
         # Define a DMDatasetOnOff dataset
         dataset = DMDatasetOnOff(
+            counts=background,
             aeff=aeff,
             edisp=edisp,
             models=[flux_model],
@@ -127,7 +122,7 @@ class SigmaVEstimator:
         dataset.nuisance = nuisance
 
         # Instantiate the estimator
-        estimator = SigmaVEstimator(dataset, masses, channels, background_model=bkg)
+        estimator = SigmaVEstimator(dataset, masses, channels)
 
         # Run the estimator
         result = estimator.run(10, nuisance=True, stat_profile_opts=dict(bounds=(0, 500), nvalues=100))
@@ -143,14 +138,12 @@ class SigmaVEstimator:
             self,
             dataset,
             masses,
-            channels,
-            background_model
+            channels
     ):
 
         self.dataset = dataset
         self.masses = masses
         self.channels = channels
-        self.background = background_model
         self.flux_model = dataset.models[0].spectral_model
         if isinstance(dataset.models[0].spectral_model, AbsorbedSpectralModel):
             self.flux_model = dataset.models[0].spectral_model.spectral_model
@@ -205,7 +198,7 @@ class SigmaVEstimator:
         okruns = 0
         # loop in runs
         for run in range(runs):
-            self.dataset.fake(background_model=self.background)
+            self.dataset.fake(background_model=self.dataset.counts)
             valid = self._loops(run, nuisance, stat_profile_opts, optimize_opts, covariance_opts)
             # skip the run and continue with the next on if fails for a mass of a specific channel
             if not valid:
