@@ -10,7 +10,7 @@ from gammapy.stats import significance, significance_on_off
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 
 __all__ = [
-    "LiMaMapEstimator",
+    "CorrelatedExcessMapEstimator",
 ]
 
 log = logging.getLogger(__name__)
@@ -40,13 +40,15 @@ def convolved_map_dataset_counts_statistics(dataset, kernel):
         background_conv = dataset.npred().convolve(kernel.array).data
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
-class LiMaMapEstimator:
+class CorrelatedExcessMapEstimator:
     """Computes correlated excess, significance and errors for MapDatasets
 
     Parameters
     ----------
     dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
         input image-like dataset
+    correlation_radius : ~astropy.coordinate.Angle
+        correlation radius to use
     n_sigma : float
         Confidence level for the asymmetric errors expressed in number of sigma.
         Default is 1.
@@ -55,12 +57,9 @@ class LiMaMapEstimator:
         Default is 3.
     """
 
-    def __init__(self, dataset, nsigma=1, nsigma_ul=3):
-
-        if not isinstance(dataset, MapDataset):
-            raise ValueError("Unsupported dataset type")
-        self._dataset = dataset
-
+    def __init__(self, dataset, correlation_radius='0.1 deg', nsigma=1, nsigma_ul=3):
+        self.dataset = dataset
+        self.correlation_radius = correlation_radius
         self.nsigma = nsigma
         self.nsigma_ul = nsigma_ul
 
@@ -68,13 +67,26 @@ class LiMaMapEstimator:
     def dataset(self):
         return self._dataset
 
-    def run(self, correlation_radius, steps="all"):
+    @dataset.setter
+    def dataset(self, dataset):
+        if not isinstance(dataset, MapDataset):
+            raise ValueError("Unsupported dataset type")
+        self._dataset = dataset
+
+    @property
+    def correlation_radius(self):
+        return self._correlation_radius
+
+    @correlation_radius.setter
+    def correlation_radius(self, correlation_radius):
+        """Sets radius"""
+        self._correlation_radius = Angle(correlation_radius)
+
+    def run(self, steps="all"):
         """Compute correlated excess, Li & Ma significance and flux maps
 
         Parameters
         ----------
-        correlation_radius : ~astropy.coordinate.Angle
-            correlation radius to use
         steps : list of str
             Which steps to execute. Available options are:
 
@@ -96,15 +108,13 @@ class LiMaMapEstimator:
                 * ts : delta TS map
                 * significance : sqrt(delta TS), or Li-Ma significance map
                 * err : symmetric error map (from covariance)
-                * errm : negative error map
+                * errn : negative error map
                 * errp : positive error map
                 * ul : upper limit map
-             
-        """
-        self.radius = Angle(correlation_radius)
 
+        """
         pixel_size = np.mean(np.abs(self.dataset.counts.geom.wcs.wcs.cdelt))
-        size = self.radius.deg / pixel_size
+        size = self.correlation_radius.deg / pixel_size
         kernel = Tophat2DKernel(size)
 
         geom = self.dataset.counts.geom

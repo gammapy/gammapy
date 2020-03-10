@@ -5,7 +5,7 @@ import numpy as np
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from gammapy.datasets import MapDataset, MapDatasetOnOff
-from gammapy.estimators import LiMaMapEstimator
+from gammapy.estimators import CorrelatedExcessMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
 from gammapy.modeling.models import BackgroundModel
@@ -55,8 +55,8 @@ def test_compute_lima_image():
     dataset = MapDataset(counts=counts)
     dataset.models =background_model
 
-    estimator = LiMaMapEstimator(dataset)
-    result_lima = estimator.run('0.1 deg', steps="err")
+    estimator = CorrelatedExcessMapEstimator(dataset,'0.1 deg')
+    result_lima = estimator.run( steps="ts")
 
     assert_allclose(result_lima["significance"].data[:,100, 100], 30.814916, atol=1e-3)
     assert_allclose(result_lima["significance"].data[:,1, 1], 0.164, atol=1e-3)
@@ -86,8 +86,8 @@ def test_compute_lima_on_off_image():
     significance = Map.read(filename, hdu="SIGNIFICANCE")
     significance = image_to_cube(significance, '1 TeV', '10 TeV')
     kernel = Tophat2DKernel(5)
-    estimator = LiMaMapEstimator(dataset)
-    results = estimator.run('0.1 deg', steps="err")
+    estimator = CorrelatedExcessMapEstimator(dataset, '0.1 deg')
+    results = estimator.run(steps="ts")
 
     # Reproduce safe significance threshold from HESS software
     results["significance"].data[results["counts"].data < 5] = 0
@@ -106,11 +106,11 @@ def test_compute_lima_on_off_image():
 
 def test_significance_map_estimator_incorrect_dataset():
     with pytest.raises(ValueError):
-        estimator = LiMaMapEstimator("bad")
+        estimator = CorrelatedExcessMapEstimator("bad")
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
-    estimator = LiMaMapEstimator(simple_dataset)
-    result = estimator.run(0.1 * u.deg, steps=[])
+    estimator = CorrelatedExcessMapEstimator(simple_dataset, 0.1 * u.deg)
+    result = estimator.run(steps=["ts"])
 
     assert_allclose(result["counts"].data[0, 25, 25], 162)
     assert_allclose(result["excess"].data[0, 25, 25], 81)
@@ -119,8 +119,8 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
 
 
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
-    estimator = LiMaMapEstimator(simple_dataset_on_off)
-    result = estimator.run(0.1 * u.deg, steps=[])
+    estimator = CorrelatedExcessMapEstimator(simple_dataset_on_off, 0.1 * u.deg)
+    result = estimator.run(steps=["ts"])
 
     assert_allclose(result["counts"].data[0, 25, 25], 162)
     assert_allclose(result["excess"].data[0, 25, 25], 81)
