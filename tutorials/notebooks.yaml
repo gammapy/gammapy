@@ -123,7 +123,7 @@
     - catalogs
     - fermi-3fhl-crab
 - name: event_sampling
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/event_sampler_tutorial.ipynb
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/event_sampling.ipynb
   datasets:
     - cta-1dc
     - fermi-3fhl-gc
