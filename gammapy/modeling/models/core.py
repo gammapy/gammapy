@@ -157,7 +157,7 @@ class Models(collections.abc.MutableSequence):
     @classmethod
     def from_dict(cls, data):
         """Create from dict."""
-        from . import MODELS
+        from . import MODELS, SkyModel
 
         models = []
         for component in data["components"]:
@@ -165,17 +165,32 @@ class Models(collections.abc.MutableSequence):
             models.append(model)
         models = cls(models)
 
-        # link shared parameters
         shared_register = {}
-        for param in models.parameters:
+        for model in models:
+            if isinstance(model, SkyModel):
+                submodels = [
+                    model.spectral_model,
+                    model.spatial_model,
+                    model.temporal_model,
+                ]
+                for submodel in submodels:
+                    if submodel is not None:
+                        shared_register = models._set_link(shared_register, submodel)
+            else:
+                shared_register = models._set_link(shared_register, model)
+        return models
+
+    def _set_link(self, shared_register, model):
+        for param in model.parameters:
+            name = param.name
             link_label = param._link_label_io
             if link_label is not None:
                 if link_label in shared_register:
                     new_param = shared_register[link_label]
-                    models._parameters.link(param, new_param)
+                    model.parameters.link(name, new_param)
                 else:
                     shared_register[link_label] = param
-        return cls(models)
+        return shared_register
 
     def write(self, path, overwrite=False):
         """Write to YAML file."""
