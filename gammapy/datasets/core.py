@@ -6,6 +6,8 @@ import numpy as np
 from gammapy.maps import Map
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
+from gammapy.modeling import Parameters
+from gammapy.modeling.models import Models
 
 __all__ = ["Dataset", "Datasets"]
 
@@ -32,9 +34,7 @@ class Dataset(abc.ABC):
     def mask(self):
         """Combined fit and safe mask"""
         mask_safe = (
-            self.mask_safe.data
-            if isinstance(self.mask_safe, Map)
-            else self.mask_safe
+            self.mask_safe.data if isinstance(self.mask_safe, Map) else self.mask_safe
         )
         mask_fit = (
             self.mask_fit.data if isinstance(self.mask_fit, Map) else self.mask_fit
@@ -122,11 +122,23 @@ class Datasets(collections.abc.MutableSequence):
         Duplicate parameter objects have been removed.
         The order of the unique parameters remains.
         """
-        # TODO: remove this delayed import
-        from gammapy.modeling.parameter import Parameters
-
         parameters = Parameters.from_stack([_.models.parameters for _ in self])
         return parameters.unique_parameters
+
+    @property
+    def models(self):
+        """Unique models (`~gammapy.modeling.Models`).
+
+        Duplicate model objects have been removed.
+        The order of the unique models remains.
+        """
+        unique_models = []
+        for d in self._datasets:
+            if d.models is not None:
+                for model in d.models:
+                    if model not in unique_models:
+                        unique_models.append(model)
+        return Models(unique_models)
 
     @property
     def names(self):
@@ -179,11 +191,15 @@ class Datasets(collections.abc.MutableSequence):
         dataset : 'gammapy.modeling.Datasets'
             Datasets
         """
-        from .io import dict_to_datasets
+        from . import DATASETS
 
-        components = read_yaml(make_path(filemodel))
+        models = Models.read(make_path(filemodel))
         data_list = read_yaml(make_path(filedata))
-        datasets = dict_to_datasets(data_list, components)
+
+        datasets = []
+        for data in data_list["datasets"]:
+            dataset = DATASETS.get_cls(data["type"]).from_dict(data, models)
+            datasets.append(dataset)
         return cls(datasets)
 
     def write(self, path, prefix="", overwrite=False):
@@ -198,13 +214,17 @@ class Datasets(collections.abc.MutableSequence):
         overwrite : bool
             overwrite datasets FITS files
         """
-        from .io import datasets_to_dict
 
         path = make_path(path)
+        datasets_dictlist = []
+        for dataset in self._datasets:
+            filename = path / f"{prefix}_data_{dataset.name}.fits"
+            dataset.write(filename, overwrite)
+            datasets_dictlist.append(dataset.to_dict(filename=filename))
+        datasets_dict = {"datasets": datasets_dictlist}
 
-        datasets_dict, components_dict = datasets_to_dict(self, path, prefix, overwrite)
         write_yaml(datasets_dict, path / f"{prefix}_datasets.yaml", sort_keys=False)
-        write_yaml(components_dict, path / f"{prefix}_models.yaml", sort_keys=False)
+        self.models.write(path / f"{prefix}_models.yaml", overwrite=overwrite)
 
     def stack_reduce(self, name=None):
         """Reduce the Datasets to a unique Dataset by stacking them together.
