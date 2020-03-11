@@ -615,7 +615,7 @@ class Parameters(collections.abc.Sequence):
         idx = [self._get_idx(par) for par in parameters]
         self.covariance[np.ix_(idx, idx)] = parameters.covariance
 
-    def check_covariance_shape(self, covariance):
+    def check_covariance(self, covariance):
         """Check whether the covariance has a valid shape"""
         value = np.asanyarray(covariance)
 
@@ -623,6 +623,8 @@ class Parameters(collections.abc.Sequence):
         shape = (npars, npars)
         if value.shape != shape:
             raise ValueError(f"Invalid covariance shape: {value.shape}, expected {shape}")
+
+        return value
 
 
 class restore_parameters_values:

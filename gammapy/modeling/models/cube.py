@@ -91,8 +91,7 @@ class SkyModel(SkyModelBase):
 
     @covariance.setter
     def covariance(self, covariance):
-        self.parameters.check_covariance_shape(covariance)
-        self._covariance = covariance
+        self._covariance = self.parameters.check_covariance(covariance)
 
         for model in [
             self.spectral_model, self.spatial_model, self.temporal_model

@@ -73,9 +73,12 @@ class Model:
         return self.parameters.covariance
 
     @covariance.setter
-    def covariance(self, value):
-        self.parameters.check_covariance_shape(value)
-        self.parameters._covariance = value
+    def covariance(self, covariance):
+        covariance = self.parameters.check_covariance(covariance)
+        self.parameters._covariance = covariance
+
+        for idx, par in enumerate(self.parameters):
+            par.error = np.sqrt(covariance[idx, idx])
 
     @property
     def parameters(self):
@@ -165,8 +168,7 @@ class Models(collections.abc.MutableSequence):
 
     @covariance.setter
     def covariance(self, covariance):
-        self.parameters.check_covariance_shape(covariance)
-        self._covariance = covariance
+        self._covariance = self.parameters.check_covariance(covariance)
 
         for model in self._models:
             subcovar = self.parameters.get_subcovariance(model.parameters)
@@ -287,6 +289,7 @@ class Models(collections.abc.MutableSequence):
             self._models[self.index(key)] = model
         else:
             raise TypeError(f"Invalid type: {model!r}")
+        self._covariance = None
 
     def insert(self, idx, model):
         if model.name in self.names:

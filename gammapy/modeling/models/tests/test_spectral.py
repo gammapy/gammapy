@@ -418,7 +418,7 @@ def test_ecpl_integrate():
 def test_pwl_pivot_energy():
     pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 cm-2 s-1 TeV-1")
 
-    pwl.parameters.covariance = [
+    pwl.covariance = [
         [0.0318377 ** 2, 6.56889442e-14, 0],
         [6.56889442e-14, 0, 0],
         [0, 0, 0],
@@ -603,7 +603,7 @@ class TestSpectralModelErrorPropagation:
             alpha=2.44,
             beta=0.25,
         )
-        self.model.parameters.covariance = [
+        self.model.covariance = [
             [1.31e-23, 0, -6.80e-14, 3.04e-13],
             [0, 0, 0, 0],
             [-6.80e-14, 0, 0.00899, 0.00904],
@@ -652,7 +652,7 @@ class TestSpectralModelErrorPropagation:
             lambda_=0.08703226432146616 * u.Unit("TeV-1"),
             reference=1 * u.TeV,
         )
-        model.parameters.covariance = [
+        model.covariance = [
             [0.00204191498, -1.507724e-14, 0.0, -0.001834819, 0.0],
             [-1.507724e-14, 1.6864740e-25, 0.0, 1.854251e-14, 0.0],
             [0.0, 0.0, 0.0, 0.0, 0.0],
