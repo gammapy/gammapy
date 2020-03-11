@@ -151,6 +151,15 @@ class FluxEstimator(ParameterEstimator):
             "ref_e2dnde": self.ref_model(e_ref) * e_ref ** 2,
         }
 
+        if "norm-scan" in steps:
+            steps.remove("norm-scan")
+            steps.append("scan")
+        if "norm-err" in steps:
+            steps.remove("norm-err")
+            steps.append("err")
+        if steps == "all":
+            steps = ["err", "ts", "errp-errn", "ul", "scan"]
+
         result.update(super().run(self.model.parameters['norm'], steps, null_value=0, scan_values=self.norm_values))
         return result
 

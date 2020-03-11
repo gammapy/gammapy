@@ -44,17 +44,24 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
 @requires_dependency("iminuit")
 def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     estimator = FluxEstimator(fermi_datasets, 0, reoptimize=True)
-    result = estimator.run("1 GeV", "100 GeV", steps=["ts"])
+    result = estimator.run("1 GeV", "100 GeV", steps=["err","ts"])
 
+<<<<<<< HEAD
     assert_allclose(result["norm"], 0.970614, atol=1e-3)
     assert_allclose(result["delta_ts"], 13005.903067, atol=1e-3)
     assert_allclose(result["err"], 0.01998, atol=1e-3)
+=======
+    print(estimator)
+    assert_allclose(result["norm"], 1.00, atol=1e-3)
+    assert_allclose(result["delta_ts"], 13005.938759, atol=1e-3)
+    assert_allclose(result["norm_err"], 0.01998, atol=1e-3)
+>>>>>>> rebase
 
 @requires_data()
 @requires_dependency("iminuit")
 def test_flux_estimator_1d(hess_datasets):
     estimator = FluxEstimator(hess_datasets, source="Crab")
-    result = estimator.run('1 TeV', '10 TeV', steps=["ts", "errp-errn", "ul"])
+    result = estimator.run('1 TeV', '10 TeV', steps=["err","ts", "errp-errn", "ul"])
 
     assert_allclose(result["norm"], 1.176789, atol=1e-3)
     assert_allclose(result["delta_ts"], 693.111777, atol=1e-3)

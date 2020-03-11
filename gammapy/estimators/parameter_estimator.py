@@ -115,7 +115,7 @@ class ParameterEstimator:
             the parameter to be estimated
         steps : list of str
             Which steps to execute. Available options are:
-
+                * "err": estimate symmetric error from covariance
                 * "ts": estimate delta TS with parameter null (reference) value
                 * "errn-errp": estimate asymmetric errors.
                 * "ul": estimate upper limits.
@@ -140,7 +140,7 @@ class ParameterEstimator:
                 self._freeze_parameters(self.datasets, parameter)
 
             if steps == "all":
-                steps = ["ts", "errp-errn", "ul", "scan"]
+                steps = ["err", "ts", "errp-errn", "ul", "scan"]
 
             TS0 = np.nan
             if "ts" in steps:
@@ -154,9 +154,11 @@ class ParameterEstimator:
                 return result
 
             value_max = result[parameter.name]
-            res = self.fit.covariance()
-            value_err = res.parameters.error(parameter)
-            result.update({"err": value_err})
+
+            if "err" in steps:
+                res = self.fit.covariance()
+                value_err = res.parameters.error(parameter)
+                result.update({f"{parameter.name}_err": value_err})
 
             if "ts" in steps:
                 res = TS0 - TS1
