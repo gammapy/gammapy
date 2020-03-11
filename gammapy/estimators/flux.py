@@ -43,17 +43,17 @@ class FluxEstimator(ParameterEstimator):
     """
 
     def __init__(
-            self,
-            datasets,
-            source,
-            energy_range,
-            norm_min=0.2,
-            norm_max=5,
-            norm_n_values=11,
-            norm_values=None,
-            sigma=1,
-            sigma_ul=3,
-            reoptimize=True,
+        self,
+        datasets,
+        source,
+        energy_range,
+        norm_min=0.2,
+        norm_max=5,
+        norm_n_values=11,
+        norm_values=None,
+        sigma=1,
+        sigma_ul=3,
+        reoptimize=True,
     ):
         # make a copy to not modify the input datasets
         datasets = self._check_datasets(datasets)
@@ -86,10 +86,7 @@ class FluxEstimator(ParameterEstimator):
         self.energy_range = energy_range
 
         super().__init__(
-            datasets,
-            sigma,
-            sigma_ul,
-            reoptimize,
+            datasets, sigma, sigma_ul, reoptimize,
         )
 
     @property
@@ -98,7 +95,7 @@ class FluxEstimator(ParameterEstimator):
 
     @energy_range.setter
     def energy_range(self, energy_range):
-        if len(energy_range)!=2:
+        if len(energy_range) != 2:
             raise ValueError("Incorrect size of energy_range")
 
         emin = u.Quantity(energy_range[0])
@@ -110,7 +107,7 @@ class FluxEstimator(ParameterEstimator):
 
     @property
     def e_ref(self):
-        return np.sqrt(self.energy_range[0]*self.energy_range[1])
+        return np.sqrt(self.energy_range[0] * self.energy_range[1])
 
     @property
     def ref_model(self):
@@ -135,10 +132,14 @@ class FluxEstimator(ParameterEstimator):
             "e_min": self.energy_range[0],
             "e_max": self.energy_range[1],
             "ref_dnde": self.ref_model(self.e_ref),
-            "ref_flux": self.ref_model.integral(self.energy_range[0], self.energy_range[1]),
-            "ref_eflux": self.ref_model.energy_flux(self.energy_range[0], self.energy_range[1]),
+            "ref_flux": self.ref_model.integral(
+                self.energy_range[0], self.energy_range[1]
+            ),
+            "ref_eflux": self.ref_model.energy_flux(
+                self.energy_range[0], self.energy_range[1]
+            ),
             "ref_e2dnde": self.ref_model(self.e_ref) * self.e_ref ** 2,
-            }
+        }
 
     def _prepare_steps(self, steps):
         """Adapt the steps to the ParameterEstimator format."""
@@ -151,7 +152,6 @@ class FluxEstimator(ParameterEstimator):
         if steps == "all":
             steps = ["err", "ts", "errp-errn", "ul", "scan"]
         return steps
-
 
     def run(self, steps="all"):
         """Estimate flux for a given energy range.
@@ -180,7 +180,14 @@ class FluxEstimator(ParameterEstimator):
         steps = self._prepare_steps(steps)
         result = self._prepare_result()
 
-        result.update(super().run(self.model.parameters['norm'], steps, null_value=0, scan_values=self.norm_values))
+        result.update(
+            super().run(
+                self.model.parameters["norm"],
+                steps,
+                null_value=0,
+                scan_values=self.norm_values,
+            )
+        )
         return result
 
     def _return_nan_result(self, steps="all"):

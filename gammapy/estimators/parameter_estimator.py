@@ -6,6 +6,7 @@ from gammapy.modeling import Fit
 
 log = logging.getLogger(__name__)
 
+
 class ParameterEstimator:
     """Model parameter estimator.
 
@@ -31,13 +32,13 @@ class ParameterEstimator:
     """
 
     def __init__(
-            self,
-            datasets,
-            sigma=1,
-            sigma_ul=2,
-            reoptimize=True,
-            n_scan_values=30,
-            scan_n_err=3,
+        self,
+        datasets,
+        sigma=1,
+        sigma_ul=2,
+        reoptimize=True,
+        n_scan_values=30,
+        scan_n_err=3,
     ):
         self.sigma = sigma
         self.sigma_ul = sigma_ul
@@ -95,9 +96,11 @@ class ParameterEstimator:
         else:
             value = np.nan
 
-        result = {parameter.name: value,
-                  "stat": fit_result.total_stat,
-                  "success": fit_result.success}
+        result = {
+            parameter.name: value,
+            "stat": fit_result.total_stat,
+            "success": fit_result.success,
+        }
 
         self.fit_result = fit_result
         return result
@@ -109,7 +112,9 @@ class ParameterEstimator:
             parameter.frozen = True
             result = self.fit.optimize()
         if not result.success:
-            log.warning("Fit failed for parameter null value, returning NaN. Check input null value.")
+            log.warning(
+                "Fit failed for parameter null value, returning NaN. Check input null value."
+            )
             return np.nan
         return result.total_stat
 
@@ -150,7 +155,7 @@ class ParameterEstimator:
                 steps = ["err", "ts", "errp-errn", "ul", "scan"]
 
             result = self._find_best_fit(parameter)
-            TS1 = result['stat']
+            TS1 = result["stat"]
 
             if not result.pop("success"):
                 log.warning("Fit failed for parameter estimate, setting NaN.")
@@ -166,13 +171,20 @@ class ParameterEstimator:
             if "ts" in steps:
                 TS0 = self._estimate_ts_for_null_value(parameter, null_value)
                 res = TS0 - TS1
-                result.update({"sqrt_ts":np.sqrt(res), "ts": res, "null_value": null_value})
+                result.update(
+                    {"sqrt_ts": np.sqrt(res), "ts": res, "null_value": null_value}
+                )
                 # TODO: should not need this
                 self.fit.optimize()
 
             if "errp-errn" in steps:
                 res = self.fit.confidence(parameter=parameter, sigma=self.sigma)
-                result.update({f"{parameter.name}_errp": res["errp"], f"{parameter.name}_errn": res["errn"]})
+                result.update(
+                    {
+                        f"{parameter.name}_errp": res["errp"],
+                        f"{parameter.name}_errn": res["errn"],
+                    }
+                )
 
             if "ul" in steps:
                 res = self.fit.confidence(parameter=parameter, sigma=self.sigma_ul)
@@ -181,15 +193,13 @@ class ParameterEstimator:
             if "scan" in steps:
                 if scan_values is None:
                     scan_values = self._compute_scan_values(
-                        value_max,
-                        value_err,
-                        parameter.min,
-                        parameter.max
+                        value_max, value_err, parameter.min, parameter.max
                     )
 
                 res = self.fit.stat_profile(
                     parameter, values=scan_values, reoptimize=self.reoptimize
                 )
-                result.update({f"{parameter.name}_scan": res["values"], "stat_scan": res["stat"]})
+                result.update(
+                    {f"{parameter.name}_scan": res["values"], "stat_scan": res["stat"]}
+                )
         return result
-

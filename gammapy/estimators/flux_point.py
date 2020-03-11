@@ -791,17 +791,17 @@ class FluxPointsEstimator(FluxEstimator):
     """
 
     def __init__(
-            self,
-            datasets,
-            e_edges,
-            source=0,
-            norm_min=0.2,
-            norm_max=5,
-            norm_n_values=11,
-            norm_values=None,
-            sigma=1,
-            sigma_ul=2,
-            reoptimize=False,
+        self,
+        datasets,
+        e_edges,
+        source=0,
+        norm_min=0.2,
+        norm_max=5,
+        norm_n_values=11,
+        norm_values=None,
+        sigma=1,
+        sigma_ul=2,
+        reoptimize=False,
     ):
         self.e_edges = e_edges
         super().__init__(
@@ -814,7 +814,7 @@ class FluxPointsEstimator(FluxEstimator):
             norm_values,
             sigma,
             sigma_ul,
-            reoptimize
+            reoptimize,
         )
         self._contribute_to_stat = False
 
@@ -865,7 +865,7 @@ class FluxPointsEstimator(FluxEstimator):
 
     def _energy_mask(self, e_group, dataset):
         energy_mask = np.zeros(dataset.data_shape)
-        energy_mask[e_group["idx_min"]: e_group["idx_max"] + 1] = 1
+        energy_mask[e_group["idx_min"] : e_group["idx_max"] + 1] = 1
         return energy_mask.astype(bool)
 
     def estimate_flux_point(self, e_group, steps="all"):
@@ -936,5 +936,3 @@ class FluxPointsEstimator(FluxEstimator):
             counts.append(dataset.counts.data[mask].sum())
 
         return {"counts": np.array(counts, dtype=int)}
-
-
