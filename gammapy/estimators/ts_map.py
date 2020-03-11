@@ -126,6 +126,7 @@ class TSMapEstimator:
 
     def __init__(
         self,
+        dataset,
         method="root brentq",
         error_method="covar",
         error_sigma=1,
@@ -134,6 +135,8 @@ class TSMapEstimator:
         threshold=None,
         rtol=0.001,
     ):
+
+        self.dataset = dataset
 
         if method not in ["root brentq", "root newton", "leastsq iter"]:
             raise ValueError(f"Not a valid method: '{method}'")
@@ -237,7 +240,7 @@ class TSMapEstimator:
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return map_ts.copy(data=sqrt_ts)
 
-    def run(self, dataset, kernel, which="all", downsampling_factor=None):
+    def run(self, kernel, which="all", downsampling_factor=None):
         """
         Run TS map estimation.
 
@@ -262,18 +265,18 @@ class TSMapEstimator:
         """
         p = self.parameters
 
-        if (np.array(kernel.shape) > np.array(dataset.counts.data.shape[1:])).any():
+        if (np.array(kernel.shape) > np.array(self.dataset.counts.data.shape[1:])).any():
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
                 " size of the kernel"
             )
 
         # First create 2D map arrays
-        counts = dataset.counts.sum_over_axes(keepdims=False)
-        background = dataset.npred().sum_over_axes(keepdims=False)
-        exposure = dataset.exposure.sum_over_axes(keepdims=False)
-        if dataset.mask is not None:
-            mask = counts.copy(data=(dataset.mask.sum(axis=0) > 0).astype("int"))
+        counts = self.dataset.counts.sum_over_axes(keepdims=False)
+        background = self.dataset.npred().sum_over_axes(keepdims=False)
+        exposure = self.dataset.exposure.sum_over_axes(keepdims=False)
+        if self.dataset.mask is not None:
+            mask = counts.copy(data=(self.dataset.mask.sum(axis=0) > 0).astype("int"))
         else:
             mask = counts.copy(data=np.ones_like(counts).astype("int"))
 
@@ -308,7 +311,7 @@ class TSMapEstimator:
             data = np.nan * np.ones_like(counts.data)
             result[name] = counts.copy(data=data)
 
-        flux_map = self.flux_default(dataset, kernel)
+        flux_map = self.flux_default(self.dataset, kernel)
 
         if p["threshold"] or p["method"] == "root newton":
             flux = flux_map.data

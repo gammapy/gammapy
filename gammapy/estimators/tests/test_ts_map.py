@@ -55,8 +55,8 @@ def test_compute_ts_map(input_dataset):
     """Minimal test of compute_ts_image"""
     kernel = Gaussian2DKernel(5)
 
-    ts_estimator = TSMapEstimator(method="leastsq iter", threshold=1)
-    result = ts_estimator.run(input_dataset, kernel=kernel)
+    ts_estimator = TSMapEstimator(input_dataset, method="leastsq iter", threshold=1)
+    result = ts_estimator.run(kernel=kernel)
 
     assert "leastsq iter" in repr(ts_estimator)
     assert_allclose(result["ts"].data[99, 99], 1714.23, rtol=1e-2)
@@ -78,8 +78,8 @@ def test_compute_ts_map_newton(input_dataset):
     """Minimal test of compute_ts_image"""
     kernel = Gaussian2DKernel(5)
 
-    ts_estimator = TSMapEstimator(method="root newton", threshold=1)
-    result = ts_estimator.run(input_dataset, kernel=kernel)
+    ts_estimator = TSMapEstimator(input_dataset, method="root newton", threshold=1)
+    result = ts_estimator.run(kernel=kernel)
 
     assert "root newton" in repr(ts_estimator)
     assert_allclose(result["ts"].data[99, 99], 1714.23, rtol=1e-2)
@@ -102,9 +102,9 @@ def test_compute_ts_map_downsampled(input_dataset):
     kernel = Gaussian2DKernel(2.5)
 
     ts_estimator = TSMapEstimator(
-        method="root brentq", error_method="conf", ul_method="conf"
+        input_dataset, method="root brentq", error_method="conf", ul_method="conf"
     )
-    result = ts_estimator.run(input_dataset, kernel=kernel, downsampling_factor=2)
+    result = ts_estimator.run(kernel=kernel, downsampling_factor=2)
 
     assert_allclose(result["ts"].data[99, 99], 1675.28, rtol=1e-2)
     assert_allclose(result["niter"].data[99, 99], 7)
@@ -124,14 +124,14 @@ def test_compute_ts_map_downsampled(input_dataset):
 def test_large_kernel(input_dataset):
     """Minimal test of compute_ts_image"""
     kernel = Gaussian2DKernel(100)
-    ts_estimator = TSMapEstimator()
+    ts_estimator = TSMapEstimator(input_dataset)
 
     with pytest.raises(ValueError):
-        ts_estimator.run(input_dataset, kernel=kernel)
+        ts_estimator.run(kernel=kernel)
 
 
-def test_incorrect_method():
+def test_incorrect_method(input_dataset):
     with pytest.raises(ValueError):
-        TSMapEstimator(method="bad")
+        TSMapEstimator(input_dataset,method="bad")
     with pytest.raises(ValueError):
-        TSMapEstimator(error_method="bad")
+        TSMapEstimator(input_dataset, error_method="bad")
