@@ -101,7 +101,7 @@ def test_compute_lima_on_off_image():
     # Set boundary to NaN in reference image
     # The absolute tolerance is low because the method used here is slightly different from the one used in HGPS
     # n_off is convolved as well to ensure the method applies to true ON-OFF datasets
-    assert_allclose(actual, desired, atol=0.2)
+    assert_allclose(actual, desired, atol=0.3)
 
 
 def test_significance_map_estimator_incorrect_dataset():
