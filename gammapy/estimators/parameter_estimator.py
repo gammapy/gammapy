@@ -162,15 +162,15 @@ class ParameterEstimator:
 
             if "ts" in steps:
                 res = TS0 - TS1
-                result.update({"delta_ts": res, "null_value": null_value})
+                result.update({"sqrt_ts":np.sqrt(res), "ts": res, "null_value": null_value})
 
             if "errp-errn" in steps:
                 res = self.fit.confidence(parameter=parameter, sigma=self.sigma)
-                result.update({"errp": res["errp"], "errn": res["errn"]})
+                result.update({f"{parameter.name}_errp": res["errp"], f"{parameter.name}_errn": res["errn"]})
 
             if "ul" in steps:
                 res = self.fit.confidence(parameter=parameter, sigma=self.sigma_ul)
-                result.update({"ul": res["errp"] + value_max})
+                result.update({f"{parameter.name}_ul": res["errp"] + value_max})
 
             if "scan" in steps:
                 if scan_values is None:

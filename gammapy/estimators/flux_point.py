@@ -911,6 +911,7 @@ class FluxPointsEstimator(FluxEstimator):
             self._freeze_empty_background()
 
             result = super().run(e_min, e_max, e_ref=None, steps=steps)
+            result.update(self.estimate_counts())
         return result
 
     def estimate_counts(self):

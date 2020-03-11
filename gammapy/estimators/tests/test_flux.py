@@ -57,11 +57,11 @@ def test_flux_estimator_1d(hess_datasets):
     result = estimator.run('1 TeV', '10 TeV', steps=["err","ts", "errp-errn", "ul"])
 
     assert_allclose(result["norm"], 1.176789, atol=1e-3)
-    assert_allclose(result["delta_ts"], 693.111777, atol=1e-3)
-    assert_allclose(result["err"], 0.078087, atol=1e-3)
-    assert_allclose(result["errn"], 0.078046, atol=1e-3)
-    assert_allclose(result["errp"], 0.081665, atol=1e-3)
-    assert_allclose(result["ul"], 1.431722, atol=1e-3)
+    assert_allclose(result["ts"], 693.111777, atol=1e-3)
+    assert_allclose(result["norm_err"], 0.079840, atol=1e-3)
+    assert_allclose(result["norm_errn"], 0.078046, atol=1e-3)
+    assert_allclose(result["norm_errp"], 0.081665, atol=1e-3)
+    assert_allclose(result["norm_ul"], 1.431722, atol=1e-3)
 
 @requires_data()
 def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
