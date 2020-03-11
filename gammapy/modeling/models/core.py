@@ -7,6 +7,20 @@ import yaml
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.scripts import make_path, make_name
 
+
+def _set_link(shared_register, model):
+    for param in model.parameters:
+        name = param.name
+        link_label = param._link_label_io
+        if link_label is not None:
+            if link_label in shared_register:
+                new_param = shared_register[link_label]
+                model.parameters.link(name, new_param)
+            else:
+                shared_register[link_label] = param
+    return shared_register
+
+
 __all__ = ["Model", "Models"]
 
 
@@ -175,22 +189,10 @@ class Models(collections.abc.MutableSequence):
                 ]
                 for submodel in submodels:
                     if submodel is not None:
-                        shared_register = models._set_link(shared_register, submodel)
+                        shared_register = _set_link(shared_register, submodel)
             else:
-                shared_register = models._set_link(shared_register, model)
+                shared_register = _set_link(shared_register, model)
         return models
-
-    def _set_link(self, shared_register, model):
-        for param in model.parameters:
-            name = param.name
-            link_label = param._link_label_io
-            if link_label is not None:
-                if link_label in shared_register:
-                    new_param = shared_register[link_label]
-                    model.parameters.link(name, new_param)
-                else:
-                    shared_register[link_label] = param
-        return shared_register
 
     def write(self, path, overwrite=False):
         """Write to YAML file."""
