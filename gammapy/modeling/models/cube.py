@@ -205,8 +205,21 @@ class SkyModel(SkyModelBase):
 
         return value
 
-    def integrate(self, geom, gti=None):
-        """Integrate model on `~gammapy.maps.Geom`."""
+    def integrate_geom(self, geom, gti=None):
+        """Integrate model on `~gammapy.maps.Geom`.
+
+        Parameters
+        ----------
+        geom : `Geom`
+            Map geometry
+        gti : `GTI`
+            GIT table
+
+        Returns
+        -------
+        flux : `Map`
+            Predicted flux map
+        """
         energy = geom.get_axis_by_name("energy_true").edges
         value = self.spectral_model.integral(
             energy[:-1], energy[1:], intervals=True
@@ -459,8 +472,21 @@ class SkyDiffuseCube(SkyModelBase):
         val = norm * self._cached_value * tilt_factor.value
         return u.Quantity(val, self.map.unit, copy=False)
 
-    def integrate(self, geom, gti=None):
-        """Integrate model on `~gammapy.maps.Geom`."""
+    def integrate_geom(self, geom, gti=None):
+        """Integrate model on `~gammapy.maps.Geom`.
+
+        Parameters
+        ----------
+        geom : `Geom`
+            Map geometry
+        gti : `GTI`
+            GIT table (currently not being used...)
+
+        Returns
+        -------
+        flux : `Map`
+            Predicted flux map
+        """
         # TODO: implement better integration method?
         value = self.evaluate_geom(geom)
         value = value * geom.bin_volume()

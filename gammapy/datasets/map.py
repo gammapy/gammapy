@@ -1634,7 +1634,7 @@ class MapEvaluator:
 
         For now, we simply multiply dnde with bin volume.
         """
-        return self.model.integrate(self.geom, self.gti)
+        return self.model.integrate_geom(self.geom, self.gti)
 
     def apply_exposure(self, flux):
         """Compute npred cube

@@ -7,6 +7,7 @@ from gammapy.estimators.parameter_estimator import ParameterEstimator
 
 log = logging.getLogger(__name__)
 
+
 class FluxEstimator(ParameterEstimator):
     """Flux estimator.
 

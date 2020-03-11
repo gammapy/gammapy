@@ -191,10 +191,22 @@ class PointSpatialModel(SpatialModel):
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
-        values = self.integrate(geom).data
+        values = self.integrate_geom(geom).data
         return values / geom.solid_angle()
 
-    def integrate(self, geom):
+    def integrate_geom(self, geom):
+        """Integrate model on `~gammapy.maps.Geom`
+
+        Parameters
+        ----------
+        geom : `Geom`
+            Map geometry
+
+        Returns
+        -------
+        flux : `Map`
+            Predicted flux map
+        """
         x, y = geom.get_pix()
         x0, y0 = self.position.to_pixel(geom.wcs)
         data = self._grid_weights(x, y, x0, y0)
