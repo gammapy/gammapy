@@ -944,12 +944,17 @@ class Map(abc.ABC):
         map : `WcsNDMap`
             Map with energy dispersion applied.
         """
-        loc = self.geom.get_axis_index_by_name("energy_true")
-        data = np.rollaxis(self.data, loc, len(self.data.shape))
-        data = np.dot(data, edisp.pdf_matrix)
-        data = np.rollaxis(data, -1, loc)
+        # TODO: either use sparse matrix mutiplication or something like edisp.is_diagonal
+        if edisp is not None:
+            loc = self.geom.get_axis_index_by_name("energy_true")
+            data = np.rollaxis(self.data, loc, len(self.data.shape))
+            data = np.dot(data, edisp.pdf_matrix)
+            data = np.rollaxis(data, -1, loc)
+            e_reco_axis = edisp.e_reco.copy(name="energy")
+        else:
+            data = self.data
+            e_reco_axis = self.geom.get_axis_by_name("energy_true").copy(name="energy")
 
-        e_reco_axis = edisp.e_reco.copy(name="energy")
         geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
         return self._init_copy(geom=geom_reco, data=data)
 

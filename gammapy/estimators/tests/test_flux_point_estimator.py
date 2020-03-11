@@ -6,7 +6,6 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
-from gammapy.datasets.spectrum import SpectrumEvaluator
 from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.makers import MapDatasetMaker
 from gammapy.maps import MapAxis, WcsGeom, RegionGeom, RegionNDMap
@@ -29,19 +28,23 @@ def simulate_spectrum_dataset(model, random_state=0):
     bkg_model = SkyModel(
         spectral_model=PowerLawSpectralModel(
             index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1"
-        )
+        ),
+        name="background"
     )
+    bkg_model.spectral_model.amplitude.frozen = True
+    bkg_model.spectral_model.index.frozen = True
+
     geom = RegionGeom(region=None, axes=[energy_axis])
     acceptance = RegionNDMap.from_geom(geom=geom, data=1)
 
     dataset = SpectrumDatasetOnOff(
-        aeff=aeff, models=model, livetime=100 * u.h, acceptance=acceptance, acceptance_off=5
+        aeff=aeff, livetime=100 * u.h, acceptance=acceptance, acceptance_off=5
     )
+    dataset.models = bkg_model
+    bkg_npred = dataset.npred_sig()
 
-    eval = SpectrumEvaluator(model=bkg_model, aeff=aeff, livetime=100 * u.h)
-
-    bkg_model = eval.compute_npred()
-    dataset.fake(random_state=random_state, background_model=bkg_model)
+    dataset.models = model
+    dataset.fake(random_state=random_state, background_model=bkg_npred)
     return dataset
 
 

@@ -1031,6 +1031,9 @@ class ScaleSpectralModel(SpectralModel):
     def evaluate(self, energy, norm):
         return norm * self.model(energy)
 
+    def integral(self, emin, emax, **kwargs):
+        return self.norm.value * self.model.integral(emin, emax, **kwargs)
+
 
 class Absorption:
     r"""Gamma-ray absorption models.

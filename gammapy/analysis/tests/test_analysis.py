@@ -14,6 +14,7 @@ from gammapy.utils.testing import requires_data, requires_dependency
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 MODEL_FILE = CONFIG_PATH / "model.yaml"
+MODEL_FILE_1D = CONFIG_PATH / "model-1d.yaml"
 
 
 def get_example_config(which):
@@ -158,7 +159,7 @@ def test_analysis_1d():
     analysis.update_config(cfg)
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.read_models(MODEL_FILE)
+    analysis.read_models(MODEL_FILE_1D)
     analysis.run_fit()
     analysis.get_flux_points()
 
@@ -250,7 +251,7 @@ def test_analysis_1d_stacked():
     analysis.config.datasets.stack = True
     analysis.get_observations()
     analysis.get_datasets()
-    analysis.read_models(MODEL_FILE)
+    analysis.read_models(MODEL_FILE_1D)
     analysis.run_fit()
 
     assert len(analysis.datasets) == 1
@@ -296,10 +297,10 @@ def test_analysis_3d():
     assert len(analysis.flux_points.data.table) == 2
     dnde = analysis.flux_points.data.table["dnde"].quantity
 
-    assert_allclose(dnde[0].value, 1.380525e-11, rtol=1e-2)
-    assert_allclose(dnde[-1].value, 3.58863e-13, rtol=1e-2)
-    assert_allclose(res["index"].value, 3.097649, rtol=1e-2)
-    assert_allclose(res["tilt"].value, -0.207786, rtol=1e-2)
+    assert_allclose(dnde[0].value, 1.340073e-11, rtol=1e-2)
+    assert_allclose(dnde[-1].value, 3.483509e-13, rtol=1e-2)
+    assert_allclose(res["index"].value, 3.097613, rtol=1e-2)
+    assert_allclose(res["tilt"].value, -0.207792, rtol=1e-2)
 
 
 @requires_data()

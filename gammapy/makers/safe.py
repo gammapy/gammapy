@@ -112,7 +112,7 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : ``~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
 
         Returns
@@ -147,7 +147,7 @@ class SafeMaskMaker:
 
         Parameters
         ----------
-        dataset : ``~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
 
         Returns

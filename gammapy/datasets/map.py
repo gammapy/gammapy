@@ -19,7 +19,7 @@ from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
-from .spectrum import SpectrumDataset, SpectrumDatasetOnOff
+
 
 __all__ = ["MapDataset", "MapDatasetOnOff"]
 
@@ -804,6 +804,8 @@ class MapDataset(Dataset):
         dataset : `~gammapy.spectrum.SpectrumDataset`
             the resulting reduced dataset
         """
+        from .spectrum import SpectrumDataset
+
         kwargs = {"gti": self.gti, "name": name}
 
         if self.gti is not None:
@@ -1389,6 +1391,8 @@ class MapDatasetOnOff(MapDataset):
         dataset : `~gammapy.spectrum.SpectrumDatasetOnOff`
             the resulting reduced dataset
         """
+        from .spectrum import SpectrumDatasetOnOff
+
         dataset = super().to_spectrum_dataset(on_region, containment_correction, name)
 
         kwargs = {}
@@ -1554,6 +1558,7 @@ class MapEvaluator:
     @property
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
+        # TODO: simplify and clean up
         if isinstance(self.model, BackgroundModel):
             return False
         elif self.exposure is None:
@@ -1580,6 +1585,7 @@ class MapEvaluator:
         geom : `WcsGeom`
             Counts geom
         """
+        # TODO: simplify and clean up
         log.debug("Updating model evaluator")
         # cache current position of the model component
 
@@ -1628,16 +1634,14 @@ class MapEvaluator:
 
         For now, we simply multiply dnde with bin volume.
         """
-        dnde = self.compute_dnde()
-        volume = self.geom.bin_volume()
-        return dnde * volume
+        return self.model.integrate_geom(self.geom, self.gti)
 
     def apply_exposure(self, flux):
         """Compute npred cube
 
         For now just divide flux cube by exposure
         """
-        npred = (flux * self.exposure.quantity).to_value("")
+        npred = (flux.quantity * self.exposure.quantity).to_value("")
         return Map.from_geom(self.geom, data=npred, unit="")
 
     def apply_psf(self, npred):
@@ -1671,18 +1675,14 @@ class MapEvaluator:
             Predicted counts on the map (in reco energy bins)
         """
         flux = self.compute_flux()
-        if self.model.apply_irf["exposure"] is True:
-            npred = self.apply_exposure(flux)
-        else:
-            geom_reco = self.geom.copy()
-            if self.edisp is not None:
-                e_reco_axis = self.edisp.e_reco.copy(name="energy")
-                geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
-            npred = Map.from_geom(geom_reco, data=flux.to_value(""), unit="")
 
-        if self.psf is not None and self.model.apply_irf["psf"] == True:
+        if self.model.apply_irf["exposure"]:
+            npred = self.apply_exposure(flux)
+
+        if self.psf and self.model.apply_irf["psf"]:
             npred = self.apply_psf(npred)
-        if self.edisp is not None and self.model.apply_irf["edisp"] == True:
+
+        if self.model.apply_irf["edisp"]:
             npred = self.apply_edisp(npred)
 
         return npred

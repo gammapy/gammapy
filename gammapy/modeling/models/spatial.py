@@ -106,6 +106,12 @@ class SpatialModel(Model):
         coords = geom.get_coord(frame=self.frame)
         return self(coords.lon, coords.lat)
 
+    def integrate(self, geom):
+        """Integrate model on `~gammapy.maps.Geom`."""
+        values = self.evaluate_geom(geom)
+        data = values * geom.solid_angle()
+        return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
+
     def to_dict(self):
         """Create dict for YAML serilisation"""
         data = super().to_dict()
@@ -185,10 +191,26 @@ class PointSpatialModel(SpatialModel):
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
+        values = self.integrate_geom(geom).data
+        return values / geom.solid_angle()
+
+    def integrate_geom(self, geom):
+        """Integrate model on `~gammapy.maps.Geom`
+
+        Parameters
+        ----------
+        geom : `Geom`
+            Map geometry
+
+        Returns
+        -------
+        flux : `Map`
+            Predicted flux map
+        """
         x, y = geom.get_pix()
         x0, y0 = self.position.to_pixel(geom.wcs)
-        w = self._grid_weights(x, y, x0, y0)
-        return w / geom.solid_angle()
+        data = self._grid_weights(x, y, x0, y0)
+        return Map.from_geom(geom=geom, data=data, unit="")
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.PointSkyRegion`)."""

@@ -4,7 +4,7 @@ import copy
 from pathlib import Path
 import numpy as np
 import astropy.units as u
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_name, make_path
@@ -196,14 +196,46 @@ class SkyModel(SkyModelBase):
         energy = geom.get_axis_by_name("energy_true").center[:, np.newaxis, np.newaxis]
         value = self.spectral_model(energy)
 
-        if self.spatial_model is not None:
+        if self.spatial_model:
             value = value * self.spatial_model.evaluate_geom(geom.to_image())
 
-        if self.temporal_model is not None:
+        if self.temporal_model:
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
             value = value * np.sum(integral)
 
         return value
+
+    def integrate_geom(self, geom, gti=None):
+        """Integrate model on `~gammapy.maps.Geom`.
+
+        Parameters
+        ----------
+        geom : `Geom`
+            Map geometry
+        gti : `GTI`
+            GIT table
+
+        Returns
+        -------
+        flux : `Map`
+            Predicted flux map
+        """
+        energy = geom.get_axis_by_name("energy_true").edges
+        value = self.spectral_model.integral(
+            energy[:-1], energy[1:], intervals=True
+        ).reshape((-1, 1, 1))
+
+        if self.spatial_model and not isinstance(geom, RegionGeom):
+            # TODO: integrate spatial model over region to correct for
+            #  containment
+            geom_image = geom.to_image()
+            value = value * self.spatial_model.integrate(geom_image).quantity
+
+        if self.temporal_model:
+            integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
+            value = value * np.sum(integral)
+
+        return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
 
     def copy(self, name=None, **kwargs):
         """Copy SkyModel"""
@@ -439,6 +471,26 @@ class SkyDiffuseCube(SkyModelBase):
 
         val = norm * self._cached_value * tilt_factor.value
         return u.Quantity(val, self.map.unit, copy=False)
+
+    def integrate_geom(self, geom, gti=None):
+        """Integrate model on `~gammapy.maps.Geom`.
+
+        Parameters
+        ----------
+        geom : `Geom`
+            Map geometry
+        gti : `GTI`
+            GIT table (currently not being used...)
+
+        Returns
+        -------
+        flux : `Map`
+            Predicted flux map
+        """
+        # TODO: implement better integration method?
+        value = self.evaluate_geom(geom)
+        value = value * geom.bin_volume()
+        return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
 
     def copy(self, name=None):
         """A shallow copy"""
