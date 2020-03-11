@@ -257,6 +257,7 @@ class SpectrumDataset(Dataset):
                         model=model,
                         exposure=self.exposure,
                         edisp=self.edisp,
+                        gti=self.gti,
                     )
                     self._evaluators[model.name] = evaluator
 

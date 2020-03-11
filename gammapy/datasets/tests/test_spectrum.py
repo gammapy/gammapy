@@ -16,6 +16,7 @@ from gammapy.modeling.models import (
     Models,
     PowerLawSpectralModel,
     SkyModel,
+    ConstantTemporalModel,
 )
 from gammapy.utils.random import get_random_state
 from gammapy.utils.regions import compound_region_to_list, make_region
@@ -34,12 +35,12 @@ def spectrum_dataset():
     livetime = 100 * u.s
 
     pwl = PowerLawSpectralModel(
-            index=2.1,
-            amplitude="1e5 cm-2 s-1 TeV-1",
-            reference="0.1 TeV",
-        )
+        index=2.1, amplitude="1e5 cm-2 s-1 TeV-1", reference="0.1 TeV",
+    )
 
-    model = SkyModel(spectral_model=pwl, name="test-source")
+    temp_mod = ConstantTemporalModel()
+
+    model = SkyModel(spectral_model=pwl, temporal_model=temp_mod, name="test-source")
     aeff = EffectiveAreaTable.from_constant(energy, "1 cm2")
 
     axis = MapAxis.from_edges(energy, interp="log", name="energy")
@@ -48,12 +49,18 @@ def spectrum_dataset():
     bkg_rate = np.ones(30) / u.s
     background.quantity = bkg_rate * livetime
 
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    t_ref = Time(55555, format="mjd")
+    gti = GTI.create(start, stop, reference_time=t_ref)
+
     dataset = SpectrumDataset(
         models=model,
         aeff=aeff,
         livetime=livetime,
         background=background,
         name="test",
+        gti=gti,
     )
     dataset.fake(random_state=23)
     return dataset
@@ -90,9 +97,7 @@ def test_incorrect_mask(spectrum_dataset):
     mask_fit = np.ones(30, dtype=np.dtype("float"))
     with pytest.raises(ValueError):
         SpectrumDataset(
-            counts=spectrum_dataset.counts.copy(),
-            livetime="1h",
-            mask_fit=mask_fit,
+            counts=spectrum_dataset.counts.copy(), livetime="1h", mask_fit=mask_fit,
         )
 
 
@@ -178,13 +183,11 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
         livetime=livetime,
         aeff=aeff,
         edisp=edisp,
-        background=background.copy()
+        background=background.copy(),
     )
 
     livetime2 = 0.5 * livetime
-    aeff2 = EffectiveAreaTable(
-        energy[:-1], energy[1:], 2 * aeff.data.data
-    )
+    aeff2 = EffectiveAreaTable(energy[:-1], energy[1:], 2 * aeff.data.data)
     bkg2 = RegionNDMap.from_geom(geom=geom, data=2 * background.data)
 
     geom = spectrum_dataset.counts.geom
@@ -224,13 +227,13 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
     livetime = 100 * u.s
     spectrum_dataset1 = SpectrumDataset(
         counts=spectrum_dataset.counts.copy(),
-        livetime=livetime, aeff=aeff, edisp=edisp1,
+        livetime=livetime,
+        aeff=aeff,
+        edisp=edisp1,
     )
 
     livetime2 = livetime
-    aeff2 = EffectiveAreaTable(
-        energy[:-1], energy[1:], aeff.data.data
-    )
+    aeff2 = EffectiveAreaTable(energy[:-1], energy[1:], aeff.data.data)
     edisp2 = EDispKernel.from_gauss(energy, energy, 0.2, 0.0)
     spectrum_dataset2 = SpectrumDataset(
         counts=spectrum_dataset.counts.copy(),
@@ -246,7 +249,9 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
         spectrum_dataset1.aeff.data.data.to_value("m2"), aeff.data.data.to_value("m2")
     )
     assert_allclose(spectrum_dataset1.edisp.get_bias(1 * u.TeV), 0.0, atol=1.2e-3)
-    assert_allclose(spectrum_dataset1.edisp.get_resolution(1 * u.TeV), 0.1581, atol=1e-2)
+    assert_allclose(
+        spectrum_dataset1.edisp.get_resolution(1 * u.TeV), 0.1581, atol=1e-2
+    )
 
 
 @requires_dependency("matplotlib")
@@ -832,9 +837,7 @@ class TestFit:
 
         self.alpha = 0.1
         random_state = get_random_state(23)
-        npred = self.source_model.spectral_model.integral(
-            energy[:-1], energy[1:]
-        ).value
+        npred = self.source_model.spectral_model.integral(energy[:-1], energy[1:]).value
         source_counts = random_state.poisson(npred)
 
         axis = MapAxis.from_edges(energy, name="energy", interp="log")
@@ -907,9 +910,7 @@ class TestFit:
         mask_safe = RegionNDMap.from_geom(geom, dtype=bool)
         mask_safe.data += True
 
-        dataset = SpectrumDatasetOnOff(
-            counts=self.src, mask_safe=mask_safe
-        )
+        dataset = SpectrumDatasetOnOff(counts=self.src, mask_safe=mask_safe)
 
         assert np.sum(dataset.mask_safe) == self.nbins
         e_min, e_max = dataset.energy_range
