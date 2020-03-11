@@ -291,16 +291,6 @@ class Parameters(collections.abc.Sequence):
         """Covariance matrix (`numpy.ndarray`)."""
         return self._covariance
 
-    @covariance.setter
-    def covariance(self, value):
-        value = np.asanyarray(value)
-
-        shape = len(self), len(self)
-        if value.shape != shape:
-            raise ValueError(f"Invalid shape: {value.shape}, expected {shape}")
-
-        self._covariance = value
-
     @classmethod
     def from_values(cls, values=None, covariance=None):
         """Create `Parameters` from values.
@@ -327,7 +317,7 @@ class Parameters(collections.abc.Sequence):
         )
 
     @classmethod
-    def from_stack(cls, parameters_list):
+    def from_stack(cls, parameters_list, covariance=None):
         """Create `Parameters` by stacking a list of other `Parameters` objects.
 
         Parameters
@@ -336,12 +326,9 @@ class Parameters(collections.abc.Sequence):
             List of `Parameters` objects
         """
         pars = itertools.chain(*parameters_list)
-        parameters = cls(pars)
+        parameters = cls(pars, covariance=covariance)
 
-        if np.any([pars.covariance is not None for pars in parameters_list]):
-            npars = len(parameters)
-            parameters.covariance = np.zeros((npars, npars))
-
+        if covariance is None:
             for pars in parameters_list:
                 if pars.covariance is not None:
                     parameters.set_subcovariance(pars)
@@ -351,10 +338,6 @@ class Parameters(collections.abc.Sequence):
     @property
     def _empty_covariance(self):
         return np.zeros((len(self), len(self)))
-
-    @property
-    def _any_covariance(self):
-        return self._empty_covariance if self.covariance is None else self.covariance
 
     def copy(self):
         """A deep copy"""
@@ -475,7 +458,7 @@ class Parameters(collections.abc.Sequence):
 
         covariance = data.get("covariance")
         if covariance is not None:
-            self.covariance = np.array(covariance)
+            self._covariance = np.array(covariance)
 
     def error(self, parname):
         """Get parameter error.
@@ -510,7 +493,7 @@ class Parameters(collections.abc.Sequence):
         >>> model.parameters.set_error(amplitude="0.6-11 cm-2 s-1 TeV-1", index=0.2)
         """
         if self.covariance is None:
-            self.covariance = self._empty_covariance
+            self._covariance = self._empty_covariance
 
         for key, error in kwargs.items():
             idx = self._get_idx(key)
@@ -562,7 +545,7 @@ class Parameters(collections.abc.Sequence):
         if not np.sqrt(matrix.size) == len(self):
             matrix = self._expand_factor_matrix(matrix)
 
-        self.covariance = self._scale_matrix * matrix
+        self._covariance = self._scale_matrix * matrix
 
     def autoscale(self, method="scale10"):
         """Autoscale all parameters.
@@ -626,8 +609,20 @@ class Parameters(collections.abc.Sequence):
             Sub list of parameters.
 
         """
+        if self.covariance is None:
+            self._covariance = self._empty_covariance
+
         idx = [self._get_idx(par) for par in parameters]
         self.covariance[np.ix_(idx, idx)] = parameters.covariance
+
+    def check_covariance_shape(self, covariance):
+        """Check whether the covariance has a valid shape"""
+        value = np.asanyarray(covariance)
+
+        npars = len(self._parameters)
+        shape = (npars, npars)
+        if value.shape != shape:
+            raise ValueError(f"Invalid covariance shape: {value.shape}, expected {shape}")
 
 
 class restore_parameters_values:

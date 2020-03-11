@@ -9,6 +9,9 @@ from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_name, make_path
 from .core import Model, Models
+from .spatial import SpatialModel
+from .spectral import SpectralModel
+from .temporal import TemporalModel
 
 
 class SkyModelBase(Model):
@@ -79,6 +82,25 @@ class SkyModel(SkyModelBase):
         self.apply_irf = apply_irf
         self.datasets_names = datasets_names
 
+        # cached covariance
+        self._covariance = None
+
+    @property
+    def covariance(self):
+        return self.parameters.covariance
+
+    @covariance.setter
+    def covariance(self, covariance):
+        self.parameters.check_covariance_shape(covariance)
+        self._covariance = covariance
+
+        for model in [
+            self.spectral_model, self.spatial_model, self.temporal_model
+        ]:
+            if model is not None:
+                subcovar = self.parameters.get_subcovariance(model.parameters)
+                model.covariance = subcovar
+
     @property
     def name(self):
         return self._name
@@ -94,7 +116,7 @@ class SkyModel(SkyModelBase):
             parameters.append(self.temporal_model.parameters)
 
         parameters.append(self.spectral_model.parameters)
-        return Parameters.from_stack(parameters)
+        return Parameters.from_stack(parameters, covariance=self._covariance)
 
     @property
     def spatial_model(self):
@@ -103,12 +125,11 @@ class SkyModel(SkyModelBase):
 
     @spatial_model.setter
     def spatial_model(self, model):
-        from .spatial import SpatialModel
-
         if not (model is None or isinstance(model, SpatialModel)):
             raise TypeError(f"Invalid type: {model!r}")
 
         self._spatial_model = model
+        self._covariance = None
 
     @property
     def spectral_model(self):
@@ -117,11 +138,11 @@ class SkyModel(SkyModelBase):
 
     @spectral_model.setter
     def spectral_model(self, model):
-        from .spectral import SpectralModel
-
         if not (model is None or isinstance(model, SpectralModel)):
             raise TypeError(f"Invalid type: {model!r}")
+
         self._spectral_model = model
+        self._covariance = None
 
     @property
     def temporal_model(self):
@@ -130,11 +151,11 @@ class SkyModel(SkyModelBase):
 
     @temporal_model.setter
     def temporal_model(self, model):
-        from .temporal import TemporalModel
-
         if not (model is None or isinstance(model, TemporalModel)):
             raise TypeError(f"Invalid type: {model!r}")
+
         self._temporal_model = model
+        self._covariance = None
 
     @property
     def position(self):
