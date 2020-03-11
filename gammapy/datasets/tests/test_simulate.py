@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
 from astropy.coordinates import SkyCoord
+from astropy.time import Time
 from gammapy.datasets import MapDatasetEventSampler
 from gammapy.data import GTI, Observation
 from gammapy.datasets.tests.test_map import get_map_dataset
@@ -41,8 +42,9 @@ def dataset():
 
     table = Table()
     table["TIME"] = time
-    table["NORM"] = norm
-    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="s")
+    table["NORM"] = norm / norm.max()
+    t_ref = Time("2000-01-01")
+    table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s")
     temporal_model = LightCurveTemplateTemporalModel(table)
 
     skymodel = SkyModel(
@@ -55,7 +57,7 @@ def dataset():
         skydir=position, binsz=1, width="5 deg", frame="galactic", axes=[energy_axis]
     )
 
-    gti = GTI.create(start=t_min, stop=t_max)
+    gti = GTI.create(start=t_min, stop=t_max, reference_time=t_ref)
 
     geom_true = geom.copy()
     geom_true.axes[0].name = "energy_true"
