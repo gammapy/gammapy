@@ -1,0 +1,8 @@
+components:
+-   name: gll_iem_v06_gc.fits
+    type: SkyDiffuseCube
+    filename: $GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz
+    parameters:
+    - {name: norm, value: 1.0, unit: '', min: .nan, max: .nan, frozen: false}
+    - {name: tilt, value: 0.0, unit: '', min: .nan, max: .nan, frozen: true}
+    - {name: reference, value: 1.0, unit: TeV, min: .nan, max: .nan, frozen: true}
