@@ -17,7 +17,9 @@ class CountsStatistic(abc.ABC):
     @property
     def significance(self):
         """Return statistical significance of measured excess."""
-        return np.sign(self.excess) * np.sqrt(self.delta_ts)
+        # Remove (small) negative delta TS due to error in root finding
+        delta_ts = np.clip(self.delta_ts,0, None)
+        return np.sign(self.excess) * np.sqrt(delta_ts)
 
     @property
     def p_value(self):

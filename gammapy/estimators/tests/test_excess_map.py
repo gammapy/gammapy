@@ -85,7 +85,6 @@ def test_compute_lima_on_off_image():
 
     significance = Map.read(filename, hdu="SIGNIFICANCE")
     significance = image_to_cube(significance, '1 TeV', '10 TeV')
-    kernel = Tophat2DKernel(5)
     estimator = CorrelatedExcessMapEstimator(dataset, '0.1 deg')
     results = estimator.run(steps="ts")
 
@@ -95,13 +94,13 @@ def test_compute_lima_on_off_image():
     # crop the image at the boundaries, because the reference image
     # is cut out from a large map, there is no way to reproduce the
     # result with regular boundary handling
-    actual = results["significance"].crop(kernel.shape).data
-    desired = significance.crop(kernel.shape).data
+    actual = results["significance"].crop((11,11)).data
+    desired = significance.crop((11,11)).data
 
     # Set boundary to NaN in reference image
     # The absolute tolerance is low because the method used here is slightly different from the one used in HGPS
     # n_off is convolved as well to ensure the method applies to true ON-OFF datasets
-    assert_allclose(actual, desired, atol=0.3)
+    assert_allclose(actual, desired, atol=0.2)
 
 
 def test_significance_map_estimator_incorrect_dataset():
