@@ -77,11 +77,10 @@ class MapDatasetEventSampler:
             evaluator.model.apply_irf["edisp"] = False
             npred = evaluator.compute_npred()
 
-            # temporal_model = ConstantTemporalModel()
-            if model.temporal_model is None:
-                temporal_model = ConstantTemporalModel()
-            else:
+            if hasattr(model, "temporal_model"):
                 temporal_model = model.temporal_model
+            else:
+                temporal_model = ConstantTemporalModel()
 
             table = self._sample_coord_time(npred, temporal_model, dataset.gti)
             table["MC_ID"] = idx + 1
