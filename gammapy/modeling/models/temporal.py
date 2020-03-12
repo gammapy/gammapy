@@ -181,17 +181,13 @@ class GaussianTemporalModel(TemporalModel):
         """
 
         pars = self.parameters
-        norm = pars["sigma"].quantity * np.sqrt(2 * np.pi)
-        u_min = norm * (
-            (t_min.mjd - pars["t_ref"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
-        )
-        u_max = norm * (
-            (t_max.mjd - pars["t_ref"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
-        )
+        sigma = pars["sigma"].quantity.to_value("d")
+        norm = np.sqrt(np.pi / 2) * sigma
+        u_min = (t_min.mjd - pars["t_ref"].quantity) / (np.sqrt(2) * sigma)
+        u_max = (t_max.mjd - pars["t_ref"].quantity) / (np.sqrt(2) * sigma)
 
-        integ = 1.0 / 2 * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
-        unit = getattr(pars["sigma"], "unit")
-        return integ / self.time_sum(t_min, t_max).to_value(unit)
+        integ = norm * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
+        return (integ / self.time_sum(t_min, t_max).to_value("d")).value
 
 
 class LightCurveTemplateTemporalModel(TemplateTemporalModel):
