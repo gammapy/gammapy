@@ -28,7 +28,7 @@ def pars():
     x = Parameter("x", 2.1)
     y = Parameter("y", 3.1, scale=1e5)
     z = Parameter("z", 4.1, scale=1e-5)
-    return Parameters([x, y, z])
+    return Parameters([x, y, z], covariance=np.diag([0.2, 3e4, 4e-6]) ** 2)
 
 
 def test_iminuit_basic(pars):
@@ -53,8 +53,6 @@ def test_iminuit_basic(pars):
 
 def test_iminuit_stepsize(pars):
     ds = MyDataset(pars)
-
-    pars.covariance = np.diag([0.2, 3e4, 4e-6]) ** 2
 
     factors, info, minuit = optimize_iminuit(function=ds.fcn, parameters=pars)
 

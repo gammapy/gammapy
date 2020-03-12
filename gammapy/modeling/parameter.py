@@ -67,7 +67,7 @@ class Parameter:
     """
 
     def __init__(
-        self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=np.nan
+        self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=1.
     ):
         self.name = name
         self._link_label_io = None
@@ -288,9 +288,7 @@ class Parameters(collections.abc.Sequence):
         else:
             parameters = list(parameters)
 
-        if covariance is None:
-            covariance = np.diag([par.error ** 2 for par in parameters])
-
+        # TODO: create default covariance from parameter errors
         self._parameters = parameters
         self._covariance = covariance
 
@@ -504,6 +502,9 @@ class Parameters(collections.abc.Sequence):
         >>> model = PowerLawSpectralModel(amplitude="4.2e-11 cm-2 s-1 TeV-1", index=2.7)
         >>> model.parameters.set_error(amplitude="0.6-11 cm-2 s-1 TeV-1", index=0.2)
         """
+        if self._covariance is None:
+            self._covariance = np.zeros((len(self), len(self)))
+
         for key, error in kwargs.items():
             idx = self._get_idx(key)
             error = u.Quantity(error, self[idx].unit).value
@@ -618,6 +619,9 @@ class Parameters(collections.abc.Sequence):
             Sub list of parameters.
 
         """
+        if self._covariance is None:
+            self._covariance = np.zeros((len(self), len(self)))
+
         idx = [self._get_idx(par) for par in parameters]
 
         if not np.all(self.covariance[np.ix_(idx, idx)] == parameters.covariance):

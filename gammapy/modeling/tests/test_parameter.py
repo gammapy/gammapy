@@ -190,8 +190,8 @@ def test_get_subcovariance():
     b = Parameter("b", 20)
     c = Parameter("c", 30)
 
-    pars_0 = Parameters([a, b, c])
-    pars_0.covariance = np.array([[2, 3, 4], [6, 7, 8], [10, 11, 12]])
+    covar = np.array([[2, 3, 4], [6, 7, 8], [10, 11, 12]])
+    pars_0 = Parameters([a, b, c], covariance=covar)
 
     pars_1 = Parameters([a, b])
 
@@ -204,11 +204,8 @@ def test_set_subcovariance():
     b = Parameter("b", 20)
     c = Parameter("c", 30)
 
-    pars_0 = Parameters([a, c, b])
-    pars_0.covariance = np.zeros((3, 3))
-
-    pars_1 = Parameters([a, b])
-    pars_1.covariance = np.array([[2, 3], [6, 7]])
+    pars_0 = Parameters([a, c, b], covariance=np.zeros((3, 3)))
+    pars_1 = Parameters([a, b], covariance=np.array([[2, 3], [6, 7]]))
 
     pars_0.set_subcovariance(pars_1)
     assert_equal(pars_0.covariance, np.array([[2, 0, 3], [0, 0, 0], [6, 0, 7]]))
