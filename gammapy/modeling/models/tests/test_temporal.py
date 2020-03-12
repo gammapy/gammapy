@@ -182,7 +182,7 @@ def test_gaussian_temporal_model_integral():
     gti = GTI.create(start, stop, reference_time=t_ref)
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
-    assert_allclose(np.sum(val), 0.160278, rtol=1e-5)
+    assert_allclose(np.sum(val), 0.682668, rtol=1e-5)
 
 
 @requires_data()
