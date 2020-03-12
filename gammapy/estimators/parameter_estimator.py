@@ -69,10 +69,9 @@ class ParameterEstimator:
 
         return datasets
 
-    def _freeze_parameters(self, datasets, parameter):
+    def _freeze_parameters(self, parameter):
         """Freeze all other parameters"""
-        # freeze other parameters
-        for par in datasets.parameters:
+        for par in self.datasets.parameters:
             if par is not parameter:
                 par.frozen = True
 
@@ -159,7 +158,6 @@ class ParameterEstimator:
 
             if not result.pop("success"):
                 log.warning("Fit failed for parameter estimate, setting NaN.")
-                return result
 
             value_max = result[parameter.name]
 
@@ -167,15 +165,6 @@ class ParameterEstimator:
                 res = self.fit.covariance()
                 value_err = res.parameters.error(parameter)
                 result.update({f"{parameter.name}_err": value_err})
-
-            if "ts" in steps:
-                TS0 = self._estimate_ts_for_null_value(parameter, null_value)
-                res = TS0 - TS1
-                result.update(
-                    {"sqrt_ts": np.sqrt(res), "ts": res, "null_value": null_value}
-                )
-                # TODO: should not need this
-                self.fit.optimize()
 
             if "errp-errn" in steps:
                 res = self.fit.confidence(parameter=parameter, sigma=self.sigma)
@@ -189,6 +178,15 @@ class ParameterEstimator:
             if "ul" in steps:
                 res = self.fit.confidence(parameter=parameter, sigma=self.sigma_ul)
                 result.update({f"{parameter.name}_ul": res["errp"] + value_max})
+
+            if "ts" in steps:
+                TS0 = self._estimate_ts_for_null_value(parameter, null_value)
+                res = TS0 - TS1
+                result.update(
+                    {"sqrt_ts": np.sqrt(res), "ts": res, "null_value": null_value}
+                )
+                # TODO: should not need this
+                self.fit.optimize()
 
             if "scan" in steps:
                 if scan_values is None:

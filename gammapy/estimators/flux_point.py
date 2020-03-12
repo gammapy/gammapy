@@ -878,7 +878,7 @@ class FluxPointsEstimator(FluxEstimator):
         steps : list of str
             Which steps to execute. Available options are:
 
-                * "err": estimate symmetric error.
+                * "norm-err": estimate symmetric error.
                 * "errn-errp": estimate asymmetric errors.
                 * "ul": estimate upper limits.
                 * "ts": estimate ts and sqrt(ts) values.

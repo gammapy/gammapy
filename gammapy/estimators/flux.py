@@ -81,13 +81,13 @@ class FluxEstimator(ParameterEstimator):
         self.norm_values = norm_values
 
         self.source = source
-        datasets = self._set_scale_model(datasets)
 
         self.energy_range = energy_range
 
         super().__init__(
             datasets, sigma, sigma_ul, reoptimize,
         )
+        self._set_scale_model()
 
     @property
     def energy_range(self):
@@ -119,11 +119,10 @@ class FluxEstimator(ParameterEstimator):
         s += str(self.model) + "\n"
         return s
 
-    def _set_scale_model(self, datasets):
+    def _set_scale_model(self):
         # set the model on all datasets
-        for dataset in datasets:
+        for dataset in self.datasets:
             dataset.models[self.source].spectral_model = self.model
-        return datasets
 
     def _prepare_result(self):
         """Prepare the result dictionnary"""
@@ -180,9 +179,12 @@ class FluxEstimator(ParameterEstimator):
         steps = self._prepare_steps(steps)
         result = self._prepare_result()
 
+        self.model.norm.value = 1.05
+        self.model.norm.frozen = False
+
         result.update(
             super().run(
-                self.model.parameters["norm"],
+                self.model.norm,
                 steps,
                 null_value=0,
                 scan_values=self.norm_values,
