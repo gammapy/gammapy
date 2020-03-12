@@ -82,6 +82,10 @@ class TSMapEstimator:
         Input MapDataset.
     kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
         Source model kernel.
+    downsampling_factor : int
+            Sample down the input maps to speed up the computation. Only integer
+            values that are a multiple of 2 are allowed. Note that the kernel is
+            not sampled down, but must be provided with the downsampled bin size.
     method : str ('root')
         The following options are available:
 
@@ -132,6 +136,7 @@ class TSMapEstimator:
         self,
         dataset,
         kernel,
+        downsampling_factor=None,
         method="root brentq",
         error_method="covar",
         error_sigma=1,
@@ -145,6 +150,8 @@ class TSMapEstimator:
         if not isinstance(kernel, Kernel2D):
             kernel = CustomKernel(kernel)
         self.kernel = kernel
+
+        self.downsampling_factor = downsampling_factor
 
         if method not in ["root brentq", "root newton", "leastsq iter"]:
             raise ValueError(f"Not a valid method: '{method}'")
@@ -248,7 +255,7 @@ class TSMapEstimator:
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return map_ts.copy(data=sqrt_ts)
 
-    def run(self,  which="all", downsampling_factor=None):
+    def run(self,  steps="all"):
         """
         Run TS map estimation.
 
@@ -257,12 +264,8 @@ class TSMapEstimator:
 
         Parameters
         ----------
-        which : list of str or 'all'
+        steps : list of str or 'all'
             Which maps to compute.
-        downsampling_factor : int
-            Sample down the input maps to speed up the computation. Only integer
-            values that are a multiple of 2 are allowed. Note that the kernel is
-            not sampled down, but must be provided with the downsampled bin size.
 
         Returns
         -------
@@ -286,31 +289,31 @@ class TSMapEstimator:
         else:
             mask = counts.copy(data=np.ones_like(counts).astype("int"))
 
-        if downsampling_factor:
+        if self.downsampling_factor:
             shape = counts.data.shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
 
             counts = counts.pad(pad_width).downsample(
-                downsampling_factor, preserve_counts=True
+                self.downsampling_factor, preserve_counts=True
             )
             background = background.pad(pad_width).downsample(
-                downsampling_factor, preserve_counts=True
+                self.downsampling_factor, preserve_counts=True
             )
             exposure = exposure.pad(pad_width).downsample(
-                downsampling_factor, preserve_counts=False
+                self.downsampling_factor, preserve_counts=False
             )
             mask = mask.pad(pad_width).downsample(
-                downsampling_factor, preserve_counts=False
+                self.downsampling_factor, preserve_counts=False
             )
             mask.data = mask.data.astype("int")
 
         mask.data &= self.mask_default(exposure, background, self.kernel).data
 
-        if which == "all":
-            which = ["ts", "sqrt_ts", "flux", "flux_err", "flux_ul", "niter"]
+        if steps == "all":
+            steps = ["ts", "sqrt_ts", "flux", "flux_err", "flux_ul", "niter"]
 
         result = {}
-        for name in which:
+        for name in steps:
             data = np.nan * np.ones_like(counts.data)
             result[name] = counts.copy(data=data)
 
@@ -329,8 +332,8 @@ class TSMapEstimator:
         # Compute null statistics per pixel for the whole image
         c_0 = cash(counts_array, background_array)
 
-        error_method = p["error_method"] if "flux_err" in which else "none"
-        ul_method = p["ul_method"] if "flux_ul" in which else "none"
+        error_method = p["error_method"] if "flux_err" in steps else "none"
+        ul_method = p["ul_method"] if "flux_ul" in steps else "none"
 
         wrap = functools.partial(
             _ts_value,
@@ -358,30 +361,30 @@ class TSMapEstimator:
         for name in ["ts", "flux", "niter"]:
             result[name].data[j, i] = [_[name] for _ in results]
 
-        if "flux_err" in which:
+        if "flux_err" in steps:
             result["flux_err"].data[j, i] = [_["flux_err"] for _ in results]
 
-        if "flux_ul" in which:
+        if "flux_ul" in steps:
             result["flux_ul"].data[j, i] = [_["flux_ul"] for _ in results]
 
         # Compute sqrt(TS) values
-        if "sqrt_ts" in which:
+        if "sqrt_ts" in steps:
             result["sqrt_ts"] = self.sqrt_ts(result["ts"])
 
-        if downsampling_factor:
-            for name in which:
+        if self.downsampling_factor:
+            for name in steps:
                 order = 0 if name == "niter" else 1
                 result[name] = result[name].upsample(
-                    factor=downsampling_factor, preserve_counts=False, order=order
+                    factor=self.downsampling_factor, preserve_counts=False, order=order
                 )
                 result[name] = result[name].crop(crop_width=pad_width)
 
         # Set correct units
-        if "flux" in which:
+        if "flux" in steps:
             result["flux"].unit = flux_map.unit
-        if "flux_err" in which:
+        if "flux_err" in steps:
             result["flux_err"].unit = flux_map.unit
-        if "flux_ul" in which:
+        if "flux_ul" in steps:
             result["flux_ul"].unit = flux_map.unit
 
         return result
