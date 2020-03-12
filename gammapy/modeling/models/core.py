@@ -2,11 +2,13 @@
 import collections.abc
 import copy
 from pathlib import Path
+from os.path import splitext
 import astropy.units as u
-import numpy as np
+from astropy.table import Table, hstack
 import yaml
 from gammapy.modeling import Parameter, Parameters, Covariance
 from gammapy.utils.scripts import make_path, make_name
+import numpy as np
 
 
 def _set_link(shared_register, model):
@@ -155,6 +157,7 @@ class Models(collections.abc.MutableSequence):
             unique_names.append(model.name)
 
         self._models = models
+        self._covar_path = None
         self._covariance = Covariance(self.parameters)
 
     def _check_covariance(self):
@@ -213,6 +216,8 @@ class Models(collections.abc.MutableSequence):
             model = MODELS.get_cls(component["type"]).from_dict(component)
             models.append(model)
         models = cls(models)
+        if "covariance" in data:
+            models.covariance_from_table(data["covariance"])
 
         shared_register = {}
         for model in models:
@@ -229,12 +234,39 @@ class Models(collections.abc.MutableSequence):
                 shared_register = _set_link(shared_register, model)
         return models
 
+    def covariance_from_table(self, covar_path):
+        self._covar_path = Path(covar_path)
+        t = Table.read(self._covar_path, format="ascii.fixed_width")
+        t.remove_column("Parameters")
+        arr = np.array(t)
+        # convert structured array to array
+        self.covariance = arr.view(np.float).reshape(arr.shape + (-1,))
+
+    def covariance_to_table(self, covar_path=None):
+        if self.covariance is not None:
+            param_names = []
+            for m in self._models:
+                for p in m.parameters:
+                    param_names = m.name + "@" + m.name
+            t1 = Table()
+            t1["Parameters"] = param_names
+            t2 = Table(self.covariance, names=param_names)
+            t = hstack([t1, t2])
+
+            if covar_path is not None:
+                t.write(covar_path, format="ascii.fixed_width", delimiter="|")
+            return t
+
     def write(self, path, overwrite=False):
         """Write to YAML file."""
         path = make_path(path)
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
         path.write_text(self.to_yaml())
+
+        if self.covariance is not None:
+            self._covar_path = Path(splitext(str(path))[0] + "_covariance.dat")
+            self.covariance_to_table(covar_path=self._covar_path)
 
     def to_yaml(self):
         """Convert to YAML string."""
@@ -260,7 +292,10 @@ class Models(collections.abc.MutableSequence):
         for model in self._models:
             model_data = model.to_dict()
             models_data.append(model_data)
-        return {"components": models_data}
+        if self._covar_path is not None:
+            return {"components": models_data, "covariance": str(self._covar_path)}
+        else:
+            return {"components": models_data}
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"
