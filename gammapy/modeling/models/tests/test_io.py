@@ -14,7 +14,6 @@ from gammapy.modeling.models import (
     Models,
     BackgroundModel,
 )
-from gammapy.modeling.models.io import dict_to_models
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
@@ -23,8 +22,7 @@ from gammapy.utils.testing import requires_data
 def test_dict_to_skymodels():
     filename = get_pkg_data_filename("data/examples.yaml")
     models_data = read_yaml(filename)
-
-    models = dict_to_models(models_data)
+    models = Models.from_dict(models_data)
 
     assert len(models) == 5
 

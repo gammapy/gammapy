@@ -5,7 +5,21 @@ from pathlib import Path
 import astropy.units as u
 import yaml
 from gammapy.modeling import Parameter, Parameters
-from gammapy.utils.scripts import make_path
+from gammapy.utils.scripts import make_path, make_name
+
+
+def _set_link(shared_register, model):
+    for param in model.parameters:
+        name = param.name
+        link_label = param._link_label_io
+        if link_label is not None:
+            if link_label in shared_register:
+                new_param = shared_register[link_label]
+                model.parameters.link(name, new_param)
+            else:
+                shared_register[link_label] = param
+    return shared_register
+
 
 __all__ = ["Model", "Models"]
 
@@ -151,10 +165,34 @@ class Models(collections.abc.MutableSequence):
     @classmethod
     def from_yaml(cls, yaml_str):
         """Create from YAML string."""
-        from .io import dict_to_models
         data = yaml.safe_load(yaml_str)
-        models = dict_to_models(data)
-        return cls(models)
+        return cls.from_dict(data)
+
+    @classmethod
+    def from_dict(cls, data):
+        """Create from dict."""
+        from . import MODELS, SkyModel
+
+        models = []
+        for component in data["components"]:
+            model = MODELS.get_cls(component["type"]).from_dict(component)
+            models.append(model)
+        models = cls(models)
+
+        shared_register = {}
+        for model in models:
+            if isinstance(model, SkyModel):
+                submodels = [
+                    model.spectral_model,
+                    model.spatial_model,
+                    model.temporal_model,
+                ]
+                for submodel in submodels:
+                    if submodel is not None:
+                        shared_register = _set_link(shared_register, submodel)
+            else:
+                shared_register = _set_link(shared_register, model)
+        return models
 
     def write(self, path, overwrite=False):
         """Write to YAML file."""
@@ -165,11 +203,29 @@ class Models(collections.abc.MutableSequence):
 
     def to_yaml(self):
         """Convert to YAML string."""
-        from .io import models_to_dict
-        data = models_to_dict(self._models)
+        data = self.to_dict()
         return yaml.dump(
             data, sort_keys=False, indent=4, width=80, default_flow_style=None
         )
+
+    def to_dict(self):
+        """Convert to dict."""
+        # update linked parameters labels
+        params_list = []
+        params_shared = []
+        for param in self.parameters:
+            if param not in params_list:
+                params_list.append(param)
+            elif param not in params_shared:
+                params_shared.append(param)
+        for param in params_shared:
+            param._link_label_io = param.name + "@" + make_name()
+
+        models_data = []
+        for model in self._models:
+            model_data = model.to_dict()
+            models_data.append(model_data)
+        return {"components": models_data}
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"
