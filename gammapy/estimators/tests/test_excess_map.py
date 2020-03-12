@@ -14,12 +14,12 @@ def image_to_cube(input_map, e_min, e_max):
     e_max = u.Quantity(e_max)
     axis = MapAxis.from_energy_bounds(e_min, e_max, nbin=1)
     geom = input_map.geom.to_cube([axis])
-    return Map.from_geom(geom, data=map.data[np.newaxis,:,:])
+    return Map.from_geom(geom, data=input_map.data[np.newaxis,:,:])
 
 @pytest.fixture
 def simple_dataset():
     axis = MapAxis.from_energy_bounds(0.1, 10, 1, unit="TeV")
-    geom = WcsGeom.create(npix=50, binsz=0.02, axes=[axis])
+    geom = WcsGeom.create(npix=20, binsz=0.02, axes=[axis])
     dataset = MapDataset.create(geom)
     dataset.mask_safe += 1
     dataset.counts += 2
@@ -30,7 +30,7 @@ def simple_dataset():
 @pytest.fixture
 def simple_dataset_on_off():
     axis = MapAxis.from_energy_bounds(0.1, 10, 1, unit="TeV")
-    geom = WcsGeom.create(npix=50, binsz=0.02, axes=[axis])
+    geom = WcsGeom.create(npix=20, binsz=0.02, axes=[axis])
     dataset = MapDatasetOnOff.create(geom)
     dataset.mask_safe += 1
     dataset.counts += 2
@@ -108,19 +108,23 @@ def test_significance_map_estimator_incorrect_dataset():
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
     estimator = CorrelatedExcessMapEstimator(simple_dataset, 0.1 * u.deg)
-    result = estimator.run(steps=["ts"])
+    result = estimator.run(steps="all")
 
-    assert_allclose(result["counts"].data[0, 25, 25], 162)
-    assert_allclose(result["excess"].data[0, 25, 25], 81)
-    assert_allclose(result["background"].data[0, 25, 25], 81)
-    assert_allclose(result["significance"].data[0, 25, 25], 7.910732, atol=1e-5)
+    assert_allclose(result["counts"].data[0, 10, 10], 162)
+    assert_allclose(result["excess"].data[0, 10, 10], 81)
+    assert_allclose(result["background"].data[0, 10, 10], 81)
+    assert_allclose(result["significance"].data[0, 10, 10], 7.910732, atol=1e-5)
+    assert_allclose(result["err"].data[0, 10, 10], 12.727922, atol=1e-3)
+    assert_allclose(result["errp"].data[0, 10, 10], 13.063328, atol=1e-3)
+    assert_allclose(result["errn"].data[0, 10, 10], -12.396716, atol=1e-3)
+    assert_allclose(result["ul"].data[0, 10, 10], 122.240837, atol=1e-3)
 
 
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     estimator = CorrelatedExcessMapEstimator(simple_dataset_on_off, 0.11 * u.deg)
     result = estimator.run(steps=["ts"])
 
-    assert_allclose(result["counts"].data[0, 25, 25], 194)
-    assert_allclose(result["excess"].data[0, 25, 25], 97)
-    assert_allclose(result["background"].data[0, 25, 25], 97)
-    assert_allclose(result["significance"].data[0, 25, 25], 5.741116, atol=1e-5)
+    assert_allclose(result["counts"].data[0, 10, 10], 194)
+    assert_allclose(result["excess"].data[0, 10, 10], 97)
+    assert_allclose(result["background"].data[0, 10, 10], 97)
+    assert_allclose(result["significance"].data[0, 10, 10], 5.741116, atol=1e-5)

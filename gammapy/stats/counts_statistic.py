@@ -19,7 +19,7 @@ class CountsStatistic(abc.ABC):
     @property
     def significance(self):
         """Return statistical significance of measured excess."""
-        return np.sign(self.excess) * np.sqrt(delta_ts)
+        return np.sign(self.excess) * np.sqrt(self.delta_ts)
 
     @property
     def p_value(self):
