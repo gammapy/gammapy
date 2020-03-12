@@ -164,6 +164,10 @@ class Models(collections.abc.MutableSequence):
 
     @property
     def covariance(self):
+
+        for model in self._models:
+            self.parameters.set_subcovariance(model.parameters)
+
         return self.parameters.covariance
 
     @covariance.setter
@@ -178,7 +182,7 @@ class Models(collections.abc.MutableSequence):
     def parameters(self):
         return Parameters.from_stack(
             [_.parameters for _ in self._models],
-            covariance=self._covariance
+            covariance=self._covariance,
         )
 
     @property

@@ -86,16 +86,22 @@ class SkyModel(SkyModelBase):
         self._covariance = None
 
     @property
+    def _model_components(self):
+        return self.spectral_model, self.spatial_model, self.temporal_model
+
+    @property
     def covariance(self):
+        for model in self._model_components:
+            if model is not None:
+                self.parameters.set_subcovariance(model.parameters)
+
         return self.parameters.covariance
 
     @covariance.setter
     def covariance(self, covariance):
         self._covariance = self.parameters.check_covariance(covariance)
 
-        for model in [
-            self.spectral_model, self.spatial_model, self.temporal_model
-        ]:
+        for model in self._model_components:
             if model is not None:
                 subcovar = self.parameters.get_subcovariance(model.parameters)
                 model.covariance = subcovar

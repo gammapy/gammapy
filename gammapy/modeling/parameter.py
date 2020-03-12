@@ -283,6 +283,9 @@ class Parameters(collections.abc.Sequence):
         else:
             parameters = list(parameters)
 
+        if covariance is None:
+            covariance = np.diag(np.ones(len(parameters)))
+
         self._parameters = parameters
         self._covariance = covariance
 
@@ -334,10 +337,6 @@ class Parameters(collections.abc.Sequence):
                     parameters.set_subcovariance(pars)
 
         return parameters
-
-    @property
-    def _empty_covariance(self):
-        return np.zeros((len(self), len(self)))
 
     def copy(self):
         """A deep copy"""
@@ -492,9 +491,6 @@ class Parameters(collections.abc.Sequence):
         >>> model = PowerLawSpectralModel(amplitude="4.2e-11 cm-2 s-1 TeV-1", index=2.7)
         >>> model.parameters.set_error(amplitude="0.6-11 cm-2 s-1 TeV-1", index=0.2)
         """
-        if self.covariance is None:
-            self._covariance = self._empty_covariance
-
         for key, error in kwargs.items():
             idx = self._get_idx(key)
             error = u.Quantity(error, self[idx].unit).value
@@ -530,7 +526,7 @@ class Parameters(collections.abc.Sequence):
 
     def _expand_factor_matrix(self, matrix):
         """Expand covariance matrix with zeros for frozen parameters"""
-        matrix_expanded = self._empty_covariance
+        matrix_expanded = np.zeros((len(self), len(self)))
         mask = np.array([par.frozen for par in self._parameters])
         free_parameters = ~(mask | mask[:, np.newaxis])
         matrix_expanded[free_parameters] = matrix.ravel()
@@ -609,10 +605,12 @@ class Parameters(collections.abc.Sequence):
             Sub list of parameters.
 
         """
-        if self.covariance is None:
-            self._covariance = self._empty_covariance
-
         idx = [self._get_idx(par) for par in parameters]
+
+        if not np.all(self.covariance[np.ix_(idx, idx)] == parameters.covariance):
+            self.covariance[idx, :] = 0
+            self.covariance[:, idx] = 0
+
         self.covariance[np.ix_(idx, idx)] = parameters.covariance
 
     def check_covariance(self, covariance):
