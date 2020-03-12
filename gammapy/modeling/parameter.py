@@ -67,7 +67,7 @@ class Parameter:
     """
 
     def __init__(
-        self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False
+        self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=np.nan
     ):
         self.name = name
         self._link_label_io = None
@@ -86,6 +86,7 @@ class Parameter:
         self.min = min
         self.max = max
         self.frozen = frozen
+        self._error = error
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -101,6 +102,10 @@ class Parameter:
         else:
             par = instance.__dict__[self.name]
             raise TypeError(f"Cannot assign {value!r} to parameter {par!r}")
+
+    @property
+    def error(self):
+        return self._error
 
     @property
     def name(self):
@@ -284,7 +289,7 @@ class Parameters(collections.abc.Sequence):
             parameters = list(parameters)
 
         if covariance is None:
-            covariance = np.diag(np.ones(len(parameters)))
+            covariance = np.diag([par.error ** 2 for par in parameters])
 
         self._parameters = parameters
         self._covariance = covariance
@@ -380,11 +385,19 @@ class Parameters(collections.abc.Sequence):
         idx = self._get_idx(name)
         return self._parameters[idx]
 
-    # TODO: think about a better API for this, add docs.
     def link(self, par, other_par):
-        """Create link to other parameter"""
+        """Create link to other parameter
+
+        Parameters
+        ----------
+        par : str, int or `Parameter`
+            Parameter to be linked
+        other_par : str, int or `Parameter`
+            Parameter to be linked
+        """
         idx = self._get_idx(par)
         self._parameters[idx] = other_par
+        #TODO: handle covariance
 
     def __len__(self):
         return len(self._parameters)

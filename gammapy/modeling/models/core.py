@@ -74,11 +74,12 @@ class Model:
 
     @covariance.setter
     def covariance(self, covariance):
-        covariance = self.parameters.check_covariance(covariance)
-        self.parameters._covariance = covariance
+        self.parameters._covariance = self.parameters.check_covariance(covariance)
 
-        for idx, par in enumerate(self.parameters):
-            par.error = np.sqrt(covariance[idx, idx])
+        for par in self.parameters:
+            pars = Parameters([par])
+            variance = self.parameters.get_subcovariance(pars)
+            par._error = float(np.sqrt(variance))
 
     @property
     def parameters(self):
@@ -117,7 +118,7 @@ class Model:
 
         Examples
         --------
-        >>> from gammapy.modeling import Model
+        >>> from gammapy.modeling.models import Model
         >>> spectral_model = Model.create("PowerLaw2SpectralModel", amplitude="1e-10 cm-2 s-1", index=3)
         >>> type(spectral_model)
         gammapy.modeling.models.spectral.PowerLaw2SpectralModel
@@ -164,8 +165,9 @@ class Models(collections.abc.MutableSequence):
 
     @property
     def covariance(self):
-
         for model in self._models:
+            # trigger recursive update
+            _ = model.covariance
             self.parameters.set_subcovariance(model.parameters)
 
         return self.parameters.covariance
