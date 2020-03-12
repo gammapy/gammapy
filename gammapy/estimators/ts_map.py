@@ -78,6 +78,10 @@ class TSMapEstimator:
 
     Parameters
     ----------
+    dataset : `~gammapy.datasets.MapDataset`
+        Input MapDataset.
+    kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
+        Source model kernel.
     method : str ('root')
         The following options are available:
 
@@ -127,6 +131,7 @@ class TSMapEstimator:
     def __init__(
         self,
         dataset,
+        kernel,
         method="root brentq",
         error_method="covar",
         error_sigma=1,
@@ -135,8 +140,11 @@ class TSMapEstimator:
         threshold=None,
         rtol=0.001,
     ):
-
         self.dataset = dataset
+
+        if not isinstance(kernel, Kernel2D):
+            kernel = CustomKernel(kernel)
+        self.kernel = kernel
 
         if method not in ["root brentq", "root newton", "leastsq iter"]:
             raise ValueError(f"Not a valid method: '{method}'")
@@ -240,7 +248,7 @@ class TSMapEstimator:
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return map_ts.copy(data=sqrt_ts)
 
-    def run(self, kernel, which="all", downsampling_factor=None):
+    def run(self,  which="all", downsampling_factor=None):
         """
         Run TS map estimation.
 
@@ -249,8 +257,6 @@ class TSMapEstimator:
 
         Parameters
         ----------
-        kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
-            Source model kernel.
         which : list of str or 'all'
             Which maps to compute.
         downsampling_factor : int
@@ -265,7 +271,7 @@ class TSMapEstimator:
         """
         p = self.parameters
 
-        if (np.array(kernel.shape) > np.array(self.dataset.counts.data.shape[1:])).any():
+        if (np.array(self.kernel.shape) > np.array(self.dataset.counts.data.shape[1:])).any():
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
                 " size of the kernel"
@@ -298,10 +304,7 @@ class TSMapEstimator:
             )
             mask.data = mask.data.astype("int")
 
-        mask.data &= self.mask_default(exposure, background, kernel).data
-
-        if not isinstance(kernel, Kernel2D):
-            kernel = CustomKernel(kernel)
+        mask.data &= self.mask_default(exposure, background, self.kernel).data
 
         if which == "all":
             which = ["ts", "sqrt_ts", "flux", "flux_err", "flux_ul", "niter"]
@@ -311,7 +314,7 @@ class TSMapEstimator:
             data = np.nan * np.ones_like(counts.data)
             result[name] = counts.copy(data=data)
 
-        flux_map = self.flux_default(self.dataset, kernel)
+        flux_map = self.flux_default(self.dataset, self.kernel)
 
         if p["threshold"] or p["method"] == "root newton":
             flux = flux_map.data
@@ -335,7 +338,7 @@ class TSMapEstimator:
             exposure=exposure_array,
             background=background_array,
             c_0=c_0,
-            kernel=kernel,
+            kernel=self.kernel,
             flux=flux,
             method=p["method"],
             error_method=error_method,
