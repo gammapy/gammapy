@@ -12,13 +12,13 @@ class CountsStatistic(abc.ABC):
     @property
     def delta_ts(self):
         """Return TS difference of measured excess versus no excess."""
-        return self.TS_null - self.TS_max
+        # Remove (small) negative delta TS due to error in root finding
+        delta_ts = np.clip(self.TS_null - self.TS_max,0, None)
+        return delta_ts
 
     @property
     def significance(self):
         """Return statistical significance of measured excess."""
-        # Remove (small) negative delta TS due to error in root finding
-        delta_ts = np.clip(self.delta_ts,0, None)
         return np.sign(self.excess) * np.sqrt(delta_ts)
 
     @property

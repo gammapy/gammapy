@@ -6,7 +6,6 @@ from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.maps import Map
 from gammapy.datasets import MapDataset, MapDatasetOnOff
-from gammapy.stats import significance, significance_on_off
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 
 __all__ = [

@@ -3,18 +3,17 @@ import pytest
 from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
-from astropy.convolution import Tophat2DKernel
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import CorrelatedExcessMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
 from gammapy.modeling.models import BackgroundModel
 
-def image_to_cube(map, e_min, e_max):
+def image_to_cube(input_map, e_min, e_max):
     e_min = u.Quantity(e_min)
     e_max = u.Quantity(e_max)
     axis = MapAxis.from_energy_bounds(e_min, e_max, nbin=1)
-    geom = map.geom.to_cube([axis])
+    geom = input_map.geom.to_cube([axis])
     return Map.from_geom(geom, data=map.data[np.newaxis,:,:])
 
 @pytest.fixture
@@ -105,7 +104,7 @@ def test_compute_lima_on_off_image():
 
 def test_significance_map_estimator_incorrect_dataset():
     with pytest.raises(ValueError):
-        estimator = CorrelatedExcessMapEstimator("bad")
+        CorrelatedExcessMapEstimator("bad")
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
     estimator = CorrelatedExcessMapEstimator(simple_dataset, 0.1 * u.deg)
