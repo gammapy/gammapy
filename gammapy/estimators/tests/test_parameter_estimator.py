@@ -43,8 +43,8 @@ def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
     assert_allclose(result["amplitude"], 5.142843823441639e-11, rtol=1e-3)
     assert_allclose(result["amplitude_err"], 6.0075e-12, rtol=1e-3)
     assert_allclose(result["ts"], 353.2092043652601, rtol=1e-3)
-    assert_allclose(result["amplitude_errp"], 6.703e-12, rtol=1e-3)
-    assert_allclose(result["amplitude_errn"], 6.152e-12, rtol=1e-3)
+    assert_allclose(result["amplitude_errp"], 6.703e-12, rtol=5e-3)
+    assert_allclose(result["amplitude_errn"], 6.152e-12, rtol=5e-3)
 
     # Add test for scan
     assert_allclose(result["amplitude_scan"].shape, 10)

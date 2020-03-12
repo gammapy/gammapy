@@ -148,7 +148,7 @@ class ParameterEstimator:
         with self.datasets.parameters.restore_values:
 
             if not self.reoptimize:
-                self._freeze_parameters(self.datasets, parameter)
+                self._freeze_parameters(parameter)
 
             if steps == "all":
                 steps = ["err", "ts", "errp-errn", "ul", "scan"]
