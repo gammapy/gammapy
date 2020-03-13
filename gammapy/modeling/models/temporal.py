@@ -141,7 +141,9 @@ class ExpDecayTemporalModel(TemporalModel):
     tag = "ExponentialDecayTemporalModel"
 
     t0 = Parameter("t0", "1 d", frozen=False)
-    t_ref = Parameter("t_ref", 55555, frozen=True)
+
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, frozen=True)
 
     def evaluate(self, time, t0, t_ref):
         return np.exp(-(time.mjd - t_ref) / t0.to_value("d"))
@@ -165,10 +167,13 @@ class GaussianTemporalModel(TemporalModel):
     """
 
     tag = "GaussianTemporalModel"
-    t_ref = Parameter("t_ref", 55555, frozen=False)
+
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, frozen=False)
     sigma = Parameter("sigma", "1 d", frozen=False)
 
-    def evaluate(self, time, t_ref, sigma):
+    @staticmethod
+    def evaluate(time, t_ref, sigma):
         return np.exp(-((time.mjd - t_ref) ** 2) / (2 * sigma.to_value("d") ** 2))
 
     def integral(self, t_min, t_max, **kwargs):
