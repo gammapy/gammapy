@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import astropy.units as u
 from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter, Parameters, Covariance
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_name, make_path
 from .core import Model, Models
@@ -86,27 +86,29 @@ class SkyModel(SkyModelBase):
         self._covariance = None
 
     @property
-    def _model_components(self):
-        return self.spectral_model, self.spatial_model, self.temporal_model
+    def _models(self):
+        models = self.spectral_model, self.spatial_model, self.temporal_model
+        return [_ for _ in models if _]
 
     @property
     def covariance(self):
-        for model in self._model_components:
-            if model is not None:
-                # trigger recursive update
-                _ = model.covariance
-                self.parameters.set_subcovariance(model.parameters)
+        if self._covariance is None or self._covariance.needs_update(self.parameters):
+            self._covariance = Covariance.from_stack(
+                [model.covariance for model in self._models]
+            )
 
-        return self.parameters.covariance
+        for model in self._models:
+            self._covariance.set_subcovariance(model.covariance)
+
+        return self._covariance
 
     @covariance.setter
     def covariance(self, covariance):
-        self._covariance = self.parameters.check_covariance(covariance)
+        self._covariance.data = covariance
 
-        for model in self._model_components:
-            if model is not None:
-                subcovar = self.parameters.get_subcovariance(model.parameters)
-                model.covariance = subcovar
+        for model in self._models:
+            subcovar = self._covariance.get_subcovariance(model.covariance)
+            model.covariance = subcovar
 
     @property
     def name(self):
@@ -116,14 +118,15 @@ class SkyModel(SkyModelBase):
     def parameters(self):
         parameters = []
 
+        parameters.append(self.spectral_model.parameters)
+
         if self.spatial_model is not None:
             parameters.append(self.spatial_model.parameters)
 
         if self.temporal_model is not None:
             parameters.append(self.temporal_model.parameters)
 
-        parameters.append(self.spectral_model.parameters)
-        return Parameters.from_stack(parameters, covariance=self._covariance)
+        return Parameters.from_stack(parameters)
 
     @property
     def spatial_model(self):

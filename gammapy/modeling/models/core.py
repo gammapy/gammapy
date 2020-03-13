@@ -5,7 +5,7 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 import yaml
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter, Parameters, Covariance
 from gammapy.utils.scripts import make_path, make_name
 
 
@@ -49,6 +49,8 @@ class Model:
 
             self._parameters[name].quantity = u.Quantity(value)
 
+        self._covariance = Covariance(self.parameters)
+
     def __init_subclass__(cls, **kwargs):
         # Add parameters list on the model sub-class (not instances)
         cls.default_parameters = Parameters(
@@ -71,19 +73,21 @@ class Model:
     @property
     def covariance(self):
         for par in self._parameters:
-            pars = Parameters([par], covariance=par.error ** 2)
-            self.parameters.set_subcovariance(pars)
-
-        return self.parameters.covariance
+            pars = Parameters([par])
+            covar = Covariance(pars, data=[[par.error ** 2]])
+            self._covariance.set_subcovariance(covar)
+        return self._covariance
 
     @covariance.setter
     def covariance(self, covariance):
-        self.parameters._covariance = self.parameters.check_covariance(covariance)
+        self._covariance.data = covariance
 
         for par in self.parameters:
             pars = Parameters([par])
-            variance = self.parameters.get_subcovariance(pars)
+            covar = Covariance(pars)
+            variance = self._covariance.get_subcovariance(covar)
             par.error = np.sqrt(variance)
+
 
     @property
     def parameters(self):
@@ -170,27 +174,27 @@ class Models(collections.abc.MutableSequence):
 
     @property
     def covariance(self):
-        for model in self._models:
-            # trigger recursive update
-            _ = model.covariance
-            self.parameters.set_subcovariance(model.parameters)
+        if self._covariance is None or self._covariance.needs_update(self.parameters):
+            self._covariance = Covariance.from_stack(
+                [model.covariance for model in self._models]
+            )
 
-        return self.parameters.covariance
+        for model in self._models:
+            self._covariance.set_subcovariance(model.covariance)
+
+        return self._covariance
 
     @covariance.setter
     def covariance(self, covariance):
-        self._covariance = self.parameters.check_covariance(covariance)
+        self._covariance.data = covariance
 
         for model in self._models:
-            subcovar = self.parameters.get_subcovariance(model.parameters)
+            subcovar = self._covariance.get_subcovariance(model.covariance)
             model.covariance = subcovar
 
     @property
     def parameters(self):
-        return Parameters.from_stack(
-            [_.parameters for _ in self._models],
-            covariance=self._covariance,
-        )
+        return Parameters.from_stack([_.parameters for _ in self._models])
 
     @property
     def names(self):

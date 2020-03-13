@@ -1254,14 +1254,13 @@ class AbsorbedSpectralModel(SpectralModel):
     def covariance(self):
         _ = self.spectral_model.covariance
         self.parameters.set_subcovariance(self.spectral_model.parameters)
-        return self.parameters.covariance
+        return self._covariance
 
     @covariance.setter
     def covariance(self, covariance):
         self._covariance = self.parameters.check_covariance(covariance)
         subcovar = self.parameters.get_subcovariance(self.spectral_model.parameters)
         self.spectral_model.covariance = subcovar
-
 
     @property
     def parameters(self):

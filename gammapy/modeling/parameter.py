@@ -427,11 +427,7 @@ class Parameters(collections.abc.Sequence):
         t = Table()
         t["name"] = [p.name for p in self._parameters]
         t["value"] = [p.value for p in self._parameters]
-        if self.covariance is None:
-            t["error"] = np.nan
-        else:
-            t["error"] = [p.error for p in self._parameters]
-
+        t["error"] = [p.error for p in self._parameters]
         t["unit"] = [p.unit.to_string("fits") for p in self._parameters]
         t["min"] = [p.min for p in self._parameters]
         t["max"] = [p.max for p in self._parameters]
@@ -441,6 +437,9 @@ class Parameters(collections.abc.Sequence):
             t[name].format = ".3e"
 
         return t
+
+    def __eq__(self, other):
+        return np.all([p is p_new for p, p_new in zip(self, other)])
 
     @classmethod
     def from_dict(cls, data):
