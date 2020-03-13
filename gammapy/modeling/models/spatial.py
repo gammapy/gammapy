@@ -150,6 +150,43 @@ class SpatialModel(Model):
         data = self.evaluate_geom(geom)
         m = Map.from_geom(geom, data=data.value, unit=data.unit)
         _, ax, _ = m.plot(ax=ax, **kwargs)
+
+        return ax
+
+    def plot_error(self, ax=None, **kwargs):
+        """Plot position error
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
+        import matplotlib.pyplot as plt
+
+        # plot center position
+        lon, lat = self.lon_0.value, self.lat_0.value
+
+        ax = plt.gca() if ax is None else ax
+
+        kwargs.setdefault("marker", "x")
+        kwargs.setdefault("color", "red")
+        kwargs.setdefault("label", "position")
+
+        ax.scatter(lon, lat, transform=ax.get_transform(self.frame), **kwargs)
+
+        # plot position error
+        if self.parameters.covariance is not None:
+            region = self.position_error.to_pixel(ax.wcs)
+            artist = region.as_artist(facecolor="none", edgecolor=kwargs["color"])
+            ax.add_artist(artist)
+
         return ax
 
 
