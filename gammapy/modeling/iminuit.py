@@ -166,7 +166,7 @@ def make_minuit_par_kwargs(parameters):
         if parameters.covariance is None:
             error = 1
         else:
-            error = parameters.error(par) / par.scale
+            error = par.error / par.scale
 
         kwargs[f"error_{name}"] = error
 

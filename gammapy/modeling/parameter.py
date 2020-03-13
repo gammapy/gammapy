@@ -67,7 +67,7 @@ class Parameter:
     """
 
     def __init__(
-        self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=1.
+        self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=np.nan
     ):
         self.name = name
         self._link_label_io = None
@@ -423,7 +423,7 @@ class Parameters(collections.abc.Sequence):
         if self.covariance is None:
             t["error"] = np.nan
         else:
-            t["error"] = [self.error(idx) for idx in range(len(self))]
+            t["error"] = [p.error for p in self._parameters]
 
         t["unit"] = [p.unit.to_string("fits") for p in self._parameters]
         t["min"] = [p.min for p in self._parameters]
@@ -509,6 +509,7 @@ class Parameters(collections.abc.Sequence):
             idx = self._get_idx(key)
             error = u.Quantity(error, self[idx].unit).value
             self.covariance[idx, idx] = error ** 2
+            self[idx]._error = error
 
     @property
     def correlation(self):

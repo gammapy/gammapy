@@ -324,9 +324,9 @@ class Fit:
             if isinstance(bounds, tuple):
                 parmin, parmax = bounds
             else:
-                if np.isnan(parameters.error(parameter)):
+                if np.isnan(parameter.error):
                     raise ValueError("Parameter error is not properly set.")
-                parerr = parameters.error(parameter)
+                parerr = parameter.error
                 parval = parameter.value
                 parmin, parmax = parval - bounds * parerr, parval + bounds * parerr
 

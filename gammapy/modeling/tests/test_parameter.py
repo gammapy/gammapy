@@ -102,8 +102,8 @@ def test_parameters_basics(pars):
     pars.set_error(spam=0.1)
     assert_allclose(pars.covariance, [[1e-2, 0], [0, 100]])
     assert_allclose(pars.correlation, [[1, 0], [0, 1]])
-    assert_allclose(pars.error("spam"), 0.1)
-    assert_allclose(pars.error(1), 10)
+    assert_allclose(pars["spam"].error, 0.1)
+    assert_allclose(pars[1].error, 10)
 
 
 def test_parameters_copy(pars):

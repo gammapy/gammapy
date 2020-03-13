@@ -603,9 +603,8 @@ class LightCurveEstimator:
         result : dict
             Dict with symmetric error for the flux point norm.
         """
-        result = self.fit.covariance()
-        norm_err = result.parameters.error(self.model.norm)
-        return {"norm_err": norm_err}
+        _ = self.fit.covariance()
+        return {"norm_err": self.model.norm.error}
 
     def estimate_counts(self, datasets):
         """Estimate counts for the flux point.

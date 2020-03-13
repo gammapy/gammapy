@@ -537,7 +537,7 @@ class PowerLawSpectralModel(SpectralModel):
 
         Formula (1) in https://arxiv.org/pdf/0910.4881.pdf
         """
-        index_err = self.parameters.error("index")
+        index_err = self.index.error
         reference = self.reference.quantity
         amplitude = self.amplitude.quantity
         cov_index_ampl = self.parameters.covariance[0, 1] * amplitude.unit

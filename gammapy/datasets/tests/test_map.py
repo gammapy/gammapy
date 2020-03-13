@@ -369,21 +369,21 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     pars = result.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("lon_0"), 0.002244, rtol=1e-2)
+    assert_allclose(pars["lon_0"].error, 0.002244, rtol=1e-2)
 
     assert_allclose(pars["index"].value, 3, rtol=1e-2)
-    assert_allclose(pars.error("index"), 0.024277, rtol=1e-2)
+    assert_allclose(pars["index"].error, 0.024277, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error("amplitude"), 4.216154e-13, rtol=1e-2)
+    assert_allclose(pars["amplitude"].error, 4.216154e-13, rtol=1e-2)
 
     # background norm 1
     assert_allclose(pars[8].value, 0.5, rtol=1e-2)
-    assert_allclose(pars.error(pars[8]), 0.015811, rtol=1e-2)
+    assert_allclose(pars[8].error, 0.015811, rtol=1e-2)
 
     # background norm 2
     assert_allclose(pars[11].value, 1, rtol=1e-2)
-    assert_allclose(pars.error(pars[11]), 0.02147, rtol=1e-2)
+    assert_allclose(pars[11].error, 0.02147, rtol=1e-2)
 
     # test mask_safe evaluation
     mask_safe = geom.energy_mask(emin=1 * u.TeV)
@@ -432,13 +432,13 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
     pars = result.parameters
 
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("lon_0"), 0.001689, rtol=1e-2)
+    assert_allclose(pars["lon_0"].error, 0.001689, rtol=1e-2)
 
     assert_allclose(pars["sigma"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("sigma"), 0.00092, rtol=1e-2)
+    assert_allclose(pars["sigma"].error, 0.00092, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error("amplitude"), 8.127593e-14, rtol=1e-2)
+    assert_allclose(pars["amplitude"].error, 8.127593e-14, rtol=1e-2)
 
 
 def test_create(geom, geom_etrue):

@@ -463,6 +463,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             raise ValueError(f"Invalid spec_type: {spec_type}")
 
         model = Model.create(tag, **pars)
+        errs["reference"] = 0 * u.TeV
         model.parameters.set_error(**errs)
         return model
 
