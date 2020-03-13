@@ -110,6 +110,7 @@ Advanced tutorials
    ../notebooks/exclusion_mask.ipynb
    ../notebooks/overview.ipynb
    ../notebooks/maps.ipynb
+   ../notebooks/statistics_in_gammapy.ipynb
    ../notebooks/modeling.ipynb
    ../notebooks/models.ipynb
    ../notebooks/catalog.ipynb
@@ -140,6 +141,7 @@ Gammapy API.
 
 *Modeling and fitting in gammapy*
 
+- `Working with counts statistics in gammapy <../notebooks/statistics_in_gammapy.html>`__ | *statistics_in_gammapy.ipynb*
 - `Modeling and Fitting <../notebooks/modeling.html>`__  | *modeling.ipynb*
 - `Models <../notebooks/models.html>`__  | *models.ipynb*
 

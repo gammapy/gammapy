@@ -122,4 +122,6 @@
   datasets:
     - catalogs
     - fermi-3fhl-crab
-    
+- name: statistics_in_gammapy
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/statistics_in_gammapy.ipynb
+
