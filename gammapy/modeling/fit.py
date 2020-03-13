@@ -70,7 +70,6 @@ class Fit:
 
     def __init__(self, datasets):
         from gammapy.datasets import Datasets
-
         self.datasets = Datasets(datasets)
 
     @lazyproperty
@@ -208,6 +207,7 @@ class Fit:
                 covariance_factors, info = compute(parameters, self.datasets.stat_sum, **kwargs)
 
         parameters.set_covariance_factors(covariance_factors)
+        self.datasets.models.covariance = parameters.covariance
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(

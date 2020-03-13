@@ -15,10 +15,11 @@ class MyModel(Model):
     y = Parameter("y", 3e2)
     z = Parameter("z", 4e-2)
     name = "test"
+    datasets_names = ["test"]
 
 
 class MyDataset(Dataset):
-    def __init__(self, name=""):
+    def __init__(self, name="test"):
         self.name = name
         self.models = Models([MyModel()])
         self.data_shape = (1,)

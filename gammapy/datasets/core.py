@@ -122,8 +122,7 @@ class Datasets(collections.abc.MutableSequence):
         Duplicate parameter objects have been removed.
         The order of the unique parameters remains.
         """
-        parameters = Parameters.from_stack([_.models.parameters for _ in self])
-        return parameters.unique_parameters
+        return self.models.parameters.unique_parameters
 
     @property
     def models(self):
@@ -137,7 +136,8 @@ class Datasets(collections.abc.MutableSequence):
             if d.models is not None:
                 for model in d.models:
                     if model not in unique_models:
-                        unique_models.append(model)
+                        if model.datasets_names is None or d.name in model.datasets_names:
+                            unique_models.append(model)
         return Models(unique_models)
 
     @property

@@ -319,3 +319,7 @@ class Models(collections.abc.MutableSequence):
 
     def _ipython_key_completions_(self):
         return self.names
+
+    def copy(self):
+        """A deep copy."""
+        return copy.deepcopy(self)

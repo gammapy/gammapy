@@ -277,8 +277,6 @@ class LightCurve:
         return x, (xn, xp)
 
 
-
-
 def group_datasets_in_time_interval(datasets, time_intervals, atol="1e-6 s"):
     """Compute the table with the info on the group to which belong each dataset.
 
@@ -396,8 +394,9 @@ class LightCurveEstimator:
 
         self._check_and_sort_time_intervals(time_intervals)
 
-        dataset = self.datasets[0]
-        model = dataset.models[source].spectral_model
+        self.models = self.datasets.models.copy()
+
+        model = self.models[source].spectral_model
 
         self.model = ScaleSpectralModel(model)
         self.model.norm.min = 0
@@ -441,8 +440,9 @@ class LightCurveEstimator:
             ]
 
     def _set_scale_model(self, datasets):
+        self.models[self.source].spectral_model = self.model
         for dataset in datasets:
-            dataset.models[self.source].spectral_model = self.model
+            dataset.models = self.models
 
     @property
     def ref_model(self):
@@ -490,6 +490,7 @@ class LightCurveEstimator:
         )
         if np.all(self.group_table_info["Group_ID"] == -1):
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
+
         for igroup, time_interval in enumerate(self.time_intervals):
             index_dataset = np.where(self.group_table_info["Group_ID"] == igroup)[0]
             if len(index_dataset) == 0:
