@@ -157,6 +157,8 @@ def test_mde_run(dataset):
     assert meta["ONTIME"] == 36000.0
     assert meta["OBS_ID"] == 1001
     assert meta["RADECSYS"] == "icrs"
+    assert meta["ALT_PNT"] == 0
+    assert meta["AZ_PNT"] == 0
 
 
 @requires_data()

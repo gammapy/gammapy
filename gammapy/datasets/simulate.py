@@ -189,7 +189,7 @@ class MapDatasetEventSampler:
         meta[
             "HDUDOC"
         ] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
-        meta["HDUVER"] = "0.2"
+        meta["HDUVERS"] = "0.2"
         meta["HDUCLASS"] = "GADF"
 
         meta["OBS_ID"] = observation.obs_id
@@ -216,7 +216,7 @@ class MapDatasetEventSampler:
         #
         meta["CREATOR"] = "Gammapy {}".format(gammapy.__version__)
 
-        #        TO COMPLETE
+        # TO BE ADDED
         #        meta["OBSERVER"] = ""
         #        meta["CREATED"] = ""
         #        meta["OBJECT"] = ""
@@ -226,21 +226,24 @@ class MapDatasetEventSampler:
         #        meta["EV_CLASS"] = ""
         #        meta["TELAPSE"] = ""
         #
-        #        meta["MJDREFI"] = int(dataset.gti.time_ref.mjd)
-        #        meta["MJDREFF"] = dataset.gti.time_ref.mjd % 1
-        #        meta["TIMEUNIT"] = "s"
-        #        meta["TIMESYS"] = "TT"
-        #        meta["TIMEREF"] = "LOCAL"
-        #        #         meta["DATE-OBS"] = dataset.gti.time_start.isot[0][0:10]
-        #        #         meta["DATE-END"] = dataset.gti.time_stop.isot[0][0:10]
+        meta["MJDREFI"] = int(dataset.gti.time_ref.mjd)
+        meta["MJDREFF"] = dataset.gti.time_ref.mjd % 1
+        meta["TIMEUNIT"] = "s"
+        meta["TIMESYS"] = dataset.gti.time_ref.scale
+        meta["TIMEREF"] = "LOCAL"
+        #        meta["DATE-OBS"] = dataset.gti.time_start.isot[0][0:10]
+        #        meta["DATE-END"] = dataset.gti.time_stop.isot[0][0:10]
         #        meta["TIME-OBS"] = dataset.gti.time_start.isot[0]
         #        meta["TIME-END"] = dataset.gti.time_stop.isot[0]
         #
-
+        # TO BE FOUND FROM THE IRF
         meta["GEOLON"] = 0
         meta["GEOLAT"] = 0
-        meta["ALTITUDE"] = 0
 
+        # Necessary for DataStore, but they should be ALT and AZ instead!
+        meta["ALT_PNT"] = 0
+        meta["AZ_PNT"] = 0
+        #
         for idx, model in enumerate(dataset.models):
             meta["MID{:05d}".format(idx + 1)] = idx + 1
             meta["MMN{:05d}".format(idx + 1)] = model.name
