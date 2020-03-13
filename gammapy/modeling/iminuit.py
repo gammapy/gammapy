@@ -163,7 +163,7 @@ def make_minuit_par_kwargs(parameters):
         max_ = None if np.isnan(par.factor_max) else par.factor_max
         kwargs[f"limit_{name}"] = (min_, max_)
 
-        if parameters.covariance is None:
+        if parameters.covariance is None or np.isnan(par.error):
             error = 1
         else:
             error = par.error / par.scale

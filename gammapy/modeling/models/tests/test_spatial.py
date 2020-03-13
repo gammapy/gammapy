@@ -276,7 +276,7 @@ def test_spatial_model_plot():
     model.covariance = np.diag([0.01, 0.01])
 
     with mpl_plot_check():
-        model.plot()
+        ax = model.plot()
 
     with mpl_plot_check():
-        model.plot_error()
+        model.plot_error(ax=ax)
