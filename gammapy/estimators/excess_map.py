@@ -9,7 +9,7 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 
 __all__ = [
-    "CorrelatedExcessMapEstimator",
+    "ExcessMapEstimator",
 ]
 
 log = logging.getLogger(__name__)
@@ -39,8 +39,8 @@ def convolved_map_dataset_counts_statistics(dataset, kernel):
         background_conv = dataset.npred().convolve(kernel.array).data
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
-class CorrelatedExcessMapEstimator:
-    """Computes correlated excess, significance and errors for MapDatasets
+class ExcessMapEstimator:
+    """Computes correlated excess, significance and errors for MapDatasets.
 
     Parameters
     ----------

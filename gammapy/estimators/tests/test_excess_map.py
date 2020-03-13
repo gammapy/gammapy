@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
 from gammapy.datasets import MapDataset, MapDatasetOnOff
-from gammapy.estimators import CorrelatedExcessMapEstimator
+from gammapy.estimators import ExcessMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
 from gammapy.modeling.models import BackgroundModel
@@ -54,7 +54,7 @@ def test_compute_lima_image():
     dataset = MapDataset(counts=counts)
     dataset.models =background_model
 
-    estimator = CorrelatedExcessMapEstimator(dataset,'0.1 deg')
+    estimator = ExcessMapEstimator(dataset,'0.1 deg')
     result_lima = estimator.run( steps="ts")
 
     assert_allclose(result_lima["significance"].data[:,100, 100], 30.814916, atol=1e-3)
@@ -84,7 +84,7 @@ def test_compute_lima_on_off_image():
 
     significance = Map.read(filename, hdu="SIGNIFICANCE")
     significance = image_to_cube(significance, '1 TeV', '10 TeV')
-    estimator = CorrelatedExcessMapEstimator(dataset, '0.1 deg')
+    estimator = ExcessMapEstimator(dataset, '0.1 deg')
     results = estimator.run(steps="ts")
 
     # Reproduce safe significance threshold from HESS software
@@ -104,10 +104,10 @@ def test_compute_lima_on_off_image():
 
 def test_significance_map_estimator_incorrect_dataset():
     with pytest.raises(ValueError):
-        CorrelatedExcessMapEstimator("bad")
+        ExcessMapEstimator("bad")
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
-    estimator = CorrelatedExcessMapEstimator(simple_dataset, 0.1 * u.deg)
+    estimator = ExcessMapEstimator(simple_dataset, 0.1 * u.deg)
     result = estimator.run(steps="all")
 
     assert_allclose(result["counts"].data[0, 10, 10], 162)
@@ -121,7 +121,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
 
 
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
-    estimator = CorrelatedExcessMapEstimator(simple_dataset_on_off, 0.11 * u.deg)
+    estimator = ExcessMapEstimator(simple_dataset_on_off, 0.11 * u.deg)
     result = estimator.run(steps=["ts"])
 
     assert_allclose(result["counts"].data[0, 10, 10], 194)
