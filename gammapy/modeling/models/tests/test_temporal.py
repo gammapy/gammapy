@@ -155,10 +155,11 @@ def test_exponential_temporal_model_evaluate():
 
 
 def test_exponential_temporal_model_integral():
-    temporal_model = ExpDecayTemporalModel()
+    t_ref = Time(55555, format="mjd")
+
+    temporal_model = ExpDecayTemporalModel(t_ref=t_ref.mjd)
     start = [1, 3, 5] * u.day
     stop = [2, 3.5, 6] * u.day
-    t_ref = Time(55555, format="mjd")
     gti = GTI.create(start, stop, reference_time=t_ref)
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
