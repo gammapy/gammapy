@@ -330,6 +330,9 @@ class Parameters(collections.abc.Sequence):
         ----------
         parameters_list : list of `Parameters`
             List of `Parameters` objects
+        covariance : `~numpy.ndarray`, optional
+            Parameters covariance matrix.
+            Order of values as specified by `parameters`.
         """
         pars = itertools.chain(*parameters_list)
         parameters = cls(pars, covariance=covariance)
@@ -469,20 +472,6 @@ class Parameters(collections.abc.Sequence):
         covariance = data.get("covariance")
         if covariance is not None:
             self._covariance = np.array(covariance)
-
-    def error(self, parname):
-        """Get parameter error.
-
-        Parameters
-        ----------
-        parname : str, int
-            Parameter name or index
-        """
-        if self.covariance is None:
-            raise ValueError("Covariance matrix not set.")
-
-        idx = self._get_idx(parname)
-        return np.sqrt(self.covariance[idx, idx])
 
     def set_error(self, **kwargs):
         """Set errors on parameters.
