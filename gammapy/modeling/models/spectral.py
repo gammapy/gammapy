@@ -122,8 +122,9 @@ class SpectralModel(Model):
         dnde, dnde_error : tuple of `~astropy.units.Quantity`
             Tuple of flux and flux error.
         """
-        p_cov = self.parameters.covariance
-        eps = np.sqrt(np.diag(self.parameters.covariance)) * epsilon
+        p_cov = self.covariance
+        print(p_cov)
+        eps = np.sqrt(np.diag(p_cov)) * epsilon
 
         df_dp = self._evaluate_gradient(energy, eps)
         f_cov = df_dp.T @ p_cov @ df_dp
@@ -1026,6 +1027,7 @@ class ScaleSpectralModel(SpectralModel):
 
     def __init__(self, model, norm=norm.quantity):
         self.model = model
+        self._covariance = None
         super().__init__(norm=norm)
 
     def evaluate(self, energy, norm):
@@ -1244,8 +1246,22 @@ class AbsorbedSpectralModel(SpectralModel):
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
         alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
         parameters = Parameters([par, alpha_norm])
+        self._covariance = None
 
         super()._init_from_parameters(parameters)
+
+    @property
+    def covariance(self):
+        _ = self.spectral_model.covariance
+        self.parameters.set_subcovariance(self.spectral_model.parameters)
+        return self.parameters.covariance
+
+    @covariance.setter
+    def covariance(self, covariance):
+        self._covariance = self.parameters.check_covariance(covariance)
+        subcovar = self.parameters.get_subcovariance(self.spectral_model.parameters)
+        self.spectral_model.covariance = subcovar
+
 
     @property
     def parameters(self):

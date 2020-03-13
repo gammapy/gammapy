@@ -70,7 +70,7 @@ class SpatialModel(Model):
     @property
     def position_error(self):
         """Get 95% containment position error as (`~regions.EllipseSkyRegion`)"""
-        if self.parameters.covariance is None:
+        if self.covariance is None:
             return EllipseSkyRegion(
                 center=self.position,
                 height=np.nan * u.deg,

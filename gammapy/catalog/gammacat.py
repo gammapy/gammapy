@@ -220,7 +220,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             raise ValueError(f"Invalid spec_type: {spec_type}")
 
         model = Model.create(tag, **pars)
-        model.parameters.set_error(**errs)
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
         return model
 
     def spatial_model(self):
@@ -261,7 +263,10 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             raise ValueError(f"Invalid morph_type: {morph_type!r}")
 
         model = Model.create(tag, **pars)
-        model.parameters.set_error(**errs)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
         return model
 
     def sky_model(self):

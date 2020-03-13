@@ -121,7 +121,10 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         }
 
         model = Model.create("PowerLawSpectralModel", **pars)
-        model.parameters.set_error(**errs)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
         return model
 
     def spatial_model(self, which="point"):
@@ -146,7 +149,10 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         }
 
         model = Model.create(tag, **pars)
-        model.parameters.set_error(**errs)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
         return model
 
     def sky_model(self, which="point"):

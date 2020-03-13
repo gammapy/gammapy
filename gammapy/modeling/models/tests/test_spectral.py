@@ -321,7 +321,8 @@ def test_model_plot():
     pwl = PowerLawSpectralModel(
         amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
     )
-    pwl.parameters.set_error(amplitude=0.1e-12 * u.Unit("TeV-1 cm-2 s-1"))
+    pwl.amplitude.error = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
+
     with mpl_plot_check():
         pwl.plot((1 * u.TeV, 10 * u.TeV))
 
@@ -391,9 +392,7 @@ def test_absorption():
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
 
     # Test error propagation
-    model.spectral_model.parameters.set_error(
-        amplitude=0.1 * model.spectral_model.amplitude.value
-    )
+    model.spectral_model.amplitude.error = 0.1 * model.spectral_model.amplitude.value
     dnde, dnde_err = model.evaluate_error(1 * u.TeV)
     assert_allclose(dnde_err / dnde, 0.1)
 
@@ -483,7 +482,7 @@ class TestNaimaModel:
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
 
-        model.parameters.set_error(amplitude=0.1 * model.amplitude.value)
+        model.amplitude.error = 0.1 * model.amplitude.value
 
         out = model.evaluate_error(1 * u.TeV)
         assert_allclose(out.data, [5.266068e-13, 5.266068e-14], rtol=1e-3)

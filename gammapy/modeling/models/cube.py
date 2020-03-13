@@ -93,6 +93,8 @@ class SkyModel(SkyModelBase):
     def covariance(self):
         for model in self._model_components:
             if model is not None:
+                # trigger recursive update
+                _ = model.covariance
                 self.parameters.set_subcovariance(model.parameters)
 
         return self.parameters.covariance

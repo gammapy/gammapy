@@ -70,6 +70,10 @@ class Model:
 
     @property
     def covariance(self):
+        for par in self._parameters:
+            pars = Parameters([par], covariance=par.error ** 2)
+            self.parameters.set_subcovariance(pars)
+
         return self.parameters.covariance
 
     @covariance.setter
@@ -79,11 +83,12 @@ class Model:
         for par in self.parameters:
             pars = Parameters([par])
             variance = self.parameters.get_subcovariance(pars)
-            par._error = float(np.sqrt(variance))
+            par.error = np.sqrt(variance)
 
     @property
     def parameters(self):
         """Parameters (`~gammapy.modeling.Parameters`)"""
+        # trigger recursive update
         return self._parameters
 
     def copy(self):

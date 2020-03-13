@@ -67,7 +67,7 @@ class Parameter:
     """
 
     def __init__(
-        self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=np.nan
+        self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=0
     ):
         self.name = name
         self._link_label_io = None
@@ -106,6 +106,10 @@ class Parameter:
     @property
     def error(self):
         return self._error
+
+    @error.setter
+    def error(self, value):
+        self._error = float(u.Quantity(value, unit=self.unit).value)
 
     @property
     def name(self):
@@ -473,33 +477,6 @@ class Parameters(collections.abc.Sequence):
         if covariance is not None:
             self._covariance = np.array(covariance)
 
-    def set_error(self, **kwargs):
-        """Set errors on parameters.
-
-        Pass parameter errors as keyword arguments,
-        similar to how parameter values are passed
-        in other places.
-
-        Usually parameter errors come via a fit and a
-        covariance matrix. This method is only used to
-        make models from previously published results,
-        e.g. in ``gammapy.catalog``.
-
-        Examples
-        --------
-        >>> from gammapy.modeling.models import PowerLawSpectralModel
-        >>> model = PowerLawSpectralModel(amplitude="4.2e-11 cm-2 s-1 TeV-1", index=2.7)
-        >>> model.parameters.set_error(amplitude="0.6-11 cm-2 s-1 TeV-1", index=0.2)
-        """
-        if self._covariance is None:
-            self._covariance = np.zeros((len(self), len(self)))
-
-        for key, error in kwargs.items():
-            idx = self._get_idx(key)
-            error = u.Quantity(error, self[idx].unit).value
-            self.covariance[idx, idx] = error ** 2
-            self[idx]._error = error
-
     @property
     def correlation(self):
         r"""Correlation matrix (`numpy.ndarray`).
@@ -614,9 +591,10 @@ class Parameters(collections.abc.Sequence):
 
         idx = [self._get_idx(par) for par in parameters]
 
-        if not np.all(self.covariance[np.ix_(idx, idx)] == parameters.covariance):
-            self.covariance[idx, :] = 0
-            self.covariance[:, idx] = 0
+        if parameters.covariance is not None:
+            if not np.allclose(self.covariance[np.ix_(idx, idx)], parameters.covariance):
+                self.covariance[idx, :] = 0
+                self.covariance[:, idx] = 0
 
         self.covariance[np.ix_(idx, idx)] = parameters.covariance
 
