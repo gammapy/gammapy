@@ -76,6 +76,7 @@ class Model:
             pars = Parameters([par])
             covar = Covariance(pars, data=[[par.error ** 2]])
             self._covariance.set_subcovariance(covar)
+
         return self._covariance
 
     @covariance.setter

@@ -110,7 +110,18 @@ class Covariance:
         table.write(filename, **kwargs)
 
     def get_subcovariance(self, covar):
-        """"""
+        """Get sub-covariance matrix
+
+        Parameters
+        ----------
+        parameters : `Parameters`
+            Sub list of parameters.
+
+        Returns
+        -------
+        covariance : `~numpy.ndarray`
+            Sub-covariance.
+        """
         idx = [self.parameters._get_idx(par) for par in covar.parameters]
         data = self._data[np.ix_(idx, idx)]
 
@@ -119,7 +130,15 @@ class Covariance:
         )
 
     def set_subcovariance(self, covar):
-        """"""
+        """Set sub-covariance matrix
+
+        Parameters
+        ----------
+        parameters : `Parameters`
+            Sub list of parameters.
+
+        """
+
         idx = [self.parameters._get_idx(par) for par in covar.parameters]
 
         if not np.allclose(self.data[np.ix_(idx, idx)], covar.data):
@@ -133,12 +152,36 @@ class Covariance:
 
         Parameters
         ----------
-        ax :
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis to plot on.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.visualisation.plot_heatmap`
 
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
 
         """
+        import matplotlib.pyplot as plt
+        from gammapy.visualization import plot_heatmap, annotate_heatmap
+
+        npars = len(self.parameters)
+        figsize = (npars * 0.8, npars * 0.65)
+
+        plt.figure(figsize=figsize)
+
+        ax = plt.gca() if ax is None else ax
+
         kwargs.setdefault("cmap", "coolwarm")
-        ax.imshow(self.correlation, vmin=-1, vmax=1, **kwargs)
+
+        names = self.parameters.names
+        im, cbar = plot_heatmap(
+            data=self.correlation, col_labels=names, row_labels=names, ax=ax,
+            vmin=-1, vmax=1, cbarlabel="Correlation", **kwargs
+        )
+        annotate_heatmap(im=im)
+        return ax
 
     @property
     def correlation(self):
