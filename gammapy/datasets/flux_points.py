@@ -377,7 +377,7 @@ class FluxPointsDataset(Dataset):
         plot_kwargs.setdefault("color", ax.lines[-1].get_color())
         del plot_kwargs["label"]
 
-        if self.models.parameters.covariance is not None:
+        if not np.all(self.models.covariance == 0):
             try:
                 self.models.plot_error(ax=ax, **plot_kwargs)
             except AttributeError:

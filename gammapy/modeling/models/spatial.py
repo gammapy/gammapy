@@ -182,7 +182,7 @@ class SpatialModel(Model):
         ax.scatter(lon, lat, transform=ax.get_transform(self.frame), **kwargs)
 
         # plot position error
-        if self.parameters.covariance is not None:
+        if not np.all(self.covariance.data == 0):
             region = self.position_error.to_pixel(ax.wcs)
             artist = region.as_artist(facecolor="none", edgecolor=kwargs["color"])
             ax.add_artist(artist)

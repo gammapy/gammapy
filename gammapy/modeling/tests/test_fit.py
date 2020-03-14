@@ -61,9 +61,10 @@ def test_run(backend):
     assert_allclose(pars["y"].error, 1, rtol=1e-7)
     assert_allclose(pars["z"].error, 1, rtol=1e-7)
 
-    assert_allclose(pars.correlation[0, 1], 0, atol=1e-7)
-    assert_allclose(pars.correlation[0, 2], 0, atol=1e-7)
-    assert_allclose(pars.correlation[1, 2], 0, atol=1e-7)
+    correlation = dataset.models.covariance.correlation
+    assert_allclose(correlation[0, 1], 0, atol=1e-7)
+    assert_allclose(correlation[0, 2], 0, atol=1e-7)
+    assert_allclose(correlation[1, 2], 0, atol=1e-7)
 
 
 @requires_dependency("sherpa")

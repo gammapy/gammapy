@@ -53,29 +53,32 @@ class Covariance:
 
         self._data = value
 
-    @property
-    def _scale_matrix(self):
-        scales = [par.scale for par in self.parameters]
-        return np.outer(scales, scales)
-
-    def _expand_factor_matrix(self, matrix):
+    @staticmethod
+    def _expand_factor_matrix(matrix, parameters):
         """Expand covariance matrix with zeros for frozen parameters"""
-        matrix_expanded = np.zeros(self.shape)
-        mask = np.array([par.frozen for par in self.parameters])
+        npars = len(parameters)
+        matrix_expanded = np.zeros((npars, npars))
+        mask = np.array([par.frozen for par in parameters])
         free_parameters = ~(mask | mask[:, np.newaxis])
         matrix_expanded[free_parameters] = matrix.ravel()
         return matrix_expanded
 
-    def set_covariance_factors(self, matrix):
+    @classmethod
+    def from_factor_matrix(cls, parameters, matrix):
         """Set covariance from factor covariance matrix.
 
         Used in the optimizer interface.
         """
-        # FIXME: this is weird to do sqrt(size). Simplify
-        if matrix.shape == self.shape:
-            matrix = self._expand_factor_matrix(matrix)
+        npars = len(parameters)
 
-        self._data = self._scale_matrix * matrix
+        if not matrix.shape == (npars, npars):
+            matrix = cls._expand_factor_matrix(matrix, parameters)
+
+        scales = [par.scale for par in parameters]
+        scale_matrix = np.outer(scales, scales)
+        data = scale_matrix * matrix
+
+        return cls(parameters, data=data)
 
     @classmethod
     def from_stack(cls, covar_list):

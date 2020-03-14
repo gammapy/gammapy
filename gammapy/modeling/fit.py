@@ -5,6 +5,7 @@ from astropy.utils import lazyproperty
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
+from .covariance import Covariance
 
 __all__ = ["Fit"]
 
@@ -75,6 +76,10 @@ class Fit:
     @lazyproperty
     def _parameters(self):
         return self.datasets.parameters
+
+    @lazyproperty
+    def _models(self):
+        return self.datasets.models
 
     def run(self, backend="minuit", optimize_opts=None, covariance_opts=None):
         """
@@ -147,7 +152,7 @@ class Fit:
         parameters = self._parameters
 
         # TODO: expose options if / when to scale? On the Fit class?
-        if parameters.covariance is None:
+        if np.all(self._models.covariance.data == 0):
             parameters.autoscale()
 
         compute = registry.get("optimize", backend)
@@ -199,15 +204,17 @@ class Fit:
             if backend == "minuit":
                 method = "hesse"
                 if hasattr(self, "minuit"):
-                    covariance_factors, info = compute(self.minuit)
+                    factor_matrix, info = compute(self.minuit)
                 else:
                     raise RuntimeError("To use minuit, you must first optimize.")
             else:
                 method = ""
-                covariance_factors, info = compute(parameters, self.datasets.stat_sum, **kwargs)
+                factor_matrix, info = compute(parameters, self.datasets.stat_sum, **kwargs)
 
-        parameters.set_covariance_factors(covariance_factors)
-        self.datasets.models.covariance = parameters.covariance
+            covariance = Covariance.from_factor_matrix(
+                parameters=self._models.parameters, matrix=factor_matrix
+            )
+            self._models.covariance = covariance
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(

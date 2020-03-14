@@ -101,8 +101,6 @@ def test_parameters_basics(pars):
     # This applies a unit transformation
     pars["ham"].error = "10000 GeV"
     pars["spam"].error = 0.1
-    assert_allclose(pars.covariance, [[1e-2, 0], [0, 100]])
-    assert_allclose(pars.correlation, [[1, 0], [0, 1]])
     assert_allclose(pars["spam"].error, 0.1)
     assert_allclose(pars[1].error, 10)
 
@@ -121,13 +119,11 @@ def test_parameters_from_stack():
     pars = Parameters([a, b]) + Parameters([]) + Parameters([c])
     assert pars.names == ["a", "b", "c"]
 
-    pars1 = Parameters.from_values([1, 2], covariance=np.full((2, 2), 2))
-    pars2 = Parameters.from_values([3, 4, 5], covariance=np.full((3, 3), 3))
+    pars1 = Parameters.from_values([1, 2])
+    pars2 = Parameters.from_values([3, 4, 5])
     pars = pars1 + pars2
 
     assert_allclose(pars.values, [1, 2, 3, 4, 5])
-    assert_allclose(pars.covariance[0], [2, 2, 0, 0, 0])
-    assert_allclose(pars.covariance[4], [0, 0, 3, 3, 3])
 
 
 def test_unique_parameters():
@@ -173,40 +169,8 @@ def test_parameters_set_parameter_factors(pars):
     assert_allclose(pars["ham"].scale, 1)
 
 
-def test_parameters_set_covariance_factors(pars):
-    cov_factor = np.array([[3, 4], [7, 8]])
-    pars.set_covariance_factors(cov_factor)
-    assert_allclose(pars.covariance, cov_factor)
-
-
 def test_parameters_autoscale():
     pars = Parameters([Parameter("", 20)])
     pars.autoscale()
     assert_allclose(pars[0].factor, 2)
     assert_allclose(pars[0].scale, 10)
-
-
-def test_get_subcovariance():
-    a = Parameter("a", 10)
-    b = Parameter("b", 20)
-    c = Parameter("c", 30)
-
-    covar = np.array([[2, 3, 4], [6, 7, 8], [10, 11, 12]])
-    pars_0 = Parameters([a, b, c], covariance=covar)
-
-    pars_1 = Parameters([a, b])
-
-    assert_equal(pars_0.get_subcovariance(pars_1), np.array([[2, 3], [6, 7]]))
-    assert_equal(pars_0.get_subcovariance([c]), np.array([[12]]))
-
-
-def test_set_subcovariance():
-    a = Parameter("a", 10)
-    b = Parameter("b", 20)
-    c = Parameter("c", 30)
-
-    pars_0 = Parameters([a, c, b], covariance=np.zeros((3, 3)))
-    pars_1 = Parameters([a, b], covariance=np.array([[2, 3], [6, 7]]))
-
-    pars_0.set_subcovariance(pars_1)
-    assert_equal(pars_0.covariance, np.array([[2, 0, 3], [0, 0, 0], [6, 0, 7]]))
