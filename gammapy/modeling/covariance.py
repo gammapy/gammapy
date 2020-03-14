@@ -136,7 +136,7 @@ class Covariance:
         table = self.to_table()
         table.write(filename, **kwargs)
 
-    def get_subcovariance(self, covar):
+    def get_subcovariance(self, parameters):
         """Get sub-covariance matrix
 
         Parameters
@@ -149,10 +149,10 @@ class Covariance:
         covariance : `~numpy.ndarray`
             Sub-covariance.
         """
-        idx = [self.parameters.index(par) for par in covar.parameters]
+        idx = [self.parameters.index(par) for par in parameters]
         data = self._data[np.ix_(idx, idx)]
         return self.__class__(
-            parameters=covar.parameters, data=data
+            parameters=parameters, data=data
         )
 
     def set_subcovariance(self, covar):

@@ -94,7 +94,6 @@ class SkyModel(SkyModelBase):
         if not self.parameters == self._covariance.parameters:
             self._covariance = Covariance.from_stack(
                 [model.covariance for model in self._models],
-                model_name=self.name
             )
 
     @property
@@ -112,7 +111,9 @@ class SkyModel(SkyModelBase):
         self._covariance.data = covariance
 
         for model in self._models:
-            subcovar = self._covariance.get_subcovariance(model.covariance)
+            subcovar = self._covariance.get_subcovariance(
+                model.covariance.parameters
+            )
             model.covariance = subcovar
 
     @property

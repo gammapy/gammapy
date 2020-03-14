@@ -210,14 +210,14 @@ class TestSkyModels:
     @staticmethod
     def test_parameters(sky_models):
         parnames = [
+            "index",
+            "amplitude",
+            "reference",
             "lon_0",
             "lat_0",
             "sigma",
             "e",
             "phi",
-            "index",
-            "amplitude",
-            "reference",
         ] * 2
         assert sky_models.parameters.names == parnames
 

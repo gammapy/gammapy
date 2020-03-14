@@ -8,7 +8,7 @@ import astropy.units as u
 from astropy.table import Table
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter, Parameters, Covariance
 from gammapy.utils.integrate import evaluate_integral_pwl, trapz_loglog
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
@@ -541,7 +541,7 @@ class PowerLawSpectralModel(SpectralModel):
         index_err = self.index.error
         reference = self.reference.quantity
         amplitude = self.amplitude.quantity
-        cov_index_ampl = self.parameters.covariance[0, 1] * amplitude.unit
+        cov_index_ampl = self.covariance.data[0, 1] * amplitude.unit
         return reference * np.exp(cov_index_ampl / (amplitude * index_err ** 2))
 
 
@@ -1246,20 +1246,28 @@ class AbsorbedSpectralModel(SpectralModel):
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
         alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
         parameters = Parameters([par, alpha_norm])
-        self._covariance = None
+        self._covariance = Covariance(parameters)
 
         super()._init_from_parameters(parameters)
 
+    def _check_covariance(self):
+        if not self.parameters == self._covariance.parameters:
+            self._covariance = Covariance(self.parameters)
+
     @property
     def covariance(self):
-        _ = self.spectral_model.covariance
-        self.parameters.set_subcovariance(self.spectral_model.parameters)
+        self._check_covariance()
+        self._covariance.set_subcovariance(self.spectral_model.covariance)
         return self._covariance
 
     @covariance.setter
     def covariance(self, covariance):
-        self._covariance = self.parameters.check_covariance(covariance)
-        subcovar = self.parameters.get_subcovariance(self.spectral_model.parameters)
+        self._check_covariance()
+        self._covariance.data = covariance
+
+        subcovar = self._covariance.get_subcovariance(
+               self.spectral_model.covariance.parameters
+            )
         self.spectral_model.covariance = subcovar
 
     @property
@@ -1373,6 +1381,7 @@ class NaimaSpectralModel(SpectralModel):
             parameters.append(Parameter("radius", radius, frozen=True))
 
         super()._init_from_parameters(parameters)
+        self._covariance = Covariance(parameters)
 
     def _evaluate_ssc(
         self, energy,

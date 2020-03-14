@@ -85,8 +85,7 @@ class Model:
 
         for par in self.parameters:
             pars = Parameters([par])
-            covar = Covariance(pars)
-            variance = self._covariance.get_subcovariance(covar)
+            variance = self._covariance.get_subcovariance(pars)
             par.error = np.sqrt(variance)
 
     @property
@@ -193,7 +192,9 @@ class Models(collections.abc.MutableSequence):
         self._covariance.data = covariance
 
         for model in self._models:
-            subcovar = self._covariance.get_subcovariance(model.covariance)
+            subcovar = self._covariance.get_subcovariance(
+                model.covariance.parameters
+            )
             model.covariance = subcovar
 
     @property
