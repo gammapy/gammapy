@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Covariance class"""
 import numpy as np
+import scipy
 from astropy.table import Table
 from .parameter import Parameters
 
@@ -220,6 +221,13 @@ class Covariance:
         """
         err = np.sqrt(np.diag(self.data))
         return self.data / np.outer(err, err)
+
+    @property
+    def scipy_mvn(self):
+        # TODO: use this, as in https://github.com/cdeil/multinorm/blob/master/multinorm.py
+        return scipy.stats.multivariate_normal(
+            self.parameters.values, self.data, allow_singular=True
+        )
 
     def __str__(self):
         return str(self.data)

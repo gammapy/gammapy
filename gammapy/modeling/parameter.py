@@ -281,28 +281,18 @@ class Parameters(collections.abc.Sequence):
     ----------
     parameters : list of `Parameter`
         List of parameters
-    covariance : `~numpy.ndarray`, optional
-        Parameters covariance matrix.
-        Order of values as specified by `parameters`.
     """
 
-    def __init__(self, parameters=None, covariance=None):
+    def __init__(self, parameters=None):
         if parameters is None:
             parameters = []
         else:
             parameters = list(parameters)
 
-        # TODO: create default covariance from parameter errors
         self._parameters = parameters
-        self._covariance = covariance
-
-    @property
-    def covariance(self):
-        """Covariance matrix (`numpy.ndarray`)."""
-        return self._covariance
 
     @classmethod
-    def from_values(cls, values=None, covariance=None):
+    def from_values(cls, values=None):
         """Create `Parameters` from values.
 
         TODO: document.
@@ -310,42 +300,24 @@ class Parameters(collections.abc.Sequence):
         parameters = [
             Parameter(f"par_{idx}", value) for idx, value in enumerate(values)
         ]
-        return cls(parameters, covariance)
+        return cls(parameters)
 
     @property
     def values(self):
         """Parameter values (`numpy.ndarray`)."""
         return np.array([_.value for _ in self._parameters], dtype=np.float64)
 
-    # TODO: add `values` setter, using array interface. Adapt callers to this!
-
-    # TODO: use this, as in https://github.com/cdeil/multinorm/blob/master/multinorm.py
-    @property
-    def scipy_mvn(self):
-        return scipy.stats.multivariate_normal(
-            self.values, self.covariance, allow_singular=True
-        )
-
     @classmethod
-    def from_stack(cls, parameters_list, covariance=None):
+    def from_stack(cls, parameters_list):
         """Create `Parameters` by stacking a list of other `Parameters` objects.
 
         Parameters
         ----------
         parameters_list : list of `Parameters`
             List of `Parameters` objects
-        covariance : `~numpy.ndarray`, optional
-            Parameters covariance matrix.
-            Order of values as specified by `parameters`.
         """
         pars = itertools.chain(*parameters_list)
-        parameters = cls(pars, covariance=covariance)
-
-        if covariance is None:
-            for pars in parameters_list:
-                if pars.covariance is not None:
-                    parameters.set_subcovariance(pars)
-
+        parameters = cls(pars)
         return parameters
 
     def copy(self):
@@ -402,7 +374,6 @@ class Parameters(collections.abc.Sequence):
         """
         idx = self.index(par)
         self._parameters[idx] = other_par
-        #TODO: handle covariance
 
     def __len__(self):
         return len(self._parameters)
@@ -414,12 +385,9 @@ class Parameters(collections.abc.Sequence):
             raise TypeError(f"Invalid type: {other!r}")
 
     def to_dict(self):
-        data = dict(parameters=[], covariance=None)
+        data = dict(parameters=[])
         for par in self._parameters:
             data["parameters"].append(par.to_dict())
-        if self.covariance is not None:
-            data["covariance"] = self.covariance.tolist()
-
         return data
 
     def to_table(self):
@@ -455,13 +423,7 @@ class Parameters(collections.abc.Sequence):
                 frozen=par.get("frozen", False),
             )
             parameters.append(parameter)
-
-        try:
-            covariance = np.array(data["covariance"])
-        except KeyError:
-            covariance = None
-
-        return cls(parameters=parameters, covariance=covariance)
+        return cls(parameters=parameters)
 
     def update_from_dict(self, data):
         for par in data["parameters"]:
@@ -473,22 +435,6 @@ class Parameters(collections.abc.Sequence):
             parameter.frozen = par.get("frozen", parameter.frozen)
             parameter._link_label_io = par.get("link", parameter._link_label_io)
 
-        covariance = data.get("covariance")
-        if covariance is not None:
-            self._covariance = np.array(covariance)
-
-    @property
-    def correlation(self):
-        r"""Correlation matrix (`numpy.ndarray`).
-
-        Correlation :math:`C` is related to covariance :math:`\Sigma` via:
-
-        .. math::
-            C_{ij} = \frac{ \Sigma_{ij} }{ \sqrt{\Sigma_{ii} \Sigma_{jj}} }
-        """
-        err = np.sqrt(np.diag(self.covariance))
-        return self.covariance / np.outer(err, err)
-
     def set_parameter_factors(self, factors):
         """Set factor of all parameters.
 
@@ -499,30 +445,6 @@ class Parameters(collections.abc.Sequence):
             if not parameter.frozen:
                 parameter.factor = factors[idx]
                 idx += 1
-
-    @property
-    def _scale_matrix(self):
-        scales = [par.scale for par in self._parameters]
-        return np.outer(scales, scales)
-
-    def _expand_factor_matrix(self, matrix):
-        """Expand covariance matrix with zeros for frozen parameters"""
-        matrix_expanded = np.zeros((len(self), len(self)))
-        mask = np.array([par.frozen for par in self._parameters])
-        free_parameters = ~(mask | mask[:, np.newaxis])
-        matrix_expanded[free_parameters] = matrix.ravel()
-        return matrix_expanded
-
-    def set_covariance_factors(self, matrix):
-        """Set covariance from factor covariance matrix.
-
-        Used in the optimizer interface.
-        """
-        # FIXME: this is weird to do sqrt(size). Simplify
-        if not np.sqrt(matrix.size) == len(self):
-            matrix = self._expand_factor_matrix(matrix)
-
-        self._covariance = self._scale_matrix * matrix
 
     def autoscale(self, method="scale10"):
         """Autoscale all parameters.
@@ -560,54 +482,6 @@ class Parameters(collections.abc.Sequence):
         """Freeze all parameters"""
         for par in self._parameters:
             par.frozen = True
-
-    def get_subcovariance(self, parameters):
-        """Get sub-covariance matrix
-
-        Parameters
-        ----------
-        parameters : `Parameters`
-            Sub list of parameters.
-
-        Returns
-        -------
-        covariance : `~numpy.ndarray`
-            Sub-covariance.
-        """
-        idx = [self.index(par) for par in parameters]
-        return self.covariance[np.ix_(idx, idx)]
-
-    def set_subcovariance(self, parameters):
-        """Set sub-covariance matrix
-
-        Parameters
-        ----------
-        parameters : `Parameters`
-            Sub list of parameters.
-
-        """
-        if self._covariance is None:
-            self._covariance = np.zeros((len(self), len(self)))
-
-        idx = [self.index(par) for par in parameters]
-
-        if parameters.covariance is not None:
-            if not np.allclose(self.covariance[np.ix_(idx, idx)], parameters.covariance):
-                self.covariance[idx, :] = 0
-                self.covariance[:, idx] = 0
-
-        self.covariance[np.ix_(idx, idx)] = parameters.covariance
-
-    def check_covariance(self, covariance):
-        """Check whether the covariance has a valid shape"""
-        value = np.asanyarray(covariance)
-
-        npars = len(self._parameters)
-        shape = (npars, npars)
-        if value.shape != shape:
-            raise ValueError(f"Invalid covariance shape: {value.shape}, expected {shape}")
-
-        return value
 
 
 class restore_parameters_values:
