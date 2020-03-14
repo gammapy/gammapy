@@ -1,16 +1,24 @@
-
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Covariance class"""
 import numpy as np
 from astropy.table import Table
 from .parameter import Parameters
-
 
 
 __all__ = ["Covariance"]
 
 
 class Covariance:
-    """"""
+    """Parameter covariance
 
+    Parameters
+    ----------
+    parameters : `~gammapy.modeling.Parameters`
+        Parameter list
+    data : `~numpy.ndarray`
+        Covariance data array
+
+    """
     def __init__(self, parameters=None, data=None):
         if parameters is None:
             parameters = Parameters()
@@ -24,11 +32,13 @@ class Covariance:
 
     @property
     def shape(self):
+        """Covariance shape"""
         npars = len(self.parameters)
         return (npars, npars)
 
     @property
     def data(self):
+        """Covariance data (`~numpy.ndarray`)"""
         return self._data
 
     @data.setter
@@ -68,7 +78,18 @@ class Covariance:
 
     @classmethod
     def from_stack(cls, covar_list):
-        """"""
+        """Stack sub-covariance matrices from list
+
+        Parameters
+        ----------
+        covar_list : list of `Covariance`
+            List of sub-covariances
+
+        Returns
+        -------
+        covar : `Covariance`
+            Stacked covariance
+        """
         parameters = Parameters.from_stack(
             [_.parameters for _ in covar_list]
         )
@@ -81,7 +102,13 @@ class Covariance:
         return covar
 
     def to_table(self):
-        """"""
+        """Convert covariance matrix to table
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Covariance table
+        """
         table = Table()
         table["name"] = self.parameters.names
 
@@ -93,7 +120,7 @@ class Covariance:
         return table
 
     def read(self, filename):
-        pass
+        raise NotImplementedError
 
     def write(self, filename, **kwargs):
         """Write covariance to file
@@ -122,9 +149,8 @@ class Covariance:
         covariance : `~numpy.ndarray`
             Sub-covariance.
         """
-        idx = [self.parameters._get_idx(par) for par in covar.parameters]
+        idx = [self.parameters.index(par) for par in covar.parameters]
         data = self._data[np.ix_(idx, idx)]
-
         return self.__class__(
             parameters=covar.parameters, data=data
         )
@@ -139,7 +165,7 @@ class Covariance:
 
         """
 
-        idx = [self.parameters._get_idx(par) for par in covar.parameters]
+        idx = [self.parameters.index(par) for par in covar.parameters]
 
         if not np.allclose(self.data[np.ix_(idx, idx)], covar.data):
             self.data[idx, :] = 0
@@ -200,7 +226,3 @@ class Covariance:
 
     def __array__(self):
         return self.data
-
-    def needs_update(self, parameters):
-        """"""
-        return not self.parameters == parameters

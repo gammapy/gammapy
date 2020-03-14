@@ -89,7 +89,6 @@ class Model:
             variance = self._covariance.get_subcovariance(covar)
             par.error = np.sqrt(variance)
 
-
     @property
     def parameters(self):
         """Parameters (`~gammapy.modeling.Parameters`)"""
@@ -171,14 +170,17 @@ class Models(collections.abc.MutableSequence):
             unique_names.append(model.name)
 
         self._models = models
-        self._covariance = None
+        self._covariance = Covariance(self.parameters)
 
-    @property
-    def covariance(self):
-        if self._covariance is None or self._covariance.needs_update(self.parameters):
+    def _check_covariance(self):
+        if not self.parameters == self._covariance.parameters:
             self._covariance = Covariance.from_stack(
                 [model.covariance for model in self._models]
             )
+
+    @property
+    def covariance(self):
+        self._check_covariance()
 
         for model in self._models:
             self._covariance.set_subcovariance(model.covariance)
@@ -187,6 +189,7 @@ class Models(collections.abc.MutableSequence):
 
     @covariance.setter
     def covariance(self, covariance):
+        self._check_covariance()
         self._covariance.data = covariance
 
         for model in self._models:
@@ -296,7 +299,6 @@ class Models(collections.abc.MutableSequence):
 
     def __delitem__(self, key):
         del self._models[self.index(key)]
-        self._covariance = None
 
     def __setitem__(self, key, model):
         from gammapy.modeling.models import SkyModel, SkyDiffuseCube
@@ -305,14 +307,12 @@ class Models(collections.abc.MutableSequence):
             self._models[self.index(key)] = model
         else:
             raise TypeError(f"Invalid type: {model!r}")
-        self._covariance = None
 
     def insert(self, idx, model):
         if model.name in self.names:
             raise (ValueError("Model names must be unique"))
 
         self._models.insert(idx, model)
-        self._covariance = None
 
     def index(self, key):
         if isinstance(key, (int, slice)):

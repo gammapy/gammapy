@@ -83,19 +83,23 @@ class SkyModel(SkyModelBase):
         self.datasets_names = datasets_names
 
         # cached covariance
-        self._covariance = None
+        self._covariance = Covariance(self.parameters)
 
     @property
     def _models(self):
         models = self.spectral_model, self.spatial_model, self.temporal_model
         return [_ for _ in models if _]
 
+    def _check_covariance(self):
+        if not self.parameters == self._covariance.parameters:
+            self._covariance = Covariance.from_stack(
+                [model.covariance for model in self._models],
+                model_name=self.name
+            )
+
     @property
     def covariance(self):
-        if self._covariance is None or self._covariance.needs_update(self.parameters):
-            self._covariance = Covariance.from_stack(
-                [model.covariance for model in self._models]
-            )
+        self._check_covariance()
 
         for model in self._models:
             self._covariance.set_subcovariance(model.covariance)
@@ -104,6 +108,7 @@ class SkyModel(SkyModelBase):
 
     @covariance.setter
     def covariance(self, covariance):
+        self._check_covariance()
         self._covariance.data = covariance
 
         for model in self._models:
@@ -139,7 +144,6 @@ class SkyModel(SkyModelBase):
             raise TypeError(f"Invalid type: {model!r}")
 
         self._spatial_model = model
-        self._covariance = None
 
     @property
     def spectral_model(self):
@@ -152,7 +156,6 @@ class SkyModel(SkyModelBase):
             raise TypeError(f"Invalid type: {model!r}")
 
         self._spectral_model = model
-        self._covariance = None
 
     @property
     def temporal_model(self):
@@ -165,7 +168,6 @@ class SkyModel(SkyModelBase):
             raise TypeError(f"Invalid type: {model!r}")
 
         self._temporal_model = model
-        self._covariance = None
 
     @property
     def position(self):

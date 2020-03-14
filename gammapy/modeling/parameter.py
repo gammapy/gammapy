@@ -367,7 +367,7 @@ class Parameters(collections.abc.Sequence):
         """List of parameter names"""
         return [par.name for par in self._parameters]
 
-    def _get_idx(self, val):
+    def index(self, val):
         """Get position index for a given parameter.
 
         The input can be a parameter object, parameter name (str)
@@ -387,7 +387,7 @@ class Parameters(collections.abc.Sequence):
 
     def __getitem__(self, name):
         """Access parameter by name or index"""
-        idx = self._get_idx(name)
+        idx = self.index(name)
         return self._parameters[idx]
 
     def link(self, par, other_par):
@@ -400,7 +400,7 @@ class Parameters(collections.abc.Sequence):
         other_par : str, int or `Parameter`
             Parameter to be linked
         """
-        idx = self._get_idx(par)
+        idx = self.index(par)
         self._parameters[idx] = other_par
         #TODO: handle covariance
 
@@ -439,7 +439,8 @@ class Parameters(collections.abc.Sequence):
         return t
 
     def __eq__(self, other):
-        return np.all([p is p_new for p, p_new in zip(self, other)])
+        all_equal = np.all([p is p_new for p, p_new in zip(self, other)])
+        return all_equal and len(self) == len(other)
 
     @classmethod
     def from_dict(cls, data):
@@ -573,7 +574,7 @@ class Parameters(collections.abc.Sequence):
         covariance : `~numpy.ndarray`
             Sub-covariance.
         """
-        idx = [self._get_idx(par) for par in parameters]
+        idx = [self.index(par) for par in parameters]
         return self.covariance[np.ix_(idx, idx)]
 
     def set_subcovariance(self, parameters):
@@ -588,7 +589,7 @@ class Parameters(collections.abc.Sequence):
         if self._covariance is None:
             self._covariance = np.zeros((len(self), len(self)))
 
-        idx = [self._get_idx(par) for par in parameters]
+        idx = [self.index(par) for par in parameters]
 
         if parameters.covariance is not None:
             if not np.allclose(self.covariance[np.ix_(idx, idx)], parameters.covariance):
