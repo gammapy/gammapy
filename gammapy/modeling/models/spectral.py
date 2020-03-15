@@ -123,7 +123,6 @@ class SpectralModel(Model):
             Tuple of flux and flux error.
         """
         p_cov = self.covariance
-        print(p_cov)
         eps = np.sqrt(np.diag(p_cov)) * epsilon
 
         df_dp = self._evaluate_gradient(energy, eps)
