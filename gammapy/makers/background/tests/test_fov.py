@@ -139,7 +139,7 @@ def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
 def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
-    test_dataset = obs_dataset.copy()
+    test_dataset = obs_dataset.copy(name="test-fov")
     # Putting negative background model to prevent convergence
     test_dataset.background_model.map.data *= -1
     dataset = fov_bkg_maker.run(test_dataset)

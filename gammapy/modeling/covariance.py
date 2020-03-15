@@ -223,7 +223,11 @@ class Covariance:
             C_{ij} = \frac{ \Sigma_{ij} }{ \sqrt{\Sigma_{ii} \Sigma_{jj}} }
         """
         err = np.sqrt(np.diag(self.data))
-        return self.data / np.outer(err, err)
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            correlation = self.data / np.outer(err, err)
+
+        return np.nan_to_num(correlation)
 
     @property
     def scipy_mvn(self):
