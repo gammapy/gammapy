@@ -10,7 +10,7 @@ __all__ = ["Covariance"]
 
 
 class Covariance:
-    """Parameter covariance
+    """Parameter covariance class
 
     Parameters
     ----------
@@ -105,8 +105,13 @@ class Covariance:
 
         return covar
 
-    def to_table(self):
+    def to_table(self, format=".6e"):
         """Convert covariance matrix to table
+
+        Parameters
+        ----------
+        format : str
+            Column format string
 
         Returns
         -------
@@ -119,8 +124,9 @@ class Covariance:
         for idx, par in enumerate(self.parameters):
             vals = self.data[idx]
             table[par.name] = vals
-            table[par.name].format = ".3e"
+            table[par.name].format = format
 
+        table.add_index("name")
         return table
 
     def read(self, filename):
