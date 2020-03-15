@@ -262,3 +262,42 @@ class PSFKernel:
     def write(self, *args, **kwargs):
         """Write the Map object which contains the PSF kernel to file."""
         self.psf_kernel_map.write(*args, **kwargs)
+
+    def to_image(self, spectrum=None, exposure=None, keepdims=True):
+        """Transform 3D PSFKernel into a 2D PSFKernel.
+
+        Parameters
+        ----------
+        spectrum : `~gammapy.modeling.models.SpectralModel`
+            Spectral model to compute the weights.
+            Default is power-law with spectral index of 2.
+        exposure : `~astropy.units.Quantity` or `~numpy.ndarray`
+            1D array containing exposure in each true energy bin.
+            It must have the same size as the PSFKernel energy axis.
+            Default is uniform exposure over energy.
+        keepdims : bool
+            If true, the resulting PSFKernel wil keep an energy axis with one bin.
+            Default is True.
+
+        Returns
+        -------
+        weighted_kernel : `~gammapy.irf.PSFKernel`
+            the weighted kernel summed over energy
+        """
+        from gammapy.makers.utils import _map_spectrum_weight
+
+        if exposure is None:
+            exposure = np.ones(self.psf_kernel_map.geom.axes[0].center.shape)
+        else:
+            if exposure.shape != self.psf_kernel_map.geom.axes[0].center.shape:
+                raise ValueError("Incorrect exposure for PSFKernel.to_image()")
+            total_expo = exposure.sum()
+            exposure /= total_expo
+            if isinstance(exposure, u.Quantity):
+                exposure = exposure.value
+
+        spectrum_weighted_kernel = _map_spectrum_weight(self.psf_kernel_map,spectrum)
+
+        spectrum_weighted_kernel.data *= exposure[:,np.newaxis, np.newaxis]
+        
+        return self.__class__(spectrum_weighted_kernel.sum_over_axes(keepdims=keepdims))
