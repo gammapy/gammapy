@@ -6,6 +6,8 @@ import warnings
 import numpy as np
 import scipy.optimize
 from astropy.convolution import CustomKernel, Kernel2D
+from gammapy.irf import PSFKernel
+from gammapy.datasets import MapDataset
 from gammapy.stats import (
     cash,
     cash_sum_cython,
@@ -82,6 +84,7 @@ class TSMapEstimator:
         Input MapDataset.
     kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
         Source model kernel.
+        If set to None, will use the PSF at the center of the counts map.
     downsampling_factor : int
             Sample down the input maps to speed up the computation. Only integer
             values that are a multiple of 2 are allowed. Note that the kernel is
@@ -135,7 +138,7 @@ class TSMapEstimator:
     def __init__(
         self,
         dataset,
-        kernel,
+        kernel=None,
         downsampling_factor=None,
         method="root brentq",
         error_method="covar",
@@ -144,11 +147,17 @@ class TSMapEstimator:
         ul_sigma=2,
         threshold=None,
         rtol=0.001,
+        max_kernel_radius=None,
     ):
+
         self.dataset = dataset
 
-        if not isinstance(kernel, Kernel2D):
-            kernel = CustomKernel(kernel)
+        if kernel is None:
+            if isinstance(self.dataset.psf, PSFKernel):
+                kernel = self.dataset.psf
+            else:
+                position = dataset._geom.center_skydir
+                kernel = self.dataset.psf.get_psf_kernel(position, self.dataset._geom, max_kernel_radius)
         self.kernel = kernel
 
         self.downsampling_factor = downsampling_factor
@@ -168,6 +177,27 @@ class TSMapEstimator:
             "threshold": threshold,
             "rtol": rtol,
         }
+
+    @property
+    def dataset(self):
+        return self._dataset
+
+    @dataset.setter
+    def dataset(self, dataset):
+        if not isinstance(dataset, MapDataset):
+            raise TypeError("TSMapEstimator: input dataset should be a MapDataset")
+        self._dataset = dataset
+
+    @property
+    def kernel(self):
+        return self._kernel
+
+    @kernel.setter
+    def kernel(self, kernel):
+        if not isinstance(kernel, Kernel2D):
+            kernel = CustomKernel(kernel)
+        self._kernel = kernel
+
 
     @staticmethod
     def flux_default(dataset, kernel):

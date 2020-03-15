@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Gaussian2DKernel
 from gammapy.datasets import MapDataset
+from gammapy.irf import PSFKernel
 from gammapy.estimators import TSMapEstimator
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import BackgroundModel
@@ -49,6 +50,37 @@ def input_dataset():
         counts=counts, exposure=exposure, models=background_model, mask_safe=mask,
     )
 
+@pytest.fixture(scope="session")
+def fermi_dataset():
+    counts = Map.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts-cube.fits.gz"
+    )
+    background = Map.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-background-cube.fits.gz"
+    )
+    background = BackgroundModel(background, datasets_names=["fermi-3fhl-gc"])
+
+    exposure = Map.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz"
+    )
+    mask_safe = counts.copy(data=np.ones_like(counts.data).astype("bool"))
+
+    kernel = PSFKernel.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf.fits.gz"
+    )
+
+    dataset = MapDataset(
+        counts=counts,
+        models=[background],
+        exposure=exposure,
+        mask_safe=mask_safe,
+        psf=kernel,
+        name="fermi-3fhl-gc",
+    )
+    dataset = dataset.to_image()
+
+    return dataset
+
 
 @requires_data()
 def test_compute_ts_map(input_dataset):
@@ -72,6 +104,12 @@ def test_compute_ts_map(input_dataset):
     # Check mask is correctly taken into account
     assert np.isnan(result["ts"].data[30, 40])
 
+@requires_data()
+def test_compute_ts_map_psf_kernel(fermi_dataset):
+    estimator = TSMapEstimator(fermi_dataset)
+    result = estimator.run()
+
+    assert False
 
 @requires_data()
 def test_compute_ts_map_newton(input_dataset):
