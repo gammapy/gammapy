@@ -20,10 +20,7 @@ class Covariance:
         Covariance data array
 
     """
-    def __init__(self, parameters=None, data=None):
-        if parameters is None:
-            parameters = Parameters()
-
+    def __init__(self, parameters, data=None):
         self.parameters = parameters
 
         if data is None:
@@ -35,7 +32,7 @@ class Covariance:
     def shape(self):
         """Covariance shape"""
         npars = len(self.parameters)
-        return (npars, npars)
+        return npars, npars
 
     @property
     def data(self):

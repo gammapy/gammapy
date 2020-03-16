@@ -17,9 +17,9 @@ def covariance_diagonal():
 
 
 @pytest.fixture
-def covariance():
-    x = Parameter("x", 1)
-    y = Parameter("y", 2)
+def covariance(covariance_diagonal):
+    x = covariance_diagonal.parameters["x"]
+    y = covariance_diagonal.parameters["y"]
     parameters = Parameters([x, y])
     data = np.ones((2, 2))
     return Covariance(parameters=parameters, data=data)
@@ -29,9 +29,8 @@ def test_str(covariance_diagonal):
     assert "0.01" in str(covariance_diagonal)
 
 
-def test_data(covariance_diagonal):
-    diagonal = np.diag(covariance_diagonal.data)
-    assert_allclose(diagonal, np.array([0.1, 0.2, 0.3]) ** 2)
+def test_shape(covariance_diagonal):
+    assert_allclose(covariance_diagonal.shape, (3, 3))
 
 
 def test_set_data(covariance_diagonal):
@@ -47,12 +46,23 @@ def test_to_table(covariance_diagonal):
     assert_allclose(table.loc["z"]["z"], 0.3 ** 2)
 
 
-def test_set_subcovariance():
-    pass
+def test_set_subcovariance(covariance_diagonal, covariance):
+    covariance_diagonal.set_subcovariance(covariance)
+    assert_allclose(
+        covariance_diagonal.data[:2, :2],
+        np.ones((2, 2))
+    )
 
 
-def test_get_subcovariance():
-    pass
+def test_get_subcovariance(covariance_diagonal, covariance):
+    covar = covariance_diagonal.get_subcovariance(covariance.parameters)
+    assert_allclose(np.diag(covar), [0.1 ** 2, 0.2 ** 2])
+
+
+def test_scipy_mvn(covariance):
+    mvn = covariance.scipy_mvn
+    value = mvn.pdf(2)
+    assert_allclose(value, 0.2489, rtol=1e-3)
 
 
 def test_plot_correlation(covariance_diagonal):
