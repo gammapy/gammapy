@@ -1,6 +1,4 @@
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 
 # taken from the matploltlib documentation
 # https://matplotlib.org/3.1.0/gallery/images_contours_and_fields/image_annotated_heatmap.html#sphx-glr-gallery-images-contours-and-fields-image-annotated-heatmap-py
@@ -31,6 +29,7 @@ def plot_heatmap(data, row_labels, col_labels, ax=None,
     **kwargs
         All other arguments are forwarded to `imshow`.
     """
+    import matplotlib.pyplot as plt
 
     if not ax:
         ax = plt.gca()
@@ -96,6 +95,7 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
         All other arguments are forwarded to each call to `text` used to create
         the text labels.
     """
+    import matplotlib
 
     if not isinstance(data, (list, np.ndarray)):
         data = im.get_array()

@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.modeling import Parameters, Parameter, Covariance
-from gammapy.utils.testing import mpl_plot_check
+from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 
 @pytest.fixture
@@ -65,6 +65,7 @@ def test_scipy_mvn(covariance):
     assert_allclose(value, 0.2489, rtol=1e-3)
 
 
+@requires_dependency("matplotlib")
 def test_plot_correlation(covariance_diagonal):
     with mpl_plot_check():
         covariance_diagonal.plot_correlation()
