@@ -6,7 +6,7 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .edisp_kernel import EDispKernel
 from .irf_map import IRFMap
 
-__all__ = ["EDispMap"]
+__all__ = ["EDispMap", "EDispKernelMap"]
 
 
 class EDispMap(IRFMap):
@@ -242,3 +242,142 @@ class EDispMap(IRFMap):
         )
 
         return cls.from_geom(geom)
+
+    def to_edisp_kernel_map(self, e_reco):
+        """Convert to map with edisp kernels
+
+        Parameters
+        ----------
+        e_reco : `MapAxis`
+            Reconstructed enrgy axis.
+
+        Returns
+        -------
+        edisp : `EDispKernelMap`
+            Energy dispersion kernel map.
+        """
+        axis = 0
+        energy_axis = self.edisp_map.geom.get_axis_by_name("energy_true")
+        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
+
+        data = []
+
+        for idx, e_true in enumerate(energy_axis.center):
+            # migration value of e_reco bounds
+            migra = e_reco.edges / e_true
+
+            edisp_e_true = self.edisp_map.slice_by_idx({"energy_true": idx})
+
+            cumsum = np.insert(edisp_e_true.data, 0, 0, axis=axis).cumsum(axis=axis)
+            with np.errstate(invalid="ignore"):
+                cumsum = np.nan_to_num(cumsum / cumsum[slice(-2, -1)])
+
+            f = interp1d(
+                migra_axis.edges.value,
+                cumsum,
+                kind="linear",
+                bounds_error=False,
+                fill_value=(0, 1),
+                axis=axis
+            )
+
+            integral = np.diff(np.clip(f(migra), a_min=0, a_max=1), axis=axis)
+            data.append(integral)
+
+        data = np.stack(data)
+
+        geom_image = self.edisp_map.geom.to_image()
+        geom = geom_image.to_cube([e_reco, energy_axis])
+        return Map.from_geom(geom=geom, data=data)
+
+
+class EDispKernelMap(IRFMap):
+    """Energy dispersion kernel map.
+
+    Parameters
+    ----------
+    edisp_kernel_map : `~gammapy.maps.Map`
+        The input energy dispersion kernel map. Should be a Map with 2 non spatial axes.
+        Reconstructed and and true energy axes should be given in this specific order.
+    exposure_map : `~gammapy.maps.Map`, optional
+        Associated exposure map. Needs to have a consistent map geometry.
+
+    """
+    _hdu_name = "edisp"
+
+    def __init__(self, edisp_kernel_map, exposure_map):
+        if edisp_kernel_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
+            raise ValueError("Incorrect energy axis position in input Map")
+
+        if edisp_kernel_map.geom.axes[0].name.upper() != "ENERGY":
+            raise ValueError("Incorrect migra axis position in input Map")
+
+        super().__init__(irf_map=edisp_kernel_map, exposure_map=exposure_map)
+
+    @property
+    def edisp_map(self):
+        return self._irf_map
+
+    @edisp_map.setter
+    def edisp_map(self, value):
+        self._irf_map = value
+
+    @classmethod
+    def from_geom(cls, geom):
+        """Create edisp kernel map from geom.
+
+        By default a diagonal edisp matrix is created.
+
+        Parameters
+        ----------
+        geom : `Geom`
+            Edisp map geometry.
+
+        Returns
+        -------
+        edisp_map : `EDispMap`
+            Energy dispersion map.
+        """
+        if "energy_true" not in [ax.name for ax in geom.axes]:
+            raise ValueError("EDispMap requires true energy axis")
+
+        geom_exposure_edisp = geom.squash(axis="energy")
+        exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
+
+        energy_axis = geom.get_axis_by_name("energy")
+        edisp_map = Map.from_geom(geom, unit="")
+
+        edisp_map.data = data
+        return cls(edisp_map, exposure_edisp)
+
+    def get_edisp_kernel(self, position):
+        """Get energy dispersion at a given position.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            the target position. Should be a single coordinates
+
+        Returns
+        -------
+        edisp : `~gammapy.irf.EnergyDispersion`
+            the energy dispersion (i.e. rmf object)
+        """
+        energy_true_axis = self.edisp_map.geom.get_axis_by_name("energy_true")
+        energy_axis = self.edisp_map.geom.get_axis_by_name("energy")
+
+        coords = {
+            "skycoord": position,
+            "energy": energy_axis.center,
+            "energy_true": energy_true_axis.center
+        }
+
+        data = self.edisp_map.get_by_coord(coords)
+
+        return EDispKernel(
+            e_true_lo=energy_true_axis.edges[:-1],
+            e_true_hi=energy_true_axis.edges[1:],
+            e_reco_lo=energy_axis.edges[:-1],
+            e_reco_hi=energy_axis.edges[1:],
+            data=data,
+        )
