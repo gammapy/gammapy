@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
+from astropy.io import fits
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.datasets import MapDatasetEventSampler
-from gammapy.data import GTI, Observation
+from gammapy.data import DataStore, GTI, Observation
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.irf import load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
@@ -157,8 +158,8 @@ def test_mde_run(dataset):
     assert meta["ONTIME"] == 36000.0
     assert meta["OBS_ID"] == 1001
     assert meta["RADECSYS"] == "icrs"
-    assert meta["ALT_PNT"] == '20.000'
-    assert meta["AZ_PNT"] == '0.000'
+    assert meta["ALT_PNT"] == "20.000"
+    assert meta["AZ_PNT"] == "0.000"
 
 
 @requires_data()
@@ -195,16 +196,21 @@ def test_mde_run_switchoff(dataset):
 @requires_data()
 def test_events_datastore(tmp_path, dataset):
     irfs = load_cta_irfs(
-                         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-                         )
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
     livetime = 10.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-                          obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
-                          )
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+    )
 
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
 
-    events.write(str(tmp_path / "events.fits"))
-    DataStore.from_events([str(tmp_path / "events.fits")])
+    primary_hdu = fits.PrimaryHDU()
+    hdu_evt = fits.BinTableHDU(events.table)
+    hdu_gti = fits.BinTableHDU(dataset.gti.table, name="GTI")
+    hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
+    hdu_all.writeto(str(tmp_path / "events.fits"))
+
+    DataStore.from_events_files([str(tmp_path / "events.fits")])

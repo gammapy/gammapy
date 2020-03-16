@@ -222,7 +222,7 @@ class MapDatasetEventSampler:
         meta["DSTYP2"] = "ENERGY"
         meta["DSUNI2"] = "TeV"
 
-        if hasattr(dataset, 'models[1]'):
+        if hasattr(dataset, "models[1]"):
             meta["OBJECT"] = dataset.models[1].name
             meta["RA_OBJ"] = dataset.models[1].position.icrs.ra.deg
             meta["DEC_OBJ"] = dataset.models[1].position.icrs.dec.deg
@@ -231,7 +231,7 @@ class MapDatasetEventSampler:
             meta["RA_OBJ"] = dataset.models[0].position.icrs.ra.deg
             meta["DEC_OBJ"] = dataset.models[0].position.icrs.dec.deg
 
-        meta["TELAPSE"] = dataset.gti.time_sum.to('s').value
+        meta["TELAPSE"] = dataset.gti.time_sum.to("s").value
         meta["MJDREFI"] = int(dataset.gti.time_ref.mjd)
         meta["MJDREFF"] = dataset.gti.time_ref.mjd % 1
         meta["TIMEUNIT"] = "s"
@@ -252,24 +252,24 @@ class MapDatasetEventSampler:
         meta["NMCIDS"] = len(dataset.models)
 
         # Necessary for DataStore, but they should be ALT and AZ instead!
-        meta["ALTITUDE"] = observation.aeff.meta['CBD50001'][7:-4]
-        meta["ALT_PNT"] = observation.aeff.meta['CBD50001'][7:-4]
-        meta["AZ_PNT"] = observation.aeff.meta['CBD60001'][8:-4]
+        meta["ALTITUDE"] = observation.aeff.meta["CBD50001"][7:-4]
+        meta["ALT_PNT"] = observation.aeff.meta["CBD50001"][7:-4]
+        meta["AZ_PNT"] = observation.aeff.meta["CBD60001"][8:-4]
 
         # TO DO: these keywords should be taken from the IRF of the dataset
         meta["ORIGIN"] = "Gammapy"
-        meta["CALDB"] = observation.aeff.meta['CBD20001'][8:-1]
-        meta["IRF"] = observation.aeff.meta['CBD10001'][5:-2]
-        meta["TELESCOP"] = observation.aeff.meta['TELESCOP']
-        meta["INSTRUME"] = observation.aeff.meta['INSTRUME']
+        meta["CALDB"] = observation.aeff.meta["CBD20001"][8:-1]
+        meta["IRF"] = observation.aeff.meta["CBD10001"][5:-2]
+        meta["TELESCOP"] = observation.aeff.meta["TELESCOP"]
+        meta["INSTRUME"] = observation.aeff.meta["INSTRUME"]
         meta["N_TELS"] = ""
         meta["TELLIST"] = ""
-        meta["GEOLON"] = ''
-        meta["GEOLAT"] = ''
+        meta["GEOLON"] = ""
+        meta["GEOLAT"] = ""
         # TO BE ADDED
-#        meta["CREATED"] = ""
-#        meta["OBS_MODE"] = ""
-#        meta["EV_CLASS"] = ""
+        #        meta["CREATED"] = ""
+        #        meta["OBS_MODE"] = ""
+        #        meta["EV_CLASS"] = ""
 
         return meta
 
