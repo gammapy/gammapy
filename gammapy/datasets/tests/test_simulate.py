@@ -157,8 +157,8 @@ def test_mde_run(dataset):
     assert meta["ONTIME"] == 36000.0
     assert meta["OBS_ID"] == 1001
     assert meta["RADECSYS"] == "icrs"
-    assert meta["ALT_PNT"] == 0
-    assert meta["AZ_PNT"] == 0
+    assert meta["ALT_PNT"] == '20.000'
+    assert meta["AZ_PNT"] == '0.000'
 
 
 @requires_data()
@@ -190,3 +190,21 @@ def test_mde_run_switchoff(dataset):
     assert meta["ONTIME"] == 36000.0
     assert meta["OBS_ID"] == 1001
     assert meta["RADECSYS"] == "icrs"
+
+
+@requires_data()
+def test_events_datastore(tmp_path, dataset):
+    irfs = load_cta_irfs(
+                         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+                         )
+    livetime = 10.0 * u.hr
+    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    obs = Observation.create(
+                          obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+                          )
+
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.run(dataset=dataset, observation=obs)
+
+    events.write(str(tmp_path / "events.fits"))
+    DataStore.from_events([str(tmp_path / "events.fits")])
