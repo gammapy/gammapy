@@ -5,6 +5,7 @@ from astropy.coordinates import Angle
 from astropy.coordinates.angle_utilities import angular_separation
 from gammapy.maps import Map, WcsGeom
 from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.modeling.models import PowerLawSpectralModel
 from .psf_table import TablePSF
 
 __all__ = ["PSFKernel"]
@@ -284,20 +285,26 @@ class PSFKernel:
         weighted_kernel : `~gammapy.irf.PSFKernel`
             the weighted kernel summed over energy
         """
-        from gammapy.makers.utils import _map_spectrum_weight
+        map = self.psf_kernel_map
+
+        if spectrum is None:
+            spectrum = PowerLawSpectralModel(index=2.0)
 
         if exposure is None:
-            exposure = np.ones(self.psf_kernel_map.geom.axes[0].center.shape)
-        else:
-            if exposure.shape != self.psf_kernel_map.geom.axes[0].center.shape:
-                raise ValueError("Incorrect exposure for PSFKernel.to_image()")
-            total_expo = exposure.sum()
-            exposure /= total_expo
-            if isinstance(exposure, u.Quantity):
-                exposure = exposure.value
+            exposure = np.ones(map.geom.axes[0].center.shape)
+        exposure = u.Quantity(exposure)
+        if exposure.shape != map.geom.axes[0].center.shape:
+            raise ValueError("Incorrect exposure_array shape")
 
-        spectrum_weighted_kernel = _map_spectrum_weight(self.psf_kernel_map,spectrum)
+        # Compute weights vector
+        energy_edges = map.geom.get_axis_by_name("energy_true").edges
+        weights = spectrum.integral(
+            emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
+        )
+        weights *= exposure
+        weights /= weights.sum()
 
-        spectrum_weighted_kernel.data *= exposure[:,np.newaxis, np.newaxis]
-        
+        spectrum_weighted_kernel = map.copy()
+        spectrum_weighted_kernel.quantity *= weights[:, np.newaxis, np.newaxis]
+
         return self.__class__(spectrum_weighted_kernel.sum_over_axes(keepdims=keepdims))
