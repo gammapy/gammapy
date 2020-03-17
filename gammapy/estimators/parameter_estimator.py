@@ -6,6 +6,7 @@ from gammapy.modeling import Fit
 
 log = logging.getLogger(__name__)
 
+
 class ParameterEstimator:
     """Model parameter estimator.
 
@@ -31,21 +32,28 @@ class ParameterEstimator:
     """
 
     def __init__(
-            self,
-            datasets,
-            sigma=1,
-            sigma_ul=2,
-            reoptimize=True,
-            n_scan_values=30,
-            scan_n_err=3,
+        self,
+        datasets,
+        sigma=1,
+        sigma_ul=2,
+        reoptimize=True,
+        n_scan_values=30,
+        scan_n_err=3,
     ):
         self.sigma = sigma
         self.sigma_ul = sigma_ul
         self.reoptimize = reoptimize
         self.n_scan_values = n_scan_values
         self.scan_n_err = scan_n_err
+        self.datasets = datasets
 
-        self.datasets = self._check_datasets(datasets)
+    @property
+    def datasets(self):
+        return self._datasets
+
+    @datasets.setter
+    def datasets(self, datasets):
+        self._datasets = self._check_datasets(datasets)
         self.fit = Fit(datasets)
         self.fit_result = None
 
@@ -61,10 +69,9 @@ class ParameterEstimator:
 
         return datasets
 
-    def _freeze_parameters(self, datasets, parameter):
+    def _freeze_parameters(self, parameter):
         """Freeze all other parameters"""
-        # freeze other parameters
-        for par in datasets.parameters:
+        for par in self.datasets.parameters:
             if par is not parameter:
                 par.frozen = True
 
@@ -88,9 +95,11 @@ class ParameterEstimator:
         else:
             value = np.nan
 
-        result = {parameter.name: value,
-                  "stat": fit_result.total_stat,
-                  "success": fit_result.success}
+        result = {
+            parameter.name: value,
+            "stat": fit_result.total_stat,
+            "success": fit_result.success,
+        }
 
         self.fit_result = fit_result
         return result
@@ -101,8 +110,10 @@ class ParameterEstimator:
             parameter.value = null_value
             parameter.frozen = True
             result = self.fit.optimize()
-        if not result.success or result.message=="Optimization failed.":
-            log.warning("Fit failed for parameter null value, returning NaN. Check input null value.")
+        if not result.success:
+            log.warning(
+                "Fit failed for parameter null value, returning NaN. Check input null value."
+            )
             return np.nan
         return result.total_stat
 
@@ -115,7 +126,7 @@ class ParameterEstimator:
             the parameter to be estimated
         steps : list of str
             Which steps to execute. Available options are:
-
+                * "err": estimate symmetric error from covariance
                 * "ts": estimate delta TS with parameter null (reference) value
                 * "errn-errp": estimate asymmetric errors.
                 * "ul": estimate upper limits.
@@ -137,51 +148,56 @@ class ParameterEstimator:
         with self.datasets.parameters.restore_values:
 
             if not self.reoptimize:
-                self._freeze_parameters(self.datasets, parameter)
+                self._freeze_parameters(parameter)
 
             if steps == "all":
-                steps = ["ts", "errp-errn", "ul", "scan"]
-
-            TS0 = np.nan
-            if "ts" in steps:
-                TS0 = self._estimate_ts_for_null_value(parameter, null_value)
+                steps = ["err", "ts", "errp-errn", "ul", "scan"]
 
             result = self._find_best_fit(parameter)
-            TS1 = result['stat']
+            TS1 = result["stat"]
 
             if not result.pop("success"):
                 log.warning("Fit failed for parameter estimate, setting NaN.")
-                return result
 
             value_max = result[parameter.name]
-            res = self.fit.covariance()
-            value_err = res.parameters.error(parameter)
-            result.update({"err": value_err})
 
-            if "ts" in steps:
-                res = TS0 - TS1
-                result.update({"delta_ts": res, "null_value": null_value})
+            if "err" in steps:
+                res = self.fit.covariance()
+                value_err = res.parameters.error(parameter)
+                result.update({f"{parameter.name}_err": value_err})
 
             if "errp-errn" in steps:
                 res = self.fit.confidence(parameter=parameter, sigma=self.sigma)
-                result.update({"errp": res["errp"], "errn": res["errn"]})
+                result.update(
+                    {
+                        f"{parameter.name}_errp": res["errp"],
+                        f"{parameter.name}_errn": res["errn"],
+                    }
+                )
 
             if "ul" in steps:
                 res = self.fit.confidence(parameter=parameter, sigma=self.sigma_ul)
-                result.update({"ul": res["errp"] + value_max})
+                result.update({f"{parameter.name}_ul": res["errp"] + value_max})
+
+            if "ts" in steps:
+                TS0 = self._estimate_ts_for_null_value(parameter, null_value)
+                res = TS0 - TS1
+                result.update(
+                    {"sqrt_ts": np.sqrt(res), "ts": res, "null_value": null_value}
+                )
+                # TODO: should not need this
+                self.fit.optimize()
 
             if "scan" in steps:
                 if scan_values is None:
                     scan_values = self._compute_scan_values(
-                        value_max,
-                        value_err,
-                        parameter.min,
-                        parameter.max
+                        value_max, value_err, parameter.min, parameter.max
                     )
 
                 res = self.fit.stat_profile(
                     parameter, values=scan_values, reoptimize=self.reoptimize
                 )
-                result.update({f"{parameter.name}_scan": res["values"], "stat_scan": res["stat"]})
+                result.update(
+                    {f"{parameter.name}_scan": res["values"], "stat_scan": res["stat"]}
+                )
         return result
-

@@ -7,6 +7,7 @@ from astropy.table import Table, vstack
 from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, ScaleSpectralModel
+from gammapy.estimators.flux import FluxEstimator
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -748,11 +749,10 @@ class FluxPoints:
         return ax
 
 
-class FluxPointsEstimator:
+class FluxPointsEstimator(FluxEstimator):
     """Flux points estimator.
 
-    Estimates flux points for a given list of spectral datasets, energies and
-    spectral model.
+    Estimates flux points for a given list of datasets, energies and spectral model.
 
     To estimate the flux point the amplitude of the reference spectral model is
     fitted within the energy range defined by the energy group. This is done for
@@ -803,47 +803,20 @@ class FluxPointsEstimator:
         sigma_ul=2,
         reoptimize=False,
     ):
-        # make a copy to not modify the input datasets
-        if not isinstance(datasets, Datasets):
-            datasets = Datasets(datasets)
-
-        if not datasets.is_all_same_type and datasets.is_all_same_shape:
-            raise ValueError(
-                "Flux point estimation requires a list of datasets"
-                " of the same type and data shape."
-            )
-
-        self.datasets = datasets.copy()
         self.e_edges = e_edges
-
-        dataset = self.datasets[0]
-
-        model = dataset.models[source].spectral_model
-
-        self.model = ScaleSpectralModel(model)
-        self.model.norm.min = 0
-        self.model.norm.max = 1e3
-
-        if norm_values is None:
-            norm_values = np.logspace(
-                np.log10(norm_min), np.log10(norm_max), norm_n_values
-            )
-
-        self.norm_values = norm_values
-        self.sigma = sigma
-        self.sigma_ul = sigma_ul
-        self.reoptimize = reoptimize
-        self.source = source
-        self.fit = Fit(self.datasets)
-
-        self._set_scale_model()
+        super().__init__(
+            datasets,
+            source,
+            e_edges[:2],
+            norm_min,
+            norm_max,
+            norm_n_values,
+            norm_values,
+            sigma,
+            sigma_ul,
+            reoptimize,
+        )
         self._contribute_to_stat = False
-
-    def _freeze_parameters(self):
-        # freeze other parameters
-        for par in self.datasets.parameters:
-            if par is not self.model.norm:
-                par.frozen = True
 
     def _freeze_empty_background(self):
         counts_all = self.estimate_counts()["counts"]
@@ -852,18 +825,6 @@ class FluxPointsEstimator:
             if isinstance(dataset, MapDataset) and counts == 0:
                 if dataset.background_model is not None:
                     dataset.background_model.parameters.freeze_all()
-
-    def _set_scale_model(self):
-        # set the model on all datasets
-        for dataset in self.datasets:
-            if len(dataset.models) > 1:
-                dataset.models[self.source].spectral_model = self.model
-            else:
-                dataset.models[0].spectral_model = self.model
-
-    @property
-    def ref_model(self):
-        return self.model.model
 
     @property
     def e_groups(self):
@@ -917,7 +878,7 @@ class FluxPointsEstimator:
         steps : list of str
             Which steps to execute. Available options are:
 
-                * "err": estimate symmetric error.
+                * "norm-err": estimate symmetric error.
                 * "errn-errp": estimate asymmetric errors.
                 * "ul": estimate upper limits.
                 * "ts": estimate ts and sqrt(ts) values.
@@ -931,18 +892,7 @@ class FluxPointsEstimator:
             Dict with results for the flux point.
         """
         e_min, e_max = e_group["energy_min"], e_group["energy_max"]
-        # Put at log center of the bin
-        e_ref = np.sqrt(e_min * e_max)
-
-        result = {
-            "e_ref": e_ref,
-            "e_min": e_min,
-            "e_max": e_max,
-            "ref_dnde": self.ref_model(e_ref),
-            "ref_flux": self.ref_model.integral(e_min, e_max),
-            "ref_eflux": self.ref_model.energy_flux(e_min, e_max),
-            "ref_e2dnde": self.ref_model(e_ref) * e_ref ** 2,
-        }
+        self.energy_range = [e_min, e_max]
 
         for dataset in self.datasets:
             dataset.mask_fit = self._energy_mask(e_group=e_group, dataset=dataset)
@@ -953,72 +903,18 @@ class FluxPointsEstimator:
 
             self._contribute_to_stat |= mask.any()
 
+        if not self._contribute_to_stat:
+            result = self._return_nan_result(steps=steps)
+            result.update(self.estimate_counts())
+            return result
+
         with self.datasets.parameters.restore_values:
 
             self._freeze_empty_background()
 
-            if not self.reoptimize:
-                self._freeze_parameters()
-
-            result.update(self.estimate_norm())
-
-            if not result.pop("success"):
-                log.warning(
-                    "Fit failed for flux point between {e_min:.3f} and {e_max:.3f},"
-                    " setting NaN.".format(e_min=e_min, e_max=e_max)
-                )
-
-            if steps == "all":
-                steps = ["err", "counts", "errp-errn", "ul", "ts", "norm-scan"]
-
-            if "err" in steps:
-                result.update(self.estimate_norm_err())
-
-            if "counts" in steps:
-                result.update(self.estimate_counts())
-
-            if "errp-errn" in steps:
-                result.update(self.estimate_norm_errn_errp())
-
-            if "ul" in steps:
-                result.update(self.estimate_norm_ul())
-
-            if "ts" in steps:
-                result.update(self.estimate_norm_ts())
-
-            if "norm-scan" in steps:
-                result.update(self.estimate_norm_scan())
-
+            result = super().run(steps=steps)
+            result.update(self.estimate_counts())
         return result
-
-    def estimate_norm_errn_errp(self):
-        """Estimate asymmetric errors for a flux point.
-
-        Returns
-        -------
-        result : dict
-            Dict with asymmetric errors for the flux point norm.
-        """
-        if not self._contribute_to_stat:
-            return {"norm_errp": np.nan, "norm_errn": np.nan}
-
-        result = self.fit.confidence(parameter=self.model.norm, sigma=self.sigma)
-        return {"norm_errp": result["errp"], "norm_errn": result["errn"]}
-
-    def estimate_norm_err(self):
-        """Estimate covariance errors for a flux point.
-
-        Returns
-        -------
-        result : dict
-            Dict with symmetric error for the flux point norm.
-        """
-        if not self._contribute_to_stat:
-            return {"norm_err": np.nan}
-
-        result = self.fit.covariance()
-        norm_err = result.parameters.error(self.model.norm)
-        return {"norm_err": norm_err}
 
     def estimate_counts(self):
         """Estimate counts for the flux point.
@@ -1040,101 +936,3 @@ class FluxPointsEstimator:
             counts.append(dataset.counts.data[mask].sum())
 
         return {"counts": np.array(counts, dtype=int)}
-
-    def estimate_norm_ul(self):
-        """Estimate upper limit for a flux point.
-
-        Returns
-        -------
-        result : dict
-            Dict with upper limit for the flux point norm.
-        """
-        if not self._contribute_to_stat:
-            return {"norm_ul": np.nan}
-
-        norm = self.model.norm
-
-        # TODO: the minuit backend has convergence problems when the fit statistic is not
-        #  of parabolic shape, which is the case, when there are zero counts in the
-        #  energy bin. For this case we change to the scipy backend.
-        counts = self.estimate_counts()["counts"]
-
-        if np.all(counts == 0):
-            result = self.fit.confidence(
-                parameter=norm,
-                sigma=self.sigma_ul,
-                backend="scipy",
-                reoptimize=self.reoptimize,
-            )
-        else:
-            result = self.fit.confidence(parameter=norm, sigma=self.sigma_ul)
-
-        return {"norm_ul": result["errp"] + norm.value}
-
-    def estimate_norm_ts(self):
-        """Estimate ts and sqrt(ts) for the flux point.
-
-        Returns
-        -------
-        result : dict
-            Dict with ts and sqrt(ts) for the flux point.
-        """
-        if not self._contribute_to_stat:
-            return {"sqrt_ts": np.nan, "ts": np.nan}
-
-        stat = self.datasets.stat_sum()
-
-        # store best fit amplitude, set amplitude of fit model to zero
-        self.model.norm.value = 0
-        self.model.norm.frozen = True
-
-        if self.reoptimize:
-            _ = self.fit.optimize()
-
-        stat_null = self.datasets.stat_sum()
-
-        # compute sqrt TS
-        ts = np.abs(stat_null - stat)
-        sqrt_ts = np.sqrt(ts)
-        return {"sqrt_ts": sqrt_ts, "ts": ts}
-
-    def estimate_norm_scan(self):
-        """Estimate fit statistic profile for the norm parameter.
-
-        Returns
-        -------
-        result : dict
-            Keys: "norm_scan", "stat_scan"
-        """
-        if not self._contribute_to_stat:
-            nans = np.nan * np.empty_like(self.norm_values)
-            return {"norm_scan": nans, "stat_scan": nans}
-
-        result = self.fit.stat_profile(
-            self.model.norm, values=self.norm_values, reoptimize=self.reoptimize
-        )
-        return {"norm_scan": result["values"], "stat_scan": result["stat"]}
-
-    def estimate_norm(self):
-        """Fit norm of the flux point.
-
-        Returns
-        -------
-        result : dict
-            Dict with "norm" and "stat" for the flux point.
-        """
-        if not self._contribute_to_stat:
-            return {"norm": np.nan, "stat": np.nan, "success": False}
-
-        # start optimization with norm=1
-        self.model.norm.value = 1.0
-        self.model.norm.frozen = False
-
-        result = self.fit.optimize()
-
-        if result.success:
-            norm = self.model.norm.value
-        else:
-            norm = np.nan
-
-        return {"norm": norm, "stat": result.total_stat, "success": result.success}

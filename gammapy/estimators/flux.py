@@ -23,7 +23,9 @@ class FluxEstimator(ParameterEstimator):
     datasets : list of `~gammapy.spectrum.SpectrumDataset`
         Spectrum datasets.
     source : str or int
-        For which source in the model to compute the flux points.
+        For which source in the model to compute the flux.
+    energy_range : `~astropy.units.Quantity`
+        the energy interval on which to compute the flux
     norm_min : float
         Minimum value for the norm used for the fit statistic profile evaluation.
     norm_max : float
@@ -41,21 +43,22 @@ class FluxEstimator(ParameterEstimator):
     """
 
     def __init__(
-            self,
-            datasets,
-            source,
-            norm_min=0.2,
-            norm_max=5,
-            norm_n_values=11,
-            norm_values=None,
-            sigma=1,
-            sigma_ul=3,
-            reoptimize=True,
+        self,
+        datasets,
+        source,
+        energy_range,
+        norm_min=0.2,
+        norm_max=5,
+        norm_n_values=11,
+        norm_values=None,
+        sigma=1,
+        sigma_ul=3,
+        reoptimize=True,
     ):
         # make a copy to not modify the input datasets
         datasets = self._check_datasets(datasets)
 
-        if not (datasets.is_all_same_type and datasets.is_all_same_shape):
+        if not datasets.is_all_same_type or not datasets.is_all_same_energy_shape:
             raise ValueError(
                 "Flux point estimation requires a list of datasets"
                 " of the same type and data shape."
@@ -78,14 +81,33 @@ class FluxEstimator(ParameterEstimator):
         self.norm_values = norm_values
 
         self.source = source
-        datasets = self._set_scale_model(datasets)
+
+        self.energy_range = energy_range
 
         super().__init__(
-            datasets,
-            sigma,
-            sigma_ul,
-            reoptimize,
+            datasets, sigma, sigma_ul, reoptimize,
         )
+        self._set_scale_model()
+
+    @property
+    def energy_range(self):
+        return self._energy_range
+
+    @energy_range.setter
+    def energy_range(self, energy_range):
+        if len(energy_range) != 2:
+            raise ValueError("Incorrect size of energy_range")
+
+        emin = u.Quantity(energy_range[0])
+        emax = u.Quantity(energy_range[1])
+
+        if emin >= emax:
+            raise ValueError("Incorrect energy_range for Flux Estimator")
+        self._energy_range = [emin, emax]
+
+    @property
+    def e_ref(self):
+        return np.sqrt(self.energy_range[0] * self.energy_range[1])
 
     @property
     def ref_model(self):
@@ -97,13 +119,40 @@ class FluxEstimator(ParameterEstimator):
         s += str(self.model) + "\n"
         return s
 
-    def _set_scale_model(self, datasets):
+    def _set_scale_model(self):
         # set the model on all datasets
-        for dataset in datasets:
+        for dataset in self.datasets:
             dataset.models[self.source].spectral_model = self.model
-        return datasets
 
-    def run(self, e_min, e_max, e_ref=None, steps="all"):
+    def _prepare_result(self):
+        """Prepare the result dictionnary"""
+        return {
+            "e_ref": self.e_ref,
+            "e_min": self.energy_range[0],
+            "e_max": self.energy_range[1],
+            "ref_dnde": self.ref_model(self.e_ref),
+            "ref_flux": self.ref_model.integral(
+                self.energy_range[0], self.energy_range[1]
+            ),
+            "ref_eflux": self.ref_model.energy_flux(
+                self.energy_range[0], self.energy_range[1]
+            ),
+            "ref_e2dnde": self.ref_model(self.e_ref) * self.e_ref ** 2,
+        }
+
+    def _prepare_steps(self, steps):
+        """Adapt the steps to the ParameterEstimator format."""
+        if "norm-scan" in steps:
+            steps.remove("norm-scan")
+            steps.append("scan")
+        if "norm-err" in steps:
+            steps.remove("norm-err")
+            steps.append("err")
+        if steps == "all":
+            steps = ["err", "ts", "errp-errn", "ul", "scan"]
+        return steps
+
+    def run(self, steps="all"):
         """Estimate flux for a given energy range.
 
         The fit is performed in the energy range provided by the dataset masks.
@@ -111,17 +160,10 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        e_min : `~astropy.units.Quantity`
-            the minimum energy of the interval on which to compute the flux
-        e_max : `~astropy.units.Quantity`
-            the maximum energy of the interval on which to compute the flux
-        e_max : `~astropy.units.Quantity`
-            the reference energy at which to compute the flux.
-            If None, use sqrt(e_min * e_max). Default is None.
         steps : list of str
             Which steps to execute. Available options are:
 
-                * "err": estimate symmetric error.
+                * "norm-err": estimate symmetric error.
                 * "errn-errp": estimate asymmetric errors.
                 * "ul": estimate upper limits.
                 * "ts": estimate ts and sqrt(ts) values.
@@ -134,23 +176,35 @@ class FluxEstimator(ParameterEstimator):
         result : dict
             Dict with results for the flux point.
         """
-        e_min = u.Quantity(e_min)
-        e_max = u.Quantity(e_max)
+        steps = self._prepare_steps(steps)
+        result = self._prepare_result()
 
-        if e_ref is None:
-            # Put at log center of the bin
-            e_ref = np.sqrt(e_min * e_max)
+        self.model.norm.value = 1.05
+        self.model.norm.frozen = False
 
-        result = {
-            "e_ref": e_ref,
-            "e_min": e_min,
-            "e_max": e_max,
-            "ref_dnde": self.ref_model(e_ref),
-            "ref_flux": self.ref_model.integral(e_min, e_max),
-            "ref_eflux": self.ref_model.energy_flux(e_min, e_max),
-            "ref_e2dnde": self.ref_model(e_ref) * e_ref ** 2,
-        }
-
-        result.update(super().run(self.model.parameters['norm'], steps, null_value=0, scan_values=self.norm_values))
+        result.update(
+            super().run(
+                self.model.norm,
+                steps,
+                null_value=0,
+                scan_values=self.norm_values,
+            )
+        )
         return result
 
+    def _return_nan_result(self, steps="all"):
+        steps = self._prepare_steps(steps)
+        result = self._prepare_result()
+        result.update({"norm": np.nan, "stat": np.nan, "success": False})
+        if "err" in steps:
+            result.update({"norm_err": np.nan})
+        if "ts" in steps:
+            result.update({"sqrt_ts": np.nan, "ts": np.nan, "null_value": np.nan})
+        if "errp-errn" in steps:
+            result.update({"norm_errp": np.nan, "norm_errn": np.nan})
+        if "ul" in steps:
+            result.update({"norm_ul": np.nan})
+        if "scan" in steps:
+            nans = np.nan * np.empty_like(self.norm_values)
+            result.update({"norm_scan": nans, "stat_scan": nans})
+        return result
