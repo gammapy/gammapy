@@ -274,6 +274,7 @@ def test_analysis_ring_background():
     assert isinstance(analysis.datasets[0], MapDataset) is True
 
 
+@requires_data()
 def test_analysis_ring_3d():
     config = get_example_config("3d")
     config.datasets.background.method = "ring"
