@@ -267,6 +267,10 @@ class Analysis:
             log.debug(
                 f"Creating RingBackgroundMaker with arguments {bkg_maker_config}"
             )
+            if datasets_settings.geom.axes.energy.nbins > 1:
+                raise ValueError(
+                    "You need to define a single-bin energy geometry for your dataset."
+                )
         else:
             bkg_maker = None
             log.warning(
