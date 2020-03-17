@@ -61,10 +61,15 @@ def test_psf_kernel_to_image():
     kernel1.psf_kernel_map.data[1,:,:] = kernel2.psf_kernel_map.data[1,:,:]
 
     kernel_image_1 = kernel1.to_image()
+    kernel_image_2 = kernel1.to_image(exposure=[1,2])
 
-    # Is normalization OK?
     assert_allclose(kernel_image_1.psf_kernel_map.data.sum(), 1.0, atol=1e-5)
     assert_allclose(kernel_image_1.psf_kernel_map.data[0,25,25], 0.028415, atol=1e-5)
-    assert_allclose(kernel_image_1.psf_kernel_map.data[0,21,21], 0.0096734, atol=1e-5)
+    assert_allclose(kernel_image_1.psf_kernel_map.data[0,22,22], 0.009806, atol=1e-5)
     assert_allclose(kernel_image_1.psf_kernel_map.data[0,20,20], 0.0, atol=1e-5)
+
+    assert_allclose(kernel_image_2.psf_kernel_map.data.sum(), 1.0, atol=1e-5)
+    assert_allclose(kernel_image_2.psf_kernel_map.data[0,25,25], 0.03791383, atol=1e-5)
+    assert_allclose(kernel_image_2.psf_kernel_map.data[0,22,22], 0.0079069, atol=1e-5)
+    assert_allclose(kernel_image_2.psf_kernel_map.data[0,20,20], 0.0, atol=1e-5)
 
