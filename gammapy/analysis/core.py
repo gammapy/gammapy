@@ -17,7 +17,7 @@ from gammapy.makers import (
 )
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
-from gammapy.modeling.models import Models
+from gammapy.modeling.models import Models, BackgroundModel
 from gammapy.estimators import FluxPointsEstimator
 from gammapy.utils.scripts import make_path
 
@@ -287,6 +287,8 @@ class Analysis:
                 dataset = maker_safe_mask.run(dataset, obs)
                 if bkg_maker is not None:
                     dataset = bkg_maker.run(dataset)
+                if bkg_method == "ring":
+                    dataset.models = Models([BackgroundModel(dataset.background)])
                 log.debug(dataset)
                 stacked.stack(dataset)
             datasets = [stacked]
