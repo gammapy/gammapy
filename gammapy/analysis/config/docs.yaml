@@ -41,7 +41,7 @@ datasets:
     background:
         method: ring        # also fov_background, reflected for 1d
         exclusion:          # fits file for exclusion mask
-        parameters: {r_in: 0.3 deg, width: 0.3 deg} # ring
+        parameters: {r_in: 0.7 deg, width: 0.7 deg} # ring
     safe_mask:
             methods: ['aeff-default', 'offset-max']
             parameters: {offset_max: 2.5 deg}

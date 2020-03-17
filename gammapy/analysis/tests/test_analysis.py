@@ -266,7 +266,7 @@ def test_analysis_1d_stacked():
 def test_analysis_ring_background():
     config = get_example_config("3d")
     config.datasets.background.method = "ring"
-    config.datasets.background.parameters = {"r_in": "0.3 deg", "width": "0.3 deg"}
+    config.datasets.background.parameters = {"r_in": "0.7 deg", "width": "0.7 deg"}
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
