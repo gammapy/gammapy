@@ -160,16 +160,10 @@ class ParameterEstimator:
                 log.warning("Fit failed for parameter estimate, setting NaN.")
 
             value_max = result[parameter.name]
-<<<<<<< HEAD
-=======
-            res = self.fit.covariance()
-            value_err = parameter.error
-            result.update({"err": value_err})
->>>>>>> Change error access
 
             if "err" in steps:
                 res = self.fit.covariance()
-                value_err = res.parameters.error(parameter)
+                value_err = res.parameters[parameter].error
                 result.update({f"{parameter.name}_err": value_err})
 
             if "errp-errn" in steps:
