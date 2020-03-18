@@ -195,7 +195,7 @@ class MapDatasetEventSampler:
         meta[
             "HDUDOC"
         ] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
-        meta["HDUVER"] = "0.2"
+        meta["HDUVERS"] = "0.2"
         meta["HDUCLASS"] = "GADF"
 
         meta["OBS_ID"] = observation.obs_id
@@ -215,41 +215,67 @@ class MapDatasetEventSampler:
 
         meta["EQUINOX"] = "J2000"
         meta["RADECSYS"] = "icrs"
-        # TO DO: these keywords should be taken from the IRF of the dataset
-        meta["ORIGIN"] = "Gammapy"
-        meta["TELESCOP"] = ""
-        meta["INSTRUME"] = ""
-        #
+
         meta["CREATOR"] = "Gammapy {}".format(gammapy.__version__)
+        meta["EUNIT"] = "TeV"
+        meta["EVTVER"] = ""
 
-        #        TO COMPLETE
-        #        meta["OBSERVER"] = ""
-        #        meta["CREATED"] = ""
-        #        meta["OBJECT"] = ""
-        #        meta["RA_OBJ"] = ""
-        #        meta["DEC_OBJ"] = ""
-        #        meta["OBS_MODE"] = ""
-        #        meta["EV_CLASS"] = ""
-        #        meta["TELAPSE"] = ""
-        #
-        #        meta["MJDREFI"] = int(dataset.gti.time_ref.mjd)
-        #        meta["MJDREFF"] = dataset.gti.time_ref.mjd % 1
-        #        meta["TIMEUNIT"] = "s"
-        #        meta["TIMESYS"] = "TT"
-        #        meta["TIMEREF"] = "LOCAL"
-        #        #         meta["DATE-OBS"] = dataset.gti.time_start.isot[0][0:10]
-        #        #         meta["DATE-END"] = dataset.gti.time_stop.isot[0][0:10]
-        #        meta["TIME-OBS"] = dataset.gti.time_start.isot[0]
-        #        meta["TIME-END"] = dataset.gti.time_stop.isot[0]
-        #
+        meta["OBSERVER"] = "Gammapy user"
+        meta["DSTYP1"] = "TIME"
+        meta["DSUNI1"] = "s"
+        meta["DSVAL1"] = "TABLE"
+        meta["DSREF1"] = ":GTI"
+        meta["DSTYP2"] = "ENERGY"
+        meta["DSUNI2"] = "TeV"
 
-        meta["GEOLON"] = 0
-        meta["GEOLAT"] = 0
-        meta["ALTITUDE"] = 0
+        if hasattr(dataset, "models[1]"):
+            meta["OBJECT"] = dataset.models[1].name
+            meta["RA_OBJ"] = dataset.models[1].position.icrs.ra.deg
+            meta["DEC_OBJ"] = dataset.models[1].position.icrs.dec.deg
+        else:
+            meta["OBJECT"] = dataset.models[0].name
+            meta["RA_OBJ"] = dataset.models[0].position.icrs.ra.deg
+            meta["DEC_OBJ"] = dataset.models[0].position.icrs.dec.deg
+
+        meta["TELAPSE"] = dataset.gti.time_sum.to("s").value
+        meta["MJDREFI"] = int(dataset.gti.time_ref.mjd)
+        meta["MJDREFF"] = dataset.gti.time_ref.mjd % 1
+        meta["TIMEUNIT"] = "s"
+        meta["TIMESYS"] = dataset.gti.time_ref.scale
+        meta["TIMEREF"] = "LOCAL"
+        meta["DATE-OBS"] = dataset.gti.time_start.isot[0][0:10]
+        meta["DATE-END"] = dataset.gti.time_stop.isot[0][0:10]
+        meta["TIME-OBS"] = dataset.gti.time_start.isot[0][11:23]
+        meta["TIME-END"] = dataset.gti.time_stop.isot[0][11:23]
+        meta["TIMEDEL"] = 1e-9
+        meta["CONV_DEP"] = 0
+        meta["CONV_RA"] = 0
+        meta["CONV_DEC"] = 0
 
         for idx, model in enumerate(dataset.models):
             meta["MID{:05d}".format(idx + 1)] = idx + 1
             meta["MMN{:05d}".format(idx + 1)] = model.name
+        meta["NMCIDS"] = len(dataset.models)
+
+        # Necessary for DataStore, but they should be ALT and AZ instead!
+        meta["ALTITUDE"] = observation.aeff.meta["CBD50001"][7:-4]
+        meta["ALT_PNT"] = observation.aeff.meta["CBD50001"][7:-4]
+        meta["AZ_PNT"] = observation.aeff.meta["CBD60001"][8:-4]
+
+        # TO DO: these keywords should be taken from the IRF of the dataset
+        meta["ORIGIN"] = "Gammapy"
+        meta["CALDB"] = observation.aeff.meta["CBD20001"][8:-1]
+        meta["IRF"] = observation.aeff.meta["CBD10001"][5:-2]
+        meta["TELESCOP"] = observation.aeff.meta["TELESCOP"]
+        meta["INSTRUME"] = observation.aeff.meta["INSTRUME"]
+        meta["N_TELS"] = ""
+        meta["TELLIST"] = ""
+        meta["GEOLON"] = ""
+        meta["GEOLAT"] = ""
+        # TO BE ADDED
+        #        meta["CREATED"] = ""
+        #        meta["OBS_MODE"] = ""
+        #        meta["EV_CLASS"] = ""
 
         return meta
 
