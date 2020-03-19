@@ -13,7 +13,6 @@ from gammapy.irf.edisp_map import EDispMap
 from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling import Parameters
 from gammapy.modeling.models import BackgroundModel, Models
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
@@ -386,8 +385,9 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        other: `~gammapy.cube.MapDataset`
-            Map dataset to be stacked with this one.
+        other: `~gammapy.cube.MapDataset` or `~gammapy.cube.MapDatasetOnOff`
+            Map dataset to be stacked with this one. If other is an on-off
+            dataset alpha * counts_off is used as a background model.
         """
 
         if self.counts and other.counts:
@@ -402,9 +402,15 @@ class MapDataset(Dataset):
             mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
             self.exposure.stack(other.exposure, weights=mask_image_other)
 
-        if self.background_model and other.background_model:
+        # TODO: unify background model handling
+        if other.stat_type == "wstat":
+            background_model = BackgroundModel(other.background)
+        else:
+            background_model = other.background_model
+
+        if self.background_model and background_model:
             self.background_model.map *= self.mask_safe
-            self.background_model.stack(other.background_model, other.mask_safe)
+            self.background_model.stack(background_model, other.mask_safe)
 
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)
@@ -987,8 +993,6 @@ class MapDatasetOnOff(MapDataset):
         PSF kernel
     edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
-    background_model : `~gammapy.modeling.models.BackgroundModel`
-        Background model to use for the fit.
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
         The "local" mode evaluates the model components on smaller grids to save computation time.
@@ -1018,7 +1022,6 @@ class MapDatasetOnOff(MapDataset):
         mask_fit=None,
         psf=None,
         edisp=None,
-        background_model=None,
         name=None,
         evaluation_mode="local",
         mask_safe=None,
@@ -1068,16 +1071,6 @@ class MapDatasetOnOff(MapDataset):
         str_ += "\t{:32}: {:.0f} \n".format("Acceptance off", acceptance_off)
 
         return str_.expandtabs(tabsize=4)
-
-    @property
-    def parameters(self):
-        """List of parameters (`~gammapy.modeling.Parameters`)"""
-        parameters = []
-
-        if self.models:
-            parameters += self.models.parameters
-
-        return Parameters(parameters)
 
     @property
     def alpha(self):
