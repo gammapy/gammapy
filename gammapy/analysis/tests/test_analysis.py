@@ -271,7 +271,8 @@ def test_analysis_ring_background():
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    assert isinstance(analysis.datasets[0], MapDataset) is True
+    assert isinstance(analysis.datasets[0], MapDataset)
+    assert_allclose(analysis.datasets[0].background_model.map.data[0, 10, 10], 0.091552, rtol=1e-5)
 
 
 @requires_data()
