@@ -313,7 +313,8 @@ class MapDataset(Dataset):
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
         kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
         kwargs["psf"] = PSFMap.from_geom(geom_psf)
-        kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
+
+        kwargs.setdefault("gti", GTI.create([] * u.s, [] * u.s, reference_time=reference_time))
         kwargs["mask_safe"] = Map.from_geom(geom, unit="", dtype=bool)
 
         return cls(**kwargs)

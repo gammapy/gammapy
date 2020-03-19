@@ -825,3 +825,21 @@ def test_names(geom, geom_etrue, sky_model):
     assert dataset1.background_model is not dataset2.background_model
     assert dataset1.models.names == dataset2.models.names
     assert dataset1.models is not dataset2.models
+
+
+def test_stack_dataset_dataset_on_off():
+    axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy")
+    geom = WcsGeom.create(width=1, axes=[axis])
+
+    gti = GTI.create([0 * u.s], [1 * u.h])
+
+    dataset = MapDataset.create(geom, gti=gti)
+    dataset_on_off = MapDatasetOnOff.create(geom, gti=gti)
+    dataset_on_off.mask_safe.data += True
+
+    dataset_on_off.acceptance_off += 5
+    dataset_on_off.acceptance += 1
+    dataset_on_off.counts_off += 1
+    dataset.stack(dataset_on_off)
+
+    assert_allclose(dataset.background_model.map.data, 0.2)
