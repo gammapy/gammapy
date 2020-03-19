@@ -404,3 +404,27 @@ class EDispKernelMap(IRFMap):
             e_reco_hi=energy_axis.edges[1:],
             data=data,
         )
+
+    @classmethod
+    def from_diagonal_response(cls, energy_axis, energy_axis_true):
+        """Create an all-sky energy dispersion map with diagonal response.
+
+        Parameters
+        ----------
+        energy_axis : `MapAxis`
+            Energy axis.
+        energy_axis_true : `MapAxis`
+            True energy axis
+
+        Returns
+        -------
+        edisp_map : `EDispMap`
+            Energy dispersion map.
+        """
+        geom = WcsGeom.create(
+            npix=(2, 1),
+            proj="CAR",
+            binsz=180,
+            axes=[energy_axis, energy_axis_true]
+        )
+        return cls.from_geom(geom)
