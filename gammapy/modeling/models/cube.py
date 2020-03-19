@@ -5,10 +5,13 @@ from pathlib import Path
 import numpy as np
 import astropy.units as u
 from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter, Parameters, Covariance
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_name, make_path
 from .core import Model, Models
+from .spatial import SpatialModel
+from .spectral import SpectralModel
+from .temporal import TemporalModel
 
 
 class SkyModelBase(Model):
@@ -79,6 +82,40 @@ class SkyModel(SkyModelBase):
         self.apply_irf = apply_irf
         self.datasets_names = datasets_names
 
+        # cached covariance
+        self._covariance = Covariance(self.parameters)
+
+    @property
+    def _models(self):
+        models = self.spectral_model, self.spatial_model, self.temporal_model
+        return [_ for _ in models if _]
+
+    def _check_covariance(self):
+        if not self.parameters == self._covariance.parameters:
+            self._covariance = Covariance.from_stack(
+                [model.covariance for model in self._models],
+            )
+
+    @property
+    def covariance(self):
+        self._check_covariance()
+
+        for model in self._models:
+            self._covariance.set_subcovariance(model.covariance)
+
+        return self._covariance
+
+    @covariance.setter
+    def covariance(self, covariance):
+        self._check_covariance()
+        self._covariance.data = covariance
+
+        for model in self._models:
+            subcovar = self._covariance.get_subcovariance(
+                model.covariance.parameters
+            )
+            model.covariance = subcovar
+
     @property
     def name(self):
         return self._name
@@ -87,13 +124,14 @@ class SkyModel(SkyModelBase):
     def parameters(self):
         parameters = []
 
+        parameters.append(self.spectral_model.parameters)
+
         if self.spatial_model is not None:
             parameters.append(self.spatial_model.parameters)
 
         if self.temporal_model is not None:
             parameters.append(self.temporal_model.parameters)
 
-        parameters.append(self.spectral_model.parameters)
         return Parameters.from_stack(parameters)
 
     @property
@@ -103,8 +141,6 @@ class SkyModel(SkyModelBase):
 
     @spatial_model.setter
     def spatial_model(self, model):
-        from .spatial import SpatialModel
-
         if not (model is None or isinstance(model, SpatialModel)):
             raise TypeError(f"Invalid type: {model!r}")
 
@@ -117,10 +153,9 @@ class SkyModel(SkyModelBase):
 
     @spectral_model.setter
     def spectral_model(self, model):
-        from .spectral import SpectralModel
-
         if not (model is None or isinstance(model, SpectralModel)):
             raise TypeError(f"Invalid type: {model!r}")
+
         self._spectral_model = model
 
     @property
@@ -130,10 +165,9 @@ class SkyModel(SkyModelBase):
 
     @temporal_model.setter
     def temporal_model(self, model):
-        from .temporal import TemporalModel
-
         if not (model is None or isinstance(model, TemporalModel)):
             raise TypeError(f"Invalid type: {model!r}")
+
         self._temporal_model = model
 
     @property

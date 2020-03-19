@@ -3,17 +3,27 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling.models import Model, Models
 from gammapy.modeling.iminuit import confidence_iminuit, optimize_iminuit
 
 pytest.importorskip("iminuit")
 
 
+class MyModel(Model):
+    x = Parameter("x", 2.1, error=0.2)
+    y = Parameter("y", 3.1, scale=1e5, error=3e4)
+    z = Parameter("z", 4.1, scale=1e-5, error=4e-6)
+    name = "test"
+    datasets_names = ["test"]
+
+
 class MyDataset:
-    def __init__(self, parameters):
-        self.parameters = parameters
+    def __init__(self, name="test"):
+        self.name = name
+        self.models = Models(MyModel())
 
     def fcn(self):
-        x, y, z = [p.value for p in self.parameters]
+        x, y, z = [p.value for p in self.models.parameters]
         x_opt, y_opt, z_opt = 2, 3e5, 4e-5
         x_err, y_err, z_err = 0.2, 3e4, 4e-6
         return (
@@ -23,16 +33,9 @@ class MyDataset:
         )
 
 
-@pytest.fixture()
-def pars():
-    x = Parameter("x", 2.1)
-    y = Parameter("y", 3.1, scale=1e5)
-    z = Parameter("z", 4.1, scale=1e-5)
-    return Parameters([x, y, z])
-
-
-def test_iminuit_basic(pars):
-    ds = MyDataset(pars)
+def test_iminuit_basic():
+    ds = MyDataset()
+    pars = ds.models.parameters
     factors, info, minuit = optimize_iminuit(function=ds.fcn, parameters=pars)
 
     assert info["success"]
@@ -51,11 +54,9 @@ def test_iminuit_basic(pars):
     assert_allclose(minuit.values["par_002_z"], 4, rtol=1e-3)
 
 
-def test_iminuit_stepsize(pars):
-    ds = MyDataset(pars)
-
-    pars.covariance = np.diag([0.2, 3e4, 4e-6]) ** 2
-
+def test_iminuit_stepsize():
+    ds = MyDataset()
+    pars = ds.models.parameters
     factors, info, minuit = optimize_iminuit(function=ds.fcn, parameters=pars)
 
     assert info["success"]
@@ -65,8 +66,9 @@ def test_iminuit_stepsize(pars):
     assert_allclose(pars["z"].value, 4e-5, rtol=2e-2)
 
 
-def test_iminuit_frozen(pars):
-    ds = MyDataset(pars)
+def test_iminuit_frozen():
+    ds = MyDataset()
+    pars = ds.models.parameters
     pars["y"].frozen = True
 
     factors, info, minuit = optimize_iminuit(function=ds.fcn, parameters=pars)
@@ -79,8 +81,9 @@ def test_iminuit_frozen(pars):
     assert_allclose(ds.fcn(), 0.111112, rtol=1e-5)
 
 
-def test_iminuit_limits(pars):
-    ds = MyDataset(pars)
+def test_iminuit_limits():
+    ds = MyDataset()
+    pars = ds.models.parameters
     pars["y"].min = 301000
 
     factors, info, minuit = optimize_iminuit(function=ds.fcn, parameters=pars)
@@ -104,8 +107,9 @@ def test_iminuit_limits(pars):
     # assert states[1]["upper_limit"] is None
 
 
-def test_opts(pars):
-    ds = MyDataset(pars)
+def test_opts():
+    ds = MyDataset()
+    pars = ds.models.parameters
     factors, info, minuit = optimize_iminuit(
         function=ds.fcn, parameters=pars, migrad_opts={"ncall": 20}, tol=1.0, strategy=2
     )
@@ -114,8 +118,9 @@ def test_opts(pars):
     assert minuit.strategy == 2
 
 
-def test_iminuit_confidence(pars):
-    ds = MyDataset(pars)
+def test_iminuit_confidence():
+    ds = MyDataset()
+    pars = ds.models.parameters
     factors, info, minuit = optimize_iminuit(function=ds.fcn, parameters=pars)
 
     assert_allclose(ds.fcn(), 0, atol=1e-5)

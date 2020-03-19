@@ -20,15 +20,16 @@ def fermi_datasets():
 @pytest.fixture(scope="session")
 def hess_datasets():
     datasets = Datasets([])
+    pwl = PowerLawSpectralModel(amplitude="3.5e-11 cm-2s-1TeV-1", index=2.7)
+    model = SkyModel(spectral_model=pwl, name="Crab")
+
     for obsid in [23523, 23526]:
-        datasets.append(
-            SpectrumDatasetOnOff.from_ogip_files(
-                f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obsid}.fits"
+        dataset = SpectrumDatasetOnOff.from_ogip_files(
+            f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obsid}.fits"
             )
-        )
-    PLmodel = PowerLawSpectralModel(amplitude="3.5e-11 cm-2s-1TeV-1", index=2.7)
-    for dataset in datasets:
-        dataset.models = SkyModel(spectral_model=PLmodel, name="Crab")
+        dataset.models = model
+        datasets.append(dataset)
+
     return datasets
 
 
@@ -67,6 +68,7 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     assert_allclose(result["norm"], 0.970614, atol=1e-3)
     assert_allclose(result["ts"], 13005.903067, atol=1e-3)
     assert_allclose(result["norm_err"], 0.01998, atol=1e-3)
+
 
 
 @requires_data()

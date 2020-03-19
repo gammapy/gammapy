@@ -94,7 +94,7 @@ class TestFluxPointFit:
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
 
         value = result.parameters["amplitude"].value
-        err = result.parameters.error("amplitude")
+        err = result.parameters["amplitude"].error
         values = np.array([value - err, value, value + err])
 
         profile = fit.stat_profile("amplitude", values=values)

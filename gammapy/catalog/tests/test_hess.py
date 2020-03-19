@@ -130,10 +130,10 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(pars["reference"].value, 1.696938754239)
         assert_allclose(pars["lambda_"].value, 0.081517637)
 
-        assert_allclose(pars.error("amplitude"), 3.260472e-13, rtol=1e-3)
-        assert_allclose(pars.error("index"), 0.077331, atol=0.001)
-        assert_allclose(pars.error("reference"), 0)
-        assert_allclose(pars.error("lambda_"), 0.011535, atol=0.001)
+        assert_allclose(pars["amplitude"].error, 3.260472e-13, rtol=1e-3)
+        assert_allclose(pars["index"].error, 0.077331, atol=0.001)
+        assert_allclose(pars["reference"].error, 0)
+        assert_allclose(pars["lambda_"].error, 0.011535, atol=0.001)
 
         model = source.spectral_model("pl")
         assert isinstance(model, PowerLawSpectralModel)
@@ -143,9 +143,9 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(pars["index"].value, 1.8913707)
         assert_allclose(pars["reference"].value, 3.0176312923431396)
 
-        assert_allclose(pars.error("amplitude"), 6.992061e-14, rtol=1e-3)
-        assert_allclose(pars.error("index"), 0.028383, atol=0.001)
-        assert_allclose(pars.error("reference"), 0)
+        assert_allclose(pars["amplitude"].error, 6.992061e-14, rtol=1e-3)
+        assert_allclose(pars["index"].error, 0.028383, atol=0.001)
+        assert_allclose(pars["reference"].error, 0)
 
     @staticmethod
     def test_position_error(cat):
@@ -271,11 +271,11 @@ class TestSourceCatalogObjectHGPSComponent:
         assert model.frame == "galactic"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 28.77037811279297)
-        assert_allclose(p.error("lon_0"), 0.058748625218868256)
+        assert_allclose(p["lon_0"].error, 0.058748625218868256)
         assert_allclose(p["lat_0"].value, -0.0727819949388504)
-        assert_allclose(p.error("lat_0"), 0.06880396604537964)
+        assert_allclose(p["lat_0"].error, 0.06880396604537964)
         assert_allclose(p["sigma"].value, 0.2294706553220749)
-        assert_allclose(p.error("sigma"), 0.04618723690509796)
+        assert_allclose(p["sigma"].error, 0.04618723690509796)
 
 
 class TestSourceCatalogLargeScaleHGPS:

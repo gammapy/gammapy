@@ -70,7 +70,7 @@ class SpatialModel(Model):
     @property
     def position_error(self):
         """Get 95% containment position error as (`~regions.EllipseSkyRegion`)"""
-        if self.parameters.covariance is None:
+        if self.covariance is None:
             return EllipseSkyRegion(
                 center=self.position,
                 height=np.nan * u.deg,
@@ -78,7 +78,7 @@ class SpatialModel(Model):
                 angle=np.nan * u.deg,
             )
         pars = self.parameters
-        sub_covar = pars.get_subcovariance(["lon_0", "lat_0"])
+        sub_covar = self.covariance.get_subcovariance(["lon_0", "lat_0"]).data.copy()
         cos_lat = np.cos(self.lat_0.quantity.to_value("rad"))
         sub_covar[0, 0] *= cos_lat ** 2.0
         sub_covar[0, 1] *= cos_lat
@@ -150,6 +150,43 @@ class SpatialModel(Model):
         data = self.evaluate_geom(geom)
         m = Map.from_geom(geom, data=data.value, unit=data.unit)
         _, ax, _ = m.plot(ax=ax, **kwargs)
+
+        return ax
+
+    def plot_error(self, ax=None, **kwargs):
+        """Plot position error
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
+        import matplotlib.pyplot as plt
+
+        # plot center position
+        lon, lat = self.lon_0.value, self.lat_0.value
+
+        ax = plt.gca() if ax is None else ax
+
+        kwargs.setdefault("marker", "x")
+        kwargs.setdefault("color", "red")
+        kwargs.setdefault("label", "position")
+
+        ax.scatter(lon, lat, transform=ax.get_transform(self.frame), **kwargs)
+
+        # plot position error
+        if not np.all(self.covariance.data == 0):
+            region = self.position_error.to_pixel(ax.wcs)
+            artist = region.as_artist(facecolor="none", edgecolor=kwargs["color"])
+            ax.add_artist(artist)
+
         return ax
 
 

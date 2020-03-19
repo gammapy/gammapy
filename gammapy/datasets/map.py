@@ -549,6 +549,7 @@ class MapDataset(Dataset):
             npred_spec = npred.get_spectrum(region=region)
             residuals = self._compute_residuals(counts_spec, npred_spec, method)
             ax = residuals.plot()
+            ax.set_yscale("linear")
             ax.axhline(0, color="black", lw=0.5)
 
             y_max = 2 * np.nanmax(residuals.data)

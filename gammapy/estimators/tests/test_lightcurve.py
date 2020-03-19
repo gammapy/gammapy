@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.time import Time
 from astropy.table import Table, Column
 from gammapy.data import GTI
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel, Models
 from gammapy.estimators.tests.test_flux_point_estimator import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
@@ -120,9 +120,6 @@ def test_lightcurve_plot_time(lc):
     )
 
 
-
-
-
 def get_spectrum_datasets():
     model = SkyModel(spectral_model=PowerLawSpectralModel())
     dataset_1 = simulate_spectrum_dataset(model=model, random_state=0)
@@ -130,7 +127,7 @@ def get_spectrum_datasets():
     gti1 = GTI.create("0h", "1h", "2010-01-01T00:00:00")
     dataset_1.gti = gti1
 
-    dataset_2 = simulate_spectrum_dataset(model, random_state=1)
+    dataset_2 = simulate_spectrum_dataset(model=model, random_state=1)
     dataset_2._name = "dataset_2"
     gti2 = GTI.create("1h", "2h", "2010-01-01T00:00:00")
     dataset_2.gti = gti2
@@ -215,10 +212,10 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert_allclose(lightcurve.table["ref_e2dnde"], [1e-12, 1e-12])
     assert_allclose(lightcurve.table["stat"], [23.302288, 22.457766], rtol=1e-5)
     assert_allclose(lightcurve.table["norm"], [0.988107, 0.948108], rtol=1e-3)
-    assert_allclose(lightcurve.table["norm_err"], [0.04493, 0.041469], rtol=1e-3)
+    assert_allclose(lightcurve.table["norm_err"], [0.04493, 0.0442229], rtol=1e-3)
     assert_allclose(lightcurve.table["counts"], [2281, 2222])
-    assert_allclose(lightcurve.table["norm_errp"], [0.044252, 0.043771], rtol=1e-3)
-    assert_allclose(lightcurve.table["norm_errn"], [0.04374, 0.043226], rtol=1e-3)
+    assert_allclose(lightcurve.table["norm_errp"], [0.044252, 0.043478], rtol=1e-3)
+    assert_allclose(lightcurve.table["norm_errn"], [0.04374, 0.043521], rtol=1e-3)
     assert_allclose(lightcurve.table["norm_ul"], [1.077213, 1.036237], rtol=1e-3)
     assert_allclose(lightcurve.table["sqrt_ts"], [26.773925, 25.796426], rtol=1e-2)
     assert_allclose(lightcurve.table["ts"], [716.843084, 665.455601], rtol=1e-2)
@@ -366,9 +363,10 @@ def get_map_datasets():
     dataset_1.gti = gti1
 
     dataset_2 = simulate_map_dataset(random_state=1, name="dataset_2")
+    dataset_2.models.pop("source")
+
     gti2 = GTI.create("1 h", "2 h", "2010-01-01T00:00:00")
     dataset_2.gti = gti2
-
     return [dataset_1, dataset_2]
 
 
@@ -397,7 +395,7 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(lightcurve.table["ref_flux"], [9.9e-12, 9.9e-12])
     assert_allclose(lightcurve.table["ref_eflux"], [4.60517e-11, 4.60517e-11])
     assert_allclose(lightcurve.table["ref_e2dnde"], [1e-11, 1e-11])
-    assert_allclose(lightcurve.table["stat"], [-87412.393367, -89856.129206], rtol=1e-5)
+    assert_allclose(lightcurve.table["stat"], [-87412.393367, -89856.129206], rtol=1e-2)
     assert_allclose(lightcurve.table["norm_err"], [0.042259, 0.043614], rtol=1e-3)
     assert_allclose(lightcurve.table["sqrt_ts"], [38.527512, 39.489968], rtol=1e-4)
     assert_allclose(lightcurve.table["ts"], [1484.369159, 1559.457547], rtol=1e-4)
@@ -419,6 +417,6 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(lightcurve2.table["ref_eflux"], [4.60517e-11])
     assert_allclose(lightcurve2.table["ref_e2dnde"], [1e-11])
     assert_allclose(lightcurve2.table["stat"], [-177267.775615], rtol=1e-5)
-    assert_allclose(lightcurve2.table["norm_err"], [0.030358], rtol=1e-3)
+    assert_allclose(lightcurve2.table["norm_err"], [0.030358], rtol=1e-2)
     assert_allclose(lightcurve.table["counts"], [46794, 47388])
-    assert_allclose(lightcurve2.table["ts"], [3042.893291], rtol=1e-4)
+    assert_allclose(lightcurve2.table["ts"], [3041.682498], rtol=1e-4)
