@@ -263,6 +263,29 @@ def test_analysis_1d_stacked():
 
 
 @requires_data()
+def test_analysis_ring_background():
+    config = get_example_config("3d")
+    config.datasets.background.method = "ring"
+    config.datasets.background.parameters = {"r_in": "0.7 deg", "width": "0.7 deg"}
+    config.datasets.geom.axes.energy.nbins = 1
+    analysis = Analysis(config)
+    analysis.get_observations()
+    analysis.get_datasets()
+    assert isinstance(analysis.datasets[0], MapDataset) is True
+
+
+@requires_data()
+def test_analysis_ring_3d():
+    config = get_example_config("3d")
+    config.datasets.background.method = "ring"
+    config.datasets.background.parameters = {"r_in": "0.7 deg", "width": "0.7 deg"}
+    analysis = Analysis(config)
+    analysis.get_observations()
+    with pytest.raises(ValueError):
+        analysis.get_datasets()
+
+
+@requires_data()
 def test_analysis_no_bkg():
     config = get_example_config("1d")
     analysis = Analysis(config)

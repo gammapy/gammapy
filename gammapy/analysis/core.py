@@ -7,17 +7,18 @@ from regions import CircleSkyRegion
 from gammapy.analysis.config import AnalysisConfig
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, MapDataset, SpectrumDataset
+from gammapy.estimators import FluxPointsEstimator
 from gammapy.makers import (
     FoVBackgroundMaker,
     MapDatasetMaker,
     ReflectedRegionsBackgroundMaker,
+    RingBackgroundMaker,
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
-from gammapy.modeling.models import Models
-from gammapy.estimators import FluxPointsEstimator
+from gammapy.modeling.models import BackgroundModel, Models
 from gammapy.utils.scripts import make_path
 
 __all__ = ["Analysis"]
@@ -249,15 +250,23 @@ class Analysis:
             methods=safe_mask_selection, **safe_mask_settings
         )
 
+        bkg_maker_config = {}
+        if datasets_settings.background.exclusion:
+            exclusion_region = Map.read(datasets_settings.background.exclusion)
+            bkg_maker_config["exclusion_mask"] = exclusion_region
+        bkg_maker_config.update(datasets_settings.background.parameters)
+
         bkg_method = datasets_settings.background.method
         if bkg_method == "fov_background":
-            bkg_maker_config = {}
-            if datasets_settings.background.exclusion:
-                exclusion_region = Map.read(datasets_settings.background.exclusion)
-                bkg_maker_config["exclusion_mask"] = exclusion_region
-            bkg_maker_config.update(datasets_settings.background.parameters)
             log.debug(f"Creating FoVBackgroundMaker with arguments {bkg_maker_config}")
             bkg_maker = FoVBackgroundMaker(**bkg_maker_config)
+        elif bkg_method == "ring":
+            bkg_maker = RingBackgroundMaker(**bkg_maker_config)
+            log.debug(f"Creating RingBackgroundMaker with arguments {bkg_maker_config}")
+            if datasets_settings.geom.axes.energy.nbins > 1:
+                raise ValueError(
+                    "You need to define a single-bin energy geometry for your dataset."
+                )
         else:
             bkg_maker = None
             log.warning(
@@ -274,6 +283,8 @@ class Analysis:
                 dataset = maker_safe_mask.run(dataset, obs)
                 if bkg_maker is not None:
                     dataset = bkg_maker.run(dataset)
+                if bkg_method == "ring":
+                    dataset.models = Models([BackgroundModel(dataset.background)])
                 log.debug(dataset)
                 stacked.stack(dataset)
             datasets = [stacked]
@@ -309,13 +320,13 @@ class Analysis:
         maker_config["selection"] = ["counts", "aeff", "edisp"]
         dataset_maker = SpectrumDatasetMaker(**maker_config)
 
+        bkg_maker_config = {}
+        if datasets_settings.background.exclusion:
+            exclusion_region = Map.read(datasets_settings.background.exclusion)
+            bkg_maker_config["exclusion_mask"] = exclusion_region
+        bkg_maker_config.update(datasets_settings.background.parameters)
         bkg_method = datasets_settings.background.method
         if bkg_method == "reflected":
-            bkg_maker_config = {}
-            if datasets_settings.background.exclusion:
-                exclusion_region = Map.read(datasets_settings.background.exclusion)
-                bkg_maker_config["exclusion_mask"] = exclusion_region
-            bkg_maker_config.update(datasets_settings.background.parameters)
             bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
             log.debug(
                 f"Creating ReflectedRegionsBackgroundMaker with arguments {bkg_maker_config}"
