@@ -122,8 +122,7 @@ class Covariance:
         data = arr.view(np.float).reshape(arr.shape + (-1,))
         return cls(models.parameters, data=data, filename=filename)
 
-
-    def write(self,models, filename, **kwargs):
+    def write(self, models, filename, **kwargs):
         """Write covariance to file
 
         Parameters
@@ -135,10 +134,10 @@ class Covariance:
 
         """
         self.filename = filename
-        param_names=[]
+        param_names = []
         for m in models:
             for p in m.parameters:
-                param_names.append(p.name+make_name())
+                param_names.append(p.name + make_name())
         # TODO: param_names.append(p.name+"@"+m.name)
         # this name would be unique once models won't have duplicate
         # parameters names, then remove make_name

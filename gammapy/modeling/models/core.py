@@ -215,9 +215,9 @@ class Models(collections.abc.MutableSequence):
             models.append(model)
         models = cls(models)
         if "covariance" in data:
-            models.covariance = Covariance.read(
-                models, filename=data["covariance"]
-            )
+            covar = Covariance.read(models, filename=data["covariance"])
+            models.covariance = covar.data
+            models._covariance.filename = covar.filename
 
         shared_register = {}
         for model in models:

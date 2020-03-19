@@ -98,10 +98,11 @@ def test_sky_models_io(tmp_path):
     # TODO: maybe change to a test case where we create a model programatically?
     filename = get_pkg_data_filename("data/examples.yaml")
     models = Models.read(filename)
-
+    models.covariance = np.eye(len(models.parameters))
     models.write(tmp_path / "tmp.yaml")
     models = Models.read(tmp_path / "tmp.yaml")
-
+    assert models.covariance.filename == str(tmp_path / "tmp_covariance.dat")
+    assert_allclose(models.covariance.data, np.eye(len(models.parameters)))
     assert_allclose(models.parameters["lat_0"].min, -90.0)
 
     # TODO: not sure if we should just round-trip, or if we should
