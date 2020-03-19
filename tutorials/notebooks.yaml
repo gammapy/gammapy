@@ -122,4 +122,7 @@
   datasets:
     - catalogs
     - fermi-3fhl-crab
-    
+- name: light_curve_simulation
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/light_curve_simulation.ipynb
+  datasets:
+    - cta-1dc    
