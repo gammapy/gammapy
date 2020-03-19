@@ -216,7 +216,7 @@ class Models(collections.abc.MutableSequence):
         models = cls(models)
         if "covariance" in data:
             models.covariance = Covariance.read(
-                models.parameters, filename=data["covariance"]
+                models, filename=data["covariance"]
             )
 
         shared_register = {}
@@ -239,8 +239,9 @@ class Models(collections.abc.MutableSequence):
         path = make_path(path)
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
-        if self.covariance is not None:
-            self._covariance.write(splitext(str(path))[0] + "_covariance.dat")
+        if self._covariance is not None:
+            filename = splitext(str(path))[0] + "_covariance.dat"
+            self._covariance.write(self._models, filename)
         path.write_text(self.to_yaml())
 
     def to_yaml(self):

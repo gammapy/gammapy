@@ -4,6 +4,7 @@ import numpy as np
 import scipy
 from astropy.table import Table, hstack
 from .parameter import Parameters
+from gammapy.utils.scripts import make_name
 
 
 __all__ = ["Covariance"]
@@ -21,10 +22,9 @@ class Covariance:
 
     """
 
-    def __init__(self, parameters, data=None, unique_names=None, filename=None):
+    def __init__(self, parameters, data=None, filename=None):
         self.parameters = parameters
         self.filename = filename
-        self.unique_names = unique_names
         if data is None:
             data = np.diag([p.error ** 2 for p in self.parameters])
 
@@ -104,7 +104,8 @@ class Covariance:
 
         return covar
 
-    def read(cls, parameters, filename):
+    @classmethod
+    def read(cls, models, filename):
         """Read covariance data from file
 
         Parameters
@@ -119,34 +120,10 @@ class Covariance:
         t.remove_column("Parameters")
         arr = np.array(t)
         data = arr.view(np.float).reshape(arr.shape + (-1,))
-        return cls(parameters, data=data, unique_names=t.colnames, filename=filename)
+        return cls(models.parameters, data=data, filename=filename)
 
-    def to_table(self):
-        """Convert covariance matrix to table
 
-        Parameters
-        ----------
-        format : str
-            Column format string
-
-        Returns
-        -------
-        table : `~astropy.table.Table`
-            Covariance table
-        """
-        if self.unique_names is None:
-            param_names = []
-            for p in self.parameters:
-                param_names = p.name
-        else:
-            param_names = self.unique_names
-        t1 = Table()
-        t1["Parameters"] = param_names
-        t2 = Table(self.covariance, names=param_names)
-        t = hstack([t1, t2])
-        return t
-
-    def write(self, filename, **kwargs):
+    def write(self,models, filename, **kwargs):
         """Write covariance to file
 
         Parameters
@@ -158,8 +135,18 @@ class Covariance:
 
         """
         self.filename = filename
-        table = self.to_table()
-        table.write(filename, format="ascii.fixed_width", delimiter="|")
+        param_names=[]
+        for m in models:
+            for p in m.parameters:
+                param_names.append(p.name+make_name())
+        # TODO: param_names.append(p.name+"@"+m.name)
+        # this name would be unique once models won't have duplicate
+        # parameters names, then remove make_name
+        t1 = Table()
+        t1["Parameters"] = param_names
+        t2 = Table(self.data, names=param_names)
+        t = hstack([t1, t2])
+        t.write(filename, format="ascii.fixed_width", delimiter="|")
 
     def get_subcovariance(self, parameters):
         """Get sub-covariance matrix
