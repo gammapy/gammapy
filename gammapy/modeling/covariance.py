@@ -2,7 +2,7 @@
 """Covariance class"""
 import numpy as np
 import scipy
-from astropy.table import Table
+from astropy.table import Table, hstack
 from .parameter import Parameters
 
 
@@ -20,11 +20,13 @@ class Covariance:
         Covariance data array
 
     """
-    def __init__(self, parameters, data=None):
-        self.parameters = parameters
 
+    def __init__(self, parameters, data=None, unique_names=None, filename=None):
+        self.parameters = parameters
+        self.filename = filename
+        self.unique_names = unique_names
         if data is None:
-            data = np.diag([p.error ** 2 for p in parameters])
+            data = np.diag([p.error ** 2 for p in self.parameters])
 
         self._data = np.asanyarray(data, dtype=float)
 
@@ -46,7 +48,9 @@ class Covariance:
         npars = len(self.parameters)
         shape = (npars, npars)
         if value.shape != shape:
-            raise ValueError(f"Invalid covariance shape: {value.shape}, expected {shape}")
+            raise ValueError(
+                f"Invalid covariance shape: {value.shape}, expected {shape}"
+            )
 
         self._data = value
 
@@ -91,9 +95,7 @@ class Covariance:
         covar : `Covariance`
             Stacked covariance
         """
-        parameters = Parameters.from_stack(
-            [_.parameters for _ in covar_list]
-        )
+        parameters = Parameters.from_stack([_.parameters for _ in covar_list])
 
         covar = cls(parameters)
 
@@ -102,7 +104,24 @@ class Covariance:
 
         return covar
 
-    def to_table(self, format=".6e"):
+    def read(cls, parameters, filename):
+        """Read covariance data from file
+
+        Parameters
+        ----------
+        parameters : `~gammapy.modeling.Parameters`
+            Parameter list
+
+        filename : str
+            Filename
+        """
+        t = Table.read(filename, format="ascii.fixed_width")
+        t.remove_column("Parameters")
+        arr = np.array(t)
+        data = arr.view(np.float).reshape(arr.shape + (-1,))
+        return cls(parameters, data=data, unique_names=t.colnames, filename=filename)
+
+    def to_table(self):
         """Convert covariance matrix to table
 
         Parameters
@@ -115,19 +134,17 @@ class Covariance:
         table : `~astropy.table.Table`
             Covariance table
         """
-        table = Table()
-        table["name"] = self.parameters.names
-
-        for idx, par in enumerate(self.parameters):
-            vals = self.data[idx]
-            table[par.name] = vals
-            table[par.name].format = format
-
-        table.add_index("name")
-        return table
-
-    def read(self, filename):
-        raise NotImplementedError
+        if self.unique_names is None:
+            param_names = []
+            for p in self.parameters:
+                param_names = p.name
+        else:
+            param_names = self.unique_names
+        t1 = Table()
+        t1["Parameters"] = param_names
+        t2 = Table(self.covariance, names=param_names)
+        t = hstack([t1, t2])
+        return t
 
     def write(self, filename, **kwargs):
         """Write covariance to file
@@ -140,8 +157,9 @@ class Covariance:
             Keyword arguments passed to `~astropy.table.Table.write`
 
         """
+        self.filename = filename
         table = self.to_table()
-        table.write(filename, **kwargs)
+        table.write(filename, format="ascii.fixed_width", delimiter="|")
 
     def get_subcovariance(self, parameters):
         """Get sub-covariance matrix
@@ -158,9 +176,7 @@ class Covariance:
         """
         idx = [self.parameters.index(par) for par in parameters]
         data = self._data[np.ix_(idx, idx)]
-        return self.__class__(
-            parameters=parameters, data=data
-        )
+        return self.__class__(parameters=parameters, data=data)
 
     def set_subcovariance(self, covar):
         """Set sub-covariance matrix
@@ -210,8 +226,14 @@ class Covariance:
 
         names = self.parameters.names
         im, cbar = plot_heatmap(
-            data=self.correlation, col_labels=names, row_labels=names, ax=ax,
-            vmin=-1, vmax=1, cbarlabel="Correlation", **kwargs
+            data=self.correlation,
+            col_labels=names,
+            row_labels=names,
+            ax=ax,
+            vmin=-1,
+            vmax=1,
+            cbarlabel="Correlation",
+            **kwargs,
         )
         annotate_heatmap(im=im)
         return ax

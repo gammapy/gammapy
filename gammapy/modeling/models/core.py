@@ -181,9 +181,7 @@ class Models(collections.abc.MutableSequence):
         self._covariance.data = covariance
 
         for model in self._models:
-            subcovar = self._covariance.get_subcovariance(
-                model.covariance.parameters
-            )
+            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
             model.covariance = subcovar
 
     @property
@@ -217,7 +215,9 @@ class Models(collections.abc.MutableSequence):
             models.append(model)
         models = cls(models)
         if "covariance" in data:
-            models.covariance_from_table(data["covariance"])
+            models.covariance = Covariance.read(
+                models.parameters, filename=data["covariance"]
+            )
 
         shared_register = {}
         for model in models:
@@ -234,39 +234,14 @@ class Models(collections.abc.MutableSequence):
                 shared_register = _set_link(shared_register, model)
         return models
 
-    def covariance_from_table(self, covar_path):
-        self._covar_path = Path(covar_path)
-        t = Table.read(self._covar_path, format="ascii.fixed_width")
-        t.remove_column("Parameters")
-        arr = np.array(t)
-        # convert structured array to array
-        self.covariance = arr.view(np.float).reshape(arr.shape + (-1,))
-
-    def covariance_to_table(self, covar_path=None):
-        if self.covariance is not None:
-            param_names = []
-            for m in self._models:
-                for p in m.parameters:
-                    param_names = m.name + "@" + m.name
-            t1 = Table()
-            t1["Parameters"] = param_names
-            t2 = Table(self.covariance, names=param_names)
-            t = hstack([t1, t2])
-
-            if covar_path is not None:
-                t.write(covar_path, format="ascii.fixed_width", delimiter="|")
-            return t
-
     def write(self, path, overwrite=False):
         """Write to YAML file."""
         path = make_path(path)
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
-        path.write_text(self.to_yaml())
-
         if self.covariance is not None:
-            self._covar_path = Path(splitext(str(path))[0] + "_covariance.dat")
-            self.covariance_to_table(covar_path=self._covar_path)
+            self._covariance.write(splitext(str(path))[0] + "_covariance.dat")
+        path.write_text(self.to_yaml())
 
     def to_yaml(self):
         """Convert to YAML string."""
@@ -292,8 +267,11 @@ class Models(collections.abc.MutableSequence):
         for model in self._models:
             model_data = model.to_dict()
             models_data.append(model_data)
-        if self._covar_path is not None:
-            return {"components": models_data, "covariance": str(self._covar_path)}
+        if self._covariance.filename is not None:
+            return {
+                "components": models_data,
+                "covariance": str(self._covariance.filename),
+            }
         else:
             return {"components": models_data}
 
