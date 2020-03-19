@@ -66,9 +66,9 @@ def fermi_dataset():
     mask_safe = counts.copy(data=np.ones_like(counts.data).astype("bool"))
 
     kernel = PSFKernel.read(
-        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf.fits.gz"
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf-cube.fits.gz"
     )
-
+    print(kernel.psf_kernel_map)
     dataset = MapDataset(
         counts=counts,
         models=[background],
