@@ -5,9 +5,9 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
-from gammapy.irf import EDispMap, EffectiveAreaTable2D, EnergyDispersion2D
+from gammapy.irf import EDispMap, EffectiveAreaTable2D, EnergyDispersion2D, EDispKernelMap
 from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
-from gammapy.maps import MapAxis, MapCoord, WcsGeom
+from gammapy.maps import MapAxis, MapCoord, WcsGeom, Map
 
 
 def fake_aeff2d(area=1e6 * u.m ** 2):
@@ -150,3 +150,34 @@ def test_edisp_from_diagonal_response(position):
     # We exclude the first and last bin, where there is no
     # e_reco to contribute to
     assert_allclose(sum_kernel[1:-1], 1)
+
+
+def test_edisp_kernel_map_stack():
+    energy_axis = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=5
+    )
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.3 TeV", "30 TeV", nbin=10, per_decade=True, name="energy_true"
+    )
+
+    edisp_1 = EDispKernelMap.from_diagonal_response(
+        energy_axis=energy_axis, energy_axis_true=energy_axis_true
+    )
+    edisp_1.exposure_map.data += 1
+
+    edisp_2 = EDispKernelMap.from_diagonal_response(
+        energy_axis=energy_axis, energy_axis_true=energy_axis_true
+    )
+    edisp_2.exposure_map.data += 2
+
+    geom = edisp_1.edisp_map.geom
+    data = geom.energy_mask(emin=2 * u.TeV)
+    weights = Map.from_geom(geom=geom, data=data)
+    edisp_1.stack(edisp_2, weights=weights)
+
+    position = SkyCoord(0, 0, unit="deg")
+    kernel = edisp_1.get_edisp_kernel(position)
+
+    actual = kernel.pdf_matrix.sum(axis=0)
+    assert_allclose(actual, [2., 2., 6., 6., 6.])

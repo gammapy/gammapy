@@ -1069,6 +1069,10 @@ class Geom(abc.ABC):
     def center_skydir(self):
         pass
 
+    @property
+    def axes_names(self):
+        return [ax.name for ax in self.axes]
+
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
         """Load a geometry object from a FITS HDUList.

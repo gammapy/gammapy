@@ -84,6 +84,9 @@ class IRFMap:
         self._irf_map.stack(other._irf_map * other.exposure_map.data, weights=weights)
 
         # stack exposure map
+        if weights and "energy" in weights.geom.axes_names:
+            weights = weights.slice_by_idx({"energy": slice(0, 1)})
+
         self.exposure_map.stack(other.exposure_map, weights=weights)
 
         with np.errstate(invalid="ignore"):

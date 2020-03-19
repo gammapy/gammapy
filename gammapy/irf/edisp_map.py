@@ -350,8 +350,8 @@ class EDispKernelMap(IRFMap):
 
         Returns
         -------
-        edisp_map : `EDispMap`
-            Energy dispersion map.
+        edisp_map : `EDispKernelMap`
+            Energy dispersion kernel map.
         """
         axis_names = [ax.name for ax in geom.axes]
 
@@ -418,8 +418,8 @@ class EDispKernelMap(IRFMap):
 
         Returns
         -------
-        edisp_map : `EDispMap`
-            Energy dispersion map.
+        edisp_map : `EDispKernelMap`
+            Energy dispersion kernel map.
         """
         geom = WcsGeom.create(
             npix=(2, 1),
