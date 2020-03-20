@@ -158,7 +158,9 @@ class Covariance:
             t1["Parameters"] = param_names
             t2 = Table(self._data, names=param_names)
             t = hstack([t1, t2])
-            t.write(filename, format="ascii.fixed_width", delimiter="|", overwrite = overwrite)
+            t.write(
+                filename, format="ascii.fixed_width", delimiter="|", overwrite=overwrite
+            )
 
     def get_subcovariance(self, parameters):
         """Get sub-covariance matrix
