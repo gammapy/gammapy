@@ -78,7 +78,10 @@ class MapDatasetEventSampler:
             npred = evaluator.compute_npred()
 
             if hasattr(model, "temporal_model"):
-                temporal_model = model.temporal_model
+                if getattr(model, "temporal_model") is None:
+                    temporal_model = ConstantTemporalModel()
+                else:
+                    temporal_model = model.temporal_model
             else:
                 temporal_model = ConstantTemporalModel()
 
