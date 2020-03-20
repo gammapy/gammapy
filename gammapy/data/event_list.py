@@ -298,8 +298,10 @@ class EventListBase:
 
         unit = ebounds.unit
 
-        plt.hist(self.energy.to_value(unit), bins=ebounds.value,  **kwargs)
-        plt.semilogx()
+        ax.hist(self.energy.to_value(unit), bins=ebounds.value,  **kwargs)
+        ax.loglog()
+        ax.set_xlabel(f"Energy ({unit})")
+        ax.set_ylabel("Counts")
         return ax
 
     def plot_time(self, ax=None):
@@ -596,24 +598,23 @@ class EventList(EventListBase):
         import matplotlib.pyplot as plt
 
         fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
-
-        axes[0,0].loglog()
         self.plot_energy(ax=axes[0, 0])
+
         off_max = self.pointing_radec.separation(self.radec).max().deg
         bins = np.linspace(start=0, stop=off_max ** 2, num=30)
         self.plot_offset2_distribution(ax=axes[0, 1], bins=bins)
+
         self.plot_time(ax=axes[0, 2])
 
         axes[1, 0].axis("off")
         m = self._counts_image()
         ax = plt.subplot(2, 3, 4, projection=m.geom.wcs)
-        m.plot(ax=ax, stretch="sqrt")
+        m.plot(ax=ax, stretch="linear")
 
         self.plot_energy_offset(ax=axes[1, 1])
 
         self._plot_text_summary(ax=axes[1, 2])
-
-#        plt.tight_layout()
+        plt.subplots_adjust(hspace=0.3, wspace=0.2)
 
     def _plot_text_summary(self, ax):
         ax.axis("off")
@@ -625,14 +626,14 @@ class EventList(EventListBase):
                  - self.galactic.b.min().deg)
         opts = {
             "width": (width, width),
-            "binsz": 0.1,
+            "binsz": 0.05,
             "proj": "TAN",
             "frame": "galactic",
             "skydir": self.pointing_radec,
         }
         m = WcsNDMap.create(**opts)
         m.fill_by_coord(self.radec)
-        m = m.smooth(width=1)
+        m = m.smooth(width=0.5)
         return m
 
     def plot_image(self):

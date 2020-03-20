@@ -326,4 +326,6 @@ class MapDatasetEventSampler:
         events.table["EVENT_ID"] = np.arange(len(events.table))
         events.table.meta = self.event_list_meta(dataset, observation)
 
-        return events
+        geom = dataset._geom
+        selection = geom.contains(events.map_coord(geom))
+        return events.select_row_subset(selection)

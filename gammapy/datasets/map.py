@@ -685,7 +685,7 @@ class MapDataset(Dataset):
         if "BACKGROUND" in hdulist:
             background_map = Map.from_hdulist(hdulist, hdu="background")
             kwargs["models"] = Models(
-                [BackgroundModel(background_map, datasets_names=[name])]
+                [BackgroundModel(background_map, datasets_names=[name], name=name + "-bkg")]
             )
 
         if "EDISP_MATRIX" in hdulist:
