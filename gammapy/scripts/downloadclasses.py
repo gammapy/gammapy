@@ -256,7 +256,7 @@ class ParallelDownload:
         res = dl.download()
         log.info(f"{len(res)} files downloaded.")
         for err in res.errors:
-            fpt, url, exception = err
+            _, _, exception = err
             log.error(f"Error: {exception}")
 
     def show_info_datasets(self):
