@@ -4,8 +4,6 @@ import numpy as np
 import scipy
 from astropy.table import Table, hstack
 from .parameter import Parameters
-from gammapy.utils.scripts import make_name
-
 
 __all__ = ["Covariance"]
 
@@ -133,19 +131,34 @@ class Covariance:
             Keyword arguments passed to `~astropy.table.Table.write`
 
         """
+        from gammapy.modeling.models import SkyModel
+
         self.filename = filename
         param_names = []
-        for m in models:
-            for p in m.parameters:
-                param_names.append(p.name + make_name())
-        # TODO: param_names.append(p.name+"@"+m.name)
-        # this name would be unique once models won't have duplicate
-        # parameters names, then remove make_name
-        t1 = Table()
-        t1["Parameters"] = param_names
-        t2 = Table(self.data, names=param_names)
-        t = hstack([t1, t2])
-        t.write(filename, format="ascii.fixed_width", delimiter="|")
+        for model in models:
+            suffix = model.name
+            if isinstance(model, SkyModel):
+                submodels = [
+                    model.spectral_model,
+                    model.spatial_model,
+                    model.temporal_model,
+                ]
+                for m in submodels:
+                    if m is not None:
+                        for p in m.parameters:
+                            suffix += "_" + m.__class__.__name__
+                            param_names.append(p.name + "@" + suffix)
+            else:
+                for p in model.parameters:
+                    suffix += "_" + model.__class__.__name__
+                    param_names.append(p.name + "@" + suffix)
+        # TODO: maybe nicer/shorter names can be found
+        if len(param_names) != 0:
+            t1 = Table()
+            t1["Parameters"] = param_names
+            t2 = Table(self.data, names=param_names)
+            t = hstack([t1, t2])
+            t.write(filename, format="ascii.fixed_width", delimiter="|")
 
     def get_subcovariance(self, parameters):
         """Get sub-covariance matrix
