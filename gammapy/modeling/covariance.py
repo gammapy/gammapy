@@ -156,7 +156,7 @@ class Covariance:
         if len(param_names) != 0:
             t1 = Table()
             t1["Parameters"] = param_names
-            t2 = Table(self.data, names=param_names)
+            t2 = Table(self._data, names=param_names)
             t = hstack([t1, t2])
             t.write(filename, format="ascii.fixed_width", delimiter="|", overwrite = overwrite)
 
