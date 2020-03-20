@@ -95,7 +95,7 @@ The following tutorials expose common analysis tasks.
 
 - `1D spectrum simulation <../notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
 - `3D map simulation <../notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
-- `Light curve simulation <../notebooks/light_curve_simulation.html>`__ | *light_curve_simulation.ipynb*
+- `Simulating 1D observations of a time varying source <../notebooks/light_curve_simulation.html>`__ | *light_curve_simulation.ipynb*
 
 Advanced tutorials
 ------------------
