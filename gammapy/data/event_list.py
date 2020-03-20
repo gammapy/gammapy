@@ -414,7 +414,8 @@ class EventListBase:
         ax = plt.gca() if ax is None else ax
 
         energy_bounds = self._default_plot_ebounds().to_value("TeV")
-        offset_bounds = np.linspace(0, 4, 30)
+        offsetangle = self.pointing_radec.separation(self.radec).max().to('deg').value
+        offset_bounds = np.linspace(0, offsetangle, 30)
 
         counts = np.histogram2d(
             x=self.energy.value,
@@ -596,8 +597,10 @@ class EventList(EventListBase):
 
         fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
 
+        axes[0,0].loglog()
         self.plot_energy(ax=axes[0, 0])
-        bins = np.linspace(start=0, stop=4 ** 2, num=30)
+        off_max = self.pointing_radec.separation(self.radec).max().deg
+        bins = np.linspace(start=0, stop=off_max ** 2, num=30)
         self.plot_offset2_distribution(ax=axes[0, 1], bins=bins)
         self.plot_time(ax=axes[0, 2])
 
@@ -610,7 +613,7 @@ class EventList(EventListBase):
 
         self._plot_text_summary(ax=axes[1, 2])
 
-        plt.tight_layout()
+#        plt.tight_layout()
 
     def _plot_text_summary(self, ax):
         ax.axis("off")
@@ -618,8 +621,10 @@ class EventList(EventListBase):
         ax.text(0, 1, txt, fontsize=12, verticalalignment="top")
 
     def _counts_image(self):
+        width = (self.galactic.b.max().deg
+                 - self.galactic.b.min().deg)
         opts = {
-            "width": (7, 7),
+            "width": (width, width),
             "binsz": 0.1,
             "proj": "TAN",
             "frame": "galactic",
