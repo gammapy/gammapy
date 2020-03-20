@@ -120,7 +120,7 @@ class Covariance:
         data = arr.view(np.float).reshape(arr.shape + (-1,))
         return cls(models.parameters, data=data, filename=filename)
 
-    def write(self, models, filename, **kwargs):
+    def write(self, models, filename, overwrite=True, **kwargs):
         """Write covariance to file
 
         Parameters
@@ -158,7 +158,7 @@ class Covariance:
             t1["Parameters"] = param_names
             t2 = Table(self.data, names=param_names)
             t = hstack([t1, t2])
-            t.write(filename, format="ascii.fixed_width", delimiter="|")
+            t.write(filename, format="ascii.fixed_width", delimiter="|", overwrite = overwrite)
 
     def get_subcovariance(self, parameters):
         """Get sub-covariance matrix

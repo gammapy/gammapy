@@ -241,7 +241,7 @@ class Models(collections.abc.MutableSequence):
             raise IOError(f"File exists already: {path}")
         if self._covariance is not None and len(self.parameters) != 0:
             filename = splitext(str(path))[0] + "_covariance.dat"
-            self._covariance.write(self._models, filename)
+            self._covariance.write(self._models, filename, overwrite)
         path.write_text(self.to_yaml())
 
     def to_yaml(self):
