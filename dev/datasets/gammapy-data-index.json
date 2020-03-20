@@ -2575,13 +2575,13 @@
     "path": "fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml",
     "url": "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master/3fhl/crab/Fermi-LAT-3FHL_datasets.yaml",
     "filesize": 194,
-    "hashmd5": "1ff54afe526639b88aaddb57a8dadeea"
+    "hashmd5": "5e17b2f385049b660ce2bd6c1bebf65d"
    },
    {
     "path": "fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml",
     "url": "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master/3fhl/crab/Fermi-LAT-3FHL_models.yaml",
     "filesize": 1251,
-    "hashmd5": "23336c63661ac35291b4a3a95f5c73df"
+    "hashmd5": "e99438be2fe12115cada40b5c2ace4a7"
    }
   ]
  },
@@ -2665,13 +2665,13 @@
     "path": "tests/models/gc_example_datasets.yaml",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/gc_example_datasets.yaml",
     "filesize": 344,
-    "hashmd5": "cf743fa5d5f06c8ebfd81d8a72c0f9c9"
+    "hashmd5": "72e07fe7aca6d77d18e61261334aab49"
    },
    {
     "path": "tests/models/gc_example_models.yaml",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/gc_example_models.yaml",
     "filesize": 2092,
-    "hashmd5": "e7e57442ecb09b3edb13d9a7140cc85a"
+    "hashmd5": "430b3ee537c243fbc1952d697efad079"
    },
    {
     "path": "tests/models/gc_example_data_gc.fits",
