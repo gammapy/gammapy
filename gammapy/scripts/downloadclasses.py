@@ -252,11 +252,12 @@ class ParallelDownload:
             if retrieve:
                 dl.enqueue_file(url, path=str(path.parent))
 
-        try:
-            dl.download()
-        except Exception as ex:
-            log.error("Failed to download files.")
-            log.error(ex)
+        log.info(f"{dl.queued_downloads} files to download.")
+        res = dl.download()
+        log.info(f"{len(res)} files downloaded.")
+        for err in res.errors:
+            fpt, url, exception = err
+            log.error(f"Error: {exception}")
 
     def show_info_datasets(self):
         print("")
