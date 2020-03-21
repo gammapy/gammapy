@@ -5,6 +5,7 @@ import logging
 import warnings
 import numpy as np
 import scipy.optimize
+import astropy.units as u
 from astropy.convolution import CustomKernel, Kernel2D
 from gammapy.irf import PSFKernel
 from gammapy.datasets import MapDataset
@@ -147,7 +148,7 @@ class TSMapEstimator:
         ul_sigma=2,
         threshold=None,
         rtol=0.001,
-        max_kernel_radius=None,
+        max_kernel_radius=0.3*u.deg,
     ):
 
         self.dataset = dataset
@@ -157,7 +158,8 @@ class TSMapEstimator:
                 kernel = self.dataset.psf
             else:
                 position = dataset._geom.center_skydir
-                kernel = self.dataset.psf.get_psf_kernel(position, self.dataset._geom, max_kernel_radius)
+                kernel = self.dataset.psf.get_psf_kernel(position, self.dataset.exposure.geom, max_kernel_radius)
+            kernel = kernel.psf_kernel_map.sum_over_axes(keepdims=False).data
         self.kernel = kernel
 
         self.downsampling_factor = downsampling_factor

@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Gaussian2DKernel
 from gammapy.datasets import MapDataset
-from gammapy.irf import PSFKernel
+from gammapy.irf import PSFKernel, PSFMap, EnergyDependentTablePSF
 from gammapy.estimators import TSMapEstimator
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import BackgroundModel
@@ -65,16 +65,17 @@ def fermi_dataset():
     )
     mask_safe = counts.copy(data=np.ones_like(counts.data).astype("bool"))
 
-    kernel = PSFKernel.read(
+    psf = EnergyDependentTablePSF.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf-cube.fits.gz"
     )
-    print(kernel.psf_kernel_map)
+    psfmap = PSFMap.from_energy_dependent_table_psf(psf)
+
     dataset = MapDataset(
         counts=counts,
         models=[background],
         exposure=exposure,
         mask_safe=mask_safe,
-        psf=kernel,
+        psf=psfmap,
         name="fermi-3fhl-gc",
     )
     dataset = dataset.to_image()
