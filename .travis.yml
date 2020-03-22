@@ -77,7 +77,7 @@ jobs:
                FETCH_GAMMAPY_DATA=false
 
         # Build docs
-        - env: CMD='make docs-all'
+        - env: CMD='make docs-all fmt=False'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_DOCS
 
         # Test conda build (which runs a bunch of useful tests after building the package)

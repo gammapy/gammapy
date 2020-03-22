@@ -73,9 +73,10 @@ def build_notebooks(args):
         log.info("Notebook file does not exist.")
         sys.exit()
 
-    subprocess.run(
-        [sys.executable, "-m", "gammapy", "jupyter", "--src", "temp", "black"]
-    )
+    if args.fmt:
+        subprocess.run(
+            [sys.executable, "-m", "gammapy", "jupyter", "--src", "temp", "black"]
+        )
     subprocess.run(
         [sys.executable, "-m", "gammapy", "jupyter", "--src", "temp", "strip"]
     )
@@ -130,15 +131,19 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--src", help="Tutorial notebook or folder to process")
     parser.add_argument("--nbs", help="Notebooks are considered in Sphinx")
+    parser.add_argument("--fmt", help="Black format notebooks")
     args = parser.parse_args()
 
     if not args.src:
         args.src = "tutorials"
     if not args.nbs:
         args.nbs = "True"
+    if not args.fmt:
+        args.fmt = "True"
 
     try:
         args.nbs = strtobool(args.nbs)
+        args.fmt = strtobool(args.fmt)
     except Exception as ex:
         log.error(ex)
         sys.exit()
