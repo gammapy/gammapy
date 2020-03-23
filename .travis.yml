@@ -63,11 +63,11 @@ jobs:
 
         # MacOS X tests
         - os: osx
-          env: PYTHON_VERSION=3.6 CMD='make test'
+          env: PYTHON_VERSION=3.7 CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_OSX
 
         # Run tests without optional dependencies
-        - env: PYTHON_VERSION=3.6 CMD='make test'
+        - env: PYTHON_VERSION=3.7 CMD='make test'
                CONDA_DEPENDENCIES='Cython click regions'
                PIP_DEPENDENCIES='pytest-astropy parfive pydantic'
 
@@ -86,20 +86,20 @@ jobs:
                TEST_PACKAGING=true CONDA_CHANNELS='astropy sherpa conda-forge'
 
         # Test with Astropy dev version
-        - env: PYTHON_VERSION=3.6 ASTROPY_VERSION=dev CMD='make test'
+        - env: PYTHON_VERSION=3.7 ASTROPY_VERSION=dev CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         # Test with Sherpa dev, this may take a longer time
-        - env: PYTHON_VERSION=3.6 SETUP_CMD='make test'
+        - env: PYTHON_VERSION=3.7 SETUP_CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
                PIP_DEPENDENCIES='git+http://github.com/sherpa/sherpa.git#egg=sherpa pytest-astropy parfive pydantic'
 
         # Test Jupyter notebooks
-        - env: PYTHON_VERSION=3.6 CMD='make test-nb'
+        - env: PYTHON_VERSION=3.7 CMD='make test-nb'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_DOCS
 
         # Test example scripts
-        - env: PYTHON_VERSION=3.6 CMD='make test-scripts'
+        - env: PYTHON_VERSION=3.7 CMD='make test-scripts'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
 
