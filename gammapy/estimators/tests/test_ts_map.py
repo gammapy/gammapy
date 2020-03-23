@@ -112,15 +112,15 @@ def test_compute_ts_map(input_dataset):
 
 @requires_data()
 def test_compute_ts_map_psf(fermi_dataset):
-    estimator = TSMapEstimator(fermi_dataset)
-    result = estimator.run()
+    estimator = TSMapEstimator()
+    result = estimator.run(fermi_dataset)
 
     assert "root brentq" in repr(estimator)
     assert_allclose(result["ts"].data[29, 29], 836.147, rtol=1e-2)
-    assert_allclose(result["niter"].data[29, 29], 7)
-    assert_allclose(result["flux"].data[29, 29], 1.2835e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[29, 29], 7.544e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[29, 29], 1.434e-09, rtol=1e-2)
+    assert_allclose(result["niter"].data[29, 29], 6)
+    assert_allclose(result["flux"].data[29, 29], 1.09716e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[29, 29], 6.594e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[29, 29], 1.229e-09, rtol=1e-2)
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
     assert result["flux_ul"].unit == u.Unit("cm-2s-1")

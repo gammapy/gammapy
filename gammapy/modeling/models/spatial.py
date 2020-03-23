@@ -244,7 +244,7 @@ class PointSpatialModel(SpatialModel):
         flux : `Map`
             Predicted flux map
         """
-        x, y = geom.get_pix()
+        x, y = geom.get_pix()[0:2]
         x0, y0 = self.position.to_pixel(geom.wcs)
         data = self._grid_weights(x, y, x0, y0)
         return Map.from_geom(geom=geom, data=data, unit="")
