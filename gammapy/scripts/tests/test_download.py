@@ -18,7 +18,6 @@ def config():
 
 def test_cli_download_help():
     result = run_cli(cli, ["download", "--help"])
-
     assert "Usage" in result.output
 
 
