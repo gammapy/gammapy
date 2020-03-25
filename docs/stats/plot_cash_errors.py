@@ -1,9 +1,9 @@
-"""Example plot showing the profile of the WStat statistic and its connection to excess errors."""
+"""Example plot showing the profile of the Cash statistic and its connection to excess errors."""
 import matplotlib.pyplot as plt
 import numpy as np
-from gammapy.stats import WStatCountsStatistic
+from gammapy.stats import CashCountsStatistic
 
-count_statistic = WStatCountsStatistic(n_on=13, n_off=11, alpha=0.5)
+count_statistic = CashCountsStatistic(n_on=13, mu_bkg=5.5)
 excess = count_statistic.excess
 
 errn = count_statistic.compute_errn(1.0)
@@ -12,19 +12,18 @@ errp = count_statistic.compute_errp(1.0)
 errn_2sigma = count_statistic.compute_errn(2.0)
 errp_2sigma = count_statistic.compute_errp(2.0)
 
-# We compute the WStat statistic profile
-mu_signal = np.linspace(-2.5, 26, 100)
+# We compute the Cash statistic profile
+mu_signal = np.linspace(-1.5, 25, 100)
 stat_values = count_statistic._stat_fcn(mu_signal)
 
-xmin, xmax = -2.5, 26
-ymin, ymax = 0, 15
+xmin, xmax = -1.5, 25
+ymin, ymax = -42, -28.0
 plt.figure(figsize=(7, 7))
 plt.plot(mu_signal, stat_values, color="k")
 plt.xlim(xmin, xmax)
 plt.ylim(ymin, ymax)
-
 plt.xlabel(r"Number of expected signal event, $\mu_{sig}$")
-plt.ylabel(r"WStat value, TS ")
+plt.ylabel(r"Cash statistic value, TS ")
 
 plt.hlines(
     count_statistic.TS_max + 1,
@@ -71,5 +70,6 @@ plt.vlines(
     linestyle="dashed",
     color="b",
 )
+
 
 plt.legend()

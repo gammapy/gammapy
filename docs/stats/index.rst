@@ -169,6 +169,8 @@ If you are interested in 68% (1 :math:`\sigma`) confidence errors:
     >>> stat.compute_errp()
     4.5823187389960225
 
+.. plot:: stats/plot_cash_errors.py
+
 
 Note that confidence intervals can be computed in a more robust manner following [Feldman1998]_.
 See :ref:`feldman_cousins`.
