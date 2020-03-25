@@ -137,6 +137,8 @@ Here's how you compute the statistical significance of your detection:
     >>> stat.significance
     2.2421704424844875
 
+.. plot:: stats/plot_wstat_significance.py
+
 Conversely, if you know that the expected number of background events is 9.5, you can use
 the Cash statistic and obtain the Li & Ma significance for known background:
 
@@ -150,7 +152,6 @@ the Cash statistic and obtain the Li & Ma significance for known background:
     2.4508934155585176
 
 .. plot:: stats/plot_cash_significance.py
-    :include-source:
 
 Excess errors
 ^^^^^^^^^^^^^
