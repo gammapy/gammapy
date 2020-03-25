@@ -11,20 +11,44 @@ class IRFMap:
         self.exposure_map = exposure_map
 
     @classmethod
-    def from_hdulist(cls, hdulist):
-        """Convert to `~astropy.io.fits.HDUList`.
+    def from_hdulist(cls, hdulist,
+            hdu=None,
+            hdu_bands=None,
+            exposure_hdu=None,
+            exposure_hdu_bands=None
+        ):
+        """Create from `~astropy.io.fits.HDUList`.
 
         Parameters
         ----------
         hdulist : `~astropy.fits.HDUList`
             HDU list.
-        """
-        irf_map = Map.from_hdulist(hdulist, cls._hdu_name)
+        hdu : str
+            Name or index of the HDU with the IRF map.
+        hdu_bands : str
+            Name or index of the HDU with the IRF map BANDS table.
+        exposure_hdu : str
+            Name or index of the HDU with the exposure map data.
+        exposure_hdu_bands : str
+            Name or index of the HDU with the exposure map BANDS table.
 
-        exposure_hdu = cls._hdu_name + "_exposure"
+        Returns
+        -------
+        irf_map : `IRFMap`
+            IRF map.
+        """
+        if hdu is None:
+            hdu = cls._hdu_name
+
+        irf_map = Map.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
+
+        if exposure_hdu is None:
+            exposure_hdu = cls._hdu_name + "_exposure"
 
         if exposure_hdu in hdulist:
-            exposure_map = Map.from_hdulist(hdulist, exposure_hdu)
+            exposure_map = Map.from_hdulist(
+                hdulist, hdu=exposure_hdu, hdu_bands=exposure_hdu_bands
+            )
         else:
             exposure_map = None
 
@@ -32,7 +56,7 @@ class IRFMap:
 
     @classmethod
     def read(cls, filename):
-        """Read an edisp_map from file and create an EDispMap object"""
+        """Read an IRF_map from file and create corresponding object"""
         with fits.open(filename, memmap=False) as hdulist:
             return cls.from_hdulist(hdulist)
 
@@ -42,6 +66,7 @@ class IRFMap:
         Returns
         -------
         hdu_list : `~astropy.io.fits.HDUList`
+            HDU list.
         """
         hdulist = self._irf_map.to_hdulist(hdu=self._hdu_name)
 
@@ -54,16 +79,16 @@ class IRFMap:
         return hdulist
 
     def write(self, filename, overwrite=False, **kwargs):
-        """Write to fits"""
+        """Write IRF map to fits"""
         hdulist = self.to_hdulist(**kwargs)
         hdulist.writeto(filename, overwrite=overwrite)
 
     def stack(self, other, weights=None):
-        """Stack EDispMap with another one in place.
+        """Stack IRF map with another one in place.
 
         Parameters
         ----------
-        other : `~gammapy.cube.EDispMap`
+        other : `~gammapy.irf.IRFMap`
             Energy dispersion map to be stacked with this one.
         weights : `~gammapy.maps.Map`
             Map with stacking weights.
@@ -94,11 +119,11 @@ class IRFMap:
             self._irf_map.data = np.nan_to_num(self._irf_map.data)
 
     def copy(self):
-        """Copy EDispMap"""
+        """Copy IRF map"""
         return deepcopy(self)
 
     def cutout(self, position, width, mode="trim"):
-        """Cutout edisp map.
+        """Cutout IRF map.
 
         Parameters
         ----------
@@ -112,8 +137,8 @@ class IRFMap:
 
         Returns
         -------
-        cutout : `EdispMap`
-            Cutout edisp map.
+        cutout : `IRFMap`
+            Cutout IRF map.
         """
         irf_map = self._irf_map.cutout(position, width, mode)
         exposure_map = self.exposure_map.cutout(position, width, mode)
