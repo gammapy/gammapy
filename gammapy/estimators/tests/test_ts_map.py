@@ -5,10 +5,10 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Gaussian2DKernel
 from gammapy.datasets import MapDataset
-from gammapy.irf import PSFKernel, PSFMap, EnergyDependentTablePSF
+from gammapy.irf import PSFMap, EnergyDependentTablePSF
 from gammapy.estimators import TSMapEstimator
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling.models import BackgroundModel
+from gammapy.modeling.models import BackgroundModel, GaussianSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import requires_data
 
 
@@ -17,6 +17,7 @@ def input_dataset():
     filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz"
 
     energy = MapAxis.from_energy_bounds("0.1 TeV", "1 TeV", 1)
+    energy_true = MapAxis.from_energy_bounds("0.1 TeV", "1 TeV", 1, name="energy_true")
 
     counts2D = Map.read(filename, hdu="counts")
     counts = Map.from_geom(
@@ -26,7 +27,7 @@ def input_dataset():
     )
     exposure2D = Map.read(filename, hdu="exposure")
     exposure = Map.from_geom(
-        exposure2D.geom.to_cube([energy]),
+        exposure2D.geom.to_cube([energy_true]),
         data=exposure2D.data[np.newaxis, :, :],
         unit="cm2s",  # no unit in header?
     )
@@ -91,13 +92,14 @@ def fermi_dataset():
 @requires_data()
 def test_compute_ts_map(input_dataset):
     """Minimal test of compute_ts_image"""
-    kernel = Gaussian2DKernel(5)
-
-    ts_estimator = TSMapEstimator(input_dataset, kernel=kernel, method="leastsq iter", threshold=1)
-    result = ts_estimator.run()
+    spatial_model = GaussianSpatialModel(sigma='0.1 deg')
+    spectral_model = PowerLawSpectralModel(index=2)
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+    ts_estimator = TSMapEstimator(model=model, method="leastsq iter", threshold=1)
+    result = ts_estimator.run(input_dataset)
 
     assert "leastsq iter" in repr(ts_estimator)
-    assert_allclose(result["ts"].data[99, 99], 1714.23, rtol=1e-2)
+    assert_allclose(result["ts"].data[99, 99], 1704.23, rtol=1e-2)
     assert_allclose(result["niter"].data[99, 99], 3)
     assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
@@ -116,8 +118,8 @@ def test_compute_ts_map_psf(fermi_dataset):
     result = estimator.run(fermi_dataset)
 
     assert "root brentq" in repr(estimator)
-    assert_allclose(result["ts"].data[29, 29], 836.147, rtol=1e-2)
-    assert_allclose(result["niter"].data[29, 29], 6)
+    assert_allclose(result["ts"].data[29, 29], 928.847, rtol=1e-2)
+    assert_allclose(result["niter"].data[29, 29], 7)
     assert_allclose(result["flux"].data[29, 29], 1.09716e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[29, 29], 6.594e-11, rtol=1e-2)
     assert_allclose(result["flux_ul"].data[29, 29], 1.229e-09, rtol=1e-2)
@@ -128,10 +130,10 @@ def test_compute_ts_map_psf(fermi_dataset):
 @requires_data()
 def test_compute_ts_map_newton(input_dataset):
     """Minimal test of compute_ts_image"""
-    kernel = Gaussian2DKernel(5)
+    model = GaussianSpatialModel(sigma='0.1 deg')
 
-    ts_estimator = TSMapEstimator(input_dataset, kernel=kernel, method="root newton", threshold=1)
-    result = ts_estimator.run()
+    ts_estimator = TSMapEstimator(model=model, method="root newton", threshold=1)
+    result = ts_estimator.run(input_dataset)
 
     assert "root newton" in repr(ts_estimator)
     assert_allclose(result["ts"].data[99, 99], 1714.23, rtol=1e-2)
@@ -151,12 +153,12 @@ def test_compute_ts_map_newton(input_dataset):
 @requires_data()
 def test_compute_ts_map_downsampled(input_dataset):
     """Minimal test of compute_ts_image"""
-    kernel = Gaussian2DKernel(2.5)
+    model = GaussianSpatialModel(sigma='0.11 deg')
 
     ts_estimator = TSMapEstimator(
-        input_dataset, kernel=kernel, downsampling_factor=2, method="root brentq", error_method="conf", ul_method="conf"
+        model=model, downsampling_factor=2, method="root brentq", error_method="conf", ul_method="conf"
     )
-    result = ts_estimator.run()
+    result = ts_estimator.run(input_dataset)
 
     assert_allclose(result["ts"].data[99, 99], 1675.28, rtol=1e-2)
     assert_allclose(result["niter"].data[99, 99], 7)
@@ -175,16 +177,16 @@ def test_compute_ts_map_downsampled(input_dataset):
 @requires_data()
 def test_large_kernel(input_dataset):
     """Minimal test of compute_ts_image"""
-    kernel = Gaussian2DKernel(100)
-    ts_estimator = TSMapEstimator(input_dataset, kernel=kernel)
+    model = GaussianSpatialModel(sigma='4 deg')
+    ts_estimator = TSMapEstimator(model=model)
 
     with pytest.raises(ValueError):
-        ts_estimator.run()
+        ts_estimator.run(input_dataset)
 
 
-def test_incorrect_method(input_dataset):
-    kernel = Gaussian2DKernel(10)
+def test_incorrect_method():
+    model = GaussianSpatialModel(sigma='0.2 deg')
     with pytest.raises(ValueError):
-        TSMapEstimator(input_dataset,kernel, method="bad")
+        TSMapEstimator(model, method="bad")
     with pytest.raises(ValueError):
-        TSMapEstimator(input_dataset, kernel, error_method="bad")
+        TSMapEstimator(model, error_method="bad")

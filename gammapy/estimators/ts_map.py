@@ -8,8 +8,10 @@ import scipy.optimize
 from astropy.coordinates import Angle
 from astropy.convolution import CustomKernel, Kernel2D
 from gammapy.irf import PSFKernel, PSFMap
+from gammapy.maps import Map
 from gammapy.datasets import MapDataset
-from gammapy.modeling.models import PointSpatialModel, SkyModel
+from gammapy.datasets.map import MapEvaluator
+from gammapy.modeling.models import PointSpatialModel, SkyModel, PowerLawSpectralModel
 from gammapy.stats import (
     cash,
     cash_sum_cython,
@@ -86,7 +88,7 @@ class TSMapEstimator:
         Source model kernel. If set to None, assume point source model, PointSpatialModel.
     kernel_size : `~astropy.coordinates.Angle`
         Kernel size to use: the kernel will be truncated at this size
-        Default : 0.3 deg
+        Default : 1 deg
     downsampling_factor : int
             Sample down the input maps to speed up the computation. Only integer
             values that are a multiple of 2 are allowed. Note that the kernel is
@@ -140,7 +142,7 @@ class TSMapEstimator:
     def __init__(
         self,
         model=None,
-        kernel_size='0.3 deg',
+        kernel_size='1 deg',
         downsampling_factor=None,
         method="root brentq",
         error_method="covar",
@@ -190,27 +192,33 @@ class TSMapEstimator:
         Convolves the model with the PSFKernel at the center of the dataset.
         If no PSFMap or PSFKernel is found the dataset, the model is used without convolution.
         """
-        if isinstance(self.dataset.psf, PSFKernel):
-            psf_kernel = self.dataset.psf
-        elif isinstance(self.dataset.psf, PSFMap):
-            position = self.dataset._geom.center_skydir
-            psf_kernel = self.dataset.psf.get_psf_kernel(position, self.dataset.exposure.geom)
-        else:
-            log.warning("TSMapEstimator: No PSF found on input MapDataset.")
-            psf_kernel = None
-
         self._center_model(self.dataset._geom.center_skydir)
-        flux = self.model.integrate(self._dataset.counts.geom)
-        if psf_kernel is not None:
-            flux = flux.convolve(psf_kernel)
+
+        evaluator = MapEvaluator(self.model, exposure=self.dataset.exposure, evaluation_mode="local")
+        evaluator.update(self.dataset.exposure, self.dataset.psf, self.dataset.edisp, self.dataset.counts.geom)
+
+        npred = evaluator.compute_npred().sum_over_axes()
+
+        # if isinstance(self.dataset.psf, PSFKernel):
+        #     psf_kernel = self.dataset.psf
+        # elif isinstance(self.dataset.psf, PSFMap):
+        #     position = self.dataset._geom.center_skydir
+        #     psf_kernel = self.dataset.psf.get_psf_kernel(position, self.dataset.exposure.geom)
+        # else:
+        #     log.warning("TSMapEstimator: No PSF found on input MapDataset.")
+        #     psf_kernel = None
+        #
+        # flux = self.model.integrate(self._dataset.counts.geom)
+        # if psf_kernel is not None:
+        #     flux = flux.convolve(psf_kernel)
 
         # define cutout size to ensure odd number of pixels
-        nbins = np.ceil(self.kernel_size / np.abs(self.dataset._geom.pixel_scales[0])) // 2 * 2 + 1
-        size = nbins * np.abs(self.dataset._geom.pixel_scales[0])
+#        nbins = np.ceil(self.kernel_size / np.abs(self.dataset._geom.pixel_scales[0])) // 2 * 2 + 1
+#        size = nbins * np.abs(self.dataset._geom.pixel_scales[0])
 
-        kernel = flux.cutout(self.dataset._geom.center_skydir, size).sum_over_axes(keepdims=False)
-        kernel /= kernel.data.sum()
-        self._kernel = CustomKernel(kernel.data)
+#        kernel = flux.cutout(self.dataset._geom.center_skydir, size).sum_over_axes(keepdims=False)
+        kernel = Map.from_geom(npred.geom, data=npred.data/npred.data.sum())
+        self._kernel = kernel.data
         if (np.array(self._kernel.shape) > np.array(self.dataset.counts.data.shape[1:])).any():
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
@@ -220,11 +228,11 @@ class TSMapEstimator:
     def _center_model(self, coord):
         """Center the model on input SkyCoord."""
         #TODO : remove once a property setter is defined on SpatialModel
-        self.model.frame = coord.frame
-        self.model.lon_0.value = coord.spherical.lon.to_value('deg')
-        self.model.lon_0.unit = 'deg'
-        self.model.lat_0.value = coord.spherical.lat.to_value('deg')
-        self.model.lat_0.unit = 'deg'
+        self.model.spatial_model.frame = coord.frame
+        self.model.spatial_model.lon_0.value = coord.spherical.lon.to_value('deg')
+        self.model.spatial_model.lon_0.unit = 'deg'
+        self.model.spatial_model.lat_0.value = coord.spherical.lat.to_value('deg')
+        self.model.spatial_model.lat_0.unit = 'deg'
 
     @property
     def model(self):
@@ -233,9 +241,11 @@ class TSMapEstimator:
     @model.setter
     def model(self, model):
         if model is None:
-            model = PointSpatialModel()
-        elif isinstance(model, SkyModel):
-            model = model.spatial_model
+            model = SkyModel(
+                spatial_model=PointSpatialModel,
+                spectral_model=PowerLawSpectralModel
+            )
+
         self._model = model
 
     @staticmethod
@@ -257,8 +267,8 @@ class TSMapEstimator:
         flux = dataset.counts - dataset.npred()
         flux = flux.sum_over_axes(keepdims=False)
         flux /= dataset.exposure.sum_over_axes(keepdims=False)
-        flux /= np.sum(kernel.array ** 2)
-        return flux.convolve(kernel.array)
+        flux /= np.sum(kernel ** 2)
+        return flux.convolve(kernel)
 
     @staticmethod
     def mask_default(exposure, background, kernel):
@@ -513,7 +523,7 @@ def _ts_value(
     exposure_ = _extract_array(exposure, kernel.shape, position)
     c_0_ = _extract_array(c_0, kernel.shape, position)
 
-    model = exposure_ * kernel._array
+    model = exposure_ * kernel
 
     c_0 = c_0_.sum()
 
