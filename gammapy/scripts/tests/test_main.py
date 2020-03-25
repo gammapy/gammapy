@@ -18,3 +18,8 @@ def test_cli_help():
 def test_cli_version():
     result = run_cli(cli, ["--version"])
     assert f"gammapy version {__version__}" in result.output
+
+
+def test_check_logging():
+    result = run_cli(cli, ["check", "logging"])
+    assert f"output" in result.output

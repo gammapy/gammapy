@@ -101,7 +101,7 @@ docs-sphinx:
 	python -m gammapy.utils.tutorials_links
 
 docs-all:
-	python -m gammapy.utils.tutorials_process --src="$(src)" --nbs="$(nbs)"
+	python -m gammapy.utils.tutorials_process --src="$(src)" --nbs="$(nbs)" --fmt="$(fmt)"
 	cd docs && python -m sphinx . _build/html -b html
 	python -m gammapy.utils.tutorials_links
 
