@@ -19,11 +19,19 @@ class TemporalModel(Model):
     evaluates on  astropy.time.Time objects"""
 
     def __call__(self, time):
-        """Call evaluate method"""
+        """Evaluate model
+
+        Parameters
+        ----------
+        time : `~astropy.time.Time`
+            Time object
+        """
         kwargs = {par.name: par.quantity for par in self.parameters}
+        time = u.Quantity(time.mjd, "day")
         return self.evaluate(time, **kwargs)
 
-    def time_sum(self, t_min, t_max):
+    @staticmethod
+    def time_sum(t_min, t_max):
         """
         Total time between t_min and t_max
 
@@ -32,49 +40,23 @@ class TemporalModel(Model):
         t_min, t_max: `~astropy.time.Time`
             Lower and upper bound of integration range
 
+        Returns
+        -------
+        time_sum : `~astropy.time.TimeDelta`
+            Summed time in the intervals.
+
         """
-        return np.sum(u.Quantity(t_max.mjd - t_min.mjd, "day"))
-
-
-# TODO: make this a small ABC to define a uniform interface.
-class TemplateTemporalModel(TemporalModel):
-    """Template temporal model base class."""
-
-    @classmethod
-    def read(cls, path):
-        """Read lightcurve model table from FITS file.
-
-        TODO: This doesn't read the XML part of the model yet.
-        """
-        filename = str(make_path(path))
-        return cls(Table.read(filename), filename=filename)
-
-    def write(self, path=None, overwrite=False):
-        if path is None:
-            path = self.filename
-        if path is None:
-            raise ValueError(f"filename is required for {self.tag}")
-        else:
-            self.filename = str(make_path(path))
-            self.table.write(self.filename, overwrite=overwrite)
+        return np.sum(t_max - t_min)
 
 
 class ConstantTemporalModel(TemporalModel):
-    """Constant temporal model.
-    """
-
+    """Constant temporal model."""
     tag = "ConstantTemporalModel"
 
-    def evaluate(self, time):
-        """Evaluate for a given time.
-
-        Parameters
-        ----------
-        time : array_like
-            Time since the ``reference`` time.
-
-        """
-        return np.ones_like(time.mjd)
+    @staticmethod
+    def evaluate(time):
+        """Evaluate at given times."""
+        return np.ones(time.shape)
 
     def integral(self, t_min, t_max):
         """Evaluate the integrated flux within the given time intervals
@@ -85,15 +67,16 @@ class ConstantTemporalModel(TemporalModel):
             Start times of observation
         t_max: `~astropy.time.Time`
             Stop times of observation
+
         Returns
         -------
-        norm: The model integrated flux
+        norm : `~astropy.units.Quantity`
+            Integrated flux norm on the given time intervals
         """
+        return (t_max - t_min) / self.time_sum(t_min, t_max)
 
-        integ = u.Quantity(t_max.mjd - t_min.mjd, "day")
-        return integ / self.time_sum(t_min, t_max)
-
-    def sample_time(self, n_events, t_min, t_max, random_state=0):
+    @staticmethod
+    def sample_time(n_events, t_min, t_max, random_state=0):
         """Sample arrival times of events.
 
         Parameters
@@ -128,74 +111,99 @@ class ConstantTemporalModel(TemporalModel):
 class ExpDecayTemporalModel(TemporalModel):
     """Temporal model with an exponential decay.
 
+        ..math::
+                F(t) = exp(t - t_ref)/t0
+
     Parameters
     ----------
-        t0 : Decay time scale
-        t_ref: The reference time in mjd
-
-    ..math::
-            F(t) = exp(t - t_ref)/t0
-
+    t0 : `~astropy.units.Quantity`
+        Decay time scale
+    t_ref: `~astropy.units.Quantity`
+        The reference time in mjd
     """
-
     tag = "ExponentialDecayTemporalModel"
 
     t0 = Parameter("t0", "1 d", frozen=False)
 
     _t_ref_default = Time("2000-01-01")
-    t_ref = Parameter("t_ref", _t_ref_default.mjd, frozen=True)
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
-    def evaluate(self, time, t0, t_ref):
-        return np.exp(-(time.mjd - t_ref) / t0.to_value("d"))
+    @staticmethod
+    def evaluate(time, t0, t_ref):
+        """Evaluate at given times"""
+        return np.exp(-(time - t_ref) / t0)
 
     def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+
+        Returns
+        -------
+        norm : float
+            Integrated flux norm on the given time intervals
+        """
         pars = self.parameters
         t0 = pars["t0"].quantity
-        t_ref = pars["t_ref"].quantity
-        val = self.evaluate(t_max, t0, t_ref) - self.evaluate(t_min, t0, t_ref)
-        integ = u.Quantity(-t0 * val)
-        return (integ / self.time_sum(t_min, t_max)).to_value("")
+        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        value = self.evaluate(t_max, t0, t_ref) - self.evaluate(t_min, t0, t_ref)
+        return -t0 * value / self.time_sum(t_min, t_max)
 
 
 class GaussianTemporalModel(TemporalModel):
-    """A Gaussian Temporal profile
+    """A Gaussian temporal profile
 
     Parameters
     ----------
-        t_ref: The reference time in mjd
-        sigma : `~astropy.units.Quantity`
+    t_ref: `~astropy.units.Quantity`
+        The reference time in mjd at the peak.
+    sigma : `~astropy.units.Quantity`
+        Width of the gaussian profile.
     """
 
     tag = "GaussianTemporalModel"
 
     _t_ref_default = Time("2000-01-01")
-    t_ref = Parameter("t_ref", _t_ref_default.mjd, frozen=False)
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
     sigma = Parameter("sigma", "1 d", frozen=False)
 
     @staticmethod
     def evaluate(time, t_ref, sigma):
-        return np.exp(-((time.mjd - t_ref) ** 2) / (2 * sigma.to_value("d") ** 2))
+        return np.exp(-((time - t_ref) ** 2) / (2 * sigma ** 2))
 
     def integral(self, t_min, t_max, **kwargs):
-        r"""Integrate Gaussian analytically.
+        """Evaluate the integrated flux within the given time intervals
 
         Parameters
         ----------
-        t_min, t_max : `~astropy.time`
-            Lower and upper bound of integration range
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+
+        Returns
+        -------
+        norm : float
+            Integrated flux norm on the given time intervals
         """
-
         pars = self.parameters
-        sigma = pars["sigma"].quantity.to_value("d")
+        sigma = pars["sigma"].quantity
+        t_ref = Time(pars["t_ref"].quantity, format="mjd")
         norm = np.sqrt(np.pi / 2) * sigma
-        u_min = (t_min.mjd - pars["t_ref"].quantity) / (np.sqrt(2) * sigma)
-        u_max = (t_max.mjd - pars["t_ref"].quantity) / (np.sqrt(2) * sigma)
 
-        integ = norm * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
-        return (integ / self.time_sum(t_min, t_max).to_value("d")).value
+        u_min = (t_min - t_ref) / (np.sqrt(2) * sigma)
+        u_max = (t_max - t_ref) / (np.sqrt(2) * sigma)
+
+        integral = norm * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
+        return integral / self.time_sum(t_min, t_max)
 
 
-class LightCurveTemplateTemporalModel(TemplateTemporalModel):
+class LightCurveTemplateTemporalModel(TemporalModel):
     """Temporal light curve model.
 
     The lightcurve is given as a table with columns ``time`` and ``norm``.
@@ -261,6 +269,24 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
             f"Norm max: {norm.max()}\n"
         )
 
+    @classmethod
+    def read(cls, path):
+        """Read lightcurve model table from FITS file.
+
+        TODO: This doesn't read the XML part of the model yet.
+        """
+        filename = str(make_path(path))
+        return cls(Table.read(filename), filename=filename)
+
+    def write(self, path=None, overwrite=False):
+        if path is None:
+            path = self.filename
+        if path is None:
+            raise ValueError(f"filename is required for {self.tag}")
+        else:
+            self.filename = str(make_path(path))
+            self.table.write(self.filename, overwrite=overwrite)
+
     @lazyproperty
     def _interpolator(self, ext=0):
         x = self._time.value
@@ -296,9 +322,8 @@ class LightCurveTemplateTemporalModel(TemplateTemporalModel):
         Returns
         -------
         norm : array_like
+            Norm at the given times.
         """
-        if isinstance(time, Time):
-            time = time.mjd
         return self._interpolator(time, ext=ext)
 
     def integral(self, t_min, t_max):

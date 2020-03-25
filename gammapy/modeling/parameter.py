@@ -4,8 +4,6 @@ import collections.abc
 import copy
 import itertools
 import numpy as np
-import scipy.linalg
-import scipy.stats
 from astropy import units as u
 from astropy.table import Table
 

@@ -38,7 +38,7 @@ def test_light_curve_evaluate(light_curve):
     assert_allclose(val, 0.015512, rtol=1e-5)
 
     t = Time(46300, format="mjd")
-    val = light_curve.evaluate(t, ext=3)
+    val = light_curve.evaluate(t.mjd, ext=3)
     assert_allclose(val, 0.01551196, rtol=1e-5)
 
 
@@ -147,7 +147,7 @@ def test_constant_temporal_model_integral():
 
 def test_exponential_temporal_model_evaluate():
     t = Time(46301, format="mjd")
-    t_ref = 46300
+    t_ref = 46300 * u.d
     t0 = 2.0 * u.d
     temporal_model = ExpDecayTemporalModel(t_ref=t_ref, t0=t0)
     val = temporal_model(t)
@@ -157,18 +157,18 @@ def test_exponential_temporal_model_evaluate():
 def test_exponential_temporal_model_integral():
     t_ref = Time(55555, format="mjd")
 
-    temporal_model = ExpDecayTemporalModel(t_ref=t_ref.mjd)
+    temporal_model = ExpDecayTemporalModel(t_ref=t_ref.mjd * u.d)
     start = [1, 3, 5] * u.day
     stop = [2, 3.5, 6] * u.day
     gti = GTI.create(start, stop, reference_time=t_ref)
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
-    assert_allclose(np.sum(val), 0.1024784, rtol=1e-5)
+    assert_allclose(np.sum(val), 0.102557, rtol=1e-5)
 
 
 def test_gaussian_temporal_model_evaluate():
     t = Time(46301, format="mjd")
-    t_ref = 46300
+    t_ref = 46300 * u.d
     sigma = 2.0 * u.d
     temporal_model = GaussianTemporalModel(t_ref=t_ref, sigma=sigma)
     val = temporal_model(t)
@@ -176,14 +176,14 @@ def test_gaussian_temporal_model_evaluate():
 
 
 def test_gaussian_temporal_model_integral():
-    temporal_model = GaussianTemporalModel(t_ref=50003, sigma="2.0 day")
+    temporal_model = GaussianTemporalModel(t_ref=50003 * u.d, sigma="2.0 day")
     start = [1, 3, 5] * u.day
     stop = [2, 3.5, 6] * u.day
     t_ref = Time(50000, format="mjd")
     gti = GTI.create(start, stop, reference_time=t_ref)
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
-    assert_allclose(np.sum(val), 0.682668, rtol=1e-5)
+    assert_allclose(np.sum(val), 0.682679, rtol=1e-5)
 
 
 @requires_data()
