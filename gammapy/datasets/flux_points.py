@@ -371,17 +371,18 @@ class FluxPointsDataset(Dataset):
         plot_kwargs.setdefault("zorder", 10)
         plot_kwargs.update(model_kwargs)
         plot_kwargs.setdefault("label", "Best fit model")
-        for _ in self.models:
-            _.spectral_model.plot(ax=ax, **plot_kwargs)
+
+        for model in self.models:
+            if model.datasets_names is None or self.name in model.datasets_names:
+                model.spectral_model.plot(ax=ax, **plot_kwargs)
 
         plot_kwargs.setdefault("color", ax.lines[-1].get_color())
         del plot_kwargs["label"]
 
-        if self.models.parameters.covariance is not None:
-            try:
-                self.models.plot_error(ax=ax, **plot_kwargs)
-            except AttributeError:
-                log.debug("Model does not support evaluation of errors")
+        for model in self.models:
+            if model.datasets_names is None or self.name in model.datasets_names:
+                if not np.all(model == 0):
+                    model.spectral_model.plot_error(ax=ax, **plot_kwargs)
 
         # format axes
         ax.set_xlim(self._e_range.to_value(self._e_unit))

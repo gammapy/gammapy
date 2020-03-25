@@ -185,7 +185,8 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         lon_err = semi_minor / scale_1sigma / np.cos(d["DEJ2000"])
 
         if model.tag != "TemplateSpatialModel":
-            model.parameters.set_error(lon_0=lon_err, lat_0=lat_err)
+            model.parameters["lon_0"].error = lon_err
+            model.parameters["lat_0"].error = lat_err
             model.phi_0 = phi_0
 
     def sky_model(self):
@@ -411,7 +412,10 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
         model = Model.create(tag, **pars)
-        model.parameters.set_error(**errs)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
         return model
 
     @property
@@ -673,7 +677,10 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
         model = Model.create(tag, **pars)
-        model.parameters.set_error(**errs)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
         return model
 
     def spatial_model(self):
@@ -900,7 +907,10 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         }
 
         model = Model.create(tag, **pars)
-        model.parameters.set_error(**errs)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
         return model
 
     @property
@@ -1070,7 +1080,10 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
         model = Model.create(tag, **pars)
-        model.parameters.set_error(**errs)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
         return model
 
     @property

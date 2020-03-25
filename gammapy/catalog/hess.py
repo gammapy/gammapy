@@ -78,7 +78,10 @@ class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
         }
         errs = {"lon_0": d["GLON_Err"], "lat_0": d["GLAT_Err"], "sigma": d["Size_Err"]}
         model = Model.create(tag, **pars)
-        model.parameters.set_error(**errs)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
         return model
 
 
@@ -463,7 +466,11 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             raise ValueError(f"Invalid spec_type: {spec_type}")
 
         model = Model.create(tag, **pars)
-        model.parameters.set_error(**errs)
+        errs["reference"] = 0 * u.TeV
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
         return model
 
     def spatial_model(self):
@@ -501,7 +508,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             raise ValueError(f"Invalid spatial_type: {spatial_type}")
 
         model = Model.create(tag, **pars)
-        model.parameters.set_error(**errs)
+        for name, value in errs.items():
+            model.parameters[name].error = value
         return model
 
     def sky_model(self, which="best"):

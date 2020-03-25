@@ -89,8 +89,10 @@ def simulate_map_dataset(random_state=0, name=None):
 
 @pytest.fixture(scope="session")
 def fpe_map_pwl():
-    dataset_1 = simulate_map_dataset()
-    dataset_2 = dataset_1.copy()
+    dataset_1 = simulate_map_dataset(name="test-map-pwl")
+    dataset_2 = dataset_1.copy(name="test-map-pwl-2")
+    dataset_2.models = dataset_1.models
+
     dataset_2.mask_safe = RegionNDMap.from_geom(dataset_2.counts.geom, dtype=bool)
 
     e_edges = [0.1, 1, 10, 100] * u.TeV

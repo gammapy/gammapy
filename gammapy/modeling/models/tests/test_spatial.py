@@ -18,7 +18,7 @@ from gammapy.modeling.models import (
     ShellSpatialModel,
     TemplateSpatialModel,
 )
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency, mpl_plot_check
 
 
 def test_sky_point_source():
@@ -268,3 +268,15 @@ def test_evaluate_fk5_model():
     )
     data = model.evaluate_geom(geom)
     assert data.sum() > 0
+
+
+@requires_dependency("matplotlib")
+def test_spatial_model_plot():
+    model = PointSpatialModel()
+    model.covariance = np.diag([0.01, 0.01])
+
+    with mpl_plot_check():
+        ax = model.plot()
+
+    with mpl_plot_check():
+        model.plot_error(ax=ax)

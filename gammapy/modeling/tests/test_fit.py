@@ -15,10 +15,11 @@ class MyModel(Model):
     y = Parameter("y", 3e2)
     z = Parameter("z", 4e-2)
     name = "test"
+    datasets_names = ["test"]
 
 
 class MyDataset(Dataset):
-    def __init__(self, name=""):
+    def __init__(self, name="test"):
         self.name = name
         self.models = Models([MyModel()])
         self.data_shape = (1,)
@@ -56,13 +57,14 @@ def test_run(backend):
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
     assert_allclose(pars["z"].value, 4e-2, rtol=1e-3)
 
-    assert_allclose(pars.error("x"), 1, rtol=1e-7)
-    assert_allclose(pars.error("y"), 1, rtol=1e-7)
-    assert_allclose(pars.error("z"), 1, rtol=1e-7)
+    assert_allclose(pars["x"].error, 1, rtol=1e-7)
+    assert_allclose(pars["y"].error, 1, rtol=1e-7)
+    assert_allclose(pars["z"].error, 1, rtol=1e-7)
 
-    assert_allclose(pars.correlation[0, 1], 0, atol=1e-7)
-    assert_allclose(pars.correlation[0, 2], 0, atol=1e-7)
-    assert_allclose(pars.correlation[1, 2], 0, atol=1e-7)
+    correlation = dataset.models.covariance.correlation
+    assert_allclose(correlation[0, 1], 0, atol=1e-7)
+    assert_allclose(correlation[0, 2], 0, atol=1e-7)
+    assert_allclose(correlation[1, 2], 0, atol=1e-7)
 
 
 @requires_dependency("sherpa")

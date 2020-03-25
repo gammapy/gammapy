@@ -68,9 +68,9 @@ def _confidence_scipy_brentq(
     if np.isnan(bound):
         bound = parameter.factor
         if upper:
-            bound += 1e2 * parameters.error(parameter) / parameter.scale
+            bound += 1e2 * parameter.error / parameter.scale
         else:
-            bound -= 1e2 * parameters.error(parameter) / parameter.scale
+            bound -= 1e2 * parameter.error / parameter.scale
 
     kwargs.setdefault("b", bound)
 

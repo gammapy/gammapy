@@ -3,8 +3,9 @@ import collections.abc
 import copy
 from pathlib import Path
 import astropy.units as u
+import numpy as np
 import yaml
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter, Parameters, Covariance
 from gammapy.utils.scripts import make_path, make_name
 
 
@@ -48,6 +49,8 @@ class Model:
 
             self._parameters[name].quantity = u.Quantity(value)
 
+        self._covariance = Covariance(self.parameters)
+
     def __init_subclass__(cls, **kwargs):
         # Add parameters list on the model sub-class (not instances)
         cls.default_parameters = Parameters(
@@ -68,8 +71,27 @@ class Model:
             setattr(self, parameter.name, parameter)
 
     @property
+    def covariance(self):
+        for par in self._parameters:
+            pars = Parameters([par])
+            covar = Covariance(pars, data=[[par.error ** 2]])
+            self._covariance.set_subcovariance(covar)
+
+        return self._covariance
+
+    @covariance.setter
+    def covariance(self, covariance):
+        self._covariance.data = covariance
+
+        for par in self.parameters:
+            pars = Parameters([par])
+            variance = self._covariance.get_subcovariance(pars)
+            par.error = np.sqrt(variance)
+
+    @property
     def parameters(self):
         """Parameters (`~gammapy.modeling.Parameters`)"""
+        # trigger recursive update
         return self._parameters
 
     def copy(self):
@@ -104,7 +126,7 @@ class Model:
 
         Examples
         --------
-        >>> from gammapy.modeling import Model
+        >>> from gammapy.modeling.models import Model
         >>> spectral_model = Model.create("PowerLaw2SpectralModel", amplitude="1e-10 cm-2 s-1", index=3)
         >>> type(spectral_model)
         gammapy.modeling.models.spectral.PowerLaw2SpectralModel
@@ -147,6 +169,33 @@ class Models(collections.abc.MutableSequence):
             unique_names.append(model.name)
 
         self._models = models
+        self._covariance = Covariance(self.parameters)
+
+    def _check_covariance(self):
+        if not self.parameters == self._covariance.parameters:
+            self._covariance = Covariance.from_stack(
+                [model.covariance for model in self._models]
+            )
+
+    @property
+    def covariance(self):
+        self._check_covariance()
+
+        for model in self._models:
+            self._covariance.set_subcovariance(model.covariance)
+
+        return self._covariance
+
+    @covariance.setter
+    def covariance(self, covariance):
+        self._check_covariance()
+        self._covariance.data = covariance
+
+        for model in self._models:
+            subcovar = self._covariance.get_subcovariance(
+                model.covariance.parameters
+            )
+            model.covariance = subcovar
 
     @property
     def parameters(self):
@@ -256,8 +305,6 @@ class Models(collections.abc.MutableSequence):
         from gammapy.modeling.models import SkyModel, SkyDiffuseCube
 
         if isinstance(model, (SkyModel, SkyDiffuseCube)):
-            if model.name in self.names:
-                raise (ValueError("Model names must be unique"))
             self._models[self.index(key)] = model
         else:
             raise TypeError(f"Invalid type: {model!r}")
@@ -265,6 +312,7 @@ class Models(collections.abc.MutableSequence):
     def insert(self, idx, model):
         if model.name in self.names:
             raise (ValueError("Model names must be unique"))
+
         self._models.insert(idx, model)
 
     def index(self, key):
@@ -282,3 +330,7 @@ class Models(collections.abc.MutableSequence):
 
     def _ipython_key_completions_(self):
         return self.names
+
+    def copy(self):
+        """A deep copy."""
+        return copy.deepcopy(self)
