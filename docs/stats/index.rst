@@ -149,6 +149,9 @@ the Cash statistic and obtain the Li & Ma significance for known background:
     >>> stat.significance
     2.4508934155585176
 
+.. plot:: stats/plot_cash_significance.py
+    :include-source:
+
 Excess errors
 ^^^^^^^^^^^^^
 
