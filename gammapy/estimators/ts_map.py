@@ -194,23 +194,12 @@ class TSMapEstimator:
         """
         self._center_model(self.dataset._geom.center_skydir)
 
-        evaluator = MapEvaluator(self.model, exposure=self.dataset.exposure, evaluation_mode="local")
+        # We use global evaluation mode because we want to perform the cutout outside MapEvaluator
+        # to ensure an odd number of bins
+        evaluator = MapEvaluator(self.model, evaluation_mode="global")
         evaluator.update(self.dataset.exposure, self.dataset.psf, self.dataset.edisp, self.dataset.counts.geom)
 
         npred = evaluator.compute_npred().sum_over_axes()
-
-        # if isinstance(self.dataset.psf, PSFKernel):
-        #     psf_kernel = self.dataset.psf
-        # elif isinstance(self.dataset.psf, PSFMap):
-        #     position = self.dataset._geom.center_skydir
-        #     psf_kernel = self.dataset.psf.get_psf_kernel(position, self.dataset.exposure.geom)
-        # else:
-        #     log.warning("TSMapEstimator: No PSF found on input MapDataset.")
-        #     psf_kernel = None
-        #
-        # flux = self.model.integrate(self._dataset.counts.geom)
-        # if psf_kernel is not None:
-        #     flux = flux.convolve(psf_kernel)
 
         # define cutout size to ensure odd number of pixels
 #        nbins = np.ceil(self.kernel_size / np.abs(self.dataset._geom.pixel_scales[0])) // 2 * 2 + 1
