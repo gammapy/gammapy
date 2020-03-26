@@ -41,8 +41,9 @@ jobs:
 
   - task: Cache@2
     inputs:
-      key: 'gammapy_data'
+      key: gammapy_data | $(Build.SourceVersion)
       restoreKeys: |
+         gammapy_data | $(Build.SourceVersion)
          gammapy_data
       path: $(GAMMAPY_DATA)
     displayName: Cache GAMMAPY_DATA
@@ -85,8 +86,9 @@ jobs:
 
   - task: Cache@2
     inputs:
-      key: 'gammapy_data'
+      key: gammapy_data | $(Build.SourceVersion)
       restoreKeys: |
+         gammapy_data | $(Build.SourceVersion)
          gammapy_data
       path: $(GAMMAPY_DATA)
     displayName: Cache GAMMAPY_DATA
@@ -162,8 +164,9 @@ jobs:
 
   - task: Cache@2
     inputs:
-      key: 'gammapy_data'
+      key: gammapy_data | $(Build.SourceVersion)
       restoreKeys: |
+         gammapy_data | $(Build.SourceVersion)
          gammapy_data
       path: $(GAMMAPY_DATA)
     displayName: Cache GAMMAPY_DATA
