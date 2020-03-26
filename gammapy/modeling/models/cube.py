@@ -692,14 +692,17 @@ class BackgroundModel(Model):
             )
             bkg_map = Map.from_geom(geom)
 
-        model = cls(
+        parameters = Parameters.from_dict(data["parameters"])
+
+        return cls(
             map=bkg_map,
             name=data["name"],
             datasets_names=data.get("datasets_names"),
             filename=data.get("filename"),
+            norm=parameters["norm"],
+            tilt=parameters["tilt"],
+            reference=parameters["reference"]
         )
-        model._update_from_dict(data)
-        return model
 
     def copy(self, name=None):
         """A deep copy."""

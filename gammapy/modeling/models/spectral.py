@@ -1245,8 +1245,6 @@ class AbsorbedSpectralModel(SpectralModel):
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
         alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
         parameters = Parameters([par, alpha_norm])
-        self._covariance = Covariance(parameters)
-
         super()._init_from_parameters(parameters)
 
     def _check_covariance(self):
@@ -1380,7 +1378,6 @@ class NaimaSpectralModel(SpectralModel):
             parameters.append(Parameter("radius", radius, frozen=True))
 
         super()._init_from_parameters(parameters)
-        self._covariance = Covariance(parameters)
 
     def _evaluate_ssc(
         self, energy,

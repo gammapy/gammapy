@@ -61,6 +61,24 @@ class Model:
             [_ for _ in cls.__dict__.values() if isinstance(_, Parameter)]
         )
 
+    @classmethod
+    def from_parameters(cls, parameters, **kwargs):
+        """Create model from parameter list
+
+        Parameters
+        ----------
+        parameters : `Parameters`
+            Parameters for init
+
+        Returns
+        -------
+        model : `Model`
+            Model instance
+        """
+        for par in parameters:
+            kwargs[par.name] = par
+        return cls(**kwargs)
+
     def _init_from_parameters(self, parameters):
         """Create model from list of parameters.
 
@@ -73,6 +91,9 @@ class Model:
         self._parameters = parameters
         for parameter in parameters:
             setattr(self, parameter.name, parameter)
+
+        self._covariance = Covariance(parameters)
+
 
     @property
     def covariance(self):
