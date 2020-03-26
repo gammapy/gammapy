@@ -18,7 +18,7 @@ stat_values = count_statistic._stat_fcn(mu_signal)
 
 xmin, xmax = -1.5, 25
 ymin, ymax = -42, -28.0
-plt.figure(figsize=(7, 7))
+plt.figure(figsize=(5, 5))
 plt.plot(mu_signal, stat_values, color="k")
 plt.xlim(xmin, xmax)
 plt.ylim(ymin, ymax)
