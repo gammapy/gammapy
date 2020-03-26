@@ -39,6 +39,14 @@ jobs:
       python -m gammapy info
     displayName: 'Install Gammapy'
 
+  - task: Cache@2
+    inputs:
+      key: 'gammapy_data'
+      restoreKeys: |
+         gammapy_data
+      path: $(GAMMAPY_DATA)
+    displayName: Cache GAMMAPY_DATA
+
   - script: |
       gammapy download datasets --out=$(GAMMAPY_DATA) --silent --tests
     displayName: 'Get GAMMAPY_DATA'
@@ -74,6 +82,14 @@ jobs:
       pip install -e .
       python -m gammapy info
     displayName: 'Install Gammapy'
+
+  - task: Cache@2
+    inputs:
+      key: 'gammapy_data'
+      restoreKeys: |
+         gammapy_data
+      path: $(GAMMAPY_DATA)
+    displayName: Cache GAMMAPY_DATA
 
   - script: |
       gammapy download datasets --out=$(GAMMAPY_DATA) --silent --tests
@@ -143,6 +159,14 @@ jobs:
       pip install -e .
       gammapy info
     displayName: 'Create gammapy-dev conda environment'
+
+  - task: Cache@2
+    inputs:
+      key: 'gammapy_data'
+      restoreKeys: |
+         gammapy_data
+      path: $(GAMMAPY_DATA)
+    displayName: Cache GAMMAPY_DATA
 
   - script: |
       source activate gammapy-dev
