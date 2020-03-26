@@ -18,47 +18,7 @@ It is mostly concerned with the evaluation of one or several observations that
 count events in a given region and time window, i.e. with Poisson-distributed
 counts measurements.
 
-For on-off methods we will use the following variable names following the
-notation in [Cousins2007]_:
-
-================= ====================== ====================================================
-Variable          Dataset attribute name Definition
-================= ====================== ====================================================
-``n_on``          ``counts``             Total observed counts in the on region
-``n_off``         ``counts_off``         Total observed counts in the off region
-``mu_on``         ``npred``              Total expected counts in the on region
-``mu_off``        ``npred_off``          Total expected counts in the off region
-``mu_sig``        ``npred_sig``          Signal expected counts in the on region
-``mu_bkg``        ``npred_bkg``          Background expected counts in the on region
-``a_on``          ``acceptance``         Relative background exposure in the on region
-``a_off``         ``acceptance_off``     Relative background exposure in the off region
-``alpha``         ``alpha``              Background efficiency ratio ``a_on`` / ``a_off``
-``n_bkg``         ``background``         Background estimate in the on region
-================= ====================== ====================================================
-
-The following formulae show how an on-off measurement :math:`(n_{on}, n_{off})`
-is related to the quantities in the above table:
-
-.. math::
-    n_{on} \sim Pois(\mu_{on})\text{ with }\mu_{on} = \mu_s + \mu_b
-    n_{off} \sim Pois(\mu_{off})\text{ with }\mu_{off} = \mu_b / \alpha\text{ with }\alpha = a_{on} / a_{off}
-
-With the background estimate in the on region
-
-.. math::
-   n_{bkg} = \alpha\ n_{off},
-
-the maximum likelihood estimate of a signal excess is
-
-.. math::
-    n_{excess} = n_{on} - n_{bkg}.
-
-When the background is known and there is only an "on" region (sometimes also
-called "source region"), we use the variable names ``n_on``, ``mu_on``,
-``mu_sig`` and ``mu_bkg``.
-
-These are references describing the available methods: [LiMa1983]_, [Cash1979]_,
-[Stewart2009]_, [Rolke2005]_, [Feldman1998]_, [Cousins2007]_.
+In the presentation below we use notations summarized in the table below :ref:`stats_notation` .
 
 Getting Started
 ===============
@@ -125,7 +85,6 @@ you suspect a source might be present and :math:`n_{off} = 97` counts in a
 background control region where you assume no source is present and that is
 :math:`a_{off}/a_{on}=10` times larger than the on-region.
 
-
 Here's how you compute the statistical significance of your detection:
 
 .. code-block:: python
@@ -158,17 +117,27 @@ Excess errors
 
 You can also compute the confidence interval for the true excess based on the statistic value:
 
-If you are interested in 68% (1 :math:`\sigma`) confidence errors:
+If you are interested in 68% (1 :math:`\sigma`) and 95% (1 :math:`\sigma`) confidence errors:
 
 .. code-block:: python
 
     >>> from gammapy.stats import CashCountsStatistic
-    >>> stat = CashCountsStatistic(n_on=18, mu_bkg=9.5)
-    >>> stat.compute_errn()
+    >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
+    >>> stat.compute_errn(1.)
     -3.91606323
-    >>> stat.compute_errp()
+    >>> stat.compute_errp(1.)
+    4.5823187389960225
+    >>> stat.compute_errn(2.)
+    -3.91606323
+    >>> stat.compute_errp(2.)
     4.5823187389960225
 
+The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
+variation is 1. The 95% confidence interval (2 :math:`\sigma`) is obtained by finding the expected signal values
+for which the TS variation is :math:`2^2 = 4`.
+
+On the following plot, we show how the 1 :math:`\sigma` and 2 :math:`\sigma` confidence errors
+relate to the fit statistic profile.
 .. plot:: stats/plot_cash_errors.py
 
 
@@ -176,15 +145,53 @@ Note that confidence intervals can be computed in a more robust manner following
 See :ref:`feldman_cousins`.
 
 
+.. _stats_notation:
+
+Notations
+---------
+
+For on-off methods we use the following variable names following the
+notation in [Cousins2007]_:
+
+================= ====================== ====================================================
+Variable          Dataset attribute name Definition
+================= ====================== ====================================================
+``n_on``          ``counts``             Total observed counts in the on region
+``n_off``         ``counts_off``         Total observed counts in the off region
+``mu_on``         ``npred``              Total expected counts in the on region
+``mu_off``        ``npred_off``          Total expected counts in the off region
+``mu_sig``        ``npred_sig``          Signal expected counts in the on region
+``mu_bkg``        ``npred_bkg``          Background expected counts in the on region
+``a_on``          ``acceptance``         Relative background exposure in the on region
+``a_off``         ``acceptance_off``     Relative background exposure in the off region
+``alpha``         ``alpha``              Background efficiency ratio ``a_on`` / ``a_off``
+``n_bkg``         ``background``         Background estimate in the on region
+================= ====================== ====================================================
+
+The ON measurement, assumed to contain signal and background counts, :math:`n_{on}` follows
+a Poisson random variable with expected value
+:math:`\mu_{on} = \mu_{sig} + \mu_{bkg}`.
+
+The OFF measurement is assumed to contain only background counts, with an acceptance to background
+:math:`a_{off}`. This OFF measurement can be used to etimate the number of background counts in the
+ON measurement: :math:`n_{bkg} = \alpha\ n_{off}` with :math:`\alpha = a_{on}/a_{off}` the ratio of
+ON and OFF acceptances.
+
+Therefore :math:`n_{off}` follows a Poisson distribution  with expected value
+:math:\mu_{off} = \mu_{bkg) / \alpha
+
+These are references describing the available methods: [LiMa1983]_, [Cash1979]_,
+[Stewart2009]_, [Rolke2005]_, [Feldman1998]_, [Cousins2007]_.
+
 Using `gammapy.stats`
 =====================
 
 .. toctree::
     :maxdepth: 1
 
-    feldman_cousins
     fit_statistics
     wstat_derivation
+    feldman_cousins
 
 Reference/API
 =============
