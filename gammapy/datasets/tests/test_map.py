@@ -514,17 +514,24 @@ def test_stack(geom, geom_etrue):
     assert_allclose(dataset1.mask_safe.data.sum(), 20000)
 
 
+def to_cube(image):
+    # introduce a fake enery axis for now
+    axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy")
+    geom = image.geom.to_cube([axis])
+    return WcsNDMap.from_geom(geom=geom, data=image.data)
+
+
 @pytest.fixture
 def images():
     """Load some `counts`, `counts_off`, `acceptance_on`, `acceptance_off" images"""
     filename = "$GAMMAPY_DATA/tests/unbundled/hess/survey/hess_survey_snippet.fits.gz"
     return {
-        "counts": WcsNDMap.read(filename, hdu="ON"),
-        "counts_off": WcsNDMap.read(filename, hdu="OFF"),
-        "acceptance": WcsNDMap.read(filename, hdu="ONEXPOSURE"),
-        "acceptance_off": WcsNDMap.read(filename, hdu="OFFEXPOSURE"),
-        "exposure": WcsNDMap.read(filename, hdu="EXPGAMMAMAP"),
-        "background": WcsNDMap.read(filename, hdu="BACKGROUND"),
+        "counts": to_cube(WcsNDMap.read(filename, hdu="ON")),
+        "counts_off": to_cube(WcsNDMap.read(filename, hdu="OFF")),
+        "acceptance": to_cube(WcsNDMap.read(filename, hdu="ONEXPOSURE")),
+        "acceptance_off": to_cube(WcsNDMap.read(filename, hdu="OFFEXPOSURE")),
+        "exposure": to_cube(WcsNDMap.read(filename, hdu="EXPGAMMAMAP")),
+        "background": to_cube(WcsNDMap.read(filename, hdu="BACKGROUND")),
     }
 
 
@@ -546,7 +553,7 @@ def get_map_dataset_onoff(images, **kwargs):
 
 
 @requires_data()
-def test_map_dataset_onoff_fits_io(images, tmp_path):
+def test_map_dataset_on_off_fits_io(images, tmp_path):
     dataset = get_map_dataset_onoff(images)
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
     dataset.gti = gti
@@ -557,12 +564,18 @@ def test_map_dataset_onoff_fits_io(images, tmp_path):
     desired = [
         "PRIMARY",
         "COUNTS",
+        "COUNTS_BANDS",
         "EXPOSURE",
+        "EXPOSURE_BANDS",
         "MASK_SAFE",
+        "MASK_SAFE_BANDS",
         "GTI",
         "COUNTS_OFF",
+        "COUNTS_OFF_BANDS",
         "ACCEPTANCE",
+        "ACCEPTANCE_BANDS",
         "ACCEPTANCE_OFF",
+        "ACCEPTANCE_OFF_BANDS",
     ]
 
     assert actual == desired
@@ -629,7 +642,7 @@ def test_stack_onoff(images, geom_image):
     assert_allclose(stacked.counts.data.sum(), 2 * dataset.counts.data.sum())
     assert_allclose(stacked.counts_off.data.sum(), 2 * dataset.counts_off.data.sum())
     assert_allclose(
-        stacked.acceptance.data.sum(), dataset.data_shape[0] * dataset.data_shape[1]
+        stacked.acceptance.data.sum(), dataset.data_shape[1] * dataset.data_shape[2]
     )
     assert_allclose(
         np.nansum(stacked.acceptance_off.data),
@@ -677,7 +690,7 @@ def test_datasets_io_no_model(tmpdir):
 
 
 @requires_data()
-def test_mapdatasetonoff_to_spectrum_dataset(images):
+def test_map_dataset_on_off_to_spectrum_dataset(images):
     e_reco = MapAxis.from_bounds(0.1, 10.0, 1, name="energy", unit=u.TeV, interp="log")
     new_images = dict()
     for key, image in images.items():
@@ -708,7 +721,7 @@ def test_mapdatasetonoff_to_spectrum_dataset(images):
 
 
 @requires_data()
-def test_mapdatasetonoff_cutout(images):
+def test_map_dataset_on_off_cutout(images):
     dataset = get_map_dataset_onoff(images)
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
     dataset.gti = gti
@@ -717,16 +730,16 @@ def test_mapdatasetonoff_cutout(images):
         images["counts"].geom.center_skydir, ["1 deg", "1 deg"]
     )
 
-    assert cutout_dataset.counts.data.shape == (50, 50)
-    assert cutout_dataset.counts_off.data.shape == (50, 50)
-    assert cutout_dataset.acceptance.data.shape == (50, 50)
-    assert cutout_dataset.acceptance_off.data.shape == (50, 50)
+    assert cutout_dataset.counts.data.shape == (1, 50, 50)
+    assert cutout_dataset.counts_off.data.shape == (1, 50, 50)
+    assert cutout_dataset.acceptance.data.shape == (1, 50, 50)
+    assert cutout_dataset.acceptance_off.data.shape == (1, 50, 50)
     assert cutout_dataset.background_model is None
     assert cutout_dataset.name != dataset.name
 
 
 @requires_data()
-def test_mapdatasetonoff_to_image():
+def test_map_dataset_on_off_to_image():
     axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV")
     geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
 
@@ -812,3 +825,21 @@ def test_names(geom, geom_etrue, sky_model):
     assert dataset1.background_model is not dataset2.background_model
     assert dataset1.models.names == dataset2.models.names
     assert dataset1.models is not dataset2.models
+
+
+def test_stack_dataset_dataset_on_off():
+    axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy")
+    geom = WcsGeom.create(width=1, axes=[axis])
+
+    gti = GTI.create([0 * u.s], [1 * u.h])
+
+    dataset = MapDataset.create(geom, gti=gti)
+    dataset_on_off = MapDatasetOnOff.create(geom, gti=gti)
+    dataset_on_off.mask_safe.data += True
+
+    dataset_on_off.acceptance_off += 5
+    dataset_on_off.acceptance += 1
+    dataset_on_off.counts_off += 1
+    dataset.stack(dataset_on_off)
+
+    assert_allclose(dataset.background_model.map.data, 0.2)

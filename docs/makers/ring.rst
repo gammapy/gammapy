@@ -21,29 +21,35 @@ A given `MapDataset` has to be reduced to a single image by calling
 
 .. code-block:: python
 
-    from gammapy.cube import MapDatasetMaker, MapDataset, RingBackgroundMaker, SafeMaskMaker
-    from gammapy.data import DataStore
-    from gammapy.maps import MapAxis, WcsGeom
+	from gammapy.makers import MapDatasetMaker, RingBackgroundMaker, SafeMaskMaker
+	from gammapy.datasets import MapDataset
+	from gammapy.data import DataStore
+	from gammapy.maps import MapAxis, WcsGeom, Map
+	from regions import CircleSkyRegion
+	from astropy import units as u
 
-    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
-    observations = data_store.get_observations([23592, 23559])
+	data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+	observations = data_store.get_observations([23592, 23559])
 
-    energy_axis = MapAxis.from_bounds(
-        0.3, 30, nbin=11, name="energy", unit="TeV", interp="log"
-    )
-    geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=8, binsz=0.02)
+	energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+	energy_axis_true = MapAxis.from_energy_bounds("0.3 TeV", "30 TeV", nbin=20, per_decade=True, name="energy_true")
 
-    stacked = MapDataset.create(geom)
-    stacked_on_off = MapDataset.create(geom.squash(axis="energy"))
+	geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5, binsz=0.02)
 
-    maker = MapDatasetMaker(offset_max="3 deg")
-    safe_mask_maker = SafeMaskMaker(
-        methods=["aeff-default", "offset-max"], offset_max="3 deg"
-    )
-    ring_bkg_maker = RingBackgroundMaker(r_in="0.3 deg", width="0.3 deg")
+	stacked = MapDataset.create(geom, energy_axis_true=energy_axis_true)
 
-    for obs in observations:
-        dataset = maker.run(stacked, obs)
-        dataset = safe_mask_maker.run(dataset, obs)
-        dataset_on_off = ring_bkg_maker.run(dataset.to_image())
-        stacked_on_off.stack(dataset_on_off)
+	maker = MapDatasetMaker()
+	safe_mask_maker = SafeMaskMaker(
+		methods=["aeff-default", "offset-max"], offset_max="2.5 deg"
+	)
+
+	circle = CircleSkyRegion(center=geom.center_skydir, radius=0.2 * u.deg)
+	exclusion_mask = Map.from_geom(geom, data=geom.region_mask([circle], inside=False))
+
+	ring_bkg_maker = RingBackgroundMaker(r_in="0.3 deg", width="0.3 deg", exclusion_mask=exclusion_mask)
+
+	for obs in observations:
+		dataset = maker.run(stacked, obs)
+		dataset = safe_mask_maker.run(dataset, obs)
+		dataset_on_off = ring_bkg_maker.run(dataset)
+		stacked.stack(dataset_on_off)
