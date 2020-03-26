@@ -234,7 +234,7 @@ class Parameter:
             "frozen": self.frozen,
             "error": self.error
         }
-        
+
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
         return output
@@ -290,17 +290,6 @@ class Parameters(collections.abc.Sequence):
             parameters = list(parameters)
 
         self._parameters = parameters
-
-    @classmethod
-    def from_values(cls, values=None):
-        """Create `Parameters` from values.
-
-        TODO: document.
-        """
-        parameters = [
-            Parameter(f"par_{idx}", value) for idx, value in enumerate(values)
-        ]
-        return cls(parameters)
 
     @property
     def values(self):

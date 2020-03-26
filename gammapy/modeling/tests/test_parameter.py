@@ -119,12 +119,6 @@ def test_parameters_from_stack():
     pars = Parameters([a, b]) + Parameters([]) + Parameters([c])
     assert pars.names == ["a", "b", "c"]
 
-    pars1 = Parameters.from_values([1, 2])
-    pars2 = Parameters.from_values([3, 4, 5])
-    pars = pars1 + pars2
-
-    assert_allclose(pars.values, [1, 2, 3, 4, 5])
-
 
 def test_unique_parameters():
     a = Parameter("a", 1)
