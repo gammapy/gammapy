@@ -89,7 +89,6 @@ jobs:
       key: gammapy_data | $(Build.SourceVersion)
       restoreKeys: |
          gammapy_data | $(Build.SourceVersion)
-         gammapy_data
       path: $(GAMMAPY_DATA)
     displayName: Cache GAMMAPY_DATA
 
