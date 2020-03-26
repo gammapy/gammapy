@@ -5,7 +5,7 @@ import copy
 import itertools
 import numpy as np
 from astropy import units as u
-from astropy.table import Table
+from gammapy.utils.table import table_from_row_data
 
 __all__ = ["Parameter", "Parameters"]
 
@@ -232,7 +232,9 @@ class Parameter:
             "min": self.min,
             "max": self.max,
             "frozen": self.frozen,
+            "error": self.error
         }
+        
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
         return output
@@ -392,19 +394,13 @@ class Parameters(collections.abc.Sequence):
 
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
-        t = Table()
-        t["name"] = [p.name for p in self._parameters]
-        t["value"] = [p.value for p in self._parameters]
-        t["error"] = [p.error for p in self._parameters]
-        t["unit"] = [p.unit.to_string("fits") for p in self._parameters]
-        t["min"] = [p.min for p in self._parameters]
-        t["max"] = [p.max for p in self._parameters]
-        t["frozen"] = [p.frozen for p in self._parameters]
+        rows = [p.to_dict() for p in self._parameters]
+        table = table_from_row_data(rows)
 
         for name in ["value", "error", "min", "max"]:
-            t[name].format = ".3e"
+            table[name].format = ".3e"
 
-        return t
+        return table
 
     def __eq__(self, other):
         all_equal = np.all([p is p_new for p, p_new in zip(self, other)])
@@ -414,14 +410,7 @@ class Parameters(collections.abc.Sequence):
     def from_dict(cls, data):
         parameters = []
         for par in data["parameters"]:
-            parameter = Parameter(
-                name=par["name"],
-                factor=float(par["value"]),
-                unit=par.get("unit", ""),
-                min=float(par.get("min", np.nan)),
-                max=float(par.get("max", np.nan)),
-                frozen=par.get("frozen", False),
-            )
+            parameter = Parameter(**par)
             parameters.append(parameter)
         return cls(parameters=parameters)
 
