@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import Background2D, Background3D
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, mpl_plot_check, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -219,3 +219,15 @@ def test_background_2d_integrate(bkg_2d):
     )
     assert rate.shape == (1, 2)
     assert_allclose(rate.value, [[0, 198]])
+
+
+@requires_dependency("matplotlib")
+def test_plot(bkg_2d):
+    with mpl_plot_check():
+        bkg_2d.plot()
+
+    with mpl_plot_check():
+        bkg_2d.plot_energy_dependence()
+
+    with mpl_plot_check():
+        bkg_2d.plot_offset_dependence()
