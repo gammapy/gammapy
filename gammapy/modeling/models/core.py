@@ -31,6 +31,7 @@ class Model:
     def __init__(self, **kwargs):
         # Copy default parameters from the class to the instance
         self._parameters = self.__class__.default_parameters.copy()
+
         for parameter in self._parameters:
             if parameter.name in self.__dict__:
                 raise ValueError(
@@ -100,15 +101,11 @@ class Model:
 
     def to_dict(self):
         """Create dict for YAML serialisation"""
-        return {"type": self.tag, "parameters": self.parameters.to_dict()["parameters"]}
+        return {"type": self.tag, "parameters": self.parameters.to_dict()}
 
     @classmethod
     def from_dict(cls, data):
         params = {x["name"]: x["value"] * u.Unit(x["unit"]) for x in data["parameters"]}
-
-        # TODO: this is a special case for spatial models, maybe better move to `SpatialModel` base class
-        if "frame" in data:
-            params["frame"] = data["frame"]
 
         model = cls(**params)
         model._update_from_dict(data)
@@ -116,7 +113,7 @@ class Model:
 
     # TODO: try to get rid of this
     def _update_from_dict(self, data):
-        self._parameters.update_from_dict(data)
+        self._parameters.update_from_dict(data["parameters"])
         for parameter in self.parameters:
             setattr(self, parameter.name, parameter)
 

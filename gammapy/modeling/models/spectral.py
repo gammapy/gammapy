@@ -990,7 +990,7 @@ class TemplateSpectralModel(SpectralModel):
     def to_dict(self):
         return {
             "type": self.tag,
-            "parameters": self.parameters.to_dict()["parameters"],
+            "parameters": self.parameters.to_dict(),
             "energy": {
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
@@ -1296,7 +1296,7 @@ class AbsorbedSpectralModel(SpectralModel):
                 "name": self.parameter_name,
                 "value": self.parameter,
             },
-            "parameters": self._parameters.to_dict()["parameters"],
+            "parameters": self._parameters.to_dict(),
         }
 
     @classmethod

@@ -383,9 +383,11 @@ class Parameters(collections.abc.Sequence):
             raise TypeError(f"Invalid type: {other!r}")
 
     def to_dict(self):
-        data = dict(parameters=[])
+        data = []
+
         for par in self._parameters:
-            data["parameters"].append(par.to_dict())
+            data.append(par.to_dict())
+
         return data
 
     def to_table(self):
@@ -424,7 +426,7 @@ class Parameters(collections.abc.Sequence):
         return cls(parameters=parameters)
 
     def update_from_dict(self, data):
-        for par in data["parameters"]:
+        for par in data:
             parameter = self[par["name"]]
             parameter.value = float(par["value"])
             parameter.unit = u.Unit(par.get("unit", parameter.unit))
