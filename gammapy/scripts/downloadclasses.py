@@ -253,10 +253,9 @@ class ParallelDownload:
             if retrieve:
                 dl.enqueue_file(url, path=str(path.parent))
                 if not parallel:
-                    import requests
+                    import urllib.request
                     Path.mkdir(path.parent, parents=True, exist_ok=True)
-                    file = requests.get(url)
-                    open(str(path), 'wb').write(file.content)
+                    urllib.request.urlretrieve(url, str(path))
                     log.info(f"Downloading {str(path)}")
 
         if parallel:
