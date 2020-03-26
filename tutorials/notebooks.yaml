@@ -69,7 +69,7 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/modeling.ipynb
   requires: sherpa
 - name: modeling_2D
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/modelin_2D.ipynb
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/modeling_2D.ipynb
   datasets:
     - cta-1dc
 - name: models
