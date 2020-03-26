@@ -4,12 +4,14 @@ import hashlib
 import json
 import logging
 import sys
+from datetime import datetime
 from pathlib import Path
-from urllib.request import urlopen
+from urllib.request import urlopen, urlretrieve
 import yaml
 from gammapy import __version__
 
 log = logging.getLogger(__name__)
+
 
 BASE_URL = "https://gammapy.org/download"
 BASE_URL_DEV = "https://raw.githubusercontent.com/gammapy/gammapy/master/"
@@ -253,10 +255,9 @@ class ParallelDownload:
             if retrieve:
                 dl.enqueue_file(url, path=str(path.parent))
                 if not parallel:
-                    import urllib.request
                     Path.mkdir(path.parent, parents=True, exist_ok=True)
-                    urllib.request.urlretrieve(url, str(path))
-                    log.info(f"Downloading {str(path)}")
+                    urlretrieve(url, str(path))
+                    log.info(f"{datetime.now()} - Downloading {str(path)}")
 
         if parallel:
             log.info(f"{dl.queued_downloads} files to download.")
