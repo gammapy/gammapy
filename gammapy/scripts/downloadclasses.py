@@ -7,6 +7,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from urllib.request import urlopen, urlretrieve
+import time
 import yaml
 from gammapy import __version__
 
@@ -258,6 +259,7 @@ class ParallelDownload:
                     Path.mkdir(path.parent, parents=True, exist_ok=True)
                     urlretrieve(url, str(path))
                     log.info(f"{datetime.now()} - Downloading {str(path)}")
+                    time.sleep(0.5)
 
         if parallel:
             log.info(f"{dl.queued_downloads} files to download.")
