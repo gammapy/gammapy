@@ -237,7 +237,7 @@ class ParallelDownload:
         if self.listfiles:
             log.info(f"Content will be downloaded in {self.outfolder}")
 
-        dl = Downloader(progress=self.progress, file_progress=False)
+        dl = Downloader(max_conn=1, progress=self.progress, file_progress=False)
         for rec in self.listfiles:
             url = self.listfiles[rec]["url"]
             path = self.outfolder / self.listfiles[rec]["path"]
