@@ -50,8 +50,8 @@ class Parameter:
     ----------
     name : str
         Name
-    factor : float or `~astropy.units.Quantity`
-        Factor
+    value : float or `~astropy.units.Quantity`
+        Value
     scale : float, optional
         Scale (sometimes used in fitting)
     unit : `~astropy.units.Unit` or str, optional
@@ -65,7 +65,7 @@ class Parameter:
     """
 
     def __init__(
-        self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=0
+        self, name, value, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=0
     ):
         self.name = name
         self._link_label_io = None
@@ -73,12 +73,12 @@ class Parameter:
 
         # TODO: move this to a setter method that can be called from `__set__` also!
         # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
-        if isinstance(factor, u.Quantity) or isinstance(factor, str):
-            val = u.Quantity(factor)
+        if isinstance(value, u.Quantity) or isinstance(value, str):
+            val = u.Quantity(value)
             self.value = val.value
             self.unit = val.unit
         else:
-            self.factor = factor
+            self.factor = value
             self.unit = unit
 
         self.min = min
@@ -398,8 +398,10 @@ class Parameters(collections.abc.Sequence):
     @classmethod
     def from_dict(cls, data):
         parameters = []
-        for par in data["parameters"]:
+        for par in data:
+            link_label = par.pop("link", None)
             parameter = Parameter(**par)
+            parameter._link_label_io = link_label
             parameters.append(parameter)
         return cls(parameters=parameters)
 

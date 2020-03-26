@@ -32,6 +32,18 @@ class Model:
         # Copy default parameters from the class to the instance
         self._parameters = self.__class__.default_parameters.copy()
 
+        # Update parameter information from kwargs
+        for name, value in kwargs.items():
+            if name not in self.parameters.names:
+                raise ValueError(
+                    f"Invalid argument: {name!r}. Parameter names are: {self.parameters.names}"
+                )
+
+            if isinstance(value, Parameter):
+                self._parameters.link(value.name, value)
+            else:
+                self._parameters[name].quantity = u.Quantity(value)
+
         for parameter in self._parameters:
             if parameter.name in self.__dict__:
                 raise ValueError(
@@ -40,15 +52,6 @@ class Model:
                 )
 
             setattr(self, parameter.name, parameter)
-
-        # Update parameter information from kwargs
-        for name, value in kwargs.items():
-            if name not in self.parameters.names:
-                raise ValueError(
-                    f"Invalid argument: {name!r}. Parameter names are: {self.parameters.names}"
-                )
-
-            self._parameters[name].quantity = u.Quantity(value)
 
         self._covariance = Covariance(self.parameters)
 
@@ -105,11 +108,9 @@ class Model:
 
     @classmethod
     def from_dict(cls, data):
-        params = {x["name"]: x["value"] * u.Unit(x["unit"]) for x in data["parameters"]}
-
-        model = cls(**params)
-        model._update_from_dict(data)
-        return model
+        parameters = Parameters.from_dict(data["parameters"])
+        kwargs = {par.name: par for par in parameters}
+        return cls(**kwargs)
 
     # TODO: try to get rid of this
     def _update_from_dict(self, data):
