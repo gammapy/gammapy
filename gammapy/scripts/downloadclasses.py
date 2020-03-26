@@ -255,10 +255,10 @@ class ParallelDownload:
         log.info(f"{dl.queued_downloads} files to download.")
         res = dl.download()
         log.info(f"{len(res)} files downloaded.")
-        if dl.queued_downloads != len(res):
-            for err in res.errors:
-                _, _, exception = err
-                log.error(f"Error: {exception}")
+        for err in res.errors:
+            _, _, exception = err
+            log.error(f"Error: {exception}")
+        if len(res.errors):
             raise IOError("Error when downloading datasets.")
 
     def show_info_datasets(self):
