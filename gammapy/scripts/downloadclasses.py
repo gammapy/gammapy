@@ -237,7 +237,8 @@ class ParallelDownload:
         if self.listfiles:
             log.info(f"Content will be downloaded in {self.outfolder}")
 
-        dl = Downloader(max_conn=1, progress=self.progress, file_progress=False)
+        parallel = False
+        dl = Downloader(progress=self.progress, file_progress=False)
         for rec in self.listfiles:
             url = self.listfiles[rec]["url"]
             path = self.outfolder / self.listfiles[rec]["path"]
@@ -251,15 +252,22 @@ class ParallelDownload:
                     retrieve = False
             if retrieve:
                 dl.enqueue_file(url, path=str(path.parent))
+                if not parallel:
+                    import requests
+                    Path.mkdir(path.parent, parents=True, exist_ok=True)
+                    file = requests.get(url)
+                    open(str(path), 'wb').write(file.content)
+                    log.info(f"Downloading {str(path)}")
 
-        log.info(f"{dl.queued_downloads} files to download.")
-        res = dl.download()
-        log.info(f"{len(res)} files downloaded.")
-        for err in res.errors:
-            _, _, exception = err
-            log.error(f"Error: {exception}")
-        if len(res.errors):
-            raise IOError("Error when downloading datasets.")
+        if parallel:
+            log.info(f"{dl.queued_downloads} files to download.")
+            res = dl.download()
+            log.info(f"{len(res)} files downloaded.")
+            for err in res.errors:
+                _, _, exception = err
+                log.error(f"Error: {exception}")
+            if len(res.errors):
+                raise IOError("Error when downloading datasets.")
 
     def show_info_datasets(self):
         print("")
