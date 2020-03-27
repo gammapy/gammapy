@@ -326,6 +326,7 @@ class SkyModel(SkyModelBase):
         spectral_model = model_class.from_dict(data["spectral"])
 
         spatial_data = data.get("spatial")
+
         if spatial_data is not None:
             model_class = SPATIAL_MODELS.get_cls(spatial_data["type"])
             spatial_model = model_class.from_dict(spatial_data)
@@ -333,6 +334,7 @@ class SkyModel(SkyModelBase):
             spatial_model = None
 
         temporal_data = data.get("temporal")
+
         if temporal_data is not None:
             model_class = TEMPORAL_MODELS.get_cls(temporal_data["type"])
             temporal_model = model_class.from_dict(temporal_data)

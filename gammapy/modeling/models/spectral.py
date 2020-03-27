@@ -523,9 +523,8 @@ class PowerLawSpectralModel(SpectralModel):
         value : `~astropy.units.Quantity`
             Function value of the spectral model.
         """
-        p = self.parameters
-        base = value / p["amplitude"].quantity
-        return p["reference"].quantity * np.power(base, -1.0 / p["index"].value)
+        base = value / self.amplitude.quantity
+        return self.reference.quantity * np.power(base, -1.0 / self.index.value)
 
     @property
     def pivot_energy(self):
@@ -590,17 +589,15 @@ class PowerLaw2SpectralModel(SpectralModel):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         """
-        pars = self.parameters
-
-        temp1 = np.power(emax, -pars["index"].value + 1)
-        temp2 = np.power(emin, -pars["index"].value + 1)
+        temp1 = np.power(emax, -self.index.value + 1)
+        temp2 = np.power(emin, -self.index.value + 1)
         top = temp1 - temp2
 
-        temp1 = np.power(pars["emax"].quantity, -pars["index"].value + 1)
-        temp2 = np.power(pars["emin"].quantity, -pars["index"].value + 1)
+        temp1 = np.power(self.emax.quantity, -self.index.value + 1)
+        temp2 = np.power(self.emin.quantity, -self.index.value + 1)
         bottom = temp1 - temp2
 
-        return pars["amplitude"].quantity * top / bottom
+        return self.amplitude.quantity * top / bottom
 
     def inverse(self, value):
         """Return energy for a given function value of the spectral model.
@@ -610,13 +607,10 @@ class PowerLaw2SpectralModel(SpectralModel):
         value : `~astropy.units.Quantity`
             Function value of the spectral model.
         """
-        p = self.parameters
-        amplitude, index, emin, emax = (
-            p["amplitude"].quantity,
-            p["index"].value,
-            p["emin"].quantity,
-            p["emax"].quantity,
-        )
+        amplitude = self.amplitude.quantity
+        index = self.index.value
+        emin = self.emin.quantity
+        emax = self.emax.quantity
 
         # to get the energies dimensionless we use a modified formula
         top = -index + 1
@@ -873,10 +867,9 @@ class LogParabolaSpectralModel(SpectralModel):
         .. math::
             E_{Peak} = E_{0} \exp{ (2 - \alpha) / (2 * \beta)}
         """
-        p = self.parameters
-        reference = p["reference"].quantity
-        alpha = p["alpha"].quantity
-        beta = p["beta"].quantity
+        reference = self.reference.quantity
+        alpha = self.alpha.quantity
+        beta = self.beta.quantity
         return reference * np.exp((2 - alpha) / (2 * beta))
 
 
@@ -1303,6 +1296,7 @@ class AbsorbedSpectralModel(SpectralModel):
         from gammapy.modeling.models import SPECTRAL_MODELS
 
         model_class = SPECTRAL_MODELS.get_cls(data["base_model"]["type"])
+
         model = cls(
             spectral_model=model_class.from_dict(data["base_model"]),
             absorption=Absorption.from_dict(data["absorption"]),

@@ -30,29 +30,24 @@ class Model:
 
     def __init__(self, **kwargs):
         # Copy default parameters from the class to the instance
-        self._parameters = self.__class__.default_parameters.copy()
+        default_parameters = self.__class__.default_parameters.copy()
 
-        # Update parameter information from kwargs
-        for name, value in kwargs.items():
-            if name not in self.parameters.names:
-                raise ValueError(
-                    f"Invalid argument: {name!r}. Parameter names are: {self.parameters.names}"
-                )
+        parameters = []
 
-            if isinstance(value, Parameter):
-                self._parameters.link(value.name, value)
+        for par in default_parameters:
+            value = kwargs.get(par.name, par)
+
+            if not isinstance(value, Parameter):
+                par.quantity = u.Quantity(value)
             else:
-                self._parameters[name].quantity = u.Quantity(value)
+                par = value
 
-        for parameter in self._parameters:
-            if parameter.name in self.__dict__:
-                raise ValueError(
-                    f"Invalid parameter name: {parameter.name!r}."
-                    f"Attribute exists already: {getattr(self, parameter.name)!r}"
-                )
+            parameters.append(par)
 
-            setattr(self, parameter.name, parameter)
+        for par in parameters:
+            setattr(self, par.name, par)
 
+        self._parameters = Parameters(parameters)
         self._covariance = Covariance(self.parameters)
 
     def __init_subclass__(cls, **kwargs):
@@ -129,8 +124,7 @@ class Model:
     @classmethod
     def from_dict(cls, data):
         parameters = Parameters.from_dict(data["parameters"])
-        kwargs = {par.name: par for par in parameters}
-        return cls(**kwargs)
+        return cls.from_parameters(parameters)
 
     # TODO: try to get rid of this
     def _update_from_dict(self, data):

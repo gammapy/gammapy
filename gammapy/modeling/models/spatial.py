@@ -357,7 +357,7 @@ class DiskSpatialModel(SpatialModel):
 
         Set to the length of the semi-major axis.
         """
-        return self.parameters["r_0"].quantity
+        return self.r_0.quantity
 
     @staticmethod
     def _evaluate_norm_factor(r_0, e):
@@ -441,7 +441,7 @@ class ShellSpatialModel(SpatialModel):
 
         Set to :math:`r_\text{out}`.
         """
-        return self.parameters["radius"].quantity + self.parameters["width"].quantity
+        return self.radius.quantity + self.width.quantity
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, radius, width):

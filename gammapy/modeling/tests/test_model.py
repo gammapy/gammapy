@@ -51,6 +51,16 @@ def test_model_class():
     assert MyModel.default_parameters["x"] is MyModel.x
 
 
+def test_model_class_par_init():
+    x = Parameter("x", 4, "cm")
+    y = Parameter("y", 10)
+
+    model = MyModel(x=x, y=y)
+
+    assert x is model.x
+    assert y is model.y
+
+
 def test_model_init():
     m = MyModel()
     assert m.x.name == "x"
