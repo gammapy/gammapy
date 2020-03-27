@@ -707,11 +707,11 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         .. math::
             E_{Peak} =  \left(\frac{2 - \Gamma}{\alpha}\right)^{1/\alpha} / \lambda
         """
-        p = self.parameters
-        reference = p["reference"].quantity
-        index = p["index"].quantity
-        lambda_ = p["lambda_"].quantity
-        alpha = p["alpha"].quantity
+        reference = self.reference.quantity
+        index = self.index.quantity
+        lambda_ = self.lambda_.quantity
+        alpha = self.alpha.quantity
+
         if index >= 2 or lambda_ == 0.0 or alpha == 0.0:
             return np.nan * reference.unit
         else:
@@ -1330,7 +1330,7 @@ class NaimaSpectralModel(SpectralModel):
         in case of a `~naima.models.InverseCompton` model. It can be a subset of the
         `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
         of photon fields
-    nested_models : ditct
+    nested_models : dict
         Additionnal parameters for nested models not supplied by the radiative model,
         for now this is used  only for synchrotron self-compton model
     """
@@ -1497,16 +1497,15 @@ class GaussianSpectralModel(SpectralModel):
         """
         # kwargs are passed to this function but not used
         # this is to get a consistent API with SpectralModel.integral()
-        pars = self.parameters
         u_min = (
-            (emin - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+            (emin - self.mean.quantity) / (np.sqrt(2) * self.sigma.quantity)
         ).to_value("")
         u_max = (
-            (emax - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+            (emax - self.mean.quantity) / (np.sqrt(2) * self.sigma.quantity)
         ).to_value("")
 
         return (
-            pars["norm"].quantity
+            self.norm.quantity
             / 2
             * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
         )
@@ -1525,15 +1524,14 @@ class GaussianSpectralModel(SpectralModel):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         """
-        pars = self.parameters
         u_min = (
-            (emin - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+            (emin - self.mean.quantity) / (np.sqrt(2) * self.sigma.quantity)
         ).to_value("")
         u_max = (
-            (emax - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+            (emax - self.mean.quantity) / (np.sqrt(2) * self.sigma.quantity)
         ).to_value("")
-        a = pars["norm"].quantity * pars["sigma"].quantity / np.sqrt(2 * np.pi)
-        b = pars["norm"].quantity * pars["mean"].quantity / 2
+        a = self.norm.quantity * self.sigma.quantity / np.sqrt(2 * np.pi)
+        b = self.norm.quantity * self.mean.quantity / 2
         return a * (np.exp(-(u_min ** 2)) - np.exp(-(u_max ** 2))) + b * (
             scipy.special.erf(u_max) - scipy.special.erf(u_min)
         )
