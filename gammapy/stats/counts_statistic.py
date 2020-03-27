@@ -10,6 +10,10 @@ __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
 class CountsStatistic(abc.ABC):
     @property
+    def excess(self):
+        return self.n_on - self.background
+
+    @property
     def delta_ts(self):
         """Return TS difference of measured excess versus no excess."""
         # Remove (small) negative delta TS due to error in root finding
@@ -111,6 +115,30 @@ class CountsStatistic(abc.ABC):
 
         return ul
 
+    def excess_matching_significance(self, significance):
+        """Compute excess matching a given significance.
+
+        This function is the inverse of `significance`.
+
+        Parameters
+        ----------
+        significance : array_like
+            Significance
+
+        Returns
+        -------
+        excess : `numpy.ndarray`
+            Excess
+        """
+        excess = np.zeros_like(self.n_on, dtype="float")
+        n_on = self.n_on
+        it = np.nditer(excess, flags=["multi_index"])
+
+        while not it.finished:
+
+
+            it.iternext()
+
 
 class CashCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -129,8 +157,9 @@ class CashCountsStatistic(CountsStatistic):
         self.mu_bkg = np.asanyarray(mu_bkg)
 
     @property
-    def excess(self):
-        return self.n_on - self.mu_bkg
+    def background(self):
+        return self.mu_bkg
+
 
     @property
     def error(self):
@@ -171,8 +200,8 @@ class WStatCountsStatistic(CountsStatistic):
         self.alpha = np.asanyarray(alpha)
 
     @property
-    def excess(self):
-        return self.n_on - self.alpha * self.n_off
+    def background(self):
+        return self.alpha*self.n_off
 
     @property
     def error(self):
