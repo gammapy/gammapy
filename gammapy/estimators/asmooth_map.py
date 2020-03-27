@@ -38,7 +38,7 @@ class ASmoothMapEstimator:
         Significance threshold.
     """
 
-    def __init__(self, scales, kernel=Gaussian2DKernel, method="simple", threshold=5):
+    def __init__(self, scales, kernel=Gaussian2DKernel, method="lima", threshold=5):
         self.parameters = {
             "kernel": kernel,
             "method": method,
