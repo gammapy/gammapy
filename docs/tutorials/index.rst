@@ -58,6 +58,7 @@ Core tutorials
    ../notebooks/sed_fitting.ipynb
    ../notebooks/light_curve.ipynb
    ../notebooks/light_curve_flare.ipynb
+   ../notebooks/light_curve_simulation.ipynb
    ../notebooks/spectrum_simulation.ipynb
    ../notebooks/modeling_2D.ipynb
    ../notebooks/ring_background.ipynb
@@ -89,12 +90,14 @@ The following tutorials expose common analysis tasks.
 
 - `Light curves <../notebooks/light_curve.html>`__ | *light_curve.ipynb*
 - `Light curves for flares <../notebooks/light_curve_flare.html>`__ | *light_curve_flare.ipynb*
+- `Simulating and fiting a time varying source <../notebooks/light_curve_simulation.html>`__ | *light_curve_simulation.ipynb*
 
 *Simulations*
 
 - `1D spectrum simulation <../notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
 - `3D map simulation <../notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
 - `Event sampling <../notebooks/event_sampling.html>`__ | *event_sampling.ipynb*
+
 
 Advanced tutorials
 ------------------
