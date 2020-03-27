@@ -499,10 +499,10 @@ class SkyDiffuseCube(SkyModelBase):
             self._cached_coordinates = (lon, lat, energy)
             self._cached_value = self._interpolate(lon, lat, energy)
 
-        norm = self.parameters["norm"].value
+        norm = self.norm.value
+        tilt = self.tilt.value
+        reference = self.reference.quantity
 
-        tilt = self.parameters["tilt"].value
-        reference = self.parameters["reference"].quantity
         tilt_factor = np.power((energy / reference).to(""), -tilt)
 
         val = norm * self._cached_value * tilt_factor.value
@@ -550,13 +550,24 @@ class SkyDiffuseCube(SkyModelBase):
 
     @classmethod
     def from_dict(cls, data):
-        model = cls.read(data["filename"])
-        model._update_from_dict(data)
-        apply_irf = data.get("apply_irf", cls._apply_irf_default)
-        model.apply_irf.update(apply_irf)
-        model.datasets_names = data.get("datasets_names")
+        parameters = Parameters.from_dict(data["parameters"])
 
-        return model
+        filename = data["filename"]
+
+        map_ = cls.read(filename).map
+
+        apply_irf = data.get("apply_irf", cls._apply_irf_default)
+        datasets_names = data.get("datasets_names")
+        name = data.get("name")
+
+        return cls.from_parameters(
+            parameters=parameters,
+            map=map_,
+            apply_irf=apply_irf,
+            datasets_names=datasets_names,
+            filename=filename,
+            name=name
+        )
 
     def to_dict(self):
         data = super().to_dict()
@@ -657,9 +668,9 @@ class BackgroundModel(Model):
         background_map : `~gammapy.maps.Map`
             Background evaluated on the Map
         """
-        norm = self.parameters["norm"].value
-        tilt = self.parameters["tilt"].value
-        reference = self.parameters["reference"].quantity
+        norm = self.norm.value
+        tilt = self.tilt.value
+        reference = self.reference.quantity
         tilt_factor = np.power((self.energy_center / reference).to(""), -tilt)
         back_values = norm * self.map.data * tilt_factor.value
         return self.map.copy(data=back_values)
@@ -696,14 +707,12 @@ class BackgroundModel(Model):
 
         parameters = Parameters.from_dict(data["parameters"])
 
-        return cls(
+        return cls.from_parameters(
+            parameters=parameters,
             map=bkg_map,
             name=data["name"],
             datasets_names=data.get("datasets_names"),
             filename=data.get("filename"),
-            norm=parameters["norm"],
-            tilt=parameters["tilt"],
-            reference=parameters["reference"]
         )
 
     def copy(self, name=None):
