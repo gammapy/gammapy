@@ -405,6 +405,91 @@ class Background2D:
             label = f"Background rate ({self.data.data.unit})"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
+    def plot_offset_dependence(self, ax=None, offset=None, energy=None, **kwargs):
+        """Plot background rate versus offset for a given energy.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        offset : `~astropy.coordinates.Angle`
+            Offset axis
+        energy : `~astropy.units.Quantity`
+            Energy
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axis
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        if energy is None:
+            e_min, e_max = np.log10(self.data.axis("energy").center.value[[0, -1]])
+            energy = np.logspace(e_min, e_max, 4) * self.data.axis("energy").unit
+
+        if offset is None:
+            offset = self.data.axis("offset").center
+
+        for ee in energy:
+            bkg = self.data.evaluate(offset=offset, energy=ee)
+            if np.isnan(bkg).all():
+                continue
+            label = f"energy = {ee:.1f}"
+            ax.plot(offset, bkg.value, label=label, **kwargs)
+
+        ax.set_xlabel(f"Offset ({self.data.axis('offset').unit})")
+        ax.set_ylabel(f"Background rate ({self.data.data.unit})")
+        ax.set_yscale("log")
+        ax.legend(loc="upper right")
+        return ax
+
+    def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
+        """Plot background rate versus energy for a given offset.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        offset : `~astropy.coordinates.Angle`
+            Offset
+        energy : `~astropy.units.Quantity`
+            Energy axis
+        kwargs : dict
+            Forwarded tp plt.plot()
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axis
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        if offset is None:
+            off_min, off_max = self.data.axis("offset").center.value[[0, -1]]
+            offset = np.linspace(off_min, off_max, 4) * self.data.axis("offset").unit
+
+        if energy is None:
+            energy = self.data.axis("energy").center
+
+        for off in offset:
+            bkg = self.data.evaluate(offset=off, energy=energy)
+            label = f"offset = {off:.1f}"
+            ax.plot(energy, bkg.value, label=label, **kwargs)
+
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel(f"Energy [{energy.unit}]")
+        ax.set_ylabel(f"Background rate ({self.data.data.unit})")
+        ax.set_xlim(min(energy.value), max(energy.value))
+        ax.legend(loc="best")
+
+        return ax
+
     def peek(self):
         from .effective_area import EffectiveAreaTable2D
 
