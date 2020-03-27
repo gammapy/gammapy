@@ -2,7 +2,7 @@
 import abc
 import numpy as np
 from scipy.stats import chi2
-from scipy.optimize import brentq
+from scipy.optimize import brentq, newton
 from gammapy.stats import wstat, cash
 
 __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
@@ -122,7 +122,7 @@ class CountsStatistic(abc.ABC):
 
         Parameters
         ----------
-        significance : array_like
+        significance : float
             Significance
 
         Returns
@@ -130,15 +130,19 @@ class CountsStatistic(abc.ABC):
         excess : `numpy.ndarray`
             Excess
         """
-        excess = np.zeros_like(self.n_on, dtype="float")
-        n_on = self.n_on
+        excess = np.zeros_like(self.background, dtype="float")
         it = np.nditer(excess, flags=["multi_index"])
 
         while not it.finished:
-
+            print(it.multi_index)
+            excess[it.multi_index] = newton(
+                self._excess_matching_significance_fcn,
+                self.background*significance,
+                args=(significance, it.multi_index)
+            )
 
             it.iternext()
-
+        return excess
 
 class CashCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -179,6 +183,10 @@ class CashCountsStatistic(CountsStatistic):
     def _stat_fcn(self, mu, delta=0, index=None):
         return cash(self.n_on[index], self.mu_bkg[index] + mu) - delta
 
+    def _excess_matching_significance_fcn(self, excess, significance, index):
+        TS0 = cash(excess + self.background[index], self.mu_bkg[index])
+        TS1 = cash(excess+self.background[index], self.mu_bkg[index] + excess)
+        return np.sign(excess)*np.sqrt(np.clip(TS0-TS1,0, None))-significance
 
 class WStatCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -220,3 +228,8 @@ class WStatCountsStatistic(CountsStatistic):
 
     def _stat_fcn(self, mu, delta=0, index=None):
         return wstat(self.n_on[index], self.n_off[index], self.alpha[index], mu) - delta
+
+    def _excess_matching_significance_fcn(self, excess, significance, index):
+        TS0 = wstat(excess + self.background[index], self.n_off[index], self.alpha[index], 0)
+        TS1 = wstat(excess+self.background[index], self.n_off[index], self.alpha[index], excess)
+        return np.sign(excess)*np.sqrt(np.clip(TS0-TS1,0, None))-significance
