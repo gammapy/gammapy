@@ -35,7 +35,7 @@ def test_asmooth(input_maps):
     scales = ASmoothMapEstimator.get_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 
     asmooth = ASmoothMapEstimator(
-        scales=scales, kernel=kernel, method="simple", threshold=2.5
+        scales=scales, kernel=kernel, method="lima", threshold=2.5
     )
     smoothed = asmooth.estimate_maps(input_maps["counts"], input_maps["background"])
 
@@ -57,7 +57,7 @@ def test_asmooth_dataset(input_dataset):
     scales = ASmoothMapEstimator.get_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 
     asmooth = ASmoothMapEstimator(
-        scales=scales, kernel=kernel, method="simple", threshold=2.5
+        scales=scales, kernel=kernel, method="lima", threshold=2.5
     )
 
     # First check that is fails if don't use to_image()
@@ -90,7 +90,7 @@ def test_asmooth_map_dataset_on_off():
     scales = ASmoothMapEstimator.get_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 
     asmooth = ASmoothMapEstimator(
-        kernel=kernel, scales=scales, method="simple", threshold=2.5
+        kernel=kernel, scales=scales, method="lima", threshold=2.5
     )
 
     counts = WcsNDMap.create(npix=(50, 50), binsz=0.02, unit="")

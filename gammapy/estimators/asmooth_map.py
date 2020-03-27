@@ -23,7 +23,7 @@ class ASmoothMapEstimator:
 
     Algorithm based on https://ui.adsabs.harvard.edu/abs/2006MNRAS.368...65E
 
-    The algorithm was slightly adapted to also allow Li & Ma and TS to estimate the
+    The algorithm was slightly adapted to also allow Li & Ma  to estimate the
     significance of a feature in the image.
 
     Parameters
@@ -32,7 +32,7 @@ class ASmoothMapEstimator:
         Smoothing scales.
     kernel : `astropy.convolution.Kernel`
         Smoothing kernel.
-    method : {'simple', 'asmooth', 'lima'}
+    method : {'asmooth', 'lima'}
         Significance estimation method.
     threshold : float
         Significance threshold.
@@ -74,7 +74,7 @@ class ASmoothMapEstimator:
 
     @staticmethod
     def _significance_cube(cubes, method):
-        if method in {"lima", "simple"}:
+        if method in {"lima"}:
             scube = CashCountsStatistic(cubes["counts"], cubes["background"]).significance
         elif method == "asmooth":
             scube = _significance_asmooth(cubes["counts"], cubes["background"])
@@ -83,8 +83,7 @@ class ASmoothMapEstimator:
         else:
             raise ValueError(
                 "Not a valid significance estimation method."
-                " Choose one of the following: 'lima', 'simple',"
-                " 'asmooth' or 'ts'"
+                " Choose one of the following: 'lima' or 'asmooth'"
             )
         return scube
 
