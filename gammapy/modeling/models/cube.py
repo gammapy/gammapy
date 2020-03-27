@@ -463,8 +463,10 @@ class SkyDiffuseCube(SkyModelBase):
             The default used if none is filename.
         """
         m = Map.read(filename, **kwargs)
+
         if m.unit == "":
             m.unit = "cm-2 s-1 MeV-1 sr-1"
+
         if name is None:
             name = Path(filename).stem
 

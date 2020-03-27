@@ -1003,11 +1003,12 @@ class TemplateSpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
+        parameters = Parameters.from_dict(data["parameters"])
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
-        model = cls(energy=energy, values=values)
-        model._update_from_dict(data)
-        return model
+        return cls.from_parameters(
+            parameters, energy=energy, values=values
+        )
 
 
 class ScaleSpectralModel(SpectralModel):

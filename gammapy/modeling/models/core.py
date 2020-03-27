@@ -94,7 +94,6 @@ class Model:
 
         self._covariance = Covariance(parameters)
 
-
     @property
     def covariance(self):
         for par in self._parameters:
