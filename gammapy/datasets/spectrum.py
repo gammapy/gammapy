@@ -9,7 +9,7 @@ from gammapy.datasets import Dataset
 from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
 from gammapy.maps import RegionNDMap, MapAxis, RegionGeom
 from gammapy.modeling.models import Models, SkyModel
-from gammapy.stats import cash, significance, significance_on_off, wstat
+from gammapy.stats import cash, wstat, CashCountsStatistic, WStatCountsStatistic
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
@@ -624,9 +624,9 @@ class SpectrumDataset(Dataset):
 
         info["background"] = self.background.data[mask].sum()
         info["excess"] = self.excess.data[mask].sum()
-        info["significance"] = significance(
+        info["significance"] = CashCountsStatistic(
             self.counts.data[mask].sum(), self.background.data[mask].sum(),
-        )
+        ).significance
 
         info["background_rate"] = info["background"] / info["livetime"]
         info["gamma_rate"] = info["excess"] / info["livetime"]
@@ -1190,11 +1190,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             info["a_off"] = 1
 
         info["alpha"] = self.alpha.data[0, 0, 0].copy()
-        info["significance"] = significance_on_off(
+        info["significance"] = WStatCountsStatistic(
             self.counts.data[mask].sum(),
             self.counts_off.data[mask].sum(),
             self.alpha.data[0, 0, 0],
-        )
+        ).significance
 
         return info
 
