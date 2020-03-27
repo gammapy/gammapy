@@ -137,7 +137,7 @@ class CountsStatistic(abc.ABC):
             try:
                 excess[it.multi_index] = newton(
                     self._excess_matching_significance_fcn,
-                    self.background[it.multi_index]*significance,
+                    np.sqrt(self.background[it.multi_index])*significance,
                     args=(significance, it.multi_index)
                 )
             except:
