@@ -134,12 +134,14 @@ class CountsStatistic(abc.ABC):
         it = np.nditer(excess, flags=["multi_index"])
 
         while not it.finished:
-            print(it.multi_index)
-            excess[it.multi_index] = newton(
-                self._excess_matching_significance_fcn,
-                self.background*significance,
-                args=(significance, it.multi_index)
-            )
+            try:
+                excess[it.multi_index] = newton(
+                    self._excess_matching_significance_fcn,
+                    self.background[it.multi_index]*significance,
+                    args=(significance, it.multi_index)
+                )
+            except:
+                excess[it.multi_index] = np.nan
 
             it.iternext()
         return excess
