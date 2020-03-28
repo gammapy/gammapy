@@ -32,7 +32,7 @@ This creates a conda environment called ``gammapy-0.17`` which you can activate 
     conda activate gammapy-0.17
 
 Note that you have to execute that activation command (but not the environment
-cration command) every time you open a new terminal window, because the default
+creation command) every time you open a new terminal window, because the default
 with conda is the base environment, which doesn't have Gammapy installed.
 
 To check your Gammapy installation, you can use this command:
@@ -45,12 +45,12 @@ To check your Gammapy installation, you can use this command:
 Using other package managers
 ----------------------------
 
-The following pages contain detailed information about Gammapy dependencies in
-various installation options:
+If you don't want to use Anaconda, you can use other package managers. To do so,the following pages contain detailed
+information about Gammapy dependencies and propose various installation options:
 
-* See gammapy install-dependencies :ref:`install-dependencies`
+* See gammapy install dependencies :ref:`install-dependencies`
 * If you want to install gammapy with pip see :ref:`install-pip`
-* If you want ot use other package manager see :ref:`install-other`
+* If you want to use other package manager see :ref:`install-other`
 
 
 Download tutorials
