@@ -44,8 +44,6 @@ class ExcessMapEstimator:
 
     Parameters
     ----------
-    dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
-        input image-like dataset
     correlation_radius : ~astropy.coordinate.Angle
         correlation radius to use
     n_sigma : float
@@ -56,21 +54,10 @@ class ExcessMapEstimator:
         Default is 3.
     """
 
-    def __init__(self, dataset, correlation_radius='0.1 deg', nsigma=1, nsigma_ul=3):
-        self.dataset = dataset
+    def __init__(self, correlation_radius='0.1 deg', nsigma=1, nsigma_ul=3):
         self.correlation_radius = correlation_radius
         self.nsigma = nsigma
         self.nsigma_ul = nsigma_ul
-
-    @property
-    def dataset(self):
-        return self._dataset
-
-    @dataset.setter
-    def dataset(self, dataset):
-        if not isinstance(dataset, MapDataset):
-            raise ValueError("Unsupported dataset type")
-        self._dataset = dataset
 
     @property
     def correlation_radius(self):
@@ -81,11 +68,13 @@ class ExcessMapEstimator:
         """Sets radius"""
         self._correlation_radius = Angle(correlation_radius)
 
-    def run(self, steps="all"):
+    def run(self, dataset, steps="all"):
         """Compute correlated excess, Li & Ma significance and flux maps
 
         Parameters
         ----------
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
+            input image-like dataset
         steps : list of str
             Which steps to execute. Available options are:
 
@@ -112,13 +101,16 @@ class ExcessMapEstimator:
                 * ul : upper limit map
 
         """
-        pixel_size = np.mean(np.abs(self.dataset.counts.geom.wcs.wcs.cdelt))
+        if not isinstance(dataset, MapDataset):
+            raise ValueError("Unsupported dataset type")
+
+        pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
         size = self.correlation_radius.deg / pixel_size
         kernel = Tophat2DKernel(size)
 
-        geom = self.dataset.counts.geom
+        geom = dataset.counts.geom
 
-        self.counts_stat = convolved_map_dataset_counts_statistics(self.dataset, kernel)
+        self.counts_stat = convolved_map_dataset_counts_statistics(dataset, kernel)
 
         n_on = Map.from_geom(geom, data=self.counts_stat.n_on)
         bkg = Map.from_geom(geom, data=self.counts_stat.n_on-self.counts_stat.excess)
