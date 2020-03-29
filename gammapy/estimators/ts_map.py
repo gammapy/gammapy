@@ -5,9 +5,7 @@ import logging
 import warnings
 import numpy as np
 import scipy.optimize
-from astropy.coordinates import Angle
-from astropy.convolution import CustomKernel, Kernel2D
-from gammapy.irf import PSFKernel, PSFMap
+from astropy.coordinates import Angle, SkyCoord
 from gammapy.maps import Map
 from gammapy.datasets import MapDataset
 from gammapy.datasets.map import MapEvaluator
@@ -79,7 +77,7 @@ class TSMapEstimator:
 
     The map is computed fitting by a single parameter amplitude fit. The fit is
     simplified by finding roots of the the derivative of the fit statistics using
-    various root finding algorithms. The approach is sescribed in Appendix A
+    various root finding algorithms. The approach is described in Appendix A
     in Stewart (2009).
 
     Parameters
@@ -90,9 +88,9 @@ class TSMapEstimator:
         Kernel size to use: the kernel will be truncated at this size
         Default : 1 deg
     downsampling_factor : int
-            Sample down the input maps to speed up the computation. Only integer
-            values that are a multiple of 2 are allowed. Note that the kernel is
-            not sampled down, but must be provided with the downsampled bin size.
+        Sample down the input maps to speed up the computation. Only integer
+        values that are a multiple of 2 are allowed. Note that the kernel is
+        not sampled down, but must be provided with the downsampled bin size.
     method : str ('root')
         The following options are available:
 
@@ -142,7 +140,7 @@ class TSMapEstimator:
     def __init__(
         self,
         model=None,
-        kernel_size='1 deg',
+        kernel_containment_fraction=0.95,
         downsampling_factor=None,
         method="root brentq",
         error_method="covar",
@@ -158,7 +156,7 @@ class TSMapEstimator:
         if error_method not in ["covar", "conf"]:
             raise ValueError(f"Not a valid error method '{error_method}'")
 
-        self.kernel_size = Angle(kernel_size)
+        self.kernel_containment_fraction = kernel_containment_fraction
         self.model = model
         self.downsampling_factor = downsampling_factor
 
@@ -192,7 +190,10 @@ class TSMapEstimator:
         Convolves the model with the PSFKernel at the center of the dataset.
         If no PSFMap or PSFKernel is found the dataset, the model is used without convolution.
         """
-        self._center_model(self.dataset._geom.center_skydir)
+        # we take the center of the map. If the center falls in between two pixels, we shift by half a pixel.
+        pix = np.rint(self.dataset._geom.center_pix).astype('int')
+        center = SkyCoord.from_pixel(pix[0], pix[1], self.dataset._geom.wcs)
+        self._center_model(center)
 
         # We use global evaluation mode because we want to perform the cutout outside MapEvaluator
         # to ensure an odd number of bins
@@ -200,15 +201,25 @@ class TSMapEstimator:
         evaluator.update(self.dataset.exposure, self.dataset.psf, self.dataset.edisp, self.dataset.counts.geom)
 
         npred = evaluator.compute_npred().sum_over_axes()
+        npred.data /= npred.data.sum()
 
+        # TODO : might not work for non square pixels or rectangular images
+        # determine size containing correct fraction of kernel starting from center
+        frac = np.zeros(np.min(pix[:2]))
+        for i in range(frac.shape[0]):
+            sly = slice(pix[0] - i - 1, pix[0] + i, None)
+            slx = slice(pix[1] - i - 1, pix[1] + i, None)
+            frac[i] = npred.data[slx, sly].sum()
+
+        index = np.where(frac>self.kernel_containment_fraction)[0][0]
         # define cutout size to ensure odd number of pixels
-#        nbins = np.ceil(self.kernel_size / np.abs(self.dataset._geom.pixel_scales[0])) // 2 * 2 + 1
-#        size = nbins * np.abs(self.dataset._geom.pixel_scales[0])
+        size = (2*index + 1) * np.abs(self.dataset._geom.pixel_scales)
 
-#        kernel = flux.cutout(self.dataset._geom.center_skydir, size).sum_over_axes(keepdims=False)
-        kernel = Map.from_geom(npred.geom, data=npred.data/npred.data.sum())
-        self._kernel = kernel.data
-        if (np.array(self._kernel.shape) > np.array(self.dataset.counts.data.shape[1:])).any():
+        kernel = Map.from_geom(npred.geom, data=npred.data)
+        kernel = kernel.cutout(center, size)
+        self._kernel = kernel
+        if (np.array(kernel.data.shape) > 0.5*np.array(self.dataset.counts.data.shape[1:])).any():
+            print(self._kernel.data.shape)
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
                 " size of the kernel"
@@ -231,8 +242,8 @@ class TSMapEstimator:
     def model(self, model):
         if model is None:
             model = SkyModel(
-                spatial_model=PointSpatialModel,
-                spectral_model=PowerLawSpectralModel
+                spatial_model=PointSpatialModel(),
+                spectral_model=PowerLawSpectralModel(index=2)
             )
 
         self._model = model
@@ -256,8 +267,8 @@ class TSMapEstimator:
         flux = dataset.counts - dataset.npred()
         flux = flux.sum_over_axes(keepdims=False)
         flux /= dataset.exposure.sum_over_axes(keepdims=False)
-        flux /= np.sum(kernel ** 2)
-        return flux.convolve(kernel)
+        flux /= np.sum(kernel.data ** 2)
+        return flux.convolve(kernel.data)
 
     @staticmethod
     def mask_default(exposure, background, kernel):
@@ -336,12 +347,25 @@ class TSMapEstimator:
         dataset : `~gammapy.datasets.MapDataset`
             Input MapDataset.
         steps : list of str or 'all'
-            Which maps to compute.
+            Which maps to compute. Available options are:
+
+                * "ts": estimate delta TS and significance (sqrt_ts)
+                * "flux-err": estimate symmetric error on flux.
+                * "flux-ul": estimate upper limits on flux.
+
+            By default all steps are executed.
 
         Returns
         -------
         maps : dict
-            Result maps.
+             Dictionary containing result maps. Keys are:
+
+                * ts : delta TS map
+                * sqrt_ts : sqrt(delta TS), or significance map
+                * flux : flux map
+                * flux_err : symmetric error map
+                * flux_ul : upper limit map
+
         """
         self.dataset = dataset
 
@@ -374,7 +398,7 @@ class TSMapEstimator:
             )
             mask.data = mask.data.astype("int")
 
-        mask.data &= self.mask_default(exposure, background, self._kernel).data
+        mask.data &= self.mask_default(exposure, background, self._kernel.data).data
 
         if steps == "all":
             steps = ["ts", "sqrt_ts", "flux", "flux_err", "flux_ul", "niter"]
@@ -408,7 +432,7 @@ class TSMapEstimator:
             exposure=exposure_array,
             background=background_array,
             c_0=c_0,
-            kernel=self._kernel,
+            kernel=self._kernel.data,
             flux=flux,
             method=p["method"],
             error_method=error_method,
