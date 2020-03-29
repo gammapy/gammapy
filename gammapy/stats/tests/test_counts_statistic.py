@@ -67,6 +67,20 @@ def test_cash_ul(n_on, mu_bkg, result):
 
 
 values = [
+    (100, 5, 54.012755),
+    (100, -5, -45.631273),
+    (1, -2, np.nan),
+    ([1,2], 5, [8.327276, 10.550546]),
+]
+
+@pytest.mark.parametrize(("mu_bkg", "significance", "result"), values)
+def test_cash_excess_matching_significance(mu_bkg, significance, result):
+    stat = CashCountsStatistic(1, mu_bkg)
+    excess = stat.excess_matching_significance(significance)
+
+    assert_allclose(excess, result, atol=1e-3)
+
+values = [
     (1, 2, 1, [-1.0, -0.5829220133009171, 0.55994580085]),
     (5, 1, 1, [4.0, 1.7061745691234782, 0.087975582112]),
     (10, 5, 0.3, [8.5, 3.5853812867949024, 3.365860865528742e-4]),
@@ -74,7 +88,6 @@ values = [
     (1, 20, 1.0, [-19, -4.590373638528086, 4.424532535784618e-06]),
     (5 * ref_array, 1 * ref_array, 1 * ref_array, [4.0, 1.7061745691234782, 0.087975582112]),
 ]
-
 
 @pytest.mark.parametrize(("n_on", "n_off", "alpha", "result"), values)
 def test_wstat_basic(n_on, n_off, alpha, result):
@@ -124,3 +137,17 @@ def test_wstat_ul(n_on, n_off, alpha, result):
     ul = stat.compute_upper_limit()
 
     assert_allclose(ul, result[0], atol=1e-5)
+
+values = [
+    ([10, 20], [0.1, 0.1], 5, [9.82966, 12.038423]),
+    ([10, 10], [0.1, 0.3], 5, [9.82966, 16.664516]),
+    ([10], [0.1], 3, [4.818497]),
+    ([[10, 20], [10, 20]], [[0.1, 0.1],[0.1, 0.1]], 5, [[9.82966, 12.038423], [9.82966, 12.038423]]),
+]
+
+@pytest.mark.parametrize(( "n_off", "alpha", "significance", "result"), values)
+def test_wstat_excess_matching_significance(n_off, alpha, significance, result):
+    stat = WStatCountsStatistic(1, n_off, alpha)
+    excess = stat.excess_matching_significance(significance)
+
+    assert_allclose(excess, result, atol=1e-3)

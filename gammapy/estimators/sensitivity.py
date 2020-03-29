@@ -2,7 +2,7 @@
 import numpy as np
 from astropy.table import Column, Table
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-from gammapy.stats import excess_matching_significance_on_off
+from gammapy.stats import WStatCountsStatistic
 
 __all__ = ["SensitivityEstimator"]
 
@@ -56,9 +56,12 @@ class SensitivityEstimator:
             Minimal excess
         """
         n_off = dataset.counts_off.data
-        excess_counts = excess_matching_significance_on_off(
-            n_off=n_off, alpha=dataset.alpha.data, significance=self.sigma
-        )
+
+        stat = WStatCountsStatistic(
+                n_on=np.ones_like(n_off),
+                n_off=n_off,
+                alpha=dataset.alpha.data)
+        excess_counts =stat.excess_matching_significance(self.sigma)
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
         excess = dataset.background.copy()

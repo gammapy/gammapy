@@ -6,7 +6,7 @@ from astropy.coordinates import Angle
 from gammapy.datasets import MapDatasetOnOff
 from gammapy.maps import WcsNDMap
 from gammapy.utils.array import scale_cube
-from gammapy.stats import significance
+from gammapy.stats import CashCountsStatistic
 
 __all__ = ["ASmoothMapEstimator"]
 
@@ -23,7 +23,7 @@ class ASmoothMapEstimator:
 
     Algorithm based on https://ui.adsabs.harvard.edu/abs/2006MNRAS.368...65E
 
-    The algorithm was slightly adapted to also allow Li & Ma and TS to estimate the
+    The algorithm was slightly adapted to also allow Li & Ma  to estimate the
     significance of a feature in the image.
 
     Parameters
@@ -32,13 +32,13 @@ class ASmoothMapEstimator:
         Smoothing scales.
     kernel : `astropy.convolution.Kernel`
         Smoothing kernel.
-    method : {'simple', 'asmooth', 'lima'}
+    method : {'asmooth', 'lima'}
         Significance estimation method.
     threshold : float
         Significance threshold.
     """
 
-    def __init__(self, scales, kernel=Gaussian2DKernel, method="simple", threshold=5):
+    def __init__(self, scales, kernel=Gaussian2DKernel, method="lima", threshold=5):
         self.parameters = {
             "kernel": kernel,
             "method": method,
@@ -74,8 +74,8 @@ class ASmoothMapEstimator:
 
     @staticmethod
     def _significance_cube(cubes, method):
-        if method in {"lima", "simple"}:
-            scube = significance(cubes["counts"], cubes["background"], method="lima")
+        if method in {"lima"}:
+            scube = CashCountsStatistic(cubes["counts"], cubes["background"]).significance
         elif method == "asmooth":
             scube = _significance_asmooth(cubes["counts"], cubes["background"])
         elif method == "ts":
@@ -83,8 +83,7 @@ class ASmoothMapEstimator:
         else:
             raise ValueError(
                 "Not a valid significance estimation method."
-                " Choose one of the following: 'lima', 'simple',"
-                " 'asmooth' or 'ts'"
+                " Choose one of the following: 'lima' or 'asmooth'"
             )
         return scube
 
