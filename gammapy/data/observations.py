@@ -131,11 +131,12 @@ class Observation:
         -------
         obs : `gammapy.data.MemoryObservation`
         """
-        if "DataStore" in cls.__name__:
-            raise ValueError("Observation cannot be created in memory")
+        if tstart is None:
+            tstart = Quantity(0.0, "hr")
 
-        tstart = tstart or Quantity(0.0, "hr")
-        tstop = (tstart + Quantity(livetime)) or tstop
+        if tstop is None:
+            tstop = tstart + Quantity(livetime)
+
         gti = GTI.create([tstart], [tstop], reference_time=reference_time)
 
         obs_info = cls._get_obs_info(
