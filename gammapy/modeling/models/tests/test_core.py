@@ -150,3 +150,23 @@ def test_compound_model():
     assert len(m.parameters) == 5
     assert m.parameters.names == ["norm", "x", "y", "x", "y"]
     assert_allclose(m.parameters.values, [42, 1, 2, 10, 20])
+
+
+def test_parameter_link_init():
+    m1 = MyModel()
+    m2 = MyModel(y=m1.y)
+
+    assert (m1.y is m2.y)
+
+    m1.y.value = 100
+    assert_allclose(m2.y.value, 100)
+
+
+def test_parameter_link():
+    m1 = MyModel()
+    m2 = MyModel()
+
+    m2.y = m1.y
+
+    m1.y.value = 100
+    assert_allclose(m2.y.value, 100)

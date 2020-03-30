@@ -351,19 +351,6 @@ class Parameters(collections.abc.Sequence):
         idx = self.index(name)
         return self._parameters[idx]
 
-    def link(self, par, other_par):
-        """Create link to other parameter
-
-        Parameters
-        ----------
-        par : str, int or `Parameter`
-            Parameter to be linked
-        other_par : str, int or `Parameter`
-            Parameter to be linked
-        """
-        idx = self.index(par)
-        self._parameters[idx] = other_par
-
     def __len__(self):
         return len(self._parameters)
 
