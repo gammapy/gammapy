@@ -65,22 +65,23 @@ def cli_download_scripts(src, out, release, modetutorials, silent):
 
 @click.command(name="datasets")
 @click.option("--src", default="", help="Specific dataset to download.")
-@click.option("--release", default="", help="Number of release - ex: 0.12")
 @click.option(
     "--out",
     default="gammapy-datasets",
-    help="Path where datasets will be copied.",
+    help="Destination folder.",
     show_default=True,
 )
-@click.option(
-    "--tests",
-    default=False,
-    is_flag=True,
-    help="Include datasets needed for development tests.",
-)
+@click.option("--release", default="", help="Number of release - ex: 0.12")
 @click.option("--modetutorials", default=False, hidden=True)
 @click.option("--silent", default=True, is_flag=True, hidden=True)
-def cli_download_datasets(src, out, release, tests, modetutorials, silent):
+@click.option(
+    "--tests",
+    default=True,
+    is_flag=True,
+    help="Include datasets needed for tests. [default: True]",
+    hidden=True
+)
+def cli_download_datasets(src, out, release, modetutorials, silent, tests):
     """Download datasets"""
     plan = ComputePlan(
         src, out, release, "datasets", modetutorials=modetutorials, download_tests=tests
