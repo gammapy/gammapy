@@ -217,6 +217,9 @@ class Background3D:
             data=data,
         )
 
+    def peek(self, figsize=(10, 8)):
+        return self.to_2d().peek(figsize)
+
 
 class Background2D:
     """Background 2D.
@@ -490,7 +493,53 @@ class Background2D:
 
         return ax
 
-    def peek(self):
-        from .effective_area import EffectiveAreaTable2D
+    def plot_spectrum(self, ax=None, **kwargs):
+        """Plot angle integrated background rate versus energy.
 
-        return EffectiveAreaTable2D.peek(self)
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        kwargs : dict
+            Forwarded tp plt.plot()
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axis
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+        offset = self.data.axis("offset").edges
+        energy = self.data.axis("energy").center
+
+        bkg = []
+        for ee in energy:
+            data = self.data.evaluate(offset=offset, energy=ee)
+            val = np.nansum(trapz_loglog(data, offset, axis=0))
+            bkg.append(val.value)
+
+        ax.plot(energy, bkg, label="integrated spectrum", **kwargs)
+
+        unit = self.data.data.unit * offset.unit * offset.unit
+
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel(f"Energy [{energy.unit}]")
+        ax.set_ylabel(f"Background rate ({unit})")
+        ax.set_xlim(min(energy.value), max(energy.value))
+        ax.legend(loc="best")
+
+        return ax
+
+    def peek(self, figsize=(10, 8)):
+        """Quick-look summary plots."""
+        import matplotlib.pyplot as plt
+
+        fig, axes = plt.subplots(nrows=2, ncols=2, figsize=figsize)
+        self.plot(ax=axes[1][1])
+        self.plot_offset_dependence(ax=axes[0][0])
+        self.plot_energy_dependence(ax=axes[1][0])
+        self.plot_spectrum(ax=axes[0][1])
+        plt.tight_layout()
