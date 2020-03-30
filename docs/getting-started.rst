@@ -12,8 +12,7 @@ This section explains the steps to get set up for the Gammapy tutorials on your
 machine:
 
 1. Check your setup and Gammapy environment
-2. Download tutorial notebooks and example datasets
-3. Use Gammapy with Python, IPython or Jupyter
+2. Use Gammapy with Python, IPython or Jupyter
 
 If you have used conda, Python, IPython and Jupyter before, you can just skim
 this page, and quickly copy & paste the commands to get set up.
@@ -24,66 +23,6 @@ Help!?
 If you have any questions or issues, please ask for help on the Gammapy Slack,
 mailing list or on Github (whatever is easiest for you, see `Gammapy contact`_)
 
-Check
------
-
-To check your Gammapy installation, use this command:
-
-.. code-block:: bash
-
-    gammapy info
-
-You can also start a Python interactive prompt and check your Gammapy install
-location and version like this:
-
-.. code-block:: bash
-
-    $ python
-    >>> import gammapy
-    >>> print(gammapy.__version__)
-    >>> print(gammapy)
-
-
-Download tutorials
-------------------
-
-You can now proceed to download the Gammapy tutorial notebooks and the example
-datasets used there (at the moment from CTA, H.E.S.S. and Fermi-LAT). The total
-size to download is about 100 MB.
-
-.. code-block:: bash
-
-    gammapy download tutorials --release 0.16
-    cd gammapy-tutorials
-    export GAMMAPY_DATA=$PWD/datasets
-
-You might want to put the definition of the ``$GAMMAPY_DATA`` environment
-variable in your shell profile setup file that is executed when you open a new
-terminal (for example ``$HOME/.bash_profile``).
-
-If you are not using the ``bash`` shell, handling of shell environment variables
-might be different, e.g. in some shells the command to use is ``set`` or something
-else instead of ``export``, and also the profile setup file will be different.
-
-On Windows, you should set the ``GAMMAPY_DATA`` environment variable in the
-"Environment Variables" settings dialog, as explained e.g.
-`here <https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables>`__
-
-The datasets are curated and stable, the notebooks are still under development
-just like Gammapy itself, and thus stored in a sub-folder that contains the
-Gammapy version number.
-
-The ``gammapy download`` command and versioning of the notebooks is new. If
-there are issues, note that you can just delete the folder any time using ``rm
--r gammapy-tutorials`` and start over.
-
-Also note that it's of course possible to download just the notebooks, just
-the datasets, a single notebook or dataset, or a specific tutorial with the
-datasets it uses. See the help:
-
-.. code-block:: bash
-
-    gammapy download --help
 
 Check your setup
 ----------------
@@ -134,8 +73,8 @@ Gammapy is a Python package, so you can of course import and use it from Python:
     Python 3.6.0 | packaged by conda-forge | (default, Feb 10 2017, 07:08:35)
     [GCC 4.2.1 Compatible Apple LLVM 7.3.0 (clang-703.0.31)] on darwin
     Type "help", "copyright", "credits" or "license" for more information.
-    >>> from gammapy.stats import significance
-    >>> significance(n_on=10, mu_bkg=4.2, method='lima')
+    >>> from gammapy.stats import CashCountsStatistic
+    >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).significance
     array([2.39791813])
 
 IPython
@@ -150,9 +89,9 @@ IPython is nicer to use for interactive analysis:
     Type 'copyright', 'credits' or 'license' for more information
     IPython 6.5.0 -- An enhanced Interactive Python. Type '?' for help.
 
-    In [1]: from gammapy.stats import significance
+    In [1]: from gammapy.stats import CashCountsStatistic
 
-    In [2]: significance(n_on=10, mu_bkg=4.2, method='lima')
+    In [2]: CashCountsStatistic(n_on=10, mu_bkg=4.2).significance
     Out[2]: array([2.39791813])
 
 For example you can use ``?`` to look up **help for any Gammapy function, class or
@@ -160,10 +99,10 @@ method** from IPython:
 
 .. code-block:: bash
 
-    In [3]: significance?
+    In [3]: CashCountsStatistic?
 
 Of course, you can also use the Gammapy online docs if you prefer, clicking in links
-(i.e. `gammapy.stats.significance`) or using *search docs* field in the upper left.
+(i.e. `gammapy.stats.CashCountsStatistic`) or using *search docs* field in the upper left.
 
 As an example, here's how you can create `gammapy.data.DataStore` and
 `gammapy.data.EventList` objects and start exploring H.E.S.S. data:
@@ -218,16 +157,6 @@ running some Python code, use IPython like this:
 
 For examples how to run Gammapy analyses from Python scripts, see :ref:`tutorials_scripts`.
 
-Command line
-++++++++++++
-
-As you have already seen, installing Gammapy gives you a ``gammapy`` command line
-tool with subcommands such as ``gammapy info`` or ``gammapy download``.
-
-We plan to add a high-level interface to Gammapy soon that will let you run
-Gammapy analyses via the command line interface, probably driven by a config
-file. This is not available yet, for now you have to use Gammapy as a Python
-package.
 
 Jupyter notebooks
 +++++++++++++++++
