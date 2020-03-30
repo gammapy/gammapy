@@ -768,8 +768,6 @@ class FluxPointsEstimator(FluxEstimator):
 
     Parameters
     ----------
-    datasets : list of `~gammapy.spectrum.SpectrumDataset`
-        Spectrum datasets.
     e_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
     source : str or int
@@ -792,7 +790,6 @@ class FluxPointsEstimator(FluxEstimator):
 
     def __init__(
         self,
-        datasets,
         e_edges,
         source=0,
         norm_min=0.2,
@@ -805,7 +802,6 @@ class FluxPointsEstimator(FluxEstimator):
     ):
         self.e_edges = e_edges
         super().__init__(
-            datasets,
             source,
             e_edges[:2],
             norm_min,
@@ -819,7 +815,7 @@ class FluxPointsEstimator(FluxEstimator):
         self._contribute_to_stat = False
 
     def _freeze_empty_background(self):
-        counts_all = self.estimate_counts()["counts"]
+        counts_all = self._estimate_counts()["counts"]
 
         for counts, dataset in zip(counts_all, self.datasets):
             if isinstance(dataset, MapDataset) and counts == 0:
@@ -835,29 +831,41 @@ class FluxPointsEstimator(FluxEstimator):
 
     def __str__(self):
         s = f"{self.__class__.__name__}:\n"
-        s += str(self.datasets) + "\n"
         s += str(self.e_edges) + "\n"
-        s += str(self.model) + "\n"
         return s
 
-    def run(self, steps="all"):
+    def run(self, datasets, steps="all"):
         """Run the flux point estimator for all energy groups.
+
+        Parameters
+        ----------
+        datasets : list of `~gammapy.spectrum.SpectrumDataset`
+            Spectrum datasets.
+        steps : list of str
+            Which steps to execute. See `estimate_flux_point` for details
+            and available options.
 
         Returns
         -------
         flux_points : `FluxPoints`
             Estimated flux points.
-        steps : list of str
-            Which steps to execute. See `estimate_flux_point` for details
-            and available options.
         """
+        datasets = self._check_datasets(datasets)
+
+        if not datasets.is_all_same_type or not datasets.is_all_same_energy_shape:
+            raise ValueError(
+                "Flux point estimation requires a list of datasets"
+                " of the same type and data shape."
+            )
+        self.datasets = datasets.copy()
+
         rows = []
         for e_group in self.e_groups:
             if e_group["bin_type"].strip() != "normal":
                 log.debug("Skipping under-/ overflow bin in flux point estimation.")
                 continue
 
-            row = self.estimate_flux_point(e_group, steps=steps)
+            row = self._estimate_flux_point(e_group, steps=steps)
             rows.append(row)
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
@@ -868,7 +876,7 @@ class FluxPointsEstimator(FluxEstimator):
         energy_mask[e_group["idx_min"] : e_group["idx_max"] + 1] = 1
         return energy_mask.astype(bool)
 
-    def estimate_flux_point(self, e_group, steps="all"):
+    def _estimate_flux_point(self, e_group, steps="all"):
         """Estimate flux point for a single energy group.
 
         Parameters
@@ -904,19 +912,20 @@ class FluxPointsEstimator(FluxEstimator):
             self._contribute_to_stat |= mask.any()
 
         if not self._contribute_to_stat:
-            result = self._return_nan_result(steps=steps)
-            result.update(self.estimate_counts())
+            model = self.datasets[0].models[self.source].spectral_model
+            result = self._return_nan_result(model, steps=steps)
+            result.update(self._estimate_counts())
             return result
 
         with self.datasets.parameters.restore_values:
 
             self._freeze_empty_background()
 
-            result = super().run(steps=steps)
-            result.update(self.estimate_counts())
+            result = super().run(self.datasets, steps=steps)
+            result.update(self._estimate_counts())
         return result
 
-    def estimate_counts(self):
+    def _estimate_counts(self):
         """Estimate counts for the flux point.
 
         Returns

@@ -53,9 +53,9 @@ def create_fpe(model):
     dataset = simulate_spectrum_dataset(model)
     e_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.models = model
-    return FluxPointsEstimator(
-        datasets=[dataset], e_edges=e_edges, norm_n_values=11, source="source"
-    )
+    fpe = FluxPointsEstimator(e_edges=e_edges, norm_n_values=11, source="source")
+    datasets = [dataset]
+    return datasets, fpe
 
 
 def simulate_map_dataset(random_state=0, name=None):
@@ -96,12 +96,9 @@ def fpe_map_pwl():
     dataset_2.mask_safe = RegionNDMap.from_geom(dataset_2.counts.geom, dtype=bool)
 
     e_edges = [0.1, 1, 10, 100] * u.TeV
-    return FluxPointsEstimator(
-        datasets=[dataset_1, dataset_2],
-        e_edges=e_edges,
-        norm_n_values=3,
-        source="source",
-    )
+    datasets = [dataset_1, dataset_2]
+    fpe = FluxPointsEstimator(e_edges=e_edges, norm_n_values=3, source="source")
+    return datasets, fpe
 
 
 @pytest.fixture(scope="session")
@@ -112,14 +109,9 @@ def fpe_map_pwl_reoptimize():
     dataset.models.parameters["lat_0"].frozen = True
     #    dataset.models.parameters["index"].frozen = True
     dataset.models.parameters["sigma"].frozen = True
-    return FluxPointsEstimator(
-        datasets=[dataset],
-        e_edges=e_edges,
-        norm_values=[1],
-        reoptimize=True,
-        source="source",
-    )
-
+    datasets = [dataset]
+    fpe = FluxPointsEstimator(e_edges=e_edges, norm_values=[1], reoptimize=True, source="source")
+    return datasets, fpe
 
 @pytest.fixture(scope="session")
 def fpe_pwl():
@@ -134,13 +126,16 @@ def fpe_ecpl():
 class TestFluxPointsEstimator:
     @staticmethod
     def test_str(fpe_pwl):
-        assert "FluxPointsEstimator" in str(fpe_pwl)
+        datasets, fpe = fpe_pwl
+        assert "FluxPointsEstimator" in str(fpe)
 
     @pytest.mark.xfail
     @staticmethod
     @requires_dependency("iminuit")
     def test_run_pwl(fpe_pwl):
-        fp = fpe_pwl.run()
+        datasets, fpe = fpe_pwl
+
+        fp = fpe.run(datasets)
         actual = fp.table["norm"].data
         assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
 
@@ -170,15 +165,10 @@ class TestFluxPointsEstimator:
 
     @staticmethod
     @requires_dependency("iminuit")
-    def test_run_ecpl(fpe_ecpl):
-        fp = fpe_ecpl.estimate_flux_point(fpe_ecpl.e_groups[1])
-        assert_allclose(fp["norm"], 1, rtol=1e-1)
-
-    @staticmethod
-    @requires_dependency("iminuit")
     @requires_data()
     def test_run_map_pwl(fpe_map_pwl):
-        fp = fpe_map_pwl.run()
+        datasets, fpe = fpe_map_pwl
+        fp = fpe.run(datasets)
 
         actual = fp.table["norm"].data
         assert_allclose(actual, [1.009629, 0.930886, 0.958678], rtol=1e-2)
@@ -205,7 +195,8 @@ class TestFluxPointsEstimator:
     @requires_dependency("iminuit")
     @requires_data()
     def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
-        fp = fpe_map_pwl_reoptimize.run(steps=["err", "norm-scan", "ts"])
+        datasets, fpe = fpe_map_pwl_reoptimize
+        fp = fpe.run(datasets, steps=["err", "norm-scan", "ts"])
 
         actual = fp.table["norm"].data
         assert_allclose(actual, 0.932607, rtol=1e-3)
@@ -229,8 +220,8 @@ def test_no_likelihood_contribution():
     )
     dataset.mask_safe = RegionNDMap.from_geom(dataset.counts.geom, dtype=bool)
 
-    fpe = FluxPointsEstimator([dataset], e_edges=[1, 3, 10] * u.TeV, source="source")
-    fp = fpe.run()
+    fpe = FluxPointsEstimator(e_edges=[1, 3, 10] * u.TeV, source="source")
+    fp = fpe.run([dataset])
 
     assert np.isnan(fp.table["norm"]).all()
     assert np.isnan(fp.table["norm_err"]).all()
@@ -260,10 +251,8 @@ def test_mask_shape():
     dataset_1.models = model
     dataset_2.models = model
 
-    fpe = FluxPointsEstimator(
-        datasets=[dataset_2, dataset_1], e_edges=[1, 10] * u.TeV, source="source"
-    )
+    fpe = FluxPointsEstimator(e_edges=[1, 10] * u.TeV, source="source")
 
-    fp = fpe.run()
+    fp = fpe.run([dataset_2, dataset_1])
 
     assert_allclose(fp.table["counts"], 0)

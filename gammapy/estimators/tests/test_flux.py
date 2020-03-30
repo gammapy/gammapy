@@ -76,7 +76,7 @@ def test_flux_estimator_1d(hess_datasets):
 
     assert_allclose(result["norm"], 1.176789, atol=1e-3)
     assert_allclose(result["ts"], 693.111777, atol=1e-3)
-    assert_allclose(result["norm_err"], 0.081581, atol=1e-3)
+    assert_allclose(result["norm_err"], 0.078087, atol=1e-3)
     assert_allclose(result["norm_errn"], 0.078046, atol=1e-3)
     assert_allclose(result["norm_errp"], 0.081665, atol=1e-3)
     assert_allclose(result["norm_ul"], 1.431722, atol=1e-3)

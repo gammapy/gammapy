@@ -87,35 +87,31 @@ class FluxEstimator(ParameterEstimator):
     def e_ref(self):
         return np.sqrt(self.energy_range[0] * self.energy_range[1])
 
-    @property
-    def ref_model(self):
-        return self.model.model
-
     def __str__(self):
         s = f"{self.__class__.__name__}:\n"
         s += str(self.datasets) + "\n"
         s += str(self.model) + "\n"
         return s
 
-    def _set_scale_model(self, datasets):
+    def _set_model(self, datasets, model):
         # set the model on all datasets
         for dataset in datasets:
-            dataset.models[self.source].spectral_model = self.model
+            dataset.models[self.source].spectral_model = model
 
-    def _prepare_result(self):
+    def _prepare_result(self, model):
         """Prepare the result dictionnary"""
         return {
             "e_ref": self.e_ref,
             "e_min": self.energy_range[0],
             "e_max": self.energy_range[1],
-            "ref_dnde": self.ref_model(self.e_ref),
-            "ref_flux": self.ref_model.integral(
+            "ref_dnde": model(self.e_ref),
+            "ref_flux": model.integral(
                 self.energy_range[0], self.energy_range[1]
             ),
-            "ref_eflux": self.ref_model.energy_flux(
+            "ref_eflux": model.energy_flux(
                 self.energy_range[0], self.energy_range[1]
             ),
-            "ref_e2dnde": self.ref_model(self.e_ref) * self.e_ref ** 2,
+            "ref_e2dnde": model(self.e_ref) * self.e_ref ** 2,
         }
 
     def _prepare_steps(self, steps):
@@ -156,7 +152,6 @@ class FluxEstimator(ParameterEstimator):
         result : dict
             Dict with results for the flux point.
         """
-        # make a copy to not modify the input datasets
         datasets = self._check_datasets(datasets)
 
         if not datasets.is_all_same_type or not datasets.is_all_same_energy_shape:
@@ -164,39 +159,37 @@ class FluxEstimator(ParameterEstimator):
                 "Flux point estimation requires a list of datasets"
                 " of the same type and data shape."
             )
-
-        datasets = datasets.copy()
-
         dataset = datasets[0]
 
-        model = dataset.models[self.source].spectral_model
+        ref_model = dataset.models[self.source].spectral_model
 
-        self.model = ScaleSpectralModel(model)
-        self.model.norm.min = 0
-        self.model.norm.max = 1e5
+        scale_model = ScaleSpectralModel(ref_model)
+        scale_model.norm.min = 0
+        scale_model.norm.max = 1e5
 
-        self._set_scale_model(datasets)
+        self._set_model(datasets, scale_model)
 
         steps = self._prepare_steps(steps)
-        result = self._prepare_result()
+        result = self._prepare_result(scale_model.model)
 
-        self.model.norm.value = 1.05
-        self.model.norm.frozen = False
+        scale_model.norm.value = 1.0
+        scale_model.norm.frozen = False
 
         result.update(
             super().run(
                 datasets,
-                self.model.norm,
+                scale_model.norm,
                 steps,
                 null_value=0,
                 scan_values=self.norm_values,
             )
         )
+        self._set_model(datasets, ref_model)
         return result
 
-    def _return_nan_result(self, steps="all"):
+    def _return_nan_result(self, model, steps="all"):
         steps = self._prepare_steps(steps)
-        result = self._prepare_result()
+        result = self._prepare_result(model)
         result.update({"norm": np.nan, "stat": np.nan, "success": False})
         if "err" in steps:
             result.update({"norm_err": np.nan})
