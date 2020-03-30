@@ -68,21 +68,6 @@ class Model:
             kwargs[par.name] = par
         return cls(**kwargs)
 
-    def _init_from_parameters(self, parameters):
-        """Create model from list of parameters.
-
-        This should be called for models that generate
-        the parameters dynamically in ``__init__``,
-        like the ``NaimaSpectralModel``
-        """
-        # TODO: should we pass through `Parameters` here? Why?
-        parameters = Parameters(parameters)
-        self._parameters = parameters
-        for parameter in parameters:
-            setattr(self, parameter.name, parameter)
-
-        self._covariance = Covariance(parameters)
-
     @property
     def covariance(self):
         for par in self.parameters:
@@ -120,12 +105,6 @@ class Model:
     def from_dict(cls, data):
         parameters = Parameters.from_dict(data["parameters"])
         return cls.from_parameters(parameters)
-
-    # TODO: try to get rid of this
-    def _update_from_dict(self, data):
-        self._parameters.update_from_dict(data["parameters"])
-        for parameter in self.parameters:
-            setattr(self, parameter.name, parameter)
 
     @staticmethod
     def create(tag, *args, **kwargs):

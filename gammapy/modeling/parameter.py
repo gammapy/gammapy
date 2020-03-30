@@ -65,7 +65,7 @@ class Parameter:
     """
 
     def __init__(
-        self, name, value, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=0
+        self, name, value, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=0,
     ):
         self.name = name
         self._link_label_io = None
@@ -404,16 +404,6 @@ class Parameters(collections.abc.Sequence):
             parameter._link_label_io = link_label
             parameters.append(parameter)
         return cls(parameters=parameters)
-
-    def update_from_dict(self, data):
-        for par in data:
-            parameter = self[par["name"]]
-            parameter.value = float(par["value"])
-            parameter.unit = u.Unit(par.get("unit", parameter.unit))
-            parameter.min = float(par.get("min", parameter.min))
-            parameter.max = float(par.get("max", parameter.max))
-            parameter.frozen = par.get("frozen", parameter.frozen)
-            parameter._link_label_io = par.get("link", parameter._link_label_io)
 
     def set_parameter_factors(self, factors):
         """Set factor of all parameters.

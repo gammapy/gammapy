@@ -740,9 +740,8 @@ class BackgroundModel(Model):
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
 
         bkg_map = self.map.cutout(**cutout_kwargs)
-        model = self.__class__(bkg_map, name=name)
-        model.parameters.update_from_dict(self.parameters.to_dict())
-        return model
+        parameters = self.parameters.copy()
+        return self.__class__.from_parameters(parameters, map=bkg_map, name=name)
 
     def stack(self, other, weights=None):
         """Stack background model in place.
