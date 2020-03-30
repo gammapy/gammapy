@@ -177,12 +177,70 @@ def test_mde_run(dataset):
 
     meta = events.table.meta
 
-    assert meta["RA_PNT"] == 266.4049882865447
-    assert meta["ONTIME"] == 3600.0
+    assert meta["HDUCLAS1"] == "EVENTS"
+    assert meta["EXTNAME"] == "EVENTS"
+    assert (
+        meta["HDUDOC"]
+        == "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
+    )
+    assert meta["HDUVERS"] == "0.2"
+    assert meta["HDUCLASS"] == "GADF"
     assert meta["OBS_ID"] == 1001
+    assert meta["TSTART"] == 0.0
+    assert meta["TSTOP"] == 3599.9999997904524
+    assert meta["ONTIME"] == 3600.0
+    assert meta["LIVETIME"] == 3600.0
+    assert meta["DEADC"] == 0.0
+    assert meta["RA_PNT"] == 266.4049882865447
+    assert meta["DEC_PNT"] == -28.936177761791473
+    assert meta["EQUINOX"] == "J2000"
     assert meta["RADECSYS"] == "icrs"
+    assert meta["CREATOR"] == "Gammapy 0.17.dev531+g93b8bd0.d20200330"
+    assert meta["EUNIT"] == "TeV"
+    assert meta["EVTVER"] == ""
+    assert meta["OBSERVER"] == "Gammapy user"
+    assert meta["DSTYP1"] == "TIME"
+    assert meta["DSUNI1"] == "s"
+    assert meta["DSVAL1"] == "TABLE"
+    assert meta["DSREF1"] == ":GTI"
+    assert meta["DSTYP2"] == "ENERGY"
+    assert meta["DSUNI2"] == "TeV"
+    assert meta["DSVAL2"] == "1.0:10.000000000000002"
+    assert meta["DSTYP3"] == "POS(RA,DEC)     "
+    assert meta["DSVAL3"] == "CIRCLE(266.4049882865447,-28.936177761791473,1.0)"
+    assert meta["DSUNI3"] == "deg             "
+    assert meta["NDSKEYS"] == " 3 "
+    assert meta["RA_OBJ"] == 266.4049882865447
+    assert meta["DEC_OBJ"] == -28.936177761791473
+    assert meta["TELAPSE"] == 1000.0
+    assert meta["MJDREFI"] == 51544
+    assert meta["MJDREFF"] == 0.0007428703684126958
+    assert meta["TIMEUNIT"] == "s"
+    assert meta["TIMESYS"] == "tt"
+    assert meta["TIMEREF"] == "LOCAL"
+    assert meta["DATE-OBS"] == "2000-01-01"
+    assert meta["DATE-END"] == "2000-01-01"
+    assert meta["TIME-OBS"] == "00:01:04.184"
+    assert meta["TIME-END"] == "00:17:44.184"
+    assert meta["TIMEDEL"] == 1e-09
+    assert meta["CONV_DEP"] == 0
+    assert meta["CONV_RA"] == 0
+    assert meta["CONV_DEC"] == 0
+    assert meta["MID00001"] == 1
+    assert meta["MID00002"] == 2
+    assert meta["NMCIDS"] == 2
+    assert meta["ALTITUDE"] == "20.000"
     assert meta["ALT_PNT"] == "20.000"
     assert meta["AZ_PNT"] == "0.000"
+    assert meta["ORIGIN"] == "Gammapy"
+    assert meta["CALDB"] == "1dc"
+    assert meta["IRF"] == "South_z20_50"
+    assert meta["TELESCOP"] == "CTA"
+    assert meta["INSTRUME"] == "1DC"
+    assert meta["N_TELS"] == ""
+    assert meta["TELLIST"] == ""
+    assert meta["GEOLON"] == ""
+    assert meta["GEOLAT"] == ""
 
 
 @requires_data()
