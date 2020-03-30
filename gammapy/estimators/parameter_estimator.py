@@ -16,8 +16,6 @@ class ParameterEstimator:
 
     Parameters
     ----------
-    datasets : `~gammapy.datasets.Datasets`
-        The datasets used to estimate the model parameter
     sigma : int
         Sigma to use for asymmetric error computation.
     sigma_ul : int
@@ -33,7 +31,6 @@ class ParameterEstimator:
 
     def __init__(
         self,
-        datasets,
         sigma=1,
         sigma_ul=2,
         reoptimize=True,
@@ -45,7 +42,6 @@ class ParameterEstimator:
         self.reoptimize = reoptimize
         self.n_scan_values = n_scan_values
         self.scan_n_err = scan_n_err
-        self.datasets = datasets
 
     @property
     def datasets(self):
@@ -117,11 +113,13 @@ class ParameterEstimator:
             return np.nan
         return result.total_stat
 
-    def run(self, parameter, steps="all", null_value=1e-150, scan_values=None):
+    def run(self, datasets, parameter, steps="all", null_value=1e-150, scan_values=None):
         """Run the parameter estimator.
 
         Parameters
         ----------
+        datasets : `~gammapy.datasets.Datasets`
+            The datasets used to estimate the model parameter
         parameter : `~gammapy.modeling.Parameter`
             the parameter to be estimated
         steps : list of str
@@ -145,6 +143,8 @@ class ParameterEstimator:
         result : dict
             Dict with the various parameter estimation values.
         """
+        self.datasets = datasets
+
         with self.datasets.parameters.restore_values:
 
             if not self.reoptimize:
