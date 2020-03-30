@@ -52,5 +52,6 @@ dependencies:
   - numdifftools
   - twine
   - parfive
+  - tqdm
   - yamllint
   - pydantic
