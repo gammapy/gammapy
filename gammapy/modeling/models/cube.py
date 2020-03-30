@@ -70,10 +70,6 @@ class SkyModel(SkyModelBase):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
         self.temporal_model = temporal_model
-        super().__init__()
-        # TODO: this hack is needed for compound models to work
-        self.__dict__.pop("_parameters")
-
         self._name = make_name(name)
 
         if apply_irf is None:
@@ -81,9 +77,7 @@ class SkyModel(SkyModelBase):
 
         self.apply_irf = apply_irf
         self.datasets_names = datasets_names
-
-        # cached covariance
-        self._covariance = Covariance(self.parameters)
+        super().__init__()
 
     @property
     def _models(self):

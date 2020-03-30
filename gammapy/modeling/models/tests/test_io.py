@@ -115,8 +115,7 @@ def test_absorption_io(tmp_path):
     model = AbsorbedSpectralModel(
         spectral_model=Model.create("PowerLawSpectralModel"),
         absorption=dominguez,
-        parameter=0.5,
-        parameter_name="redshift",
+        redshift=0.5
     )
     assert len(model.parameters) == 5
 
@@ -126,8 +125,7 @@ def test_absorption_io(tmp_path):
 
     new_model = AbsorbedSpectralModel.from_dict(model_dict)
 
-    assert new_model.parameter == 0.5
-    assert new_model.parameter_name == "redshift"
+    assert new_model.redshift.value == 0.5
     assert new_model.alpha_norm.name == "alpha_norm"
     assert new_model.alpha_norm.value == 1
     assert new_model.spectral_model.tag == "PowerLawSpectralModel"
@@ -143,8 +141,7 @@ def test_absorption_io(tmp_path):
     model = AbsorbedSpectralModel(
         spectral_model=Model.create("PowerLawSpectralModel"),
         absorption=test_absorption,
-        parameter=0.5,
-        parameter_name="redshift",
+        redshift=0.5,
     )
     model_dict = model.to_dict()
     new_model = AbsorbedSpectralModel.from_dict(model_dict)

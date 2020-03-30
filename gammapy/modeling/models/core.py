@@ -16,7 +16,7 @@ def _set_link(shared_register, model):
         if link_label is not None:
             if link_label in shared_register:
                 new_param = shared_register[link_label]
-                model.parameters.link(name, new_param)
+                setattr(model, name, new_param)
             else:
                 shared_register[link_label] = param
     return shared_register
@@ -30,9 +30,7 @@ class Model:
 
     def __init__(self, **kwargs):
         # Copy default parameters from the class to the instance
-        default_parameters = self.__class__.default_parameters.copy()
-
-        parameters = []
+        default_parameters = self.default_parameters.copy()
 
         for par in default_parameters:
             value = kwargs.get(par.name, par)
@@ -42,12 +40,8 @@ class Model:
             else:
                 par = value
 
-            parameters.append(par)
-
-        for par in parameters:
             setattr(self, par.name, par)
 
-        self._parameters = Parameters(parameters)
         self._covariance = Covariance(self.parameters)
 
     def __init_subclass__(cls, **kwargs):
@@ -91,7 +85,7 @@ class Model:
 
     @property
     def covariance(self):
-        for par in self._parameters:
+        for par in self.parameters:
             pars = Parameters([par])
             covar = Covariance(pars, data=[[par.error ** 2]])
             self._covariance.set_subcovariance(covar)
@@ -110,8 +104,9 @@ class Model:
     @property
     def parameters(self):
         """Parameters (`~gammapy.modeling.Parameters`)"""
-        # trigger recursive update
-        return self._parameters
+        return Parameters(
+            [getattr(self, name) for name in self.default_parameters.names]
+        )
 
     def copy(self):
         """A deep copy."""

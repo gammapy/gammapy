@@ -6,12 +6,14 @@ import scipy.optimize
 import scipy.special
 import astropy.units as u
 from astropy.table import Table
+from astropy import constants as const
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.modeling import Parameter, Parameters, Covariance
 from gammapy.utils.integrate import evaluate_integral_pwl, trapz_loglog
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
+
 from .core import Model
 
 
@@ -1211,35 +1213,31 @@ class AbsorbedSpectralModel(SpectralModel):
         Spectral model.
     absorption : `Absorption`
         Absorption model.
-    parameter : float
-        parameter value for absorption model
-    parameter_name : str, optional
-        parameter name
+    redshift : float
+        Redshift of the absorption model
     alpha_norm: float
         Norm of the EBL model
     """
 
     tag = "AbsorbedSpectralModel"
+    alpha_norm = Parameter("alpha_norm", 1., frozen=True)
+    redshift = Parameter("redshift", 0.1, frozen=True)
 
     def __init__(
         self,
         spectral_model,
         absorption,
-        parameter,
-        parameter_name="redshift",
-        alpha_norm=1.0,
+        redshift,
+        alpha_norm=alpha_norm.quantity,
     ):
         self.spectral_model = spectral_model
         self.absorption = absorption
-        self.parameter = parameter
-        self.parameter_name = parameter_name
+
         min_ = self.absorption.param.min()
         max_ = self.absorption.param.max()
 
-        par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
-        alpha_norm = Parameter("alpha_norm", alpha_norm, frozen=True)
-        parameters = Parameters([par, alpha_norm])
-        super()._init_from_parameters(parameters)
+        redshift = Parameter("redshift", redshift, frozen=True, min=min_, max=max_)
+        super().__init__(redshift=redshift, alpha_norm=alpha_norm)
 
     def _check_covariance(self):
         if not self.parameters == self._covariance.parameters:
@@ -1263,20 +1261,19 @@ class AbsorbedSpectralModel(SpectralModel):
 
     @property
     def parameters(self):
-        return self._parameters + self.spectral_model.parameters
+        return Parameters([self.redshift, self.alpha_norm]) + self.spectral_model.parameters
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""
         # assign redshift value and remove it from dictionary
         # since it does not belong to the spectral model
-        parameter = kwargs[self.parameter_name]
-        del kwargs[self.parameter_name]
-        del kwargs["alpha_norm"]
+        parameter = kwargs.pop("redshift")
+        alpha_norm = kwargs.pop("alpha_norm")
 
         dnde = self.spectral_model.evaluate(energy=energy, **kwargs)
         absorption = self.absorption.evaluate(energy=energy, parameter=parameter)
         # Power rule: (e ^ a) ^ b = e ^ (a * b)
-        absorption = np.power(absorption, self.alpha_norm.value)
+        absorption = np.power(absorption, alpha_norm)
         return dnde * absorption
 
     def to_dict(self):
@@ -1285,10 +1282,10 @@ class AbsorbedSpectralModel(SpectralModel):
             "base_model": self.spectral_model.to_dict(),
             "absorption": self.absorption.to_dict(),
             "absorption_parameter": {
-                "name": self.parameter_name,
-                "value": self.parameter,
+                "name": "redshift",
+                "value": self.redshift.value,
             },
-            "parameters": self._parameters.to_dict(),
+            "parameters": Parameters([self.redshift, self.alpha_norm]).to_dict(),
         }
 
     @classmethod
@@ -1300,10 +1297,8 @@ class AbsorbedSpectralModel(SpectralModel):
         model = cls(
             spectral_model=model_class.from_dict(data["base_model"]),
             absorption=Absorption.from_dict(data["absorption"]),
-            parameter=data["absorption_parameter"]["value"],
-            parameter_name=data["absorption_parameter"]["name"],
+            redshift=data["absorption_parameter"]["value"]
         )
-        model._update_from_dict(data)
         return model
 
 
@@ -1340,8 +1335,10 @@ class NaimaSpectralModel(SpectralModel):
         self._particle_distribution = self.radiative_model.particle_distribution
         self.distance = u.Quantity(distance)
         self.seed = seed
+
         if nested_models is None:
             nested_models = {}
+
         self.nested_models = nested_models
 
         if isinstance(self._particle_distribution, naima.models.TableModel):
@@ -1372,7 +1369,8 @@ class NaimaSpectralModel(SpectralModel):
             parameters.append(Parameter("B", B))
             parameters.append(Parameter("radius", radius, frozen=True))
 
-        super()._init_from_parameters(parameters)
+        self.default_parameters = Parameters(parameters)
+        super().__init__()
 
     def _evaluate_ssc(
         self, energy,
@@ -1386,7 +1384,6 @@ class NaimaSpectralModel(SpectralModel):
         "https://naima.readthedocs.io/en/latest/examples.html#crab-nebula-ssc-model"
 
         """
-        from astropy.constants import c
         import naima
 
         SYN = naima.models.Synchrotron(
@@ -1398,7 +1395,7 @@ class NaimaSpectralModel(SpectralModel):
 
         Esy = np.logspace(-7, 9, 100) * u.eV
         Lsy = SYN.flux(Esy, distance=0 * u.cm)  # use distance 0 to get luminosity
-        phn_sy = Lsy / (4 * np.pi * self.radius.quantity ** 2 * c) * 2.24
+        phn_sy = Lsy / (4 * np.pi * self.radius.quantity ** 2 * const.c) * 2.24
         # The factor 2.24 comes from the assumption on uniform synchrotron
         # emissivity inside a sphere
 
