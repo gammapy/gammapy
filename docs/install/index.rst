@@ -58,7 +58,8 @@ Download tutorials
 
 You can now proceed to download the Gammapy tutorial notebooks and the example
 datasets used there (at the moment from CTA, H.E.S.S. and Fermi-LAT). The total
-size to download is about 100 MB.
+size to download is about 180 MB. Select the location where you want to install
+the datasets and proceed with the following commands:
 
 .. code-block:: bash
 
@@ -90,5 +91,5 @@ What next?
 
 Congratulations! You are all set to start using Gammapy!
 
-* If you're new to Python, ipython and Jupyter, read the :ref:`getting-started` guide.
+* If you're new to conda, Python, ipython and Jupyter, read the :ref:`getting-started` guide.
 * To learn how to use Gammapy, go to :ref:`tutorials`.

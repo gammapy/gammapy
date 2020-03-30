@@ -157,16 +157,6 @@ running some Python code, use IPython like this:
 
 For examples how to run Gammapy analyses from Python scripts, see :ref:`tutorials_scripts`.
 
-Command line
-++++++++++++
-
-As you have already seen, installing Gammapy gives you a ``gammapy`` command line
-tool with subcommands such as ``gammapy info`` or ``gammapy download``.
-
-We plan to add a high-level interface to Gammapy soon that will let you run
-Gammapy analyses via the command line interface, probably driven by a config
-file. This is not available yet, for now you have to use Gammapy as a Python
-package.
 
 Jupyter notebooks
 +++++++++++++++++
