@@ -3,6 +3,7 @@
 import logging
 import click
 import requests
+import tarfile
 from .downloadclasses import ComputePlan, ParallelDownload
 from pathlib import Path
 from tqdm import tqdm
@@ -26,6 +27,20 @@ def progress_download(source, destination):
                     f.write(chunk)
                     progress_bar.update(len(chunk))
     progress_bar.close()
+
+
+def members(tf, master_folder):
+    l = len(master_folder)
+    for member in tf.getmembers():
+        if member.path.startswith(master_folder):
+            member.path = member.path[l:]
+            yield member
+
+
+def extract_bundle(bundle, destination):
+    with tarfile.open(bundle) as tar:
+        tar.extractall(path=destination, members=members(tar, "gammapy-data-master/"))
+    Path(bundle).unlink()
 
 
 @click.command(name="notebooks")
@@ -122,6 +137,9 @@ def cli_download_datasets(src, out, release, modetutorials, silent, tests):
         log.info(f"Downloading datasets from {filelist['bundle']['url']}")
         tar_destination_file = Path(localfolder) / "datasets.tar.gz"
         progress_download(filelist['bundle']['url'], tar_destination_file)
+        log.info(f"Extracting {tar_destination_file}")
+        extract_bundle(tar_destination_file, localfolder)
+
     # specific collection
     else:
         down.run()
