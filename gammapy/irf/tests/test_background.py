@@ -130,6 +130,12 @@ def test_background_3d_integrate(bkg_3d):
     assert_allclose(rate.to("s-1 sr-1").value, [[99000000.0, 99000000.0]], rtol=1e-5)
 
 
+@requires_dependency("matplotlib")
+def test_plot(bkg_2d):
+    with mpl_plot_check():
+        bkg_2d.peek()
+
+
 @pytest.fixture(scope="session")
 def bkg_2d():
     """A simple Background2D test case"""
@@ -231,3 +237,6 @@ def test_plot(bkg_2d):
 
     with mpl_plot_check():
         bkg_2d.plot_offset_dependence()
+
+    with mpl_plot_check():
+        bkg_2d.plot_spectrum()
