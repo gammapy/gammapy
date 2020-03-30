@@ -129,7 +129,12 @@ class ComputePlan:
                 return self.listfiles
             # collection of files
             if self.release:
-                url_datasets_json = RELEASES_BASE_URL + "/data/gammapy-" + self.release + "-data-index.json"
+                url_datasets_json = (
+                    RELEASES_BASE_URL
+                    + "/data/gammapy-"
+                    + self.release
+                    + "-data-index.json"
+                )
                 log.info(f"Reading {url_datasets_json}")
                 try:
                     txt = urlopen(url_datasets_json).read().decode("utf-8")
@@ -138,7 +143,9 @@ class ComputePlan:
                     return False
             else:
                 # for development just use the local index file
-                local_datasets_json = (Path(__file__).parent / DEV_DATA_JSON_LOCAL).resolve()
+                local_datasets_json = (
+                    Path(__file__).parent / DEV_DATA_JSON_LOCAL
+                ).resolve()
                 log.info(f"Reading {local_datasets_json}")
                 txt = local_datasets_json.read_text()
             datasets = json.loads(txt)

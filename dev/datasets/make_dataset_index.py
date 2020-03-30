@@ -4,13 +4,13 @@
 This is very much work in progress.
 Probably we should add a static website build step.
 """
-import logging
+import hashlib
 import json
+import logging
 import os
+import shutil
 from pathlib import Path
 import click
-import hashlib
-import shutil
 
 log = logging.getLogger(__name__)
 path_temp = Path("datasets")
@@ -225,9 +225,9 @@ class DownloadDatasetIndex:
         records = list(self.make_records())
         for rec in records:
             for f in rec["files"]:
-                destination = Path(os.environ["GAMMAPY_DATA"]) / f['path']
+                destination = Path(os.environ["GAMMAPY_DATA"]) / f["path"]
                 log.info(f"Moving {f['itempath']}")
-                shutil.copyfile(f['itempath'], destination)
+                shutil.copyfile(f["itempath"], destination)
 
         txt = json.dumps(records, indent=True)
         log.info("Writing {}".format(self.path))

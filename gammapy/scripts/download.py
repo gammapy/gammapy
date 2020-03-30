@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Command line tool to download datasets and notebooks"""
 import logging
+import tarfile
+from pathlib import Path
 import click
 import requests
-import tarfile
-from .downloadclasses import ComputePlan, ParallelDownload
-from pathlib import Path
 from tqdm import tqdm
-
+from .downloadclasses import ComputePlan, ParallelDownload
 
 log = logging.getLogger(__name__)
 
@@ -19,9 +18,9 @@ def progress_download(source, destination):
         return
 
     with requests.get(source, stream=True) as r:
-        total_size = int(r.headers.get('content-length')) if r.headers.get('content-length') else 152*1024*1024
-        progress_bar = tqdm(total=total_size, unit='B', unit_scale=True, unit_divisor=1024)
-        with open(destination, 'wb') as f:
+        total_size = (int(r.headers.get("content-length")) if r.headers.get("content-length") else 152 * 1024 * 1024)
+        progress_bar = tqdm(total=total_size, unit="B", unit_scale=True, unit_divisor=1024)
+        with open(destination, "wb") as f:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:
                     f.write(chunk)
@@ -102,10 +101,7 @@ def cli_download_scripts(src, out, release, modetutorials, silent):
 @click.command(name="datasets")
 @click.option("--src", default="", help="Specific dataset to download.")
 @click.option(
-    "--out",
-    default="gammapy-datasets",
-    help="Destination folder.",
-    show_default=True,
+    "--out", default="gammapy-datasets", help="Destination folder.", show_default=True,
 )
 @click.option("--release", default="", help="Number of release - ex: 0.12")
 @click.option("--modetutorials", default=False, hidden=True)
@@ -115,7 +111,7 @@ def cli_download_scripts(src, out, release, modetutorials, silent):
     default=True,
     is_flag=True,
     help="Include datasets needed for tests. [default: True]",
-    hidden=True
+    hidden=True,
 )
 def cli_download_datasets(src, out, release, modetutorials, silent, tests):
     """Download datasets"""
@@ -125,18 +121,13 @@ def cli_download_datasets(src, out, release, modetutorials, silent, tests):
     filelist = plan.getfilelist()
     localfolder = plan.getlocalfolder()
     down = ParallelDownload(
-        filelist,
-        localfolder,
-        release,
-        "datasets",
-        modetutorials,
-        silent,
+        filelist, localfolder, release, "datasets", modetutorials, silent,
     )
     # tar bundle
     if "bundle" in filelist:
         log.info(f"Downloading datasets from {filelist['bundle']['url']}")
         tar_destination_file = Path(localfolder) / "datasets.tar.gz"
-        progress_download(filelist['bundle']['url'], tar_destination_file)
+        progress_download(filelist["bundle"]["url"], tar_destination_file)
         log.info(f"Extracting {tar_destination_file}")
         extract_bundle(tar_destination_file, localfolder)
 
