@@ -60,6 +60,7 @@ Steps for the day of the release:
 
 #. Update the dataset index file by running `make dataset-index` and copy it over to `gammapy-0.14-data-index.json` in
    the webpage repo.
+#. Check if content in `gammapy-data` repository has changed and push the content and re-tag as master if so.
 #. Copy over `notebooks.yaml` to `gammapy-0.14-tutorials.yml` and adapt the links contained
    in the file to point to `https://docs.gammapy.org/0.14/_static/notebooks`.
 #. Copy the script index file from the last release to `gammapy-0.14-scripts.yml`
