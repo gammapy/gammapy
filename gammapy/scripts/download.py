@@ -19,7 +19,7 @@ def progress_download(source, destination):
         return
 
     with requests.get(source, stream=True) as r:
-        total_size = int(r.headers.get('content-length'))
+        total_size = int(r.headers.get('content-length')) if r.headers.get('content-length') else 152*1024*1024
         progress_bar = tqdm(total=total_size, unit='B', unit_scale=True, unit_divisor=1024)
         with open(destination, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024):
