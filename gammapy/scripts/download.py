@@ -8,17 +8,15 @@ import requests
 from tqdm import tqdm
 from .downloadclasses import ComputePlan, ParallelDownload
 
+
+BUNDLESIZE = 152  # in MB
 log = logging.getLogger(__name__)
 
 
 def progress_download(source, destination):
     destination.parent.mkdir(parents=True, exist_ok=True)
-    if destination.exists():
-        print("Already exists !!!")
-        return
-
     with requests.get(source, stream=True) as r:
-        total_size = (int(r.headers.get("content-length")) if r.headers.get("content-length") else 152 * 1024 * 1024)
+        total_size = (int(r.headers.get("content-length")) if r.headers.get("content-length") else BUNDLESIZE * 1024 * 1024)
         progress_bar = tqdm(total=total_size, unit="B", unit_scale=True, unit_divisor=1024)
         with open(destination, "wb") as f:
             for chunk in r.iter_content(chunk_size=1024):
