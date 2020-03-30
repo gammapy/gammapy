@@ -4,8 +4,6 @@ import logging
 import tarfile
 from pathlib import Path
 import click
-import requests
-from tqdm import tqdm
 from .downloadclasses import ComputePlan, ParallelDownload
 
 
@@ -14,6 +12,9 @@ log = logging.getLogger(__name__)
 
 
 def progress_download(source, destination):
+    import requests
+    from tqdm import tqdm
+
     destination.parent.mkdir(parents=True, exist_ok=True)
     with requests.get(source, stream=True) as r:
         total_size = (int(r.headers.get("content-length")) if r.headers.get("content-length") else BUNDLESIZE * 1024 * 1024)
