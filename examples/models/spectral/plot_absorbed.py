@@ -44,7 +44,7 @@ pwl = PowerLawSpectralModel(index=index, amplitude=amplitude, reference=referenc
 
 # EBL + PWL model
 model = AbsorbedSpectralModel(
-    spectral_model=pwl, absorption=absorption, parameter=redshift
+    spectral_model=pwl, absorption=absorption, redshift=redshift
 )
 
 energy_range = [0.1, 100] * u.TeV

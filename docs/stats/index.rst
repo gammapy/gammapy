@@ -141,7 +141,7 @@ WStat counts statistic
 ----------------------
 
 Excess and Significance
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 
 To measure the significance of an excess, one can directly use the delta TS of the measurement with and
 without the excess. Taking the square root of the result yields the so-called Li & Ma significance
