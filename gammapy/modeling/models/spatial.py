@@ -14,7 +14,7 @@ from regions import (
     PolygonSkyRegion,
 )
 from gammapy.maps import Map, WcsGeom
-from gammapy.modeling import Parameter
+from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from .core import Model
@@ -357,7 +357,7 @@ class DiskSpatialModel(SpatialModel):
 
         Set to the length of the semi-major axis.
         """
-        return self.parameters["r_0"].quantity
+        return self.r_0.quantity
 
     @staticmethod
     def _evaluate_norm_factor(r_0, e):
@@ -441,7 +441,7 @@ class ShellSpatialModel(SpatialModel):
 
         Set to :math:`r_\text{out}`.
         """
-        return self.parameters["radius"].quantity + self.parameters["width"].quantity
+        return self.radius.quantity + self.width.quantity
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, radius, width):
@@ -616,9 +616,18 @@ class TemplateSpatialModel(SpatialModel):
 
     @classmethod
     def from_dict(cls, data):
-        model = cls.read(data["filename"], normalize=data.get("normalize", True))
-        model._update_from_dict(data)
-        return model
+        m = Map.read(data["filename"])
+
+        if m.unit == "":
+            m.unit = "sr-1"
+
+        parameters = Parameters.from_dict(data["parameters"])
+        return cls.from_parameters(
+            parameters=parameters,
+            map=m,
+            filename=data["filename"],
+            normalize=data.get("normalize", True)
+        )
 
     def to_dict(self):
         """Create dict for YAML serilisation"""

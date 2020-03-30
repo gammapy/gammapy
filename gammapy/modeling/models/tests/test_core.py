@@ -2,7 +2,7 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.modeling.models import Model, Parameter
+from gammapy.modeling.models import Model, Parameter, Parameters
 
 
 class MyModel(Model):
@@ -24,7 +24,7 @@ class CoModel(Model):
 
     @property
     def parameters(self):
-        return self._parameters + self.m1.parameters + self.m2.parameters
+        return Parameters([self.norm]) + self.m1.parameters + self.m2.parameters
 
 
 class WrapperModel(Model):
@@ -37,18 +37,30 @@ class WrapperModel(Model):
 
     def __init__(self, m1, a=1, y=99):
         self.m1 = m1
-        parameters = [Parameter("a", a), Parameter("y", y)]
-        super()._init_from_parameters(parameters)
+        a = Parameter("a", a)
+        y = Parameter("y", y)
+        self.default_parameters = Parameters([a, y])
+        super().__init__(a=a, y=y)
 
     @property
     def parameters(self):
-        return self._parameters + self.m1.parameters
+        return Parameters([self.a, self.y]) + self.m1.parameters
 
 
 def test_model_class():
     assert isinstance(MyModel.parameters, property)
     assert MyModel.x.name == "x"
     assert MyModel.default_parameters["x"] is MyModel.x
+
+
+def test_model_class_par_init():
+    x = Parameter("x", 4, "cm")
+    y = Parameter("y", 10)
+
+    model = MyModel(x=x, y=y)
+
+    assert x is model.x
+    assert y is model.y
 
 
 def test_model_init():
@@ -138,3 +150,23 @@ def test_compound_model():
     assert len(m.parameters) == 5
     assert m.parameters.names == ["norm", "x", "y", "x", "y"]
     assert_allclose(m.parameters.values, [42, 1, 2, 10, 20])
+
+
+def test_parameter_link_init():
+    m1 = MyModel()
+    m2 = MyModel(y=m1.y)
+
+    assert (m1.y is m2.y)
+
+    m1.y.value = 100
+    assert_allclose(m2.y.value, 100)
+
+
+def test_parameter_link():
+    m1 = MyModel()
+    m2 = MyModel()
+
+    m2.y = m1.y
+
+    m1.y.value = 100
+    assert_allclose(m2.y.value, 100)

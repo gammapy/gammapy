@@ -39,21 +39,21 @@ def test_dict_to_skymodels():
     assert pars0["index"].unit == ""
     assert np.isnan(pars0["index"].max)
     assert np.isnan(pars0["index"].min)
-    assert pars0["index"].frozen is False
+    assert not pars0["index"].frozen
 
-    assert pars0["lon_0"].value == -50.0
+    assert pars0["lon_0"].value == -0.5
     assert pars0["lon_0"].unit == "deg"
     assert pars0["lon_0"].max == 180.0
     assert pars0["lon_0"].min == -180.0
-    assert pars0["lon_0"].frozen is True
+    assert pars0["lon_0"].frozen
 
-    assert pars0["lat_0"].value == -0.05
+    assert pars0["lat_0"].value == -0.0005
     assert pars0["lat_0"].unit == "deg"
     assert pars0["lat_0"].max == 90.0
     assert pars0["lat_0"].min == -90.0
-    assert pars0["lat_0"].frozen is True
+    assert pars0["lat_0"].frozen
 
-    assert pars0["lambda_"].value == 0.06
+    assert pars0["lambda_"].value == 0.006
     assert pars0["lambda_"].unit == "TeV-1"
     assert np.isnan(pars0["lambda_"].min)
     assert np.isnan(pars0["lambda_"].max)
@@ -86,7 +86,7 @@ def test_dict_to_skymodels():
     assert model2.spatial_model.tag == "TemplateSpatialModel"
 
     assert model2.spatial_model.parameters["norm"].value == 1.0
-    assert model2.spatial_model.normalize is False
+    assert not model2.spatial_model.normalize
     assert model2.spectral_model.parameters["norm"].value == 2.1
 
     # TODO problem of duplicate parameter name between TemplateSpatialModel and TemplateSpectralModel
@@ -115,8 +115,7 @@ def test_absorption_io(tmp_path):
     model = AbsorbedSpectralModel(
         spectral_model=Model.create("PowerLawSpectralModel"),
         absorption=dominguez,
-        parameter=0.5,
-        parameter_name="redshift",
+        redshift=0.5
     )
     assert len(model.parameters) == 5
 
@@ -126,8 +125,7 @@ def test_absorption_io(tmp_path):
 
     new_model = AbsorbedSpectralModel.from_dict(model_dict)
 
-    assert new_model.parameter == 0.5
-    assert new_model.parameter_name == "redshift"
+    assert new_model.redshift.value == 0.5
     assert new_model.alpha_norm.name == "alpha_norm"
     assert new_model.alpha_norm.value == 1
     assert new_model.spectral_model.tag == "PowerLawSpectralModel"
@@ -143,8 +141,7 @@ def test_absorption_io(tmp_path):
     model = AbsorbedSpectralModel(
         spectral_model=Model.create("PowerLawSpectralModel"),
         absorption=test_absorption,
-        parameter=0.5,
-        parameter_name="redshift",
+        redshift=0.5,
     )
     model_dict = model.to_dict()
     new_model = AbsorbedSpectralModel.from_dict(model_dict)

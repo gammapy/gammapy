@@ -70,10 +70,6 @@ class SkyModel(SkyModelBase):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
         self.temporal_model = temporal_model
-        super().__init__()
-        # TODO: this hack is needed for compound models to work
-        self.__dict__.pop("_parameters")
-
         self._name = make_name(name)
 
         if apply_irf is None:
@@ -81,9 +77,7 @@ class SkyModel(SkyModelBase):
 
         self.apply_irf = apply_irf
         self.datasets_names = datasets_names
-
-        # cached covariance
-        self._covariance = Covariance(self.parameters)
+        super().__init__()
 
     @property
     def _models(self):
@@ -326,6 +320,7 @@ class SkyModel(SkyModelBase):
         spectral_model = model_class.from_dict(data["spectral"])
 
         spatial_data = data.get("spatial")
+
         if spatial_data is not None:
             model_class = SPATIAL_MODELS.get_cls(spatial_data["type"])
             spatial_model = model_class.from_dict(spatial_data)
@@ -333,6 +328,7 @@ class SkyModel(SkyModelBase):
             spatial_model = None
 
         temporal_data = data.get("temporal")
+
         if temporal_data is not None:
             model_class = TEMPORAL_MODELS.get_cls(temporal_data["type"])
             temporal_model = model_class.from_dict(temporal_data)
@@ -463,8 +459,10 @@ class SkyDiffuseCube(SkyModelBase):
             The default used if none is filename.
         """
         m = Map.read(filename, **kwargs)
+
         if m.unit == "":
             m.unit = "cm-2 s-1 MeV-1 sr-1"
+
         if name is None:
             name = Path(filename).stem
 
@@ -497,10 +495,10 @@ class SkyDiffuseCube(SkyModelBase):
             self._cached_coordinates = (lon, lat, energy)
             self._cached_value = self._interpolate(lon, lat, energy)
 
-        norm = self.parameters["norm"].value
+        norm = self.norm.value
+        tilt = self.tilt.value
+        reference = self.reference.quantity
 
-        tilt = self.parameters["tilt"].value
-        reference = self.parameters["reference"].quantity
         tilt_factor = np.power((energy / reference).to(""), -tilt)
 
         val = norm * self._cached_value * tilt_factor.value
@@ -548,13 +546,24 @@ class SkyDiffuseCube(SkyModelBase):
 
     @classmethod
     def from_dict(cls, data):
-        model = cls.read(data["filename"])
-        model._update_from_dict(data)
-        apply_irf = data.get("apply_irf", cls._apply_irf_default)
-        model.apply_irf.update(apply_irf)
-        model.datasets_names = data.get("datasets_names")
+        parameters = Parameters.from_dict(data["parameters"])
 
-        return model
+        filename = data["filename"]
+
+        map_ = cls.read(filename).map
+
+        apply_irf = data.get("apply_irf", cls._apply_irf_default)
+        datasets_names = data.get("datasets_names")
+        name = data.get("name")
+
+        return cls.from_parameters(
+            parameters=parameters,
+            map=map_,
+            apply_irf=apply_irf,
+            datasets_names=datasets_names,
+            filename=filename,
+            name=name
+        )
 
     def to_dict(self):
         data = super().to_dict()
@@ -655,9 +664,9 @@ class BackgroundModel(Model):
         background_map : `~gammapy.maps.Map`
             Background evaluated on the Map
         """
-        norm = self.parameters["norm"].value
-        tilt = self.parameters["tilt"].value
-        reference = self.parameters["reference"].quantity
+        norm = self.norm.value
+        tilt = self.tilt.value
+        reference = self.reference.quantity
         tilt_factor = np.power((self.energy_center / reference).to(""), -tilt)
         back_values = norm * self.map.data * tilt_factor.value
         return self.map.copy(data=back_values)
@@ -692,14 +701,15 @@ class BackgroundModel(Model):
             )
             bkg_map = Map.from_geom(geom)
 
-        model = cls(
+        parameters = Parameters.from_dict(data["parameters"])
+
+        return cls.from_parameters(
+            parameters=parameters,
             map=bkg_map,
             name=data["name"],
             datasets_names=data.get("datasets_names"),
             filename=data.get("filename"),
         )
-        model._update_from_dict(data)
-        return model
 
     def copy(self, name=None):
         """A deep copy."""
@@ -730,9 +740,8 @@ class BackgroundModel(Model):
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
 
         bkg_map = self.map.cutout(**cutout_kwargs)
-        model = self.__class__(bkg_map, name=name)
-        model.parameters.update_from_dict(self.parameters.to_dict())
-        return model
+        parameters = self.parameters.copy()
+        return self.__class__.from_parameters(parameters, map=bkg_map, name=name)
 
     def stack(self, other, weights=None):
         """Stack background model in place.

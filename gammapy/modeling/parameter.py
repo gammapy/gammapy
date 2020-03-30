@@ -5,7 +5,7 @@ import copy
 import itertools
 import numpy as np
 from astropy import units as u
-from astropy.table import Table
+from gammapy.utils.table import table_from_row_data
 
 __all__ = ["Parameter", "Parameters"]
 
@@ -50,8 +50,8 @@ class Parameter:
     ----------
     name : str
         Name
-    factor : float or `~astropy.units.Quantity`
-        Factor
+    value : float or `~astropy.units.Quantity`
+        Value
     scale : float, optional
         Scale (sometimes used in fitting)
     unit : `~astropy.units.Unit` or str, optional
@@ -65,7 +65,7 @@ class Parameter:
     """
 
     def __init__(
-        self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=0
+        self, name, value, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=0,
     ):
         self.name = name
         self._link_label_io = None
@@ -73,12 +73,12 @@ class Parameter:
 
         # TODO: move this to a setter method that can be called from `__set__` also!
         # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
-        if isinstance(factor, u.Quantity) or isinstance(factor, str):
-            val = u.Quantity(factor)
+        if isinstance(value, u.Quantity) or isinstance(value, str):
+            val = u.Quantity(value)
             self.value = val.value
             self.unit = val.unit
         else:
-            self.factor = factor
+            self.factor = value
             self.unit = unit
 
         self.min = min
@@ -232,7 +232,9 @@ class Parameter:
             "min": self.min,
             "max": self.max,
             "frozen": self.frozen,
+            "error": self.error
         }
+
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
         return output
@@ -288,17 +290,6 @@ class Parameters(collections.abc.Sequence):
             parameters = list(parameters)
 
         self._parameters = parameters
-
-    @classmethod
-    def from_values(cls, values=None):
-        """Create `Parameters` from values.
-
-        TODO: document.
-        """
-        parameters = [
-            Parameter(f"par_{idx}", value) for idx, value in enumerate(values)
-        ]
-        return cls(parameters)
 
     @property
     def values(self):
@@ -360,19 +351,6 @@ class Parameters(collections.abc.Sequence):
         idx = self.index(name)
         return self._parameters[idx]
 
-    def link(self, par, other_par):
-        """Create link to other parameter
-
-        Parameters
-        ----------
-        par : str, int or `Parameter`
-            Parameter to be linked
-        other_par : str, int or `Parameter`
-            Parameter to be linked
-        """
-        idx = self.index(par)
-        self._parameters[idx] = other_par
-
     def __len__(self):
         return len(self._parameters)
 
@@ -383,26 +361,22 @@ class Parameters(collections.abc.Sequence):
             raise TypeError(f"Invalid type: {other!r}")
 
     def to_dict(self):
-        data = dict(parameters=[])
+        data = []
+
         for par in self._parameters:
-            data["parameters"].append(par.to_dict())
+            data.append(par.to_dict())
+
         return data
 
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
-        t = Table()
-        t["name"] = [p.name for p in self._parameters]
-        t["value"] = [p.value for p in self._parameters]
-        t["error"] = [p.error for p in self._parameters]
-        t["unit"] = [p.unit.to_string("fits") for p in self._parameters]
-        t["min"] = [p.min for p in self._parameters]
-        t["max"] = [p.max for p in self._parameters]
-        t["frozen"] = [p.frozen for p in self._parameters]
+        rows = [p.to_dict() for p in self._parameters]
+        table = table_from_row_data(rows)
 
         for name in ["value", "error", "min", "max"]:
-            t[name].format = ".3e"
+            table[name].format = ".3e"
 
-        return t
+        return table
 
     def __eq__(self, other):
         all_equal = np.all([p is p_new for p, p_new in zip(self, other)])
@@ -411,27 +385,12 @@ class Parameters(collections.abc.Sequence):
     @classmethod
     def from_dict(cls, data):
         parameters = []
-        for par in data["parameters"]:
-            parameter = Parameter(
-                name=par["name"],
-                factor=float(par["value"]),
-                unit=par.get("unit", ""),
-                min=float(par.get("min", np.nan)),
-                max=float(par.get("max", np.nan)),
-                frozen=par.get("frozen", False),
-            )
+        for par in data:
+            link_label = par.pop("link", None)
+            parameter = Parameter(**par)
+            parameter._link_label_io = link_label
             parameters.append(parameter)
         return cls(parameters=parameters)
-
-    def update_from_dict(self, data):
-        for par in data["parameters"]:
-            parameter = self[par["name"]]
-            parameter.value = float(par["value"])
-            parameter.unit = u.Unit(par.get("unit", parameter.unit))
-            parameter.min = float(par.get("min", parameter.min))
-            parameter.max = float(par.get("max", parameter.max))
-            parameter.frozen = par.get("frozen", parameter.frozen)
-            parameter._link_label_io = par.get("link", parameter._link_label_io)
 
     def set_parameter_factors(self, factors):
         """Set factor of all parameters.

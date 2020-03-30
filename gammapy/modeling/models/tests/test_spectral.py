@@ -370,7 +370,7 @@ def test_absorption():
 
     # EBL + PWL model
     model = AbsorbedSpectralModel(
-        spectral_model=pwl, absorption=absorption, parameter=redshift
+        spectral_model=pwl, absorption=absorption, redshift=redshift
     )
 
     desired = u.Quantity(5.140765e-13, "TeV-1 s-1 cm-2")
@@ -379,13 +379,13 @@ def test_absorption():
 
     # EBL + PWL model: test if norm of EBL=0: it mean model =pwl
     model = AbsorbedSpectralModel(
-        spectral_model=pwl, absorption=absorption, alpha_norm=0, parameter=redshift
+        spectral_model=pwl, absorption=absorption, alpha_norm=0, redshift=redshift
     )
     assert_quantity_allclose(model(1 * u.TeV), pwl(1 * u.TeV), rtol=1e-3)
 
     # EBL + PWL model: Test with a norm different of 1
     model = AbsorbedSpectralModel(
-        spectral_model=pwl, absorption=absorption, alpha_norm=1.5, parameter=redshift
+        spectral_model=pwl, absorption=absorption, alpha_norm=1.5, redshift=redshift
     )
     desired = u.Quantity(2.739695e-13, "TeV-1 s-1 cm-2")
     assert model.alpha_norm.value == 1.5
@@ -582,7 +582,7 @@ class TestNaimaModel:
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV, rtol=1e-5)
 
-        model.B.value = 100
+        model.parameters["B"].value = 100
         val_at_2TeV = 1.441331153167876e-11 * u.Unit("cm-2 s-1 TeV-1")
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV, rtol=1e-5)

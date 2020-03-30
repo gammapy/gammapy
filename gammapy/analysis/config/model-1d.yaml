@@ -4,20 +4,17 @@ components:
       spectral:
           type: PowerLawSpectralModel
           parameters:
-              - factor: 2.0
-                frozen: false
+              - frozen: false
                 name: index
                 scale: 1.0
                 unit: ''
                 value: 2.6
-              - factor: 1.0e-12
-                frozen: false
+              - frozen: false
                 name: amplitude
                 scale: 1.0
                 unit: cm-2 s-1 TeV-1
                 value: 5.0e-11
-              - factor: 1.0
-                frozen: true
+              - frozen: true
                 name: reference
                 scale: 1.0
                 unit: TeV

@@ -16,7 +16,7 @@ def _set_link(shared_register, model):
         if link_label is not None:
             if link_label in shared_register:
                 new_param = shared_register[link_label]
-                model.parameters.link(name, new_param)
+                setattr(model, name, new_param)
             else:
                 shared_register[link_label] = param
     return shared_register
@@ -30,24 +30,17 @@ class Model:
 
     def __init__(self, **kwargs):
         # Copy default parameters from the class to the instance
-        self._parameters = self.__class__.default_parameters.copy()
-        for parameter in self._parameters:
-            if parameter.name in self.__dict__:
-                raise ValueError(
-                    f"Invalid parameter name: {parameter.name!r}."
-                    f"Attribute exists already: {getattr(self, parameter.name)!r}"
-                )
+        default_parameters = self.default_parameters.copy()
 
-            setattr(self, parameter.name, parameter)
+        for par in default_parameters:
+            value = kwargs.get(par.name, par)
 
-        # Update parameter information from kwargs
-        for name, value in kwargs.items():
-            if name not in self.parameters.names:
-                raise ValueError(
-                    f"Invalid argument: {name!r}. Parameter names are: {self.parameters.names}"
-                )
+            if not isinstance(value, Parameter):
+                par.quantity = u.Quantity(value)
+            else:
+                par = value
 
-            self._parameters[name].quantity = u.Quantity(value)
+            setattr(self, par.name, par)
 
         self._covariance = Covariance(self.parameters)
 
@@ -57,22 +50,27 @@ class Model:
             [_ for _ in cls.__dict__.values() if isinstance(_, Parameter)]
         )
 
-    def _init_from_parameters(self, parameters):
-        """Create model from list of parameters.
+    @classmethod
+    def from_parameters(cls, parameters, **kwargs):
+        """Create model from parameter list
 
-        This should be called for models that generate
-        the parameters dynamically in ``__init__``,
-        like the ``NaimaSpectralModel``
+        Parameters
+        ----------
+        parameters : `Parameters`
+            Parameters for init
+
+        Returns
+        -------
+        model : `Model`
+            Model instance
         """
-        # TODO: should we pass through `Parameters` here? Why?
-        parameters = Parameters(parameters)
-        self._parameters = parameters
-        for parameter in parameters:
-            setattr(self, parameter.name, parameter)
+        for par in parameters:
+            kwargs[par.name] = par
+        return cls(**kwargs)
 
     @property
     def covariance(self):
-        for par in self._parameters:
+        for par in self.parameters:
             pars = Parameters([par])
             covar = Covariance(pars, data=[[par.error ** 2]])
             self._covariance.set_subcovariance(covar)
@@ -91,8 +89,9 @@ class Model:
     @property
     def parameters(self):
         """Parameters (`~gammapy.modeling.Parameters`)"""
-        # trigger recursive update
-        return self._parameters
+        return Parameters(
+            [getattr(self, name) for name in self.default_parameters.names]
+        )
 
     def copy(self):
         """A deep copy."""
@@ -100,25 +99,12 @@ class Model:
 
     def to_dict(self):
         """Create dict for YAML serialisation"""
-        return {"type": self.tag, "parameters": self.parameters.to_dict()["parameters"]}
+        return {"type": self.tag, "parameters": self.parameters.to_dict()}
 
     @classmethod
     def from_dict(cls, data):
-        params = {x["name"]: x["value"] * u.Unit(x["unit"]) for x in data["parameters"]}
-
-        # TODO: this is a special case for spatial models, maybe better move to `SpatialModel` base class
-        if "frame" in data:
-            params["frame"] = data["frame"]
-
-        model = cls(**params)
-        model._update_from_dict(data)
-        return model
-
-    # TODO: try to get rid of this
-    def _update_from_dict(self, data):
-        self._parameters.update_from_dict(data)
-        for parameter in self.parameters:
-            setattr(self, parameter.name, parameter)
+        parameters = Parameters.from_dict(data["parameters"])
+        return cls.from_parameters(parameters)
 
     @staticmethod
     def create(tag, *args, **kwargs):
