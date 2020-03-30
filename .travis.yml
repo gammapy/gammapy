@@ -68,7 +68,7 @@ jobs:
 
         # Run tests without optional dependencies
         - env: PYTHON_VERSION=3.7 CMD='make test'
-               CONDA_DEPENDENCIES='Cython click regions'
+               CONDA_DEPENDENCIES='Cython click regions requests tqdm'
                PIP_DEPENDENCIES='pytest-astropy parfive pydantic'
 
         # Run tests without GAMMAPY_DATA available
