@@ -19,7 +19,6 @@ PYTEST_HEADER_MODULES["healpy"] = "healpy"
 PYTEST_HEADER_MODULES["sherpa"] = "sherpa"
 PYTEST_HEADER_MODULES["gammapy"] = "gammapy"
 PYTEST_HEADER_MODULES["naima"] = "naima"
-PYTEST_HEADER_MODULES["reproject"] = "reproject"
 
 
 def pytest_configure(config):
