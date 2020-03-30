@@ -2,10 +2,30 @@
 """Command line tool to download datasets and notebooks"""
 import logging
 import click
+import requests
 from .downloadclasses import ComputePlan, ParallelDownload
 from pathlib import Path
+from tqdm import tqdm
+
 
 log = logging.getLogger(__name__)
+
+
+def progress_download(source, destination):
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.exists():
+        print("Already exists !!!")
+        return
+
+    with requests.get(source, stream=True) as r:
+        total_size = int(r.headers.get('content-length'))
+        progress_bar = tqdm(total=total_size, unit='B', unit_scale=True, unit_divisor=1024)
+        with open(destination, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
+                    progress_bar.update(len(chunk))
+    progress_bar.close()
 
 
 @click.command(name="notebooks")
@@ -101,6 +121,7 @@ def cli_download_datasets(src, out, release, modetutorials, silent, tests):
     if "bundle" in filelist:
         log.info(f"Downloading datasets from {filelist['bundle']['url']}")
         tar_destination_file = Path(localfolder) / "datasets.tar.gz"
+        progress_download(filelist['bundle']['url'], tar_destination_file)
     # specific collection
     else:
         down.run()
