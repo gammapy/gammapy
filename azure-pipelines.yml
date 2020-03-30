@@ -30,7 +30,7 @@ jobs:
 
   - script: |
       python -m pip install --upgrade pip setuptools wheel
-      pip install pytest pytest-cov cython numpy astropy regions pyyaml click pytest-astropy parfive tqdm pydantic pytest-astropy-header
+      pip install pytest pytest-cov cython numpy astropy regions pyyaml click pytest-astropy parfive tqdm requests pydantic pytest-astropy-header
       pip install matplotlib reproject iminuit
     displayName: 'Install dependencies'
 
@@ -66,7 +66,7 @@ jobs:
 
   - script: |
       python -m pip install --upgrade pip setuptools wheel
-      pip install cython numpy astropy regions pyyaml click parfive tqdm pydantic jupyter
+      pip install cython numpy astropy regions pyyaml click parfive tqdm requests pydantic jupyter
       pip install matplotlib reproject iminuit emcee corner
     displayName: 'Install dependencies'
 
