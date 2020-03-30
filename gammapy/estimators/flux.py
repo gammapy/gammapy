@@ -20,8 +20,6 @@ class FluxEstimator(ParameterEstimator):
 
     Parameters
     ----------
-    datasets : list of `~gammapy.spectrum.SpectrumDataset`
-        Spectrum datasets.
     source : str or int
         For which source in the model to compute the flux.
     energy_range : `~astropy.units.Quantity`
@@ -44,7 +42,6 @@ class FluxEstimator(ParameterEstimator):
 
     def __init__(
         self,
-        datasets,
         source,
         energy_range,
         norm_min=0.2,
@@ -55,24 +52,6 @@ class FluxEstimator(ParameterEstimator):
         sigma_ul=3,
         reoptimize=True,
     ):
-        # make a copy to not modify the input datasets
-        datasets = self._check_datasets(datasets)
-
-        if not datasets.is_all_same_type or not datasets.is_all_same_energy_shape:
-            raise ValueError(
-                "Flux point estimation requires a list of datasets"
-                " of the same type and data shape."
-            )
-
-        datasets = datasets.copy()
-
-        dataset = datasets[0]
-
-        model = dataset.models[source].spectral_model
-
-        self.model = ScaleSpectralModel(model)
-        self.model.norm.min = 0
-        self.model.norm.max = 1e5
 
         if norm_values is None:
             norm_values = np.logspace(
@@ -85,9 +64,8 @@ class FluxEstimator(ParameterEstimator):
         self.energy_range = energy_range
 
         super().__init__(
-            datasets, sigma, sigma_ul, reoptimize,
+            sigma, sigma_ul, reoptimize,
         )
-        self._set_scale_model()
 
     @property
     def energy_range(self):
@@ -119,9 +97,9 @@ class FluxEstimator(ParameterEstimator):
         s += str(self.model) + "\n"
         return s
 
-    def _set_scale_model(self):
+    def _set_scale_model(self, datasets):
         # set the model on all datasets
-        for dataset in self.datasets:
+        for dataset in datasets:
             dataset.models[self.source].spectral_model = self.model
 
     def _prepare_result(self):
@@ -152,7 +130,7 @@ class FluxEstimator(ParameterEstimator):
             steps = ["err", "ts", "errp-errn", "ul", "scan"]
         return steps
 
-    def run(self, steps="all"):
+    def run(self, datasets, steps="all"):
         """Estimate flux for a given energy range.
 
         The fit is performed in the energy range provided by the dataset masks.
@@ -160,6 +138,8 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
+        datasets : list of `~gammapy.spectrum.SpectrumDataset`
+            Spectrum datasets.
         steps : list of str
             Which steps to execute. Available options are:
 
@@ -176,6 +156,27 @@ class FluxEstimator(ParameterEstimator):
         result : dict
             Dict with results for the flux point.
         """
+        # make a copy to not modify the input datasets
+        datasets = self._check_datasets(datasets)
+
+        if not datasets.is_all_same_type or not datasets.is_all_same_energy_shape:
+            raise ValueError(
+                "Flux point estimation requires a list of datasets"
+                " of the same type and data shape."
+            )
+
+        datasets = datasets.copy()
+
+        dataset = datasets[0]
+
+        model = dataset.models[self.source].spectral_model
+
+        self.model = ScaleSpectralModel(model)
+        self.model.norm.min = 0
+        self.model.norm.max = 1e5
+
+        self._set_scale_model(datasets)
+
         steps = self._prepare_steps(steps)
         result = self._prepare_result()
 
@@ -184,6 +185,7 @@ class FluxEstimator(ParameterEstimator):
 
         result.update(
             super().run(
+                datasets,
                 self.model.norm,
                 steps,
                 null_value=0,

@@ -43,16 +43,6 @@ class ParameterEstimator:
         self.n_scan_values = n_scan_values
         self.scan_n_err = scan_n_err
 
-    @property
-    def datasets(self):
-        return self._datasets
-
-    @datasets.setter
-    def datasets(self, datasets):
-        self._datasets = self._check_datasets(datasets)
-        self.fit = Fit(datasets)
-        self.fit_result = None
-
     def __str__(self):
         s = f"{self.__class__.__name__}:\n"
         s += str(self.datasets) + "\n"
@@ -143,7 +133,9 @@ class ParameterEstimator:
         result : dict
             Dict with the various parameter estimation values.
         """
-        self.datasets = datasets
+        self.datasets = self._check_datasets(datasets)
+        self.fit = Fit(datasets)
+        self.fit_result = None
 
         with self.datasets.parameters.restore_values:
 
