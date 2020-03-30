@@ -3,6 +3,7 @@
 import logging
 import click
 from .downloadclasses import ComputePlan, ParallelDownload
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 
@@ -86,15 +87,23 @@ def cli_download_datasets(src, out, release, modetutorials, silent, tests):
     plan = ComputePlan(
         src, out, release, "datasets", modetutorials=modetutorials, download_tests=tests
     )
+    filelist = plan.getfilelist()
+    localfolder = plan.getlocalfolder()
     down = ParallelDownload(
-        plan.getfilelist(),
-        plan.getlocalfolder(),
+        filelist,
+        localfolder,
         release,
         "datasets",
         modetutorials,
         silent,
     )
-    down.run()
+    # tar bundle
+    if "bundle" in filelist:
+        log.info(f"Downloading datasets from {filelist['bundle']['url']}")
+        tar_destination_file = Path(localfolder) / "datasets.tar.gz"
+    # specific collection
+    else:
+        down.run()
     down.show_info_datasets()
 
 

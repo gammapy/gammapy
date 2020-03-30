@@ -123,7 +123,11 @@ class ComputePlan:
         if self.option == "datasets":
             if self.modetutorials and not self.listfiles:
                 sys.exit()
-
+            # datasets bundle
+            if not self.src:
+                self.listfiles = {"bundle": {"path": self.outfolder, "url": TAR_BUNDLE}}
+                return self.listfiles
+            # collection of files
             if self.release:
                 url_datasets_json = RELEASES_BASE_URL + "/data/gammapy-" + self.release + "-data-index.json"
                 log.info(f"Reading {url_datasets_json}")
