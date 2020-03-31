@@ -97,6 +97,9 @@ Steps for the day to announce the release:
 #. Update these release notes with any useful infos / steps that you learned
    while making the release (ideally try to script / automate the task or check,
    e.g. as a ``make release-check-xyz`` target.
+#. Update version number in Binder `Dockerfile` in
+   `gammapy webpage repo <https://github.com/gammapy/gammapy-webpage>`__ master branch
+   and tag the release for Binder.
 #. Open a milestone and issue for the next release (and possibly also a milestone for the
    release after, so that low-priority issues can already be moved there) Find a
    release manager for the next release, assign the release issue to her / him,
