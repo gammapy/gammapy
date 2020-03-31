@@ -82,9 +82,9 @@ request with new or modified datasets, these are the steps to follow:
 
 #. Update the content of the remote specific dataset repository (i.e. `gammapy-extra`, `gammapy-fermi-lat-data`,
    `gamma-cat`).
-#. Update the content of your local `gammapy-data` repository and JSON index file by runinng
+#. Update the content of your local `gammapy-data` repository and JSON index file by running
    `python make_datasets_index.py` in the `dev/datasets/` folder.
-#. Push eventual changes in `gammapy-data` to remote repository and re-tag the `master` tag.
+#. Push eventual changes to remote `gammapy-data` Github repository.
 
 
 Fix non-Unix line endings

@@ -27,17 +27,18 @@ def progress_download(source, destination):
     progress_bar.close()
 
 
-def members(tf, master_folder):
-    l = len(master_folder)
-    for member in tf.getmembers():
-        if member.path.startswith(master_folder):
-            member.path = member.path[l:]
+def members(tf):
+    list_members = tf.getmembers()
+    root_folder = list_members[0].name
+    for member in list_members:
+        if member.path.startswith(root_folder):
+            member.path = member.path[len(root_folder)+1:]
             yield member
 
 
 def extract_bundle(bundle, destination):
     with tarfile.open(bundle) as tar:
-        tar.extractall(path=destination, members=members(tar, "gammapy-data-master/"))
+        tar.extractall(path=destination, members=members(tar))
     Path(bundle).unlink()
 
 
