@@ -49,7 +49,7 @@ def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
     # Add test for scan
     assert_allclose(result["amplitude_scan"].shape, 10)
 
-
+@pytest.mark.xfail
 @requires_data()
 def test_parameter_estimator_3d(crab_datasets_fermi):
     datasets = crab_datasets_fermi
@@ -63,6 +63,7 @@ def test_parameter_estimator_3d(crab_datasets_fermi):
     assert_allclose(result["ts"], 13005.938702, rtol=1e-3)
 
 
+@pytest.mark.xfail
 @requires_data()
 def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
     datasets = crab_datasets_fermi
