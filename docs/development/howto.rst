@@ -54,10 +54,7 @@ For three or more things, using a Python ``dict`` instead should be preferred.
 Python version support
 ----------------------
 
-In Gammapy we currently support Python 3.5 or later.
-
-We plan to discuss later in 2019 whether to bump the version requirement to Python 3.6,
-to be able to take advantage of the new features introduced there.
+In Gammapy we currently support Python 3.7 or later.
 
 .. _dev-skip_tests:
 
@@ -73,6 +70,22 @@ Skip unit tests for some Astropy versions
    @pytest.mark.xfail(ASTROPY_VERSION < (0, 4), reason="Astropy API change")
    def test_something():
       ...
+
+Making a pull request with new or modified datasets
+---------------------------------------------------
+
+Datasets used in tests and tutorials are hosted in the
+`gammapy-data Github repository <https://github.com/gammapy/gammapy-data>`__. It is recommended that developers
+have `$GAMMAPY_DATA` environment variable pointing to the local folder where they have fetched the `gammapy-data` Github
+repository, so they can push and pull eventual modification of its content. In the cases they want to make a pull
+request with new or modified datasets, these are the steps to follow:
+
+#. Update the content of the remote specific dataset repository (i.e. `gammapy-extra`, `gammapy-fermi-lat-data`,
+   `gamma-cat`).
+#. Update the content of your local `gammapy-data` repository and JSON index file by runinng
+   `python make_datasets_index.py` in the `dev/datasets/` folder.
+#. Push eventual changes in `gammapy-data` to remote repository and re-tag the `master` tag.
+
 
 Fix non-Unix line endings
 -------------------------
@@ -90,7 +103,6 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
     $ cd astropy_helpers && git checkout -- . && cd ..
 
 .. _dev-check_html_links:
-
 
 What checks and conversions should I do for inputs?
 ---------------------------------------------------
