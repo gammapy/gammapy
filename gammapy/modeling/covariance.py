@@ -2,7 +2,6 @@
 """Covariance class"""
 import numpy as np
 import scipy
-from astropy.table import Table, hstack
 from .parameter import Parameters
 
 __all__ = ["Covariance"]
@@ -20,9 +19,8 @@ class Covariance:
 
     """
 
-    def __init__(self, parameters, data=None, filename=None):
+    def __init__(self, parameters, data=None):
         self.parameters = parameters
-        self.filename = filename
         if data is None:
             data = np.diag([p.error ** 2 for p in self.parameters])
 
@@ -101,66 +99,6 @@ class Covariance:
             covar.set_subcovariance(subcovar)
 
         return covar
-
-    @classmethod
-    def read(cls, models, filename):
-        """Read covariance data from file
-
-        Parameters
-        ----------
-        parameters : `~gammapy.modeling.Parameters`
-            Parameter list
-
-        filename : str
-            Filename
-        """
-        t = Table.read(filename, format="ascii.fixed_width")
-        t.remove_column("Parameters")
-        arr = np.array(t)
-        data = arr.view(np.float).reshape(arr.shape + (-1,))
-        return cls(models.parameters, data=data, filename=filename)
-
-    def write(self, models, filename, overwrite=True, **kwargs):
-        """Write covariance to file
-
-        Parameters
-        ----------
-        filename : str
-            Filename
-        **kwargs : dict
-            Keyword arguments passed to `~astropy.table.Table.write`
-
-        """
-        from gammapy.modeling.models import SkyModel
-
-        self.filename = filename
-        param_names = []
-        for model in models:
-            suffix = model.name
-            if isinstance(model, SkyModel):
-                submodels = [
-                    model.spectral_model,
-                    model.spatial_model,
-                    model.temporal_model,
-                ]
-                for m in submodels:
-                    if m is not None:
-                        for p in m.parameters:
-                            suffix += "_" + m.__class__.__name__
-                            param_names.append(p.name + "@" + suffix)
-            else:
-                for p in model.parameters:
-                    suffix += "_" + model.__class__.__name__
-                    param_names.append(p.name + "@" + suffix)
-        # TODO: maybe nicer/shorter names can be found
-        if len(param_names) != 0:
-            t1 = Table()
-            t1["Parameters"] = param_names
-            t2 = Table(self._data, names=param_names)
-            t = hstack([t1, t2])
-            t.write(
-                filename, format="ascii.fixed_width", delimiter="|", overwrite=overwrite
-            )
 
     def get_subcovariance(self, parameters):
         """Get sub-covariance matrix

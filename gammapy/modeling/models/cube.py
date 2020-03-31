@@ -105,9 +105,7 @@ class SkyModel(SkyModelBase):
         self._covariance.data = covariance
 
         for model in self._models:
-            subcovar = self._covariance.get_subcovariance(
-                model.covariance.parameters
-            )
+            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
             model.covariance = subcovar
 
     @property
@@ -127,6 +125,20 @@ class SkyModel(SkyModelBase):
             parameters.append(self.temporal_model.parameters)
 
         return Parameters.from_stack(parameters)
+
+    @property
+    def parameters_unique_names(self):
+        param_names = []
+        for m in self.models:
+            for p in m.parameters:
+                if m.spectral_model is not None and p in m.spectral_model:
+                    tag = ".spectral."
+                elif m.spatial_model is not None and p in m.spectral_model:
+                    tag = ".spatial."
+                elif m.temporal_model is not None and p in m.temporal_model:
+                    tag = ".temporal."
+                param_names.append(m.name + tag + p.name)
+        return param_names
 
     @property
     def spatial_model(self):
@@ -562,7 +574,7 @@ class SkyDiffuseCube(SkyModelBase):
             apply_irf=apply_irf,
             datasets_names=datasets_names,
             filename=filename,
-            name=name
+            name=name,
         )
 
     def to_dict(self):

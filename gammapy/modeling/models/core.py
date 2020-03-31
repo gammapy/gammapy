@@ -157,7 +157,7 @@ class Models(collections.abc.MutableSequence):
             unique_names.append(model.name)
 
         self._models = models
-        self._covar_path = None
+        self._covar_file = None
         self._covariance = Covariance(self.parameters)
 
     def _check_covariance(self):
@@ -215,9 +215,9 @@ class Models(collections.abc.MutableSequence):
             models.append(model)
         models = cls(models)
         if "covariance" in data:
-            covar = Covariance.read(models, filename=data["covariance"])
-            models.covariance = covar.data
-            models._covariance.filename = covar.filename
+            filename = data["covariance"]
+            models.read_covariance(filename, format="ascii.fixed_width")
+            models._covar_file = filename
 
         shared_register = {}
         for model in models:
@@ -241,7 +241,11 @@ class Models(collections.abc.MutableSequence):
             raise IOError(f"File exists already: {path}")
         if self.covariance is not None and len(self.parameters) != 0:
             filename = splitext(str(path))[0] + "_covariance.dat"
-            self.covariance.write(self._models, filename, overwrite)
+            kwargs = dict(
+                format="ascii.fixed_width", delimiter="|", overwrite=overwrite
+            )
+            self.write_covariance(self._models, filename, **kwargs)
+            self._covar_file = filename
         path.write_text(self.to_yaml())
 
     def to_yaml(self):
@@ -268,13 +272,58 @@ class Models(collections.abc.MutableSequence):
         for model in self._models:
             model_data = model.to_dict()
             models_data.append(model_data)
-        if self._covariance.filename is not None:
+        if self._covar_file is not None:
             return {
                 "components": models_data,
-                "covariance": str(self._covariance.filename),
+                "covariance": str(self._covar_file),
             }
         else:
             return {"components": models_data}
+
+    def read_covariance(self, filename, **kwargs):
+        """Read covariance data from file
+
+        Parameters
+        ----------
+        filename : str
+            Filename
+        **kwargs : dict
+            Keyword arguments passed to `~astropy.table.Table.read`
+
+        """
+        t = Table.read(filename, **kwargs)
+        t.remove_column("Parameters")
+        arr = np.array(t)
+        data = arr.view(np.float).reshape(arr.shape + (-1,))
+        self.covariance = data
+        self._covar_file = filename
+
+    def write_covariance(self, filename, **kwargs):
+        """Write covariance to file
+
+        Parameters
+        ----------
+        filename : str
+            Filename
+        **kwargs : dict
+            Keyword arguments passed to `~astropy.table.Table.write`
+
+        """
+        param_names = self.parameters_unique_names
+        if len(param_names) != 0:
+            t1 = Table()
+            t1["Parameters"] = param_names
+            t2 = Table(self._data, names=param_names)
+            t = hstack([t1, t2])
+            t.write(filename, **kwargs)
+
+    @property
+    def parameters_unique_names(self):
+        param_names = []
+        for m in self.models:
+            for p in m.parameters:
+                param_names.append(m.name + "." + p.name)
+        return param_names
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"

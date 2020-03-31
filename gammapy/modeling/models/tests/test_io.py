@@ -13,6 +13,9 @@ from gammapy.modeling.models import (
     Model,
     Models,
     BackgroundModel,
+    SkyModel,
+    PointSpatialModel,
+    PowerLawSpectralModel,
 )
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
@@ -101,7 +104,7 @@ def test_sky_models_io(tmp_path):
     models.covariance = np.eye(len(models.parameters))
     models.write(tmp_path / "tmp.yaml")
     models = Models.read(tmp_path / "tmp.yaml")
-    assert models.covariance.filename == str(tmp_path / "tmp_covariance.dat")
+    assert models._covar_file == str(tmp_path / "tmp_covariance.ecsv")
     assert_allclose(models.covariance.data, np.eye(len(models.parameters)))
     assert_allclose(models.parameters["lat_0"].min, -90.0)
 
@@ -110,13 +113,26 @@ def test_sky_models_io(tmp_path):
     # or check serialised dict content
 
 
+def test_covariance_io(tmp_path):
+    s1 = SkyModel(PowerLawSpectralModel(), PointSpatialModel())
+    s2 = SkyModel(PowerLawSpectralModel(), PointSpatialModel())
+    models = Models([s1, s2])
+    models_copy = models.copy()
+    models_copy.covariance = None
+
+    filename = str(tmp_path / "covar.dat")
+    models.write_covariance(filename)
+    models.read_covariance(filename)
+    assert_allclose(models.covariance, models_copy.covariance)
+
+
 @requires_data()
 def test_absorption_io(tmp_path):
     dominguez = Absorption.read_builtin("dominguez")
     model = AbsorbedSpectralModel(
         spectral_model=Model.create("PowerLawSpectralModel"),
         absorption=dominguez,
-        redshift=0.5
+        redshift=0.5,
     )
     assert len(model.parameters) == 5
 

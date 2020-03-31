@@ -5,12 +5,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
 from gammapy.modeling import Parameters, Parameter, Covariance
-from gammapy.modeling.models import (
-    Models,
-    SkyModel,
-    PointSpatialModel,
-    PowerLawSpectralModel,
-)
 
 
 @pytest.fixture
@@ -46,21 +40,9 @@ def test_set_data(covariance_diagonal):
         covariance_diagonal.data = data
 
 
-def test_io(tmp_path,covariance_diagonal):
-    s1 = SkyModel(PowerLawSpectralModel(),PointSpatialModel())
-    s2 = SkyModel(PowerLawSpectralModel(),PointSpatialModel())
-    models = Models([s1, s2])
-    filename = str(tmp_path/"covar.dat")
-    models.covariance.write(models, filename)
-    covar = Covariance.read(models, filename)
-    assert_allclose(covar, models.covariance)
-
 def test_set_subcovariance(covariance_diagonal, covariance):
     covariance_diagonal.set_subcovariance(covariance)
-    assert_allclose(
-        covariance_diagonal.data[:2, :2],
-        np.ones((2, 2))
-    )
+    assert_allclose(covariance_diagonal.data[:2, :2], np.ones((2, 2)))
 
 
 def test_get_subcovariance(covariance_diagonal, covariance):
