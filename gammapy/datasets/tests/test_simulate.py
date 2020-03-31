@@ -186,16 +186,16 @@ def test_mde_run(dataset):
     assert meta["HDUVERS"] == "0.2"
     assert meta["HDUCLASS"] == "GADF"
     assert meta["OBS_ID"] == 1001
-    assert meta["TSTART"] == 0.0
-    assert meta["TSTOP"] == 3599.9999997904524
-    assert meta["ONTIME"] == 3600.0
-    assert meta["LIVETIME"] == 3600.0
-    assert meta["DEADC"] == 0.0
-    assert meta["RA_PNT"] == 266.4049882865447
-    assert meta["DEC_PNT"] == -28.936177761791473
+    assert_allclose(meta["TSTART"], 0.0)
+    assert_allclose(meta["TSTOP"], 3600.0)
+    assert_allclose(meta["ONTIME"], 3600.0)
+    assert_allclose(meta["LIVETIME"], 3600.0)
+    assert_allclose(meta["DEADC"], 0.0)
+    assert_allclose(meta["RA_PNT"], 266.4049882865447)
+    assert_allclose(meta["DEC_PNT"],-28.936177761791473)
     assert meta["EQUINOX"] == "J2000"
     assert meta["RADECSYS"] == "icrs"
-    assert meta["CREATOR"] == "Gammapy 0.17.dev531+g93b8bd0.d20200330"
+    assert "Gammapy" in meta["CREATOR"]
     assert meta["EUNIT"] == "TeV"
     assert meta["EVTVER"] == ""
     assert meta["OBSERVER"] == "Gammapy user"
@@ -205,16 +205,16 @@ def test_mde_run(dataset):
     assert meta["DSREF1"] == ":GTI"
     assert meta["DSTYP2"] == "ENERGY"
     assert meta["DSUNI2"] == "TeV"
-    assert meta["DSVAL2"] == "1.0:10.000000000000002"
+    assert ":" in meta["DSVAL2"]
     assert meta["DSTYP3"] == "POS(RA,DEC)     "
-    assert meta["DSVAL3"] == "CIRCLE(266.4049882865447,-28.936177761791473,1.0)"
+    assert "CIRCLE" in meta["DSVAL3"]
     assert meta["DSUNI3"] == "deg             "
     assert meta["NDSKEYS"] == " 3 "
-    assert meta["RA_OBJ"] == 266.4049882865447
-    assert meta["DEC_OBJ"] == -28.936177761791473
-    assert meta["TELAPSE"] == 1000.0
-    assert meta["MJDREFI"] == 51544
-    assert meta["MJDREFF"] == 0.0007428703684126958
+    assert_allclose(meta["RA_OBJ"], 266.4049882865447)
+    assert_allclose(meta["DEC_OBJ"], -28.936177761791473)
+    assert_allclose(meta["TELAPSE"], 1000.0)
+    assert_allclose(meta["MJDREFI"], 51544)
+    assert_allclose(meta["MJDREFF"], 0.0007428703684126958)
     assert meta["TIMEUNIT"] == "s"
     assert meta["TIMESYS"] == "tt"
     assert meta["TIMEREF"] == "LOCAL"
@@ -222,7 +222,7 @@ def test_mde_run(dataset):
     assert meta["DATE-END"] == "2000-01-01"
     assert meta["TIME-OBS"] == "00:01:04.184"
     assert meta["TIME-END"] == "00:17:44.184"
-    assert meta["TIMEDEL"] == 1e-09
+    assert_allclose(meta["TIMEDEL"], 1e-09)
     assert meta["CONV_DEP"] == 0
     assert meta["CONV_RA"] == 0
     assert meta["CONV_DEC"] == 0
