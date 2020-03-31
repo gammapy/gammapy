@@ -202,7 +202,6 @@ class TSMapEstimator:
 
         npred = evaluator.compute_npred().sum_over_axes()
         npred.data /= npred.data.sum()
-
         # TODO : might not work for non square pixels or rectangular images
         # determine size containing correct fraction of kernel starting from center
         frac = np.zeros(np.min(pix[:2]))
