@@ -51,6 +51,7 @@ def input_dataset():
         counts=counts, exposure=exposure, models=background_model, mask_safe=mask,
     )
 
+
 @pytest.fixture(scope="session")
 def fermi_dataset():
     size = Angle('3 deg', '3.5 deg')
@@ -96,7 +97,7 @@ def test_compute_ts_map(input_dataset):
     spatial_model = GaussianSpatialModel(sigma='0.1 deg')
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
-    ts_estimator = TSMapEstimator(model=model, method="leastsq iter", threshold=1)
+    ts_estimator = TSMapEstimator(model=model, method="leastsq iter", threshold=1, kernel_width="1 deg")
     result = ts_estimator.run(input_dataset)
 
     assert "leastsq iter" in repr(ts_estimator)
@@ -113,20 +114,22 @@ def test_compute_ts_map(input_dataset):
     # Check mask is correctly taken into account
     assert np.isnan(result["ts"].data[30, 40])
 
+
 @requires_data()
 def test_compute_ts_map_psf(fermi_dataset):
-    estimator = TSMapEstimator()
+    estimator = TSMapEstimator(kernel_width="1 deg")
     result = estimator.run(fermi_dataset)
 
     assert "root brentq" in repr(estimator)
     assert_allclose(result["ts"].data[29, 29], 852.1548, rtol=1e-2)
     assert_allclose(result["niter"].data[29, 29], 7)
-    assert_allclose(result["flux"].data[29, 29], 1.490154e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[29, 29], 8.653709e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[29, 29], 1.663228e-09, rtol=1e-2)
+    assert_allclose(result["flux"].data[29, 29], 1.419909e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[29, 29], 8.245766e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[29, 29], 1.584825e-09, rtol=1e-2)
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
     assert result["flux_ul"].unit == u.Unit("cm-2s-1")
+
 
 @requires_data()
 def test_compute_ts_map_newton(input_dataset):
@@ -135,7 +138,7 @@ def test_compute_ts_map_newton(input_dataset):
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-    ts_estimator = TSMapEstimator(model=model, method="root newton", threshold=1)
+    ts_estimator = TSMapEstimator(model=model, method="root newton", threshold=1, kernel_width="1 deg")
     result = ts_estimator.run(input_dataset)
 
     assert "root newton" in repr(ts_estimator)
@@ -161,15 +164,16 @@ def test_compute_ts_map_downsampled(input_dataset):
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
     ts_estimator = TSMapEstimator(
-        model=model, downsampling_factor=2, method="root brentq", error_method="conf", ul_method="conf"
+        model=model, downsampling_factor=2, method="root brentq", error_method="conf", ul_method="conf",
+        kernel_width="1 deg"
     )
     result = ts_estimator.run(input_dataset)
 
-    assert_allclose(result["ts"].data[99, 99], 1080.897262, rtol=1e-2)
-    assert_allclose(result["niter"].data[99, 99], 7)
-    assert_allclose(result["flux"].data[99, 99], 1.37155e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[99, 99], 5.43812e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[99, 99], 1.481059e-09, rtol=1e-2)
+    assert_allclose(result["ts"].data[99, 99], 1661.49, rtol=1e-2)
+    assert_allclose(result["niter"].data[99, 99], 9)
+    assert_allclose(result["flux"].data[99, 99], 1.065988e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[99, 99], 4.005628e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[99, 99], 1.147133e-09, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
@@ -185,7 +189,7 @@ def test_large_kernel(input_dataset):
     spatial_model = GaussianSpatialModel(sigma='4 deg')
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
-    ts_estimator = TSMapEstimator(model=model)
+    ts_estimator = TSMapEstimator(model=model, kernel_width="4 deg")
 
     with pytest.raises(ValueError):
         ts_estimator.run(input_dataset)

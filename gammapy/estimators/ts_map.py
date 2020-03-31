@@ -6,8 +6,7 @@ import warnings
 import numpy as np
 import scipy.optimize
 from astropy.coordinates import Angle, SkyCoord
-from gammapy.maps import Map
-from gammapy.datasets import MapDataset
+from gammapy.maps import Map, WcsGeom
 from gammapy.datasets.map import MapEvaluator
 from gammapy.modeling.models import PointSpatialModel, SkyModel, PowerLawSpectralModel
 from gammapy.stats import (
@@ -26,6 +25,10 @@ log = logging.getLogger(__name__)
 FLUX_FACTOR = 1e-12
 MAX_NITER = 20
 RTOL = 1e-3
+
+
+def round_up_to_odd(f):
+    return int(np.ceil(f) // 2 * 2 + 1)
 
 
 def _extract_array(array, shape, position):
@@ -82,11 +85,10 @@ class TSMapEstimator:
 
     Parameters
     ----------
-    model : `~gammapy.modeling.model.SpatialModel`
+    model : `~gammapy.modeling.model.SkyModel`
         Source model kernel. If set to None, assume point source model, PointSpatialModel.
-    kernel_size : `~astropy.coordinates.Angle`
-        Kernel size to use: the kernel will be truncated at this size
-        Default : 1 deg
+    kernel_width : `~astropy.coordinates.Angle`
+        Width of the kernel to use: the kernel will be truncated at this size
     downsampling_factor : int
         Sample down the input maps to speed up the computation. Only integer
         values that are a multiple of 2 are allowed. Note that the kernel is
@@ -140,7 +142,7 @@ class TSMapEstimator:
     def __init__(
         self,
         model=None,
-        kernel_containment_fraction=0.95,
+        kernel_width="0.2 deg",
         downsampling_factor=None,
         method="root brentq",
         error_method="covar",
@@ -156,7 +158,14 @@ class TSMapEstimator:
         if error_method not in ["covar", "conf"]:
             raise ValueError(f"Not a valid error method '{error_method}'")
 
-        self.kernel_containment_fraction = kernel_containment_fraction
+        self.kernel_width = Angle(kernel_width)
+
+        if model is None:
+            model = SkyModel(
+                spectral_model=PowerLawSpectralModel(),
+                spatial_model=PointSpatialModel()
+            )
+
         self.model = model
         self.downsampling_factor = downsampling_factor
 
@@ -170,82 +179,52 @@ class TSMapEstimator:
             "rtol": rtol,
         }
 
-    @property
-    def dataset(self):
-        return self._dataset
-
-    @dataset.setter
-    def dataset(self, dataset):
-        """Set MapDataset and retrieves the PSF at its center to define the kernel."""
-        if not isinstance(dataset, MapDataset):
-            raise TypeError("TSMapEstimator: input dataset should be a MapDataset.")
-        if dataset.data_shape[0] != 1:
-            raise NotImplementedError("TSMapEstimator: for now, input dataset should have only one energy bin.")
-        self._dataset = dataset
-        self._set_kernel()
-
-    def _set_kernel(self):
+    def get_kernel(self, dataset):
         """Set the convolution kernel for the input dataset.
 
         Convolves the model with the PSFKernel at the center of the dataset.
         If no PSFMap or PSFKernel is found the dataset, the model is used without convolution.
         """
-        # we take the center of the map. If the center falls in between two pixels, we shift by half a pixel.
-        pix = np.rint(self.dataset._geom.center_pix).astype('int')
-        center = SkyCoord.from_pixel(pix[0], pix[1], self.dataset._geom.wcs)
-        self._center_model(center)
+        # TODO: further simplify the code below
+        geom = dataset.counts.geom
 
-        # We use global evaluation mode because we want to perform the cutout outside MapEvaluator
-        # to ensure an odd number of bins
-        evaluator = MapEvaluator(self.model, evaluation_mode="global")
-        evaluator.update(self.dataset.exposure, self.dataset.psf, self.dataset.edisp, self.dataset.counts.geom)
+        if self.downsampling_factor:
+            geom = geom.downsample(self.downsampling_factor)
 
-        npred = evaluator.compute_npred().sum_over_axes()
-        npred.data /= npred.data.sum()
-        # TODO : might not work for non square pixels or rectangular images
-        # determine size containing correct fraction of kernel starting from center
-        frac = np.zeros(np.min(pix[:2]))
-        for i in range(frac.shape[0]):
-            sly = slice(pix[0] - i - 1, pix[0] + i, None)
-            slx = slice(pix[1] - i - 1, pix[1] + i, None)
-            frac[i] = npred.data[slx, sly].sum()
+        model = self.model.copy()
+        model.spatial_model.position = geom.center_skydir
 
-        index = np.where(frac>self.kernel_containment_fraction)[0][0]
-        # define cutout size to ensure odd number of pixels
-        size = (2*index + 1) * np.abs(self.dataset._geom.pixel_scales)
+        binsz = np.mean(geom.pixel_scales)
+        width_pix = self.kernel_width / binsz
 
-        kernel = Map.from_geom(npred.geom, data=npred.data)
-        kernel = kernel.cutout(center, size)
-        self._kernel = kernel
-        if (np.array(kernel.data.shape) > 0.5*np.array(self.dataset.counts.data.shape[1:])).any():
-            print(self._kernel.data.shape)
+        npix = round_up_to_odd(width_pix.to_value(""))
+
+        axis = dataset.exposure.geom.get_axis_by_name("energy_true")
+
+        geom = WcsGeom.create(
+            skydir=model.position,
+            proj="TAN",
+            npix=npix,
+            axes=[axis],
+            binsz=binsz
+        )
+
+        exposure = Map.from_geom(geom, unit="cm2 s1")
+        exposure.data += 1.
+
+        # We use global evaluation mode to not modify the geometry
+        evaluator = MapEvaluator(model, evaluation_mode="global")
+        evaluator.update(exposure, dataset.psf, dataset.edisp, dataset.counts.geom)
+
+        kernel = evaluator.compute_npred().sum_over_axes()
+        kernel.data /= kernel.data.sum()
+
+        if (self.kernel_width > geom.width).any():
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
                 " size of the kernel"
             )
-
-    def _center_model(self, coord):
-        """Center the model on input SkyCoord."""
-        #TODO : remove once a property setter is defined on SpatialModel
-        self.model.spatial_model.frame = coord.frame
-        self.model.spatial_model.lon_0.value = coord.spherical.lon.to_value('deg')
-        self.model.spatial_model.lon_0.unit = 'deg'
-        self.model.spatial_model.lat_0.value = coord.spherical.lat.to_value('deg')
-        self.model.spatial_model.lat_0.unit = 'deg'
-
-    @property
-    def model(self):
-        return self._model
-
-    @model.setter
-    def model(self, model):
-        if model is None:
-            model = SkyModel(
-                spatial_model=PointSpatialModel(),
-                spectral_model=PowerLawSpectralModel(index=2)
-            )
-
-        self._model = model
+        return kernel
 
     @staticmethod
     def flux_default(dataset, kernel):
@@ -255,7 +234,7 @@ class TSMapEstimator:
         ----------
         dataset : `~gammapy.cube.MapDataset`
             Input dataset.
-        kernel : `~stropy.convolution.Kernel2D`
+        kernel : `~numpy.ndarray`
             Source model kernel.
 
         Returns
@@ -266,8 +245,8 @@ class TSMapEstimator:
         flux = dataset.counts - dataset.npred()
         flux = flux.sum_over_axes(keepdims=False)
         flux /= dataset.exposure.sum_over_axes(keepdims=False)
-        flux /= np.sum(kernel.data ** 2)
-        return flux.convolve(kernel.data)
+        flux /= np.sum(kernel ** 2)
+        return flux.convolve(kernel)
 
     @staticmethod
     def mask_default(exposure, background, kernel):
@@ -279,7 +258,7 @@ class TSMapEstimator:
             Input exposure map.
         background : `~gammapy.maps.Map`
             Input background map.
-        kernel : `astropy.convolution.Kernel2D`
+        kernel : `~numpy.ndarray`
             Source model kernel.
 
         Returns
@@ -333,7 +312,6 @@ class TSMapEstimator:
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return map_ts.copy(data=sqrt_ts)
 
-
     def run(self, dataset, steps="all"):
         """
         Run TS map estimation.
@@ -366,16 +344,17 @@ class TSMapEstimator:
                 * flux_ul : upper limit map
 
         """
-        self.dataset = dataset
-
         p = self.parameters
 
         # First create 2D map arrays
-        counts = self.dataset.counts.sum_over_axes(keepdims=False)
-        background = self.dataset.npred().sum_over_axes(keepdims=False)
-        exposure = self.dataset.exposure.sum_over_axes(keepdims=False)
-        if self.dataset.mask is not None:
-            mask = counts.copy(data=(self.dataset.mask.sum(axis=0) > 0).astype("int"))
+        counts = dataset.counts.sum_over_axes(keepdims=False)
+        background = dataset.npred().sum_over_axes(keepdims=False)
+        exposure = dataset.exposure.sum_over_axes(keepdims=False)
+
+        kernel = self.get_kernel(dataset)
+
+        if dataset.mask is not None:
+            mask = counts.copy(data=(dataset.mask.sum(axis=0) > 0).astype("int"))
         else:
             mask = counts.copy(data=np.ones_like(counts).astype("int"))
 
@@ -397,7 +376,7 @@ class TSMapEstimator:
             )
             mask.data = mask.data.astype("int")
 
-        mask.data &= self.mask_default(exposure, background, self._kernel.data).data
+        mask.data &= self.mask_default(exposure, background, kernel.data).data
 
         if steps == "all":
             steps = ["ts", "sqrt_ts", "flux", "flux_err", "flux_ul", "niter"]
@@ -407,7 +386,7 @@ class TSMapEstimator:
             data = np.nan * np.ones_like(counts.data)
             result[name] = counts.copy(data=data)
 
-        flux_map = self.flux_default(self.dataset, self._kernel)
+        flux_map = self.flux_default(dataset, kernel.data)
 
         if p["threshold"] or p["method"] == "root newton":
             flux = flux_map.data
@@ -431,7 +410,7 @@ class TSMapEstimator:
             exposure=exposure_array,
             background=background_array,
             c_0=c_0,
-            kernel=self._kernel.data,
+            kernel=kernel.data,
             flux=flux,
             method=p["method"],
             error_method=error_method,

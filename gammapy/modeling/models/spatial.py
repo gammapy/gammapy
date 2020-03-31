@@ -56,6 +56,13 @@ class SpatialModel(Model):
         lat = self.lat_0.quantity
         return SkyCoord(lon, lat, frame=self.frame)
 
+    @position.setter
+    def position(self, skycoord):
+        """Spatial model center position"""
+        coord = skycoord.transform_to(self.frame)
+        self.lon_0.quantity = coord.data.lon
+        self.lat_0.quantity = coord.data.lat
+
     # TODO: get rid of this!
     _phi_0 = 0.0
 
