@@ -113,20 +113,6 @@ def test_sky_models_io(tmp_path):
     # or check serialised dict content
 
 
-#
-# def test_covariance_io(tmp_path):
-#    s1 = SkyModel(PowerLawSpectralModel(), PointSpatialModel())
-#    s2 = SkyModel(PowerLawSpectralModel(), PointSpatialModel())
-#    models = Models([s1, s2])
-#    models_copy = models.copy()
-#    models_copy.covariance = None
-#
-#    filename = str(tmp_path / "covar.dat")
-#    models.write_covariance(filename)
-#    models.read_covariance(filename)
-#    assert_allclose(models.covariance, models_copy.covariance)
-
-
 @requires_data()
 def test_absorption_io(tmp_path):
     dominguez = Absorption.read_builtin("dominguez")

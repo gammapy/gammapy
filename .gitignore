@@ -69,7 +69,9 @@ tutorials/analysis_1
 tutorials/analysis_3d
 tutorials/event_sampling
 tutorials/*.yaml
-Tutorials/*.reg
+tutorials/*.dat
+tutorials/*.reg
+
 gammapy-datasets
 temp
 

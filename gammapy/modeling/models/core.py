@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections.abc
 import copy
-from pathlib import Path
 from os.path import splitext
 import astropy.units as u
-from astropy.table import Table, hstack
+from astropy.table import Table
 import yaml
 from gammapy.modeling import Parameter, Parameters, Covariance
 from gammapy.utils.scripts import make_path, make_name
@@ -70,8 +69,13 @@ class Model:
             kwargs[par.name] = par
         return cls(**kwargs)
 
+    def _check_covariance(self):
+        if not self.parameters == self._covariance.parameters:
+            self._covariance = Covariance(self.parameters)
+
     @property
     def covariance(self):
+        self._check_covariance()
         for par in self.parameters:
             pars = Parameters([par])
             covar = Covariance(pars, data=[[par.error ** 2]])
@@ -81,6 +85,7 @@ class Model:
 
     @covariance.setter
     def covariance(self, covariance):
+        self._check_covariance()
         self._covariance.data = covariance
 
         for par in self.parameters:
@@ -105,8 +110,14 @@ class Model:
 
     @classmethod
     def from_dict(cls, data):
+        kwargs = {}
         parameters = Parameters.from_dict(data["parameters"])
-        return cls.from_parameters(parameters)
+
+        # TODO: this is a special case for spatial models, maybe better move to `SpatialModel` base class
+        if "frame" in data:
+            kwargs["frame"] = data["frame"]
+
+        return cls.from_parameters(parameters, **kwargs)
 
     @staticmethod
     def create(tag, *args, **kwargs):
@@ -223,7 +234,7 @@ class Models(collections.abc.MutableSequence):
     @classmethod
     def read(cls, filename):
         """Read from YAML file."""
-        yaml_str = Path(filename).read_text()
+        yaml_str = make_path(filename).read_text()
         return cls.from_yaml(yaml_str)
 
     @classmethod
@@ -238,14 +249,16 @@ class Models(collections.abc.MutableSequence):
         from . import MODELS, SkyModel
 
         models = []
+
         for component in data["components"]:
             model = MODELS.get_cls(component["type"]).from_dict(component)
             models.append(model)
+
         models = cls(models)
+
         if "covariance" in data:
             filename = data["covariance"]
             models.read_covariance(filename, format="ascii.fixed_width")
-            models._covar_file = filename
 
         shared_register = {}
         for model in models:
@@ -265,15 +278,18 @@ class Models(collections.abc.MutableSequence):
     def write(self, path, overwrite=False):
         """Write to YAML file."""
         path = make_path(path)
+
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
-        if self._covariance is not None and len(self.parameters) != 0:
+
+        if self.covariance is not None and len(self.parameters) != 0:
             filename = splitext(str(path))[0] + "_covariance.dat"
             kwargs = dict(
                 format="ascii.fixed_width", delimiter="|", overwrite=overwrite
             )
             self.write_covariance(filename, **kwargs)
             self._covar_file = filename
+
         path.write_text(self.to_yaml())
 
     def to_yaml(self):
@@ -322,7 +338,7 @@ class Models(collections.abc.MutableSequence):
         t = Table.read(filename, **kwargs)
         t.remove_column("Parameters")
         arr = np.array(t)
-        data = arr.view(np.float).reshape(arr.shape + (-1,))
+        data = arr.view(float).reshape(arr.shape + (-1,))
         self.covariance = data
         self._covar_file = filename
 
@@ -337,13 +353,15 @@ class Models(collections.abc.MutableSequence):
             Keyword arguments passed to `~astropy.table.Table.write`
 
         """
-        param_names = self.parameters_unique_names
-        if len(param_names) != 0:
-            t1 = Table()
-            t1["Parameters"] = param_names
-            t2 = Table(self._covariance.data, names=param_names)
-            t = hstack([t1, t2])
-            t.write(filename, **kwargs)
+        names = self.parameters_unique_names
+        table = Table()
+        table["Parameters"] = names
+
+        for idx, name in enumerate(names):
+            values = self.covariance.data[idx]
+            table[name] = values
+
+        table.write(filename, **kwargs)
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"
