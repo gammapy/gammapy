@@ -358,10 +358,15 @@ def get_map_datasets():
     dataset_1.gti = gti1
 
     dataset_2 = simulate_map_dataset(random_state=1, name="dataset_2")
-    dataset_2.models.pop("source")
-    dataset_2.models.append(dataset_1.models["source"])
     gti2 = GTI.create("1 h", "2 h", "2010-01-01T00:00:00")
     dataset_2.gti = gti2
+
+    model = dataset_1.models["source"].copy("test_source")
+    dataset_1.models.pop("source")
+    dataset_2.models.pop("source")
+    dataset_1.models.append(model)
+    dataset_2.models.append(model)
+
     return [dataset_1, dataset_2]
 
 
@@ -375,7 +380,7 @@ def test_lightcurve_estimator_map_datasets():
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
     ]
     estimator = LightCurveEstimator(
-        energy_range=[1,100]*u.TeV, source="source", time_intervals=time_intervals)
+        energy_range=[1,100]*u.TeV, source="test_source", time_intervals=time_intervals)
     steps = ["err", "counts", "ts", "norm-scan"]
     lightcurve = estimator.run(datasets, steps=steps)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -388,14 +393,16 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(lightcurve.table["ref_eflux"], [4.60517e-11, 4.60517e-11])
     assert_allclose(lightcurve.table["ref_e2dnde"], [1e-11, 1e-11])
     assert_allclose(lightcurve.table["stat"], [-87412.393367, -89856.129206], rtol=1e-2)
+    assert_allclose(lightcurve.table["norm"], [0.960233, 1.007574], rtol=1e-2)
     assert_allclose(lightcurve.table["norm_err"], [0.037565, 0.038417], rtol=1e-2)
     assert_allclose(lightcurve.table["sqrt_ts"], [38.067567, 39.531903], rtol=1e-2)
     assert_allclose(lightcurve.table["ts"], [1449.139654, 1562.771374], rtol=1e-2)
 
     datasets = get_map_datasets()
+
     time_intervals2 = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
     estimator2 = LightCurveEstimator(
-        energy_range=[1,100]*u.TeV, source="source", time_intervals=time_intervals2
+        energy_range=[1,100]*u.TeV, source="test_source", time_intervals=time_intervals2
     )
     lightcurve2 = estimator2.run(datasets)
 
@@ -408,7 +415,8 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(lightcurve2.table["ref_flux"], [9.9e-12])
     assert_allclose(lightcurve2.table["ref_eflux"], [4.60517e-11])
     assert_allclose(lightcurve2.table["ref_e2dnde"], [1e-11])
-    assert_allclose(lightcurve2.table["stat"], [-177267.775615], rtol=1e-5)
-    assert_allclose(lightcurve2.table["norm_err"], [0.030358], rtol=1e-2)
+    assert_allclose(lightcurve2.table["stat"], [-177267.775615], rtol=1e-2)
+    assert_allclose(lightcurve2.table["norm"], [0.983672], rtol=1e-2)
+    assert_allclose(lightcurve2.table["norm_err"], [0.026864], rtol=1e-2)
     assert_allclose(lightcurve.table["counts"], [46794, 47388])
-    assert_allclose(lightcurve2.table["ts"], [3041.682498], rtol=1e-4)
+    assert_allclose(lightcurve2.table["ts"], [3011.128], rtol=1e-2)

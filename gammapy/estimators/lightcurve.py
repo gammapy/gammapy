@@ -505,7 +505,6 @@ class LightCurveEstimator(FluxEstimator):
         """
         result = super().run(datasets, steps=steps)
         result.update(self._estimate_counts(datasets))
-
         if not result.pop("success"):
             log.warning(
                 "Fit failed for time bin between {t_min} and {t_max},".format(
