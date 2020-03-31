@@ -189,6 +189,34 @@ class Models(collections.abc.MutableSequence):
         return Parameters.from_stack([_.parameters for _ in self._models])
 
     @property
+    def parameters_unique_names(self):
+        from gammapy.modeling.models import SkyModel
+
+        param_names = []
+        for m in self._models:
+            if isinstance(m, SkyModel):
+                for p in m.parameters:
+                    if (
+                        m.spectral_model is not None
+                        and p in m.spectral_model.parameters
+                    ):
+                        tag = ".spectral."
+                    elif (
+                        m.spatial_model is not None and p in m.spatial_model.parameters
+                    ):
+                        tag = ".spatial."
+                    elif (
+                        m.temporal_model is not None
+                        and p in m.temporal_model.parameters
+                    ):
+                        tag = ".temporal."
+                    param_names.append(m.name + tag + p.name)
+            else:
+                for p in m.parameters:
+                    param_names.append(m.name + "." + p.name)
+        return param_names
+
+    @property
     def names(self):
         return [m.name for m in self._models]
 
@@ -239,12 +267,12 @@ class Models(collections.abc.MutableSequence):
         path = make_path(path)
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
-        if self.covariance is not None and len(self.parameters) != 0:
+        if self._covariance is not None and len(self.parameters) != 0:
             filename = splitext(str(path))[0] + "_covariance.dat"
             kwargs = dict(
                 format="ascii.fixed_width", delimiter="|", overwrite=overwrite
             )
-            self.write_covariance(self._models, filename, **kwargs)
+            self.write_covariance(filename, **kwargs)
             self._covar_file = filename
         path.write_text(self.to_yaml())
 
@@ -313,17 +341,9 @@ class Models(collections.abc.MutableSequence):
         if len(param_names) != 0:
             t1 = Table()
             t1["Parameters"] = param_names
-            t2 = Table(self._data, names=param_names)
+            t2 = Table(self._covariance.data, names=param_names)
             t = hstack([t1, t2])
             t.write(filename, **kwargs)
-
-    @property
-    def parameters_unique_names(self):
-        param_names = []
-        for m in self.models:
-            for p in m.parameters:
-                param_names.append(m.name + "." + p.name)
-        return param_names
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"
