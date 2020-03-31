@@ -921,7 +921,7 @@ class MapDataset(Dataset):
                 kwargs["psf"] = self.psf.to_image(spectrum=spectrum, keepdims=True)
             else:
                 # assume exposure at center position
-                kwargs["psf"] = self.psf.to_image(spectrum=spectrum, keepdims=True)
+                kwargs["psf"] = None
 
         return self.__class__(**kwargs)
 
