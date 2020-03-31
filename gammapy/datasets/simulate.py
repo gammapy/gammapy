@@ -230,11 +230,25 @@ class MapDatasetEventSampler:
         meta["DSREF1"] = ":GTI"
         meta["DSTYP2"] = "ENERGY"
         meta["DSUNI2"] = "TeV"
+        meta[
+            "DSVAL2"
+        ] = f'{dataset._geom.get_axis_by_name("energy").edges.min().value}:{dataset._geom.get_axis_by_name("energy").edges.max().value}'
+        meta["DSTYP3"] = "POS(RA,DEC)     "
+        meta[
+            "DSVAL3"
+        ] = f"CIRCLE({observation.pointing_radec.ra.deg},{observation.pointing_radec.dec.deg},{dataset.models[0].evaluation_radius.value})"
+        meta["DSUNI3"] = "deg             "
+        meta["NDSKEYS"] = " 3 "
 
-        if hasattr(dataset, "models[1]"):
-            meta["OBJECT"] = dataset.models[1].name
-            meta["RA_OBJ"] = dataset.models[1].position.icrs.ra.deg
-            meta["DEC_OBJ"] = dataset.models[1].position.icrs.dec.deg
+        if len(dataset.models) > 1:
+            if dataset.models[1] != dataset.background_model:
+                meta["OBJECT"] = dataset.models[1].name
+                meta["RA_OBJ"] = dataset.models[1].position.icrs.ra.deg
+                meta["DEC_OBJ"] = dataset.models[1].position.icrs.dec.deg
+            else:
+                meta["OBJECT"] = dataset.models[0].name
+                meta["RA_OBJ"] = dataset.models[0].position.icrs.ra.deg
+                meta["DEC_OBJ"] = dataset.models[0].position.icrs.dec.deg
         else:
             meta["OBJECT"] = dataset.models[0].name
             meta["RA_OBJ"] = dataset.models[0].position.icrs.ra.deg
