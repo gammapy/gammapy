@@ -2,9 +2,7 @@
 """Covariance class"""
 import numpy as np
 import scipy
-from astropy.table import Table
 from .parameter import Parameters
-
 
 __all__ = ["Covariance"]
 
@@ -20,11 +18,11 @@ class Covariance:
         Covariance data array
 
     """
+
     def __init__(self, parameters, data=None):
         self.parameters = parameters
-
         if data is None:
-            data = np.diag([p.error ** 2 for p in parameters])
+            data = np.diag([p.error ** 2 for p in self.parameters])
 
         self._data = np.asanyarray(data, dtype=float)
 
@@ -46,7 +44,9 @@ class Covariance:
         npars = len(self.parameters)
         shape = (npars, npars)
         if value.shape != shape:
-            raise ValueError(f"Invalid covariance shape: {value.shape}, expected {shape}")
+            raise ValueError(
+                f"Invalid covariance shape: {value.shape}, expected {shape}"
+            )
 
         self._data = value
 
@@ -91,9 +91,7 @@ class Covariance:
         covar : `Covariance`
             Stacked covariance
         """
-        parameters = Parameters.from_stack(
-            [_.parameters for _ in covar_list]
-        )
+        parameters = Parameters.from_stack([_.parameters for _ in covar_list])
 
         covar = cls(parameters)
 
@@ -101,47 +99,6 @@ class Covariance:
             covar.set_subcovariance(subcovar)
 
         return covar
-
-    def to_table(self, format=".6e"):
-        """Convert covariance matrix to table
-
-        Parameters
-        ----------
-        format : str
-            Column format string
-
-        Returns
-        -------
-        table : `~astropy.table.Table`
-            Covariance table
-        """
-        table = Table()
-        table["name"] = self.parameters.names
-
-        for idx, par in enumerate(self.parameters):
-            vals = self.data[idx]
-            table[par.name] = vals
-            table[par.name].format = format
-
-        table.add_index("name")
-        return table
-
-    def read(self, filename):
-        raise NotImplementedError
-
-    def write(self, filename, **kwargs):
-        """Write covariance to file
-
-        Parameters
-        ----------
-        filename : str
-            Filename
-        **kwargs : dict
-            Keyword arguments passed to `~astropy.table.Table.write`
-
-        """
-        table = self.to_table()
-        table.write(filename, **kwargs)
 
     def get_subcovariance(self, parameters):
         """Get sub-covariance matrix
@@ -158,9 +115,7 @@ class Covariance:
         """
         idx = [self.parameters.index(par) for par in parameters]
         data = self._data[np.ix_(idx, idx)]
-        return self.__class__(
-            parameters=parameters, data=data
-        )
+        return self.__class__(parameters=parameters, data=data)
 
     def set_subcovariance(self, covar):
         """Set sub-covariance matrix
@@ -210,8 +165,14 @@ class Covariance:
 
         names = self.parameters.names
         im, cbar = plot_heatmap(
-            data=self.correlation, col_labels=names, row_labels=names, ax=ax,
-            vmin=-1, vmax=1, cbarlabel="Correlation", **kwargs
+            data=self.correlation,
+            col_labels=names,
+            row_labels=names,
+            ax=ax,
+            vmin=-1,
+            vmax=1,
+            cbarlabel="Correlation",
+            **kwargs,
         )
         annotate_heatmap(im=im)
         return ax

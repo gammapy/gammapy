@@ -2,11 +2,13 @@
 import collections.abc
 import copy
 from pathlib import Path
+from os.path import splitext
 import astropy.units as u
-import numpy as np
+from astropy.table import Table, hstack
 import yaml
 from gammapy.modeling import Parameter, Parameters, Covariance
 from gammapy.utils.scripts import make_path, make_name
+import numpy as np
 
 
 def _set_link(shared_register, model):
@@ -155,6 +157,7 @@ class Models(collections.abc.MutableSequence):
             unique_names.append(model.name)
 
         self._models = models
+        self._covar_file = None
         self._covariance = Covariance(self.parameters)
 
     def _check_covariance(self):
@@ -178,14 +181,40 @@ class Models(collections.abc.MutableSequence):
         self._covariance.data = covariance
 
         for model in self._models:
-            subcovar = self._covariance.get_subcovariance(
-                model.covariance.parameters
-            )
+            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
             model.covariance = subcovar
 
     @property
     def parameters(self):
         return Parameters.from_stack([_.parameters for _ in self._models])
+
+    @property
+    def parameters_unique_names(self):
+        from gammapy.modeling.models import SkyModel
+
+        param_names = []
+        for m in self._models:
+            if isinstance(m, SkyModel):
+                for p in m.parameters:
+                    if (
+                        m.spectral_model is not None
+                        and p in m.spectral_model.parameters
+                    ):
+                        tag = ".spectral."
+                    elif (
+                        m.spatial_model is not None and p in m.spatial_model.parameters
+                    ):
+                        tag = ".spatial."
+                    elif (
+                        m.temporal_model is not None
+                        and p in m.temporal_model.parameters
+                    ):
+                        tag = ".temporal."
+                    param_names.append(m.name + tag + p.name)
+            else:
+                for p in m.parameters:
+                    param_names.append(m.name + "." + p.name)
+        return param_names
 
     @property
     def names(self):
@@ -213,6 +242,10 @@ class Models(collections.abc.MutableSequence):
             model = MODELS.get_cls(component["type"]).from_dict(component)
             models.append(model)
         models = cls(models)
+        if "covariance" in data:
+            filename = data["covariance"]
+            models.read_covariance(filename, format="ascii.fixed_width")
+            models._covar_file = filename
 
         shared_register = {}
         for model in models:
@@ -234,6 +267,13 @@ class Models(collections.abc.MutableSequence):
         path = make_path(path)
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
+        if self._covariance is not None and len(self.parameters) != 0:
+            filename = splitext(str(path))[0] + "_covariance.dat"
+            kwargs = dict(
+                format="ascii.fixed_width", delimiter="|", overwrite=overwrite
+            )
+            self.write_covariance(filename, **kwargs)
+            self._covar_file = filename
         path.write_text(self.to_yaml())
 
     def to_yaml(self):
@@ -260,7 +300,50 @@ class Models(collections.abc.MutableSequence):
         for model in self._models:
             model_data = model.to_dict()
             models_data.append(model_data)
-        return {"components": models_data}
+        if self._covar_file is not None:
+            return {
+                "components": models_data,
+                "covariance": str(self._covar_file),
+            }
+        else:
+            return {"components": models_data}
+
+    def read_covariance(self, filename, **kwargs):
+        """Read covariance data from file
+
+        Parameters
+        ----------
+        filename : str
+            Filename
+        **kwargs : dict
+            Keyword arguments passed to `~astropy.table.Table.read`
+
+        """
+        t = Table.read(filename, **kwargs)
+        t.remove_column("Parameters")
+        arr = np.array(t)
+        data = arr.view(np.float).reshape(arr.shape + (-1,))
+        self.covariance = data
+        self._covar_file = filename
+
+    def write_covariance(self, filename, **kwargs):
+        """Write covariance to file
+
+        Parameters
+        ----------
+        filename : str
+            Filename
+        **kwargs : dict
+            Keyword arguments passed to `~astropy.table.Table.write`
+
+        """
+        param_names = self.parameters_unique_names
+        if len(param_names) != 0:
+            t1 = Table()
+            t1["Parameters"] = param_names
+            t2 = Table(self._covariance.data, names=param_names)
+            t = hstack([t1, t2])
+            t.write(filename, **kwargs)
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"

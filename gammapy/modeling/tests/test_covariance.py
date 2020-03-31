@@ -3,8 +3,8 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.modeling import Parameters, Parameter, Covariance
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
+from gammapy.modeling import Parameters, Parameter, Covariance
 
 
 @pytest.fixture
@@ -12,6 +12,7 @@ def covariance_diagonal():
     x = Parameter("x", 1, error=0.1)
     y = Parameter("y", 2, error=0.2)
     z = Parameter("z", 3, error=0.3)
+
     parameters = Parameters([x, y, z])
     return Covariance(parameters=parameters)
 
@@ -39,19 +40,9 @@ def test_set_data(covariance_diagonal):
         covariance_diagonal.data = data
 
 
-def test_to_table(covariance_diagonal):
-    table = covariance_diagonal.to_table()
-    assert_allclose(table.loc["x"]["x"], 0.1 ** 2)
-    assert_allclose(table.loc["y"]["y"], 0.2 ** 2)
-    assert_allclose(table.loc["z"]["z"], 0.3 ** 2)
-
-
 def test_set_subcovariance(covariance_diagonal, covariance):
     covariance_diagonal.set_subcovariance(covariance)
-    assert_allclose(
-        covariance_diagonal.data[:2, :2],
-        np.ones((2, 2))
-    )
+    assert_allclose(covariance_diagonal.data[:2, :2], np.ones((2, 2)))
 
 
 def test_get_subcovariance(covariance_diagonal, covariance):
