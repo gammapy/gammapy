@@ -190,11 +190,10 @@ class Analysis:
         e_edges = self._make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
             e_edges=e_edges,
-            datasets=self.datasets,
             source=fp_settings.source,
             **fp_settings.parameters,
         )
-        fp = flux_point_estimator.run()
+        fp = flux_point_estimator.run(datasets=self.datasets)
         fp.table["is_ul"] = fp.table["ts"] < 4
         self.flux_points = FluxPointsDataset(
             data=fp, models=self.models[fp_settings.source]

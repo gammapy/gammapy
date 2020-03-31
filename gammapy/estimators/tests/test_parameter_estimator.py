@@ -36,9 +36,9 @@ def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
     for dataset in datasets:
         dataset.models = SkyModel(spectral_model=PLmodel, name="Crab")
 
-    estimator = ParameterEstimator(datasets, n_scan_values=10)
+    estimator = ParameterEstimator(n_scan_values=10)
 
-    result = estimator.run(PLmodel.amplitude, steps="all")
+    result = estimator.run(datasets, PLmodel.amplitude, steps="all")
 
     assert_allclose(result["amplitude"], 5.142843823441639e-11, rtol=1e-3)
     assert_allclose(result["amplitude_err"], 6.0075e-12, rtol=1e-3)
@@ -50,30 +50,30 @@ def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
     assert_allclose(result["amplitude_scan"].shape, 10)
 
 
-@pytest.mark.xfail
 @requires_data()
 def test_parameter_estimator_3d(crab_datasets_fermi):
     datasets = crab_datasets_fermi
     parameter = datasets[0].models.parameters["amplitude"]
-    estimator = ParameterEstimator(datasets)
+    estimator = ParameterEstimator()
 
-    result = estimator.run(parameter, steps="ts")
+    result = estimator.run(datasets, parameter, steps=["ts", "err"])
 
-    assert_allclose(result["amplitude"], 0.3415434439879935, rtol=1e-4)
+    assert_allclose(result["amplitude"], 0.328839, rtol=1e-3)
+    assert_allclose(result["amplitude_err"], 0.002801, rtol=1e-3)
+    assert_allclose(result["ts"], 13005.938702, rtol=1e-3)
 
 
-@pytest.mark.xfail
 @requires_data()
 def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
     datasets = crab_datasets_fermi
     parameter = datasets[0].models.parameters["amplitude"]
-    estimator = ParameterEstimator(datasets, reoptimize=False, n_scan_values=10)
+    estimator = ParameterEstimator(reoptimize=False, n_scan_values=10)
     alpha_value = datasets[0].models.parameters["alpha"].value
 
-    result = estimator.run(parameter, steps="all")
+    result = estimator.run(datasets, parameter, steps="all")
 
     assert datasets[0].models.parameters["alpha"].frozen == False
     assert_allclose(datasets[0].models.parameters["alpha"].value, alpha_value)
-    assert_allclose(result["amplitude"], 0.3415441642696537, rtol=1e-4)
+    assert_allclose(result["amplitude"], 0.331505, rtol=1e-4)
     assert_allclose(result["amplitude_scan"].shape, 10)
-    assert_allclose(result["amplitude_scan"][0], 0.32107816, atol=1e-3)
+    assert_allclose(result["amplitude_scan"][0], 0.312406, atol=1e-3)
