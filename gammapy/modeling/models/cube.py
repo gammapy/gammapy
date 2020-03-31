@@ -105,9 +105,7 @@ class SkyModel(SkyModelBase):
         self._covariance.data = covariance
 
         for model in self._models:
-            subcovar = self._covariance.get_subcovariance(
-                model.covariance.parameters
-            )
+            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
             model.covariance = subcovar
 
     @property
@@ -562,7 +560,7 @@ class SkyDiffuseCube(SkyModelBase):
             apply_irf=apply_irf,
             datasets_names=datasets_names,
             filename=filename,
-            name=name
+            name=name,
         )
 
     def to_dict(self):
