@@ -368,7 +368,6 @@ class LightCurveEstimator(FluxEstimator):
 
     def __init__(
         self,
-        datasets,
         time_intervals=None,
         source=0,
         energy_range=[1., 10.]*u.TeV,
@@ -392,7 +391,6 @@ class LightCurveEstimator(FluxEstimator):
         self.atol = u.Quantity(atol)
 
         super().__init__(
-            datasets,
             source,
             energy_range,
             norm_min,
@@ -514,9 +512,8 @@ class LightCurveEstimator(FluxEstimator):
         result : dict
             Dict with results for the flux point.
         """
-        self.datasets=datasets
-        result = super().run(steps=steps)
-#        result.update(self.estimate_counts())
+        result = super().run(datasets, steps=steps)
+        result.update(self._estimate_counts(datasets))
 
 #        if not result.pop("success"):
 #            log.warning(
@@ -527,7 +524,7 @@ class LightCurveEstimator(FluxEstimator):
 #            )
         return result
 
-    def estimate_counts(self, datasets):
+    def _estimate_counts(self, datasets):
         """Estimate counts for the flux point.
 
         Parameters
