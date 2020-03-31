@@ -347,7 +347,9 @@ class LightCurveEstimator(FluxEstimator):
     time_intervals : list of `astropy.time.Time`
         Start and stop time for each interval to compute the LC
     source : str
-        For which source in the model to compute the flux points. Default is ''
+        For which source in the model to compute the flux points. Default is 0
+    energy_range : tuple of `~astropy.units.Quantity`
+        Energy range on which to compute the flux. Default is 1-10 TeV
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
     norm_min : float
