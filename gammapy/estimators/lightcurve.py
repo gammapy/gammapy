@@ -7,7 +7,7 @@ from astropy.time import Time
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 from gammapy.modeling.models import ScaleSpectralModel
-from gammapy.estimators import FluxPoints
+from gammapy.estimators import FluxPoints, FluxEstimator
 from gammapy.utils.table import table_from_row_data
 from gammapy.utils.scripts import make_path
 
@@ -332,7 +332,7 @@ def group_datasets_in_time_interval(datasets, time_intervals, atol="1e-6 s"):
     return dataset_group_ID_table
 
 
-class LightCurveEstimator:
+class LightCurveEstimator(FluxEstimator):
     """Compute light curve.
 
     The estimator will fit the source model component to datasets in each of the time intervals
@@ -344,12 +344,12 @@ class LightCurveEstimator:
 
     Parameters
     ----------
-    datasets : list of `~gammapy.spectrum.SpectrumDataset` or `~gammapy.cube.MapDataset`
-        Spectrum or Map datasets.
     time_intervals : list of `astropy.time.Time`
         Start and stop time for each interval to compute the LC
     source : str
         For which source in the model to compute the flux points. Default is ''
+    atol : `~astropy.units.Quantity`
+        Tolerance value for time comparison with different scale. Default 1e-6 sec.
     norm_min : float
         Minimum value for the norm used for the fit statistic profile evaluation.
     norm_max : float
@@ -371,6 +371,8 @@ class LightCurveEstimator:
         datasets,
         time_intervals=None,
         source=0,
+        energy_range=[1., 10.]*u.TeV,
+        atol="1e-6 s",
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
@@ -379,42 +381,28 @@ class LightCurveEstimator:
         sigma_ul=2,
         reoptimize=False,
     ):
-        self.datasets = Datasets(datasets)
 
-        if not self.datasets.is_all_same_type and self.datasets.is_all_same_shape:
-            raise ValueError(
-                "Light Curve estimation requires a list of datasets"
-                " of the same type and data shape."
-            )
+        self.input_time_intervals = time_intervals
 
-        if time_intervals is None:
-            time_intervals = [
-                Time([d.gti.time_start[0], d.gti.time_stop[-1]]) for d in self.datasets
-            ]
+#        self.models = self.datasets.models.copy()
 
-        self._check_and_sort_time_intervals(time_intervals)
-
-        self.models = self.datasets.models.copy()
-
-        model = self.models[source].spectral_model
-
-        self.model = ScaleSpectralModel(model)
-        self.model.norm.min = 0
-        self.model.norm.max = 1e5
-
-        if norm_values is None:
-            norm_values = np.logspace(
-                np.log10(norm_min), np.log10(norm_max), norm_n_values
-            )
-
-        self.norm_values = norm_values
-
-        self.sigma = sigma
-        self.sigma_ul = sigma_ul
-        self.reoptimize = reoptimize
-        self.source = source
+#        model = self.models[source].spectral_model
 
         self.group_table_info = None
+        self.atol = u.Quantity(atol)
+
+        super().__init__(
+            datasets,
+            source,
+            energy_range,
+            norm_min,
+            norm_max,
+            norm_n_values,
+            norm_values,
+            sigma,
+            sigma_ul,
+            reoptimize,
+        )
 
     def _check_and_sort_time_intervals(self, time_intervals):
         """Sort the time_intervals by increasing time if not already ordered correctly.
@@ -439,28 +427,15 @@ class LightCurveEstimator:
                 for tstart, tstop in zip(time_start_sorted, time_stop_sorted)
             ]
 
-    def _set_scale_model(self, datasets):
-        self.models[self.source].spectral_model = self.model
-        for dataset in datasets:
-            dataset.models = self.models
-
-    @property
-    def ref_model(self):
-        return self.model.model
-
-    def run(self, e_ref, e_min, e_max, steps="all", atol="1e-6 s"):
+    def run(self, datasets, steps="all"):
         """Run light curve extraction.
 
         Normalize integral and energy flux between emin and emax.
 
         Parameters
         ----------
-        e_ref : `~astropy.units.Quantity`
-            reference energy of dnde flux normalization
-        e_min : `~astropy.units.Quantity`
-            minimum energy of integral and energy flux normalization interval
-        e_max : `~astropy.units.Quantity`
-            minimum energy of integral and energy flux normalization interval
+        datasets : list of `~gammapy.spectrum.SpectrumDataset` or `~gammapy.cube.MapDataset`
+            Spectrum or Map datasets.
         steps : list of str
             Which steps to execute. Available options are:
 
@@ -471,22 +446,24 @@ class LightCurveEstimator:
                 * "norm-scan": estimate fit statistic profiles.
 
             By default all steps are executed.
-        atol : `~astropy.units.Quantity`
-            Tolerance value for time comparison with different scale. Default 1e-6 sec.
 
         Returns
         -------
         lightcurve : `~gammapy.time.LightCurve`
             the Light Curve object
         """
-        atol = u.Quantity(atol)
-        self.e_ref = e_ref
-        self.e_min = e_min
-        self.e_max = e_max
+        if self.input_time_intervals is None:
+            time_intervals = [
+                Time([d.gti.time_start[0], d.gti.time_stop[-1]]) for d in datasets
+            ]
+        else:
+            time_intervals=self.input_time_intervals
+
+        self._check_and_sort_time_intervals(time_intervals)
 
         rows = []
         self.group_table_info = group_datasets_in_time_interval(
-            datasets=self.datasets, time_intervals=self.time_intervals, atol=atol
+            datasets=datasets, time_intervals=time_intervals, atol=self.atol
         )
         if np.all(self.group_table_info["Group_ID"] == -1):
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
@@ -500,11 +477,10 @@ class LightCurveEstimator:
             row = {"time_min": time_interval[0].mjd, "time_max": time_interval[1].mjd}
             interval_list_dataset = Datasets(
                 [
-                    self.datasets[int(_)].copy(name=self.datasets[int(_)].name)
+                    datasets[int(_)].copy(name=datasets[int(_)].name)
                     for _ in index_dataset
                 ]
             )
-            self._set_scale_model(interval_list_dataset)
             row.update(
                 self.estimate_time_bin_flux(interval_list_dataset, time_interval, steps)
             )
@@ -538,73 +514,18 @@ class LightCurveEstimator:
         result : dict
             Dict with results for the flux point.
         """
-        self.fit = Fit(datasets)
+        self.datasets=datasets
+        result = super().run(steps=steps)
+#        result.update(self.estimate_counts())
 
-        result = {
-            "e_ref": self.e_ref,
-            "e_min": self.e_min,
-            "e_max": self.e_max,
-            "ref_dnde": self.ref_model(self.e_ref),
-            "ref_flux": self.ref_model.integral(self.e_min, self.e_max),
-            "ref_eflux": self.ref_model.energy_flux(self.e_min, self.e_max),
-            "ref_e2dnde": self.ref_model(self.e_ref) * self.e_ref ** 2,
-        }
-
-        result.update(self.estimate_norm())
-
-        if not result.pop("success"):
-            log.warning(
-                "Fit failed for time bin between {t_min} and {t_max},"
-                " setting NaN.".format(
-                    t_min=time_interval[0].mjd, t_max=time_interval[1].mjd
-                )
-            )
-
-        if steps == "all":
-            steps = ["err", "counts", "errp-errn", "ul", "ts", "norm-scan"]
-
-        if "err" in steps:
-            result.update(self.estimate_norm_err())
-
-        if "counts" in steps:
-            result.update(self.estimate_counts(datasets))
-
-        if "ul" in steps:
-            result.update(self.estimate_norm_ul(datasets))
-
-        if "errp-errn" in steps:
-            result.update(self.estimate_norm_errn_errp())
-
-        if "ts" in steps:
-            result.update(self.estimate_norm_ts(datasets))
-
-        if "norm-scan" in steps:
-            result.update(self.estimate_norm_scan())
-
+#        if not result.pop("success"):
+#            log.warning(
+#                "Fit failed for time bin between {t_min} and {t_max},"
+#                " setting NaN.".format(
+#                    t_min=time_interval[0].mjd, t_max=time_interval[1].mjd
+#                )
+#            )
         return result
-
-    # TODO : most of the following code is copied from FluxPointsEstimator, can it be restructured?
-    def estimate_norm_errn_errp(self):
-        """Estimate asymmetric errors for a flux point.
-
-        Returns
-        -------
-        result : dict
-            Dict with asymmetric errors for the flux point norm.
-        """
-        result = self.fit.confidence(parameter=self.model.norm, sigma=self.sigma)
-        return {"norm_errp": result["errp"], "norm_errn": result["errn"]}
-
-    def estimate_norm_err(self):
-        """Estimate covariance errors for a flux point.
-
-        Returns
-        -------
-        result : dict
-            Dict with symmetric error for the flux point norm.
-        """
-        _ = self.fit.covariance()
-        return {"norm_err": self.model.norm.error}
 
     def estimate_counts(self, datasets):
         """Estimate counts for the flux point.
@@ -627,97 +548,3 @@ class LightCurveEstimator:
 
         return {"counts": np.array(counts, dtype=int).sum()}
 
-    def estimate_norm_ul(self, datasets):
-        """Estimate upper limit for a flux point.
-
-        Parameters
-        ----------
-        datasets : `~gammapy.modeling.Datasets`
-            the list of dataset object
-
-        Returns
-        -------
-        result : dict
-            Dict with upper limit for the flux point norm.
-        """
-        norm = self.model.norm
-
-        # TODO: the minuit backend has convergence problems when the fit statistic is not
-        #  of parabolic shape, which is the case, when there are zero counts in the
-        #  energy bin. For this case we change to the scipy backend.
-        counts = self.estimate_counts(datasets)["counts"]
-
-        if np.all(counts == 0):
-            result = self.fit.confidence(
-                parameter=norm,
-                sigma=self.sigma_ul,
-                backend="scipy",
-                reoptimize=self.reoptimize,
-            )
-        else:
-            result = self.fit.confidence(parameter=norm, sigma=self.sigma_ul)
-
-        return {"norm_ul": result["errp"] + norm.value}
-
-    def estimate_norm_ts(self, datasets):
-        """Estimate ts and sqrt(ts) for the flux point.
-
-        Parameters
-        ----------
-        datasets : `~gammapy.modeling.Datasets`
-            the list of dataset object
-
-        Returns
-        -------
-        result : dict
-            Dict with ts and sqrt(ts) for the flux point.
-        """
-        stat = datasets.stat_sum()
-
-        # store best fit amplitude, set amplitude of fit model to zero
-        self.model.norm.value = 0
-        self.model.norm.frozen = True
-
-        if self.reoptimize:
-            _ = self.fit.optimize()
-
-        stat_null = datasets.stat_sum()
-
-        # compute sqrt TS
-        ts = np.abs(stat_null - stat)
-        sqrt_ts = np.sqrt(ts)
-        return {"sqrt_ts": sqrt_ts, "ts": ts}
-
-    def estimate_norm_scan(self):
-        """Estimate fit statistic profile for the norm parameter.
-
-        Returns
-        -------
-        result : dict
-            Keys "norm_scan", "stat_scan"
-        """
-        result = self.fit.stat_profile(
-            self.model.norm, values=self.norm_values, reoptimize=self.reoptimize
-        )
-        return {"norm_scan": result["values"], "stat_scan": result["stat"]}
-
-    def estimate_norm(self):
-        """Fit norm of the flux point.
-
-        Returns
-        -------
-        result : dict
-            Dict with "norm" and "stat" for the flux point.
-        """
-        # start optimization with norm=1
-        self.model.norm.value = 1.0
-        self.model.norm.frozen = False
-
-        result = self.fit.optimize()
-
-        if result.success:
-            norm = self.model.norm.value
-        else:
-            norm = np.nan
-
-        return {"norm": norm, "stat": result.total_stat, "success": result.success}
