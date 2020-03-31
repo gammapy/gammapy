@@ -919,6 +919,9 @@ class MapDataset(Dataset):
             # TODO: implement PSFKernel.to_image()
             if not isinstance(self.psf, PSFKernel):
                 kwargs["psf"] = self.psf.to_image(spectrum=spectrum, keepdims=True)
+            else:
+                # assume exposure at center position
+                kwargs["psf"] = None
 
         return self.__class__(**kwargs)
 

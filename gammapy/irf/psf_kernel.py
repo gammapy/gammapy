@@ -5,6 +5,7 @@ from astropy.coordinates import Angle
 from astropy.coordinates.angle_utilities import angular_separation
 from gammapy.maps import Map, WcsGeom
 from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.modeling.models import PowerLawSpectralModel
 from .psf_table import TablePSF
 
 __all__ = ["PSFKernel"]
@@ -262,3 +263,48 @@ class PSFKernel:
     def write(self, *args, **kwargs):
         """Write the Map object which contains the PSF kernel to file."""
         self.psf_kernel_map.write(*args, **kwargs)
+
+    def to_image(self, spectrum=None, exposure=None, keepdims=True):
+        """Transform 3D PSFKernel into a 2D PSFKernel.
+
+        Parameters
+        ----------
+        spectrum : `~gammapy.modeling.models.SpectralModel`
+            Spectral model to compute the weights.
+            Default is power-law with spectral index of 2.
+        exposure : `~astropy.units.Quantity` or `~numpy.ndarray`
+            1D array containing exposure in each true energy bin.
+            It must have the same size as the PSFKernel energy axis.
+            Default is uniform exposure over energy.
+        keepdims : bool
+            If true, the resulting PSFKernel wil keep an energy axis with one bin.
+            Default is True.
+
+        Returns
+        -------
+        weighted_kernel : `~gammapy.irf.PSFKernel`
+            the weighted kernel summed over energy
+        """
+        map = self.psf_kernel_map
+
+        if spectrum is None:
+            spectrum = PowerLawSpectralModel(index=2.0)
+
+        if exposure is None:
+            exposure = np.ones(map.geom.axes[0].center.shape)
+        exposure = u.Quantity(exposure)
+        if exposure.shape != map.geom.axes[0].center.shape:
+            raise ValueError("Incorrect exposure_array shape")
+
+        # Compute weights vector
+        energy_edges = map.geom.get_axis_by_name("energy_true").edges
+        weights = spectrum.integral(
+            emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
+        )
+        weights *= exposure
+        weights /= weights.sum()
+
+        spectrum_weighted_kernel = map.copy()
+        spectrum_weighted_kernel.quantity *= weights[:, np.newaxis, np.newaxis]
+
+        return self.__class__(spectrum_weighted_kernel.sum_over_axes(keepdims=keepdims))
