@@ -135,13 +135,13 @@ def test_psfmap_to_psf_kernel():
 
 def test_psfmap_to_from_hdulist():
     psfmap = make_test_psfmap(0.15 * u.deg)
-    hdulist = psfmap.to_hdulist(psf_hdu="PSF", psf_hdubands="BANDS")
+    hdulist = psfmap.to_hdulist()
     assert "PSF" in hdulist
-    assert "BANDS" in hdulist
-    assert "EXPMAP" in hdulist
-    assert "BANDSEXP" in hdulist
+    assert "PSF_BANDS" in hdulist
+    assert "PSF_EXPOSURE" in hdulist
+    assert "PSF_EXPOSURE_BANDS" in hdulist
 
-    new_psfmap = PSFMap.from_hdulist(hdulist, psf_hdu="PSF", psf_hdubands="BANDS")
+    new_psfmap = PSFMap.from_hdulist(hdulist)
     assert_allclose(psfmap.psf_map.data, new_psfmap.psf_map.data)
     assert new_psfmap.psf_map.geom == psfmap.psf_map.geom
     assert new_psfmap.exposure_map.geom == psfmap.exposure_map.geom

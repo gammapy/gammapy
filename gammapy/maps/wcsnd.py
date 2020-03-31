@@ -687,9 +687,7 @@ class WcsNDMap(WcsMap):
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
                 raise ValueError("Incompatible spatial geoms between map and weights")
-
             data = data * weights.data[cutout_slices]
-
         self.data[parent_slices] += data
 
     def sample_coord(self, n_events, random_state=0):

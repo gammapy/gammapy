@@ -1,16 +1,27 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from copy import deepcopy
 import numpy as np
 from scipy.interpolate import interp1d
-import astropy.io.fits as fits
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .edisp_kernel import EDispKernel
+from .irf_map import IRFMap
 
-__all__ = ["EDispMap"]
+__all__ = ["EDispMap", "EDispKernelMap"]
 
 
-class EDispMap:
+def get_overlap_fraction(energy_axis, energy_axis_true):
+    a_min = energy_axis.edges[:-1]
+    a_max = energy_axis.edges[1:]
+
+    b_min = energy_axis_true.edges[:-1][:, np.newaxis]
+    b_max = energy_axis_true.edges[1:][:, np.newaxis]
+
+    xmin = np.fmin(a_max, b_max)
+    xmax = np.fmax(a_min, b_min)
+    return np.clip(xmin - xmax, 0, np.inf) / (b_max - b_min)
+
+
+class EDispMap(IRFMap):
     """Energy dispersion map.
 
     Parameters
@@ -64,6 +75,7 @@ class EDispMap:
         # Write map to disk
         edisp_map.write("edisp_map.fits")
     """
+    _hdu_name = "edisp"
 
     def __init__(self, edisp_map, exposure_map):
         if edisp_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
@@ -72,83 +84,15 @@ class EDispMap:
         if edisp_map.geom.axes[0].name.upper() != "MIGRA":
             raise ValueError("Incorrect migra axis position in input Map")
 
-        self.edisp_map = edisp_map
-        self.exposure_map = exposure_map
+        super().__init__(irf_map=edisp_map, exposure_map=exposure_map)
 
-    @classmethod
-    def from_hdulist(
-        cls,
-        hdulist,
-        edisp_hdu="EDISPMAP",
-        edisp_hdubands="BANDSEDISP",
-        exposure_hdu="EXPMAP",
-        exposure_hdubands="BANDSEXP",
-    ):
-        """Convert to `~astropy.io.fits.HDUList`.
+    @property
+    def edisp_map(self):
+        return self._irf_map
 
-        Parameters
-        ----------
-        edisp_hdu : str
-            Name or index of the HDU with the edisp_map data.
-        edisp_hdubands : str
-            Name or index of the HDU with the edisp_map BANDS table.
-        exposure_hdu : str
-            Name or index of the HDU with the exposure_map data.
-        exposure_hdubands : str
-            Name or index of the HDU with the exposure_map BANDS table.
-        """
-        edisp_map = Map.from_hdulist(hdulist, edisp_hdu, edisp_hdubands, "auto")
-        if exposure_hdu in hdulist:
-            exposure_map = Map.from_hdulist(
-                hdulist, exposure_hdu, exposure_hdubands, "auto"
-            )
-        else:
-            exposure_map = None
-
-        return cls(edisp_map, exposure_map)
-
-    @classmethod
-    def read(cls, filename, **kwargs):
-        """Read an edisp_map from file and create an EDispMap object"""
-        with fits.open(filename, memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, **kwargs)
-
-    def to_hdulist(
-        self,
-        edisp_hdu="EDISPMAP",
-        edisp_hdubands="BANDSEDISP",
-        exposure_hdu="EXPMAP",
-        exposure_hdubands="BANDSEXP",
-    ):
-        """Convert to `~astropy.io.fits.HDUList`.
-
-        Parameters
-        ----------
-        edisp_hdu : str
-            Name or index of the HDU with the edisp_map data.
-        edisp_hdubands : str
-            Name or index of the HDU with the edisp_map BANDS table.
-        exposure_hdu : str
-            Name or index of the HDU with the exposure_map data.
-        exposure_hdubands : str
-            Name or index of the HDU with the exposure_map BANDS table.
-
-        Returns
-        -------
-        hdu_list : `~astropy.io.fits.HDUList`
-        """
-        hdulist = self.edisp_map.to_hdulist(hdu=edisp_hdu, hdu_bands=edisp_hdubands)
-        if self.exposure_map is not None:
-            new_hdulist = self.exposure_map.to_hdulist(
-                hdu=exposure_hdu, hdu_bands=exposure_hdubands
-            )
-            hdulist.extend(new_hdulist[1:])
-        return hdulist
-
-    def write(self, filename, overwrite=False, **kwargs):
-        """Write to fits"""
-        hdulist = self.to_hdulist(**kwargs)
-        hdulist.writeto(filename, overwrite=overwrite)
+    @edisp_map.setter
+    def edisp_map(self, value):
+        self._irf_map = value
 
     def get_edisp_kernel(self, position, e_reco):
         """Get energy dispersion at a given position.
@@ -213,40 +157,6 @@ class EDispMap:
             e_reco_hi=e_reco[1:],
             data=data,
         )
-
-    def stack(self, other, weights=None):
-        """Stack EDispMap with another one in place.
-
-        Parameters
-        ----------
-        other : `~gammapy.cube.EDispMap`
-            Energy dispersion map to be stacked with this one.
-
-        """
-        if self.exposure_map is None or other.exposure_map is None:
-            raise ValueError("Missing exposure map for PSFMap.stack")
-
-        cutout_info = other.edisp_map.geom.cutout_info
-
-        if cutout_info is not None:
-            slices = cutout_info["parent-slices"]
-            parent_slices = Ellipsis, slices[0], slices[1]
-        else:
-            parent_slices = None
-
-        self.edisp_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self.edisp_map.stack(other.edisp_map * other.exposure_map.data, weights=weights)
-
-        # stack exposure map
-        self.exposure_map.stack(other.exposure_map, weights=weights)
-
-        with np.errstate(invalid="ignore"):
-            self.edisp_map.data[parent_slices] /= self.exposure_map.data[parent_slices]
-            self.edisp_map.data = np.nan_to_num(self.edisp_map.data)
-
-    def copy(self):
-        """Copy EDispMap"""
-        return deepcopy(self)
 
     @classmethod
     def from_geom(cls, geom):
@@ -345,24 +255,176 @@ class EDispMap:
 
         return cls.from_geom(geom)
 
-    def cutout(self, position, width, mode="trim"):
-        """Cutout edisp map.
+    def to_edisp_kernel_map(self, energy_axis):
+        """Convert to map with edisp kernels
+
+        Parameters
+        ----------
+        e_reco : `MapAxis`
+            Reconstructed enrgy axis.
+
+        Returns
+        -------
+        edisp : `EDispKernelMap`
+            Energy dispersion kernel map.
+        """
+        axis = 0
+        energy_axis_true = self.edisp_map.geom.get_axis_by_name("energy_true")
+        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
+
+        data = []
+
+        for idx, e_true in enumerate(energy_axis_true.center):
+            # migration value of e_reco bounds
+            migra = energy_axis.edges / e_true
+
+            edisp_e_true = self.edisp_map.slice_by_idx({"energy_true": idx})
+
+            cumsum = np.insert(edisp_e_true.data, 0, 0, axis=axis).cumsum(axis=axis)
+            with np.errstate(invalid="ignore"):
+                cumsum = np.nan_to_num(cumsum / cumsum[slice(-2, -1)])
+
+            f = interp1d(
+                migra_axis.edges.value,
+                cumsum,
+                kind="linear",
+                bounds_error=False,
+                fill_value=(0, 1),
+                axis=axis
+            )
+
+            integral = np.diff(np.clip(f(migra), a_min=0, a_max=1), axis=axis)
+            data.append(integral)
+
+        data = np.stack(data)
+
+        geom_image = self.edisp_map.geom.to_image()
+        geom = geom_image.to_cube([energy_axis, energy_axis_true])
+        edisp_kernel_map = Map.from_geom(geom=geom, data=data)
+        return EDispKernelMap(
+            edisp_kernel_map=edisp_kernel_map, exposure_map=self.exposure_map
+        )
+
+
+class EDispKernelMap(IRFMap):
+    """Energy dispersion kernel map.
+
+    Parameters
+    ----------
+    edisp_kernel_map : `~gammapy.maps.Map`
+        The input energy dispersion kernel map. Should be a Map with 2 non spatial axes.
+        Reconstructed and and true energy axes should be given in this specific order.
+    exposure_map : `~gammapy.maps.Map`, optional
+        Associated exposure map. Needs to have a consistent map geometry.
+
+    """
+    _hdu_name = "edisp"
+
+    def __init__(self, edisp_kernel_map, exposure_map):
+        if edisp_kernel_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
+            raise ValueError("Incorrect energy axis position in input Map")
+
+        if edisp_kernel_map.geom.axes[0].name.upper() != "ENERGY":
+            raise ValueError("Incorrect migra axis position in input Map")
+
+        super().__init__(irf_map=edisp_kernel_map, exposure_map=exposure_map)
+
+    @property
+    def edisp_map(self):
+        return self._irf_map
+
+    @edisp_map.setter
+    def edisp_map(self, value):
+        self._irf_map = value
+
+    @classmethod
+    def from_geom(cls, geom):
+        """Create edisp map from geom.
+
+        By default a diagonal edisp matrix is created.
+
+        Parameters
+        ----------
+        geom : `Geom`
+            Edisp map geometry.
+
+        Returns
+        -------
+        edisp_map : `EDispKernelMap`
+            Energy dispersion kernel map.
+        """
+        axis_names = [ax.name for ax in geom.axes]
+
+        if "energy_true" not in axis_names:
+            raise ValueError("EDispKernelMap requires true energy axis")
+
+        if "energy" not in axis_names:
+            raise ValueError("EDispKernelMap requires energy axis")
+
+        geom_exposure = geom.squash(axis="energy")
+        exposure = Map.from_geom(geom_exposure, unit="m2 s")
+
+        energy_axis = geom.get_axis_by_name("energy")
+        energy_axis_true = geom.get_axis_by_name("energy_true")
+
+        data = get_overlap_fraction(energy_axis, energy_axis_true)
+
+        edisp_kernel_map = Map.from_geom(geom, unit="")
+        edisp_kernel_map.quantity += data[:, :, np.newaxis, np.newaxis]
+        return cls(edisp_kernel_map=edisp_kernel_map, exposure_map=exposure)
+
+    def get_edisp_kernel(self, position):
+        """Get energy dispersion at a given position.
 
         Parameters
         ----------
         position : `~astropy.coordinates.SkyCoord`
-            Center position of the cutout region.
-        width : tuple of `~astropy.coordinates.Angle`
-            Angular sizes of the region in (lon, lat) in that specific order.
-            If only one value is passed, a square region is extracted.
-        mode : {'trim', 'partial', 'strict'}
-            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+            the target position. Should be a single coordinates
 
         Returns
         -------
-        cutout : `EdispMap`
-            Cutout edisp map.
+        edisp : `~gammapy.irf.EnergyDispersion`
+            the energy dispersion (i.e. rmf object)
         """
-        edisp_map = self.edisp_map.cutout(position, width, mode)
-        exposure_map = self.exposure_map.cutout(position, width, mode)
-        return self.__class__(edisp_map=edisp_map, exposure_map=exposure_map)
+        energy_true_axis = self.edisp_map.geom.get_axis_by_name("energy_true")
+        energy_axis = self.edisp_map.geom.get_axis_by_name("energy")
+
+        coords = {
+            "skycoord": position,
+            "energy": energy_axis.center,
+            "energy_true": energy_true_axis.center.reshape((-1, 1))
+        }
+
+        data = self.edisp_map.get_by_coord(coords)
+
+        return EDispKernel(
+            e_true_lo=energy_true_axis.edges[:-1],
+            e_true_hi=energy_true_axis.edges[1:],
+            e_reco_lo=energy_axis.edges[:-1],
+            e_reco_hi=energy_axis.edges[1:],
+            data=data,
+        )
+
+    @classmethod
+    def from_diagonal_response(cls, energy_axis, energy_axis_true):
+        """Create an all-sky energy dispersion map with diagonal response.
+
+        Parameters
+        ----------
+        energy_axis : `MapAxis`
+            Energy axis.
+        energy_axis_true : `MapAxis`
+            True energy axis
+
+        Returns
+        -------
+        edisp_map : `EDispKernelMap`
+            Energy dispersion kernel map.
+        """
+        geom = WcsGeom.create(
+            npix=(2, 1),
+            proj="CAR",
+            binsz=180,
+            axes=[energy_axis, energy_axis_true]
+        )
+        return cls.from_geom(geom)
