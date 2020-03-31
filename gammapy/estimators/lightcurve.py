@@ -508,8 +508,7 @@ class LightCurveEstimator(FluxEstimator):
 
         if not result.pop("success"):
             log.warning(
-                "Fit failed for time bin between {t_min} and {t_max},"
-                " setting NaN.".format(
+                "Fit failed for time bin between {t_min} and {t_max},".format(
                     t_min=time_interval[0].mjd, t_max=time_interval[1].mjd
                 )
             )
