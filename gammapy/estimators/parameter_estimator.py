@@ -148,9 +148,6 @@ class ParameterEstimator:
             result = self._find_best_fit(parameter)
             TS1 = result["stat"]
 
-            if not result.pop("success"):
-                log.warning("Fit failed for parameter estimate, setting NaN.")
-
             value_max = result[parameter.name]
 
             if "err" in steps:

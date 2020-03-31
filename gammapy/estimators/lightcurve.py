@@ -383,10 +383,6 @@ class LightCurveEstimator(FluxEstimator):
 
         self.input_time_intervals = time_intervals
 
-#        self.models = self.datasets.models.copy()
-
-#        model = self.models[source].spectral_model
-
         self.group_table_info = None
         self.atol = u.Quantity(atol)
 
@@ -473,12 +469,7 @@ class LightCurveEstimator(FluxEstimator):
                 continue
 
             row = {"time_min": time_interval[0].mjd, "time_max": time_interval[1].mjd}
-            interval_list_dataset = Datasets(
-                [
-                    datasets[int(_)].copy(name=datasets[int(_)].name)
-                    for _ in index_dataset
-                ]
-            )
+            interval_list_dataset = Datasets([datasets[int(_)] for _ in index_dataset])
             row.update(
                 self.estimate_time_bin_flux(interval_list_dataset, time_interval, steps)
             )
@@ -515,13 +506,13 @@ class LightCurveEstimator(FluxEstimator):
         result = super().run(datasets, steps=steps)
         result.update(self._estimate_counts(datasets))
 
-#        if not result.pop("success"):
-#            log.warning(
-#                "Fit failed for time bin between {t_min} and {t_max},"
-#                " setting NaN.".format(
-#                    t_min=time_interval[0].mjd, t_max=time_interval[1].mjd
-#                )
-#            )
+        if not result.pop("success"):
+            log.warning(
+                "Fit failed for time bin between {t_min} and {t_max},"
+                " setting NaN.".format(
+                    t_min=time_interval[0].mjd, t_max=time_interval[1].mjd
+                )
+            )
         return result
 
     def _estimate_counts(self, datasets):
