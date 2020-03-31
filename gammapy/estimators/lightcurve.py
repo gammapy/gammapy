@@ -420,7 +420,7 @@ class LightCurveEstimator(FluxEstimator):
         if np.any(diff_time_stop < 0) or np.any(diff_time_interval_edges < 0):
             raise ValueError("LightCurveEstimator requires non-overlapping time bins.")
         else:
-            self.time_intervals = [
+            return [
                 Time([tstart, tstop])
                 for tstart, tstop in zip(time_start_sorted, time_stop_sorted)
             ]
@@ -457,7 +457,7 @@ class LightCurveEstimator(FluxEstimator):
         else:
             time_intervals=self.input_time_intervals
 
-        self._check_and_sort_time_intervals(time_intervals)
+        time_intervals = self._check_and_sort_time_intervals(time_intervals)
 
         rows = []
         self.group_table_info = group_datasets_in_time_interval(
@@ -466,7 +466,7 @@ class LightCurveEstimator(FluxEstimator):
         if np.all(self.group_table_info["Group_ID"] == -1):
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
-        for igroup, time_interval in enumerate(self.time_intervals):
+        for igroup, time_interval in enumerate(time_intervals):
             index_dataset = np.where(self.group_table_info["Group_ID"] == igroup)[0]
             if len(index_dataset) == 0:
                 log.debug("No Dataset for the time interval " + str(igroup))
