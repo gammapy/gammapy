@@ -228,6 +228,7 @@ class DownloadDatasetIndex:
                 destination = Path(os.environ["GAMMAPY_DATA"]) / f["path"]
                 log.info(f"Moving {f['itempath']}")
                 shutil.copyfile(f["itempath"], destination)
+                del f["itempath"]
 
         txt = json.dumps(records, indent=True)
         log.info("Writing {}".format(self.path))
