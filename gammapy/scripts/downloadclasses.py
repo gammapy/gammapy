@@ -11,11 +11,11 @@ from gammapy import __version__
 
 log = logging.getLogger(__name__)
 
-BASE_URL = "https://gammapy.org/download"
-BASE_URL_DEV = "https://raw.githubusercontent.com/gammapy/gammapy/master/"
-DEV_NBS_YAML_URL = BASE_URL_DEV + "tutorials/notebooks.yaml"
-DEV_SCRIPTS_YAML_URL = BASE_URL_DEV + "examples/scripts.yaml"
-DEV_DATA_JSON_LOCAL = "../../dev/datasets/gammapy-data-index.json"
+RELEASES_BASE_URL = "https://gammapy.org/download"
+DEV_NBS_YAML_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/notebooks.yaml"
+DEV_SCRIPTS_YAML_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/examples/scripts.yaml"
+TAR_BUNDLE = "https://github.com/gammapy/gammapy-data/tarball/master"       # Curated datasets bundle
+DEV_DATA_JSON_LOCAL = "../../dev/datasets/gammapy-data-index.json"          # CI tests
 
 
 def parse_datafiles(datasearch, datasetslist, download_tests=False):
@@ -74,7 +74,7 @@ class ComputePlan:
 
         dl = Downloader(progress=False, file_progress=False)
         filename_env = "gammapy-" + self.release + "-environment.yml"
-        url_file_env = BASE_URL + "/install/" + filename_env
+        url_file_env = RELEASES_BASE_URL + "/install/" + filename_env
         filepath_env = str(self.outfolder / filename_env)
         dl.enqueue_file(url_file_env, path=filepath_env)
         try:
@@ -123,22 +123,31 @@ class ComputePlan:
         if self.option == "datasets":
             if self.modetutorials and not self.listfiles:
                 sys.exit()
-
+            # datasets bundle
+            if not self.src:
+                self.listfiles = {"bundle": {"path": self.outfolder, "url": TAR_BUNDLE}}
+                return self.listfiles
+            # collection of files
             if self.release:
-                filename_datasets = "gammapy-" + self.release + "-data-index.json"
-                url = BASE_URL + "/data/" + filename_datasets
-                log.info(f"Reading {url}")
+                url_datasets_json = (
+                    RELEASES_BASE_URL
+                    + "/data/gammapy-"
+                    + self.release
+                    + "-data-index.json"
+                )
+                log.info(f"Reading {url_datasets_json}")
                 try:
-                    txt = urlopen(url).read().decode("utf-8")
+                    txt = urlopen(url_datasets_json).read().decode("utf-8")
                 except Exception as ex:
                     log.error(ex)
                     return False
             else:
                 # for development just use the local index file
-                filename = (Path(__file__).parent / DEV_DATA_JSON_LOCAL).resolve()
-                log.info(f"Reading {filename}")
-                txt = filename.read_text()
-
+                local_datasets_json = (
+                    Path(__file__).parent / DEV_DATA_JSON_LOCAL
+                ).resolve()
+                log.info(f"Reading {local_datasets_json}")
+                txt = local_datasets_json.read_text()
             datasets = json.loads(txt)
             datafound = {}
             if not self.modetutorials:
@@ -166,7 +175,7 @@ class ComputePlan:
         url = DEV_NBS_YAML_URL
         if self.release:
             filename_nbs = "gammapy-" + self.release + "-tutorials.yml"
-            url = BASE_URL + "/tutorials/" + filename_nbs
+            url = RELEASES_BASE_URL + "/tutorials/" + filename_nbs
 
         log.info(f"Reading {url}")
         try:
@@ -194,7 +203,7 @@ class ComputePlan:
         url = DEV_SCRIPTS_YAML_URL
         if self.release:
             filename_scripts = "gammapy-" + self.release + "-scripts.yml"
-            url = BASE_URL + "/tutorials/" + filename_scripts
+            url = RELEASES_BASE_URL + "/tutorials/" + filename_scripts
 
         log.info(f"Reading {url}")
         try:

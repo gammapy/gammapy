@@ -2574,13 +2574,13 @@
    {
     "path": "fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml",
     "url": "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master/3fhl/crab/Fermi-LAT-3FHL_datasets.yaml",
-    "filesize": 194,
+    "filesize": 124,
     "hashmd5": "5e17b2f385049b660ce2bd6c1bebf65d"
    },
    {
     "path": "fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml",
     "url": "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master/3fhl/crab/Fermi-LAT-3FHL_models.yaml",
-    "filesize": 1251,
+    "filesize": 1283,
     "hashmd5": "e99438be2fe12115cada40b5c2ace4a7"
    }
   ]
@@ -2664,13 +2664,13 @@
    {
     "path": "tests/models/gc_example_datasets.yaml",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/gc_example_datasets.yaml",
-    "filesize": 344,
+    "filesize": 198,
     "hashmd5": "72e07fe7aca6d77d18e61261334aab49"
    },
    {
     "path": "tests/models/gc_example_models.yaml",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/gc_example_models.yaml",
-    "filesize": 2092,
+    "filesize": 2238,
     "hashmd5": "430b3ee537c243fbc1952d697efad079"
    },
    {
@@ -3050,6 +3050,42 @@
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/figures/background/bg_cube_model_true_reco.png",
     "filesize": 270031,
     "hashmd5": "9d78b3514ae1c7c2d90f76b1feb99b75"
+   },
+   {
+    "path": "figures/general/data_flow_full.drawio",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/figures/general/data_flow_full.drawio",
+    "filesize": 1813,
+    "hashmd5": "4f114280150a7dc519e545eb9c69b106"
+   },
+   {
+    "path": "figures/general/data_flow_full.pdf",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/figures/general/data_flow_full.pdf",
+    "filesize": 49800,
+    "hashmd5": "4077d9ec587b0eb0d0935a969aa22157"
+   },
+   {
+    "path": "figures/general/data_flow_full.png",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/figures/general/data_flow_full.png",
+    "filesize": 35283,
+    "hashmd5": "b7fbdf92174bb589587b07ccf30f67f5"
+   },
+   {
+    "path": "figures/general/data_flow_gammapy.drawio",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/figures/general/data_flow_gammapy.drawio",
+    "filesize": 205449,
+    "hashmd5": "c25b7700328f4675f462c2ea7a2c59fa"
+   },
+   {
+    "path": "figures/general/data_flow_gammapy.png",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/figures/general/data_flow_gammapy.png",
+    "filesize": 433104,
+    "hashmd5": "bd1eddc23b2260e6fcf4411e69f28daf"
+   },
+   {
+    "path": "figures/general/data_flow_gammapy.pdf",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/figures/general/data_flow_gammapy.pdf",
+    "filesize": 211135,
+    "hashmd5": "4e7fb139af8ff0ad98a7d8b34865ab7a"
    },
    {
     "path": "figures/image/survey_example.png",

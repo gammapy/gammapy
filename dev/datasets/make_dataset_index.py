@@ -4,14 +4,16 @@
 This is very much work in progress.
 Probably we should add a static website build step.
 """
-import logging
+import hashlib
 import json
+import logging
 import os
+import shutil
 from pathlib import Path
 import click
-import hashlib
 
 log = logging.getLogger(__name__)
+path_temp = Path("datasets")
 
 
 def hashmd5(path):
@@ -36,8 +38,8 @@ class DownloadDataset:
 
     The followLinks flag declares how to build the destination paths in the local desktop
     according to the datasets paths used in the tutorials.
-        GAMMAPY-EXTRA: datasets stored in Gammapy-extra reporsitory
-        JOINT-CRAB: datasets stored in Joint-crab reporsitory
+        GAMMAPY-EXTRA: datasets stored in Gammapy-extra repository
+        JOINT-CRAB: datasets stored in Joint-crab repository
         OTHERS: datasets stored in others repositories
     """
 
@@ -79,6 +81,7 @@ class DownloadDataset:
                 "url": self.base_url + urlpath,
                 "filesize": filesize,
                 "hashmd5": md5,
+                "itempath": str(itempath),
             }
 
 
@@ -220,6 +223,13 @@ class DownloadDatasetIndex:
 
     def make(self):
         records = list(self.make_records())
+        for rec in records:
+            for f in rec["files"]:
+                destination = Path(os.environ["GAMMAPY_DATA"]) / f["path"]
+                log.info(f"Moving {f['itempath']}")
+                shutil.copyfile(f["itempath"], destination)
+                del f["itempath"]
+
         txt = json.dumps(records, indent=True)
         log.info("Writing {}".format(self.path))
         Path(self.path).write_text(txt)
@@ -244,7 +254,7 @@ def cli_all(ctx):
 
 @cli.command("dataset-index")
 def cli_download_dataset_index():
-    """Generate dataset index JSON file"""
+    """Generate dataset index JSON file and write files in gammapy-data local repo"""
     DownloadDatasetIndex().make()
 
 
