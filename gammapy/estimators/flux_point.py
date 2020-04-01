@@ -5,11 +5,12 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.datasets import MapDataset
-from gammapy.estimators.flux import FluxEstimator
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
+from .flux import FluxEstimator
+
 
 __all__ = ["FluxPoints", "FluxPointsEstimator"]
 

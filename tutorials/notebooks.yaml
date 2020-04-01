@@ -34,6 +34,10 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/extended_source_spectral_analysis.ipynb
   datasets:
     - hess-dl3-dr1
+- name: event_sampling
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/event_sampling.ipynb
+  datasets:
+    - cta-1dc
 - name: fermi_lat
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/fermi_lat.ipynb
   requires: healpy

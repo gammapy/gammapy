@@ -5,9 +5,11 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.datasets import Datasets
-from gammapy.estimators import FluxEstimator, FluxPoints
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data
+from .flux import FluxEstimator
+from .flux_point import FluxPoints
+
 
 __all__ = ["LightCurve", "LightCurveEstimator"]
 
