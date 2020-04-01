@@ -18,9 +18,6 @@ addons:
       - texlive-latex-extra
       - dvipng
 
-cache:
-  directories:
-  - $HOME/gammapy-data
 
 env:
     global:
