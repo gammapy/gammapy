@@ -68,7 +68,7 @@ Steps for the day of the release:
    and adapt dependency versions as required.
 #. Mention release on the front page and on the news page of the Gammapy webpage
    (update `index.html` and `news.html` in the `gammapy webpage repo <https://github.com/gammapy/gammapy-webpage>`__).
-#. Update the version number in `docs/getting-started.rst`
+#. Update the version number in `docs/install/index.rst`
 #. Follow the instructions how to release an Astropy affiliated package
    `here <https://docs.astropy.org/en/stable/development/astropy-package-template.html>`__.
 #. Checkout the git tag v0.14 and build the release documentation and publish it in `gammapy-docs` `Github repository <https://github.com/gammapy/gammapy-docs>`__
