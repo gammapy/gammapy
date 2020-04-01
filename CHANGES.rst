@@ -13,16 +13,19 @@ Summary
 **What's new**
 
 Gammapy v0.17 comes with new important features, an improved sub-package
-stucture and a more uniform API.
+stucture and a more uniform API. Again this release contains several API
+breaking changes and removal of non-essential parts of Gammapy. These
+changes are required to finally arrive at a more consistent and stable
+API for Gammapy v1.0.
 
 The main feature introduces in Gammapy v0.17 is event sampling. Based
 on the newly introduced ``MapDatasetEventSampler`` class, event lists can be
 sampled from a ``MapDataset`` object. The use of this class is shown in a dedicated
 `event sampling tutorial <notebooks/event_sampling.html>`__. Gammapy v0.17 now
-supports simulation and fitting of temporal models. Both is demonstrated in the
+supports simulation and fitting of temporal models. Both are demonstrated in the
 `lightcurve simulation tutorial <notebooks/light_curve_simulation.html>`__.
-A more general introduction to modelling and fitting in Gammapy is now available
-as a `modelling and fitting tutorial <notebooks/modeling.html>`__
+A more general introduction to modeling and fitting in Gammapy is now available
+as a `modeling and fitting tutorial <notebooks/modeling.html>`__
 
 Following the proposal in `PIG 19`_ the sub-package structure of Gammapy was
 unified. Instead of grouping the main functionality by use-case it is now
@@ -36,7 +39,11 @@ The `gammapy.cube`, `gammapy.spectrum` and `gammapy.detect` modules were removed
 
 With the introduction of the `gammapy.estimators` sub-package the
 API of all ``Estimator`` classes was unified. The ``Dataset`` objects
-are now always passed to the ``.run()`` methods.
+are now always passed to the ``.run()`` methods. A new ``ExcessMapEstimator``
+was introduced, which replaces the former ``compute_lima_map`` functions
+and also computes maps of upper limits as well as asymmetric flux errors.
+The ``TSMapEstimator`` now takes into account PSF information automatically
+and uses `SkyModel` as kernel configuration.
 
 For Gammapy v0.17 the model handling was further improved and unified. The
 separate ``background_model`` argument was removed from the ``MapDataset``.
@@ -53,15 +60,16 @@ moved from the ``Parameters`` object to a ``.covariance`` attribute on all
 ``Model`` and ``Models`` objects.  The covariance and is now automatically
 set after ``Fit.covariance()`` was called.
 
+To unify and clean up statistical calculations ``CountsStatistics`` classes
+we introduced in ``gammapy.stats`` which allow calculation of excess, background,
+significance, errors, asymmetric errors and upper limits. The ``gammapy.stats.poisson``
+module has been removed as well as the ``significance_lima`` methods.
+
 To further unify the data structures for 1D and 3D analyses a ``RegionGeom``
 and ``RegionNDMap`` were introduced in ``gammapy.maps``. These region based map classes
 are now used for the ``SpectrumDataset`` and ``SpectrumDatasetOnOff``. The previously
 used ``CountsSpectrum`` class was removed.
 
-Again this release contains several API breaking changes and removal of
-non-essential parts of Gammapy (see full PR list below). These changes
-are required to finally arrive at a more consistent and stable API for
-Gammapy v1.0. Thanks for your understanding!
 
 
 **Contributors:**
