@@ -48,6 +48,11 @@ component using the newly introduced ``SkyModel.apply_irf`` and ``SkyDiffuseCube
 keywords. A new ``GaussianTemporalModel`` and ``ExpDecayTemporalModel`` were
 introduced.
 
+A new ``Covariance`` class was introduced and the covariance information was
+moved from the ``Parameters`` object to a ``.covariance`` attribute on all
+``Model`` and ``Models`` objects.  The covariance and is now automatically
+set after ``Fit.covariance()`` was called.
+
 To further unify the data structures for 1D and 3D analyses a ``RegionGeom``
 and ``RegionNDMap`` were introduced in ``gammapy.maps``. These region based map classes
 are now used for the ``SpectrumDataset`` and ``SpectrumDatasetOnOff``. The previously
