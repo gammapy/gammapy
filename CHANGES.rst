@@ -16,8 +16,8 @@ Gammapy v0.17 comes with new important features, an improved sub-package
 stucture and a more uniform API.
 
 The main feature introduces in Gammapy v0.17 is event sampling. Based
-on the newly introduced `MapDatasetEventSampler` class, event lists can be
-sampled from a `MapDataset` object. The use of this class is shown in a dedicated
+on the newly introduced ``MapDatasetEventSampler`` class, event lists can be
+sampled from a ``MapDataset`` object. The use of this class is shown in a dedicated
 `event sampling tutorial <notebooks/event_sampling.html>`__. Gammapy v0.17 now
 supports simulation and fitting of temporal models. Both is demonstrated in the
 `lightcurve simulation tutorial <notebooks/light_curve_simulation.html>`__.
@@ -26,32 +26,32 @@ as a `modelling and fitting tutorial <notebooks/modeling.html>`__
 
 Following the proposal in `PIG 19`_ the sub-package structure of Gammapy was
 unified. Instead of grouping the main functionality by use-case it is now
-grouped by abstractions and data levels. For this all `Dataset` classes
-were moved to the newly introduced `gammapy.datasets`. All `Maker` classes
+grouped by abstractions and data levels. For this all ``Dataset`` classes
+were moved to the newly introduced `gammapy.datasets`. All ``Maker`` classes
 for data reduction from the DL3 to the DL4 data level were moved to the new
-`gammapy.makers` sub-package and all high-level `Estimator` classes were moved
+`gammapy.makers` sub-package and all high-level ``Estimator`` classes were moved
 to the new `gammapy.estimators`. In addition a `gammapy.visualization` module
 was introduced to group plotting related functionality into a single namespace.
 The `gammapy.cube`, `gammapy.spectrum` and `gammapy.detect` modules were removed.
 
 With the introduction of the `gammapy.estimators` sub-package the
-API of all `Estimator` class was unified. The `Dataset` objects
-are now always passed to the `.run()` methods.
+API of all ``Estimator`` classes was unified. The ``Dataset`` objects
+are now always passed to the ``.run()`` methods.
 
 For Gammapy v0.17 the model handling was further improved and unified. The
-separate `background_model` argument was removed from the `MapDataset`.
+separate ``background_model`` argument was removed from the ``MapDataset``.
 Background models can now be specified as part of the general model
-definition. For this a `BackgroundModel.datasets_names` attribute
+definition. For this a ``BackgroundModel.datasets_names`` attribute
 was introduced which allows to declare to which dataset the model belongs.
 The application of PSF and energy dispersion can now be configured per model
-component using the newly introduced `SkyModel.apply_irf` and `SkyDiffuseCube.apply_irf`
-keywords. A new `GaussianTemporalModel` and `ExpDecayTemporalModel` were
+component using the newly introduced ``SkyModel.apply_irf`` and ``SkyDiffuseCube.apply_irf``
+keywords. A new ``GaussianTemporalModel`` and ``ExpDecayTemporalModel`` were
 introduced.
 
-To further unify the data structures for 1D and 3D analyses a `RegionGeom`
-and `RegionNDMap` were introduced in `gammapy.maps`. These region based map classes
-are now used for the `SpectrumDataset` and `SpectrumDatasetOnOff`. The previously
-used `CountsSpectrum` class was removed.
+To further unify the data structures for 1D and 3D analyses a ``RegionGeom``
+and ``RegionNDMap`` were introduced in ``gammapy.maps``. These region based map classes
+are now used for the ``SpectrumDataset`` and ``SpectrumDatasetOnOff``. The previously
+used ``CountsSpectrum`` class was removed.
 
 Again this release contains several API breaking changes and removal of
 non-essential parts of Gammapy (see full PR list below). These changes
