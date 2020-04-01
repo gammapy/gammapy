@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from gammapy.modeling.models import Models, SkyModel
+from gammapy.modeling.models import Models
 from gammapy.utils.scripts import make_name
 from .core import Dataset
 

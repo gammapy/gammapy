@@ -13,9 +13,6 @@ from gammapy.modeling.models import (
     BackgroundModel,
     Model,
     Models,
-    PointSpatialModel,
-    PowerLawSpectralModel,
-    SkyModel,
 )
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data

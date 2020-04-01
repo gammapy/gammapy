@@ -5,7 +5,7 @@ import logging
 import warnings
 import numpy as np
 import scipy.optimize
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import Angle
 from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel

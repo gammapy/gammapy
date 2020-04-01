@@ -74,7 +74,7 @@ def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
 
     result = estimator.run(datasets, parameter, steps="all")
 
-    assert datasets[0].models.parameters["alpha"].frozen == False
+    assert not datasets[0].models.parameters["alpha"].frozen
     assert_allclose(datasets[0].models.parameters["alpha"].value, alpha_value)
     assert_allclose(result["amplitude"], 0.331505, rtol=1e-4)
     assert_allclose(result["amplitude_scan"].shape, 10)

@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter
 from gammapy.modeling.iminuit import confidence_iminuit, optimize_iminuit
 from gammapy.modeling.models import Model, Models
 

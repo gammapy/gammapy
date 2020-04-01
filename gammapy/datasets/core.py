@@ -4,7 +4,6 @@ import collections.abc
 import copy
 import numpy as np
 from gammapy.maps import Map
-from gammapy.modeling import Parameters
 from gammapy.modeling.models import Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data

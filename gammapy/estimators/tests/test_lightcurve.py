@@ -12,7 +12,7 @@ from gammapy.estimators.tests.test_flux_point_estimator import (
     simulate_spectrum_dataset,
 )
 from gammapy.maps import RegionNDMap
-from gammapy.modeling.models import Models, PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
