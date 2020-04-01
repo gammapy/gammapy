@@ -8,30 +8,54 @@ Summary
 
 - Released April 1, 2020
 - 8 contributors
-- 80 pull requests (not all listed below)
+- 81 pull requests (not all listed below)
 
 **What's new**
 
-Gammapy v0.17 comes with
+Gammapy v0.17 comes with new important features, an improved sub-package
+stucture and a more uniform API.
 
-Subpackage structure...
+The main feature introduces in Gammapy v0.17 is event sampling. Based
+on the newly introduced `MapDatasetEventSampler` class, event lists can be
+sampled from a `MapDataset` object. The use of this class is shown in a dedicated
+`event sampling tutorial <notebooks/event_sampling.html>`__. Gammapy v0.17 now
+supports simulation and fitting of temporal models. Both is demonstrated in the
+`lightcurve simulation tutorial <notebooks/light_curve_simulation.html>`__.
+A more general introduction to modelling and fitting in Gammapy is now available
+as a `modelling and fitting tutorial <notebooks/modeling.html>`__
 
-- Modeling fitting notebook
-- Introduced RegionGeom, RegionNDMap
-- CountsSpectrum removed
-- Removed separate background model from `MapDataset`, now in models
-- Added SkyModel.apply_irf
-- MapDatasetEventSampler
-- Temporal model fitting
-- Temporal models
-- Light curve simulation
-- Uniform estimator API
-- DataStoreObservation and Observation class
+Following the proposal in `PIG 19`_ the sub-package structure of Gammapy was
+unified. Instead of grouping the main functionality by use-case it is now
+grouped by abstractions and data levels. For this all `Dataset` classes
+were moved to the newly introduced `gammapy.datasets`. All `Maker` classes
+for data reduction from the DL3 to the DL4 data level were moved to the new
+`gammapy.makers` sub-package and all high-level `Estimator` classes were moved
+to the new `gammapy.estimators`. In addition a `gammapy.visualization` module
+was introduced to group plotting related functionality into a single namespace.
+The `gammapy.cube`, `gammapy.spectrum` and `gammapy.detect` modules were removed.
 
+With the introduction of the `gammapy.estimators` sub-package the
+API of all `Estimator` class was unified. The `Dataset` objects
+are now always passed to the `.run()` methods.
+
+For Gammapy v0.17 the model handling was further improved and unified. The
+separate `background_model` argument was removed from the `MapDataset`.
+Background models can now be specified as part of the general model
+definition. For this a `BackgroundModel.datasets_names` attribute
+was introduced which allows to declare to which dataset the model belongs.
+The application of PSF and energy dispersion can now be configured per model
+component using the newly introduced `SkyModel.apply_irf` and `SkyDiffuseCube.apply_irf`
+keywords. A new `GaussianTemporalModel` and `ExpDecayTemporalModel` were
+introduced.
+
+To further unify the data structures for 1D and 3D analyses a `RegionGeom`
+and `RegionNDMap` were introduced in `gammapy.maps`. These region based map classes
+are now used for the `SpectrumDataset` and `SpectrumDatasetOnOff`. The previously
+used `CountsSpectrum` class was removed.
 
 Again this release contains several API breaking changes and removal of
-non-essential parts of Gammapy (see PR list below). These changes are
-required to finally arrive at a more consistent and stable API for
+non-essential parts of Gammapy (see full PR list below). These changes
+are required to finally arrive at a more consistent and stable API for
 Gammapy v1.0. Thanks for your understanding!
 
 
@@ -57,66 +81,67 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 See the complete `Gammapy v0.17 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.17+is%3Aclosed>`__.
 
 
-- [] Add more meta data keywords for sampled event lists #2846 (Fabio Pintore)
-- [] Clean up model parameter handling #2841 (Axel Donath)
-- [] Add Background3D plotting methods #2845 (Atreyee Sinha)
-- [] Clean up gammapy.stats #2842 (Régis Terrier)
-- [] Improve stats documentation #2839 (Régis Terrier)
-- [] Improve Background2D visualisation #2837 (Atreyee Sinha)
-- [] Implement EDispKernelMap #2832 (Axel Donath)
-- [] Add event sampling tutorial #2829 (Fabio Pintore)
-- [] Add notebook for light curve simulation #2828 (Atreyee Sinha)
-- [] Improve covariance handling / implement Covariance class (Axel Donath)
-- [] Add temporal evaluation for spectral datasets #2823
-- [] Refactor model serialisation code #2822 (Quentin Remy)
-- [] Rename LiMaMapEstimator to ExcessMapEstimator #2820 (Régis Terrier)
-- [] Fix background serialization #2818 (Quentin Remy)
-- [] Remove SpectrumEvaluator class #2817 (Axel Donath)
-- [] Remove RegionGeom.energy_mask() #2816 (Axel Donath)
-- [] Remove CountsSpectrum class #2815 (Axel Donath)
-- [] Add ring background estimation in high-level interface #2812 (José Enrique Ruiz)
-- [] Fix confidence interval range in CountsStatistic class #2811 (Régis Terrier)
-- [] Implement FluxEstimator #2810 (Régis Terrier)
-- [] Add sampling of temporal models to event sampler #2809 (Fabio Pintore)
-- [] Add temporal model evaluation #2808 (Atreyee Sinha)
-- [] Move LightcurveEstimator to gammapy.estimators #2805 (Axel Donath)
-- [] Remove gammapy.cube sub package #2804 (Axel Donath)
-- [] Remove gammapy.spectrum sub package #2803 (Axel Donath)
-- [] Remove gammapy.detect sub package #2802 (Axel Donath)
-- [] Support SpectrumDataset in FluxPointsEstimator #2801 (Régis Terrier)
-- [] Implement option to sample background only #2799 (Fabio Pintore)
-- [] Support aeff-max safe energy threshold for MapDataset #2798 (Luca Giunti)
-- [] Remove KernelBackgroundEstimator class #2797 (Axel Donath)
-- [] Change beta sign in SmoothBrokenPowerLawSpectralModel (Quentin Remy)
-- [] Refactor catalog registry #2794 (Axel Donath)
-- [] Add notebooks test to azure pipelines #2793 (Axel Donath)
-- [] Introduce gammapy.visualization sub-package #2792 (Axel Donath)
-- [] Introduce gammapy.estimators and ParameterEstimator class #2791 (Axel Donath)
-- [] Introduce gammapy.makers sub package #2790 (Axel Donath)
-- [] Move irf maps to gammapy/irf #2789 (Axel Donath)
-- [] Introduce gammapy.datasets submodule #2788 (Axel Donath)
-- [] Add TemporalModel integral method #2787 (Atreyee Sinha)
-- [] Datasets names follow up #2785 (Axel Donath)
-- [] Implement naming convention for true energy axis #2784 (Axel Donath)
-- [] Add __call__ method to TemporalModel #2783 (Atreyee Sinha)
-- [] Add datasets_names attribute to cube models #2782 (Quentin Remy)
-- [] Fix Jacobian factor in PSFMap.sample_coord() #2781 (Fabio Pintore)
-- [] Add exclusion mask tutorial #2779 (Régis Terrier)
-- [] Implement RegionGeom and RegionNDMap #2778 (Axel Donath)
-- [] Add SkyModel.apply_irf and SkyDiffuseCube.apply_irf #2777 (Quentin Remy)
-- [] Add support for FoVBackground on the HLI #2776 (Régis Terrier)
-- [] Implement CountsStatistics classes #2775 (Régis Terrier)
-- [] Add region serialization on CountsSpectrum #2772 (Régis Terrier)
-- [] Set DM primary flux to zero beyond particle mass energy #2771 (José Enrique Ruiz)
-- [] Refactor map dataset background model #2768 (Axel Donath)
-- [] Implement self synchrotron compton for NaimaModel #2767 (Quentin Remy)
-- [] Clean up container classes #2765 (Axel Donath)
-- [] Add modeling and fitting tutorial notebook #2764 (Quentin Remy)
-- [] Implement SignificanceMapEstimator #2762 (Régis Terrier)
-- [#] Implement LazyFitsData descriptor #2761 (Axel Donath)
-- [#] Fix osx travis build #2759 (Brigitta Sipocz)
-- [#] PIG 19 - Package structure follow up #2720 (Axel Donath)
+- [#2846] Add more meta data keywords for sampled event lists (Fabio Pintore)
+- [#2841] Clean up model parameter handling (Axel Donath)
+- [#2845] Add Background3D plotting methods (Atreyee Sinha)
+- [#2842] Clean up gammapy.stats (Régis Terrier)
+- [#2839] Improve stats documentation (Régis Terrier)
+- [#2837] Improve Background2D visualisation (Atreyee Sinha)
+- [#2832] Implement EDispKernelMap (Axel Donath)
+- [#2829] Add event sampling tutorial (Fabio Pintore)
+- [#2828] Add notebook for light curve simulation (Atreyee Sinha)
+- [#2827] Improve covariance handling / implement Covariance class (Axel Donath)
+- [#2823] Add temporal evaluation for spectral datasets (Atreyee Sinha)
+- [#2822] Refactor model serialisation code (Quentin Remy)
+- [#2820] Rename LiMaMapEstimator to ExcessMapEstimator (Régis Terrier)
+- [#2818] Fix background serialization (Quentin Remy)
+- [#2817] Remove SpectrumEvaluator class (Axel Donath)
+- [#2816] Remove RegionGeom.energy_mask() (Axel Donath)
+- [#2815] Remove CountsSpectrum class (Axel Donath)
+- [#2812] Add ring background estimation in high-level interface (José Enrique Ruiz)
+- [#2811] Fix confidence interval range in CountsStatistic class (Régis Terrier)
+- [#2810] Implement FluxEstimator (Régis Terrier)
+- [#2809] Add sampling of temporal models to event sampler (Fabio Pintore)
+- [#2808] Add temporal model evaluation (Atreyee Sinha)
+- [#2805] Move LightcurveEstimator to gammapy.estimators (Axel Donath)
+- [#2804] Remove gammapy.cube sub package (Axel Donath)
+- [#2803] Remove gammapy.spectrum sub package (Axel Donath)
+- [#2802] Remove gammapy.detect sub package (Axel Donath)
+- [#2801] Support SpectrumDataset in FluxPointsEstimator (Régis Terrier)
+- [#2799] Implement option to sample background only (Fabio Pintore)
+- [#2798] Support aeff-max safe energy threshold for MapDataset (Luca Giunti)
+- [#2797] Remove KernelBackgroundEstimator class  (Axel Donath)
+- [#2796] Change beta sign in SmoothBrokenPowerLawSpectralModel (Quentin Remy)
+- [#2794] Refactor catalog registry (Axel Donath)
+- [#2793] Add notebooks test to azure pipelines (Axel Donath)
+- [#2792] Introduce gammapy.visualization sub-package (Axel Donath)
+- [#2791] Introduce gammapy.estimators and ParameterEstimator class (Axel Donath)
+- [#2790] Introduce gammapy.makers sub package (Axel Donath)
+- [#2789] Move irf maps to gammapy/irf (Axel Donath)
+- [#2788] Introduce gammapy.datasets submodule (Axel Donath)
+- [#2787] Add TemporalModel integral method (Atreyee Sinha)
+- [#2785] Datasets names follow up (Axel Donath)
+- [#2784] Implement naming convention for true energy axis (Axel Donath)
+- [#2783] Add __call__ method to TemporalModel (Atreyee Sinha)
+- [#2782] Add datasets_names attribute to cube models (Quentin Remy)
+- [#2781] Fix Jacobian factor in PSFMap.sample_coord() (Fabio Pintore)
+- [#2779] Add exclusion mask tutorial (Régis Terrier)
+- [#2778] Implement RegionGeom and RegionNDMap (Axel Donath)
+- [#2777] Add SkyModel.apply_irf and SkyDiffuseCube.apply_irf (Quentin Remy)
+- [#2776] Add support for FoVBackground on the HLI (Régis Terrier)
+- [#2775] Implement CountsStatistics classes (Régis Terrier)
+- [#2772] Add region serialization on CountsSpectrum (Régis Terrier)
+- [#2771] Set DM primary flux to zero beyond particle mass energy (José Enrique Ruiz)
+- [#2768] Refactor map dataset background model (Axel Donath)
+- [#2767] Implement self synchrotron compton for NaimaModel (Quentin Remy)
+- [#2765] Clean up container classes (Axel Donath)
+- [#2764] Add modeling and fitting tutorial notebook (Quentin Remy)
+- [#2762] Implement SignificanceMapEstimator (Régis Terrier)
+- [#2761] Implement LazyFitsData descriptor (Axel Donath)
+- [#2759] Fix osx travis build (Brigitta Sipocz)
+- [#2720] PIG 19 - Package structure follow up (Axel Donath)
 
+.. _PIG 19: https://docs.gammapy.org/dev/development/pigs/pig-019.html
 
 
 .. _gammapy_0p16_release:
