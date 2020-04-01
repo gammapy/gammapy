@@ -4,9 +4,9 @@ import astropy.units as u
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.random import InverseCDFSampler, get_random_state
+from .irf_map import IRFMap
 from .psf_kernel import PSFKernel
 from .psf_table import EnergyDependentTablePSF
-from .irf_map import IRFMap
 
 __all__ = ["PSFMap"]
 
@@ -65,6 +65,7 @@ class PSFMap(IRFMap):
         # Write map to disk
         psf_map.write('psf_map.fits')
     """
+
     _hdu_name = "psf"
 
     @property

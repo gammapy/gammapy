@@ -42,12 +42,7 @@ SPECTRAL_MODELS = Registry(
 )
 """Built-in spectral models."""
 
-TEMPORAL_MODELS = Registry(
-    [
-        ConstantTemporalModel,
-        LightCurveTemplateTemporalModel,
-    ]
-)
+TEMPORAL_MODELS = Registry([ConstantTemporalModel, LightCurveTemplateTemporalModel,])
 """Built-in temporal models."""
 
 MODELS = Registry(

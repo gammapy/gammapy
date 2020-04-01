@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from astropy.coordinates import Angle
 from gammapy.maps import Map
-from gammapy.visualization import MapPanelPlotter
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
+from gammapy.visualization import MapPanelPlotter
 
 
 @requires_dependency("matplotlib")

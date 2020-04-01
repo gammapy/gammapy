@@ -3,19 +3,19 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.time import Time
+from gammapy.data.gti import GTI
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.data.gti import GTI
-from astropy.time import Time
 from gammapy.modeling.models import (
     BackgroundModel,
     ConstantSpectralModel,
+    ConstantTemporalModel,
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
     PowerLawSpectralModel,
-    ConstantTemporalModel,
     SkyDiffuseCube,
     SkyModel,
     create_fermi_isotropic_diffuse_model,

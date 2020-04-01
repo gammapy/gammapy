@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.modeling import Parameter, Parameters
-from gammapy.modeling.models import Model, Models
 from gammapy.modeling.iminuit import confidence_iminuit, optimize_iminuit
+from gammapy.modeling.models import Model, Models
 
 pytest.importorskip("iminuit")
 

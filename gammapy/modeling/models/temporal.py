@@ -51,6 +51,7 @@ class TemporalModel(Model):
 
 class ConstantTemporalModel(TemporalModel):
     """Constant temporal model."""
+
     tag = "ConstantTemporalModel"
 
     @staticmethod
@@ -121,6 +122,7 @@ class ExpDecayTemporalModel(TemporalModel):
     t_ref: `~astropy.units.Quantity`
         The reference time in mjd
     """
+
     tag = "ExponentialDecayTemporalModel"
 
     t0 = Parameter("t0", "1 d", frozen=False)

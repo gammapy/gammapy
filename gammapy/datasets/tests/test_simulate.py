@@ -2,21 +2,21 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.io import fits
 import astropy.units as u
-from astropy.table import Table
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
+from astropy.table import Table
 from astropy.time import Time
+from gammapy.data import GTI, DataStore, Observation
 from gammapy.datasets import MapDatasetEventSampler
-from gammapy.data import DataStore, GTI, Observation
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.irf import load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     GaussianSpatialModel,
+    LightCurveTemplateTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
-    LightCurveTemplateTemporalModel,
 )
 from gammapy.utils.testing import requires_data
 
@@ -192,7 +192,7 @@ def test_mde_run(dataset):
     assert_allclose(meta["LIVETIME"], 3600.0)
     assert_allclose(meta["DEADC"], 0.0)
     assert_allclose(meta["RA_PNT"], 266.4049882865447)
-    assert_allclose(meta["DEC_PNT"],-28.936177761791473)
+    assert_allclose(meta["DEC_PNT"], -28.936177761791473)
     assert meta["EQUINOX"] == "J2000"
     assert meta["RADECSYS"] == "icrs"
     assert "Gammapy" in meta["CREATOR"]

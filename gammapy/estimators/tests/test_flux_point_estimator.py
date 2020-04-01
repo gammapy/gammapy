@@ -6,16 +6,16 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
+from gammapy.estimators import FluxPointsEstimator
 from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.makers import MapDatasetMaker
-from gammapy.maps import MapAxis, WcsGeom, RegionGeom, RegionNDMap
+from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.estimators import FluxPointsEstimator
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -29,7 +29,7 @@ def simulate_spectrum_dataset(model, random_state=0):
         spectral_model=PowerLawSpectralModel(
             index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1"
         ),
-        name="background"
+        name="background",
     )
     bkg_model.spectral_model.amplitude.frozen = True
     bkg_model.spectral_model.index.frozen = True
@@ -110,8 +110,11 @@ def fpe_map_pwl_reoptimize():
     #    dataset.models.parameters["index"].frozen = True
     dataset.models.parameters["sigma"].frozen = True
     datasets = [dataset]
-    fpe = FluxPointsEstimator(e_edges=e_edges, norm_values=[1], reoptimize=True, source="source")
+    fpe = FluxPointsEstimator(
+        e_edges=e_edges, norm_values=[1], reoptimize=True, source="source"
+    )
     return datasets, fpe
+
 
 @pytest.fixture(scope="session")
 def fpe_pwl():

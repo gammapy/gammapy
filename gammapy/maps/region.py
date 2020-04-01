@@ -1,17 +1,18 @@
 import copy
 import numpy as np
 from astropy import units as u
-from astropy.table import Table
-from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
-from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
-from regions import (
-    fits_region_objects_to_table,
-    FITSRegionParser,
+from astropy.table import Table
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
+from regions import FITSRegionParser, fits_region_objects_to_table
+from gammapy.utils.regions import (
+    compound_region_to_list,
+    list_to_compound_region,
+    make_region,
 )
-from gammapy.utils.regions import make_region, compound_region_to_list, list_to_compound_region
 from .base import MapCoord
-from .geom import Geom, make_axes, pix_tuple_to_idx, MapAxis
+from .geom import Geom, MapAxis, make_axes, pix_tuple_to_idx
 from .utils import edges_from_lo_hi
 from .wcs import WcsGeom
 
@@ -305,7 +306,7 @@ class RegionGeom(Geom):
         if self.region is None:
             raise ValueError("Region definition required.")
 
-        #TODO: make this a to_hdulist() method
+        # TODO: make this a to_hdulist() method
         region_list = compound_region_to_list(self.region)
         pixel_region_list = []
         for reg in region_list:
@@ -343,13 +344,9 @@ class RegionGeom(Geom):
         """Stack a RegionGeom by making the union"""
         if not self == other:
             print(self, other)
-            raise ValueError(
-                "Can only make union if extra axes are equivalent."
-            )
+            raise ValueError("Can only make union if extra axes are equivalent.")
         if other.region:
             if self.region:
                 self._region = self.region.union(other.region)
             else:
                 self._region = other.region
-
-

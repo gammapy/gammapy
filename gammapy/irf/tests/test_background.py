@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import Background2D, Background3D
-from gammapy.utils.testing import requires_data, mpl_plot_check, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")

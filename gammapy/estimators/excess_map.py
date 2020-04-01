@@ -4,8 +4,8 @@ import logging
 import numpy as np
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.maps import Map
 from gammapy.datasets import MapDataset, MapDatasetOnOff
+from gammapy.maps import Map
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 
 __all__ = [
@@ -13,6 +13,7 @@ __all__ = [
 ]
 
 log = logging.getLogger(__name__)
+
 
 def convolved_map_dataset_counts_statistics(dataset, kernel):
     """Return CountsDataset objects containing smoothed maps from the MapDataset"""
@@ -39,6 +40,7 @@ def convolved_map_dataset_counts_statistics(dataset, kernel):
         background_conv = dataset.npred().convolve(kernel.array).data
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
+
 class ExcessMapEstimator:
     """Computes correlated excess, significance and errors for MapDatasets.
 
@@ -54,7 +56,7 @@ class ExcessMapEstimator:
         Default is 3.
     """
 
-    def __init__(self, correlation_radius='0.1 deg', nsigma=1, nsigma_ul=3):
+    def __init__(self, correlation_radius="0.1 deg", nsigma=1, nsigma_ul=3):
         self.correlation_radius = correlation_radius
         self.nsigma = nsigma
         self.nsigma_ul = nsigma_ul
@@ -113,7 +115,7 @@ class ExcessMapEstimator:
         self.counts_stat = convolved_map_dataset_counts_statistics(dataset, kernel)
 
         n_on = Map.from_geom(geom, data=self.counts_stat.n_on)
-        bkg = Map.from_geom(geom, data=self.counts_stat.n_on-self.counts_stat.excess)
+        bkg = Map.from_geom(geom, data=self.counts_stat.n_on - self.counts_stat.excess)
         excess = Map.from_geom(geom, data=self.counts_stat.excess)
 
         result = {"counts": n_on, "background": bkg, "excess": excess}
@@ -136,6 +138,8 @@ class ExcessMapEstimator:
             result.update({"errn": errn, "errp": errp})
 
         if "ul" in steps:
-            ul = Map.from_geom(geom, data=self.counts_stat.compute_upper_limit(self.nsigma_ul))
+            ul = Map.from_geom(
+                geom, data=self.counts_stat.compute_upper_limit(self.nsigma_ul)
+            )
             result.update({"ul": ul})
         return result

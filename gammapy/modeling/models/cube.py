@@ -4,8 +4,8 @@ import copy
 from pathlib import Path
 import numpy as np
 import astropy.units as u
-from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
-from gammapy.modeling import Parameter, Parameters, Covariance
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_name, make_path
 from .core import Model, Models

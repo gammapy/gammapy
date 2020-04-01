@@ -19,7 +19,6 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
-
 __all__ = ["MapDataset", "MapDatasetOnOff"]
 
 log = logging.getLogger(__name__)
@@ -314,7 +313,9 @@ class MapDataset(Dataset):
         kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
         kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
-        kwargs.setdefault("gti", GTI.create([] * u.s, [] * u.s, reference_time=reference_time))
+        kwargs.setdefault(
+            "gti", GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
+        )
         kwargs["mask_safe"] = Map.from_geom(geom, unit="", dtype=bool)
 
         return cls(**kwargs)
@@ -693,7 +694,11 @@ class MapDataset(Dataset):
         if "BACKGROUND" in hdulist:
             background_map = Map.from_hdulist(hdulist, hdu="background")
             kwargs["models"] = Models(
-                [BackgroundModel(background_map, datasets_names=[name], name=name + "-bkg")]
+                [
+                    BackgroundModel(
+                        background_map, datasets_names=[name], name=name + "-bkg"
+                    )
+                ]
             )
 
         if "EDISP_MATRIX" in hdulist:

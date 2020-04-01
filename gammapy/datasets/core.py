@@ -4,10 +4,10 @@ import collections.abc
 import copy
 import numpy as np
 from gammapy.maps import Map
-from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
-from gammapy.utils.table import table_from_row_data
 from gammapy.modeling import Parameters
 from gammapy.modeling.models import Models
+from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
+from gammapy.utils.table import table_from_row_data
 
 __all__ = ["Dataset", "Datasets"]
 
@@ -136,7 +136,10 @@ class Datasets(collections.abc.MutableSequence):
             if d.models is not None:
                 for model in d.models:
                     if model not in unique_models:
-                        if model.datasets_names is None or d.name in model.datasets_names:
+                        if (
+                            model.datasets_names is None
+                            or d.name in model.datasets_names
+                        ):
                             unique_models.append(model)
         return Models(unique_models)
 
@@ -158,7 +161,6 @@ class Datasets(collections.abc.MutableSequence):
     def is_all_same_energy_shape(self):
         """Whether all contained datasets have the same data shape"""
         return len(set(_.data_shape[0] for _ in self)) == 1
-
 
     def stat_sum(self):
         """Compute joint likelihood"""

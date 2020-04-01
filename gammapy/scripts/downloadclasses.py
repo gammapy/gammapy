@@ -12,10 +12,16 @@ from gammapy import __version__
 log = logging.getLogger(__name__)
 
 RELEASES_BASE_URL = "https://gammapy.org/download"
-DEV_NBS_YAML_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/notebooks.yaml"
-DEV_SCRIPTS_YAML_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/examples/scripts.yaml"
-TAR_BUNDLE = "https://github.com/gammapy/gammapy-data/tarball/master"       # Curated datasets bundle
-DEV_DATA_JSON_LOCAL = "../../dev/datasets/gammapy-data-index.json"          # CI tests
+DEV_NBS_YAML_URL = (
+    "https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/notebooks.yaml"
+)
+DEV_SCRIPTS_YAML_URL = (
+    "https://raw.githubusercontent.com/gammapy/gammapy/master/examples/scripts.yaml"
+)
+TAR_BUNDLE = (
+    "https://github.com/gammapy/gammapy-data/tarball/master"  # Curated datasets bundle
+)
+DEV_DATA_JSON_LOCAL = "../../dev/datasets/gammapy-data-index.json"  # CI tests
 
 
 def parse_datafiles(datasearch, datasetslist, download_tests=False):

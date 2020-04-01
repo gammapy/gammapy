@@ -3,8 +3,8 @@ import logging
 import numpy as np
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
-from gammapy.maps import Map, MapCoord
 from gammapy.irf import EffectiveAreaTable
+from gammapy.maps import Map, MapCoord
 
 __all__ = ["SafeMaskMaker"]
 
@@ -128,7 +128,9 @@ class SafeMaskMaker:
                 position = dataset.counts.geom.center_skydir
             exposure = dataset.exposure
             energy = exposure.geom.get_axis_by_name("energy_true")
-            coord = MapCoord.create({"skycoord": position, "energy_true": energy.center})
+            coord = MapCoord.create(
+                {"skycoord": position, "energy_true": energy.center}
+            )
             exposure_1d = exposure.interp_by_coord(coord)
             aeff = EffectiveAreaTable(
                 energy_lo=energy.edges[:-1],

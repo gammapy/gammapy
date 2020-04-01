@@ -7,9 +7,9 @@ from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.datasets import Dataset
 from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
-from gammapy.maps import RegionNDMap, MapAxis, RegionGeom
+from gammapy.maps import MapAxis, RegionGeom, RegionNDMap
 from gammapy.modeling.models import Models, SkyModel
-from gammapy.stats import cash, wstat, CashCountsStatistic, WStatCountsStatistic
+from gammapy.stats import CashCountsStatistic, WStatCountsStatistic, cash, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path

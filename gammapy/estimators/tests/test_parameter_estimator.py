@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
-from gammapy.utils.testing import requires_data
-from gammapy.datasets import SpectrumDatasetOnOff, Datasets
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators import ParameterEstimator
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.utils.testing import requires_data
 
 pytest.importorskip("iminuit")
 

@@ -156,7 +156,7 @@ def test_parameter_link_init():
     m1 = MyModel()
     m2 = MyModel(y=m1.y)
 
-    assert (m1.y is m2.y)
+    assert m1.y is m2.y
 
     m1.y.value = 100
     assert_allclose(m2.y.value, 100)

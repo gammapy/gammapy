@@ -7,16 +7,17 @@ from .gammacat import *
 from .hawc import *
 from .hess import *
 
-
-SOURCE_CATALOGS = Registry([
-    SourceCatalogGammaCat,
-    SourceCatalogHGPS,
-    SourceCatalog2HWC,
-    SourceCatalog3FGL,
-    SourceCatalog4FGL,
-    SourceCatalog2FHL,
-    SourceCatalog3FHL
-])
+SOURCE_CATALOGS = Registry(
+    [
+        SourceCatalogGammaCat,
+        SourceCatalogHGPS,
+        SourceCatalog2HWC,
+        SourceCatalog3FGL,
+        SourceCatalog4FGL,
+        SourceCatalog2FHL,
+        SourceCatalog3FHL,
+    ]
+)
 """Registry of source catalogs in Gammapy."""
 
 __all__ = [

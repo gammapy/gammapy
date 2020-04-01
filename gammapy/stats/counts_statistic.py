@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
 import numpy as np
-from scipy.stats import chi2
 from scipy.optimize import brentq, newton
-from gammapy.stats import wstat, cash
+from scipy.stats import chi2
+from .fit_statistics import cash, wstat
 
 __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
@@ -17,7 +17,7 @@ class CountsStatistic(abc.ABC):
     def delta_ts(self):
         """Return TS difference of measured excess versus no excess."""
         # Remove (small) negative delta TS due to error in root finding
-        delta_ts = np.clip(self.TS_null - self.TS_max,0, None)
+        delta_ts = np.clip(self.TS_null - self.TS_max, 0, None)
         return delta_ts
 
     @property
@@ -30,8 +30,7 @@ class CountsStatistic(abc.ABC):
         """Return p_value of measured excess."""
         return chi2.sf(self.delta_ts, 1)
 
-
-    def compute_errn(self, n_sigma=1.):
+    def compute_errn(self, n_sigma=1.0):
         """Compute downward excess uncertainties.
 
         Searches the signal value for which the test statistics is n_sigma**2 away from the maximum.
@@ -51,7 +50,7 @@ class CountsStatistic(abc.ABC):
                     self._stat_fcn,
                     min_range[it.multi_index],
                     self.excess[it.multi_index],
-                    args=(self.TS_max[it.multi_index] + n_sigma**2, it.multi_index),
+                    args=(self.TS_max[it.multi_index] + n_sigma ** 2, it.multi_index),
                 )
                 errn[it.multi_index] = res - self.excess[it.multi_index]
             except ValueError:
@@ -79,7 +78,7 @@ class CountsStatistic(abc.ABC):
                 self._stat_fcn,
                 self.excess[it.multi_index],
                 max_range[it.multi_index],
-                args=(self.TS_max[it.multi_index] + n_sigma**2, it.multi_index),
+                args=(self.TS_max[it.multi_index] + n_sigma ** 2, it.multi_index),
             )
             it.iternext()
 
@@ -109,7 +108,7 @@ class CountsStatistic(abc.ABC):
                 self._stat_fcn,
                 min_range[it.multi_index],
                 max_range[it.multi_index],
-                args=(TS_ref + n_sigma**2, it.multi_index),
+                args=(TS_ref + n_sigma ** 2, it.multi_index),
             )
             it.iternext()
 
@@ -137,14 +136,15 @@ class CountsStatistic(abc.ABC):
             try:
                 excess[it.multi_index] = newton(
                     self._excess_matching_significance_fcn,
-                    np.sqrt(self.background[it.multi_index])*significance,
-                    args=(significance, it.multi_index)
+                    np.sqrt(self.background[it.multi_index]) * significance,
+                    args=(significance, it.multi_index),
                 )
             except:
                 excess[it.multi_index] = np.nan
 
             it.iternext()
         return excess
+
 
 class CashCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -166,7 +166,6 @@ class CashCountsStatistic(CountsStatistic):
     def background(self):
         return self.mu_bkg
 
-
     @property
     def error(self):
         """Approximate error from the covariance matrix."""
@@ -187,8 +186,9 @@ class CashCountsStatistic(CountsStatistic):
 
     def _excess_matching_significance_fcn(self, excess, significance, index):
         TS0 = cash(excess + self.background[index], self.mu_bkg[index])
-        TS1 = cash(excess+self.background[index], self.mu_bkg[index] + excess)
-        return np.sign(excess)*np.sqrt(np.clip(TS0-TS1,0, None))-significance
+        TS1 = cash(excess + self.background[index], self.mu_bkg[index] + excess)
+        return np.sign(excess) * np.sqrt(np.clip(TS0 - TS1, 0, None)) - significance
+
 
 class WStatCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -211,7 +211,7 @@ class WStatCountsStatistic(CountsStatistic):
 
     @property
     def background(self):
-        return self.alpha*self.n_off
+        return self.alpha * self.n_off
 
     @property
     def error(self):
@@ -232,6 +232,13 @@ class WStatCountsStatistic(CountsStatistic):
         return wstat(self.n_on[index], self.n_off[index], self.alpha[index], mu) - delta
 
     def _excess_matching_significance_fcn(self, excess, significance, index):
-        TS0 = wstat(excess + self.background[index], self.n_off[index], self.alpha[index], 0)
-        TS1 = wstat(excess+self.background[index], self.n_off[index], self.alpha[index], excess)
-        return np.sign(excess)*np.sqrt(np.clip(TS0-TS1,0, None))-significance
+        TS0 = wstat(
+            excess + self.background[index], self.n_off[index], self.alpha[index], 0
+        )
+        TS1 = wstat(
+            excess + self.background[index],
+            self.n_off[index],
+            self.alpha[index],
+            excess,
+        )
+        return np.sign(excess) * np.sqrt(np.clip(TS0 - TS1, 0, None)) - significance

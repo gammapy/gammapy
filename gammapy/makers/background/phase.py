@@ -38,7 +38,9 @@ class PhaseBackgroundMaker:
 
         event_lists = []
         for interval in phases:
-            events = observation.events.select_parameter(parameter="PHASE", band=interval)
+            events = observation.events.select_parameter(
+                parameter="PHASE", band=interval
+            )
             event_lists.append(events)
 
         events = EventList.stack(event_lists)

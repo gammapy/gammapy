@@ -2,10 +2,10 @@
 import logging
 import numpy as np
 from astropy.utils import lazyproperty
+from .covariance import Covariance
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
-from .covariance import Covariance
 
 __all__ = ["Fit"]
 
@@ -71,6 +71,7 @@ class Fit:
 
     def __init__(self, datasets):
         from gammapy.datasets import Datasets
+
         self.datasets = Datasets(datasets)
 
     @lazyproperty
@@ -209,7 +210,9 @@ class Fit:
                     raise RuntimeError("To use minuit, you must first optimize.")
             else:
                 method = ""
-                factor_matrix, info = compute(parameters, self.datasets.stat_sum, **kwargs)
+                factor_matrix, info = compute(
+                    parameters, self.datasets.stat_sum, **kwargs
+                )
 
             covariance = Covariance.from_factor_matrix(
                 parameters=self._models.parameters, matrix=factor_matrix

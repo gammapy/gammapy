@@ -10,12 +10,12 @@ from gammapy.modeling.models import (
     MODELS,
     AbsorbedSpectralModel,
     Absorption,
+    BackgroundModel,
     Model,
     Models,
-    BackgroundModel,
-    SkyModel,
     PointSpatialModel,
     PowerLawSpectralModel,
+    SkyModel,
 )
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data

@@ -1,6 +1,6 @@
 """Example plot showing the profile of the Cash statistic and its connection to excess errors."""
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 from gammapy.stats import CashCountsStatistic
 
 count_statistic = CashCountsStatistic(n_on=13, mu_bkg=5.5)

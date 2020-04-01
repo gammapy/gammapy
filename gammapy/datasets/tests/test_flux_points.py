@@ -3,9 +3,9 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.datasets import Datasets, FluxPointsDataset
+from gammapy.estimators import FluxPoints
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-from gammapy.estimators import FluxPoints
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 

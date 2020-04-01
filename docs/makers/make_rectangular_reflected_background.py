@@ -6,9 +6,9 @@ from regions import RectangleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
 from gammapy.datasets import SpectrumDataset
-from gammapy.visualization import plot_spectrum_datasets_off_regions
 from gammapy.makers import ReflectedRegionsBackgroundMaker, SpectrumDatasetMaker
 from gammapy.maps import Map
+from gammapy.visualization import plot_spectrum_datasets_off_regions
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 mask = data_store.obs_table["TARGET_NAME"] == "Crab"

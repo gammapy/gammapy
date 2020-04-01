@@ -5,8 +5,8 @@ from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDatasetOnOff
 from gammapy.maps import WcsNDMap
-from gammapy.utils.array import scale_cube
 from gammapy.stats import CashCountsStatistic
+from gammapy.utils.array import scale_cube
 
 __all__ = ["ASmoothMapEstimator"]
 
@@ -75,7 +75,9 @@ class ASmoothMapEstimator:
     @staticmethod
     def _significance_cube(cubes, method):
         if method in {"lima"}:
-            scube = CashCountsStatistic(cubes["counts"], cubes["background"]).significance
+            scube = CashCountsStatistic(
+                cubes["counts"], cubes["background"]
+            ).significance
         elif method == "asmooth":
             scube = _significance_asmooth(cubes["counts"], cubes["background"])
         elif method == "ts":

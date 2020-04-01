@@ -633,7 +633,7 @@ class TemplateSpatialModel(SpatialModel):
             parameters=parameters,
             map=m,
             filename=data["filename"],
-            normalize=data.get("normalize", True)
+            normalize=data.get("normalize", True),
         )
 
     def to_dict(self):

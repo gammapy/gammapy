@@ -1,9 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.coordinates import Angle
 from astropy import units as u
-from gammapy.utils.random import sample_powerlaw, sample_sphere, sample_sphere_distance, sample_times
+from astropy.coordinates import Angle
+from gammapy.utils.random import (
+    sample_powerlaw,
+    sample_sphere,
+    sample_sphere_distance,
+    sample_times,
+)
 from gammapy.utils.testing import assert_quantity_allclose
 
 

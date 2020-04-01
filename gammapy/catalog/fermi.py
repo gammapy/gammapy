@@ -7,6 +7,7 @@ import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
 from astropy.wcs import FITSFixedWarning
+from gammapy.estimators import FluxPoints, LightCurve
 from gammapy.modeling.models import (
     DiskSpatialModel,
     GaussianSpatialModel,
@@ -15,7 +16,6 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
-from gammapy.estimators import FluxPoints, LightCurve
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_inplace

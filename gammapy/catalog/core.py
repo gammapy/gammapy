@@ -76,6 +76,7 @@ class SourceCatalog(abc.ABC):
         Columns with source name aliases. This will allow accessing the source
         row by alias names as well.
     """
+
     @classmethod
     @abc.abstractmethod
     def description(cls):

@@ -8,14 +8,15 @@ from astropy.time import Time
 from gammapy.data.gti import GTI
 from gammapy.modeling.models import (
     ConstantTemporalModel,
-    LightCurveTemplateTemporalModel,
     ExpDecayTemporalModel,
     GaussianTemporalModel,
+    LightCurveTemplateTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
+
 
 # TODO: add light-curve test case from scratch
 # only use the FITS one for I/O (or not at all)

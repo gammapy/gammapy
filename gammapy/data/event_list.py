@@ -298,7 +298,7 @@ class EventListBase:
 
         unit = ebounds.unit
 
-        ax.hist(self.energy.to_value(unit), bins=ebounds.value,  **kwargs)
+        ax.hist(self.energy.to_value(unit), bins=ebounds.value, **kwargs)
         ax.loglog()
         ax.set_xlabel(f"Energy ({unit})")
         ax.set_ylabel("Counts")
@@ -416,7 +416,7 @@ class EventListBase:
         ax = plt.gca() if ax is None else ax
 
         energy_bounds = self._default_plot_ebounds().to_value("TeV")
-        offsetangle = self.pointing_radec.separation(self.radec).max().to('deg').value
+        offsetangle = self.pointing_radec.separation(self.radec).max().to("deg").value
         offset_bounds = np.linspace(0, offsetangle, 30)
 
         counts = np.histogram2d(
@@ -622,8 +622,7 @@ class EventList(EventListBase):
         ax.text(0, 1, txt, fontsize=12, verticalalignment="top")
 
     def _counts_image(self):
-        width = (self.galactic.b.max().deg
-                 - self.galactic.b.min().deg)
+        width = self.galactic.b.max().deg - self.galactic.b.min().deg
         opts = {
             "width": (width, width),
             "binsz": 0.05,

@@ -5,11 +5,11 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.datasets import Datasets
+from gammapy.estimators import FluxEstimator, FluxPoints
 from gammapy.modeling import Fit
 from gammapy.modeling.models import ScaleSpectralModel
-from gammapy.estimators import FluxPoints, FluxEstimator
-from gammapy.utils.table import table_from_row_data
 from gammapy.utils.scripts import make_path
+from gammapy.utils.table import table_from_row_data
 
 __all__ = ["LightCurve", "LightCurveEstimator"]
 
@@ -372,7 +372,7 @@ class LightCurveEstimator(FluxEstimator):
         self,
         time_intervals=None,
         source=0,
-        energy_range=[1., 10.]*u.TeV,
+        energy_range=[1.0, 10.0] * u.TeV,
         atol="1e-6 s",
         norm_min=0.2,
         norm_max=5,
@@ -453,7 +453,7 @@ class LightCurveEstimator(FluxEstimator):
                 Time([d.gti.time_start[0], d.gti.time_stop[-1]]) for d in datasets
             ]
         else:
-            time_intervals=self.input_time_intervals
+            time_intervals = self.input_time_intervals
 
         time_intervals = self._check_and_sort_time_intervals(time_intervals)
 
@@ -535,4 +535,3 @@ class LightCurveEstimator(FluxEstimator):
             counts.append(dataset.counts.data[mask].sum())
 
         return {"counts": np.array(counts, dtype=int).sum()}
-

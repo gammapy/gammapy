@@ -5,15 +5,14 @@ import numpy as np
 import scipy.optimize
 import scipy.special
 import astropy.units as u
-from astropy.table import Table
 from astropy import constants as const
+from astropy.table import Table
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
-from gammapy.modeling import Parameter, Parameters, Covariance
+from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.integrate import evaluate_integral_pwl, trapz_loglog
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
-
 from .core import Model
 
 
@@ -1001,9 +1000,7 @@ class TemplateSpectralModel(SpectralModel):
         parameters = Parameters.from_dict(data["parameters"])
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
-        return cls.from_parameters(
-            parameters, energy=energy, values=values
-        )
+        return cls.from_parameters(parameters, energy=energy, values=values)
 
 
 class ScaleSpectralModel(SpectralModel):
@@ -1220,15 +1217,11 @@ class AbsorbedSpectralModel(SpectralModel):
     """
 
     tag = "AbsorbedSpectralModel"
-    alpha_norm = Parameter("alpha_norm", 1., frozen=True)
+    alpha_norm = Parameter("alpha_norm", 1.0, frozen=True)
     redshift = Parameter("redshift", 0.1, frozen=True)
 
     def __init__(
-        self,
-        spectral_model,
-        absorption,
-        redshift,
-        alpha_norm=alpha_norm.quantity,
+        self, spectral_model, absorption, redshift, alpha_norm=alpha_norm.quantity,
     ):
         self.spectral_model = spectral_model
         self.absorption = absorption
@@ -1255,13 +1248,16 @@ class AbsorbedSpectralModel(SpectralModel):
         self._covariance.data = covariance
 
         subcovar = self._covariance.get_subcovariance(
-               self.spectral_model.covariance.parameters
-            )
+            self.spectral_model.covariance.parameters
+        )
         self.spectral_model.covariance = subcovar
 
     @property
     def parameters(self):
-        return Parameters([self.redshift, self.alpha_norm]) + self.spectral_model.parameters
+        return (
+            Parameters([self.redshift, self.alpha_norm])
+            + self.spectral_model.parameters
+        )
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""
@@ -1281,10 +1277,7 @@ class AbsorbedSpectralModel(SpectralModel):
             "type": self.tag,
             "base_model": self.spectral_model.to_dict(),
             "absorption": self.absorption.to_dict(),
-            "absorption_parameter": {
-                "name": "redshift",
-                "value": self.redshift.value,
-            },
+            "absorption_parameter": {"name": "redshift", "value": self.redshift.value,},
             "parameters": Parameters([self.redshift, self.alpha_norm]).to_dict(),
         }
 
@@ -1297,7 +1290,7 @@ class AbsorbedSpectralModel(SpectralModel):
         model = cls(
             spectral_model=model_class.from_dict(data["base_model"]),
             absorption=Absorption.from_dict(data["absorption"]),
-            redshift=data["absorption_parameter"]["value"]
+            redshift=data["absorption_parameter"]["value"],
         )
         return model
 

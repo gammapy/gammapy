@@ -75,6 +75,7 @@ class EDispMap(IRFMap):
         # Write map to disk
         edisp_map.write("edisp_map.fits")
     """
+
     _hdu_name = "edisp"
 
     def __init__(self, edisp_map, exposure_map):
@@ -290,7 +291,7 @@ class EDispMap(IRFMap):
                 kind="linear",
                 bounds_error=False,
                 fill_value=(0, 1),
-                axis=axis
+                axis=axis,
             )
 
             integral = np.diff(np.clip(f(migra), a_min=0, a_max=1), axis=axis)
@@ -318,6 +319,7 @@ class EDispKernelMap(IRFMap):
         Associated exposure map. Needs to have a consistent map geometry.
 
     """
+
     _hdu_name = "edisp"
 
     def __init__(self, edisp_kernel_map, exposure_map):
@@ -392,7 +394,7 @@ class EDispKernelMap(IRFMap):
         coords = {
             "skycoord": position,
             "energy": energy_axis.center,
-            "energy_true": energy_true_axis.center.reshape((-1, 1))
+            "energy_true": energy_true_axis.center.reshape((-1, 1)),
         }
 
         data = self.edisp_map.get_by_coord(coords)
@@ -422,9 +424,6 @@ class EDispKernelMap(IRFMap):
             Energy dispersion kernel map.
         """
         geom = WcsGeom.create(
-            npix=(2, 1),
-            proj="CAR",
-            binsz=180,
-            axes=[energy_axis, energy_axis_true]
+            npix=(2, 1), proj="CAR", binsz=180, axes=[energy_axis, energy_axis_true]
         )
         return cls.from_geom(geom)

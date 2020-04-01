@@ -2,8 +2,8 @@
 import logging
 import numpy as np
 from astropy import units as u
-from gammapy.modeling.models import ScaleSpectralModel
 from gammapy.estimators.parameter_estimator import ParameterEstimator
+from gammapy.modeling.models import ScaleSpectralModel
 
 log = logging.getLogger(__name__)
 
@@ -105,12 +105,8 @@ class FluxEstimator(ParameterEstimator):
             "e_min": self.energy_range[0],
             "e_max": self.energy_range[1],
             "ref_dnde": model(self.e_ref),
-            "ref_flux": model.integral(
-                self.energy_range[0], self.energy_range[1]
-            ),
-            "ref_eflux": model.energy_flux(
-                self.energy_range[0], self.energy_range[1]
-            ),
+            "ref_flux": model.integral(self.energy_range[0], self.energy_range[1]),
+            "ref_eflux": model.energy_flux(self.energy_range[0], self.energy_range[1]),
             "ref_e2dnde": model(self.e_ref) * self.e_ref ** 2,
         }
 

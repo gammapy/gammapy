@@ -30,12 +30,7 @@ class ParameterEstimator:
     """
 
     def __init__(
-        self,
-        sigma=1,
-        sigma_ul=2,
-        reoptimize=True,
-        n_scan_values=30,
-        scan_n_err=3,
+        self, sigma=1, sigma_ul=2, reoptimize=True, n_scan_values=30, scan_n_err=3,
     ):
         self.sigma = sigma
         self.sigma_ul = sigma_ul
@@ -103,7 +98,9 @@ class ParameterEstimator:
             return np.nan
         return result.total_stat
 
-    def run(self, datasets, parameter, steps="all", null_value=1e-150, scan_values=None):
+    def run(
+        self, datasets, parameter, steps="all", null_value=1e-150, scan_values=None
+    ):
         """Run the parameter estimator.
 
         Parameters

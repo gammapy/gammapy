@@ -2,12 +2,12 @@
 import collections.abc
 import copy
 from os.path import splitext
+import numpy as np
 import astropy.units as u
 from astropy.table import Table
 import yaml
-from gammapy.modeling import Parameter, Parameters, Covariance
-from gammapy.utils.scripts import make_path, make_name
-import numpy as np
+from gammapy.modeling import Covariance, Parameter, Parameters
+from gammapy.utils.scripts import make_name, make_path
 
 
 def _set_link(shared_register, model):

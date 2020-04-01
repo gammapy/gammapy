@@ -65,7 +65,15 @@ class Parameter:
     """
 
     def __init__(
-        self, name, value, unit="", scale=1, min=np.nan, max=np.nan, frozen=False, error=0,
+        self,
+        name,
+        value,
+        unit="",
+        scale=1,
+        min=np.nan,
+        max=np.nan,
+        frozen=False,
+        error=0,
     ):
         self.name = name
         self._link_label_io = None
@@ -232,7 +240,7 @@ class Parameter:
             "min": self.min,
             "max": self.max,
             "frozen": self.frozen,
-            "error": self.error
+            "error": self.error,
         }
 
         if self._link_label_io is not None:

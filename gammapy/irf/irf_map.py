@@ -1,22 +1,25 @@
+from copy import deepcopy
+import numpy as np
 from astropy.io import fits
 from gammapy.maps import Map
-import numpy as np
-from copy import deepcopy
 
 
 class IRFMap:
     """IRF map base class"""
+
     def __init__(self, irf_map, exposure_map):
         self._irf_map = irf_map
         self.exposure_map = exposure_map
 
     @classmethod
-    def from_hdulist(cls, hdulist,
-            hdu=None,
-            hdu_bands=None,
-            exposure_hdu=None,
-            exposure_hdu_bands=None
-        ):
+    def from_hdulist(
+        cls,
+        hdulist,
+        hdu=None,
+        hdu_bands=None,
+        exposure_hdu=None,
+        exposure_hdu_bands=None,
+    ):
         """Create from `~astropy.io.fits.HDUList`.
 
         Parameters

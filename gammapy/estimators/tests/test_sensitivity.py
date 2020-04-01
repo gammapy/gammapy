@@ -4,9 +4,9 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.estimators import SensitivityEstimator
 from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.maps import MapAxis, RegionNDMap
-from gammapy.estimators import SensitivityEstimator
 
 
 @pytest.fixture()

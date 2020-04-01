@@ -5,10 +5,15 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
-from gammapy.irf import PSFMap, EnergyDependentTablePSF
 from gammapy.estimators import TSMapEstimator
+from gammapy.irf import EnergyDependentTablePSF, PSFMap
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling.models import BackgroundModel, GaussianSpatialModel, PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import (
+    BackgroundModel,
+    GaussianSpatialModel,
+    PowerLawSpectralModel,
+    SkyModel,
+)
 from gammapy.utils.testing import requires_data
 
 
@@ -54,10 +59,8 @@ def input_dataset():
 
 @pytest.fixture(scope="session")
 def fermi_dataset():
-    size = Angle('3 deg', '3.5 deg')
-    counts = Map.read(
-        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts-cube.fits.gz"
-    )
+    size = Angle("3 deg", "3.5 deg")
+    counts = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts-cube.fits.gz")
     counts = counts.cutout(counts.geom.center_skydir, size)
 
     background = Map.read(
@@ -70,7 +73,7 @@ def fermi_dataset():
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz"
     )
     exposure = exposure.cutout(exposure.geom.center_skydir, size)
-    exposure.unit ="cm2s"
+    exposure.unit = "cm2s"
     mask_safe = counts.copy(data=np.ones_like(counts.data).astype("bool"))
 
     psf = EnergyDependentTablePSF.read(
@@ -94,10 +97,12 @@ def fermi_dataset():
 @requires_data()
 def test_compute_ts_map(input_dataset):
     """Minimal test of compute_ts_image"""
-    spatial_model = GaussianSpatialModel(sigma='0.1 deg')
+    spatial_model = GaussianSpatialModel(sigma="0.1 deg")
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
-    ts_estimator = TSMapEstimator(model=model, method="leastsq iter", threshold=1, kernel_width="1 deg")
+    ts_estimator = TSMapEstimator(
+        model=model, method="leastsq iter", threshold=1, kernel_width="1 deg"
+    )
     result = ts_estimator.run(input_dataset)
 
     assert "leastsq iter" in repr(ts_estimator)
@@ -134,11 +139,13 @@ def test_compute_ts_map_psf(fermi_dataset):
 @requires_data()
 def test_compute_ts_map_newton(input_dataset):
     """Minimal test of compute_ts_image"""
-    spatial_model = GaussianSpatialModel(sigma='0.1 deg')
+    spatial_model = GaussianSpatialModel(sigma="0.1 deg")
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-    ts_estimator = TSMapEstimator(model=model, method="root newton", threshold=1, kernel_width="1 deg")
+    ts_estimator = TSMapEstimator(
+        model=model, method="root newton", threshold=1, kernel_width="1 deg"
+    )
     result = ts_estimator.run(input_dataset)
 
     assert "root newton" in repr(ts_estimator)
@@ -159,13 +166,17 @@ def test_compute_ts_map_newton(input_dataset):
 @requires_data()
 def test_compute_ts_map_downsampled(input_dataset):
     """Minimal test of compute_ts_image"""
-    spatial_model = GaussianSpatialModel(sigma='0.11 deg')
+    spatial_model = GaussianSpatialModel(sigma="0.11 deg")
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
     ts_estimator = TSMapEstimator(
-        model=model, downsampling_factor=2, method="root brentq", error_method="conf", ul_method="conf",
-        kernel_width="1 deg"
+        model=model,
+        downsampling_factor=2,
+        method="root brentq",
+        error_method="conf",
+        ul_method="conf",
+        kernel_width="1 deg",
     )
     result = ts_estimator.run(input_dataset)
 
@@ -186,7 +197,7 @@ def test_compute_ts_map_downsampled(input_dataset):
 @requires_data()
 def test_large_kernel(input_dataset):
     """Minimal test of compute_ts_image"""
-    spatial_model = GaussianSpatialModel(sigma='4 deg')
+    spatial_model = GaussianSpatialModel(sigma="4 deg")
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     ts_estimator = TSMapEstimator(model=model, kernel_width="4 deg")
@@ -196,7 +207,7 @@ def test_large_kernel(input_dataset):
 
 
 def test_incorrect_method():
-    model = GaussianSpatialModel(sigma='0.2 deg')
+    model = GaussianSpatialModel(sigma="0.2 deg")
     with pytest.raises(ValueError):
         TSMapEstimator(model, method="bad")
     with pytest.raises(ValueError):

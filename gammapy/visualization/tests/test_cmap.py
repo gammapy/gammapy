@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
-from gammapy.visualization import colormap_hess, colormap_milagro
 from gammapy.utils.testing import requires_dependency
+from gammapy.visualization import colormap_hess, colormap_milagro
 
 
 def _check_cmap_rgb_vals(vals, cmap, vmin=0, vmax=1):
@@ -42,4 +42,3 @@ def test_colormap_milagro():
         (1.0, (1.0, 1.0, 1.0)),
     ]
     _check_cmap_rgb_vals(vals, cmap)
-

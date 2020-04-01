@@ -3,8 +3,8 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
-from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
 from gammapy.estimators.flux import FluxEstimator
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -26,7 +26,7 @@ def hess_datasets():
     for obsid in [23523, 23526]:
         dataset = SpectrumDatasetOnOff.from_ogip_files(
             f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obsid}.fits"
-            )
+        )
         dataset.models = model
         datasets.append(dataset)
 
@@ -67,7 +67,6 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     assert_allclose(result["norm_err"], 0.01998, atol=1e-3)
 
 
-
 @requires_data()
 @requires_dependency("iminuit")
 def test_flux_estimator_1d(hess_datasets):
@@ -86,8 +85,9 @@ def test_flux_estimator_1d(hess_datasets):
 def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
     fermi_datasets.append(hess_datasets[0])
     with pytest.raises(ValueError):
-        estimator = FluxEstimator( source=0, energy_range=[1, 10] * u.TeV)
+        estimator = FluxEstimator(source=0, energy_range=[1, 10] * u.TeV)
         estimator.run(fermi_datasets)
+
 
 @requires_data()
 def test_flux_estimator_incorrect_energy_range():

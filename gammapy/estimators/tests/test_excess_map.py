@@ -1,20 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from numpy.testing import assert_allclose
 import numpy as np
+from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.utils.testing import requires_data
 from gammapy.modeling.models import BackgroundModel
+from gammapy.utils.testing import requires_data
+
 
 def image_to_cube(input_map, e_min, e_max):
     e_min = u.Quantity(e_min)
     e_max = u.Quantity(e_max)
     axis = MapAxis.from_energy_bounds(e_min, e_max, nbin=1)
     geom = input_map.geom.to_cube([axis])
-    return Map.from_geom(geom, data=input_map.data[np.newaxis,:,:])
+    return Map.from_geom(geom, data=input_map.data[np.newaxis, :, :])
+
 
 @pytest.fixture
 def simple_dataset():
@@ -47,18 +49,18 @@ def test_compute_lima_image():
     """
     filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz"
     counts = Map.read(filename, hdu="counts")
-    counts = image_to_cube(counts, '1 GeV', '100 GeV')
+    counts = image_to_cube(counts, "1 GeV", "100 GeV")
     background = Map.read(filename, hdu="background")
-    background = image_to_cube(background, '1 GeV', '100 GeV')
+    background = image_to_cube(background, "1 GeV", "100 GeV")
     background_model = BackgroundModel(background)
     dataset = MapDataset(counts=counts)
-    dataset.models =background_model
+    dataset.models = background_model
 
-    estimator = ExcessMapEstimator('0.1 deg')
+    estimator = ExcessMapEstimator("0.1 deg")
     result_lima = estimator.run(dataset, steps="ts")
 
-    assert_allclose(result_lima["significance"].data[:,100, 100], 30.814916, atol=1e-3)
-    assert_allclose(result_lima["significance"].data[:,1, 1], 0.164, atol=1e-3)
+    assert_allclose(result_lima["significance"].data[:, 100, 100], 30.814916, atol=1e-3)
+    assert_allclose(result_lima["significance"].data[:, 1, 1], 0.164, atol=1e-3)
 
 
 @requires_data()
@@ -68,23 +70,23 @@ def test_compute_lima_on_off_image():
     """
     filename = "$GAMMAPY_DATA/tests/unbundled/hess/survey/hess_survey_snippet.fits.gz"
     n_on = Map.read(filename, hdu="ON")
-    counts = image_to_cube(n_on, '1 TeV', '100 TeV')
+    counts = image_to_cube(n_on, "1 TeV", "100 TeV")
     n_off = Map.read(filename, hdu="OFF")
-    counts_off = image_to_cube(n_off, '1 TeV', '100 TeV')
+    counts_off = image_to_cube(n_off, "1 TeV", "100 TeV")
     a_on = Map.read(filename, hdu="ONEXPOSURE")
-    acceptance = image_to_cube(a_on, '1 TeV', '100 TeV')
+    acceptance = image_to_cube(a_on, "1 TeV", "100 TeV")
     a_off = Map.read(filename, hdu="OFFEXPOSURE")
-    acceptance_off = image_to_cube(a_off, '1 TeV', '100 TeV')
+    acceptance_off = image_to_cube(a_off, "1 TeV", "100 TeV")
     dataset = MapDatasetOnOff(
         counts=counts,
         counts_off=counts_off,
         acceptance=acceptance,
-        acceptance_off=acceptance_off
+        acceptance_off=acceptance_off,
     )
 
     significance = Map.read(filename, hdu="SIGNIFICANCE")
-    significance = image_to_cube(significance, '1 TeV', '10 TeV')
-    estimator = ExcessMapEstimator('0.1 deg')
+    significance = image_to_cube(significance, "1 TeV", "10 TeV")
+    estimator = ExcessMapEstimator("0.1 deg")
     results = estimator.run(dataset, steps="ts")
 
     # Reproduce safe significance threshold from HESS software
@@ -93,8 +95,8 @@ def test_compute_lima_on_off_image():
     # crop the image at the boundaries, because the reference image
     # is cut out from a large map, there is no way to reproduce the
     # result with regular boundary handling
-    actual = results["significance"].crop((11,11)).data
-    desired = significance.crop((11,11)).data
+    actual = results["significance"].crop((11, 11)).data
+    desired = significance.crop((11, 11)).data
 
     # Set boundary to NaN in reference image
     # The absolute tolerance is low because the method used here is slightly different from the one used in HGPS
@@ -105,6 +107,7 @@ def test_compute_lima_on_off_image():
 def test_significance_map_estimator_incorrect_dataset():
     with pytest.raises(ValueError):
         ExcessMapEstimator("bad")
+
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
     estimator = ExcessMapEstimator(0.1 * u.deg)

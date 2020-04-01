@@ -6,13 +6,13 @@ import warnings
 import numpy as np
 import scipy.optimize
 from astropy.coordinates import Angle, SkyCoord
-from gammapy.maps import Map, WcsGeom
 from gammapy.datasets.map import MapEvaluator
-from gammapy.modeling.models import PointSpatialModel, SkyModel, PowerLawSpectralModel
+from gammapy.maps import Map, WcsGeom
+from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import (
+    amplitude_bounds_cython,
     cash,
     cash_sum_cython,
-    amplitude_bounds_cython,
     f_cash_root_cython,
     x_best_leastsq,
 )
@@ -163,7 +163,7 @@ class TSMapEstimator:
         if model is None:
             model = SkyModel(
                 spectral_model=PowerLawSpectralModel(),
-                spatial_model=PointSpatialModel()
+                spatial_model=PointSpatialModel(),
             )
 
         self.model = model
@@ -202,15 +202,11 @@ class TSMapEstimator:
         axis = dataset.exposure.geom.get_axis_by_name("energy_true")
 
         geom = WcsGeom.create(
-            skydir=model.position,
-            proj="TAN",
-            npix=npix,
-            axes=[axis],
-            binsz=binsz
+            skydir=model.position, proj="TAN", npix=npix, axes=[axis], binsz=binsz
         )
 
         exposure = Map.from_geom(geom, unit="cm2 s1")
-        exposure.data += 1.
+        exposure.data += 1.0
 
         # We use global evaluation mode to not modify the geometry
         evaluator = MapEvaluator(model, evaluation_mode="global")

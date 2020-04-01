@@ -8,15 +8,15 @@ from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.irf import EDispKernel, EffectiveAreaTable
-from gammapy.maps import MapAxis, WcsGeom, RegionNDMap, RegionGeom
+from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ConstantSpectralModel,
+    ConstantTemporalModel,
     ExpCutoffPowerLawSpectralModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
-    ConstantTemporalModel,
 )
 from gammapy.utils.random import get_random_state
 from gammapy.utils.regions import compound_region_to_list, make_region

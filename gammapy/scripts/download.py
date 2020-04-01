@@ -6,7 +6,6 @@ from pathlib import Path
 import click
 from .downloadclasses import ComputePlan, ParallelDownload
 
-
 BUNDLESIZE = 152  # in MB
 log = logging.getLogger(__name__)
 
@@ -17,8 +16,14 @@ def progress_download(source, destination):
 
     destination.parent.mkdir(parents=True, exist_ok=True)
     with requests.get(source, stream=True) as r:
-        total_size = (int(r.headers.get("content-length")) if r.headers.get("content-length") else BUNDLESIZE * 1024 * 1024)
-        progress_bar = tqdm(total=total_size, unit="B", unit_scale=True, unit_divisor=1024)
+        total_size = (
+            int(r.headers.get("content-length"))
+            if r.headers.get("content-length")
+            else BUNDLESIZE * 1024 * 1024
+        )
+        progress_bar = tqdm(
+            total=total_size, unit="B", unit_scale=True, unit_divisor=1024
+        )
         with open(destination, "wb") as f:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:
@@ -32,7 +37,7 @@ def members(tf):
     root_folder = list_members[0].name
     for member in list_members:
         if member.path.startswith(root_folder):
-            member.path = member.path[len(root_folder)+1:]
+            member.path = member.path[len(root_folder) + 1 :]
             yield member
 
 
