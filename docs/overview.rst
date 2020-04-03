@@ -192,8 +192,9 @@ To learn more about time, see :ref:`gammapy.time <time>`.
 Simulation
 ----------
 
-Gammapy currently supports binned simulation, Poisson fluctuation of predicted
-counts maps. The following tutorials illustrate how to use that to predict
+Gammapy supports binned simulation, i.e. Poisson fluctuation of predicted
+counts maps or spectra, as well as event sampling to simulate DL3 events data.
+ The following tutorials illustrate how to use that to predict
 observability, significance and sensitivity, using CTA examples: `3D map
 simulation <notebooks/simulate_3d.html>`__, `1D spectrum simulation
 <notebooks/spectrum_simulation.html>`__, and `Point source sensitivity

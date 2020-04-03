@@ -94,9 +94,4 @@ Congratulations! You are all set to start using Gammapy!
 * If you're new to conda, Python, ipython and Jupyter, read the :ref:`getting-started` guide.
 * To learn how to use Gammapy, go to :ref:`tutorials`.
 
-.. toctree::
-    :maxdepth: 1
-
-    dependencies
-    other
-    pip
+.. Don't include toc to avoid having other install appear as next
