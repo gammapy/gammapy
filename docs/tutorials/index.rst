@@ -11,7 +11,7 @@ You can read them here, or execute them using a temporary cloud server in Binder
 
 To execute them locally, you have to first install Gammapy locally (see
 :ref:`install`) and download the tutorial notebooks and example datasets (see
-:ref:`getting-started`). Once Gammapy installed, remember that you can always
+:ref:`getting-started`). Once Gammapy is installed, remember that you can always
 use ``gammapy info`` to check your setup.
 
 Gammapy is a Python package built on `Numpy`_ and `Astropy`_, so to use it
