@@ -62,21 +62,3 @@ example data download (``parfive``) or in one of the tutorials (``sherpa``).
 * corner_ for MCMC corner plots
 * parfive_ for example data and tutorial notebook download
 
-Versions
---------
-
-Every stable version of Gammapy is compatible with a range of versions of it's
-dependencies. E.g. Gammapy v0.13 was fully tested and is known to be compatible
-with Python 3.5, 3.6 and 3.7. Most likely it will be compatible with Python 3.8
-when it comes out, or also with Python 4.0 if that ever comes out, but we can't
-know for sure or guarantee that. With other dependencies it's similar, e.g.
-Gammapy v0.13 was fully tested and known to work with Astropy 2.0 to 3.2, there
-were certain functions in Gammapy that didn't work with older Astropy versions
-than 2.0, and for Astropy 4.0 or newer versions likely everything will work, but
-we can't test or guarantee it before that comes out.
-
-So for now, we have decided to ship and recommend the use of Gammapy conda
-environments with fixed and recent versions of all dependencies. This will give
-users a well-tested and known good reproducible execution environment (on any of
-the supported platforms: Linux, macOS and Windows). As an example, see
-`gammapy-0.13-environment.yml`_.
