@@ -97,12 +97,11 @@ class Background3D:
         else:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
-        # Currently some files (e.g. CTA 1DC) contain unit in the FITS file
-        # '1/s/MeV/sr', which is invalid ( try: astropy.units.Unit('1/s/MeV/sr')
-        # This should be corrected.
-        # For now, we hard-code the unit here:
-        data_unit = u.Unit("s-1 MeV-1 sr-1")
-
+        data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
+        if isinstance(data_unit, u.UnrecognizedUnit):
+            data_unit = u.Unit(
+                "s-1 MeV-1 sr-1"
+            )  # To handle CTA 1-DC invalid unit problem
         return cls(
             energy_lo=table["ENERG_LO"].quantity[0],
             energy_hi=table["ENERG_HI"].quantity[0],
@@ -280,11 +279,11 @@ class Background2D:
         else:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
-        # Currently some files (e.g. CTA 1DC) contain unit in the FITS file
-        # '1/s/MeV/sr', which is invalid ( try: astropy.units.Unit('1/s/MeV/sr')
-        # This should be corrected.
-        # For now, we hard-code the unit here:
-        data_unit = u.Unit("s-1 MeV-1 sr-1")
+        data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
+        if isinstance(data_unit, u.UnrecognizedUnit):
+            data_unit = u.Unit(
+                "s-1 MeV-1 sr-1"
+            )  # To handle CTA 1-DC invalid unit problem
         return cls(
             energy_lo=table["ENERG_LO"].quantity[0],
             energy_hi=table["ENERG_HI"].quantity[0],
