@@ -1439,6 +1439,11 @@ class NaimaSpectralModel(SpectralModel):
             "Currently the NaimaSpectralModel cannot be read from YAML"
         )
 
+    @classmethod
+    def from_parameters(cls, parameters, **kwargs):
+        raise NotImplementedError(
+            "Currently the NaimaSpectralModel cannot be built from a list of parameters."
+        )
 
 class GaussianSpectralModel(SpectralModel):
     r"""Gaussian spectral model.

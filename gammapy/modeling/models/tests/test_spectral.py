@@ -587,6 +587,21 @@ class TestNaimaModel:
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV, rtol=1e-5)
 
+    def test_bad_init(self):
+        import naima
+        particle_distribution = naima.models.PowerLaw(
+            amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
+        )
+        radiative_model = naima.radiative.PionDecay(
+            particle_distribution, nh=1 * u.cm ** -3
+        )
+        model = NaimaSpectralModel(radiative_model)
+
+        with pytest.raises(NotImplementedError):
+            NaimaSpectralModel.from_dict(model.to_dict())
+        with pytest.raises(NotImplementedError):
+            NaimaSpectralModel.from_parameters(model.parameters)
+
 
 class TestSpectralModelErrorPropagation:
     """Test spectral model error propagation.
