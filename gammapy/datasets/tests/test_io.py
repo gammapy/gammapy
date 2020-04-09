@@ -5,6 +5,7 @@ from gammapy.modeling.models import Models
 from gammapy.utils.testing import requires_data
 from gammapy.modeling import Fit
 
+
 @requires_data()
 def test_datasets_to_io(tmp_path):
     filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
@@ -43,10 +44,14 @@ def test_datasets_to_io(tmp_path):
     assert dataset0.models[1].name == "gll_iem_v06_cutout"
 
     assert (
+        dataset0.models["background_irf_gc"].parameters["norm"]
+        is dataset1.models["background_irf_g09"].parameters["norm"]
+    )
+
+    assert (
         dataset0.models["gc"].parameters["reference"]
         is dataset1.models["g09"].parameters["reference"]
     )
-
     assert_allclose(dataset1.models["g09"].parameters["lon_0"].value, 0.9, atol=0.1)
 
     datasets.write(tmp_path, prefix="written")
