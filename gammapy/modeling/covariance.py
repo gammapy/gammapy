@@ -55,7 +55,10 @@ class Covariance:
         """Expand covariance matrix with zeros for frozen parameters"""
         npars = len(parameters)
         matrix_expanded = np.zeros((npars, npars))
-        mask = np.array([par.frozen for par in parameters])
+        mask_frozen = [par.frozen for par in parameters]
+        pars_index = [np.where(np.array(parameters) == p)[0][0] for p in parameters]
+        mask_duplicate = [pars_idx != idx for idx, pars_idx in enumerate(pars_index)]
+        mask = np.array(mask_frozen) | np.array(mask_duplicate)
         free_parameters = ~(mask | mask[:, np.newaxis])
         matrix_expanded[free_parameters] = matrix.ravel()
         return matrix_expanded

@@ -3,7 +3,7 @@ from numpy.testing import assert_allclose
 from gammapy.datasets import Datasets
 from gammapy.modeling.models import Models
 from gammapy.utils.testing import requires_data
-
+from gammapy.modeling import Fit
 
 @requires_data()
 def test_datasets_to_io(tmp_path):
@@ -11,7 +11,11 @@ def test_datasets_to_io(tmp_path):
     filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
 
     datasets = Datasets.read(filedata, filemodel)
-
+    Fit(datasets).run()
+    assert_allclose(
+        datasets.models["background_irf_g09"].covariance,
+        datasets.models["background_irf_gc"].covariance,
+    )
     assert len(datasets) == 2
 
     dataset0 = datasets[0]
