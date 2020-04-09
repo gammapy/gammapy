@@ -12,11 +12,7 @@ def test_datasets_to_io(tmp_path):
     filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
 
     datasets = Datasets.read(filedata, filemodel)
-    Fit(datasets).run()
-    assert_allclose(
-        datasets.models["background_irf_g09"].covariance,
-        datasets.models["background_irf_gc"].covariance,
-    )
+
     assert len(datasets) == 2
 
     dataset0 = datasets[0]
@@ -59,7 +55,7 @@ def test_datasets_to_io(tmp_path):
         tmp_path / "written_datasets.yaml", tmp_path / "written_models.yaml"
     )
 
-    assert len(datasets.parameters) == 22
+    assert len(datasets.parameters) == 21
 
     assert len(datasets_read) == 2
     dataset0 = datasets_read[0]
@@ -68,3 +64,9 @@ def test_datasets_to_io(tmp_path):
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
     assert_allclose(dataset0.background_model.evaluate().data.sum(), 4094.2, atol=0.1)
+
+    Fit(datasets).run()
+    assert_allclose(
+        datasets.models["background_irf_g09"].covariance,
+        datasets.models["background_irf_gc"].covariance,
+    )
