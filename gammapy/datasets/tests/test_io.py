@@ -2,11 +2,12 @@
 from numpy.testing import assert_allclose
 from gammapy.datasets import Datasets
 from gammapy.modeling.models import Models
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 from gammapy.modeling import Fit
 
 
 @requires_data()
+@requires_dependency("iminuit")
 def test_datasets_to_io(tmp_path):
     filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
     filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
