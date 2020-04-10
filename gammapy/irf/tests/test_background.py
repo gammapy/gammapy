@@ -14,7 +14,7 @@ def bkg_3d():
     fov_lon = [0, 1, 2, 3] * u.deg
     fov_lat = [0, 1, 2, 3] * u.deg
 
-    data = np.ones((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
+    data = np.ones((2, 3, 3)) * u.Unit("s-1 GeV-1 sr-1")
     # Axis order is (energy, fov_lon, fov_lat)
     # data.value[1, 0, 0] = 1
     data.value[1, 1, 1] = 100
@@ -47,7 +47,7 @@ def test_background_3d_basics(bkg_3d):
 
     data = bkg_3d.data.data
     assert data.shape == (2, 3, 3)
-    assert data.unit == "s-1 MeV-1 sr-1"
+    assert data.unit == "s-1 GeV-1 sr-1"
 
     bkg_2d = bkg_3d.to_2d()
     assert bkg_2d.data.data.shape == (2, 3)
@@ -71,7 +71,7 @@ def test_background_3d_read_write(tmp_path, bkg_3d):
 
     data = bkg_3d_2.data.data
     assert data.shape == (2, 3, 3)
-    assert data.unit == "s-1 MeV-1 sr-1"
+    assert data.unit == "s-1 GeV-1 sr-1"
 
 
 def test_background_3d_evaluate(bkg_3d):
@@ -83,7 +83,7 @@ def test_background_3d_evaluate(bkg_3d):
     )
     assert_allclose(res.value, [1, 100])
     assert res.shape == (2,)
-    assert res.unit == "s-1 MeV-1 sr-1"
+    assert res.unit == "s-1 GeV-1 sr-1"
 
     res = bkg_3d.evaluate(
         fov_lon=[1, 0.5] * u.deg,
@@ -114,12 +114,12 @@ def test_background_3d_integrate(bkg_3d):
 
     # Expect approximately `rate * de`
     # with `rate = 4 s-1 sr-1 MeV-1` and `de = 2 MeV`
-    assert_allclose(rate.to("s-1 sr-1").value, 200, rtol=1e-5)
+    assert_allclose(rate.to("s-1 sr-1").value, 0.2, rtol=1e-5)
 
     rate = bkg_3d.evaluate_integrate(
         fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy_reco=[1, 100] * u.TeV
     )
-    assert_allclose(rate.to("s-1 sr-1").value, 99000000)
+    assert_allclose(rate.to("s-1 sr-1").value, 99000)
 
     rate = bkg_3d.evaluate_integrate(
         fov_lon=[[1, 0.5], [1, 0.5]] * u.deg,
@@ -127,7 +127,18 @@ def test_background_3d_integrate(bkg_3d):
         energy_reco=[[1, 1], [100, 100]] * u.TeV,
     )
     assert rate.shape == (1, 2)
-    assert_allclose(rate.to("s-1 sr-1").value, [[99000000.0, 99000000.0]], rtol=1e-5)
+    assert_allclose(rate.to("s-1 sr-1").value, [[99000.0, 99000.0]], rtol=1e-5)
+
+
+@requires_data()
+def test_background_3D_read():
+    filename = (
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    bkg = Background3D.read(filename)
+    data = bkg.data.data
+    assert data.shape == (21, 36, 36)
+    assert data.unit == "s-1 MeV-1 sr-1"
 
 
 @requires_dependency("matplotlib")
