@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
@@ -10,6 +11,8 @@ from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 
 __all__ = ["Background3D", "Background2D"]
+
+log = logging.getLogger(__name__)
 
 
 class Background3D:
@@ -97,11 +100,12 @@ class Background3D:
         else:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
-        # Currently some files (e.g. CTA 1DC) contain unit in the FITS file
-        # '1/s/MeV/sr', which is invalid ( try: astropy.units.Unit('1/s/MeV/sr')
-        # This should be corrected.
-        # For now, we hard-code the unit here:
-        data_unit = u.Unit("s-1 MeV-1 sr-1")
+        data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
+        if isinstance(data_unit, u.UnrecognizedUnit):
+            data_unit = u.Unit("s-1 MeV-1 sr-1")
+            log.warning(
+                "Ïnvalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
+            )
 
         return cls(
             energy_lo=table["ENERG_LO"].quantity[0],
@@ -280,11 +284,12 @@ class Background2D:
         else:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
-        # Currently some files (e.g. CTA 1DC) contain unit in the FITS file
-        # '1/s/MeV/sr', which is invalid ( try: astropy.units.Unit('1/s/MeV/sr')
-        # This should be corrected.
-        # For now, we hard-code the unit here:
-        data_unit = u.Unit("s-1 MeV-1 sr-1")
+        data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
+        if isinstance(data_unit, u.UnrecognizedUnit):
+            data_unit = u.Unit("s-1 MeV-1 sr-1")
+            log.warning(
+                "Ïnvalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
+            )
         return cls(
             energy_lo=table["ENERG_LO"].quantity[0],
             energy_hi=table["ENERG_HI"].quantity[0],
