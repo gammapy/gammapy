@@ -184,7 +184,7 @@ def test_sky_shell():
     lon = [1, 2, 4] * u.deg
     lat = 45 * u.deg
     val = model(lon, lat)
-    assert val.unit == "deg-2"
+    assert val.unit == "sr-1"
     desired = [55.979449, 57.831651, 94.919895]
     assert_allclose(val.to_value("sr-1"), desired)
     radius = model.evaluation_radius
@@ -227,6 +227,7 @@ def test_sky_diffuse_map_normalize():
     # define model map with a constant value of 1
     model_map = Map.create(map_type="wcs", width=(10, 5), binsz=0.5)
     model_map.data += 1.0
+    model_map.unit = "sr-1"
     model = TemplateSpatialModel(model_map)
 
     # define data map with a different spatial binning
