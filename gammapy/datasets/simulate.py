@@ -86,7 +86,11 @@ class MapDatasetEventSampler:
                 temporal_model = ConstantTemporalModel()
 
             table = self._sample_coord_time(npred, temporal_model, dataset.gti)
-            table["MC_ID"] = idx + 1
+            if len(table) > 0:
+                table["MC_ID"] = idx + 1
+            else:
+                mcid = table.Column(name="MC_ID", length=len(table), dtype=int)
+                table.add_column(mcid)
             events_all.append(EventList(table))
 
         return EventList.stack(events_all)
@@ -316,13 +320,13 @@ class MapDatasetEventSampler:
         if len(dataset.models) > 1:
             events_src = self.sample_sources(dataset)
 
-            if dataset.psf:
+            if dataset.psf and (len(events_src.table) > 0):
                 events_src = self.sample_psf(dataset.psf, events_src)
             else:
                 events_src.table["RA"] = events_src.table["RA_TRUE"]
                 events_src.table["DEC"] = events_src.table["DEC_TRUE"]
 
-            if dataset.edisp:
+            if dataset.edisp and (len(events_src.table) > 0):
                 events_src = self.sample_edisp(dataset.edisp, events_src)
             else:
                 events_src.table["ENERGY"] = events_src.table["ENERGY_TRUE"]
