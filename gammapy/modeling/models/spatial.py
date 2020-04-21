@@ -466,7 +466,7 @@ class ShellSpatialModel(SpatialModel):
             value[mask] = (value - np.sqrt(radius ** 2 - sep ** 2))[mask]
             value[sep > radius_out] = 0
 
-        return u.Quantity(norm * value, "sr-1", copy=False)
+        return norm * value
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.CircleAnnulusSkyRegion`)."""
@@ -507,7 +507,7 @@ class ConstantSpatialModel(SpatialModel):
     @staticmethod
     def evaluate(lon, lat, value):
         """Evaluate model."""
-        return u.Quantity(value, "sr-1", copy=False)
+        return value
 
     @staticmethod
     def to_region(**kwargs):
@@ -524,7 +524,7 @@ class ConstantSpatialModel(SpatialModel):
 class TemplateSpatialModel(SpatialModel):
     """Spatial sky map template model (2D).
 
-    This is for a 2D image. The unit of the map has to be in ``sr-1``.
+    This is for a 2D image. The unit of the map has to be equivalent to ``sr-1``.
 
     Use `~gammapy.modeling.models.SkyDiffuseCube` for 3D cubes with
     an energy axis.
@@ -534,7 +534,7 @@ class TemplateSpatialModel(SpatialModel):
     Parameters
     ----------
     map : `~gammapy.maps.Map`
-        Map template. The unit has to be in ``sr-1``.
+        Map template. The unit has to be equivalent to ``sr-1``.
     norm : float
         Norm parameter (multiplied with map values)
     meta : dict, optional
@@ -565,8 +565,8 @@ class TemplateSpatialModel(SpatialModel):
             filename = str(make_path(filename))
 
         self.map = map
-        if self.map.unit != "sr-1":
-            raise ValueError("The map unit should be in sr-1")
+        if not self.map.unit.is_equivalent("sr-1"):
+            raise ValueError("The map unit should be equivalent to sr-1")
         self.normalize = normalize
         if normalize:
             # Normalize the diffuse map model so that it integrates to unity."""
@@ -594,7 +594,7 @@ class TemplateSpatialModel(SpatialModel):
     def read(cls, filename, normalize=True, **kwargs):
         """Read spatial template model from FITS image.
 
-        The unit of the map has to be in ``sr-1``. The default unit used if none is found in the file is ``sr-1``.
+        The unit of the map has to be equivalent to ``sr-1``. If no unit the default is ``sr-1``.
 
         Parameters
         ----------
@@ -606,17 +606,17 @@ class TemplateSpatialModel(SpatialModel):
             Keyword arguments passed to `Map.read()`.
         """
         m = Map.read(filename, **kwargs)
+
         if m.unit == "":
             m.unit = "sr-1"
-        elif m.unit != "sr-1":
-            raise ValueError("The map unit should be in sr-1")
+
         return cls(m, normalize=normalize, filename=filename)
 
     def evaluate(self, lon, lat, norm):
         """Evaluate model."""
         coord = {"lon": lon.to_value("deg"), "lat": lat.to_value("deg")}
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
-        return u.Quantity(norm.value * val, "sr-1", copy=False)
+        return u.Quantity(norm.value * val, self.map.unit, copy=False)
 
     @property
     def position(self):

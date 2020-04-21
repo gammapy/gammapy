@@ -184,7 +184,7 @@ def test_sky_shell():
     lon = [1, 2, 4] * u.deg
     lat = 45 * u.deg
     val = model(lon, lat)
-    assert val.unit == "sr-1"
+    assert val.unit == "deg-2"
     desired = [55.979449, 57.831651, 94.919895]
     assert_allclose(val.to_value("sr-1"), desired)
     radius = model.evaluation_radius
