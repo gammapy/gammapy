@@ -607,8 +607,9 @@ class TemplateSpatialModel(SpatialModel):
         """
         m = Map.read(filename, **kwargs)
 
-        if m.unit == "":
+        if not m.unit.is_equivalent("sr-1"):
             m.unit = "sr-1"
+            log.warning("Spatial template unit is not equivalent to sr^-1")
 
         return cls(m, normalize=normalize, filename=filename)
 
@@ -631,8 +632,9 @@ class TemplateSpatialModel(SpatialModel):
     def from_dict(cls, data):
         m = Map.read(data["filename"])
 
-        if m.unit == "":
+        if not m.unit.is_equivalent("sr-1"):
             m.unit = "sr-1"
+            log.warning("Spatial template unit is not equivalent to sr^-1")
 
         parameters = Parameters.from_dict(data["parameters"])
         return cls.from_parameters(
