@@ -93,6 +93,29 @@ def test_mde_sample_sources(dataset):
 
 
 @requires_data()
+def test_mde_sample_weak_src(dataset):
+    irfs = load_cta_irfs(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    livetime = 10.0 * u.hr
+    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    obs = Observation.create(
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+    )
+
+    dataset_weak_src = dataset.copy()
+    dataset_weak_src.models[0].parameters["amplitude"].value = 1e-25
+
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.run(dataset=dataset_weak_src, observation=obs)
+
+    assert len(events.table) == 18
+    assert_allclose(
+        len(np.where(events.table["MC_ID"] == 0)[0]), len(events.table), rtol=1e-5
+    )
+
+
+@requires_data()
 def test_mde_sample_background(dataset):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_background(dataset=dataset)
