@@ -64,7 +64,9 @@ def test_asmooth_dataset(input_dataset):
     with pytest.raises(ValueError):
         asmooth.run(input_dataset)
 
-    smoothed = asmooth.run(input_dataset.to_image())
+    img = input_dataset.to_image()
+    img.models.pop("Crab Nebula")
+    smoothed = asmooth.run(img)
 
     assert smoothed["flux"].data.shape == (40, 50)
     assert smoothed["flux"].unit == u.Unit("cm-2s-1")

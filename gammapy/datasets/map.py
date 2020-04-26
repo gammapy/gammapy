@@ -846,8 +846,7 @@ class MapDataset(Dataset):
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
                 raise TypeError(
-                    "Containement correction is only supported for"
-                    " `CircleSkyRegion`."
+                    "Containment correction is only supported for" " `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containement correction impossible")
@@ -869,13 +868,12 @@ class MapDataset(Dataset):
         return SpectrumDataset(**kwargs)
 
     def to_image(self, spectrum=None, name=None):
-        """Create images by summing over the energy axis.
+        """Create images by summing over the reco energy axis.
+        True energy axis is left unchanged to have proper model evaluation.
 
-        Exposure is weighted with an assumed spectrum,
+        In case an EdispMap is not present, true energy axis is also summed;
+        exposure is weighted with an assumed spectrum,
         resulting in a weighted mean exposure image.
-
-        Currently the PSFMap and EdispMap are dropped from the
-        resulting image dataset.
 
         Parameters
         ----------
@@ -909,26 +907,63 @@ class MapDataset(Dataset):
             counts = self.counts * mask_safe
             kwargs["counts"] = counts.sum_over_axes(keepdims=True)
 
-        if self.exposure is not None:
-            exposure = _map_spectrum_weight(self.exposure, spectrum)
-            kwargs["exposure"] = exposure.sum_over_axes(keepdims=True)
-
         if self.background_model is not None:
             background = self.background_model.evaluate() * mask_safe
             background = background.sum_over_axes(keepdims=True)
-            kwargs["models"] = Models(
-                [BackgroundModel(background, datasets_names=[name])]
-            )
+        else:
+            background = None
 
-        if self.psf is not None:
+        if isinstance(self.edisp, EDispMap):
+            kwargs["edisp"] = self.edisp
+            kwargs["exposure"] = self.exposure
+            kwargs["psf"] = self.psf
+        else:
+            kwargs["edisp"] = None
+            if self.exposure is not None:
+                exposure = _map_spectrum_weight(self.exposure, spectrum)
+                kwargs["exposure"] = exposure.sum_over_axes(keepdims=True)
+
             # TODO: implement PSFKernel.to_image()
-            if not isinstance(self.psf, PSFKernel):
+            if isinstance(self.psf, PSFMap):
                 kwargs["psf"] = self.psf.to_image(spectrum=spectrum, keepdims=True)
             else:
-                # assume exposure at center position
                 kwargs["psf"] = None
 
+        kwargs["models"] = self._copy_models(background=background, name=name)
+
         return self.__class__(**kwargs)
+
+    def _copy_models(self, background=None, name=None):
+        """
+        Returns models to be copied onto a new dataset
+
+        Parameters
+        ----------
+        background: `~gammapy.maps.WcsNDMap`
+            The background IRF map
+        name: str
+            The name of the new dataset
+
+        Returns
+        -------
+        models : `~gammapy.modeling.models.core.Models`
+            The models on the new dataset
+        """
+
+        models = Models()
+        if self.models is not None:
+            for m in self.models:
+                if isinstance(m, BackgroundModel):
+                    if background is not None:
+                        m1 = BackgroundModel(
+                            background, datasets_names=[name], name="background_model"
+                        )
+                    else:
+                        continue
+                else:
+                    m1 = m.copy(name=m.name, datasets_names=m.datasets_names)
+                models.append(m1)
+        return models if len(models) > 0 else None
 
     def cutout(self, position, width, mode="trim", name=None):
         """Cutout map dataset.
