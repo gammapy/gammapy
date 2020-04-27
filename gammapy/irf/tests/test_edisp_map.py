@@ -156,6 +156,23 @@ def test_edisp_from_diagonal_response(position):
     # e_reco to contribute to
     assert_allclose(sum_kernel[1:-1], 1)
 
+def test_edisp_map_to_edisp_kernel_map():
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.3 TeV", "30 TeV", nbin=10, per_decade=True, name="energy_true"
+    )
+    migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
+
+    edisp_map = EDispMap.from_diagonal_response(energy_axis_true,migra_axis)
+
+    edisp_kernel_map = edisp_map.to_edisp_kernel_map(energy_axis)
+    position = SkyCoord(0, 0, unit="deg")
+    kernel = edisp_kernel_map.get_edisp_kernel(position)
+
+    assert edisp_kernel_map.exposure_map.geom.axes[0].name == 'energy'
+    actual = kernel.pdf_matrix.sum(axis=0)
+    assert_allclose(actual, 2.0)
 
 def test_edisp_kernel_map_stack():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
