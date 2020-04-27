@@ -92,7 +92,7 @@ class IRFMap:
         Parameters
         ----------
         other : `~gammapy.irf.IRFMap`
-            Energy dispersion map to be stacked with this one.
+            IRF map to be stacked with this one.
         weights : `~gammapy.maps.Map`
             Map with stacking weights.
 

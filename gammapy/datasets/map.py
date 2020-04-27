@@ -9,7 +9,7 @@ from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable
-from gammapy.irf.edisp_map import EDispMap
+from gammapy.irf.edisp_map import EDispMap, EDispKernelMap
 from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis
@@ -437,6 +437,16 @@ class MapDataset(Dataset):
 
         if self.edisp and other.edisp:
             if isinstance(self.edisp, EDispMap) and isinstance(other.edisp, EDispMap):
+                mask_irf = self._mask_safe_irf(self.edisp.edisp_map, mask_image)
+                self.edisp.edisp_map *= mask_irf.data
+                self.edisp.exposure_map *= mask_irf.data
+
+                mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
+                mask_irf_other = self._mask_safe_irf(
+                    other.edisp.edisp_map, mask_image_other
+                )
+                self.edisp.stack(other.edisp, weights=mask_irf_other)
+            elif isinstance(self.edisp, EDispKernelMap) and isinstance(other.edisp, EDispKernelMap):
                 mask_irf = self._mask_safe_irf(self.edisp.edisp_map, mask_image)
                 self.edisp.edisp_map *= mask_irf.data
                 self.edisp.exposure_map *= mask_irf.data
