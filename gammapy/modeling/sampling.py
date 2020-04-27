@@ -82,8 +82,6 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
     import emcee
 
     dataset.models.parameters.autoscale()  # Autoscale parameters
-    #pars = [par.factor for par in dataset.models.parameters.free_parameters]
-    #ndim = len(pars)
 
     # Initialize walkers in a ball of relative size 0.5% in all dimensions if the
     # parameters have been fit, or to 10% otherwise
