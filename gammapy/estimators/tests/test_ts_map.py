@@ -89,8 +89,6 @@ def fermi_dataset():
         psf=psfmap,
         name="fermi-3fhl-gc",
     )
-    dataset = dataset.to_image()
-
     return dataset
 
 
@@ -126,11 +124,11 @@ def test_compute_ts_map_psf(fermi_dataset):
     result = estimator.run(fermi_dataset)
 
     assert "root brentq" in repr(estimator)
-    assert_allclose(result["ts"].data[29, 29], 852.1548, rtol=1e-2)
+    assert_allclose(result["ts"].data[29, 29], 852.341, rtol=1e-2)
     assert_allclose(result["niter"].data[29, 29], 7)
-    assert_allclose(result["flux"].data[29, 29], 1.419909e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[29, 29], 8.245766e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[29, 29], 1.584825e-09, rtol=1e-2)
+    assert_allclose(result["flux"].data[29, 29], 1.177226e-10, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[29, 29], 6.8358179e-12, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[29, 29], 1.313942781e-10, rtol=1e-2)
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
     assert result["flux_ul"].unit == u.Unit("cm-2s-1")

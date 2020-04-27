@@ -867,19 +867,15 @@ class MapDataset(Dataset):
 
         return SpectrumDataset(**kwargs)
 
-    def to_image(self, spectrum=None, name=None):
+    def to_image(self, name=None):
         """Create images by summing over the reco energy axis.
         True energy axis is left unchanged to have proper model evaluation.
 
-        In case an EdispMap is not present, true energy axis is also summed;
-        exposure is weighted with an assumed spectrum,
-        resulting in a weighted mean exposure image.
+        In case edisp is not present,
+        a diagonal EDispMap is created by defualt
 
         Parameters
         ----------
-        spectrum : `~gammapy.modeling.models.SpectralModel`
-            Spectral model to compute the weights.
-            Default is power-law with spectral index of 2.
         name : str
             Name of the new dataset.
 
@@ -913,21 +909,16 @@ class MapDataset(Dataset):
         else:
             background = None
 
-        if isinstance(self.edisp, EDispMap):
-            kwargs["edisp"] = self.edisp
-            kwargs["exposure"] = self.exposure
-            kwargs["psf"] = self.psf
-        else:
-            kwargs["edisp"] = None
-            if self.exposure is not None:
-                exposure = _map_spectrum_weight(self.exposure, spectrum)
-                kwargs["exposure"] = exposure.sum_over_axes(keepdims=True)
+        kwargs["exposure"] = self.exposure
 
-            # TODO: implement PSFKernel.to_image()
-            if isinstance(self.psf, PSFMap):
-                kwargs["psf"] = self.psf.to_image(spectrum=spectrum, keepdims=True)
-            else:
-                kwargs["psf"] = None
+        kwargs["edisp"] = self.edisp
+        if self.edisp is None:
+            if self.exposure is not None:
+                kwargs["edisp"] = EDispMap.from_diagonal_response(
+                    self.exposure.geom.get_axis_by_name("energy_true")
+                )
+
+        kwargs["psf"] = self.psf
 
         kwargs["models"] = self._copy_models(background=background, name=name)
 
@@ -1491,17 +1482,8 @@ class MapDatasetOnOff(MapDataset):
     def to_image(self, spectrum=None, name=None):
         """Create images by summing over the energy axis.
 
-        Exposure is weighted with an assumed spectrum,
-        resulting in a weighted mean exposure image.
-
-        Currently the PSFMap and EdispMap are dropped from the
-        resulting image dataset.
-
         Parameters
         ----------
-        spectrum : `~gammapy.modeling.models.SpectralModel`
-            Spectral model to compute the weights.
-            Default is power-law with spectral index of 2.
         name : str
             Name of the new dataset.
 
@@ -1511,7 +1493,7 @@ class MapDatasetOnOff(MapDataset):
             Map dataset containing images.
         """
         kwargs = {"name": name}
-        dataset = super().to_image(spectrum, name)
+        dataset = super().to_image(name)
 
         if self.mask_safe is not None:
             mask_safe = self.mask_safe
