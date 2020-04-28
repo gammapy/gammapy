@@ -98,7 +98,7 @@ class IRFMap:
 
         """
         if self.exposure_map is None or other.exposure_map is None:
-            raise ValueError("Missing exposure map for IRFMap.stack")
+            raise ValueError(f"Missing exposure map for {self.__class__.__name__}.stack")
 
         cutout_info = other._irf_map.geom.cutout_info
 

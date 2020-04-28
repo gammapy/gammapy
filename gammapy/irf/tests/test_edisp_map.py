@@ -222,5 +222,6 @@ def test__incorrect_edisp_kernel_map_stack():
     )
     edisp_2.exposure_map = None
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as except_info:
         edisp_1.stack(edisp_2)
+    assert except_info.match("Missing exposure map for EDispKernelMap.stack")
