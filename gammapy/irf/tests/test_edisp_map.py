@@ -200,4 +200,7 @@ def test_edisp_kernel_map_stack():
     kernel = edisp_1.get_edisp_kernel(position)
 
     actual = kernel.pdf_matrix.sum(axis=0)
-    assert_allclose(actual, [2.0, 2.0, 6.0, 6.0, 6.0])
+    exposure = edisp_1.exposure_map.data[:,0,0,0]
+
+    assert_allclose(actual, [2./3., 2./3., 2.0, 2.0, 2.0])
+    assert_allclose(exposure, 3.)
