@@ -82,15 +82,24 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
     import emcee
 
     dataset.models.parameters.autoscale()  # Autoscale parameters
-    pars = [par.factor for par in dataset.models.parameters.free_parameters]
-    ndim = len(pars)
 
     # Initialize walkers in a ball of relative size 0.5% in all dimensions if the
     # parameters have been fit, or to 10% otherwise
+    # Handle source position spread differently with a spread of 0.1°
     # TODO: the spread of 0.5% below is valid if a pre-fit of the model has been obtained.
     # currently the run_mcmc() doesn't know the status of previous fit.
-    spread = 0.5 / 100
-    p0var = np.array([spread * pp for pp in pars])
+    p0var = []
+    pars = []
+    spread = 0.5/100
+    spread_pos = 0.1 # in degrees
+    for par in dataset.models.parameters.free_parameters:
+        pars.append(par.factor)
+        if par.name in ["lon_0", "lat_0"]:
+            p0var.append(spread_pos/par.scale)
+        else:
+            p0var.append(spread*par.factor)
+
+    ndim = len(pars)
     p0 = emcee.utils.sample_ball(pars, p0var, nwalkers)
 
     labels = []
