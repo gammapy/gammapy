@@ -204,3 +204,23 @@ def test_edisp_kernel_map_stack():
 
     assert_allclose(actual, [2./3., 2./3., 2.0, 2.0, 2.0])
     assert_allclose(exposure, 3.)
+
+def test__incorrect_edisp_kernel_map_stack():
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.3 TeV", "30 TeV", nbin=10, per_decade=True, name="energy_true"
+    )
+
+    edisp_1 = EDispKernelMap.from_diagonal_response(
+        energy_axis=energy_axis, energy_axis_true=energy_axis_true
+    )
+    edisp_1.exposure_map.data += 1
+
+    edisp_2 = EDispKernelMap.from_diagonal_response(
+        energy_axis=energy_axis, energy_axis_true=energy_axis_true
+    )
+    edisp_2.exposure_map = None
+
+    with pytest.raises(ValueError):
+        edisp_1.stack(edisp_2)
