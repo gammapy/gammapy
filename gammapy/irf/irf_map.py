@@ -98,7 +98,7 @@ class IRFMap:
 
         """
         if self.exposure_map is None or other.exposure_map is None:
-            raise ValueError("Missing exposure map for PSFMap.stack")
+            raise ValueError(f"Missing exposure map for {self.__class__.__name__}.stack")
 
         cutout_info = other._irf_map.geom.cutout_info
 
@@ -113,8 +113,7 @@ class IRFMap:
 
         # stack exposure map
         if weights and "energy" in weights.geom.axes_names:
-            weights = weights.slice_by_idx({"energy": slice(0, 1)})
-
+            weights = weights.reduce_over_axes(func=np.logical_or, axes=["energy"], keepdims=True)
         self.exposure_map.stack(other.exposure_map, weights=weights)
 
         with np.errstate(invalid="ignore"):
