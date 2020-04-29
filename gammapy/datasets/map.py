@@ -874,6 +874,8 @@ class MapDataset(Dataset):
         In case edisp is not present,
         a diagonal EDispMap is created by defualt
 
+        Models are dropped at present.
+
         Parameters
         ----------
         name : str
@@ -906,55 +908,27 @@ class MapDataset(Dataset):
         if self.background_model is not None:
             background = self.background_model.evaluate() * mask_safe
             background = background.sum_over_axes(keepdims=True)
-        else:
-            background = None
+            kwargs["models"] = BackgroundModel(
+                background,
+                datasets_names=[name],
+                name="background_model",
+                norm=self.background_model.norm,
+                tilt=self.background_model.tilt,
+            )
 
         kwargs["exposure"] = self.exposure
 
         kwargs["edisp"] = self.edisp
-        if self.edisp is None:
-            if self.exposure is not None:
-                kwargs["edisp"] = EDispMap.from_diagonal_response(
-                    self.exposure.geom.get_axis_by_name("energy_true")
-                )
+
+        # if self.edisp is None:
+        #    if self.exposure is not None:
+        #        kwargs["edisp"] = EDispMap.from_diagonal_response(
+        #            self.exposure.geom.get_axis_by_name("energy_true"),
+        #        )
 
         kwargs["psf"] = self.psf
 
-        kwargs["models"] = self._copy_models(background=background, name=name)
-
         return self.__class__(**kwargs)
-
-    def _copy_models(self, background=None, name=None):
-        """
-        Returns models to be copied onto a new dataset
-
-        Parameters
-        ----------
-        background: `~gammapy.maps.WcsNDMap`
-            The background IRF map
-        name: str
-            The name of the new dataset
-
-        Returns
-        -------
-        models : `~gammapy.modeling.models.core.Models`
-            The models on the new dataset
-        """
-
-        models = Models()
-        if self.models is not None:
-            for m in self.models:
-                if isinstance(m, BackgroundModel):
-                    if background is not None:
-                        m1 = BackgroundModel(
-                            background, datasets_names=[name], name="background_model"
-                        )
-                    else:
-                        continue
-                else:
-                    m1 = m.copy(name=m.name, datasets_names=m.datasets_names)
-                models.append(m1)
-        return models if len(models) > 0 else None
 
     def cutout(self, position, width, mode="trim", name=None):
         """Cutout map dataset.

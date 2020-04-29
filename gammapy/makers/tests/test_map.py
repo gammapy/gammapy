@@ -102,13 +102,11 @@ def test_map_maker(pars, observations):
         dataset = safe_mask_maker.run(dataset, obs)
         stacked.stack(dataset)
 
-    counts = stacked.counts
-    assert counts.unit == ""
-    assert_allclose(counts.data.sum(), pars["counts"], rtol=1e-5)
+    assert stacked.counts.unit == ""
+    assert_allclose(stacked.counts.data.sum(), pars["counts"], rtol=1e-5)
 
-    exposure = stacked.exposure
-    assert exposure.unit == "m2 s"
-    assert_allclose(exposure.data.mean(), pars["exposure"], rtol=3e-3)
+    assert stacked.exposure.unit == "m2 s"
+    assert_allclose(stacked.exposure.data.mean(), pars["exposure"], rtol=3e-3)
 
     background = stacked.background_model.map
     assert background.unit == ""
@@ -116,17 +114,30 @@ def test_map_maker(pars, observations):
 
     image_dataset = stacked.to_image()
 
-    counts = image_dataset.counts
-    assert counts.unit == ""
-    assert_allclose(counts.data.sum(), pars["counts"], rtol=1e-4)
+    assert image_dataset.counts.unit == ""
+    assert_allclose(image_dataset.counts.data.sum(), pars["counts"], rtol=1e-4)
+    assert image_dataset.counts.data.shape == (
+        1,
+        stacked.counts.data.shape[1],
+        stacked.counts.data.shape[2],
+    )
 
-    exposure = image_dataset.exposure
-    assert exposure.unit == "m2 s"
-    assert_allclose(exposure.data.sum(), pars["exposure_image"], rtol=1e-3)
+    assert image_dataset.exposure.unit == "m2 s"
+    assert_allclose(
+        image_dataset.exposure.data.sum(), pars["exposure_image"], rtol=1e-3
+    )
+    assert image_dataset.exposure.data.shape == stacked.exposure.data.shape
 
-    background = image_dataset.background_model.map
-    assert background.unit == ""
-    assert_allclose(background.data.sum(), pars["background"], rtol=1e-4)
+    im_background = image_dataset.background_model.map
+    assert im_background.data.shape == (
+        1,
+        background.data.shape[1],
+        background.data.shape[2],
+    )
+    assert im_background.unit == ""
+    assert_allclose(im_background.data.sum(), pars["background"], rtol=1e-4)
+
+    # assert image_dataset.edisp is not None
 
 
 @requires_data()
