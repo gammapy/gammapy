@@ -524,7 +524,9 @@ class ConstantSpatialModel(SpatialModel):
 class TemplateSpatialModel(SpatialModel):
     """Spatial sky map template model (2D).
 
-    This is for a 2D image. Use `~gammapy.modeling.models.SkyDiffuseCube` for 3D cubes with
+    This is for a 2D image. The unit of the map has to be equivalent to ``sr-1``.
+
+    Use `~gammapy.modeling.models.SkyDiffuseCube` for 3D cubes with
     an energy axis.
 
     For more information see :ref:`template-spatial-model`.
@@ -532,7 +534,7 @@ class TemplateSpatialModel(SpatialModel):
     Parameters
     ----------
     map : `~gammapy.maps.Map`
-        Map template
+        Map template. The unit has to be equivalent to ``sr-1``.
     norm : float
         Norm parameter (multiplied with map values)
     meta : dict, optional
@@ -563,6 +565,8 @@ class TemplateSpatialModel(SpatialModel):
             filename = str(make_path(filename))
 
         self.map = map
+        if not self.map.unit.is_equivalent("sr-1"):
+            raise ValueError("The map unit should be equivalent to sr-1")
         self.normalize = normalize
         if normalize:
             # Normalize the diffuse map model so that it integrates to unity."""
@@ -590,7 +594,7 @@ class TemplateSpatialModel(SpatialModel):
     def read(cls, filename, normalize=True, **kwargs):
         """Read spatial template model from FITS image.
 
-        The default unit used if none is found in the file is ``sr-1``.
+        The unit of the map has to be equivalent to ``sr-1``. If no unit the default is ``sr-1``.
 
         Parameters
         ----------
@@ -602,8 +606,13 @@ class TemplateSpatialModel(SpatialModel):
             Keyword arguments passed to `Map.read()`.
         """
         m = Map.read(filename, **kwargs)
-        if m.unit == "":
+
+        if not m.unit.is_equivalent("sr-1"):
             m.unit = "sr-1"
+            log.warning(
+                "Spatial template unit is not equivalent to sr^-1, unit changed to sr^-1"
+            )
+
         return cls(m, normalize=normalize, filename=filename)
 
     def evaluate(self, lon, lat, norm):
@@ -625,8 +634,11 @@ class TemplateSpatialModel(SpatialModel):
     def from_dict(cls, data):
         m = Map.read(data["filename"])
 
-        if m.unit == "":
+        if not m.unit.is_equivalent("sr-1"):
             m.unit = "sr-1"
+            log.warning(
+                "Spatial template unit is not equivalent to sr^-1, unit changed to sr^-1"
+            )
 
         parameters = Parameters.from_dict(data["parameters"])
         return cls.from_parameters(
