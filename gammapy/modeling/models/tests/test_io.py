@@ -157,9 +157,8 @@ def test_absorption_io(tmp_path):
 def make_all_models():
     """Make an instance of each model, for testing."""
     yield Model.create("ConstantSpatialModel")
-    map = Map.create(npix=(10, 20))
-    map.unit = "sr-1"
-    yield Model.create("TemplateSpatialModel", map=map)
+    map_constantmodel = Map.create(npix=(10, 20), unit="sr-1")
+    yield Model.create("TemplateSpatialModel", map=map_constantmodel)
     yield Model.create("DiskSpatialModel", lon_0="1 deg", lat_0="2 deg", r_0="3 deg")
     yield Model.create(
         "GaussianSpatialModel", lon_0="1 deg", lat_0="2 deg", sigma="3 deg"

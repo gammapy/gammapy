@@ -609,7 +609,9 @@ class TemplateSpatialModel(SpatialModel):
 
         if not m.unit.is_equivalent("sr-1"):
             m.unit = "sr-1"
-            log.warning("Spatial template unit is not equivalent to sr^-1")
+            log.warning(
+                "Spatial template unit is not equivalent to sr^-1, unit changed to sr^-1"
+            )
 
         return cls(m, normalize=normalize, filename=filename)
 
@@ -634,7 +636,9 @@ class TemplateSpatialModel(SpatialModel):
 
         if not m.unit.is_equivalent("sr-1"):
             m.unit = "sr-1"
-            log.warning("Spatial template unit is not equivalent to sr^-1")
+            log.warning(
+                "Spatial template unit is not equivalent to sr^-1, unit changed to sr^-1"
+            )
 
         parameters = Parameters.from_dict(data["parameters"])
         return cls.from_parameters(
