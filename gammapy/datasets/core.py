@@ -64,7 +64,15 @@ class Dataset(abc.ABC):
     def copy(self, name=None):
         """A deep copy."""
         new = copy.deepcopy(self)
-        new._name = make_name(name)
+        name = make_name(name)
+        new._name = name
+        # propagate new dataset name
+        if new.models is not None:
+            for m in new.models:
+                if m.datasets_names is not None:
+                    for k, d in enumerate(m.datasets_names):
+                        if d == self.name:
+                            m.datasets_names[k] = name
         return new
 
     @staticmethod
