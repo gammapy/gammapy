@@ -189,14 +189,8 @@ def test_event_det_coord(dataset):
     assert_allclose(events.table["DETX"][0], -2.44563584, rtol=1e-5)
     assert events.table["DETX"].unit == "deg"
 
-    assert_allclose(events.table["DETX_TRUE"][0], -2.44563584, rtol=1e-5)
-    assert events.table["DETX_TRUE"].unit == "deg"
-
     assert_allclose(events.table["DETY"][0], 0.01414569, rtol=1e-5)
     assert events.table["DETY"].unit == "deg"
-
-    assert_allclose(events.table["DETY_TRUE"][0], 0.01414569, rtol=1e-5)
-    assert events.table["DETY_TRUE"].unit == "deg"
 
 
 @requires_data()

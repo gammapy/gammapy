@@ -182,7 +182,7 @@ class MapDatasetEventSampler:
         return events
 
     def event_det_coord(self, observation, events):
-        """Add event detector coordinates to the event list.
+        """Add columns of detector coordinates (DETX-DETY) to the event list.
 
         Parameters
         ----------
@@ -196,15 +196,12 @@ class MapDatasetEventSampler:
         events : `~gammapy.data.EventList`
             Event list with columns of event detector coordinates.
         """
-        for sky in ["_TRUE", ""]:
-            sky_coord = SkyCoord(
-                events.table["RA" + sky], events.table["DEC" + sky], frame="icrs"
-            )
-            frame = SkyOffsetFrame(origin=observation.pointing_radec.icrs)
-            pseudo_fov_coord = sky_coord.transform_to(frame)
+        sky_coord = SkyCoord(events.table["RA"], events.table["DEC"], frame="icrs")
+        frame = SkyOffsetFrame(origin=observation.pointing_radec.icrs)
+        pseudo_fov_coord = sky_coord.transform_to(frame)
 
-            events.table["DETX" + sky] = pseudo_fov_coord.lon
-            events.table["DETY" + sky] = pseudo_fov_coord.lat
+        events.table["DETX"] = pseudo_fov_coord.lon
+        events.table["DETY"] = pseudo_fov_coord.lat
         return events
 
     @staticmethod
