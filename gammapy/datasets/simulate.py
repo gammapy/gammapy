@@ -181,7 +181,7 @@ class MapDatasetEventSampler:
         events.table["DEC"] = coords_reco["lat"] * u.deg
         return events
 
-    def event_det_coord(self, observation, events):
+    def event_det_coords(self, observation, events):
         """Add columns of detector coordinates (DETX-DETY) to the event list.
 
         Parameters
