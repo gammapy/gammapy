@@ -1011,5 +1011,20 @@ class Map(abc.ABC):
     def __itruediv__(self, other):
         return self._arithmetics(np.true_divide, other, copy=False)
 
+    def __le__(self, other):
+        return self._arithmetics(np.less_equal, other, copy=True)
+
+    def __lt__(self, other):
+        return self._arithmetics(np.less, other, copy=True)
+
+    def __ge__(self, other):
+        return self._arithmetics(np.greater_equal, other, copy=True)
+
+    def __gt__(self, other):
+        return self._arithmetics(np.greater, other, copy=True)
+
+    def __eq__(self, other):
+        return self._arithmetics(np.equal, other, copy=True)
+
     def __array__(self):
         return self.data
