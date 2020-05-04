@@ -292,6 +292,22 @@ def test_map_arithmetics(map_type):
     assert m1.unit == u.Unit("")
     assert_allclose(m1.data, 4)
 
+    lt_m2 = m2 < 1.5*u.m**2
+    assert lt_m2.data.dtype == bool
+    assert_allclose(lt_m2, True)
+
+    le_m2 = m2 <= 10000*u.cm**2
+    assert_allclose(le_m2, True)
+
+    gt_m2 = m2 > 15000*u.cm**2
+    assert_allclose(gt_m2, False)
+
+    ge_m2 = m2 >= m2
+    assert_allclose(ge_m2, True)
+
+    eq_m2 = m2 == 500*u.cm**2
+    assert_allclose(eq_m2, False)
+
 
 def test_arithmetics_inconsistent_geom():
     m_wcs = Map.create(binsz=0.1, width=1.0)
