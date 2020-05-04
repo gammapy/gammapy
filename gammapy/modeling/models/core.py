@@ -335,7 +335,7 @@ class Models(collections.abc.MutableSequence):
             Keyword arguments passed to `~astropy.table.Table.read`
 
         """
-        t = Table.read(filename, **kwargs)
+        t = Table.read(make_path(filename), **kwargs)
         t.remove_column("Parameters")
         arr = np.array(t)
         data = arr.view(float).reshape(arr.shape + (-1,))
@@ -361,7 +361,7 @@ class Models(collections.abc.MutableSequence):
             values = self.covariance.data[idx]
             table[name] = values
 
-        table.write(filename, **kwargs)
+        table.write(make_path(filename), **kwargs)
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"

@@ -74,7 +74,7 @@ def make_path(path):
     # TODO: raise error or warning if environment variables that don't resolve are used
     # e.g. "spam/$DAMN/ham" where `$DAMN` is not defined
     # Otherwise this can result in cryptic errors later on
-    return Path(os.path.expandvars(path))
+    return Path(os.path.expandvars(path)).resolve()
 
 
 def recursive_merge_dicts(a, b):
