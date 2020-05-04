@@ -10,7 +10,6 @@ from gammapy.data import EventList
 from gammapy.maps import MapCoord
 from gammapy.modeling.models import BackgroundModel, ConstantTemporalModel
 from gammapy.utils.random import get_random_state
-from gammapy.utils.coordinates import sky_to_fov
 
 
 __all__ = ["MapDatasetEventSampler"]
