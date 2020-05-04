@@ -232,7 +232,7 @@ class Datasets(collections.abc.MutableSequence):
             overwrite datasets FITS files
         """
 
-        path = make_path(path)
+        path = make_path(path, abs_path=True)
         datasets_dictlist = []
         for dataset in self._datasets:
             filename = path / f"{prefix}_data_{dataset.name}.fits"
