@@ -51,5 +51,14 @@ def plot_contour_line(ax, x, y, **kwargs):
     out = cs(ts)
 
     # plot
-    ax.plot(out[:, 0], out[:, 1], "-", **kwargs)
-    ax.plot(xf, yf, "+", color=kwargs["color"])
+    if "marker" in kwargs.keys():
+        marker = kwargs.pop("marker")
+    else:
+        marker = "+"
+    if "color" in kwargs.keys():
+        color = kwargs.pop("color")
+    else:
+        color = "b"
+
+    ax.plot(out[:, 0], out[:, 1], "-", color=color, **kwargs)
+    ax.plot(xf, yf, linestyle='', marker=marker, color=color)
