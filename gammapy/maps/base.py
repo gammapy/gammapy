@@ -1026,5 +1026,8 @@ class Map(abc.ABC):
     def __eq__(self, other):
         return self._arithmetics(np.equal, other, copy=True)
 
+    def __ne__(self, other):
+        return self._arithmetics(np.not_equal, other, copy=True)
+
     def __array__(self):
         return self.data

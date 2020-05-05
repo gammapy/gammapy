@@ -308,6 +308,8 @@ def test_map_arithmetics(map_type):
     eq_m2 = m2 == 500*u.cm**2
     assert_allclose(eq_m2, False)
 
+    ne_m2 = m2 != 500*u.cm**2
+    assert_allclose(ne_m2, True)
 
 def test_arithmetics_inconsistent_geom():
     m_wcs = Map.create(binsz=0.1, width=1.0)
