@@ -279,7 +279,7 @@ def test_mde_run_switchoff(dataset):
 
     dataset.psf = None
     dataset.edisp = None
-    dataset.background_model = None
+    dataset._background_model = None
 
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)

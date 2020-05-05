@@ -251,10 +251,10 @@ def test_to_image(geom):
     # Check that missing entries in the dataset do not break
     dataset_copy = dataset.copy()
     dataset_copy.exposure = None
-    dataset_copy.background_model = None
+    dataset_copy._background_model = None
     dataset_im = dataset_copy.to_image()
     assert dataset_im.exposure is None
-    assert dataset_im.background_model is None
+    assert dataset_im.background_model == None
 
     dataset_copy = dataset.copy()
     dataset_copy.counts = None
@@ -734,7 +734,7 @@ def test_map_dataset_on_off_cutout(images):
     assert cutout_dataset.counts_off.data.shape == (1, 50, 50)
     assert cutout_dataset.acceptance.data.shape == (1, 50, 50)
     assert cutout_dataset.acceptance_off.data.shape == (1, 50, 50)
-    assert cutout_dataset.background_model is None
+    assert cutout_dataset.background_model == None
     assert cutout_dataset.name != dataset.name
 
 
@@ -779,7 +779,9 @@ def test_map_dataset_geom(geom, sky_model):
     e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5, name="energy_true")
     dataset = MapDataset.create(geom, energy_axis_true=e_true)
     dataset.counts = None
-    dataset.background_model = None
+    dataset._background_model = None
+    with pytest.raises(AttributeError):
+        dataset.background_model = None
 
     dataset.models = sky_model
 

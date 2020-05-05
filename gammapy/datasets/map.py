@@ -87,7 +87,7 @@ class MapDataset(Dataset):
             raise ValueError("mask data must have dtype bool")
 
         self._name = make_name(name)
-        self.background_model = None
+        self._background_model = None
         self.evaluation_mode = evaluation_mode
         self.counts = counts
         self.exposure = exposure
@@ -186,6 +186,10 @@ class MapDataset(Dataset):
         """Models (`~gammapy.modeling.models.Models`)."""
         return self._models
 
+    @property
+    def background_model(self):
+        return self._background_model
+
     @models.setter
     def models(self, models):
         if models is None:
@@ -199,7 +203,7 @@ class MapDataset(Dataset):
                 if isinstance(model, BackgroundModel):
                     if model.datasets_names is not None:
                         if self.name in model.datasets_names:
-                            self.background_model = model
+                            self._background_model = model
                             break
             else:
                 log.warning(f"No background model defined for dataset {self.name}")
@@ -411,8 +415,8 @@ class MapDataset(Dataset):
             background_model = other.background_model
 
         if self.background_model and background_model:
-            self.background_model.map *= self.mask_safe
-            self.background_model.stack(background_model, other.mask_safe)
+            self._background_model.map *= self.mask_safe
+            self._background_model.stack(background_model, other.mask_safe)
 
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)
@@ -1053,7 +1057,7 @@ class MapDatasetOnOff(MapDataset):
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
         self.exposure = exposure
-        self.background_model = None
+        self._background_model = None
         self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
