@@ -14,7 +14,7 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None):
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
 
-    ax = plt.gca() or ax
+    ax = plt.gca(projection=datasets[0].counts_off.geom.wcs) or ax
 
     color_cycle = plt.rcParams["axes.prop_cycle"]
     colors = color_cycle.by_key()["color"]
@@ -51,5 +51,14 @@ def plot_contour_line(ax, x, y, **kwargs):
     out = cs(ts)
 
     # plot
-    ax.plot(out[:, 0], out[:, 1], "-", **kwargs)
-    ax.plot(xf, yf, "+", color=kwargs["color"])
+    if "marker" in kwargs.keys():
+        marker = kwargs.pop("marker")
+    else:
+        marker = "+"
+    if "color" in kwargs.keys():
+        color = kwargs.pop("color")
+    else:
+        color = "b"
+
+    ax.plot(out[:, 0], out[:, 1], "-", color=color, **kwargs)
+    ax.plot(xf, yf, linestyle='', marker=marker, color=color)

@@ -3,7 +3,9 @@ import pytest
 import numpy as np
 from astropy.io import fits
 from astropy.table import Column, Table
-
+from gammapy.utils.fits import ebounds_to_energy_axis
+from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
 
 # TODO: merge this fixture with the one in `test_table.py`.
 # Need to move to conftest or can import?
@@ -43,3 +45,12 @@ def test_table_fits_io_astropy(table):
     assert table2["b"].unit == "m"
     # Note: description doesn't come back in older versions of Astropy
     # that we still support, so we're not asserting on that here for now.
+
+@requires_data()
+def test_ebounds_to_energy_axis():
+    filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+    hdul = fits.open(make_path(filename))
+    axis = ebounds_to_energy_axis(hdul['EBOUNDS'])
+
+    assert axis.unit == 'keV'
+    assert len(axis) == 81
