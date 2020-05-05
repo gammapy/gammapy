@@ -73,6 +73,8 @@ class Dataset(abc.ABC):
                     for k, d in enumerate(m.datasets_names):
                         if d == self.name:
                             m.datasets_names[k] = name
+                    if hasattr(new, "background_model") and m == new.background_model:
+                        m._name = name + "-bkg"
         return new
 
     @staticmethod

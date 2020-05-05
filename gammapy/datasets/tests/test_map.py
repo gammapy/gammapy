@@ -824,9 +824,9 @@ def test_names(geom, geom_etrue, sky_model):
     assert dataset2.background_model
     dataset2 = dataset1.copy(name="dataset2")
     assert dataset2.name == "dataset2"
-    assert dataset2.background_model.name == "bkg1"
+    assert dataset2.background_model.name == "dataset2-bkg"
     assert dataset1.background_model is not dataset2.background_model
-    assert dataset1.models.names == dataset2.models.names
+    assert dataset1.models.names == ["model1", "model2", "dataset2-bkg"]
     assert dataset1.models is not dataset2.models
 
 
