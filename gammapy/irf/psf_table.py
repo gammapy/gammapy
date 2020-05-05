@@ -104,7 +104,7 @@ class TablePSF:
     def info(self):
         """Print basic info."""
         ss = array_stats_str(self.rad.deg, "offset")
-        ss += f"integral = {self.integral()}\n"
+        ss += f"integral = {self.containment(self.rad[-1])}\n"
 
         for containment in [68, 80, 95]:
             radius = self.containment_radius(0.01 * containment)

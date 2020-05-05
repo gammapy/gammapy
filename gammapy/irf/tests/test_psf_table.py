@@ -41,6 +41,9 @@ class TestTablePSF:
         actual = psf.containment_radius(0.25).deg
         assert_allclose(actual, radius.deg, rtol=1e-4)
 
+        # test info
+        info = psf.info()
+        assert info.find("integral") == 58
 
 @requires_data()
 class TestEnergyDependentTablePSF:
@@ -84,6 +87,12 @@ class TestEnergyDependentTablePSF:
     def test_plot2(self):
         with mpl_plot_check():
             self.psf.plot_psf_vs_rad()
+
+    @requires_dependency("matplotlib")
+    def test_plot_exposure_vs_energy(self):
+        with mpl_plot_check():
+            self.psf.plot_exposure_vs_energy()
+
 
     def test_repr(self):
         info = str(self.psf)
