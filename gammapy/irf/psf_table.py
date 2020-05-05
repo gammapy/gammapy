@@ -326,7 +326,14 @@ class EnergyDependentTablePSF:
         data = Table([self.rad.to("deg")], names=["Theta"])
         theta_hdu = fits.BinTableHDU(data=data, name="THETA")
 
-        data = Table([self.energy.to("MeV"), self.exposure.to("cm^2 s"), self.psf_value.to("sr^-1")], names=["Energy", "Exposure", "PSF"])
+        data = Table(
+            [
+                self.energy.to("MeV"),
+                self.exposure.to("cm^2 s"),
+                self.psf_value.to("sr^-1"),
+            ],
+            names=["Energy", "Exposure", "PSF"],
+        )
         psf_hdu = fits.BinTableHDU(data=data, name="PSF")
 
         hdu_list = fits.HDUList([fits.PrimaryHDU(), theta_hdu, psf_hdu])

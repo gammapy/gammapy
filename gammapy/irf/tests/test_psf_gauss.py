@@ -10,7 +10,7 @@ from gammapy.irf.psf_gauss import (
     HESSMultiGaussPSF,
     multi_gauss_psf_kernel,
 )
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 @requires_data()
@@ -65,6 +65,11 @@ class TestEnergyDependentMultiGaussPSF:
             [psf_3d.containment_radius(energy, theta, _).value for _ in containment]
         )
         assert_allclose(np.squeeze(desired), actual, atol=0.005)
+
+    @requires_dependency("matplotlib")
+    def test_peek(self, psf):
+        with mpl_plot_check():
+            psf.peek()
 
 
 @requires_data()
