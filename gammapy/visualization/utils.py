@@ -14,7 +14,7 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None):
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
 
-    ax = plt.gca() or ax
+    ax = plt.gca(projection=datasets[0].counts_off.geom.wcs) or ax
 
     color_cycle = plt.rcParams["axes.prop_cycle"]
     colors = color_cycle.by_key()["color"]
