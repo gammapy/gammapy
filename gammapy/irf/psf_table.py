@@ -5,6 +5,7 @@ import scipy.integrate
 from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.io import fits
+from astropy.table import Table
 from astropy.utils import lazyproperty
 from gammapy.maps import MapAxis
 from gammapy.utils.array import array_stats_str
@@ -200,7 +201,6 @@ class TablePSF:
             Normalize PSF after broadening
         """
         self.rad *= factor
-        self._setup_interpolators()
         if normalize:
             self.normalize()
 
@@ -323,13 +323,13 @@ class EnergyDependentTablePSF:
         """
         # TODO: write HEADER keywords as gtpsf
 
-        data = self.rad
-        theta_hdu = fits.BinTableHDU(data=data, name="Theta")
+        data = Table([self.rad.to("deg")], names=["Theta"])
+        theta_hdu = fits.BinTableHDU(data=data, name="THETA")
 
-        data = [self.energy, self.exposure, self.psf_value]
+        data = Table([self.energy.to("MeV"), self.exposure.to("cm^2 s"), self.psf_value.to("sr^-1")], names=["Energy", "Exposure", "PSF"])
         psf_hdu = fits.BinTableHDU(data=data, name="PSF")
 
-        hdu_list = fits.HDUList([theta_hdu, psf_hdu])
+        hdu_list = fits.HDUList([fits.PrimaryHDU(), theta_hdu, psf_hdu])
         return hdu_list
 
     @classmethod
