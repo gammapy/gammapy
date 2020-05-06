@@ -259,10 +259,10 @@ class Models(collections.abc.MutableSequence):
 
         if "covariance" in data:
             filename = data["covariance"]
-            path = make_path(path) 
+            path = make_path(path)
             if not (path / filename).exists():
                 path, filename = split(filename)
-    
+
             models.read_covariance(path, filename, format="ascii.fixed_width")
 
         shared_register = {}
@@ -284,8 +284,8 @@ class Models(collections.abc.MutableSequence):
         """Write to YAML file."""
         base_path, filename = split(path)
         path = make_path(path)
-        base_path =  make_path(base_path)
-        
+        base_path = make_path(base_path)
+
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
 
@@ -296,8 +296,7 @@ class Models(collections.abc.MutableSequence):
             )
             self.write_covariance(base_path / filecovar, **kwargs)
             self._covar_file = filecovar
-        
-      
+
         path.write_text(self.to_yaml())
 
     def to_yaml(self):

@@ -90,14 +90,14 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
     # currently the run_mcmc() doesn't know the status of previous fit.
     p0var = []
     pars = []
-    spread = 0.5/100
-    spread_pos = 0.1 # in degrees
+    spread = 0.5 / 100
+    spread_pos = 0.1  # in degrees
     for par in dataset.models.parameters.free_parameters:
         pars.append(par.factor)
         if par.name in ["lon_0", "lat_0"]:
-            p0var.append(spread_pos/par.scale)
+            p0var.append(spread_pos / par.scale)
         else:
-            p0var.append(spread*par.factor)
+            p0var.append(spread * par.factor)
 
     ndim = len(pars)
     p0 = emcee.utils.sample_ball(pars, p0var, nwalkers)
