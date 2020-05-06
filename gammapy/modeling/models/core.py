@@ -260,9 +260,7 @@ class Models(collections.abc.MutableSequence):
         if "covariance" in data:
             filename = data["covariance"]
             path = make_path(path) 
-            if (path / filename).exists():
-                filename = path / filename
-            else:
+            if not (path / filename).exists():
                 path, filename = split(filename)
     
             models.read_covariance(path, filename, format="ascii.fixed_width")
@@ -282,25 +280,25 @@ class Models(collections.abc.MutableSequence):
                 shared_register = _set_link(shared_register, model)
         return models
 
-    def write(self, path, prefix="", overwrite=False):
+    def write(self, path, overwrite=False):
         """Write to YAML file."""
+        base_path, filename = split(path)
         path = make_path(path)
-        filemodels = prefix+"_models.yaml"
-        pathmodels = path / filemodels  
+        base_path =  make_path(base_path)
         
-        if pathmodels.exists() and not overwrite:
+        if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
 
         if self.covariance is not None and len(self.parameters) != 0:
-            filecovar = prefix + "_covariance.dat"
+            filecovar = path.stem + "_covariance.dat"
             kwargs = dict(
                 format="ascii.fixed_width", delimiter="|", overwrite=overwrite
             )
-            self.write_covariance(path / filecovar, **kwargs)
+            self.write_covariance(base_path / filecovar, **kwargs)
             self._covar_file = filecovar
         
       
-        pathmodels.write_text(self.to_yaml())
+        path.write_text(self.to_yaml())
 
     def to_yaml(self):
         """Convert to YAML string."""
@@ -346,7 +344,8 @@ class Models(collections.abc.MutableSequence):
 
         """
         path = make_path(path)
-        t = Table.read(path / filename, **kwargs)
+        filepath = str(path / filename)
+        t = Table.read(filepath, **kwargs)
         t.remove_column("Parameters")
         arr = np.array(t)
         data = arr.view(float).reshape(arr.shape + (-1,))
