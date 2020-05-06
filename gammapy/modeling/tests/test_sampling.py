@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 from gammapy.datasets import Datasets
 from gammapy.modeling.sampling import run_mcmc, ln_uniform_prior
 import numpy as np
-#@pytest.fixture
+from gammapy.utils.testing import requires_dependency
+
 def get_datasets():
     dataset = Datasets.read("$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml",
                             "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml")
@@ -35,9 +35,10 @@ def test_lnprob():
     parameters["amplitude"].value = 1000
     assert ln_uniform_prior(dataset) == -np.inf
 
+@requires_dependency("emcee")
 def test_runmcmc():
     #Running a small MCMC on pregenerated datasets
     dataset = get_datasets()
-    sampler = run_mcmc(dataset, nwalkers=6, nrun=10)  # to speedup the test
+    run_mcmc(dataset, nwalkers=6, nrun=10)  # to speedup the test
 
 
