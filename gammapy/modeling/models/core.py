@@ -282,7 +282,7 @@ class Models(collections.abc.MutableSequence):
 
     def write(self, path, overwrite=False):
         """Write to YAML file."""
-        base_path, filename = split(path)
+        base_path, _ = split(path)
         path = make_path(path)
         base_path = make_path(base_path)
 
