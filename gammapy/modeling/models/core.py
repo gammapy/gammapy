@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections.abc
 import copy
-from os.path import splitext
+from os.path import split
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
@@ -235,16 +235,17 @@ class Models(collections.abc.MutableSequence):
     def read(cls, filename):
         """Read from YAML file."""
         yaml_str = make_path(filename).read_text()
-        return cls.from_yaml(yaml_str)
+        path, filename = split(filename)
+        return cls.from_yaml(yaml_str, path=path)
 
     @classmethod
-    def from_yaml(cls, yaml_str):
+    def from_yaml(cls, yaml_str, path=""):
         """Create from YAML string."""
         data = yaml.safe_load(yaml_str)
-        return cls.from_dict(data)
+        return cls.from_dict(data, path=path)
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, path=""):
         """Create from dict."""
         from . import MODELS, SkyModel
 
@@ -258,7 +259,13 @@ class Models(collections.abc.MutableSequence):
 
         if "covariance" in data:
             filename = data["covariance"]
-            models.read_covariance(filename, format="ascii.fixed_width")
+            path = make_path(path) 
+            if (path / filename).exists():
+                filename = path / filename
+            else:
+                path, filename = split(filename)
+    
+            models.read_covariance(path, filename, format="ascii.fixed_width")
 
         shared_register = {}
         for model in models:
@@ -275,22 +282,25 @@ class Models(collections.abc.MutableSequence):
                 shared_register = _set_link(shared_register, model)
         return models
 
-    def write(self, path, overwrite=False):
+    def write(self, path, prefix="", overwrite=False):
         """Write to YAML file."""
         path = make_path(path)
-
-        if path.exists() and not overwrite:
+        filemodels = prefix+"_models.yaml"
+        pathmodels = path / filemodels  
+        
+        if pathmodels.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
 
         if self.covariance is not None and len(self.parameters) != 0:
-            filename = splitext(str(path))[0] + "_covariance.dat"
+            filecovar = prefix + "_covariance.dat"
             kwargs = dict(
                 format="ascii.fixed_width", delimiter="|", overwrite=overwrite
             )
-            self.write_covariance(filename, **kwargs)
-            self._covar_file = filename
-
-        path.write_text(self.to_yaml())
+            self.write_covariance(path / filecovar, **kwargs)
+            self._covar_file = filecovar
+        
+      
+        pathmodels.write_text(self.to_yaml())
 
     def to_yaml(self):
         """Convert to YAML string."""
@@ -324,7 +334,7 @@ class Models(collections.abc.MutableSequence):
         else:
             return {"components": models_data}
 
-    def read_covariance(self, filename, **kwargs):
+    def read_covariance(self, path, filename="_covariance.dat", **kwargs):
         """Read covariance data from file
 
         Parameters
@@ -335,7 +345,8 @@ class Models(collections.abc.MutableSequence):
             Keyword arguments passed to `~astropy.table.Table.read`
 
         """
-        t = Table.read(make_path(filename), **kwargs)
+        path = make_path(path)
+        t = Table.read(path / filename, **kwargs)
         t.remove_column("Parameters")
         arr = np.array(t)
         data = arr.view(float).reshape(arr.shape + (-1,))

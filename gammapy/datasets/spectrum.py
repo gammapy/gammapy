@@ -1225,7 +1225,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.to_ogip_files(outdir=outdir, overwrite=overwrite)
 
     @classmethod
-    def from_dict(cls, data, models):
+    def from_dict(cls, data, models, path=""):
         """Create flux point dataset from dict.
 
         Parameters
@@ -1243,6 +1243,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """
 
         filename = data["filename"]
+        path = make_path(path)
+        if (path / filename).exists():
+            filename = path / filename
+        else:
+            filename = make_path(filename)
 
         dataset = cls.from_ogip_files(filename=filename)
         dataset.mask_fit = None

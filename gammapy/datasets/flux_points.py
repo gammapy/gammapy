@@ -4,7 +4,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from gammapy.modeling.models import Models
-from gammapy.utils.scripts import make_name
+from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
 log = logging.getLogger(__name__)
@@ -107,7 +107,7 @@ class FluxPointsDataset(Dataset):
         table.write(filename, overwrite=overwrite, **kwargs)
 
     @classmethod
-    def from_dict(cls, data, models):
+    def from_dict(cls, data, models, path=""):
         """Create flux point dataset from dict.
 
         Parameters
@@ -124,7 +124,14 @@ class FluxPointsDataset(Dataset):
         """
         from gammapy.estimators import FluxPoints
 
-        table = Table.read(data["filename"])
+        filename = data["filename"]
+        path = make_path(path)
+        if (path / filename).exists():
+            filename = path / filename
+        else:
+            filename = make_path(filename)
+
+        table = Table.read(filename)
         mask_fit = table["mask_fit"].data.astype("bool")
         mask_safe = table["mask_safe"].data.astype("bool")
         table.remove_columns(["mask_fit", "mask_safe"])
