@@ -1,10 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import numpy as np
+import pytest
 from gammapy.datasets import Datasets
 from gammapy.modeling.sampling import run_mcmc, ln_uniform_prior
-import numpy as np
-from gammapy.utils.testing import requires_dependency
+from gammapy.utils.testing import requires_dependency, requires_data
 
-def get_datasets():
+
+@pytest.fixture(scope="session")
+def dataset():
     dataset = Datasets.read("$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml",
                             "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml")
 
@@ -24,9 +27,9 @@ def get_datasets():
 
     return dataset
 
-def test_lnprob():
-    #Testing priors
-    dataset = get_datasets()
+@requires_data()
+def test_lnprob(dataset):
+    #Testing priors and parameter bounds
     parameters = dataset.models.parameters
 
     #paramater is within min, max boundaries
@@ -36,9 +39,12 @@ def test_lnprob():
     assert ln_uniform_prior(dataset) == -np.inf
 
 @requires_dependency("emcee")
-def test_runmcmc():
+@requires_data()
+def test_runmcmc(dataset):
     #Running a small MCMC on pregenerated datasets
-    dataset = get_datasets()
-    run_mcmc(dataset, nwalkers=6, nrun=10)  # to speedup the test
+    import emcee
+
+    sampler = run_mcmc(dataset, nwalkers=6, nrun=10)  # to speedup the test
+    assert type(sampler) is emcee.ensemble.EnsembleSampler
 
 
