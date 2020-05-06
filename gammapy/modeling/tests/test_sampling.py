@@ -45,6 +45,5 @@ def test_runmcmc(dataset):
     import emcee
 
     sampler = run_mcmc(dataset, nwalkers=6, nrun=10)  # to speedup the test
-    assert type(sampler) is emcee.ensemble.EnsembleSampler
-
+    assert isinstance(sampler, emcee.ensemble.EnsembleSampler)
 
