@@ -512,6 +512,7 @@ def test_stack(geom, geom_etrue):
     assert_allclose(dataset1.background_model.map.data.sum(), 5987)
     assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
     assert_allclose(dataset1.mask_safe.data.sum(), 20000)
+    assert len(dataset1.models) == 1
 
 
 def to_cube(image):
@@ -823,10 +824,10 @@ def test_names(geom, geom_etrue, sky_model):
     assert dataset2.background_model
     dataset2 = dataset1.copy(name="dataset2")
     assert dataset2.name == "dataset2"
-    assert dataset2.background_model.name == "bkg1"
-    assert dataset1.background_model is not dataset2.background_model
-    assert dataset1.models.names == dataset2.models.names
-    assert dataset1.models is not dataset2.models
+    assert dataset2.background_model.name == "dataset2-bkg"
+    assert dataset2.background_model is not dataset1.background_model
+    assert dataset2.models.names == ["model1", "model2", "dataset2-bkg"]
+    assert dataset2.models is not dataset1.models
 
 
 def test_stack_dataset_dataset_on_off():

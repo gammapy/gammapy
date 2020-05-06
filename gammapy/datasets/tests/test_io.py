@@ -71,3 +71,6 @@ def test_datasets_to_io(tmp_path):
         datasets.models["background_irf_g09"].covariance,
         datasets.models["background_irf_gc"].covariance,
     )
+
+    dataset_copy = dataset0.copy(name="dataset0-copy")
+    assert dataset_copy.background_model.datasets_names == ["dataset0-copy"]

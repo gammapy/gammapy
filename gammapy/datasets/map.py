@@ -417,6 +417,9 @@ class MapDataset(Dataset):
         if self.background_model and background_model:
             self._background_model.map *= self.mask_safe
             self._background_model.stack(background_model, other.mask_safe)
+            self.models = Models([self.background_model])
+        else:
+            self.models = None
 
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)
