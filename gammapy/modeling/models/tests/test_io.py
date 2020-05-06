@@ -101,7 +101,7 @@ def test_sky_models_io(tmp_path):
     models.covariance = np.eye(len(models.parameters))
     models.write(tmp_path / "tmp.yaml")
     models = Models.read(tmp_path / "tmp.yaml")
-    assert models._covar_file == str(tmp_path / "tmp_covariance.dat")
+    assert models._covar_file == "tmp_covariance.dat"
     assert_allclose(models.covariance.data, np.eye(len(models.parameters)))
     assert_allclose(models.parameters["lat_0"].min, -90.0)
 
