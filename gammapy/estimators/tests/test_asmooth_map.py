@@ -21,8 +21,9 @@ def input_maps():
 @pytest.fixture(scope="session")
 def input_dataset():
     datasets = Datasets.read(
-        filedata="$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml",
-        filemodel="$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml",
+        "$GAMMAPY_DATA/fermi-3fhl-crab",
+        filedata="Fermi-LAT-3FHL_datasets.yaml",
+        filemodel="Fermi-LAT-3FHL_models.yaml",
     )
     dataset = datasets[0]
     dataset.psf = None

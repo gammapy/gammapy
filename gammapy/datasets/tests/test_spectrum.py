@@ -808,7 +808,7 @@ def test_spectrum_dataset_on_off_to_yaml(tmpdir):
     spectrum_datasets_on_off = make_observation_list()
     datasets = Datasets(spectrum_datasets_on_off)
     datasets.write(path=tmpdir)
-    datasets_read = Datasets.read(tmpdir / "_datasets.yaml", tmpdir / "_models.yaml")
+    datasets_read = Datasets.read(tmpdir, "_datasets.yaml", "_models.yaml")
     assert len(datasets_read) == len(datasets)
     assert datasets_read[0].name == datasets[0].name
     assert datasets_read[1].name == datasets[1].name

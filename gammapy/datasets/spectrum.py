@@ -1242,8 +1242,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         """
 
-        filename = data["filename"]
-
+        filename = make_path(data["filename"])
         dataset = cls.from_ogip_files(filename=filename)
         dataset.mask_fit = None
         dataset.models = models

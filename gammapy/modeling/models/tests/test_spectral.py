@@ -589,6 +589,7 @@ class TestNaimaModel:
 
     def test_bad_init(self):
         import naima
+
         particle_distribution = naima.models.PowerLaw(
             amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
         )

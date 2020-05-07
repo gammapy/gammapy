@@ -9,10 +9,11 @@ from gammapy.modeling import Fit
 @requires_data()
 @requires_dependency("iminuit")
 def test_datasets_to_io(tmp_path):
-    filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
-    filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
+    path = "$GAMMAPY_DATA/tests/models"
+    filedata = "gc_example_datasets.yaml"
+    filemodel = "gc_example_models.yaml"
 
-    datasets = Datasets.read(filedata, filemodel)
+    datasets = Datasets.read(path, filedata, filemodel)
 
     assert len(datasets) == 2
 
@@ -53,7 +54,7 @@ def test_datasets_to_io(tmp_path):
 
     datasets.write(tmp_path, prefix="written")
     datasets_read = Datasets.read(
-        tmp_path / "written_datasets.yaml", tmp_path / "written_models.yaml"
+        tmp_path, "written_datasets.yaml", "written_models.yaml"
     )
 
     assert len(datasets.parameters) == 21

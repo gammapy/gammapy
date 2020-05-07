@@ -8,8 +8,11 @@ from gammapy.utils.testing import requires_dependency, requires_data
 
 @pytest.fixture(scope="session")
 def dataset():
-    dataset = Datasets.read("$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml",
-                            "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml")
+    dataset = Datasets.read(
+        "$GAMMAPY_DATA/fermi-3fhl-crab/",
+        "Fermi-LAT-3FHL_datasets.yaml",
+        "Fermi-LAT-3FHL_models.yaml",
+    )
 
     # Define the free parameters and min, max values
     parameters = dataset.models.parameters
@@ -27,23 +30,24 @@ def dataset():
 
     return dataset
 
+
 @requires_data()
 def test_lnprob(dataset):
-    #Testing priors and parameter bounds
+    # Testing priors and parameter bounds
     parameters = dataset.models.parameters
 
-    #paramater is within min, max boundaries
+    # paramater is within min, max boundaries
     assert ln_uniform_prior(dataset) == 0.0
     # Setting amplitude outside min, max values
     parameters["amplitude"].value = 1000
     assert ln_uniform_prior(dataset) == -np.inf
 
+
 @requires_dependency("emcee")
 @requires_data()
 def test_runmcmc(dataset):
-    #Running a small MCMC on pregenerated datasets
+    # Running a small MCMC on pregenerated datasets
     import emcee
 
     sampler = run_mcmc(dataset, nwalkers=6, nrun=10)  # to speedup the test
     assert isinstance(sampler, emcee.ensemble.EnsembleSampler)
-

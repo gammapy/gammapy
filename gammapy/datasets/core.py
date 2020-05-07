@@ -193,15 +193,17 @@ class Datasets(collections.abc.MutableSequence):
         return copy.deepcopy(self)
 
     @classmethod
-    def read(cls, filedata, filemodel):
+    def read(cls, path, filedata="_datasets.yaml", filemodel="_models.yaml"):
         """De-serialize datasets from YAML and FITS files.
 
         Parameters
         ----------
+        path : str, Path
+            Base directory of the datasets files.
         filedata : str
-            filepath to yaml datasets file
+            file path or name of yaml datasets file
         filemodel : str
-            filepath to yaml models file
+            file path or name of yaml models file
 
         Returns
         -------
@@ -210,11 +212,24 @@ class Datasets(collections.abc.MutableSequence):
         """
         from . import DATASETS
 
-        models = Models.read(make_path(filemodel))
-        data_list = read_yaml(make_path(filedata))
+        path = make_path(path)
+
+        if (path / filedata).exists():
+            filedata = path / filedata
+        else:
+            filedata = make_path(filedata)
+        if (path / filemodel).exists():
+            filemodel = path / filemodel
+        else:
+            filemodel = make_path(filemodel)
+
+        models = Models.read(filemodel)
+        data_list = read_yaml(filedata)
 
         datasets = []
         for data in data_list["datasets"]:
+            if (path / data["filename"]).exists():
+                data["filename"] = str(make_path(path / data["filename"]))
             dataset = DATASETS.get_cls(data["type"]).from_dict(data, models)
             datasets.append(dataset)
         return cls(datasets)
@@ -232,11 +247,11 @@ class Datasets(collections.abc.MutableSequence):
             overwrite datasets FITS files
         """
 
-        path = make_path(path)
+        path = make_path(path).resolve()
         datasets_dictlist = []
         for dataset in self._datasets:
-            filename = path / f"{prefix}_data_{dataset.name}.fits"
-            dataset.write(filename, overwrite)
+            filename = f"{prefix}_data_{dataset.name}.fits"
+            dataset.write(path / filename, overwrite)
             datasets_dictlist.append(dataset.to_dict(filename=filename))
         datasets_dict = {"datasets": datasets_dictlist}
 
