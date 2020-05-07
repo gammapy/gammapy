@@ -228,7 +228,9 @@ class Datasets(collections.abc.MutableSequence):
 
         datasets = []
         for data in data_list["datasets"]:
-            dataset = DATASETS.get_cls(data["type"]).from_dict(data, models, path=path)
+            if (path / data["filename"]).exists():
+                data["filename"] = str(make_path(path / data["filename"]))
+            dataset = DATASETS.get_cls(data["type"]).from_dict(data, models)
             datasets.append(dataset)
         return cls(datasets)
 
@@ -245,7 +247,7 @@ class Datasets(collections.abc.MutableSequence):
             overwrite datasets FITS files
         """
 
-        path = make_path(path, abs_path=True)
+        path = make_path(path).resolve()
         datasets_dictlist = []
         for dataset in self._datasets:
             filename = f"{prefix}_data_{dataset.name}.fits"

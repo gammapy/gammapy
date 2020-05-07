@@ -107,7 +107,7 @@ class FluxPointsDataset(Dataset):
         table.write(filename, overwrite=overwrite, **kwargs)
 
     @classmethod
-    def from_dict(cls, data, models, path=""):
+    def from_dict(cls, data, models):
         """Create flux point dataset from dict.
 
         Parameters
@@ -125,12 +125,7 @@ class FluxPointsDataset(Dataset):
         from gammapy.estimators import FluxPoints
 
         filename = data["filename"]
-        path = make_path(path)
-        if (path / filename).exists():
-            filename = path / filename
-        else:
-            filename = make_path(filename)
-
+        filename = make_path(data["filename"])
         table = Table.read(filename)
         mask_fit = table["mask_fit"].data.astype("bool")
         mask_safe = table["mask_safe"].data.astype("bool")

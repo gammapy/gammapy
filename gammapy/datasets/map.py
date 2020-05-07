@@ -773,15 +773,10 @@ class MapDataset(Dataset):
             return cls.from_hdulist(hdulist, name=name)
 
     @classmethod
-    def from_dict(cls, data, models, path=""):
+    def from_dict(cls, data, models):
         """Create from dicts and models list generated from YAML serialization."""
 
-        filename = data["filename"]
-        path = make_path(path)
-        if (path / filename).exists():
-            filename = path / filename
-        else:
-            filename = make_path(filename)
+        filename = make_path(data["filename"])
         dataset = cls.read(filename, name=data["name"])
 
         for model in models:

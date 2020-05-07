@@ -63,7 +63,7 @@ def make_name(name=None):
         return name
 
 
-def make_path(path, abs_path=False):
+def make_path(path):
     """Expand environment variables on `~pathlib.Path` construction.
 
     Parameters
@@ -74,10 +74,7 @@ def make_path(path, abs_path=False):
     # TODO: raise error or warning if environment variables that don't resolve are used
     # e.g. "spam/$DAMN/ham" where `$DAMN` is not defined
     # Otherwise this can result in cryptic errors later on
-    if abs_path:
-        return Path(os.path.expandvars(path)).resolve()
-    else:
-        return Path(os.path.expandvars(path))
+    return Path(os.path.expandvars(path))
 
 
 def recursive_merge_dicts(a, b):
