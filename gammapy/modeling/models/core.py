@@ -508,7 +508,7 @@ class ProperModels(Models):
         for d in self._datasets:
             if model.name not in d._models.names:
                 if isinstance(model, (SkyModel, SkyDiffuseCube)):
-                    d._models[idx] = model
+                    d._models.insert(idx, model)
                 else:
                     raise TypeError(f"Invalid type: {model!r}")
                 if (
