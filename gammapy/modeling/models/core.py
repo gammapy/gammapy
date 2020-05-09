@@ -443,6 +443,7 @@ class ProperModels(Models):
             self._is_dataset = True
         elif isinstance(parent, Datasets):
             self._datasets = parent._datasets
+            self._is_dataset = False
         else:
             raise TypeError(f"Invalid type: {type(parent)!r}")
 
@@ -495,12 +496,12 @@ class ProperModels(Models):
                     d._models[key] = model
                 else:
                     raise TypeError(f"Invalid type: {model!r}")
-                if (
-                    model.datasets_names is not None
-                    and d.name not in model.datasets_names
-                    and self._is_dataset
-                ):
-                    model.datasets_names.append(d.name)
+            if (
+                model.datasets_names is not None
+                and d.name not in model.datasets_names
+                and self._is_dataset
+            ):
+                model.datasets_names.append(d.name)
 
     def insert(self, idx, model):
         from gammapy.modeling.models import SkyModel, SkyDiffuseCube
@@ -511,12 +512,12 @@ class ProperModels(Models):
                     d._models.insert(idx, model)
                 else:
                     raise TypeError(f"Invalid type: {model!r}")
-                if (
-                    model.datasets_names is not None
-                    and d.name not in model.datasets_names
-                    and self._is_dataset
-                ):
-                    model.datasets_names.append(d.name)
+            if (
+                model.datasets_names is not None
+                and d.name not in model.datasets_names
+                and self._is_dataset
+            ):
+                model.datasets_names.append(d.name)
 
     def append(self, model):
         self.insert(-1, model)
