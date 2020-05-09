@@ -43,7 +43,8 @@ def input_dataset():
         data=background2D.data[np.newaxis, :, :],
         unit=background2D.unit,
     )
-    background_model = BackgroundModel(background)
+    name = "test-dataset"
+    background_model = BackgroundModel(background, datasets_names=[name])
 
     # add mask
     mask2D = np.ones_like(background2D.data).astype("bool")
@@ -51,9 +52,12 @@ def input_dataset():
     mask = Map.from_geom(
         background2D.geom.to_cube([energy]), data=mask2D[np.newaxis, :, :],
     )
-
     return MapDataset(
-        counts=counts, exposure=exposure, models=background_model, mask_safe=mask,
+        counts=counts,
+        exposure=exposure,
+        models=background_model,
+        mask_safe=mask,
+        name=name,
     )
 
 
