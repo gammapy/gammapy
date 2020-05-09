@@ -23,11 +23,11 @@ class MyDataset(Dataset):
         self.name = name
         self._models = Models([MyModel()])
         self.data_shape = (1,)
-        
+
     @property
     def models(self):
         return self._models
-    
+
     def stat_sum(self):
         # self._model.parameters = parameters
         x, y, z = [p.value for p in self.models.parameters]
