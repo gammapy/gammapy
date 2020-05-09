@@ -457,6 +457,8 @@ class ProperModels(Models):
                             or d.name in model.datasets_names
                         ):
                             unique_models.append(model)
+            else:
+                d._models = []
             self._models = unique_models
 
         self._covar_file = None
@@ -470,58 +472,51 @@ class ProperModels(Models):
         else:
             raise TypeError(f"Invalid type: {other!r}")
         for d in self._datasets:
-            if d._models is not None:
-                for m in other:
-                    if m not in d._models:
-                        d._models.append(m)
-                    if (
-                        m.datasets_names is not None
-                        and d.name not in m.datasets_names
-                        and self._is_dataset
-                    ):
-                        m.datasets_names.append(d.name)
+            for m in other:
+                if m not in d._models:
+                    d._models.append(m)
+                if (
+                    m.datasets_names is not None
+                    and d.name not in m.datasets_names
+                    and self._is_dataset
+                ):
+                    m.datasets_names.append(d.name)
 
     def __delitem__(self, key):
         for d in self._datasets:
-            if d._models is not None:
-                if key in d._models.names:
-                    datasets_names = d._models[key].datasets_names
-                    if datasets_names is None or d.name in datasets_names:
-                        d._models.remove(key)
+            if key in d.models.names:
+                datasets_names = d.models[key].datasets_names
+                if datasets_names is None or d.name in datasets_names:
+                    d._models.remove(key)
 
     def __setitem__(self, key, model):
         from gammapy.modeling.models import SkyModel, SkyDiffuseCube
 
         for d in self._datasets:
-            if d._models is not None:
-                if model in d._models:
-                    if isinstance(model, (SkyModel, SkyDiffuseCube)):
-                        d._models[key] = model
-                    else:
-                        raise TypeError(f"Invalid type: {model!r}")
-                if (
-                    model.datasets_names is not None
-                    and d.name not in model.datasets_names
-                    and self._is_dataset
-                ):
-                    model.datasets_names.append(d.name)
+            if model in d._models:
+                if isinstance(model, (SkyModel, SkyDiffuseCube)):
+                    d._models[key] = model
+                else:
+                    raise TypeError(f"Invalid type: {model!r}")
+            if (
+                model.datasets_names is not None
+                and d.name not in model.datasets_names
+                and self._is_dataset
+            ):
+                model.datasets_names.append(d.name)
 
     def insert(self, idx, model):
         from gammapy.modeling.models import SkyModel, SkyDiffuseCube
 
         for d in self._datasets:
-            if d._models is not None:
-                if model.name not in d._models.names:
-                    if isinstance(model, (SkyModel, SkyDiffuseCube)):
-                        d._models.insert(idx, model)
-                    else:
-                        raise TypeError(f"Invalid type: {model!r}")
-                if (
-                    model.datasets_names is not None
-                    and d.name not in model.datasets_names
-                    and self._is_dataset
-                ):
-                    model.datasets_names.append(d.name)
-
-    def append(self, model):
-        self.insert(-1, model)
+            if model.name not in d.models.names:
+                if isinstance(model, (SkyModel, SkyDiffuseCube)):
+                    d._models.insert(idx, model)
+                else:
+                    raise TypeError(f"Invalid type: {model!r}")
+            if (
+                model.datasets_names is not None
+                and d.name not in model.datasets_names
+                and self._is_dataset
+            ):
+                model.datasets_names.append(d.name)
