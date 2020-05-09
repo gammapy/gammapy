@@ -8,7 +8,7 @@ from gammapy.data import GTI
 from gammapy.datasets import Dataset
 from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap
-from gammapy.modeling.models import Models
+from gammapy.modeling.models import Models, ProperModels
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic, cash, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
@@ -188,7 +188,7 @@ class SpectrumDataset(Dataset):
     @property
     def models(self):
         """Models (`gammapy.modeling.models.Models`)."""
-        return self._models
+        return ProperModels(self)
 
     @models.setter
     def models(self, models):
@@ -246,10 +246,6 @@ class SpectrumDataset(Dataset):
 
         if self.models:
             for model in self.models:
-                if model.datasets_names is not None:
-                    if self.name not in model.datasets_names:
-                        continue
-
                 evaluator = self._evaluators.get(model.name)
 
                 if evaluator is None:

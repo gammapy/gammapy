@@ -4,7 +4,7 @@ import collections.abc
 import copy
 import numpy as np
 from gammapy.maps import Map
-from gammapy.modeling.models import Models
+from gammapy.modeling.models import Models, ProperModels
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
 
@@ -67,8 +67,8 @@ class Dataset(abc.ABC):
         name = make_name(name)
         new._name = name
         # propagate new dataset name
-        if new.models is not None:
-            for m in new.models:
+        if new._models is not None:
+            for m in new._models:
                 if m.datasets_names is not None:
                     for k, d in enumerate(m.datasets_names):
                         if d == self.name:
@@ -140,17 +140,7 @@ class Datasets(collections.abc.MutableSequence):
         Duplicate model objects have been removed.
         The order of the unique models remains.
         """
-        unique_models = []
-        for d in self._datasets:
-            if d.models is not None:
-                for model in d.models:
-                    if model not in unique_models:
-                        if (
-                            model.datasets_names is None
-                            or d.name in model.datasets_names
-                        ):
-                            unique_models.append(model)
-        return Models(unique_models)
+        return ProperModels(self)
 
     @property
     def names(self):

@@ -16,7 +16,8 @@ def test_datasets_to_io(tmp_path):
     datasets = Datasets.read(path, filedata, filemodel)
 
     assert len(datasets) == 2
-
+    print(list(datasets.models))
+    assert len(datasets.models) == 5
     dataset0 = datasets[0]
     assert dataset0.name == "gc"
     assert dataset0.counts.data.sum() == 6824
@@ -37,9 +38,10 @@ def test_datasets_to_io(tmp_path):
     )
 
     assert isinstance(dataset0.models, Models)
-    assert len(dataset0.models) == 5
+    assert len(dataset0.models) == 3
     assert dataset0.models[0].name == "gc"
     assert dataset0.models[1].name == "gll_iem_v06_cutout"
+    assert dataset0.models[2].name == "background_irf_gc"
 
     assert (
         dataset0.models["background_irf_gc"].parameters["norm"]
