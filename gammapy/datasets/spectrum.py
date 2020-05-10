@@ -459,7 +459,6 @@ class SpectrumDataset(Dataset):
         if region is None:
             region = "icrs;circle(0, 0, 1)"
 
-        # TODO: change .create() API
         counts = RegionNDMap.create(region=region, axes=[e_reco])
         background = RegionNDMap.create(region=region, axes=[e_reco])
 
@@ -812,10 +811,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         Parameters
         ----------
-        e_reco : `~astropy.units.Quantity`
-            edges of counts vector
-        e_true : `~astropy.units.Quantity`
-            edges of effective area table. If not set use reco energy values. Default : None
+        e_reco : `~gammapy.maps.MapAxis`
+            counts energy axis. Its name must be "energy".
+        e_true : `~gammapy.maps.MapAxis`
+            effective area table energy axis. Its name must be "energy-true".
+            If not set use reco energy values. Default : None
         region : `~regions.SkyRegion`
             Region to define the dataset for.
         reference_time : `~astropy.time.Time`
