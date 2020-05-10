@@ -509,7 +509,7 @@ class ProperModels(Models):
         from gammapy.modeling.models import SkyModel, SkyDiffuseCube
 
         for d in self._datasets:
-            if model.name not in d._models.names:
+            if model not in d._models:
                 if isinstance(model, (SkyModel, SkyDiffuseCube)):
                     if idx == len(self):
                         index = len(d._models)
