@@ -492,8 +492,9 @@ class ProperModels(Models):
     def __setitem__(self, key, model):
         from gammapy.modeling.models import SkyModel, SkyDiffuseCube
 
+        print(key)
         for d in self._datasets:
-            if model in d._models:
+            if model not in d._models:
                 if isinstance(model, (SkyModel, SkyDiffuseCube)):
                     d._models[key] = model
                 else:

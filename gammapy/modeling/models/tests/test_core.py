@@ -190,7 +190,7 @@ def test_models_management(tmp_path):
     names1 = datasets[1].models.names
 
     datasets[0].models.append(model1)
-    datasets[0].models.append(model2)
+    datasets[0].models + model2
     assert datasets[0].models.names == names0 + ["model1", "model2"]
     assert datasets[0].models["model1"].datasets_names == None
     assert datasets[0].models["model2"].datasets_names == [
@@ -231,3 +231,13 @@ def test_models_management(tmp_path):
     datasets.models.extend([model1, model2, model3])
     assert datasets[0].models.names == names0 + ["model1", "model2", "model3"]
     assert datasets[1].models.names == names1 + ["model1", "model2"]
+
+    for m in [model1, model2, model3]:
+        datasets.models.remove(m)
+    datasets.models + [model1, model2]
+    assert datasets[0].models.names == names0 + ["model1", "model2"]
+    assert datasets[1].models.names == names1 + ["model1", "model2"]
+
+    datasets[0].models["model2"] = model3
+    assert datasets[0].models.names == names0 + ["model1", "model3"]
+    assert datasets[1].models.names == names1 + ["model1"]
