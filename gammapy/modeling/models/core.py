@@ -509,9 +509,13 @@ class ProperModels(Models):
         from gammapy.modeling.models import SkyModel, SkyDiffuseCube
 
         for d in self._datasets:
-            if model.name not in d.models.names:
+            if model.name not in d._models.names:
                 if isinstance(model, (SkyModel, SkyDiffuseCube)):
-                    d._models.insert(idx, model)
+                    if idx == len(self):
+                        index = len(d._models)
+                    else:
+                        index = idx
+                    d._models.insert(index, model)
                 else:
                     raise TypeError(f"Invalid type: {model!r}")
             if (
@@ -520,3 +524,7 @@ class ProperModels(Models):
                 and self._is_dataset
             ):
                 model.datasets_names.append(d.name)
+
+    def remove(self, value):
+        key = value.name
+        del self[key]

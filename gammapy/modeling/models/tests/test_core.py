@@ -3,6 +3,8 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.modeling.models import Model, Parameter, Parameters
+from gammapy.datasets import Datasets
+from gammapy.utils.testing import requires_data
 
 
 class MyModel(Model):
@@ -170,3 +172,62 @@ def test_parameter_link():
 
     m1.y.value = 100
     assert_allclose(m2.y.value, 100)
+
+
+@requires_data()
+def test_models_management(tmp_path):
+    path = "$GAMMAPY_DATA/tests/models"
+    filedata = "gc_example_datasets.yaml"
+    filemodel = "gc_example_models.yaml"
+
+    datasets = Datasets.read(path, filedata, filemodel)
+
+    model1 = datasets.models[0].copy(name="model1", datasets_names=None)
+    model2 = datasets.models[0].copy(name="model2", datasets_names=[datasets[1].name])
+    model3 = datasets.models[0].copy(name="model3", datasets_names=[datasets[0].name])
+
+    names0 = datasets[0].models.names
+    names1 = datasets[1].models.names
+
+    datasets[0].models.append(model1)
+    datasets[0].models.append(model2)
+    assert datasets[0].models.names == names0 + ["model1", "model2"]
+    assert datasets[0].models["model1"].datasets_names == None
+    assert datasets[0].models["model2"].datasets_names == [
+        datasets[1].name,
+        datasets[0].name,
+    ]
+    print(names1)
+    print(datasets[1].models.names)
+    assert datasets[1].models.names == names1 + ["model1", "model2"]
+
+    # TODO consistency check at datasets level ?
+    # or force same Models for each dataset._models on datasets init ?
+    # here we have the right behavior: model1 and model2 are also added to dataset1
+    # because serialization create a global model object shared by all datasets
+    # if that was not the case we could have inconsistancies
+    # such as model1.datasets_names == None added only to dataset1
+    # user can still create such inconsistancies if they define datasets
+    # with diferent Models objects for each dataset.
+
+    del datasets[0].models["model1"]
+    assert datasets[0].models.names == names0 + ["model2"]
+
+    datasets[0].models.remove(model2)
+    assert datasets[0].models.names == names0
+
+    datasets.models.append(model2)
+    assert model2 in datasets.models
+    assert model2 in datasets[1].models
+    assert datasets[0].models.names == names0 + ["model2"]
+
+    datasets[0].models.extend([model1, model3])
+    assert datasets[0].models.names == names0 + ["model2", "model1", "model3"]
+
+    for m in [model1, model2, model3]:
+        datasets.models.remove(m)
+    assert datasets[0].models.names == names0
+    assert datasets[1].models.names == names1
+    datasets.models.extend([model1, model2, model3])
+    assert datasets[0].models.names == names0 + ["model1", "model2", "model3"]
+    assert datasets[1].models.names == names1 + ["model1", "model2"]
