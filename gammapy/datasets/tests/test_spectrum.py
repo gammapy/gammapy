@@ -114,7 +114,7 @@ def test_set_model(spectrum_dataset):
 
 
 def test_npred_models():
-    e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3).edges
+    e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
     spectrum_dataset = SpectrumDataset.create(e_reco=e_reco)
     spectrum_dataset.livetime = 1 * u.h
     spectrum_dataset.aeff.data.data += 1e10 * u.Unit("cm2")
@@ -153,8 +153,8 @@ def test_fit(spectrum_dataset):
 
 
 def test_spectrum_dataset_create():
-    e_reco = u.Quantity([0.1, 1, 10.0], "TeV")
-    e_true = u.Quantity([0.05, 0.5, 5, 20.0], "TeV")
+    e_reco = MapAxis.from_edges(u.Quantity([0.1, 1, 10.0], "TeV"), name="energy")
+    e_true = MapAxis.from_edges(u.Quantity([0.05, 0.5, 5, 20.0], "TeV"), name="energy_true")
     empty_spectrum_dataset = SpectrumDataset.create(e_reco, e_true, name="test")
 
     assert empty_spectrum_dataset.name == "test"
@@ -272,11 +272,11 @@ class TestSpectrumOnOff:
 
     def setup(self):
         etrue = np.logspace(-1, 1, 10) * u.TeV
-        self.e_true = etrue
+        self.e_true = MapAxis.from_edges(etrue, name="energy_true")
         ereco = np.logspace(-1, 1, 5) * u.TeV
         elo = ereco[:-1]
         ehi = ereco[1:]
-        self.e_reco = ereco
+        self.e_reco = MapAxis.from_edges(ereco, name="energy")
         self.aeff = EffectiveAreaTable(etrue[:-1], etrue[1:], np.ones(9) * u.cm ** 2)
         self.edisp = EDispKernel.from_diagonal_response(etrue, ereco)
 
@@ -330,8 +330,8 @@ class TestSpectrumOnOff:
         )
 
     def test_spectrumdatasetonoff_create(self):
-        e_reco = u.Quantity([0.1, 1, 10.0], "TeV")
-        e_true = u.Quantity([0.05, 0.5, 5, 20.0], "TeV")
+        e_reco = MapAxis.from_edges(u.Quantity([0.1, 1, 10.0], "TeV"), name="energy")
+        e_true = MapAxis.from_edges(u.Quantity([0.05, 0.5, 5, 20.0], "TeV"),  name="energy_true")
         empty_dataset = SpectrumDatasetOnOff.create(e_reco, e_true)
 
         assert empty_dataset.counts.data.sum() == 0
@@ -816,7 +816,7 @@ def test_spectrum_dataset_on_off_to_yaml(tmpdir):
 
 
 def test_stack_no_livetime():
-    e_reco = np.logspace(0, 1, 3) * u.TeV
+    e_reco = MapAxis.from_energy_bounds(1,10, 3, name="energy", unit='TeV')
     dataset_1 = SpectrumDataset.create(e_reco=e_reco)
     dataset_1.livetime = None
     dataset_2 = dataset_1.copy()
