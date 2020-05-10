@@ -17,7 +17,7 @@ from gammapy.makers import (
     ReflectedRegionsFinder,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import WcsGeom, WcsNDMap
+from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
 from gammapy.utils.regions import compound_region_to_list
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -165,8 +165,8 @@ def test_bad_on_region(exclusion_mask, on_region):
 def test_reflected_bkg_maker(on_region, reflected_bkg_maker, observations):
     datasets = []
 
-    e_reco = np.logspace(0, 2, 5) * u.TeV
-    e_true = np.logspace(-0.5, 2, 11) * u.TeV
+    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+    e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
 
     dataset_empty = SpectrumDataset.create(
         e_reco=e_reco, e_true=e_true, region=on_region
@@ -198,8 +198,8 @@ def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations):
 
     datasets = []
 
-    e_reco = np.logspace(0, 2, 5) * u.TeV
-    e_true = np.logspace(-0.5, 2, 11) * u.TeV
+    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+    e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
     dataset_empty = SpectrumDataset.create(e_reco=e_reco, e_true=e_true, region=region)
 
     for obs in observations:

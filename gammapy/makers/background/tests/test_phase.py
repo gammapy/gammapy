@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from gammapy.data import DataStore
+from gammapy.maps import MapAxis
 from gammapy.datasets import SpectrumDataset
 from gammapy.makers import PhaseBackgroundMaker, SpectrumDatasetMaker
 from gammapy.utils.regions import SphericalCircleSkyRegion
@@ -34,8 +35,8 @@ def test_run(observations, phase_bkg_maker):
 
     maker = SpectrumDatasetMaker()
 
-    e_reco = np.logspace(0, 2, 5) * u.TeV
-    e_true = np.logspace(-0.5, 2, 11) * u.TeV
+    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+    e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
 
     pos = SkyCoord("08h35m20.65525s", "-45d10m35.1545s", frame="icrs")
     radius = Angle(0.2, "deg")
