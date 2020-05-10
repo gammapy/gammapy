@@ -190,15 +190,13 @@ def test_models_management(tmp_path):
     names1 = datasets[1].models.names
 
     datasets[0].models.append(model1)
-    datasets[0].models + model2
+    _ = datasets[0].models + model2
     assert datasets[0].models.names == names0 + ["model1", "model2"]
     assert datasets[0].models["model1"].datasets_names == None
     assert datasets[0].models["model2"].datasets_names == [
         datasets[1].name,
         datasets[0].name,
     ]
-    print(names1)
-    print(datasets[1].models.names)
     assert datasets[1].models.names == names1 + ["model1", "model2"]
 
     # TODO consistency check at datasets level ?
@@ -234,7 +232,7 @@ def test_models_management(tmp_path):
 
     for m in [model1, model2, model3]:
         datasets.models.remove(m)
-    datasets.models + [model1, model2]
+    _ = datasets.models + [model1, model2]
     assert datasets[0].models.names == names0 + ["model1", "model2"]
     assert datasets[1].models.names == names1 + ["model1", "model2"]
 
