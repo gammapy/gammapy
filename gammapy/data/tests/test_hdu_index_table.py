@@ -49,7 +49,7 @@ def test_hdu_index_table(hdu_index_table):
 
 
 @requires_data()
-def test_hdu_index_table_hd_hap():
+def test_hdu_index_table_hd_hap(capfd):
     """Test HESS HAP-HD data access."""
     hdu_index = HDUIndexTable.read("$GAMMAPY_DATA/hess-dl3-dr1/hdu-index.fits.gz")
 
@@ -59,6 +59,13 @@ def test_hdu_index_table_hd_hap():
     # A few valid queries
 
     location = hdu_index.hdu_location(obs_id=23523, hdu_type="events")
+
+    # We test here the std out
+    location.info()
+    out, err = capfd.readouterr()
+    lines = out.split('\n')
+    assert len(lines) == 8
+
     hdu = location.get_hdu()
     assert hdu.name == "EVENTS"
 
@@ -79,6 +86,11 @@ def test_hdu_index_table_hd_hap():
     )
 
     location = hdu_index.hdu_location(obs_id=23523, hdu_type="psf")
+    assert location.path(abs_path=False) == Path(
+        "data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
+
+    location = hdu_index.hdu_location(obs_id=23523, hdu_type="bkg")
     assert location.path(abs_path=False) == Path(
         "data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
@@ -104,3 +116,9 @@ def test_hdu_index_table_hd_hap():
         hdu_index.hdu_location(obs_id=23523, hdu_class="invalid")
     msg = "Invalid hdu_class: invalid. Valid values are: ['events', 'gti', 'aeff_2d', 'edisp_2d', 'psf_table', 'psf_3gauss', 'psf_king', 'bkg_2d', 'bkg_3d']"
     assert str(excinfo.value) == msg
+
+    location = hdu_index.hdu_location(obs_id=23523, hdu_class="psf_king")
+    assert location == None
+
+    location = hdu_index.hdu_location(obs_id=23523, hdu_class="bkg_2d")
+    assert location == None
