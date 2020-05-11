@@ -257,6 +257,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     edispmap = Map.from_geom(geom, data=data, unit="")
     return EDispMap(edispmap, exposure_map)
 
+
 def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
     """Make a edisp kernel map for a single observation
 
@@ -283,10 +284,12 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
         the resulting EDispKernel map
     """
     # Use EnergyDispersion2D migra axis.
-    migra_axis = edisp.migra_axis
+    migra_axis = edisp.data.axis("migra")
 
     # Create temporary EDispMap Geom
-    new_geom = geom.to_image().to_cube([migra_axis, geom.get_axis_by_name("energy_true")])
+    new_geom = geom.to_image().to_cube(
+        [migra_axis, geom.get_axis_by_name("energy_true")]
+    )
 
     edisp = make_edisp_map(edisp, pointing, new_geom, exposure_map)
 

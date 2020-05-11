@@ -6,11 +6,12 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from gammapy.data import FixedPointingInfo
-from gammapy.irf import Background3D, EffectiveAreaTable2D
+from gammapy.irf import Background3D, EffectiveAreaTable2D, EnergyDispersion2D
 from gammapy.makers.utils import (
     _map_spectrum_weight,
     make_map_background_irf,
     make_map_exposure_true_energy,
+    make_edisp_kernel_map,
 )
 from gammapy.maps import HpxGeom, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
@@ -251,3 +252,23 @@ def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
         with pytest.raises(AssertionError):
             assert_allclose(d[0, 1], d[2, 1], rtol=1e-4)  # Symmetric along lat
         assert_allclose(d[0, 1] * 9, d[2, 1], rtol=1e-4)  # Asymmetric along lat
+
+
+def test_make_edisp_kernel_map():
+    migra = MapAxis.from_edges(np.linspace(0.5, 1.5, 50), unit="", name="migra")
+    etrue = MapAxis.from_energy_bounds(0.5, 2, 6, unit="TeV", name="energy_true")
+    offset = MapAxis.from_edges(np.linspace(0.0, 2.0, 3), unit="deg", name="offset")
+    ereco = MapAxis.from_energy_bounds(0.5, 2, 3, unit="TeV", name="energy")
+
+    edisp = EnergyDispersion2D.from_gauss(
+        etrue.edges, migra.edges, 0, 0.01, offset.edges
+    )
+
+    geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue])
+    pointing = SkyCoord(0, 0, frame="icrs", unit="deg")
+    edispmap = make_edisp_kernel_map(edisp, pointing, geom)
+
+    kernel = edispmap.get_edisp_kernel(pointing)
+    assert_allclose(kernel.pdf_matrix[:, 0], (1.0, 1.0, 0.0, 0.0, 0.0, 0.0))
+    assert_allclose(kernel.pdf_matrix[:, 1], (0.0, 0.0, 1.0, 1.0, 0.0, 0.0))
+    assert_allclose(kernel.pdf_matrix[:, 2], (0.0, 0.0, 0.0, 0.0, 1.0, 1.0))
