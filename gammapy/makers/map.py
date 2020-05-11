@@ -6,6 +6,7 @@ from gammapy.maps import Map
 from gammapy.modeling.models import BackgroundModel
 from .utils import (
     make_edisp_map,
+    make_edisp_kernel_map,
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_psf_map,
@@ -187,7 +188,7 @@ class MapDatasetMaker:
         """
         exposure = self.make_exposure_irf(geom.squash(axis="energy"), observation)
 
-        return make_edisp_map(
+        return make_edisp_kernel_map(
             edisp=observation.edisp,
             pointing=observation.pointing_radec,
             geom=geom,
@@ -266,10 +267,12 @@ class MapDatasetMaker:
             kwargs["psf"] = psf
 
         if "edisp" in self.selection:
-            if dataset.edisp.edisp_map.geom.axes[0].name.upper() == 'MIGRA':
+            if dataset.edisp.edisp_map.geom.axes[0].name.upper() == "MIGRA":
                 edisp = self.make_edisp(dataset.edisp.edisp_map.geom, observation)
             else:
-                edisp = self.make_edisp_kernel(dataset.edisp.edisp_map.geom, observation)
+                edisp = self.make_edisp_kernel(
+                    dataset.edisp.edisp_map.geom, observation
+                )
 
             kwargs["edisp"] = edisp
 

@@ -313,7 +313,7 @@ class MapDataset(Dataset):
         )
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
 
-        if geom_edisp.axes[0].name == "energy":
+        if geom_edisp.axes[0].name.lower() == "energy":
             kwargs["edisp"] = EDispKernelMap.from_geom(geom_edisp)
         else:
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
@@ -1187,7 +1187,7 @@ class MapDatasetOnOff(MapDataset):
             kwargs[key] = Map.from_geom(geom, unit="")
 
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
-        if geom_edisp.axes[0].name == "energy":
+        if geom_edisp.axes[0].name.lower() == "energy":
             kwargs["edisp"] = EDispKernelMap.from_geom(geom_edisp)
         else:
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)

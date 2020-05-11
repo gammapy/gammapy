@@ -291,6 +291,6 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
         [migra_axis, geom.get_axis_by_name("energy_true")]
     )
 
-    edisp = make_edisp_map(edisp, pointing, new_geom, exposure_map)
+    edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map)
 
-    return edisp.to_edisp_kernel_map(geom.get_axis_by_name("energy"))
+    return edisp_map.to_edisp_kernel_map(geom.get_axis_by_name("energy"))

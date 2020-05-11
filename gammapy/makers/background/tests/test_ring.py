@@ -25,7 +25,7 @@ def observations():
 
 @pytest.fixture(scope="session")
 def geom():
-    energy_axis = MapAxis.from_edges([1, 10], unit="TeV", name="ENERGY", interp="log")
+    energy_axis = MapAxis.from_edges([1, 10], unit="TeV", name="energy", interp="log")
     return WcsGeom.create(
         skydir=SkyCoord(83.633, 22.014, unit="deg"),
         binsz=0.02,
