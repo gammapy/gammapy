@@ -9,6 +9,7 @@ from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.irf import (
     EDispMap,
+    EDispKernelMap,
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     PSFMap,
@@ -441,7 +442,36 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
     assert_allclose(pars["amplitude"].error, 8.127593e-14, rtol=1e-2)
 
 
-def test_create(geom, geom_etrue):
+def test_create():
+    # tests empty datasets created
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    e_reco = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
+    )
+    e_true = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 4), name="energy_true", unit=u.TeV, interp="log"
+    )
+    geom = WcsGeom.create(binsz=0.02, width=(2, 2), axes=[e_reco])
+    empty_dataset = MapDataset.create(
+        geom=geom, energy_axis_true=e_true, rad_axis=rad_axis
+    )
+
+    assert empty_dataset.counts.data.shape == (2, 100, 100)
+
+    assert empty_dataset.exposure.data.shape == (3, 100, 100)
+
+    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 10, 10)
+    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 10, 10)
+
+    assert isinstance(empty_dataset.edisp, EDispKernelMap)
+    assert empty_dataset.edisp.edisp_map.data.shape == (3, 2, 10, 10)
+    assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 10, 10)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 300)
+
+    assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
+
+
+def test_create_with_migra(tmp_path):
     # tests empty datasets created
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
@@ -456,18 +486,19 @@ def test_create(geom, geom_etrue):
         geom=geom, energy_axis_true=e_true, migra_axis=migra_axis, rad_axis=rad_axis
     )
 
-    assert empty_dataset.counts.data.shape == (2, 100, 100)
+    empty_dataset.write(tmp_path / "test.fits")
 
-    assert empty_dataset.exposure.data.shape == (3, 100, 100)
+    dataset_new = MapDataset.read(tmp_path / "test.fits")
 
-    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 10, 10)
-    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 10, 10)
-
+    assert isinstance(empty_dataset.edisp, EDispMap)
     assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 10, 10)
     assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 10, 10)
     assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 300)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
+
+    assert isinstance(dataset_new.edisp, EDispMap)
+    assert dataset_new.edisp.edisp_map.data.shape == (3, 50, 10, 10)
 
 
 @requires_data()
