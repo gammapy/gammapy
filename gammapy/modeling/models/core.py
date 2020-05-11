@@ -461,8 +461,24 @@ class ProperModels(Models):
                 d._models = []
             self._models = unique_models
 
+        if self._is_dataset == False:
+            self.force_models_consistency()
+
         self._covar_file = None
         self._covariance = Covariance(self.parameters)
+
+    def force_models_consistency(self):
+        """Force consistency between models listed in each dataset of a datasets
+        and each model.datasets_names. For example if a model with
+        datasets_names = None appears in only one dataset,
+        it will be automatically added to the others.
+        """
+        for d in self._datasets:
+            for m in self._models:
+                if (
+                    m.datasets_names is None or d.name in m.datasets_names
+                ) and m not in d.models:
+                    d.models.append(m)
 
     def __add__(self, other):
         if isinstance(other, (Models, list)):
@@ -492,7 +508,6 @@ class ProperModels(Models):
     def __setitem__(self, key, model):
         from gammapy.modeling.models import SkyModel, SkyDiffuseCube
 
-        print(key)
         for d in self._datasets:
             if model not in d._models:
                 if isinstance(model, (SkyModel, SkyDiffuseCube)):

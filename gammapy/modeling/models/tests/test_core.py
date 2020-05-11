@@ -239,3 +239,9 @@ def test_models_management(tmp_path):
     datasets[0].models["model2"] = model3
     assert datasets[0].models.names == names0 + ["model1", "model3"]
     assert datasets[1].models.names == names1 + ["model1"]
+
+    datasets.models.remove(model1)
+    datasets[0].models = model1
+    _ = datasets.models  # auto-update models
+    assert datasets[0].models.names == ["model1", "gll_iem_v06_cutout"]
+    # the consistency check added diffuse model contained in the global model
