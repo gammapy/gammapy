@@ -104,7 +104,7 @@ class Background3D:
         if isinstance(data_unit, u.UnrecognizedUnit):
             data_unit = u.Unit("s-1 MeV-1 sr-1")
             log.warning(
-                "Ïnvalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
+                "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
         return cls(
@@ -288,7 +288,7 @@ class Background2D:
         if isinstance(data_unit, u.UnrecognizedUnit):
             data_unit = u.Unit("s-1 MeV-1 sr-1")
             log.warning(
-                "Ïnvalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
+                "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
         return cls(
             energy_lo=table["ENERG_LO"].quantity[0],
