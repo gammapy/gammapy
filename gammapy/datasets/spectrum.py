@@ -443,30 +443,29 @@ class SpectrumDataset(Dataset):
 
         Parameters
         ----------
-        e_reco : `~astropy.units.Quantity`
-            edges of counts vector
-        e_true : `~astropy.units.Quantity`
-            edges of effective area table. If not set use reco energy values. Default : None
+        e_reco : `~gammapy.maps.MapAxis`
+            counts energy axis. Its name must be "energy".
+        e_true : `~gammapy.maps.MapAxis`
+            effective area table energy axis. Its name must be "energy-true".
+            If not set use reco energy values. Default : None
         region : `~regions.SkyRegion`
             Region to define the dataset for.
         reference_time : `~astropy.time.Time`
             reference time of the dataset, Default is "2000-01-01"
         """
         if e_true is None:
-            e_true = e_reco
+            e_true = e_reco.copy(name="energy_true")
 
         if region is None:
             region = "icrs;circle(0, 0, 1)"
 
-        # TODO: change .create() API
-        energy = MapAxis.from_edges(e_reco, interp="log", name="energy")
-        counts = RegionNDMap.create(region=region, axes=[energy])
-        background = RegionNDMap.create(region=region, axes=[energy])
+        counts = RegionNDMap.create(region=region, axes=[e_reco])
+        background = RegionNDMap.create(region=region, axes=[e_reco])
 
         aeff = EffectiveAreaTable(
-            e_true[:-1], e_true[1:], np.zeros(e_true[:-1].shape) * u.m ** 2
+            e_true.edges[:-1], e_true.edges[1:], np.zeros(e_true.edges[:-1].shape) * u.m ** 2
         )
-        edisp = EDispKernel.from_diagonal_response(e_true, e_reco)
+        edisp = EDispKernel.from_diagonal_response(e_true.edges, e_reco.edges)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
         livetime = gti.time_sum
@@ -812,10 +811,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         Parameters
         ----------
-        e_reco : `~astropy.units.Quantity`
-            edges of counts vector
-        e_true : `~astropy.units.Quantity`
-            edges of effective area table. If not set use reco energy values. Default : None
+        e_reco : `~gammapy.maps.MapAxis`
+            counts energy axis. Its name must be "energy".
+        e_true : `~gammapy.maps.MapAxis`
+            effective area table energy axis. Its name must be "energy-true".
+            If not set use reco energy values. Default : None
         region : `~regions.SkyRegion`
             Region to define the dataset for.
         reference_time : `~astropy.time.Time`

@@ -12,7 +12,7 @@ from gammapy.makers import (
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import WcsGeom, WcsNDMap
+from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
@@ -34,8 +34,8 @@ def observations_cta_dc1():
 
 @pytest.fixture()
 def spectrum_dataset_gc():
-    e_reco = np.logspace(0, 2, 5) * u.TeV
-    e_true = np.logspace(-0.5, 2, 11) * u.TeV
+    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+    e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
     pos = SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
     radius = Angle(0.11, "deg")
     region = CircleSkyRegion(pos, radius)
@@ -44,8 +44,8 @@ def spectrum_dataset_gc():
 
 @pytest.fixture()
 def spectrum_dataset_crab():
-    e_reco = np.logspace(0, 2, 5) * u.TeV
-    e_true = np.logspace(-0.5, 2, 11) * u.TeV
+    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+    e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     radius = Angle(0.11, "deg")
     region = CircleSkyRegion(pos, radius)
@@ -54,8 +54,8 @@ def spectrum_dataset_crab():
 
 @pytest.fixture()
 def spectrum_dataset_crab_fine():
-    e_true = np.logspace(-2, 2.5, 109) * u.TeV
-    e_reco = np.logspace(-2, 2, 73) * u.TeV
+    e_true = MapAxis.from_edges(np.logspace(-2, 2.5, 109) * u.TeV, name="energy_true")
+    e_reco = MapAxis.from_edges(np.logspace(-2, 2, 73) * u.TeV, name="energy")
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     radius = Angle(0.11, "deg")
     region = CircleSkyRegion(pos, radius)
