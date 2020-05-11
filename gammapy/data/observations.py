@@ -153,58 +153,6 @@ class Observation:
             psf=irfs.get("psf"),
         )
 
-    @classmethod
-    def from_caldb(
-        cls,
-        pointing,
-        obs_id=None,
-        livetime=None,
-        tstart=None,
-        tstop=None,
-        caldb="prod2",
-        irf="South0.5hr",
-        deadtime_fraction=0.0,
-    ):
-        """Create an observation using IRFs from a given CTA CALDB.
-
-        Parameters
-        ----------
-        pointing : `~astropy.coordinates.SkyCoord`
-            Pointing position
-        obs_id : int
-            Observation ID as identifier
-        livetime : ~astropy.units.Quantity`
-            Livetime exposure of the simulated observation
-        tstart : `~astropy.units.Quantity`
-            Start time of observation
-        tstop : `~astropy.units.Quantity`
-            Stop time of observation
-        caldb : str
-            Calibration database
-        irf : str
-            Type of Instrumental response function.
-        deadtime_fraction : float, optional
-            Deadtime fraction, defaults to 0
-
-        Returns
-        -------
-        obs : `gammapy.data.Observation`
-        """
-        from .data_store import CalDBIRF
-
-        irf_loc = CalDBIRF("CTA", caldb, irf)
-        filename = irf_loc.file_dir + irf_loc.file_name
-        irfs = load_cta_irfs(filename)
-        return cls.create(
-            pointing=pointing,
-            obs_id=obs_id,
-            livetime=livetime,
-            tstart=tstart,
-            tstop=tstop,
-            irfs=irfs,
-            deadtime_fraction=deadtime_fraction,
-        )
-
     @property
     def tstart(self):
         """Observation start time (`~astropy.time.Time`)."""

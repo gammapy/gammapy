@@ -75,6 +75,11 @@ class TestEventListHESS:
         stacked_list = EventList.stack(event_lists)
         assert len(stacked_list.table) == 11243 * 2
 
+    def test_offset_selection(self):
+        offset_range = u.Quantity([0.5, 1.0]*u.deg)
+        new_list = self.events.select_offset(offset_range)
+        assert len(new_list.table) == 1820
+
     @requires_dependency("matplotlib")
     def test_plot_time(self):
         with mpl_plot_check():
@@ -141,6 +146,7 @@ class TestEventSelection:
         table["RA"] = [0.0, 0.0, 0.0, 10.0] * u.deg
         table["DEC"] = [0.0, 0.9, 10.0, 10.0] * u.deg
         table["ENERGY"] = [1.0, 1.5, 1.5, 10.0] * u.TeV
+        table["OFFSET"] = [0.1, 0.5, 1.0, 1.5] * u.deg
 
         self.events = EventListBase(table)
 
@@ -173,3 +179,8 @@ class TestEventSelection:
         mask = Map.from_geom(geom, data=mask_data)
         new_list = self.events.select_map_mask(mask)
         assert len(new_list.table) == 2
+
+    def test_select_energy(self):
+        energy_band = u.Quantity([1, 10], 'TeV')
+        new_list = self.events.select_energy(energy_band)
+        assert len(new_list.table) == 3
