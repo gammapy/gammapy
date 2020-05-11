@@ -458,7 +458,7 @@ class ProperModels(Models):
                         ):
                             unique_models.append(model)
             else:
-                d._models = []
+                d._models = Models([])
             self._models = unique_models
 
         if self._is_dataset == False:
