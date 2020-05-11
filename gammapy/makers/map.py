@@ -170,6 +170,30 @@ class MapDatasetMaker:
             exposure_map=exposure,
         )
 
+    def make_edisp_kernel(self, geom, observation):
+        """Make energy dispersion kernel map.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Reference geom. Must contain "energy" and "energy_true" axes in that order.
+        observation : `~gammapy.data.Observation`
+            Observation container.
+
+        Returns
+        -------
+        edisp : `~gammapy.cube.EDispKernelMap`
+            EdispKernel map.
+        """
+        exposure = self.make_exposure_irf(geom.squash(axis="energy"), observation)
+
+        return make_edisp_map(
+            edisp=observation.edisp,
+            pointing=observation.pointing_radec,
+            geom=geom,
+            exposure_map=exposure,
+        )
+
     def make_psf(self, geom, observation):
         """Make psf map.
 
@@ -242,7 +266,11 @@ class MapDatasetMaker:
             kwargs["psf"] = psf
 
         if "edisp" in self.selection:
-            edisp = self.make_edisp(dataset.edisp.edisp_map.geom, observation)
+            if dataset.edisp.edisp_map.geom.axes[0].name.upper() == 'MIGRA':
+                edisp = self.make_edisp(dataset.edisp.edisp_map.geom, observation)
+            else:
+                edisp = self.make_edisp_kernel(dataset.edisp.edisp_map.geom, observation)
+
             kwargs["edisp"] = edisp
 
         return MapDataset(name=dataset.name, **kwargs)

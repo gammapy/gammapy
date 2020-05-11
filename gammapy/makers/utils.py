@@ -226,7 +226,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
         the pointing direction
     geom : `~gammapy.maps.Geom`
         the map geom to be used. It provides the target geometry.
-        rad and true energy axes should be given in this specific order.
+        migra and true energy axes should be given in this specific order.
     exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
@@ -256,3 +256,38 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     data = edisp_values.to_value("")
     edispmap = Map.from_geom(geom, data=data, unit="")
     return EDispMap(edispmap, exposure_map)
+
+def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
+    """Make a edisp kernel map for a single observation
+
+    Expected axes : (reco) energy and true energy in this specific order
+    The name of the reco energy MapAxis is expected to be 'energy'.
+    The name of the true energy MapAxis is expected to be 'energy_true'.
+
+    Parameters
+    ----------
+    edisp : `~gammapy.irf.EnergyDispersion2D`
+        the 2D Energy Dispersion IRF
+    pointing : `~astropy.coordinates.SkyCoord`
+        the pointing direction
+    geom : `~gammapy.maps.Geom`
+        the map geom to be used. It provides the target geometry.
+        energy and true energy axes should be given in this specific order.
+    exposure_map : `~gammapy.maps.Map`, optional
+        the associated exposure map.
+        default is None
+
+    Returns
+    -------
+    edispmap : `~gammapy.cube.EDispKernelMap`
+        the resulting EDispKernel map
+    """
+    # Use EnergyDispersion2D migra axis.
+    migra_axis = edisp.migra_axis
+
+    # Create temporary EDispMap Geom
+    new_geom = geom.to_image().to_cube([migra_axis, geom.get_axis_by_name("energy_true")])
+
+    edisp = make_edisp_map(edisp, pointing, new_geom, exposure_map)
+
+    return edisp.to_edisp_kernel_map(geom.get_axis_by_name("energy"))
