@@ -230,9 +230,24 @@ def test_observation():
 @requires_data()
 class TestObservationChecker:
     def setup(self):
-        data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
-        self.observation = data_store.obs(111140)
+        self.data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
 
     def test_check_all(self):
-        records = list(self.observation.check())
+        observation = self.data_store.obs(111140)
+        records = list(observation.check())
         assert len(records) == 8
+
+
+    def test_checker_bad(self):
+        for index in range(5):
+            self.data_store.hdu_table[index]['FILE_NAME']='bad'
+
+        observation = self.data_store.obs(110380)
+        records = list(observation.check())
+        assert len(records) == 10
+        assert records[1]['msg'] == 'Loading events failed'
+        assert records[3]['msg'] == 'Loading GTI failed'
+        assert records[5]['msg'] == 'Loading aeff failed'
+        assert records[7]['msg'] == 'Loading edisp failed'
+        assert records[9]['msg'] == 'Loading psf failed'
+
