@@ -893,6 +893,8 @@ class MapDataset(Dataset):
         if self.edisp is not None:
             if isinstance(self.edisp, EDispKernel):
                 edisp = self.edisp
+            elif isinstance(self.edisp, EDispKernelMap):
+                edisp = self.edisp.get_edisp_kernel(on_region.center)
             else:
                 axis = self._geom.get_axis_by_name("energy")
                 edisp = self.edisp.get_edisp_kernel(on_region.center, e_reco=axis.edges)
