@@ -451,6 +451,14 @@ def test_wcs_geom_equal(npix, binsz, frame, proj, skypos, axes, result):
     assert (geom0 == geom1) is result
     assert (geom0 != geom1) is not result
 
+def test_irregular_geom_equality():
+    axis = MapAxis.from_bounds(1,3,10, name="axis", unit="")
+    geom0 = WcsGeom.create(skydir=(0,0), npix=10, binsz=0.1, axes=[axis])
+    binsizes = np.ones((10))*0.1
+    geom1 = WcsGeom.create(skydir=(0,0), npix=10, binsz=binsizes, axes=[axis])
+
+    with pytest.raises(NotImplementedError):
+        geom0 == geom1
 
 @pytest.mark.parametrize("node_type", ["edges", "center"])
 @pytest.mark.parametrize("interp", ["log", "lin", "sqrt"])
