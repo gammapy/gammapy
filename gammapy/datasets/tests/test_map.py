@@ -556,8 +556,8 @@ def test_stack(geom, geom_etrue):
     assert len(dataset1.models) == 1
 
 def test_stack_simple_edisp(sky_model, geom, geom_etrue):
-    dataset1 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edisp")
-    dataset2 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edisp")
+    dataset1 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispkernel")
+    dataset2 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispkernel")
 
     with pytest.raises(ValueError):
         dataset1.stack(dataset2)
@@ -649,7 +649,7 @@ def test_map_dataset_on_off_fits_io(images, tmp_path):
     )
 
 
-def test_create_onoff(geom, geom_etrue):
+def test_create_onoff(geom):
     # tests empty datasets created
 
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
@@ -784,6 +784,21 @@ def test_map_dataset_on_off_cutout(images):
     assert cutout_dataset.acceptance_off.data.shape == (1, 50, 50)
     assert cutout_dataset.background_model == None
     assert cutout_dataset.name != dataset.name
+
+def test_map_dataset_on_off_fake(geom):
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    energy_true_axis = geom.get_axis_by_name("energy").copy(name="energy_true")
+
+    empty_dataset = MapDataset.create(geom, energy_true_axis, rad_axis=rad_axis)
+    empty_dataset = MapDatasetOnOff.from_map_dataset(empty_dataset, acceptance=1, acceptance_off=10.)
+
+    empty_dataset.acceptance_off.data[0,50,50] = 0
+    background_map = Map.from_geom(geom, data=1)
+    empty_dataset.fake(background_map, random_state=42)
+
+    assert_allclose(empty_dataset.counts.data[0,50,50],0)
+    assert_allclose(empty_dataset.counts.data.mean(),0.99445, rtol=1e-3)
+    assert_allclose(empty_dataset.counts_off.data.mean(), 10.00055, rtol=1e-3)
 
 
 @requires_data()

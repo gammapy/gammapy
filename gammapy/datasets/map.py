@@ -1085,16 +1085,16 @@ class MapDatasetOnOff(MapDataset):
         self.evaluation_mode = evaluation_mode
         self.counts = counts
         self.counts_off = counts_off
+        self.exposure = exposure
 
         if np.isscalar(acceptance):
-            acceptance = np.ones(self.data_shape) * acceptance
+            acceptance = Map.from_geom(self._geom, data=np.ones(self.data_shape) * acceptance)
 
         if np.isscalar(acceptance_off):
-            acceptance_off = np.ones(self.data_shape) * acceptance_off
+            acceptance_off = Map.from_geom(self._geom, data=np.ones(self.data_shape) * acceptance_off)
 
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
-        self.exposure = exposure
         self._background_model = None
         self.mask_fit = mask_fit
         self.psf = psf
@@ -1201,6 +1201,7 @@ class MapDatasetOnOff(MapDataset):
             kwargs["edisp"] = EDispKernelMap.from_geom(geom_edisp)
         else:
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
+
         kwargs["psf"] = PSFMap.from_geom(geom_psf)
         kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
         kwargs["mask_safe"] = Map.from_geom(geom, dtype=bool)
