@@ -555,6 +555,12 @@ def test_stack(geom, geom_etrue):
     assert_allclose(dataset1.mask_safe.data.sum(), 20000)
     assert len(dataset1.models) == 1
 
+def test_stack_simple_edisp(sky_model, geom, geom_etrue):
+    dataset1 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edisp")
+    dataset2 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edisp")
+
+    with pytest.raises(ValueError):
+        dataset1.stack(dataset2)
 
 def to_cube(image):
     # introduce a fake enery axis for now

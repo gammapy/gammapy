@@ -86,6 +86,8 @@ class MapDataset(Dataset):
         if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
+
+
         self._name = make_name(name)
         self._background_model = None
         self.evaluation_mode = evaluation_mode
@@ -403,17 +405,24 @@ class MapDataset(Dataset):
             Map dataset to be stacked with this one. If other is an on-off
             dataset alpha * counts_off is used as a background model.
         """
+        if self.mask_safe is None:
+            self.mask_safe = Map.from_geom(self._geom, data=np.ones_like(self.data_shape))
+
+        if other.mask_safe is None:
+            other_mask_safe = Map.from_geom(other._geom, data=np.ones_like(other.data_shape))
+        else:
+            other_mask_safe = other.mask_safe
 
         if self.counts and other.counts:
             self.counts *= self.mask_safe
-            self.counts.stack(other.counts, weights=other.mask_safe)
+            self.counts.stack(other.counts, weights=other_mask_safe)
 
         if self.exposure and other.exposure:
             mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or)
             self.exposure *= mask_image.data
             # TODO: apply energy dependent mask to exposure. Does this require
             #  a mask_safe in true energy?
-            mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
+            mask_image_other = other_mask_safe.reduce_over_axes(func=np.logical_or)
             self.exposure.stack(other.exposure, weights=mask_image_other)
 
         # TODO: unify background model handling
@@ -424,13 +433,10 @@ class MapDataset(Dataset):
 
         if self.background_model and background_model:
             self._background_model.map *= self.mask_safe
-            self._background_model.stack(background_model, other.mask_safe)
+            self._background_model.stack(background_model, other_mask_safe)
             self.models = Models([self.background_model])
         else:
             self.models = None
-
-        if self.mask_safe is not None and other.mask_safe is not None:
-            self.mask_safe.stack(other.mask_safe)
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
@@ -438,7 +444,7 @@ class MapDataset(Dataset):
                 self.psf.psf_map *= mask_irf.data
                 self.psf.exposure_map *= mask_irf.data
 
-                mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
+                mask_image_other = other_mask_safe.reduce_over_axes(func=np.logical_or)
                 mask_irf_other = self._mask_safe_irf(
                     other.psf.psf_map, mask_image_other
                 )
@@ -452,7 +458,7 @@ class MapDataset(Dataset):
                 self.edisp.edisp_map *= mask_irf.data
                 self.edisp.exposure_map *= mask_irf.data
 
-                mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
+                mask_image_other = other_mask_safe.reduce_over_axes(func=np.logical_or)
                 mask_irf_other = self._mask_safe_irf(
                     other.edisp.edisp_map, mask_image_other
                 )
@@ -464,13 +470,15 @@ class MapDataset(Dataset):
                 self.edisp.edisp_map *= mask_irf.data
                 self.edisp.exposure_map *= mask_irf.data
 
-                mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
+                mask_image_other = other_mask_safe.reduce_over_axes(func=np.logical_or)
                 mask_irf_other = self._mask_safe_irf(
                     other.edisp.edisp_map, mask_image_other
                 )
                 self.edisp.stack(other.edisp, weights=mask_irf_other)
             else:
                 raise ValueError("Stacking of edisp kernels not supported")
+
+        self.mask_safe.stack(other_mask_safe)
 
         if self.gti and other.gti:
             self.gti = self.gti.stack(other.gti).union()
