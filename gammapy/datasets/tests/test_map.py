@@ -10,6 +10,7 @@ from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.irf import (
     EDispMap,
     EDispKernelMap,
+    EDispKernel,
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     PSFMap,
@@ -97,7 +98,7 @@ def sky_model():
     return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
-def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, name="test", **kwargs):
+def get_map_dataset(sky_model, geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
     """Returns a MapDatasets"""
     # define background model
     m = Map.from_geom(geom)
@@ -107,10 +108,15 @@ def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, name="test", **kwar
     psf = get_psf()
     exposure = get_exposure(geom_etrue)
 
-    if edisp:
-        # define energy dispersion
-        e_true = geom_etrue.get_axis_by_name("energy_true")
+    e_reco = geom.get_axis_by_name("energy")
+    e_true = geom_etrue.get_axis_by_name("energy_true")
+
+    if edisp == "edispmap":
         edisp = EDispMap.from_diagonal_response(energy_axis_true=e_true)
+    elif edisp == "edispkernelmap":
+        edisp = EDispKernelMap.from_diagonal_response(energy_axis=e_reco, energy_axis_true=e_true)
+    elif edisp == "edispkernel":
+        edisp = EDispKernel.from_diagonal_response(e_true=e_true, e_reco=e_reco)
     else:
         edisp = None
 
@@ -162,7 +168,7 @@ def test_fake(sky_model, geom, geom_etrue):
 @pytest.mark.xfail
 @requires_data()
 def test_different_exposure_unit(sky_model, geom):
-    dataset_ref = get_map_dataset(sky_model, geom, geom, edisp=False)
+    dataset_ref = get_map_dataset(sky_model, geom, geom, edisp='None')
     npred_ref = dataset_ref.npred()
 
     ebounds_true = np.logspace(2, 4, 3)
@@ -175,7 +181,7 @@ def test_different_exposure_unit(sky_model, geom):
         axes=[axis],
     )
 
-    dataset = get_map_dataset(sky_model, geom, geom_gev, edisp=False)
+    dataset = get_map_dataset(sky_model, geom, geom_gev, edisp='None')
     npred = dataset.npred()
 
     assert_allclose(npred.data[0, 50, 50], npred_ref.data[0, 50, 50])
@@ -183,7 +189,7 @@ def test_different_exposure_unit(sky_model, geom):
 
 @requires_data()
 def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
-    dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=True)
+    dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispmap")
 
     dataset_ref.counts = dataset_ref.background_model.map * 0.0
     dataset_ref.counts.data[1, 50, 50] = 1
@@ -400,8 +406,9 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.npred()
     assert not dataset_1._evaluators[dataset_1.models[0]].contributes
 
+    region = sky_model.spatial_model.to_region()
     with mpl_plot_check():
-        dataset_1.plot_residuals()
+        dataset_1.plot_residuals(region=region)
 
 
 @requires_dependency("iminuit")
