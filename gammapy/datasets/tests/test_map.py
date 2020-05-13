@@ -555,6 +555,7 @@ def test_stack(geom, geom_etrue):
     assert_allclose(dataset1.mask_safe.data.sum(), 20000)
     assert len(dataset1.models) == 1
 
+@requires_data()
 def test_stack_simple_edisp(sky_model, geom, geom_etrue):
     dataset1 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispkernel")
     dataset2 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispkernel")
