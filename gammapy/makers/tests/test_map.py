@@ -40,6 +40,7 @@ def geom(ebounds, binsz=0.5):
             "exposure_image": 7.921993e10,
             "background": 27989.05,
             "binsz_irf": 0.5,
+            "migra": None,
         },
         {
             # Test single energy bin
@@ -50,6 +51,7 @@ def geom(ebounds, binsz=0.5):
             "exposure_image": 1.16866e11,
             "background": 30424.451,
             "binsz_irf": 0.5,
+            "migra": None,
         },
         {
             # Test single energy bin with exclusion mask
@@ -61,6 +63,7 @@ def geom(ebounds, binsz=0.5):
             "exposure_image": 1.16866e11,
             "background": 30424.451,
             "binsz_irf": 0.5,
+            "migra": None,
         },
         {
             # Test for different e_true and e_reco bins
@@ -74,6 +77,7 @@ def geom(ebounds, binsz=0.5):
             "background": 28760.283,
             "background_oversampling": 2,
             "binsz_irf": 0.5,
+            "migra": None,
         },
         {
             # Test for different e_true and e_reco and spatial bins
@@ -87,12 +91,27 @@ def geom(ebounds, binsz=0.5):
             "background": 28760.283,
             "background_oversampling": 2,
             "binsz_irf": 1.0,
+            "migra": None,
+        },
+        {
+            # Test for different e_true and e_reco and use edispmap
+            "geom": geom(ebounds=[0.1, 1, 10]),
+            "e_true": MapAxis.from_edges(
+                [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
+            ),
+            "counts": 34366,
+            "exposure": 9.951827e08,
+            "exposure_image": 6.492968e10,
+            "background": 28760.283,
+            "background_oversampling": 2,
+            "binsz_irf": 0.5,
+            "migra": MapAxis.from_edges(np.linspace(0.,3.,100), name="migra", unit=""),
         },
     ],
 )
 def test_map_maker(pars, observations):
     stacked = MapDataset.create(
-        geom=pars["geom"], energy_axis_true=pars["e_true"], binsz_irf=pars["binsz_irf"]
+        geom=pars["geom"], energy_axis_true=pars["e_true"], binsz_irf=pars["binsz_irf"], migra_axis=pars["migra"]
     )
 
     maker = MapDatasetMaker(background_oversampling=pars.get("background_oversampling"))

@@ -116,7 +116,7 @@ def get_map_dataset(sky_model, geom, geom_etrue, edisp="edispmap", name="test", 
     elif edisp == "edispkernelmap":
         edisp = EDispKernelMap.from_diagonal_response(energy_axis=e_reco, energy_axis_true=e_true)
     elif edisp == "edispkernel":
-        edisp = EDispKernel.from_diagonal_response(e_true=e_true, e_reco=e_reco)
+        edisp = EDispKernel.from_diagonal_response(e_true=e_true.edges, e_reco=e_reco.edges)
     else:
         edisp = None
 
@@ -187,9 +187,12 @@ def test_different_exposure_unit(sky_model, geom):
     assert_allclose(npred.data[0, 50, 50], npred_ref.data[0, 50, 50])
 
 
+@pytest.mark.parametrize(
+    ("edisp_mode"), ["edispmap", "edispkernelmap", "edispkernel"]
+)
 @requires_data()
-def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
-    dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispmap")
+def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
+    dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=edisp_mode)
 
     dataset_ref.counts = dataset_ref.background_model.map * 0.0
     dataset_ref.counts.data[1, 50, 50] = 1
@@ -672,7 +675,7 @@ def test_map_dataset_onoff_str(images):
 
 
 @requires_data()
-def test_stack_onoff(images, geom_image):
+def test_stack_onoff(images):
     dataset = get_map_dataset_onoff(images)
     stacked = dataset.copy()
 
