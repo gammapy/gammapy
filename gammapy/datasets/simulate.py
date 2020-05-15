@@ -180,7 +180,8 @@ class MapDatasetEventSampler:
         events.table["DEC"] = coords_reco["lat"] * u.deg
         return events
 
-    def event_det_coords(self, observation, events):
+    @staticmethod
+    def event_det_coords(observation, events):
         """Add columns of detector coordinates (DETX-DETY) to the event list.
 
         Parameters
@@ -367,7 +368,7 @@ class MapDatasetEventSampler:
             events_bkg = self.sample_background(dataset)
             events = EventList.stack([events_bkg])
 
-        events = self.event_det_coord(observation, events)
+        events = self.event_det_coords(observation, events)
         events.table["EVENT_ID"] = np.arange(len(events.table))
         events.table.meta = self.event_list_meta(dataset, observation)
 
