@@ -130,6 +130,8 @@ def test_mde_sample_background(dataset):
     assert_allclose(events.table["DEC"][0], -30.870316, rtol=1e-5)
     assert events.table["DEC"].unit == "deg"
 
+    assert events.table["DEC_TRUE"][0] == events.table["DEC"][0]
+
     assert_allclose(events.table["MC_ID"][0], 0, rtol=1e-5)
 
 
@@ -167,6 +169,28 @@ def test_mde_sample_edisp(dataset):
     assert events.table["DEC_TRUE"].unit == "deg"
 
     assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
+
+
+@requires_data()
+def test_event_det_coords(dataset):
+    irfs = load_cta_irfs(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    livetime = 1.0 * u.hr
+    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    obs = Observation.create(
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+    )
+
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.run(dataset=dataset, observation=obs)
+
+    assert len(events.table) == 374
+    assert_allclose(events.table["DETX"][0], -2.44563584, rtol=1e-5)
+    assert events.table["DETX"].unit == "deg"
+
+    assert_allclose(events.table["DETY"][0], 0.01414569, rtol=1e-5)
+    assert events.table["DETY"].unit == "deg"
 
 
 @requires_data()

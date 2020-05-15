@@ -2,6 +2,7 @@
 """Simulate observations"""
 import copy
 import numpy as np
+from astropy.coordinates import SkyCoord, SkyOffsetFrame
 import astropy.units as u
 from astropy.table import Table
 import gammapy
@@ -9,6 +10,7 @@ from gammapy.data import EventList
 from gammapy.maps import MapCoord
 from gammapy.modeling.models import BackgroundModel, ConstantTemporalModel
 from gammapy.utils.random import get_random_state
+
 
 __all__ = ["MapDatasetEventSampler"]
 
@@ -115,9 +117,9 @@ class MapDatasetEventSampler:
         table = self._sample_coord_time(background, temporal_model, dataset.gti)
 
         table["MC_ID"] = 0
-        table.rename_column("ENERGY_TRUE", "ENERGY")
-        table.rename_column("RA_TRUE", "RA")
-        table.rename_column("DEC_TRUE", "DEC")
+        table["ENERGY"] = table["ENERGY_TRUE"]
+        table["RA"] = table["RA_TRUE"]
+        table["DEC"] = table["DEC_TRUE"]
 
         return EventList(table)
 
@@ -176,6 +178,30 @@ class MapDatasetEventSampler:
         coords_reco = psf_map.sample_coord(coord, self.random_state)
         events.table["RA"] = coords_reco["lon"] * u.deg
         events.table["DEC"] = coords_reco["lat"] * u.deg
+        return events
+
+    @staticmethod
+    def event_det_coords(observation, events):
+        """Add columns of detector coordinates (DETX-DETY) to the event list.
+
+        Parameters
+        ----------
+        observation : `~gammapy.data.Observation`
+            In memory observation.
+        events : `~gammapy.data.EventList`
+            Event list.
+
+        Returns
+        -------
+        events : `~gammapy.data.EventList`
+            Event list with columns of event detector coordinates.
+        """
+        sky_coord = SkyCoord(events.table["RA"], events.table["DEC"], frame="icrs")
+        frame = SkyOffsetFrame(origin=observation.pointing_radec.icrs)
+        pseudo_fov_coord = sky_coord.transform_to(frame)
+
+        events.table["DETX"] = pseudo_fov_coord.lon
+        events.table["DETY"] = pseudo_fov_coord.lat
         return events
 
     @staticmethod
@@ -342,6 +368,7 @@ class MapDatasetEventSampler:
             events_bkg = self.sample_background(dataset)
             events = EventList.stack([events_bkg])
 
+        events = self.event_det_coords(observation, events)
         events.table["EVENT_ID"] = np.arange(len(events.table))
         events.table.meta = self.event_list_meta(dataset, observation)
 
