@@ -60,17 +60,16 @@ MANIFEST
 # notebooks
 *.ipynb_checkpoints
 docs/_static/notebooks
-docs/notebooks
 docs/modeling/gallery
-tutorials/fit_result_LogParabola.yaml
-tutorials/model-best-fit.yaml
-tutorials/crab-3datasets
-tutorials/analysis_1
-tutorials/analysis_3d
-tutorials/event_sampling
-tutorials/*.yaml
-tutorials/*.dat
-tutorials/*.reg
+docs/tutorials/fit_result_LogParabola.yaml
+docs/tutorials/model-best-fit.yaml
+docs/tutorials/crab-3datasets
+docs/tutorials/analysis_1
+docs/tutorials/analysis_3d
+docs/tutorials/event_sampling
+docs/tutorials/*.yaml
+docs/tutorials/*.dat
+docs/tutorials/*.reg
 
 gammapy-datasets
 temp
