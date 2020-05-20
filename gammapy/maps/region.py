@@ -169,10 +169,10 @@ class RegionGeom(Geom):
 
         area = self.region.to_pixel(self.wcs).area
         solid_angle = area * proj_plane_pixel_area(self.wcs) * u.deg ** 2
-        return solid_angle.to("sr")*np.ones(self.data_shape)
+        return solid_angle.to("sr")
 
     def bin_volume(self):
-        bin_volume = self.to_image().solid_angle()
+        bin_volume = self.solid_angle()*np.ones(self.data_shape)
 
         for idx, ax in enumerate(self.axes):
             shape = self.ndim * [1]
