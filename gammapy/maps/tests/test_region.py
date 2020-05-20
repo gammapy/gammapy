@@ -45,10 +45,11 @@ def test_create_axis(region):
     assert len(geom.axes) == 1
     assert geom.data_shape == (3, 1, 1)
 
-    with pytest.raises(ValueError):
-        axis = MapAxis.from_nodes([1, 2], name="test")
-        geom = RegionGeom.create(region, axes=[axis])
-
+    axis2 = MapAxis.from_nodes([1, 2], name="test")
+    geom = RegionGeom.create(region, axes=[axis, axis2])
+    assert geom.ndim == 4
+    assert len(geom.axes) == 2
+    assert geom.data_shape == (2, 3, 1, 1)
 
 def test_get_coord(region):
     axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy", interp="log")

@@ -44,10 +44,6 @@ class RegionGeom(Geom):
         self._region = region
         self._axes = make_axes(axes)
 
-        if axes is not None:
-            if len(axes) > 1 or axes[0].name not in ["energy", "energy_true"]:
-                raise ValueError("RegionGeom currently only supports an energy axes.")
-
         if wcs is None and region is not None:
             wcs = WcsGeom.create(
                 skydir=region.center,
@@ -167,10 +163,17 @@ class RegionGeom(Geom):
 
         area = self.region.to_pixel(self.wcs).area
         solid_angle = area * proj_plane_pixel_area(self.wcs) * u.deg ** 2
-        return solid_angle.to("sr")
+        return solid_angle.to("sr")*np.ones(self.data_shape)
 
     def bin_volume(self):
-        return self.solid_angle() * self.axes[0].bin_width.reshape((-1, 1, 1))
+        bin_volume = self.to_image().solid_angle()
+
+        for idx, ax in enumerate(self.axes):
+            shape = self.ndim * [1]
+            shape[-(idx + 3)] = -1
+            bin_volume = bin_volume * ax.bin_width.reshape(tuple(shape))
+
+        return bin_volume
 
     def to_cube(self, axes):
         axes = copy.deepcopy(self.axes) + axes
