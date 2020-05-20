@@ -124,7 +124,6 @@ class FluxPointsDataset(Dataset):
         """
         from gammapy.estimators import FluxPoints
 
-        filename = data["filename"]
         filename = make_path(data["filename"])
         table = Table.read(filename)
         mask_fit = table["mask_fit"].data.astype("bool")

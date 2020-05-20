@@ -113,15 +113,17 @@ class SpectrumDataset(Dataset):
             npred = np.sum(self.npred().data)
         str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
 
-        counts_off = np.nan
         if getattr(self, "counts_off", None) is not None:
             counts_off = np.sum(self.counts_off.data)
             str_ += "\t{:32}: {:.2f}\n\n".format("Total off counts", counts_off)
+        else:
+            counts_off = np.nan
 
-        background = np.nan
         if getattr(self, "background", None) is not None:
             background = np.sum(self.background.data)
             str_ += "\t{:32}: {:.2f}\n\n".format("Total background counts", background)
+        else:
+            background = np.nan
 
         aeff_min, aeff_max, aeff_unit = np.nan, np.nan, ""
         if self.aeff is not None:

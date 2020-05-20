@@ -156,9 +156,7 @@ class Models(collections.abc.MutableSequence):
             models = models._models
         elif isinstance(models, Model):
             models = [models]
-        elif isinstance(models, list):
-            models = models
-        else:
+        elif not isinstance(models, list):
             raise TypeError(f"Invalid type: {models!r}")
 
         unique_names = []
