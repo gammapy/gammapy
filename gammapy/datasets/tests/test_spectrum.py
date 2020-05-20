@@ -394,6 +394,7 @@ class TestSpectrumOnOff:
     @requires_dependency("matplotlib")
     def test_plot_off_regions(self):
         from gammapy.visualization import plot_spectrum_datasets_off_regions
+
         with mpl_plot_check():
             plot_spectrum_datasets_off_regions([self.dataset])
 

@@ -275,7 +275,7 @@ class TSMapEstimator:
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
         # to fail, this is a temporary fix
-        mask[background == 0] = 0
+        mask[background.data == 0] = 0
 
         return exposure.copy(data=mask.astype("int"), unit="")
 

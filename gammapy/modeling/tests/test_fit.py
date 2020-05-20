@@ -21,8 +21,12 @@ class MyModel(Model):
 class MyDataset(Dataset):
     def __init__(self, name="test"):
         self.name = name
-        self.models = Models([MyModel()])
+        self._models = Models([MyModel()])
         self.data_shape = (1,)
+
+    @property
+    def models(self):
+        return self._models
 
     def stat_sum(self):
         # self._model.parameters = parameters

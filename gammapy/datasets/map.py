@@ -13,7 +13,7 @@ from gammapy.irf.edisp_map import EDispMap
 from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling.models import BackgroundModel, Models
+from gammapy.modeling.models import BackgroundModel, Models, ProperModels
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
@@ -184,7 +184,7 @@ class MapDataset(Dataset):
     @property
     def models(self):
         """Models (`~gammapy.modeling.models.Models`)."""
-        return self._models
+        return ProperModels(self)
 
     @property
     def background_model(self):
@@ -246,10 +246,6 @@ class MapDataset(Dataset):
 
         if self.models:
             for model in self.models:
-                if model.datasets_names is not None:
-                    if self.name not in model.datasets_names:
-                        continue
-
                 evaluator = self._evaluators.get(model.name)
 
                 if evaluator is None:
@@ -1066,8 +1062,8 @@ class MapDatasetOnOff(MapDataset):
         self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
-        self.models = models
         self._name = make_name(name)
+        self.models = models
         self.mask_safe = mask_safe
         self.gti = gti
 

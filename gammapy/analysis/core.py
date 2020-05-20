@@ -149,11 +149,7 @@ class Analysis:
         else:
             raise TypeError(f"Invalid type: {models!r}")
 
-        for dataset in self.datasets:
-            if dataset.models is not None:
-                dataset.models.extend(self.models)
-            else:
-                dataset.models = self.models
+        self.datasets.models.extend(self.models)
 
         log.info(self.models)
 

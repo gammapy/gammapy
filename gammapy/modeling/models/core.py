@@ -23,7 +23,7 @@ def _set_link(shared_register, model):
     return shared_register
 
 
-__all__ = ["Model", "Models"]
+__all__ = ["Model", "Models", "ProperModels"]
 
 
 class Model:
@@ -430,3 +430,117 @@ class Models(collections.abc.MutableSequence):
     def copy(self):
         """A deep copy."""
         return copy.deepcopy(self)
+
+
+class ProperModels(Models):
+    """ Proper Models of a Dataset or Datasets."""
+
+    def __init__(self, parent):
+        from gammapy.datasets import Dataset, Datasets
+
+        if isinstance(parent, Dataset):
+            self._datasets = [parent]
+            self._is_dataset = True
+        elif isinstance(parent, Datasets):
+            self._datasets = parent._datasets
+            self._is_dataset = False
+        else:
+            raise TypeError(f"Invalid type: {type(parent)!r}")
+
+        unique_models = []
+        for d in self._datasets:
+            if d._models is not None:
+                for model in d._models:
+                    if model not in unique_models:
+                        if (
+                            model.datasets_names is None
+                            or d.name in model.datasets_names
+                        ):
+                            unique_models.append(model)
+            else:
+                d._models = Models([])
+            self._models = unique_models
+
+        if self._is_dataset == False:
+            self.force_models_consistency()
+
+        self._covar_file = None
+        self._covariance = Covariance(self.parameters)
+
+    def force_models_consistency(self):
+        """Force consistency between models listed in each dataset of a datasets
+        and each model.datasets_names. For example if a model with
+        datasets_names = None appears in only one dataset,
+        it will be automatically added to the others.
+        """
+        for d in self._datasets:
+            for m in self._models:
+                if (
+                    m.datasets_names is None or d.name in m.datasets_names
+                ) and m not in d.models:
+                    d.models.append(m)
+
+    def __add__(self, other):
+        if isinstance(other, (Models, list)):
+            pass
+        elif isinstance(other, Model):
+            other = [other]
+        else:
+            raise TypeError(f"Invalid type: {other!r}")
+        for d in self._datasets:
+            for m in other:
+                if m not in d._models:
+                    d._models.append(m)
+                if (
+                    m.datasets_names is not None
+                    and d.name not in m.datasets_names
+                    and self._is_dataset
+                ):
+                    m.datasets_names.append(d.name)
+
+    def __delitem__(self, key):
+        for d in self._datasets:
+            if key in d.models.names:
+                datasets_names = d.models[key].datasets_names
+                if datasets_names is None or d.name in datasets_names:
+                    d._models.remove(key)
+
+    def __setitem__(self, key, model):
+        from gammapy.modeling.models import SkyModel, SkyDiffuseCube
+
+        for d in self._datasets:
+            if model not in d._models:
+                if isinstance(model, (SkyModel, SkyDiffuseCube)):
+                    d._models[key] = model
+                else:
+                    raise TypeError(f"Invalid type: {model!r}")
+            if (
+                model.datasets_names is not None
+                and d.name not in model.datasets_names
+                and self._is_dataset
+            ):
+                model.datasets_names.append(d.name)
+
+    def insert(self, idx, model):
+        from gammapy.modeling.models import SkyModel, SkyDiffuseCube
+
+        for d in self._datasets:
+            if model not in d._models:
+                if isinstance(model, (SkyModel, SkyDiffuseCube)):
+                    if idx == len(self):
+                        index = len(d._models)
+                    else:
+                        index = idx
+                    d._models.insert(index, model)
+                else:
+                    raise TypeError(f"Invalid type: {model!r}")
+            if (
+                model.datasets_names is not None
+                and d.name not in model.datasets_names
+                and self._is_dataset
+            ):
+                model.datasets_names.append(d.name)
+
+    def remove(self, value):
+        key = value.name
+        del self[key]

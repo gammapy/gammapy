@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from gammapy.modeling.models import Models
+from gammapy.modeling.models import Models, ProperModels
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
@@ -75,7 +75,7 @@ class FluxPointsDataset(Dataset):
 
     @property
     def models(self):
-        return self._models
+        return ProperModels(self)
 
     @models.setter
     def models(self, models):
@@ -199,9 +199,6 @@ class FluxPointsDataset(Dataset):
         """Compute predicted flux."""
         flux = 0.0
         for model in self.models:
-            if model.datasets_names is not None:
-                if self.name not in model.datasets_names:
-                    continue
             flux += model.spectral_model(self.data.e_ref)
         return flux
 
