@@ -7,7 +7,7 @@ from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.datasets import Dataset
 from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
-from gammapy.maps import MapAxis, RegionGeom, RegionNDMap
+from gammapy.maps import RegionGeom, RegionNDMap
 from gammapy.modeling.models import Models, ProperModels
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic, cash, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
@@ -113,17 +113,15 @@ class SpectrumDataset(Dataset):
             npred = np.sum(self.npred().data)
         str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
 
+        counts_off = np.nan
         if getattr(self, "counts_off", None) is not None:
             counts_off = np.sum(self.counts_off.data)
             str_ += "\t{:32}: {:.2f}\n\n".format("Total off counts", counts_off)
-        else:
-            counts_off = np.nan
 
+        background = np.nan
         if getattr(self, "background", None) is not None:
             background = np.sum(self.background.data)
             str_ += "\t{:32}: {:.2f}\n\n".format("Total background counts", background)
-        else:
-            background = np.nan
 
         aeff_min, aeff_max, aeff_unit = np.nan, np.nan, ""
         if self.aeff is not None:
