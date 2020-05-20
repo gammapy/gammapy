@@ -143,8 +143,13 @@ class RegionGeom(Geom):
         cdict["skycoord"] = self.center_skydir.reshape((1, 1))
 
         if self.axes is not None:
+            coords = []
             for ax in self.axes:
-                cdict[ax.name] = ax.center.reshape((-1, 1, 1))
+                coords.append(ax.center) #.reshape((-1, 1, 1)))
+
+            coords = np.meshgrid(*coords)
+            for idx, ax in enumerate(self.axes):
+                cdict[ax.name] = coords[idx].reshape(self.data_shape)
 
         if frame is None:
             frame = self.frame
