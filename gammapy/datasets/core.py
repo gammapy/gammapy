@@ -109,11 +109,9 @@ class Datasets(collections.abc.MutableSequence):
 
         if isinstance(datasets, Datasets):
             datasets = datasets._datasets
-        elif isinstance(datasets, list):
-            datasets = datasets
         elif isinstance(datasets, Dataset):
             datasets = [datasets]
-        else:
+        elif not isinstance(datasets, list):
             raise TypeError(f"Invalid type: {datasets!r}")
 
         unique_names = []

@@ -6,7 +6,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.irf import Background3D, load_cta_irfs
+from gammapy.irf import Background3D
 from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
 from gammapy.utils.testing import Checker
 from .event_list import EventListChecker
