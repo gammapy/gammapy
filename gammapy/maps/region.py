@@ -139,6 +139,7 @@ class RegionGeom(Geom):
         coord : `~MapCoord`
             Map coordinate object.
         """
+        #TODO: support mode=edges?
         cdict = {}
         cdict["skycoord"] = self.center_skydir.reshape((1, 1))
 
@@ -248,11 +249,9 @@ class RegionGeom(Geom):
         return pix
 
     def get_idx(self):
-        idxs = (0, 0)
-        if self.axes is not None:
-            for ax in self.axes:
-                idxs += (np.arange(ax.nbin).reshape((-1, 1, 1)),)
-        return np.broadcast_arrays(*idxs)
+        idxs = [np.arange(n, dtype=float) for n in self.data_shape[::-1]]
+        return np.meshgrid(*idxs[::-1], indexing="ij")[::-1]
+
 
     def _make_bands_cols(self):
         pass

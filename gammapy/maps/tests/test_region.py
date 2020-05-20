@@ -67,13 +67,13 @@ def test_get_coord(region, energy_axis, test_axis):
 
     geom = RegionGeom.create(region, axes=[energy_axis, test_axis])
     coords = geom.get_coord()
-    assert coords["lon"].shape == (2,3,1, 1)
-    assert coords["test"].shape == (2,3,1, 1)
+    assert coords["lon"].shape == (2, 3, 1, 1)
+    assert coords["test"].shape == (2, 3, 1, 1)
     assert_allclose(coords["energy"].value[1].squeeze(), [1.467799, 3.162278, 6.812921], rtol=1e-5)
     assert_allclose(coords["test"].value[:,1].squeeze(), [1,2], rtol=1e-5)
 
 
-def test_get_idx(region, energy_axis):
+def test_get_idx(region, energy_axis, test_axis):
     geom = RegionGeom.create(region, axes=[energy_axis])
     pix = geom.get_idx()
 
@@ -81,6 +81,13 @@ def test_get_idx(region, energy_axis):
     assert_allclose(pix[1], 0)
     assert_allclose(pix[2].squeeze(), [0, 1, 2])
 
+    geom = RegionGeom.create(region, axes=[energy_axis, test_axis])
+    pix = geom.get_idx()
+
+    assert pix[0].shape == (2, 3, 1, 1)
+    assert_allclose(pix[0], 0)
+    assert_allclose(pix[1], 0)
+    assert_allclose(pix[2][0].squeeze(), [0, 1, 2])
 
 def test_coord_to_pix(region, energy_axis):
     geom = RegionGeom.create(region, axes=[energy_axis])
