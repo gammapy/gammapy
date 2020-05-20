@@ -89,7 +89,7 @@ def test_get_idx(region, energy_axis, test_axis):
     assert_allclose(pix[1], 0)
     assert_allclose(pix[2][0].squeeze(), [0, 1, 2])
 
-def test_coord_to_pix(region, energy_axis):
+def test_coord_to_pix(region, energy_axis, test_axis):
     geom = RegionGeom.create(region, axes=[energy_axis])
 
     position = SkyCoord(0, 0, frame="galactic", unit="deg")
@@ -100,6 +100,14 @@ def test_coord_to_pix(region, energy_axis):
     assert_allclose(coords_pix[1], 0)
     assert_allclose(coords_pix[2], -0.5)
 
+    geom = RegionGeom.create(region, axes=[energy_axis, test_axis])
+    coords["test"] = 2
+    coords_pix = geom.coord_to_pix(coords)
+
+    assert_allclose(coords_pix[0], 0)
+    assert_allclose(coords_pix[1], 0)
+    assert_allclose(coords_pix[2], -0.5)
+    assert_allclose(coords_pix[3], 1)
 
 def test_pix_to_coord(region, energy_axis):
     geom = RegionGeom.create(region, axes=[energy_axis])
@@ -119,6 +127,21 @@ def test_pix_to_coord(region, energy_axis):
     pix = (1, 1, 3)
     coords = geom.pix_to_coord(pix)
     assert_allclose(coords[2].value, 14.677993, rtol=1e-5)
+
+def test_pix_to_coord_2axes(region, energy_axis, test_axis):
+    geom = RegionGeom.create(region, axes=[energy_axis, test_axis])
+
+    pix = (0, 0, 0, 0)
+    coords = geom.pix_to_coord(pix)
+    assert_allclose(coords[0].value, 0)
+    assert_allclose(coords[1].value, 0)
+    assert_allclose(coords[2].value, 1.467799, rtol=1e-5)
+    assert_allclose(coords[3].value, 1)
+
+    pix = (0, 0, 0, 2)
+    coords = geom.pix_to_coord(pix)
+    assert_allclose(coords[3].value, 3)
+
 
 def test_contains(region):
     geom = RegionGeom.create(region)
