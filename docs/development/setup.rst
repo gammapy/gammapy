@@ -44,7 +44,7 @@ generated during the documentation building process.
 
 We do have automated testing for notebooks set up (just check that they run
 and don't raise an exception) in Travis CI (see below) which runs
-``python -m gammapy.utils.tutorials_test`` and looks at the ``tutorials/notebooks.yaml``
+``python -m gammapy.utils.notebooks_test`` and looks at the ``notebooks.yaml``
 file for which notebooks to test or not to test. It is also possible to perform
 tests locally on notebooks  with the ``gammapy jupyter`` command. This command provides
 functionalities for testing, code formatting, stripping output cells and execution. See

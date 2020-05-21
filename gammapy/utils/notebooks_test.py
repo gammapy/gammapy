@@ -45,16 +45,19 @@ def main():
 
     # setup
     path_temp = Path("temp")
-    path_empty_nbs = Path("tutorials")
     shutil.rmtree(path_temp, ignore_errors=True)
-    shutil.copytree(path_empty_nbs, path_temp)
 
     for notebook in get_notebooks():
         if requirement_missing(notebook):
             log.info(f"Skipping notebook (requirement missing): {notebook['name']}")
             continue
+
         filename = notebook["name"] + ".ipynb"
         path = path_temp / filename
+
+        # TODO: get notebook path from dict and copy file into temp
+        # path_empty_nbs = Path("tutorials")
+        # shutil.copy(src_path, path)
 
         if not notebook_test(path):
             passed = False

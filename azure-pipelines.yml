@@ -151,7 +151,7 @@ jobs:
 
   - script: |
       source activate gammapy-dev
-      python -m gammapy.utils.tutorials_process
+      python -m gammapy.utils.notebooks_process
     displayName: 'Run tutorial Jupyter notebooks'
 
   - script: |
