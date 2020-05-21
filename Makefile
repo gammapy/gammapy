@@ -93,8 +93,8 @@ test-scripts:
 	python -m gammapy.utils.scripts_test
 
 clean-nb:
-	python -m gammapy jupyter --src=tutorials black
-	python -m gammapy jupyter --src=tutorials strip
+	python -m gammapy jupyter --src=docs --r black
+	python -m gammapy jupyter --src=docs --r strip
 
 docs-sphinx:
 	cd docs && python -m sphinx . _build/html -b html

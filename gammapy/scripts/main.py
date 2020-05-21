@@ -121,8 +121,9 @@ def cli_download(ctx):  # noqa: D301
 
 @cli.group("jupyter", short_help="Perform actions on notebooks")
 @click.option("--src", default=".", help="Local folder or Jupyter notebook filename.")
+@click.option("--r", default=False, is_flag=True, help="Apply to notebooks found recursively in folder.")
 @click.pass_context
-def cli_jupyter(ctx, src):  # noqa: D301
+def cli_jupyter(ctx, src, r):  # noqa: D301
     """
     Perform a series of actions on Jupyter notebooks.
 
@@ -134,9 +135,9 @@ def cli_jupyter(ctx, src):  # noqa: D301
     --------
     \b
     $ gammapy jupyter strip
-    $ gammapy jupyter --src mynotebooks.ipynb run
-    $ gammapy jupyter --src myfolder/tutorials test
-    $ gammapy jupyter black
+    $ gammapy jupyter --src my/notebook.ipynb run
+    $ gammapy jupyter --src my/folder test
+    $ gammapy jupyter --src my/recursive/folder --r black
     """
     log = logging.getLogger(__name__)
 
@@ -146,7 +147,10 @@ def cli_jupyter(ctx, src):  # noqa: D301
         sys.exit()
 
     if path.is_dir():
-        paths = list(path.glob("*.ipynb"))
+        if r:
+            paths = list(path.rglob("*.ipynb"))
+        else:
+            paths = list(path.glob("*.ipynb"))
     else:
         paths = [path]
 
