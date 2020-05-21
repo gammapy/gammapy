@@ -44,10 +44,6 @@ class RegionGeom(Geom):
         self._region = region
         self._axes = make_axes(axes)
 
-        if axes is not None:
-            if len(axes) > 1 or axes[0].name not in ["energy", "energy_true"]:
-                raise ValueError("RegionGeom currently only supports an energy axes.")
-
         if wcs is None and region is not None:
             wcs = WcsGeom.create(
                 skydir=region.center,
@@ -143,12 +139,18 @@ class RegionGeom(Geom):
         coord : `~MapCoord`
             Map coordinate object.
         """
+        #TODO: support mode=edges?
         cdict = {}
         cdict["skycoord"] = self.center_skydir.reshape((1, 1))
 
         if self.axes is not None:
+            coords = []
             for ax in self.axes:
-                cdict[ax.name] = ax.center.reshape((-1, 1, 1))
+                coords.append(ax.center) #.reshape((-1, 1, 1)))
+
+            coords = np.meshgrid(*coords)
+            for idx, ax in enumerate(self.axes):
+                cdict[ax.name] = coords[idx].reshape(self.data_shape)
 
         if frame is None:
             frame = self.frame
@@ -170,7 +172,14 @@ class RegionGeom(Geom):
         return solid_angle.to("sr")
 
     def bin_volume(self):
-        return self.solid_angle() * self.axes[0].bin_width.reshape((-1, 1, 1))
+        bin_volume = self.solid_angle()*np.ones(self.data_shape)
+
+        for idx, ax in enumerate(self.axes):
+            shape = self.ndim * [1]
+            shape[-(idx + 3)] = -1
+            bin_volume = bin_volume * ax.bin_width.reshape(tuple(shape))
+
+        return bin_volume
 
     def to_cube(self, axes):
         axes = copy.deepcopy(self.axes) + axes
@@ -240,11 +249,9 @@ class RegionGeom(Geom):
         return pix
 
     def get_idx(self):
-        idxs = (0, 0)
-        if self.axes is not None:
-            for ax in self.axes:
-                idxs += (np.arange(ax.nbin).reshape((-1, 1, 1)),)
-        return np.broadcast_arrays(*idxs)
+        idxs = [np.arange(n, dtype=float) for n in self.data_shape[::-1]]
+        return np.meshgrid(*idxs[::-1], indexing="ij")[::-1]
+
 
     def _make_bands_cols(self):
         pass
