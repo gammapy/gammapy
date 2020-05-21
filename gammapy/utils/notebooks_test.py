@@ -10,11 +10,11 @@ import yaml
 from gammapy.scripts.jupyter import notebook_test
 
 log = logging.getLogger(__name__)
-
+RAW_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/"
 
 def get_notebooks():
     """Read `notebooks.yaml` info."""
-    path = Path("tutorials") / "notebooks.yaml"
+    path = Path("notebooks.yaml")
     with path.open() as fh:
         return yaml.safe_load(fh)
 
@@ -45,7 +45,7 @@ def main():
 
     # setup
     path_temp = Path("temp")
-    shutil.rmtree(path_temp, ignore_errors=True)
+    path_temp.mkdir()
 
     for notebook in get_notebooks():
         if requirement_missing(notebook):
@@ -53,13 +53,11 @@ def main():
             continue
 
         filename = notebook["name"] + ".ipynb"
-        path = path_temp / filename
+        path_dest = path_temp / filename
+        src_path = notebook["url"].replace(RAW_URL, "")
+        shutil.copyfile(src_path, path_dest)
 
-        # TODO: get notebook path from dict and copy file into temp
-        # path_empty_nbs = Path("tutorials")
-        # shutil.copy(src_path, path)
-
-        if not notebook_test(path):
+        if not notebook_test(path_dest):
             passed = False
 
     # tear down
