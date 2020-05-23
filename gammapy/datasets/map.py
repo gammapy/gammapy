@@ -246,13 +246,14 @@ class MapDataset(Dataset):
 
         if self.models:
             for model in self.models:
-                evaluator = self._evaluators.get(model.name)
+                model_id = hex(id(model))
+                evaluator = self._evaluators.get(model_id)
 
                 if evaluator is None:
                     evaluator = MapEvaluator(
                         model=model, evaluation_mode=self.evaluation_mode, gti=self.gti
                     )
-                    self._evaluators[model.name] = evaluator
+                    self._evaluators[model_id] = evaluator
 
                 # if the model component drifts out of its support the evaluator has
                 # has to be updated

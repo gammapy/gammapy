@@ -246,7 +246,8 @@ class SpectrumDataset(Dataset):
 
         if self.models:
             for model in self.models:
-                evaluator = self._evaluators.get(model.name)
+                model_id = hex(id(model))
+                evaluator = self._evaluators.get(model_id)
 
                 if evaluator is None:
                     evaluator = MapEvaluator(
@@ -255,7 +256,7 @@ class SpectrumDataset(Dataset):
                         edisp=self.edisp,
                         gti=self.gti,
                     )
-                    self._evaluators[model.name] = evaluator
+                    self._evaluators[model_id] = evaluator
 
                 npred = evaluator.compute_npred()
                 npred_total.stack(npred)
@@ -459,7 +460,9 @@ class SpectrumDataset(Dataset):
         background = RegionNDMap.create(region=region, axes=[e_reco])
 
         aeff = EffectiveAreaTable(
-            e_true.edges[:-1], e_true.edges[1:], np.zeros(e_true.edges[:-1].shape) * u.m ** 2
+            e_true.edges[:-1],
+            e_true.edges[1:],
+            np.zeros(e_true.edges[:-1].shape) * u.m ** 2,
         )
         edisp = EDispKernel.from_diagonal_response(e_true.edges, e_reco.edges)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")

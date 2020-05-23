@@ -501,6 +501,8 @@ class ProperModels(Models):
             if key in d.models.names:
                 datasets_names = d.models[key].datasets_names
                 if datasets_names is None or d.name in datasets_names:
+                    prev_id = hex(id(d.models[key]))
+                    d._evaluators[prev_id] = None
                     d._models.remove(key)
 
     def __setitem__(self, key, model):
@@ -509,7 +511,10 @@ class ProperModels(Models):
         for d in self._datasets:
             if model not in d._models:
                 if isinstance(model, (SkyModel, SkyDiffuseCube)):
+                    prev_id = hex(id(d.models[key]))
+                    d._evaluators[prev_id] = None
                     d._models[key] = model
+
                 else:
                     raise TypeError(f"Invalid type: {model!r}")
             if (

@@ -186,6 +186,9 @@ def test_models_management(tmp_path):
     model2 = datasets.models[0].copy(name="model2", datasets_names=[datasets[1].name])
     model3 = datasets.models[0].copy(name="model3", datasets_names=[datasets[0].name])
 
+    model1b = datasets.models[0].copy(name="model1", datasets_names=None)
+    model1b.spectral_model.amplitude.value *= 2
+
     names0 = datasets[0].models.names
     names1 = datasets[1].models.names
 
@@ -245,3 +248,12 @@ def test_models_management(tmp_path):
     _ = datasets.models  # auto-update models
     assert datasets[0].models.names == ["model1", "gll_iem_v06_cutout"]
     # the consistency check added diffuse model contained in the global model
+
+    npred1 = datasets[0].npred().data.sum()
+    datasets.models.remove(model1)
+    npred0 = datasets[0].npred().data.sum()
+    datasets.models.append(model1b)
+    npred1b = datasets[0].npred().data.sum()
+    assert npred1b != npred1
+    assert npred1b != npred0
+    assert_allclose(npred1b, 2147.407023024028)
