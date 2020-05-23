@@ -261,7 +261,7 @@ class SpectrumDataset(Dataset):
         """Predicted counts from source model (`RegionNDMap`)."""
         npred_total = RegionNDMap.from_geom(self._geom)
 
-        for key, evaluator in self.evaluators.items():
+        for _, evaluator in self.evaluators.items():
             npred = evaluator.compute_npred()
             npred_total.stack(npred)
 
