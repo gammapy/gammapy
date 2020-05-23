@@ -67,7 +67,6 @@ class MapDatasetEventSampler:
             Event list
         """
         events_all = []
-        _ = dataset.npred() # update evaluators
         for idx, model in enumerate(dataset.models):
             if isinstance(model, BackgroundModel):
                 continue

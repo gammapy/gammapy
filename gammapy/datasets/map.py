@@ -212,9 +212,23 @@ class MapDataset(Dataset):
     @property
     def evaluators(self):
         """Model evaluators"""
-        # this call is needed to trigger the setup of the evaluators
-        if not self._evaluators:
-            self.npred()
+
+        if self.models:
+            for model in self.models:
+                model_id = hex(id(model))
+                evaluator = self._evaluators.get(model_id)
+
+                if evaluator is None:
+                    evaluator = MapEvaluator(
+                        model=model, evaluation_mode=self.evaluation_mode, gti=self.gti
+                    )
+                    self._evaluators[model_id] = evaluator
+
+                # if the model component drifts out of its support the evaluator has
+                # has to be updated
+
+                if evaluator.needs_update:
+                    evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
 
         return self._evaluators
 
@@ -244,26 +258,10 @@ class MapDataset(Dataset):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
         npred_total = Map.from_geom(self._geom, dtype=float)
 
-        if self.models:
-            for model in self.models:
-                model_id = hex(id(model))
-                evaluator = self._evaluators.get(model_id)
-
-                if evaluator is None:
-                    evaluator = MapEvaluator(
-                        model=model, evaluation_mode=self.evaluation_mode, gti=self.gti
-                    )
-                    self._evaluators[model_id] = evaluator
-
-                # if the model component drifts out of its support the evaluator has
-                # has to be updated
-
-                if evaluator.needs_update:
-                    evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
-
-                if evaluator.contributes:
-                    npred = evaluator.compute_npred()
-                    npred_total.stack(npred)
+        for _, evaluator in self.evaluators.items():
+            if evaluator.contributes:
+                npred = evaluator.compute_npred()
+                npred_total.stack(npred)
 
         return npred_total
 

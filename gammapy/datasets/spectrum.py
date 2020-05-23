@@ -179,9 +179,20 @@ class SpectrumDataset(Dataset):
     @property
     def evaluators(self):
         """Model evaluators"""
-        # this call is needed to trigger the setup of the evaluators
-        if not self._evaluators:
-            self.npred()
+
+        if self.models:
+            for model in self.models:
+                model_id = hex(id(model))
+                evaluator = self._evaluators.get(model_id)
+
+                if evaluator is None:
+                    evaluator = MapEvaluator(
+                        model=model,
+                        exposure=self.exposure,
+                        edisp=self.edisp,
+                        gti=self.gti,
+                    )
+                    self._evaluators[model_id] = evaluator
 
         return self._evaluators
 
@@ -244,22 +255,9 @@ class SpectrumDataset(Dataset):
         """Predicted counts from source model (`RegionNDMap`)."""
         npred_total = RegionNDMap.from_geom(self._geom)
 
-        if self.models:
-            for model in self.models:
-                model_id = hex(id(model))
-                evaluator = self._evaluators.get(model_id)
-
-                if evaluator is None:
-                    evaluator = MapEvaluator(
-                        model=model,
-                        exposure=self.exposure,
-                        edisp=self.edisp,
-                        gti=self.gti,
-                    )
-                    self._evaluators[model_id] = evaluator
-
-                npred = evaluator.compute_npred()
-                npred_total.stack(npred)
+        for key, evaluator in self.evaluators.items():
+            npred = evaluator.compute_npred()
+            npred_total.stack(npred)
 
         return npred_total
 
