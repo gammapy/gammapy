@@ -181,9 +181,10 @@ class SpectrumDataset(Dataset):
         """Model evaluators"""
 
         if self.models:
+            hex_ids = []
             for model in self.models:
-                model_id = hex(id(model))
-                evaluator = self._evaluators.get(model_id)
+                evaluator = self._evaluators.get(model.hex_id)
+                hex_ids.append(model.hex_id)
 
                 if evaluator is None:
                     evaluator = MapEvaluator(
@@ -192,7 +193,12 @@ class SpectrumDataset(Dataset):
                         edisp=self.edisp,
                         gti=self.gti,
                     )
-                    self._evaluators[model_id] = evaluator
+                    self._evaluators[model.hex_id] = evaluator
+
+        keys = list(self._evaluators.keys())
+        for key in keys:
+            if key not in hex_ids:
+                del self._evaluators[key]
 
         return self._evaluators
 

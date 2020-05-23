@@ -214,21 +214,25 @@ class MapDataset(Dataset):
         """Model evaluators"""
 
         if self.models:
+            hex_ids = []
             for model in self.models:
-                model_id = hex(id(model))
-                evaluator = self._evaluators.get(model_id)
-
+                evaluator = self._evaluators.get(model.hex_id)
+                hex_ids.append(model.hex_id)
                 if evaluator is None:
                     evaluator = MapEvaluator(
                         model=model, evaluation_mode=self.evaluation_mode, gti=self.gti
                     )
-                    self._evaluators[model_id] = evaluator
+                    self._evaluators[model.hex_id] = evaluator
 
                 # if the model component drifts out of its support the evaluator has
                 # has to be updated
-
                 if evaluator.needs_update:
                     evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+
+        keys = list(self._evaluators.keys())
+        for key in keys:
+            if key not in hex_ids:
+                del self._evaluators[key]
 
         return self._evaluators
 

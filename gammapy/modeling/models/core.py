@@ -51,6 +51,10 @@ class Model:
             [_ for _ in cls.__dict__.values() if isinstance(_, Parameter)]
         )
 
+    @property
+    def hex_id(self):
+        return hex(id(self))
+
     @classmethod
     def from_parameters(cls, parameters, **kwargs):
         """Create model from parameter list
@@ -501,8 +505,6 @@ class ProperModels(Models):
             if key in d.models.names:
                 datasets_names = d.models[key].datasets_names
                 if datasets_names is None or d.name in datasets_names:
-                    prev_id = hex(id(d.models[key]))
-                    del d.evaluators[prev_id]
                     d._models.remove(key)
 
     def __setitem__(self, key, model):
@@ -511,8 +513,6 @@ class ProperModels(Models):
         for d in self._datasets:
             if model not in d._models:
                 if isinstance(model, (SkyModel, SkyDiffuseCube)):
-                    prev_id = hex(id(d.models[key]))
-                    del d.evaluators[prev_id]
                     d._models[key] = model
 
                 else:
