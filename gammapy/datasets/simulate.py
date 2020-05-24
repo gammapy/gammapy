@@ -71,7 +71,7 @@ class MapDatasetEventSampler:
             if isinstance(model, BackgroundModel):
                 continue
 
-            evaluator = dataset.evaluators.get(hex(id(model)))
+            evaluator = dataset.evaluators.get(model)
 
             evaluator = copy.deepcopy(evaluator)
             evaluator.model.apply_irf["psf"] = False
