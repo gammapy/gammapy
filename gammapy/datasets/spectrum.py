@@ -181,10 +181,8 @@ class SpectrumDataset(Dataset):
         """Model evaluators"""
 
         if self.models:
-            hex_ids = []
             for model in self.models:
-                evaluator = self._evaluators.get(model.hex_id)
-                hex_ids.append(model.hex_id)
+                evaluator = self._evaluators.get(model)
 
                 if evaluator is None:
                     evaluator = MapEvaluator(
@@ -193,11 +191,11 @@ class SpectrumDataset(Dataset):
                         edisp=self.edisp,
                         gti=self.gti,
                     )
-                    self._evaluators[model.hex_id] = evaluator
+                    self._evaluators[model] = evaluator
 
         keys = list(self._evaluators.keys())
         for key in keys:
-            if key not in hex_ids:
+            if key not in self.models:
                 del self._evaluators[key]
 
         return self._evaluators
@@ -261,8 +259,8 @@ class SpectrumDataset(Dataset):
         """Predicted counts from source model (`RegionNDMap`)."""
         npred_total = RegionNDMap.from_geom(self._geom)
 
-        for _, evaluator in self.evaluators.items():
-            npred = evaluator.compute_npred()
+        for key in self.evaluators:
+            npred = self.evaluators[key].compute_npred()
             npred_total.stack(npred)
 
         return npred_total

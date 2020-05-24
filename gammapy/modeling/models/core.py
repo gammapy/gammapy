@@ -51,10 +51,6 @@ class Model:
             [_ for _ in cls.__dict__.values() if isinstance(_, Parameter)]
         )
 
-    @property
-    def hex_id(self):
-        return hex(id(self))
-
     @classmethod
     def from_parameters(cls, parameters, **kwargs):
         """Create model from parameter list

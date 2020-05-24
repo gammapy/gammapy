@@ -214,15 +214,13 @@ class MapDataset(Dataset):
         """Model evaluators"""
 
         if self.models:
-            hex_ids = []
             for model in self.models:
-                evaluator = self._evaluators.get(model.hex_id)
-                hex_ids.append(model.hex_id)
+                evaluator = self._evaluators.get(model)
                 if evaluator is None:
                     evaluator = MapEvaluator(
                         model=model, evaluation_mode=self.evaluation_mode, gti=self.gti
                     )
-                    self._evaluators[model.hex_id] = evaluator
+                    self._evaluators[model] = evaluator
 
                 # if the model component drifts out of its support the evaluator has
                 # has to be updated
@@ -231,7 +229,7 @@ class MapDataset(Dataset):
 
         keys = list(self._evaluators.keys())
         for key in keys:
-            if key not in hex_ids:
+            if key not in self.models:
                 del self._evaluators[key]
 
         return self._evaluators
@@ -262,9 +260,9 @@ class MapDataset(Dataset):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
         npred_total = Map.from_geom(self._geom, dtype=float)
 
-        for _, evaluator in self.evaluators.items():
-            if evaluator.contributes:
-                npred = evaluator.compute_npred()
+        for key in self.evaluators:
+            if self.evaluators[key].contributes:
+                npred = self.evaluators[key].compute_npred()
                 npred_total.stack(npred)
 
         return npred_total
