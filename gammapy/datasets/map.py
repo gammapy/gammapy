@@ -794,6 +794,50 @@ class MapDataset(Dataset):
             "filename": str(filename),
         }
 
+    def info_dict(self, region=None):
+        """Basic info dict with summary statistics
+
+        If a region is passed, then a spectrum dataset is
+        extracted, and the corresponding info returned.
+
+        Parameters
+        ----------
+        region : `~regions.SkyRegion`, optional
+            the input ON region on which to extract the spectrum
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info.
+        """
+        if region:
+            info = self.to_spectrum_dataset(on_region=region).info_dict()
+
+        else:
+            info = dict()
+            info["name"] = self.name
+            if self.counts:
+                info["counts"] = np.sum(self.counts.data)
+            if self.background_model:
+                info["background"] = np.sum(self.background_model.evaluate().data)
+                info["excess"] = info["counts"] - info["background"]
+
+            info["npred"] = np.sum(self.npred())
+
+            if self.mask_safe is not None:
+                mask = self.mask_safe.reduce_over_axes(np.logical_or).data
+                if not mask.any():
+                    mask = None
+            else:
+                mask = None
+            if self.exposure:
+                exposure_min = np.min(self.exposure.data[..., mask])
+                exposure_max = np.max(self.exposure.data[..., mask])
+                info["aeff_min"] = exposure_min * self.exposure.unit
+                info["aeff_max"] = exposure_max * self.exposure.unit
+
+        return info
+
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
         """Return a ~gammapy.spectrum.SpectrumDataset from on_region.
 
@@ -1503,6 +1547,37 @@ class MapDatasetOnOff(MapDataset):
             )
 
         return self.from_map_dataset(dataset, **kwargs)
+
+    def info_dict(self, region=None):
+        """Basic info dict with summary statistics
+
+        If a region is passed, then a spectrum dataset is
+        extracted, and the corresponding info returned.
+
+        Parameters
+        ----------
+        region : `~regions.SkyRegion`, optional
+            the input ON region on which to extract the spectrum
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info.
+        """
+        info = super().info_dict(region)
+        if not region:
+            if self.counts_off is not None:
+                info["counts_off"] = np.sum(self.counts_off.data)
+
+            if self.acceptance is not None:
+                info["acceptance"] = np.sum(self.acceptance.data)
+
+            if self.acceptance_off is not None:
+                info["acceptance_off"] = np.sum(self.acceptance_off.data)
+
+            info["excess"] = np.sum(self.excess.data)
+
+        return info
 
 
 class MapEvaluator:
