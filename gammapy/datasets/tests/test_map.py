@@ -397,7 +397,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     dataset_1.models[0].spatial_model.lon_0.value = 150
     dataset_1.npred()
-    assert not dataset_1._evaluators[dataset_1.models[0].name].contributes
+    assert not dataset_1._evaluators[dataset_1.models[0]].contributes
 
     with mpl_plot_check():
         dataset_1.plot_residuals()

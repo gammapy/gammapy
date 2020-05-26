@@ -179,9 +179,24 @@ class SpectrumDataset(Dataset):
     @property
     def evaluators(self):
         """Model evaluators"""
-        # this call is needed to trigger the setup of the evaluators
-        if not self._evaluators:
-            self.npred()
+
+        if self.models:
+            for model in self.models:
+                evaluator = self._evaluators.get(model)
+
+                if evaluator is None:
+                    evaluator = MapEvaluator(
+                        model=model,
+                        exposure=self.exposure,
+                        edisp=self.edisp,
+                        gti=self.gti,
+                    )
+                    self._evaluators[model] = evaluator
+
+        keys = list(self._evaluators.keys())
+        for key in keys:
+            if key not in self.models:
+                del self._evaluators[key]
 
         return self._evaluators
 
@@ -244,21 +259,9 @@ class SpectrumDataset(Dataset):
         """Predicted counts from source model (`RegionNDMap`)."""
         npred_total = RegionNDMap.from_geom(self._geom)
 
-        if self.models:
-            for model in self.models:
-                evaluator = self._evaluators.get(model.name)
-
-                if evaluator is None:
-                    evaluator = MapEvaluator(
-                        model=model,
-                        exposure=self.exposure,
-                        edisp=self.edisp,
-                        gti=self.gti,
-                    )
-                    self._evaluators[model.name] = evaluator
-
-                npred = evaluator.compute_npred()
-                npred_total.stack(npred)
+        for key in self.evaluators:
+            npred = self.evaluators[key].compute_npred()
+            npred_total.stack(npred)
 
         return npred_total
 
@@ -459,7 +462,9 @@ class SpectrumDataset(Dataset):
         background = RegionNDMap.create(region=region, axes=[e_reco])
 
         aeff = EffectiveAreaTable(
-            e_true.edges[:-1], e_true.edges[1:], np.zeros(e_true.edges[:-1].shape) * u.m ** 2
+            e_true.edges[:-1],
+            e_true.edges[1:],
+            np.zeros(e_true.edges[:-1].shape) * u.m ** 2,
         )
         edisp = EDispKernel.from_diagonal_response(e_true.edges, e_reco.edges)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")

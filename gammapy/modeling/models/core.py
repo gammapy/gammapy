@@ -510,6 +510,7 @@ class ProperModels(Models):
             if model not in d._models:
                 if isinstance(model, (SkyModel, SkyDiffuseCube)):
                     d._models[key] = model
+
                 else:
                     raise TypeError(f"Invalid type: {model!r}")
             if (

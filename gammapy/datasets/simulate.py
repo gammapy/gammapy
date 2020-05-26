@@ -67,12 +67,11 @@ class MapDatasetEventSampler:
             Event list
         """
         events_all = []
-
         for idx, model in enumerate(dataset.models):
             if isinstance(model, BackgroundModel):
                 continue
 
-            evaluator = dataset.evaluators.get(model.name)
+            evaluator = dataset.evaluators.get(model)
 
             evaluator = copy.deepcopy(evaluator)
             evaluator.model.apply_irf["psf"] = False

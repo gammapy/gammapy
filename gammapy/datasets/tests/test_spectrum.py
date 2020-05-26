@@ -154,7 +154,9 @@ def test_fit(spectrum_dataset):
 
 def test_spectrum_dataset_create():
     e_reco = MapAxis.from_edges(u.Quantity([0.1, 1, 10.0], "TeV"), name="energy")
-    e_true = MapAxis.from_edges(u.Quantity([0.05, 0.5, 5, 20.0], "TeV"), name="energy_true")
+    e_true = MapAxis.from_edges(
+        u.Quantity([0.05, 0.5, 5, 20.0], "TeV"), name="energy_true"
+    )
     empty_spectrum_dataset = SpectrumDataset.create(e_reco, e_true, name="test")
 
     assert empty_spectrum_dataset.name == "test"
@@ -331,7 +333,9 @@ class TestSpectrumOnOff:
 
     def test_spectrumdatasetonoff_create(self):
         e_reco = MapAxis.from_edges(u.Quantity([0.1, 1, 10.0], "TeV"), name="energy")
-        e_true = MapAxis.from_edges(u.Quantity([0.05, 0.5, 5, 20.0], "TeV"),  name="energy_true")
+        e_true = MapAxis.from_edges(
+            u.Quantity([0.05, 0.5, 5, 20.0], "TeV"), name="energy_true"
+        )
         empty_dataset = SpectrumDatasetOnOff.create(e_reco, e_true)
 
         assert empty_dataset.counts.data.sum() == 0
@@ -817,7 +821,7 @@ def test_spectrum_dataset_on_off_to_yaml(tmpdir):
 
 
 def test_stack_no_livetime():
-    e_reco = MapAxis.from_energy_bounds(1,10, 3, name="energy", unit='TeV')
+    e_reco = MapAxis.from_energy_bounds(1, 10, 3, name="energy", unit="TeV")
     dataset_1 = SpectrumDataset.create(e_reco=e_reco)
     dataset_1.livetime = None
     dataset_2 = dataset_1.copy()
