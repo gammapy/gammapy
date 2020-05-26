@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
+import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset
+from gammapy.irf import EDispMap, EDispKernelMap
 from gammapy.makers import MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
@@ -38,6 +40,7 @@ def geom(ebounds, binsz=0.5):
             "exposure_image": 7.921993e10,
             "background": 27989.05,
             "binsz_irf": 0.5,
+            "migra": None,
         },
         {
             # Test single energy bin
@@ -48,6 +51,7 @@ def geom(ebounds, binsz=0.5):
             "exposure_image": 1.16866e11,
             "background": 30424.451,
             "binsz_irf": 0.5,
+            "migra": None,
         },
         {
             # Test single energy bin with exclusion mask
@@ -59,6 +63,7 @@ def geom(ebounds, binsz=0.5):
             "exposure_image": 1.16866e11,
             "background": 30424.451,
             "binsz_irf": 0.5,
+            "migra": None,
         },
         {
             # Test for different e_true and e_reco bins
@@ -72,6 +77,7 @@ def geom(ebounds, binsz=0.5):
             "background": 28760.283,
             "background_oversampling": 2,
             "binsz_irf": 0.5,
+            "migra": None,
         },
         {
             # Test for different e_true and e_reco and spatial bins
@@ -85,12 +91,27 @@ def geom(ebounds, binsz=0.5):
             "background": 28760.283,
             "background_oversampling": 2,
             "binsz_irf": 1.0,
+            "migra": None,
+        },
+        {
+            # Test for different e_true and e_reco and use edispmap
+            "geom": geom(ebounds=[0.1, 1, 10]),
+            "e_true": MapAxis.from_edges(
+                [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
+            ),
+            "counts": 34366,
+            "exposure": 9.951827e08,
+            "exposure_image": 6.492968e10,
+            "background": 28760.283,
+            "background_oversampling": 2,
+            "binsz_irf": 0.5,
+            "migra": MapAxis.from_edges(np.linspace(0.,3.,100), name="migra", unit=""),
         },
     ],
 )
 def test_map_maker(pars, observations):
     stacked = MapDataset.create(
-        geom=pars["geom"], energy_axis_true=pars["e_true"], binsz_irf=pars["binsz_irf"]
+        geom=pars["geom"], energy_axis_true=pars["e_true"], binsz_irf=pars["binsz_irf"], migra_axis=pars["migra"]
     )
 
     maker = MapDatasetMaker(background_oversampling=pars.get("background_oversampling"))
@@ -147,8 +168,30 @@ def test_map_maker_obs(observations):
     map_dataset = maker_obs.run(reference, observations[0])
     assert map_dataset.counts.geom == geom_reco
     assert map_dataset.background_model.map.geom == geom_reco
-    assert map_dataset.edisp.edisp_map.data.shape == (3, 48, 5, 10)
+    assert isinstance(map_dataset.edisp, EDispKernelMap)
+    assert map_dataset.edisp.edisp_map.data.shape == (3, 2, 5, 10)
     assert map_dataset.edisp.exposure_map.data.shape == (3, 1, 5, 10)
     assert map_dataset.psf.psf_map.data.shape == (3, 66, 5, 10)
     assert map_dataset.psf.exposure_map.data.shape == (3, 1, 5, 10)
     assert_allclose(map_dataset.gti.time_delta, 1800.0 * u.s)
+
+@requires_data()
+def test_map_maker_obs_with_migra(observations):
+    # Test for different spatial geoms and etrue, ereco bins
+    migra = MapAxis.from_edges(np.linspace(0,2.,50), unit='', name='migra')
+    geom_reco = geom(ebounds=[0.1, 1, 10])
+    e_true = MapAxis.from_edges(
+        [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
+    )
+
+    reference = MapDataset.create(
+        geom=geom_reco, energy_axis_true=e_true, migra_axis=migra, binsz_irf=1.0
+    )
+
+    maker_obs = MapDatasetMaker()
+
+    map_dataset = maker_obs.run(reference, observations[0])
+    assert map_dataset.counts.geom == geom_reco
+    assert isinstance(map_dataset.edisp, EDispMap)
+    assert map_dataset.edisp.edisp_map.data.shape == (3, 49, 5, 10)
+    assert map_dataset.edisp.exposure_map.data.shape == (3, 1, 5, 10)

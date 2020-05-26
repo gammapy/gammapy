@@ -64,7 +64,7 @@ def dataset():
     geom_true.axes[0].name = "energy_true"
 
     dataset = get_map_dataset(
-        sky_model=skymodel, geom=geom, geom_etrue=geom_true, edisp=True
+        sky_model=skymodel, geom=geom, geom_etrue=geom_true, edisp="edispmap"
     )
     dataset.gti = gti
 

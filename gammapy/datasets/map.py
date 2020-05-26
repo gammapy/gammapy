@@ -9,7 +9,7 @@ from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable
-from gammapy.irf.edisp_map import EDispMap
+from gammapy.irf.edisp_map import EDispMap, EDispKernelMap
 from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis
@@ -85,6 +85,8 @@ class MapDataset(Dataset):
 
         if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
+
+
 
         self._name = make_name(name)
         self._background_model = None
@@ -290,7 +292,8 @@ class MapDataset(Dataset):
         geom_psf : `Geom`
             geometry for the psf map
         geom_edisp : `Geom`
-            geometry for the energy dispersion map
+            geometry for the energy dispersion kernel map.
+            If geom_edisp has a migra axis, this wil create an EDispMap instead.
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
@@ -311,7 +314,12 @@ class MapDataset(Dataset):
             [BackgroundModel(background, name=name + "-bkg", datasets_names=[name])]
         )
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
-        kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
+
+        if geom_edisp.axes[0].name.lower() == "energy":
+            kwargs["edisp"] = EDispKernelMap.from_geom(geom_edisp)
+        else:
+            kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
+
         kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs.setdefault(
@@ -342,7 +350,8 @@ class MapDataset(Dataset):
         energy_axis_true : `~gammapy.maps.MapAxis`
             True energy axis used for IRF maps
         migra_axis : `~gammapy.maps.MapAxis`
-            Migration axis for the energy dispersion map
+            If set, this provides the migration axis for the energy dispersion map.
+            If not set, an EDispKernelMap is produced instead. Default is None
         rad_axis : `~gammapy.maps.MapAxis`
             Rad axis for the psf map
         binsz_irf : float
@@ -357,7 +366,6 @@ class MapDataset(Dataset):
         empty_maps : `MapDataset`
             A MapDataset containing zero filled maps
         """
-        migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
         rad_axis = rad_axis or RAD_AXIS_DEFAULT
 
         if energy_axis_true is not None:
@@ -371,7 +379,12 @@ class MapDataset(Dataset):
         geom_exposure = geom_image.to_cube([energy_axis_true])
         geom_irf = geom_image.to_binsz(binsz=binsz_irf)
         geom_psf = geom_irf.to_cube([rad_axis, energy_axis_true])
-        geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
+        if migra_axis:
+            geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
+        else:
+            geom_edisp = geom_irf.to_cube(
+                [geom.get_axis_by_name("energy"), energy_axis_true]
+            )
 
         return cls.from_geoms(
             geom,
@@ -392,17 +405,24 @@ class MapDataset(Dataset):
             Map dataset to be stacked with this one. If other is an on-off
             dataset alpha * counts_off is used as a background model.
         """
+        if self.mask_safe is None:
+            self.mask_safe = Map.from_geom(self._geom, data=np.ones_like(self.data_shape))
+
+        if other.mask_safe is None:
+            other_mask_safe = Map.from_geom(other._geom, data=np.ones_like(other.data_shape))
+        else:
+            other_mask_safe = other.mask_safe
 
         if self.counts and other.counts:
             self.counts *= self.mask_safe
-            self.counts.stack(other.counts, weights=other.mask_safe)
+            self.counts.stack(other.counts, weights=other_mask_safe)
 
         if self.exposure and other.exposure:
             mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or)
             self.exposure *= mask_image.data
             # TODO: apply energy dependent mask to exposure. Does this require
             #  a mask_safe in true energy?
-            mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
+            mask_image_other = other_mask_safe.reduce_over_axes(func=np.logical_or)
             self.exposure.stack(other.exposure, weights=mask_image_other)
 
         # TODO: unify background model handling
@@ -413,13 +433,10 @@ class MapDataset(Dataset):
 
         if self.background_model and background_model:
             self._background_model.map *= self.mask_safe
-            self._background_model.stack(background_model, other.mask_safe)
+            self._background_model.stack(background_model, other_mask_safe)
             self.models = Models([self.background_model])
         else:
             self.models = None
-
-        if self.mask_safe is not None and other.mask_safe is not None:
-            self.mask_safe.stack(other.mask_safe)
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
@@ -427,7 +444,7 @@ class MapDataset(Dataset):
                 self.psf.psf_map *= mask_irf.data
                 self.psf.exposure_map *= mask_irf.data
 
-                mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
+                mask_image_other = other_mask_safe.reduce_over_axes(func=np.logical_or)
                 mask_irf_other = self._mask_safe_irf(
                     other.psf.psf_map, mask_image_other
                 )
@@ -441,13 +458,27 @@ class MapDataset(Dataset):
                 self.edisp.edisp_map *= mask_irf.data
                 self.edisp.exposure_map *= mask_irf.data
 
-                mask_image_other = other.mask_safe.reduce_over_axes(func=np.logical_or)
+                mask_image_other = other_mask_safe.reduce_over_axes(func=np.logical_or)
+                mask_irf_other = self._mask_safe_irf(
+                    other.edisp.edisp_map, mask_image_other
+                )
+                self.edisp.stack(other.edisp, weights=mask_irf_other)
+            elif isinstance(self.edisp, EDispKernelMap) and isinstance(
+                other.edisp, EDispKernelMap
+            ):
+                mask_irf = self._mask_safe_irf(self.edisp.edisp_map, mask_image)
+                self.edisp.edisp_map *= mask_irf.data
+                self.edisp.exposure_map *= mask_irf.data
+
+                mask_image_other = other_mask_safe.reduce_over_axes(func=np.logical_or)
                 mask_irf_other = self._mask_safe_irf(
                     other.edisp.edisp_map, mask_image_other
                 )
                 self.edisp.stack(other.edisp, weights=mask_irf_other)
             else:
                 raise ValueError("Stacking of edisp kernels not supported")
+
+        self.mask_safe.stack(other_mask_safe)
 
         if self.gti and other.gti:
             self.gti = self.gti.stack(other.gti).union()
@@ -712,7 +743,10 @@ class MapDataset(Dataset):
         if "EDISP" in hdulist:
             edisp_map = Map.from_hdulist(hdulist, hdu="edisp")
             exposure_map = Map.from_hdulist(hdulist, hdu="edisp_exposure")
-            kwargs["edisp"] = EDispMap(edisp_map, exposure_map)
+            if edisp_map.geom.axes[0].name == "energy":
+                kwargs["edisp"] = EDispKernelMap(edisp_map, exposure_map)
+            else:
+                kwargs["edisp"] = EDispMap(edisp_map, exposure_map)
 
         if "PSF_KERNEL" in hdulist:
             psf_map = Map.from_hdulist(hdulist, hdu="psf_kernel")
@@ -867,6 +901,8 @@ class MapDataset(Dataset):
         if self.edisp is not None:
             if isinstance(self.edisp, EDispKernel):
                 edisp = self.edisp
+            elif isinstance(self.edisp, EDispKernelMap):
+                edisp = self.edisp.get_edisp_kernel(on_region.center)
             else:
                 axis = self._geom.get_axis_by_name("energy")
                 edisp = self.edisp.get_edisp_kernel(on_region.center, e_reco=axis.edges)
@@ -1049,16 +1085,16 @@ class MapDatasetOnOff(MapDataset):
         self.evaluation_mode = evaluation_mode
         self.counts = counts
         self.counts_off = counts_off
+        self.exposure = exposure
 
         if np.isscalar(acceptance):
-            acceptance = np.ones(self.data_shape) * acceptance
+            acceptance = Map.from_geom(self._geom, data=np.ones(self.data_shape) * acceptance)
 
         if np.isscalar(acceptance_off):
-            acceptance_off = np.ones(self.data_shape) * acceptance_off
+            acceptance_off = Map.from_geom(self._geom, data=np.ones(self.data_shape) * acceptance_off)
 
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
-        self.exposure = exposure
         self._background_model = None
         self.mask_fit = mask_fit
         self.psf = psf
@@ -1142,7 +1178,8 @@ class MapDatasetOnOff(MapDataset):
         geom_psf : `gammapy.maps.WcsGeom`
             geometry for the psf map
         geom_edisp : `gammapy.maps.WcsGeom`
-            geometry for the energy dispersion map
+            geometry for the energy dispersion kernel map.
+            If geom_edisp has a migra axis, this wil create an EDispMap instead.
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
@@ -1160,7 +1197,11 @@ class MapDatasetOnOff(MapDataset):
             kwargs[key] = Map.from_geom(geom, unit="")
 
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
-        kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
+        if geom_edisp.axes[0].name.lower() == "energy":
+            kwargs["edisp"] = EDispKernelMap.from_geom(geom_edisp)
+        else:
+            kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
+
         kwargs["psf"] = PSFMap.from_geom(geom_psf)
         kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
         kwargs["mask_safe"] = Map.from_geom(geom, dtype=bool)
@@ -1598,7 +1639,9 @@ class MapEvaluator:
         log.debug("Updating model evaluator")
         # cache current position of the model component
 
-        if isinstance(edisp, EDispMap):
+        if isinstance(edisp, EDispKernelMap):
+            self.edisp = edisp.get_edisp_kernel(self.model.position)
+        elif isinstance(edisp, EDispMap):
             e_reco = geom.get_axis_by_name("energy").edges
             self.edisp = edisp.get_edisp_kernel(self.model.position, e_reco=e_reco)
         else:

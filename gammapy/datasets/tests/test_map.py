@@ -9,6 +9,8 @@ from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.irf import (
     EDispMap,
+    EDispKernelMap,
+    EDispKernel,
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     PSFMap,
@@ -96,7 +98,7 @@ def sky_model():
     return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
-def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, name="test", **kwargs):
+def get_map_dataset(sky_model, geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
     """Returns a MapDatasets"""
     # define background model
     m = Map.from_geom(geom)
@@ -106,10 +108,15 @@ def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, name="test", **kwar
     psf = get_psf()
     exposure = get_exposure(geom_etrue)
 
-    if edisp:
-        # define energy dispersion
-        e_true = geom_etrue.get_axis_by_name("energy_true")
+    e_reco = geom.get_axis_by_name("energy")
+    e_true = geom_etrue.get_axis_by_name("energy_true")
+
+    if edisp == "edispmap":
         edisp = EDispMap.from_diagonal_response(energy_axis_true=e_true)
+    elif edisp == "edispkernelmap":
+        edisp = EDispKernelMap.from_diagonal_response(energy_axis=e_reco, energy_axis_true=e_true)
+    elif edisp == "edispkernel":
+        edisp = EDispKernel.from_diagonal_response(e_true=e_true.edges, e_reco=e_reco.edges)
     else:
         edisp = None
 
@@ -161,7 +168,7 @@ def test_fake(sky_model, geom, geom_etrue):
 @pytest.mark.xfail
 @requires_data()
 def test_different_exposure_unit(sky_model, geom):
-    dataset_ref = get_map_dataset(sky_model, geom, geom, edisp=False)
+    dataset_ref = get_map_dataset(sky_model, geom, geom, edisp='None')
     npred_ref = dataset_ref.npred()
 
     ebounds_true = np.logspace(2, 4, 3)
@@ -174,15 +181,18 @@ def test_different_exposure_unit(sky_model, geom):
         axes=[axis],
     )
 
-    dataset = get_map_dataset(sky_model, geom, geom_gev, edisp=False)
+    dataset = get_map_dataset(sky_model, geom, geom_gev, edisp='None')
     npred = dataset.npred()
 
     assert_allclose(npred.data[0, 50, 50], npred_ref.data[0, 50, 50])
 
 
+@pytest.mark.parametrize(
+    ("edisp_mode"), ["edispmap", "edispkernelmap", "edispkernel"]
+)
 @requires_data()
-def test_to_spectrum_dataset(sky_model, geom, geom_etrue):
-    dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=True)
+def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
+    dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=edisp_mode)
 
     dataset_ref.counts = dataset_ref.background_model.map * 0.0
     dataset_ref.counts.data[1, 50, 50] = 1
@@ -399,8 +409,9 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.npred()
     assert not dataset_1._evaluators[dataset_1.models[0]].contributes
 
+    region = sky_model.spatial_model.to_region()
     with mpl_plot_check():
-        dataset_1.plot_residuals()
+        dataset_1.plot_residuals(region=region)
 
 
 @requires_dependency("iminuit")
@@ -441,7 +452,36 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
     assert_allclose(pars["amplitude"].error, 8.127593e-14, rtol=1e-2)
 
 
-def test_create(geom, geom_etrue):
+def test_create():
+    # tests empty datasets created
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    e_reco = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
+    )
+    e_true = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 4), name="energy_true", unit=u.TeV, interp="log"
+    )
+    geom = WcsGeom.create(binsz=0.02, width=(2, 2), axes=[e_reco])
+    empty_dataset = MapDataset.create(
+        geom=geom, energy_axis_true=e_true, rad_axis=rad_axis
+    )
+
+    assert empty_dataset.counts.data.shape == (2, 100, 100)
+
+    assert empty_dataset.exposure.data.shape == (3, 100, 100)
+
+    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 10, 10)
+    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 10, 10)
+
+    assert isinstance(empty_dataset.edisp, EDispKernelMap)
+    assert empty_dataset.edisp.edisp_map.data.shape == (3, 2, 10, 10)
+    assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 10, 10)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 300)
+
+    assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
+
+
+def test_create_with_migra(tmp_path):
     # tests empty datasets created
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
@@ -456,18 +496,19 @@ def test_create(geom, geom_etrue):
         geom=geom, energy_axis_true=e_true, migra_axis=migra_axis, rad_axis=rad_axis
     )
 
-    assert empty_dataset.counts.data.shape == (2, 100, 100)
+    empty_dataset.write(tmp_path / "test.fits")
 
-    assert empty_dataset.exposure.data.shape == (3, 100, 100)
+    dataset_new = MapDataset.read(tmp_path / "test.fits")
 
-    assert empty_dataset.psf.psf_map.data.shape == (3, 50, 10, 10)
-    assert empty_dataset.psf.exposure_map.data.shape == (3, 1, 10, 10)
-
+    assert isinstance(empty_dataset.edisp, EDispMap)
     assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 10, 10)
     assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 10, 10)
     assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 300)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
+
+    assert isinstance(dataset_new.edisp, EDispMap)
+    assert dataset_new.edisp.edisp_map.data.shape == (3, 50, 10, 10)
 
 
 @requires_data()
@@ -514,6 +555,13 @@ def test_stack(geom, geom_etrue):
     assert_allclose(dataset1.mask_safe.data.sum(), 20000)
     assert len(dataset1.models) == 1
 
+@requires_data()
+def test_stack_simple_edisp(sky_model, geom, geom_etrue):
+    dataset1 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispkernel")
+    dataset2 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispkernel")
+
+    with pytest.raises(ValueError):
+        dataset1.stack(dataset2)
 
 def to_cube(image):
     # introduce a fake enery axis for now
@@ -602,7 +650,7 @@ def test_map_dataset_on_off_fits_io(images, tmp_path):
     )
 
 
-def test_create_onoff(geom, geom_etrue):
+def test_create_onoff(geom):
     # tests empty datasets created
 
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
@@ -634,7 +682,7 @@ def test_map_dataset_onoff_str(images):
 
 
 @requires_data()
-def test_stack_onoff(images, geom_image):
+def test_stack_onoff(images):
     dataset = get_map_dataset_onoff(images)
     stacked = dataset.copy()
 
@@ -737,6 +785,21 @@ def test_map_dataset_on_off_cutout(images):
     assert cutout_dataset.acceptance_off.data.shape == (1, 50, 50)
     assert cutout_dataset.background_model == None
     assert cutout_dataset.name != dataset.name
+
+def test_map_dataset_on_off_fake(geom):
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    energy_true_axis = geom.get_axis_by_name("energy").copy(name="energy_true")
+
+    empty_dataset = MapDataset.create(geom, energy_true_axis, rad_axis=rad_axis)
+    empty_dataset = MapDatasetOnOff.from_map_dataset(empty_dataset, acceptance=1, acceptance_off=10.)
+
+    empty_dataset.acceptance_off.data[0,50,50] = 0
+    background_map = Map.from_geom(geom, data=1)
+    empty_dataset.fake(background_map, random_state=42)
+
+    assert_allclose(empty_dataset.counts.data[0,50,50],0)
+    assert_allclose(empty_dataset.counts.data.mean(),0.99445, rtol=1e-3)
+    assert_allclose(empty_dataset.counts_off.data.mean(), 10.00055, rtol=1e-3)
 
 
 @requires_data()

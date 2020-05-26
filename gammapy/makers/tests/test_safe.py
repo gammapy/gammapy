@@ -47,7 +47,7 @@ def test_safe_mask_maker(observations):
     assert_allclose(mask_aeff_max.sum(), 1210)
 
     mask_edisp_bias = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
-    assert_allclose(mask_edisp_bias.sum(), 121)
+    assert_allclose(mask_edisp_bias.sum(), 1815)
 
     mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
     assert_allclose(mask_bkg_peak.sum(), 1815)

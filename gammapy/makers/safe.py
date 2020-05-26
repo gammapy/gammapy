@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
-from gammapy.irf import EffectiveAreaTable
+from gammapy.irf import EffectiveAreaTable, EDispKernelMap
 from gammapy.maps import Map, MapCoord
 
 __all__ = ["SafeMaskMaker"]
@@ -164,7 +164,10 @@ class SafeMaskMaker:
             if position is None:
                 position = dataset.counts.geom.center_skydir
             e_reco = dataset.counts.geom.get_axis_by_name("energy").edges
-            edisp = edisp.get_edisp_kernel(position, e_reco)
+            if isinstance(edisp, EDispKernelMap):
+                edisp = edisp.get_edisp_kernel(position)
+            else:
+                edisp = edisp.get_edisp_kernel(position, e_reco)
 
         e_min = edisp.get_bias_energy(self.bias_percent / 100)
         return geom.energy_mask(emin=e_min)
