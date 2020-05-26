@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.irf.edisp_map import EDispMap
@@ -810,12 +810,16 @@ class MapDataset(Dataset):
         info_dict : dict
             Dictionary with summary info.
         """
-        if region:
+        if self.gti is not None:
+            if region is None:
+                region = RectangleSkyRegion(
+                    center=self._geom.center_skydir,
+                    width=self._geom.width[0][0],
+                    height=self._geom.width[1][0],
+                )
             info = self.to_spectrum_dataset(on_region=region).info_dict()
-
         else:
             info = dict()
-            info["name"] = self.name
             if self.counts:
                 info["counts"] = np.sum(self.counts.data)
             if self.background_model:
@@ -823,7 +827,6 @@ class MapDataset(Dataset):
                 info["excess"] = info["counts"] - info["background"]
 
             info["npred"] = np.sum(self.npred())
-
             if self.mask_safe is not None:
                 mask = self.mask_safe.reduce_over_axes(np.logical_or).data
                 if not mask.any():
@@ -835,6 +838,8 @@ class MapDataset(Dataset):
                 exposure_max = np.max(self.exposure.data[..., mask])
                 info["aeff_min"] = exposure_min * self.exposure.unit
                 info["aeff_max"] = exposure_max * self.exposure.unit
+
+        info["name"] = self.name
 
         return info
 
@@ -1412,6 +1417,37 @@ class MapDatasetOnOff(MapDataset):
             kwargs["gti"] = gti
         return cls(**kwargs)
 
+    def info_dict(self, region=None):
+        """Basic info dict with summary statistics
+
+        If a region is passed, then a spectrum dataset is
+        extracted, and the corresponding info returned.
+
+        Parameters
+        ----------
+        region : `~regions.SkyRegion`, optional
+            the input ON region on which to extract the spectrum
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info.
+        """
+        info = super().info_dict(region)
+        info["name"] = self.name
+        if self.gti is None:
+            if self.counts_off is not None:
+                info["counts_off"] = np.sum(self.counts_off.data)
+
+            if self.acceptance is not None:
+                info["acceptance"] = np.sum(self.acceptance.data)
+
+            if self.acceptance_off is not None:
+                info["acceptance_off"] = np.sum(self.acceptance_off.data)
+
+            info["excess"] = np.sum(self.excess.data)
+        return info
+
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
         """Return a ~gammapy.spectrum.SpectrumDatasetOnOff from on_region.
 
@@ -1547,37 +1583,6 @@ class MapDatasetOnOff(MapDataset):
             )
 
         return self.from_map_dataset(dataset, **kwargs)
-
-    def info_dict(self, region=None):
-        """Basic info dict with summary statistics
-
-        If a region is passed, then a spectrum dataset is
-        extracted, and the corresponding info returned.
-
-        Parameters
-        ----------
-        region : `~regions.SkyRegion`, optional
-            the input ON region on which to extract the spectrum
-
-        Returns
-        -------
-        info_dict : dict
-            Dictionary with summary info.
-        """
-        info = super().info_dict(region)
-        if not region:
-            if self.counts_off is not None:
-                info["counts_off"] = np.sum(self.counts_off.data)
-
-            if self.acceptance is not None:
-                info["acceptance"] = np.sum(self.acceptance.data)
-
-            if self.acceptance_off is not None:
-                info["acceptance_off"] = np.sum(self.acceptance_off.data)
-
-            info["excess"] = np.sum(self.excess.data)
-
-        return info
 
 
 class MapEvaluator:

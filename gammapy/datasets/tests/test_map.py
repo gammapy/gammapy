@@ -215,6 +215,7 @@ def test_info_dict(sky_model, geom, geom_etrue):
     dataset = get_map_dataset(sky_model, geom, geom_etrue)
     dataset.counts = dataset.npred()
     info_dict = dataset.info_dict()
+
     assert_allclose(info_dict["counts"], 9526, rtol=1e-3)
     assert_allclose(info_dict["background"], 4000.0)
     assert_allclose(info_dict["excess"], 5525.756, rtol=1e-3)
@@ -223,20 +224,16 @@ def test_info_dict(sky_model, geom, geom_etrue):
     assert info_dict["aeff_max"].unit == "m2 s"
     assert info_dict["name"] == "test"
 
-    on_region = CircleSkyRegion(center=geom.center_skydir, radius=0.05 * u.deg)
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
     dataset.gti = gti
-    spectrum_dataset = dataset.to_spectrum_dataset(on_region, name="spec")
-    info_dict = spectrum_dataset.info_dict()
-
-    assert_allclose(info_dict["n_on"], 78.29, rtol=1e-3)
-    assert_allclose(info_dict["background"], 6.4, rtol=1e-3)
-
-    assert_allclose(info_dict["significance"], 15.76, rtol=1e-3)
-    assert_allclose(info_dict["excess"], 71.89, rtol=1e-3)
+    info_dict = dataset.info_dict()
+    assert_allclose(info_dict["n_on"], 9526, rtol=1e-3)
+    assert_allclose(info_dict["background"], 4000.0, rtol=1e-3)
+    assert_allclose(info_dict["significance"], 74.024180, rtol=1e-3)
+    assert_allclose(info_dict["excess"], 5525.756, rtol=1e-3)
     assert_allclose(info_dict["livetime"].value, 3600)
 
-    assert info_dict["name"] == "spec"
+    assert info_dict["name"] == "test"
 
 
 @requires_data()
@@ -889,3 +886,14 @@ def test_info_dict_on_off(images):
     assert_allclose(info_dict["counts_off"], 20407510.0, rtol=1e-3)
     assert_allclose(info_dict["acceptance"], 4272.7075, rtol=1e-3)
     assert_allclose(info_dict["acceptance_off"], 20175596.0, rtol=1e-3)
+
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+    dataset.gti = gti
+    info_dict = dataset.info_dict()
+    assert_allclose(info_dict["n_on"], 4299)
+    assert_allclose(info_dict["n_off"], 20407510.0)
+    assert_allclose(info_dict["a_on"], 0.068363324)
+    assert_allclose(info_dict["a_off"], 322.83185)
+    assert_allclose(info_dict["alpha"], 0.0002117614)
+    assert_allclose(info_dict["excess"], -22.52295)
+    assert_allclose(info_dict["livetime"].value, 3600)

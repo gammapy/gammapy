@@ -459,7 +459,9 @@ class SpectrumDataset(Dataset):
         background = RegionNDMap.create(region=region, axes=[e_reco])
 
         aeff = EffectiveAreaTable(
-            e_true.edges[:-1], e_true.edges[1:], np.zeros(e_true.edges[:-1].shape) * u.m ** 2
+            e_true.edges[:-1],
+            e_true.edges[1:],
+            np.zeros(e_true.edges[:-1].shape) * u.m ** 2,
         )
         edisp = EDispKernel.from_diagonal_response(e_true.edges, e_reco.edges)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
@@ -1159,7 +1161,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             gti=gti,
         )
 
-    def info_dict(self, in_safe_energy_range=True):
+    def info_dict(self, in_safe_energy_range=True, **kwargs):
         """Info dict with summary statistics, summed over energy
 
         Parameters
