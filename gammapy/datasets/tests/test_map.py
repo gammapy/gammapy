@@ -98,7 +98,9 @@ def sky_model():
     return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
-def get_map_dataset(sky_model, geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
+def get_map_dataset(
+    sky_model, geom, geom_etrue, edisp="edispmap", name="test", **kwargs
+):
     """Returns a MapDatasets"""
     # define background model
     m = Map.from_geom(geom)
@@ -114,9 +116,13 @@ def get_map_dataset(sky_model, geom, geom_etrue, edisp="edispmap", name="test", 
     if edisp == "edispmap":
         edisp = EDispMap.from_diagonal_response(energy_axis_true=e_true)
     elif edisp == "edispkernelmap":
-        edisp = EDispKernelMap.from_diagonal_response(energy_axis=e_reco, energy_axis_true=e_true)
+        edisp = EDispKernelMap.from_diagonal_response(
+            energy_axis=e_reco, energy_axis_true=e_true
+        )
     elif edisp == "edispkernel":
-        edisp = EDispKernel.from_diagonal_response(e_true=e_true.edges, e_reco=e_reco.edges)
+        edisp = EDispKernel.from_diagonal_response(
+            e_true=e_true.edges, e_reco=e_reco.edges
+        )
     else:
         edisp = None
 
@@ -168,7 +174,7 @@ def test_fake(sky_model, geom, geom_etrue):
 @pytest.mark.xfail
 @requires_data()
 def test_different_exposure_unit(sky_model, geom):
-    dataset_ref = get_map_dataset(sky_model, geom, geom, edisp='None')
+    dataset_ref = get_map_dataset(sky_model, geom, geom, edisp="None")
     npred_ref = dataset_ref.npred()
 
     ebounds_true = np.logspace(2, 4, 3)
@@ -181,15 +187,13 @@ def test_different_exposure_unit(sky_model, geom):
         axes=[axis],
     )
 
-    dataset = get_map_dataset(sky_model, geom, geom_gev, edisp='None')
+    dataset = get_map_dataset(sky_model, geom, geom_gev, edisp="None")
     npred = dataset.npred()
 
     assert_allclose(npred.data[0, 50, 50], npred_ref.data[0, 50, 50])
 
 
-@pytest.mark.parametrize(
-    ("edisp_mode"), ["edispmap", "edispkernelmap", "edispkernel"]
-)
+@pytest.mark.parametrize(("edisp_mode"), ["edispmap", "edispkernelmap", "edispkernel"])
 @requires_data()
 def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=edisp_mode)
@@ -581,6 +585,7 @@ def test_stack(geom, geom_etrue):
     assert_allclose(dataset1.mask_safe.data.sum(), 20000)
     assert len(dataset1.models) == 1
 
+
 @requires_data()
 def test_stack_simple_edisp(sky_model, geom, geom_etrue):
     dataset1 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispkernel")
@@ -588,6 +593,7 @@ def test_stack_simple_edisp(sky_model, geom, geom_etrue):
 
     with pytest.raises(ValueError):
         dataset1.stack(dataset2)
+
 
 def to_cube(image):
     # introduce a fake enery axis for now
@@ -668,6 +674,8 @@ def test_map_dataset_on_off_fits_io(images, tmp_path):
     assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
     assert_allclose(dataset.mask_safe, dataset_new.mask_safe)
 
+    assert np.all(dataset.mask_safe.data == dataset_new.mask_safe.data) == True
+    assert dataset.mask_safe.geom == dataset_new.mask_safe.geom
     assert dataset.counts.geom == dataset_new.counts.geom
     assert dataset.exposure.geom == dataset_new.exposure.geom
 
@@ -812,19 +820,22 @@ def test_map_dataset_on_off_cutout(images):
     assert cutout_dataset.background_model == None
     assert cutout_dataset.name != dataset.name
 
+
 def test_map_dataset_on_off_fake(geom):
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
     energy_true_axis = geom.get_axis_by_name("energy").copy(name="energy_true")
 
     empty_dataset = MapDataset.create(geom, energy_true_axis, rad_axis=rad_axis)
-    empty_dataset = MapDatasetOnOff.from_map_dataset(empty_dataset, acceptance=1, acceptance_off=10.)
+    empty_dataset = MapDatasetOnOff.from_map_dataset(
+        empty_dataset, acceptance=1, acceptance_off=10.0
+    )
 
-    empty_dataset.acceptance_off.data[0,50,50] = 0
+    empty_dataset.acceptance_off.data[0, 50, 50] = 0
     background_map = Map.from_geom(geom, data=1)
     empty_dataset.fake(background_map, random_state=42)
 
-    assert_allclose(empty_dataset.counts.data[0,50,50],0)
-    assert_allclose(empty_dataset.counts.data.mean(),0.99445, rtol=1e-3)
+    assert_allclose(empty_dataset.counts.data[0, 50, 50], 0)
+    assert_allclose(empty_dataset.counts.data.mean(), 0.99445, rtol=1e-3)
     assert_allclose(empty_dataset.counts_off.data.mean(), 10.00055, rtol=1e-3)
 
 
