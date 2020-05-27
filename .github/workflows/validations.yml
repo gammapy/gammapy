@@ -1,0 +1,14 @@
+name: Remote dispatch action on gammapy-benchmarks
+on:
+  pull-request:
+    branches:
+      - master
+jobs:
+  ping-pong:
+    runs-on: ubuntu-latest
+    steps:
+      - name: dispatch validation
+        run: |
+          curl -X POST https://api.github.com/repos/gammapy/gammapy-benchmarks/dispatches \
+          -H 'Accept: application/vnd.github.everest-preview+json' \
+          -u ${{ secrets.REMOTE_DISPATCH }} --data '{"event_type": "validate"}'
