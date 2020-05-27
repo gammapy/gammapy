@@ -86,8 +86,6 @@ class MapDataset(Dataset):
         if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
-
-
         self._name = make_name(name)
         self._background_model = None
         self.evaluation_mode = evaluation_mode
@@ -406,10 +404,14 @@ class MapDataset(Dataset):
             dataset alpha * counts_off is used as a background model.
         """
         if self.mask_safe is None:
-            self.mask_safe = Map.from_geom(self._geom, data=np.ones_like(self.data_shape))
+            self.mask_safe = Map.from_geom(
+                self._geom, data=np.ones_like(self.data_shape)
+            )
 
         if other.mask_safe is None:
-            other_mask_safe = Map.from_geom(other._geom, data=np.ones_like(other.data_shape))
+            other_mask_safe = Map.from_geom(
+                other._geom, data=np.ones_like(other.data_shape)
+            )
         else:
             other_mask_safe = other.mask_safe
 
@@ -1137,10 +1139,14 @@ class MapDatasetOnOff(MapDataset):
         self.exposure = exposure
 
         if np.isscalar(acceptance):
-            acceptance = Map.from_geom(self._geom, data=np.ones(self.data_shape) * acceptance)
+            acceptance = Map.from_geom(
+                self._geom, data=np.ones(self.data_shape) * acceptance
+            )
 
         if np.isscalar(acceptance_off):
-            acceptance_off = Map.from_geom(self._geom, data=np.ones(self.data_shape) * acceptance_off)
+            acceptance_off = Map.from_geom(
+                self._geom, data=np.ones(self.data_shape) * acceptance_off
+            )
 
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
@@ -1447,12 +1453,14 @@ class MapDatasetOnOff(MapDataset):
             kwargs["psf"] = PSFKernel(psf_map)
 
         if "MASK_SAFE" in hdulist:
-            mask_safe_map = Map.from_hdulist(hdulist, hdu="mask_safe")
-            kwargs["mask_safe"] = mask_safe_map.data.astype(bool)
+            mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe")
+            mask_safe.data = mask_safe.data.astype(bool)
+            kwargs["mask_safe"] = mask_safe
 
         if "MASK_FIT" in hdulist:
-            mask_fit_map = Map.from_hdulist(hdulist, hdu="mask_fit")
-            kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
+            mask_fit = Map.from_hdulist(hdulist, hdu="mask_fit")
+            mask_fit.data = mask_fit.data.astype(bool)
+            kwargs["mask_fit"] = mask_fit
 
         if "GTI" in hdulist:
             gti = GTI(Table.read(hdulist, hdu="GTI"))
