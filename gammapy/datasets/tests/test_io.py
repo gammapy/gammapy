@@ -59,7 +59,7 @@ def test_datasets_to_io(tmp_path):
         tmp_path, "written_datasets.yaml", "written_models.yaml"
     )
 
-    assert len(datasets.parameters) == 21
+    assert len(datasets.parameters) == 30
 
     assert len(datasets_read) == 2
     dataset0 = datasets_read[0]

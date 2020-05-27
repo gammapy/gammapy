@@ -398,6 +398,9 @@ class SkyDiffuseCube(SkyModelBase):
     norm = Parameter("norm", 1)
     tilt = Parameter("tilt", 0, unit="", frozen=True)
     reference = Parameter("reference", "1 TeV", frozen=True)
+    lambda_ = Parameter("lambda_", "0. TeV-1", frozen=True)
+    alpha = Parameter("alpha", "1.0", frozen=True)
+    beta = Parameter("beta", "0.0", frozen=True)
 
     _apply_irf_default = {"exposure": True, "psf": True, "edisp": True}
 
@@ -407,6 +410,9 @@ class SkyDiffuseCube(SkyModelBase):
         norm=norm.quantity,
         tilt=tilt.quantity,
         reference=reference.quantity,
+        lambda_=lambda_.quantity,
+        alpha=alpha.quantity,
+        beta=beta.quantity,
         meta=None,
         interp_kwargs=None,
         name=None,
@@ -436,7 +442,14 @@ class SkyDiffuseCube(SkyModelBase):
 
         self.apply_irf = apply_irf
         self.datasets_names = datasets_names
-        super().__init__(norm=norm, tilt=tilt, reference=reference)
+        super().__init__(
+            norm=norm,
+            tilt=tilt,
+            reference=reference,
+            lambda_=lambda_,
+            alpha=alpha,
+            beta=beta,
+        )
 
     @property
     def name(self):
@@ -495,11 +508,17 @@ class SkyDiffuseCube(SkyModelBase):
 
         norm = self.norm.value
         tilt = self.tilt.value
+        alpha = self.alpha.value
+        beta = self.beta.value
+
         reference = self.reference.quantity
+        lambda_ = self.lambda_.quantity
 
-        tilt_factor = np.power((energy / reference).to(""), -tilt)
+        xx = (energy / reference).to("")
+        tilt_factor = np.power(xx, -tilt - beta * np.log(xx).value)
+        cutoff = np.exp(-np.power((energy * lambda_).to(""), alpha))
 
-        val = norm * self._cached_value * tilt_factor.value
+        val = norm * self._cached_value * tilt_factor.value * cutoff.value
         return u.Quantity(val, self.map.unit, copy=False)
 
     def integrate_geom(self, geom, gti=None):
@@ -614,6 +633,9 @@ class BackgroundModel(Model):
     norm = Parameter("norm", 1, unit="", min=0)
     tilt = Parameter("tilt", 0, unit="", frozen=True)
     reference = Parameter("reference", "1 TeV", frozen=True)
+    lambda_ = Parameter("lambda_", "0. TeV-1", frozen=True)
+    alpha = Parameter("alpha", "1.0", frozen=True)
+    beta = Parameter("beta", "0.", frozen=True)
 
     def __init__(
         self,
@@ -621,6 +643,9 @@ class BackgroundModel(Model):
         norm=norm.quantity,
         tilt=tilt.quantity,
         reference=reference.quantity,
+        lambda_=lambda_.quantity,
+        alpha=alpha.quantity,
+        beta=beta.quantity,
         name=None,
         filename=None,
         datasets_names=None,
@@ -641,7 +666,14 @@ class BackgroundModel(Model):
                 )
 
         self.datasets_names = datasets_names
-        super().__init__(norm=norm, tilt=tilt, reference=reference)
+        super().__init__(
+            norm=norm,
+            tilt=tilt,
+            reference=reference,
+            lambda_=lambda_,
+            alpha=alpha,
+            beta=beta,
+        )
 
     @property
     def name(self):
@@ -664,9 +696,17 @@ class BackgroundModel(Model):
         """
         norm = self.norm.value
         tilt = self.tilt.value
+        alpha = self.alpha.value
+        beta = self.beta.value
+
         reference = self.reference.quantity
-        tilt_factor = np.power((self.energy_center / reference).to(""), -tilt)
-        back_values = norm * self.map.data * tilt_factor.value
+        lambda_ = self.lambda_.quantity
+
+        xx = (self.energy_center / reference).to("")
+        tilt_factor = np.power(xx, -tilt - beta * np.log(xx.value))
+        cutoff = np.exp(-np.power((self.energy_center * lambda_).to(""), alpha))
+        back_values = norm * self.map.data * tilt_factor.value * cutoff.value
+
         return self.map.copy(data=back_values)
 
     def to_dict(self):

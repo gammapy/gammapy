@@ -431,9 +431,17 @@ def test_TemplateSpectralModel_evaluate_tiny():
     values = np.array([4.39150790e-38, 1.96639562e-38, 8.80497507e-39, 3.94262401e-39])
 
     model = TemplateSpectralModel(
-        energy=energy, values=values * u.Unit("MeV-1 s-1 sr-1")
+        energy=energy * u.TeV, values=values * u.Unit("MeV-1 s-1 sr-1")
     )
-    result = model.evaluate(energy, norm=1.0, tilt=0.0, reference=1 * u.TeV)
+    result = model.evaluate(
+        energy * u.TeV,
+        norm=1.0,
+        tilt=0.0,
+        reference=1 * u.TeV,
+        lambda_=0.0 / u.TeV,
+        alpha=1,
+        beta=0,
+    )
     tiny = np.finfo(np.float32).tiny
     mask = abs(values) - tiny > tiny
     np.testing.assert_allclose(

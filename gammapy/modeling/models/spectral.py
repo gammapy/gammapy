@@ -901,6 +901,9 @@ class TemplateSpectralModel(SpectralModel):
     norm = Parameter("norm", 1, unit="")
     tilt = Parameter("tilt", 0, unit="", frozen=True)
     reference = Parameter("reference", "1 TeV", frozen=True)
+    lambda_ = Parameter("lambda_", "0. TeV-1", frozen=True)
+    alpha = Parameter("alpha", "1.0", frozen=True)
+    beta = Parameter("beta", "0", frozen=True)
 
     def __init__(
         self,
@@ -909,6 +912,9 @@ class TemplateSpectralModel(SpectralModel):
         norm=norm.quantity,
         tilt=tilt.quantity,
         reference=reference.quantity,
+        lambda_=lambda_.quantity,
+        alpha=alpha.quantity,
+        beta=beta.quantity,
         interp_kwargs=None,
         meta=None,
     ):
@@ -923,7 +929,14 @@ class TemplateSpectralModel(SpectralModel):
             points=(energy,), values=values, **interp_kwargs
         )
 
-        super().__init__(norm=norm, tilt=tilt, reference=reference)
+        super().__init__(
+            norm=norm,
+            tilt=tilt,
+            reference=reference,
+            lambda_=lambda_,
+            alpha=alpha,
+            beta=beta,
+        )
 
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
@@ -975,11 +988,13 @@ class TemplateSpectralModel(SpectralModel):
         kwargs.setdefault("interp_kwargs", {"values_scale": "lin"})
         return cls(energy=energy, values=values, **kwargs)
 
-    def evaluate(self, energy, norm, tilt, reference):
+    def evaluate(self, energy, norm, tilt, reference, lambda_, alpha, beta):
         """Evaluate the model (static function)."""
         values = self._evaluate((energy,), clip=True)
-        tilt_factor = np.power(energy / reference, -tilt)
-        return norm * values * tilt_factor
+        xx = (energy / reference).to("")
+        tilt_factor = np.power(xx, -tilt - beta * np.log(xx.value))
+        cutoff = np.exp(-np.power(energy * lambda_, alpha))
+        return norm * values * tilt_factor * cutoff
 
     def to_dict(self):
         return {
