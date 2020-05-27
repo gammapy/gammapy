@@ -674,6 +674,7 @@ def test_map_dataset_on_off_fits_io(images, tmp_path):
     assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
     assert_allclose(dataset.mask_safe, dataset_new.mask_safe)
 
+    assert np.all(dataset.mask_safe.data == dataset_new.mask_safe.data) == True
     assert dataset.mask_safe.geom == dataset_new.mask_safe.geom
     assert dataset.counts.geom == dataset_new.counts.geom
     assert dataset.exposure.geom == dataset_new.exposure.geom
