@@ -267,7 +267,7 @@ class Datasets(collections.abc.MutableSequence):
             dataset.stack(ds)
         return dataset
 
-    def info_table(self, cumulative=False):
+    def info_table(self, cumulative=False, region=None):
         """Get info table for datasets.
 
         Parameters
@@ -283,7 +283,7 @@ class Datasets(collections.abc.MutableSequence):
         if not self.is_all_same_type:
             raise ValueError("Info table not supported for mixed dataset type.")
 
-        stacked = self[0].copy(name="stacked")
+        stacked = self[0].copy(name=self[0].name)
 
         rows = [stacked.info_dict()]
 

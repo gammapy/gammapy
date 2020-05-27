@@ -1164,7 +1164,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             gti=gti,
         )
 
-    def info_dict(self, in_safe_energy_range=True):
+    def info_dict(self, in_safe_energy_range=True, **kwargs):
         """Info dict with summary statistics, summed over energy
 
         Parameters
