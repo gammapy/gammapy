@@ -1,6 +1,6 @@
 name: Remote dispatch action on gammapy-benchmarks
 on:
-  pull-request:
+  pull_request:
     branches:
       - master
 jobs:
