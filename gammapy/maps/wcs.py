@@ -1019,7 +1019,9 @@ class WcsGeom(Geom):
             return NotImplemented
 
         if not (self.is_regular and other.is_regular):
-            raise NotImplementedError("Geom comparison is not possible for irregular geometries.")
+            raise NotImplementedError(
+                "Geom comparison is not possible for irregular geometries."
+            )
 
         # check overall shape and axes compatibility
         if self.data_shape != other.data_shape:

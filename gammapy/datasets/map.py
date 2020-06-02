@@ -214,6 +214,11 @@ class MapDataset(Dataset):
         """Model evaluators"""
 
         if self.models:
+            keys = list(self._evaluators.keys())
+            for key in keys:
+                if key not in self.models:
+                    del self._evaluators[key]
+
             for model in self.models:
                 evaluator = self._evaluators.get(model)
 
@@ -227,11 +232,6 @@ class MapDataset(Dataset):
                 # has to be updated
                 if evaluator.needs_update:
                     evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
-
-        keys = list(self._evaluators.keys())
-        for key in keys:
-            if key not in self.models:
-                del self._evaluators[key]
 
         return self._evaluators
 
@@ -257,17 +257,16 @@ class MapDataset(Dataset):
         """Shape of the counts or background data (tuple)"""
         return self._geom.data_shape
 
-    def npred(self):
+    def npred(self, use_cache=True):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
         npred_total = Map.from_geom(self._geom, dtype=float)
 
-        evaluators = self.evaluators
-
-        for evaluator in evaluators.values():
+        for evaluator in self.evaluators.values():
             if evaluator.contributes:
+                if use_cache is False:
+                    evaluator._pars = None
                 npred = evaluator.compute_npred()
                 npred_total.stack(npred)
-
         return npred_total
 
     @classmethod
@@ -1674,21 +1673,22 @@ class MapEvaluator:
         gti=None,
         evaluation_mode="local",
     ):
+
         self.model = model
         self.exposure = exposure
         self.psf = psf
         self.edisp = edisp
         self.gti = gti
         self.contributes = True
+        self._npred = None
+        self._pars = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
-
         self.evaluation_mode = evaluation_mode
 
         # TODO: this is preliminary solution until we have further unified the model handling
-        if isinstance(model, BackgroundModel):
-            self.compute_npred = model.evaluate
+        if isinstance(self.model, BackgroundModel):
             self.evaluation_mode = "global"
 
     @property
@@ -1761,6 +1761,8 @@ class MapEvaluator:
         else:
             self.exposure = exposure
 
+        self._pars = None
+
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
 
@@ -1817,15 +1819,24 @@ class MapEvaluator:
         npred : `~gammapy.maps.Map`
             Predicted counts on the map (in reco energy bins)
         """
-        flux = self.compute_flux()
 
-        if self.model.apply_irf["exposure"]:
-            npred = self.apply_exposure(flux)
+        pars = [p.value for p in self.model.parameters]
+        npred = self._npred
+        if pars != self._pars:
+            self._pars = pars
+            if isinstance(self.model, BackgroundModel):
+                npred = self.model.evaluate()
+            else:
+                flux = self.compute_flux()
 
-        if self.psf and self.model.apply_irf["psf"]:
-            npred = self.apply_psf(npred)
+                if self.model.apply_irf["exposure"]:
+                    npred = self.apply_exposure(flux)
 
-        if self.model.apply_irf["edisp"]:
-            npred = self.apply_edisp(npred)
+                if self.psf and self.model.apply_irf["psf"]:
+                    npred = self.apply_psf(npred)
 
+                if self.model.apply_irf["edisp"]:
+                    npred = self.apply_edisp(npred)
+
+            self._npred = npred
         return npred
