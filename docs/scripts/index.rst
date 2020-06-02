@@ -143,19 +143,6 @@ You can manually edit this produced configuration file and the run the data redu
     INFO:gammapy.analysis.core:Processing observation 23559
     Datasets stored in datasets folder.
 
-.. _CLI_ref:
-
-Reference
-=========
-
-Here is auto-generated documentation for all available sub-commands, arguments
-and options of the ``gammapy`` command line interface (CLI).
-
-
-.. click:: gammapy.scripts.main:cli
-   :prog: gammapy
-   :show-nested:
-
 
 .. _CLI_write:
 
@@ -331,11 +318,16 @@ helpful::
 If you're still stuck or have any question, feel free to ask for help with
 installation issues on the Gammapy mailing list of Slack any time!
 
+.. _CLI_ref:
 
-Reference/API
-=============
+Reference
+=========
 
-Besides the CLI interface, the `gammapy.scripts` package currently contains a
-bunch of things that will probably all be removed or rewritten and integrated in
-other sub-packages of Gammapy, leaving ``scripts`` just as the high-level
-command line script interface for Gammapy.
+Here is auto-generated documentation for all available sub-commands, arguments
+and options of the ``gammapy`` command line interface (CLI).
+
+
+.. click:: gammapy.scripts.main:cli
+   :prog: gammapy
+   :show-nested:
+
