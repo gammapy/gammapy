@@ -1,25 +1,30 @@
 """Example how to write a command line tool with Click"""
 import click
-from gammapy.stats import significance
+from gammapy.stats import CashCountsStatistic
 
 
 # You can call the callback function for the click command anything you like.
 # `cli` is just a commonly used generic term for "command line interface".
 @click.command()
-@click.argument("n_observed")
-@click.argument("mu_background")
+@click.argument("n_observed", type=float)
+@click.argument("mu_background", type=float)
 @click.option(
-    "--method",
-    type=click.Choice(["lima", "simple"]),
-    default="lima",
-    help="Significance computation method",
+    "--value",
+    type=click.Choice(["sqrt_ts", "p_value"]),
+    default="sqrt_ts",
+    help="Significance or p_value",
 )
-def cli(n_observed, mu_background, method):
+def cli(n_observed, mu_background, value):
     """Compute significance for a Poisson count observation.
 
     The significance is the tail probability to observe N_OBSERVED counts
     or more, given a known background level MU_BACKGROUND."""
-    s = significance(n_observed, mu_background, method)
+    stat = CashCountsStatistic(n_observed, mu_background)
+    if value == "sqrt_ts":
+        s = stat.significance
+    else:
+        s = stat.p_value
+
     print(s)
 
 
