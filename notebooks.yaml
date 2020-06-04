@@ -93,6 +93,7 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/light_curve_simulation.ipynb
   datasets:
     - cta-1dc
+  tutorial: True
 - name: maps
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/maps.ipynb
   datasets:
