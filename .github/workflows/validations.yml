@@ -8,8 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: dispatch validation
-        run: |
-          curl -X POST https://api.github.com/repos/gammapy/gammapy-benchmarks/dispatches \
-          -H 'Accept: application/vnd.github.everest-preview+json' \
-          -u ${{ secrets.REMOTE_DISPATCH }} \
-          --data '{"event_type": "validate"}'
+        uses: mvasigh/dispatch-action@master
+        with:
+          token: ${{ secrets.REMOTE_DISPATCH }}
+          repo: gammapy-benchmarks
+          owner: gammapy
+          event_type: validate
