@@ -156,9 +156,9 @@ gammapy_sphinx_notebooks(setup_cfg)
 # Theme style
 # html_style = ''
 def setup(app):
-    app.add_stylesheet("gammapy.css")
-    app.add_javascript("copybutton.js")
-    app.add_javascript("gammapy.js")
+    app.add_css_file("gammapy.css")
+    app.add_js_file("copybutton.js")
+    app.add_js_file("gammapy.js")
 
 
 # copybutton.js provides hide/show button for python prompts >>>
