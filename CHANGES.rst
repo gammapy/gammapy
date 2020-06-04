@@ -183,7 +183,7 @@ model to the data.
 
 To provide a visual overview of the available models in Gammapy a
 `model gallery <modeling/gallery/index.rst>`__ was added. A general introduction
-on how to work with the different models is now avilable in a dedicated `models tutorial <tutorials/models.html>`__.
+on how to work with the different models is now available in a dedicated `models tutorial <tutorials/models.html>`__.
 The spectral analysis of an extended source is demonstrated in the newly
 added `extended source spectral analysis tutorial <tutorials/extended_source_spectral_analysis.ipynb>`__.
 
