@@ -47,21 +47,20 @@ def main():
     path_temp = Path("temp")
     path_temp.mkdir()
 
-    for notebook in get_notebooks():
-        if requirement_missing(notebook):
-            log.info(f"Skipping notebook (requirement missing): {notebook['name']}")
-            continue
-
-        filename = notebook["name"] + ".ipynb"
-        path_dest = path_temp / filename
-        src_path = notebook["url"].replace(RAW_URL, "")
-        shutil.copyfile(src_path, path_dest)
-
-        if not notebook_test(path_dest):
-            passed = False
-
-    # tear down
-    shutil.rmtree(path_temp, ignore_errors=True)
+    try:
+        for notebook in get_notebooks():
+            if requirement_missing(notebook):
+                log.info(f"Skipping notebook (requirement missing): {notebook['name']}")
+                continue
+            filename = notebook["name"] + ".ipynb"
+            path_dest = path_temp / filename
+            src_path = notebook["url"].replace(RAW_URL, "")
+            shutil.copyfile(src_path, path_dest)
+            if not notebook_test(path_dest):
+                passed = False
+    finally:
+        # tear down
+        shutil.rmtree(path_temp, ignore_errors=True)
 
     if not passed:
         sys.exit("Some tests failed. Existing now.")
