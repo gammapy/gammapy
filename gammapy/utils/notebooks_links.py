@@ -5,13 +5,14 @@ import re
 from configparser import ConfigParser
 from pathlib import Path
 from gammapy import __version__
+from gammapy.utils.notebooks_test import get_notebooks
 
 log = logging.getLogger(__name__)
 
 PATH_NBS = Path("docs/_static/notebooks")
 PATH_DOC = Path("docs/_build/html/")
-PATH_HTM = PATH_DOC / "notebooks"
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
+URL_GAMMAPY_MASTER = "https://raw.githubusercontent.com/gammapy/gammapy/master/"
 
 # fetch url_docs from setup.cfg
 conf = ConfigParser()
@@ -113,10 +114,14 @@ def make_api_links(file_path, file_type):
 def main():
     logging.basicConfig(level=logging.INFO)
     log.info("Building API links in notebooks.")
+
+    for notebook in get_notebooks():
+        html_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
+        html_path = html_path.replace("ipynb", "html")
+        make_api_links(Path(html_path), file_type="html")
+
     for nb_path in list(PATH_NBS.glob("*.ipynb")):
-        make_api_links(nb_path, file_type="ipynb")
-    for html_path in list(PATH_HTM.glob("*.html")):
-        make_api_links(html_path, file_type="html")
+        make_api_links(Path(nb_path), file_type="ipynb")
 
 
 if __name__ == "__main__":
