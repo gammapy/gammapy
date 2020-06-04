@@ -1,0 +1,160 @@
+# This is a list of available notebooks.
+# It's used for automatic testing and downloading of datesets notebooks.
+# Dataset ebl declared in overview notebook is used in some Sphinx docs examples.
+# Names of notebooks should be unique. Let's keep it alphabetical.
+- name: analysis_1
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/analysis_1.ipynb
+  datasets:
+    - hess-dl3-dr1
+  tutorial: True
+- name: analysis_2
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/analysis_2.ipynb
+  datasets:
+    - hess-dl3-dr1
+  tutorial: True
+- name: analysis_3d
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/analysis_3d.ipynb
+  datasets:
+    - cta-1dc
+    - fermi-3fhl-gc
+  images:
+    - DC1_3d
+  tutorial: True
+- name: analysis_mwl
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/analysis_mwl.ipynb
+  datasets:
+    - crab-3datasets
+  tutorial: True
+- name: astro_dark_matter
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/astro_dark_matter.ipynb
+  datasets:
+    - dark_matter_spectra
+  tutorial: True
+- name: cta
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/cta.ipynb
+  datasets:
+    - cta-1dc
+  tutorial: True
+- name: cta_data_analysis
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/cta_data_analysis.ipynb
+  datasets:
+    - cta-1dc
+  tutorial: True
+- name: cta_sensitivity
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/cta_sensitivity.ipynb
+  datasets:
+    - cta-1dc
+  tutorial: True
+- name: detect
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/detect.ipynb
+  datasets:
+    - fermi-3fhl-gc
+    - catalogs
+  tutorial: True
+- name: exclusion_mask
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/exclusion_mask.ipynb
+  datasets:
+    - catalogs
+    - fermi-3fhl-crab
+  tutorial: True
+- name: extended_source_spectral_analysis
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/extended_source_spectral_analysis.ipynb
+  datasets:
+    - hess-dl3-dr1
+  tutorial: True
+- name: event_sampling
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/event_sampling.ipynb
+  datasets:
+    - cta-1dc
+  tutorial: True
+- name: fermi_lat
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/fermi_lat.ipynb
+  requires: healpy
+  datasets:
+    - fermi_3fhl
+    - fermi-3fhl-gc
+  tutorial: True
+- name: hess
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/hess.ipynb
+  datasets:
+    - hess-dl3-dr1
+  tutorial: True
+- name: light_curve
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/light_curve.ipynb
+  datasets:
+    - hess-dl3-dr1
+  tutorial: True
+- name: light_curve_flare
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/light_curve_flare.ipynb
+  datasets:
+    - hess-dl3-dr1
+  tutorial: True
+- name: light_curve_simulation
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/light_curve_simulation.ipynb
+  datasets:
+    - cta-1dc
+- name: maps
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/maps.ipynb
+  datasets:
+    - fermi-3fhl-gc
+  images:
+    - gammapy_maps
+  tutorial: True
+- name: mcmc_sampling
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/mcmc_sampling.ipynb
+  datasets:
+    - cta-1dc
+  images:
+    - gammapy_mcmc
+  tutorial: True
+- name: modeling
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/modeling.ipynb
+  requires: sherpa
+  tutorial: True
+- name: modeling_2D
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/modeling_2D.ipynb
+  datasets:
+    - cta-1dc
+  tutorial: True
+- name: models
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/models.ipynb
+  tutorial: True
+- name: overview
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/overview.ipynb
+  datasets:
+    - fermi-3fhl-gc
+    - images
+    - catalogs
+    - ebl
+  tutorial: True
+- name: pulsar_analysis
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/pulsar_analysis.ipynb
+  datasets:
+    - cta-1dc
+  tutorial: True
+- name: ring_background
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/ring_background.ipynb
+  datasets:
+    - hess-dl3-dr1
+  tutorial: True
+- name: sed_fitting
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/sed_fitting.ipynb
+  datasets:
+    - catalogs
+    - gamma-cat
+  tutorial: True
+- name: simulate_3d
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/simulate_3d.ipynb
+  datasets:
+    - cta-1dc
+  tutorial: True
+- name: spectrum_analysis
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/spectrum_analysis.ipynb
+  datasets:
+    - hess-dl3-dr1
+  tutorial: True
+- name: spectrum_simulation
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/spectrum_simulation.ipynb
+  datasets:
+    - cta-1dc
+  tutorial: True
