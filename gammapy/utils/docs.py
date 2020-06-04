@@ -46,7 +46,7 @@ class HowtoHLI(Include):
         section = self.arguments[0]
         doc = AnalysisConfig._get_doc_sections()
         for keyword in doc.keys():
-            if section == "" or section == keyword:
+            if section in ["", keyword]:
                 raw += doc[keyword]
         include_lines = raw.splitlines()
         codeblock = CodeBlock(
@@ -111,7 +111,7 @@ def parse_notebooks(folder, url_docs):
     to other files in the documentation. Adds a box to the sphinx formatted
     notebooks with info and links to the *.ipynb and *.py files.
     """
-    release_number_binder = __version__
+    release_number_binder = f"v{__version__}"
     if "dev" in __version__:
         release_number_binder = "master"
 
@@ -120,7 +120,7 @@ def parse_notebooks(folder, url_docs):
 
 **This is a fixed-text formatted version of a Jupyter notebook**
 
-- Try online [![Binder](https://static.mybinder.org/badge.svg)](https://mybinder.org/v2/gh/gammapy/gammapy-webpage/v{release_number_binder}?urlpath=lab/tree/{nb_filename})
+- Try online [![Binder](https://static.mybinder.org/badge.svg)](https://mybinder.org/v2/gh/gammapy/gammapy-webpage/{release_number_binder}?urlpath=lab/tree/{nb_filename})
 - You can contribute with your own notebooks in this
 [GitHub repository](https://github.com/gammapy/gammapy/tree/master/tutorials).
 - **Source files:**
@@ -151,11 +151,13 @@ def parse_notebooks(folder, url_docs):
                 for cell in rawnb.cells:
                     if "outputs" in cell.keys():
                         for output in cell["outputs"]:
-                            if output["output_type"] == "execute_result":
-                                if "text/latex" in output["data"].keys():
-                                    output["data"]["text/latex"] = output["data"][
-                                        "text/latex"
-                                    ].replace("$", "$$")
+                            if (
+                                output["output_type"] == "execute_result"
+                                and "text/latex" in output["data"].keys()
+                            ):
+                                output["data"]["text/latex"] = output["data"][
+                                    "text/latex"
+                                ].replace("$", "$$")
                 nbformat.write(rawnb, str(nbpath))
 
 
