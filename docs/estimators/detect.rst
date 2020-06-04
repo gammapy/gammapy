@@ -72,7 +72,7 @@ center data:
     kernel = PSFKernel.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf.fits.gz")
 
     ts_estimator = TSMapEstimator()
-    result = ts_estimator.run(dataset, kernel.data)
+    result = ts_estimator.run(dataset)
 
 The function returns an dictionary, that bundles all resulting maps. E.g. here's
 how to find the largest TS value:
@@ -82,17 +82,17 @@ how to find the largest TS value:
     import numpy as np
     np.nanmax(result['ts'].data)
 
-Computation of Li & Ma significance images
-==========================================
+Computation of significance images a la Li & Ma
+===============================================
 
 The method derived by [LiMa1983]_ is one of the standard methods to determine
 detection significances for gamma-ray sources. Using the same prepared Fermi
 dataset as above, the corresponding images can be computed using the
-`~gammapy.estimators.LiMaMapEstimator` class:
+`~gammapy.estimators.ExcessMapEstimator` class:
 
 .. code-block:: python
 
-    from gammapy.estimators import LiMaMapEstimator
+    from gammapy.estimators import ExcessMapEstimator
     from gammapy.datasets import MapDataset
     from gammapy.maps import Map
     from gammapy.modeling.models import BackgroundModel
@@ -107,7 +107,7 @@ dataset as above, the corresponding images can be computed using the
         models=[BackgroundModel(background, datasets_names=["fermi-3fhl-gc"])],
         name="fermi-3fhl-gc"
     )
-
+    dataset = dataset.to_image()
 
     lima_estimator = LiMaMapEstimator("0.2 deg")
     result = lima_estimator.run(dataset)
