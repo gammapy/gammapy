@@ -120,5 +120,5 @@ Using `gammapy.detect`
 
 :ref:`tutorials` that show examples using ``gammapy.detect``:
 
-* `Source detection <../notebooks/detect.html>`__
+* `Source detection <../tutorials/detect.html>`__
 

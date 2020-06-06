@@ -22,7 +22,7 @@ class DataStore:
     The data selection and access happens using an observation
     and an HDU index file as described at :ref:`gadf:iact-storage`.
 
-    For a usage example see `cta.html <../notebooks/cta.html>`__
+    For a usage example see `cta.html <../tutorials/cta.html>`__
 
     Parameters
     ----------

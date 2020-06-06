@@ -217,10 +217,10 @@ Using `gammapy.makers`
 
 Gammapy tutorial notebooks that show examples using ``gammapy.makers``:
 
-* `analysis_3d.html <../notebooks/analysis_3d.html>`__
-* `simulate_3d.html <../notebooks/simulate_3d.html>`__
-* `spectrum_analysis.html <../notebooks/spectrum_analysis.html>`__
-* `spectrum_simulation.html <../notebooks/spectrum_simulation.html>`__
+* `analysis_3d.html <../tutorials/analysis_3d.html>`__
+* `simulate_3d.html <../tutorials/simulate_3d.html>`__
+* `spectrum_analysis.html <../tutorials/spectrum_analysis.html>`__
+* `spectrum_simulation.html <../tutorials/spectrum_simulation.html>`__
 
 Reference/API
 =============

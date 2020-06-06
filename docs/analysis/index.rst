@@ -84,7 +84,7 @@ General settings
 In the following you may find more detailed information on the different sections which
 compose the YAML formatted nested configuration settings hierarchy. The different
 high-level analysis commands exposed may be reproduced within the
-`First analysis <../notebooks/analysis_1.html>`__ tutorial.
+`First analysis <../tutorials/analysis_1.html>`__ tutorial.
 
 The ``general`` section comprises information related with the ``log`` configuration,
 as well as the output folder where all file outputs and datasets will be stored, declared

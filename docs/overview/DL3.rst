@@ -49,8 +49,8 @@ A convenient way to do this is to use the high level interface, see :ref:`gammap
 Example notebooks
 ^^^^^^^^^^^^^^^^^
 
-* `CTA DL3 handling <../notebooks/cta.html>`__
-* `HESS Data Release 1 handling <../notebooks/hess.html>`__
+* `CTA DL3 handling <../tutorials/cta.html>`__
+* `HESS Data Release 1 handling <../tutorials/hess.html>`__
 
 Relevant API
 ^^^^^^^^^^^^

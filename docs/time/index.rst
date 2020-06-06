@@ -45,12 +45,12 @@ Tutorials
 
 The main tutorial demonstrates how to extract light curves from 1D and 3D datasets:
 
-* `Light Curve tutorial <../notebooks/light_curve.html>`__
+* `Light Curve tutorial <../tutorials/light_curve.html>`__
 
 Light curve extraction on small time bins (i.e. smaller than the observation scale) for flares
 is demonstrated in the following tutorial:
 
-* `Flare tutorial <../notebooks/light_curve_flare.html>`__
+* `Flare tutorial <../tutorials/light_curve_flare.html>`__
 
 Using `gammapy.time`
 ====================

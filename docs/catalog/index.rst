@@ -35,12 +35,12 @@ Tutorials
 
 The main tutorial for `gammapy.catalog` is:
 
-* `Source catalogs tutorial <../notebooks/catalog.html>`__
+* `Source catalogs tutorial <../tutorials/catalog.html>`__
 
 Other :ref:`tutorials` mentioning `gammapy.catalog` are:
 
-* `Overview tutorial <../notebooks/overview.html>`__
-* `SED fitting tutorial <../notebooks/sed_fitting.html>`__
+* `Overview tutorial <../tutorials/overview.html>`__
+* `SED fitting tutorial <../tutorials/sed_fitting.html>`__
 
 Reference/API
 =============

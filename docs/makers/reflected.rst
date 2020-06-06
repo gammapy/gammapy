@@ -72,4 +72,4 @@ The following notebook shows an example using
 `~gammapy.spectrum.ReflectedRegionsBackgroundMaker` to perform a spectral
 extraction and fitting:
 
-* `spectrum_analysis.html <../notebooks/spectrum_analysis.html>`__
+* `spectrum_analysis.html <../tutorials/spectrum_analysis.html>`__

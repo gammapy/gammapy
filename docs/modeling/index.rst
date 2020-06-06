@@ -96,10 +96,10 @@ Tutorials
 
 :ref:`tutorials` that show examples using ``gammapy.modeling``:
 
-- `Models Tutorial <../notebooks/models.html>`__
-- `Modeling and Fitting <../notebooks/modeling.html>`__
-- `analysis_3d.html <../notebooks/analysis_3d.html>`__
-- `spectrum_analysis.html <../notebooks/spectrum_analysis.html>`__
+- `Models Tutorial <../tutorials/models.html>`__
+- `Modeling and Fitting <../tutorials/modeling.html>`__
+- `analysis_3d.html <../tutorials/analysis_3d.html>`__
+- `spectrum_analysis.html <../tutorials/spectrum_analysis.html>`__
 
 
 Reference/API

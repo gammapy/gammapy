@@ -56,7 +56,7 @@ to compute the light curve in the datasets time intervals::
 where `source` is the model component describing the source of interest and `datasets` the `~gammapy.modeling.Datasets`
 object produced by data reduction.
 The light curve notebook shows an example of `observation based light curve
-extraction <../notebooks/light_curve.html#Light-Curve-estimation:-by-observation>`__
+extraction <../tutorials/light_curve.html#Light-Curve-estimation:-by-observation>`__
 
 Similarly, `~gammapy.time.LightCurveEstimator` can be used to extract the light curve in user defined time intervals.
 This can be useful to combine datasets to produce light curve by night, week or month::
@@ -66,7 +66,7 @@ This can be useful to combine datasets to produce light curve by night, week or 
 
 where `time_intervals` is a list of time intervals as `~astropy.time.Time` objects.
 The light curve notebook shows an example of `night-wise light curve
-extraction <../notebooks/light_curve.html#Night-wise-LC-estimation>`__
+extraction <../tutorials/light_curve.html#Night-wise-LC-estimation>`__
 
 
 Tutorials
@@ -74,9 +74,9 @@ Tutorials
 
 The main tutorial demonstrates how to extract light curves from 1D and 3D datasets:
 
-* `Light Curve tutorial <../notebooks/light_curve.html>`__
+* `Light Curve tutorial <../tutorials/light_curve.html>`__
 
 Light curve extraction on small time bins (i.e. smaller than the observation scale) for flares
 is demonstrated in the following tutorial:
 
-* `Flare tutorial <../notebooks/light_curve_flare.html>`__
+* `Flare tutorial <../tutorials/light_curve_flare.html>`__

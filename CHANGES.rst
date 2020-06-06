@@ -478,7 +478,7 @@ Gammapy v0.14 features a new high level analysis interface. Starting from
 a YAML configuration file, it supports the standard use-cases of joint
 or stacked 3D as well as 1D reflected region analyses. It also supports
 computation of flux points for all cases. The usage of this new ``Analysis``
-class is demonstrated in the `hess.html <./notebooks/hess.html>`__ tutorial.
+class is demonstrated in the `hess.html <./tutorials/hess.html>`__ tutorial.
 
 Following the proposal in :ref:`pig-016` the subpackages ``gammapy.background``
 and ``gammapy.image`` were removed. Existing functionality was moved to the
