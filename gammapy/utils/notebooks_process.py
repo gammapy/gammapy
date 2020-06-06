@@ -2,6 +2,7 @@
 """Process tutorials notebooks for publication in documentation."""
 import argparse
 import logging
+import nbformat
 import os
 import shutil
 import subprocess
@@ -11,45 +12,134 @@ from distutils.util import strtobool
 from pathlib import Path
 from gammapy.scripts.jupyter import notebook_test
 from gammapy.utils.notebooks_test import get_notebooks
+from gammapy import __version__
+from nbformat.v4 import new_markdown_cell
 
 log = logging.getLogger(__name__)
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
+SETUP_FILE = "setup.cfg"
 
 # fetch params from setup.cfg
 conf = ConfigParser()
-conf.read(PATH_CFG / "setup.cfg")
+conf.read(PATH_CFG / SETUP_FILE)
 setup_cfg = dict(conf.items("metadata"))
 URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 build_docs_cfg = dict(conf.items("build_docs"))
-PATH_NBS = Path(build_docs_cfg["source-dir"]) / build_docs_cfg["downloadable-notebooks"]
-
-
-def ignorefiles(d, files):
-    return [
-        f
-        for f in files
-        if os.path.isfile(os.path.join(d, f))
-        and f[-6:] != ".ipynb"
-        and f[-4:] != ".png"
-    ]
+DOWN_NBS = build_docs_cfg["downloadable-notebooks"]
+PATH_NBS = Path(build_docs_cfg["source-dir"]) / DOWN_NBS
+GITHUB_TUTOS_URL = "https://github.com/gammapy/gammapy/tree/master/docs/tutorials"
+BINDER_BADGE_URL = "https://static.mybinder.org/badge.svg"
+BINDER_URL = "https://mybinder.org/v2/gh/gammapy/gammapy-webpage"
 
 
 def setup_sphinx_params(args):
+    """Set Sphinx params in config file setup.cfg"""
+
     flagnotebooks = "True"
-    setupfilename = "setup.cfg"
     if not args.nbs:
         flagnotebooks = "False"
     build_notebooks_line = f"build_notebooks = {flagnotebooks}\n"
 
     file_str = ""
-    with open(setupfilename) as f:
+    with open(SETUP_FILE) as f:
         for line in f:
             if line.startswith("build_notebooks ="):
                 line = build_notebooks_line
             file_str += line
 
-    with open(setupfilename, "w") as f:
+    with open(SETUP_FILE, "w") as f:
         f.write(file_str)
+
+
+def fill_notebook(nb_path, args):
+    """Code formatting, strip output, file copy, execution and script conversion."""
+
+    if not Path(nb_path).exists():
+        log.info(f"File {nb_path} does not exist.")
+        return
+
+    if args.fmt:
+        subprocess.run(
+            [sys.executable, "-m", "gammapy", "jupyter", "--src", nb_path, "black"]
+        )
+    subprocess.run(
+        [sys.executable, "-m", "gammapy", "jupyter", "--src", nb_path, "strip"]
+    )
+
+    log.info(f"Copying notebook {nb_path} to {PATH_NBS}")
+    shutil.copy(nb_path, PATH_NBS)
+
+    # execute notebook
+    notebook_test(nb_path)
+
+    static_nb_path = PATH_NBS / Path(nb_path).absolute().name
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "jupyter",
+            "nbconvert",
+            "--to",
+            "script",
+            static_nb_path,
+        ]
+    )
+
+
+def add_box(nb_path):
+    """Adds box with downloadable links and binder."""
+
+    nb_path = Path(nb_path)
+    log.info(f"Adding box in {nb_path}")
+    release_number_binder = f"v{__version__}"
+    if "dev" in __version__:
+        release_number_binder = "master"
+
+    DOWNLOAD_CELL = """
+<div class="alert alert-info">
+
+**This is a fixed-text formatted version of a Jupyter notebook**
+
+- Try online [![Binder]({BINDER_BADGE_URL})]({BINDER_URL}/{release_number_binder}?urlpath=lab/tree/{nb_filename})
+- You can contribute with your own notebooks in this
+[GitHub repository]({GITHUB_TUTOS_URL}).
+- **Source files:**
+[{nb_filename}](../{DOWN_NBS}/{nb_filename}) |
+[{py_filename}](../{DOWN_NBS}/{py_filename})
+</div>
+"""
+
+    # add binder cell
+    nb_filename = nb_path.absolute().name
+    py_filename = nb_filename.replace("ipynb", "py")
+    ctx = dict(
+        nb_filename=nb_filename,
+        py_filename=py_filename,
+        release_number_binder=release_number_binder,
+        DOWN_NBS=DOWN_NBS,
+        BINDER_BADGE_URL=BINDER_BADGE_URL,
+        BINDER_URL=BINDER_URL,
+        GITHUB_TUTOS_URL=GITHUB_TUTOS_URL,
+    )
+    strcell = DOWNLOAD_CELL.format(**ctx)
+    rawnb = nbformat.read(nb_path, as_version=nbformat.NO_CONVERT)
+
+    if "nbsphinx" not in rawnb.metadata:
+        rawnb.metadata["nbsphinx"] = {"orphan": bool("true")}
+        rawnb.cells.insert(0, new_markdown_cell(strcell))
+
+        # add latex format
+        for cell in rawnb.cells:
+            if "outputs" in cell.keys():
+                for output in cell["outputs"]:
+                    if (
+                        output["output_type"] == "execute_result"
+                        and "text/latex" in output["data"].keys()
+                    ):
+                        output["data"]["text/latex"] = output["data"][
+                            "text/latex"
+                        ].replace("$", "$$")
+        nbformat.write(rawnb, nb_path)
 
 
 def build_notebooks(args):
@@ -59,94 +149,28 @@ def build_notebooks(args):
         log.info("Exiting now.")
         sys.exit()
 
-    # prepare folder structure
-    pathsrc = Path(args.src)
-    path_temp = Path("temp")
-    path_empty_nbs = Path("tutorials")
-    path_filled_nbs = Path("docs") / "notebooks"
-    path_static_nbs = Path("docs") / "_static" / "notebooks"
+    PATH_NBS.mkdir(parents=True, exist_ok=True)
 
-    shutil.rmtree(path_temp, ignore_errors=True)
-    path_temp.mkdir(parents=True, exist_ok=True)
-    path_filled_nbs.mkdir(parents=True, exist_ok=True)
-    path_static_nbs.mkdir(parents=True, exist_ok=True)
-
-    if pathsrc == path_empty_nbs:
-        shutil.rmtree(path_temp, ignore_errors=True)
-        shutil.rmtree(path_static_nbs, ignore_errors=True)
-        shutil.rmtree(path_filled_nbs, ignore_errors=True)
-        shutil.copytree(path_empty_nbs, path_temp, ignore=ignorefiles)
-    elif pathsrc.exists():
-        notebookname = pathsrc.name
-        pathdest = path_temp / notebookname
-        shutil.copyfile(pathsrc, pathdest)
+    if args.src:
+        pathsrc = Path(args.src)
+        fill_notebook(pathsrc, args)
+        add_box(pathsrc)
     else:
-        log.info("Notebook file does not exist.")
-        sys.exit()
-
-    if args.fmt:
-        subprocess.run(
-            [sys.executable, "-m", "gammapy", "jupyter", "--src", "temp", "black"]
-        )
-    subprocess.run(
-        [sys.executable, "-m", "gammapy", "jupyter", "--src", "temp", "strip"]
-    )
-
-    # test /run
-    for path in path_temp.glob("*.ipynb"):
-        notebook_test(path)
-
-    # convert into scripts
-    # copy generated filled notebooks to doc
-    if pathsrc == path_empty_nbs:
-        # copytree is needed to copy subfolder images
-        shutil.copytree(path_empty_nbs, path_static_nbs, ignore=ignorefiles)
-        for path in path_static_nbs.glob("*.ipynb"):
-            subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "jupyter",
-                    "nbconvert",
-                    "--to",
-                    "script",
-                    str(path),
-                ]
-            )
-        shutil.copytree(path_temp, path_filled_nbs, ignore=ignorefiles)
-    else:
-        pathsrc = path_temp / notebookname
-        pathdest = path_static_nbs / notebookname
-        shutil.copyfile(pathsrc, pathdest)
-        subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "jupyter",
-                "nbconvert",
-                "--to",
-                "script",
-                str(pathdest),
-            ]
-        )
-        pathdest = path_filled_nbs / notebookname
-        shutil.copyfile(pathsrc, pathdest)
-
-    # tear down
-    shutil.rmtree(path_temp, ignore_errors=True)
+        for notebook in get_notebooks():
+            nb_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
+            fill_notebook(nb_path, args)
+            add_box(nb_path)
 
 
 def main():
     logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--src", help="Tutorial notebook or folder to process")
+    parser.add_argument("--src", help="Tutorial notebook to process")
     parser.add_argument("--nbs", help="Notebooks are considered in Sphinx")
     parser.add_argument("--fmt", help="Black format notebooks")
     args = parser.parse_args()
 
-    if not args.src:
-        args.src = "tutorials"
     if not args.nbs:
         args.nbs = "True"
     if not args.fmt:
