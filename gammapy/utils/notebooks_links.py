@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Process tutorials notebooks for publication in documentation."""
+import argparse
 import logging
 import re
+import shutil
 from configparser import ConfigParser
 from pathlib import Path
 from gammapy import __version__
@@ -114,23 +116,33 @@ def make_api_links(file_path, file_type):
 
 
 def main():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--src", help="Tutorial notebook to process")
+    parser.add_argument("--nbs", help="Notebooks are considered in Sphinx")
+    args = parser.parse_args()
+
+    if not args.nbs:
+        args.nbs = "True"
+    if not args.nbs:
+        return
+
     logging.basicConfig(level=logging.INFO)
-    log.info("Building API links in .ipynb and Sphinx formatted notebooks.")
     log.info("Bring back stripped and clean notebooks.")
+    log.info("Building API links in .ipynb and Sphinx formatted notebooks.")
 
     for notebook in get_notebooks():
         nb_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
+        if args.src and args.src!=nb_path:
+            continue
         downloadable_path = Path(nb_path)
         downloadable_path = PATH_NBS / downloadable_path.absolute().name
+        shutil.copyfile(downloadable_path, nb_path)
         make_api_links(downloadable_path, file_type="ipynb")
 
         html_path = nb_path.replace(str(SOURCE_DIR), str(PATH_DOC))
         html_path = html_path.replace("ipynb", "html")
         make_api_links(Path(html_path), file_type="html")
-
-        # TODO: recover not processed notebooks
-        #
-        #
 
 
 if __name__ == "__main__":

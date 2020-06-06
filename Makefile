@@ -98,12 +98,11 @@ clean-nb:
 
 docs-sphinx:
 	cd docs && python -m sphinx . _build/html -b html
-	python -m gammapy.utils.notebooks_links
 
 docs-all:
 	python -m gammapy.utils.notebooks_process --src="$(src)" --nbs="$(nbs)" --fmt="$(fmt)"
 	cd docs && python -m sphinx . _build/html -b html
-	python -m gammapy.utils.notebooks_links
+	python -m gammapy.utils.notebooks_links --src="$(src)" --nbs="$(nbs)"
 
 docs-show:
 	open docs/_build/html/index.html
