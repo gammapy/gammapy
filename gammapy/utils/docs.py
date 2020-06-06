@@ -17,6 +17,7 @@ Here's some good resources with working examples:
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
 import os
+from configparser import ConfigParser
 from distutils.util import strtobool
 from pathlib import Path
 import nbformat
@@ -36,6 +37,13 @@ except KeyError:
     HAS_GP_DATA = False
 
 log = logging.getLogger(__name__)
+PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
+
+# fetch params from setup.cfg
+conf = ConfigParser()
+conf.read(PATH_CFG / "setup.cfg")
+build_docs_cfg = dict(conf.items("build_docs"))
+PATH_NBS = build_docs_cfg["downloadable-notebooks"]
 
 
 class HowtoHLI(Include):
@@ -124,8 +132,8 @@ def parse_notebooks(folder, url_docs):
 - You can contribute with your own notebooks in this
 [GitHub repository](https://github.com/gammapy/gammapy/tree/master/tutorials).
 - **Source files:**
-[{nb_filename}](../_static/notebooks/{nb_filename}) |
-[{py_filename}](../_static/notebooks/{py_filename})
+[{nb_filename}](../{PATH_NBS}/{nb_filename}) |
+[{py_filename}](../{PATH_NBS}/{py_filename})
 </div>
 """
 
@@ -171,7 +179,7 @@ def gammapy_sphinx_notebooks(setup_cfg):
 
     # fix links
     filled_notebooks_folder = Path("notebooks")
-    download_notebooks_folder = Path("_static") / "notebooks"
+    download_notebooks_folder = Path(PATH_NBS)
 
     if filled_notebooks_folder.is_dir():
         parse_notebooks(filled_notebooks_folder, url_docs)

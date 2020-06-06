@@ -6,11 +6,22 @@ import os
 import shutil
 import subprocess
 import sys
+from configparser import ConfigParser
 from distutils.util import strtobool
 from pathlib import Path
 from gammapy.scripts.jupyter import notebook_test
+from gammapy.utils.notebooks_test import get_notebooks
 
 log = logging.getLogger(__name__)
+PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
+
+# fetch params from setup.cfg
+conf = ConfigParser()
+conf.read(PATH_CFG / "setup.cfg")
+setup_cfg = dict(conf.items("metadata"))
+URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
+build_docs_cfg = dict(conf.items("build_docs"))
+PATH_NBS = Path(build_docs_cfg["source-dir"]) / build_docs_cfg["downloadable-notebooks"]
 
 
 def ignorefiles(d, files):

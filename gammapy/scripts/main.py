@@ -147,10 +147,7 @@ def cli_jupyter(ctx, src, r):  # noqa: D301
         sys.exit()
 
     if path.is_dir():
-        if r:
-            paths = list(path.rglob("*.ipynb"))
-        else:
-            paths = list(path.glob("*.ipynb"))
+        paths = list(path.rglob('*.ipynb')) if r else list(path.glob('*.ipynb'))
     else:
         paths = [path]
 

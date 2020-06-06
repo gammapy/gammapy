@@ -4,13 +4,20 @@ import logging
 import os
 import shutil
 import sys
+from configparser import ConfigParser
 from pathlib import Path
 import pkg_resources
 import yaml
 from gammapy.scripts.jupyter import notebook_test
 
 log = logging.getLogger(__name__)
-RAW_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/"
+PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
+
+# fetch params from setup.cfg
+conf = ConfigParser()
+conf.read(PATH_CFG / "setup.cfg")
+setup_cfg = dict(conf.items("metadata"))
+URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 
 def get_notebooks():
     """Read `notebooks.yaml` info."""
@@ -54,7 +61,7 @@ def main():
                 continue
             filename = notebook["name"] + ".ipynb"
             path_dest = path_temp / filename
-            src_path = notebook["url"].replace(RAW_URL, "")
+            src_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
             shutil.copyfile(src_path, path_dest)
             if not notebook_test(path_dest):
                 passed = False

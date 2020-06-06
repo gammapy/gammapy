@@ -8,17 +8,18 @@ from gammapy import __version__
 from gammapy.utils.notebooks_test import get_notebooks
 
 log = logging.getLogger(__name__)
-
-PATH_NBS = Path("docs/_static/notebooks")
-PATH_DOC = Path("docs/_build/html/")
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
-URL_GAMMAPY_MASTER = "https://raw.githubusercontent.com/gammapy/gammapy/master/"
 
-# fetch url_docs from setup.cfg
+# fetch params from setup.cfg
 conf = ConfigParser()
 conf.read(PATH_CFG / "setup.cfg")
 setup_cfg = dict(conf.items("metadata"))
-url_docs = setup_cfg["url_docs"]
+URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
+URL_DOCS = setup_cfg["url_docs"]
+build_docs_cfg = dict(conf.items("build_docs"))
+upload_docs_cfg = dict(conf.items("upload_docs_cfg"))
+PATH_NBS = Path(build_docs_cfg["source-dir"]) / build_docs_cfg["downloadable-notebooks"]
+PATH_DOC = Path(upload_docs_cfg["upload-dir"])
 
 # release number in absolute links
 release_number_docs = __version__
@@ -32,7 +33,7 @@ def make_api_links(file_path, file_type):
     start_link = "../"
     re_api = re.compile(r'<span class="pre">~gammapy\.(.*?)</span>')
     if file_type == "ipynb":
-        start_link = url_docs
+        start_link = URL_DOCS
         re_api = re.compile(r"`~gammapy\.(.*?)`")
     txt = file_path.read_text(encoding="utf-8")
 
@@ -97,12 +98,12 @@ def make_api_links(file_path, file_type):
 
     # modif absolute links to rst/html doc files
     if file_type == "ipynb":
-        url_docs_release = url_docs.replace("dev", release_number_docs)
-        txt = txt.replace(url_docs, url_docs_release)
+        url_docs_release = URL_DOCS.replace("dev", release_number_docs)
+        txt = txt.replace(URL_DOCS, url_docs_release)
     else:
         repl = r"..\/\1html\2"
         txt = re.sub(
-            pattern=url_docs + r"(.*?)html(\)|#)",
+            pattern=URL_DOCS + r"(.*?)html(\)|#)",
             repl=repl,
             string=txt,
             flags=re.M | re.I,
