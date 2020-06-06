@@ -18,16 +18,12 @@ Here's some good resources with working examples:
 """
 import os
 from configparser import ConfigParser
-from distutils.util import strtobool
 from pathlib import Path
-import nbformat
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst.directives.body import CodeBlock
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives.misc import Include
-from nbformat.v4 import new_markdown_cell
 from sphinx.util import logging
-from gammapy import __version__
 from gammapy.analysis import AnalysisConfig
 
 try:
@@ -110,77 +106,3 @@ def gammapy_sphinx_ext_activate():
     # Register our directives and roles with Sphinx
     register_directive("gp-image", DocsImage)
     register_directive("gp-howto-hli", HowtoHLI)
-
-
-def parse_notebooks(folder, url_docs):
-    """Parse Jupyter notebook.
-
-    Modifies raw and html-fixed notebooks so they will not have broken links
-    to other files in the documentation. Adds a box to the sphinx formatted
-    notebooks with info and links to the *.ipynb and *.py files.
-    """
-    release_number_binder = f"v{__version__}"
-    if "dev" in __version__:
-        release_number_binder = "master"
-
-    DOWNLOAD_CELL = """
-<div class="alert alert-info">
-
-**This is a fixed-text formatted version of a Jupyter notebook**
-
-- Try online [![Binder](https://static.mybinder.org/badge.svg)](https://mybinder.org/v2/gh/gammapy/gammapy-webpage/{release_number_binder}?urlpath=lab/tree/{nb_filename})
-- You can contribute with your own notebooks in this
-[GitHub repository](https://github.com/gammapy/gammapy/tree/master/tutorials).
-- **Source files:**
-[{nb_filename}](../{PATH_NBS}/{nb_filename}) |
-[{py_filename}](../{PATH_NBS}/{py_filename})
-</div>
-"""
-
-    for nbpath in list(folder.glob("*.ipynb")):
-        if str(folder) == "notebooks":
-
-            # add binder cell
-            nb_filename = str(nbpath).replace("notebooks/", "")
-            py_filename = nb_filename.replace("ipynb", "py")
-            ctx = dict(
-                nb_filename=nb_filename,
-                py_filename=py_filename,
-                release_number_binder=release_number_binder,
-            )
-            strcell = DOWNLOAD_CELL.format(**ctx)
-            rawnb = nbformat.read(str(nbpath), as_version=nbformat.NO_CONVERT)
-
-            if "nbsphinx" not in rawnb.metadata:
-                rawnb.metadata["nbsphinx"] = {"orphan": bool("true")}
-                rawnb.cells.insert(0, new_markdown_cell(strcell))
-
-                # add latex format
-                for cell in rawnb.cells:
-                    if "outputs" in cell.keys():
-                        for output in cell["outputs"]:
-                            if (
-                                output["output_type"] == "execute_result"
-                                and "text/latex" in output["data"].keys()
-                            ):
-                                output["data"]["text/latex"] = output["data"][
-                                    "text/latex"
-                                ].replace("$", "$$")
-                nbformat.write(rawnb, str(nbpath))
-
-
-def gammapy_sphinx_notebooks(setup_cfg):
-    """Manage creation of Sphinx-formatted notebooks."""
-    if not strtobool(setup_cfg["build_notebooks"]):
-        log.info("Config build_notebooks is False; skipping notebook processing")
-        return
-
-    url_docs = setup_cfg["url_docs"]
-
-    # fix links
-    filled_notebooks_folder = Path("notebooks")
-    download_notebooks_folder = Path(PATH_NBS)
-
-    if filled_notebooks_folder.is_dir():
-        parse_notebooks(filled_notebooks_folder, url_docs)
-        parse_notebooks(download_notebooks_folder, url_docs)

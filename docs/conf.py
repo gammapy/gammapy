@@ -149,9 +149,6 @@ html_static_path = ["_static"]
 
 gammapy_sphinx_ext_activate()
 
-# Integration of notebooks
-gammapy_sphinx_notebooks(setup_cfg)
-
 
 # Theme style
 # html_style = ''
