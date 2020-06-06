@@ -17,8 +17,9 @@ setup_cfg = dict(conf.items("metadata"))
 URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 URL_DOCS = setup_cfg["url_docs"]
 build_docs_cfg = dict(conf.items("build_docs"))
-upload_docs_cfg = dict(conf.items("upload_docs_cfg"))
-PATH_NBS = Path(build_docs_cfg["source-dir"]) / build_docs_cfg["downloadable-notebooks"]
+upload_docs_cfg = dict(conf.items("upload_docs"))
+SOURCE_DIR = Path(build_docs_cfg["source-dir"])
+PATH_NBS = SOURCE_DIR / build_docs_cfg["downloadable-notebooks"]
 PATH_DOC = Path(upload_docs_cfg["upload-dir"])
 
 # release number in absolute links
@@ -114,15 +115,22 @@ def make_api_links(file_path, file_type):
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    log.info("Building API links in notebooks.")
+    log.info("Building API links in .ipynb and Sphinx formatted notebooks.")
+    log.info("Bring back stripped and clean notebooks.")
 
     for notebook in get_notebooks():
-        html_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
+        nb_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
+        downloadable_path = Path(nb_path)
+        downloadable_path = PATH_NBS / downloadable_path.absolute().name
+        make_api_links(downloadable_path, file_type="ipynb")
+
+        html_path = nb_path.replace(str(SOURCE_DIR), str(PATH_DOC))
         html_path = html_path.replace("ipynb", "html")
         make_api_links(Path(html_path), file_type="html")
 
-    for nb_path in list(PATH_NBS.glob("*.ipynb")):
-        make_api_links(Path(nb_path), file_type="ipynb")
+        # TODO: recover not processed notebooks
+        #
+        #
 
 
 if __name__ == "__main__":

@@ -11,7 +11,6 @@ from sphinx_astropy.conf import *
 
 # Load utils docs functions
 from gammapy.utils.docs import gammapy_sphinx_ext_activate
-from gammapy.utils.docs import gammapy_sphinx_notebooks
 
 # Sphinx-gallery config
 from sphinx_gallery.sorting import FileNameSortKey
