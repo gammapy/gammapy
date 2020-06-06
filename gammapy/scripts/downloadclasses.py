@@ -193,7 +193,7 @@ class ComputePlan:
             return False
 
         for nb in yaml.safe_load(txt):
-            if not (nb["tutorial"] or self.all_notebooks):
+            if not (nb.get("tutorial", True) or self.all_notebooks):
                 continue
             path = nb["name"] + ".ipynb"
             label = "nb: " + nb["name"]
