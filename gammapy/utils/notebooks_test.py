@@ -19,6 +19,7 @@ conf.read(PATH_CFG / "setup.cfg")
 setup_cfg = dict(conf.items("metadata"))
 URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 
+
 def get_notebooks():
     """Read `notebooks.yaml` info."""
     path = Path("notebooks.yaml")

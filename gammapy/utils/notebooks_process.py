@@ -2,7 +2,6 @@
 """Process tutorials notebooks for publication in documentation."""
 import argparse
 import logging
-import nbformat
 import os
 import shutil
 import subprocess
@@ -10,10 +9,11 @@ import sys
 from configparser import ConfigParser
 from distutils.util import strtobool
 from pathlib import Path
+import nbformat
+from nbformat.v4 import new_markdown_cell
+from gammapy import __version__
 from gammapy.scripts.jupyter import notebook_test
 from gammapy.utils.notebooks_test import get_notebooks
-from gammapy import __version__
-from nbformat.v4 import new_markdown_cell
 
 log = logging.getLogger(__name__)
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
