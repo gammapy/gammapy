@@ -216,6 +216,7 @@ class MapDataset(Dataset):
         if self.models:
             for model in self.models:
                 evaluator = self._evaluators.get(model)
+
                 if evaluator is None:
                     evaluator = MapEvaluator(
                         model=model, evaluation_mode=self.evaluation_mode, gti=self.gti
@@ -260,9 +261,11 @@ class MapDataset(Dataset):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
         npred_total = Map.from_geom(self._geom, dtype=float)
 
-        for key in self.evaluators:
-            if self.evaluators[key].contributes:
-                npred = self.evaluators[key].compute_npred()
+        evaluators = self.evaluators
+
+        for evaluator in evaluators.values():
+            if evaluator.contributes:
+                npred = evaluator.compute_npred()
                 npred_total.stack(npred)
 
         return npred_total
