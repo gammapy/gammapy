@@ -1,0 +1,198 @@
+.. include:: ../../references.txt
+
+.. _pig-020:
+
+***************
+PIG 20 - Models
+***************
+
+* Author: Axel Donath, Régis Terrier and Quentin Remy
+* Created: Jun 10, 2020
+* Withdrawn:
+* Status:
+* Discussion:
+
+Abstract
+========
+
+This PIG aims to resolve the remaining design questions for the Gammapy model handling.
+
+
+
+Proposal
+========
+
+Global Model Handling
+---------------------
+Gammapy already supports joint-likelihood analyses, where indiviudal,
+statistically independent datasets are represented by a `Dataset` object. In a
+typical analysis scenario there are components in the model, that are only
+fitted to one of the datasets (e.g. instrumental background components), while
+other model componenents (typically the source(s) of interested) are shared between
+all datasets.
+
+.. code::
+
+	models = DatasetModels()
+
+
+	# to simplify the creation of a global model
+	global_models = Models.from_dataset_models([dataset.models for dataset in datasets])
+
+	#however this could be done automatically by Datasets like:
+	datasets = Datasets(datasets)
+
+	print(datasets.models)
+
+	# add a setup function, this will be needed anyway for distributed computing?
+	datasets.distribute()
+
+	# on model set the evaluators are created
+	dataset.models = DatasetModels()
+
+	dataset_models = models.select(dataset_name="")
+
+
+Energy Dependent Spatial Models
+-------------------------------
+A very common use-case in scientific analyses is to look for energy dependent
+morphology of extended sources. In the past this kind of analysis has been typically
+done by splitting the data into energy bands and doing individual firs of the
+morphology. In a combined spectral and spatial ("cube") analysis this can be
+naturally achieved by allowing for an energy dependent spatial model, where the
+energy dependence is e.g. described by a parametric model expression.
+
+In the current model scheme we use a "factorised" representation of the source model,
+where the spatial, energy and time dependence are independent and not correlated:
+
+.. math::
+
+	f(l, b, E, t) = A \cdot F(l, b) \cdot G(E) \cdot H(t)
+
+To represent energy depdendent spatial model we need to adapt this to:
+
+.. math::
+
+	f(l, b, E, t) = A \cdot F(l, b, E) \cdot G(E) \cdot H(t)
+
+In general the energy dependence is optional.
+
+The ``SkyDiffuseCube`` is replaced by:
+
+
+.. code::
+
+	spatial_model = TemplateSpatialModel.read("my_cube.fits")
+
+	model = SkyModel(
+		spatial_model=spatial_model,
+		spectral_model=PowerLawNormSpectralModel()
+	)
+
+Parametric energy dependent models will be introduced later (after v1.0), but we
+add a docs example, how a custom energy dependent spatial model can be implemented
+
+
+Spectral Norm Models
+--------------------
+
+For the purpose of adjusting template based model we propose to introduce a new
+class of spectral models. Those spectral model feature a norm parameter instead
+of amplitude
+
+.. code::
+
+	from gammapy.modeling.models import PowerLawNormSpectralModel, LogParabolaNormSpectralModel, NodeNormSpectralModel
+
+	pwl_norm = PowerLawNormSpectralModel()
+	log_parabola_norm = LogParabolaNormSpectralModel()
+	node_norm = NodeNormSpectralModel()
+
+
+What works:
+
+.. code::
+	from gammapy.modeling.models import PowerLawSpectralModel, Parameter
+
+	amplitude = Parameter(name="amplitude", value=1, unit="")
+	pwl_norm = PowerLawSpectralModel(amplitude=amplitude, index=0)
+
+
+
+Background Model Handling
+-------------------------
+
+Either use ``SkyModel()`` and ``DataModel`` or ``SourceModel`` and ``BackgroundModel``,
+or ``DataTemplateSpatialModel``?
+
+.. code::
+
+	from gammapy.modeling.models import BackgroundModel
+
+	bkg_model = BackgroundModel(
+		spectral_norm_model=
+		dataset_name=
+	)
+
+	bkg_model.evaluate()
+
+
+Maybe introduce a special BackgroundIRFModel? Remove ``MapDataset.background_model``
+and use ``MapDataset.models["dataset-name-bkg"]`` instead. Introduce naming convention?
+
+
+CompoundModel
+-------------
+
+Serialise operator, or MultiplicativeSpectralModel() and AdditiveSpectralModel?
+
+
+
+Spectral Absorbtion Model
+-------------------------
+
+The absorbed spectral model should be handled with a different approach
+
+
+Additional Models
+-----------------
+`SersicSpatialModel`, `NodeSpectralModel`
+
+
+`BrokenPowerLaw`, `SuperExponentialCutoff`,
+
+`PiecewiseBrokenPowerLawSpectralModel` (not have energy parameters...)
+
+
+Parametrisation of the LightCurveModel, ExponentialCutoffSpectralModel
+
+
+
+Requires more work...
+`PhaseCurveModel`???
+
+
+
+
+
+XML Support for Reading Models
+------------------------------
+
+Implement reading XML files for models, like:
+
+.. code::
+
+	from gammapy.modeling.models import Models
+
+	models = Models.read("my_model.xml")
+
+
+Alternative solution: implement a conversion script `gammapy convert-model my_model.xml my_model.yaml`?
+
+Decision
+========
+
+
+.. _gammapy: https://github.com/gammapy/gammapy
+.. _gammapy-web: https://github.com/gammapy/gammapy-webpage
+
