@@ -258,17 +258,12 @@ def test_models_management(tmp_path):
     assert npred1b != npred0
     assert_allclose(npred1b, 2147.407023024028)
 
-    from timeit import timeit
-
     datasets.models.remove(model1b)
     _ = datasets.models  # auto-update models
     newmodels = [datasets.models[0].copy() for k in range(48)]
     datasets.models.extend(newmodels)
 
-    assert (
-        datasets[0].npred(use_cache=False).data.sum()
-        == datasets[0].npred(use_cache=True).data.sum()
-    )
-    assert timeit(lambda: datasets[0].npred(use_cache=False), number=1) > timeit(
-        lambda: datasets[0].npred(use_cache=True), number=1
-    )
+    datasets[0].use_cache = False
+    nocache = datasets[0].npred().data.sum()
+    datasets[0].use_cache = True
+    assert_allclose(datasets[0].npred().data.sum(), nocache)

@@ -58,6 +58,8 @@ class MapDataset(Dataset):
         This mode is recommended for local optimization algorithms.
         The "global" evaluation mode evaluates the model components on the full map.
         This mode is recommended for global optimization algorithms.
+    use_cache : bool
+        Use cached values of frozen models or recompute them
     mask_safe : `~gammapy.maps.WcsNDMap`
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
@@ -77,6 +79,7 @@ class MapDataset(Dataset):
         edisp=None,
         name=None,
         evaluation_mode="local",
+        use_cache=True,
         mask_safe=None,
         gti=None,
     ):
@@ -257,14 +260,14 @@ class MapDataset(Dataset):
         """Shape of the counts or background data (tuple)"""
         return self._geom.data_shape
 
-    def npred(self, use_cache=True):
+    def npred(self):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
         npred_total = Map.from_geom(self._geom, dtype=float)
 
         for evaluator in self.evaluators.values():
             if evaluator.contributes:
-                if use_cache is False:
-                    evaluator._pars = None
+                if self.use_cache is False:
+                    evaluator._pars_cached = None
                 npred = evaluator.compute_npred()
                 npred_total.stack(npred)
         return npred_total
@@ -1680,8 +1683,8 @@ class MapEvaluator:
         self.edisp = edisp
         self.gti = gti
         self.contributes = True
-        self._npred = None
-        self._pars = None
+        self._npred_cached = None
+        self._pars_cached = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -1761,7 +1764,7 @@ class MapEvaluator:
         else:
             self.exposure = exposure
 
-        self._pars = None
+        self._pars_cached = None
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -1820,10 +1823,10 @@ class MapEvaluator:
             Predicted counts on the map (in reco energy bins)
         """
 
-        pars = [p.value for p in self.model.parameters]
-        npred = self._npred
-        if pars != self._pars:
-            self._pars = pars
+        pars = self.model.parameters.values
+        npred = self._npred_cached
+        if pars != self._pars_cached:
+            self._pars_cached = pars
             if isinstance(self.model, BackgroundModel):
                 npred = self.model.evaluate()
             else:
@@ -1838,5 +1841,5 @@ class MapEvaluator:
                 if self.model.apply_irf["edisp"]:
                     npred = self.apply_edisp(npred)
 
-            self._npred = npred
+            self._npred_cached = npred
         return npred
