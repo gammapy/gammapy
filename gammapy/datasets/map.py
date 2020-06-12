@@ -100,6 +100,7 @@ class MapDataset(Dataset):
         self.mask_safe = mask_safe
         self.models = models
         self.gti = gti
+        self.use_cache = use_cache
 
         # check whether a reference geom is defined
         _ = self._geom
@@ -1823,9 +1824,9 @@ class MapEvaluator:
             Predicted counts on the map (in reco energy bins)
         """
 
-        pars = self.model.parameters.values
+        pars = list(self.model.parameters.values)
         npred = self._npred_cached
-        if pars != self._pars_cached:
+        if self._pars_cached != pars:
             self._pars_cached = pars
             if isinstance(self.model, BackgroundModel):
                 npred = self.model.evaluate()
