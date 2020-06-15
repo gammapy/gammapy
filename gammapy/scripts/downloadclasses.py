@@ -4,33 +4,34 @@ import hashlib
 import json
 import logging
 import sys
+from configparser import ConfigParser
 from pathlib import Path
 from urllib.request import urlopen
 import yaml
 from gammapy import __version__
 
 log = logging.getLogger(__name__)
+PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
+
+# fetch params from setup.cfg
+conf = ConfigParser()
+conf.read(PATH_CFG / "setup.cfg")
+setup_cfg = dict(conf.items("metadata"))
+URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 
 RELEASES_BASE_URL = "https://gammapy.org/download"
-DEV_NBS_YAML_URL = (
-    "https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/notebooks.yaml"
-)
-DEV_SCRIPTS_YAML_URL = (
-    "https://raw.githubusercontent.com/gammapy/gammapy/master/examples/scripts.yaml"
-)
-TAR_BUNDLE = (
-    "https://github.com/gammapy/gammapy-data/tarball/master"  # Curated datasets bundle
-)
+DEV_NBS_YAML_URL = f"{URL_GAMMAPY_MASTER}notebooks.yaml"
+DEV_SCRIPTS_YAML_URL = f"{URL_GAMMAPY_MASTER}examples/scripts.yaml"
 DEV_DATA_JSON_LOCAL = "../../dev/datasets/gammapy-data-index.json"  # CI tests
+TAR_BUNDLE = "https://github.com/gammapy/gammapy-data/tarball/master"
+# Curated datasets bundle
 
 
 def parse_datafiles(datasearch, datasetslist, download_tests=False):
     for dataset in datasetslist:
         if dataset["name"] == "tests" and not download_tests and datasearch != "tests":
             continue
-        if (datasearch == dataset["name"] or datasearch == "") and dataset.get(
-            "files", ""
-        ):
+        if datasearch in [dataset["name"], ""] and dataset.get("files", ""):
             for ds in dataset["files"]:
                 label = ds["path"]
                 data = {"url": ds["url"], "path": ds["path"]}
@@ -57,7 +58,7 @@ class ComputePlan:
     """Generates the whole list of files to download"""
 
     def __init__(
-        self, src, outfolder, release, option, modetutorials=False, download_tests=False
+        self, src, outfolder, release, option, modetutorials=False, download_tests=False, all_notebooks=False
     ):
         self.src = src
         self.outfolder = Path(outfolder)
@@ -65,6 +66,7 @@ class ComputePlan:
         self.option = option
         self.modetutorials = modetutorials
         self.download_tests = download_tests
+        self.all_notebooks = all_notebooks
         self.listfiles = {}
         log.info(f"Looking for {self.option}...")
 
@@ -191,6 +193,8 @@ class ComputePlan:
             return False
 
         for nb in yaml.safe_load(txt):
+            if not (nb.get("tutorial", True) or self.all_notebooks):
+                continue
             path = nb["name"] + ".ipynb"
             label = "nb: " + nb["name"]
             self.listfiles[label] = {}

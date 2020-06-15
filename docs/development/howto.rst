@@ -912,14 +912,18 @@ This should work::
 
 You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
 
-Jupyter notebooks stripped of output cells are present in the ``tutorials`` folder.
-They are by default tested, executed, and copied to the ``docs/notebooks`` and
-``docs/_static/notebooks`` folders during the process of generating HTML docs. This
-triggers its conversion to Sphinx formatted HTML files and ``.py`` scripts. The Sphinx
-formatted versions of the notebooks provide links to the raw ``.ipynb`` Jupyter files
-and ``.py`` script versions stored in ``docs/_static/notebooks`` folder.
+Jupyter notebooks present in Gammapy documentation have stripped output cells.
+All notebooks declared in the ``notebooks.yaml`` index file are code formatted, tested,
+and filled during the process of documentation building. They are also converted to Sphinx
+formatted HTML files and ``.py`` scripts.
 
-Once the documentation built you can optimize the speed of re-building processes,
+The Sphinx formatted versions of the notebooks provide links to the raw ``.ipynb`` Jupyter
+files and ``.py`` script versions stored in ``docs/_static/notebooks`` folder, as well as
+a link pointing to its specific Binder space in the ``gammapy-webpage`` repository.
+Since notebooks are evolving with Gammapy features and documentation, the different
+versions of the notebooks are linked to versioned Binder environments.
+
+Once the documentation is built you can optimize the speed of eventual re-building,
 for example in case you are modifying or creating new docs and you would like to check
 these changes are displayed nicely. For that purpose, if your modified RST file
 does not contain links to notebooks, you may run ``make docs-all nbs=False`` so
@@ -927,15 +931,7 @@ that notebooks are not executed during the docs build.
 
 In the case one single notebook is modified or added to the documentation, you can
 execute the build doc process with the ``src`` parameter with value the name of the
-considered notebook. i.e. ``make docs-all src=tutorials/my-notebook.ipynb``
-
-Each *fixed-text* Sphinx formatted notebook present in the documentation has its
-own link pointing to its specific Binder space in the ``gammapy-webpage`` repository.
-Since notebooks are evolving with Gammapy features and documentation, the different
-versions of the notebooks are linked to the versioned Binder environments. In this
-sense, it is important to publish as stable docs those built with stable release
-versions of Gammapy so the links to Binder in the tutorials point to stable tagged
-Binder environments in the ``gammapy-webpage`` repository.
+considered notebook. i.e. ``make docs-all src=docs/tutorials/my-notebook.ipynb``
 
 Sphinx gallery extension
 ------------------------
@@ -945,13 +941,11 @@ extension to build galleries of illustrated examples on how to use Gammapy (i.e.
 :ref:`model-gallery`). The Python scripts used to produce the model gallery are placed in
 ``examples/models`` and the configuration of the ``sphinx-gallery`` module is done in ``docs/conf.py``.
 
-
 Dealing with links and notebooks
 --------------------------------
 
-Jupyter notebooks stored in the ``tutorials`` folder and are copied to the ``notebooks`` folder
-during the process of Sphinx building documentation. They are converted to HTML files using
-`nb_sphinx <http://nbsphinx.readthedocs.io/>`__ Sphinx extension that provides a source parser
+All Jupyter notebooks in Gammpay documentation are converted to HTML files using
+`nb_sphinx <http://nbsphinx.readthedocs.io/>`__ Sphinx extension which provides a source parser
 for ``.ipynb`` files.
 
 Links to notebooks
@@ -959,10 +953,9 @@ Links to notebooks
 
 From docstrings and RST documentation files in Gammapy you can link to the built fixed-text HTML formatted
 versions of the notebooks and subsections providing its filename with the ``.ipynb`` file extension
-and the relative path to the ``notebooks`` folder. This folder is created and populated with notebooks
-at the root of the ``docs`` folder in the process of documentation building::
+and the relative path to the folder where they are placed::
 
-    `Maps section in Gammapy overview tutorial <../notebooks/overview.ipynb#Maps>`__
+    `Maps section in Gammapy overview tutorial <../tutorials/overview.ipynb#Maps>`__
 
 Links within notebooks
 ++++++++++++++++++++++

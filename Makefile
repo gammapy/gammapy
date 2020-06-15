@@ -87,23 +87,22 @@ test-cov:
 	python -m pytest -v gammapy --cov=gammapy --cov-report=html
 
 test-nb:
-	python -m gammapy.utils.tutorials_test
+	python -m gammapy.utils.notebooks_test
 
 test-scripts:
 	python -m gammapy.utils.scripts_test
 
 clean-nb:
-	python -m gammapy jupyter --src=tutorials black
-	python -m gammapy jupyter --src=tutorials strip
+	python -m gammapy jupyter --src=docs --r black
+	python -m gammapy jupyter --src=docs --r strip
 
 docs-sphinx:
 	cd docs && python -m sphinx . _build/html -b html
-	python -m gammapy.utils.tutorials_links
 
 docs-all:
-	python -m gammapy.utils.tutorials_process --src="$(src)" --nbs="$(nbs)" --fmt="$(fmt)"
+	python -m gammapy.utils.notebooks_process --src="$(src)" --nbs="$(nbs)" --fmt="$(fmt)"
 	cd docs && python -m sphinx . _build/html -b html
-	python -m gammapy.utils.tutorials_links
+	python -m gammapy.utils.notebooks_links --src="$(src)" --nbs="$(nbs)"
 
 docs-show:
 	open docs/_build/html/index.html

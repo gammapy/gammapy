@@ -65,7 +65,6 @@ def test_cli_download_scripts(tmp_path, config):
         f"--release={config['release']}",
     ]
     run_cli(cli, args)
-
     assert (tmp_path / config["envfilename"]).exists()
     assert (tmp_path / f"scripts-{config['release']}/{config['script']}.py").exists()
 

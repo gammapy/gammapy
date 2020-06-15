@@ -27,7 +27,7 @@ class SensitivityEstimator:
 
     Examples
     --------
-    For a usage example see `cta_sensitivity.html <../notebooks/cta_sensitivity.html>`__
+    For a usage example see `cta_sensitivity.html <../tutorials/cta_sensitivity.html>`__
 
     """
 

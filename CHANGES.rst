@@ -27,11 +27,11 @@ API for Gammapy v1.0.
 The main feature introduces in Gammapy v0.17 is event sampling. Based
 on the newly introduced ``MapDatasetEventSampler`` class, event lists can be
 sampled from a ``MapDataset`` object. The use of this class is shown in a dedicated
-`event sampling tutorial <notebooks/event_sampling.html>`__. Gammapy v0.17 now
+`event sampling tutorial <tutorials/event_sampling.html>`__. Gammapy v0.17 now
 supports simulation and fitting of temporal models. Both are demonstrated in the
-`lightcurve simulation tutorial <notebooks/light_curve_simulation.html>`__.
+`lightcurve simulation tutorial <tutorials/light_curve_simulation.html>`__.
 A more general introduction to modeling and fitting in Gammapy is now available
-as a `modeling and fitting tutorial <notebooks/modeling.html>`__
+as a `modeling and fitting tutorial <tutorials/modeling.html>`__
 
 Following the proposal in `PIG 19`_ the sub-package structure of Gammapy was
 unified. Instead of grouping the main functionality by use-case it is now
@@ -183,9 +183,9 @@ model to the data.
 
 To provide a visual overview of the available models in Gammapy a
 `model gallery <modeling/gallery/index.rst>`__ was added. A general introduction
-on how to work with the different models is now avilable in a dedicated `models tutorial <notebooks/models.html>`__.
+on how to work with the different models is now available in a dedicated `models tutorial <tutorials/models.html>`__.
 The spectral analysis of an extended source is demonstrated in the newly
-added `extended source spectral analysis tutorial <notebooks/extended_source_spectral_analysis.ipynb>`__.
+added `extended source spectral analysis tutorial <tutorials/extended_source_spectral_analysis.ipynb>`__.
 
 To further improve API consistency the ``EnergyDispersion`` class
 was renamed to ``EDispKernel`` and the ``SkyModels`` class was
@@ -298,17 +298,17 @@ For Gammapy v0.15 the high-level ``Analysis`` class was moved to the newly
 introduced ``gammapy.analysis`` sub-package. The syntax of the YAML config
 file was simplified and validation of config parameters is now available
 for interactive use of the ``Analysis`` class as well. Both is demonstrated in the
-`first analysis with Gammapy notebook <notebooks/analysis_1.html>`__.
+`first analysis with Gammapy notebook <tutorials/analysis_1.html>`__.
 In addition a new ``gammapy analysis`` command line tool was introduced,
 which executes the data reduction part of an analysis, based on a given config
-file. The use of the tool is documented `here <scripts/index.rst#example>`__.
+file.
 
 Following the proposal in `PIG 18`_ the structure of the documentation was
 improved. The new `overview page <overview.rst>`__ gives an introduction and
 overview of the Gammapy analysis workflow and package structure. The structure
 and content of the `tutorials page <tutorials/index.rst>`__ was simplified and
 cleaned up and a `how to <howto.rst>`__ page was introduced. A tutorial notebook
-showing how to do a joint `multi-instrument analysis <notebooks/analysis_mwl.html>`__
+showing how to do a joint `multi-instrument analysis <tutorials/analysis_mwl.html>`__
 of the Crab Nebula using H.E.S.S. and Fermi-LAT data and HAWC flux points was added.
 
 Another focus of the work for Gammapy v0.15 was the clean-up and unification of
@@ -318,7 +318,7 @@ and ``SpectrumDatasetMaker`` which directly produce a ``MapDataset`` or
 were adapted by introducing a ``ReflectedRegionsBackgroundMaker``,
 ``RingBackgroundMaker`` and ``AdaptiveRingbackgroundMaker``. Those makers can
 also be chained to create custom data reduction workflows. The new data reduction
-API is shown in the `second analysis with Gammapy notebook <notebooks/analysis_2.html>`__
+API is shown in the `second analysis with Gammapy notebook <tutorials/analysis_2.html>`__
 and corresponding `docs page <cube/index.rst>`__.
 
 A ``MapDatasetOnOff`` class was introduced to handle on-off observation based analyses
@@ -328,19 +328,19 @@ geometry or energy specification. Gammapy now supports spatially varying PSF and
 energy dispersion in the data reduction as well as during fitting. By introducing
 an in memory ``Observation`` class Gammapy now features unified support for
 binned simulations of spectrum and map datasets. This is shown in the
-`1d simulation <notebooks/spectrum_simulation.html>`__ and
-`3d simulation <notebooks/simulate_3d.html>`__ tutorial notebooks.
+`1d simulation <tutorials/spectrum_simulation.html>`__ and
+`3d simulation <tutorials/simulate_3d.html>`__ tutorial notebooks.
 
 The ``LightCurveEstimator`` was improved to use the GTIs defined on datasets
 and allow for grouping of datasets according to provided time intervals. Details
 are explained on the `time docs page <time/index.rst>`__ and the newly added
-`flare light curve notebook <notebooks/light_curve_flare.html>`__.
+`flare light curve notebook <tutorials/light_curve_flare.html>`__.
 
 The support for 2FHL and 4FGL was improved by adding attributes returning
 spatial and spectral models as well as lightcurves to the corresponding objects.
 The support for the Fermi-LAT 1FHL catalog was dropped. An overview can be found
 on the `catalog docs page <catalog/index.rst>`__ and the `catalog tutorial notebook
-<notebooks/catalog.html>`__.
+<tutorials/catalog.html>`__.
 
 Error propagation is now fully supported for the ``AbsorbedSpectralModel`` and
 ``NaimaModel``.
@@ -478,7 +478,7 @@ Gammapy v0.14 features a new high level analysis interface. Starting from
 a YAML configuration file, it supports the standard use-cases of joint
 or stacked 3D as well as 1D reflected region analyses. It also supports
 computation of flux points for all cases. The usage of this new ``Analysis``
-class is demonstrated in the `hess.html <./notebooks/hess.html>`__ tutorial.
+class is demonstrated in the `hess.html <./tutorials/hess.html>`__ tutorial.
 
 Following the proposal in :ref:`pig-016` the subpackages ``gammapy.background``
 and ``gammapy.image`` were removed. Existing functionality was moved to the
@@ -1334,7 +1334,7 @@ Documentation:
   in the Sphinx-based documentation (the one you are looking at) at :ref:`tutorials`.
 - Most of the Gammapy tutorials can be executed directly in the browser via the https://mybinder.org/
   service. There is a "launch in binder" link at the top of each tutorial in the docs,
-  see e.g. here: `CTA data analysis with Gammapy <notebooks/cta_data_analysis.html>`__
+  see e.g. here: `CTA data analysis with Gammapy <tutorials/cta_data_analysis.html>`__
 - A page was created to collect the information for CTA members how to get started with Gammapy
   and with contact / support channels: https://gammapy.org/cta.html
 

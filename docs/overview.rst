@@ -35,14 +35,14 @@ intermediate Python skill level.
 
 To analyse data from CTA or existing IACTs, the usual workflow is to use the
 high-level interface in :ref:`gammapy.analysis <analysis>` as shown in the
-example `First analysis tutorial notebook <notebooks/analysis_1.html>`__, i.e.
+example `First analysis tutorial notebook <./tutorials/analysis_1.html>`__, i.e.
 to write a YAML config file, and then to use `~gammapy.analysis.AnalysisConfig`
 and `~gammapy.analysis.Analysis` to perform the data reduction from event lists
 and instrument response functions (IRFs) to a reduced data format called
 datasets, using either 3D cube analysis or 1D region-based spectral analysis.
 The IACT data distributed by instruments is called "data level 3" (DL3) and is
-given as FITS files, as shown in the `CTA with Gammapy <notebooks/cta.html>`__
-and `H.E.S.S. with Gammapy <notebooks/hess.html>`__ notebooks and explained in
+given as FITS files, as shown in the `CTA with Gammapy <./tutorials/cta.html>`__
+and `H.E.S.S. with Gammapy <./tutorials/hess.html>`__ notebooks and explained in
 more detail in :ref:`overview_data` below. Then `~gammapy.analysis.Analysis`
 class is then used to compute intermediate reduced analysis files like counts
 and exposure maps or spectra, and reduced point spread function (PSF) or energy
@@ -68,7 +68,7 @@ of the datasets, models and fit classes. Advanced users that need to run
 specialises analyses such as e.g. complex background modeling, or grouping of
 observations, have a second-level API available via dataset makers, that offer
 more flexibility. An example of this is shown in the `Second analysis tutorial
-notebook <notebooks/analysis_2.html>`__.
+notebook <./tutorials/analysis_2.html>`__.
 
 Gammapy ships with a ``gammapy`` command line tool, that can be used to check
 your installation and show version information via ``gammapy info``, to download
@@ -158,7 +158,7 @@ also be modeled by multiple components if you want. The
 `~gammapy.modeling.models.SpectralModel` component and a
 `~gammapy.modeling.models.SpatialModel` component. Most commonly used models in
 gamma-ray astronomy are built-in, see the `Model gallery
-<notebooks/models.html>`__. It is easy to create user-defined models and
+<./tutorials/models.html>`__. It is easy to create user-defined models and
 datasets, Gammapy is very flexible. 
 
 The `~gammapy.modeling.Fit` class provides methods to fit, i.e. optimise
@@ -196,10 +196,10 @@ Gammapy supports binned simulation, i.e. Poisson fluctuation of predicted
 counts maps or spectra, as well as event sampling to simulate DL3 events data.
 The following tutorials illustrate how to use that to predict
 observability, significance and sensitivity, using CTA examples: `3D map
-simulation <notebooks/simulate_3d.html>`__, `1D spectrum simulation
-<notebooks/spectrum_simulation.html>`__, and `Point source sensitivity
-<notebooks/cta_sensitivity.html>`__. Event sampling is demonstrated in
-`a dedicated notebook <notebooks/event_sampling.html>`__.
+simulation <./tutorials/simulate_3d.html>`__, `1D spectrum simulation
+<./tutorials/spectrum_simulation.html>`__, and `Point source sensitivity
+<./tutorials/cta_sensitivity.html>`__. Event sampling is demonstrated in
+`a dedicated notebook <./tutorials/event_sampling.html>`__.
 
 .. _overview_other:
 
@@ -217,7 +217,7 @@ started. To learn more, see the following sub packages and documentation pages:
 Note that in Gammapy, 2D image analyses are partly done with actual 2D images
 that don't have an energy axis (e.g. in :ref:`gammapy.detect <detect>`), and
 partly with 3D cubes with a single energy bin, e.g. for modeling and fitting,
-see the `2D map analysis tutorial <notebooks/image_analysis.html>`__.
+see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
 
 For 1D spectral modeling and fitting, `~gammapy.modeling.models.Models` are
 used, to provide uniformity within Gammapy, and to allow in future versions of
@@ -228,7 +228,7 @@ e.g. a gamma-ray binary with underlying emission from a pulsar wind nebula, to
 apply proper treatment of containment and contamination corrections. Note that
 the spatial model on a `~gammapy.modeling.models.SkyModel` is optional, you can
 only pass a `~gammapy.modeling.models.SpectralModel`, as shown in the `First
-analysis tutorial notebook <notebooks/analysis_1.html>`__ and other tutorials.
+analysis tutorial notebook <./tutorials/analysis_1.html>`__ and other tutorials.
 
 .. _overview_next:
 

@@ -4,17 +4,25 @@ import logging
 import os
 import shutil
 import sys
+from configparser import ConfigParser
 from pathlib import Path
 import pkg_resources
 import yaml
 from gammapy.scripts.jupyter import notebook_test
 
 log = logging.getLogger(__name__)
+PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
+
+# fetch params from setup.cfg
+conf = ConfigParser()
+conf.read(PATH_CFG / "setup.cfg")
+setup_cfg = dict(conf.items("metadata"))
+URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 
 
 def get_notebooks():
     """Read `notebooks.yaml` info."""
-    path = Path("tutorials") / "notebooks.yaml"
+    path = Path("notebooks.yaml")
     with path.open() as fh:
         return yaml.safe_load(fh)
 
@@ -45,22 +53,22 @@ def main():
 
     # setup
     path_temp = Path("temp")
-    path_empty_nbs = Path("tutorials")
-    shutil.rmtree(path_temp, ignore_errors=True)
-    shutil.copytree(path_empty_nbs, path_temp)
+    path_temp.mkdir()
 
-    for notebook in get_notebooks():
-        if requirement_missing(notebook):
-            log.info(f"Skipping notebook (requirement missing): {notebook['name']}")
-            continue
-        filename = notebook["name"] + ".ipynb"
-        path = path_temp / filename
-
-        if not notebook_test(path):
-            passed = False
-
-    # tear down
-    shutil.rmtree(path_temp, ignore_errors=True)
+    try:
+        for notebook in get_notebooks():
+            if requirement_missing(notebook):
+                log.info(f"Skipping notebook (requirement missing): {notebook['name']}")
+                continue
+            filename = notebook["name"] + ".ipynb"
+            path_dest = path_temp / filename
+            src_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
+            shutil.copyfile(src_path, path_dest)
+            if not notebook_test(path_dest):
+                passed = False
+    finally:
+        # tear down
+        shutil.rmtree(path_temp, ignore_errors=True)
 
     if not passed:
         sys.exit("Some tests failed. Existing now.")

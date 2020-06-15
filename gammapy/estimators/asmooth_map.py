@@ -98,6 +98,7 @@ class ASmoothMapEstimator:
         ----------
         dataset : `~gammapy.cube.MapDataset` or `~gammapy.cube.MapDatasetOnOff`
             the input dataset (with one bin in energy at most)
+
         Returns
         -------
         images : dict of `~gammapy.maps.WcsNDMap`

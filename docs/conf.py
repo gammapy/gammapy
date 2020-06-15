@@ -11,7 +11,6 @@ from sphinx_astropy.conf import *
 
 # Load utils docs functions
 from gammapy.utils.docs import gammapy_sphinx_ext_activate
-from gammapy.utils.docs import gammapy_sphinx_notebooks
 
 # Sphinx-gallery config
 from sphinx_gallery.sorting import FileNameSortKey
@@ -149,16 +148,13 @@ html_static_path = ["_static"]
 
 gammapy_sphinx_ext_activate()
 
-# Integration of notebooks
-gammapy_sphinx_notebooks(setup_cfg)
-
 
 # Theme style
 # html_style = ''
 def setup(app):
-    app.add_stylesheet("gammapy.css")
-    app.add_javascript("copybutton.js")
-    app.add_javascript("gammapy.js")
+    app.add_css_file("gammapy.css")
+    app.add_js_file("copybutton.js")
+    app.add_js_file("gammapy.js")
 
 
 # copybutton.js provides hide/show button for python prompts >>>
