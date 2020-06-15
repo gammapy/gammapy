@@ -6,4 +6,5 @@ from .flux_point import *
 from .lightcurve import *
 from .sensitivity import *
 from .ts_map import *
+from .image_profile import *
 from .map_profile import *
