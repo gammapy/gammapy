@@ -7,7 +7,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import PolygonPixelRegion, CircleAnnulusPixelRegion, RectangleSkyRegion, PixCoord
 from gammapy.maps import MapAxis
 from gammapy.utils.table import table_from_row_data
-from gammapy.estimators import ImageProfile
+from gammapy.visualization import ImageProfile
 from gammapy.stats import WStatCountsStatistic, CashCountsStatistic
 from gammapy.datasets import SpectrumDatasetOnOff
 
@@ -21,7 +21,59 @@ class MapProfileEstimator:
     ----------
     regions : list of `regions`
         regions to use
-    
+    axis : `~gammapy.maps.MapAxis`
+        Radial axis of the profiles
+    n_sigma : float (optional)
+        Number of sigma to compute errors
+    n_sigma_ul : float (optional)
+        Number of sigma to compute upper limit
+
+    Example
+    --------
+    This example shows how to compute a counts profile for the Fermi galactic
+    center region::
+
+        import matplotlib.pyplot as plt
+        from astropy import units as u
+        from gammapy.estimator import MapProfileEstimator, make_orthogonal_boxes
+        from gammapy.datasets import Datasets
+        from gammapy.visualization import image_profile
+
+        # load example data
+        datasets = Datasets.read("$GAMMAPY_DATA/fermi-3fhl-crab/",
+            "Fermi-LAT-3FHL_datasets.yaml", "Fermi-LAT-3FHL_models.yaml")
+        # configuration
+        datasets[0].gti = GTI.create("0s", "1e7s", "2010-01-01")
+
+        # creation of the boxes and axis
+        start_line = SkyCoord(182.5, -5.8, unit='deg', frame='galactic')
+        end_line = SkyCoord(186.5, -5.8, unit='deg', frame='galactic')
+        boxes, axis = make_orthogonal_boxes(start_line,
+                                        end_line,
+                                        datasets[0].counts.geom.wcs,
+                                        1.*u.deg,
+                                        11)
+
+        # set up profile estimator and run
+        prof_maker = MapProfileEstimator(boxes, axis)
+        fermi_prof = prof_maker.run(datasets[0])
+
+        # plot directly the data from the output dictionnary
+        x=fermi_prof.table["x_ref"]
+        y=fermi_prof.table["excess"]
+        yerr = [-fermi_prof.table["errn"], fermi_prof.table["errp"]]
+        plt.errorbar(x,y,yerr=yerr, fmt='o')
+        plt.yscale('log')
+        plt.show()
+
+        # smooth and plot the data using the ImageProfile class
+        fermi_prof.peek()
+        plt.show()
+
+        ax = plt.gca()
+        ax.set_yscale('log')
+        ax = fermi_prof.plot("flux", ax=ax)
+
     """
 
     def __init__(self, regions, axis, n_sigma = 1, n_sigma_ul=3):
@@ -42,7 +94,8 @@ class MapProfileEstimator:
         Returns
         --------
         results : list of dictionnary
-            the list of results (list keys below)
+            the list of results (list of keys: x_min, x_ref, x_max, alpha, counts, background, excess, ts, sqrt_ts, err,
+             errn, errp, ul, exposure, solid_angle)
         """
         if steps == "all":
             steps = ["err", "ts", "errn-errp", "ul"]
@@ -64,33 +117,48 @@ class MapProfileEstimator:
                 )
                 
             result = {
-                "x_min" : self.axis.edges[index], 
-                "x_max" : self.axis.edges[index+1],
-                "x_ref" : self.axis.center[index]
+                "x_min": self.axis.edges[index],
+                "x_max": self.axis.edges[index+1],
+                "x_ref": self.axis.center[index]
             }
+            if isinstance(spds, SpectrumDatasetOnOff):
+                result["alpha"] = stats.alpha
             result.update({
-                "counts" : stats.n_on, 
-                "excess" : stats.excess, 
+                "counts": stats.n_on,
+                "background": stats.background,
+                "excess": stats.excess,
             })
+
             if "ts" in steps:
-                result["ts"] = stats.delta_ts
-                result["sqrt_ts"] = stats.significance                
-                
+                if isinstance(stats.delta_ts, list) or isinstance(stats.delta_ts, np.ndarray):
+                    result["ts"] = np.asanyarray(stats.delta_ts[0],dtype=np.float32)
+                else:
+                    result["ts"] = np.asanyarray(stats.delta_ts, dtype=np.float32)
+                if isinstance(stats.significance, list) or isinstance(stats.significance, np.ndarray):
+                    result["sqrt_ts"] = np.asanyarray(stats.significance[0], dtype=np.float32)
+                else:
+                    result["sqrt_ts"] = np.asanyarray(stats.significance, dtype=np.float32)
+
             if "err" in steps:
-                result["err"] = stats.error
+                result["err"] = np.asanyarray(stats.error, dtype=np.float32)
             
             if "errn-errp" in steps:
                 result["errn"] = stats.compute_errn(self.n_sigma)
-                result["errp"] = stats.compute_errp(self.n_sigma)
+                #ToDo: check the type of errp compared to errn (maybe not the same)
+                _errp = stats.compute_errp(self.n_sigma)
+                if isinstance(_errp, list) or isinstance(_errp, np.ndarray):
+                    result["errp"] = np.asanyarray(_errp[0], dtype=np.float32)
+                else:
+                    result["errp"] = np.asanyarray(_errp, dtype=np.float32)
  
             if "ul" in steps:
                 result["ul"] = stats.compute_upper_limit(self.n_sigma_ul)
  
-            # What exposure to take?
+            # What exposure to take? And waht about the mask?
             result.update(
-                {"exposure" : spds.aeff.data.data.max() * spds.livetime,
-                "solid_angle" : spds.counts.geom.solid_angle()}
-                         )
+                {"exposure": spds.aeff.data.data.max() * spds.livetime,
+                 "solid_angle": spds.counts.geom.solid_angle()}
+            )
             results.append(result)
         return results
 
@@ -106,7 +174,7 @@ class MapProfileEstimator:
 
         Returns
         --------
-        imageprofile : `~gammapy.maps.ImageProfile`
+        imageprofile : `~gammapy.estomators.ImageProfile`
             Return an image profile class containing the result
         """
         results = self.make_prof(dataset, steps)
@@ -115,6 +183,7 @@ class MapProfileEstimator:
             table.meta["PROFILE_TYPE"] = "orthogonal"
 
         return ImageProfile(table)
+
 
 def make_orthogonal_boxes_new(start_pos, end_pos, wcs, fullwidth, nbins=1):
     """Utility returning an array of regions to make orthogonal projections
@@ -161,6 +230,7 @@ def make_orthogonal_boxes_new(start_pos, end_pos, wcs, fullwidth, nbins=1):
 
     return regions, axis
 
+
 def make_orthogonal_boxes(start_pos, end_pos, wcs, fullwidth, nbins=1):
     """Utility returning an array of regions to make orthogonal projections
 
@@ -170,7 +240,7 @@ def make_orthogonal_boxes(start_pos, end_pos, wcs, fullwidth, nbins=1):
         First sky coordinate defining the line to which the orthogonal boxes made
     end_pos : `~astropy.regions.SkyCoord'
         Second sky coordinate defining the line to which the orthogonal boxes made
-    fullwidth : float
+    fullwidth : `~astropy.units.Quantity`
         Full width in degrees of the orthogonal dimension of the boxes
     wcs : `~astropy.wcs.WCS`
         WCS projection object
@@ -221,7 +291,7 @@ def make_orthogonal_boxes(start_pos, end_pos, wcs, fullwidth, nbins=1):
         yy1 = yy + stepy
         pix_center_reg = PixCoord((xx1 + xx) / 2., (yy1 + yy) / 2.)
         rectangle_sky = RectangleSkyRegion(center=pix_center_reg.to_sky(wcs),
-                                           width=binwidth*binz*u.deg, height=fullwidth*u.deg,
+                                           width=binwidth*binz*u.deg, height=fullwidth,
                                            angle=rot_ang.degree * u.deg)
         regions.append(rectangle_sky)
         dist = _pix_dist(PixCoord(xx1, yy1), pix_center_pos)*binz
