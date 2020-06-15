@@ -1,64 +1,69 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.utils.testing import requires_data, requires_dependency, mpl_plot_check
-from astropy.coordinates import SkyCoord
-from gammapy.datasets import Datasets
-from gammapy.data import GTI
-from gammapy.estimators import MapProfileEstimator, make_orthogonal_boxes
+import numpy as np
+from gammapy.utils.testing import requires_dependency, mpl_plot_check
+from gammapy.utils.table import table_from_row_data
+from gammapy.estimators import ImageProfile
 
 
-@requires_data()
 def make_improf():
-    datasets = Datasets.read("$GAMMAPY_DATA/fermi-3fhl-crab/",
-                             "Fermi-LAT-3FHL_datasets.yaml", "Fermi-LAT-3FHL_models.yaml")
-    datasets[0].gti = GTI.create("0s", "1e7s", "2010-01-01")
+    results = []
+    bkg = 2
+    counts = 5
+    xmin = -2*u.deg
+    xmax = -1*u.deg
+    for ii in range(6):
+        on = counts+ii
+        sigma = np.sqrt(on+bkg)
+        result =  {
+              "xmax": xmin+ii*u.deg,
+              "x_ref": xmin+ii*u.deg,
+              "counts": on,
+              "excess": on-bkg,
+              "sqrt_ts": sigma,
+              "err": (on-bkg)/sigma,
+              "ul": 10,
+              "exposure": 100 * u.m ** 2 * u.s,
+              "solid_angle": 0.1 * u.sr,
+              }
+        results.append(result)
 
-    start_line = SkyCoord(182.5, -5.8, unit='deg', frame='galactic')
-    end_line = SkyCoord(186.5, -5.8, unit='deg', frame='galactic')
-    boxes, axis = make_orthogonal_boxes(start_line,
-                                        end_line,
-                                        datasets[0].counts.geom.wcs,
-                                        1. * u.deg,
-                                        11)
-
-    prof_maker = MapProfileEstimator(boxes, axis)
-    fermi_prof = prof_maker.run(datasets[0])
-
-    return fermi_prof
+    ftable = table_from_row_data(results)
+    return ImageProfile(ftable)
 
 
 @requires_dependency("matplotlib")
 def test_peek_plot():
-
-    fermi_prof = make_improf()
+    import matplotlib.pyplot as plt
+    a_prof = make_improf()
 
     with mpl_plot_check():
-        fermi_prof.peek()
+        a_prof.peek()
 
 
 @requires_dependency("matplotlib")
 def test_flux_plot():
     import matplotlib.pyplot as plt
-    fermi_prof = make_improf()
+    a_prof = make_improf()
 
     with mpl_plot_check():
         ax = plt.gca()
         ax.set_yscale('log')
-        ax = fermi_prof.plot("flux", ax=ax)
+        ax = a_prof.plot("flux", ax=ax)
 
 
 def test_content():
-    fermi_prof = make_improf()
+    a_prof = make_improf()
 
-    assert_allclose(fermi_prof.profile("brightness")[10].value, 1.053396e-07, atol=1e-5)
-    assert_allclose(fermi_prof.profile_ul("flux")[0].value, 4.5263849e-11, atol=1e-5)
-    assert_allclose(fermi_prof.profile_err_p("excess")[4].value, 10.582960, atol=1e-5)
-    assert_allclose(fermi_prof.profile_err_p("excess")[4].value, 10.582960, atol=1e-5)
+    assert_allclose(a_prof.profile("brightness")[4].value, 0.7, atol=1e-2)
+    assert_allclose(a_prof.profile_ul("flux")[0].value, 0.1, atol=1e-2)
+    assert_allclose(a_prof.profile_err_p("excess")[2].value, 1.666, atol=1e-3)
+    assert_allclose(a_prof.profile_err("excess")[1].value, 1.414, atol=1e-3)
 
 
 def test_normalise():
-    fermi_prof = make_improf()
-    fermi_norm = fermi_prof.normalize(mode="peak", method="excess")
+    a_prof = make_improf()
+    a_norm = a_prof.normalize(mode="peak", method="excess")
 
-    assert_allclose(fermi_norm.profile("excess")[4].value, 0.047630, atol=1e-5)
+    assert_allclose(a_norm.profile("excess")[4].value, 0.875, atol=1e-4)
