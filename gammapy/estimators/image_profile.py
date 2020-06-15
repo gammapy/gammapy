@@ -15,7 +15,7 @@ class ImageProfile:
     The image profile data is stored in `~astropy.table.Table` object, with the
     following columns:
 
-        * `x_ref` Center of the bin, given the distance to a reference position to (required).
+        * `x_ref` Center of the bin, given the distance to a reference position (required).
         * `x_min` Bin minimum value (optional).
         * `x_max` Bin maximum value (optional).
         * `counts` Counts profile data (required).
@@ -103,8 +103,12 @@ class ImageProfile:
                 if method != 'excess' and self.table["excess"].unit == '':
                     fact = fact.value
 
-                ymin = self.table["errn"].quantity * fact
-                ymax = self.table["errp"].quantity * fact
+                if "errn" in self.table.colnames:
+                    ymin = self.table["errn"].quantity * fact
+                elif "errp" in self.table.colnames:
+                    ymax = self.table["errp"].quantity * fact
+                else:
+                    ymin = ymax = self.table["err"].quantity * fact
                 return (ymin+ymax)/2.
         except KeyError:
             return None
@@ -136,7 +140,10 @@ class ImageProfile:
                 if method != 'excess' and self.table["excess"].unit == '':
                     fact = fact.value
 
-                return self.table["errp"].quantity * fact
+                if "errp" in self.table.colnames:
+                    return self.table["errp"].quantity * fact
+                else:
+                    return self.table["err"].quantity * fact
         except KeyError:
             return None
 
@@ -167,7 +174,11 @@ class ImageProfile:
                 if method != 'excess' and self.table["excess"].unit == '':
                     fact = fact.value
 
-                return self.table["errn"].quantity * fact
+                if "errm" in self.table.colnames:
+                    return self.table["errm"].quantity * fact
+                else:
+                    return self.table["err"].quantity * fact
+
         except KeyError:
             return None
 
