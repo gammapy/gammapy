@@ -1,13 +1,12 @@
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
 import numpy as np
 from astropy import units as u
-from astropy.table import Table
 from astropy.wcs.utils import proj_plane_pixel_scales
 from astropy.coordinates import Angle, SkyCoord
 from regions import PolygonPixelRegion, CircleAnnulusPixelRegion, RectangleSkyRegion, PixCoord
 from gammapy.maps import MapAxis
 from gammapy.utils.table import table_from_row_data
-from gammapy.visualization import ImageProfile
+from gammapy.estimators import ImageProfile
 from gammapy.stats import WStatCountsStatistic, CashCountsStatistic
 from gammapy.datasets import SpectrumDatasetOnOff
 
@@ -35,9 +34,8 @@ class MapProfileEstimator:
 
         import matplotlib.pyplot as plt
         from astropy import units as u
-        from gammapy.estimator import MapProfileEstimator, make_orthogonal_boxes
+        from gammapy.estimators import MapProfileEstimator, make_orthogonal_boxes, image_profile
         from gammapy.datasets import Datasets
-        from gammapy.visualization import image_profile
 
         # load example data
         datasets = Datasets.read("$GAMMAPY_DATA/fermi-3fhl-crab/",
@@ -87,7 +85,7 @@ class MapProfileEstimator:
 
         Parameters
         ----------
-        dataset : MapDataset or MapDatasetOnOff
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the dataset to use for profile extraction
         steps : list of str
             the steps to be used.
@@ -167,14 +165,14 @@ class MapProfileEstimator:
 
         Parameters
         ----------
-        dataset : MapDataset or MapDatasetOnOff
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the dataset to use for profile extraction
         steps : list of str
             the steps to be used.
 
         Returns
         --------
-        imageprofile : `~gammapy.estomators.ImageProfile`
+        imageprofile : `~gammapy.estimators.ImageProfile`
             Return an image profile class containing the result
         """
         results = self.make_prof(dataset, steps)
