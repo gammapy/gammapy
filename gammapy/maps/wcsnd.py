@@ -576,7 +576,7 @@ class WcsNDMap(WcsMap):
         else:
             data = func(self.data, axis=(1, 2))
 
-        geom = RegionGeom(region=region, axes=[energy_axis])
+        geom = RegionGeom(region=region, axes=[energy_axis], wcs=self.geom.wcs)
         return RegionNDMap(
             geom=geom, data=data.reshape(geom.data_shape), unit=self.unit
         )
