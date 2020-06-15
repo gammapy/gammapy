@@ -3,7 +3,7 @@ import numpy as np
 from astropy import units as u
 from astropy.wcs.utils import proj_plane_pixel_scales
 from astropy.coordinates import Angle, SkyCoord
-from regions import CircleAnnulusPixelRegion, RectangleSkyRegion, PixCoord
+from regions import RectangleSkyRegion, PixCoord
 from gammapy.maps import MapAxis
 from gammapy.utils.table import table_from_row_data
 from gammapy.estimators import ImageProfile
@@ -113,7 +113,7 @@ class MapProfileEstimator:
                     spds.counts.data[mask].sum(),
                     spds.background.data[mask].sum(),
                 )
-                
+
             result = {
                 "x_min": self.axis.edges[index],
                 "x_max": self.axis.edges[index+1],
@@ -139,7 +139,7 @@ class MapProfileEstimator:
 
             if "err" in steps:
                 result["err"] = np.asanyarray(stats.error, dtype=np.float32)
-            
+
             if "errn-errp" in steps:
                 result["errn"] = stats.compute_errn(self.n_sigma)
                 #ToDo: check the type of errp compared to errn (maybe not the same)
