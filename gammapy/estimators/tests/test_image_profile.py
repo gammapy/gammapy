@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.utils.testing import requires_data, requires_dependency, mpl_plot_check
@@ -52,7 +51,7 @@ def test_flux_plot():
 def test_content():
     fermi_prof = make_improf()
 
-    assert_allclose(fermi_prof.profile("radiance")[10].value, 1.053396e-07, atol=1e-5)
+    assert_allclose(fermi_prof.profile("brightness")[10].value, 1.053396e-07, atol=1e-5)
     assert_allclose(fermi_prof.profile_ul("flux")[0].value, 4.5263849e-11, atol=1e-5)
     assert_allclose(fermi_prof.profile_err_p("excess")[4].value, 10.582960, atol=1e-5)
     assert_allclose(fermi_prof.profile_err_p("excess")[4].value, 10.582960, atol=1e-5)
