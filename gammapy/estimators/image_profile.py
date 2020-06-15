@@ -15,13 +15,13 @@ class ImageProfile:
     The image profile data is stored in `~astropy.table.Table` object, with the
     following columns:
 
-        * `x_ref` Coordinate bin center (required).
-        * `x_min` Coordinate bin minimum (optional).
-        * `x_max` Coordinate bin maximum (optional).
+        * `x_ref` Center of the bin, given the distance to a reference position to (required).
+        * `x_min` Bin minimum value (optional).
+        * `x_max` Bin maximum value (optional).
         * `counts` Counts profile data (required).
-        * `background` Estimated background profile data (required).
-        * `excess` Excess profile data (required).
-        * `alpha` Bin exposure_on/Exposure_off ratio (optional).
+        * `background` Estimated background counts (optional).
+        * `excess` Excess counts (required).
+        * `alpha` Bin acceptance_on/acceptance_off ratio (optional).
         * `ts` Bin statistics (optional).
         * `sqrt_ts` square-root of TS (optional).
         * `err` Excess profile data error (optional).
@@ -45,30 +45,30 @@ class ImageProfile:
 
         Parameters
         ----------
-        method : ['counts', 'excess', 'flux', 'radiance']
-           Compute counts, excess, fluxes or the radiance within profile bins.
+        method : ['counts', 'excess', 'flux', 'brightness']
+           Compute counts, excess, fluxes or the brightness within profile bins.
 
         Returns
         -------
-        value: array of `astropy.units.quantity.Quantity`
+        value: `astropy.units.quantity.Quantity`
             Data computed for the required method of the image profile
 
         """
         try:
             if method == 'counts':
-                y = self.table['counts'].quantity.copy()
+                y = self.table['counts'].quantity
             else:
                 if method == 'excess':
                     fact = 1.
-                elif method == 'radiance':
-                    fact = 1. / self.table['exposure'].quantity.copy() / self.table['solid_angle'].quantity.copy()
+                elif method == 'brightness':
+                    fact = 1. / self.table['exposure'].quantity / self.table['solid_angle'].quantity
                 elif method == 'flux':
-                    fact = 1. / self.table['exposure'].quantity.copy()
+                    fact = 1. / self.table['exposure'].quantity
                 else:
                     raise AttributeError(f"The method [{method}] is not supported")
                 if method != 'excess' and self.table["excess"].unit == '':
                     fact = fact.value
-                y = self.table["excess"].quantity.copy() * fact
+                y = self.table["excess"].quantity * fact
                 y.name = method
             return y
         except AttributeError:
@@ -79,8 +79,8 @@ class ImageProfile:
 
         Parameters
         ----------
-        method : ['counts', 'excess', 'flux', 'radiance']
-           Compute the mean error of counts, excess, fluxes or the radiance within profile bins.
+        method : ['counts', 'excess', 'flux', 'brightness']
+           Compute the mean error of counts, excess, fluxes or the brightness within profile bins.
 
         Returns
         -------
@@ -90,21 +90,21 @@ class ImageProfile:
         """
         try:
             if method == 'counts':
-                return np.sqrt(self.table['counts'].quantity.copy())
+                return np.sqrt(self.table['counts'].quantity)
             else:
                 if method == 'excess':
                     fact = 1.
-                elif method == 'radiance':
-                    fact = 1. / self.table['exposure'].quantity.copy() / self.table['solid_angle'].quantity.copy()
+                elif method == 'brightness':
+                    fact = 1. / self.table['exposure'].quantity / self.table['solid_angle'].quantity
                 elif method == 'flux':
-                    fact = 1. / self.table['exposure'].quantity.copy()
+                    fact = 1. / self.table['exposure'].quantity
                 else:
                     raise AttributeError(f"The method [{method}] is not supported")
                 if method != 'excess' and self.table["excess"].unit == '':
                     fact = fact.value
 
-                ymin = self.table["errn"].quantity.copy() * fact
-                ymax = self.table["errp"].quantity.copy() * fact
+                ymin = self.table["errn"].quantity * fact
+                ymax = self.table["errp"].quantity * fact
                 return (ymin+ymax)/2.
         except KeyError:
             return None
@@ -114,8 +114,8 @@ class ImageProfile:
 
         Parameters
         ----------
-        method : ['counts', 'excess', 'flux', 'radiance']
-           Compute the positive error of counts, excess, fluxes or the radiance within profile bins.
+        method : ['counts', 'excess', 'flux', 'brightness']
+           Compute the positive error of counts, excess, fluxes or the brightness within profile bins.
 
         Returns
         -------
@@ -125,18 +125,18 @@ class ImageProfile:
         """
         try:
             if method == 'counts':
-                return np.sqrt(self.table['counts'].quantity.copy())
+                return np.sqrt(self.table['counts'].quantity)
             else:
                 if method == 'excess':
                     fact = 1.
-                elif method == 'radiance':
-                    fact = 1. / self.table['exposure'].quantity.copy() / self.table['solid_angle'].quantity.copy()
+                elif method == 'brightness':
+                    fact = 1. / self.table['exposure'].quantity / self.table['solid_angle'].quantity
                 elif method == 'flux':
-                    fact = 1. / self.table['exposure'].quantity.copy()
+                    fact = 1. / self.table['exposure'].quantity
                 if method != 'excess' and self.table["excess"].unit == '':
                     fact = fact.value
 
-                return self.table["errp"].quantity.copy() * fact
+                return self.table["errp"].quantity * fact
         except KeyError:
             return None
 
@@ -145,8 +145,8 @@ class ImageProfile:
 
         Parameters
         ----------
-        method : ['counts', 'excess', 'flux', 'radiance']
-           Compute the negative error of counts, excess, fluxes or the radiance within profile bins.
+        method : ['counts', 'excess', 'flux', 'brightness']
+           Compute the negative error of counts, excess, fluxes or the brightness within profile bins.
 
         Returns
         -------
@@ -156,18 +156,18 @@ class ImageProfile:
         """
         try:
             if method == 'counts':
-                return np.sqrt(self.table['counts'].quantity.copy())
+                return np.sqrt(self.table['counts'].quantity)
             else:
                 if method == 'excess':
                     fact = 1.
-                elif method == 'radiance':
-                    fact = 1. / self.table['exposure'].quantity.copy() / self.table['solid_angle'].quantity.copy()
+                elif method == 'brightness':
+                    fact = 1. / self.table['exposure'].quantity / self.table['solid_angle'].quantity
                 elif method == 'flux':
-                    fact = 1. / self.table['exposure'].quantity.copy()
+                    fact = 1. / self.table['exposure'].quantity
                 if method != 'excess' and self.table["excess"].unit == '':
                     fact = fact.value
 
-                return self.table["errn"].quantity.copy() * fact
+                return self.table["errn"].quantity * fact
         except KeyError:
             return None
 
@@ -176,7 +176,7 @@ class ImageProfile:
 
         Parameters
         ----------
-        method : ['counts', 'excess', 'flux', 'radiance']
+        method : ['counts', 'excess', 'flux', 'brightness']
            Compute the upper limit within profile bins.
 
         Returns
@@ -187,18 +187,18 @@ class ImageProfile:
         """
         try:
             if method == 'counts':
-                return self.table['counts'].quantity.copy()
+                return self.table['counts'].quantity
             else:
                 if method == 'excess':
                     fact = 1.
-                elif method == 'radiance':
-                    fact = 1. / self.table['exposure'].quantity.copy() / self.table['solid_angle'].quantity.copy()
+                elif method == 'brightness':
+                    fact = 1. / self.table['exposure'].quantity / self.table['solid_angle'].quantity
                 elif method == 'flux':
-                    fact = 1. / self.table['exposure'].quantity.copy()
+                    fact = 1. / self.table['exposure'].quantity
                 if method != 'excess' and self.table["excess"].unit == '':
                     fact = fact.value
 
-                return self.table["ul"].quantity.copy() * fact
+                return self.table["ul"].quantity * fact
         except KeyError:
             return None
 
@@ -210,8 +210,8 @@ class ImageProfile:
         mode : ['integral', 'peak']
             Normalize image profile so that it integrates to unity ('integral')
             or the maximum value corresponds to one ('peak').
-        method : ['counts', 'excess', 'flux', 'radiance']
-           Compute the negative error of counts, excess, fluxes or the radiance within profile bins.
+        method : ['counts', 'excess', 'flux', 'brightness']
+           Compute the negative error of counts, excess, fluxes or the brightness within profile bins.
 
         Returns
         -------
@@ -255,7 +255,7 @@ class ImageProfile:
 
         Parameters
         ----------
-        method : ['counts', 'excess', 'flux', 'radiance']
+        method : ['counts', 'excess', 'flux', 'brightness']
             Compute counts, excess of the fluxes within profile bins.
         n_sigma : float
             Minimum number of sigma for which upper limits are plotted
@@ -330,7 +330,7 @@ class ImageProfile:
 
         Parameters
         ----------
-         method : ['counts', 'excess', 'flux', 'radiance']
+         method : ['counts', 'excess', 'flux', 'brightness']
             Compute counts, excess of the fluxes within profile bins.
          n_sigma : float
             Minimum number of sigma for which upper limits are plotted
