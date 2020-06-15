@@ -3,7 +3,7 @@ import numpy as np
 from astropy import units as u
 from astropy.wcs.utils import proj_plane_pixel_scales
 from astropy.coordinates import Angle, SkyCoord
-from regions import PolygonPixelRegion, CircleAnnulusPixelRegion, RectangleSkyRegion, PixCoord
+from regions import CircleAnnulusPixelRegion, RectangleSkyRegion, PixCoord
 from gammapy.maps import MapAxis
 from gammapy.utils.table import table_from_row_data
 from gammapy.estimators import ImageProfile
@@ -97,7 +97,7 @@ class MapProfileEstimator:
         """
         if steps == "all":
             steps = ["err", "ts", "errn-errp", "ul"]
-        
+
         results = []
         for index, reg in enumerate(self.regions):
             spds = dataset.to_spectrum_dataset(reg)
@@ -218,7 +218,7 @@ def make_orthogonal_boxes_new(start_pos, end_pos, wcs, fullwidth, nbins=1):
     regions = []
     for i in range(nbins):
         reg = RectangleSkyRegion(center=coords[i],
-                                 width=box_width, 
+                                 width=box_width,
                                  height=u.Quantity(fullwidth),
                                  angle=rot_angle)
         regions.append(reg)
@@ -271,7 +271,6 @@ def make_orthogonal_boxes(start_pos, end_pos, wcs, fullwidth, nbins=1):
     xx_c = (xx_s + xx_e) / 2.
     yy_c = (yy_s + yy_e) / 2.
     pix_center_pos = PixCoord(xx_c, yy_c)
-    center_pos = pix_center_pos.to_sky(wcs)
 
     regions = []
     edges = []
@@ -284,7 +283,7 @@ def make_orthogonal_boxes(start_pos, end_pos, wcs, fullwidth, nbins=1):
         sign = -1.
     edges.append(sign * dist)
 
-    for i in range(nbins):
+    for _ in range(nbins):
         xx1 = xx + stepx
         yy1 = yy + stepy
         pix_center_reg = PixCoord((xx1 + xx) / 2., (yy1 + yy) / 2.)
