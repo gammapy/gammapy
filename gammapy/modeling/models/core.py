@@ -279,7 +279,18 @@ class Models(collections.abc.MutableSequence):
         return models
 
     def write(self, path, overwrite=False, save_covariance=True):
-        """Write to YAML file."""
+        """Write to YAML file.
+        
+        Parameters
+        ----------
+        path : `pathlib.Path`
+            path to write files
+        overwrite : bool
+            overwrite datasets FITS files
+        save_covariance : bool
+            save covariance or not
+        """
+
         base_path, _ = split(path)
         path = make_path(path)
         base_path = make_path(base_path)

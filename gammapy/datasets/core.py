@@ -233,6 +233,8 @@ class Datasets(collections.abc.MutableSequence):
             common prefix of file names
         overwrite : bool
             overwrite datasets FITS files
+        save_covariance : bool
+            save covariance or not
         """
 
         path = make_path(path).resolve()
