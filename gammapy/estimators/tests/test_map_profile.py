@@ -5,7 +5,7 @@ from astropy.coordinates import SkyCoord
 from gammapy.datasets import MapDatasetOnOff
 from gammapy.data import GTI
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.estimators import MapProfileEstimator, make_orthogonal_boxes
+from gammapy.estimators import MapProfileEstimator, make_orthogonal_rectangle_sky_regions
 
 
 def get_simple_dataset_on_off():
@@ -25,13 +25,13 @@ def get_simple_dataset_on_off():
 def make_boxes(wcs):
     start_line = SkyCoord(0.08, -0.16, unit='deg', frame='icrs')
     end_line = SkyCoord(359.9, 0.16, unit='deg', frame='icrs')
-    return make_orthogonal_boxes(start_line, end_line, wcs, 0.1*u.deg, 8)
+    return make_orthogonal_rectangle_sky_regions(start_line, end_line, wcs, 0.1*u.deg, 8)
 
 
 def make_horizontal_boxes(wcs):
     start_line = SkyCoord(0.08, 0.1, unit='deg', frame='icrs')
     end_line = SkyCoord(359.9, 0.1, unit='deg', frame='icrs')
-    return make_orthogonal_boxes(start_line, end_line, wcs, 0.1*u.deg, 8)
+    return make_orthogonal_rectangle_sky_regions(start_line, end_line, wcs, 0.1*u.deg, 8)
 
 
 def test_boxes_creation():
