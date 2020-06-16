@@ -147,7 +147,7 @@ class ImageProfile:
         except KeyError:
             return None
 
-    def profile_err_m(self, method='counts'):
+    def profile_err_n(self, method='counts'):
         """Negative error quantity of the image profile.
 
         Parameters
@@ -163,7 +163,7 @@ class ImageProfile:
         """
         try:
             if method == 'counts':
-                return np.sqrt(self.table['counts'].quantity)
+                return np.sqrt(self.table['counts'].quantity) * -1.
             else:
                 if method == 'excess':
                     fact = 1.
@@ -174,10 +174,10 @@ class ImageProfile:
                 if method != 'excess' and self.table["excess"].unit == '':
                     fact = fact.value
 
-                if "errm" in self.table.colnames:
-                    return self.table["errm"].quantity * fact
+                if "errn" in self.table.colnames:
+                    return self.table["errn"].quantity * fact
                 else:
-                    return self.table["err"].quantity * fact
+                    return self.table["err"].quantity * -1. * fact
 
         except KeyError:
             return None
@@ -286,10 +286,11 @@ class ImageProfile:
             ax = plt.gca()
 
         y = self.profile(method)
-        yerr = [self.profile_err_m(method).value * -1., self.profile_err_p(method).value]
+        yerr = [np.abs(self.profile_err_n(method).value), self.profile_err_p(method).value]
+        y_ul = []
         x = self.table['x_ref']
         if n_sigma is not None and ("ul" not in self.table.colnames or "sqrt_ts" not in self.table.colnames):
-            log.warning(f"No UL stored or TS in the table")
+            log.warning(f"No UL or TS stored in the table")
         elif n_sigma is not None and "ul" in self.table.colnames and "sqrt_ts" in self.table.colnames:
             ulmask = [(ii.value < n_sigma) for ii in self.table["sqrt_ts"].quantity]
             x_ul = x[ulmask].copy()
@@ -301,7 +302,7 @@ class ImageProfile:
             mask = [(ii.value >= n_sigma) for ii in self.table["sqrt_ts"].quantity]
             y = y[mask]
             x = x[mask]
-            yerr = [self.profile_err_m(method).value[mask] * -1., self.profile_err_p(method).value[mask]]
+            yerr = [np.abs(self.profile_err_n(method).value[mask]), self.profile_err_p(method).value[mask]]
 
         ax.errorbar(x, y.data, yerr=yerr, fmt='o', ecolor='blue', **kwargs)
         ax.set_xlabel(f"Distance [{self.table['x_ref'].unit.to_string()}]")
@@ -309,30 +310,28 @@ class ImageProfile:
         xmin, xmax = ax.get_xlim()
         ymin, ymax = ax.get_ylim()
 
-        try:
-            y_ul
-        except NameError:
-            log.warning("Not plotting the ULs")
-        else:
-            if len(y_ul) > 0:
-                arrow_width = 0.03
-                if len(x) > 1:
-                    arrow_width = (x[1]-x[0])/3.
-                for i in range(len(x_ul)):
-                    ax.arrow(x=x_ul[i], y=y_ul.data[i], dx=dx[i], dy=dy.data[i],
-                             color='blue', head_width=arrow_width, head_length=np.abs(dy.data[i]*0.4),
-                             **kwargs)
-                if np.max(y_ul).value > ymax:
-                    ymax = np.max(y_ul).value*1.1
-                if np.min(y_ul+dy).value < ymin:
-                    ymin = np.min(y_ul+dy).value*0.8
-                if np.max(x_ul) > xmax:
-                    xmax = np.max(x_ul) + np.abs(np.max(x_ul)*0.1)
-                if np.min(x_ul) < xmin:
-                    xmin = np.min(x_ul) - np.abs(np.min(x_ul)*0.1)
-
-        ax.set_ylim(ymin, ymax)
-        ax.set_xlim(xmin, xmax)
+        if len(y_ul) > 0:
+            # Case of only ULs
+            if len(x) < 1:
+                xmin = ymin = 1.e10
+                xmax = ymax = -1.e10
+            arrow_width = 0.03
+            if len(x_ul) >= 1:
+                arrow_width = (x_ul[1]-x_ul[0])/3.
+            for i in range(len(x_ul)):
+                ax.arrow(x=x_ul[i], y=y_ul.data[i], dx=dx[i], dy=dy.data[i],
+                         color='blue', head_width=arrow_width, head_length=np.abs(dy.data[i]*0.4),
+                         **kwargs)
+            if np.max(y_ul).value > ymax:
+                ymax = np.max(y_ul).value*1.1
+            if np.min(y_ul+dy).value < ymin:
+                ymin = np.min(y_ul+dy).value*0.8
+            if np.max(x_ul) > xmax:
+                xmax = np.max(x_ul) + np.abs(np.max(x_ul)*0.1)
+            if np.min(x_ul) < xmin:
+                xmin = np.min(x_ul) - np.abs(np.min(x_ul)*0.1)
+            ax.set_ylim(ymin, ymax)
+            ax.set_xlim(xmin, xmax)
 
         return ax
 
