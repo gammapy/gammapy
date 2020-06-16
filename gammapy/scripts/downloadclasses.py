@@ -11,14 +11,15 @@ import yaml
 from gammapy import __version__
 
 log = logging.getLogger(__name__)
-PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
 
 # fetch params from setup.cfg
-conf = ConfigParser()
-conf.read(PATH_CFG / "setup.cfg")
-setup_cfg = dict(conf.items("metadata"))
-URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
+# PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
+# conf = ConfigParser()
+# conf.read(PATH_CFG / "setup.cfg")
+# setup_cfg = dict(conf.items("metadata"))
+# URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 
+URL_GAMMAPY_MASTER = "https://raw.githubusercontent.com/gammapy/gammapy/master/"
 RELEASES_BASE_URL = "https://gammapy.org/download"
 DEV_NBS_YAML_URL = f"{URL_GAMMAPY_MASTER}notebooks.yaml"
 DEV_SCRIPTS_YAML_URL = f"{URL_GAMMAPY_MASTER}examples/scripts.yaml"
