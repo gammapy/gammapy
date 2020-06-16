@@ -286,7 +286,7 @@ class Models(collections.abc.MutableSequence):
         path : `pathlib.Path`
             path to write files
         overwrite : bool
-            overwrite datasets FITS files
+            overwrite files
         save_covariance : bool
             save covariance or not
         """
