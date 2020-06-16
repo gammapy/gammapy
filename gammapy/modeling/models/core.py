@@ -287,7 +287,11 @@ class Models(collections.abc.MutableSequence):
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
 
-        if save_covariance and self.covariance is not None and len(self.parameters) != 0:
+        if (
+            save_covariance
+            and self.covariance is not None
+            and len(self.parameters) != 0
+        ):
             filecovar = path.stem + "_covariance.dat"
             kwargs = dict(
                 format="ascii.fixed_width", delimiter="|", overwrite=overwrite

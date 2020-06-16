@@ -244,7 +244,11 @@ class Datasets(collections.abc.MutableSequence):
         datasets_dict = {"datasets": datasets_dictlist}
 
         write_yaml(datasets_dict, path / f"{prefix}_datasets.yaml", sort_keys=False)
-        self.models.write(path / f"{prefix}_models.yaml", overwrite=overwrite, save_covariance=save_covariance)
+        self.models.write(
+            path / f"{prefix}_models.yaml",
+            overwrite=overwrite,
+            save_covariance=save_covariance,
+        )
 
     def stack_reduce(self, name=None):
         """Reduce the Datasets to a unique Dataset by stacking them together.
