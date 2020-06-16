@@ -217,13 +217,14 @@ class MapDataset(Dataset):
     def evaluators(self):
         """Model evaluators"""
 
-        if self.models:
+        models = self.models
+        if models:
             keys = list(self._evaluators.keys())
             for key in keys:
-                if key not in self.models:
+                if key not in models:
                     del self._evaluators[key]
 
-            for model in self.models:
+            for model in models:
                 evaluator = self._evaluators.get(model)
 
                 if evaluator is None:
