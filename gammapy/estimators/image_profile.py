@@ -306,7 +306,7 @@ class ImageProfile:
 
         ax.errorbar(x, y.data, yerr=yerr, fmt='o', ecolor='blue', **kwargs)
         ax.set_xlabel(f"Distance [{self.table['x_ref'].unit.to_string()}]")
-        ax.set_ylabel(f"Profile [{y.unit.to_string()}]")
+        ax.set_ylabel(f"{method} profile [{y.unit.to_string()}]")
         xmin, xmax = ax.get_xlim()
         ymin, ymax = ax.get_ylim()
 
