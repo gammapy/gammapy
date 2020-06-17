@@ -46,7 +46,9 @@ class TemporalModel(Model):
             Summed time in the intervals.
 
         """
-        return np.sum(t_max - t_min)
+        diff = t_max - t_min
+        # TODO: this is a work-around for https://github.com/astropy/astropy/issues/10501
+        return u.Quantity(np.sum(diff.to_value("day")), "day")
 
 
 class ConstantTemporalModel(TemporalModel):

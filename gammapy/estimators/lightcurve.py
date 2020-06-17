@@ -413,7 +413,7 @@ class LightCurveEstimator(FluxEstimator):
         sorted_indices = time_start.argsort()
         time_start_sorted = time_start[sorted_indices]
         time_stop_sorted = time_stop[sorted_indices]
-        diff_time_stop = np.diff(time_stop_sorted)
+        diff_time_stop = time_stop_sorted[1:] - time_stop_sorted[:-1]
         diff_time_interval_edges = time_start_sorted[1:] - time_stop_sorted[:-1]
         if np.any(diff_time_stop < 0) or np.any(diff_time_interval_edges < 0):
             raise ValueError("LightCurveEstimator requires non-overlapping time bins.")
