@@ -2,21 +2,26 @@
 
 .. _pig-020:
 
-***************
-PIG 20 - Models
-***************
+*************************
+PIG 20 - Global Model API
+*************************
 
 * Author: Axel Donath, Régis Terrier and Quentin Remy
 * Created: Jun 10, 2020
-* Withdrawn:
+* Accepted:
 * Status:
 * Discussion:
 
 Abstract
 ========
-
-This PIG aims to resolve the remaining design questions for the Gammapy model handling.
-
+Gammapy already supports joint-likelihood analyses, where indiviudal, statistically
+independent datasets are represented by a `Dataset` object. In a typical analysis
+scenario there are components in the model, that are only fitted to one of the datasets,
+while other model components are shared between all datasets. This PIG proposes the
+introduction of a global model API for Gammapy, which handles all model components
+involved in an analysis in a single global models object to resolve the spreaded
+model definition in the current implementation. We consider the global model API
+as a key solution for future support for distributed computing in Gammapy.
 
 
 Proposal
@@ -24,60 +29,252 @@ Proposal
 
 Global Model Handling
 ---------------------
-Gammapy already supports joint-likelihood analyses, where indiviudal,
-statistically independent datasets are represented by a `Dataset` object. In a
-typical analysis scenario there are components in the model, that are only
-fitted to one of the datasets (e.g. instrumental background components), while
-other model componenents (typically the source(s) of interested) are shared between
-all datasets.
+Currently different model components are handled in Gammapy by having a different
+selection of models in the ``Dataset.models`` attributes and pointing to the same
+instance of a model, if the component is shared between multiple datasets. This
+works as long as all objects reside in the same memory space.
+
+If datasets are distributed to different processes in future, it is technically
+complex and probably in-efficient to share model states between all sub-processes.
+It is conceptionally simpler if processes communicate with a single server process
+that contains the single global model object.
+
+The fundamental important difference to the current design is, that the model objects
+defined in ``Dataset.models`` can represent copies of the global model object components.
+
+To handle this difference in the API we propose to define two different models classes.
+The global ``Models`` abstraction and a ``DatasetModels`` class, which represents a
+(possibly copied sub-set) of the global model, with the model components only applied
+to a specific dataset. The ``DatasetModels`` object will be immutable, so methods
+like ``.append()``, ``.insert()`` etc. are not supported.
+
+User will only interact with the ``Models`` class, the ``DatasetModels`` class
+remains mostly an implementation detail.
 
 .. code::
 
-	models = DatasetModels()
+	from gammapy.modeling.models import Models
+	from gammapy.datasets import Datasets
+
+	models = Models.read("my-models.yaml")
+	datasets = Datasets.read("my-datasets.yaml")
+
+	# the .set_models call distributes the model components
+	datasets.set_models(models)
+
+	# and to update parameters during fitting, a manual parameter modification by the user
+	# requires an update as well.
+	datasets.set_models_parameters(models.parameters)
+
+Using the ``.set_models()`` API we propose to hide the ``dataset.models`` attribute.
+It also requires adapting our fitting API as well to handle the model separately:
+
+.. code::
+
+	from gammapy.modeling import Fit
+
+	fit = Fit(datasets)
+
+	result = fit.optimize(models)
+
+	# or for estimators
+
+	fpe = FluxPointsEstimator(
+		source="my_source"
+	)
+
+	fpe.run(datasets, models)
 
 
-	# to simplify the creation of a global model
-	global_models = Models.from_dataset_models([dataset.models for dataset in datasets])
+Alternatively we can make the ``Models`` object available on the ``Datasets``
+object as well:
 
-	#however this could be done automatically by Datasets like:
-	datasets = Datasets(datasets)
+.. code::
+
+	from gammapy.modeling.models import Models
+	from gammapy.modeling import Fit
+	from gammapy.datasets import Datasets
+
+	models = Models.read("my-models.yaml")
+	datasets = Datasets.read("my-datasets.yaml")
+
+	# models can be set like so
+	datasets.models = models
+
+	# this results in the model components being distributed and (possibly copied) to the
+	# dataset objects contained in the datasets object
+
+	# or are created on datasets init
+
+	datasets = Datasets([dataset_1, dataset_2])
 
 	print(datasets.models)
 
-	# add a setup function, this will be needed anyway for distributed computing?
-	datasets.distribute()
+	# if the models object is modified
 
-	# on model set the evaluators are created
-	dataset.models = DatasetModels()
+	models.append(model)
 
-	dataset_models = models.select(dataset_name="")
+	# the models need to be reset like so
+	datasets.models = models
+
+
+The public model attribute allows to create a global model on data reduction like so:
+
+.. code::
+
+	models = Models()
+
+	for obs in observations:
+		dataset = bkg_maker.run(dataset)
+		dataset.write(f"dataset-{obs.obs_id}.fits.gz")
+		models.extend(dataset.models)
+
+	models.write("my-model.yaml")
+
+
+But allows to modify parameters values without effect on the global model:
+
+.. code::
+
+	datasets[0].models["my-model"].spectral_model.amplitude.value = 1e-8
+
+
+To further prevent usage errors we propose to remove the sub-model component setters on `SkyModel`.
+
+
+Interaction Between Models and Dataset Objects
+----------------------------------------------
+
+The ``MapDataset`` object features methods such as ``.to_spectrum_dataset()``, ``.to_image()``
+and ``.stack()`` and ``.copy()``. It is convenient for the user if those methods modify the
+models contained in the dataset as well. In particular this is useful for the background model.
+We propose a uniform scheme on how the dataset methods interact with the model.
+
+We propose that in general datasets can modify their own models i.e. copies contained
+in 	``DatasetModels``, but never interact "bottom to top" with the global ``Models``
+object. So the global model object needs to be re-defined or updated explicitly.
+
+The proposed behaviour is as follows:
+- ``Dataset.copy()``, copy the dataset and model, if a new name is specified for the dataset, the
+``Model.dataset_names`` are adapted.
+
+- ``Dataset.stack()``, stack the model components by concatenating the model lists. The background model
+is stacked in place.
+
+- ``.to_image()`` sums up the background model component and ``TemplateSpatialModel`` if it defines
+an energy axis.
+
+- ``.to_spectrum_dataset``, creates a fixed ``BackgroundModel`` by summing up the data in the same region.
+Further suggestions? Check which model contributes npred to the region?
+
+
+Background Model Handling
+-------------------------
+
+We propose to
+
+We also propose to extend the ``BackgroundModel`` to include a spectral model
+component like so:
+
+.. code::
+
+	from gammapy.modeling.models import BackgroundIRFModel, PowerLawNormSpectralModel
+
+	norm = PowerLawNormSpectralModel(norm=1, tilt=0.1)
+
+	bkg_model = BackgroundIRFModel(
+		spectral_model=norm,
+		dataset_name="my-dataset"
+	)
+
+	bkg_model.evaluate(map=map)
+
+After introduction of the global model we propose to remove ``MapDataset.background_model``
+and use ``MapDataset.models["dataset-name-bkg"]`` instead. Introduce a naming convention?
+
+The background data can be stored either in the ``BackgroundModel`` class
+or the ``MapDataset`` object as an IRF. This has implications on the
+serialisation and memory management once we introduce distributed
+computing. In one case the data is stored in the server process
+in the other case it is stored on the sub-process.
+
+To support spectral background models we propose to support ``RegionGeom`` in
+the ``BackgroundModel`` class.
+
+
+
+Spectral Norm Models
+--------------------
+
+For the purpose of adjusting template based models we propose to introduce a new
+class of spectral models. Those spectral models feature a norm parameter instead
+of amplitude and are named using the `NormSpectralModel` suffix:
+
+.. code::
+
+	from gammapy.modeling.models import PowerLawNormSpectralModel, LogParabolaNormSpectralModel, NodeNormSpectralModel
+
+	pwl_norm = PowerLawNormSpectralModel()
+	log_parabola_norm = LogParabolaNormSpectralModel()
+	bpwl_norm = PiecewiseBrokenPowerlawNormSpectralModel()
+	const_norm = ConstantNormSpectralModel()
+
+
+**Alternatives:** Technically the following works as well:
+
+.. code::
+
+	from gammapy.modeling.models import PowerLawSpectralModel, Parameter
+
+	amplitude = Parameter(name="amplitude", value=1, unit="")
+
+	pwl_norm = PowerLawSpectralModel(amplitude=amplitude)
+
+
+This avoids code duplication, but features possibly a slightly less cleaner API.
+The introduction of ``NormSpectralModel`` classes allows to use slightly more
+explicit parameter names, such as ``norm`` and ``tilt`` (including better
+default values) and to hide methods such as ``.energy_flux()``, which are
+less meaningful for spectral models, where amplitude represent a norm.
 
 
 Energy Dependent Spatial Models
 -------------------------------
 A very common use-case in scientific analyses is to look for energy dependent
 morphology of extended sources. In the past this kind of analysis has been typically
-done by splitting the data into energy bands and doing individual firs of the
-morphology. In a combined spectral and spatial ("cube") analysis this can be
-naturally achieved by allowing for an energy dependent spatial model, where the
-energy dependence is e.g. described by a parametric model expression.
+done by splitting the data into energy bands and doing individual fits of the
+morphology in these energy bands. In a combined spectral and spatial ("cube") analysis
+this can be naturally achieved by allowing for an energy dependent spatial model,
+where the energy dependence is e.g. described by a parametric model expression with
+energy dependent parameters.
 
 In the current model scheme we use a "factorised" representation of the source model,
-where the spatial, energy and time dependence are independent and not correlated:
+where the spatial, energy and time dependence are independent model components and
+not correlated:
 
 .. math::
 
 	f(l, b, E, t) = A \cdot F(l, b) \cdot G(E) \cdot H(t)
 
-To represent energy depdendent spatial model we need to adapt this to:
+To represent energy dependent morphology we propose to introduce energy
+dependent spatial models:
 
 .. math::
 
 	f(l, b, E, t) = A \cdot F(l, b, E) \cdot G(E) \cdot H(t)
 
-In general the energy dependence is optional.
+In general the energy dependence is optional. If the spatial model does not declare
+an energy dependence it assumes the same morphology for all energies. This also ensures backwards
+compatibility with the current behaviour.
 
-The ``SkyDiffuseCube`` is replaced by:
+To limit the implementation effort in this PIG we propose to only adapt the ``SkyDiffuseCube``
+and add an example energy dependent custom model to our documentation. We do not propose to
+introduce general dependence of arbitrary model parameters for any spatial model, such as
+``GaussianSpatialModel`` or ``DiskSpatialModel``. An example of how this can be achieved with
+a custom implemented model is given below.
+
+We propose to add energy dependence to the ``TemplateSpatialModel`` and
+replace the current ``SkyDiffuseCube``by:
 
 
 .. code::
@@ -89,105 +286,236 @@ The ``SkyDiffuseCube`` is replaced by:
 		spectral_model=PowerLawNormSpectralModel()
 	)
 
-Parametric energy dependent models will be introduced later (after v1.0), but we
-add a docs example, how a custom energy dependent spatial model can be implemented
+A custom energy dependent spatial model can be implemented like:
 
-
-Spectral Norm Models
---------------------
-
-For the purpose of adjusting template based model we propose to introduce a new
-class of spectral models. Those spectral model feature a norm parameter instead
-of amplitude
 
 .. code::
 
-	from gammapy.modeling.models import PowerLawNormSpectralModel, LogParabolaNormSpectralModel, NodeNormSpectralModel
+	from gammapy.modeling.models import SpatialModel
+	from astropy.coordinates.angle_utilities import angular_separation
 
-	pwl_norm = PowerLawNormSpectralModel()
-	log_parabola_norm = LogParabolaNormSpectralModel()
-	node_norm = NodeNormSpectralModel()
+	class MyCustomGaussianModel(SpatialModel):
+		"""My custom gaussian model.
+
+		Parameters
+		----------
+		lon_0, lat_0 : `~astropy.coordinates.Angle`
+			Center position
+		sigma_1TeV : `~astropy.coordinates.Angle`
+			Width of the Gaussian at 1 TeV
+		sigma_10TeV : `~astropy.coordinates.Angle`
+			Width of the Gaussian at 10 TeV
+
+		"""
+		tag = "MyCustomGaussianModel"
+		lon_0 = Parameter("lon_0", "0 deg")
+		lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+
+		sigma_1TeV = Parameter("sigma_1TeV", "1 deg", min=0)
+		sigma_10TeV = Parameter("sigma_10TeV", "0.5 deg", min=0)
+
+	@staticmethod:
+	def evaluate(lon, lat, energy, lon_0, lat_0, sigma_1TeV, sigma_10TeV):
+		"""Evaluate custom Gaussian model"""
+		sigmas = u.Quantity([sigma_1TeV, sigma_10TeV])
+		energy_nodes = [1, 10] * u.TeV
+		sigma = np.interp(energy, energy_nodes, sigmas)
+
+		sep = angular_separation(lon, lat, lon_0, lat_0)
+
+		exponent = -0.5 * (sep / sigma) ** 2
+		norm = 1 / (2 * np.pi * sigma ** 2)
+		return norm * np.exp(exponent)
+
+	@property
+	def evaluation_radius(self):
+		"""Evaluation radius (`~astropy.coordinates.Angle`)."""
+		return 5 * self.sigma_1TeV.quantity
 
 
-What works:
-
-.. code::
-	from gammapy.modeling.models import PowerLawSpectralModel, Parameter
-
-	amplitude = Parameter(name="amplitude", value=1, unit="")
-	pwl_norm = PowerLawSpectralModel(amplitude=amplitude, index=0)
-
-
-
-Background Model Handling
+Spectral Absorption Model
 -------------------------
 
-Either use ``SkyModel()`` and ``DataModel`` or ``SourceModel`` and ``BackgroundModel``,
-or ``DataTemplateSpatialModel``?
+In the current handling of absorbed spectral models we have a very special
+``Absorption`` model, which is not a spectral model. To resolve this special
+case, we propose to refactor the existing code and handle the absorbed case
+using a ``CompoundSpectralModel``. The new implementation is used as follows:
 
 .. code::
 
-	from gammapy.modeling.models import BackgroundModel
+	from gammapy.modeling.models import EBLAbsorptionSpectralModel, PowerLawSpectralModel
 
-	bkg_model = BackgroundModel(
-		spectral_norm_model=
-		dataset_name=
+	absorption = EBLAbsorptionSpectralModel.from_reference(
+		redshift=0.1, alpha_norm=1, reference="dominguez"
 	)
 
-	bkg_model.evaluate()
+	pwl = PowerLawSpectralModel()
 
+	spectral_model = absorption * pwl
 
-Maybe introduce a special BackgroundIRFModel? Remove ``MapDataset.background_model``
-and use ``MapDataset.models["dataset-name-bkg"]`` instead. Introduce naming convention?
+	assert isinstance(spectral_model, CompoundSpectralModel)
 
-
-CompoundModel
--------------
-
-Serialise operator, or MultiplicativeSpectralModel() and AdditiveSpectralModel?
-
-
-
-Spectral Absorbtion Model
--------------------------
-
-The absorbed spectral model should be handled with a different approach
-
-
-Additional Models
------------------
-`SersicSpatialModel`, `NodeSpectralModel`
-
-
-`BrokenPowerLaw`, `SuperExponentialCutoff`,
-
-`PiecewiseBrokenPowerLawSpectralModel` (not have energy parameters...)
-
-
-Parametrisation of the LightCurveModel, ExponentialCutoffSpectralModel
-
-
-
-Requires more work...
-`PhaseCurveModel`???
-
-
-
+In addition we propose to rename `.table_model` to `.to_template()`.
 
 
 XML Support for Reading Models
 ------------------------------
-
-Implement reading XML files for models, like:
+ctools as well as the Fermi Science Tools use a XML-based model serialisation
+format. To ensure compatibility with these tools we propose to add
+support for reading XML files to Gammapy, so that the following works:
 
 .. code::
 
 	from gammapy.modeling.models import Models
 
 	models = Models.read("my_model.xml")
+	print(models)
 
 
-Alternative solution: implement a conversion script `gammapy convert-model my_model.xml my_model.yaml`?
+**Alternatives:** Alternatively one could implement a conversion script, that
+allows to convert a model file from YAML to XML format. This script would be
+shipped with Gammapy and be available as a sub-command ``gammapy convert-model-file my_model.xml my_model.yaml``.
+The effort of implementation is comparable.
+
+For complete support it is necessary to add further models to Gammapy,
+which are listed in the following section.
+
+
+Additional Models
+-----------------
+In addition we propose to implement the following models in ``gammapy.modeling.models``:
+
+
+- ``SersicSpatialModel`` following the parametrisation of the Astropy ``Sersic2D`` model.
+
+- ``BrokenPowerLaw`` with the following parametrisation:
+
+.. math::
+
+	\begin{split}phi(E) = phi_0 \times \left \{
+\begin{eqnarray}
+  \left( \frac{E}{E_b} \right)^{\gamma_1} & {\rm if\,\,} E < E_b \\
+  \left( \frac{E}{E_b} \right)^{\gamma_2} & {\rm otherwise}
+\end{eqnarray}
+\right .\end{split}
+
+
+
+- ``PiecewiseBrokenPowerLawSpectralModel``
+
+.. code::
+
+	energy = [1, 10, 100] * u.TeV
+	amplitudes = [1e-12, 1e-13, 1e-15] * u.Unit("TeV-1 cm-2 s-1")
+
+	model = PiecewiseBrokenPowerLawSpectralModel(
+		energy=energy, amplitudes=amplitudes
+	)
+
+
+	print(model.amplitude_0)
+	print(model.amplitude_1)
+
+
+To be discussed:
+- ``CompositeSpatialModel``, that represents the sum of multiple spatial
+model components. This will be useful for "multi-component" sources (e.g. HGPS
+analysis), but requires a definition of attributes such as `.position`.
+ctools implements such a model
+
+- ``CompositeSpectralModel``, the same as above but for multiple spectral
+components.
+
+
+- Reintroduce ``PhaseCurveModel``, not for fitting of phases, but to get mean fluxes over time?
+
+
+Introduce Shorter YAML Alias Tags
+---------------------------------
+
+We propose to introduce shorter YAML tags for all models in Gammapy, to simplify
+definition of the models in YAML. For backwards compatibility we propose to support
+the class name as well.
+
+Here is a list of proposed YAML tags:
+
+======================================== ======================
+Class Name                               YAML Tag
+======================================== ======================
+ConstantSpectralModel                    spectral-const
+CompoundSpectralModel                    spectral-compound
+PowerLawSpectralModel                    pl
+PowerLaw2SpectralModel                   pl-2
+SmoothBrokenPowerLawSpectralModel        sbpl
+BrokenPowerLawSpectralModel				 bpl
+PiecewiseBrokenPowerLawSpectraModel      pwbpl
+ExpCutoffPowerLawSpectralModel           ecpl
+ExpCutoffPowerLaw3FGLSpectralModel       ecpl-3fgl
+SuperExpCutoffPowerLaw3FGLSpectralModel  secpl-3fgl
+SuperExpCutoffPowerLaw4FGLSpectralModel  secpl-4fgl
+LogParabolaSpectralModel                 logpar
+TemplateSpectralModel                    spectral-template
+GaussianSpectralModel                    spectral-gauss
+EBLAbsorbtionSpectralModel               ebl-absorbtion
+NaimaSpectralModel                       naima
+ScaleSpectralModel                       scale
+======================================== ========================
+ConstantSpatialModel                     spatial-const
+TemplateSpatialModel                     spatial-template
+GaussianSpatialModel                     spatial-gauss
+DiskSpatialModel    					 disk
+PointSpatialModel						 point
+ShellSpatialModel                        shell
+SersicSpatialModel						 sersic
+======================================== ========================
+ConstantTemporalModel          			 temporal-const
+LightCurveTemplateTemporalModel          temporal-template
+GaussianTemporalModel					 temporal-gauss
+ExpDecayTemporalModel					 exp-decay
+======================================== ========================
+
+
+Once the YAML tags are introduce the following simple creation via the `Model.create()`
+factory method works:
+
+.. code::
+
+	from gammapy.modeling.models import Model
+
+	pwl = Model.create(tag="pwl", **pars)
+
+
+To further simplify the structure of the YAML file, the default values should be removed on write:
+
+Instead of:
+
+.. code::
+
+	spectral:
+		type: PowerLawSpectralModel
+		parameters:
+		- {name: index, value: 2.0, unit: '', min: .nan, max: .nan, frozen: false,
+            error: 0}
+		- {name: amplitude, value: 1.0e-12, unit: cm-2 s-1 TeV-1, min: .nan, max: .nan,
+            frozen: false, error: 0}
+		- {name: reference, value: 1.0, unit: TeV, min: .nan, max: .nan, frozen: true,
+            error: 0}
+
+We should try to simplify to:
+
+.. code::
+
+	spectral:
+		type: pwl
+		parameters:
+			index:
+				value: 2
+			amplitude:
+				value: 1e-12 cm-2 s-1 TeV-1
+			reference:
+				value: 1 TeV
+				frozen: true
+
 
 Decision
 ========
