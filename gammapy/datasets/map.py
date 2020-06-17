@@ -58,6 +58,8 @@ class MapDataset(Dataset):
         This mode is recommended for local optimization algorithms.
         The "global" evaluation mode evaluates the model components on the full map.
         This mode is recommended for global optimization algorithms.
+    use_cache : bool
+        Use cached values of frozen models or recompute them
     mask_safe : `~gammapy.maps.WcsNDMap`
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
@@ -77,6 +79,7 @@ class MapDataset(Dataset):
         edisp=None,
         name=None,
         evaluation_mode="local",
+        use_cache=True,
         mask_safe=None,
         gti=None,
     ):
@@ -97,6 +100,7 @@ class MapDataset(Dataset):
         self.mask_safe = mask_safe
         self.models = models
         self.gti = gti
+        self.use_cache = use_cache
 
         # check whether a reference geom is defined
         _ = self._geom
@@ -213,8 +217,14 @@ class MapDataset(Dataset):
     def evaluators(self):
         """Model evaluators"""
 
-        if self.models:
-            for model in self.models:
+        models = self.models
+        if models:
+            keys = list(self._evaluators.keys())
+            for key in keys:
+                if key not in models:
+                    del self._evaluators[key]
+
+            for model in models:
                 evaluator = self._evaluators.get(model)
 
                 if evaluator is None:
@@ -227,11 +237,6 @@ class MapDataset(Dataset):
                 # has to be updated
                 if evaluator.needs_update:
                     evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
-
-        keys = list(self._evaluators.keys())
-        for key in keys:
-            if key not in self.models:
-                del self._evaluators[key]
 
         return self._evaluators
 
@@ -261,13 +266,12 @@ class MapDataset(Dataset):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
         npred_total = Map.from_geom(self._geom, dtype=float)
 
-        evaluators = self.evaluators
-
-        for evaluator in evaluators.values():
+        for evaluator in self.evaluators.values():
             if evaluator.contributes:
+                if self.use_cache is False:
+                    evaluator._pars_cached = None
                 npred = evaluator.compute_npred()
                 npred_total.stack(npred)
-
         return npred_total
 
     @classmethod
@@ -1674,21 +1678,22 @@ class MapEvaluator:
         gti=None,
         evaluation_mode="local",
     ):
+
         self.model = model
         self.exposure = exposure
         self.psf = psf
         self.edisp = edisp
         self.gti = gti
         self.contributes = True
+        self._npred_cached = None
+        self._pars_cached = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
-
         self.evaluation_mode = evaluation_mode
 
         # TODO: this is preliminary solution until we have further unified the model handling
-        if isinstance(model, BackgroundModel):
-            self.compute_npred = model.evaluate
+        if isinstance(self.model, BackgroundModel):
             self.evaluation_mode = "global"
 
     @property
@@ -1761,6 +1766,8 @@ class MapEvaluator:
         else:
             self.exposure = exposure
 
+        self._pars_cached = None
+
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
 
@@ -1817,15 +1824,24 @@ class MapEvaluator:
         npred : `~gammapy.maps.Map`
             Predicted counts on the map (in reco energy bins)
         """
-        flux = self.compute_flux()
 
-        if self.model.apply_irf["exposure"]:
-            npred = self.apply_exposure(flux)
+        pars = list(self.model.parameters.values)
+        npred = self._npred_cached
+        if self._pars_cached != pars:
+            self._pars_cached = pars
+            if isinstance(self.model, BackgroundModel):
+                npred = self.model.evaluate()
+            else:
+                flux = self.compute_flux()
 
-        if self.psf and self.model.apply_irf["psf"]:
-            npred = self.apply_psf(npred)
+                if self.model.apply_irf["exposure"]:
+                    npred = self.apply_exposure(flux)
 
-        if self.model.apply_irf["edisp"]:
-            npred = self.apply_edisp(npred)
+                if self.psf and self.model.apply_irf["psf"]:
+                    npred = self.apply_psf(npred)
 
+                if self.model.apply_irf["edisp"]:
+                    npred = self.apply_edisp(npred)
+
+            self._npred_cached = npred
         return npred
