@@ -280,7 +280,7 @@ class Models(collections.abc.MutableSequence):
 
     def write(self, path, overwrite=False, save_covariance=True):
         """Write to YAML file.
-        
+
         Parameters
         ----------
         path : `pathlib.Path`
