@@ -27,7 +27,7 @@ also be modeled by multiple components if you want. The
 `~gammapy.modeling.models.SpectralModel` component and a
 `~gammapy.modeling.models.SpatialModel` component. Most commonly used models in
 gamma-ray astronomy are built-in, see the :ref:`model-gallery`.
- It is easy to create user-defined models and
+It is easy to create user-defined models and
 datasets, Gammapy is very flexible.
 
 The `~gammapy.modeling.Fit` class provides methods to fit, i.e. optimise
