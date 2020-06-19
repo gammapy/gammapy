@@ -1,5 +1,5 @@
-from gammapy.estimators import ESTIMATORS
+from gammapy.estimators import ESTIMATOR_REGISTRY
 
 
 def test_estimator_registry():
-    assert "Estimator" in str(ESTIMATORS)
+    assert "Estimator" in str(ESTIMATOR_REGISTRY)

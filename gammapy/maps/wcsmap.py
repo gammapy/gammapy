@@ -2,7 +2,7 @@
 import json
 import numpy as np
 from astropy.io import fits
-from .base import Map
+from .core import Map
 from .utils import find_bands_hdu, find_hdu
 from .wcs import WcsGeom
 

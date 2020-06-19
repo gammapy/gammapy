@@ -309,18 +309,18 @@ class SkyModel(SkyModelBase):
     def from_dict(cls, data):
         """Create SkyModel from dict"""
         from gammapy.modeling.models import (
-            SPATIAL_MODELS,
-            SPECTRAL_MODELS,
-            TEMPORAL_MODELS,
+            SPATIAL_MODEL_REGISTRY,
+            SPECTRAL_MODEL_REGISTRY,
+            TEMPORAL_MODEL_REGISTRY,
         )
 
-        model_class = SPECTRAL_MODELS.get_cls(data["spectral"]["type"])
+        model_class = SPECTRAL_MODEL_REGISTRY.get_cls(data["spectral"]["type"])
         spectral_model = model_class.from_dict(data["spectral"])
 
         spatial_data = data.get("spatial")
 
         if spatial_data is not None:
-            model_class = SPATIAL_MODELS.get_cls(spatial_data["type"])
+            model_class = SPATIAL_MODEL_REGISTRY.get_cls(spatial_data["type"])
             spatial_model = model_class.from_dict(spatial_data)
         else:
             spatial_model = None
@@ -328,7 +328,7 @@ class SkyModel(SkyModelBase):
         temporal_data = data.get("temporal")
 
         if temporal_data is not None:
-            model_class = TEMPORAL_MODELS.get_cls(temporal_data["type"])
+            model_class = TEMPORAL_MODEL_REGISTRY.get_cls(temporal_data["type"])
             temporal_model = model_class.from_dict(temporal_data)
         else:
             temporal_model = None

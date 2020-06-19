@@ -5,7 +5,7 @@ from .map import *
 from .safe import *
 from .spectrum import *
 
-MAKERS = Registry(
+MAKER_REGISTRY = Registry(
     [
         ReflectedRegionsBackgroundMaker,
         AdaptiveRingBackgroundMaker,
@@ -19,6 +19,6 @@ MAKERS = Registry(
 )
 """Registry of maker classes in Gammapy."""
 
-__all__ = ["MAKERS", "Maker"]
-__all__.extend(cls.__name__ for cls in MAKERS)
+__all__ = ["MAKER_REGISTRY", "Maker"]
+__all__.extend(cls.__name__ for cls in MAKER_REGISTRY)
 

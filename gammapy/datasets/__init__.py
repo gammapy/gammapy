@@ -5,7 +5,7 @@ from .map import *
 from .simulate import *
 from .spectrum import *
 
-DATASETS = Registry(
+DATASET_REGISTRY = Registry(
     [
         MapDataset,
         SpectrumDatasetOnOff,
@@ -15,10 +15,10 @@ DATASETS = Registry(
 """Registry of dataset classes in Gammapy."""
 
 __all__ = [
-    "DATASETS",
+    "DATASET_REGISTRY",
     "Dataset",
     "Datasets",
     "MapDatasetOnOff",
     "SpectrumDataset"
 ]
-__all__.extend(cls.__name__ for cls in DATASETS)
+__all__.extend(cls.__name__ for cls in DATASET_REGISTRY)

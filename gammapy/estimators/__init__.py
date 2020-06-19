@@ -10,7 +10,7 @@ from .profile import *
 from .sensitivity import *
 from .ts_map import *
 
-ESTIMATORS = Registry(
+ESTIMATOR_REGISTRY = Registry(
     [
         ExcessMapEstimator,
         TSMapEstimator,
@@ -23,5 +23,5 @@ ESTIMATORS = Registry(
 )
 """Registry of estimator classes in Gammapy."""
 
-__all__ = ["ESTIMATORS", "FluxPoints", "LightCurve", "ImageProfile", "Estimator"]
-__all__.extend(cls.__name__ for cls in ESTIMATORS)
+__all__ = ["ESTIMATOR_REGISTRY", "FluxPoints", "LightCurve", "ImageProfile", "Estimator"]
+__all__.extend(cls.__name__ for cls in ESTIMATOR_REGISTRY)
