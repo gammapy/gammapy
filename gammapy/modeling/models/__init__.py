@@ -19,7 +19,7 @@ SPATIAL_MODELS = Registry(
         ShellSpatialModel,
     ]
 )
-"""Built-in spatial models."""
+"""Registry of spatial model classes."""
 
 SPECTRAL_MODELS = Registry(
     [
@@ -40,10 +40,10 @@ SPECTRAL_MODELS = Registry(
         ScaleSpectralModel,
     ]
 )
-"""Built-in spectral models."""
+"""Registry of spectral model classes."""
 
 TEMPORAL_MODELS = Registry([ConstantTemporalModel, LightCurveTemplateTemporalModel,])
-"""Built-in temporal models."""
+"""Registry of temporal models classes."""
 
 MODELS = Registry(
     SPATIAL_MODELS
@@ -51,10 +51,11 @@ MODELS = Registry(
     + TEMPORAL_MODELS
     + [SkyModel, SkyDiffuseCube, BackgroundModel]
 )
-"""All built-in models."""
+"""Registry of model classes"""
 
 
 __all__ = [
+    "MODELS",
     "SPATIAL_MODELS",
     "TEMPORAL_MODELS",
     "SPECTRAL_MODELS",
