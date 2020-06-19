@@ -367,6 +367,7 @@ class LightCurveEstimator(FluxEstimator):
     reoptimize : bool
         reoptimize other parameters during fit statistic scan?
     """
+    tag = "LightCurveEstimator"
 
     def __init__(
         self,

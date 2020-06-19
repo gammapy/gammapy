@@ -7,6 +7,7 @@ from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.maps import Map
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
+from .core import Estimator
 
 __all__ = [
     "ExcessMapEstimator",
@@ -41,7 +42,7 @@ def convolved_map_dataset_counts_statistics(dataset, kernel):
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
 
-class ExcessMapEstimator:
+class ExcessMapEstimator(Estimator):
     """Computes correlated excess, significance and errors for MapDatasets.
 
     Parameters
@@ -55,6 +56,7 @@ class ExcessMapEstimator:
         Confidence level for the upper limits expressed in number of sigma.
         Default is 3.
     """
+    tag = "ExcessMapEstimator"
 
     def __init__(self, correlation_radius="0.1 deg", nsigma=1, nsigma_ul=3):
         self.correlation_radius = correlation_radius

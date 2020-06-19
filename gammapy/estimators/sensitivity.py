@@ -3,11 +3,13 @@ import numpy as np
 from astropy.table import Column, Table
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
+from .core import Estimator
+
 
 __all__ = ["SensitivityEstimator"]
 
 
-class SensitivityEstimator:
+class SensitivityEstimator(Estimator):
     """Estimate differential sensitivity.
 
     This class allows to determine for each reconstructed energy bin the flux
@@ -30,6 +32,7 @@ class SensitivityEstimator:
     For a usage example see `cta_sensitivity.html <../tutorials/cta_sensitivity.html>`__
 
     """
+    tag = "SensitivityEstimator"
 
     def __init__(
         self, spectrum=None, sigma=5.0, gamma_min=10,

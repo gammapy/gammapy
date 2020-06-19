@@ -787,6 +787,7 @@ class FluxPointsEstimator(FluxEstimator):
     reoptimize : bool
         Re-optimize other free model parameters.
     """
+    tag = "FluxPointsEstimator"
 
     def __init__(
         self,
