@@ -222,7 +222,7 @@ class Datasets(collections.abc.MutableSequence):
             datasets.append(dataset)
         return cls(datasets)
 
-    def write(self, path, prefix="", overwrite=False, save_covariance=True):
+    def write(self, path, prefix="", overwrite=False, write_covariance=True):
         """Serialize datasets to YAML and FITS files.
 
         Parameters

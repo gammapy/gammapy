@@ -278,7 +278,7 @@ class Models(collections.abc.MutableSequence):
                 shared_register = _set_link(shared_register, model)
         return models
 
-    def write(self, path, overwrite=False, save_covariance=True):
+    def write(self, path, overwrite=False, write_covariance=True):
         """Write to YAML file.
 
         Parameters
