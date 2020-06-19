@@ -4,6 +4,7 @@ from gammapy.datasets import MapDataset
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map
 from gammapy.modeling.models import BackgroundModel
+from .core import Maker
 from .utils import (
     make_edisp_map,
     make_edisp_kernel_map,
@@ -17,7 +18,7 @@ __all__ = ["MapDatasetMaker"]
 log = logging.getLogger(__name__)
 
 
-class MapDatasetMaker:
+class MapDatasetMaker(Maker):
     """Make maps for a single IACT observation.
 
     Parameters
@@ -29,7 +30,7 @@ class MapDatasetMaker:
         Available: 'counts', 'exposure', 'background', 'psf', 'edisp'
         By default, all maps are made.
     """
-
+    tag = "MapDatasetMaker"
     available_selection = ["counts", "exposure", "background", "psf", "edisp"]
 
     def __init__(self, background_oversampling=None, selection=None):

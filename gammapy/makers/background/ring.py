@@ -6,11 +6,12 @@ from astropy.convolution import Ring2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.maps import Map
 from gammapy.utils.array import scale_cube
+from ..core import Maker
 
 __all__ = ["AdaptiveRingBackgroundMaker", "RingBackgroundMaker"]
 
 
-class AdaptiveRingBackgroundMaker:
+class AdaptiveRingBackgroundMaker(Maker):
     """Adaptive ring background algorithm.
 
     This algorithm extends the `RingBackgroundMaker` method by adapting the
@@ -40,6 +41,7 @@ class AdaptiveRingBackgroundMaker:
     --------
     RingBackgroundMaker
     """
+    tag = "AdaptiveRingBackgroundMaker"
 
     def __init__(
         self,
@@ -223,7 +225,7 @@ class AdaptiveRingBackgroundMaker:
         return dataset_on_off
 
 
-class RingBackgroundMaker:
+class RingBackgroundMaker(Maker):
     """Ring background method for cartesian coordinates.
 
     - Step 1: apply exclusion mask
@@ -242,6 +244,7 @@ class RingBackgroundMaker:
     --------
     AdaptiveRingBackgroundEstimator
     """
+    tag = "RingBackgroundMaker"
 
     def __init__(self, r_in, width, exclusion_mask=None):
         self.r_in = Angle(r_in)

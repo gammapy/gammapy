@@ -7,6 +7,7 @@ from regions import PixCoord
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.maps import RegionGeom, RegionNDMap, WcsNDMap
 from gammapy.utils.regions import list_to_compound_region
+from ..core import Maker
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundMaker"]
 
@@ -249,7 +250,7 @@ class ReflectedRegionsFinder:
         return fig, ax
 
 
-class ReflectedRegionsBackgroundMaker:
+class ReflectedRegionsBackgroundMaker(Maker):
     """Reflected regions background maker.
 
     Parameters
@@ -267,6 +268,7 @@ class ReflectedRegionsBackgroundMaker:
     binsz : `~astropy.coordinates.Angle`
         Bin size of the reference map used for region finding.
     """
+    tag = "ReflectedRegionsBackgroundMaker"
 
     def __init__(
         self,

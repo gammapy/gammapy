@@ -2,13 +2,14 @@
 """FoV background estimation."""
 import logging
 from gammapy.maps import Map
+from ..core import Maker
 
 __all__ = ["FoVBackgroundMaker"]
 
 log = logging.getLogger(__name__)
 
 
-class FoVBackgroundMaker:
+class FoVBackgroundMaker(Maker):
     """Normalize template background on the whole field-of-view.
 
     The dataset background model can be simply scaled (method="scale") or fitted (method="fit")
@@ -26,6 +27,7 @@ class FoVBackgroundMaker:
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask
     """
+    tag = "FoVBackgroundMaker"
 
     def __init__(self, method="scale", exclusion_mask=None):
         if method in ["fit", "scale"]:

@@ -10,6 +10,7 @@ from gammapy.utils.coordinates import sky_to_fov
 __all__ = [
     "make_map_background_irf",
     "make_edisp_map",
+    "make_edisp_kernel_map",
     "make_psf_map",
     "make_map_exposure_true_energy",
 ]

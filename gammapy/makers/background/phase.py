@@ -3,11 +3,12 @@ import numpy as np
 from gammapy.data import EventList
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.maps import RegionNDMap
+from ..core import Maker
 
 __all__ = ["PhaseBackgroundMaker"]
 
 
-class PhaseBackgroundMaker:
+class PhaseBackgroundMaker(Maker):
     """Background estimation with on and off phases.
 
     TODO: For a usage example see future notebook.
@@ -22,6 +23,7 @@ class PhaseBackgroundMaker:
     off_phase : `tuple` or list of tuples
         off-phase defined by the two edges of each interval (edges are excluded)
     """
+    tag = "PhaseBackgroundMaker"
 
     def __init__(self, on_phase, off_phase):
         self.on_phase = self._check_intervals(on_phase)
