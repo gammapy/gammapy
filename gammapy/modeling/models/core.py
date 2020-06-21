@@ -278,8 +278,19 @@ class Models(collections.abc.MutableSequence):
                 shared_register = _set_link(shared_register, model)
         return models
 
-    def write(self, path, overwrite=False):
-        """Write to YAML file."""
+    def write(self, path, overwrite=False, write_covariance=True):
+        """Write to YAML file.
+
+        Parameters
+        ----------
+        path : `pathlib.Path`
+            path to write files
+        overwrite : bool
+            overwrite files
+        save_covariance : bool
+            save covariance or not
+        """
+
         base_path, _ = split(path)
         path = make_path(path)
         base_path = make_path(base_path)
@@ -287,7 +298,11 @@ class Models(collections.abc.MutableSequence):
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
 
-        if self.covariance is not None and len(self.parameters) != 0:
+        if (
+            save_covariance
+            and self.covariance is not None
+            and len(self.parameters) != 0
+        ):
             filecovar = path.stem + "_covariance.dat"
             kwargs = dict(
                 format="ascii.fixed_width", delimiter="|", overwrite=overwrite

@@ -222,7 +222,7 @@ class Datasets(collections.abc.MutableSequence):
             datasets.append(dataset)
         return cls(datasets)
 
-    def write(self, path, prefix="", overwrite=False):
+    def write(self, path, prefix="", overwrite=False, write_covariance=True):
         """Serialize datasets to YAML and FITS files.
 
         Parameters
@@ -233,6 +233,8 @@ class Datasets(collections.abc.MutableSequence):
             common prefix of file names
         overwrite : bool
             overwrite datasets FITS files
+        save_covariance : bool
+            save covariance or not
         """
 
         path = make_path(path).resolve()
@@ -244,7 +246,11 @@ class Datasets(collections.abc.MutableSequence):
         datasets_dict = {"datasets": datasets_dictlist}
 
         write_yaml(datasets_dict, path / f"{prefix}_datasets.yaml", sort_keys=False)
-        self.models.write(path / f"{prefix}_models.yaml", overwrite=overwrite)
+        self.models.write(
+            path / f"{prefix}_models.yaml",
+            overwrite=overwrite,
+            save_covariance=save_covariance,
+        )
 
     def stack_reduce(self, name=None):
         """Reduce the Datasets to a unique Dataset by stacking them together.
