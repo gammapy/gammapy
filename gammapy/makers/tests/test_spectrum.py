@@ -149,15 +149,9 @@ def test_safe_mask_maker_dc1(spectrum_dataset_gc, observations_cta_dc1):
 
 @requires_data()
 def test_make_meta_table(observations_hess_dl3):
-#    pos = SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
-#    geom = WcsGeom.create(skydir=pos, binsz=0.02, width=10.0)
-#    e_true = MapAxis.from_edges(
-#                                [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
-#                                )
-
     maker_obs = SpectrumDatasetMaker()
     map_spectrumdataset_meta_table = maker_obs.make_meta_table(observation=observations_hess_dl3[0])
-    
+
     assert_allclose(map_spectrumdataset_meta_table["RA_PNT"], 83.63333129882812)
     assert_allclose(map_spectrumdataset_meta_table["DEC_PNT"], 21.51444435119629)
     assert_allclose(map_spectrumdataset_meta_table["OBS_ID"], 23523)
