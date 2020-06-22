@@ -233,7 +233,7 @@ class Datasets(collections.abc.MutableSequence):
             common prefix of file names
         overwrite : bool
             overwrite datasets FITS files
-        save_covariance : bool
+        write_covariance : bool
             save covariance or not
         """
 
@@ -249,7 +249,7 @@ class Datasets(collections.abc.MutableSequence):
         self.models.write(
             path / f"{prefix}_models.yaml",
             overwrite=overwrite,
-            save_covariance=save_covariance,
+            write_covariance=write_covariance,
         )
 
     def stack_reduce(self, name=None):

@@ -287,7 +287,7 @@ class Models(collections.abc.MutableSequence):
             path to write files
         overwrite : bool
             overwrite files
-        save_covariance : bool
+        write_covariance : bool
             save covariance or not
         """
 
@@ -299,7 +299,7 @@ class Models(collections.abc.MutableSequence):
             raise IOError(f"File exists already: {path}")
 
         if (
-            save_covariance
+            write_covariance
             and self.covariance is not None
             and len(self.parameters) != 0
         ):
