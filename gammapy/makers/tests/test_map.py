@@ -195,3 +195,21 @@ def test_map_maker_obs_with_migra(observations):
     assert isinstance(map_dataset.edisp, EDispMap)
     assert map_dataset.edisp.edisp_map.data.shape == (3, 49, 5, 10)
     assert map_dataset.edisp.exposure_map.data.shape == (3, 1, 5, 10)
+
+@requires_data()
+def test_make_meta_table(observations):
+    geom_reco = geom(ebounds=[0.1, 1, 10])
+    e_true = MapAxis.from_edges(
+                                [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
+                                )
+        
+    reference = MapDataset.create(
+                              geom=geom_reco, energy_axis_true=e_true, binsz_irf=1.0
+                              )
+
+    maker_obs = MapDatasetMaker()
+    map_dataset_meta_table = maker_obs.make_meta_table(observation=observations[0])
+
+    assert_allclose(map_dataset_meta_table["RA_PNT"], 267.68121338)
+    assert_allclose(map_dataset_meta_table["DEC_PNT"], -29.6075)
+    assert_allclose(map_dataset_meta_table["OBS_ID"], 110380)
