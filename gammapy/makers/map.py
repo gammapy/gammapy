@@ -241,7 +241,7 @@ class MapDatasetMaker:
         meta_table = Table()
         meta_table["TELESCOP"] = [observation.aeff.meta["TELESCOP"]]
         meta_table["INSTRUME"] = [observation.aeff.meta["INSTRUME"]]
-        meta_table["NAME"] = [observation.aeff.meta["CBD10001"][5:-1]]
+#        meta_table["NAME"] = [observation.aeff.meta["CBD10001"][5:-1]]
         meta_table["OBS_ID"] = [observation.obs_id]
         #        NOT WORK YET
         #        info_table['AZ'] = [observation.pointing_altaz.az]
