@@ -228,7 +228,7 @@ class MapDatasetMaker:
 
     def make_meta_table(self, observation):
         """Make info meta table.
-        
+
         Parameters
         ----------
         observation : `~gammapy.data.Observation`

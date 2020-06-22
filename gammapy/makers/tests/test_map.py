@@ -202,10 +202,6 @@ def test_make_meta_table(observations):
     e_true = MapAxis.from_edges(
                                 [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
                                 )
-        
-    reference = MapDataset.create(
-                              geom=geom_reco, energy_axis_true=e_true, binsz_irf=1.0
-                              )
 
     maker_obs = MapDatasetMaker()
     map_dataset_meta_table = maker_obs.make_meta_table(observation=observations[0])
