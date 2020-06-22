@@ -143,10 +143,10 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     # t_b * m_b = mu_bkg
     # t_s / t_b = alpha
 
-    n_on = np.atleast_1d(np.asanyarray(n_on, dtype=np.float64))
-    n_off = np.atleast_1d(np.asanyarray(n_off, dtype=np.float64))
-    alpha = np.atleast_1d(np.asanyarray(alpha, dtype=np.float64))
-    mu_sig = np.atleast_1d(np.asanyarray(mu_sig, dtype=np.float64))
+    n_on = np.asanyarray(n_on, dtype=np.float64)
+    n_off = np.asanyarray(n_off, dtype=np.float64)
+    alpha = np.asanyarray(alpha, dtype=np.float64)
+    mu_sig = np.asanyarray(mu_sig, dtype=np.float64)
 
     if mu_bkg is None:
         mu_bkg = get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig)
@@ -186,10 +186,10 @@ def get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig):
 
     See :ref:`wstat`.
     """
-    n_on = np.atleast_1d(np.asanyarray(n_on, dtype=np.float64))
-    n_off = np.atleast_1d(np.asanyarray(n_off, dtype=np.float64))
-    alpha = np.atleast_1d(np.asanyarray(alpha, dtype=np.float64))
-    mu_sig = np.atleast_1d(np.asanyarray(mu_sig, dtype=np.float64))
+    n_on = np.asanyarray(n_on, dtype=np.float64)
+    n_off = np.asanyarray(n_off, dtype=np.float64)
+    alpha = np.asanyarray(alpha, dtype=np.float64)
+    mu_sig = np.asanyarray(mu_sig, dtype=np.float64)
 
     # NOTE: Corner cases in the docs are all handled correcty by this formula
     C = alpha * (n_on + n_off) - (1 + alpha) * mu_sig
