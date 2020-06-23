@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from astropy.table import Table
 from numpy.testing import assert_allclose
 from gammapy.datasets import Datasets, FluxPointsDataset
 from gammapy.estimators import FluxPoints
@@ -13,6 +14,12 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 def fit(dataset):
     return Fit([dataset])
 
+@pytest.fixture()
+def test_meta_table(dataset):
+    meta_table = dataset.meta_table
+    assert meta_table["TELESCOP"] == "CTA"
+    assert meta_table["OBS_ID"] == "0001"
+    assert meta_table["INSTRUME"] == "South_Z20_50h"
 
 @pytest.fixture()
 def dataset():
@@ -24,7 +31,13 @@ def dataset():
             index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
         )
     )
-    dataset = FluxPointsDataset(model, data)
+
+    obs_table = Table()
+    obs_table["TELESCOP"] = ["CTA"]
+    obs_table["OBS_ID"] = ["0001"]
+    obs_table["INSTRUME"] = ["South_Z20_50h"]
+
+    dataset = FluxPointsDataset(model, data, meta_table=obs_table)
     return dataset
 
 
