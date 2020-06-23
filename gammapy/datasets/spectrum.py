@@ -50,6 +50,9 @@ class SpectrumDataset(Dataset):
         Dataset name.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
+    meta_table : `~astropy.table.Table`
+        Table listing informations on observations used to create the dataset.
+        One line per observation for stacked datasets.
 
     See Also
     --------
@@ -71,6 +74,7 @@ class SpectrumDataset(Dataset):
         mask_fit=None,
         name=None,
         gti=None,
+        meta_table=None,
     ):
 
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
@@ -88,6 +92,7 @@ class SpectrumDataset(Dataset):
         self.background = background
         self.mask_safe = mask_safe
         self.gti = gti
+        self.meta_table = meta_table
 
         self._name = make_name(name)
         self.models = models
@@ -431,7 +436,8 @@ class SpectrumDataset(Dataset):
 
     @classmethod
     def create(
-        cls, e_reco, e_true=None, region=None, reference_time="2000-01-01", name=None
+        cls, e_reco, e_true=None, region=None, reference_time="2000-01-01", name=None,
+        meta_table=None
     ):
         """Creates empty spectrum dataset.
 
@@ -451,6 +457,9 @@ class SpectrumDataset(Dataset):
             Region to define the dataset for.
         reference_time : `~astropy.time.Time`
             reference time of the dataset, Default is "2000-01-01"
+        meta_table : `~astropy.table.Table`
+            Table listing informations on observations used to create the dataset.
+            One line per observation for stacked datasets.
         """
         if e_true is None:
             e_true = e_reco.copy(name="energy_true")
@@ -667,6 +676,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Name of the dataset.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
+    meta_table : `~astropy.table.Table`
+        Table listing informations on observations used to create the dataset.
+        One line per observation for stacked datasets.
 
     See Also
     --------
@@ -690,6 +702,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         acceptance_off=None,
         name=None,
         gti=None,
+        meta_table=None,
     ):
 
         self.counts = counts
@@ -703,6 +716,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.aeff = aeff
         self.edisp = edisp
         self.mask_safe = mask_safe
+        self.meta_table = meta_table
 
         if np.isscalar(acceptance):
             data = np.ones(self._geom.data_shape) * acceptance
@@ -801,7 +815,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     @classmethod
     def create(
-        cls, e_reco, e_true=None, region=None, reference_time="2000-01-01", name=None
+        cls, e_reco, e_true=None, region=None, reference_time="2000-01-01", name=None,
+        meta_table=None
     ):
         """Create empty SpectrumDatasetOnOff.
 
@@ -821,6 +836,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Region to define the dataset for.
         reference_time : `~astropy.time.Time`
             reference time of the dataset, Default is "2000-01-01"
+        meta_table : `~astropy.table.Table`
+            Table listing informations on observations used to create the dataset.
+            One line per observation for stacked datasets.
         """
         dataset = super().create(
             e_reco=e_reco,

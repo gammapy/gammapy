@@ -147,6 +147,14 @@ def test_safe_mask_maker_dc1(spectrum_dataset_gc, observations_cta_dc1):
     assert_allclose(dataset.energy_range[0].value, 3.162278, rtol=1e-3)
     assert dataset.energy_range[0].unit == "TeV"
 
+@requires_data()
+def test_make_meta_table(observations_hess_dl3):
+    maker_obs = SpectrumDatasetMaker()
+    map_spectrumdataset_meta_table = maker_obs.make_meta_table(observation=observations_hess_dl3[0])
+
+    assert_allclose(map_spectrumdataset_meta_table["RA_PNT"], 83.63333129882812)
+    assert_allclose(map_spectrumdataset_meta_table["DEC_PNT"], 21.51444435119629)
+    assert_allclose(map_spectrumdataset_meta_table["OBS_ID"], 23523)
 
 @requires_data()
 class TestSpectrumMakerChain:
