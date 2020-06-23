@@ -198,11 +198,6 @@ def test_map_maker_obs_with_migra(observations):
 
 @requires_data()
 def test_make_meta_table(observations):
-    geom_reco = geom(ebounds=[0.1, 1, 10])
-    e_true = MapAxis.from_edges(
-                                [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
-                                )
-
     maker_obs = MapDatasetMaker()
     map_dataset_meta_table = maker_obs.make_meta_table(observation=observations[0])
 

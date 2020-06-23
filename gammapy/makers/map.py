@@ -234,7 +234,7 @@ class MapDatasetMaker:
         ----------
         observation : `~gammapy.data.Observation`
             Observation
-        
+
         Returns
         -------
         meta_table: `~astropy.table.Table`
