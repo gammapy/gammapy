@@ -226,7 +226,8 @@ class MapDatasetMaker:
             exposure_map=exposure,
         )
 
-    def make_meta_table(self, observation):
+    @staticmethod
+    def make_meta_table(observation):
         """Make info meta table.
 
         Parameters
