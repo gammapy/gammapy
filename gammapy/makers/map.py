@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from astropy.table import Table
+import astropy.units as u
 from gammapy.datasets import MapDataset
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map
@@ -224,6 +226,33 @@ class MapDatasetMaker:
             exposure_map=exposure,
         )
 
+    @staticmethod
+    def make_meta_table(observation):
+        """Make info meta table.
+
+        Parameters
+        ----------
+        observation : `~gammapy.data.Observation`
+            Observation
+
+        Returns
+        -------
+        meta_table: `~astropy.table.Table`
+        """
+        meta_table = Table()
+        meta_table["TELESCOP"] = [observation.aeff.meta["TELESCOP"]]
+        meta_table["INSTRUME"] = [observation.aeff.meta["INSTRUME"]]
+#        meta_table["NAME"] = [observation.aeff.meta["CBD10001"][5:-1]]
+        meta_table["OBS_ID"] = [observation.obs_id]
+        #        NOT WORK YET
+        #        info_table['AZ'] = [observation.pointing_altaz.az]
+        #        info_table['ALT'] = [observation.pointing_altaz.alt]
+
+        meta_table["RA_PNT"] = [observation.pointing_radec.icrs.ra.deg] * u.deg
+        meta_table["DEC_PNT"] = [observation.pointing_radec.icrs.dec.deg] * u.deg
+
+        return meta_table
+
     def run(self, dataset, observation):
         """Make map dataset.
 
@@ -240,6 +269,7 @@ class MapDatasetMaker:
             Map dataset.
         """
         kwargs = {"gti": observation.gti}
+        kwargs["meta_table"] = self.make_meta_table(observation)
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
         mask_safe.data |= True

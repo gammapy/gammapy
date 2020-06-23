@@ -64,6 +64,9 @@ class MapDataset(Dataset):
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
+    meta_table : `~astropy.table.Table`
+        Table listing informations on observations used to create the dataset.
+        One line per observation for stacked datasets.
     """
 
     stat_type = "cash"
@@ -82,6 +85,7 @@ class MapDataset(Dataset):
         use_cache=True,
         mask_safe=None,
         gti=None,
+        meta_table=None,
     ):
         if mask_fit is not None and mask_fit.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
@@ -101,6 +105,7 @@ class MapDataset(Dataset):
         self.models = models
         self.gti = gti
         self.use_cache = use_cache
+        self.meta_table = meta_table
 
         # check whether a reference geom is defined
         _ = self._geom
@@ -344,6 +349,7 @@ class MapDataset(Dataset):
         binsz_irf=None,
         reference_time="2000-01-01",
         name=None,
+        meta_table=None,
         **kwargs,
     ):
         """Create a MapDataset object with zero filled maps.
@@ -365,6 +371,9 @@ class MapDataset(Dataset):
             the reference time to use in GTI definition
         name : str
             Name of the returned dataset.
+        meta_table : `~astropy.table.Table`
+            Table listing informations on observations used to create the dataset.
+            One line per observation for stacked datasets.
 
         Returns
         -------
@@ -1113,6 +1122,9 @@ class MapDatasetOnOff(MapDataset):
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
+    meta_table : `~astropy.table.Table`
+        Table listing informations on observations used to create the dataset.
+        One line per observation for stacked datasets.
     name : str
         Name of the dataset.
 
@@ -1136,6 +1148,7 @@ class MapDatasetOnOff(MapDataset):
         evaluation_mode="local",
         mask_safe=None,
         gti=None,
+        meta_table=None,
     ):
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
@@ -1165,6 +1178,7 @@ class MapDatasetOnOff(MapDataset):
         self.models = models
         self.mask_safe = mask_safe
         self.gti = gti
+        self.meta_table = meta_table
 
     def __str__(self):
         str_ = super().__str__()
