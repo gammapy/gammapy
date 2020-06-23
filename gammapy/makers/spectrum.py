@@ -144,7 +144,8 @@ class SpectrumDatasetMaker:
             offset, e_reco=energy_axis.edges, e_true=energy_axis_true.edges
         )
 
-    def make_meta_table(self, observation):
+    @staticmethod
+    def make_meta_table(observation):
         """Make info meta table.
 
         Parameters
