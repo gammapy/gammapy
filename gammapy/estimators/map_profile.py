@@ -10,7 +10,7 @@ from gammapy.estimators import ImageProfile
 from gammapy.stats import WStatCountsStatistic, CashCountsStatistic
 from gammapy.datasets import SpectrumDatasetOnOff
 
-__all__ = ["MapProfileEstimator", "make_orthogonal_boxes"]
+__all__ = ["MapProfileEstimator", "make_orthogonal_rectangle_sky_regions"]
 
 
 class MapProfileEstimator:
@@ -34,7 +34,9 @@ class MapProfileEstimator:
 
         import matplotlib.pyplot as plt
         from astropy import units as u
-        from gammapy.estimators import MapProfileEstimator, make_orthogonal_boxes, image_profile
+        from astropy.coordinates import SkyCoord
+        from gammapy.data import GTI
+        from gammapy.estimators import MapProfileEstimator, make_orthogonal_rectangle_sky_regions, image_profile
         from gammapy.datasets import Datasets
 
         # load example data
@@ -46,7 +48,7 @@ class MapProfileEstimator:
         # creation of the boxes and axis
         start_line = SkyCoord(182.5, -5.8, unit='deg', frame='galactic')
         end_line = SkyCoord(186.5, -5.8, unit='deg', frame='galactic')
-        boxes, axis = make_orthogonal_boxes(start_line,
+        boxes, axis = make_orthogonal_rectangle_sky_regions(start_line,
                                         end_line,
                                         datasets[0].counts.geom.wcs,
                                         1.*u.deg,
@@ -79,19 +81,38 @@ class MapProfileEstimator:
         self.axis = axis
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.spectrum_datasets = None
 
-    def make_prof(self, dataset, steps):
-        """ Utility to make the profile in each region
+    def get_spectrum_datasets(self, dataset):
+        """ Utility to make the final `~gammapy.datasts.Datasets`
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the dataset to use for profile extraction
+        Returns
+        --------
+        datasets : `~gammapy.datasts.Datasets`
+            the list of `~gammapy.datasets.SpectrumDataset` computed in each box
+        """
+        sp_datasets = []
+        for index, reg in enumerate(self.regions):
+            spds = dataset.to_spectrum_dataset(reg)
+            sp_datasets.append(spds)
+        return sp_datasets
+
+    def make_prof(self, sp_datasets, steps):
+        """ Utility to make the profile in each region
+
+        Parameters
+        ----------
+        sp_datasets : `~gammapy.datasets.MapDatasets` of `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.SpectrumDatasetOnOff`
+            the dataset to use for profile extraction
         steps : list of str
             the steps to be used.
         Returns
         --------
-        results : list of dictionnary
+        results : list of dictionary
             the list of results (list of keys: x_min, x_ref, x_max, alpha, counts, background, excess, ts, sqrt_ts, err,
              errn, errp, ul, exposure, solid_angle)
         """
@@ -99,20 +120,27 @@ class MapProfileEstimator:
             steps = ["err", "ts", "errn-errp", "ul"]
 
         results = []
-        for index, reg in enumerate(self.regions):
-            spds = dataset.to_spectrum_dataset(reg)
-            mask = spds.mask if spds.mask is not None else slice(None)
+        for index, spds in enumerate(sp_datasets):
+            # ToDo: When the function to_spectrum_dataset will manage the masks, use the following line
+            # mask = spds.mask if spds.mask is not None else slice(None)
+            mask = slice(None)
             if isinstance(spds, SpectrumDatasetOnOff):
+                print(spds.counts.meta)
+                print(spds.counts.geom.axes[0])
+                print(spds.counts.data[:,:,:])
+                print(tuple(range(spds.counts.data.ndim - 2)))
                 stats = WStatCountsStatistic(
                     spds.counts.data[mask].sum(),
                     spds.counts_off.data[mask].sum(),
                     spds.alpha.data[0,0,0] # At some point, should replace with averaging over energy
                 )
+                print(f"Wstat {type(spds.counts.data[mask].sum())} {type(spds.counts_off.data[mask].sum())} {type(spds.alpha.data[0,0,0])} {type(stats.n_on)} {type(stats.background)} {type(stats.excess)} {type(stats.delta_ts)}")
             else:
                 stats = CashCountsStatistic(
                     spds.counts.data[mask].sum(),
                     spds.background.data[mask].sum(),
                 )
+                print(f"Cash {type(spds.counts.data[mask].sum())} {type(spds.background.data[mask].sum())} ND {type(stats.n_on)} {type(stats.background)} {type(stats.excess)} {type(stats.delta_ts)}")
 
             result = {
                 "x_min": self.axis.edges[index],
@@ -152,12 +180,14 @@ class MapProfileEstimator:
             if "ul" in steps:
                 result["ul"] = stats.compute_upper_limit(self.n_sigma_ul)
  
-            # What exposure to take? And waht about the mask?
+            # What about the mask (see above)?
+            # ToDo: when the input dataset of this estimator has several energy bins, what exposure to take?
             result.update(
                 {"exposure": spds.aeff.data.data.max() * spds.livetime,
                  "solid_angle": spds.counts.geom.solid_angle()}
             )
             results.append(result)
+        self.sp_datasets = sp_datasets
         return results
 
     def run(self, dataset, steps="all"):
@@ -175,10 +205,11 @@ class MapProfileEstimator:
         imageprofile : `~gammapy.estimators.ImageProfile`
             Return an image profile class containing the result
         """
-        results = self.make_prof(dataset, steps)
+        self.spectrum_datasets = self.get_spectrum_datasets(dataset)
+        results = self.make_prof(self.spectrum_datasets, steps)
         table = table_from_row_data(results)
         if isinstance(self.regions[0], RectangleSkyRegion):
-            table.meta["PROFILE_TYPE"] = "orthogonal"
+            table.meta["PROFILE_TYPE"] = "orthogonal_rectangle"
 
         return ImageProfile(table)
 
@@ -229,7 +260,7 @@ def make_orthogonal_boxes_new(start_pos, end_pos, wcs, fullwidth, nbins=1):
     return regions, axis
 
 
-def make_orthogonal_boxes(start_pos, end_pos, wcs, fullwidth, nbins=1):
+def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, fullwidth, nbins=1):
     """Utility returning an array of regions to make orthogonal projections
 
     Parameters
