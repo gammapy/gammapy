@@ -26,6 +26,9 @@ class FluxPointsDataset(Dataset):
         Mask to apply for fitting
     mask_safe : `numpy.ndarray`
         Mask defining the safe data range.
+    meta_table : `~astropy.table.Table`
+        Table listing informations on observations used to create the dataset.
+        One line per observation for stacked datasets.
 
     Examples
     --------
@@ -55,11 +58,12 @@ class FluxPointsDataset(Dataset):
     stat_type = "chi2"
     tag = "FluxPointsDataset"
 
-    def __init__(self, models, data, mask_fit=None, mask_safe=None, name=None):
+    def __init__(self, models, data, mask_fit=None, mask_safe=None, name=None, meta_table=None):
         self.data = data
         self.mask_fit = mask_fit
         self._name = make_name(name)
         self.models = models
+        self.meta_table = meta_table
 
         if data.sed_type != "dnde":
             raise ValueError("Currently only flux points of type 'dnde' are supported.")
