@@ -39,7 +39,6 @@ or request a feature, or need help with anything Gammapy-related.
     datasets/index
     modeling/index
     estimators/index
-    time/index
 
     irf/index
     maps/index
