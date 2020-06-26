@@ -89,7 +89,7 @@ class ExcessProfileEstimator:
             the list of `~gammapy.datasets.SpectrumDataset` computed in each box
         """
         sp_datasets = []
-        for index, reg in enumerate(self.regions):
+        for reg in self.regions:
             spds = dataset.to_spectrum_dataset(reg)
             sp_datasets.append(spds)
         return sp_datasets
@@ -261,9 +261,8 @@ def make_orthogonal_boxes_new(start_pos, end_pos, wcs, fullwidth, nbins=1):
     pix_stop = end_pos.to_pixel(wcs)
 
     points = np.linspace(start=pix_start, stop=pix_stop, num=nbins+1).T
-    centers = 0.5*(points[:,:-1]+points[:,1:])
-    coords = SkyCoord.from_pixel(centers[0], centers[1] ,wcs)
-    
+    centers = 0.5*(points[:, :-1]+points[:, 1:])
+    coords = SkyCoord.from_pixel(centers[0], centers[1], wcs)
     box_width = start_pos.separation(end_pos).to("rad")/nbins
     rot_angle = end_pos.position_angle(start_pos)-90*u.deg
     regions = []
