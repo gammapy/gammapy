@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.estimators import LightCurve
-from gammapy.time import compute_chisq, compute_fvar
+from gammapy.stats.variability import compute_chisq, compute_fvar
 from gammapy.utils.testing import assert_quantity_allclose
 
 
