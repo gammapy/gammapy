@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to store profiles (i.e. 1D "slices" from 2D images)."""
 import numpy as np
-from astropy import units as u
 import logging
 
 __all__ = ["ImageProfile"]
@@ -18,6 +17,7 @@ class ImageProfile:
         * `x_ref` Center of the bin, given the distance to a reference position (required).
         * `x_min` Bin minimum value (optional).
         * `x_max` Bin maximum value (optional).
+        * `energy_edge` Edges of the energy bands (required).
         * `counts` Counts profile data (required).
         * `background` Estimated background counts (optional).
         * `excess` Excess counts (required).
@@ -28,8 +28,17 @@ class ImageProfile:
         * `errn` Excess profile data lower error (optional).
         * `errp` Excess profile data upper error (optional).
         * `ul` Excess profile data upper limit (optional).
-        * `exposure` Bin exposure (required).
+        * `flux` Flux within the energy range (required).
+        * `flux_err` Flux error (optional).
+        * `flux_errn` Flux lower error (optional).
+        * `flux_errp` Flux upper error (optional).
+        * `flux_ul` Flux upper limit (optional).
         * `solid_angle` Region solid angle (required).
+
+    The stored metadata are:
+
+        * `PROFILE_TYPE` orthogonal_rectangle
+        * `SPECTRAL_MODEL` Spectral Model used to compute fluxes
 
     Parameters
     ----------
@@ -40,13 +49,15 @@ class ImageProfile:
     def __init__(self, table):
         self.table = table
 
-    def profile(self, method='counts'):
+    def profile(self, method='counts', energy_band=None):
         """Image profile quantity.
 
         Parameters
         ----------
         method : ['counts', 'excess', 'flux', 'brightness']
            Compute counts, excess, fluxes or the brightness within profile bins.
+        energy_band : `~astropy.units.Quantity`, e.g. Quantity([1, 20], 'TeV')
+            User energy band. If None, the sum is used
 
         Returns
         -------
@@ -55,32 +66,28 @@ class ImageProfile:
 
         """
         try:
-            if method == 'counts':
-                y = self.table['counts'].quantity
+            if method == 'brightness':
+                y = self.table['flux'].quantity / self.table['solid_angle'].quantity
             else:
-                if method == 'excess':
-                    fact = 1.
-                elif method == 'brightness':
-                    fact = 1. / self.table['exposure'].quantity / self.table['solid_angle'].quantity
-                elif method == 'flux':
-                    fact = 1. / self.table['exposure'].quantity
-                else:
-                    raise AttributeError(f"The method [{method}] is not supported")
-                if method != 'excess' and self.table["excess"].unit == '':
-                    fact = fact.value
-                y = self.table["excess"].quantity * fact
-                y.name = method
-            return y
+                y = self.table[method].quantity
+                # if method != 'excess' and self.table["excess"].unit == '':
+                #     fact = fact.value
+            mask = self._get_energy_mask(energy_band)
+            yy = np.sum(y, axis=1, where=mask, keepdims=True)
+            yy.name = method
+            return yy
         except AttributeError:
-            raise AttributeError(f"Missing data to compute [{method}]")
+            raise AttributeError(f"The method [{method}] is not supported")
 
-    def profile_err(self, method='counts'):
+    def profile_err(self, method='counts', energy_band=None):
         """Mean error quantity of the image profile
 
         Parameters
         ----------
         method : ['counts', 'excess', 'flux', 'brightness']
            Compute the mean error of counts, excess, fluxes or the brightness within profile bins.
+        energy_band : `~astropy.units.Quantity`, e.g. Quantity([1, 20], 'TeV')
+            User energy band. If None, the sum is used
 
         Returns
         -------
@@ -88,38 +95,48 @@ class ImageProfile:
             Errors on the data computed for the required method of the image profile
 
         """
+        mask = self._get_energy_mask(energy_band)
+
         try:
             if method == 'counts':
-                return np.sqrt(self.table['counts'].quantity)
+                y = np.sum(self.table['counts'].quantity, axis=1, where=mask, keepdims=True)
+                return np.sqrt(y)
+            elif method == 'excess':
+                if "errn" in self.table.colnames and "errp" in self.table.colnames:
+                    ymin = self._quadratic_sum(self.table["errn"].quantity, axis=1, where=mask, keepdims=True)
+                    ymax = self._quadratic_sum(self.table["errp"].quantity, axis=1, where=mask, keepdims=True)
+                elif "err" in self.table.colnames:
+                    ymin = ymax = self._quadratic_sum(self.table["err"].quantity, axis=1, where=mask, keepdims=True)
+                else:
+                    return None
+                return (ymin+ymax)/2.
             else:
-                if method == 'excess':
-                    fact = 1.
-                elif method == 'brightness':
-                    fact = 1. / self.table['exposure'].quantity / self.table['solid_angle'].quantity
-                elif method == 'flux':
-                    fact = 1. / self.table['exposure'].quantity
+                fact = 1.
+                if method == 'brightness':
+                    fact = 1. / self.table['solid_angle'].quantity[:, 0]
+                # if method != 'excess' and self.table["excess"].unit == '':
+                #     fact = fact.value
+                if "flux_errn" in self.table.colnames and "flux_errp" in self.table.colnames:
+                    ymin = self._quadratic_sum(self.table["flux_errn"].quantity*fact, axis=1, where=mask, keepdims=True)
+                    ymax = self._quadratic_sum(self.table["flux_errp"].quantity*fact, axis=1, where=mask, keepdims=True)
+                elif "flux_err" in self.table.colnames:
+                    ymin = ymax = \
+                        self._quadratic_sum(self.table["flux_err"].quantity*fact, axis=1, where=mask, keepdims=True)
                 else:
-                    raise AttributeError(f"The method [{method}] is not supported")
-                if method != 'excess' and self.table["excess"].unit == '':
-                    fact = fact.value
-
-                if "errn" in self.table.colnames:
-                    ymin = self.table["errn"].quantity * fact
-                elif "errp" in self.table.colnames:
-                    ymax = self.table["errp"].quantity * fact
-                else:
-                    ymin = ymax = self.table["err"].quantity * fact
+                    return None
                 return (ymin+ymax)/2.
         except KeyError:
             return None
 
-    def profile_err_p(self, method='counts'):
+    def profile_err_p(self, method='counts', energy_band=None):
         """Positive error quantity of the image profile.
 
         Parameters
         ----------
         method : ['counts', 'excess', 'flux', 'brightness']
            Compute the positive error of counts, excess, fluxes or the brightness within profile bins.
+        energy_band : `~astropy.units.Quantity`, e.g. Quantity([1, 20], 'TeV')
+            User energy band. If None, the sum is used
 
         Returns
         -------
@@ -127,33 +144,45 @@ class ImageProfile:
             Errors on the data computed for the required method of the image profile
 
         """
+        mask = self._get_energy_mask(energy_band)
+
         try:
             if method == 'counts':
-                return np.sqrt(self.table['counts'].quantity)
-            else:
-                if method == 'excess':
-                    fact = 1.
-                elif method == 'brightness':
-                    fact = 1. / self.table['exposure'].quantity / self.table['solid_angle'].quantity
-                elif method == 'flux':
-                    fact = 1. / self.table['exposure'].quantity
-                if method != 'excess' and self.table["excess"].unit == '':
-                    fact = fact.value
-
+                y = np.sum(self.table['counts'].quantity, axis=1, where=mask, keepdims=True)
+                return np.sqrt(y)
+            elif method == 'excess':
                 if "errp" in self.table.colnames:
-                    return self.table["errp"].quantity * fact
+                    yerr = self._quadratic_sum(self.table["errp"].quantity, axis=1, where=mask, keepdims=True)
+                elif "err" in self.table.colnames:
+                    yerr = self._quadratic_sum(self.table["err"].quantity, axis=1, where=mask, keepdims=True)
                 else:
-                    return self.table["err"].quantity * fact
+                    return None
+                return yerr
+            else:
+                fact = 1.
+                if method == 'brightness':
+                    fact = 1. / self.table['solid_angle'].quantity
+                # if method != 'excess' and self.table["excess"].unit == '':
+                #     fact = fact.value
+                if "flux_errp" in self.table.colnames:
+                    yerr = self._quadratic_sum(self.table["flux_errp"].quantity*fact, axis=1, where=mask, keepdims=True)
+                elif "flux_err" in self.table.colnames:
+                    yerr = self._quadratic_sum(self.table["flux_err"].quantity*fact, axis=1, where=mask, keepdims=True)
+                else:
+                    return None
+                return yerr
         except KeyError:
             return None
 
-    def profile_err_n(self, method='counts'):
+    def profile_err_n(self, method='counts', energy_band=None):
         """Negative error quantity of the image profile.
 
         Parameters
         ----------
         method : ['counts', 'excess', 'flux', 'brightness']
            Compute the negative error of counts, excess, fluxes or the brightness within profile bins.
+        energy_band : `~astropy.units.Quantity`, e.g. Quantity([1, 20], 'TeV')
+            User energy band. If None, the sum is used
 
         Returns
         -------
@@ -161,34 +190,44 @@ class ImageProfile:
             Errors on the data computed for the required method of the image profile
 
         """
+        mask = self._get_energy_mask(energy_band)
         try:
             if method == 'counts':
-                return np.sqrt(self.table['counts'].quantity) * -1.
-            else:
-                if method == 'excess':
-                    fact = 1.
-                elif method == 'brightness':
-                    fact = 1. / self.table['exposure'].quantity / self.table['solid_angle'].quantity
-                elif method == 'flux':
-                    fact = 1. / self.table['exposure'].quantity
-                if method != 'excess' and self.table["excess"].unit == '':
-                    fact = fact.value
-
+                y = np.sum(self.table['counts'].quantity, axis=1, where=mask, keepdims=True) * -1.
+                return np.sqrt(y)
+            elif method == 'excess':
                 if "errn" in self.table.colnames:
-                    return self.table["errn"].quantity * fact
+                    yerr = self._quadratic_sum(self.table["errn"].quantity, axis=1, where=mask, keepdims=True)
+                elif "err" in self.table.colnames:
+                    yerr = self._quadratic_sum(self.table["err"].quantity, axis=1, where=mask, keepdims=True)
                 else:
-                    return self.table["err"].quantity * -1. * fact
-
+                    return None
+                return yerr * -1.
+            else:
+                fact = 1.
+                if method == 'brightness':
+                    fact = 1. / self.table['solid_angle'].quantity
+                # if method != 'excess' and self.table["excess"].unit == '':
+                #     fact = fact.value
+                if "flux_errn" in self.table.colnames:
+                    yerr = self._quadratic_sum(self.table["flux_errn"].quantity*fact, axis=1, where=mask, keepdims=True)
+                elif "flux_err" in self.table.colnames:
+                    yerr = self._quadratic_sum(self.table["flux_err"].quantity*fact, axis=1, where=mask, keepdims=True)
+                else:
+                    return None
+                return yerr * -1.
         except KeyError:
             return None
 
-    def profile_ul(self, method='counts'):
-        """Negative error quantity of the image profile.
+    def profile_ul(self, method='counts', energy_band=None):
+        """ quantity of the image profile upper limits.
 
         Parameters
         ----------
         method : ['counts', 'excess', 'flux', 'brightness']
            Compute the upper limit within profile bins.
+        energy_band : `~astropy.units.Quantity`, e.g. Quantity([1, 20], 'TeV')
+            User energy band. If None, the sum is used
 
         Returns
         -------
@@ -196,72 +235,67 @@ class ImageProfile:
             Upper limits computed for the required method of the image profile
 
         """
+        mask = self._get_energy_mask(energy_band)
         try:
             if method == 'counts':
-                return self.table['counts'].quantity
+                y = np.sum(self.table['counts'].quantity, axis=1, where=mask, keepdims=True)
+                return y + np.sqrt(y)
+            elif method == 'excess':
+                if "ul" in self.table.colnames:
+                    return self._quadratic_sum(self.table["ul"].quantity, axis=1, where=mask, keepdims=True)
             else:
-                if method == 'excess':
-                    fact = 1.
-                elif method == 'brightness':
-                    fact = 1. / self.table['exposure'].quantity / self.table['solid_angle'].quantity
-                elif method == 'flux':
-                    fact = 1. / self.table['exposure'].quantity
-                if method != 'excess' and self.table["excess"].unit == '':
-                    fact = fact.value
-
-                return self.table["ul"].quantity * fact
+                if "flux_ul" not in self.table.colnames:
+                    return None
+                fact = 1.
+                if method == 'brightness':
+                    fact = 1. / self.table['solid_angle'].quantity
+                # if method != 'excess' and self.table["excess"].unit == '':
+                #     fact = fact.value
+                return self._quadratic_sum(self.table["flux_ul"].quantity*fact, axis=1, where=mask, keepdims=True)
         except KeyError:
             return None
 
-    def normalize(self, mode="peak", method="counts"):
-        """Normalize profile to peak value or integral.
+    def _quadratic_sum(self, aa, axis=None, where=None, keepdims=False):
+        """Compute the quadratic sum of 1D-array elements
 
         Parameters
         ----------
-        mode : ['integral', 'peak']
-            Normalize image profile so that it integrates to unity ('integral')
-            or the maximum value corresponds to one ('peak').
-        method : ['counts', 'excess', 'flux', 'brightness']
-           Compute the negative error of counts, excess, fluxes or the brightness within profile bins.
+        aa : `array_like`
+            Elements to sum
+        axis : None or int or tuple of ints, optional
+            Axis or axes along which a sum is performed. The default, axis=None, will sum all of the elements of the \
+            input array. If axis is negative it counts from the last to the first axis.
+        where : array_like of bool, optional
+            Elements to include in the sum
+        keepdims : bool, optional
+            If this is set to True, the axes which are reduced are left in the result as dimensions with size one. \
+            With this option, the result will broadcast correctly against the input array.
+            If the default value is passed, then keepdims will not be passed through to the sum method of sub-classes \
+            of ndarray, however any non-default value will be. If the sub-class’ method does not implement keepdims any\
+             exceptions will be raised.
+
 
         Returns
         -------
-        profile : `~gammapy.estimators.ImageProfile`
-            Normalized image profile.
+         sum : `float`
+            return value
         """
+        return np.sqrt(np.sum(np.square(aa), axis=axis, where=where, keepdims=keepdims))
 
-        table = self.table.copy()
+    def _get_energy_mask(self, energy_band):
+        mask = np.full(self.table['counts'].quantity.shape, True)
+        if 'energy_edge' not in self.table.colnames:
+            return mask
+        if energy_band is None or self.table['energy_edge'].quantity[0].size <= 2:
+            return mask
 
-        if method == "counts":
-            y = self.profile('counts').copy()
-            if mode == "peak":
-                norm = np.nanmax(y)
-            elif mode == "integral":
-                norm = np.nansum(y)
-            else:
-                raise ValueError(f"Invalid normalization mode: {mode!r}")
-            table['counts'] = [(ii/norm).value for ii in table['counts'].quantity]*u.dimensionless_unscaled
-        else:
-            y = self.profile(method).copy()
-            if mode == "peak":
-                norm = np.nanmax(y)
-            elif mode == "integral":
-                norm = np.nansum(y)
-            else:
-                raise ValueError(f"Invalid normalization mode: {mode!r}")
-            table['excess'] = [(ii / norm).value for ii in table['excess'].quantity] * u.dimensionless_unscaled
-            if "err" in table.colnames:
-                table['err'] = [(ii / norm).value for ii in table['err'].quantity] * u.dimensionless_unscaled
-            if "errn" in table.colnames:
-                table['errn'] = [(ii / norm).value for ii in table['errn'].quantity] * u.dimensionless_unscaled
-            if "errp" in table.colnames:
-                table['errp'] = [(ii/norm).value for ii in table['errp'].quantity]*u.dimensionless_unscaled
-            if "ul" in table.colnames:
-                table['ul'] = [(ii / norm).value for ii in table['ul'].quantity] * u.dimensionless_unscaled
+        e_reco_lo = self.table['energy_edge'].quantity[:, :-1]
+        e_reco_hi = self.table['energy_edge'].quantity[:, 1:]
+        e_center = (e_reco_lo + e_reco_hi) / 2.
+        mask = np.logical_and(energy_band[0] <= e_center, e_center <= energy_band[1])
+        return mask
 
-        return self.__class__(table)
-
-    def plot(self, method, n_sigma=3., ax=None, **kwargs):
+    def plot(self, method, n_sigma=3., energy_band=None, ax=None, **kwargs):
         """Plot image profile.
 
         Parameters
@@ -270,6 +304,8 @@ class ImageProfile:
             Compute counts, excess of the fluxes within profile bins.
         n_sigma : float
             Minimum number of sigma for which upper limits are plotted
+        energy_band : `~astropy.units.Quantity`, e.g. Quantity([1, 20], 'TeV')
+            User energy band. If None, the sum is used
         ax : `~matplotlib.axes.Axes`
             Axes object
         **kwargs : dict
@@ -284,27 +320,40 @@ class ImageProfile:
 
         if ax is None:
             ax = plt.gca()
-
-        y = self.profile(method)
-        yerr = [np.abs(self.profile_err_n(method).value), self.profile_err_p(method).value]
+        if energy_band is None:
+            if 'energy_edge' in self.table.colnames:
+                log.info(f" Used energy band : {self.table['energy_edge'][0]}\n")
+            else:
+                log.info(f" Using the full energy band \n")
+        else:
+            log.info(f" Used energy band : {energy_band}\n")
+        y = self.profile(method, energy_band)
+        errn = self.profile_err_n(method, energy_band)
+        errp = self.profile_err_p(method, energy_band)
+        if errn is None or errp is None:
+            errn = errp = np.full(self.table['counts'].quantity.shape, 0.)
+        yerr = [np.abs(errn), errp]
         y_ul = []
         x = self.table['x_ref']
         if n_sigma is not None and ("ul" not in self.table.colnames or "sqrt_ts" not in self.table.colnames):
-            log.warning(f"No UL or TS stored in the table")
-        elif n_sigma is not None and "ul" in self.table.colnames and "sqrt_ts" in self.table.colnames:
-            ulmask = [(ii.value < n_sigma) for ii in self.table["sqrt_ts"].quantity]
-            x_ul = x[ulmask].copy()
+            log.warning(f"No UL or SQRT_TS stored in the table")
+        elif n_sigma is not None and "sqrt_ts" in self.table.colnames and "ul" in self.table.colnames and \
+                "flux_ul" in self.table.colnames:
+            en_mask = self._get_energy_mask(energy_band)
+            sqrt_ts = self._quadratic_sum(self.table["sqrt_ts"].quantity, axis=1, where=en_mask, keepdims=True)
+            ulmask = [val[0] < n_sigma for val in sqrt_ts]
+            x_ul = x[ulmask]
             dx = np.zeros_like(x_ul)
-            y_ul = self.profile_ul(method)[ulmask]
+            y_ul = self.profile_ul(method, energy_band)[ulmask]
             dy = y_ul * -0.05
             if ax.get_yaxis().get_scale() == "log":
                 dy = y_ul * -0.3
-            mask = [(ii.value >= n_sigma) for ii in self.table["sqrt_ts"].quantity]
+            mask = [val[0] >= n_sigma for val in sqrt_ts]
             y = y[mask]
             x = x[mask]
-            yerr = [np.abs(self.profile_err_n(method).value[mask]), self.profile_err_p(method).value[mask]]
+            yerr = [np.abs(errn[mask]), errp[mask]]
 
-        ax.errorbar(x, y.data, yerr=yerr, fmt='o', ecolor='blue', **kwargs)
+        ax.errorbar(x, y, yerr=yerr, fmt='o', ecolor='blue', **kwargs)
         ax.set_xlabel(f"Distance [{self.table['x_ref'].unit.to_string()}]")
         ax.set_ylabel(f"{method} profile [{y.unit.to_string()}]")
         xmin, xmax = ax.get_xlim()
@@ -319,8 +368,8 @@ class ImageProfile:
             if len(x_ul) >= 1:
                 arrow_width = (x_ul[1]-x_ul[0])/3.
             for i in range(len(x_ul)):
-                ax.arrow(x=x_ul[i], y=y_ul.data[i], dx=dx[i], dy=dy.data[i],
-                         color='blue', head_width=arrow_width, head_length=np.abs(dy.data[i]*0.4),
+                ax.arrow(x=x_ul[i], y=y_ul[i].value[0], dx=dx[i], dy=dy[i].value[0],
+                         color='blue', head_width=arrow_width, head_length=np.abs(dy[i].value[0]*0.4),
                          **kwargs)
             if np.max(y_ul).value > ymax:
                 ymax = np.max(y_ul).value*1.1
@@ -335,7 +384,7 @@ class ImageProfile:
 
         return ax
 
-    def peek(self, method='excess', n_sigma=None, figsize=(8, 4.5), **kwargs):
+    def peek(self, method='excess', n_sigma=None, energy_band=None, figsize=(8, 4.5), **kwargs):
         """Show image profile and error.
 
         Parameters
@@ -344,6 +393,8 @@ class ImageProfile:
             Compute counts, excess of the fluxes within profile bins.
          n_sigma : float
             Minimum number of sigma for which upper limits are plotted
+        energy_band : `~astropy.units.Quantity`, e.g. Quantity([1, 20], 'TeV')
+            User energy band. If None, the sum is used
          **kwargs : dict
             Keyword arguments passed to `ImageProfile.plot_profile()`
 
@@ -356,6 +407,6 @@ class ImageProfile:
 
         fig = plt.figure(figsize=figsize)
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-        ax = self.plot(method, n_sigma=n_sigma, ax=ax, **kwargs)
+        ax = self.plot(method, n_sigma=n_sigma, energy_band=energy_band, ax=ax, **kwargs)
 
         return ax
