@@ -367,7 +367,7 @@ class ImageProfile:
             arrow_width = 0.03
             if len(x_ul) >= 1:
                 arrow_width = (x_ul[1]-x_ul[0])/3.
-            for i in range(len(x_ul)):
+            for i, _ in enumerate(x_ul):
                 ax.arrow(x=x_ul[i], y=y_ul[i].value[0], dx=dx[i], dy=dy[i].value[0],
                          color='blue', head_width=arrow_width, head_length=np.abs(dy[i].value[0]*0.4),
                          **kwargs)
