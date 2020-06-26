@@ -7,7 +7,7 @@ from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
-    MODELS,
+    MODEL_REGISTRY,
     AbsorbedSpectralModel,
     Absorption,
     BackgroundModel,
@@ -200,7 +200,7 @@ def make_all_models():
     yield Model.create("BackgroundModel", map=m2)
 
 
-@pytest.mark.parametrize("model_class", MODELS)
+@pytest.mark.parametrize("model_class", MODEL_REGISTRY)
 def test_all_model_classes(model_class):
     assert model_class.tag == model_class.__name__
 

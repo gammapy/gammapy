@@ -5,6 +5,7 @@ from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
 from gammapy.irf import EffectiveAreaTable, EDispKernelMap
 from gammapy.maps import Map, MapCoord
+from .core import Maker
 
 __all__ = ["SafeMaskMaker"]
 
@@ -12,7 +13,7 @@ __all__ = ["SafeMaskMaker"]
 log = logging.getLogger(__name__)
 
 
-class SafeMaskMaker:
+class SafeMaskMaker(Maker):
     """Make safe data range mask for a given observation.
 
     Parameters
@@ -35,7 +36,7 @@ class SafeMaskMaker:
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
     """
-
+    tag = "SafeMaskMaker"
     available_methods = {
         "aeff-default",
         "aeff-max",

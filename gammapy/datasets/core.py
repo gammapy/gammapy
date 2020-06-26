@@ -198,7 +198,7 @@ class Datasets(collections.abc.MutableSequence):
         dataset : 'gammapy.modeling.Datasets'
             Datasets
         """
-        from . import DATASETS
+        from . import DATASET_REGISTRY
 
         path = make_path(path)
 
@@ -218,7 +218,7 @@ class Datasets(collections.abc.MutableSequence):
         for data in data_list["datasets"]:
             if (path / data["filename"]).exists():
                 data["filename"] = str(make_path(path / data["filename"]))
-            dataset = DATASETS.get_cls(data["type"]).from_dict(data, models)
+            dataset = DATASET_REGISTRY.get_cls(data["type"]).from_dict(data, models)
             datasets.append(dataset)
         return cls(datasets)
 

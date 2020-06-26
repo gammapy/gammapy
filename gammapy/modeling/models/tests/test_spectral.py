@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.maps import MapAxis
 from gammapy.modeling.models import (
-    SPECTRAL_MODELS,
+    SPECTRAL_MODEL_REGISTRY,
     AbsorbedSpectralModel,
     Absorption,
     ConstantSpectralModel,
@@ -335,7 +335,7 @@ def test_to_from_dict():
     model = spectrum["model"]
 
     model_dict = model.to_dict()
-    model_class = SPECTRAL_MODELS.get_cls(model_dict["type"])
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
     new_model = model_class.from_dict(model_dict)
 
     assert isinstance(new_model, PowerLawSpectralModel)

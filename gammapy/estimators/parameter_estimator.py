@@ -3,11 +3,12 @@ import logging
 import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
+from .core import Estimator
 
 log = logging.getLogger(__name__)
 
 
-class ParameterEstimator:
+class ParameterEstimator(Estimator):
     """Model parameter estimator.
 
     Estimates a model parameter for a group of datasets.
@@ -28,6 +29,7 @@ class ParameterEstimator:
         Range to scan in number of parameter error
 
     """
+    tag = "ParameterEstimator"
 
     def __init__(
         self, sigma=1, sigma_ul=2, reoptimize=True, n_scan_values=30, scan_n_err=3,

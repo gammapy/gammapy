@@ -9,7 +9,7 @@ from .spectral_cosmic_ray import *
 from .spectral_crab import *
 from .temporal import *
 
-SPATIAL_MODELS = Registry(
+SPATIAL_MODEL_REGISTRY = Registry(
     [
         ConstantSpatialModel,
         TemplateSpatialModel,
@@ -19,9 +19,9 @@ SPATIAL_MODELS = Registry(
         ShellSpatialModel,
     ]
 )
-"""Built-in spatial models."""
+"""Registry of spatial model classes."""
 
-SPECTRAL_MODELS = Registry(
+SPECTRAL_MODEL_REGISTRY = Registry(
     [
         ConstantSpectralModel,
         CompoundSpectralModel,
@@ -40,24 +40,25 @@ SPECTRAL_MODELS = Registry(
         ScaleSpectralModel,
     ]
 )
-"""Built-in spectral models."""
+"""Registry of spectral model classes."""
 
-TEMPORAL_MODELS = Registry([ConstantTemporalModel, LightCurveTemplateTemporalModel,])
-"""Built-in temporal models."""
+TEMPORAL_MODEL_REGISTRY = Registry([ConstantTemporalModel, LightCurveTemplateTemporalModel,])
+"""Registry of temporal models classes."""
 
-MODELS = Registry(
-    SPATIAL_MODELS
-    + SPECTRAL_MODELS
-    + TEMPORAL_MODELS
+MODEL_REGISTRY = Registry(
+    SPATIAL_MODEL_REGISTRY
+    + SPECTRAL_MODEL_REGISTRY
+    + TEMPORAL_MODEL_REGISTRY
     + [SkyModel, SkyDiffuseCube, BackgroundModel]
 )
-"""All built-in models."""
+"""Registry of model classes"""
 
 
 __all__ = [
-    "SPATIAL_MODELS",
-    "TEMPORAL_MODELS",
-    "SPECTRAL_MODELS",
+    "MODEL_REGISTRY",
+    "SPATIAL_MODEL_REGISTRY",
+    "TEMPORAL_MODEL_REGISTRY",
+    "SPECTRAL_MODEL_REGISTRY",
     "SkyModelBase",
     "Models",
     "SkyModel",
@@ -71,6 +72,6 @@ __all__ = [
     "TemporalModel",
 ]
 
-__all__.extend(cls.__name__ for cls in SPATIAL_MODELS)
-__all__.extend(cls.__name__ for cls in SPECTRAL_MODELS)
-__all__.extend(cls.__name__ for cls in TEMPORAL_MODELS)
+__all__.extend(cls.__name__ for cls in SPATIAL_MODEL_REGISTRY)
+__all__.extend(cls.__name__ for cls in SPECTRAL_MODEL_REGISTRY)
+__all__.extend(cls.__name__ for cls in TEMPORAL_MODEL_REGISTRY)

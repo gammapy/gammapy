@@ -11,7 +11,7 @@ from gammapy.utils.regions import (
     list_to_compound_region,
     make_region,
 )
-from .base import MapCoord
+from .core import MapCoord
 from .geom import Geom, MapAxis, make_axes, pix_tuple_to_idx
 from .utils import edges_from_lo_hi
 from .wcs import WcsGeom

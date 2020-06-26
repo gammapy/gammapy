@@ -130,9 +130,9 @@ class Model:
         >>> type(spectral_model)
         gammapy.modeling.models.spectral.PowerLaw2SpectralModel
         """
-        from . import MODELS
+        from . import MODEL_REGISTRY
 
-        cls = MODELS.get_cls(tag)
+        cls = MODEL_REGISTRY.get_cls(tag)
         return cls(*args, **kwargs)
 
     def __str__(self):
@@ -245,12 +245,12 @@ class Models(collections.abc.MutableSequence):
     @classmethod
     def from_dict(cls, data, path=""):
         """Create from dict."""
-        from . import MODELS, SkyModel
+        from . import MODEL_REGISTRY, SkyModel
 
         models = []
 
         for component in data["components"]:
-            model = MODELS.get_cls(component["type"]).from_dict(component)
+            model = MODEL_REGISTRY.get_cls(component["type"]).from_dict(component)
             models.append(model)
 
         models = cls(models)

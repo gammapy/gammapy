@@ -3,7 +3,7 @@ import abc
 import json
 import numpy as np
 from astropy.io import fits
-from .base import Map
+from .core import Map
 from .hpx import HpxConv, HpxGeom
 from .utils import find_bands_hdu, find_bintable_hdu
 

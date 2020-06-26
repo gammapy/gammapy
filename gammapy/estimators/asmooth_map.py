@@ -7,6 +7,7 @@ from gammapy.datasets import MapDatasetOnOff
 from gammapy.maps import WcsNDMap
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
+from .core import Estimator
 
 __all__ = ["ASmoothMapEstimator"]
 
@@ -16,7 +17,7 @@ def _significance_asmooth(counts, background):
     return (counts - background) / np.sqrt(counts + background)
 
 
-class ASmoothMapEstimator:
+class ASmoothMapEstimator(Estimator):
     """Adaptively smooth counts image.
 
     Achieves a roughly constant significance of features across the whole image.
@@ -37,6 +38,7 @@ class ASmoothMapEstimator:
     threshold : float
         Significance threshold.
     """
+    tag = "ASmoothMapEstimator"
 
     def __init__(self, scales, kernel=Gaussian2DKernel, method="lima", threshold=5):
         self.parameters = {

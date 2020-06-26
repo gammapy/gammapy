@@ -6,13 +6,14 @@ from astropy import units as u
 from astropy.convolution import Box1DKernel, Gaussian1DKernel
 from astropy.coordinates import Angle
 from astropy.table import Table
+from .core import Estimator
 
 __all__ = ["ImageProfile", "ImageProfileEstimator"]
 
 
 # TODO: implement measuring profile along arbitrary directions
 # TODO: think better about error handling. e.g. MC based methods
-class ImageProfileEstimator:
+class ImageProfileEstimator(Estimator):
     """Estimate profile from image.
 
     Parameters
@@ -49,6 +50,7 @@ class ImageProfileEstimator:
         smoothed.peek()
         plt.show()
     """
+    tag = "ImageProfileEstimator"
 
     def __init__(self, x_edges=None, method="sum", axis="lon", center=None):
         self._x_edges = x_edges

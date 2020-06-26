@@ -39,6 +39,7 @@ class FluxEstimator(ParameterEstimator):
     reoptimize : bool
         Re-optimize other free model parameters.
     """
+    tag = "FluxEstimator"
 
     def __init__(
         self,

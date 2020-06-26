@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Sky maps."""
-from .base import *
+from .core import *
 from .geom import *
 from .hpx import *
 from .hpxmap import *

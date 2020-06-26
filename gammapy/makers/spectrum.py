@@ -5,13 +5,14 @@ from astropy import units as u
 from regions import CircleSkyRegion
 from gammapy.datasets import SpectrumDataset
 from gammapy.maps import RegionNDMap
+from .core import Maker
 
 __all__ = ["SpectrumDatasetMaker"]
 
 log = logging.getLogger(__name__)
 
 
-class SpectrumDatasetMaker:
+class SpectrumDatasetMaker(Maker):
     """Make spectrum for a single IACT observation.
 
     The irfs and background are computed at a single fixed offset,
@@ -26,7 +27,7 @@ class SpectrumDatasetMaker:
         Available: 'counts', 'aeff', 'background', 'edisp'
         By default, all spectra are made.
     """
-
+    tag = "SpectrumDatasetMaker"
     available_selection = ["counts", "background", "aeff", "edisp"]
 
     def __init__(self, containment_correction=False, selection=None):

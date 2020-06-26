@@ -7,7 +7,7 @@ from .gammacat import *
 from .hawc import *
 from .hess import *
 
-SOURCE_CATALOGS = Registry(
+CATALOG_REGISTRY = Registry(
     [
         SourceCatalogGammaCat,
         SourceCatalogHGPS,
@@ -21,7 +21,7 @@ SOURCE_CATALOGS = Registry(
 """Registry of source catalogs in Gammapy."""
 
 __all__ = [
-    "SOURCE_CATALOGS",
+    "CATALOG_REGISTRY",
     "SourceCatalog",
     "SourceCatalogObject",
     "SourceCatalogObjectHGPS",
@@ -35,4 +35,4 @@ __all__ = [
     "SourceCatalogLargeScaleHGPS",
 ]
 
-__all__.extend(cls.__name__ for cls in SOURCE_CATALOGS)
+__all__.extend(cls.__name__ for cls in CATALOG_REGISTRY)

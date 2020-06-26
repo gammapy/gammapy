@@ -17,6 +17,7 @@ from gammapy.stats import (
     x_best_leastsq,
 )
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
+from .core import Estimator
 
 __all__ = ["TSMapEstimator"]
 
@@ -75,7 +76,7 @@ def f_cash(x, counts, background, model):
     )
 
 
-class TSMapEstimator:
+class TSMapEstimator(Estimator):
     r"""Compute TS map from a MapDataset using different optimization methods.
 
     The map is computed fitting by a single parameter amplitude fit. The fit is
@@ -138,6 +139,7 @@ class TSMapEstimator:
     ----------
     [Stewart2009]_
     """
+    tag = "TSMapEstimator"
 
     def __init__(
         self,

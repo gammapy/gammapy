@@ -1283,9 +1283,9 @@ class AbsorbedSpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
-        from gammapy.modeling.models import SPECTRAL_MODELS
+        from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
 
-        model_class = SPECTRAL_MODELS.get_cls(data["base_model"]["type"])
+        model_class = SPECTRAL_MODEL_REGISTRY.get_cls(data["base_model"]["type"])
 
         model = cls(
             spectral_model=model_class.from_dict(data["base_model"]),
