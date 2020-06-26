@@ -9,11 +9,12 @@ from gammapy.utils.table import table_from_row_data
 from gammapy.estimators import ImageProfile
 from gammapy.stats import WStatCountsStatistic, CashCountsStatistic
 from gammapy.datasets import SpectrumDatasetOnOff
+from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
 
-__all__ = ["MapProfileEstimator", "make_orthogonal_rectangle_sky_regions"]
+__all__ = ["ExcessProfileEstimator", "make_orthogonal_rectangle_sky_regions"]
 
 
-class MapProfileEstimator:
+class ExcessProfileEstimator:
     """Estimate profile from a DataSet.
 
     Parameters
@@ -36,7 +37,7 @@ class MapProfileEstimator:
         from astropy import units as u
         from astropy.coordinates import SkyCoord
         from gammapy.data import GTI
-        from gammapy.estimators import MapProfileEstimator, make_orthogonal_rectangle_sky_regions, image_profile
+        from gammapy.estimators import ExcessProfileEstimator, make_orthogonal_rectangle_sky_regions, image_profile
         from gammapy.datasets import Datasets
 
         # load example data
@@ -55,16 +56,8 @@ class MapProfileEstimator:
                                         11)
 
         # set up profile estimator and run
-        prof_maker = MapProfileEstimator(boxes, axis)
+        prof_maker = ExcessProfileEstimator(boxes, axis)
         fermi_prof = prof_maker.run(datasets[0])
-
-        # plot directly the data from the output dictionnary
-        x=fermi_prof.table["x_ref"]
-        y=fermi_prof.table["excess"]
-        yerr = [-fermi_prof.table["errn"], fermi_prof.table["errp"]]
-        plt.errorbar(x,y,yerr=yerr, fmt='o')
-        plt.yscale('log')
-        plt.show()
 
         # smooth and plot the data using the ImageProfile class
         fermi_prof.peek()
@@ -101,51 +94,68 @@ class MapProfileEstimator:
             sp_datasets.append(spds)
         return sp_datasets
 
-    def make_prof(self, sp_datasets, steps):
+    def make_prof(self, sp_datasets, steps, spectrum=None):
         """ Utility to make the profile in each region
 
         Parameters
         ----------
-        sp_datasets : `~gammapy.datasets.MapDatasets` of `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.SpectrumDatasetOnOff`
+        sp_datasets : `~gammapy.datasets.MapDatasets` of `~gammapy.datasets.SpectrumDataset` or \
+        `~gammapy.datasets.SpectrumDatasetOnOff`
             the dataset to use for profile extraction
         steps : list of str
             the steps to be used.
+        spectrum : `~gammapy.modeling.models.SpectralModel`
+            Spectral model to compute the fluxes or brightness.
+            Default is power-law with spectral index of 2.
         Returns
         --------
         results : list of dictionary
-            the list of results (list of keys: x_min, x_ref, x_max, alpha, counts, background, excess, ts, sqrt_ts, err,
-             errn, errp, ul, exposure, solid_angle)
+            the list of results (list of keys: x_min, x_ref, x_max, alpha, counts, background, excess, ts, sqrt_ts, \
+            err, errn, errp, ul, exposure, solid_angle)
         """
         if steps == "all":
             steps = ["err", "ts", "errn-errp", "ul"]
+        if spectrum is None:
+            spectrum = PowerLawSpectralModel(index=2.0, amplitude="1.e-12 cm-2 s-1 TeV-1", reference=1*u.TeV)
 
         results = []
         for index, spds in enumerate(sp_datasets):
+            old_model = None
+            if spds.models is not None:
+                old_model = spds.models
+            spds.models = SkyModel(spectral_model=spectrum)
+            e_reco = spds.counts.geom.get_axis_by_name("energy").edges
+
             # ToDo: When the function to_spectrum_dataset will manage the masks, use the following line
             # mask = spds.mask if spds.mask is not None else slice(None)
             mask = slice(None)
             if isinstance(spds, SpectrumDatasetOnOff):
-                print(spds.counts.meta)
-                print(spds.counts.geom.axes[0])
-                print(spds.counts.data[:,:,:])
-                print(tuple(range(spds.counts.data.ndim - 2)))
+                # stats_sum = WStatCountsStatistic(
+                #     spds.counts.data[mask].sum(),
+                #     spds.counts_off.data[mask].sum(),
+                #     spds.alpha.data[0,0,0] # At some point, should replace with averaging over energy
+                # )
                 stats = WStatCountsStatistic(
-                    spds.counts.data[mask].sum(),
-                    spds.counts_off.data[mask].sum(),
-                    spds.alpha.data[0,0,0] # At some point, should replace with averaging over energy
+                    spds.counts.data[mask][:, 0, 0],
+                    spds.counts_off.data[mask][:, 0, 0],
+                    spds.alpha.data[mask][:, 0, 0]
                 )
-                print(f"Wstat {type(spds.counts.data[mask].sum())} {type(spds.counts_off.data[mask].sum())} {type(spds.alpha.data[0,0,0])} {type(stats.n_on)} {type(stats.background)} {type(stats.excess)} {type(stats.delta_ts)}")
+
             else:
+                # stats_sum = CashCountsStatistic(
+                #     spds.counts.data[mask].sum(),
+                #     spds.background.data[mask].sum(),
+                # )
                 stats = CashCountsStatistic(
-                    spds.counts.data[mask].sum(),
-                    spds.background.data[mask].sum(),
+                    spds.counts.data[mask][:, 0, 0],
+                    spds.background.data[mask][:, 0, 0],
                 )
-                print(f"Cash {type(spds.counts.data[mask].sum())} {type(spds.background.data[mask].sum())} ND {type(stats.n_on)} {type(stats.background)} {type(stats.excess)} {type(stats.delta_ts)}")
 
             result = {
                 "x_min": self.axis.edges[index],
                 "x_max": self.axis.edges[index+1],
-                "x_ref": self.axis.center[index]
+                "x_ref": self.axis.center[index],
+                "energy_edge": e_reco
             }
             if isinstance(spds, SpectrumDatasetOnOff):
                 result["alpha"] = stats.alpha
@@ -156,41 +166,45 @@ class MapProfileEstimator:
             })
 
             if "ts" in steps:
-                if isinstance(stats.delta_ts, list) or isinstance(stats.delta_ts, np.ndarray):
-                    result["ts"] = np.asanyarray(stats.delta_ts[0],dtype=np.float32)
-                else:
-                    result["ts"] = np.asanyarray(stats.delta_ts, dtype=np.float32)
-                if isinstance(stats.significance, list) or isinstance(stats.significance, np.ndarray):
-                    result["sqrt_ts"] = np.asanyarray(stats.significance[0], dtype=np.float32)
-                else:
-                    result["sqrt_ts"] = np.asanyarray(stats.significance, dtype=np.float32)
+                result["ts"] = stats.delta_ts
+                result["sqrt_ts"] = stats.significance
 
             if "err" in steps:
-                result["err"] = np.asanyarray(stats.error, dtype=np.float32)
+                result["err"] = stats.error
 
             if "errn-errp" in steps:
                 result["errn"] = stats.compute_errn(self.n_sigma)
-                #ToDo: check the type of errp compared to errn (maybe not the same)
-                _errp = stats.compute_errp(self.n_sigma)
-                if isinstance(_errp, list) or isinstance(_errp, np.ndarray):
-                    result["errp"] = np.asanyarray(_errp[0], dtype=np.float32)
-                else:
-                    result["errp"] = np.asanyarray(_errp, dtype=np.float32)
- 
+                result["errp"] = stats.compute_errp(self.n_sigma)
+
             if "ul" in steps:
                 result["ul"] = stats.compute_upper_limit(self.n_sigma_ul)
- 
-            # What about the mask (see above)?
-            # ToDo: when the input dataset of this estimator has several energy bins, what exposure to take?
-            result.update(
-                {"exposure": spds.aeff.data.data.max() * spds.livetime,
-                 "solid_angle": spds.counts.geom.solid_angle()}
-            )
+
+            npred = spds.npred_sig().data[mask][:, 0, 0]
+            e_reco_lo = e_reco[:-1]
+            e_reco_hi = e_reco[1:]
+            flux = stats.excess / npred * \
+                            spds.models[0].spectral_model.integral(e_reco_lo, e_reco_hi).value
+            result["flux"] = flux
+
+            if "err" in steps:
+                result["flux_err"] = stats.error / stats.excess * flux
+
+            if "errn-errp" in steps:
+                result["flux_errn"] = np.abs(result["errn"]) / stats.excess * flux
+                result["flux_errp"] = result["errp"] / stats.excess * flux
+
+            if "ul" in steps:
+                result["flux_ul"] = result["ul"] / stats.excess * flux
+
+            result["solid_angle"] = np.full(result['counts'].shape, spds.counts.geom.solid_angle()) * u.steradian
+
             results.append(result)
-        self.sp_datasets = sp_datasets
+            if old_model is not None:
+                spds.models = old_model
+
         return results
 
-    def run(self, dataset, steps="all"):
+    def run(self, dataset, steps="all", spectrum=None):
         """Make the profiles
 
         Parameters
@@ -199,6 +213,9 @@ class MapProfileEstimator:
             the dataset to use for profile extraction
         steps : list of str
             the steps to be used.
+        spectrum : `~gammapy.modeling.models.SpectralModel`
+            Spectral model to compute the fluxes or brightness.
+            Default is power-law with spectral index of 2.
 
         Returns
         --------
@@ -206,10 +223,13 @@ class MapProfileEstimator:
             Return an image profile class containing the result
         """
         self.spectrum_datasets = self.get_spectrum_datasets(dataset)
-        results = self.make_prof(self.spectrum_datasets, steps)
+        results = self.make_prof(self.spectrum_datasets, steps, spectrum)
         table = table_from_row_data(results)
         if isinstance(self.regions[0], RectangleSkyRegion):
             table.meta["PROFILE_TYPE"] = "orthogonal_rectangle"
+        if spectrum is None:
+            spectrum = PowerLawSpectralModel(index=2.0)
+        table.meta["SPECTRAL_MODEL"] = spectrum.to_dict()
 
         return ImageProfile(table)
 
@@ -261,7 +281,11 @@ def make_orthogonal_boxes_new(start_pos, end_pos, wcs, fullwidth, nbins=1):
 
 
 def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, fullwidth, nbins=1):
-    """Utility returning an array of regions to make orthogonal projections
+    """Utility returning an array of rectangular regions that are orthogonal to a like
+
+    This function is used to produce excess profiles (plus flux and brightness) with the estimator \
+    `~gammapy.estimators.ExcessProfileEstimator`. Its output, a `~gammapy.estimators.ImageProfile`, contains then the \
+    following metadata: `PROFILE_TYPE` = "orthogonal_rectangle".
 
     Parameters
     ----------
