@@ -5,11 +5,11 @@ from astropy.coordinates import SkyCoord
 from gammapy.datasets import MapDatasetOnOff
 from gammapy.data import GTI
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.estimators import MapProfileEstimator, make_orthogonal_rectangle_sky_regions
+from gammapy.estimators import ExcessProfileEstimator, make_orthogonal_rectangle_sky_regions
 
 
 def get_simple_dataset_on_off():
-    axis = MapAxis.from_energy_bounds(0.1, 10, 1, unit="TeV")
+    axis = MapAxis.from_energy_bounds(0.1, 10, 2, unit="TeV")
     geom = WcsGeom.create(npix=40, binsz=0.01, axes=[axis])
     dataset = MapDatasetOnOff.create(geom)
     dataset.mask_safe += 1
@@ -52,15 +52,15 @@ def test_profile_content():
     wcs = mapdataset_onoff.counts.geom.wcs
     boxes, axis = make_horizontal_boxes(wcs)
 
-    prof_maker = MapProfileEstimator(boxes, axis)
+    prof_maker = ExcessProfileEstimator(boxes, axis)
     imp_prof = prof_maker.run(mapdataset_onoff)
 
     assert_allclose(imp_prof.table[7]['x_min'], 0.0675, atol=1e-4)
     assert_allclose(imp_prof.table[7]['x_ref'], 0.07875, atol=1e-4)
-    assert_allclose(imp_prof.table[7]['counts'], 100., atol=1e-2)
-    assert_allclose(imp_prof.table[7]['excess'], 80., atol=1e-2)
-    assert_allclose(imp_prof.table[7]['sqrt_ts'], 7.6302447, atol=1e-5)
-    assert_allclose(imp_prof.table[7]['errn'], -10.747017, atol=1e-5)
-    assert_allclose(imp_prof.table[0]['ul'], 115.171871, atol=1e-5)
-    assert_allclose(imp_prof.table[0]['exposure'], 1000., atol=1e-3)
-    assert_allclose(imp_prof.table[0]['solid_angle'], 6.853891e-07, atol=1e-5)
+    assert_allclose(imp_prof.table[7]['counts'], [100., 100.], atol=1e-2)
+    assert_allclose(imp_prof.table[7]['excess'], [80., 80.], atol=1e-2)
+    assert_allclose(imp_prof.table[7]['sqrt_ts'], [7.6302447, 7.6302447], atol=1e-5)
+    assert_allclose(imp_prof.table[7]['errn'], [-10.747017, -10.747017], atol=1e-5)
+    assert_allclose(imp_prof.table[0]['ul'], [115.171871, 115.171871], atol=1e-5)
+    assert_allclose(imp_prof.table[0]['flux'], [7.99999987e-06, 8.00000010e-06], atol=1e-3)
+    assert_allclose(imp_prof.table[0]['solid_angle'], [6.853891e-07, 6.853891e-07], atol=1e-5)
