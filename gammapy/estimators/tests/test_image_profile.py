@@ -37,7 +37,6 @@ def make_improf():
 
 @requires_dependency("matplotlib")
 def test_peek_plot():
-    import matplotlib.pyplot as plt
     a_prof = make_improf()
 
     with mpl_plot_check():
