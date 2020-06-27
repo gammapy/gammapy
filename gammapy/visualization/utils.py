@@ -3,32 +3,67 @@ import numpy as np
 __all__ = ["plot_spectrum_datasets_off_regions", "plot_contour_line"]
 
 
-def plot_spectrum_datasets_off_regions(datasets, ax=None):
-    """Plot spectrum datasets of regions.
+def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, **kwargs):
+    """Plot spectrum datasets' off regions.
 
     Parameters
     ----------
     datasets : list of `SpectrumDatasetOnOff`
-        List of spectrum on-off datasets
+        List of spectrum on-off datasets.
+    ax : `~`
+        .
+    legend : bool
+        Whether to display the legend. By default True if `len(datasets) <= 10`.
+    kwargs : dict
+        Keyword arguments used in `~gammapy.maps.RegionNDMap.plot_region`.
+        Can contain a `cycler.Cycler` in a `prop_cycle` item.
+
+    Notes
+    -----
+    Properties from the `prop_cycle` have maximum priority except `edgecolor`.
+    `edgecolor` is selected from the sources below in this order:
+        `kwargs["edgecolor"]`
+        `kwargs["prop_cycle"]`
+        `~matplotlib.RcParams["axes.prop_cycle"]`
+        `~matplotlib.RcParams["patch.edgecolor"]`
+    `~matplotlib.RcParams["patch.facecolor"]` is never used.
+
+    Examples
+    --------
+    >>> plot_spectrum_datasets_off_regions(datasets, ax, legend=False, lw=2.5)
+    >>> plot_spectrum_datasets_off_regions(datasets, ax, alpha=.3, facecolor='k')
+    >>> plot_spectrum_datasets_off_regions(
+            datasets, ax, ls='--', prop_cycle=plt.cycler('color', list('rgb'))
+        )
+    >>> plt.rc('legend', fontsize=9)
+    >>> plt.rc('patch', edgecolor='blue')
+    >>> plot_spectrum_datasets_off_regions(
+            datasets, ax, legend=True, prop_cycle=plt.cycler('ls', ['-', '-.'])
+        )
     """
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
 
-    ax = plt.gca(projection=datasets[0].counts_off.geom.wcs) or ax
-
-    color_cycle = plt.rcParams["axes.prop_cycle"]
-    colors = color_cycle.by_key()["color"]
+    ax = ax or plt.gca(projection=datasets[0].counts_off.geom.wcs)
     handles = []
 
-    for color, dataset in zip(colors, datasets):
-        kwargs = {"edgecolor": color, "facecolor": "none"}
-        dataset.counts_off.plot_region(ax=ax, **kwargs)
+    kwargs.setdefault("facecolor", "none")
+    prop_cycle = kwargs.pop("prop_cycle", plt.rcParams["axes.prop_cycle"])
+    plot_kwargs = kwargs.copy()
+
+    for props, dataset in zip(prop_cycle(), datasets):
+        props = props.copy()	# not sure why this is necessary
+        color = props.pop("color", plt.rcParams["patch.edgecolor"])
+        plot_kwargs["edgecolor"] = kwargs.get("edgecolor", color)
+        plot_kwargs.update(props)
+        dataset.counts_off.plot_region(ax, **plot_kwargs)
 
         # create proxy artist for the custom legend
-        handle = mpatches.Patch(label=dataset.name, **kwargs)
+        handle = mpatches.Patch(label=dataset.name, **plot_kwargs)
         handles.append(handle)
 
-    plt.legend(handles=handles)
+    if legend or legend == None and len(datasets) <= 10:
+        plt.legend(handles=handles)
 
 
 def plot_contour_line(ax, x, y, **kwargs):
