@@ -8,30 +8,30 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, **kwargs)
 
     Parameters
     ----------
-    datasets : list of `SpectrumDatasetOnOff`
+    datasets : `Datasets` of or list of `SpectrumDatasetOnOff`
         List of spectrum on-off datasets.
     ax : `~`
         .
     legend : bool
-        Whether to display the legend. By default True if `len(datasets) <= 10`.
-    kwargs : dict
-        Keyword arguments used in `~gammapy.maps.RegionNDMap.plot_region`.
-        Can contain a `cycler.Cycler` in a `prop_cycle` item.
+        Whether to display the legend. By default True if ``len(datasets) <= 10``.
+    **kwargs : dict
+        Keyword arguments used in `gammapy.maps.RegionNDMap.plot_region`.
+        Can contain a `~cycler.Cycler` in a ``prop_cycle`` item.
 
     Notes
     -----
-    Properties from the `prop_cycle` have maximum priority except `edgecolor`.
-    `edgecolor` is selected from the sources below in this order:
-        `kwargs["edgecolor"]`
-        `kwargs["prop_cycle"]`
-        `~matplotlib.RcParams["axes.prop_cycle"]`
-        `~matplotlib.RcParams["patch.edgecolor"]`
-    `~matplotlib.RcParams["patch.facecolor"]` is never used.
+    Properties from the ``prop_cycle`` have maximum priority, except ``color``.
+    ``edgecolor``/``color`` is selected from the sources below in this order:
+        ``kwargs["edgecolor"]``
+        ``kwargs["prop_cycle"]``
+        ``matplotlib.rcParams["axes.prop_cycle"]``
+        ``matplotlib.rcParams["patch.edgecolor"]``
+    ``matplotlib.rcParams["patch.facecolor"]`` is never used.
 
     Examples
     --------
     >>> plot_spectrum_datasets_off_regions(datasets, ax, legend=False, lw=2.5)
-    >>> plot_spectrum_datasets_off_regions(datasets, ax, alpha=.3, facecolor='k')
+    >>> plot_spectrum_datasets_off_regions(datasets, ax, alpha=0.3, facecolor='k')
     >>> plot_spectrum_datasets_off_regions(
             datasets, ax, ls='--', prop_cycle=plt.cycler('color', list('rgb'))
         )
@@ -52,7 +52,7 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, **kwargs)
     plot_kwargs = kwargs.copy()
 
     for props, dataset in zip(prop_cycle(), datasets):
-        props = props.copy()	# not sure why this is necessary
+        props = props.copy()
         color = props.pop("color", plt.rcParams["patch.edgecolor"])
         plot_kwargs["edgecolor"] = kwargs.get("edgecolor", color)
         plot_kwargs.update(props)
