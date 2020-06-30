@@ -13,7 +13,6 @@ from gammapy.utils.regions import (
 )
 from .core import MapCoord
 from .geom import Geom, MapAxis, make_axes, pix_tuple_to_idx
-from .utils import edges_from_lo_hi
 from .wcs import WcsGeom
 
 __all__ = ["RegionGeom"]
@@ -324,8 +323,21 @@ class RegionGeom(Geom):
 
     @classmethod
     def from_hdulist(cls, hdulist, format="ogip"):
-        """Read region table and convert it to region list."""
+        """Read region table and convert it to region list.
 
+        Parameters
+        ----------
+        hdulist : `~astropy.io.fits.HDUList`
+            HDU list
+        format : {"ogip"}
+            HDU format
+
+        Returns
+        -------
+        geom : `RegionGeom`
+            Region map geometry
+
+        """
         if "REGION" in hdulist:
             region_table = Table.read(hdulist["REGION"])
             parser = FITSRegionParser(region_table)
@@ -339,12 +351,7 @@ class RegionGeom(Geom):
         else:
             region, wcs = None, None
 
-        ebounds = Table.read(hdulist["EBOUNDS"])
-        emin = ebounds["E_MIN"].quantity
-        emax = ebounds["E_MAX"].quantity
-
-        edges = edges_from_lo_hi(emin, emax)
-        axis = MapAxis.from_edges(edges, interp="log", name="energy")
+        axis = MapAxis.from_table_hdu(hdulist["EBOUNDS"])
         return cls(region=region, wcs=wcs, axes=[axis])
 
     def union(self, other):

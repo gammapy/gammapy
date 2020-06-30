@@ -77,30 +77,6 @@ def make_axes_cols(axes, axis_names=None):
     return cols
 
 
-def energy_axis_from_fgst_ccube(hdu):
-    bands = Table.read(hdu)
-    edges_min = bands["E_MIN"].quantity
-    edges_max = bands["E_MAX"].quantity
-    edges = edges_from_lo_hi(edges_min, edges_max)
-    return [MapAxis.from_edges(edges=edges, name="energy", interp="log")]
-
-
-def energy_axis_from_fgst_template(hdu):
-    bands = Table.read(hdu)
-
-    allowed_names = ["Energy", "ENERGY", "energy"]
-    for colname in bands.colnames:
-        if colname in allowed_names:
-            tag = colname
-            break
-
-    nodes = bands[tag].data
-
-    return [
-        MapAxis.from_nodes(nodes=nodes, name="energy_true", unit="MeV", interp="log")
-    ]
-
-
 def axes_from_bands_hdu(hdu):
     """Read and returns the map axes from a BANDS table.
 
@@ -153,9 +129,9 @@ def find_and_read_bands(hdu):
         return []
 
     if hdu.name == "ENERGIES":
-        axes = energy_axis_from_fgst_template(hdu)
+        axes = [MapAxis.from_table_hdu(hdu, format="fgst-template")]
     elif hdu.name == "EBOUNDS":
-        axes = energy_axis_from_fgst_ccube(hdu)
+        axes = [MapAxis.from_table_hdu(hdu, format="fgst-ccube")]
     else:
         axes = axes_from_bands_hdu(hdu)
 
@@ -464,8 +440,8 @@ class MapAxis:
             Energy unit
         per_decade : bool
             Whether `nbin` is given per decade.
-        energy_true : bool
-            Whether energy is true energy
+        name : str
+            Name of the energy axis, either 'energy' or 'energy_true'
 
         Returns
         -------
@@ -484,6 +460,9 @@ class MapAxis:
 
         if name is None:
             name = "energy"
+
+        if name not in ["energy", "energy_true"]:
+            raise ValueError("Energy axis can only be named 'energy' or 'energy_true'")
 
         return cls.from_bounds(
             emin.value, emax.value, nbin=nbin, unit=unit, interp="log", name=name
@@ -841,13 +820,13 @@ class MapAxis:
 
     @classmethod
     def from_table_hdu(cls, hdu, format="ogip"):
-        """Instanciate MapAxix from table HDU
+        """Instanciate MapAxis from table HDU
 
         Parameters
         ----------
         hdu : `~astropy.io.fits.BinTableHDU`
             Table HDU
-        format : {"ogip"}
+        format : {"ogip", "fgst-ccube", "fgst-template"}
             Format specification
 
         Returns
@@ -855,14 +834,26 @@ class MapAxis:
         axis : `MapAxis`
             Map Axis
         """
-        if format != "ogip":
-            raise ValueError("Only 'ogip' format supported")
-
         table = Table.read(hdu)
-        emin = table["E_MIN"].quantity
-        emax = table["E_MAX"].quantity
-        edges = np.append(emin.value, emax.value[-1]) * emin.unit
-        return cls.from_edges(edges, name="energy", interp="log")
+
+        if format in ["ogip", "fgst-ccube"]:
+            emin = table["E_MIN"].quantity
+            emax = table["E_MAX"].quantity
+            edges = np.append(emin.value, emax.value[-1]) * emin.unit
+            axis = cls.from_edges(edges, name="energy", interp="log")
+        elif format == "fgst-template":
+            allowed_names = ["Energy", "ENERGY", "energy"]
+            for colname in table.colnames:
+                if colname in allowed_names:
+                    tag = colname
+                    break
+
+            nodes = table[tag].data
+            axis = cls.from_nodes(nodes=nodes, name="energy_true", unit="MeV", interp="log")
+        else:
+            raise ValueError(f"Format '{format}' not supported")
+
+        return axis
 
 
 class MapCoord:

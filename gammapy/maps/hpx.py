@@ -188,14 +188,6 @@ def get_pix_size_from_nside(nside):
     return HPX_ORDER_TO_PIXSIZE[order]
 
 
-def hpx_to_axes(h, npix):
-    """Generate a sequence of bin edge vectors corresponding to the axes of a HPX object.
-    """
-    x = h.ebins
-    z = np.arange(npix[-1] + 1)
-    return x, z
-
-
 def make_hpx_to_wcs_mapping(hpx, wcs):
     """Make the pixel mapping from HPX- to a WCS-based geometry.
 
