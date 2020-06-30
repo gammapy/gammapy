@@ -790,6 +790,80 @@ class MapAxis:
         nbin = int(self.nbin / factor)
         return self._up_down_sample(nbin)
 
+    def to_table_hdu(self, format="ogip"):
+        """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
+
+        See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
+
+        The 'ogip-sherpa' format is equivalent to 'ogip' but uses keV energy units.
+
+        Parameters
+        ----------
+        format : {"ogip", "ogip-sherpa"}
+            Format specification
+
+
+        Returns
+        -------
+        hdu : `~astropy.io.fits.BinTableHDU`
+            Table HDU
+        """
+        if format not in ["ogip", "ogip-sherpa"]:
+            raise ValueError("Only 'ogip' and 'ogip-sherpa' format supported")
+
+        if "energy" not in self.name:
+            raise ValueError("Only energy axes can be converted to HDU")
+
+        edges = self.edges
+
+        if format == "ogip-sherpa":
+            edges = edges.to("keV")
+
+        table = Table()
+        table["CHANNEL"] = np.arange(self.nbin, dtype=np.int16)
+        table["E_MIN"] = edges[:-1]
+        table["E_MAX"] = edges[1:]
+
+        hdu = fits.BinTableHDU(table)
+
+        header = hdu.header
+        header["EXTNAME"] = "EBOUNDS", "Name of this binary table extension"
+        header["TELESCOP"] = "DUMMY", "Mission/satellite name"
+        header["INSTRUME"] = "DUMMY", "Instrument/detector"
+        header["FILTER"] = "None", "Filter information"
+        header["CHANTYPE"] = "PHA", "Type of channels (PHA, PI etc)"
+        header["DETCHANS"] = self.nbin, "Total number of detector PHA channels"
+        header["HDUCLASS"] = "OGIP", "Organisation devising file format"
+        header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
+        header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
+        header["HDUVERS"] = "1.2.0", "Version of file format"
+        return hdu
+
+    @classmethod
+    def from_table_hdu(cls, hdu, format="ogip"):
+        """Instanciate MapAxix from table HDU
+
+        Parameters
+        ----------
+        hdu : `~astropy.io.fits.BinTableHDU`
+            Table HDU
+        format : {"ogip"}
+            Format specification
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Map Axis
+        """
+        if format != "ogip":
+            raise ValueError("Only 'ogip' format supported")
+
+        table = Table.read(hdu)
+        emin = table["E_MIN"].quantity
+        emax = table["E_MAX"].quantity
+        edges = np.append(emin.value, emax.value[-1]) * emin.unit
+        return cls.from_edges(edges, name="energy", interp="log")
+
 
 class MapCoord:
     """Represents a sequence of n-dimensional map coordinates.

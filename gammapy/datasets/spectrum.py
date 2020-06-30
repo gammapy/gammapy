@@ -10,7 +10,6 @@ from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
 from gammapy.maps import RegionGeom, RegionNDMap
 from gammapy.modeling.models import Models, ProperModels
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic, cash, wstat
-from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from .map import MapEvaluator
@@ -1036,7 +1035,14 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         name = counts_table.meta["name"]
         hdu = fits.BinTableHDU(counts_table, name=name)
-        hdulist = fits.HDUList([fits.PrimaryHDU(), hdu, self._ebounds_hdu(use_sherpa)])
+
+        energy_axis = self.counts.geom.axes[0]
+
+        hdu_format = "ogip-sherpa" if use_sherpa else "ogip"
+
+        hdulist = fits.HDUList(
+            [fits.PrimaryHDU(), hdu, energy_axis.to_table_hdu(format=hdu_format)]
+        )
 
         if self.gti is not None:
             hdu = fits.BinTableHDU(self.gti.table, name="GTI")
@@ -1063,7 +1069,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             name = counts_off_table.meta["name"]
             hdu = fits.BinTableHDU(counts_off_table, name=name)
             hdulist = fits.HDUList(
-                [fits.PrimaryHDU(), hdu, self._ebounds_hdu(use_sherpa)]
+                [fits.PrimaryHDU(), hdu, energy_axis.to_table_hdu(format=hdu_format)]
             )
             if (
                 self.counts_off.geom._region is not None
@@ -1079,14 +1085,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             self.edisp.write(
                 outdir / rmffile, overwrite=overwrite, use_sherpa=use_sherpa
             )
-
-    def _ebounds_hdu(self, use_sherpa):
-        energy = self.counts.geom.axes[0].edges
-
-        if use_sherpa:
-            energy = energy.to("keV")
-
-        return energy_axis_to_ebounds(energy)
 
     def _ogip_meta(self):
         """Meta info for the OGIP data format"""

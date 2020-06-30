@@ -5,7 +5,6 @@ from astropy.table import Table
 from astropy.units import Quantity
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
-from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 
@@ -318,15 +317,12 @@ class EDispKernel:
             [c0, c1, c2, c3, c4, c5], header=header, name=name
         )
 
-        energy = self.e_reco.edges
+        hdu_format = "ogip-sherpa" if use_sherpa else "ogip"
 
-        if use_sherpa:
-            energy = energy.to("keV")
-
-        ebounds = energy_axis_to_ebounds(energy)
+        ebounds_hdu = self.e_reco.to_table_hdu(format=hdu_format)
         prim_hdu = fits.PrimaryHDU()
 
-        return fits.HDUList([prim_hdu, hdu, ebounds])
+        return fits.HDUList([prim_hdu, hdu, ebounds_hdu])
 
     def to_table(self):
         """Convert to `~astropy.table.Table`.
