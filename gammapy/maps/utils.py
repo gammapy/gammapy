@@ -133,14 +133,6 @@ def find_hdu(hdulist):
     raise AttributeError("No Image or BinTable HDU found.")
 
 
-def find_image_hdu(hdulist):
-    for hdu in hdulist:
-        if hdu.data is not None and isinstance(hdu, fits.ImageHDU):
-            return hdu
-
-    raise AttributeError("No Image HDU found.")
-
-
 def find_bintable_hdu(hdulist):
     for hdu in hdulist:
         if hdu.data is not None and isinstance(hdu, fits.BinTableHDU):

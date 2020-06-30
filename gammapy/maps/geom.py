@@ -77,30 +77,6 @@ def make_axes_cols(axes, axis_names=None):
     return cols
 
 
-def energy_axis_from_fgst_ccube(hdu):
-    bands = Table.read(hdu)
-    edges_min = bands["E_MIN"].quantity
-    edges_max = bands["E_MAX"].quantity
-    edges = edges_from_lo_hi(edges_min, edges_max)
-    return [MapAxis.from_edges(edges=edges, name="energy", interp="log")]
-
-
-def energy_axis_from_fgst_template(hdu):
-    bands = Table.read(hdu)
-
-    allowed_names = ["Energy", "ENERGY", "energy"]
-    for colname in bands.colnames:
-        if colname in allowed_names:
-            tag = colname
-            break
-
-    nodes = bands[tag].data
-
-    return [
-        MapAxis.from_nodes(nodes=nodes, name="energy_true", unit="MeV", interp="log")
-    ]
-
-
 def axes_from_bands_hdu(hdu):
     """Read and returns the map axes from a BANDS table.
 
@@ -153,9 +129,9 @@ def find_and_read_bands(hdu):
         return []
 
     if hdu.name == "ENERGIES":
-        axes = energy_axis_from_fgst_template(hdu)
+        axes = [MapAxis.from_table_hdu(hdu, format="fgst-template")]
     elif hdu.name == "EBOUNDS":
-        axes = energy_axis_from_fgst_ccube(hdu)
+        axes = [MapAxis.from_table_hdu(hdu, format="fgst-ccube")]
     else:
         axes = axes_from_bands_hdu(hdu)
 
@@ -464,8 +440,8 @@ class MapAxis:
             Energy unit
         per_decade : bool
             Whether `nbin` is given per decade.
-        energy_true : bool
-            Whether energy is true energy
+        name : str
+            Name of the energy axis, either 'energy' or 'energy_true'
 
         Returns
         -------
@@ -484,6 +460,9 @@ class MapAxis:
 
         if name is None:
             name = "energy"
+
+        if name not in ["energy", "energy_true"]:
+            raise ValueError("Energy axis can only be named 'energy' or 'energy_true'")
 
         return cls.from_bounds(
             emin.value, emax.value, nbin=nbin, unit=unit, interp="log", name=name
@@ -789,6 +768,92 @@ class MapAxis:
         """
         nbin = int(self.nbin / factor)
         return self._up_down_sample(nbin)
+
+    def to_table_hdu(self, format="ogip"):
+        """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
+
+        See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
+
+        The 'ogip-sherpa' format is equivalent to 'ogip' but uses keV energy units.
+
+        Parameters
+        ----------
+        format : {"ogip", "ogip-sherpa"}
+            Format specification
+
+
+        Returns
+        -------
+        hdu : `~astropy.io.fits.BinTableHDU`
+            Table HDU
+        """
+        if format not in ["ogip", "ogip-sherpa"]:
+            raise ValueError("Only 'ogip' and 'ogip-sherpa' format supported")
+
+        if "energy" not in self.name:
+            raise ValueError("Only energy axes can be converted to HDU")
+
+        edges = self.edges
+
+        if format == "ogip-sherpa":
+            edges = edges.to("keV")
+
+        table = Table()
+        table["CHANNEL"] = np.arange(self.nbin, dtype=np.int16)
+        table["E_MIN"] = edges[:-1]
+        table["E_MAX"] = edges[1:]
+
+        hdu = fits.BinTableHDU(table)
+
+        header = hdu.header
+        header["EXTNAME"] = "EBOUNDS", "Name of this binary table extension"
+        header["TELESCOP"] = "DUMMY", "Mission/satellite name"
+        header["INSTRUME"] = "DUMMY", "Instrument/detector"
+        header["FILTER"] = "None", "Filter information"
+        header["CHANTYPE"] = "PHA", "Type of channels (PHA, PI etc)"
+        header["DETCHANS"] = self.nbin, "Total number of detector PHA channels"
+        header["HDUCLASS"] = "OGIP", "Organisation devising file format"
+        header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
+        header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
+        header["HDUVERS"] = "1.2.0", "Version of file format"
+        return hdu
+
+    @classmethod
+    def from_table_hdu(cls, hdu, format="ogip"):
+        """Instanciate MapAxis from table HDU
+
+        Parameters
+        ----------
+        hdu : `~astropy.io.fits.BinTableHDU`
+            Table HDU
+        format : {"ogip", "fgst-ccube", "fgst-template"}
+            Format specification
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Map Axis
+        """
+        table = Table.read(hdu)
+
+        if format in ["ogip", "fgst-ccube"]:
+            emin = table["E_MIN"].quantity
+            emax = table["E_MAX"].quantity
+            edges = np.append(emin.value, emax.value[-1]) * emin.unit
+            axis = cls.from_edges(edges, name="energy", interp="log")
+        elif format == "fgst-template":
+            allowed_names = ["Energy", "ENERGY", "energy"]
+            for colname in table.colnames:
+                if colname in allowed_names:
+                    tag = colname
+                    break
+
+            nodes = table[tag].data
+            axis = cls.from_nodes(nodes=nodes, name="energy_true", unit="MeV", interp="log")
+        else:
+            raise ValueError(f"Format '{format}' not supported")
+
+        return axis
 
 
 class MapCoord:
