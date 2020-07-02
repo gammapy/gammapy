@@ -576,7 +576,7 @@ class EDispKernel:
 
         ax.plot(x, y, **kwargs)
         ax.set_xlabel(r"$E_\mathrm{{True}}$ [TeV]")
-        ax.set_ylabel(r"($E_\mathrm{{True}} - E_\mathrm{{Reco}} / E_\mathrm{{True}}$)")
+        ax.set_ylabel(r"($E_\mathrm{{Reco}} - E_\mathrm{{True}}) / E_\mathrm{{True}}$")
         ax.set_xscale("log")
         return ax
 
