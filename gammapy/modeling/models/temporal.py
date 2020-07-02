@@ -125,10 +125,9 @@ class ExpDecayTemporalModel(TemporalModel):
         The reference time in mjd
     """
 
-    tag = "ExponentialDecayTemporalModel"
+    tag = "ExpDecayTemporalModel"
 
     t0 = Parameter("t0", "1 d", frozen=False)
-
     _t_ref_default = Time("2000-01-01")
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
