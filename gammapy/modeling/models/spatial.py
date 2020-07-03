@@ -113,7 +113,7 @@ class SpatialModel(Model):
         coords = geom.get_coord(frame=self.frame)
         return self(coords.lon, coords.lat)
 
-    def integrate(self, geom):
+    def integrate_geom(self, geom):
         """Integrate model on `~gammapy.maps.Geom`."""
         values = self.evaluate_geom(geom)
         data = values * geom.solid_angle()

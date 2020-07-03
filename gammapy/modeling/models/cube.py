@@ -255,7 +255,7 @@ class SkyModel(SkyModelBase):
             # TODO: integrate spatial model over region to correct for
             #  containment
             geom_image = geom.to_image()
-            value = value * self.spatial_model.integrate(geom_image).quantity
+            value = value * self.spatial_model.integrate_geom(geom_image).quantity
 
         if self.temporal_model:
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
