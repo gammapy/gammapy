@@ -1,17 +1,14 @@
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
 import numpy as np
 from astropy import units as u
-from astropy.wcs.utils import proj_plane_pixel_scales
-from astropy.coordinates import Angle, SkyCoord
-from regions import RectangleSkyRegion, PixCoord
-from gammapy.maps import MapAxis
+from regions import RectangleSkyRegion
 from gammapy.utils.table import table_from_row_data
 from gammapy.estimators import ImageProfile
 from gammapy.stats import WStatCountsStatistic, CashCountsStatistic
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
 
-__all__ = ["ExcessProfileEstimator", "make_orthogonal_rectangle_sky_regions"]
+__all__ = ["ExcessProfileEstimator"]
 
 
 class ExcessProfileEstimator:
@@ -24,9 +21,12 @@ class ExcessProfileEstimator:
     axis : `~gammapy.maps.MapAxis`
         Radial axis of the profiles
     n_sigma : float (optional)
-        Number of sigma to compute errors
+        Number of sigma to compute errors. By default, it is 1.
     n_sigma_ul : float (optional)
-        Number of sigma to compute upper limit
+        Number of sigma to compute upper limit. By default, it is 3.
+    spectrum : `~gammapy.modeling.models.SpectralModel` (optional)
+        Spectral model to compute the fluxes or brightness.
+        Default is power-law with spectral index of 2.
 
     Example
     --------
@@ -37,7 +37,8 @@ class ExcessProfileEstimator:
         from astropy import units as u
         from astropy.coordinates import SkyCoord
         from gammapy.data import GTI
-        from gammapy.estimators import ExcessProfileEstimator, make_orthogonal_rectangle_sky_regions, image_profile
+        from gammapy.estimators import ExcessProfileEstimator, image_profile
+        from gammapy.utils.regions import make_orthogonal_rectangle_sky_regions
         from gammapy.datasets import Datasets
 
         # load example data
@@ -69,12 +70,14 @@ class ExcessProfileEstimator:
 
     """
 
-    def __init__(self, regions, axis, n_sigma = 1, n_sigma_ul=3):
+    def __init__(self, regions, axis, spectrum=None, n_sigma=1., n_sigma_ul=3.):
         self.regions = regions
         self.axis = axis
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
-        self.spectrum_datasets = None
+        self.spectrum = spectrum
+        if spectrum is None:
+            self.spectrum = PowerLawSpectralModel(index=2.0, amplitude="1.e-12 cm-2 s-1 TeV-1", reference=1*u.TeV)
 
     def get_spectrum_datasets(self, dataset):
         """ Utility to make the final `~gammapy.datasts.Datasets`
@@ -85,7 +88,7 @@ class ExcessProfileEstimator:
             the dataset to use for profile extraction
         Returns
         --------
-        datasets : `~gammapy.datasts.Datasets`
+        sp_datasets : array of `~gammapy.datasets.SpectrumDataset`
             the list of `~gammapy.datasets.SpectrumDataset` computed in each box
         """
         sp_datasets = []
@@ -94,7 +97,7 @@ class ExcessProfileEstimator:
             sp_datasets.append(spds)
         return sp_datasets
 
-    def make_prof(self, sp_datasets, steps, spectrum=None):
+    def make_prof(self, sp_datasets, steps):
         """ Utility to make the profile in each region
 
         Parameters
@@ -104,9 +107,6 @@ class ExcessProfileEstimator:
             the dataset to use for profile extraction
         steps : list of str
             the steps to be used.
-        spectrum : `~gammapy.modeling.models.SpectralModel`
-            Spectral model to compute the fluxes or brightness.
-            Default is power-law with spectral index of 2.
         Returns
         --------
         results : list of dictionary
@@ -115,15 +115,13 @@ class ExcessProfileEstimator:
         """
         if steps == "all":
             steps = ["err", "ts", "errn-errp", "ul"]
-        if spectrum is None:
-            spectrum = PowerLawSpectralModel(index=2.0, amplitude="1.e-12 cm-2 s-1 TeV-1", reference=1*u.TeV)
 
         results = []
         for index, spds in enumerate(sp_datasets):
             old_model = None
             if spds.models is not None:
                 old_model = spds.models
-            spds.models = SkyModel(spectral_model=spectrum)
+            spds.models = SkyModel(spectral_model=self.spectrum)
             e_reco = spds.counts.geom.get_axis_by_name("energy").edges
 
             # ToDo: When the function to_spectrum_dataset will manage the masks, use the following line
@@ -204,7 +202,7 @@ class ExcessProfileEstimator:
 
         return results
 
-    def run(self, dataset, steps="all", spectrum=None):
+    def run(self, dataset, steps="all"):
         """Make the profiles
 
         Parameters
@@ -213,155 +211,17 @@ class ExcessProfileEstimator:
             the dataset to use for profile extraction
         steps : list of str
             the steps to be used.
-        spectrum : `~gammapy.modeling.models.SpectralModel`
-            Spectral model to compute the fluxes or brightness.
-            Default is power-law with spectral index of 2.
 
         Returns
         --------
         imageprofile : `~gammapy.estimators.ImageProfile`
             Return an image profile class containing the result
         """
-        self.spectrum_datasets = self.get_spectrum_datasets(dataset)
-        results = self.make_prof(self.spectrum_datasets, steps, spectrum)
+        spectrum_datasets = self.get_spectrum_datasets(dataset)
+        results = self.make_prof(spectrum_datasets, steps)
         table = table_from_row_data(results)
         if isinstance(self.regions[0], RectangleSkyRegion):
             table.meta["PROFILE_TYPE"] = "orthogonal_rectangle"
-        if spectrum is None:
-            spectrum = PowerLawSpectralModel(index=2.0)
-        table.meta["SPECTRAL_MODEL"] = spectrum.to_dict()
+        table.meta["SPECTRAL_MODEL"] = self.spectrum.to_dict()
 
         return ImageProfile(table)
-
-
-def make_orthogonal_boxes_new(start_pos, end_pos, wcs, fullwidth, nbins=1):
-    """Utility returning an array of regions to make orthogonal projections
-
-    Parameters
-    ----------
-    start_pos : `~astropy.regions.SkyCoord'
-        First sky coordinate defining the line to which the orthogonal boxes made
-    end_pos : `~astropy.regions.SkyCoord'
-        Second sky coordinate defining the line to which the orthogonal boxes made
-    fullwidth : Angle
-        Full width of the orthogonal dimension of the boxes
-    wcs : `~astropy.wcs.WCS`
-        WCS projection object
-    nbins : int
-        Number of boxes along the line
-
-    Returns
-    --------
-    regions : Array of `~astropy.regions`
-        Regions in which the profiles are made
-    rad_axis : `~gammapy.maps.MapAxis`
-        Radial axis of the profiles
-    """
-    pix_start = start_pos.to_pixel(wcs)
-    pix_stop = end_pos.to_pixel(wcs)
-
-    points = np.linspace(start=pix_start, stop=pix_stop, num=nbins+1).T
-    centers = 0.5*(points[:, :-1]+points[:, 1:])
-    coords = SkyCoord.from_pixel(centers[0], centers[1], wcs)
-    box_width = start_pos.separation(end_pos).to("rad")/nbins
-    rot_angle = end_pos.position_angle(start_pos)-90*u.deg
-    regions = []
-    for i in range(nbins):
-        reg = RectangleSkyRegion(center=coords[i],
-                                 width=box_width,
-                                 height=u.Quantity(fullwidth),
-                                 angle=rot_angle)
-        regions.append(reg)
-    
-    axis = MapAxis.from_nodes(coords[0].separation(coords))
-    axis.name = 'projected distance'
-
-    return regions, axis
-
-
-def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, fullwidth, nbins=1):
-    """Utility returning an array of rectangular regions that are orthogonal to a like
-
-    This function is used to produce excess profiles (plus flux and brightness) with the estimator \
-    `~gammapy.estimators.ExcessProfileEstimator`. Its output, a `~gammapy.estimators.ImageProfile`, contains then the \
-    following metadata: `PROFILE_TYPE` = "orthogonal_rectangle".
-
-    Parameters
-    ----------
-    start_pos : `~astropy.regions.SkyCoord'
-        First sky coordinate defining the line to which the orthogonal boxes made
-    end_pos : `~astropy.regions.SkyCoord'
-        Second sky coordinate defining the line to which the orthogonal boxes made
-    fullwidth : `~astropy.units.Quantity`
-        Full width in degrees of the orthogonal dimension of the boxes
-    wcs : `~astropy.wcs.WCS`
-        WCS projection object
-    nbins : int
-        Number of boxes along the line
-
-    Returns
-    --------
-    regions : Array of `~astropy.regions`
-        Regions in which the profiles are made
-    rad_axis : `~gammapy.maps.MapAxis`
-        Radial axis of the profiles
-    """
-
-    pix_start_pos = PixCoord.from_sky(start_pos, wcs)
-    pix_end_pos = PixCoord.from_sky(end_pos, wcs)
-    xx_s = pix_start_pos.x
-    yy_s = pix_start_pos.y
-    xx_e = pix_end_pos.x
-    yy_e = pix_end_pos.y
-
-    rot_ang = Angle(np.arctan2(yy_e-yy_s, xx_e-xx_s) * u.rad)
-    length = _pix_dist(pix_start_pos, pix_end_pos)
-    binwidth = length / nbins
-    stepx = binwidth * np.cos(rot_ang.rad)
-    stepy = binwidth * np.sin(rot_ang.rad)
-    binz = proj_plane_pixel_scales(wcs)[0]
-
-    # Line center
-    xx_c = (xx_s + xx_e) / 2.
-    yy_c = (yy_s + yy_e) / 2.
-    pix_center_pos = PixCoord(xx_c, yy_c)
-
-    regions = []
-    edges = []
-    xx = xx_s
-    yy = yy_s
-    pix_edge_pos = PixCoord(xx, yy)
-    dist = _pix_dist(pix_edge_pos, pix_center_pos)*binz
-    sign = 1.
-    if xx < xx_c:
-        sign = -1.
-    edges.append(sign * dist)
-
-    for _ in range(nbins):
-        xx1 = xx + stepx
-        yy1 = yy + stepy
-        pix_center_reg = PixCoord((xx1 + xx) / 2., (yy1 + yy) / 2.)
-        rectangle_sky = RectangleSkyRegion(center=pix_center_reg.to_sky(wcs),
-                                           width=binwidth*binz*u.deg, height=fullwidth,
-                                           angle=rot_ang.degree * u.deg)
-        regions.append(rectangle_sky)
-        dist = _pix_dist(PixCoord(xx1, yy1), pix_center_pos)*binz
-        sign = 1.
-        if xx1 < xx_c:
-            sign = -1.
-        edges.append(sign * dist)
-
-        xx = xx1
-        yy = yy1
-
-    axis = MapAxis.from_edges(edges, unit='degree')
-    axis.name = 'projected distance'
-    return regions, axis
-
-
-def _pix_dist(pix_coord1, pix_coord2):
-    xx_s = pix_coord1.x
-    yy_s = pix_coord1.y
-    xx_e = pix_coord2.x
-    yy_e = pix_coord2.y
-    return np.sqrt((xx_e-xx_s)**2+(yy_e-yy_s)**2)
