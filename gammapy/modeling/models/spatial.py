@@ -356,7 +356,7 @@ class DiskSpatialModel(SpatialModel):
     r_0 = Parameter("r_0", "1 deg", min=0)
     e = Parameter("e", 0, min=0, max=1, frozen=True)
     phi = Parameter("phi", "0 deg", frozen=True)
-    edge = Parameter("edge", "0.01 deg", frozen=True, min=0.01)
+    edge = Parameter("edge", "0.01 deg", frozen=True)
 
     @property
     def evaluation_radius(self):

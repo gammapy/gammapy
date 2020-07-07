@@ -3,6 +3,7 @@
 import collections.abc
 import copy
 import itertools
+import warnings
 import numpy as np
 from astropy import units as u
 from gammapy.utils.table import table_from_row_data
@@ -78,6 +79,8 @@ class Parameter:
         self.name = name
         self._link_label_io = None
         self.scale = scale
+        self.min = min
+        self.max = max
 
         # TODO: move this to a setter method that can be called from `__set__` also!
         # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
@@ -89,8 +92,6 @@ class Parameter:
             self.factor = value
             self.unit = unit
 
-        self.min = min
-        self.max = max
         self.frozen = frozen
         self._error = error
 
@@ -208,6 +209,7 @@ class Parameter:
     @value.setter
     def value(self, val):
         self._factor = float(val) / self._scale
+        self._check_value_within_bounds()
 
     @property
     def quantity(self):
@@ -219,6 +221,23 @@ class Parameter:
         val = u.Quantity(val, unit=self.unit)
         self.value = val.value
         self.unit = val.unit
+
+    def _check_value_within_bounds(self):
+        """Send a warning if value is outside the min/max range (or at the border within 1%)"""
+        min_nan = np.isnan(self.min)
+        max_nan = np.isnan(self.max)
+        min_ok = self.value > self.min and ~np.isclose(
+            self.value - self.min, 0, atol=1e-2
+        )
+        max_ok = self.value < self.max and ~np.isclose(
+            self.value - self.max, 0, atol=1e-2
+        )
+        if (~min_nan and ~min_ok) or (~max_nan and ~max_ok):
+            warnings.warn(
+                f"Setting parameter '{self.name}' value {self.value} near or outside bounds [{self.min}, {self.max}]",
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
     def __repr__(self):
         return (
