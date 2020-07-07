@@ -826,17 +826,20 @@ def test_map_dataset_on_off_fake(geom):
     energy_true_axis = geom.get_axis_by_name("energy").copy(name="energy_true")
 
     empty_dataset = MapDataset.create(geom, energy_true_axis, rad_axis=rad_axis)
-    empty_dataset = MapDatasetOnOff.from_map_dataset(
+    empty_datasetonoff = MapDatasetOnOff.from_map_dataset(
         empty_dataset, acceptance=1, acceptance_off=10.0
     )
 
-    empty_dataset.acceptance_off.data[0, 50, 50] = 0
+    empty_datasetonoff.acceptance_off.data[0, 50, 50] = 0
     background_map = Map.from_geom(geom, data=1)
-    empty_dataset.fake(background_map, random_state=42)
+    empty_datasetonoff.fake(background_map, random_state=42)
 
-    assert_allclose(empty_dataset.counts.data[0, 50, 50], 0)
-    assert_allclose(empty_dataset.counts.data.mean(), 0.99445, rtol=1e-3)
-    assert_allclose(empty_dataset.counts_off.data.mean(), 10.00055, rtol=1e-3)
+    assert_allclose(empty_datasetonoff.counts.data[0, 50, 50], 0)
+    assert_allclose(empty_datasetonoff.counts.data.mean(), 0.99445, rtol=1e-3)
+    assert_allclose(empty_datasetonoff.counts_off.data.mean(), 10.00055, rtol=1e-3)
+
+    assert empty_datasetonoff.psf == empty_dataset.psf
+    assert empty_datasetonoff.edisp == empty_dataset.edisp
 
 
 @requires_data()

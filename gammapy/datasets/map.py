@@ -1322,6 +1322,7 @@ class MapDatasetOnOff(MapDataset):
             exposure=dataset.exposure,
             counts_off=counts_off,
             edisp=dataset.edisp,
+            psf=dataset.psf,
             gti=dataset.gti,
             mask_safe=dataset.mask_safe,
             mask_fit=dataset.mask_fit,
