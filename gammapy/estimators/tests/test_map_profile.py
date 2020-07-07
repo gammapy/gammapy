@@ -5,7 +5,8 @@ from astropy.coordinates import SkyCoord
 from gammapy.datasets import MapDatasetOnOff
 from gammapy.data import GTI
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.estimators import ExcessProfileEstimator, make_orthogonal_rectangle_sky_regions
+from gammapy.estimators import ExcessProfileEstimator
+from gammapy.utils.regions import make_orthogonal_rectangle_sky_regions
 
 
 def get_simple_dataset_on_off():
@@ -34,19 +35,6 @@ def make_horizontal_boxes(wcs):
     return make_orthogonal_rectangle_sky_regions(start_line, end_line, wcs, 0.1*u.deg, 8)
 
 
-def test_boxes_creation():
-    mapdataset_onoff = get_simple_dataset_on_off()
-    wcs = mapdataset_onoff.counts.geom.wcs
-    boxes, axis = make_boxes(wcs)
-
-    assert_allclose(len(boxes), 8, atol=1e-5)
-    sep = boxes[7].center.separation(SkyCoord(359.91125, 0.14, unit='deg', frame='icrs')).value
-    assert_allclose(sep, 0., atol=1.e-4)
-
-    assert_allclose(len(axis.edges), 9, atol=1e-5)
-    assert_allclose(axis.edges[3].value, -0.045894, atol=1e-5)
-
-
 def test_profile_content():
     mapdataset_onoff = get_simple_dataset_on_off()
     wcs = mapdataset_onoff.counts.geom.wcs
@@ -55,8 +43,8 @@ def test_profile_content():
     prof_maker = ExcessProfileEstimator(boxes, axis)
     imp_prof = prof_maker.run(mapdataset_onoff)
 
-    assert_allclose(imp_prof.table[7]['x_min'], 0.0675, atol=1e-4)
-    assert_allclose(imp_prof.table[7]['x_ref'], 0.07875, atol=1e-4)
+    assert_allclose(imp_prof.table[7]['x_min'], -0.0562, atol=1e-4)
+    assert_allclose(imp_prof.table[7]['x_ref'], -0.0674, atol=1e-4)
     assert_allclose(imp_prof.table[7]['counts'], [100., 100.], atol=1e-2)
     assert_allclose(imp_prof.table[7]['excess'], [80., 80.], atol=1e-2)
     assert_allclose(imp_prof.table[7]['sqrt_ts'], [7.6302447, 7.6302447], atol=1e-5)
