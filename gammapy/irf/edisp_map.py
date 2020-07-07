@@ -439,6 +439,6 @@ class EDispKernelMap(IRFMap):
                 npix=(2, 1), proj="CAR", binsz=180, axes=[energy_axis, energy_axis_true]
             )
         else:
-            geom = geom.to_cube([energy_axis, energy_axis_true])
+            geom = geom.to_image().to_cube([energy_axis, energy_axis_true])
 
         return cls.from_geom(geom)

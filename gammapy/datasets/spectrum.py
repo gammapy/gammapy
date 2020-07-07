@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.datasets import Dataset
-from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
+from gammapy.irf import EDispKernel, EDispKernelMap, EffectiveAreaTable, IRFStacker
 from gammapy.maps import RegionGeom, RegionNDMap
 from gammapy.modeling.models import Models, ProperModels
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic, cash, wstat
@@ -37,8 +37,8 @@ class SpectrumDataset(Dataset):
         Livetime
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
-    edisp : `~gammapy.irf.EDispKernel`
-        Energy dispersion
+    edisp : `~gammapy.irf.EDispKernelMap`
+        Energy dispersion kernel.
     background : `~gammapy.maps.RegionNDMap`
         Background to use for the fit.
     mask_safe : `~gammapy.maps.RegionNDMap`
@@ -184,6 +184,11 @@ class SpectrumDataset(Dataset):
     def evaluators(self):
         """Model evaluators"""
 
+        if isinstance(self.edisp, EDispKernelMap):
+            edisp = self.edisp.get_edisp_kernel(self._geom.center_skydir)
+        else:
+            edisp = self.edisp
+
         if self.models:
             for model in self.models:
                 evaluator = self._evaluators.get(model)
@@ -192,7 +197,7 @@ class SpectrumDataset(Dataset):
                     evaluator = MapEvaluator(
                         model=model,
                         exposure=self.exposure,
-                        edisp=self.edisp,
+                        edisp=edisp,
                         gti=self.gti,
                     )
                     self._evaluators[model] = evaluator
@@ -474,7 +479,7 @@ class SpectrumDataset(Dataset):
             e_true.edges[1:],
             np.zeros(e_true.edges[:-1].shape) * u.m ** 2,
         )
-        edisp = EDispKernel.from_diagonal_response(e_true.edges, e_reco.edges)
+        edisp = EDispKernelMap.from_diagonal_response( e_reco, e_true, counts.geom)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
         livetime = gti.time_sum
@@ -661,8 +666,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Livetime
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
-    edisp : `~gammapy.irf.EDispKernel`
-        Energy dispersion
+    edisp : `~gammapy.irf.EDispKernelMap`
+        Energy dispersion kernel
     mask_safe : `~gammapy.maps.RegionNDMap`
         Mask defining the safe data range.
     mask_fit : `~gammapy.maps.RegionNDMap`

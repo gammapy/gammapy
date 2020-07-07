@@ -125,7 +125,6 @@ def test_npred_models():
     model_2 = SkyModel(spectral_model=pwl_2)
 
     spectrum_dataset.models = Models([model_1, model_2])
-
     npred = spectrum_dataset.npred()
 
     assert_allclose(npred.data.sum(), 64.8)
@@ -165,7 +164,7 @@ def test_spectrum_dataset_create():
     assert empty_spectrum_dataset.background.data.sum() == 0
     assert empty_spectrum_dataset.background.geom.axes[0].nbin == 2
     assert empty_spectrum_dataset.aeff.data.axis("energy_true").nbin == 3
-    assert empty_spectrum_dataset.edisp.data.axis("energy").nbin == 2
+    assert empty_spectrum_dataset.edisp.edisp_map.geom.get_axis_by_name("energy").nbin == 2
     assert empty_spectrum_dataset.livetime.value == 0
     assert len(empty_spectrum_dataset.gti.table) == 0
     assert empty_spectrum_dataset.energy_range[0] is None
