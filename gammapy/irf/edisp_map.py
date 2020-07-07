@@ -167,12 +167,12 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Edisp map geometry.
 
         Returns
         -------
-        edisp_map : `EDispMap`
+        edisp_map : `~gammapy.maps.EDispMap`
             Energy dispersion map.
         """
         if "energy_true" not in [ax.name for ax in geom.axes]:
@@ -233,14 +233,14 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        energy_axis_true : `MapAxis`
+        energy_axis_true : `~gammapy.maps.MapAxis`
             True energy axis
-        migra_axis : `MapAxis`
+        migra_axis : `~gammapy.maps.MapAxis`
             Migra axis
 
         Returns
         -------
-        edisp_map : `EDispMap`
+        edisp_map : `~gammapy.maps.EDispMap`
             Energy dispersion map.
         """
         migra_res = 1e-5
@@ -261,12 +261,12 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        e_reco : `MapAxis`
+        e_reco : `~gammapy.maps.MapAxis`
             Reconstructed enrgy axis.
 
         Returns
         -------
-        edisp : `EDispKernelMap`
+        edisp : `~gammapy.maps.EDispKernelMap`
             Energy dispersion kernel map.
         """
         axis = 0
@@ -356,7 +356,7 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Edisp map geometry.
 
         Returns
@@ -417,22 +417,28 @@ class EDispKernelMap(IRFMap):
         )
 
     @classmethod
-    def from_diagonal_response(cls, energy_axis, energy_axis_true):
+    def from_diagonal_response(cls, energy_axis, energy_axis_true, geom=None):
         """Create an all-sky energy dispersion map with diagonal response.
 
         Parameters
         ----------
-        energy_axis : `MapAxis`
+        energy_axis : `~gammapy.maps.MapAxis`
             Energy axis.
-        energy_axis_true : `MapAxis`
+        energy_axis_true : `~gammapy.maps.MapAxis`
             True energy axis
+        geom : `~gammapy.maps.Geom`
+            The (2D) geom object to use. Default creates an all sky geometry with 2 bins.
 
         Returns
         -------
         edisp_map : `EDispKernelMap`
             Energy dispersion kernel map.
         """
-        geom = WcsGeom.create(
-            npix=(2, 1), proj="CAR", binsz=180, axes=[energy_axis, energy_axis_true]
-        )
+        if geom is None:
+            geom = WcsGeom.create(
+                npix=(2, 1), proj="CAR", binsz=180, axes=[energy_axis, energy_axis_true]
+            )
+        else:
+            geom = geom.to_cube([energy_axis, energy_axis_true])
+
         return cls.from_geom(geom)

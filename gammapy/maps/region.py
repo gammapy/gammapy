@@ -364,3 +364,30 @@ class RegionGeom(Geom):
                 self._region = self.region.union(other.region)
             else:
                 self._region = other.region
+
+    def squash(self, axis):
+        """Squash geom axis.
+
+        Parameters
+        ----------
+        axis : str
+            Axis to squash.
+
+        Returns
+        -------
+        geom : `Geom`
+            Geom with squashed axis.
+        """
+        _ = self.get_axis_by_name(axis)
+
+        axes = []
+        for ax in copy.deepcopy(self.axes):
+            if ax.name == axis:
+                ax = ax.squash()
+            axes.append(ax)
+
+        return self.__class__(
+            self.region,
+            axes=axes,
+            wcs=self.wcs,
+        )

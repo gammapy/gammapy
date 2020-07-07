@@ -12,8 +12,8 @@ from gammapy.irf import (
     EnergyDispersion2D,
 )
 from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
-
+from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, RegionGeom
+from gammapy.utils.regions import make_region
 
 def fake_aeff2d(area=1e6 * u.m ** 2):
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
@@ -225,3 +225,20 @@ def test__incorrect_edisp_kernel_map_stack():
     with pytest.raises(ValueError) as except_info:
         edisp_1.stack(edisp_2)
     assert except_info.match("Missing exposure map for EDispKernelMap.stack")
+
+def test_edispkernel_from_diagonal_response():
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.3 TeV", "10 TeV", nbin=11, name="energy_true"
+    )
+    energy_axis = MapAxis.from_energy_bounds(
+        "0.3 TeV", "10 TeV", nbin=11, name="energy"
+    )
+
+    region = make_region("fk5;circle(0.,0., 10.")
+    geom = RegionGeom(region)
+    region_edisp = EDispKernelMap.from_diagonal_response(energy_axis, energy_axis_true, geom=geom)
+    sum_kernel = np.sum(region_edisp.edisp_map.data[...,0,0], axis=1)
+
+    # We exclude the first and last bin, where there is no
+    # e_reco to contribute to
+    assert_allclose(sum_kernel[1:-1], 1)
