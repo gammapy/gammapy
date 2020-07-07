@@ -12,12 +12,13 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 import regions
 from astropy.coordinates import SkyCoord
-from gammapy.maps import WcsGeom
+from gammapy.maps import WcsGeom, MapAxis
 from gammapy.utils.regions import (
     SphericalCircleSkyRegion,
     make_pixel_region,
     make_region,
 )
+from gammapy.utils.regions import make_orthogonal_rectangle_sky_regions
 
 
 def test_make_region():
@@ -72,3 +73,21 @@ class TestSphericalCircleSkyRegion:
         coord = SkyCoord([20.1, 22] * u.deg, 20 * u.deg)
         mask = self.region.contains(coord)
         assert_equal(mask, [True, False])
+
+def test_make_orthogonal_rectangle_sky_regions():
+    start_line = SkyCoord(0.08, 0.1, unit='deg', frame='icrs')
+    end_line = SkyCoord(359.9, 0.1, unit='deg', frame='icrs')
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        npix=20,
+        binsz=0.1,
+        frame="galactic",
+        proj="CAR",
+        axes=[MapAxis.from_edges([0, 2, 3])],
+    )
+    regions, axis = make_orthogonal_rectangle_sky_regions(start_line, end_line, geom.wcs, 0.1*u.deg, 8)
+
+    assert_equal(len(regions), 8)
+    assert_equal(axis.nbin, 8)
+    assert_allclose(regions[7].center.l.value, 96.254, rtol=1.e-3)
+    assert_allclose(regions[0].angle.value, -2.74e-6, rtol=1.e-2)
