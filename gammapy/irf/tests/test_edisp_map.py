@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
 from gammapy.irf import (
+    EDispKernel,
     EDispKernelMap,
     EDispMap,
     EffectiveAreaTable2D,
@@ -242,3 +243,24 @@ def test_edispkernel_from_diagonal_response():
     # We exclude the first and last bin, where there is no
     # e_reco to contribute to
     assert_allclose(sum_kernel[1:-1], 1)
+
+def test_edispkernel_from_1D():
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.5 TeV", "5 TeV", nbin=31, name="energy_true"
+    )
+    energy_axis = MapAxis.from_energy_bounds(
+        "0.1 TeV", "10 TeV", nbin=11, name="energy"
+    )
+
+    edisp = EDispKernel.from_gauss(energy_axis_true.edges, energy_axis.edges, 0.1, 0.)
+    region = make_region("fk5;circle(0.,0., 10.")
+    geom = RegionGeom(region)
+    region_edisp = EDispKernelMap.from_edisp_kernel(edisp, geom=geom)
+    sum_kernel = np.sum(region_edisp.edisp_map.data[...,0,0], axis=1)
+    assert_allclose(sum_kernel, 1, rtol=1e-5)
+
+    allsky_edisp = EDispKernelMap.from_edisp_kernel(edisp)
+    sum_kernel = np.sum(allsky_edisp.edisp_map.data[..., 0, 0], axis=1)
+    assert allsky_edisp.edisp_map.data.shape == (31, 11, 1, 2)
+    assert_allclose(sum_kernel, 1, rtol=1e-5)
+

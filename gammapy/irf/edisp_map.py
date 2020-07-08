@@ -418,7 +418,7 @@ class EDispKernelMap(IRFMap):
 
     @classmethod
     def from_diagonal_response(cls, energy_axis, energy_axis_true, geom=None):
-        """Create an all-sky energy dispersion map with diagonal response.
+        """Create an energy dispersion map with diagonal response.
 
         Parameters
         ----------
@@ -442,3 +442,26 @@ class EDispKernelMap(IRFMap):
             geom = geom.to_image().to_cube([energy_axis, energy_axis_true])
 
         return cls.from_geom(geom)
+
+    @classmethod
+    def from_edisp_kernel(cls, edisp, geom=None):
+        """Create an energy dispersion map from the input 1D kernel.
+
+        The kernel will be duplicated over all spatial bins.
+
+        Parameters
+        ----------
+        edisp : `~gammapy.irfs.EDispKernel`
+            the input 1D kernel.
+        geom : `~gammapy.maps.Geom`
+            The (2D) geom object to use. Default creates an all sky geometry with 2 bins.
+
+        Returns
+        -------
+        edisp_map : `EDispKernelMap`
+            Energy dispersion kernel map.
+        """
+        edispmap = cls.from_diagonal_response(edisp.e_reco, edisp.e_true, geom)
+        edispmap.edisp_map.data[:, :, ...] = edisp.pdf_matrix[:,:, np.newaxis, np.newaxis]
+
+        return edispmap
