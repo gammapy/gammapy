@@ -626,7 +626,7 @@ class SpectrumDataset(Dataset):
 
         ax3.set_title("Energy Dispersion")
         if self.edisp is not None:
-            self.edisp.plot_matrix(ax=ax3)
+            self._edisp_kernel.plot_matrix(ax=ax3)
 
         # TODO: optimize layout
         plt.subplots_adjust(wspace=0.3)
@@ -1171,6 +1171,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         try:
             rmffile = phafile.replace("pha", "rmf")
             energy_dispersion = EDispKernel.read(dirname / rmffile)
+            if counts.geom.region is not None:
+                energy_dispersion = EDispKernelMap.from_edisp_kernel(energy_dispersion, counts.geom)
+
         except OSError:
             # TODO : Add logger and echo warning
             energy_dispersion = None

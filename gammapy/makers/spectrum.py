@@ -4,6 +4,7 @@ from astropy.table import Table
 from astropy import units as u
 from regions import CircleSkyRegion
 from gammapy.datasets import SpectrumDataset
+from gammapy.irf import EDispKernelMap
 from gammapy.maps import RegionNDMap
 from .core import Maker
 
@@ -209,13 +210,8 @@ class SpectrumDatasetMaker(Maker):
             kwargs["aeff"] = self.make_aeff(region, energy_axis_true, observation)
 
         if "edisp" in self.selection:
-
-#            kwargs["edisp"] = self.make_edisp(
-#                region.center, energy_axis, energy_axis_true, observation
-#            )
-            from gammapy.makers import MapDatasetMaker
-            maker = MapDatasetMaker()
-            kwargs["edisp"] = maker.make_edisp_kernel(
-                dataset.edisp.edisp_map.geom, observation
+            edisp = self.make_edisp(
+                region.center, energy_axis, energy_axis_true, observation
             )
+            kwargs["edisp"]  = EDispKernelMap.from_edisp_kernel(edisp, geom=dataset.counts.geom)
         return SpectrumDataset(name=dataset.name, **kwargs)
