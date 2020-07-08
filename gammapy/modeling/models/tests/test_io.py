@@ -222,3 +222,7 @@ def test_missing_parameters():
     models = Models.read(filename)
     assert models["source1"].spatial_model.e in models.parameters
     assert len(models["source1"].spatial_model.parameters) == 6
+
+
+def test_registries_print():
+    print(MODEL_REGISTRY)

@@ -14,10 +14,9 @@ class Registry(list):
     def __str__(self):
         info = "Registry\n"
         info += "--------\n\n"
-        tags = [_.tag[0] if isinstance(_.tag, list) else _.tag for _ in self]
-        len_max = max([len(tag) for tag in tags])
+        len_max = max([len(_.__name__) for _ in self])
 
-        for item in self:
-            info += f"\t{item.tag:{len_max}s}: {item.__name__}\n"
+        for k, item in enumerate(self):
+            info += f"{item.__name__:{len_max}s}: {item.tag} \n"
 
         return info.expandtabs(tabsize=2)
