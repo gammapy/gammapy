@@ -184,10 +184,7 @@ class SpectrumDataset(Dataset):
     def evaluators(self):
         """Model evaluators"""
 
-        if isinstance(self.edisp, EDispKernelMap):
-            edisp = self.edisp.get_edisp_kernel(self._geom.center_skydir)
-        else:
-            edisp = self.edisp
+        edisp = self._edisp_kernel
 
         if self.models:
             for model in self.models:
@@ -263,6 +260,15 @@ class SpectrumDataset(Dataset):
     def data_shape(self):
         """Shape of the counts data"""
         return self._geom.data_shape
+
+    @property
+    def _edisp_kernel(self):
+        """The edisp kernel stored in the EDispMapKernel"""
+        if isinstance(self.edisp, EDispKernelMap):
+            edisp = self.edisp.get_edisp_kernel(self._geom.center_skydir)
+        else:
+            edisp = self.edisp
+        return edisp
 
     def npred_sig(self):
         """Predicted counts from source model (`RegionNDMap`)."""
@@ -546,22 +552,33 @@ class SpectrumDataset(Dataset):
             self.background *= self.mask_safe
             self.background.stack(other.background, weights=other.mask_safe)
 
-        if self.aeff is not None:
-            if self.livetime is None or other.livetime is None:
-                raise ValueError("IRF stacking requires livetime for both datasets.")
+        if self.livetime is None or other.livetime is None:
+            raise ValueError("IRF stacking requires livetime for both datasets.")
+        else:
+            stacked_livetime = self.livetime + other.livetime
+
+            if self.exposure and other.exposure:
+                stacked_exposure = self.exposure
+                stacked_exposure.stack(other.exposure)
+
+                stacked_aeff = EffectiveAreaTable(
+                    stacked_exposure.geom.axes[0].edges[:-1],
+                    stacked_exposure.geom.axes[0].edges[1:],
+                    np.squeeze(stacked_exposure.quantity/stacked_livetime)
+                )
 
             irf_stacker = IRFStacker(
                 list_aeff=[self.aeff, other.aeff],
                 list_livetime=[self.livetime, other.livetime],
-                list_edisp=[self.edisp, other.edisp],
+                list_edisp=[self._edisp_kernel, other._edisp_kernel],
                 list_low_threshold=[self.energy_range[0], other.energy_range[0]],
                 list_high_threshold=[self.energy_range[1], other.energy_range[1]],
             )
-            irf_stacker.stack_aeff()
             if self.edisp is not None:
                 irf_stacker.stack_edisp()
                 self.edisp = irf_stacker.stacked_edisp
-            self.aeff = irf_stacker.stacked_aeff
+
+            self.aeff = stacked_aeff
 
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)
@@ -1087,7 +1104,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             hdulist.writeto(outdir / bkgfile, overwrite=overwrite)
 
         if self.edisp is not None:
-            self.edisp.write(
+            self._edisp_kernel.write(
                 outdir / rmffile, overwrite=overwrite, use_sherpa=use_sherpa
             )
 

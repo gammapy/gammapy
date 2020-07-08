@@ -411,7 +411,7 @@ class TestSpectrumOnOff:
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert_allclose(self.off_counts.data, newdataset.counts_off.data)
-        assert_allclose(self.edisp.pdf_matrix, newdataset.edisp.pdf_matrix)
+        assert_allclose(self.edisp.pdf_matrix, newdataset._edisp_kernel.pdf_matrix)
         assert_time_allclose(newdataset.gti.time_start, dataset.gti.time_start)
 
         assert len(regions) == len(expected_regions)

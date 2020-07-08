@@ -210,8 +210,12 @@ class SpectrumDatasetMaker(Maker):
 
         if "edisp" in self.selection:
 
-            kwargs["edisp"] = self.make_edisp(
-                region.center, energy_axis, energy_axis_true, observation
+#            kwargs["edisp"] = self.make_edisp(
+#                region.center, energy_axis, energy_axis_true, observation
+#            )
+            from gammapy.makers import MapDatasetMaker
+            maker = MapDatasetMaker()
+            kwargs["edisp"] = maker.make_edisp_kernel(
+                dataset.edisp.edisp_map.geom, observation
             )
-
         return SpectrumDataset(name=dataset.name, **kwargs)
