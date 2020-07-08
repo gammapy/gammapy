@@ -3,7 +3,7 @@ import numpy as np
 __all__ = ["plot_spectrum_datasets_off_regions", "plot_contour_line"]
 
 
-def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, legend_kw={}, **kwargs):
+def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, legend_kwargs=None, **kwargs):
     """Plot the off regions of spectrum datasets.
 
     Parameters
@@ -16,7 +16,7 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, legend_kw
     legend : bool
         Whether to add/display the labels of the off regions in a legend. By default True if
         ``len(datasets) <= 10``.
-    legend_kw : dict
+    legend_kwargs : dict
         Keyword arguments used in `matplotlib.axes.Axes.legend`. The ``handler_map`` cannot be
         overridden.
     **kwargs : dict
@@ -52,10 +52,10 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, legend_kw
 
     Plot that uses a modified `~matplotlib.rcParams`, has two legend columns, static and
     dynamic colors, but only shows labels for ``datasets1`` and ``datasets2``. Note that
-    ``legend_kw`` only applies if it's given in the last function call with ``legend=True``:
+    ``legend_kwargs`` only applies if it's given in the last function call with ``legend=True``:
     >>> plt.rc('legend', columnspacing=1, fontsize=9)
     >>> plot_spectrum_datasets_off_regions(datasets1, ax, legend=True, edgecolor='cyan')
-    >>> plot_spectrum_datasets_off_regions(datasets2, ax, legend=True, legend_kw=dict(ncol=2))
+    >>> plot_spectrum_datasets_off_regions(datasets2, ax, legend=True, legend_kwargs=dict(ncol=2))
     >>> plot_spectrum_datasets_off_regions(datasets3, ax, legend=False, edgecolor='magenta')
     """
     import matplotlib.pyplot as plt
@@ -64,6 +64,7 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, legend_kw
 
     ax = ax or plt.gca(projection=datasets[0].counts_off.geom.wcs)
     legend = legend or legend is None and len(datasets) <= 10
+    legend_kwargs = legend_kwargs or {}
     handles, labels = [], []
 
     kwargs.setdefault("facecolor", "none")
@@ -97,9 +98,9 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, legend_kw
             return CirclePolygon((radius - xdescent, height / 2 - ydescent), radius)
         patch_handler = HandlerPatch(patch_func)
 
-        legend_kw.setdefault("handletextpad", 0.5)
-        legend_kw["handler_map"] = {Patch: patch_handler, tuple: tuple_handler}
-        ax.legend(handles, labels, **legend_kw)
+        legend_kwargs.setdefault("handletextpad", 0.5)
+        legend_kwargs["handler_map"] = {Patch: patch_handler, tuple: tuple_handler}
+        ax.legend(handles, labels, **legend_kwargs)
 
 
 def plot_contour_line(ax, x, y, **kwargs):
