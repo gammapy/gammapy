@@ -106,7 +106,8 @@ class Model:
 
     def to_dict(self):
         """Create dict for YAML serialisation"""
-        return {"type": self.tag, "parameters": self.parameters.to_dict()}
+        tag = self.tag[0] if isinstance(self.tag, list) else self.tag
+        return {"type": tag, "parameters": self.parameters.to_dict()}
 
     @classmethod
     def from_dict(cls, data):

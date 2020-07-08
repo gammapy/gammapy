@@ -165,7 +165,7 @@ class TestFermi4FGLObject:
 
     def test_spatial_model(self):
         model = self.cat["4FGL J0000.3-7355"].spatial_model()
-        assert model.tag == "PointSpatialModel"
+        assert "PointSpatialModel" in model.tag
         assert model.frame == "icrs"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 0.0983)
@@ -178,7 +178,7 @@ class TestFermi4FGLObject:
         assert_allclose(model.position.dec.value, pos_err.center.dec.value)
 
         model = self.cat["4FGL J1409.1-6121e"].spatial_model()
-        assert model.tag == "DiskSpatialModel"
+        assert "DiskSpatialModel" in model.tag
         assert model.frame == "icrs"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 212.294006)
@@ -186,7 +186,7 @@ class TestFermi4FGLObject:
         assert_allclose(p["r_0"].value, 0.7331369519233704)
 
         model = self.cat["4FGL J0617.2+2234e"].spatial_model()
-        assert model.tag == "GaussianSpatialModel"
+        assert "GaussianSpatialModel" in model.tag
         assert model.frame == "icrs"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 94.309998)
@@ -194,7 +194,7 @@ class TestFermi4FGLObject:
         assert_allclose(p["sigma"].value, 0.27)
 
         model = self.cat["4FGL J1443.0-6227e"].spatial_model()
-        assert model.tag == "TemplateSpatialModel"
+        assert "TemplateSpatialModel" in model.tag
         assert model.frame == "fk5"
         assert model.normalize is True
 
@@ -305,14 +305,14 @@ class TestFermi3FGLObject:
 
     def test_spatial_model(self):
         model = self.cat[0].spatial_model()
-        assert model.tag == "PointSpatialModel"
+        assert "PointSpatialModel" in model.tag
         assert model.frame == "icrs"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 0.0377)
         assert_allclose(p["lat_0"].value, 65.751701)
 
         model = self.cat[122].spatial_model()
-        assert model.tag == "GaussianSpatialModel"
+        assert "GaussianSpatialModel" in model.tag
         assert model.frame == "icrs"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 14.75)
@@ -320,7 +320,7 @@ class TestFermi3FGLObject:
         assert_allclose(p["sigma"].value, 1.35)
 
         model = self.cat[955].spatial_model()
-        assert model.tag == "DiskSpatialModel"
+        assert "DiskSpatialModel" in model.tag
         assert model.frame == "icrs"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 128.287201)
@@ -328,7 +328,7 @@ class TestFermi3FGLObject:
         assert_allclose(p["r_0"].value, 0.91)
 
         model = self.cat[602].spatial_model()
-        assert model.tag == "TemplateSpatialModel"
+        assert "TemplateSpatialModel" in model.tag
         assert model.frame == "fk5"
         assert model.normalize is True
 
@@ -442,7 +442,7 @@ class TestFermi2FHLObject:
 
     def test_spatial_model(self):
         model = self.cat[221].spatial_model()
-        assert model.tag == "PointSpatialModel"
+        assert "PointSpatialModel" in model.tag
         assert model.frame == "icrs"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 221.281998, rtol=1e-5)
@@ -459,7 +459,7 @@ class TestFermi2FHLObject:
         assert_allclose(model.position.dec.value, pos_err.center.dec.value)
 
         model = self.cat[97].spatial_model()
-        assert model.tag == "GaussianSpatialModel"
+        assert "GaussianSpatialModel" in model.tag
         assert model.frame == "icrs"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 94.309998, rtol=1e-5)
@@ -467,7 +467,7 @@ class TestFermi2FHLObject:
         assert_allclose(p["sigma"].value, 0.27)
 
         model = self.cat[134].spatial_model()
-        assert model.tag == "DiskSpatialModel"
+        assert "DiskSpatialModel" in model.tag
         assert model.frame == "icrs"
         p = model.parameters
         assert_allclose(p["lon_0"].value, 125.660004, rtol=1e-5)
@@ -475,7 +475,7 @@ class TestFermi2FHLObject:
         assert_allclose(p["r_0"].value, 0.37)
 
         model = self.cat[256].spatial_model()
-        assert model.tag == "TemplateSpatialModel"
+        assert "TemplateSpatialModel" in model.tag
         assert model.frame == "fk5"
         assert model.normalize is True
         # TODO: have to check the extended template used for RX J1713,

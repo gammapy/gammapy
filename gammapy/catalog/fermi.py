@@ -184,7 +184,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         lat_err = semi_major / scale_1sigma
         lon_err = semi_minor / scale_1sigma / np.cos(d["DEJ2000"])
 
-        if model.tag != "TemplateSpatialModel":
+        if  "TemplateSpatialModel" not in model.tag:
             model.parameters["lon_0"].error = lon_err
             model.parameters["lat_0"].error = lat_err
             model.phi_0 = phi_0

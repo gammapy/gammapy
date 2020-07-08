@@ -31,8 +31,8 @@ def test_dict_to_skymodels():
     assert model0.name == "background_irf"
 
     model0 = models[1]
-    assert model0.spectral_model.tag == "ExpCutoffPowerLawSpectralModel"
-    assert model0.spatial_model.tag == "PointSpatialModel"
+    assert "ExpCutoffPowerLawSpectralModel" in model0.spectral_model.tag
+    assert "PointSpatialModel" in model0.spatial_model.tag
 
     pars0 = model0.parameters
     assert pars0["index"].value == 2.1
@@ -59,9 +59,11 @@ def test_dict_to_skymodels():
     assert np.isnan(pars0["lambda_"].max)
 
     model1 = models[2]
-    assert model1.spectral_model.tag == "PowerLawSpectralModel"
-    assert model1.spatial_model.tag == "DiskSpatialModel"
-    assert model1.temporal_model.tag == "LightCurveTemplateTemporalModel"
+    assert "PL" in model1.spectral_model.tag
+    assert "PowerLawSpectralModel" in model1.spectral_model.tag
+    assert "DiskSpatialModel" in model1.spatial_model.tag
+    assert "disk" in model1.spatial_model.tag
+    assert "LightCurveTemplateTemporalModel" in model1.temporal_model.tag
 
     pars1 = model1.parameters
     assert pars1["index"].value == 2.2
@@ -82,8 +84,8 @@ def test_dict_to_skymodels():
     )
     assert model2.spectral_model.values.unit == "1 / (cm2 MeV s sr)"
 
-    assert model2.spectral_model.tag == "TemplateSpectralModel"
-    assert model2.spatial_model.tag == "TemplateSpatialModel"
+    assert "TemplateSpectralModel" in model2.spectral_model.tag
+    assert "TemplateSpatialModel" in model2.spatial_model.tag
 
     assert model2.spatial_model.parameters["norm"].value == 1.0
     assert not model2.spatial_model.normalize
@@ -129,7 +131,7 @@ def test_absorption_io(tmp_path):
     assert new_model.redshift.value == 0.5
     assert new_model.alpha_norm.name == "alpha_norm"
     assert new_model.alpha_norm.value == 1
-    assert new_model.spectral_model.tag == "PowerLawSpectralModel"
+    assert "PowerLawSpectralModel" in new_model.spectral_model.tag
     assert_allclose(new_model.absorption.energy, dominguez.energy)
     assert_allclose(new_model.absorption.param, dominguez.param)
     assert len(new_model.parameters) == 5
@@ -202,12 +204,16 @@ def make_all_models():
 
 @pytest.mark.parametrize("model_class", MODEL_REGISTRY)
 def test_all_model_classes(model_class):
-    assert model_class.tag == model_class.__name__
+    if isinstance(model_class.tag, list):
+        assert model_class.tag[0] == model_class.__name__
+    else:
+        assert model_class.tag == model_class.__name__
 
 
 @pytest.mark.parametrize("model", make_all_models())
 def test_all_model_instances(model):
-    assert model.tag == model.__class__.__name__
+    tag = model.tag[0] if isinstance(model.tag, list) else model.tag
+    assert tag == model.__class__.__name__
 
 
 @requires_data()
