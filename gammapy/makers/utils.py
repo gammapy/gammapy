@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.coordinates import SkyOffsetFrame
+from astropy.coordinates import Angle
+from astropy.table import Table
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, PSFMap
 from gammapy.maps import Map, WcsNDMap
@@ -13,6 +15,7 @@ __all__ = [
     "make_edisp_kernel_map",
     "make_psf_map",
     "make_map_exposure_true_energy",
+    "make_theta_squared_table",
 ]
 
 
@@ -297,3 +300,88 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
     edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map)
 
     return edisp_map.to_edisp_kernel_map(geom.get_axis_by_name("energy"))
+
+
+def make_theta_squared_table(observation_list, on_position, theta2_axis, off_position=None):
+    """ Compute the OFF and ON theta2 distribution in the same FOV for a list of `Observation`
+    from a given theta2 binning.
+
+    The ON theta2 profile is computed from a given distribution, on_position. By default, the OFF theta2 profile
+    is extracted from a mirror position radially symmetric in the FOV to pos_on.
+
+    The ON and OFF regions are assumed to be of the same size, so the normalisation factor between both region
+    alpha=1.
+
+    Parameters
+    ----------
+    observation_list: `~gammapy.data.Observations`
+        List of observation
+    on_position : `~astropy.coordinates.SkyCoord`
+        position from which the ON theta^2 distribution is computed
+    theta2_axis : theta2_axis: `~gammapy.maps.geom.MapAxis`
+        Array of edges of the theta2 bin used to compute the distribution
+    off_position : `astropy.coordinates.SkyCoord`
+        position from which the OFF theta^2 distribution is computed. Default: reflected position w.r.t.
+        to the pointing position
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Table containing the ON counts, the OFF counts, the acceptance, the off acceptance and the alpha (normalisation
+        between ON and OFF) for each theta2 bin
+    """
+    if not theta2_axis.edges.unit.is_equivalent("deg2"):
+        raise ValueError("The theta2 axis should be equivalent to deg2")
+
+    on_counts_tot = np.zeros_like(theta2_axis.center.value)
+    off_counts_tot = np.zeros_like(theta2_axis.center.value)
+    acceptance_tot = np.zeros_like(theta2_axis.center.value)
+    acceptance_off_tot = np.zeros_like(theta2_axis.center.value)
+    alpha_tot = np.zeros_like(theta2_axis.center.value)
+    livetime_tot = 0
+    for observation in observation_list:
+        # Angular distance of the events from the given ON position
+        separation_on = on_position.separation(observation.events.radec)
+        if not off_position:
+            # Estimate the position of the mirror position
+            pos_angle = observation.pointing_radec.position_angle(on_position)
+            sep_angle = observation.pointing_radec.separation(on_position)
+            off_position = observation.pointing_radec.directional_offset_by(
+                pos_angle + Angle(np.pi, "rad"), sep_angle
+            )
+        # Angular distance of the events from the mirror position
+        separation_off = off_position.separation(observation.events.radec)
+
+        # Extract the ON and OFF theta2 distribution from the two positions.
+        on_cnts, _ = np.histogram(separation_on ** 2, theta2_axis.edges)
+        off_cnts, _ = np.histogram(separation_off ** 2, theta2_axis.edges)
+        on_counts_tot += on_cnts
+        off_counts_tot += off_cnts
+
+        # Normalisation between ON and OFF is one
+        acceptance = np.ones_like(theta2_axis.center.value)
+        acceptance_off = np.ones_like(theta2_axis.center.value)
+        acceptance_tot += acceptance
+        acceptance_off_tot += acceptance_off
+        alpha = acceptance / acceptance_off
+        alpha_tot += alpha * observation.observation_live_time_duration.value
+        livetime_tot += observation.observation_live_time_duration.value
+
+    alpha_tot /= livetime_tot
+
+    table = Table(
+        {
+            "theta2_min": theta2_axis.edges[0:-1],
+            "theta2_max": theta2_axis.edges[1:],
+            "counts": on_counts_tot,
+            "counts_off": off_counts_tot,
+            "acceptance": acceptance_tot,
+            "acceptance_off": acceptance_off_tot,
+            "alpha": alpha_tot,
+        }
+    )
+
+    table.meta["ON_RA"] = on_position.icrs.ra
+    table.meta["ON_DEC"] = on_position.icrs.dec
+    table.meta["OFF_RA"] = off_position.icrs.ra
+    table.meta["OFF_DEC"] = off_position.icrs.dec
+    return table

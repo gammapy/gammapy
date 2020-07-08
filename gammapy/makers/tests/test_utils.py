@@ -5,17 +5,20 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
-from gammapy.data import FixedPointingInfo
+from astropy.table import Table
+from gammapy.data import FixedPointingInfo, Observation, EventList, GTI
 from gammapy.irf import Background3D, EffectiveAreaTable2D, EnergyDispersion2D
 from gammapy.makers.utils import (
     _map_spectrum_weight,
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_edisp_kernel_map,
+    make_theta_squared_table
 )
 from gammapy.maps import HpxGeom, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
 from gammapy.utils.testing import requires_data
+from gammapy.utils.time import time_ref_to_dict
 
 
 @pytest.fixture(scope="session")
@@ -272,3 +275,79 @@ def test_make_edisp_kernel_map():
     assert_allclose(kernel.pdf_matrix[:, 0], (1.0, 1.0, 0.0, 0.0, 0.0, 0.0))
     assert_allclose(kernel.pdf_matrix[:, 1], (0.0, 0.0, 1.0, 1.0, 0.0, 0.0))
     assert_allclose(kernel.pdf_matrix[:, 2], (0.0, 0.0, 0.0, 0.0, 1.0, 1.0))
+
+
+class TestTheta2Table:
+    def setup_class(self):
+        table = Table()
+        table["RA"] = [0.0, 0.0, 0.0, 0.0, 10.0] * u.deg
+        table["DEC"] = [0.0, 0.05, 0.9, 10.0, 10.0] * u.deg
+        table["ENERGY"] = [1.0, 1.0, 1.5, 1.5, 10.0] * u.TeV
+        table["OFFSET"] = [0.1, 0.1, 0.5, 1.0, 1.5] * u.deg
+
+        table.meta["RA_PNT"] = 0 * u.deg
+        table.meta["DEC_PNT"] = 0.5 * u.deg
+
+        meta_obs = dict()
+        meta_obs["RA_PNT"] = 0 * u.deg
+        meta_obs["DEC_PNT"] = 0.5 * u.deg
+        meta_obs["DEADC"] = 1
+
+        meta = time_ref_to_dict("2010-01-01")
+        gti_table = Table({"START": [1], "STOP": [3]}, meta=meta)
+        gti = GTI(gti_table)
+
+        self.observation = Observation(events=EventList(table), obs_info=meta_obs, gti=gti)
+
+    def test_make_theta_squared_table(self):
+        # pointing position: (0,0.5) degree in ra/dec
+        # On theta2 distribution compute from (0,0) in ra/dec.
+        # OFF theta2 distribution from the mirror position at (0,1) in ra/dec.
+        position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
+        bins = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg2")
+        theta2_table = make_theta_squared_table(observation_list=[self.observation],
+                                                on_position=position, theta2_axis=bins
+                                                )
+        theta2_lo = [0, 0.05, 0.1, 0.15]
+        theta2_hi = [0.05, 0.1, 0.15, 0.2]
+        on_counts = [2, 0, 0, 0]
+        off_counts = [1, 0, 0, 0]
+        acceptance = [1, 1, 1, 1]
+        acceptance_off = [1, 1, 1, 1]
+        alpha = [1, 1, 1, 1]
+        assert len(theta2_table) == 4
+        assert theta2_table["theta2_min"].unit == "deg2"
+        assert_allclose(theta2_table["theta2_min"], theta2_lo)
+        assert_allclose(theta2_table["theta2_max"], theta2_hi)
+        assert_allclose(theta2_table["counts"], on_counts)
+        assert_allclose(theta2_table["counts_off"], off_counts)
+        assert_allclose(theta2_table["acceptance"], acceptance)
+        assert_allclose(theta2_table["acceptance_off"], acceptance_off)
+        assert_allclose(theta2_table["alpha"], alpha)
+        assert_allclose(theta2_table.meta["ON_RA"], 0 * u.deg)
+        assert_allclose(theta2_table.meta["ON_DEC"], 0 * u.deg)
+        assert_allclose(theta2_table.meta["OFF_RA"], 0 * u.deg)
+        assert_allclose(theta2_table.meta["OFF_DEC"], 1 * u.deg)
+
+        # Taking the off position as the on one
+        off_position = position
+        theta2_table2 = make_theta_squared_table(observation_list=[self.observation],
+                                                 on_position=position, theta2_axis=bins, off_position=off_position
+                                                 )
+
+        assert_allclose(theta2_table2["counts_off"], theta2_table["counts"])
+
+        # Test for two observations, here identical
+        theta2_table_two_obs = make_theta_squared_table(observation_list=[self.observation, self.observation],
+                                                        on_position=position, theta2_axis=bins
+                                                        )
+        on_counts_two_obs = [4, 0, 0, 0]
+        off_counts_two_obs = [2, 0, 0, 0]
+        acceptance_two_obs = [2, 2, 2, 2]
+        acceptance_off_two_obs = [2, 2, 2, 2]
+        alpha_two_obs = [1, 1, 1, 1]
+        assert_allclose(theta2_table_two_obs["counts"], on_counts_two_obs)
+        assert_allclose(theta2_table_two_obs["counts_off"], off_counts_two_obs)
+        assert_allclose(theta2_table_two_obs["acceptance"], acceptance_two_obs)
+        assert_allclose(theta2_table_two_obs["acceptance_off"], acceptance_off_two_obs)
+        assert_allclose(theta2_table["alpha"], alpha_two_obs)
