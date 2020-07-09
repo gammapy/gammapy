@@ -124,7 +124,7 @@ class Fit:
         return optimize_result
 
     def check_limits(self, strict=False):
-        "Check that all parameters are within their min/max range"""
+        """Check that all parameters are within their min/max range"""
         for par in self._parameters:
             par.check_limits(strict=strict)
 

@@ -234,7 +234,9 @@ class Parameter:
                         f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'"
                     )
                 else:
-                    raise ValueError(f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'")
+                    raise ValueError(
+                        f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'"
+                    )
 
     def __repr__(self):
         return (
