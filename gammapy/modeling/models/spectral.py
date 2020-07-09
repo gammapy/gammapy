@@ -692,6 +692,97 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
         return pwl * brk
 
 
+class PiecewiseBrokenPowerLawSpectralModel(SpectralModel):
+    """Piecewise broken power-law at fixed energy nodes.
+
+    Parameters
+    ----------
+    energy : `~astropy.units.Quantity`
+        Array of energies at which the model values are given (nodes).
+    values : array
+        Array with the initial values of the model at energies ``energy``.
+        A normalisation parameters is created for each value.
+    """
+
+    tag = "PiecewiseBrokenPowerLawSpectralModel"
+
+    def __init__(self, energy, values, parameters=None):
+        self._energy = energy
+        self.init_values = values
+        if len(values) != len(energy):
+            raise ValueError("dimension mismatch")
+        if len(values) < 2:
+            raise ValueError("Input arrays must contians at least 2 elements")
+        if parameters is None:
+            parameters = Parameters(
+                [Parameter(f"norm{k}", 1.0) for k in range(len(values))]
+            )
+        for parameter in parameters:
+            setattr(self, parameter.name, parameter)
+        self.default_parameters = parameters
+
+    @classmethod
+    def from_parameters(cls, parameters, energy, values):
+        init = cls(energy, values, parameters=parameters)
+        return init
+
+    @property
+    def values(self):
+        return np.array([p.value for p in self.parameters]) * self.init_values
+
+    @property
+    def energy(self):
+        return self._energy
+
+    def __call__(self, energy):
+        return self.evaluate(energy)
+
+    def evaluate(self, energy):
+        logedata = np.log10(np.atleast_1d(energy.value))
+        loge = np.log10(self.energy.to(energy.unit).value)
+        logv = np.log10(self.values.value)
+        ne = len(loge)
+        conds = (
+            [(logedata < loge[1])]
+            + [
+                (logedata >= loge[k]) & (logedata < loge[k + 1])
+                for k in range(1, ne - 2)
+            ]
+            + [(logedata >= loge[-2])]
+        )
+        a = (logv[1:] - logv[:-1]) / (loge[1:] - loge[:-1])
+        b = logv[1:] - a * loge[1:]
+
+        output = np.zeros(logedata.shape)
+        for k in range(ne - 1):
+            output[conds[k]] = 10 ** (a[k] * logedata[conds[k]] + b[k])
+        return output * self.values.unit
+
+    def to_dict(self):
+        return {
+            "type": self.tag,
+            "parameters": self.parameters.to_dict(),
+            "energy": {
+                "data": self.energy.data.tolist(),
+                "unit": str(self.energy.unit),
+            },
+            "values": {
+                "data": self.init_values.data.tolist(),
+                "unit": str(self.values.unit),
+            },
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
+        values = u.Quantity(data["values"]["data"], data["values"]["unit"])
+        if "parameters" in data:
+            parameters = Parameters.from_dict(data["parameters"])
+            return cls.from_parameters(parameters, energy=energy, values=values)
+        else:
+            return cls(energy=energy, values=values)
+
+
 class ExpCutoffPowerLawSpectralModel(SpectralModel):
     r"""Spectral exponential cutoff power-law model.
 

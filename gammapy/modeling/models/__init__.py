@@ -29,6 +29,7 @@ SPECTRAL_MODEL_REGISTRY = Registry(
         PowerLaw2SpectralModel,
         BrokenPowerLawSpectralModel,
         SmoothBrokenPowerLawSpectralModel,
+        PiecewiseBrokenPowerLawSpectralModel,
         ExpCutoffPowerLawSpectralModel,
         ExpCutoffPowerLaw3FGLSpectralModel,
         SuperExpCutoffPowerLaw3FGLSpectralModel,
