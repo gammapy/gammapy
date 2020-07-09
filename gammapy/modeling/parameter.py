@@ -138,8 +138,7 @@ class Parameter:
     @factor.setter
     def factor(self, val):
         self._factor = float(val)
-        if self.frozen is False:
-            self.check_limits()
+        self.check_limits()
 
     @property
     def scale(self):
@@ -226,15 +225,16 @@ class Parameter:
 
     def check_limits(self, strict=False):
         """Emit a warning or error if value is outside the min/max range"""
-        if (~np.isnan(self.min) and (self.value <= self.min)) or (
-            ~np.isnan(self.max) and (self.value >= self.max)
-        ):
-            if strict is False:
-                log.warning(
-                    f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'"
-                )
-            else:
-                raise ValueError(f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'")
+        if self.frozen is False:
+            if (~np.isnan(self.min) and (self.value <= self.min)) or (
+                ~np.isnan(self.max) and (self.value >= self.max)
+            ):
+                if strict is False:
+                    log.warning(
+                        f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'"
+                    )
+                else:
+                    raise ValueError(f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'")
 
     def __repr__(self):
         return (
