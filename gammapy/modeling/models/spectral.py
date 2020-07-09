@@ -715,16 +715,15 @@ class PiecewiseBrokenPowerLawSpectralModel(SpectralModel):
             raise ValueError("Input arrays must contians at least 2 elements")
         if parameters is None:
             parameters = Parameters(
-                [Parameter(f"norm{k}", 1.0) for k in range(len(values))]
+                [Parameter(f"norm{k}", 1.0) for k, _ in enumerate(values)]
             )
         for parameter in parameters:
             setattr(self, parameter.name, parameter)
         self.default_parameters = parameters
 
     @classmethod
-    def from_parameters(cls, parameters, energy, values):
-        init = cls(energy, values, parameters=parameters)
-        return init
+    def from_parameters(cls, parameters, **kwargs):
+        return cls(kwargs["energy"], kwargs["values"], parameters=parameters)
 
     @property
     def values(self):
