@@ -27,6 +27,7 @@ SPECTRAL_MODEL_REGISTRY = Registry(
         CompoundSpectralModel,
         PowerLawSpectralModel,
         PowerLaw2SpectralModel,
+        BrokenPowerLawSpectralModel,
         SmoothBrokenPowerLawSpectralModel,
         ExpCutoffPowerLawSpectralModel,
         ExpCutoffPowerLaw3FGLSpectralModel,
@@ -47,7 +48,7 @@ TEMPORAL_MODEL_REGISTRY = Registry(
         ConstantTemporalModel,
         LightCurveTemplateTemporalModel,
         ExpDecayTemporalModel,
-        GaussianTemporalModel
+        GaussianTemporalModel,
     ]
 )
 """Registry of temporal models classes."""
