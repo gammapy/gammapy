@@ -264,11 +264,20 @@ class SpectrumDataset(Dataset):
     @property
     def _edisp_kernel(self):
         """The edisp kernel stored in the EDispMapKernel"""
+        # TODO: replace with get_kernel(position) once it works properly
         if isinstance(self.edisp, EDispKernelMap):
-            edisp = self.edisp.get_edisp_kernel(self._geom.center_skydir)
+            energy_true_axis = self.edisp.edisp_map.geom.get_axis_by_name("energy_true")
+            energy_axis = self.edisp.edisp_map.geom.get_axis_by_name("energy")
+
+            return EDispKernel(
+                e_true_lo=energy_true_axis.edges[:-1],
+                e_true_hi=energy_true_axis.edges[1:],
+                e_reco_lo=energy_axis.edges[:-1],
+                e_reco_hi=energy_axis.edges[1:],
+                data=self.edisp.edisp_map.data[:,:,0,0],
+            )
         else:
-            edisp = self.edisp
-        return edisp
+            return  self.edisp
 
     def npred_sig(self):
         """Predicted counts from source model (`RegionNDMap`)."""
