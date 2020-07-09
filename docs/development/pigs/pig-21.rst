@@ -246,15 +246,19 @@ Introduce Shorter YAML Alias Tags
 
 To simplify the definition of models in YAML files as well as for interactive
 model creation we propose to introduce shorter YAML tags for all models in Gammapy.
-For backwards compatibility we propose to support the class name as well.
+For backwards compatibility we propose to support the class name as well. We
+require that the short YAML tag is only unique within the model class, so that
+the same tag such as "gauss" can be re-used by spectral, spatial as well as
+temporal components. The uniqueness is guaranteed in the YAML file, because
+of the different sections for the model types.
 
-We propose to introduce the following YAML tags.
+We propose to introduce the following YAML tags:
 
 ======================================== ======================
 Class Name                               YAML Tag
 ======================================== ======================
-ConstantSpectralModel                    spectral-const
-CompoundSpectralModel                    spectral-compound
+ConstantSpectralModel                    const
+CompoundSpectralModel                    compound
 PowerLawSpectralModel                    pl
 PowerLaw2SpectralModel                   pl-2
 SmoothBrokenPowerLawSpectralModel        sbpl
@@ -265,8 +269,8 @@ ExpCutoffPowerLaw3FGLSpectralModel       ecpl-3fgl
 SuperExpCutoffPowerLaw3FGLSpectralModel  secpl-3fgl
 SuperExpCutoffPowerLaw4FGLSpectralModel  secpl-4fgl
 LogParabolaSpectralModel                 logpar
-TemplateSpectralModel                    spectral-template
-GaussianSpectralModel                    spectral-gauss
+TemplateSpectralModel                    template
+GaussianSpectralModel                    gauss
 EBLAbsorbtionSpectralModel               ebl-absorbtion
 NaimaSpectralModel                       naima
 ScaleSpectralModel                       scale
@@ -276,9 +280,9 @@ ScaleSpectralModel                       scale
 ======================================== ======================
 Class Name                               YAML Tag
 ======================================== ======================
-ConstantSpatialModel                     spatial-const
-TemplateSpatialModel                     spatial-template
-GaussianSpatialModel                     spatial-gauss
+ConstantSpatialModel                     const
+TemplateSpatialModel                     template
+GaussianSpatialModel                     gauss
 DiskSpatialModel    					 disk
 PointSpatialModel						 point
 ShellSpatialModel                        shell
@@ -289,21 +293,34 @@ SersicSpatialModel						 sersic
 ======================================== ======================
 Class Name                               YAML Tag
 ======================================== ======================
-ConstantTemporalModel          			 temporal-const
-LightCurveTemplateTemporalModel          temporal-template
-GaussianTemporalModel					 temporal-gauss
+ConstantTemporalModel          			 const
+LightCurveTemplateTemporalModel          template
+GaussianTemporalModel					 gauss
 ExpDecayTemporalModel					 exp-decay
 ======================================== ======================
 
+To simplify the interactive model creation we propose to introduce:
 
-Once the YAML tags are introduce the following simple creation via the ``Model.create()``
-factory method works:
+.. code::
+
+    from gammapy.modeling.models import SkyModel
+
+    model = SkyModel.create(
+    	spectral_type="pl",
+		spectral_pars={"index": 2},
+		spatial_type="gauss",
+		spatial_pars={"sigma": "0.1 deg"},
+		temporal_type="const",
+    )
+
+In addition the ``Model.create()`` factory function should be
+adapted to:
 
 .. code::
 
     from gammapy.modeling.models import Model
 
-    pwl = Model.create(tag="pwl", **pars)
+    pwl = Model.create(tag="gauss", model_type="spectral", **pars)
 
 
 Simplify YAML Parameter Representation
