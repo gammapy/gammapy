@@ -37,24 +37,6 @@ of amplitude and are named using the ``NormSpectralModel`` suffix:
     const_norm = ConstantNormSpectralModel()
 
 
-**Alternatives:** Technically the following works as well:
-
-.. code::
-
-    from gammapy.modeling.models import PowerLawSpectralModel, Parameter
-
-    amplitude = Parameter(name="amplitude", value=1, unit="")
-
-    pwl_norm = PowerLawSpectralModel(amplitude=amplitude)
-
-
-This avoids code duplication, but features possibly a slightly less cleaner API.
-The introduction of ``NormSpectralModel`` classes allows to use slightly more
-explicit parameter names, such as ``norm`` and ``tilt`` (including better
-default values) and to hide methods such as ``.energy_flux()``, which are
-less meaningful for spectral models, where amplitude represent a norm.
-
-
 Energy Dependent Spatial Models
 -------------------------------
 A very common use-case in scientific analyses is to look for energy dependent
@@ -161,9 +143,9 @@ using a ``CompoundSpectralModel``. The new implementation is used as follows:
 
 .. code::
 
-    from gammapy.modeling.models import EBLAbsorptionSpectralModel, PowerLawSpectralModel
+    from gammapy.modeling.models import EBLAbsorptionNormSpectralModel, PowerLawSpectralModel
 
-    absorption = EBLAbsorptionSpectralModel.from_reference(
+    absorption = EBLAbsorptionNormSpectralModel.from_reference(
         redshift=0.1, alpha_norm=1, reference="dominguez"
     )
 
@@ -250,7 +232,8 @@ For backwards compatibility we propose to support the class name as well. We
 require that the short YAML tag is only unique within the model class, so that
 the same tag such as "gauss" can be re-used by spectral, spatial as well as
 temporal components. The uniqueness is guaranteed in the YAML file, because
-of the different sections for the model types.
+of the different sections for the model types. For writing the models the
+verbose class name is used by default.
 
 We propose to introduce the following YAML tags:
 
@@ -260,18 +243,20 @@ Class Name                               YAML Tag
 ConstantSpectralModel                    const
 CompoundSpectralModel                    compound
 PowerLawSpectralModel                    pl
+PowerLawNormSpectralModel                pl-norm
 PowerLaw2SpectralModel                   pl-2
 SmoothBrokenPowerLawSpectralModel        sbpl
 BrokenPowerLawSpectralModel				 bpl
-PiecewiseBrokenPowerLawSpectraModel      pwbpl
+PiecewiseBrokenPowerLawNormSpectraModel  pwbpl-norm
 ExpCutoffPowerLawSpectralModel           ecpl
 ExpCutoffPowerLaw3FGLSpectralModel       ecpl-3fgl
 SuperExpCutoffPowerLaw3FGLSpectralModel  secpl-3fgl
 SuperExpCutoffPowerLaw4FGLSpectralModel  secpl-4fgl
-LogParabolaSpectralModel                 logpar
+LogParabolaSpectralModel                 lp
+LogParabolaNormSpectralModel             lp-norm
 TemplateSpectralModel                    template
 GaussianSpectralModel                    gauss
-EBLAbsorbtionSpectralModel               ebl-absorbtion
+EBLAbsorbtionNormSpectralModel           ebl-absorbtion-norm
 NaimaSpectralModel                       naima
 ScaleSpectralModel                       scale
 ======================================== ======================
