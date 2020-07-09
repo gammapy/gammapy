@@ -623,6 +623,8 @@ class PowerLaw2SpectralModel(SpectralModel):
 class BrokenPowerLawSpectralModel(SpectralModel):
     r"""Spectral broken power-law model.
 
+    For more information see :ref:`broken-powerlaw-spectral-model`.
+
     Parameters
     ----------
     index1 : `~astropy.units.Quantity`
