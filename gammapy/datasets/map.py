@@ -611,10 +611,8 @@ class MapDataset(Dataset):
             residuals = self._compute_residuals(counts_spec, npred_spec, method)
             if method == "diff":
                 yerr = np.sqrt(np.abs(residuals.data.flatten()))
-            elif method == "diff/sqrt(model)":
-                yerr = np.ones_like(residuals.data.flatten())
             else:
-                yerr = None
+                yerr = np.ones_like(residuals.data.flatten())
             ax = residuals.plot(color="black", yerr=yerr)
             ax.set_yscale("linear")
             ax.axhline(0, color="black", lw=0.5)

@@ -426,10 +426,8 @@ class SpectrumDataset(Dataset):
 
         if method == "diff":
             yerr = np.sqrt(np.abs(residuals.data.flatten()))
-        elif method == "diff/sqrt(model)":
-            yerr = np.ones_like(residuals.data.flatten())
         else:
-            yerr = None
+            yerr = np.ones_like(residuals.data.flatten())
         residuals.plot(ax=ax, color="black", yerr=yerr, **kwargs)
         ax.axhline(0, color="black", lw=0.5)
 
