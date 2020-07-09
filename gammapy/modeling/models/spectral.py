@@ -621,9 +621,7 @@ class PowerLaw2SpectralModel(SpectralModel):
 
 
 class BrokenPowerLawSpectralModel(SpectralModel):
-    r"""Spectral smooth broken power-law model.
-
-    For more information see :ref:`smooth-broken-powerlaw-spectral-model`.
+    r"""Spectral broken power-law model.
 
     Parameters
     ----------
@@ -655,7 +653,7 @@ class BrokenPowerLawSpectralModel(SpectralModel):
 
 
 class SmoothBrokenPowerLawSpectralModel(SpectralModel):
-    r"""Spectral broken power-law model.
+    r"""Spectral smooth broken power-law model.
 
     For more information see :ref:`smooth-broken-powerlaw-spectral-model`.
 
