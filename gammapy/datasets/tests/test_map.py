@@ -167,7 +167,7 @@ def test_fake(sky_model, geom, geom_etrue):
     dataset.fake(314)
 
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
-    assert_allclose(real_dataset.counts.data.sum(), 9525.755807)
+    assert_allclose(real_dataset.counts.data.sum(), 9525.299054, rtol=1e-5)
     assert_allclose(dataset.counts.data.sum(), 9723)
 
 
@@ -431,7 +431,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_2.mask_safe = Map.from_geom(geom, data=mask_safe)
 
     stat = fit.datasets.stat_sum()
-    assert_allclose(stat, 14824.282955)
+    assert_allclose(stat, 14824.173099, rtol=1e-5)
 
     # test model evaluation outside image
 
