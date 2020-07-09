@@ -3,12 +3,14 @@
 import collections.abc
 import copy
 import itertools
-import warnings
+import logging
 import numpy as np
 from astropy import units as u
 from gammapy.utils.table import table_from_row_data
 
 __all__ = ["Parameter", "Parameters"]
+
+log = logging.getLogger(__name__)
 
 
 def _get_parameters_str(parameters):
@@ -81,6 +83,8 @@ class Parameter:
         self.scale = scale
         self.min = min
         self.max = max
+        self.frozen = frozen
+        self._error = error
 
         # TODO: move this to a setter method that can be called from `__set__` also!
         # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
@@ -91,9 +95,6 @@ class Parameter:
         else:
             self.factor = value
             self.unit = unit
-
-        self.frozen = frozen
-        self._error = error
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -137,6 +138,8 @@ class Parameter:
     @factor.setter
     def factor(self, val):
         self._factor = float(val)
+        if self.frozen is False:
+            self.check_limits()
 
     @property
     def scale(self):
@@ -208,8 +211,7 @@ class Parameter:
 
     @value.setter
     def value(self, val):
-        self._factor = float(val) / self._scale
-        self._check_value_within_bounds()
+        self.factor = float(val) / self._scale
 
     @property
     def quantity(self):
@@ -222,22 +224,17 @@ class Parameter:
         self.value = val.value
         self.unit = val.unit
 
-    def _check_value_within_bounds(self):
-        """Send a warning if value is outside the min/max range (or at the border within 1%)"""
-        min_nan = np.isnan(self.min)
-        max_nan = np.isnan(self.max)
-        min_ok = self.value > self.min and ~np.isclose(
-            self.value - self.min, 0, atol=1e-2
-        )
-        max_ok = self.value < self.max and ~np.isclose(
-            self.value - self.max, 0, atol=1e-2
-        )
-        if (~min_nan and ~min_ok) or (~max_nan and ~max_ok):
-            warnings.warn(
-                f"Setting parameter '{self.name}' value {self.value} near or outside bounds [{self.min}, {self.max}]",
-                RuntimeWarning,
-                stacklevel=2,
-            )
+    def check_limits(self, strict=False):
+        """Emit a warning or error if value is outside the min/max range"""
+        if (~np.isnan(self.min) and (self.value <= self.min)) or (
+            ~np.isnan(self.max) and (self.value >= self.max)
+        ):
+            if strict is False:
+                log.warning(
+                    f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'"
+                )
+            else:
+                raise ValueError(f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'")
 
     def __repr__(self):
         return (
