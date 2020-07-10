@@ -3,7 +3,7 @@ import numpy as np
 from astropy import units as u
 from regions import RectangleSkyRegion
 from gammapy.utils.table import table_from_row_data
-from gammapy.estimators import ImageProfile
+#from gammapy.estimators import ImageProfile
 from gammapy.stats import WStatCountsStatistic, CashCountsStatistic
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
@@ -217,4 +217,5 @@ class ExcessProfileEstimator(Estimator):
             table.meta["PROFILE_TYPE"] = "orthogonal_rectangle"
         table.meta["SPECTRAL_MODEL"] = self.spectrum.to_dict()
 
-        return ImageProfile(table)
+        # return ImageProfile(table)
+        return table
