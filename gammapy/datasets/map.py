@@ -610,14 +610,15 @@ class MapDataset(Dataset):
             npred_spec = npred.get_spectrum(region=region)
             residuals = self._compute_residuals(counts_spec, npred_spec, method)
             if method == "diff":
-                yerr = np.sqrt(np.abs(residuals.data.flatten()))
+                yerr = np.sqrt((counts_spec.data + npred_spec.data).flatten())
             else:
                 yerr = np.ones_like(residuals.data.flatten())
-            ax = residuals.plot(color="black", yerr=yerr)
+            ax = residuals.plot(color="black", yerr=yerr, fmt=".", capsize=2, lw=1)
             ax.set_yscale("linear")
             ax.axhline(0, color="black", lw=0.5)
-            y_max = 2 * np.nanmax(residuals.data)
-            plt.ylim(-y_max, y_max)
+            ymax = 1.05 * np.nanmax(residuals.data + yerr.data)
+            ymin = 1.05 * np.nanmin(residuals.data - yerr.data)
+            plt.ylim(ymin, ymax)
             label = self._residuals_labels[method]
             plt.ylabel(f"Residuals ({label})")
 

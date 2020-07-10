@@ -58,7 +58,6 @@ class RegionNDMap(Map):
 
         ax = ax or plt.gca()
 
-
         if len(self.geom.axes) > 1:
             raise TypeError(
                 "Use `.plot_interactive()` if more the one extra axis is present."
@@ -70,13 +69,14 @@ class RegionNDMap(Map):
             xerr = (axis.center - axis.edges[:-1], axis.edges[1:] - axis.center)
             if step is False:
                 kwargs.setdefault("fmt", ".")
+                kwargs.setdefault("capsize", 2)
+                kwargs.setdefault("lw", 1)
                 ax.errorbar(
                     axis.center, self.quantity.squeeze(), xerr=xerr, yerr=yerr, **kwargs
                 )
             else:
-                ax.step(
-                    axis.center, self.quantity.squeeze(), where="mid", **kwargs
-                )
+                kwargs.setdefault("lw", "1")
+                ax.step(axis.center, self.quantity.squeeze(), where="mid", **kwargs)
 
         if axis.interp == "log":
             ax.set_xscale("log")

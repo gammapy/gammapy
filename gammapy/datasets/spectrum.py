@@ -369,13 +369,11 @@ class SpectrumDataset(Dataset):
         ax = plt.gca() if ax is None else ax
         self._plot_energy_range(ax=ax)
         self.excess.plot(
-            ax=ax, label="Measured excess", yerr=np.sqrt(np.abs(self.excess.data.flatten()))
-        )
-        self.npred_sig().plot(
             ax=ax,
-            label="Predicted excess",
-            step=True,
+            label="Measured excess",
+            yerr=np.sqrt(np.abs(self.excess.data.flatten())),
         )
+        self.npred_sig().plot(ax=ax, label="Predicted excess", step=True)
 
         ax.legend(numpoints=1)
         ax.set_title("")
@@ -425,7 +423,7 @@ class SpectrumDataset(Dataset):
         label = self._residuals_labels[method]
 
         if method == "diff":
-            yerr = np.sqrt(np.abs(residuals.data.flatten()))
+            yerr = np.sqrt((self.counts.data + self.npred().data).flatten())
         else:
             yerr = np.ones_like(residuals.data.flatten())
         residuals.plot(ax=ax, color="black", yerr=yerr, **kwargs)
@@ -435,8 +433,9 @@ class SpectrumDataset(Dataset):
         ax.set_ylabel(f"Residuals ({label})")
         ax.set_yscale("linear")
 
-        ymax = 1.2 * np.nanmax(residuals.data)
-        ax.set_ylim(-ymax, ymax)
+        ymax = 1.05 * np.nanmax(residuals.data + yerr.data)
+        ymin = 1.05 * np.nanmin(residuals.data - yerr.data)
+        ax.set_ylim(ymin, ymax)
         return ax
 
     @classmethod
