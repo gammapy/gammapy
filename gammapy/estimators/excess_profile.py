@@ -38,7 +38,7 @@ class ExcessProfileEstimator(Estimator):
         from astropy import units as u
         from astropy.coordinates import SkyCoord
         from gammapy.data import GTI
-        from gammapy.estimators import ExcessProfileEstimator, imageprofile
+        from gammapy.estimators import ExcessProfileEstimator, ImageProfile
         from gammapy.utils.regions import make_orthogonal_rectangle_sky_regions
         from gammapy.datasets import Datasets
 
@@ -130,11 +130,6 @@ class ExcessProfileEstimator(Estimator):
             # mask = spds.mask if spds.mask is not None else slice(None)
             mask = slice(None)
             if isinstance(spds, SpectrumDatasetOnOff):
-                # stats_sum = WStatCountsStatistic(
-                #     spds.counts.data[mask].sum(),
-                #     spds.counts_off.data[mask].sum(),
-                #     spds.alpha.data[0,0,0] # At some point, should replace with averaging over energy
-                # )
                 stats = WStatCountsStatistic(
                     spds.counts.data[mask][:, 0, 0],
                     spds.counts_off.data[mask][:, 0, 0],
@@ -142,10 +137,6 @@ class ExcessProfileEstimator(Estimator):
                 )
 
             else:
-                # stats_sum = CashCountsStatistic(
-                #     spds.counts.data[mask].sum(),
-                #     spds.background.data[mask].sum(),
-                # )
                 stats = CashCountsStatistic(
                     spds.counts.data[mask][:, 0, 0],
                     spds.background.data[mask][:, 0, 0],
