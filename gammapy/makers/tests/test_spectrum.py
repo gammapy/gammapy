@@ -198,7 +198,7 @@ class TestSpectrumMakerChain:
         dataset = safe_mask_maker.run(dataset, obs)
 
         aeff_actual = dataset.aeff.data.evaluate(energy_true=5 * u.TeV)
-        edisp_actual = dataset.edisp.data.evaluate(
+        edisp_actual = dataset._edisp_kernel.data.evaluate(
             energy_true=5 * u.TeV, energy=5.2 * u.TeV
         )
 

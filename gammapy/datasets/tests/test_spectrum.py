@@ -7,7 +7,7 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
-from gammapy.irf import EDispKernel, EffectiveAreaTable
+from gammapy.irf import EDispKernel, EffectiveAreaTable, EDispKernelMap
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
@@ -125,7 +125,6 @@ def test_npred_models():
     model_2 = SkyModel(spectral_model=pwl_2)
 
     spectrum_dataset.models = Models([model_1, model_2])
-
     npred = spectrum_dataset.npred()
 
     assert_allclose(npred.data.sum(), 64.8)
@@ -165,7 +164,7 @@ def test_spectrum_dataset_create():
     assert empty_spectrum_dataset.background.data.sum() == 0
     assert empty_spectrum_dataset.background.geom.axes[0].nbin == 2
     assert empty_spectrum_dataset.aeff.data.axis("energy_true").nbin == 3
-    assert empty_spectrum_dataset.edisp.data.axis("energy").nbin == 2
+    assert empty_spectrum_dataset.edisp.edisp_map.geom.get_axis_by_name("energy").nbin == 2
     assert empty_spectrum_dataset.livetime.value == 0
     assert len(empty_spectrum_dataset.gti.table) == 0
     assert empty_spectrum_dataset.energy_range[0] is None
@@ -280,7 +279,6 @@ class TestSpectrumOnOff:
         ehi = ereco[1:]
         self.e_reco = MapAxis.from_edges(ereco, name="energy")
         self.aeff = EffectiveAreaTable(etrue[:-1], etrue[1:], np.ones(9) * u.cm ** 2)
-        self.edisp = EDispKernel.from_diagonal_response(etrue, ereco)
 
         start = u.Quantity([0], "s")
         stop = u.Quantity([1000], "s")
@@ -318,6 +316,8 @@ class TestSpectrumOnOff:
 
         acceptance_off = RegionNDMap.from_geom(self.off_counts.geom)
         acceptance_off.data += 10
+
+        self.edisp = EDispKernelMap.from_diagonal_response(self.e_reco, self.aeff.data.axis("energy_true"), self.on_counts.geom)
 
         self.dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
@@ -412,7 +412,7 @@ class TestSpectrumOnOff:
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert_allclose(self.off_counts.data, newdataset.counts_off.data)
-        assert_allclose(self.edisp.pdf_matrix, newdataset.edisp.pdf_matrix)
+        assert_allclose(self.edisp.edisp_map.data, newdataset.edisp.edisp_map.data)
         assert_time_allclose(newdataset.gti.time_start, dataset.gti.time_start)
 
         assert len(regions) == len(expected_regions)
