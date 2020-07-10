@@ -620,6 +620,40 @@ class PowerLaw2SpectralModel(SpectralModel):
         return np.power(term.to_value(""), -1.0 / index) * emax
 
 
+class BrokenPowerLawSpectralModel(SpectralModel):
+    r"""Spectral broken power-law model.
+
+    For more information see :ref:`broken-powerlaw-spectral-model`.
+
+    Parameters
+    ----------
+    index1 : `~astropy.units.Quantity`
+        :math:`\Gamma1`
+    index2 : `~astropy.units.Quantity`
+        :math:`\Gamma2`
+    amplitude : `~astropy.units.Quantity`
+        :math:`\phi_0`
+    ebreak : `~astropy.units.Quantity`
+        :math:`E_{break}`
+    """
+
+    tag = "BrokenPowerLawSpectralModel"
+    index1 = Parameter("index1", 2.0)
+    index2 = Parameter("index2", 2.0)
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    ebreak = Parameter("ebreak", "1 TeV")
+
+    @staticmethod
+    def evaluate(energy, index1, index2, amplitude, ebreak):
+        """Evaluate the model (static function)."""
+        energy = np.atleast_1d(energy)
+        cond = energy < ebreak
+        bpwl = amplitude * np.ones(energy.shape)
+        bpwl[cond] *= (energy[cond] / ebreak) ** (-index1)
+        bpwl[~cond] *= (energy[~cond] / ebreak) ** (-index2)
+        return bpwl
+
+
 class SmoothBrokenPowerLawSpectralModel(SpectralModel):
     r"""Spectral smooth broken power-law model.
 
