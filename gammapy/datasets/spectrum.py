@@ -95,7 +95,7 @@ class SpectrumDataset(Dataset):
 
         self._name = make_name(name)
         self.models = models
-
+        
     @property
     def name(self):
         return self._name
@@ -264,20 +264,8 @@ class SpectrumDataset(Dataset):
     @property
     def _edisp_kernel(self):
         """The edisp kernel stored in the EDispMapKernel"""
-        # TODO: replace with get_kernel(position) once it works properly
-        if isinstance(self.edisp, EDispKernelMap):
-            energy_true_axis = self.edisp.edisp_map.geom.get_axis_by_name("energy_true")
-            energy_axis = self.edisp.edisp_map.geom.get_axis_by_name("energy")
-
-            return EDispKernel(
-                e_true_lo=energy_true_axis.edges[:-1],
-                e_true_hi=energy_true_axis.edges[1:],
-                e_reco_lo=energy_axis.edges[:-1],
-                e_reco_hi=energy_axis.edges[1:],
-                data=self.edisp.edisp_map.data[:,:,0,0],
-            )
-        else:
-            return  self.edisp
+        if self.edisp is not None:
+            return self.edisp.get_edisp_kernel()
 
     def npred_sig(self):
         """Predicted counts from source model (`RegionNDMap`)."""
@@ -494,7 +482,7 @@ class SpectrumDataset(Dataset):
             e_true.edges[1:],
             np.zeros(e_true.edges[:-1].shape) * u.m ** 2,
         )
-        edisp = EDispKernelMap.from_diagonal_response( e_reco, e_true, counts.geom)
+        edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, counts.geom)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
         livetime = gti.time_sum
@@ -576,16 +564,9 @@ class SpectrumDataset(Dataset):
                     np.squeeze(stacked_exposure.quantity/stacked_livetime)
                 )
 
-            irf_stacker = IRFStacker(
-                list_aeff=[self.aeff, other.aeff],
-                list_livetime=[self.livetime, other.livetime],
-                list_edisp=[self._edisp_kernel, other._edisp_kernel],
-                list_low_threshold=[self.energy_range[0], other.energy_range[0]],
-                list_high_threshold=[self.energy_range[1], other.energy_range[1]],
-            )
             if self.edisp is not None:
-                irf_stacker.stack_edisp()
-                self.edisp = irf_stacker.stacked_edisp
+                self.edisp.edisp_map *= self.mask_safe.data
+                self.edisp.stack(other.edisp, weights=other.mask_safe)
 
             self.aeff = stacked_aeff
 
@@ -1179,13 +1160,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         try:
             rmffile = phafile.replace("pha", "rmf")
-            energy_dispersion = EDispKernel.read(dirname / rmffile)
-            if counts.geom.region is not None:
-                energy_dispersion = EDispKernelMap.from_edisp_kernel(energy_dispersion, counts.geom)
+            kernel = EDispKernel.read(dirname / rmffile)
+            edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=counts.geom)
 
         except OSError:
             # TODO : Add logger and echo warning
-            energy_dispersion = None
+            edisp = None
 
         try:
             bkgfile = phafile.replace("pha", "bkg")
@@ -1205,7 +1185,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             counts=counts,
             aeff=aeff,
             counts_off=counts_off,
-            edisp=energy_dispersion,
+            edisp=edisp,
             livetime=counts.meta["EXPOSURE"] * u.s,
             mask_safe=mask_safe,
             acceptance=acceptance,
