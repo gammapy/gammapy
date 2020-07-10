@@ -226,7 +226,6 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, fullwidth, nb
                                  angle=rot_angle)
         regions.append(reg)
 
-    # axis = MapAxis.from_nodes(coords[0].separation(coords))
     dist = []
     center = coords[int(nbins/2)]
     for coord in coords:
