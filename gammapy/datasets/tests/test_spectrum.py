@@ -412,7 +412,6 @@ class TestSpectrumOnOff:
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert_allclose(self.off_counts.data, newdataset.counts_off.data)
-        print(newdataset.edisp.edisp_map.data)
         assert_allclose(self.edisp.edisp_map.data, newdataset.edisp.edisp_map.data)
         assert_time_allclose(newdataset.gti.time_start, dataset.gti.time_start)
 
