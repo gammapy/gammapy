@@ -8,7 +8,7 @@ from astropy.coordinates import Angle
 from astropy.table import Table
 from .core import Estimator
 
-__all__ = ["ImageProfile", "ImageProfileEstimator"]
+__all__ = ["SimpleImageProfile", "ImageProfileEstimator"]
 
 
 # TODO: implement measuring profile along arbitrary directions
@@ -152,7 +152,7 @@ class ImageProfileEstimator(Estimator):
 
         Returns
         -------
-        profile : `ImageProfile`
+        profile : `SimpleImageProfile`
             Result image profile object.
         """
         p = self.parameters
@@ -174,10 +174,10 @@ class ImageProfileEstimator(Estimator):
 
         result.meta["PROFILE_TYPE"] = p["axis"]
 
-        return ImageProfile(result)
+        return SimpleImageProfile(result)
 
 
-class ImageProfile:
+class SimpleImageProfile:
     """Image profile class.
 
     The image profile data is stored in `~astropy.table.Table` object, with the
@@ -229,7 +229,7 @@ class ImageProfile:
 
         Returns
         -------
-        profile : `ImageProfile`
+        profile : `SimpleImageProfile`
             Smoothed image profile.
         """
         table = self.table.copy()
@@ -366,7 +366,7 @@ class ImageProfile:
         Parameters
         ----------
         **kwargs : dict
-            Keyword arguments passed to `ImageProfile.plot_profile()`
+            Keyword arguments passed to `SimpleImageProfile.plot_profile()`
 
         Returns
         -------
@@ -395,7 +395,7 @@ class ImageProfile:
 
         Returns
         -------
-        profile : `ImageProfile`
+        profile : `SimpleImageProfile`
             Normalized image profile.
         """
         table = self.table.copy()
@@ -405,7 +405,7 @@ class ImageProfile:
         elif mode == "integral":
             norm = np.nansum(profile)
         else:
-            raise ValueError(f"Invalide normalization mode: {mode!r}")
+            raise ValueError(f"Invalid normalization mode: {mode!r}")
 
         table["profile"] /= norm
 
