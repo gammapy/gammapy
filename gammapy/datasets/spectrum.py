@@ -367,15 +367,15 @@ class SpectrumDataset(Dataset):
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
+        self._plot_energy_range(ax=ax)
         self.excess.plot(
-            ax=ax, label="Measured excess", yerr=np.sqrt(self.excess.data.flatten())
+            ax=ax, label="Measured excess", yerr=np.sqrt(np.abs(self.excess.data.flatten()))
         )
         self.npred_sig().plot(
             ax=ax,
             label="Predicted excess",
-            yerr=np.sqrt(self.npred_sig().data.flatten()),
+            step=True,
         )
-        self._plot_energy_range(ax=ax)
 
         ax.legend(numpoints=1)
         ax.set_title("")
