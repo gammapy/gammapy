@@ -279,8 +279,8 @@ class MapDataset(Dataset):
         for evaluator in self.evaluators.values():
             if evaluator.contributes:
                 if self.use_cache is False:
-                    evaluator._spatial_pars_cached = None
-                    evaluator._pars_cached = None
+                    evaluator._spatial_conv_cached = None
+                    evaluator._npred_cached = None
                 npred = evaluator.compute_npred()
                 npred_total.stack(npred)
         return npred_total
@@ -1792,8 +1792,8 @@ class MapEvaluator:
         else:
             self.exposure = exposure
 
-        self._pars_cached = None
-        self._spatial_pars_cached = None
+        self._npred_cached = None
+        self._spatial_conv_cached = None
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -1854,7 +1854,7 @@ class MapEvaluator:
 
         pars = list(self.model.parameters.values)
         npred = self._npred_cached
-        if self._pars_cached != pars:
+        if self._pars_cached != pars or self._npred_cached is None:
             self._pars_cached = pars
             if isinstance(self.model, BackgroundModel):
                 npred = self.model.evaluate()
@@ -1894,7 +1894,7 @@ class MapEvaluator:
         if self.model.spatial_model and not isinstance(self.geom, RegionGeom):
             spatial_pars = list(self.model.spatial_model.parameters.values)
             spatial_conv = self._spatial_conv_cached
-            if self._spatial_pars_cached != spatial_pars:
+            if self._spatial_pars_cached != spatial_pars or self._spatial_conv_cached is None:
                 self._spatial_pars_cached = spatial_pars
                 spatial_conv = Map.from_geom(geom=self.geom, data=1)
                 geom_image = self.geom.to_image()
