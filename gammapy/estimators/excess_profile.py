@@ -7,11 +7,12 @@ from gammapy.estimators import ImageProfile
 from gammapy.stats import WStatCountsStatistic, CashCountsStatistic
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
+from .core import Estimator
 
 __all__ = ["ExcessProfileEstimator"]
 
 
-class ExcessProfileEstimator:
+class ExcessProfileEstimator(Estimator):
     """Estimate profile from a DataSet.
 
     Parameters
@@ -37,7 +38,7 @@ class ExcessProfileEstimator:
         from astropy import units as u
         from astropy.coordinates import SkyCoord
         from gammapy.data import GTI
-        from gammapy.estimators import ExcessProfileEstimator, image_profile
+        from gammapy.estimators import ExcessProfileEstimator, imageprofile
         from gammapy.utils.regions import make_orthogonal_rectangle_sky_regions
         from gammapy.datasets import Datasets
 
@@ -69,6 +70,7 @@ class ExcessProfileEstimator:
         ax = fermi_prof.plot("flux", ax=ax)
 
     """
+    tag = "ExcessProfileEstimator"
 
     def __init__(self, regions, axis, spectrum=None, n_sigma=1., n_sigma_ul=3.):
         self.regions = regions
