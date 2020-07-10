@@ -9,6 +9,7 @@ from .lightcurve import *
 from .profile import *
 from .sensitivity import *
 from .ts_map import *
+from .image_profile import *
 
 ESTIMATOR_REGISTRY = Registry(
     [
@@ -18,10 +19,10 @@ ESTIMATOR_REGISTRY = Registry(
         FluxPointsEstimator,
         LightCurveEstimator,
         SensitivityEstimator,
-        ImageProfileEstimator
+        ImageProfileEstimator,
 ]
 )
 """Registry of estimator classes in Gammapy."""
 
-__all__ = ["ESTIMATOR_REGISTRY", "FluxPoints", "LightCurve", "ImageProfile", "Estimator"]
+__all__ = ["ESTIMATOR_REGISTRY", "FluxPoints", "LightCurve", "SimpleImageProfile", "Estimator", "ImageProfile"]
 __all__.extend(cls.__name__ for cls in ESTIMATOR_REGISTRY)
