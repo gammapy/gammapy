@@ -59,7 +59,7 @@ def test_dict_to_skymodels():
     assert np.isnan(pars0["lambda_"].max)
 
     model1 = models[2]
-    assert "PL" in model1.spectral_model.tag
+    assert "pl" in model1.spectral_model.tag
     assert "PowerLawSpectralModel" in model1.spectral_model.tag
     assert "DiskSpatialModel" in model1.spatial_model.tag
     assert "disk" in model1.spatial_model.tag
@@ -116,7 +116,7 @@ def test_sky_models_io(tmp_path):
 def test_absorption_io(tmp_path):
     dominguez = Absorption.read_builtin("dominguez")
     model = AbsorbedSpectralModel(
-        spectral_model=Model.create("PowerLawSpectralModel"),
+        spectral_model=Model.create("pl", "spectral"),
         absorption=dominguez,
         redshift=0.5,
     )
@@ -142,7 +142,7 @@ def test_absorption_io(tmp_path):
         u.Quantity(np.ones((2, 3)), ""),
     )
     model = AbsorbedSpectralModel(
-        spectral_model=Model.create("PowerLawSpectralModel"),
+        spectral_model=Model.create("PowerLawSpectralModel", "spectral"),
         absorption=test_absorption,
         redshift=0.5,
     )
@@ -158,39 +158,44 @@ def test_absorption_io(tmp_path):
 
 def make_all_models():
     """Make an instance of each model, for testing."""
-    yield Model.create("ConstantSpatialModel")
+    yield Model.create("ConstantSpatialModel", "spatial")
     map_constantmodel = Map.create(npix=(10, 20), unit="sr-1")
-    yield Model.create("TemplateSpatialModel", map=map_constantmodel)
-    yield Model.create("DiskSpatialModel", lon_0="1 deg", lat_0="2 deg", r_0="3 deg")
+    yield Model.create("TemplateSpatialModel", "spatial", map=map_constantmodel)
     yield Model.create(
-        "GaussianSpatialModel", lon_0="1 deg", lat_0="2 deg", sigma="3 deg"
+        "DiskSpatialModel", "spatial", lon_0="1 deg", lat_0="2 deg", r_0="3 deg"
     )
-    yield Model.create("PointSpatialModel", lon_0="1 deg", lat_0="2 deg")
+    yield Model.create("gauss", "spatial", lon_0="1 deg", lat_0="2 deg", sigma="3 deg")
+    yield Model.create("PointSpatialModel", "spatial", lon_0="1 deg", lat_0="2 deg")
     yield Model.create(
-        "ShellSpatialModel", lon_0="1 deg", lat_0="2 deg", radius="3 deg", width="4 deg"
+        "ShellSpatialModel",
+        "spatial",
+        lon_0="1 deg",
+        lat_0="2 deg",
+        radius="3 deg",
+        width="4 deg",
     )
-    yield Model.create("ConstantSpectralModel", const="99 cm-2 s-1 TeV-1")
+    yield Model.create("ConstantSpectralModel", "spectral", const="99 cm-2 s-1 TeV-1")
     # TODO: yield Model.create("CompoundSpectralModel")
-    yield Model.create("PowerLawSpectralModel")
-    yield Model.create("PowerLaw2SpectralModel")
-    yield Model.create("ExpCutoffPowerLawSpectralModel")
-    yield Model.create("ExpCutoffPowerLaw3FGLSpectralModel")
-    yield Model.create("SuperExpCutoffPowerLaw3FGLSpectralModel")
-    yield Model.create("SuperExpCutoffPowerLaw4FGLSpectralModel")
-    yield Model.create("LogParabolaSpectralModel")
+    yield Model.create("PowerLawSpectralModel", "spectral")
+    yield Model.create("PowerLaw2SpectralModel", "spectral")
+    yield Model.create("ExpCutoffPowerLawSpectralModel", "spectral")
+    yield Model.create("ExpCutoffPowerLaw3FGLSpectralModel", "spectral")
+    yield Model.create("SuperExpCutoffPowerLaw3FGLSpectralModel", "spectral")
+    yield Model.create("SuperExpCutoffPowerLaw4FGLSpectralModel", "spectral")
+    yield Model.create("LogParabolaSpectralModel", "spectral")
     yield Model.create(
-        "TemplateSpectralModel", energy=[1, 2] * u.cm, values=[3, 4] * u.cm
+        "TemplateSpectralModel", "spectral", energy=[1, 2] * u.cm, values=[3, 4] * u.cm
     )  # TODO: add unit validation?
-    yield Model.create("GaussianSpectralModel")
+    yield Model.create("GaussianSpectralModel", "spectral")
     # TODO: yield Model.create("AbsorbedSpectralModel")
     # TODO: yield Model.create("NaimaSpectralModel")
     # TODO: yield Model.create("ScaleSpectralModel")
-    yield Model.create("ConstantTemporalModel")
-    yield Model.create("LightCurveTemplateTemporalModel", Table())
+    yield Model.create("ConstantTemporalModel", "temporal")
+    yield Model.create("LightCurveTemplateTemporalModel", "temporal", Table())
     yield Model.create(
         "SkyModel",
-        spatial_model=Model.create("ConstantSpatialModel"),
-        spectral_model=Model.create("PowerLawSpectralModel"),
+        spatial_model=Model.create("ConstantSpatialModel", "spatial"),
+        spectral_model=Model.create("PowerLawSpectralModel", "spectral"),
     )
     m1 = Map.create(
         npix=(10, 20, 30), axes=[MapAxis.from_nodes([1, 2] * u.TeV, name="energy")]

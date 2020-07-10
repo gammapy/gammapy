@@ -210,7 +210,7 @@ class PointSpatialModel(SpatialModel):
         Center position coordinate frame
     """
 
-    tag = ["PointSpatialModel", "PS"]
+    tag = ["PointSpatialModel", "point"]
     lon_0 = Parameter("lon_0", "0 deg")
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
 
@@ -281,7 +281,7 @@ class GaussianSpatialModel(SpatialModel):
         Center position coordinate frame
     """
 
-    tag = ["GaussianSpatialModel", "GaussianSpatial"]
+    tag = ["GaussianSpatialModel", "gauss"]
 
     lon_0 = Parameter("lon_0", "0 deg")
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
@@ -489,7 +489,7 @@ class ConstantSpatialModel(SpatialModel):
         Value
     """
 
-    tag = ["ConstantSpatialModel", "ConstantSpatial"]
+    tag = ["ConstantSpatialModel", "const"]
     value = Parameter("value", "1 sr-1", frozen=True)
 
     frame = "icrs"
@@ -546,7 +546,7 @@ class TemplateSpatialModel(SpatialModel):
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
     """
 
-    tag = ["TemplateSpatialModel", "TemplateSpatial"]
+    tag = ["TemplateSpatialModel", "template"]
     norm = Parameter("norm", 1)
 
     def __init__(

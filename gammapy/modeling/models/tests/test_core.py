@@ -139,7 +139,7 @@ def test_model_copy():
 
 def test_model_create():
     spectral_model = Model.create(
-        "PowerLaw2SpectralModel", amplitude="1e-10 cm-2 s-1", index=3
+        "pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3
     )
     assert "PowerLaw2SpectralModel" in spectral_model.tag
     assert_allclose(spectral_model.index.value, 3)

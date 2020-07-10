@@ -219,7 +219,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         else:
             raise ValueError(f"Invalid spec_type: {spec_type}")
 
-        model = Model.create(tag, **pars)
+        model = Model.create(tag, "spectral", **pars)
         for name, value in errs.items():
             model.parameters[name].error = value
 
@@ -262,7 +262,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         else:
             raise ValueError(f"Invalid morph_type: {morph_type!r}")
 
-        model = Model.create(tag, **pars)
+        model = Model.create(tag, "spatial", **pars)
 
         for name, value in errs.items():
             model.parameters[name].error = value

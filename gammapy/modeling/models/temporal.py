@@ -54,7 +54,7 @@ class TemporalModel(Model):
 class ConstantTemporalModel(TemporalModel):
     """Constant temporal model."""
 
-    tag = "ConstantTemporalModel"
+    tag = ["ConstantTemporalModel", "const"]
 
     @staticmethod
     def evaluate(time):
@@ -125,7 +125,7 @@ class ExpDecayTemporalModel(TemporalModel):
         The reference time in mjd
     """
 
-    tag = "ExpDecayTemporalModel"
+    tag = ["ExpDecayTemporalModel", "exp-decay"]
 
     t0 = Parameter("t0", "1 d", frozen=False)
     _t_ref_default = Time("2000-01-01")
@@ -169,7 +169,7 @@ class GaussianTemporalModel(TemporalModel):
         Width of the gaussian profile.
     """
 
-    tag = "GaussianTemporalModel"
+    tag = ["GaussianTemporalModel", "gauss"]
 
     _t_ref_default = Time("2000-01-01")
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
@@ -253,7 +253,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     >>> light_curve.mean_norm_in_time_interval(46300, 46301)
     """
 
-    tag = "LightCurveTemplateTemporalModel"
+    tag = ["LightCurveTemplateTemporalModel", "template"]
 
     def __init__(self, table, filename=None):
         self.table = table
@@ -398,4 +398,4 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     def to_dict(self, overwrite=False):
         """Create dict for YAML serilisation"""
-        return {"type": self.tag, "filename": self.filename}
+        return {"type": self.tag[0], "filename": self.filename}

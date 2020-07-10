@@ -121,19 +121,32 @@ class Model:
         return cls.from_parameters(parameters, **kwargs)
 
     @staticmethod
-    def create(tag, *args, **kwargs):
+    def create(tag, model_type=None, *args, **kwargs):
         """Create a model instance.
 
         Examples
         --------
         >>> from gammapy.modeling.models import Model
-        >>> spectral_model = Model.create("PowerLaw2SpectralModel", amplitude="1e-10 cm-2 s-1", index=3)
+        >>> spectral_model = Model.create("pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3)
         >>> type(spectral_model)
         gammapy.modeling.models.spectral.PowerLaw2SpectralModel
         """
-        from . import MODEL_REGISTRY
+        from . import (
+            MODEL_REGISTRY,
+            SPATIAL_MODEL_REGISTRY,
+            SPECTRAL_MODEL_REGISTRY,
+            TEMPORAL_MODEL_REGISTRY,
+        )
 
-        cls = MODEL_REGISTRY.get_cls(tag)
+        if model_type is None:
+            cls = MODEL_REGISTRY.get_cls(tag)
+        else:
+            registry = {
+                "spatial": SPATIAL_MODEL_REGISTRY,
+                "spectral": SPECTRAL_MODEL_REGISTRY,
+                "temporal": TEMPORAL_MODEL_REGISTRY,
+            }
+            cls = registry[model_type].get_cls(tag)
         return cls(*args, **kwargs)
 
     def __str__(self):
