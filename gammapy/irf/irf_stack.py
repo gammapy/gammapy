@@ -14,25 +14,6 @@ class IRFStacker:
     r"""
     Stack instrument response functions.
 
-    Compute mean effective area and the mean energy dispersion for a given for a
-    given list of instrument response functions. Results are stored as
-    attributes.
-
-    The stacking of :math:`j` elements is implemented as follows.  :math:`k`
-    and :math:`l` denote a bin in reconstructed and true energy, respectively.
-
-    .. math::
-        \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
-            bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
-
-        \overline{t} = \sum_{j} t_i
-
-        \overline{\mathrm{aeff}}_l = \frac{\sum_{j}\mathrm{aeff}_{jl}
-            \cdot t_j}{\overline{t}}
-
-        \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl}
-            \cdot \mathrm{aeff}_{jl} \cdot t_j \cdot \epsilon_{jk}}{\sum_{j} \mathrm{aeff}_{jl}
-            \cdot t_j}
 
     Parameters
     ----------
