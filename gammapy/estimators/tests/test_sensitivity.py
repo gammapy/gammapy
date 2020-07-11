@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
@@ -11,9 +10,9 @@ from gammapy.maps import MapAxis, RegionNDMap
 
 @pytest.fixture()
 def spectrum_dataset():
-    e_true = np.logspace(0, 1, 21) * u.TeV
+    e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=20, name="energy_true")
     e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=4)
-    aeff = EffectiveAreaTable.from_constant(value=1e6 * u.m ** 2, energy=e_true)
+    aeff = EffectiveAreaTable.from_constant(value=1e6 * u.m ** 2, energy=e_true.edges)
 
     background = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[e_reco])
     background.data += 3600

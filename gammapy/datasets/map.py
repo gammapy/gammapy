@@ -12,7 +12,7 @@ from gammapy.irf import EDispKernel, EffectiveAreaTable
 from gammapy.irf.edisp_map import EDispMap, EDispKernelMap
 from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
-from gammapy.maps import Map, MapAxis
+from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling.models import BackgroundModel, Models, ProperModels
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
@@ -973,6 +973,10 @@ class MapDataset(Dataset):
             else:
                 axis = self._geom.get_axis_by_name("energy")
                 edisp = self.edisp.get_edisp_kernel(on_region.center, e_reco=axis.edges)
+
+            edisp = EDispKernelMap.from_edisp_kernel(
+                edisp=edisp, geom=RegionGeom(on_region)
+            )
             kwargs["edisp"] = edisp
 
         return SpectrumDataset(**kwargs)

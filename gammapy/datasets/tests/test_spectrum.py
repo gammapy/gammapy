@@ -185,7 +185,7 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
         counts=spectrum_dataset.counts.copy(),
         livetime=livetime,
         aeff=aeff,
-        edisp=edisp,
+        edisp=edisp.copy(),
         background=background.copy(),
     )
 
@@ -598,7 +598,7 @@ class TestSpectralFit:
         assert_allclose(actual.value, 5.200e-11, rtol=1e-3)
 
     def test_stats(self):
-        dataset = self.datasets[0]
+        dataset = self.datasets[0].copy()
         dataset.models = self.pwl
 
         fit = Fit([dataset])
@@ -771,17 +771,18 @@ class TestSpectrumDatasetOnOffStack:
                 index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
             )
         )
+
         self.stacked_dataset.models = pwl
 
         npred_stacked = self.stacked_dataset.npred().data
         npred_stacked[~self.stacked_dataset.mask_safe.data] = 0
         npred_summed = np.zeros_like(npred_stacked)
 
-        for obs in self.datasets:
-            obs.models = pwl
-            npred_summed[obs.mask_safe] += obs.npred().data[obs.mask_safe]
+        for dataset in self.datasets:
+            dataset.models = pwl
+            npred_summed[dataset.mask_safe] += dataset.npred().data[dataset.mask_safe]
 
-        assert_allclose(npred_stacked, npred_summed)
+        assert_allclose(npred_stacked, npred_summed, rtol=1e-6)
 
     def test_stack_backscal(self):
         """Verify backscal stacking """

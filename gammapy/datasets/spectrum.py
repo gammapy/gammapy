@@ -95,7 +95,12 @@ class SpectrumDataset(Dataset):
 
         self._name = make_name(name)
         self.models = models
-        
+
+        # TODO: this enforces the exposure on the edisp map, maybe better move
+        #  to where the EDispKernelMap is created?
+        if edisp is not None:
+            self.edisp.exposure_map.data = self.exposure.data
+
     @property
     def name(self):
         return self._name
@@ -745,6 +750,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self._name = make_name(name)
         self.gti = gti
         self.models = models
+
+        # TODO: this enforces the exposure on the edisp map, maybe better move
+        #  to where the EDispKernelMap is created?
+        if edisp is not None:
+            self.edisp.exposure_map.data = self.exposure.data
 
     def __str__(self):
         str_ = super().__str__()
