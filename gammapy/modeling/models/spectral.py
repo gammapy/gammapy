@@ -637,7 +637,7 @@ class BrokenPowerLawSpectralModel(SpectralModel):
         :math:`E_{break}`
     """
 
-    tag = "BrokenPowerLawSpectralModel"
+    tag = ["BrokenPowerLawSpectralModel", "bpl"]
     index1 = Parameter("index1", 2.0)
     index2 = Parameter("index2", 2.0)
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
