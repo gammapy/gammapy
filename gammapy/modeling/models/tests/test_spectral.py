@@ -468,6 +468,19 @@ def test_TemplateSpectralModel_evaluate_tiny():
     assert np.all(result[mask] == 0.0)
 
 
+def test_PiecewiseBrokenPowerLawSpectralModel_from_template():
+    energy = np.array([1.00000000e06, 1.25892541e06, 1.58489319e06, 1.99526231e06])
+    values = np.array([4.39150790e-38, 1.96639562e-38, 8.80497507e-39, 3.94262401e-39])
+
+    model = TemplateSpectralModel(
+        energy=energy * u.TeV, values=values * u.Unit("MeV-1 s-1 sr-1")
+    )
+    PiecewiseBrokenPowerLawSpectralModel.from_template(model)
+    PiecewiseBrokenPowerLawSpectralModel.from_template(
+        model, energy=[0.1, 1, 10] * u.TeV
+    )
+
+
 @requires_dependency("naima")
 class TestNaimaModel:
     # Used to test model value at 2 TeV

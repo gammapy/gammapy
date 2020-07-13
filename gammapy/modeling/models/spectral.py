@@ -725,6 +725,25 @@ class PiecewiseBrokenPowerLawSpectralModel(SpectralModel):
     def from_parameters(cls, parameters, **kwargs):
         return cls(kwargs["energy"], kwargs["values"], parameters=parameters)
 
+    @classmethod
+    def from_template(cls, model, energy=None):
+        """Create from TemplateSpectralModel.
+
+        Parameters
+        ----------
+        model : `~gammapy.modeling.models.TemplateSpectralModel`
+            Template evaluated to determine values at given `energy`
+        energy : `~astropy.units.Quantity`
+            Array of energies at which the model values are given (nodes).
+            By default energy are set as model.energy.
+        """
+
+        if not isinstance(model, TemplateSpectralModel):
+            raise TypeError("model must be a TemplateSpectralModel")
+        if energy is None:
+            energy = model.energy
+        return cls(energy, model(energy))
+
     @property
     def values(self):
         return np.array([p.value for p in self.parameters]) * self.init_values
