@@ -1894,13 +1894,10 @@ class MapEvaluator:
         if self.model.spatial_model and not isinstance(self.geom, RegionGeom):
             spatial_pars = list(self.model.spatial_model.parameters.values)
             spatial_conv = self._spatial_conv_cached
-            if self._spatial_pars_cached != spatial_pars or self._spatial_conv_cached is None:
+            if self._spatial_pars_cached != spatial_pars or spatial_conv is None:
                 self._spatial_pars_cached = spatial_pars
-                spatial_conv = Map.from_geom(geom=self.geom, data=1)
                 geom_image = self.geom.to_image()
-                integral = self.model.spatial_model.integrate_geom(geom_image)
-                spatial_conv.data = np.ones(value.shape) * integral.data
-                spatial_conv.unit = integral.unit
+                spatial_conv = self.model.spatial_model.integrate_geom(geom_image)
                 if self.psf and self.model.apply_irf["psf"]:
                     spatial_conv = self.apply_psf(spatial_conv)
                 self._spatial_conv_cached = spatial_conv
