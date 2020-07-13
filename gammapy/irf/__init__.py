@@ -8,8 +8,6 @@ from .edisp_map import *
 from .effective_area import *
 from .energy_dispersion import *
 from .io import *
-from .irf_reduce import *
-from .irf_stack import *
 from .psf_3d import *
 from .psf_gauss import *
 from .psf_kernel import *

@@ -157,6 +157,7 @@ def test_edisp_from_diagonal_response(position):
     # e_reco to contribute to
     assert_allclose(sum_kernel[1:-1], 1)
 
+
 def test_edisp_map_to_edisp_kernel_map():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
 
@@ -174,6 +175,7 @@ def test_edisp_map_to_edisp_kernel_map():
     assert edisp_kernel_map.exposure_map.geom.axes[0].name == 'energy'
     actual = kernel.pdf_matrix.sum(axis=0)
     assert_allclose(actual, 2.0)
+
 
 def test_edisp_kernel_map_stack():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
@@ -206,6 +208,7 @@ def test_edisp_kernel_map_stack():
     assert_allclose(actual, [2./3., 2./3., 2.0, 2.0, 2.0])
     assert_allclose(exposure, 3.)
 
+
 def test__incorrect_edisp_kernel_map_stack():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
 
@@ -227,6 +230,7 @@ def test__incorrect_edisp_kernel_map_stack():
         edisp_1.stack(edisp_2)
     assert except_info.match("Missing exposure map for EDispKernelMap.stack")
 
+
 def test_edispkernel_from_diagonal_response():
     energy_axis_true = MapAxis.from_energy_bounds(
         "0.3 TeV", "10 TeV", nbin=11, name="energy_true"
@@ -243,6 +247,7 @@ def test_edispkernel_from_diagonal_response():
     # We exclude the first and last bin, where there is no
     # e_reco to contribute to
     assert_allclose(sum_kernel[1:-1], 1)
+
 
 def test_edispkernel_from_1D():
     energy_axis_true = MapAxis.from_energy_bounds(

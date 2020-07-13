@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.datasets import Dataset
-from gammapy.irf import EDispKernel, EDispKernelMap, EffectiveAreaTable, IRFStacker
+from gammapy.irf import EDispKernel, EDispKernelMap, EffectiveAreaTable
 from gammapy.maps import RegionGeom, RegionNDMap
 from gammapy.modeling.models import Models, ProperModels
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic, cash, wstat
@@ -95,6 +95,11 @@ class SpectrumDataset(Dataset):
 
         self._name = make_name(name)
         self.models = models
+
+        # TODO: this enforces the exposure on the edisp map, maybe better move
+        #  to where the EDispKernelMap is created?
+        if edisp is not None:
+            self.edisp.exposure_map.data = self.exposure.data
 
     @property
     def name(self):
@@ -264,20 +269,8 @@ class SpectrumDataset(Dataset):
     @property
     def _edisp_kernel(self):
         """The edisp kernel stored in the EDispMapKernel"""
-        # TODO: replace with get_kernel(position) once it works properly
-        if isinstance(self.edisp, EDispKernelMap):
-            energy_true_axis = self.edisp.edisp_map.geom.get_axis_by_name("energy_true")
-            energy_axis = self.edisp.edisp_map.geom.get_axis_by_name("energy")
-
-            return EDispKernel(
-                e_true_lo=energy_true_axis.edges[:-1],
-                e_true_hi=energy_true_axis.edges[1:],
-                e_reco_lo=energy_axis.edges[:-1],
-                e_reco_hi=energy_axis.edges[1:],
-                data=self.edisp.edisp_map.data[:,:,0,0],
-            )
-        else:
-            return  self.edisp
+        if self.edisp is not None:
+            return self.edisp.get_edisp_kernel()
 
     def npred_sig(self):
         """Predicted counts from source model (`RegionNDMap`)."""
@@ -494,7 +487,7 @@ class SpectrumDataset(Dataset):
             e_true.edges[1:],
             np.zeros(e_true.edges[:-1].shape) * u.m ** 2,
         )
-        edisp = EDispKernelMap.from_diagonal_response( e_reco, e_true, counts.geom)
+        edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, counts.geom)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
         livetime = gti.time_sum
@@ -542,9 +535,6 @@ class SpectrumDataset(Dataset):
         .. math::
             \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
 
-        Please refer to the `~gammapy.irf.IRFStacker` for the description
-        of how the IRFs are stacked.
-
         Parameters
         ----------
         other : `~gammapy.spectrum.SpectrumDataset`
@@ -576,16 +566,9 @@ class SpectrumDataset(Dataset):
                     np.squeeze(stacked_exposure.quantity/stacked_livetime)
                 )
 
-            irf_stacker = IRFStacker(
-                list_aeff=[self.aeff, other.aeff],
-                list_livetime=[self.livetime, other.livetime],
-                list_edisp=[self._edisp_kernel, other._edisp_kernel],
-                list_low_threshold=[self.energy_range[0], other.energy_range[0]],
-                list_high_threshold=[self.energy_range[1], other.energy_range[1]],
-            )
             if self.edisp is not None:
-                irf_stacker.stack_edisp()
-                self.edisp = irf_stacker.stacked_edisp
+                self.edisp.edisp_map *= self.mask_safe.data
+                self.edisp.stack(other.edisp, weights=other.mask_safe)
 
             self.aeff = stacked_aeff
 
@@ -764,6 +747,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self._name = make_name(name)
         self.gti = gti
         self.models = models
+
+        # TODO: this enforces the exposure on the edisp map, maybe better move
+        #  to where the EDispKernelMap is created?
+        if edisp is not None:
+            self.edisp.exposure_map.data = self.exposure.data
 
     def __str__(self):
         str_ = super().__str__()
@@ -960,8 +948,23 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             \overline{{a}_{off}}_k = \frac{\overline{\mathrm {n_{off}}}}{\alpha_{1k} \cdot
             \mathrm{n_{off}}_{1k} \cdot \epsilon_{1k} + \alpha_{2k} \cdot \mathrm{n_{off}}_{2k} \cdot \epsilon_{2k}}
 
-        Please refer to the `~gammapy.irf.IRFStacker` for the description
-        of how the IRFs are stacked.
+
+        The stacking of :math:`j` elements is implemented as follows.  :math:`k`
+        and :math:`l` denote a bin in reconstructed and true energy, respectively.
+
+        .. math::
+            \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
+                bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+
+            \overline{t} = \sum_{j} t_i
+
+            \overline{\mathrm{aeff}}_l = \frac{\sum_{j}\mathrm{aeff}_{jl}
+                \cdot t_j}{\overline{t}}
+
+            \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl}
+                \cdot \mathrm{aeff}_{jl} \cdot t_j \cdot \epsilon_{jk}}{\sum_{j} \mathrm{aeff}_{jl}
+                \cdot t_j}
+
 
         Parameters
         ----------
@@ -1179,13 +1182,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         try:
             rmffile = phafile.replace("pha", "rmf")
-            energy_dispersion = EDispKernel.read(dirname / rmffile)
-            if counts.geom.region is not None:
-                energy_dispersion = EDispKernelMap.from_edisp_kernel(energy_dispersion, counts.geom)
+            kernel = EDispKernel.read(dirname / rmffile)
+            edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=counts.geom)
 
         except OSError:
             # TODO : Add logger and echo warning
-            energy_dispersion = None
+            edisp = None
 
         try:
             bkgfile = phafile.replace("pha", "bkg")
@@ -1205,7 +1207,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             counts=counts,
             aeff=aeff,
             counts_off=counts_off,
-            edisp=energy_dispersion,
+            edisp=edisp,
             livetime=counts.meta["EXPOSURE"] * u.s,
             mask_safe=mask_safe,
             acceptance=acceptance,

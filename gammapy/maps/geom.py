@@ -423,7 +423,7 @@ class MapAxis:
 
     @classmethod
     def from_energy_bounds(
-        cls, emin, emax, nbin, unit=None, per_decade=False, name=None
+        cls, emin, emax, nbin, unit=None, per_decade=False, name=None, node_type="edges"
     ):
         """Make an energy axis.
 
@@ -465,7 +465,7 @@ class MapAxis:
             raise ValueError("Energy axis can only be named 'energy' or 'energy_true'")
 
         return cls.from_bounds(
-            emin.value, emax.value, nbin=nbin, unit=unit, interp="log", name=name
+            emin.value, emax.value, nbin=nbin, unit=unit, interp="log", name=name, node_type=node_type
         )
 
     @classmethod
