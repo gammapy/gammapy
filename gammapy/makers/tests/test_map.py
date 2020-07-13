@@ -238,7 +238,7 @@ def data_store():
             "psf_value": 4369.96391,
         },
         {
-            "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
+            "energy": MapAxis.from_energy_bounds(1, 10, 101, "TeV", name="energy_true", node_type="center"),
             "rad": None,
             "energy_shape": (101,),
             "psf_energy": 1412.537545,
@@ -260,7 +260,7 @@ def data_store():
             "psf_value": 25888.5047,
         },
         {
-            "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
+            "energy": MapAxis.from_energy_bounds(1, 10, 101, "TeV", name="energy_true", node_type="center"),
             "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002) * u.deg, name="theta"),
             "energy_shape": (101,),
             "psf_energy": 1412.537545,
@@ -276,11 +276,13 @@ def test_make_psf(pars, data_store):
     energy_axis = pars["energy"]
     rad_axis = pars["rad"]
 
+    psf = data_store.obs(23523).psf
+
     if energy_axis is None:
-        energy_axis = MapAxis.from_energy_bounds(1, 10, 100, unit="TeV", name="energy_true")
+        energy_axis = psf.energy_axis
 
     if rad_axis is None:
-        rad_axis = MapAxis.from_bounds(0, 10, 100, unit="deg", name="theta")
+        rad_axis = psf.rad_axis
 
     geom = RegionGeom(
         region=PointSkyRegion(SkyCoord(83.63, 22.01, unit="deg")),
@@ -289,7 +291,7 @@ def test_make_psf(pars, data_store):
 
     maker = MapDatasetMaker()
 
-    psf_map = maker.make_psf(geom, data_store.obs(23523))
+    psf_map = maker.make_psf(geom=geom, observation=data_store.obs(23523))
     psf = psf_map.get_energy_dependent_table_psf()
 
     assert psf.energy.unit == "GeV"
@@ -311,10 +313,20 @@ def test_make_psf(pars, data_store):
 
 @requires_data()
 def test_make_mean_psf(data_store):
-    position = SkyCoord(83.63, 22.01, unit="deg")
+    psf = data_store.obs(23523).psf
 
-    observations = data_store.get_observations([23523, 23526])
-    psf = make_mean_psf(observations, position=position)
+    geom = RegionGeom.create(
+        region="icrs;point(83.63, 22.01)",
+        axes=[psf.rad_axis, psf.energy_axis]
+    )
+
+    maker = MapDatasetMaker()
+
+    psf_map_1 = maker.make_psf(geom=geom, observation=data_store.obs(23523))
+    psf_map_2 = maker.make_psf(geom=geom, observation=data_store.obs(23526))
+
+    psf_map_1.stack(psf_map_2)
+    psf = psf_map_1.get_energy_dependent_table_psf()
 
     assert not np.isnan(psf.psf_value.value).any()
-    assert_allclose(psf.psf_value.value[22, 22], 12206.1665)
+    assert_allclose(psf.psf_value.value[22, 22], 12206.167892)

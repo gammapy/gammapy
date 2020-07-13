@@ -32,6 +32,7 @@ class RegionGeom(Geom):
     """
 
     is_image = False
+    is_regular = True
     is_allsky = False
     is_hpx = False
     _slice_spatial_axes = slice(0, 2)
@@ -242,7 +243,9 @@ class RegionGeom(Geom):
         y[~in_region] = np.nan
 
         pix = (x, y)
-        for coord, ax in zip(coords[self._slice_non_spatial_axes], self.axes):
+
+        c = self.coord_to_tuple(coords)
+        for coord, ax in zip(c[self._slice_non_spatial_axes], self.axes):
             pix += (ax.coord_to_pix(coord),)
 
         return pix
@@ -250,7 +253,6 @@ class RegionGeom(Geom):
     def get_idx(self):
         idxs = [np.arange(n, dtype=float) for n in self.data_shape[::-1]]
         return np.meshgrid(*idxs[::-1], indexing="ij")[::-1]
-
 
     def _make_bands_cols(self):
         pass

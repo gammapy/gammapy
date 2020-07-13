@@ -6,6 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from gammapy.maps import MapAxis
+from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
@@ -61,6 +62,16 @@ class PSF3D:
         self.energy_thresh_hi = energy_thresh_hi.to("TeV")
 
         self._interp_kwargs = interp_kwargs or {}
+
+    @property
+    def energy_axis(self):
+        edges = edges_from_lo_hi(self.energy_lo, self.energy_hi)
+        return MapAxis.from_edges(edges, name="energy_true", interp="log")
+
+    @property
+    def rad_axis(self):
+        edges = edges_from_lo_hi(self.rad_lo, self.rad_hi)
+        return MapAxis.from_edges(edges, name="theta", interp="lin")
 
     @lazyproperty
     def _interpolate(self):
