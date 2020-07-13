@@ -389,7 +389,7 @@ class ConstantSpectralModel(SpectralModel):
         :math:`k`
     """
 
-    tag = "ConstantSpectralModel"
+    tag = ["ConstantSpectralModel", "const"]
     const = Parameter("const", "1e-12 cm-2 s-1 TeV-1")
 
     @staticmethod
@@ -404,7 +404,7 @@ class CompoundSpectralModel(SpectralModel):
     For more information see :ref:`compound-spectral-model`.
     """
 
-    tag = "CompoundSpectralModel"
+    tag = ["CompoundSpectralModel", "compound"]
 
     def __init__(self, model1, model2, operator):
         self.model1 = model1
@@ -452,7 +452,7 @@ class PowerLawSpectralModel(SpectralModel):
         :math:`E_0`
     """
 
-    tag = "PowerLawSpectralModel"
+    tag = ["PowerLawSpectralModel", "pl"]
     index = Parameter("index", 2.0)
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
     reference = Parameter("reference", "1 TeV", frozen=True)
@@ -561,7 +561,7 @@ class PowerLaw2SpectralModel(SpectralModel):
         Upper energy limit :math:`E_{0, max}`.
     """
 
-    tag = "PowerLaw2SpectralModel"
+    tag = ["PowerLaw2SpectralModel", "pl-2"]
 
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1")
     index = Parameter("index", 2)
@@ -637,7 +637,7 @@ class BrokenPowerLawSpectralModel(SpectralModel):
         :math:`E_{break}`
     """
 
-    tag = "BrokenPowerLawSpectralModel"
+    tag = ["BrokenPowerLawSpectralModel", "bpl"]
     index1 = Parameter("index1", 2.0)
     index2 = Parameter("index2", 2.0)
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
@@ -675,7 +675,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
         :math:`\beta`
     """
 
-    tag = "SmoothBrokenPowerLawSpectralModel"
+    tag = ["SmoothBrokenPowerLawSpectralModel", "sbpl"]
     index1 = Parameter("index1", 2.0)
     index2 = Parameter("index2", 2.0)
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
@@ -711,7 +711,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         :math:`\alpha`
     """
 
-    tag = "ExpCutoffPowerLawSpectralModel"
+    tag = ["ExpCutoffPowerLawSpectralModel", "ecpl"]
 
     index = Parameter("index", 1.5)
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
@@ -764,7 +764,7 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
         :math:`E_{C}`
     """
 
-    tag = "ExpCutoffPowerLaw3FGLSpectralModel"
+    tag = ["ExpCutoffPowerLaw3FGLSpectralModel", "ecpl-3fgl"]
     index = Parameter("index", 1.5)
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
     reference = Parameter("reference", "1 TeV", frozen=True)
@@ -803,7 +803,7 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
         :math:`E_{C}`
     """
 
-    tag = "SuperExpCutoffPowerLaw3FGLSpectralModel"
+    tag = ["SuperExpCutoffPowerLaw3FGLSpectralModel", "secpl-3fgl"]
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
     reference = Parameter("reference", "1 TeV", frozen=True)
     ecut = Parameter("ecut", "10 TeV")
@@ -838,7 +838,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         internally assumes unit of :math:`[E_0]` power :math:`-\Gamma_2`
     """
 
-    tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
+    tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
     reference = Parameter("reference", "1 TeV", frozen=True)
     expfactor = Parameter("expfactor", "1e-2")
@@ -874,7 +874,7 @@ class LogParabolaSpectralModel(SpectralModel):
         :math:`\beta`
     """
 
-    tag = "LogParabolaSpectralModel"
+    tag = ["LogParabolaSpectralModel", "lp"]
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
     reference = Parameter("reference", "10 TeV", frozen=True)
     alpha = Parameter("alpha", 2)
@@ -931,7 +931,7 @@ class TemplateSpectralModel(SpectralModel):
         Meta information, meta['filename'] will be used for serialization
     """
 
-    tag = "TemplateSpectralModel"
+    tag = ["TemplateSpectralModel", "template"]
     norm = Parameter("norm", 1, unit="")
     tilt = Parameter("tilt", 0, unit="", frozen=True)
     reference = Parameter("reference", "1 TeV", frozen=True)
@@ -1017,7 +1017,7 @@ class TemplateSpectralModel(SpectralModel):
 
     def to_dict(self):
         return {
-            "type": self.tag,
+            "type": self.tag[0],
             "parameters": self.parameters.to_dict(),
             "energy": {
                 "data": self.energy.data.tolist(),
@@ -1048,7 +1048,7 @@ class ScaleSpectralModel(SpectralModel):
         Multiplicative norm factor for the model value.
     """
 
-    tag = "ScaleSpectralModel"
+    tag = ["ScaleSpectralModel", "scale"]
     norm = Parameter("norm", 1, unit="")
 
     def __init__(self, model, norm=norm.quantity):
@@ -1250,7 +1250,7 @@ class AbsorbedSpectralModel(SpectralModel):
         Norm of the EBL model
     """
 
-    tag = "AbsorbedSpectralModel"
+    tag = ["AbsorbedSpectralModel", "ebl-absorption"]
     alpha_norm = Parameter("alpha_norm", 1.0, frozen=True)
     redshift = Parameter("redshift", 0.1, frozen=True)
 
@@ -1351,7 +1351,7 @@ class NaimaSpectralModel(SpectralModel):
         for now this is used  only for synchrotron self-compton model
     """
 
-    tag = "NaimaSpectralModel"
+    tag = ["NaimaSpectralModel", "naima"]
 
     def __init__(
         self, radiative_model, distance=1.0 * u.kpc, seed=None, nested_models=None
@@ -1495,7 +1495,7 @@ class GaussianSpectralModel(SpectralModel):
         :math:`\sigma`
     """
 
-    tag = "GaussianSpectralModel"
+    tag = ["GaussianSpectralModel", "gauss"]
     norm = Parameter("norm", 1e-12 * u.Unit("cm-2 s-1"))
     mean = Parameter("mean", 1 * u.TeV)
     sigma = Parameter("sigma", 2 * u.TeV)

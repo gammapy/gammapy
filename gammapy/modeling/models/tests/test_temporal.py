@@ -205,7 +205,7 @@ def test_with_skymodel(light_curve):
     sky_model = SkyModel(
         spectral_model=PowerLawSpectralModel(), temporal_model=light_curve
     )
-    assert sky_model.temporal_model.tag == "LightCurveTemplateTemporalModel"
+    assert "LightCurveTemplateTemporalModel" in sky_model.temporal_model.tag
 
     out = sky_model.to_dict()
     assert "temporal" in out

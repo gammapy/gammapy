@@ -53,12 +53,7 @@ TEMPORAL_MODEL_REGISTRY = Registry(
 )
 """Registry of temporal models classes."""
 
-MODEL_REGISTRY = Registry(
-    SPATIAL_MODEL_REGISTRY
-    + SPECTRAL_MODEL_REGISTRY
-    + TEMPORAL_MODEL_REGISTRY
-    + [SkyModel, SkyDiffuseCube, BackgroundModel]
-)
+MODEL_REGISTRY = Registry([SkyModel, SkyDiffuseCube, BackgroundModel])
 """Registry of model classes"""
 
 
