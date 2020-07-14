@@ -3,11 +3,14 @@
 import collections.abc
 import copy
 import itertools
+import logging
 import numpy as np
 from astropy import units as u
 from gammapy.utils.table import table_from_row_data
 
 __all__ = ["Parameter", "Parameters"]
+
+log = logging.getLogger(__name__)
 
 
 def _get_parameters_str(parameters):
@@ -78,6 +81,10 @@ class Parameter:
         self.name = name
         self._link_label_io = None
         self.scale = scale
+        self.min = min
+        self.max = max
+        self.frozen = frozen
+        self._error = error
 
         # TODO: move this to a setter method that can be called from `__set__` also!
         # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
@@ -88,11 +95,6 @@ class Parameter:
         else:
             self.factor = value
             self.unit = unit
-
-        self.min = min
-        self.max = max
-        self.frozen = frozen
-        self._error = error
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -136,6 +138,7 @@ class Parameter:
     @factor.setter
     def factor(self, val):
         self._factor = float(val)
+        self.check_limits()
 
     @property
     def scale(self):
@@ -207,7 +210,7 @@ class Parameter:
 
     @value.setter
     def value(self, val):
-        self._factor = float(val) / self._scale
+        self.factor = float(val) / self._scale
 
     @property
     def quantity(self):
@@ -219,6 +222,21 @@ class Parameter:
         val = u.Quantity(val, unit=self.unit)
         self.value = val.value
         self.unit = val.unit
+
+    def check_limits(self, strict=False):
+        """Emit a warning or error if value is outside the min/max range"""
+        if self.frozen is False:
+            if (~np.isnan(self.min) and (self.value <= self.min)) or (
+                ~np.isnan(self.max) and (self.value >= self.max)
+            ):
+                if strict is False:
+                    log.warning(
+                        f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'"
+                    )
+                else:
+                    raise ValueError(
+                        f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'"
+                    )
 
     def __repr__(self):
         return (
