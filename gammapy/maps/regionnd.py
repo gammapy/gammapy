@@ -39,7 +39,7 @@ class RegionNDMap(Map):
         self.meta = meta
         self.unit = u.Unit(unit)
 
-    def plot(self, ax=None, yerr=None, step=False, **kwargs):
+    def plot(self, ax=None, **kwargs):
         """Plot region map.
 
         Parameters
@@ -58,8 +58,6 @@ class RegionNDMap(Map):
 
         ax = ax or plt.gca()
 
-        kwargs.setdefault("fmt", ".")
-
         if self.data.squeeze().ndim > 1:
             raise TypeError(
                 "Use `.plot_interactive()` if more the one extra axis is present."
@@ -69,21 +67,16 @@ class RegionNDMap(Map):
             axis = self.geom.get_axis_by_name("energy")
         except KeyError:
             axis = self.geom.get_axis_by_name("energy_true")
-        except KeyError:
-            raise ValueError("Plotting only supported for energy axes.")
+
+        kwargs.setdefault("fmt", ".")
+        kwargs.setdefault("capsize", 2)
+        kwargs.setdefault("lw", 1)
 
         with quantity_support():
             xerr = (axis.center - axis.edges[:-1], axis.edges[1:] - axis.center)
-            if step is False:
-                kwargs.setdefault("fmt", ".")
-                kwargs.setdefault("capsize", 2)
-                kwargs.setdefault("lw", 1)
-                ax.errorbar(
-                    axis.center, self.quantity.squeeze(), xerr=xerr, yerr=yerr, **kwargs
-                )
-            else:
-                kwargs.setdefault("lw", "1")
-                ax.step(axis.center, self.quantity.squeeze(), where="mid", **kwargs)
+            ax.errorbar(
+                axis.center, self.quantity.squeeze(), xerr=xerr, **kwargs
+            )
 
         if axis.interp == "log":
             ax.set_xscale("log")
@@ -118,7 +111,7 @@ class RegionNDMap(Map):
         ax = plt.gca() if ax is None else ax
 
         kwargs.setdefault("histtype", "step")
-        kwargs.setdefault("lw", 2)
+        kwargs.setdefault("lw", 1)
 
         axis = self.geom.axes[0]
 

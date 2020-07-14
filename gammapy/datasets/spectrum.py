@@ -386,7 +386,7 @@ class SpectrumDataset(Dataset):
             label="Measured excess",
             yerr=np.sqrt(np.abs(self.excess.data.flatten())),
         )
-        self.npred_sig().plot(ax=ax, label="Predicted excess", step=True)
+        self.npred_sig().plot_hist(ax=ax, label="Predicted excess")
 
         ax.legend(numpoints=1)
         ax.set_title("")
