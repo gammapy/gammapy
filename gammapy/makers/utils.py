@@ -51,7 +51,9 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
 
     exposure = (exposure * livetime).to("m2 s")
 
-    return WcsNDMap(geom, exposure.value.reshape(geom.data_shape), unit=exposure.unit)
+    return Map.from_geom(
+        geom=geom, data=exposure.value.reshape(geom.data_shape), unit=exposure.unit
+    )
 
 
 def _map_spectrum_weight(map, spectrum=None):

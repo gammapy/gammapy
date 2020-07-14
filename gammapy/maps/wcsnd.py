@@ -225,64 +225,6 @@ class WcsNDMap(WcsMap):
         """
         return self.reduce_over_axes(func=np.add, axes=axes, keepdims=keepdims)
 
-    def reduce_over_axes(self, func=np.add, keepdims=False, axes=None):
-        """Reduce map over non-spatial axes
-
-        Parameters
-        ----------
-        func : `~numpy.ufunc`
-            Function to use for reducing the data.
-        keepdims : bool, optional
-            If this is set to true, the axes which are summed over are left in
-            the map with a single bin
-        axes: list
-            Names of MapAxis to reduce over
-            If None, all will reduced
-
-        Returns
-        -------
-        map_out : `~WcsNDMap`
-            Map with non-spatial axes reduced
-        """
-        if axes is None:
-            axes = [ax.name for ax in self.geom.axes]
-
-        map_out = self.copy()
-        for ax in axes:
-            map_out = map_out.reduce(ax, func=func, keepdims=keepdims)
-        return map_out
-
-    def reduce(self, axis, func=np.add, keepdims=False):
-        """Reduce map over a single non-spatial axis
-
-        Parameters
-        ----------
-        axis: str
-            The name of the axis to reduce over
-        func : `~numpy.ufunc`
-            Function to use for reducing the data.
-        keepdims : bool, optional
-            If this is set to true, the axes which are summed over are left in
-            the map with a single bin
-
-
-        Returns
-        -------
-        map_out : `~WcsNDMap`
-            Map with the given non-spatial axes reduced
-        """
-        if keepdims:
-            geom = self.geom.squash(axis=axis)
-        else:
-            geom = self.geom.drop(axis=axis)
-
-        names = [ax.name for ax in reversed(self.geom.axes)]
-        idx = names.index(axis)
-        data = func.reduce(
-            self.data, axis=idx, keepdims=keepdims, where=~np.isnan(self.data)
-        )
-        return self._init_copy(geom=geom, data=data)
-
     def pad(self, pad_width, mode="constant", cval=0, order=1):
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)

@@ -7,7 +7,7 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
-from gammapy.irf import EDispKernel, EffectiveAreaTable
+from gammapy.irf import EDispKernel, EffectiveAreaTable, EDispKernelMap
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
@@ -125,7 +125,6 @@ def test_npred_models():
     model_2 = SkyModel(spectral_model=pwl_2)
 
     spectrum_dataset.models = Models([model_1, model_2])
-
     npred = spectrum_dataset.npred()
 
     assert_allclose(npred.data.sum(), 64.8)
@@ -165,7 +164,7 @@ def test_spectrum_dataset_create():
     assert empty_spectrum_dataset.background.data.sum() == 0
     assert empty_spectrum_dataset.background.geom.axes[0].nbin == 2
     assert empty_spectrum_dataset.aeff.data.axis("energy_true").nbin == 3
-    assert empty_spectrum_dataset.edisp.data.axis("energy").nbin == 2
+    assert empty_spectrum_dataset.edisp.edisp_map.geom.get_axis_by_name("energy").nbin == 2
     assert empty_spectrum_dataset.livetime.value == 0
     assert len(empty_spectrum_dataset.gti.table) == 0
     assert empty_spectrum_dataset.energy_range[0] is None
@@ -175,21 +174,23 @@ def test_spectrum_dataset_create():
 def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     geom = spectrum_dataset.counts.geom
 
-    energy = np.logspace(-1, 1, 31) * u.TeV
-    aeff = EffectiveAreaTable.from_parametrization(energy, "HESS")
-    edisp = EDispKernel.from_diagonal_response(energy, energy)
+    energy = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=30)
+    energy_true = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=30, name="energy_true")
+
+    aeff = EffectiveAreaTable.from_parametrization(energy.edges, "HESS")
+    edisp = EDispKernelMap.from_diagonal_response(energy, energy_true, geom=geom.to_image())
     livetime = 100 * u.s
     background = spectrum_dataset.background
     spectrum_dataset1 = SpectrumDataset(
         counts=spectrum_dataset.counts.copy(),
         livetime=livetime,
         aeff=aeff,
-        edisp=edisp,
+        edisp=edisp.copy(),
         background=background.copy(),
     )
 
     livetime2 = 0.5 * livetime
-    aeff2 = EffectiveAreaTable(energy[:-1], energy[1:], 2 * aeff.data.data)
+    aeff2 = EffectiveAreaTable(energy.edges[:-1], energy.edges[1:], 2 * aeff.data.data)
     bkg2 = RegionNDMap.from_geom(geom=geom, data=2 * background.data)
 
     geom = spectrum_dataset.counts.geom
@@ -217,15 +218,22 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
         spectrum_dataset1.aeff.data.data.to_value("m2"),
         4.0 / 3 * aeff.data.data.to_value("m2"),
     )
-    assert_allclose(spectrum_dataset1.edisp.pdf_matrix[1:], edisp.pdf_matrix[1:])
-    assert_allclose(spectrum_dataset1.edisp.pdf_matrix[0], 0.5 * edisp.pdf_matrix[0])
+    kernel = edisp.get_edisp_kernel()
+    kernel_stacked = spectrum_dataset1.edisp.get_edisp_kernel()
+
+    assert_allclose(kernel_stacked.pdf_matrix[1:], kernel.pdf_matrix[1:])
+    assert_allclose(kernel_stacked.pdf_matrix[0], 0.5 * kernel.pdf_matrix[0])
 
 
 def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
-    energy = spectrum_dataset.counts.geom.axes[0].edges
+    energy = spectrum_dataset.counts.geom.axes[0]
 
-    aeff = EffectiveAreaTable.from_parametrization(energy, "HESS")
-    edisp1 = EDispKernel.from_gauss(energy, energy, 0.1, 0)
+    aeff = EffectiveAreaTable.from_parametrization(energy.edges, "HESS")
+
+    geom = spectrum_dataset.counts.geom.to_image()
+    edisp1 = EDispKernelMap.from_gauss(energy, energy, 0.1, 0, geom=geom)
+    edisp1.exposure_map.data += 1
+
     livetime = 100 * u.s
     spectrum_dataset1 = SpectrumDataset(
         counts=spectrum_dataset.counts.copy(),
@@ -235,8 +243,9 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
     )
 
     livetime2 = livetime
-    aeff2 = EffectiveAreaTable(energy[:-1], energy[1:], aeff.data.data)
-    edisp2 = EDispKernel.from_gauss(energy, energy, 0.2, 0.0)
+    aeff2 = EffectiveAreaTable(energy.edges[:-1], energy.edges[1:], aeff.data.data)
+    edisp2 = EDispKernelMap.from_gauss(energy, energy, 0.2, 0.0, geom=geom)
+    edisp2.exposure_map.data += 1
     spectrum_dataset2 = SpectrumDataset(
         counts=spectrum_dataset.counts.copy(),
         livetime=livetime2,
@@ -250,10 +259,9 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
     assert_allclose(
         spectrum_dataset1.aeff.data.data.to_value("m2"), aeff.data.data.to_value("m2")
     )
-    assert_allclose(spectrum_dataset1.edisp.get_bias(1 * u.TeV), 0.0, atol=1.2e-3)
-    assert_allclose(
-        spectrum_dataset1.edisp.get_resolution(1 * u.TeV), 0.1581, atol=1e-2
-    )
+    kernel = edisp1.get_edisp_kernel()
+    assert_allclose(kernel.get_bias(1 * u.TeV), 0.0, atol=1.2e-3)
+    assert_allclose(kernel.get_resolution(1 * u.TeV), 0.1581, atol=1e-2)
 
 
 @requires_dependency("matplotlib")
@@ -280,7 +288,6 @@ class TestSpectrumOnOff:
         ehi = ereco[1:]
         self.e_reco = MapAxis.from_edges(ereco, name="energy")
         self.aeff = EffectiveAreaTable(etrue[:-1], etrue[1:], np.ones(9) * u.cm ** 2)
-        self.edisp = EDispKernel.from_diagonal_response(etrue, ereco)
 
         start = u.Quantity([0], "s")
         stop = u.Quantity([1000], "s")
@@ -318,6 +325,8 @@ class TestSpectrumOnOff:
 
         acceptance_off = RegionNDMap.from_geom(self.off_counts.geom)
         acceptance_off.data += 10
+
+        self.edisp = EDispKernelMap.from_diagonal_response(self.e_reco, self.aeff.data.axis("energy_true"), self.on_counts.geom)
 
         self.dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
@@ -412,7 +421,7 @@ class TestSpectrumOnOff:
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert_allclose(self.off_counts.data, newdataset.counts_off.data)
-        assert_allclose(self.edisp.pdf_matrix, newdataset.edisp.pdf_matrix)
+        assert_allclose(self.edisp.edisp_map.data, newdataset.edisp.edisp_map.data)
         assert_time_allclose(newdataset.gti.time_start, dataset.gti.time_start)
 
         assert len(regions) == len(expected_regions)
@@ -589,7 +598,7 @@ class TestSpectralFit:
         assert_allclose(actual.value, 5.200e-11, rtol=1e-3)
 
     def test_stats(self):
-        dataset = self.datasets[0]
+        dataset = self.datasets[0].copy()
         dataset.models = self.pwl
 
         fit = Fit([dataset])
@@ -676,7 +685,9 @@ def make_observation_list():
     mask_safe.data += True
 
     aeff = EffectiveAreaTable.from_constant(energy, "1 cm2")
-    edisp = EDispKernel.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
+    edisp = EDispKernelMap.from_gauss(
+        energy_axis=axis, energy_axis_true=axis, sigma=0.2, bias=0, geom=geom
+    )
 
     time_ref = Time("2010-01-01")
     gti1 = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]}, time_ref=time_ref)
@@ -760,17 +771,18 @@ class TestSpectrumDatasetOnOffStack:
                 index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
             )
         )
+
         self.stacked_dataset.models = pwl
 
         npred_stacked = self.stacked_dataset.npred().data
         npred_stacked[~self.stacked_dataset.mask_safe.data] = 0
         npred_summed = np.zeros_like(npred_stacked)
 
-        for obs in self.datasets:
-            obs.models = pwl
-            npred_summed[obs.mask_safe] += obs.npred().data[obs.mask_safe]
+        for dataset in self.datasets:
+            dataset.models = pwl
+            npred_summed[dataset.mask_safe] += dataset.npred().data[dataset.mask_safe]
 
-        assert_allclose(npred_stacked, npred_summed)
+        assert_allclose(npred_stacked, npred_summed, rtol=1e-6)
 
     def test_stack_backscal(self):
         """Verify backscal stacking """

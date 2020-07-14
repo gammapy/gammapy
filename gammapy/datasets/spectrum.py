@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.datasets import Dataset
-from gammapy.irf import EDispKernel, EffectiveAreaTable, IRFStacker
+from gammapy.irf import EDispKernel, EDispKernelMap, EffectiveAreaTable
 from gammapy.maps import RegionGeom, RegionNDMap
 from gammapy.modeling.models import Models, ProperModels
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic, cash, wstat
@@ -34,8 +34,8 @@ class SpectrumDataset(Dataset):
         Livetime
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
-    edisp : `~gammapy.irf.EDispKernel`
-        Energy dispersion
+    edisp : `~gammapy.irf.EDispKernelMap`
+        Energy dispersion kernel.
     background : `~gammapy.maps.RegionNDMap`
         Background to use for the fit.
     mask_safe : `~gammapy.maps.RegionNDMap`
@@ -92,6 +92,11 @@ class SpectrumDataset(Dataset):
 
         self._name = make_name(name)
         self.models = models
+
+        # TODO: this enforces the exposure on the edisp map, maybe better move
+        #  to where the EDispKernelMap is created?
+        if edisp is not None:
+            self.edisp.exposure_map.data = self.exposure.data
 
     @property
     def name(self):
@@ -181,6 +186,8 @@ class SpectrumDataset(Dataset):
     def evaluators(self):
         """Model evaluators"""
 
+        edisp = self._edisp_kernel
+
         if self.models:
             for model in self.models:
                 evaluator = self._evaluators.get(model)
@@ -189,7 +196,7 @@ class SpectrumDataset(Dataset):
                     evaluator = MapEvaluator(
                         model=model,
                         exposure=self.exposure,
-                        edisp=self.edisp,
+                        edisp=edisp,
                         gti=self.gti,
                     )
                     self._evaluators[model] = evaluator
@@ -255,6 +262,12 @@ class SpectrumDataset(Dataset):
     def data_shape(self):
         """Shape of the counts data"""
         return self._geom.data_shape
+
+    @property
+    def _edisp_kernel(self):
+        """The edisp kernel stored in the EDispMapKernel"""
+        if self.edisp is not None:
+            return self.edisp.get_edisp_kernel()
 
     def npred_sig(self):
         """Predicted counts from source model (`RegionNDMap`)."""
@@ -484,7 +497,7 @@ class SpectrumDataset(Dataset):
             e_true.edges[1:],
             np.zeros(e_true.edges[:-1].shape) * u.m ** 2,
         )
-        edisp = EDispKernel.from_diagonal_response(e_true.edges, e_reco.edges)
+        edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, counts.geom)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
         livetime = gti.time_sum
@@ -532,9 +545,6 @@ class SpectrumDataset(Dataset):
         .. math::
             \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
 
-        Please refer to the `~gammapy.irf.IRFStacker` for the description
-        of how the IRFs are stacked.
-
         Parameters
         ----------
         other : `~gammapy.spectrum.SpectrumDataset`
@@ -551,22 +561,26 @@ class SpectrumDataset(Dataset):
             self.background *= self.mask_safe
             self.background.stack(other.background, weights=other.mask_safe)
 
-        if self.aeff is not None:
-            if self.livetime is None or other.livetime is None:
-                raise ValueError("IRF stacking requires livetime for both datasets.")
+        if self.livetime is None or other.livetime is None:
+            raise ValueError("IRF stacking requires livetime for both datasets.")
+        else:
+            stacked_livetime = self.livetime + other.livetime
 
-            irf_stacker = IRFStacker(
-                list_aeff=[self.aeff, other.aeff],
-                list_livetime=[self.livetime, other.livetime],
-                list_edisp=[self.edisp, other.edisp],
-                list_low_threshold=[self.energy_range[0], other.energy_range[0]],
-                list_high_threshold=[self.energy_range[1], other.energy_range[1]],
-            )
-            irf_stacker.stack_aeff()
+            if self.exposure and other.exposure:
+                stacked_exposure = self.exposure
+                stacked_exposure.stack(other.exposure)
+
+                stacked_aeff = EffectiveAreaTable(
+                    stacked_exposure.geom.axes[0].edges[:-1],
+                    stacked_exposure.geom.axes[0].edges[1:],
+                    np.squeeze(stacked_exposure.quantity/stacked_livetime)
+                )
+
             if self.edisp is not None:
-                irf_stacker.stack_edisp()
-                self.edisp = irf_stacker.stacked_edisp
-            self.aeff = irf_stacker.stacked_aeff
+                self.edisp.edisp_map *= self.mask_safe.data
+                self.edisp.stack(other.edisp, weights=other.mask_safe)
+
+            self.aeff = stacked_aeff
 
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)
@@ -608,7 +622,7 @@ class SpectrumDataset(Dataset):
 
         ax3.set_title("Energy Dispersion")
         if self.edisp is not None:
-            self.edisp.plot_matrix(ax=ax3)
+            self._edisp_kernel.plot_matrix(ax=ax3)
 
         # TODO: optimize layout
         plt.subplots_adjust(wspace=0.3)
@@ -665,8 +679,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Livetime
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
-    edisp : `~gammapy.irf.EDispKernel`
-        Energy dispersion
+    edisp : `~gammapy.irf.EDispKernelMap`
+        Energy dispersion kernel
     mask_safe : `~gammapy.maps.RegionNDMap`
         Mask defining the safe data range.
     mask_fit : `~gammapy.maps.RegionNDMap`
@@ -737,6 +751,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self._name = make_name(name)
         self.gti = gti
         self.models = models
+
+        # TODO: this enforces the exposure on the edisp map, maybe better move
+        #  to where the EDispKernelMap is created?
+        if edisp is not None:
+            self.edisp.exposure_map.data = self.exposure.data
 
     def __str__(self):
         str_ = super().__str__()
@@ -938,8 +957,23 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             \overline{{a}_{off}}_k = \frac{\overline{\mathrm {n_{off}}}}{\alpha_{1k} \cdot
             \mathrm{n_{off}}_{1k} \cdot \epsilon_{1k} + \alpha_{2k} \cdot \mathrm{n_{off}}_{2k} \cdot \epsilon_{2k}}
 
-        Please refer to the `~gammapy.irf.IRFStacker` for the description
-        of how the IRFs are stacked.
+
+        The stacking of :math:`j` elements is implemented as follows.  :math:`k`
+        and :math:`l` denote a bin in reconstructed and true energy, respectively.
+
+        .. math::
+            \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
+                bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+
+            \overline{t} = \sum_{j} t_i
+
+            \overline{\mathrm{aeff}}_l = \frac{\sum_{j}\mathrm{aeff}_{jl}
+                \cdot t_j}{\overline{t}}
+
+            \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl}
+                \cdot \mathrm{aeff}_{jl} \cdot t_j \cdot \epsilon_{jk}}{\sum_{j} \mathrm{aeff}_{jl}
+                \cdot t_j}
+
 
         Parameters
         ----------
@@ -1091,7 +1125,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             hdulist.writeto(outdir / bkgfile, overwrite=overwrite)
 
         if self.edisp is not None:
-            self.edisp.write(
+            self._edisp_kernel.write(
                 outdir / rmffile, overwrite=overwrite, use_sherpa=use_sherpa
             )
 
@@ -1157,10 +1191,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         try:
             rmffile = phafile.replace("pha", "rmf")
-            energy_dispersion = EDispKernel.read(dirname / rmffile)
+            kernel = EDispKernel.read(dirname / rmffile)
+            edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=counts.geom)
+
         except OSError:
             # TODO : Add logger and echo warning
-            energy_dispersion = None
+            edisp = None
 
         try:
             bkgfile = phafile.replace("pha", "bkg")
@@ -1180,7 +1216,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             counts=counts,
             aeff=aeff,
             counts_off=counts_off,
-            edisp=energy_dispersion,
+            edisp=edisp,
             livetime=counts.meta["EXPOSURE"] * u.s,
             mask_safe=mask_safe,
             acceptance=acceptance,

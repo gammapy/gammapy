@@ -120,7 +120,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
             "index": self.data[f"spec{idx}_index_err"],
         }
 
-        model = Model.create("PowerLawSpectralModel", **pars)
+        model = Model.create("PowerLawSpectralModel", "spectral", **pars)
 
         for name, value in errs.items():
             model.parameters[name].error = value
@@ -148,7 +148,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
             "lon_0": self.data.pos_err / np.cos(self.data.glat),
         }
 
-        model = Model.create(tag, **pars)
+        model = Model.create(tag, "spatial", **pars)
 
         for name, value in errs.items():
             model.parameters[name].error = value

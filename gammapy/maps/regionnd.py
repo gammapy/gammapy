@@ -58,12 +58,19 @@ class RegionNDMap(Map):
 
         ax = ax or plt.gca()
 
-        if len(self.geom.axes) > 1:
+        kwargs.setdefault("fmt", ".")
+
+        if self.data.squeeze().ndim > 1:
             raise TypeError(
                 "Use `.plot_interactive()` if more the one extra axis is present."
             )
 
-        axis = self.geom.axes[0]
+        try:
+            axis = self.geom.get_axis_by_name("energy")
+        except KeyError:
+            axis = self.geom.get_axis_by_name("energy_true")
+        except KeyError:
+            raise ValueError("Plotting only supported for energy axes.")
 
         with quantity_support():
             xerr = (axis.center - axis.edges[:-1], axis.edges[1:] - axis.center)

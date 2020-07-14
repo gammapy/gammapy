@@ -225,3 +225,16 @@ def test_to_cube_to_image(region):
 
     geom = geom_cube.to_image()
     assert geom.ndim == 2
+
+def test_squash(region):
+    axis1 = MapAxis.from_edges([1, 10, 100] * u.TeV, name="energy", interp="log")
+    axis2 = MapAxis.from_edges([1, 2, 3, 4] * u.deg, name="angle", interp="lin")
+
+    geom = RegionGeom(region, axes=[axis1, axis2])
+
+    geom_squashed = geom.squash("energy")
+
+    assert len(geom_squashed.axes) == 2
+    assert geom_squashed.axes[1] == axis2
+    assert_allclose(geom_squashed.axes[0].edges.to_value("TeV"), (1, 100))
+

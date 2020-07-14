@@ -85,8 +85,10 @@ class PSFMap(IRFMap):
 
         super().__init__(irf_map=psf_map, exposure_map=exposure_map)
 
-    def get_energy_dependent_table_psf(self, position):
+    def get_energy_dependent_table_psf(self, position=None):
         """Get energy-dependent PSF at a given position.
+
+        By default the PSF at the center of the map is returned.
 
         Parameters
         ----------
@@ -98,6 +100,9 @@ class PSFMap(IRFMap):
         psf_table : `~gammapy.irf.EnergyDependentTablePSF`
             the table PSF
         """
+        if position is None:
+            position = self.psf_map.geom.center_skydir
+
         if position.size != 1:
             raise ValueError(
                 "EnergyDependentTablePSF can be extracted at one single position only."

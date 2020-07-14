@@ -6,14 +6,15 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
 from gammapy.irf import (
+    EDispKernel,
     EDispKernelMap,
     EDispMap,
     EffectiveAreaTable2D,
     EnergyDispersion2D,
 )
 from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
-
+from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, RegionGeom
+from gammapy.utils.regions import make_region
 
 def fake_aeff2d(area=1e6 * u.m ** 2):
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
@@ -156,6 +157,7 @@ def test_edisp_from_diagonal_response(position):
     # e_reco to contribute to
     assert_allclose(sum_kernel[1:-1], 1)
 
+
 def test_edisp_map_to_edisp_kernel_map():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
 
@@ -173,6 +175,7 @@ def test_edisp_map_to_edisp_kernel_map():
     assert edisp_kernel_map.exposure_map.geom.axes[0].name == 'energy'
     actual = kernel.pdf_matrix.sum(axis=0)
     assert_allclose(actual, 2.0)
+
 
 def test_edisp_kernel_map_stack():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
@@ -205,6 +208,7 @@ def test_edisp_kernel_map_stack():
     assert_allclose(actual, [2./3., 2./3., 2.0, 2.0, 2.0])
     assert_allclose(exposure, 3.)
 
+
 def test__incorrect_edisp_kernel_map_stack():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
 
@@ -225,3 +229,43 @@ def test__incorrect_edisp_kernel_map_stack():
     with pytest.raises(ValueError) as except_info:
         edisp_1.stack(edisp_2)
     assert except_info.match("Missing exposure map for EDispKernelMap.stack")
+
+
+def test_edispkernel_from_diagonal_response():
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.3 TeV", "10 TeV", nbin=11, name="energy_true"
+    )
+    energy_axis = MapAxis.from_energy_bounds(
+        "0.3 TeV", "10 TeV", nbin=11, name="energy"
+    )
+
+    region = make_region("fk5;circle(0.,0., 10.")
+    geom = RegionGeom(region)
+    region_edisp = EDispKernelMap.from_diagonal_response(energy_axis, energy_axis_true, geom=geom)
+    sum_kernel = np.sum(region_edisp.edisp_map.data[...,0,0], axis=1)
+
+    # We exclude the first and last bin, where there is no
+    # e_reco to contribute to
+    assert_allclose(sum_kernel[1:-1], 1)
+
+
+def test_edispkernel_from_1D():
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.5 TeV", "5 TeV", nbin=31, name="energy_true"
+    )
+    energy_axis = MapAxis.from_energy_bounds(
+        "0.1 TeV", "10 TeV", nbin=11, name="energy"
+    )
+
+    edisp = EDispKernel.from_gauss(energy_axis_true.edges, energy_axis.edges, 0.1, 0.)
+    region = make_region("fk5;circle(0.,0., 10.")
+    geom = RegionGeom(region)
+    region_edisp = EDispKernelMap.from_edisp_kernel(edisp, geom=geom)
+    sum_kernel = np.sum(region_edisp.edisp_map.data[...,0,0], axis=1)
+    assert_allclose(sum_kernel, 1, rtol=1e-5)
+
+    allsky_edisp = EDispKernelMap.from_edisp_kernel(edisp)
+    sum_kernel = np.sum(allsky_edisp.edisp_map.data[..., 0, 0], axis=1)
+    assert allsky_edisp.edisp_map.data.shape == (31, 11, 1, 2)
+    assert_allclose(sum_kernel, 1, rtol=1e-5)
+

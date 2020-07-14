@@ -116,7 +116,7 @@ class SensitivityEstimator(Estimator):
         sensitivity : `~astropy.table.Table`
             Sensitivity table
         """
-        energy = dataset.edisp.e_reco.center
+        energy = dataset._edisp_kernel.e_reco.center
         excess = self.estimate_min_excess(dataset)
         e2dnde = self.estimate_min_e2dnde(excess, dataset)
         criterion = self._get_criterion(excess.data.squeeze())

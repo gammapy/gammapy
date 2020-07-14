@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from scipy.interpolate import interp1d
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
+from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, RegionGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .edisp_kernel import EDispKernel
 from .irf_map import IRFMap
@@ -167,12 +167,12 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Edisp map geometry.
 
         Returns
         -------
-        edisp_map : `EDispMap`
+        edisp_map : `~gammapy.maps.EDispMap`
             Energy dispersion map.
         """
         if "energy_true" not in [ax.name for ax in geom.axes]:
@@ -233,14 +233,14 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        energy_axis_true : `MapAxis`
+        energy_axis_true : `~gammapy.maps.MapAxis`
             True energy axis
-        migra_axis : `MapAxis`
+        migra_axis : `~gammapy.maps.MapAxis`
             Migra axis
 
         Returns
         -------
-        edisp_map : `EDispMap`
+        edisp_map : `~gammapy.maps.EDispMap`
             Energy dispersion map.
         """
         migra_res = 1e-5
@@ -261,12 +261,12 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        e_reco : `MapAxis`
+        e_reco : `~gammapy.maps.MapAxis`
             Reconstructed enrgy axis.
 
         Returns
         -------
-        edisp : `EDispKernelMap`
+        edisp : `~gammapy.maps.EDispKernelMap`
             Energy dispersion kernel map.
         """
         axis = 0
@@ -356,7 +356,7 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Edisp map geometry.
 
         Returns
@@ -384,7 +384,7 @@ class EDispKernelMap(IRFMap):
         edisp_kernel_map.quantity += data[:, :, np.newaxis, np.newaxis]
         return cls(edisp_kernel_map=edisp_kernel_map, exposure_map=exposure)
 
-    def get_edisp_kernel(self, position):
+    def get_edisp_kernel(self, position=None):
         """Get energy dispersion at a given position.
 
         Parameters
@@ -400,13 +400,19 @@ class EDispKernelMap(IRFMap):
         energy_true_axis = self.edisp_map.geom.get_axis_by_name("energy_true")
         energy_axis = self.edisp_map.geom.get_axis_by_name("energy")
 
-        coords = {
-            "skycoord": position,
-            "energy": energy_axis.center,
-            "energy_true": energy_true_axis.center.reshape((-1, 1)),
-        }
+        if isinstance(self.edisp_map.geom, RegionGeom):
+            data = self.edisp_map.data.squeeze()
+        else:
+            if position is None:
+                position = self.edisp_map.geom.center_skydir
 
-        data = self.edisp_map.get_by_coord(coords)
+            coords = {
+                "skycoord": position,
+                "energy": energy_axis.center,
+                "energy_true": energy_true_axis.center.reshape((-1, 1)),
+            }
+
+            data = self.edisp_map.get_by_coord(coords)
 
         return EDispKernel(
             e_true_lo=energy_true_axis.edges[:-1],
@@ -417,22 +423,76 @@ class EDispKernelMap(IRFMap):
         )
 
     @classmethod
-    def from_diagonal_response(cls, energy_axis, energy_axis_true):
-        """Create an all-sky energy dispersion map with diagonal response.
+    def from_diagonal_response(cls, energy_axis, energy_axis_true, geom=None):
+        """Create an energy dispersion map with diagonal response.
 
         Parameters
         ----------
-        energy_axis : `MapAxis`
+        energy_axis : `~gammapy.maps.MapAxis`
             Energy axis.
-        energy_axis_true : `MapAxis`
+        energy_axis_true : `~gammapy.maps.MapAxis`
             True energy axis
+        geom : `~gammapy.maps.Geom`
+            The (2D) geom object to use. Default creates an all sky geometry with 2 bins.
 
         Returns
         -------
         edisp_map : `EDispKernelMap`
             Energy dispersion kernel map.
         """
-        geom = WcsGeom.create(
-            npix=(2, 1), proj="CAR", binsz=180, axes=[energy_axis, energy_axis_true]
-        )
+        if geom is None:
+            geom = WcsGeom.create(
+                npix=(2, 1), proj="CAR", binsz=180, axes=[energy_axis, energy_axis_true]
+            )
+        else:
+            geom = geom.to_image().to_cube([energy_axis, energy_axis_true])
+
         return cls.from_geom(geom)
+
+    @classmethod
+    def from_edisp_kernel(cls, edisp, geom=None):
+        """Create an energy dispersion map from the input 1D kernel.
+
+        The kernel will be duplicated over all spatial bins.
+
+        Parameters
+        ----------
+        edisp : `~gammapy.irfs.EDispKernel`
+            the input 1D kernel.
+        geom : `~gammapy.maps.Geom`
+            The (2D) geom object to use. Default creates an all sky geometry with 2 bins.
+
+        Returns
+        -------
+        edisp_map : `EDispKernelMap`
+            Energy dispersion kernel map.
+        """
+        edisp_map = cls.from_diagonal_response(edisp.e_reco, edisp.e_true, geom)
+        edisp_map.edisp_map.data[:, :, ...] = edisp.pdf_matrix[:, :, np.newaxis, np.newaxis]
+        return edisp_map
+
+    @classmethod
+    def from_gauss(cls, energy_axis, energy_axis_true, sigma, bias, pdf_threshold=1e-6, geom=None):
+        """Create an energy dispersion map from the input 1D kernel.
+
+        The kernel will be duplicated over all spatial bins.
+
+        Parameters
+        ----------
+        edisp : `~gammapy.irfs.EDispKernel`
+            the input 1D kernel.
+        geom : `~gammapy.maps.Geom`
+            The (2D) geom object to use. Default creates an all sky geometry with 2 bins.
+
+        Returns
+        -------
+        edisp_map : `EDispKernelMap`
+            Energy dispersion kernel map.
+        """
+        kernel = EDispKernel.from_gauss(
+            e_reco=energy_axis.edges,
+            e_true=energy_axis_true.edges,
+            sigma=sigma, bias=bias,
+            pdf_threshold=pdf_threshold
+        )
+        return cls.from_edisp_kernel(kernel, geom=geom)
