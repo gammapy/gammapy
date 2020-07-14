@@ -14,10 +14,7 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from .map import MapEvaluator
 
-__all__ = [
-    "SpectrumDatasetOnOff",
-    "SpectrumDataset",
-]
+__all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
 
 
 class SpectrumDataset(Dataset):
@@ -383,10 +380,13 @@ class SpectrumDataset(Dataset):
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
-
-        self.npred_sig().plot(ax=ax, label="mu_src")
-        self.excess.plot(ax=ax, label="Excess")
         self._plot_energy_range(ax=ax)
+        self.excess.plot(
+            ax=ax,
+            label="Measured excess",
+            yerr=np.sqrt(np.abs(self.excess.data.flatten())),
+        )
+        self.npred_sig().plot(ax=ax, label="Predicted excess", step=True)
 
         ax.legend(numpoints=1)
         ax.set_title("")
@@ -435,21 +435,31 @@ class SpectrumDataset(Dataset):
         residuals = self.residuals(method=method)
         label = self._residuals_labels[method]
 
-        residuals.plot(ax=ax, color="black", **kwargs)
+        if method == "diff":
+            yerr = np.sqrt((self.counts.data + self.npred().data).flatten())
+        else:
+            yerr = np.ones_like(residuals.data.flatten())
+        residuals.plot(ax=ax, color="black", yerr=yerr, **kwargs)
         ax.axhline(0, color="black", lw=0.5)
 
         ax.set_xlabel(f"Energy [{self._e_unit}]")
         ax.set_ylabel(f"Residuals ({label})")
         ax.set_yscale("linear")
 
-        ymax = 1.2 * np.nanmax(residuals.data)
-        ax.set_ylim(-ymax, ymax)
+        ymax = 1.05 * np.nanmax(residuals.data + yerr.data)
+        ymin = 1.05 * np.nanmin(residuals.data - yerr.data)
+        ax.set_ylim(ymin, ymax)
         return ax
 
     @classmethod
     def create(
-        cls, e_reco, e_true=None, region=None, reference_time="2000-01-01", name=None,
-        meta_table=None
+        cls,
+        e_reco,
+        e_true=None,
+        region=None,
+        reference_time="2000-01-01",
+        name=None,
+        meta_table=None,
     ):
         """Creates empty spectrum dataset.
 
@@ -593,17 +603,11 @@ class SpectrumDataset(Dataset):
         ax1.set_title("Counts")
 
         if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
-            self.background.plot_hist(
-                ax=ax1, label="alpha * N_off",
-            )
+            self.background.plot_hist(ax=ax1, label="alpha * N_off")
         elif self.background is not None:
-            self.background.plot_hist(
-                ax=ax1, label="background",
-            )
+            self.background.plot_hist(ax=ax1, label="background")
 
-        self.counts.plot_hist(
-            ax=ax1, label="n_on",
-        )
+        self.counts.plot_hist(ax=ax1, label="n_on")
 
         e_unit = e_min.unit
         ax1.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
@@ -612,7 +616,7 @@ class SpectrumDataset(Dataset):
 
         ax2.set_title("Effective Area")
         e_unit = self.aeff.energy.unit
-        self.aeff.plot(ax=ax2,)
+        self.aeff.plot(ax=ax2)
         ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
         self._plot_energy_range(ax=ax2)
 
@@ -647,7 +651,7 @@ class SpectrumDataset(Dataset):
         info["background"] = self.background.data[mask].sum()
         info["excess"] = self.excess.data[mask].sum()
         info["significance"] = CashCountsStatistic(
-            self.counts.data[mask].sum(), self.background.data[mask].sum(),
+            self.counts.data[mask].sum(), self.background.data[mask].sum()
         ).significance
 
         info["background_rate"] = info["background"] / info["livetime"]
@@ -833,8 +837,13 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     @classmethod
     def create(
-        cls, e_reco, e_true=None, region=None, reference_time="2000-01-01", name=None,
-        meta_table=None
+        cls,
+        e_reco,
+        e_true=None,
+        region=None,
+        reference_time="2000-01-01",
+        name=None,
+        meta_table=None,
     ):
         """Create empty SpectrumDatasetOnOff.
 
@@ -1256,11 +1265,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         outdir = Path(filename).parent
         filename = str(outdir / f"pha_obs{self.name}.fits")
 
-        return {
-            "name": self.name,
-            "type": self.tag,
-            "filename": filename,
-        }
+        return {"name": self.name, "type": self.tag, "filename": filename}
 
     def write(self, filename, overwrite):
         """Write spectrum dataset on off to file.

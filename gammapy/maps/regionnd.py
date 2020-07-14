@@ -39,7 +39,7 @@ class RegionNDMap(Map):
         self.meta = meta
         self.unit = u.Unit(unit)
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax=None, yerr=None, step=False, **kwargs):
         """Plot region map.
 
         Parameters
@@ -74,7 +74,16 @@ class RegionNDMap(Map):
 
         with quantity_support():
             xerr = (axis.center - axis.edges[:-1], axis.edges[1:] - axis.center)
-            ax.errorbar(axis.center, self.quantity.squeeze(), xerr=xerr, **kwargs)
+            if step is False:
+                kwargs.setdefault("fmt", ".")
+                kwargs.setdefault("capsize", 2)
+                kwargs.setdefault("lw", 1)
+                ax.errorbar(
+                    axis.center, self.quantity.squeeze(), xerr=xerr, yerr=yerr, **kwargs
+                )
+            else:
+                kwargs.setdefault("lw", "1")
+                ax.step(axis.center, self.quantity.squeeze(), where="mid", **kwargs)
 
         if axis.interp == "log":
             ax.set_xscale("log")
