@@ -414,6 +414,20 @@ def test_wcsndmap_downsample_axis():
     assert m2.data.shape == (2, 4, 4)
 
 
+def test_wcsndmap_resample_axis():
+    axis_1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="test-1")
+    axis_2 = MapAxis.from_edges([1, 2, 3, 4], name="test-2")
+
+    geom = WcsGeom.create(npix=(7, 6), axes=[axis_1, axis_2])
+    m = WcsNDMap(geom, unit="m2")
+    m.data += 1
+
+    new_axis = MapAxis.from_edges([1, 3, 5], name="test-1")
+    m2 = m.resample_axis(axis=new_axis)
+    assert m2.data.shape == (3, 2, 6, 7)
+    assert_allclose(m2.data, 2)
+
+
 def test_coadd_unit():
     geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", frame="galactic")
     m1 = WcsNDMap(geom, data=np.ones((10, 10)), unit="m2")
