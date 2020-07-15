@@ -433,15 +433,16 @@ def test_map_fit(sky_model, geom, geom_etrue):
     stat = fit.datasets.stat_sum()
     assert_allclose(stat, 14824.173099, rtol=1e-5)
 
-    # test model evaluation outside image
+    region = sky_model.spatial_model.to_region()
 
+    with mpl_plot_check():
+        dataset_1.plot_residuals(region=region)
+
+    # test model evaluation outside image
     dataset_1.models[0].spatial_model.lon_0.value = 150
     dataset_1.npred()
     assert not dataset_1._evaluators[dataset_1.models[0]].contributes
 
-    region = sky_model.spatial_model.to_region()
-    with mpl_plot_check():
-        dataset_1.plot_residuals(region=region)
 
 
 @requires_dependency("iminuit")

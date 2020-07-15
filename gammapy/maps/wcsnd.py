@@ -512,14 +512,20 @@ class WcsNDMap(WcsMap):
         """
         energy_axis = self.geom.axes[0]
 
+        geom = RegionGeom(region=region, axes=[energy_axis], wcs=self.geom.wcs)
+
         if region:
-            mask = self.geom.region_mask([region])
-            data = self.data[mask].reshape(energy_axis.nbin, -1)
+            geom_cutout = self.geom.cutout(
+                position=geom.center_skydir, width=geom.width
+            )
+            mask = geom_cutout.region_mask([region])
+            slices = geom_cutout.cutout_info["parent-slices"]
+            parent_slices = Ellipsis, slices[0], slices[1]
+            data = self.data[parent_slices][mask].reshape(energy_axis.nbin, -1)
             data = func(data, axis=1)
         else:
             data = func(self.data, axis=(1, 2))
 
-        geom = RegionGeom(region=region, axes=[energy_axis])
         return RegionNDMap(
             geom=geom, data=data.reshape(geom.data_shape), unit=self.unit
         )
