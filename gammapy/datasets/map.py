@@ -13,7 +13,12 @@ from gammapy.irf.edisp_map import EDispMap, EDispKernelMap
 from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom
-from gammapy.modeling.models import BackgroundModel, Models, ProperModels
+from gammapy.modeling.models import (
+    BackgroundModel,
+    Models,
+    ProperModels,
+    SkyDiffuseCube,
+)
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
@@ -274,7 +279,8 @@ class MapDataset(Dataset):
         for evaluator in self.evaluators.values():
             if evaluator.contributes:
                 if self.use_cache is False:
-                    evaluator._pars_cached = None
+                    evaluator._spatial_conv_cached = None
+                    evaluator._npred_cached = None
                 npred = evaluator.compute_npred()
                 npred_total.stack(npred)
         return npred_total
@@ -1705,6 +1711,8 @@ class MapEvaluator:
         self.contributes = True
         self._npred_cached = None
         self._pars_cached = None
+        self._spatial_pars_cached = None
+        self._spatial_conv_cached = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -1784,7 +1792,8 @@ class MapEvaluator:
         else:
             self.exposure = exposure
 
-        self._pars_cached = None
+        self._npred_cached = None
+        self._spatial_conv_cached = None
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -1845,11 +1854,12 @@ class MapEvaluator:
 
         pars = list(self.model.parameters.values)
         npred = self._npred_cached
-        if self._pars_cached != pars:
+        if self._pars_cached != pars or self._npred_cached is None:
             self._pars_cached = pars
             if isinstance(self.model, BackgroundModel):
                 npred = self.model.evaluate()
-            else:
+            elif isinstance(self.model, SkyDiffuseCube):
+                # TODO: remove once SkyDiffuseCube can be a spatial model
                 flux = self.compute_flux()
 
                 if self.model.apply_irf["exposure"]:
@@ -1860,6 +1870,43 @@ class MapEvaluator:
 
                 if self.model.apply_irf["edisp"]:
                     npred = self.apply_edisp(npred)
+            else:
+
+                flux_conv = self._compute_flux_conv()
+
+                if self.model.apply_irf["exposure"]:
+                    npred = self.apply_exposure(flux_conv)
+
+                if self.model.apply_irf["edisp"]:
+                    npred = self.apply_edisp(npred)
 
             self._npred_cached = npred
         return npred
+
+    def _compute_flux_conv(self):
+        """ compute_flux with caching of psf-convolved spatial model"""
+        energy = self.geom.get_axis_by_name("energy_true").edges
+
+        value = self.model.spectral_model.integral(
+            energy[:-1], energy[1:], intervals=True
+        ).reshape((-1, 1, 1))
+
+        if self.model.spatial_model and not isinstance(self.geom, RegionGeom):
+            spatial_pars = list(self.model.spatial_model.parameters.values)
+            spatial_conv = self._spatial_conv_cached
+            if self._spatial_pars_cached != spatial_pars or spatial_conv is None:
+                self._spatial_pars_cached = spatial_pars
+                geom_image = self.geom.to_image()
+                spatial_conv = self.model.spatial_model.integrate_geom(geom_image)
+                if self.psf and self.model.apply_irf["psf"]:
+                    spatial_conv = self.apply_psf(spatial_conv)
+                self._spatial_conv_cached = spatial_conv
+            value = value * spatial_conv.quantity
+
+        if self.model.temporal_model:
+            integral = self.model.temporal_model.integral(
+                self.gti.time_start, self.gti.time_stop
+            )
+            value = value * np.sum(integral)
+
+        return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
