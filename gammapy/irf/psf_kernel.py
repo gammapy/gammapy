@@ -308,3 +308,4 @@ class PSFKernel:
         spectrum_weighted_kernel.quantity *= weights[:, np.newaxis, np.newaxis]
 
         return self.__class__(spectrum_weighted_kernel.sum_over_axes(keepdims=keepdims))
+

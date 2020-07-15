@@ -105,6 +105,10 @@ class MapDataset(Dataset):
         self.exposure = exposure
         self.mask_fit = mask_fit
         self.psf = psf
+
+        if isinstance(edisp, EDispKernel):
+            edisp = EDispKernelMap.from_edisp_kernel(edisp=edisp)
+
         self.edisp = edisp
         self.mask_safe = mask_safe
         self.models = models
@@ -477,30 +481,15 @@ class MapDataset(Dataset):
                 raise ValueError("Stacking of PSF kernels not supported")
 
         if self.edisp and other.edisp:
-            if isinstance(self.edisp, EDispMap) and isinstance(other.edisp, EDispMap):
-                mask_irf = self._mask_safe_irf(self.edisp.edisp_map, mask_image)
-                self.edisp.edisp_map *= mask_irf.data
-                self.edisp.exposure_map *= mask_irf.data
+            mask_irf = self._mask_safe_irf(self.edisp.edisp_map, mask_image)
+            self.edisp.edisp_map *= mask_irf.data
+            self.edisp.exposure_map *= mask_irf.data
 
-                mask_image_other = other_mask_safe.reduce_over_axes(func=np.logical_or)
-                mask_irf_other = self._mask_safe_irf(
-                    other.edisp.edisp_map, mask_image_other
-                )
-                self.edisp.stack(other.edisp, weights=mask_irf_other)
-            elif isinstance(self.edisp, EDispKernelMap) and isinstance(
-                other.edisp, EDispKernelMap
-            ):
-                mask_irf = self._mask_safe_irf(self.edisp.edisp_map, mask_image)
-                self.edisp.edisp_map *= mask_irf.data
-                self.edisp.exposure_map *= mask_irf.data
-
-                mask_image_other = other_mask_safe.reduce_over_axes(func=np.logical_or)
-                mask_irf_other = self._mask_safe_irf(
-                    other.edisp.edisp_map, mask_image_other
-                )
-                self.edisp.stack(other.edisp, weights=mask_irf_other)
-            else:
-                raise ValueError("Stacking of edisp kernels not supported")
+            mask_image_other = other_mask_safe.reduce_over_axes(func=np.logical_or)
+            mask_irf_other = self._mask_safe_irf(
+                other.edisp.edisp_map, mask_image_other
+            )
+            self.edisp.stack(other.edisp, weights=mask_irf_other)
 
         self.mask_safe.stack(other_mask_safe)
 
@@ -972,13 +961,8 @@ class MapDataset(Dataset):
                 kwargs["aeff"].data.data *= containment.squeeze()
 
         if self.edisp is not None:
-            if isinstance(self.edisp, EDispKernel):
-                edisp = self.edisp
-            elif isinstance(self.edisp, EDispKernelMap):
-                edisp = self.edisp.get_edisp_kernel(on_region.center)
-            else:
-                axis = self._geom.get_axis_by_name("energy")
-                edisp = self.edisp.get_edisp_kernel(on_region.center, e_reco=axis.edges)
+            energy_axis = self._geom.get_axis_by_name("energy")
+            edisp = self.edisp.get_edisp_kernel(on_region.center, energy_axis=energy_axis)
 
             edisp = EDispKernelMap.from_edisp_kernel(
                 edisp=edisp, geom=RegionGeom(on_region)
@@ -1761,15 +1745,13 @@ class MapEvaluator:
         log.debug("Updating model evaluator")
         # cache current position of the model component
 
-        if isinstance(edisp, EDispKernelMap):
-            self.edisp = edisp.get_edisp_kernel(self.model.position)
-        elif isinstance(edisp, EDispMap):
-            e_reco = geom.get_axis_by_name("energy").edges
-            self.edisp = edisp.get_edisp_kernel(self.model.position, e_reco=e_reco)
-        else:
-            self.edisp = edisp
+        # lookup edisp
+        if edisp:
+            energy_axis = geom.get_axis_by_name("energy")
+            self.edisp = edisp.get_edisp_kernel(self.model.position, energy_axis=energy_axis)
 
         if isinstance(psf, PSFMap):
+            # lookup psf
             self.psf = psf.get_psf_kernel(self.model.position, geom=exposure.geom)
         else:
             self.psf = psf

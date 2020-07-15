@@ -95,15 +95,15 @@ class EDispMap(IRFMap):
     def edisp_map(self, value):
         self._irf_map = value
 
-    def get_edisp_kernel(self, position, e_reco):
+    def get_edisp_kernel(self, position, energy_axis):
         """Get energy dispersion at a given position.
 
         Parameters
         ----------
         position : `~astropy.coordinates.SkyCoord`
             the target position. Should be a single coordinates
-        e_reco : `~astropy.units.Quantity`
-            Reconstructed energy axis binning
+        energy_axis : `MapAxis`
+            Reconstructed energy axis
 
         Returns
         -------
@@ -115,13 +115,13 @@ class EDispMap(IRFMap):
                 "EnergyDispersion can be extracted at one single position only."
             )
 
-        energy_axis = self.edisp_map.geom.get_axis_by_name("energy_true")
+        energy_axis_true = self.edisp_map.geom.get_axis_by_name("energy_true")
         migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
 
         coords = {
             "skycoord": position,
             "migra": migra_axis.center.reshape((-1, 1, 1, 1)),
-            "energy_true": energy_axis.center.reshape((1, -1, 1, 1)),
+            "energy_true": energy_axis_true.center.reshape((1, -1, 1, 1)),
         }
 
         # Interpolate in the EDisp map. Squeeze to remove dimensions of length 1
@@ -130,9 +130,9 @@ class EDispMap(IRFMap):
 
         data = []
 
-        for idx, e_true in enumerate(energy_axis.center):
+        for idx, e_true in enumerate(energy_axis_true.center):
             # migration value of e_reco bounds
-            migra = e_reco / e_true
+            migra = energy_axis.edges / e_true
 
             cumsum = np.insert(edisp_values[:, idx], 0, 0).cumsum()
             with np.errstate(invalid="ignore"):
@@ -152,10 +152,10 @@ class EDispMap(IRFMap):
             data.append(integral)
 
         return EDispKernel(
-            e_true_lo=energy_axis.edges[:-1],
-            e_true_hi=energy_axis.edges[1:],
-            e_reco_lo=e_reco[:-1],
-            e_reco_hi=e_reco[1:],
+            e_true_lo=energy_axis_true.edges[:-1],
+            e_true_hi=energy_axis_true.edges[1:],
+            e_reco_lo=energy_axis.edges[:-1],
+            e_reco_hi=energy_axis.edges[1:],
             data=data,
         )
 
@@ -384,13 +384,15 @@ class EDispKernelMap(IRFMap):
         edisp_kernel_map.quantity += data[:, :, np.newaxis, np.newaxis]
         return cls(edisp_kernel_map=edisp_kernel_map, exposure_map=exposure)
 
-    def get_edisp_kernel(self, position=None):
+    def get_edisp_kernel(self, position=None, energy_axis=None):
         """Get energy dispersion at a given position.
 
         Parameters
         ----------
         position : `~astropy.coordinates.SkyCoord`
             the target position. Should be a single coordinates
+        energy_axis : `MapAxis`
+            Reconstructed energy axis, only used for checking.
 
         Returns
         -------
@@ -398,7 +400,11 @@ class EDispKernelMap(IRFMap):
             the energy dispersion (i.e. rmf object)
         """
         energy_true_axis = self.edisp_map.geom.get_axis_by_name("energy_true")
-        energy_axis = self.edisp_map.geom.get_axis_by_name("energy")
+
+        if energy_axis is None:
+            energy_axis = self.edisp_map.geom.get_axis_by_name("energy")
+        else:
+            assert energy_axis == self.edisp_map.geom.get_axis_by_name("energy")
 
         if isinstance(self.edisp_map.geom, RegionGeom):
             data = self.edisp_map.data.squeeze()
