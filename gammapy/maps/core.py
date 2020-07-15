@@ -7,8 +7,8 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
-from .geom import MapCoord, pix_tuple_to_idx
-from .utils import INVALID_VALUE
+from .geom import MapCoord, pix_tuple_to_idx, MapAxis
+from .utils import INVALID_VALUE, edges_from_lo_hi
 
 __all__ = ["Map"]
 
@@ -460,6 +460,34 @@ class Map(abc.ABC):
             Upsampled map.
         """
         pass
+
+    def resample_axis(self, axis):
+        """Resample map to a new axis binning by grouping and summing smaller bins.
+
+        Parameters
+        ----------
+        axis : `MapAxis`
+            New map axis.
+
+        Returns
+        -------
+        map : `Map`
+            Map with resampled axis.
+        """
+        geom = self.geom.resample_axis(axis)
+
+        axis_self = self.geom.get_axis_by_name(axis.name)
+        axis_resampled = geom.get_axis_by_name(axis.name)
+
+        indices = axis_self.coord_to_idx(axis_resampled.edges[:-1])
+
+        idx = self.geom.get_axis_index_by_name(axis.name)
+
+        # transform to data idx
+        idx = len(geom.axes) - idx - 1
+        data = np.add.reduceat(self.data, indices=indices, axis=idx)
+
+        return self._init_copy(data=data, geom=geom)
 
     def slice_by_idx(self, slices):
         """Slice sub map from map object.
