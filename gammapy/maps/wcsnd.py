@@ -550,44 +550,42 @@ class WcsNDMap(WcsMap):
         from gammapy.irf import PSFKernel
 
         conv_function = scipy.signal.fftconvolve if use_fft else scipy.ndimage.convolve
+
         if use_fft:
             kwargs.setdefault("mode", "same")
 
+        if self.geom.is_image and not isinstance(kernel, PSFKernel):
+            if kernel.ndim > 2:
+                raise ValueError(
+                    "Image convolution with 3D kernel requires a PSFKernel object"
+                )
+
         geom = self.geom.copy()
-        notPSFKernel = True
+
         if isinstance(kernel, PSFKernel):
-            notPSFKernel = False
             kmap = kernel.psf_kernel_map
             if not np.allclose(
                 self.geom.pixel_scales.deg, kmap.geom.pixel_scales.deg, rtol=1e-5
             ):
                 raise ValueError("Pixel size of kernel and map not compatible.")
             kernel = kmap.data.astype(np.float32)
-            geom.axes.append(kmap.geom.axes[0])
+            if self.geom.is_image:
+                geom = geom.to_cube([kmap.geom.axes[0]])
 
-        if len(self.data.shape) < len(kernel.shape):
-            if notPSFKernel:
-                raise TypeError(
-                    "2D map convolution with 3D kernel requires a PSFKernel"
-                )
-            convolved_data = np.empty(
-                (kernel.shape[0],) + self.data.shape, dtype=np.float32
-            )
+        convolved_data = np.empty(geom.data_shape, dtype=np.float32)
+
+        if self.geom.is_image and kernel.ndim == 3:
             for idx in range(kernel.shape[0]):
                 convolved_data[idx] = conv_function(
                     self.data.astype(np.float32), kernel[idx], **kwargs
                 )
-            return Map.from_geom(geom=geom, data=convolved_data)
         else:
-            convolved_data = np.empty(self.data.shape, dtype=np.float32)
             for img, idx in self.iter_by_image():
                 ikern = Ellipsis if kernel.ndim == 2 else idx
                 convolved_data[idx] = conv_function(
                     img.astype(np.float32), kernel[ikern], **kwargs
                 )
-            return self._init_copy(data=convolved_data)
-
-        return self._init_copy(data=convolved_data)
+        return self._init_copy(data=convolved_data, geom=geom)
 
     def cutout(self, position, width, mode="trim"):
         """
