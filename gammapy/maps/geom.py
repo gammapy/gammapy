@@ -1524,6 +1524,43 @@ class Geom(abc.ABC):
         """
         pass
 
+    def resample_axis(self, axis):
+        """Resample geom to a new axis binning.
+
+        This method groups the existing bins into a new binning.
+
+        Parameters
+        ----------
+        axis : `MapAxis`
+            New map axis.
+
+        Returns
+        -------
+        map : `Geom`
+            Geom with resampled axis.
+        """
+        axis_self = self.get_axis_by_name(axis.name)
+        groups = axis_self.group_table(axis.edges)
+
+        edges = edges_from_lo_hi(
+            groups[axis.name + "_min"], groups[axis.name + "_max"]
+        )
+
+        axis_resampled = MapAxis.from_edges(
+            edges=edges,
+            interp=axis.interp,
+            name=axis.name
+        )
+
+        axes = []
+        for ax in self.axes:
+            if ax.name == axis.name:
+                axes.append(axis_resampled)
+            else:
+                axes.append(ax)
+
+        return self._init_copy(axes=axes)
+
     @abc.abstractmethod
     def solid_angle(self):
         """Solid angle (`~astropy.units.Quantity` in ``sr``)."""
