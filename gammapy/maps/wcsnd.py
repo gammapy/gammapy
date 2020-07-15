@@ -8,6 +8,7 @@ import scipy.signal
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.io import fits
+from regions import RectangleSkyRegion
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -16,7 +17,7 @@ from .geom import MapCoord, pix_tuple_to_idx
 from .regionnd import RegionGeom, RegionNDMap
 from .utils import INVALID_INDEX, interp_to_order
 from .wcsmap import WcsGeom, WcsMap
-from .core import Map
+
 
 __all__ = ["WcsNDMap"]
 
@@ -522,6 +523,11 @@ class WcsNDMap(WcsMap):
             data = cutout.data[mask].reshape(energy_axis.nbin, -1)
             data = func(data, axis=1)
         else:
+            width, height = self.geom.width
+            region = RectangleSkyRegion(
+                center=self.geom.center_skydir, width=width[0], height=height[0]
+            )
+            geom = RegionGeom(region=region, axes=[energy_axis], wcs=self.geom.wcs)
             data = func(self.data, axis=(1, 2))
 
         return RegionNDMap(
