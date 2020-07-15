@@ -14,7 +14,10 @@ PIG 21 - Models Improvements
 
 Abstract
 ========
-This PIG outlines further improvement to the modeling framework in Gammapy.
+This PIG outlines further minor improvements to the modeling framework of Gammapy.
+This includes introduction of a spectra models with norm parameters, minimal
+support for energy dependent spatial models as well as simplifications of the
+YAML serialisation.
 
 
 Proposal
@@ -29,13 +32,28 @@ of amplitude and are named using the ``NormSpectralModel`` suffix:
 
 .. code::
 
-    from gammapy.modeling.models import PowerLawNormSpectralModel, LogParabolaNormSpectralModel, NodeNormSpectralModel
+    from gammapy.modeling.models import (
+        PowerLawNormSpectralModel,
+        LogParabolaNormSpectralModel,
+        PiecewiseBrokenPowerlawNormSpectralModel,
+        ConstantNormSpectralModel,
+    )
 
-    pwl_norm = PowerLawNormSpectralModel()
-    log_parabola_norm = LogParabolaNormSpectralModel()
-    bpwl_norm = PiecewiseBrokenPowerlawNormSpectralModel()
-    const_norm = ConstantNormSpectralModel()
+    pwl_norm = PowerLawNormSpectralModel(norm=, tilt=, reference=)
+    log_parabola_norm = LogParabolaNormSpectralModel(norm=, alpha=, beta=)
+    bpwl_norm = PiecewiseBrokenPowerlawNormSpectralModel(norms=, energies=)
+    const_norm = ConstantNormSpectralModel(norm=)
 
+    # typically used like
+	template = TemplateSpectralModel()
+    model = template * pwl_norm
+
+    model = BackgroundModel(
+		map=map,
+		spectral_model=pwl_norm
+	)
+
+This requires removing the hard-coded parameters of the `TemplateSpectralModel` and `BackgroundModel`.
 
 Energy Dependent Spatial Models
 -------------------------------
@@ -158,29 +176,6 @@ using a ``CompoundSpectralModel``. The new implementation is used as follows:
 In addition we propose to rename ``.table_model`` to ``.to_template_spectral_model(redshift, alpha_norm)``.
 
 
-XML Support for Reading Models
-------------------------------
-ctools as well as the Fermi Science Tools use a XML-based model serialisation
-format. To ensure compatibility with these tools we propose to add
-support for reading XML files to Gammapy, so that the following works:
-
-.. code::
-
-    from gammapy.modeling.models import Models
-
-    models = Models.read("my_model.xml")
-    print(models)
-
-
-**Alternatives:** Alternatively one could implement a conversion script, that
-allows to convert a model file from YAML to XML format. This script would be
-shipped with Gammapy and be available as a sub-command ``gammapy convert-model-file my_model.xml my_model.yaml``.
-The effort of implementation is comparable.
-
-For complete support it is necessary to add further models to Gammapy,
-which are listed in the following section.
-
-
 Additional Models
 -----------------
 In addition we propose to implement the following models in ``gammapy.modeling.models``:
@@ -200,24 +195,7 @@ In addition we propose to implement the following models in ``gammapy.modeling.m
 	\right .\end{split}
 
 
-
-- ``PiecewiseBrokenPowerLawSpectralModel``
-
-.. code::
-
-    energy = [1, 10, 100] * u.TeV
-    amplitudes = [1e-12, 1e-13, 1e-15] * u.Unit("TeV-1 cm-2 s-1")
-
-    model = PiecewiseBrokenPowerLawSpectralModel(
-        energy=energy, amplitudes=amplitudes
-    )
-
-
-    print(model.amplitude_0)
-    print(model.amplitude_1)
-
-
-- Reintroduce the ``PhaseCurveModel`` to compute mean fluxes over time
+- We propose to re-introduce the ``PhaseCurveModel`` to compute mean fluxes over time
 
 
 Simplify YAML Representation
@@ -241,6 +219,7 @@ We propose to introduce the following YAML tags:
 Class Name                               YAML Tag
 ======================================== ======================
 ConstantSpectralModel                    const
+ConstantNormSpectralModel                const-norm
 CompoundSpectralModel                    compound
 PowerLawSpectralModel                    pl
 PowerLawNormSpectralModel                pl-norm
