@@ -4,7 +4,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
-from gammapy.estimators import ImageProfile, ImageProfileEstimator
+from gammapy.estimators import SimpleImageProfile, ImageProfileEstimator
 from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -33,7 +33,7 @@ def cosine_profile():
     table["x_ref"] = np.linspace(-90, 90, 11) * u.deg
     table["profile"] = np.cos(table["x_ref"].to("rad")) * u.Unit("cm-2 s-1")
     table["profile_err"] = 0.1 * table["profile"]
-    return ImageProfile(table)
+    return SimpleImageProfile(table)
 
 
 class TestImageProfileEstimator:
@@ -99,7 +99,7 @@ class TestImageProfileEstimator:
         assert_quantity_allclose(profile.profile, desired)
 
 
-class TestImageProfile:
+class TestSimpleImageProfile:
     @staticmethod
     def test_normalize(cosine_profile):
         normalized = cosine_profile.normalize(mode="integral")
