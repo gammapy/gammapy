@@ -873,8 +873,8 @@ class FluxPointsEstimator(FluxEstimator):
         return FluxPoints(table).to_sed_type("dnde")
 
     def _energy_mask(self, e_group, dataset):
-        energy_mask = np.zeros(dataset.data_shape)
-        energy_mask[e_group["idx_min"] : e_group["idx_max"] + 1] = 1
+        energy_mask = np.zeros(dataset.counts.geom.data_shape)
+        energy_mask[e_group["idx_min"]: e_group["idx_max"] + 1] = 1
         return energy_mask.astype(bool)
 
     def _estimate_flux_point(self, e_group, steps="all"):

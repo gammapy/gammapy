@@ -138,7 +138,6 @@ class Parameter:
     @factor.setter
     def factor(self, val):
         self._factor = float(val)
-        self.check_limits()
 
     @property
     def scale(self):
