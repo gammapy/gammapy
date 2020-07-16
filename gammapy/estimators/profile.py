@@ -8,7 +8,7 @@ from astropy.coordinates import Angle
 from astropy.table import Table
 from .core import Estimator
 
-__all__ = ["SimpleImageProfile", "ImageProfileEstimator"]
+__all__ = ["ImageProfile", "ImageProfileEstimator"]
 
 
 # TODO: implement measuring profile along arbitrary directions
@@ -152,7 +152,7 @@ class ImageProfileEstimator(Estimator):
 
         Returns
         -------
-        profile : `SimpleImageProfile`
+        profile : `ImageProfile`
             Result image profile object.
         """
         p = self.parameters
@@ -174,10 +174,10 @@ class ImageProfileEstimator(Estimator):
 
         result.meta["PROFILE_TYPE"] = p["axis"]
 
-        return SimpleImageProfile(result)
+        return ImageProfile(result)
 
 
-class SimpleImageProfile:
+class ImageProfile:
     """Image profile class.
 
     The image profile data is stored in `~astropy.table.Table` object, with the
@@ -229,7 +229,7 @@ class SimpleImageProfile:
 
         Returns
         -------
-        profile : `SimpleImageProfile`
+        profile : `ImageProfile`
             Smoothed image profile.
         """
         table = self.table.copy()
@@ -366,7 +366,7 @@ class SimpleImageProfile:
         Parameters
         ----------
         **kwargs : dict
-            Keyword arguments passed to `SimpleImageProfile.plot_profile()`
+            Keyword arguments passed to `ImageProfile.plot_profile()`
 
         Returns
         -------
@@ -395,7 +395,7 @@ class SimpleImageProfile:
 
         Returns
         -------
-        profile : `SimpleImageProfile`
+        profile : `ImageProfile`
             Normalized image profile.
         """
         table = self.table.copy()

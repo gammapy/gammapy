@@ -187,7 +187,8 @@ class ExcessProfileEstimator(Estimator):
             if "ul" in steps:
                 result["flux_ul"] = result["ul"] / stats.excess * flux
 
-            result["solid_angle"] = np.full(result['counts'].shape, spds.counts.geom.solid_angle()) * u.steradian
+            solid_angle = spds.counts.geom.solid_angle()
+            result["solid_angle"] = np.full(result['counts'].shape, solid_angle.to_value("sr")) * u.sr
 
             results.append(result)
             if old_model is not None:
