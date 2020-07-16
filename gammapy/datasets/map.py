@@ -977,20 +977,12 @@ class MapDataset(Dataset):
 
         return SpectrumDataset(**kwargs)
 
-    def to_image(self, spectrum=None, name=None):
-        """Create images by summing over the energy axis.
-
-        Exposure is weighted with an assumed spectrum,
-        resulting in a weighted mean exposure image.
-
-        Currently the PSFMap and EdispMap are dropped from the
-        resulting image dataset.
+    def to_image(self, name=None):
+        """Create images by summing over the reco-energy axis.
+        The true energy axis is left unchanged.
 
         Parameters
         ----------
-        spectrum : `~gammapy.modeling.models.SpectralModel`
-            Spectral model to compute the weights.
-            Default is power-law with spectral index of 2.
         name : str
             Name of the new dataset.
 
@@ -1005,37 +997,64 @@ class MapDataset(Dataset):
         kwargs = {}
         kwargs["name"] = name
         kwargs["gti"] = self.gti
+        kwargs['exposure'] = self.exposure
+        kwargs['psf'] = self.psf
 
         if self.mask_safe is not None:
             mask_safe = self.mask_safe
-            kwargs["mask_safe"] = mask_safe.reduce_over_axes(
+        else:
+            mask_safe = Map.from_geom(self._geom, data=np.ones_like(self.data_shape))
+        kwargs["mask_safe"] = mask_safe.reduce_over_axes(
+            func=np.logical_or, keepdims=True
+        )
+
+        mask_fit = self.mask_fit
+        if self.mask_fit is not None:
+            mask_fit = self.mask_fit.reduce_over_axes(
                 func=np.logical_or, keepdims=True
             )
-        else:
-            mask_safe = 1
+        kwargs["mask_fit"] = mask_fit
 
         if self.counts is not None:
             counts = self.counts * mask_safe
             kwargs["counts"] = counts.sum_over_axes(keepdims=True)
 
-        if self.exposure is not None:
-            exposure = _map_spectrum_weight(self.exposure, spectrum)
-            kwargs["exposure"] = exposure.sum_over_axes(keepdims=True)
+        if self.models is not None:
+            models = Models()
+            for model in self.models:
+                if isinstance(model,BackgroundModel):
+                    background = self.background_model.evaluate() * mask_safe
+                    background = background.sum_over_axes(keepdims=True)
+                    model_new = BackgroundModel(background, datasets_names=[name])
+                else:
+                    model_new = model.copy(datasets_names=[name])
+                models.append(model_new)
+        kwargs["models"] = models
 
-        if self.background_model is not None:
-            background = self.background_model.evaluate() * mask_safe
-            background = background.sum_over_axes(keepdims=True)
-            kwargs["models"] = Models(
-                [BackgroundModel(background, datasets_names=[name])]
+        if isinstance(self.edisp, EDispKernel):
+            mask = np.sum(mask_safe.data, axis=(1,2), dtype=bool)
+            pdf_matrix = mask * self.edisp.pdf_matrix
+            kwargs['edisp'] = EDispKernel(
+                e_reco_lo=self.edisp.e_reco.edges[0:1],
+                e_reco_hi=self.edisp.e_reco.edges[-1:],
+                e_true_lo=self.edisp.e_true.edges[:-1],
+                e_true_hi=self.edisp.e_true.edges[1:],
+                data=np.sum(pdf_matrix, axis=1, keepdims=True)
             )
 
-        if self.psf is not None:
-            # TODO: implement PSFKernel.to_image()
-            if not isinstance(self.psf, PSFKernel):
-                kwargs["psf"] = self.psf.to_image(spectrum=spectrum, keepdims=True)
-            else:
-                # assume exposure at center position
-                kwargs["psf"] = None
+        elif isinstance(self.edisp, EDispKernelMap):
+            mask_image = self.mask_safe.reduce_over_axes(func=np.logical_or)
+            mask_irf = self._mask_safe_irf(self.edisp.edisp_map, mask_image)
+            edisp = self.edisp.copy()
+            edisp.edisp_map.data = edisp.edisp_map.data * mask_irf.data
+            edisp.exposure_map.data = edisp.exposure_map.data * mask_irf.data
+            edisp.edisp_map.sum_over_axes(axes=["energy"], keepdims=True)
+            kwargs['edisp'] = EDispKernelMap(edisp_kernel_map=edisp.edisp_map,
+                                             exposure_map=edisp.edisp_map)
+
+        else: #None or EDispMap
+            kwargs['edisp'] = self.edisp
+
 
         return self.__class__(**kwargs)
 
@@ -1610,20 +1629,9 @@ class MapDatasetOnOff(MapDataset):
 
         return cutout_dataset
 
-    def to_image(self, spectrum=None, name=None):
-        """Create images by summing over the energy axis.
+    def to_image(self, name=None):
+        """Create images by summing over the reco-energy axis.
 
-        Exposure is weighted with an assumed spectrum,
-        resulting in a weighted mean exposure image.
-
-        Currently the PSFMap and EdispMap are dropped from the
-        resulting image dataset.
-
-        Parameters
-        ----------
-        spectrum : `~gammapy.modeling.models.SpectralModel`
-            Spectral model to compute the weights.
-            Default is power-law with spectral index of 2.
         name : str
             Name of the new dataset.
 
