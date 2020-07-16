@@ -9,6 +9,7 @@ from astropy.table import Table, vstack
 from .core import Estimator
 from .flux_point import FluxPointsEstimator
 from gammapy.datasets import Datasets
+from gammapy.modeling.models import PowerLawSpectralModel
 from regions import ds9_objects_to_string
 
 
@@ -18,29 +19,47 @@ __all__ = ["ImageProfile", "ImageProfileEstimator"]
 class FluxProfileEstimator(Estimator):
     """Estimate flux profiles
 
+    Parameters
+    ----------
+    regions : list of `regions`
+        regions to use
+    spectrum : `~gammapy.modeling.models.SpectralModel` (optional)
+        Spectral model to compute the fluxes or brightness.
+        Default is power-law with spectral index of 2.
+    **kwargs : dict
+        Keywords forwarded to the `FluxPointsEstimator` (see documentation
+        there for further description of valid keywords)
+
     """
     tag = "FluxProfileEstimator"
 
-    def __init__(self, regions, **kwargs):
+    def __init__(self, regions, spectrum=None, **kwargs):
         self.regions = regions
+
+        if spectrum is None:
+            spectrum = PowerLawSpectralModel()
+
+        self.spectrum = spectrum
         self.fpe = FluxPointsEstimator(**kwargs)
 
     def get_spectrum_datasets(self, dataset):
-        """ Utility to make the final `~gammapy.datasts.Datasets`
+        """Extract spectrum datasets for the given regions.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the dataset to use for profile extraction
+
         Returns
         --------
-        sp_datasets : array of `~gammapy.datasets.SpectrumDataset`
-            the list of `~gammapy.datasets.SpectrumDataset` computed in each box
+        datasets : `Datasets`
+            List of `~gammapy.datasets.SpectrumDataset` computed in each box
         """
         datasets = Datasets()
 
         for reg in self.regions:
             spectrum_dataset = dataset.to_spectrum_dataset(reg)
+            spectrum_dataset.models = dataset.models.copy()
             datasets.append(spectrum_dataset)
 
         return datasets
@@ -50,7 +69,7 @@ class FluxProfileEstimator(Estimator):
         table_flat = Table()
 
         for column in table.columns:
-            table_flat[column.name] = column.reshape((1, -1))
+            table_flat[column] = table[column].reshape((1, -1))
 
         return table_flat
 
@@ -72,13 +91,6 @@ class FluxProfileEstimator(Estimator):
             results.append(row)
 
         return vstack(results)
-
-
-class FluxProfile:
-    """"""
-    def __init__(self, table):
-        self.table
-
 
 
 # TODO: implement measuring profile along arbitrary directions
