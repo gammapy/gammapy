@@ -38,9 +38,9 @@ def make_horizontal_boxes(wcs):
 def test_profile_content():
     mapdataset_onoff = get_simple_dataset_on_off()
     wcs = mapdataset_onoff.counts.geom.wcs
-    boxes, axis = make_horizontal_boxes(wcs)
+    boxes = make_horizontal_boxes(wcs)
 
-    prof_maker = ExcessProfileEstimator(boxes, axis)
+    prof_maker = ExcessProfileEstimator(boxes)
     imp_prof = prof_maker.run(mapdataset_onoff)
 
     # assert_allclose(imp_prof.table[7]['x_min'], -0.0562, atol=1e-4)
@@ -52,8 +52,8 @@ def test_profile_content():
     # assert_allclose(imp_prof.table[0]['ul'], [115.171871, 115.171871], atol=1e-5)
     # assert_allclose(imp_prof.table[0]['flux'], [7.99999987e-06, 8.00000010e-06], atol=1e-3)
     # assert_allclose(imp_prof.table[0]['solid_angle'], [6.853891e-07, 6.853891e-07], atol=1e-5)
-    assert_allclose(imp_prof[7]['x_min'], -0.0562, atol=1e-4)
-    assert_allclose(imp_prof[7]['x_ref'], -0.0674, atol=1e-4)
+    assert_allclose(imp_prof[7]['x_min'], 0.1462, atol=1e-4)
+    assert_allclose(imp_prof[7]['x_ref'], 0.1575, atol=1e-4)
     assert_allclose(imp_prof[7]['counts'], [100., 100.], atol=1e-2)
     assert_allclose(imp_prof[7]['excess'], [80., 80.], atol=1e-2)
     assert_allclose(imp_prof[7]['sqrt_ts'], [7.6302447, 7.6302447], atol=1e-5)

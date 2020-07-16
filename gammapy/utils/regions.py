@@ -25,14 +25,18 @@ from regions import (
     Region,
     SkyRegion,
     RectangleSkyRegion,
-    PixCoord,
 )
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
-from gammapy.maps import MapAxis
 
-__all__ = ["make_region", "make_pixel_region", "make_orthogonal_rectangle_sky_regions"]
+__all__ = [
+    "make_region",
+    "make_pixel_region",
+    "make_orthogonal_rectangle_sky_regions",
+    "compound_region_to_list",
+    "list_to_compound_region"
+]
 
 
 def make_region(region):
@@ -187,7 +191,7 @@ class SphericalCircleSkyRegion(CircleSkyRegion):
         return separation < self.radius
 
 
-def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, fullwidth, nbins=1):
+def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbins=1):
     """Utility returning an array of regions to make orthogonal projections
 
     Parameters
@@ -196,8 +200,8 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, fullwidth, nb
         First sky coordinate defining the line to which the orthogonal boxes made
     end_pos : `~astropy.regions.SkyCoord'
         Second sky coordinate defining the line to which the orthogonal boxes made
-    fullwidth : Angle
-        Full width of the orthogonal dimension of the boxes
+    height : `~astropy.quantity.Quantity`
+        Height of the rectangle region.
     wcs : `~astropy.wcs.WCS`
         WCS projection object
     nbins : int
@@ -207,8 +211,6 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, fullwidth, nb
     --------
     regions : Array of `~astropy.regions`
         Regions in which the profiles are made
-    rad_axis : `~gammapy.maps.MapAxis`
-        Radial axis of the profiles
     """
     pix_start = start_pos.to_pixel(wcs)
     pix_stop = end_pos.to_pixel(wcs)
@@ -216,23 +218,15 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, fullwidth, nb
     points = np.linspace(start=pix_start, stop=pix_stop, num=nbins + 1).T
     centers = 0.5 * (points[:, :-1] + points[:, 1:])
     coords = SkyCoord.from_pixel(centers[0], centers[1], wcs)
-    box_width = start_pos.separation(end_pos).to("rad") / nbins
-    rot_angle = end_pos.position_angle(start_pos) - 90 * u.deg
+
+    width = start_pos.separation(end_pos).to("rad") / nbins
+    angle = end_pos.position_angle(start_pos) - 90 * u.deg
+
     regions = []
-    for i in range(nbins):
-        reg = RectangleSkyRegion(center=coords[i],
-                                 width=box_width,
-                                 height=u.Quantity(fullwidth),
-                                 angle=rot_angle)
+
+    for center in coords:
+        reg = RectangleSkyRegion(
+            center=center, width=width, height=u.Quantity(height), angle=angle)
         regions.append(reg)
 
-    dist = []
-    center = coords[int(nbins/2)]
-    for coord in coords:
-        sep = center.separation(coord)
-        if coord.galactic.l.value < center.galactic.l.value:
-            sep *= -1
-        dist.append(sep.value)
-    axis = MapAxis.from_nodes(Angle(dist, unit='deg'), name='projected distance')
-
-    return regions, axis
+    return regions

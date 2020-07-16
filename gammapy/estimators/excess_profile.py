@@ -1,11 +1,12 @@
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
 import numpy as np
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 from regions import RectangleSkyRegion
 from gammapy.utils.table import table_from_row_data
-#from gammapy.estimators import ImageProfile
 from gammapy.stats import WStatCountsStatistic, CashCountsStatistic
-from gammapy.datasets import SpectrumDatasetOnOff
+from gammapy.datasets import SpectrumDatasetOnOff, Datasets
+from gammapy.maps import MapAxis
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
 from .core import Estimator
 
@@ -19,8 +20,6 @@ class ExcessProfileEstimator(Estimator):
     ----------
     regions : list of `regions`
         regions to use
-    axis : `~gammapy.maps.MapAxis`
-        Radial axis of the profiles
     n_sigma : float (optional)
         Number of sigma to compute errors. By default, it is 1.
     n_sigma_ul : float (optional)
@@ -72,14 +71,15 @@ class ExcessProfileEstimator(Estimator):
     """
     tag = "ExcessProfileEstimator"
 
-    def __init__(self, regions, axis, spectrum=None, n_sigma=1., n_sigma_ul=3.):
+    def __init__(self, regions, spectrum=None, n_sigma=1., n_sigma_ul=3.):
         self.regions = regions
-        self.axis = axis
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
-        self.spectrum = spectrum
+
         if spectrum is None:
-            self.spectrum = PowerLawSpectralModel(index=2.0, amplitude="1.e-12 cm-2 s-1 TeV-1", reference=1*u.TeV)
+            spectrum = PowerLawSpectralModel()
+
+        self.spectrum = spectrum
 
     def get_spectrum_datasets(self, dataset):
         """ Utility to make the final `~gammapy.datasts.Datasets`
@@ -93,11 +93,25 @@ class ExcessProfileEstimator(Estimator):
         sp_datasets : array of `~gammapy.datasets.SpectrumDataset`
             the list of `~gammapy.datasets.SpectrumDataset` computed in each box
         """
-        sp_datasets = []
+        datasets = Datasets()
+
         for reg in self.regions:
-            spds = dataset.to_spectrum_dataset(reg)
-            sp_datasets.append(spds)
-        return sp_datasets
+            spectrum_dataset = dataset.to_spectrum_dataset(reg)
+            datasets.append(spectrum_dataset)
+
+        return datasets
+
+    def _get_projected_distance(self):
+        centers = []
+
+        for region in self.regions:
+            centers.append(region.center)
+
+        centers = SkyCoord(centers)
+
+        distance = centers.separation(centers[0])
+
+        return MapAxis.from_nodes(distance, name="projected distance")
 
     def make_prof(self, sp_datasets, steps):
         """ Utility to make the profile in each region
@@ -119,6 +133,9 @@ class ExcessProfileEstimator(Estimator):
             steps = ["err", "ts", "errn-errp", "ul"]
 
         results = []
+
+        distance = self._get_projected_distance()
+
         for index, spds in enumerate(sp_datasets):
             old_model = None
             if spds.models is not None:
@@ -143,9 +160,9 @@ class ExcessProfileEstimator(Estimator):
                 )
 
             result = {
-                "x_min": self.axis.edges[index],
-                "x_max": self.axis.edges[index+1],
-                "x_ref": self.axis.center[index],
+                "x_min": distance.edges[index],
+                "x_max": distance.edges[index + 1],
+                "x_ref": distance.center[index],
                 "energy_edge": e_reco
             }
             if isinstance(spds, SpectrumDatasetOnOff):
