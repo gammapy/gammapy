@@ -9,6 +9,7 @@ from astropy.table import Table, vstack
 from .core import Estimator
 from .flux_point import FluxPointsEstimator
 from gammapy.datasets import Datasets
+from regions import ds9_objects_to_string
 
 
 __all__ = ["ImageProfile", "ImageProfileEstimator"]
@@ -53,17 +54,31 @@ class FluxProfileEstimator(Estimator):
 
         return table_flat
 
+    @staticmethod
+    def _get_ds9_string(region):
+        header, frame, region, _ = ds9_objects_to_string([region]).split("\n")
+        return ";".join([frame, region])
+
     def run(self, dataset):
         """"""
         results = []
 
         datasets = self.get_spectrum_datasets(dataset)
 
-        for dataset in datasets:
+        for region, dataset in zip(self.regions, datasets):
             fp = self.fpe.run(dataset)
-            results.append(self._flat_table(fp.table))
+            row = self._flat_table(fp.table)
+            row["region"] = self._get_ds9_string(region)
+            results.append(row)
 
         return vstack(results)
+
+
+class FluxProfile:
+    """"""
+    def __init__(self, table):
+        self.table
+
 
 
 # TODO: implement measuring profile along arbitrary directions
