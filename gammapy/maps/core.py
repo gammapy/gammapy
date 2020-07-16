@@ -461,13 +461,16 @@ class Map(abc.ABC):
         """
         pass
 
-    def resample_axis(self, axis):
+    def resample_axis(self, axis, weights=None):
         """Resample map to a new axis binning by grouping and summing smaller bins.
 
         Parameters
         ----------
         axis : `MapAxis`
             New map axis.
+        weights : `Map`
+            Array to be used as weights. The spatial geometry must be equivalent
+            to `other` and additional axes must be broadcastable.
 
         Returns
         -------
@@ -485,7 +488,10 @@ class Map(abc.ABC):
 
         # transform to data idx
         idx = len(geom.axes) - idx - 1
-        data = np.add.reduceat(self.data, indices=indices, axis=idx)
+
+        weights = 1 if weights is None else weights.data
+
+        data = np.add.reduceat(self.data * weights, indices=indices, axis=idx)
 
         return self._init_copy(data=data, geom=geom)
 
