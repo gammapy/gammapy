@@ -24,9 +24,19 @@ from regions import (
     PixelRegion,
     Region,
     SkyRegion,
+    RectangleSkyRegion,
 )
+import numpy as np
+from astropy import units as u
+from astropy.coordinates import Angle, SkyCoord
 
-__all__ = ["make_region", "make_pixel_region"]
+__all__ = [
+    "make_region",
+    "make_pixel_region",
+    "make_orthogonal_rectangle_sky_regions",
+    "compound_region_to_list",
+    "list_to_compound_region"
+]
 
 
 def make_region(region):
@@ -179,3 +189,44 @@ class SphericalCircleSkyRegion(CircleSkyRegion):
         """Defined by spherical distance."""
         separation = self.center.separation(skycoord)
         return separation < self.radius
+
+
+def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbins=1):
+    """Utility returning an array of regions to make orthogonal projections
+
+    Parameters
+    ----------
+    start_pos : `~astropy.regions.SkyCoord'
+        First sky coordinate defining the line to which the orthogonal boxes made
+    end_pos : `~astropy.regions.SkyCoord'
+        Second sky coordinate defining the line to which the orthogonal boxes made
+    height : `~astropy.quantity.Quantity`
+        Height of the rectangle region.
+    wcs : `~astropy.wcs.WCS`
+        WCS projection object
+    nbins : int
+        Number of boxes along the line
+
+    Returns
+    --------
+    regions : Array of `~astropy.regions`
+        Regions in which the profiles are made
+    """
+    pix_start = start_pos.to_pixel(wcs)
+    pix_stop = end_pos.to_pixel(wcs)
+
+    points = np.linspace(start=pix_start, stop=pix_stop, num=nbins + 1).T
+    centers = 0.5 * (points[:, :-1] + points[:, 1:])
+    coords = SkyCoord.from_pixel(centers[0], centers[1], wcs)
+
+    width = start_pos.separation(end_pos).to("rad") / nbins
+    angle = end_pos.position_angle(start_pos) - 90 * u.deg
+
+    regions = []
+
+    for center in coords:
+        reg = RectangleSkyRegion(
+            center=center, width=width, height=u.Quantity(height), angle=angle)
+        regions.append(reg)
+
+    return regions

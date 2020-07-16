@@ -405,7 +405,7 @@ class ImageProfile:
         elif mode == "integral":
             norm = np.nansum(profile)
         else:
-            raise ValueError(f"Invalide normalization mode: {mode!r}")
+            raise ValueError(f"Invalid normalization mode: {mode!r}")
 
         table["profile"] /= norm
 
