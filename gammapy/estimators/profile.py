@@ -5,10 +5,65 @@ import scipy.ndimage
 from astropy import units as u
 from astropy.convolution import Box1DKernel, Gaussian1DKernel
 from astropy.coordinates import Angle
-from astropy.table import Table
+from astropy.table import Table, vstack
 from .core import Estimator
+from .flux_point import FluxPointsEstimator
+from gammapy.datasets import Datasets
+
 
 __all__ = ["ImageProfile", "ImageProfileEstimator"]
+
+
+class FluxProfileEstimator(Estimator):
+    """Estimate flux profiles
+
+    """
+    tag = "FluxProfileEstimator"
+
+    def __init__(self, regions, **kwargs):
+        self.regions = regions
+        self.fpe = FluxPointsEstimator(**kwargs)
+
+    def get_spectrum_datasets(self, dataset):
+        """ Utility to make the final `~gammapy.datasts.Datasets`
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
+            the dataset to use for profile extraction
+        Returns
+        --------
+        sp_datasets : array of `~gammapy.datasets.SpectrumDataset`
+            the list of `~gammapy.datasets.SpectrumDataset` computed in each box
+        """
+        datasets = Datasets()
+
+        for reg in self.regions:
+            spectrum_dataset = dataset.to_spectrum_dataset(reg)
+            datasets.append(spectrum_dataset)
+
+        return datasets
+
+    @staticmethod
+    def _flat_table(table):
+        table_flat = Table()
+
+        for column in table.columns:
+            table_flat[column.name] = column.reshape((1, -1))
+
+        return table_flat
+
+    def run(self, dataset):
+        """"""
+        results = []
+
+        datasets = self.get_spectrum_datasets(dataset)
+
+        for dataset in datasets:
+            fp = self.fpe.run(dataset)
+            results.append(self._flat_table(fp.table))
+
+        return vstack(results)
 
 
 # TODO: implement measuring profile along arbitrary directions
