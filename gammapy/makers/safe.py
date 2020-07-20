@@ -103,7 +103,7 @@ class SafeMaskMaker(Maker):
             e_max = observation.aeff.high_threshold
             e_min = observation.aeff.low_threshold
         except KeyError:
-            log.warning(f"No thresholds defined for obs {observation}")
+            log.warning(f"No thresholds defined for obs {observation.obs_id}")
             e_min, e_max = None, None
 
         return dataset.counts.geom.energy_mask(emin=e_min, emax=e_max)

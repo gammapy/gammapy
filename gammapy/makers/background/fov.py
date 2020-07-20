@@ -36,7 +36,7 @@ class FoVBackgroundMaker(Maker):
             raise ValueError(f"Incorrect method for FoVBackgroundMaker: {method}.")
         self.exclusion_mask = exclusion_mask
 
-    def run(self, dataset):
+    def run(self, dataset, observation=None):
         """Run FoV background maker.
 
         Fit the background model norm
