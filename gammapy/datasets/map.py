@@ -1082,6 +1082,66 @@ class MapDataset(Dataset):
 
         return self.__class__(**kwargs)
 
+    def downsample(self, factor, axis=None, name=None):
+        """Downsample map dataset.
+
+        The PSFMap and EDispKernelMap are not downsampled, except if
+        a corresponding axis is given.
+
+        Parameters
+        ----------
+        factor : int
+            Downsampling factor.
+        axis : str
+            Which axis to downsample. By default only spatial axes are downsampled.
+        name : str
+            Name of the downsampled dataset.
+
+        Returns
+        -------
+        dataset : `MapDataset`
+            Downsampled map dataset.
+        """
+        name = make_name(name)
+
+        kwargs = {"gti": self.gti, "name": name}
+
+        kwargs["counts"] = self.counts.downsample(
+            factor=factor, preserve_counts=True, axis=axis, weights=self.mask_safe
+        )
+
+        if axis is None:
+            kwargs["exposure"] = self.exposure.downsample(
+                factor=factor, preserve_counts=False
+            )
+        else:
+            kwargs["exposure"] = self.exposure.copy()
+
+        if self.background_model is not None:
+            m = self.background_model.evaluate().downsample(
+                factor=factor, axis=axis, weights=self.mask_safe
+            )
+            kwargs["models"] = BackgroundModel(map=m, datasets_names=[name])
+
+        if axis is not None:
+            kwargs["edisp"] = self.edisp.downsample(
+                factor=factor, axis=axis
+            )
+        else:
+            kwargs["edisp"] = self.edisp.copy()
+
+        kwargs["psf"] = self.psf.copy()
+
+        kwargs["mask_safe"] = self.mask_safe.downsample(
+            factor=factor, preserve_counts=False, axis=axis
+        )
+
+        kwargs["mask_fit"] = self.mask_safe.downsample(
+            factor=factor, preserve_counts=False, axis=axis
+        )
+
+        return self.__class__(**kwargs)
+
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
@@ -1648,6 +1708,9 @@ class MapDatasetOnOff(MapDataset):
             )
 
         return self.from_map_dataset(dataset, **kwargs)
+
+    def downsample(self):
+        raise NotImplementedError
 
 
 class MapEvaluator:
