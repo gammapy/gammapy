@@ -40,7 +40,7 @@ def test_hdu_index_table(hdu_index_table):
     See https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/issues/118
     """
     location = hdu_index_table.hdu_location(obs_id=42, hdu_type="events")
-    assert location.path().as_posix() == "spam/a/b"
+    assert location.path().as_posix() == "a/b"
 
     location = hdu_index_table.hdu_location(obs_id=42, hdu_type="bkg")
     assert location is None

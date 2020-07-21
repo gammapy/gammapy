@@ -52,8 +52,10 @@ class HDULocation:
 
         Include ``base_dir`` if ``abs_path`` is True.
         """
-        if abs_path:
-            return make_path(self.base_dir) / self.file_dir / self.file_name
+        path = make_path(self.base_dir) / self.file_dir / self.file_name
+
+        if abs_path and path.exists():
+            return path
         else:
             return make_path(self.file_dir) / self.file_name
 
