@@ -190,9 +190,6 @@ class TSMapEstimator(Estimator):
         # TODO: further simplify the code below
         geom = dataset.counts.geom
 
-        if self.downsampling_factor:
-            geom = geom.downsample(self.downsampling_factor)
-
         model = self.model.copy()
         model.spatial_model.position = geom.center_skydir
 
@@ -344,6 +341,11 @@ class TSMapEstimator(Estimator):
         """
         p = self.parameters
 
+        if self.downsampling_factor:
+            shape = dataset.counts.geom.to_image().data_shape
+            pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
+            dataset = dataset.pad(pad_width).downsample(self.downsampling_factor)
+
         # First create 2D map arrays
         counts = dataset.counts.sum_over_axes(keepdims=False)
         background = dataset.npred().sum_over_axes(keepdims=False)
@@ -355,24 +357,6 @@ class TSMapEstimator(Estimator):
             mask = counts.copy(data=(dataset.mask.sum(axis=0) > 0).astype("int"))
         else:
             mask = counts.copy(data=np.ones_like(counts).astype("int"))
-
-        if self.downsampling_factor:
-            shape = counts.data.shape
-            pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
-
-            counts = counts.pad(pad_width).downsample(
-                self.downsampling_factor, preserve_counts=True
-            )
-            background = background.pad(pad_width).downsample(
-                self.downsampling_factor, preserve_counts=True
-            )
-            exposure = exposure.pad(pad_width).downsample(
-                self.downsampling_factor, preserve_counts=False
-            )
-            mask = mask.pad(pad_width).downsample(
-                self.downsampling_factor, preserve_counts=False
-            )
-            mask.data = mask.data.astype("int")
 
         mask.data &= self.mask_default(exposure, background, kernel.data).data
 

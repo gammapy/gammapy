@@ -230,6 +230,8 @@ class WcsNDMap(WcsMap):
     def pad(self, pad_width, mode="constant", cval=0, order=1):
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)
+
+        if len(pad_width) == 2:
             pad_width += (0,) * (self.geom.ndim - 2)
 
         geom = self.geom.pad(pad_width[:2])
@@ -331,8 +333,7 @@ class WcsNDMap(WcsMap):
         else:
             block_size = [1] * self.data.ndim
             idx = self.geom.get_axis_index_by_name(axis)
-            idx = len(geom.axes) - idx - 1
-            block_size[idx] = factor
+            block_size[idx + 2] = factor
 
         func = np.nansum if preserve_counts else np.nanmean
 
@@ -341,7 +342,7 @@ class WcsNDMap(WcsMap):
         else:
             weights = weights.data
 
-        data = block_reduce(self.data * weights, tuple(block_size), func=func)
+        data = block_reduce(self.data * weights, tuple(block_size[::-1]), func=func)
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
     def plot(self, ax=None, fig=None, add_cbar=False, stretch="linear", **kwargs):
