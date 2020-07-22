@@ -151,13 +151,7 @@ class EDispMap(IRFMap):
             integral = np.diff(np.clip(f(migra), a_min=0, a_max=1))
             data.append(integral)
 
-        return EDispKernel(
-            e_true_lo=energy_axis_true.edges[:-1],
-            e_true_hi=energy_axis_true.edges[1:],
-            e_reco_lo=energy_axis.edges[:-1],
-            e_reco_hi=energy_axis.edges[1:],
-            data=data,
-        )
+        return EDispKernel(e_true=energy_axis_true, e_reco=energy_axis, data=data)
 
     @classmethod
     def from_geom(cls, geom):
@@ -420,13 +414,7 @@ class EDispKernelMap(IRFMap):
 
             data = self.edisp_map.get_by_coord(coords)
 
-        return EDispKernel(
-            e_true_lo=energy_true_axis.edges[:-1],
-            e_true_hi=energy_true_axis.edges[1:],
-            e_reco_lo=energy_axis.edges[:-1],
-            e_reco_hi=energy_axis.edges[1:],
-            data=data,
-        )
+        return EDispKernel(e_true=energy_true_axis, e_reco=energy_axis, data=data)
 
     @classmethod
     def from_diagonal_response(cls, energy_axis, energy_axis_true, geom=None):
