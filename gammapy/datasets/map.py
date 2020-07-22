@@ -1765,6 +1765,9 @@ class MapDatasetOnOff(MapDataset):
     def downsample(self):
         raise NotImplementedError
 
+    def pad(self):
+        raise NotImplementedError
+
 
 class MapEvaluator:
     """Sky model evaluation on maps.
