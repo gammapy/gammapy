@@ -766,7 +766,11 @@ class MapAxis:
             Downsampled map axis.
 
         """
-        nbin = int(self.nbin / factor)
+        nbin = self.nbin / factor
+
+        if np.mod(nbin, 1) > 0:
+            raise ValueError(f"Number of {self.name} bins is not divisible by {factor}")
+
         return self._up_down_sample(nbin)
 
     def to_table_hdu(self, format="ogip"):
