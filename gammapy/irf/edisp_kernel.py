@@ -18,10 +18,10 @@ class EDispKernel:
 
     Parameters
     ----------
-    e_true_lo, e_true_hi : `~astropy.units.Quantity`
-        True energy axis binning
-    e_reco_lo, e_reco_hi : `~astropy.units.Quantity`
-        Reconstructed energy axis binning
+    e_true : `~gammapy.maps.MapAxis`
+        True energy axis. Its name must be "energy_true"
+    e_reco : `~gammapy.maps.MapAxis`
+        Reconstructed energy axis. Its name must be "energy"
     data : array_like
         2-dim energy dispersion matrix
 
@@ -29,10 +29,10 @@ class EDispKernel:
     --------
     Create a Gaussian energy dispersion matrix::
 
-        import numpy as np
-        import astropy.units as u
+        from gammapy.maps import MapAxis
         from gammapy.irf import EDispKernel
-        energy = np.logspace(0, 1, 101) * u.TeV
+        energy = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV')
+        energy_true = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV', name='energy_true')
         edisp = EDispKernel.from_gauss(
             e_true=energy, e_reco=energy,
             sigma=0.1, bias=0,
@@ -43,9 +43,6 @@ class EDispKernel:
     >>> print(edisp)
     >>> edisp.peek()
 
-    See Also
-    --------
-    EnergyDispersion2D
     """
 
     default_interp_kwargs = dict(bounds_error=False, fill_value=0, method="nearest")
@@ -54,10 +51,8 @@ class EDispKernel:
 
     def __init__(
         self,
-        e_true_lo,
-        e_true_hi,
-        e_reco_lo,
-        e_reco_hi,
+        e_true,
+        e_reco,
         data,
         interp_kwargs=None,
         meta=None,
@@ -65,14 +60,8 @@ class EDispKernel:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-        e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
-        e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="energy_true")
-
-        e_reco_edges = edges_from_lo_hi(e_reco_lo, e_reco_hi)
-        e_reco_axis = MapAxis.from_edges(e_reco_edges, interp="log", name="energy")
-
         self.data = NDDataArray(
-            axes=[e_true_axis, e_reco_axis], data=data, interp_kwargs=interp_kwargs
+            axes=[e_true, e_reco], data=data, interp_kwargs=interp_kwargs
         )
         self.meta = meta or {}
 
@@ -119,6 +108,16 @@ class EDispKernel:
             idx = (energy[:-1] < lo_threshold) | (energy[1:] > hi_threshold)
         data[:, idx] = 0
         return data
+
+    @classmethod
+    def from_energy_lo_hi(cls, e_true_lo, e_true_hi, e_reco_lo, e_reco_hi, data, **kwargs):
+        e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
+        e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="energy_true")
+
+        e_reco_edges = edges_from_lo_hi(e_reco_lo, e_reco_hi)
+        e_reco_axis = MapAxis.from_edges(e_reco_edges, interp="log", name="energy")
+
+        return cls(e_true_axis, e_reco_axis, data, **kwargs)
 
     @classmethod
     def from_gauss(cls, e_true, e_reco, sigma, bias, pdf_threshold=1e-6):
@@ -196,7 +195,7 @@ class EDispKernel:
         data = np.logical_and(etrue_2d >= ereco_lo_2d, etrue_2d < ereco_hi_2d)
         data = np.transpose(data).astype("float")
 
-        return cls(
+        return cls.from_energy_lo_hi(
             e_true_lo=e_true[:-1],
             e_true_hi=e_true[1:],
             e_reco_lo=e_reco[:-1],
@@ -244,7 +243,7 @@ class EDispKernel:
         e_true_lo = Quantity(matrix_hdu.data["ENERG_LO"], unit=unit)
         e_true_hi = Quantity(matrix_hdu.data["ENERG_HI"], unit=unit)
 
-        return cls(
+        return cls.from_energy_lo_hi(
             e_true_lo=e_true_lo,
             e_true_hi=e_true_hi,
             e_reco_lo=e_reco_lo,

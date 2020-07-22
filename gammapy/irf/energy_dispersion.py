@@ -231,7 +231,7 @@ class EnergyDispersion2D:
         e_lo, e_hi = e_true[:-1], e_true[1:]
         ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
 
-        return EDispKernel(
+        return EDispKernel.from_energy_lo_hi(
             e_true_lo=e_lo,
             e_true_hi=e_hi,
             e_reco_lo=ereco_lo,
