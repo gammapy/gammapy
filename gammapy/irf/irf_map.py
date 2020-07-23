@@ -145,3 +145,33 @@ class IRFMap:
         irf_map = self._irf_map.cutout(position, width, mode)
         exposure_map = self.exposure_map.cutout(position, width, mode)
         return self.__class__(irf_map, exposure_map=exposure_map)
+
+    def downsample(self, factor, axis=None, weights=None):
+        """Downsample the spatial dimension by a given factor.
+
+        Parameters
+        ----------
+        factor : int
+            Downsampling factor.
+        axis : str
+            Which axis to downsample. By default spatial axes are downsampled.
+        weights : `~gammapy.maps.Map`
+            Map with weights downsampling.
+
+        Returns
+        -------
+        map : `Map`
+            Downsampled map.
+        """
+        irf_map = self._irf_map.downsample(
+            factor=factor, axis=axis, preserve_counts=True, weights=weights
+        )
+        if axis is None:
+            exposure_map = self.exposure_map.downsample(
+                factor=factor, preserve_counts=False
+            )
+        else:
+            exposure_map = self.exposure_map.copy()
+
+        return self.__class__(irf_map, exposure_map=exposure_map)
+

@@ -1082,6 +1082,119 @@ class MapDataset(Dataset):
 
         return self.__class__(**kwargs)
 
+    def downsample(self, factor, axis=None, name=None):
+        """Downsample map dataset.
+
+        The PSFMap and EDispKernelMap are not downsampled, except if
+        a corresponding axis is given.
+
+        Parameters
+        ----------
+        factor : int
+            Downsampling factor.
+        axis : str
+            Which axis to downsample. By default only spatial axes are downsampled.
+        name : str
+            Name of the downsampled dataset.
+
+        Returns
+        -------
+        dataset : `MapDataset`
+            Downsampled map dataset.
+        """
+        name = make_name(name)
+
+        kwargs = {"gti": self.gti, "name": name}
+
+        if self.counts is not None:
+            kwargs["counts"] = self.counts.downsample(
+                factor=factor, preserve_counts=True, axis=axis, weights=self.mask_safe
+            )
+
+        if self.exposure is not None:
+            if axis is None:
+                kwargs["exposure"] = self.exposure.downsample(
+                    factor=factor, preserve_counts=False
+                )
+            else:
+                kwargs["exposure"] = self.exposure.copy()
+
+        if self.background_model is not None:
+            m = self.background_model.evaluate().downsample(
+                factor=factor, axis=axis, weights=self.mask_safe
+            )
+            kwargs["models"] = BackgroundModel(map=m, datasets_names=[name])
+
+        if self.edisp is not None:
+            if axis is not None:
+                kwargs["edisp"] = self.edisp.downsample(
+                    factor=factor, axis=axis
+                )
+            else:
+                kwargs["edisp"] = self.edisp.copy()
+
+        if self.psf is not None:
+            kwargs["psf"] = self.psf.copy()
+
+        if self.mask_safe is not None:
+            kwargs["mask_safe"] = self.mask_safe.downsample(
+                factor=factor, preserve_counts=False, axis=axis
+            )
+
+        if self.mask_fit is not None:
+            kwargs["mask_fit"] = self.mask_fit.downsample(
+                factor=factor, preserve_counts=False, axis=axis
+            )
+
+        return self.__class__(**kwargs)
+
+    def pad(self, pad_width, mode="constant", name=None):
+        """Pad the spatial dimensions of the dataset.
+
+        The padding only applies to counts, masks, background and exposure.
+
+        Counts, background and masks are padded with zeros, exposure is padded with edge value.
+
+        Parameters
+        ----------
+        pad_width : {sequence, array_like, int}
+            Number of pixels padded to the edges of each axis.
+        name : str
+            Name of the padded dataset.
+
+        Returns
+        -------
+        map : `Map`
+            Padded map.
+
+        """
+        name = make_name(name)
+        kwargs = {"gti": self.gti, "name": name}
+
+        if self.counts is not None:
+            kwargs["counts"] = self.counts.pad(pad_width=pad_width, mode=mode)
+
+        if self.exposure is not None:
+            kwargs["exposure"] = self.exposure.pad(pad_width=pad_width, mode=mode)
+
+        if self.background_model is not None:
+            m = self.background_model.evaluate().pad(pad_width=pad_width, mode=mode)
+            kwargs["models"] = BackgroundModel(map=m, datasets_names=[name])
+
+        if self.edisp is not None:
+            kwargs["edisp"] = self.edisp.copy()
+
+        if self.psf is not None:
+            kwargs["psf"] = self.psf.copy()
+
+        if self.mask_safe is not None:
+            kwargs["mask_safe"] = self.mask_safe.pad(pad_width=pad_width, mode=mode)
+
+        if self.mask_fit is not None:
+            kwargs["mask_fit"] = self.mask_fit.pad(pad_width=pad_width, mode=mode)
+
+        return self.__class__(**kwargs)
+
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
@@ -1648,6 +1761,12 @@ class MapDatasetOnOff(MapDataset):
             )
 
         return self.from_map_dataset(dataset, **kwargs)
+
+    def downsample(self):
+        raise NotImplementedError
+
+    def pad(self):
+        raise NotImplementedError
 
 
 class MapEvaluator:
