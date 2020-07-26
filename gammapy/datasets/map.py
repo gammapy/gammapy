@@ -24,7 +24,7 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
-__all__ = ["MapDataset", "MapDatasetOnOff"]
+__all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
 
 log = logging.getLogger(__name__)
 
@@ -38,6 +38,63 @@ MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
 )
 
 BINSZ_IRF_DEFAULT = 0.2
+
+
+def create_map_dataset_geoms(
+        geom,
+        energy_axis_true=None,
+        migra_axis=None,
+        rad_axis=None,
+        binsz_irf=None,
+):
+    """Create map geometries for a `MapDataset`
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.WcsGeom`
+        Reference target geometry in reco energy, used for counts and background maps
+    energy_axis_true : `~gammapy.maps.MapAxis`
+        True energy axis used for IRF maps
+    migra_axis : `~gammapy.maps.MapAxis`
+        If set, this provides the migration axis for the energy dispersion map.
+        If not set, an EDispKernelMap is produced instead. Default is None
+    rad_axis : `~gammapy.maps.MapAxis`
+        Rad axis for the psf map
+    binsz_irf : float
+        IRF Map pixel size in degrees.
+
+    Returns
+    -------
+    geoms : dict
+        Dict with map geometries.
+    """
+    rad_axis = rad_axis or RAD_AXIS_DEFAULT
+
+    if energy_axis_true is not None:
+        if energy_axis_true.name != "energy_true":
+            raise ValueError("True enery axis name must be 'energy_true'")
+    else:
+        energy_axis_true = geom.get_axis_by_name("energy").copy(name="energy_true")
+
+    binsz_irf = binsz_irf or BINSZ_IRF_DEFAULT
+    geom_image = geom.to_image()
+    geom_exposure = geom_image.to_cube([energy_axis_true])
+    geom_irf = geom_image.to_binsz(binsz=binsz_irf)
+    geom_psf = geom_irf.to_cube([rad_axis, energy_axis_true])
+
+    if migra_axis:
+        geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
+    else:
+        geom_edisp = geom_irf.to_cube(
+            [geom.get_axis_by_name("energy"), energy_axis_true]
+        )
+
+    return {
+        "geom": geom,
+        "geom_exposure": geom_exposure,
+        "geom_psf": geom_psf,
+        "geom_edisp": geom_edisp
+    }
 
 
 class MapDataset(Dataset):
@@ -390,31 +447,17 @@ class MapDataset(Dataset):
         empty_maps : `MapDataset`
             A MapDataset containing zero filled maps
         """
-        rad_axis = rad_axis or RAD_AXIS_DEFAULT
+        geoms = create_map_dataset_geoms(
+            geom=geom,
+            energy_axis_true=energy_axis_true,
+            rad_axis=rad_axis,
+            migra_axis=migra_axis,
+            binsz_irf=binsz_irf
+        )
 
-        if energy_axis_true is not None:
-            if energy_axis_true.name != "energy_true":
-                raise ValueError("True enery axis name must be 'energy_true'")
-        else:
-            energy_axis_true = geom.get_axis_by_name("energy").copy(name="energy_true")
-
-        binsz_irf = binsz_irf or BINSZ_IRF_DEFAULT
-        geom_image = geom.to_image()
-        geom_exposure = geom_image.to_cube([energy_axis_true])
-        geom_irf = geom_image.to_binsz(binsz=binsz_irf)
-        geom_psf = geom_irf.to_cube([rad_axis, energy_axis_true])
-        if migra_axis:
-            geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
-        else:
-            geom_edisp = geom_irf.to_cube(
-                [geom.get_axis_by_name("energy"), energy_axis_true]
-            )
+        kwargs.update(geoms)
 
         return cls.from_geoms(
-            geom,
-            geom_exposure,
-            geom_psf,
-            geom_edisp,
             reference_time=reference_time,
             name=name,
             **kwargs,
