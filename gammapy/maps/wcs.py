@@ -147,6 +147,13 @@ class WcsGeom(Geom):
 
         return state
 
+    def __setstate__(self, state):
+        for key, value in state.items():
+            if key in ["get_coord", "solid_angle", "bin_volume", "to_image"]:
+                state[key] = lru_cache()(value)
+
+        self.__dict__ = state
+
     @property
     def data_shape(self):
         """Shape of the Numpy data array matching this geometry."""
