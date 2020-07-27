@@ -2,6 +2,7 @@
 import logging
 import sys
 import numpy as np
+from pathlib import Path
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
@@ -24,9 +25,8 @@ class HDULocation:
     """
 
     def __init__(
-        self, hdu_type, hdu_class, base_dir, file_dir, file_name, hdu_name
+        self, hdu_class, base_dir=".", file_dir=None, file_name=None, hdu_name=None
     ):
-        self.hdu_type = hdu_type
         self.hdu_class = hdu_class
         self.base_dir = base_dir
         self.file_dir = file_dir
@@ -37,8 +37,6 @@ class HDULocation:
         """Print some summary info to stdout."""
         if not file:
             file = sys.stdout
-
-        print(f"HDU_TYPE = {self.hdu_type}", file=file)
         print(f"HDU_CLASS = {self.hdu_class}", file=file)
         print(f"BASE_DIR = {self.base_dir}", file=file)
         print(f"FILE_DIR = {self.file_dir}", file=file)
@@ -228,7 +226,6 @@ class HDUIndexTable(Table):
         """Create `HDULocation` for a given row index."""
         row = self[idx]
         return HDULocation(
-            hdu_type=row["HDU_TYPE"].strip(),
             hdu_class=row["HDU_CLASS"].strip(),
             base_dir=self.base_dir.as_posix(),
             file_dir=row["FILE_DIR"].strip(),
