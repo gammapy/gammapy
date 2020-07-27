@@ -24,9 +24,8 @@ class HDULocation:
     """
 
     def __init__(
-        self, obs_id, hdu_type, hdu_class, base_dir, file_dir, file_name, hdu_name
+        self, hdu_type, hdu_class, base_dir, file_dir, file_name, hdu_name
     ):
-        self.obs_id = obs_id
         self.hdu_type = hdu_type
         self.hdu_class = hdu_class
         self.base_dir = base_dir
@@ -39,7 +38,6 @@ class HDULocation:
         if not file:
             file = sys.stdout
 
-        print(f"OBS_ID = {self.obs_id}", file=file)
         print(f"HDU_TYPE = {self.hdu_type}", file=file)
         print(f"HDU_CLASS = {self.hdu_class}", file=file)
         print(f"BASE_DIR = {self.base_dir}", file=file)
@@ -251,7 +249,6 @@ class HDUIndexTable(Table):
         """Create `HDULocation` for a given row index."""
         row = self[idx]
         return HDULocation(
-            obs_id=row["OBS_ID"],
             hdu_type=row["HDU_TYPE"].strip(),
             hdu_class=row["HDU_CLASS"].strip(),
             base_dir=self.base_dir.as_posix(),
