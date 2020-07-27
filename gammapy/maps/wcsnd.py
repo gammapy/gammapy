@@ -382,7 +382,7 @@ class WcsNDMap(WcsMap):
             fig = plt.gcf()
 
         if ax is None:
-            if self.geom.is_allsky:
+            if self.geom.projection in ["AIT"]:
                 ax = fig.add_subplot(
                     1, 1, 1, projection=self.geom.wcs, frame_class=EllipticalFrame
                 )
