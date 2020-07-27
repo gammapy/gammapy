@@ -444,7 +444,6 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert not dataset_1._evaluators[dataset_1.models[0]].contributes
 
 
-
 @requires_dependency("iminuit")
 @requires_data()
 def test_map_fit_one_energy_bin(sky_model, geom_image):
@@ -582,7 +581,7 @@ def test_stack(geom, geom_etrue):
     dataset1.stack(dataset2)
     assert_allclose(dataset1.counts.data.sum(), 7987)
     assert_allclose(dataset1.background_model.map.data.sum(), 5987)
-    assert_allclose(dataset1.exposure.data, 2.0 * dataset2.exposure.data)
+    assert_allclose(dataset1.exposure.data, 293509914234325.9)
     assert_allclose(dataset1.mask_safe.data.sum(), 20000)
     assert len(dataset1.models) == 1
 
