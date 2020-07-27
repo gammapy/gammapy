@@ -78,7 +78,6 @@ class HDULocation:
             return GTI.read(filename, hdu=hdu)
         elif hdu_class == "map":
             from gammapy.maps import Map
-
             return Map.read(filename, hdu=hdu)
         else:
             cls = IRF_REGISTRY.get_cls(hdu_class)
@@ -110,7 +109,7 @@ class LazyFitsData(object):
         if value is not None:
             return value
         else:
-            hdu_loc = instance.__dict__.get(self.name + "_hdu")
+            hdu_loc = instance.__dict__.get(f"_{self.name}_hdu")
             value = hdu_loc.load()
             if self.cache:
                 instance.__dict__[self.name] = value
@@ -118,7 +117,7 @@ class LazyFitsData(object):
 
     def __set__(self, instance, value):
         if isinstance(value, HDULocation):
-            instance.__dict__[self.name + "_hdu"] = value
+            instance.__dict__[f"_{self.name}_hdu"] = value
         else:
             instance.__dict__[self.name] = value
 
