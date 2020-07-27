@@ -32,6 +32,7 @@ class PSFKing:
     sigma : `~astropy.coordinates.Angle`
         PSF parameter (2D)
     """
+    tag = "psf_king"
 
     def __init__(
         self,

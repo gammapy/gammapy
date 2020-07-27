@@ -70,6 +70,7 @@ class HDULocation:
 
         TODO: this should probably go via an extensible registry.
         """
+        from gammapy.irf import IRF_REGISTRY
         hdu_class = self.hdu_class
         filename = self.path()
         hdu = self.hdu_name
@@ -82,36 +83,14 @@ class HDULocation:
             from gammapy.data import GTI
 
             return GTI.read(filename, hdu=hdu)
-        elif hdu_class == "aeff_2d":
-            from gammapy.irf import EffectiveAreaTable2D
+        elif hdu_class == "map":
+            from gammapy.maps import Map
 
-            return EffectiveAreaTable2D.read(filename, hdu=hdu)
-        elif hdu_class == "edisp_2d":
-            from gammapy.irf import EnergyDispersion2D
-
-            return EnergyDispersion2D.read(filename, hdu=hdu)
-        elif hdu_class == "psf_table":
-            from gammapy.irf import PSF3D
-
-            return PSF3D.read(filename, hdu=hdu)
-        elif hdu_class == "psf_3gauss":
-            from gammapy.irf import EnergyDependentMultiGaussPSF
-
-            return EnergyDependentMultiGaussPSF.read(filename, hdu=hdu)
-        elif hdu_class == "psf_king":
-            from gammapy.irf import PSFKing
-
-            return PSFKing.read(filename, hdu=hdu)
-        elif hdu_class == "bkg_2d":
-            from gammapy.irf import Background2D
-
-            return Background2D.read(filename, hdu=hdu)
-        elif hdu_class == "bkg_3d":
-            from gammapy.irf import Background3D
-
-            return Background3D.read(filename, hdu=hdu)
+            return Map.read(filename, hdu=hdu)
         else:
-            raise ValueError(f"Invalid hdu_class: {hdu_class}")
+            cls = IRF_REGISTRY.get_cls(hdu_class)
+
+            return cls.read(filename, hdu=hdu)
 
 
 class HDUIndexTable(Table):
