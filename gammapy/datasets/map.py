@@ -156,12 +156,6 @@ class MapDataset(Dataset):
         gti=None,
         meta_table=None,
     ):
-        #if mask_fit is not None and mask_fit.data.dtype != np.dtype("bool"):
-        #    raise ValueError("mask data must have dtype bool")
-
-        #if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
-        #    raise ValueError("mask data must have dtype bool")
-
         self._name = make_name(name)
         self._background_model = None
         self.evaluation_mode = evaluation_mode
@@ -179,9 +173,6 @@ class MapDataset(Dataset):
         self.gti = gti
         self.use_cache = use_cache
         self.meta_table = meta_table
-
-        # check whether a reference geom is defined
-        #_ = self._geom
 
     @property
     def name(self):

@@ -105,11 +105,10 @@ class LazyFitsData(object):
             # Accessed on a class, not an instance
             return self
 
-        value = instance.__dict__.get(self.name)
-        if value is not None:
-            return value
-        else:
-            hdu_loc = instance.__dict__.get(f"_{self.name}_hdu")
+        try:
+            return instance.__dict__[self.name]
+        except KeyError:
+            hdu_loc = instance.__dict__[f"_{self.name}_hdu"]
             value = hdu_loc.load()
             if self.cache:
                 instance.__dict__[self.name] = value
