@@ -1,6 +1,12 @@
 import numpy as np
+from gammapy.maps import MapAxis
+from gammapy.maps.utils import edges_from_lo_hi
 
-__all__ = ["plot_spectrum_datasets_off_regions", "plot_contour_line"]
+__all__ = [
+    "plot_spectrum_datasets_off_regions",
+    "plot_contour_line",
+    "plot_theta_squared_table"
+]
 
 
 def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, legend_kwargs=None, **kwargs):
@@ -90,12 +96,13 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, legend_kw
             handles = legend.legendHandles + handles
             labels = [text.get_text() for text in legend.texts] + labels
 
-        handles = [(handle,handle) for handle in handles]
+        handles = [(handle, handle) for handle in handles]
         tuple_handler = HandlerTuple(ndivide=None, pad=0)
 
         def patch_func(legend, orig_handle, xdescent, ydescent, width, height, fontsize):
             radius = width / 2
             return CirclePolygon((radius - xdescent, height / 2 - ydescent), radius)
+
         patch_handler = HandlerPatch(patch_func)
 
         legend_kwargs.setdefault("handletextpad", 0.5)
@@ -134,3 +141,40 @@ def plot_contour_line(ax, x, y, **kwargs):
 
     ax.plot(out[:, 0], out[:, 1], "-", color=color, **kwargs)
     ax.plot(xf, yf, linestyle='', marker=marker, color=color)
+
+
+def plot_theta_squared_table(table):
+    """Plot the theta2 distribution of ON, OFF counts, excess and signifiance in each theta2bin.
+
+    Take the table containing the ON counts, the OFF counts, the acceptance, the off acceptance and the alpha
+    (normalisation between ON and OFF) for each theta2 bin
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Required columns: theta2_min, theta2_max, counts, counts_off and alpha
+    """
+    import matplotlib.pyplot as plt
+
+    theta2_edges = edges_from_lo_hi(table["theta2_min"], table["theta2_max"])
+    theta2_axis = MapAxis.from_edges(
+        theta2_edges, interp="lin", name="theta_squared"
+    )
+
+    ax0 = plt.subplot(2, 1, 1)
+    xerr = (theta2_axis.center - theta2_axis.edges[:-1], theta2_axis.edges[1:] - theta2_axis.center)
+
+    ax0.errorbar(
+        theta2_axis.center, table["counts"], xerr=xerr, yerr=np.sqrt(table["counts"]), linestyle='None', label="Counts")
+    ax0.errorbar(theta2_axis.center, table["counts_off"], xerr=xerr, yerr=np.sqrt(table["counts_off"]), linestyle='None',
+                 label="Counts Off")
+    ax0.errorbar(theta2_axis.center, table["excess"], xerr=xerr, yerr=(-table["excess_errn"], table["excess_errp"]), fmt="+",
+                 linestyle='None', label="Excess")
+    ax0.set_ylabel("Counts")
+    ax0.set_xticks([])
+    ax0.set_xlabel('')
+    ax0.legend()
+    ax1 = plt.subplot(2, 1, 2)
+    ax1.errorbar(theta2_axis.center, table["sqrt_ts"], xerr=xerr, linestyle='None')
+    ax1.set_xlabel(f"Theta  [{theta2_axis.unit}]")
+    ax1.set_ylabel("Significance")

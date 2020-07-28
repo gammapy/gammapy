@@ -1,8 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.coordinates import SkyOffsetFrame
+from astropy.coordinates import Angle
+from astropy.table import Table
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, PSFMap
+from gammapy.stats import WStatCountsStatistic
 from gammapy.maps import Map, WcsNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.coordinates import sky_to_fov
@@ -13,6 +16,7 @@ __all__ = [
     "make_edisp_kernel_map",
     "make_psf_map",
     "make_map_exposure_true_energy",
+    "make_theta_squared_table",
 ]
 
 
@@ -297,3 +301,91 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
     edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map)
 
     return edisp_map.to_edisp_kernel_map(geom.get_axis_by_name("energy"))
+
+
+def make_theta_squared_table(observations, theta_squared_axis, position, position_off=None):
+    """Make theta squared distribution in the same FoV for a list of `Observation`
+    objects.
+
+    The ON theta2 profile is computed from a given distribution, on_position.
+    By default, the OFF theta2 profile is extracted from a mirror position
+    radially symmetric in the FOV to pos_on.
+
+    The ON and OFF regions are assumed to be of the same size, so the normalisation
+    factor between both region alpha = 1.
+
+    Parameters
+    ----------
+    observations: `~gammapy.data.Observations`
+        List of observations
+    theta_squared_axis : `~gammapy.maps.geom.MapAxis`
+        Axis of edges of the theta2 bin used to compute the distribution
+    position : `~astropy.coordinates.SkyCoord`
+        Position from which the on theta^2 distribution is computed
+    position_off : `astropy.coordinates.SkyCoord`
+        Position from which the OFF theta^2 distribution is computed.
+        Default: reflected position w.r.t. to the pointing position
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Table containing the on counts, the off counts, acceptance, off acceptance and alpha
+        for each theta squared bin.
+    """
+    if not theta_squared_axis.edges.unit.is_equivalent("deg2"):
+        raise ValueError("The theta2 axis should be equivalent to deg2")
+
+    table = Table()
+
+    table["theta2_min"] = theta_squared_axis.edges[:-1]
+    table["theta2_max"] = theta_squared_axis.edges[1:]
+    table["counts"] = 0
+    table["counts_off"] = 0
+    table["acceptance"] = 0.
+    table["acceptance_off"] = 0.
+
+    alpha_tot = np.zeros(len(table))
+    livetime_tot = 0
+
+    for observation in observations:
+        separation = position.separation(observation.events.radec)
+        counts, _ = np.histogram(separation ** 2, theta_squared_axis.edges)
+        table["counts"] += counts
+
+        if not position_off:
+            # Estimate the position of the mirror position
+            pos_angle = observation.pointing_radec.position_angle(position)
+            sep_angle = observation.pointing_radec.separation(position)
+            position_off = observation.pointing_radec.directional_offset_by(
+                pos_angle + Angle(np.pi, "rad"), sep_angle
+            )
+
+        # Angular distance of the events from the mirror position
+        separation_off = position_off.separation(observation.events.radec)
+
+        # Extract the ON and OFF theta2 distribution from the two positions.
+        counts_off, _ = np.histogram(separation_off ** 2, theta_squared_axis.edges)
+        table["counts_off"] += counts_off
+
+        # Normalisation between ON and OFF is one
+        acceptance = np.ones(theta_squared_axis.nbin)
+        acceptance_off = np.ones(theta_squared_axis.nbin)
+
+        table["acceptance"] += acceptance
+        table["acceptance_off"] += acceptance_off
+        alpha = acceptance / acceptance_off
+        alpha_tot += alpha * observation.observation_live_time_duration.to_value("s")
+        livetime_tot += observation.observation_live_time_duration.to_value("s")
+
+    alpha_tot /= livetime_tot
+    table["alpha"] = alpha_tot
+
+    stat = WStatCountsStatistic(table["counts"], table["counts_off"], table["alpha"])
+    table["excess"] = stat.excess
+    table["sqrt_ts"] = stat.significance
+    table["excess_errn"] = stat.compute_errn()
+    table["excess_errp"] = stat.compute_errp()
+
+    table.meta["ON_RA"] = position.icrs.ra
+    table.meta["ON_DEC"] = position.icrs.dec
+    return table
