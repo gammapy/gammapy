@@ -467,14 +467,14 @@ class EffectiveAreaTable2D:
 
         for off in offset:
             area = self.data.evaluate(offset=off, energy_true=energy)
-            label = f"offset = {off:.1f}"
-            ax.plot(energy, area.value, label=label, **kwargs)
+            kwargs.setdefault("label", f"offset = {off:.1f}")
+            ax.plot(energy, area.value, **kwargs)
 
         ax.set_xscale("log")
         ax.set_xlabel(f"Energy [{energy.unit}]")
         ax.set_ylabel(f"Effective Area [{self.data.data.unit}]")
         ax.set_xlim(min(energy.value), max(energy.value))
-        ax.legend(loc="upper left")
+
 
         return ax
 

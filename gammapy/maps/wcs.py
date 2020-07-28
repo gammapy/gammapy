@@ -422,7 +422,9 @@ class WcsGeom(Geom):
         wcs : `~WcsGeom`
             WCS geometry object.
         """
-        wcs = WCS(header, naxis=(1, 2))
+        wcs = WCS(header, naxis=2)
+        # TODO: see https://github.com/astropy/astropy/issues/9259
+        wcs._naxis = wcs._naxis[:2]
 
         axes = find_and_read_bands(hdu_bands)
         shape = tuple([ax.nbin for ax in axes])

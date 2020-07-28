@@ -326,7 +326,7 @@ class PSF3D:
         return u.Quantity(radii).T.squeeze()
 
     def plot_containment_vs_energy(
-        self, fractions=[0.68, 0.95], thetas=Angle([0, 1], "deg"), ax=None
+        self, fractions=[0.68, 0.95], thetas=Angle([0, 1], "deg"), ax=None, **kwargs
     ):
         """Plot containment fraction as a function of energy.
         """
@@ -341,8 +341,8 @@ class PSF3D:
         for theta in thetas:
             for fraction in fractions:
                 radius = self.containment_radius(energy, theta, fraction)
-                label = f"{theta.deg} deg, {100 * fraction:.1f}%"
-                ax.plot(energy.value, radius.value, label=label)
+                kwargs.setdefault("label", f"{theta.deg} deg, {100 * fraction:.1f}%")
+                ax.plot(energy.value, radius.value, **kwargs)
 
         ax.semilogx()
         ax.legend(loc="best")

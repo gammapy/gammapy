@@ -331,8 +331,8 @@ class EnergyDependentMultiGaussPSF:
         for theta in thetas:
             for fraction in fractions:
                 radius = self.containment_radius(energy, theta, fraction).squeeze()
-                label = f"{theta.deg} deg, {100 * fraction:.1f}%"
-                ax.plot(energy.value, radius.value, label=label)
+                kwargs.setdefault("label", f"{theta.deg} deg, {100 * fraction:.1f}%" )
+                ax.plot(energy.value, radius.value, **kwargs)
 
         ax.semilogx()
         ax.legend(loc="best")

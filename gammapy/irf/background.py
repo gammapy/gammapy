@@ -486,8 +486,8 @@ class Background2D:
 
         for off in offset:
             bkg = self.data.evaluate(offset=off, energy=energy)
-            label = f"offset = {off:.1f}"
-            ax.plot(energy, bkg.value, label=label, **kwargs)
+            kwargs.setdefault("label", f"offset = {off:.1f}")
+            ax.plot(energy, bkg.value, **kwargs)
 
         ax.set_xscale("log")
         ax.set_yscale("log")
