@@ -304,9 +304,9 @@ class TestTheta2Table:
         # On theta2 distribution compute from (0,0) in ra/dec.
         # OFF theta2 distribution from the mirror position at (0,1) in ra/dec.
         position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
-        bins = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg2")
-        theta2_table = make_theta_squared_table(observation_list=[self.observation],
-                                                on_position=position, theta2_axis=bins
+        axis = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg2")
+        theta2_table = make_theta_squared_table(observations=[self.observation],
+                                                position=position, theta_squared_axis=axis
                                                 )
         theta2_lo = [0, 0.05, 0.1, 0.15]
         theta2_hi = [0.05, 0.1, 0.15, 0.2]
@@ -326,20 +326,18 @@ class TestTheta2Table:
         assert_allclose(theta2_table["alpha"], alpha)
         assert_allclose(theta2_table.meta["ON_RA"], 0 * u.deg)
         assert_allclose(theta2_table.meta["ON_DEC"], 0 * u.deg)
-        assert_allclose(theta2_table.meta["OFF_RA"], 0 * u.deg)
-        assert_allclose(theta2_table.meta["OFF_DEC"], 1 * u.deg)
 
         # Taking the off position as the on one
         off_position = position
-        theta2_table2 = make_theta_squared_table(observation_list=[self.observation],
-                                                 on_position=position, theta2_axis=bins, off_position=off_position
+        theta2_table2 = make_theta_squared_table(observations=[self.observation],
+                                                 position=position, theta_squared_axis=axis, position_off=off_position
                                                  )
 
         assert_allclose(theta2_table2["counts_off"], theta2_table["counts"])
 
         # Test for two observations, here identical
-        theta2_table_two_obs = make_theta_squared_table(observation_list=[self.observation, self.observation],
-                                                        on_position=position, theta2_axis=bins
+        theta2_table_two_obs = make_theta_squared_table(observations=[self.observation, self.observation],
+                                                        position=position, theta_squared_axis=axis
                                                         )
         on_counts_two_obs = [4, 0, 0, 0]
         off_counts_two_obs = [2, 0, 0, 0]
