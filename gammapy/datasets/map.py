@@ -271,15 +271,14 @@ class MapDataset(Dataset):
             self._models = Models(models)
 
         # TODO: clean this up (probably by removing)
-        if self.models is not None:
-            for model in self.models:
-                if isinstance(model, BackgroundModel):
-                    if model.datasets_names is not None:
-                        if self.name in model.datasets_names:
-                            self._background_model = model
-                            break
-            else:
-                log.warning(f"No background model defined for dataset {self.name}")
+        for model in self.models:
+            if isinstance(model, BackgroundModel):
+                if model.datasets_names is not None:
+                    if self.name in model.datasets_names:
+                        self._background_model = model
+                        break
+        else:
+            log.warning(f"No background model defined for dataset {self.name}")
         self._evaluators = {}
 
     @property
@@ -868,7 +867,7 @@ class MapDataset(Dataset):
         self.to_hdulist().writeto(make_path(filename), overwrite=overwrite)
 
     @classmethod
-    def read(cls, filename, name=None, lazy=False):
+    def read(cls, filename, name=None, lazy=False, cache=True):
         """Read map dataset from file.
 
         Parameters
@@ -879,32 +878,51 @@ class MapDataset(Dataset):
             Name of the new dataset.
         lazy : bool
             Whether to lazy load data into memory
+        cache : bool
+            Whether to cache the data after loading.
 
         Returns
         -------
         dataset : `MapDataset`
             Map dataset.
         """
+        name = make_name(name)
+
         if lazy:
             kwargs = {"name": name}
-            kwargs["gti"] = GTI(Table.read(filename, hdu="GTI"))
+            try:
+                kwargs["gti"] = GTI(Table.read(filename, hdu="GTI"))
+            except KeyError:
+                pass
 
             path = make_path(filename)
-            for name in ["counts", "exposure", "edisp", "psf", "mask_fit", "mask_safe"]:
-                kwargs[name] = HDULocation(
-                    hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name=name.upper()
+            for hdu_name in ["counts", "exposure", "edisp", "psf", "mask_fit", "mask_safe"]:
+                kwargs[hdu_name] = HDULocation(
+                    hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name=hdu_name.upper(),
+                    cache=cache
                 )
+
+            hduloc = HDULocation(
+                    hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name="BACKGROUND",
+                    cache=cache
+                )
+            model = BackgroundModel(
+                hduloc, datasets_names=[name], name=name + "-bkg"
+            )
+
+            kwargs["models"] = [model]
             return cls(**kwargs)
         else:
             with fits.open(make_path(filename), memmap=False) as hdulist:
                 return cls.from_hdulist(hdulist, name=name)
 
     @classmethod
-    def from_dict(cls, data, models):
+    def from_dict(cls, data, models, lazy=False, cache=True):
         """Create from dicts and models list generated from YAML serialization."""
 
+        # TODO: remove handling models here
         filename = make_path(data["filename"])
-        dataset = cls.read(filename, name=data["name"])
+        dataset = cls.read(filename, name=data["name"], lazy=lazy, cache=cache)
 
         for model in models:
             if (

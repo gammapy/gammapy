@@ -8,6 +8,7 @@ from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_name, make_path
+from gammapy.utils.fits import LazyFitsData, HDULocation
 from .core import Model, Models
 from .spatial import SpatialModel
 from .spectral import SpectralModel
@@ -614,6 +615,7 @@ class BackgroundModel(Model):
     norm = Parameter("norm", 1, unit="", min=0)
     tilt = Parameter("tilt", 0, unit="", frozen=True)
     reference = Parameter("reference", "1 TeV", frozen=True)
+    map = LazyFitsData(cache=True)
 
     def __init__(
         self,
@@ -625,9 +627,10 @@ class BackgroundModel(Model):
         filename=None,
         datasets_names=None,
     ):
-        axis = map.geom.get_axis_by_name("energy")
-        if axis.node_type != "edges":
-            raise ValueError('Need an integrated map, energy axis node_type="edges"')
+        if isinstance(map, Map):
+            axis = map.geom.get_axis_by_name("energy")
+            if axis.node_type != "edges":
+                raise ValueError('Need an integrated map, energy axis node_type="edges"')
 
         self.map = map
 

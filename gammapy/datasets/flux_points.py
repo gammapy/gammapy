@@ -111,7 +111,7 @@ class FluxPointsDataset(Dataset):
         table.write(filename, overwrite=overwrite, **kwargs)
 
     @classmethod
-    def from_dict(cls, data, models):
+    def from_dict(cls, data, models, **kwargs):
         """Create flux point dataset from dict.
 
         Parameters
