@@ -541,49 +541,95 @@ def test_create_with_migra(tmp_path):
     assert dataset_new.edisp.edisp_map.data.shape == (3, 50, 10, 10)
 
 
-@requires_data()
-def test_stack(geom, geom_etrue):
-    m = Map.from_geom(geom)
-    m.quantity = 0.2 * np.ones(m.data.shape)
-    background_model1 = BackgroundModel(
-        m, name="dataset-1-bkg", datasets_names=["dataset-1"]
+def test_stack(sky_model):
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3)
+    geom = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.05,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
     )
-    c_map1 = Map.from_geom(geom)
-    c_map1.quantity = 0.3 * np.ones(c_map1.data.shape)
-    mask1 = np.ones(m.data.shape, dtype=bool)
-    mask1[0][0][0:10] = False
-    mask1 = Map.from_geom(geom, data=mask1)
+    axis_etrue = MapAxis.from_energy_bounds(
+        "0.1 TeV", "10 TeV", nbin=5, name="energy_true"
+    )
+    geom_etrue = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.05,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis_etrue],
+    )
 
+    edisp = EDispKernelMap.from_diagonal_response(
+        energy_axis=axis, energy_axis_true=axis_etrue, geom=geom
+    )
+    edisp.exposure_map.quantity = (
+        1e0 * u.m ** 2 * u.s * np.ones(edisp.exposure_map.data.shape)
+    )
+
+    bkg1 = Map.from_geom(geom)
+    bkg1.data = 0.2 * np.ones(bkg1.data.shape)
+    background_model1 = BackgroundModel(
+        bkg1, name="dataset-1-bkg", datasets_names=["dataset-1"]
+    )
+
+    cnt1 = Map.from_geom(geom)
+    cnt1.data = 1.0 * np.ones(cnt1.data.shape)
+
+    exp1 = Map.from_geom(geom_etrue)
+    exp1.quantity = 1e7 * u.m ** 2 * u.s * np.ones(exp1.data.shape)
+
+    mask1 = Map.from_geom(geom)
+    mask1.data = np.ones(mask1.data.shape, dtype=bool)
+    mask1.data[0][:][5:10] = False
     dataset1 = MapDataset(
-        counts=c_map1,
+        counts=cnt1,
         models=[background_model1],
-        exposure=get_exposure(geom_etrue),
+        exposure=exp1,
         mask_safe=mask1,
         name="dataset-1",
+        edisp=edisp,
     )
 
-    c_map2 = Map.from_geom(geom)
-    c_map2.quantity = 0.1 * np.ones(c_map2.data.shape)
+    bkg2 = Map.from_geom(geom)
+    bkg2.data = 0.1 * np.ones(bkg2.data.shape)
     background_model2 = BackgroundModel(
-        m, norm=0.5, name="dataset-2-bkg", datasets_names=["dataset-2"]
+        bkg2, name="dataset-2-bkg", datasets_names=["dataset-2"]
     )
-    mask2 = np.ones(m.data.shape, dtype=bool)
-    mask2[0][3] = False
-    mask2 = Map.from_geom(geom, data=mask2)
+
+    cnt2 = Map.from_geom(geom)
+    cnt2.data = 1.0 * np.ones(cnt2.data.shape)
+
+    exp2 = Map.from_geom(geom_etrue)
+    exp2.quantity = 1e7 * u.m ** 2 * u.s * np.ones(exp2.data.shape)
+
+    mask2 = Map.from_geom(geom)
+    mask2.data = np.ones(mask2.data.shape, dtype=bool)
+    mask2.data[0][:][5:10] = False
+    mask2.data[1][:][10:15] = False
 
     dataset2 = MapDataset(
-        counts=c_map2,
+        counts=cnt2,
         models=[background_model2],
-        exposure=get_exposure(geom_etrue),
+        exposure=exp2,
         mask_safe=mask2,
         name="dataset-2",
+        edisp=edisp,
     )
+
+    dataset1.models.append(sky_model)
+    dataset2.models.append(sky_model)
+
     dataset1.stack(dataset2)
-    assert_allclose(dataset1.counts.data.sum(), 7987)
-    assert_allclose(dataset1.background_model.map.data.sum(), 5987)
-    assert_allclose(dataset1.exposure.data.sum(), 293509914234325.9)
-    assert_allclose(dataset1.mask_safe.data.sum(), 20000)
-    assert len(dataset1.models) == 1
+    dataset1.models.append(sky_model)
+    npred_b = dataset1.npred()
+
+    assert_allclose(npred_b.data.sum(), 1459.96, 1e-5)
+    assert_allclose(dataset1.background_model.map.data.sum(), 1360.00, 1e-5)
+    assert_allclose(dataset1.counts.data.sum(), 9000, 1e-5)
+    assert_allclose(dataset1.mask_safe.data.sum(), 4600)
+    assert_allclose(dataset1.exposure.data.sum(), 150000000000.0)
 
 
 @requires_data()

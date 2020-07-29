@@ -468,13 +468,13 @@ class MapDataset(Dataset):
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
                 mask_irf = self._mask_safe_irf(
-                    self.psf.psf_map, self.mask_safe, drop="theta"
+                    self.psf.exposure_map, self.mask_safe, drop="theta"
                 )
-                self.psf.psf_map *= mask_irf.data
-                self.psf.exposure_map *= mask_irf.data
+                self.psf.psf_map.data *= mask_irf.data
+                self.psf.exposure_map.data *= mask_irf.data
 
                 mask_irf_other = self._mask_safe_irf(
-                    other.psf.psf_map, other_mask_safe, drop="theta"
+                    other.psf.exposure_map, other_mask_safe, drop="theta"
                 )
                 self.psf.stack(other.psf, weights=mask_irf_other)
             else:
@@ -485,10 +485,10 @@ class MapDataset(Dataset):
                 other.edisp, EDispKernelMap
             ):
                 mask_irf = self._mask_safe_irf(
-                    self.edisp.exposure_map, self.mask_safe, drop="energy_true"
+                    self.edisp.edisp_map, self.mask_safe, drop="energy_true"
                 )
                 mask_irf_other = self._mask_safe_irf(
-                    other.edisp.exposure_map, other_mask_safe, drop="energy_true"
+                    other.edisp.edisp_map, other_mask_safe, drop="energy_true"
                 )
 
             if isinstance(self.edisp, EDispMap) and isinstance(other.edisp, EDispMap):
@@ -501,8 +501,11 @@ class MapDataset(Dataset):
                     other_mask_safe.reduce_over_axes(func=np.logical_or),
                 )
 
-            self.edisp.edisp_map *= mask_irf.data
-            self.edisp.exposure_map *= mask_irf.data
+            self.edisp.edisp_map.data *= mask_irf.data
+            # Question: Should mask be applied on exposure map as well?
+            # Mask here is on the reco energy.
+            # self.edisp.exposure_map.data *= mask_irf.data
+
             self.edisp.stack(other.edisp, weights=mask_irf_other)
 
         self.mask_safe.stack(other_mask_safe)
