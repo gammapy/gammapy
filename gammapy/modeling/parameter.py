@@ -222,20 +222,15 @@ class Parameter:
         self.value = val.value
         self.unit = val.unit
 
-    def check_limits(self, strict=False):
+    def check_limits(self):
         """Emit a warning or error if value is outside the min/max range"""
-        if self.frozen is False:
+        if not self.frozen:
             if (~np.isnan(self.min) and (self.value <= self.min)) or (
                 ~np.isnan(self.max) and (self.value >= self.max)
             ):
-                if strict is False:
-                    log.warning(
-                        f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'"
-                    )
-                else:
-                    raise ValueError(
-                        f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'"
-                    )
+                log.warning(
+                    f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'"
+                )
 
     def __repr__(self):
         return (
@@ -315,6 +310,11 @@ class Parameters(collections.abc.Sequence):
             parameters = list(parameters)
 
         self._parameters = parameters
+
+    def check_limits(self):
+        """Check parameter limits and emit a warning"""
+        for par in self:
+            par.check_limits()
 
     @property
     def values(self):

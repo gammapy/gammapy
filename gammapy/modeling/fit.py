@@ -101,7 +101,6 @@ class Fit:
             Results
         """
 
-        self.check_limits(strict=True)
 
         if optimize_opts is None:
             optimize_opts = {}
@@ -119,14 +118,7 @@ class Fit:
         # back or how to form the FitResult object.
         optimize_result._success = optimize_result.success and covariance_result.success
 
-        self.check_limits()
-
         return optimize_result
-
-    def check_limits(self, strict=False):
-        """Check that all parameters are within their min/max range"""
-        for par in self._parameters:
-            par.check_limits(strict=strict)
 
     def optimize(self, backend="minuit", **kwargs):
         """Run the optimization.
@@ -161,6 +153,7 @@ class Fit:
             Results
         """
         parameters = self._parameters
+        parameters.check_limits()
 
         # TODO: expose options if / when to scale? On the Fit class?
         if np.all(self._models.covariance.data == 0):
@@ -183,7 +176,7 @@ class Fit:
 
         # Copy final results into the parameters object
         parameters.set_parameter_factors(factors)
-
+        parameters.check_limits()
         return OptimizeResult(
             parameters=parameters,
             total_stat=self.datasets.stat_sum(),
