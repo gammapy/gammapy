@@ -330,7 +330,7 @@ class Models(collections.abc.MutableSequence):
         """Convert to YAML string."""
         data = self.to_dict()
         return yaml.dump(
-            data, sort_keys=False, indent=4, width=80, default_flow_style=None
+            data, sort_keys=False, indent=4, width=80, default_flow_style=False
         )
 
     def to_dict(self):
@@ -340,6 +340,7 @@ class Models(collections.abc.MutableSequence):
         params_shared = []
         for param in self.parameters:
             if param not in params_list:
+                params_list.append(param)
                 params_list.append(param)
             elif param not in params_shared:
                 params_shared.append(param)

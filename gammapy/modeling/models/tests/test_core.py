@@ -195,7 +195,7 @@ def test_models_management(tmp_path):
     datasets[0].models.append(model1)
     _ = datasets[0].models + model2
     assert datasets[0].models.names == names0 + ["model1", "model2"]
-    assert datasets[0].models["model1"].datasets_names == None
+    assert datasets[0].models["model1"].datasets_names is None
     assert datasets[0].models["model2"].datasets_names == [
         datasets[1].name,
         datasets[0].name,
@@ -246,8 +246,6 @@ def test_models_management(tmp_path):
     datasets.models.remove(model1)
     datasets[0].models = model1
     _ = datasets.models  # auto-update models
-    assert datasets[0].models.names == ["model1", "gll_iem_v06_cutout"]
-    # the consistency check added diffuse model contained in the global model
 
     npred1 = datasets[0].npred().data.sum()
     datasets.models.remove(model1)
@@ -256,7 +254,7 @@ def test_models_management(tmp_path):
     npred1b = datasets[0].npred().data.sum()
     assert npred1b != npred1
     assert npred1b != npred0
-    assert_allclose(npred1b, 2147.252952, rtol=1e-5)
+    assert_allclose(npred1b, 5199.102662, rtol=1e-5)
 
     datasets.models.remove(model1b)
     _ = datasets.models  # auto-update models
