@@ -41,6 +41,22 @@ class TestEDispKernel:
         assert_equal(edisp.pdf_matrix[2][0], 0)
         assert edisp.pdf_matrix.sum() == 4
 
+    def test_to_image(self):
+        e_reco = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3)
+        e_true = MapAxis.from_energy_bounds(
+            "0.08 TeV", "20 TeV", nbin=5, name="energy_true"
+        )
+        edisp = EDispKernel.from_gauss(
+            e_reco=e_reco.edges, e_true=e_true.edges, sigma=0.2, bias=0.1
+        )
+        im = edisp.to_image()
+
+        assert im.pdf_matrix.shape == (5, 1)
+        assert_allclose(
+            im.pdf_matrix, [[0.97142], [1.0], [1.0], [1.0], [0.12349]], rtol=1e-3
+        )
+        assert_allclose(im.e_reco.edges, [0.1, 10] * u.TeV)
+
     def test_str(self):
         assert "EDispKernel" in str(self.edisp)
 
