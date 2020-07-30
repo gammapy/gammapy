@@ -117,7 +117,7 @@ class LazyFitsData(object):
                 value = hdu_loc.load()
             except KeyError:
                 value = None
-                log.warning(f"HDU {hdu_loc.hdu_name} not found")
+                log.warning(f"HDU '{hdu_loc.hdu_name}' not found")
             if self.cache or hdu_loc.cache:
                 instance.__dict__[self.name] = value
             return value

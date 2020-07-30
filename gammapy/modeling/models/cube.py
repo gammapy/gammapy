@@ -349,18 +349,18 @@ class SkyModel(SkyModelBase):
 
         str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
 
-        str_ += "\t{:26}: {}\n".format("Spectral model type", self.spectral_model.tag)
+        str_ += "\t{:26}: {}\n".format("Spectral model type", self.spectral_model.__class__.__name__)
 
         if self.spatial_model is not None:
-            spatial_type = self.spatial_model.tag
+            spatial_type = self.spatial_model.__class__.__name__
         else:
-            spatial_type = "None"
+            spatial_type = ""
         str_ += "\t{:26}: {}\n".format("Spatial  model type", spatial_type)
 
         if self.temporal_model is not None:
-            temporal_type = self.temporal_model.tag
+            temporal_type = self.temporal_model.__class__.__name__
         else:
-            temporal_type = "None"
+            temporal_type = ""
         str_ += "\t{:26}: {}\n".format("Temporal model type", temporal_type)
 
         str_ += "\tParameters:\n"
@@ -811,10 +811,13 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
     energy = u.Quantity(vals[:, 0], "MeV", copy=False)
     values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2", copy=False)
 
+    kwargs.setdefault("interp_kwargs", {"fill_value": None})
+
     spatial_model = ConstantSpatialModel()
     spectral_model = TemplateSpectralModel(energy=energy, values=values, **kwargs)
     return SkyModel(
         spatial_model=spatial_model,
         spectral_model=spectral_model,
         name="fermi-diffuse-iso",
+
     )

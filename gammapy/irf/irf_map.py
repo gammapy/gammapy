@@ -58,7 +58,7 @@ class IRFMap:
         return cls(irf_map, exposure_map)
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, hdu=None):
         """Read an IRF_map from file and create corresponding object"""
         with fits.open(filename, memmap=False) as hdulist:
             return cls.from_hdulist(hdulist)

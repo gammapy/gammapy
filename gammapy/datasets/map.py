@@ -867,6 +867,47 @@ class MapDataset(Dataset):
         self.to_hdulist().writeto(make_path(filename), overwrite=overwrite)
 
     @classmethod
+    def _read_lazy(cls, name, filename, cache):
+        kwargs = {"name": name}
+        try:
+            kwargs["gti"] = GTI(Table.read(filename, hdu="GTI"))
+        except KeyError:
+            pass
+
+        path = make_path(filename)
+        for hdu_name in ["counts", "exposure", "mask_fit", "mask_safe"]:
+            kwargs[hdu_name] = HDULocation(
+                hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name=hdu_name.upper(),
+                cache=cache
+            )
+
+        hduloc_edisp = HDULocation(
+            hdu_class="edisp_kernel_map", file_dir=path.parent, file_name=path.name, hdu_name="EDISP",
+            cache=cache
+        )
+
+        kwargs["edisp"] = hduloc_edisp
+
+        hduloc_psf = HDULocation(
+            hdu_class="psf_map", file_dir=path.parent, file_name=path.name, hdu_name="PSF",
+            cache=cache
+        )
+
+        kwargs["psf"] = hduloc_psf
+
+        hduloc = HDULocation(
+            hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name="BACKGROUND",
+            cache=cache
+        )
+
+        model = BackgroundModel(
+            hduloc, datasets_names=[name], name=name + "-bkg"
+        )
+
+        kwargs["models"] = [model]
+        return cls(**kwargs)
+
+    @classmethod
     def read(cls, filename, name=None, lazy=False, cache=True):
         """Read map dataset from file.
 
@@ -889,29 +930,7 @@ class MapDataset(Dataset):
         name = make_name(name)
 
         if lazy:
-            kwargs = {"name": name}
-            try:
-                kwargs["gti"] = GTI(Table.read(filename, hdu="GTI"))
-            except KeyError:
-                pass
-
-            path = make_path(filename)
-            for hdu_name in ["counts", "exposure", "edisp", "psf", "mask_fit", "mask_safe"]:
-                kwargs[hdu_name] = HDULocation(
-                    hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name=hdu_name.upper(),
-                    cache=cache
-                )
-
-            hduloc = HDULocation(
-                    hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name="BACKGROUND",
-                    cache=cache
-                )
-            model = BackgroundModel(
-                hduloc, datasets_names=[name], name=name + "-bkg"
-            )
-
-            kwargs["models"] = [model]
-            return cls(**kwargs)
+            return cls._read_lazy(name=name, filename=filename, cache=cache)
         else:
             with fits.open(make_path(filename), memmap=False) as hdulist:
                 return cls.from_hdulist(hdulist, name=name)
@@ -1726,12 +1745,10 @@ class MapDatasetOnOff(MapDataset):
 
         if "MASK_SAFE" in hdulist:
             mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe")
-            mask_safe.data = mask_safe.data.astype(bool)
             kwargs["mask_safe"] = mask_safe
 
         if "MASK_FIT" in hdulist:
             mask_fit = Map.from_hdulist(hdulist, hdu="mask_fit")
-            mask_fit.data = mask_fit.data.astype(bool)
             kwargs["mask_fit"] = mask_fit
 
         if "GTI" in hdulist:

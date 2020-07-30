@@ -325,7 +325,7 @@ class EDispKernelMap(IRFMap):
         Associated exposure map. Needs to have a consistent map geometry.
 
     """
-
+    tag = "edisp_kernel_map"
     _hdu_name = "edisp"
 
     def __init__(self, edisp_kernel_map, exposure_map):
