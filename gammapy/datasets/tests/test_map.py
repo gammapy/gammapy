@@ -632,6 +632,60 @@ def test_stack(sky_model):
     assert_allclose(dataset1.exposure.data.sum(), 150000000000.0)
 
 
+def test_stack_npred():
+    pwl = PowerLawSpectralModel()
+    gauss = GaussianSpatialModel(sigma="0.2 deg")
+    model = SkyModel(pwl, gauss)
+
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=5)
+    axis_etrue = MapAxis.from_energy_bounds(
+        "0.1 TeV", "10 TeV", nbin=11, name="energy_true"
+    )
+
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        binsz=0.05,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    dataset_1 = MapDataset.create(
+        geom, energy_axis_true=axis_etrue, name="dataset-1", gti=GTI.create("0 min", "30 min")
+    )
+    dataset_1.psf = None
+    dataset_1.exposure.data += 1
+    dataset_1.mask_safe.data = geom.energy_mask(emin=1 * u.TeV)
+    dataset_1.models["dataset-1-bkg"].map.data += 1
+    dataset_1.models.append(model)
+
+    dataset_2 = MapDataset.create(
+        geom, energy_axis_true=axis_etrue, name="dataset-2", gti=GTI.create("30 min", "60 min")
+    )
+    dataset_2.psf = None
+    dataset_2.exposure.data += 1
+    dataset_2.mask_safe.data = geom.energy_mask(emin=0.2 * u.TeV)
+    dataset_2.models["dataset-2-bkg"].map.data += 1
+    dataset_2.models.append(model)
+
+    npred_1 = dataset_1.npred()
+    npred_1.data[~dataset_1.mask_safe.data] = 0
+    npred_2 = dataset_2.npred()
+    npred_2.data[~dataset_2.mask_safe.data] = 0
+
+    stacked_npred = Map.from_geom(geom)
+    stacked_npred.stack(npred_1)
+    stacked_npred.stack(npred_2)
+
+    stacked = MapDataset.create(geom, energy_axis_true=axis_etrue, name="stacked")
+    stacked.stack(dataset_1)
+    stacked.stack(dataset_2)
+
+    npred_stacked = stacked.npred()
+
+    assert_allclose(npred_stacked.data, stacked_npred.data)
+
+
 @requires_data()
 def test_stack_simple_edisp(sky_model, geom, geom_etrue):
     dataset1 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispkernel")
