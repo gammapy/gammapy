@@ -20,33 +20,28 @@ def test_datasets_to_io(tmp_path):
     assert len(datasets.models) == 5
     dataset0 = datasets[0]
     assert dataset0.name == "gc"
-    assert dataset0.counts.data.sum() == 6824
-    assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
+    assert dataset0.counts.data.sum() == 22258
+    assert_allclose(dataset0.exposure.data.sum(), 8.057342e+12, atol=0.1)
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
 
-    assert_allclose(dataset0.background_model.evaluate().data.sum(), 4094.2, atol=0.1)
+    assert_allclose(dataset0.background_model.evaluate().data.sum(), 15726.8, atol=0.1)
 
-    assert dataset0.background_model.name == "background_irf_gc"
+    assert dataset0.background_model.name == "gc-bkg"
 
     dataset1 = datasets[1]
     assert dataset1.name == "g09"
-    assert dataset1.background_model.name == "background_irf_g09"
+    assert dataset1.background_model.name == "g09-bkg"
 
     assert (
         dataset0.models["gll_iem_v06_cutout"] == dataset1.models["gll_iem_v06_cutout"]
     )
 
     assert isinstance(dataset0.models, Models)
-    assert len(dataset0.models) == 3
+    assert len(dataset0.models) ==4
     assert dataset0.models[0].name == "gc"
     assert dataset0.models[1].name == "gll_iem_v06_cutout"
-    assert dataset0.models[2].name == "background_irf_gc"
-
-    assert (
-        dataset0.models["background_irf_gc"].parameters["norm"]
-        is dataset1.models["background_irf_g09"].parameters["norm"]
-    )
+    assert dataset0.models[2].name == "gc-bkg"
 
     assert (
         dataset0.models["gc"].parameters["reference"]
@@ -59,21 +54,15 @@ def test_datasets_to_io(tmp_path):
         tmp_path, "written_datasets.yaml", "written_models.yaml"
     )
 
-    assert len(datasets.parameters) == 21
+    assert len(datasets.parameters) == 22
 
     assert len(datasets_read) == 2
     dataset0 = datasets_read[0]
-    assert dataset0.counts.data.sum() == 6824
-    assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
+    assert dataset0.counts.data.sum() == 22258
+    assert_allclose(dataset0.exposure.data.sum(), 8.057342e+12, atol=0.1)
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
-    assert_allclose(dataset0.background_model.evaluate().data.sum(), 4094.2, atol=0.1)
-
-    Fit(datasets).run()
-    assert_allclose(
-        datasets.models["background_irf_g09"].covariance,
-        datasets.models["background_irf_gc"].covariance,
-    )
+    assert_allclose(dataset0.background_model.evaluate().data.sum(), 15726.8, atol=0.1)
 
     dataset_copy = dataset0.copy(name="dataset0-copy")
     assert dataset_copy.background_model.datasets_names == ["dataset0-copy"]
