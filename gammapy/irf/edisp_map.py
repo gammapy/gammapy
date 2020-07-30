@@ -110,6 +110,9 @@ class EDispMap(IRFMap):
         edisp : `~gammapy.irf.EnergyDispersion`
             the energy dispersion (i.e. rmf object)
         """
+        if position is None:
+            position = self.edisp_map.geom.center_skydir
+
         if position.size != 1:
             raise ValueError(
                 "EnergyDispersion can be extracted at one single position only."
