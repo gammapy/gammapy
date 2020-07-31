@@ -8,9 +8,9 @@ PIG 21 - Models Improvements
 
 * Author: Axel Donath, Régis Terrier and Quentin Remy
 * Created: Jun 10, 2020
-* Accepted:
-* Status:
-* Discussion:
+* Accepted: July 31, 2020
+* Status: accepted
+* Discussion: `GH 2944`_
 
 Abstract
 ========
@@ -324,7 +324,16 @@ After the simplification:
 
 Decision
 ========
+This PIG received feedback in form of comments to the PR `GH 2944`_ and via private
+Slack messages to the authors. Most concerns were raised against the introduction
+of `NormSpectralModels`. In a following discussion among the lead developers
+it was decided to stick with the proposal, but keep the abstraction of `SkyDiffuseCube`
+to avoid the case, where a spatial model carries the flux information.
+A final review announced on the Gammapy and CC mailing list did not yield
+any additional comments. Therefore the PIG was accepted on July 31, 2020.
 
+
+.. _GH 2944: https://github.com/gammapy/gammapy/pull/2944
 .. _gammapy: https://github.com/gammapy/gammapy
 .. _gammapy-web: https://github.com/gammapy/gammapy-webpage
 
