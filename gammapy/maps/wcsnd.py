@@ -375,7 +375,7 @@ class WcsNDMap(WcsMap):
         from astropy.visualization import simple_norm
         from astropy.visualization.wcsaxes.frame import EllipticalFrame
 
-        if not self.geom.is_image:
+        if not self.geom.is_flat:
             raise TypeError("Use .plot_interactive() for Map dimension > 2")
 
         if fig is None:
@@ -389,7 +389,7 @@ class WcsNDMap(WcsMap):
             else:
                 ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
-        data = self.data.astype(float)
+        data = np.squeeze(self.data.astype(float))
 
         kwargs.setdefault("interpolation", "nearest")
         kwargs.setdefault("origin", "lower")

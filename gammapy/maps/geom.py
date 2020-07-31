@@ -1590,10 +1590,21 @@ class Geom(abc.ABC):
 
     @property
     def is_image(self):
-        """Whether the geom is equivalent to an image without extra dimensions."""
+        """Whether the geom is an image without extra dimensions."""
         if self.axes is None:
             return True
         return len(self.axes) == 0
+
+    @property
+    def is_flat(self):
+        """Whether the geom non spatial axes have length 1, i.e. if the geom is equivalent to an image."""
+        if self.is_image:
+            return True
+        else:
+            valid = True
+            for axis in self.axes:
+                valid = valid and (axis.nbin == 1)
+            return valid
 
     def get_axis_by_name(self, name):
         """Get an axis by name (case in-sensitive).
