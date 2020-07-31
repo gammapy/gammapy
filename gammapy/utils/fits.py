@@ -1,11 +1,89 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
+import sys
 from astropy.coordinates import Angle, EarthLocation
 from astropy.io import fits
-from astropy.table import Table
 from astropy.units import Quantity
+from .scripts import make_path
 
-__all__ = ["earth_location_from_dict", "LazyFitsData"]
+__all__ = ["earth_location_from_dict", "LazyFitsData", "HDULocation"]
+
+
+class HDULocation:
+    """HDU localisation, loading and Gammapy object mapper.
+
+    This represents one row in `HDUIndexTable`.
+
+    It's more a helper class, that is wrapped by `~gammapy.data.Observation`,
+    usually those objects will be used to access data.
+
+    See also :ref:`gadf:hdu-index`.
+    """
+
+    def __init__(
+        self, hdu_class, base_dir=".", file_dir=None, file_name=None, hdu_name=None
+    ):
+        self.hdu_class = hdu_class
+        self.base_dir = base_dir
+        self.file_dir = file_dir
+        self.file_name = file_name
+        self.hdu_name = hdu_name
+
+    def info(self, file=None):
+        """Print some summary info to stdout."""
+        if not file:
+            file = sys.stdout
+        print(f"HDU_CLASS = {self.hdu_class}", file=file)
+        print(f"BASE_DIR = {self.base_dir}", file=file)
+        print(f"FILE_DIR = {self.file_dir}", file=file)
+        print(f"FILE_NAME = {self.file_name}", file=file)
+        print(f"HDU_NAME = {self.hdu_name}", file=file)
+
+    def path(self, abs_path=True):
+        """Full filename path.
+
+        Include ``base_dir`` if ``abs_path`` is True.
+        """
+        path = make_path(self.base_dir) / self.file_dir / self.file_name
+
+        if abs_path and path.exists():
+            return path
+        else:
+            return make_path(self.file_dir) / self.file_name
+
+    def get_hdu(self):
+        """Get HDU."""
+        filename = self.path(abs_path=True)
+        # Here we're intentionally not calling `with fits.open`
+        # because we don't want the file to remain open.
+        hdu_list = fits.open(filename, memmap=False)
+        return hdu_list[self.hdu_name]
+
+    def load(self):
+        """Load HDU as appropriate class.
+
+        TODO: this should probably go via an extensible registry.
+        """
+        from gammapy.irf import IRF_REGISTRY
+        hdu_class = self.hdu_class
+        filename = self.path()
+        hdu = self.hdu_name
+
+        if hdu_class == "events":
+            from gammapy.data import EventList
+
+            return EventList.read(filename, hdu=hdu)
+        elif hdu_class == "gti":
+            from gammapy.data import GTI
+
+            return GTI.read(filename, hdu=hdu)
+        elif hdu_class == "map":
+            from gammapy.maps import Map
+
+            return Map.read(filename, hdu=hdu)
+        else:
+            cls = IRF_REGISTRY.get_cls(hdu_class)
+
+            return cls.read(filename, hdu=hdu)
 
 
 class LazyFitsData(object):
@@ -39,8 +117,6 @@ class LazyFitsData(object):
             return value
 
     def __set__(self, instance, value):
-        from gammapy.data import HDULocation
-
         if isinstance(value, HDULocation):
             instance.__dict__[self.name + "_hdu"] = value
         else:

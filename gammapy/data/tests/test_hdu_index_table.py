@@ -64,7 +64,7 @@ def test_hdu_index_table_hd_hap(capfd):
     location.info()
     out, err = capfd.readouterr()
     lines = out.split('\n')
-    assert len(lines) == 8
+    assert len(lines) == 6
 
     hdu = location.get_hdu()
     assert hdu.name == "EVENTS"
