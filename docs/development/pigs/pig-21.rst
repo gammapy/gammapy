@@ -84,27 +84,10 @@ In general the energy dependence is optional. If the spatial model does not decl
 an energy dependence it assumes the same morphology for all energies. This also ensures backwards
 compatibility with the current behaviour.
 
-To limit the implementation effort in this PIG we propose to only adapt the ``SkyDiffuseCube``
-and add an example energy dependent custom model to our documentation. We do not propose to
-introduce general dependence of arbitrary model parameters for any spatial model, such as
-``GaussianSpatialModel`` or ``DiskSpatialModel``. An example of how this can be achieved with
-a custom implemented model is given below.
-
-We propose to add energy dependence to the ``TemplateSpatialModel`` and
-replace the current ``SkyDiffuseCube`` by:
-
-
-.. code::
-
-    spatial_model = TemplateSpatialModel.read("my_cube.fits")
-
-    model = SkyModel(
-        spatial_model=spatial_model,
-        spectral_model=PowerLawNormSpectralModel()
-    )
-
-A custom energy dependent spatial model can be implemented like:
-
+To limit the implementation effort in this PIG we propose to only add an example energy dependent
+custom model to our documentation. We do not propose to introduce general dependence of arbitrary
+model parameters for any spatial model, such as ``GaussianSpatialModel`` or ``DiskSpatialModel``.
+An example of how this can be achieved with a custom implemented model is given below:
 
 .. code::
 
@@ -330,7 +313,6 @@ After the simplification:
         parameters:
         - name: index
           value: 2.0
-          unit: ''
         - name: amplitude
           value: 1.0e-12
           unit: cm-2 s-1 TeV-1
