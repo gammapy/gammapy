@@ -846,10 +846,10 @@ class FluxPointsEstimator(FluxEstimator):
         """
         datasets = self._check_datasets(datasets)
 
-        if not datasets.is_all_same_type or not datasets.is_all_same_energy_shape:
+        if not datasets.is_all_same_type or not datasets.energy_axes_are_aligned:
             raise ValueError(
-                "Flux point estimation requires a list of datasets"
-                " of the same type and data shape."
+               "Flux point estimation requires a list of datasets"
+               " of the same type and data shape."
             )
         self.datasets = datasets.copy()
 
