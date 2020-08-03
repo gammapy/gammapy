@@ -30,6 +30,7 @@ class Map(abc.ABC):
     unit : str or `~astropy.units.Unit`
         Data unit
     """
+    tag = "map"
 
     def __init__(self, geom, data, meta=None, unit=""):
         self._geom = geom

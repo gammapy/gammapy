@@ -39,6 +39,7 @@ class PSF3D:
     energy_thresh_hi : `~astropy.units.Quantity`
         Upper energy threshold.
     """
+    tag = "psf_table"
 
     def __init__(
         self,

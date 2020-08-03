@@ -343,7 +343,7 @@ class EffectiveAreaTable2D:
     offset         : size =     4, min =  0.000 deg, max =  1.000 deg
     Data           : size =    30, min =  1.000 cm2, max =  1.000 cm2
     """
-
+    tag = "aeff_2d"
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""
 

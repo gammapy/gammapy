@@ -46,7 +46,7 @@ class Background3D:
     fov_lat           : size =    36, min = -5.833 deg, max =  5.833 deg
     Data           : size = 27216, min =  0.000 1 / (MeV s sr), max =  0.421 1 / (MeV s sr)
     """
-
+    tag = "bkg_3d"
     default_interp_kwargs = dict(
         bounds_error=False, fill_value=None, values_scale="log"
     )
@@ -239,7 +239,7 @@ class Background2D:
     data : `~astropy.units.Quantity`
         Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
     """
-
+    tag = "bkg_2d"
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 

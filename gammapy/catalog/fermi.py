@@ -189,12 +189,15 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
             model.parameters["lat_0"].error = lat_err
             model.phi_0 = phi_0
 
-    def sky_model(self):
+    def sky_model(self, name=None):
         """Sky model (`~gammapy.modeling.models.SkyModel`)."""
+        if name is None:
+            name = self.name
+
         return SkyModel(
             spatial_model=self.spatial_model(),
             spectral_model=self.spectral_model(),
-            name=self.name,
+            name=name,
         )
 
 

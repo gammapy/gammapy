@@ -780,10 +780,10 @@ class FluxPointsEstimator(FluxEstimator):
         Number of norm values used for the fit statistic profile.
     norm_values : `numpy.ndarray`
         Array of norm values to be used for the fit statistic profile.
-    sigma : int
-        Sigma to use for asymmetric error computation.
-    sigma_ul : int
-        Sigma to use for upper limit computation.
+    n_sigma : int
+        Number of sigma to use for asymmetric error computation. Default is 1.
+    n_sigma_ul : int
+        Number of sigma to use for upper limit computation. Default is 2.
     reoptimize : bool
         Re-optimize other free model parameters.
     """
@@ -797,8 +797,8 @@ class FluxPointsEstimator(FluxEstimator):
         norm_max=5,
         norm_n_values=11,
         norm_values=None,
-        sigma=1,
-        sigma_ul=2,
+        n_sigma=1,
+        n_sigma_ul=2,
         reoptimize=False,
     ):
         self.e_edges = e_edges
@@ -809,8 +809,8 @@ class FluxPointsEstimator(FluxEstimator):
             norm_max,
             norm_n_values,
             norm_values,
-            sigma,
-            sigma_ul,
+            n_sigma,
+            n_sigma_ul,
             reoptimize,
         )
         self._contribute_to_stat = False
