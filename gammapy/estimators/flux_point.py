@@ -823,13 +823,6 @@ class FluxPointsEstimator(FluxEstimator):
                 if dataset.background_model is not None:
                     dataset.background_model.parameters.freeze_all()
 
-    @property
-    def e_groups(self):
-        """Energy grouping table `~astropy.table.Table`"""
-        dataset = self.datasets[0]
-        energy_axis = dataset.counts.geom.get_axis_by_name("energy")
-        return energy_axis.group_table(self.e_edges)
-
     def __str__(self):
         s = f"{self.__class__.__name__}:\n"
         s += str(self.e_edges) + "\n"
@@ -861,29 +854,29 @@ class FluxPointsEstimator(FluxEstimator):
         self.datasets = datasets.copy()
 
         rows = []
-        for e_group in self.e_groups:
-            if e_group["bin_type"].strip() != "normal":
-                log.debug("Skipping under-/ overflow bin in flux point estimation.")
-                continue
-
-            row = self._estimate_flux_point(e_group, steps=steps)
+        for e_min, e_max in zip(self.e_edges[:-1], self.e_edges[1:]):
+            row = self._estimate_flux_point(e_min=e_min, e_max=e_max, steps=steps)
             rows.append(row)
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         return FluxPoints(table).to_sed_type("dnde")
 
-    def _energy_mask(self, e_group, dataset):
-        energy_mask = np.zeros(dataset.counts.geom.data_shape)
-        energy_mask[e_group["idx_min"]: e_group["idx_max"] + 1] = 1
-        return energy_mask.astype(bool)
+    def _get_energy_range(self, e_min, e_max):
+        """Round e_min and e_max to grid"""
+        energy_axis = self.datasets[0].counts.geom.get_axis_by_name("energy")
+        edges_pix = energy_axis.coord_to_pix([e_min, e_max])
+        edges_pix = np.clip(edges_pix, -0.5, energy_axis.nbin - 0.5)
+        edges_idx = np.round(edges_pix + 0.5) - 0.5
+        e_min, e_max = energy_axis.pix_to_coord(edges_idx)
+        return e_min, e_max
 
-    def _estimate_flux_point(self, e_group, steps="all"):
+    def _estimate_flux_point(self, e_min, e_max, steps="all"):
         """Estimate flux point for a single energy group.
 
         Parameters
         ----------
-        e_group : `~astropy.table.Row`
-            Energy group to compute the flux point for.
+        e_min, e_max : `~astropy.units.Quantity`
+            Energy bounds to compute the flux point for.
         steps : list of str
             Which steps to execute. Available options are:
 
@@ -900,11 +893,14 @@ class FluxPointsEstimator(FluxEstimator):
         result : dict
             Dict with results for the flux point.
         """
-        e_min, e_max = e_group["energy_min"], e_group["energy_max"]
+        e_min, e_max = self._get_energy_range(e_min, e_max)
         self.energy_range = [e_min, e_max]
 
         for dataset in self.datasets:
-            dataset.mask_fit = self._energy_mask(e_group=e_group, dataset=dataset)
+            dataset.mask_fit = dataset.counts.geom.energy_mask(
+                emin=e_min, emax=e_max
+            )
+
             self._contribute_to_stat |= dataset.mask.any()
 
         if not self._contribute_to_stat:
