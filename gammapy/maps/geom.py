@@ -308,7 +308,7 @@ class MapAxis:
 
         self._nbin = nbin
 
-    def is_aligned(self, other, atol=1e-2):
+    def is_aligned(self, other, atol=2e-2):
         """Check if other map axis is aligned.
 
         Two axes are aligned if their center coordinate values map to integers
@@ -1705,7 +1705,9 @@ class Geom(abc.ABC):
         """
         # get energy axes and values
         energy_axis = self.get_axis_by_name("energy")
-        edges = energy_axis.edges.reshape((-1, 1, 1))
+        # TODO: make this more general
+        shape = (-1, 1) if self.is_hpx else (-1, 1, 1)
+        edges = energy_axis.edges.reshape(shape)
 
         # set default values
         emin = emin if emin is not None else edges[0]
