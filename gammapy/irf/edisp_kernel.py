@@ -105,6 +105,15 @@ class EDispKernel:
         return data
 
     def to_image(self, lo_threshold=None, hi_threshold=None):
+        """Return a 2D edisp by summing the pdf matrix over the ereco axis.
+
+        Parameters
+        ----------
+        lo_threshold :`~astropy.units.Quantity`, optional
+            Low reco energy threshold
+        hi_threshold : `~astropy.units.Quantity`, optional
+            High reco energy threshold
+        """
         lo_threshold = lo_threshold or self.e_reco.edges[0]
         hi_threshold = hi_threshold or self.e_reco.edges[-1]
         data = self.pdf_in_safe_range(lo_threshold, hi_threshold)
