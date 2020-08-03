@@ -58,10 +58,10 @@ class ExcessMapEstimator(Estimator):
     """
     tag = "ExcessMapEstimator"
 
-    def __init__(self, correlation_radius="0.1 deg", nsigma=1, nsigma_ul=3):
+    def __init__(self, correlation_radius="0.1 deg", n_sigma=1, n_sigma_ul=3):
         self.correlation_radius = correlation_radius
-        self.nsigma = nsigma
-        self.nsigma_ul = nsigma_ul
+        self.n_sigma = n_sigma
+        self.n_sigma_ul = n_sigma_ul
 
     @property
     def correlation_radius(self):
@@ -135,13 +135,13 @@ class ExcessMapEstimator(Estimator):
             result.update({"err": err})
 
         if "errn-errp" in steps:
-            errn = Map.from_geom(geom, data=self.counts_stat.compute_errn(self.nsigma))
-            errp = Map.from_geom(geom, data=self.counts_stat.compute_errp(self.nsigma))
+            errn = Map.from_geom(geom, data=self.counts_stat.compute_errn(self.n_sigma))
+            errp = Map.from_geom(geom, data=self.counts_stat.compute_errp(self.n_sigma))
             result.update({"errn": errn, "errp": errp})
 
         if "ul" in steps:
             ul = Map.from_geom(
-                geom, data=self.counts_stat.compute_upper_limit(self.nsigma_ul)
+                geom, data=self.counts_stat.compute_upper_limit(self.n_sigma_ul)
             )
             result.update({"ul": ul})
         return result
