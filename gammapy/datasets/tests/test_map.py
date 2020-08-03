@@ -267,9 +267,9 @@ def test_to_image(geom):
         counts=counts, models=[background], exposure=exposure, name="fermi"
     )
     dataset_im = dataset.to_image()
-    assert dataset_im.mask_safe is None
     assert dataset_im.counts.data.sum() == dataset.counts.data.sum()
     assert_allclose(dataset_im.background_model.map.data.sum(), 28548.625, rtol=1e-5)
+    assert_allclose(dataset_im.exposure.data, dataset.exposure.data, rtol=1e-5)
 
     ebounds = np.logspace(-1.0, 1.0, 3)
     axis = MapAxis.from_edges(ebounds, name="energy", unit=u.TeV, interp="log")
@@ -291,10 +291,8 @@ def test_to_image(geom):
     # Check that missing entries in the dataset do not break
     dataset_copy = dataset.copy()
     dataset_copy.exposure = None
-    dataset_copy._background_model = None
     dataset_im = dataset_copy.to_image()
     assert dataset_im.exposure is None
-    assert dataset_im.background_model == None
 
     dataset_copy = dataset.copy()
     dataset_copy.counts = None
@@ -643,15 +641,14 @@ def test_stack_npred():
     )
 
     geom = WcsGeom.create(
-        skydir=(0, 0),
-        binsz=0.05,
-        width=(2, 2),
-        frame="icrs",
-        axes=[axis],
+        skydir=(0, 0), binsz=0.05, width=(2, 2), frame="icrs", axes=[axis],
     )
 
     dataset_1 = MapDataset.create(
-        geom, energy_axis_true=axis_etrue, name="dataset-1", gti=GTI.create("0 min", "30 min")
+        geom,
+        energy_axis_true=axis_etrue,
+        name="dataset-1",
+        gti=GTI.create("0 min", "30 min"),
     )
     dataset_1.psf = None
     dataset_1.exposure.data += 1
@@ -660,7 +657,10 @@ def test_stack_npred():
     dataset_1.models.append(model)
 
     dataset_2 = MapDataset.create(
-        geom, energy_axis_true=axis_etrue, name="dataset-2", gti=GTI.create("30 min", "60 min")
+        geom,
+        energy_axis_true=axis_etrue,
+        name="dataset-2",
+        gti=GTI.create("30 min", "60 min"),
     )
     dataset_2.psf = None
     dataset_2.exposure.data += 1
