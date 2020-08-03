@@ -528,7 +528,8 @@ def test_convolve_pixel_scale_error():
 
 @requires_dependency("matplotlib")
 def test_plot():
-    m = WcsNDMap.create(binsz=0.1 * u.deg, width=1 * u.deg)
+    axis = MapAxis([0,1], node_type='edges')
+    m = WcsNDMap.create(binsz=0.1 * u.deg, width=1 * u.deg, axes=[axis])
     with mpl_plot_check():
         m.plot(add_cbar=True)
 

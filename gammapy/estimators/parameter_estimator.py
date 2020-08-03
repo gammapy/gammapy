@@ -17,10 +17,10 @@ class ParameterEstimator(Estimator):
 
     Parameters
     ----------
-    sigma : int
-        Sigma to use for asymmetric error computation.
-    sigma_ul : int
-        Sigma to use for upper limit computation.
+    n_sigma : int
+        Sigma to use for asymmetric error computation. Default is 1.
+    n_sigma_ul : int
+        Sigma to use for upper limit computation. Default is 2.
     reoptimize : bool
         Re-optimize other free model parameters. Default is True.
     n_scan_values : int
@@ -32,10 +32,10 @@ class ParameterEstimator(Estimator):
     tag = "ParameterEstimator"
 
     def __init__(
-        self, sigma=1, sigma_ul=2, reoptimize=True, n_scan_values=30, scan_n_err=3,
+        self, n_sigma=1, n_sigma_ul=2, reoptimize=True, n_scan_values=30, scan_n_err=3,
     ):
-        self.sigma = sigma
-        self.sigma_ul = sigma_ul
+        self.n_sigma = n_sigma
+        self.n_sigma_ul = n_sigma_ul
         self.reoptimize = reoptimize
         self.n_scan_values = n_scan_values
         self.scan_n_err = scan_n_err
@@ -155,7 +155,7 @@ class ParameterEstimator(Estimator):
                 result.update({f"{parameter.name}_err": value_err})
 
             if "errp-errn" in steps:
-                res = self.fit.confidence(parameter=parameter, sigma=self.sigma)
+                res = self.fit.confidence(parameter=parameter, sigma=self.n_sigma)
                 result.update(
                     {
                         f"{parameter.name}_errp": res["errp"],
@@ -164,7 +164,7 @@ class ParameterEstimator(Estimator):
                 )
 
             if "ul" in steps:
-                res = self.fit.confidence(parameter=parameter, sigma=self.sigma_ul)
+                res = self.fit.confidence(parameter=parameter, sigma=self.n_sigma_ul)
                 result.update({f"{parameter.name}_ul": res["errp"] + value_max})
 
             if "ts" in steps:

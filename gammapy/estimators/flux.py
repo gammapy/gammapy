@@ -32,9 +32,9 @@ class FluxEstimator(ParameterEstimator):
         Number of norm values used for the fit statistic profile.
     norm_values : `numpy.ndarray`
         Array of norm values to be used for the fit statistic profile.
-    sigma : int
+    n_sigma : int
         Sigma to use for asymmetric error computation.
-    sigma_ul : int
+    n_sigma_ul : int
         Sigma to use for upper limit computation.
     reoptimize : bool
         Re-optimize other free model parameters.
@@ -49,8 +49,8 @@ class FluxEstimator(ParameterEstimator):
         norm_max=5,
         norm_n_values=11,
         norm_values=None,
-        sigma=1,
-        sigma_ul=3,
+        n_sigma=1,
+        n_sigma_ul=3,
         reoptimize=True,
     ):
 
@@ -65,7 +65,7 @@ class FluxEstimator(ParameterEstimator):
         self.energy_range = energy_range
 
         super().__init__(
-            sigma, sigma_ul, reoptimize,
+            n_sigma, n_sigma_ul, reoptimize,
         )
 
     @property

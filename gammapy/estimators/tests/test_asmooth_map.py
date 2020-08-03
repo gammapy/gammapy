@@ -79,6 +79,7 @@ def test_asmooth_dataset(input_dataset):
         "scale": 0.056419,
         "significance": 3.7041,
         "flux": 1.9627731416710178e-12,
+
     }
 
     for name in smoothed:

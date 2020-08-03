@@ -132,18 +132,27 @@ class TestFluxPointsEstimator:
         datasets, fpe = fpe_pwl
         assert "FluxPointsEstimator" in str(fpe)
 
-    @pytest.mark.xfail
     @staticmethod
     @requires_dependency("iminuit")
     def test_run_pwl(fpe_pwl):
         datasets, fpe = fpe_pwl
 
         fp = fpe.run(datasets)
+
+        actual = fp.table["e_min"].data
+        assert_allclose(actual, [0.316228,  1., 10.], rtol=1e-5)
+
+        actual = fp.table["e_max"].data
+        assert_allclose(actual, [1., 10., 31.622777], rtol=1e-5)
+
+        actual = fp.table["e_ref"].data
+        assert_allclose(actual, [0.562341, 3.162278, 17.782794], rtol=1e-3)
+
         actual = fp.table["norm"].data
         assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, [0.066374, 0.061025, 0.179729], rtol=1e-2)
+        assert_allclose(actual, [0.070675, 0.057445, 0.185618], rtol=1e-2)
 
         actual = fp.table["norm_errn"].data
         assert_allclose(actual, [0.065803, 0.060403, 0.171376], rtol=1e-2)
@@ -172,6 +181,15 @@ class TestFluxPointsEstimator:
     def test_run_map_pwl(fpe_map_pwl):
         datasets, fpe = fpe_map_pwl
         fp = fpe.run(datasets)
+
+        actual = fp.table["e_min"].data
+        assert_allclose(actual, [0.1, 1.178769, 8.48342], rtol=1e-5)
+
+        actual = fp.table["e_max"].data
+        assert_allclose(actual, [1.178769, 8.483429, 100.], rtol=1e-5)
+
+        actual = fp.table["e_ref"].data
+        assert_allclose(actual, [0.343332, 3.162278, 29.126327], rtol=1e-5)
 
         actual = fp.table["norm"].data
         assert_allclose(actual, [0.974726, 0.96342, 0.994251], rtol=1e-2)

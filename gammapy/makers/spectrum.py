@@ -160,17 +160,11 @@ class SpectrumDatasetMaker(Maker):
         meta_table: `~astropy.table.Table`
         """
         meta_table = Table()
-        meta_table["TELESCOP"] = [observation.aeff.meta["TELESCOP"]]
-        meta_table["INSTRUME"] = [observation.aeff.meta["INSTRUME"]]
-#        meta_table["NAME"] = [observation.aeff.meta["CBD10001"][5:-1]]
+        meta_table["TELESCOP"] = [observation.aeff.meta.get("TELESCOP")]
+        meta_table["INSTRUME"] = [observation.aeff.meta.get("INSTRUME")]
         meta_table["OBS_ID"] = [observation.obs_id]
-        #        NOT WORK YET
-        #        info_table['AZ'] = [observation.pointing_altaz.az]
-        #        info_table['ALT'] = [observation.pointing_altaz.alt]
-
         meta_table["RA_PNT"] = [observation.pointing_radec.icrs.ra.deg] * u.deg
         meta_table["DEC_PNT"] = [observation.pointing_radec.icrs.dec.deg] * u.deg
-
         return meta_table
 
     def run(self, dataset, observation):

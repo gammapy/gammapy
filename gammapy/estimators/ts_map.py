@@ -90,6 +90,12 @@ class TSMapEstimator(Estimator):
         Source model kernel. If set to None, assume point source model, PointSpatialModel.
     kernel_width : `~astropy.coordinates.Angle`
         Width of the kernel to use: the kernel will be truncated at this size
+    n_sigma : int
+        Number of sigma for flux error. Default is 1.
+    ul_method : ['covar', 'conf']
+        Upper limit estimation method.
+    n_sigma_ul : int
+        Number of sigma for flux upper limits. Default is 2.
     downsampling_factor : int
         Sample down the input maps to speed up the computation. Only integer
         values that are a multiple of 2 are allowed. Note that the kernel is
@@ -108,12 +114,6 @@ class TSMapEstimator(Estimator):
             analytically.
     error_method : ['covar', 'conf']
         Error estimation method.
-    error_sigma : int (1)
-        Sigma for flux error.
-    ul_method : ['covar', 'conf']
-        Upper limit estimation method.
-    ul_sigma : int (2)
-        Sigma for flux upper limits.
     threshold : float (None)
         If the TS value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time.
@@ -148,9 +148,9 @@ class TSMapEstimator(Estimator):
         downsampling_factor=None,
         method="root brentq",
         error_method="covar",
-        error_sigma=1,
+        n_sigma=1,
         ul_method="covar",
-        ul_sigma=2,
+        n_sigma_ul=2,
         threshold=None,
         rtol=0.001,
     ):
@@ -174,9 +174,9 @@ class TSMapEstimator(Estimator):
         self.parameters = {
             "method": method,
             "error_method": error_method,
-            "error_sigma": error_sigma,
+            "n_sigma": n_sigma,
             "ul_method": ul_method,
-            "ul_sigma": ul_sigma,
+            "n_sigma_ul": n_sigma_ul,
             "threshold": threshold,
             "rtol": rtol,
         }
@@ -397,9 +397,9 @@ class TSMapEstimator(Estimator):
             method=p["method"],
             error_method=error_method,
             threshold=p["threshold"],
-            error_sigma=p["error_sigma"],
+            error_sigma=p["n_sigma"],
             ul_method=ul_method,
-            ul_sigma=p["ul_sigma"],
+            ul_sigma=p["n_sigma_ul"],
             rtol=p["rtol"],
         )
 

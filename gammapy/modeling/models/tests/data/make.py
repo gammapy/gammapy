@@ -26,7 +26,7 @@ def make_example_2():
     spatial = GaussianSpatialModel(lon_0="0 deg", lat_0="0 deg", sigma="1 deg")
     model = SkyModel(PowerLawSpectralModel(), spatial)
     models = Models([model])
-    models.write(DATA_PATH / "example2.yaml")
+    models.write(DATA_PATH / "example2.yaml", overwrite=True, write_covariance=False)
 
 
 def make_datasets_example():
@@ -38,7 +38,7 @@ def make_datasets_example():
     geom0 = WcsGeom.create(
         skydir=(0, 0),
         binsz=0.1,
-        width=(1, 1),
+        width=(2, 2),
         frame="galactic",
         proj="CAR",
         axes=[energy_axis],
@@ -46,7 +46,7 @@ def make_datasets_example():
     geom1 = WcsGeom.create(
         skydir=(1, 0),
         binsz=0.1,
-        width=(1, 1),
+        width=(2, 2),
         frame="galactic",
         proj="CAR",
         axes=[energy_axis],
@@ -55,7 +55,7 @@ def make_datasets_example():
 
     sources_coords = [(0, 0), (0.9, 0.1)]
     names = ["gc", "g09"]
-    models = []
+    models = Models()
 
     for idx, (lon, lat) in enumerate(sources_coords):
         spatial_model = PointSpatialModel(
@@ -72,12 +72,7 @@ def make_datasets_example():
         )
         models.append(model_ecpl)
 
-    # test to link a spectral parameter
-    params0 = models[0].spectral_model.parameters
-    params1 = models[1].spectral_model.parameters
-    params0.link("reference", params1["reference"])
-    # update the sky model
-    models[0].parameters.link("reference", params1["reference"])
+    models["gc"].spectral_model.reference = models["g09"].spectral_model.reference
 
     obs_ids = [110380, 111140, 111159]
     data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
@@ -86,36 +81,28 @@ def make_datasets_example():
         "$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits"
     )
 
-    datasets_list = []
+    maker = MapDatasetMaker()
+    datasets = Datasets()
+
+    observations = data_store.get_observations(obs_ids)
+
     for idx, geom in enumerate(geoms):
-        observations = data_store.get_observations(obs_ids)
-
-        stacked = MapDataset.create(geom=geom)
-        stacked.background_model.name = "background_irf_" + names[idx]
-
-        maker = MapDatasetMaker(offset_max=4.0 * u.deg)
+        stacked = MapDataset.create(geom=geom, name=names[idx])
 
         for obs in observations:
             dataset = maker.run(stacked, obs)
             stacked.stack(dataset)
 
-        stacked.psf = stacked.psf.get_psf_kernel(
-            position=geom.center_skydir, geom=geom, max_radius="0.3 deg"
-        )
+        bkg = stacked.models.pop(0)
+        stacked.models = [models[idx], diffuse_model, bkg]
+        datasets.append(stacked)
 
-        stacked.name = names[idx]
-        stacked.models = models[idx] + diffuse_model
-        datasets_list.append(stacked)
-
-    datasets = Datasets(datasets_list)
-
-    dataset0 = datasets[0]
-    print("dataset0")
-    print("counts sum : ", dataset0.counts.data.sum())
-    print("expo sum : ", dataset0.exposure.data.sum())
-    print("bkg0 sum : ", dataset0.background_model.evaluate().data.sum())
-
-    datasets.write("$GAMMAPY_DATA/tests/models", prefix="gc_example_", overwrite=True)
+    datasets.write(
+        "$GAMMAPY_DATA/tests/models",
+        prefix="gc_example",
+        overwrite=True,
+        write_covariance=False
+    )
 
 
 if __name__ == "__main__":

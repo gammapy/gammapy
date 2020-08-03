@@ -50,7 +50,7 @@ class EnergyDispersion2D:
     --------
     EnergyDispersion
     """
-
+    tag = "edisp_2d"
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 

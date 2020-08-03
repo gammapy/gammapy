@@ -1,119 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import sys
 import numpy as np
-from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from gammapy.utils.scripts import make_path
+from gammapy.utils.fits import HDULocation
 
-__all__ = ["HDULocation", "HDUIndexTable"]
+__all__ = ["HDUIndexTable"]
 
 log = logging.getLogger(__name__)
-
-
-class HDULocation:
-    """HDU localisation, loading and Gammapy object mapper.
-
-    This represents one row in `HDUIndexTable`.
-
-    It's more a helper class, that is wrapped by `~gammapy.data.Observation`,
-    usually those objects will be used to access data.
-
-    See also :ref:`gadf:hdu-index`.
-    """
-
-    def __init__(
-        self, obs_id, hdu_type, hdu_class, base_dir, file_dir, file_name, hdu_name
-    ):
-        self.obs_id = obs_id
-        self.hdu_type = hdu_type
-        self.hdu_class = hdu_class
-        self.base_dir = base_dir
-        self.file_dir = file_dir
-        self.file_name = file_name
-        self.hdu_name = hdu_name
-
-    def info(self, file=None):
-        """Print some summary info to stdout."""
-        if not file:
-            file = sys.stdout
-
-        print(f"OBS_ID = {self.obs_id}", file=file)
-        print(f"HDU_TYPE = {self.hdu_type}", file=file)
-        print(f"HDU_CLASS = {self.hdu_class}", file=file)
-        print(f"BASE_DIR = {self.base_dir}", file=file)
-        print(f"FILE_DIR = {self.file_dir}", file=file)
-        print(f"FILE_NAME = {self.file_name}", file=file)
-        print(f"HDU_NAME = {self.hdu_name}", file=file)
-
-    def path(self, abs_path=True):
-        """Full filename path.
-
-        Include ``base_dir`` if ``abs_path`` is True.
-        """
-        path = make_path(self.base_dir) / self.file_dir / self.file_name
-
-        if abs_path and path.exists():
-            return path
-        else:
-            return make_path(self.file_dir) / self.file_name
-
-    def get_hdu(self):
-        """Get HDU."""
-        filename = self.path(abs_path=True)
-        # Here we're intentionally not calling `with fits.open`
-        # because we don't want the file to remain open.
-        hdu_list = fits.open(filename, memmap=False)
-        return hdu_list[self.hdu_name]
-
-    def load(self):
-        """Load HDU as appropriate class.
-
-        TODO: this should probably go via an extensible registry.
-        """
-        hdu_class = self.hdu_class
-        filename = self.path()
-        hdu = self.hdu_name
-
-        if hdu_class == "events":
-            from gammapy.data import EventList
-
-            return EventList.read(filename, hdu=hdu)
-        elif hdu_class == "gti":
-            from gammapy.data import GTI
-
-            return GTI.read(filename, hdu=hdu)
-        elif hdu_class == "aeff_2d":
-            from gammapy.irf import EffectiveAreaTable2D
-
-            return EffectiveAreaTable2D.read(filename, hdu=hdu)
-        elif hdu_class == "edisp_2d":
-            from gammapy.irf import EnergyDispersion2D
-
-            return EnergyDispersion2D.read(filename, hdu=hdu)
-        elif hdu_class == "psf_table":
-            from gammapy.irf import PSF3D
-
-            return PSF3D.read(filename, hdu=hdu)
-        elif hdu_class == "psf_3gauss":
-            from gammapy.irf import EnergyDependentMultiGaussPSF
-
-            return EnergyDependentMultiGaussPSF.read(filename, hdu=hdu)
-        elif hdu_class == "psf_king":
-            from gammapy.irf import PSFKing
-
-            return PSFKing.read(filename, hdu=hdu)
-        elif hdu_class == "bkg_2d":
-            from gammapy.irf import Background2D
-
-            return Background2D.read(filename, hdu=hdu)
-        elif hdu_class == "bkg_3d":
-            from gammapy.irf import Background3D
-
-            return Background3D.read(filename, hdu=hdu)
-        else:
-            raise ValueError(f"Invalid hdu_class: {hdu_class}")
 
 
 class HDUIndexTable(Table):
@@ -251,8 +146,6 @@ class HDUIndexTable(Table):
         """Create `HDULocation` for a given row index."""
         row = self[idx]
         return HDULocation(
-            obs_id=row["OBS_ID"],
-            hdu_type=row["HDU_TYPE"].strip(),
             hdu_class=row["HDU_CLASS"].strip(),
             base_dir=self.base_dir.as_posix(),
             file_dir=row["FILE_DIR"].strip(),
