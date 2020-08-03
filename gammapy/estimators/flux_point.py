@@ -905,12 +905,7 @@ class FluxPointsEstimator(FluxEstimator):
 
         for dataset in self.datasets:
             dataset.mask_fit = self._energy_mask(e_group=e_group, dataset=dataset)
-            mask = dataset.mask_fit
-
-            if dataset.mask_safe is not None:
-                mask &= dataset.mask_safe
-
-            self._contribute_to_stat |= mask.any()
+            self._contribute_to_stat |= dataset.mask.any()
 
         if not self._contribute_to_stat:
             model = self.datasets[0].models[self.source].spectral_model
@@ -934,15 +929,9 @@ class FluxPointsEstimator(FluxEstimator):
         result : dict
             Dict with an array with one entry per dataset with counts for the flux point.
         """
-        if not self._contribute_to_stat:
-            return {"counts": np.zeros(len(self.datasets))}
-
         counts = []
         for dataset in self.datasets:
-            mask = dataset.mask_fit
-            if dataset.mask_safe is not None:
-                mask &= dataset.mask_safe
-
+            mask = dataset.mask
             counts.append(dataset.counts.data[mask].sum())
 
         return {"counts": np.array(counts, dtype=int)}
