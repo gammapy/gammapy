@@ -813,7 +813,6 @@ class FluxPointsEstimator(FluxEstimator):
             n_sigma_ul,
             reoptimize,
         )
-        self._contribute_to_stat = False
 
     def _freeze_empty_background(self):
         counts_all = self._estimate_counts()["counts"]
@@ -896,14 +895,18 @@ class FluxPointsEstimator(FluxEstimator):
         e_min, e_max = self._get_energy_range(e_min, e_max)
         self.energy_range = [e_min, e_max]
 
+        datasets = []
+
         for dataset in self.datasets:
             dataset.mask_fit = dataset.counts.geom.energy_mask(
                 emin=e_min, emax=e_max
             )
 
-            self._contribute_to_stat |= dataset.mask.any()
+            if dataset.mask.any():
+                datasets.append(dataset)
 
-        if not self._contribute_to_stat:
+        # if no dataset contributes
+        if len(datasets) == 0:
             model = self.datasets[0].models[self.source].spectral_model
             result = self._return_nan_result(model, steps=steps)
             result.update(self._estimate_counts())
