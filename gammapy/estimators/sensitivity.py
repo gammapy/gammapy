@@ -14,7 +14,7 @@ class SensitivityEstimator(Estimator):
 
     This class allows to determine for each reconstructed energy bin the flux
     associated to the number of gamma-ray events for which the significance is
-    ``sigma``, and being larger than ``gamma_min`` and ``bkg_sys`` percent
+    ``n_sigma``, and being larger than ``gamma_min`` and ``bkg_sys`` percent
     larger than the number of background events in the ON region.
 
 
@@ -22,10 +22,10 @@ class SensitivityEstimator(Estimator):
     ----------
     spectrum : `SpectralModel`
         Spectral model assumption
-    sigma : float, optional
-        Minimum significance
+    n_sigma : float, optional
+        Minimum significance. Default is 5.
     gamma_min : float, optional
-        Minimum number of gamma-rays
+        Minimum number of gamma-rays. Default is 10.
 
     Examples
     --------
@@ -35,14 +35,14 @@ class SensitivityEstimator(Estimator):
     tag = "SensitivityEstimator"
 
     def __init__(
-        self, spectrum=None, sigma=5.0, gamma_min=10,
+        self, spectrum=None, n_sigma=5.0, gamma_min=10,
     ):
 
         if spectrum is None:
             spectrum = PowerLawSpectralModel(index=2, amplitude="1 cm-2 s-1 TeV-1")
 
         self.spectrum = spectrum
-        self.sigma = sigma
+        self.n_sigma = n_sigma
         self.gamma_min = gamma_min
 
     def estimate_min_excess(self, dataset):
@@ -63,7 +63,7 @@ class SensitivityEstimator(Estimator):
         stat = WStatCountsStatistic(
             n_on=np.ones_like(n_off), n_off=n_off, alpha=dataset.alpha.data
         )
-        excess_counts = stat.excess_matching_significance(self.sigma)
+        excess_counts = stat.excess_matching_significance(self.n_sigma)
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
         excess = dataset.background.copy()
