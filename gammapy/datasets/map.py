@@ -1082,7 +1082,7 @@ class MapDataset(Dataset):
 
         if isinstance(self.edisp, EDispKernelMap):
             mask_irf = self._mask_safe_irf(
-                self.edisp.edisp_map, self.mask_safe, drop="energy_true"
+                self.edisp.edisp_map, mask_safe, drop="energy_true"
             )
             kwargs["edisp"] = self.edisp.to_image(mask=mask_irf)
 

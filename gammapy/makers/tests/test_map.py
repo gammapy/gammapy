@@ -38,7 +38,7 @@ def geom(ebounds, binsz=0.5):
             "e_true": None,
             "counts": 34366,
             "exposure": 9.995376e08,
-            "exposure_image": 7.921993e10,
+            "exposure_image": 3.99815e11,
             "background": 27989.05,
             "binsz_irf": 0.5,
             "migra": None,
@@ -74,7 +74,7 @@ def geom(ebounds, binsz=0.5):
             ),
             "counts": 34366,
             "exposure": 9.951827e08,
-            "exposure_image": 6.492968e10,
+            "exposure_image": 5.971096e11,
             "background": 28760.283,
             "background_oversampling": 2,
             "binsz_irf": 0.5,
@@ -88,7 +88,7 @@ def geom(ebounds, binsz=0.5):
             ),
             "counts": 34366,
             "exposure": 9.951827e08,
-            "exposure_image": 6.492968e10,
+            "exposure_image": 5.971096e11,
             "background": 28760.283,
             "background_oversampling": 2,
             "binsz_irf": 1.0,
@@ -102,17 +102,22 @@ def geom(ebounds, binsz=0.5):
             ),
             "counts": 34366,
             "exposure": 9.951827e08,
-            "exposure_image": 6.492968e10,
+            "exposure_image": 5.971096e11,
             "background": 28760.283,
             "background_oversampling": 2,
             "binsz_irf": 0.5,
-            "migra": MapAxis.from_edges(np.linspace(0.,3.,100), name="migra", unit=""),
+            "migra": MapAxis.from_edges(
+                np.linspace(0.0, 3.0, 100), name="migra", unit=""
+            ),
         },
     ],
 )
 def test_map_maker(pars, observations):
     stacked = MapDataset.create(
-        geom=pars["geom"], energy_axis_true=pars["e_true"], binsz_irf=pars["binsz_irf"], migra_axis=pars["migra"]
+        geom=pars["geom"],
+        energy_axis_true=pars["e_true"],
+        binsz_irf=pars["binsz_irf"],
+        migra_axis=pars["migra"],
     )
 
     maker = MapDatasetMaker(background_oversampling=pars.get("background_oversampling"))
@@ -176,10 +181,11 @@ def test_map_maker_obs(observations):
     assert map_dataset.psf.exposure_map.data.shape == (3, 1, 5, 10)
     assert_allclose(map_dataset.gti.time_delta, 1800.0 * u.s)
 
+
 @requires_data()
 def test_map_maker_obs_with_migra(observations):
     # Test for different spatial geoms and etrue, ereco bins
-    migra = MapAxis.from_edges(np.linspace(0,2.,50), unit='', name='migra')
+    migra = MapAxis.from_edges(np.linspace(0, 2.0, 50), unit="", name="migra")
     geom_reco = geom(ebounds=[0.1, 1, 10])
     e_true = MapAxis.from_edges(
         [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
@@ -196,6 +202,7 @@ def test_map_maker_obs_with_migra(observations):
     assert isinstance(map_dataset.edisp, EDispMap)
     assert map_dataset.edisp.edisp_map.data.shape == (3, 49, 5, 10)
     assert map_dataset.edisp.exposure_map.data.shape == (3, 1, 5, 10)
+
 
 @requires_data()
 def test_make_meta_table(observations):
@@ -238,7 +245,9 @@ def data_store():
             "psf_value": 4369.96391,
         },
         {
-            "energy": MapAxis.from_energy_bounds(1, 10, 101, "TeV", name="energy_true", node_type="center"),
+            "energy": MapAxis.from_energy_bounds(
+                1, 10, 101, "TeV", name="energy_true", node_type="center"
+            ),
             "rad": None,
             "energy_shape": (101,),
             "psf_energy": 1412.537545,
@@ -260,7 +269,9 @@ def data_store():
             "psf_value": 25888.5047,
         },
         {
-            "energy": MapAxis.from_energy_bounds(1, 10, 101, "TeV", name="energy_true", node_type="center"),
+            "energy": MapAxis.from_energy_bounds(
+                1, 10, 101, "TeV", name="energy_true", node_type="center"
+            ),
             "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002) * u.deg, name="theta"),
             "energy_shape": (101,),
             "psf_energy": 1412.537545,
@@ -286,7 +297,7 @@ def test_make_psf(pars, data_store):
 
     geom = RegionGeom(
         region=PointSkyRegion(SkyCoord(83.63, 22.01, unit="deg")),
-        axes=[rad_axis, energy_axis]
+        axes=[rad_axis, energy_axis],
     )
 
     maker = MapDatasetMaker()
@@ -316,8 +327,7 @@ def test_make_mean_psf(data_store):
     psf = data_store.obs(23523).psf
 
     geom = RegionGeom.create(
-        region="icrs;point(83.63, 22.01)",
-        axes=[psf.rad_axis, psf.energy_axis]
+        region="icrs;point(83.63, 22.01)", axes=[psf.rad_axis, psf.energy_axis]
     )
 
     maker = MapDatasetMaker()

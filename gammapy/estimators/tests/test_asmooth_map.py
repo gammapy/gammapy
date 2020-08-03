@@ -74,16 +74,16 @@ def test_asmooth_dataset(input_dataset):
     assert smoothed["scale"].unit == u.Unit("deg")
 
     desired = {
-        "counts": 369.479167,
-        "background": 0.13461,
+        "counts": 2.999937,
+        "background": 0.14224,
         "scale": 0.056419,
-        "significance": 74.677406,
-        "flux": 1.237284e-09,
+        "significance": 3.7041,
+        "flux": 1.9627731416710178e-12,
     }
 
     for name in smoothed:
-        actual = smoothed[name].data[20, 25]
-        assert_allclose(actual, desired[name], rtol=1e-5)
+        actual = smoothed[name].data[20, 20]
+        assert_allclose(actual, desired[name], rtol=1e-3)
 
 
 def test_asmooth_map_dataset_on_off():
