@@ -24,28 +24,27 @@ def convolved_map_dataset_counts_statistics(
     kernel = copy.deepcopy(kernel)
     kernel.normalize("peak")
 
+    mask = np.ones(dataset.data_shape, dtype=bool)
+    if dataset.mask_safe:
+        mask = dataset.mask_safe
+    if apply_mask_fit:
+        mask *= dataset.mask_fit
+
     # fft convolution adds numerical noise, to ensure integer results we call
     # np.rint
-    n_on = dataset.counts
-    if dataset.mask_safe:
-        n_on = n_on * dataset.mask_safe
-    if apply_mask_fit:
-        n_on = n_on * dataset.mask_fit
+    n_on = dataset.counts * mask
     if return_image:
-        n_on = n_on.sum_over_axes(keepdims=False)
+        n_on = n_on.sum_over_axes(keepdims=True)
     n_on_conv = np.rint(n_on.convolve(kernel.array).data)
 
     if isinstance(dataset, MapDatasetOnOff):
-        background = dataset.background
+        background = dataset.background * mask
         background.data[dataset.acceptance_off.data == 0] = 0.0
-        n_off = dataset.counts_off
+        n_off = dataset.counts_off * mask
 
-        if apply_mask_fit:
-            background = background * dataset.mask_fit
-            n_off = n_off * dataset.mask_fit
         if return_image:
-            background = background.sum_over_axes(keepdims=False)
-            n_off = n_off.sum_over_axes(keepdims=False)
+            background = background.sum_over_axes(keepdims=True)
+            n_off = n_off.sum_over_axes(keepdims=True)
 
         background_conv = background.convolve(kernel.array)
         n_off_conv = n_off.convolve(kernel.array)
@@ -55,13 +54,9 @@ def convolved_map_dataset_counts_statistics(
 
         return WStatCountsStatistic(n_on_conv.data, n_off_conv.data, alpha_conv.data)
     else:
-        npred = dataset.npred()
-        if dataset.mask_safe:
-            npred = npred * dataset.mask_safe
-        if apply_mask_fit:
-            npred = npred * dataset.mask_fit
+        npred = dataset.npred() * mask
         if return_image:
-            npred = npred.sum_over_axes(keepdims=False)
+            npred = npred.sum_over_axes(keepdims=True)
         background_conv = npred.convolve(kernel.array)
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
@@ -159,7 +154,7 @@ class ExcessMapEstimator(Estimator):
         )
 
         if self.return_image:
-            geom = dataset.counts.geom.to_image()
+            geom = dataset.counts.geom.squash("energy")
 
         n_on = Map.from_geom(geom, data=counts_stat.n_on)
         bkg = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.excess)
