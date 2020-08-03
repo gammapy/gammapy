@@ -131,7 +131,7 @@ class ExcessMapEstimator(Estimator):
             result.update({"ts": tsmap, "significance": significance})
 
         if "err" in steps:
-            err = Map.from_geom(geom, data=counts_stat.error)
+            err = Map.from_geom(geom, data=counts_stat.error*self.n_sigma)
             result.update({"err": err})
 
         if "errn-errp" in steps:

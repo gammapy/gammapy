@@ -178,7 +178,7 @@ class ExcessProfileEstimator(Estimator):
                 result["sqrt_ts"] = stats.significance
 
             if "err" in steps:
-                result["err"] = stats.error
+                result["err"] = stats.error * self.n_sigma
 
             if "errn-errp" in steps:
                 result["errn"] = stats.compute_errn(self.n_sigma)

@@ -151,7 +151,7 @@ class ParameterEstimator(Estimator):
 
             if "err" in steps:
                 res = self.fit.covariance()
-                value_err = res.parameters[parameter].error
+                value_err = res.parameters[parameter].error*self.n_sigma
                 result.update({f"{parameter.name}_err": value_err})
 
             if "errp-errn" in steps:
