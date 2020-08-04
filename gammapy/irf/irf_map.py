@@ -193,7 +193,9 @@ class IRFMap:
         map_out : `IRFMap`
             Sliced irf map object.
         """
-        print(slices)
         irf_map = self._irf_map.slice_by_idx(slices=slices)
-        exposure_map = self.exposure_map.slice_by_idx(slices=slices)
+        if "energy_true" in slices:
+            exposure_map = self.exposure_map.slice_by_idx(slices=slices)
+        else:
+            exposure_map = self.exposure_map
         return self.__class__(irf_map, exposure_map=exposure_map)
