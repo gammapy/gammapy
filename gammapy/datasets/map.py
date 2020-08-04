@@ -890,30 +890,25 @@ class MapDataset(Dataset):
                 cache=cache
             )
 
-        hduloc_edisp = HDULocation(
+        kwargs["edisp"] = HDULocation(
             hdu_class="edisp_kernel_map", file_dir=path.parent, file_name=path.name, hdu_name="EDISP",
             cache=cache
         )
 
-        kwargs["edisp"] = hduloc_edisp
-
-        hduloc_psf = HDULocation(
+        kwargs["psf"] = HDULocation(
             hdu_class="psf_map", file_dir=path.parent, file_name=path.name, hdu_name="PSF",
             cache=cache
         )
-
-        kwargs["psf"] = hduloc_psf
 
         hduloc = HDULocation(
             hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name="BACKGROUND",
             cache=cache
         )
 
-        model = BackgroundModel(
+        kwargs["models"] = [BackgroundModel(
             hduloc, datasets_names=[name], name=name + "-bkg"
-        )
+        )]
 
-        kwargs["models"] = [model]
         return cls(**kwargs)
 
     @classmethod
