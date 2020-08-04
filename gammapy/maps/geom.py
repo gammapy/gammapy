@@ -308,6 +308,29 @@ class MapAxis:
 
         self._nbin = nbin
 
+    def is_aligned(self, other, atol=2e-2):
+        """Check if other map axis is aligned.
+
+        Two axes are aligned if their center coordinate values map to integers
+        on the other axes as well.
+
+        Parameters
+        ----------
+        other : `MapAxis`
+            Other map axis.
+        atol : float
+            Absolute numerical tolerance for the comparison measured in bins.
+
+        Returns
+        -------
+        aligned : bool
+            Whether the axes are aligned
+        """
+        pix = self.coord_to_pix(other.center)
+        pix_other = other.coord_to_pix(self.center)
+        pix_all = np.append(pix, pix_other)
+        return np.allclose(np.round(pix_all) - pix_all, 0, atol=atol)
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return NotImplemented
@@ -1682,7 +1705,9 @@ class Geom(abc.ABC):
         """
         # get energy axes and values
         energy_axis = self.get_axis_by_name("energy")
-        edges = energy_axis.edges.reshape((-1, 1, 1))
+        # TODO: make this more general
+        shape = (-1, 1) if self.is_hpx else (-1, 1, 1)
+        edges = energy_axis.edges.reshape(shape)
 
         # set default values
         emin = emin if emin is not None else edges[0]

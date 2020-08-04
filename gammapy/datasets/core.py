@@ -159,6 +159,12 @@ class Datasets(collections.abc.MutableSequence):
         """Whether all contained datasets have the same data shape"""
         return len(set(_.data_shape[0] for _ in self)) == 1
 
+    @property
+    def energy_axes_are_aligned(self):
+        """Whether all contained datasets have aligned energy axis"""
+        axes = [d.counts.geom.get_axis_by_name("energy") for d in self]
+        return np.all([axes[0].is_aligned(ax) for ax in axes])
+
     def stat_sum(self):
         """Compute joint likelihood"""
         stat_sum = 0
