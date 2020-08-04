@@ -1262,6 +1262,53 @@ class MapDataset(Dataset):
 
         return self.__class__(**kwargs)
 
+    def slice_by_idx(self, slices, name=None):
+        """Slice sub dataset.
+
+        The slicing only applies to the maps that define the corresponding axes.
+
+        Parameters
+        ----------
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            corresponding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
+        name : str
+            Name of the sliced dataset.
+
+        Returns
+        -------
+        map_out : `Map`
+            Sliced map object.
+        """
+        name = make_name(name)
+        kwargs = {"gti": self.gti, "name": name}
+
+        if self.counts is not None:
+            kwargs["counts"] = self.counts.slice_by_idx(slices=slices)
+
+        if self.exposure is not None:
+            kwargs["exposure"] = self.exposure.slice_by_idx(slices=slices)
+
+        if self.background_model is not None:
+            m = self.background_model.evaluate().slice_by_idx(slices=slices)
+            kwargs["models"] = BackgroundModel(map=m, datasets_names=[name])
+
+        if self.edisp is not None:
+            kwargs["edisp"] = self.edisp.slice_by_idx(slices=slices)
+
+        if self.psf is not None:
+            kwargs["psf"] = self.psf.slice_by_idx(slices=slices)
+
+        if self.mask_safe is not None:
+            kwargs["mask_safe"] = self.mask_safe.slice_by_idx(slices=slices)
+
+        if self.mask_fit is not None:
+            kwargs["mask_fit"] = self.mask_fit.slice_by_idx(slices=slices)
+
+        return self.__class__(**kwargs)
+
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
@@ -1833,6 +1880,9 @@ class MapDatasetOnOff(MapDataset):
         raise NotImplementedError
 
     def pad(self):
+        raise NotImplementedError
+
+    def slice_by_idx(self, slices):
         raise NotImplementedError
 
 
