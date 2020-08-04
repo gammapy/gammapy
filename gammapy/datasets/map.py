@@ -22,6 +22,7 @@ from gammapy.modeling.models import (
 from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
+from gammapy.utils.fits import LazyFitsData, HDULocation
 from .core import Dataset
 
 __all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
@@ -133,6 +134,21 @@ class MapDataset(Dataset):
 
     stat_type = "cash"
     tag = "MapDataset"
+    counts = LazyFitsData(cache=True)
+    exposure = LazyFitsData(cache=True)
+    edisp = LazyFitsData(cache=True)
+    psf = LazyFitsData(cache=True)
+    mask_fit = LazyFitsData(cache=True)
+    mask_safe = LazyFitsData(cache=True)
+
+    _lazy_data_members = [
+        "counts",
+        "exposure",
+        "edisp",
+        "psf",
+        "mask_fit",
+        "mask_safe"
+    ]
 
     def __init__(
         self,
@@ -149,12 +165,6 @@ class MapDataset(Dataset):
         gti=None,
         meta_table=None,
     ):
-        if mask_fit is not None and mask_fit.data.dtype != np.dtype("bool"):
-            raise ValueError("mask data must have dtype bool")
-
-        if mask_safe is not None and mask_safe.data.dtype != np.dtype("bool"):
-            raise ValueError("mask data must have dtype bool")
-
         self._name = make_name(name)
         self._background_model = None
         self.evaluation_mode = evaluation_mode
@@ -172,9 +182,6 @@ class MapDataset(Dataset):
         self.gti = gti
         self.use_cache = use_cache
         self.meta_table = meta_table
-
-        # check whether a reference geom is defined
-        _ = self._geom
 
     @property
     def name(self):
@@ -273,15 +280,14 @@ class MapDataset(Dataset):
             self._models = Models(models)
 
         # TODO: clean this up (probably by removing)
-        if self.models is not None:
-            for model in self.models:
-                if isinstance(model, BackgroundModel):
-                    if model.datasets_names is not None:
-                        if self.name in model.datasets_names:
-                            self._background_model = model
-                            break
-            else:
-                log.warning(f"No background model defined for dataset {self.name}")
+        for model in self.models:
+            if isinstance(model, BackgroundModel):
+                if model.datasets_names is not None:
+                    if self.name in model.datasets_names:
+                        self._background_model = model
+                        break
+        else:
+            log.warning(f"No background model defined for dataset {self.name}")
         self._evaluators = {}
 
     @property
@@ -783,7 +789,7 @@ class MapDataset(Dataset):
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, name=None):
+    def from_hdulist(cls, hdulist, name=None, lazy=False):
         """Create map dataset from list of HDUs.
 
         Parameters
@@ -835,6 +841,7 @@ class MapDataset(Dataset):
         if "PSF_KERNEL" in hdulist:
             psf_map = Map.from_hdulist(hdulist, hdu="psf_kernel")
             kwargs["psf"] = PSFKernel(psf_map)
+
         if "PSF" in hdulist:
             psf_map = Map.from_hdulist(hdulist, hdu="psf")
             exposure_map = Map.from_hdulist(hdulist, hdu="psf_exposure")
@@ -869,7 +876,43 @@ class MapDataset(Dataset):
         self.to_hdulist().writeto(make_path(filename), overwrite=overwrite)
 
     @classmethod
-    def read(cls, filename, name=None):
+    def _read_lazy(cls, name, filename, cache):
+        kwargs = {"name": name}
+        try:
+            kwargs["gti"] = GTI(Table.read(filename, hdu="GTI"))
+        except KeyError:
+            pass
+
+        path = make_path(filename)
+        for hdu_name in ["counts", "exposure", "mask_fit", "mask_safe"]:
+            kwargs[hdu_name] = HDULocation(
+                hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name=hdu_name.upper(),
+                cache=cache
+            )
+
+        kwargs["edisp"] = HDULocation(
+            hdu_class="edisp_kernel_map", file_dir=path.parent, file_name=path.name, hdu_name="EDISP",
+            cache=cache
+        )
+
+        kwargs["psf"] = HDULocation(
+            hdu_class="psf_map", file_dir=path.parent, file_name=path.name, hdu_name="PSF",
+            cache=cache
+        )
+
+        hduloc = HDULocation(
+            hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name="BACKGROUND",
+            cache=cache
+        )
+
+        kwargs["models"] = [BackgroundModel(
+            hduloc, datasets_names=[name], name=name + "-bkg"
+        )]
+
+        return cls(**kwargs)
+
+    @classmethod
+    def read(cls, filename, name=None, lazy=False, cache=True):
         """Read map dataset from file.
 
         Parameters
@@ -878,21 +921,31 @@ class MapDataset(Dataset):
             Filename to read from.
         name : str
             Name of the new dataset.
+        lazy : bool
+            Whether to lazy load data into memory
+        cache : bool
+            Whether to cache the data after loading.
 
         Returns
         -------
         dataset : `MapDataset`
             Map dataset.
         """
-        with fits.open(make_path(filename), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, name=name)
+        name = make_name(name)
+
+        if lazy:
+            return cls._read_lazy(name=name, filename=filename, cache=cache)
+        else:
+            with fits.open(make_path(filename), memmap=False) as hdulist:
+                return cls.from_hdulist(hdulist, name=name)
 
     @classmethod
-    def from_dict(cls, data, models):
+    def from_dict(cls, data, models, lazy=False, cache=True):
         """Create from dicts and models list generated from YAML serialization."""
 
+        # TODO: remove handling models here
         filename = make_path(data["filename"])
-        dataset = cls.read(filename, name=data["name"])
+        dataset = cls.read(filename, name=data["name"], lazy=lazy, cache=cache)
 
         for model in models:
             if (
@@ -1309,6 +1362,12 @@ class MapDataset(Dataset):
 
         return self.__class__(**kwargs)
 
+    def reset_data_cache(self):
+        """Reset data cache to free memory space"""
+        for name in self._lazy_data_members:
+            if self.__dict__.pop(name, False):
+                log.info(f"Clearing {name} cache for dataset {self.name}")
+
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
@@ -1696,12 +1755,10 @@ class MapDatasetOnOff(MapDataset):
 
         if "MASK_SAFE" in hdulist:
             mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe")
-            mask_safe.data = mask_safe.data.astype(bool)
             kwargs["mask_safe"] = mask_safe
 
         if "MASK_FIT" in hdulist:
             mask_fit = Map.from_hdulist(hdulist, hdu="mask_fit")
-            mask_fit.data = mask_fit.data.astype(bool)
             kwargs["mask_fit"] = mask_fit
 
         if "GTI" in hdulist:

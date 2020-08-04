@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel, BackgroundModel
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -45,6 +45,7 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
         norm_max=2,
         reoptimize=False,
     )
+
     result = estimator.run(fermi_datasets)
 
     assert_allclose(result["norm"], 1.010983, atol=1e-3)

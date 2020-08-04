@@ -1283,7 +1283,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.to_ogip_files(outdir=outdir, overwrite=overwrite)
 
     @classmethod
-    def from_dict(cls, data, models):
+    def from_dict(cls, data, models, **kwargs):
         """Create flux point dataset from dict.
 
         Parameters

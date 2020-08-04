@@ -101,7 +101,12 @@ class WcsNDMap(WcsMap):
 
             map_out.set_by_idx(idx[::-1], vals)
         else:
-            map_out = cls(geom=geom, meta=meta, data=hdu.data, unit=unit)
+            if "mask" in hdu.name.lower():
+                data = hdu.data.astype(bool)
+            else:
+                data = hdu.data
+
+            map_out = cls(geom=geom, meta=meta, data=data, unit=unit)
 
         return map_out
 
