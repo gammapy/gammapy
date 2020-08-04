@@ -528,7 +528,7 @@ def test_convolve_pixel_scale_error():
 
 @requires_dependency("matplotlib")
 def test_plot():
-    axis = MapAxis([0,1], node_type='edges')
+    axis = MapAxis([0, 1], node_type="edges")
     m = WcsNDMap.create(binsz=0.1 * u.deg, width=1 * u.deg, axes=[axis])
     with mpl_plot_check():
         m.plot(add_cbar=True)
@@ -660,3 +660,18 @@ def test_reduce():
     m3 = m1.reduce(axis="ax1", keepdims=False)
     assert_allclose(m3.geom.data_shape, (2, 3, 5, 5))
     assert_allclose(m3.data[0][0][0][0], 4.0)
+
+
+def test_to_cube():
+    ax1 = MapAxis.from_nodes([1, 2, 3, 4], name="ax1")
+    ax2 = MapAxis.from_edges([5, 6], name="ax2")
+    ax3 = MapAxis.from_edges([8, 9], name="ax3")
+    geom = WcsGeom.create(npix=(5, 5), axes=[ax1])
+    m1 = Map.from_geom(geom=geom, data=np.ones(geom.data_shape))
+    m2 = m1.to_cube([ax2, ax3])
+    assert_allclose(m2.geom.data_shape, (1, 1, 4, 5, 5))
+
+    # test that more than one bin fails
+    ax4 = MapAxis.from_edges([8, 9, 10], name="ax4")
+    with pytest.raises(ValueError):
+        m1.to_cube([ax4])

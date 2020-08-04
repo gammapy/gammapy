@@ -25,33 +25,20 @@ def input_dataset():
     energy_true = MapAxis.from_energy_bounds("0.1 TeV", "1 TeV", 1, name="energy_true")
 
     counts2D = Map.read(filename, hdu="counts")
-    counts = Map.from_geom(
-        counts2D.geom.to_cube([energy]),
-        data=counts2D.data[np.newaxis, :, :],
-        unit=counts2D.unit,
-    )
+    counts = counts2D.to_cube([energy])
     exposure2D = Map.read(filename, hdu="exposure")
-    exposure = Map.from_geom(
-        exposure2D.geom.to_cube([energy_true]),
-        data=exposure2D.data[np.newaxis, :, :],
-        unit="cm2s",  # no unit in header?
-    )
-
+    exposure2D.unit = "cm2s"
+    exposure = exposure2D.to_cube([energy_true])
     background2D = Map.read(filename, hdu="background")
-    background = Map.from_geom(
-        background2D.geom.to_cube([energy]),
-        data=background2D.data[np.newaxis, :, :],
-        unit=background2D.unit,
-    )
+    background = background2D.to_cube([energy])
     name = "test-dataset"
     background_model = BackgroundModel(background, datasets_names=[name])
 
     # add mask
-    mask2D = np.ones_like(background2D.data).astype("bool")
-    mask2D[0:40, :] = False
-    mask = Map.from_geom(
-        background2D.geom.to_cube([energy]), data=mask2D[np.newaxis, :, :],
-    )
+    mask2D_data = np.ones_like(background2D.data).astype("bool")
+    mask2D_data[0:40, :] = False
+    mask2D = Map.from_geom(geom=counts2D.geom, data=mask2D_data)
+    mask = mask2D.to_cube([energy])
     return MapDataset(
         counts=counts,
         exposure=exposure,
