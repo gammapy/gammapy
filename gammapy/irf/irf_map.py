@@ -61,7 +61,7 @@ class IRFMap:
     def read(cls, filename, hdu=None):
         """Read an IRF_map from file and create corresponding object"""
         with fits.open(filename, memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist)
+            return cls.from_hdulist(hdulist, hdu=hdu)
 
     def to_hdulist(self):
         """Convert to `~astropy.io.fits.HDUList`.

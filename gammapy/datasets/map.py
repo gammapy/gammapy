@@ -141,6 +141,15 @@ class MapDataset(Dataset):
     mask_fit = LazyFitsData(cache=True)
     mask_safe = LazyFitsData(cache=True)
 
+    _lazy_data_members = [
+        "counts",
+        "exposure",
+        "edisp",
+        "psf",
+        "mask_fit",
+        "mask_safe"
+    ]
+
     def __init__(
         self,
         models=None,
@@ -1357,6 +1366,12 @@ class MapDataset(Dataset):
             kwargs["mask_fit"] = self.mask_fit.slice_by_idx(slices=slices)
 
         return self.__class__(**kwargs)
+
+    def reset_data_cache(self):
+        """Reset data cache to free memory space"""
+        for name in self._lazy_data_members:
+            if self.__dict__.pop(name, False):
+                log.info(f"Clearing {name} cache for dataset {self.name}")
 
 
 class MapDatasetOnOff(MapDataset):

@@ -247,8 +247,6 @@ def test_models_management(tmp_path):
     datasets[0].models = model1
     _ = datasets.models  # auto-update models
 
-    print(datasets[0].models["gll_iem_v06_cutout"].map)
-
     npred1 = datasets[0].npred().data.sum()
     datasets.models.remove(model1)
     npred0 = datasets[0].npred().data.sum()
