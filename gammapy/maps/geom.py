@@ -312,7 +312,7 @@ class MapAxis:
         """Check if other map axis is aligned.
 
         Two axes are aligned if their center coordinate values map to integers
-        on the other axes as well.
+        on the other axes as well and if the interpolation modes are equivalent.
 
         Parameters
         ----------
@@ -329,7 +329,8 @@ class MapAxis:
         pix = self.coord_to_pix(other.center)
         pix_other = other.coord_to_pix(self.center)
         pix_all = np.append(pix, pix_other)
-        return np.allclose(np.round(pix_all) - pix_all, 0, atol=atol)
+        aligned = np.allclose(np.round(pix_all) - pix_all, 0, atol=atol)
+        return aligned and self.interp == other.interp
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
