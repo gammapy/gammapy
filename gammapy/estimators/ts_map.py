@@ -112,8 +112,6 @@ class TSMapEstimator(Estimator):
         * ``'leastsq iter'``
             Fit the amplitude by an iterative least square fit, that can be solved
             analytically.
-    error_method : ['covar', 'conf']
-        Error estimation method.
     threshold : float (None)
         If the TS value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time.
@@ -147,7 +145,6 @@ class TSMapEstimator(Estimator):
         kernel_width="0.2 deg",
         downsampling_factor=None,
         method="root brentq",
-        error_method="covar",
         n_sigma=1,
         ul_method="covar",
         n_sigma_ul=2,
@@ -156,9 +153,6 @@ class TSMapEstimator(Estimator):
     ):
         if method not in ["root brentq", "root newton", "leastsq iter"]:
             raise ValueError(f"Not a valid method: '{method}'")
-
-        if error_method not in ["covar", "conf"]:
-            raise ValueError(f"Not a valid error method '{error_method}'")
 
         self.kernel_width = Angle(kernel_width)
 
@@ -173,7 +167,6 @@ class TSMapEstimator(Estimator):
 
         self.parameters = {
             "method": method,
-            "error_method": error_method,
             "n_sigma": n_sigma,
             "ul_method": ul_method,
             "n_sigma_ul": n_sigma_ul,
@@ -323,6 +316,7 @@ class TSMapEstimator(Estimator):
 
                 * "ts": estimate delta TS and significance (sqrt_ts)
                 * "flux-err": estimate symmetric error on flux.
+                * "flux-errn-errp": estimate symmetric error on flux.
                 * "flux-ul": estimate upper limits on flux.
 
             By default all steps are executed.
@@ -361,10 +355,19 @@ class TSMapEstimator(Estimator):
         mask.data &= self.mask_default(exposure, background, kernel.data).data
 
         if steps == "all":
-            steps = ["ts", "sqrt_ts", "flux", "flux_err", "flux_ul", "niter"]
+            steps = ["ts", "flux_err", "flux_errp-errn", "flux_ul"]
+
+        keys = ["ts", "sqrt_ts", "flux", "niter"]
+        if "flux_err" in steps:
+            keys.append("flux_err")
+        if "flux_errp-errn" in steps:
+            keys.append("flux_errp")
+            keys.append("flux_errn")
+        if "flux_ul" in steps:
+            keys.append("flux_ul")
 
         result = {}
-        for name in steps:
+        for name in keys:
             data = np.nan * np.ones_like(counts.data)
             result[name] = counts.copy(data=data)
 
@@ -383,8 +386,9 @@ class TSMapEstimator(Estimator):
         # Compute null statistics per pixel for the whole image
         c_0 = cash(counts_array, background_array)
 
-        error_method = p["error_method"] if "flux_err" in steps else "none"
-        ul_method = p["ul_method"] if "flux_ul" in steps else "none"
+        compute_err = True if "flux_err" in steps else False
+        compute_errp_errn = True if "flux_errp-errn" in steps else False
+        compute_ul = True if "flux_ul" in steps else False
 
         wrap = functools.partial(
             _ts_value,
@@ -395,10 +399,11 @@ class TSMapEstimator(Estimator):
             kernel=kernel.data,
             flux=flux,
             method=p["method"],
-            error_method=error_method,
+            compute_err=compute_err,
+            compute_errp_errn=compute_errp_errn,
+            compute_ul=compute_ul,
             threshold=p["threshold"],
             error_sigma=p["n_sigma"],
-            ul_method=ul_method,
             ul_sigma=p["n_sigma_ul"],
             rtol=p["rtol"],
         )
@@ -409,21 +414,25 @@ class TSMapEstimator(Estimator):
 
         # Set TS values at given positions
         j, i = zip(*positions)
-        for name in ["ts", "flux", "niter"]:
-            result[name].data[j, i] = [_[name] for _ in results]
+
+        if "ts" in steps:
+            for name in ["ts", "flux", "niter"]:
+                result[name].data[j, i] = [_[name] for _ in results]
+            result["sqrt_ts"] = self.sqrt_ts(result["ts"])
 
         if "flux_err" in steps:
             result["flux_err"].data[j, i] = [_["flux_err"] for _ in results]
 
+        if "flux_errp-errn" in steps:
+            result["flux_errp"].data[j, i] = [_["flux_errp"] for _ in results]
+            result["flux_errn"].data[j, i] = [_["flux_errn"] for _ in results]
+
         if "flux_ul" in steps:
             result["flux_ul"].data[j, i] = [_["flux_ul"] for _ in results]
 
-        # Compute sqrt(TS) values
-        if "sqrt_ts" in steps:
-            result["sqrt_ts"] = self.sqrt_ts(result["ts"])
 
         if self.downsampling_factor:
-            for name in steps:
+            for name in keys:
                 order = 0 if name == "niter" else 1
                 result[name] = result[name].upsample(
                     factor=self.downsampling_factor, preserve_counts=False, order=order
@@ -431,11 +440,11 @@ class TSMapEstimator(Estimator):
                 result[name] = result[name].crop(crop_width=pad_width)
 
         # Set correct units
-        if "flux" in steps:
+        if "flux" in keys:
             result["flux"].unit = flux_map.unit
-        if "flux_err" in steps:
+        if "flux_err" in keys:
             result["flux_err"].unit = flux_map.unit
-        if "flux_ul" in steps:
+        if "flux_ul" in keys:
             result["flux_ul"].unit = flux_map.unit
 
         return result
@@ -458,9 +467,10 @@ def _ts_value(
     kernel,
     flux,
     method,
-    error_method,
+    compute_err,
+    compute_errp_errn,
+    compute_ul,
     error_sigma,
-    ul_method,
     ul_sigma,
     threshold,
     rtol,
@@ -510,8 +520,13 @@ def _ts_value(
             result["ts"] = (c_0 - c_1) * np.sign(amplitude)
             result["flux"] = amplitude
             result["niter"] = 0
-            result["flux_err"] = np.nan
-            result["flux_ul"] = np.nan
+            if compute_err:
+                result["flux_err"] = np.nan
+            if compute_errp_errn:
+                result["flux_errn"] = np.nan
+                result["flux_errp"] = np.nan
+            if compute_ul:
+                result["flux_ul"] = np.nan
             return result
 
     if method == "root brentq":
@@ -537,20 +552,24 @@ def _ts_value(
     result["flux"] = amplitude * FLUX_FACTOR
     result["niter"] = niter
 
-    if error_method == "covar":
+    if compute_err:
         flux_err = _compute_flux_err_covar(amplitude, counts_, background_, model)
         result["flux_err"] = flux_err * error_sigma
-    elif error_method == "conf":
-        flux_err = _compute_flux_err_conf(
-            amplitude, counts_, background_, model, c_1, error_sigma
-        )
-        result["flux_err"] = FLUX_FACTOR * flux_err
 
-    if ul_method == "covar":
-        result["flux_ul"] = result["flux"] + ul_sigma * result["flux_err"]
-    elif ul_method == "conf":
+    if compute_errp_errn:
+        flux_errp = _compute_flux_err_conf(
+            amplitude, counts_, background_, model, c_1, error_sigma, True
+        )
+        result["flux_errp"] = FLUX_FACTOR * flux_errp
+
+        flux_errn = _compute_flux_err_conf(
+            amplitude, counts_, background_, model, c_1, error_sigma, False
+        )
+        result["flux_errn"] = FLUX_FACTOR * flux_errn
+
+    if compute_ul:
         flux_ul = _compute_flux_err_conf(
-            amplitude, counts_, background_, model, c_1, ul_sigma
+            amplitude, counts_, background_, model, c_1, ul_sigma, True
         )
         result["flux_ul"] = FLUX_FACTOR * flux_ul + result["flux"]
     return result
@@ -692,24 +711,30 @@ def _compute_flux_err_covar(x, counts, background, model):
         return np.sqrt(1.0 / stat.sum())
 
 
-def _compute_flux_err_conf(amplitude, counts, background, model, c_1, error_sigma):
+def _compute_flux_err_conf(amplitude, counts, background, model, c_1, n_sigma, positive=True):
     """
     Compute amplitude errors using likelihood profile method.
     """
 
     def ts_diff(x, counts, background, model):
-        return (c_1 + error_sigma ** 2) - f_cash(x, counts, background, model)
+        return (c_1 + n_sigma ** 2) - f_cash(x, counts, background, model)
 
     args = (counts, background, model)
 
-    amplitude_max = amplitude + 1e4
+    if positive:
+        min_amplitude = amplitude
+        max_amplitude = amplitude + 1e4
+    else:
+        min_amplitude = amplitude - 1e4
+        max_amplitude = amplitude
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
             result = scipy.optimize.brentq(
                 ts_diff,
-                amplitude,
-                amplitude_max,
+                min_amplitude,
+                max_amplitude,
                 args=args,
                 maxiter=MAX_NITER,
                 rtol=1e-3,

@@ -165,8 +165,6 @@ def test_compute_ts_map_downsampled(input_dataset):
         model=model,
         downsampling_factor=2,
         method="root brentq",
-        error_method="conf",
-        ul_method="conf",
         kernel_width="1 deg",
     )
     result = ts_estimator.run(input_dataset)
@@ -201,5 +199,3 @@ def test_incorrect_method():
     model = GaussianSpatialModel(sigma="0.2 deg")
     with pytest.raises(ValueError):
         TSMapEstimator(model, method="bad")
-    with pytest.raises(ValueError):
-        TSMapEstimator(model, error_method="bad")
