@@ -670,3 +670,8 @@ def test_to_cube():
     m1 = Map.from_geom(geom=geom, data=np.ones(geom.data_shape))
     m2 = m1.to_cube([ax2, ax3])
     assert_allclose(m2.geom.data_shape, (1, 1, 4, 5, 5))
+
+    # test that more than one bin fails
+    ax4 = MapAxis.from_edges([8, 9, 10], name="ax4")
+    with pytest.raises(ValueError):
+        m1.to_cube([ax4])

@@ -715,7 +715,9 @@ class WcsNDMap(WcsMap):
         map : `~gammapy.maps.WcsNDMap`
             new map
         """
-
+        for ax in axes:
+            if ax.nbin > 1:
+                raise ValueError(ax.name, "should have only one bin")
         geom = self.geom.to_cube(axes)
         data = self.data.reshape((1,) * len(axes) + self.data.shape)
         return self.from_geom(data=data, geom=geom, unit=self.unit)
