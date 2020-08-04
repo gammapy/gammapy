@@ -53,6 +53,11 @@ of amplitude and are named using the ``NormSpectralModel`` suffix:
 		spectral_model=pwl_norm
 	)
 
+    model = SkyDiffuseCube(
+		map=map,
+		spectral_model=pwl_norm
+	)
+
 This requires removing the hard-coded parameters of the `TemplateSpectralModel` and `BackgroundModel`.
 
 Energy Dependent Spatial Models
