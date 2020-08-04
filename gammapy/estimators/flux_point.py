@@ -813,6 +813,7 @@ class FluxPointsEstimator(FluxEstimator):
             n_sigma_ul,
             reoptimize,
         )
+        self._contribute_to_stat = False
 
     def _freeze_empty_background(self):
         counts_all = self._estimate_counts()["counts"]
@@ -860,9 +861,11 @@ class FluxPointsEstimator(FluxEstimator):
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         return FluxPoints(table).to_sed_type("dnde")
 
-    def _get_energy_range(self, e_min, e_max):
+    @staticmethod
+    def _get_energy_range(dataset, e_min, e_max):
         """Round e_min and e_max to grid"""
-        energy_axis = self.datasets[0].counts.geom.get_axis_by_name("energy")
+        # TODO: remove this special handling and just rely on Geom.energy_mask?
+        energy_axis = dataset.counts.geom.get_axis_by_name("energy")
         edges_pix = energy_axis.coord_to_pix([e_min, e_max])
         edges_pix = np.clip(edges_pix, -0.5, energy_axis.nbin - 0.5)
         edges_idx = np.round(edges_pix + 0.5) - 0.5
@@ -892,32 +895,25 @@ class FluxPointsEstimator(FluxEstimator):
         result : dict
             Dict with results for the flux point.
         """
-        e_min, e_max = self._get_energy_range(e_min, e_max)
-        self.energy_range = [e_min, e_max]
-
-        datasets = []
-
         for dataset in self.datasets:
+            e_min_new, e_max_new = self._get_energy_range(dataset, e_min, e_max)
             dataset.mask_fit = dataset.counts.geom.energy_mask(
-                emin=e_min, emax=e_max
-            )
-
+                    emin=e_min_new, emax=e_max_new
+                )
             if dataset.mask.any():
-                datasets.append(dataset)
+                self.energy_range = [e_min_new, e_max_new]
 
-        # if no dataset contributes
-        if len(datasets) == 0:
+            self._contribute_to_stat |= dataset.mask.any()
+
+        if not self._contribute_to_stat:
             model = self.datasets[0].models[self.source].spectral_model
             result = self._return_nan_result(model, steps=steps)
-            result.update(self._estimate_counts())
-            return result
+        else:
+            with self.datasets.parameters.restore_values:
+                self._freeze_empty_background()
+                result = super().run(self.datasets, steps=steps)
 
-        with self.datasets.parameters.restore_values:
-
-            self._freeze_empty_background()
-
-            result = super().run(self.datasets, steps=steps)
-            result.update(self._estimate_counts())
+        result.update(self._estimate_counts())
         return result
 
     def _estimate_counts(self):
