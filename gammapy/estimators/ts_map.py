@@ -386,7 +386,7 @@ class TSMapEstimator(Estimator):
             compute_ul=compute_ul,
             threshold=p["threshold"],
             n_sigma=p["n_sigma"],
-            ul_sigma=p["n_sigma_ul"],
+            n_sigma_ul=p["n_sigma_ul"],
             rtol=p["rtol"],
         )
 
@@ -402,14 +402,14 @@ class TSMapEstimator(Estimator):
                 result[name].data[j, i] = [_[name] for _ in results]
             result["sqrt_ts"] = self.sqrt_ts(result["ts"])
 
-        if "flux_err" in steps:
+        if "err" in steps:
             result["flux_err"].data[j, i] = [_["flux_err"] for _ in results]
 
-        if "flux_errp-errn" in steps:
+        if "errn-errp" in steps:
             result["flux_errp"].data[j, i] = [_["flux_errp"] for _ in results]
             result["flux_errn"].data[j, i] = [_["flux_errn"] for _ in results]
 
-        if "flux_ul" in steps:
+        if "ul" in steps:
             result["flux_ul"].data[j, i] = [_["flux_ul"] for _ in results]
 
 
@@ -456,7 +456,7 @@ def _ts_value(
     compute_errn_errp,
     compute_ul,
     n_sigma,
-    ul_sigma,
+    n_sigma_ul,
     threshold,
     rtol,
 ):
@@ -527,7 +527,6 @@ def _ts_value(
     if compute_err:
         flux_err = _compute_flux_err_covar(amplitude, counts_, background_, model)
         result["flux_err"] = flux_err * n_sigma
-
     if compute_errn_errp:
         flux_errp = _compute_flux_err_conf(
             amplitude, counts_, background_, model, c_1, n_sigma, True
@@ -541,7 +540,7 @@ def _ts_value(
 
     if compute_ul:
         flux_ul = _compute_flux_err_conf(
-            amplitude, counts_, background_, model, c_1, ul_sigma, True
+            amplitude, counts_, background_, model, c_1, n_sigma_ul, True
         )
         result["flux_ul"] = FLUX_FACTOR * flux_ul + result["flux"]
     return result
@@ -617,14 +616,15 @@ def _compute_flux_err_conf(amplitude, counts, background, model, c_1, n_sigma, p
     if positive:
         min_amplitude = amplitude
         max_amplitude = amplitude + 1e4
+        factor = 1
     else:
         min_amplitude = amplitude - 1e4
         max_amplitude = amplitude
+        factor = -1
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
-#            print(min_amplitude, max_amplitude)
             result = scipy.optimize.brentq(
                 ts_diff,
                 min_amplitude,
@@ -633,8 +633,7 @@ def _compute_flux_err_conf(amplitude, counts, background, model, c_1, n_sigma, p
                 maxiter=MAX_NITER,
                 rtol=1e-3,
             )
-#            print(result)
-            return result - amplitude
+            return (result - amplitude)*factor
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
             return np.nan
