@@ -100,18 +100,6 @@ class TSMapEstimator(Estimator):
         Sample down the input maps to speed up the computation. Only integer
         values that are a multiple of 2 are allowed. Note that the kernel is
         not sampled down, but must be provided with the downsampled bin size.
-    method : str ('root')
-        The following options are available:
-
-        * ``'root brentq'`` (default)
-            Fit amplitude by finding the roots of the the derivative of the fit
-            statistics using the brentq method.
-        * ``'root newton'``
-            Fit amplitude by finding the roots of the the derivative of the fit
-            statistics using Newton's method.
-        * ``'leastsq iter'``
-            Fit the amplitude by an iterative least square fit, that can be solved
-            analytically.
     threshold : float (None)
         If the TS value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time.
@@ -144,16 +132,12 @@ class TSMapEstimator(Estimator):
         model=None,
         kernel_width="0.2 deg",
         downsampling_factor=None,
-        method="root brentq",
         n_sigma=1,
         ul_method="covar",
         n_sigma_ul=2,
         threshold=None,
         rtol=0.001,
     ):
-        if method not in ["root brentq", "root newton", "leastsq iter"]:
-            raise ValueError(f"Not a valid method: '{method}'")
-
         self.kernel_width = Angle(kernel_width)
 
         if model is None:
@@ -166,7 +150,6 @@ class TSMapEstimator(Estimator):
         self.downsampling_factor = downsampling_factor
 
         self.parameters = {
-            "method": method,
             "n_sigma": n_sigma,
             "ul_method": ul_method,
             "n_sigma_ul": n_sigma_ul,
@@ -315,9 +298,9 @@ class TSMapEstimator(Estimator):
             Which maps to compute. Available options are:
 
                 * "ts": estimate delta TS and significance (sqrt_ts)
-                * "flux-err": estimate symmetric error on flux.
-                * "flux-errn-errp": estimate symmetric error on flux.
-                * "flux-ul": estimate upper limits on flux.
+                * "err": estimate symmetric error on flux.
+                * "errn-errp": estimate assymmetric error on flux.
+                * "ul": estimate upper limits on flux.
 
             By default all steps are executed.
 
@@ -355,15 +338,15 @@ class TSMapEstimator(Estimator):
         mask.data &= self.mask_default(exposure, background, kernel.data).data
 
         if steps == "all":
-            steps = ["ts", "flux_err", "flux_errp-errn", "flux_ul"]
+            steps = ["ts", "err", "errn-errp", "ul"]
 
         keys = ["ts", "sqrt_ts", "flux", "niter"]
-        if "flux_err" in steps:
+        if "err" in steps:
             keys.append("flux_err")
-        if "flux_errp-errn" in steps:
+        if "errn-errp" in steps:
             keys.append("flux_errp")
             keys.append("flux_errn")
-        if "flux_ul" in steps:
+        if "ul" in steps:
             keys.append("flux_ul")
 
         result = {}
@@ -373,7 +356,7 @@ class TSMapEstimator(Estimator):
 
         flux_map = self.flux_default(dataset, kernel.data)
 
-        if p["threshold"] or p["method"] == "root newton":
+        if p["threshold"]:
             flux = flux_map.data
         else:
             flux = None
@@ -386,9 +369,9 @@ class TSMapEstimator(Estimator):
         # Compute null statistics per pixel for the whole image
         c_0 = cash(counts_array, background_array)
 
-        compute_err = True if "flux_err" in steps else False
-        compute_errp_errn = True if "flux_errp-errn" in steps else False
-        compute_ul = True if "flux_ul" in steps else False
+        compute_err = True if "err" in steps else False
+        compute_errn_errp = True if "errn-errp" in steps else False
+        compute_ul = True if "ul" in steps else False
 
         wrap = functools.partial(
             _ts_value,
@@ -398,12 +381,11 @@ class TSMapEstimator(Estimator):
             c_0=c_0,
             kernel=kernel.data,
             flux=flux,
-            method=p["method"],
             compute_err=compute_err,
-            compute_errp_errn=compute_errp_errn,
+            compute_errn_errp=compute_errn_errp,
             compute_ul=compute_ul,
             threshold=p["threshold"],
-            error_sigma=p["n_sigma"],
+            n_sigma=p["n_sigma"],
             ul_sigma=p["n_sigma_ul"],
             rtol=p["rtol"],
         )
@@ -444,6 +426,10 @@ class TSMapEstimator(Estimator):
             result["flux"].unit = flux_map.unit
         if "flux_err" in keys:
             result["flux_err"].unit = flux_map.unit
+        if "flux_errp" in keys:
+            result["flux_errp"].unit = flux_map.unit
+        if "flux_errn" in keys:
+            result["flux_errn"].unit = flux_map.unit
         if "flux_ul" in keys:
             result["flux_ul"].unit = flux_map.unit
 
@@ -466,11 +452,10 @@ def _ts_value(
     c_0,
     kernel,
     flux,
-    method,
     compute_err,
-    compute_errp_errn,
+    compute_errn_errp,
     compute_ul,
-    error_sigma,
+    n_sigma,
     ul_sigma,
     threshold,
     rtol,
@@ -522,27 +507,14 @@ def _ts_value(
             result["niter"] = 0
             if compute_err:
                 result["flux_err"] = np.nan
-            if compute_errp_errn:
+            if compute_errn_errp:
                 result["flux_errn"] = np.nan
                 result["flux_errp"] = np.nan
             if compute_ul:
                 result["flux_ul"] = np.nan
             return result
 
-    if method == "root brentq":
-        amplitude, niter = _root_amplitude_brentq(
-            counts_, background_, model, rtol=rtol
-        )
-    elif method == "root newton":
-        amplitude, niter = _root_amplitude(
-            counts_, background_, model, flux[position], rtol=rtol
-        )
-    elif method == "leastsq iter":
-        amplitude, niter = _leastsq_iter_amplitude(
-            counts_, background_, model, rtol=rtol
-        )
-    else:
-        raise ValueError(f"Invalid method: {method}")
+    amplitude, niter = _root_amplitude_brentq(counts_, background_, model, rtol=rtol)
 
     with np.errstate(invalid="ignore", divide="ignore"):
         c_1 = f_cash(amplitude, counts_, background_, model)
@@ -554,16 +526,16 @@ def _ts_value(
 
     if compute_err:
         flux_err = _compute_flux_err_covar(amplitude, counts_, background_, model)
-        result["flux_err"] = flux_err * error_sigma
+        result["flux_err"] = flux_err * n_sigma
 
-    if compute_errp_errn:
+    if compute_errn_errp:
         flux_errp = _compute_flux_err_conf(
-            amplitude, counts_, background_, model, c_1, error_sigma, True
+            amplitude, counts_, background_, model, c_1, n_sigma, True
         )
         result["flux_errp"] = FLUX_FACTOR * flux_errp
 
         flux_errn = _compute_flux_err_conf(
-            amplitude, counts_, background_, model, c_1, error_sigma, False
+            amplitude, counts_, background_, model, c_1, n_sigma, False
         )
         result["flux_errn"] = FLUX_FACTOR * flux_errn
 
@@ -574,85 +546,6 @@ def _ts_value(
         result["flux_ul"] = FLUX_FACTOR * flux_ul + result["flux"]
     return result
 
-
-def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=RTOL):
-    """Fit amplitude using an iterative least squares algorithm.
-
-    Parameters
-    ----------
-    counts : `~numpy.ndarray`
-        Slice of counts image
-    background : `~numpy.ndarray`
-        Slice of background image
-    model : `~numpy.ndarray`
-        Model template to fit.
-    maxiter : int
-        Maximum number of iterations.
-    rtol : float
-        Relative flux error.
-
-    Returns
-    -------
-    amplitude : float
-        Fitted flux amplitude.
-    niter : int
-        Number of function evaluations needed for the fit.
-    """
-    bounds = amplitude_bounds_cython(counts, background, model)
-    amplitude_min, amplitude_max, amplitude_min_total = bounds
-
-    if not counts.sum() > 0:
-        return amplitude_min_total, 0
-
-    weights = np.ones(model.shape)
-
-    x_old = 0
-    for i in range(maxiter):
-        x = x_best_leastsq(counts, background, model, weights)
-        if abs((x - x_old) / x) < rtol:
-            return max(x / FLUX_FACTOR, amplitude_min_total), i + 1
-        else:
-            weights = x * model + background
-            x_old = x
-    return max(x / FLUX_FACTOR, amplitude_min_total), MAX_NITER
-
-
-def _root_amplitude(counts, background, model, flux, rtol=RTOL):
-    """Fit amplitude by finding roots using newton algorithm.
-
-    See Appendix A Stewart (2009).
-
-    Parameters
-    ----------
-    counts : `~numpy.ndarray`
-        Slice of count image
-    background : `~numpy.ndarray`
-        Slice of background image
-    model : `~numpy.ndarray`
-        Model template to fit.
-    flux : float
-        Starting value for the fit.
-
-    Returns
-    -------
-    amplitude : float
-        Fitted flux amplitude.
-    niter : int
-        Number of function evaluations needed for the fit.
-    """
-    args = (counts, background, model)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        try:
-            return (
-                scipy.optimize.newton(
-                    f_cash_root_cython, flux, args=args, maxiter=MAX_NITER, tol=rtol
-                ),
-                0,
-            )
-        except RuntimeError:
-            # Where the root finding fails NaN is set as amplitude
-            return np.nan, MAX_NITER
 
 
 def _root_amplitude_brentq(counts, background, model, rtol=RTOL):
@@ -731,6 +624,7 @@ def _compute_flux_err_conf(amplitude, counts, background, model, c_1, n_sigma, p
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
+#            print(min_amplitude, max_amplitude)
             result = scipy.optimize.brentq(
                 ts_diff,
                 min_amplitude,
@@ -739,6 +633,7 @@ def _compute_flux_err_conf(amplitude, counts, background, model, c_1, n_sigma, p
                 maxiter=MAX_NITER,
                 rtol=1e-3,
             )
+#            print(result)
             return result - amplitude
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
