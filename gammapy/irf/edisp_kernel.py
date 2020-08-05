@@ -50,12 +50,7 @@ class EDispKernel:
     interpolate"""
 
     def __init__(
-        self,
-        e_true,
-        e_reco,
-        data,
-        interp_kwargs=None,
-        meta=None,
+        self, e_true, e_reco, data, interp_kwargs=None, meta=None,
     ):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
@@ -109,8 +104,30 @@ class EDispKernel:
         data[:, idx] = 0
         return data
 
+    def to_image(self, lo_threshold=None, hi_threshold=None):
+        """Return a 2D edisp by summing the pdf matrix over the ereco axis.
+
+        Parameters
+        ----------
+        lo_threshold :`~astropy.units.Quantity`, optional
+            Low reco energy threshold
+        hi_threshold : `~astropy.units.Quantity`, optional
+            High reco energy threshold
+        """
+        lo_threshold = lo_threshold or self.e_reco.edges[0]
+        hi_threshold = hi_threshold or self.e_reco.edges[-1]
+        data = self.pdf_in_safe_range(lo_threshold, hi_threshold)
+
+        return self.__class__(
+            e_reco=self.e_reco.squash(),
+            e_true=self.e_true,
+            data=np.sum(data, axis=1, keepdims=True),
+        )
+
     @classmethod
-    def from_energy_lo_hi(cls, e_true_lo, e_true_hi, e_reco_lo, e_reco_hi, data, **kwargs):
+    def from_energy_lo_hi(
+        cls, e_true_lo, e_true_hi, e_reco_lo, e_reco_hi, data, **kwargs
+    ):
         e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
         e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="energy_true")
 

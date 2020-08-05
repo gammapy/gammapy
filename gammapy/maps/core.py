@@ -993,7 +993,7 @@ class Map(abc.ABC):
         geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
         return self._init_copy(geom=geom_reco, data=data)
 
-    def reduce_over_axes(self, func=np.add, keepdims=False, axes=None):
+    def reduce_over_axes(self, func=np.add, keepdims=False, axes=None, weights=None):
         """Reduce map over non-spatial axes
 
         Parameters
@@ -1006,6 +1006,8 @@ class Map(abc.ABC):
         axes: list
             Names of MapAxis to reduce over
             If None, all will reduced
+        weights : `Map`
+            Weights to be applied.
 
         Returns
         -------
@@ -1017,10 +1019,10 @@ class Map(abc.ABC):
 
         map_out = self.copy()
         for ax in axes:
-            map_out = map_out.reduce(ax, func=func, keepdims=keepdims)
+            map_out = map_out.reduce(ax, func=func, keepdims=keepdims, weights=weights)
         return map_out
 
-    def reduce(self, axis, func=np.add, keepdims=False):
+    def reduce(self, axis, func=np.add, keepdims=False, weights=None):
         """Reduce map over a single non-spatial axis
 
         Parameters
@@ -1032,7 +1034,8 @@ class Map(abc.ABC):
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
             the map with a single bin
-
+        weights : `Map`
+            Weights to be applied.
 
         Returns
         -------
@@ -1046,8 +1049,14 @@ class Map(abc.ABC):
 
         names = [ax.name for ax in reversed(self.geom.axes)]
         idx = names.index(axis)
+
+        data = self.data
+
+        if weights is not None:
+            data = data * weights
+
         data = func.reduce(
-            self.data, axis=idx, keepdims=keepdims, where=~np.isnan(self.data)
+            data, axis=idx, keepdims=keepdims, where=~np.isnan(data)
         )
         return self._init_copy(geom=geom, data=data)
 

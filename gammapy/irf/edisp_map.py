@@ -465,11 +465,15 @@ class EDispKernelMap(IRFMap):
             Energy dispersion kernel map.
         """
         edisp_map = cls.from_diagonal_response(edisp.e_reco, edisp.e_true, geom)
-        edisp_map.edisp_map.data[:, :, ...] = edisp.pdf_matrix[:, :, np.newaxis, np.newaxis]
+        edisp_map.edisp_map.data[:, :, ...] = edisp.pdf_matrix[
+            :, :, np.newaxis, np.newaxis
+        ]
         return edisp_map
 
     @classmethod
-    def from_gauss(cls, energy_axis, energy_axis_true, sigma, bias, pdf_threshold=1e-6, geom=None):
+    def from_gauss(
+        cls, energy_axis, energy_axis_true, sigma, bias, pdf_threshold=1e-6, geom=None
+    ):
         """Create an energy dispersion map from the input 1D kernel.
 
         The kernel will be duplicated over all spatial bins.
@@ -489,7 +493,33 @@ class EDispKernelMap(IRFMap):
         kernel = EDispKernel.from_gauss(
             e_reco=energy_axis.edges,
             e_true=energy_axis_true.edges,
-            sigma=sigma, bias=bias,
-            pdf_threshold=pdf_threshold
+            sigma=sigma,
+            bias=bias,
+            pdf_threshold=pdf_threshold,
         )
         return cls.from_edisp_kernel(kernel, geom=geom)
+
+    def to_image(self, weights=None):
+        """"Return a 2D EdispKernelMap by summing over the reconstructed energy axis.
+
+        Parameters
+        ----------
+        weights: `~gammapy.maps.Map`, optional
+            Weights to be applied
+
+        Returns
+        -------
+        edisp : `EDispKernelMap`
+            Edisp kernel map
+        """
+
+        edisp = self.edisp_map.data
+        if weights:
+            edisp = edisp * weights.data
+
+        data = np.sum(edisp, axis=1, keepdims=True)
+        geom = self.edisp_map.geom.squash("energy")
+        edisp_map = Map.from_geom(geom=geom, data=data)
+        return self.__class__(
+            edisp_kernel_map=edisp_map, exposure_map=self.exposure_map
+        )
