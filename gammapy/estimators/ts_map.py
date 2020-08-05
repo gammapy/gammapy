@@ -16,6 +16,7 @@ from gammapy.stats import (
     f_cash_root_cython,
     x_best_leastsq,
 )
+from gammapy.makers.utils import _map_spectrum_weight
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from .core import Estimator
 
@@ -349,7 +350,9 @@ class TSMapEstimator(Estimator):
         # First create 2D map arrays
         counts = dataset.counts.sum_over_axes(keepdims=False)
         background = dataset.npred().sum_over_axes(keepdims=False)
-        exposure = dataset.exposure.sum_over_axes(keepdims=False)
+
+        exposure = _map_spectrum_weight(dataset.exposure, self.model.spectral_model)
+        exposure = exposure.sum_over_axes(keepdims=False)
 
         kernel = self.get_kernel(dataset)
 
