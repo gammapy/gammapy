@@ -92,8 +92,6 @@ class TSMapEstimator(Estimator):
         Width of the kernel to use: the kernel will be truncated at this size
     n_sigma : int
         Number of sigma for flux error. Default is 1.
-    ul_method : ['covar', 'conf']
-        Upper limit estimation method.
     n_sigma_ul : int
         Number of sigma for flux upper limits. Default is 2.
     downsampling_factor : int
@@ -133,7 +131,6 @@ class TSMapEstimator(Estimator):
         kernel_width="0.2 deg",
         downsampling_factor=None,
         n_sigma=1,
-        ul_method="covar",
         n_sigma_ul=2,
         threshold=None,
         rtol=0.001,
@@ -151,7 +148,6 @@ class TSMapEstimator(Estimator):
 
         self.parameters = {
             "n_sigma": n_sigma,
-            "ul_method": ul_method,
             "n_sigma_ul": n_sigma_ul,
             "threshold": threshold,
             "rtol": rtol,
