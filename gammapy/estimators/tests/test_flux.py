@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel, BackgroundModel
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -45,10 +45,11 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
         norm_max=2,
         reoptimize=False,
     )
+
     result = estimator.run(fermi_datasets)
 
-    assert_allclose(result["norm"], 1.012374, atol=1e-3)
-    assert_allclose(result["ts"], 28086.66085, atol=1e-3)
+    assert_allclose(result["norm"], 1.010983, atol=1e-3)
+    assert_allclose(result["ts"], 28086.565, atol=1e-3)
     assert_allclose(result["norm_err"], 0.01998, atol=1e-3)
     assert_allclose(result["norm_errn"], 0.0199, atol=1e-3)
     assert_allclose(result["norm_errp"], 0.0199, atol=1e-3)
@@ -63,8 +64,8 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     estimator = FluxEstimator(0, energy_range=["1 GeV", "100 GeV"], reoptimize=True)
     result = estimator.run(fermi_datasets, steps=["err", "ts"])
 
-    assert_allclose(result["norm"], 1.012374, atol=1e-3)
-    assert_allclose(result["ts"], 20896.27951, atol=1e-3)
+    assert_allclose(result["norm"], 1.010983, atol=1e-3)
+    assert_allclose(result["ts"], 20896.1864, atol=1e-3)
     assert_allclose(result["norm_err"], 0.01998, atol=1e-3)
 
 
@@ -72,7 +73,7 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
 @requires_dependency("iminuit")
 def test_flux_estimator_1d(hess_datasets):
     estimator = FluxEstimator(source="Crab", energy_range=[1, 10] * u.TeV)
-    result = estimator.run(hess_datasets, steps=["err", "ts", "errp-errn", "ul"])
+    result = estimator.run(hess_datasets, steps=["err", "ts", "errn-errp", "ul"])
 
     assert_allclose(result["norm"], 1.176789, atol=1e-3)
     assert_allclose(result["ts"], 693.111777, atol=1e-3)

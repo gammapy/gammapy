@@ -496,7 +496,7 @@ class Map(abc.ABC):
 
         return self._init_copy(data=data, geom=geom)
 
-    def slice_by_idx(self, slices):
+    def slice_by_idx(self, slices, ):
         """Slice sub map from map object.
 
         For usage examples, see :ref:`mapslicing`.

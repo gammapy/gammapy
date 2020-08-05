@@ -58,10 +58,10 @@ class ExcessMapEstimator(Estimator):
     """
     tag = "ExcessMapEstimator"
 
-    def __init__(self, correlation_radius="0.1 deg", nsigma=1, nsigma_ul=3):
+    def __init__(self, correlation_radius="0.1 deg", n_sigma=1, n_sigma_ul=3):
         self.correlation_radius = correlation_radius
-        self.nsigma = nsigma
-        self.nsigma_ul = nsigma_ul
+        self.n_sigma = n_sigma
+        self.n_sigma_ul = n_sigma_ul
 
     @property
     def correlation_radius(self):
@@ -114,11 +114,11 @@ class ExcessMapEstimator(Estimator):
 
         geom = dataset.counts.geom
 
-        self.counts_stat = convolved_map_dataset_counts_statistics(dataset, kernel)
+        counts_stat = convolved_map_dataset_counts_statistics(dataset, kernel)
 
-        n_on = Map.from_geom(geom, data=self.counts_stat.n_on)
-        bkg = Map.from_geom(geom, data=self.counts_stat.n_on - self.counts_stat.excess)
-        excess = Map.from_geom(geom, data=self.counts_stat.excess)
+        n_on = Map.from_geom(geom, data=counts_stat.n_on)
+        bkg = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.excess)
+        excess = Map.from_geom(geom, data=counts_stat.excess)
 
         result = {"counts": n_on, "background": bkg, "excess": excess}
 
@@ -126,22 +126,22 @@ class ExcessMapEstimator(Estimator):
             steps = ["ts", "err", "errn-errp", "ul"]
 
         if "ts" in steps:
-            tsmap = Map.from_geom(geom, data=self.counts_stat.delta_ts)
-            significance = Map.from_geom(geom, data=self.counts_stat.significance)
+            tsmap = Map.from_geom(geom, data=counts_stat.delta_ts)
+            significance = Map.from_geom(geom, data=counts_stat.significance)
             result.update({"ts": tsmap, "significance": significance})
 
         if "err" in steps:
-            err = Map.from_geom(geom, data=self.counts_stat.error)
+            err = Map.from_geom(geom, data=counts_stat.error*self.n_sigma)
             result.update({"err": err})
 
         if "errn-errp" in steps:
-            errn = Map.from_geom(geom, data=self.counts_stat.compute_errn(self.nsigma))
-            errp = Map.from_geom(geom, data=self.counts_stat.compute_errp(self.nsigma))
+            errn = Map.from_geom(geom, data=counts_stat.compute_errn(self.n_sigma))
+            errp = Map.from_geom(geom, data=counts_stat.compute_errp(self.n_sigma))
             result.update({"errn": errn, "errp": errp})
 
         if "ul" in steps:
             ul = Map.from_geom(
-                geom, data=self.counts_stat.compute_upper_limit(self.nsigma_ul)
+                geom, data=counts_stat.compute_upper_limit(self.n_sigma_ul)
             )
             result.update({"ul": ul})
         return result

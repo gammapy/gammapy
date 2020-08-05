@@ -159,6 +159,12 @@ class Datasets(collections.abc.MutableSequence):
         """Whether all contained datasets have the same data shape"""
         return len(set(_.data_shape[0] for _ in self)) == 1
 
+    @property
+    def energy_axes_are_aligned(self):
+        """Whether all contained datasets have aligned energy axis"""
+        axes = [d.counts.geom.get_axis_by_name("energy") for d in self]
+        return np.all([axes[0].is_aligned(ax) for ax in axes])
+
     def stat_sum(self):
         """Compute joint likelihood"""
         stat_sum = 0
@@ -181,7 +187,7 @@ class Datasets(collections.abc.MutableSequence):
         return copy.deepcopy(self)
 
     @classmethod
-    def read(cls, path, filedata="_datasets.yaml", filemodel="_models.yaml"):
+    def read(cls, path, filedata="_datasets.yaml", filemodel="_models.yaml", lazy=True, cache=True):
         """De-serialize datasets from YAML and FITS files.
 
         Parameters
@@ -192,6 +198,11 @@ class Datasets(collections.abc.MutableSequence):
             file path or name of yaml datasets file
         filemodel : str
             file path or name of yaml models file
+        lazy : bool
+            Whether to lazy load data into memory
+        cache : bool
+            Whether to cache the data after loading.
+
 
         Returns
         -------
@@ -218,7 +229,9 @@ class Datasets(collections.abc.MutableSequence):
         for data in data_list["datasets"]:
             if (path / data["filename"]).exists():
                 data["filename"] = str(make_path(path / data["filename"]))
-            dataset = DATASET_REGISTRY.get_cls(data["type"]).from_dict(data, models)
+
+            dataset_cls = DATASET_REGISTRY.get_cls(data["type"])
+            dataset = dataset_cls.from_dict(data, models, lazy=lazy, cache=cache)
             datasets.append(dataset)
         return cls(datasets)
 

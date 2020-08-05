@@ -78,7 +78,8 @@ class Model:
         self._check_covariance()
         for par in self.parameters:
             pars = Parameters([par])
-            covar = Covariance(pars, data=[[par.error ** 2]])
+            error = np.nan_to_num(par.error ** 2, nan=1)
+            covar = Covariance(pars, data=[[error]])
             self._covariance.set_subcovariance(covar)
 
         return self._covariance
@@ -264,7 +265,8 @@ class Models(collections.abc.MutableSequence):
         models = []
 
         for component in data["components"]:
-            model = MODEL_REGISTRY.get_cls(component["type"]).from_dict(component)
+            model_cls = MODEL_REGISTRY.get_cls(component["type"])
+            model = model_cls.from_dict(component)
             models.append(model)
 
         models = cls(models)

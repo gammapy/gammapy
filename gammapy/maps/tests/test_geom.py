@@ -374,3 +374,9 @@ def test_group_table_outside_range(energy_axis_ref):
 def test_map_axis_single_bin():
     with pytest.raises(ValueError):
         _ = MapAxis.from_nodes([1])
+
+
+def test_map_axis_aligned():
+    ax1 = MapAxis([1, 2, 3], interp='lin', node_type='edges')
+    ax2 = MapAxis([1.5, 2.5], interp='log', node_type='center')
+    assert not ax1.is_aligned(ax2)

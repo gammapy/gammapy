@@ -7,6 +7,7 @@ from gammapy.datasets import Datasets, MapDatasetOnOff
 from gammapy.estimators import ASmoothMapEstimator
 from gammapy.maps import Map, WcsNDMap
 from gammapy.utils.testing import requires_data
+from gammapy.modeling.models import BackgroundModel
 
 
 @pytest.fixture(scope="session")

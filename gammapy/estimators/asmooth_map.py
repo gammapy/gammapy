@@ -49,12 +49,10 @@ class ASmoothMapEstimator(Estimator):
             spectrum = PowerLawSpectralModel()
 
         self.spectrum = spectrum
-        self.parameters = {
-            "kernel": kernel,
-            "method": method,
-            "threshold": threshold,
-            "scales": scales,
-        }
+        self.scales = scales
+        self.kernel = kernel
+        self.threshold = threshold
+        self.method = method
 
     def kernels(self, pixel_scale):
         """
@@ -70,12 +68,11 @@ class ASmoothMapEstimator(Estimator):
         kernels : list
             List of `~astropy.convolution.Kernel`
         """
-        p = self.parameters
-        scales = p["scales"].to_value("deg") / Angle(pixel_scale).deg
+        scales = self.scales.to_value("deg") / Angle(pixel_scale).deg
 
         kernels = []
         for scale in scales:  # .value:
-            kernel = p["kernel"](scale, mode="oversample")
+            kernel = self.kernel(scale, mode="oversample")
             # TODO: check if normalizing here makes sense
             kernel.normalize("peak")
             kernels.append(kernel)
@@ -182,7 +179,7 @@ class ASmoothMapEstimator(Estimator):
             cubes["flux"] = scale_cube(flux.data, kernels)
 
         cubes["significance"] = self._significance_cube(
-            cubes, method=self.parameters["method"]
+            cubes, method=self.method
         )
 
         smoothed = self._reduce_cubes(cubes, kernels)
@@ -217,7 +214,6 @@ class ASmoothMapEstimator(Estimator):
         cubes : dict
             Data cubes
         """
-        p = self.parameters
         shape = cubes["counts"].shape[:2]
         smoothed = {}
 
@@ -225,12 +221,12 @@ class ASmoothMapEstimator(Estimator):
         for key in ["counts", "background", "scale", "significance", "flux"]:
             smoothed[key] = np.tile(np.nan, shape)
 
-        for idx, scale in enumerate(p["scales"]):
+        for idx, scale in enumerate(self.scales):
             # slice out 2D image at index idx out of cube
             slice_ = np.s_[:, :, idx]
 
             mask = np.isnan(smoothed["counts"])
-            mask = (cubes["significance"][slice_] > p["threshold"]) & mask
+            mask = (cubes["significance"][slice_] > self.threshold) & mask
 
             smoothed["scale"][mask] = scale
             smoothed["significance"][mask] = cubes["significance"][slice_][mask]

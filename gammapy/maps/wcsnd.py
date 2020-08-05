@@ -101,7 +101,12 @@ class WcsNDMap(WcsMap):
 
             map_out.set_by_idx(idx[::-1], vals)
         else:
-            map_out = cls(geom=geom, meta=meta, data=hdu.data, unit=unit)
+            if "mask" in hdu.name.lower():
+                data = hdu.data.astype(bool)
+            else:
+                data = hdu.data
+
+            map_out = cls(geom=geom, meta=meta, data=data, unit=unit)
 
         return map_out
 
@@ -526,9 +531,7 @@ class WcsNDMap(WcsMap):
         geom = RegionGeom(region=region, axes=[energy_axis], wcs=self.geom.wcs)
 
         if region:
-            cutout = self.cutout(
-                position=geom.center_skydir, width=geom.width
-            )
+            cutout = self.cutout(position=geom.center_skydir, width=geom.width)
             mask = cutout.geom.region_mask([region])
             data = cutout.data[mask].reshape(energy_axis.nbin, -1)
             data = func(data, axis=1)
@@ -699,3 +702,29 @@ class WcsNDMap(WcsMap):
         cdict = OrderedDict(zip(axes_names, coords))
 
         return MapCoord.create(cdict, frame=self.geom.frame)
+
+    def to_cube(self, axes):
+        """Append non-spatial axes to create a higher-dimensional Map.
+
+        This will result in a Map with a new geometry with
+        N+M dimensions where N is the number of current dimensions and
+        M is the number of axes in the list. The data is reshaped onto the
+        new geometry
+
+        Parameters
+        ----------
+        axes : list
+            Axes that will be appended to this Map.
+            The axes should have only one bin
+
+        Returns
+        -------
+        map : `~gammapy.maps.WcsNDMap`
+            new map
+        """
+        for ax in axes:
+            if ax.nbin > 1:
+                raise ValueError(ax.name, "should have only one bin")
+        geom = self.geom.to_cube(axes)
+        data = self.data.reshape((1,) * len(axes) + self.data.shape)
+        return self.from_geom(data=data, geom=geom, unit=self.unit)

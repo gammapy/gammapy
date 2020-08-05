@@ -1,9 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import sys
+import logging
 from astropy.coordinates import Angle, EarthLocation
 from astropy.io import fits
 from astropy.units import Quantity
 from .scripts import make_path
+
+log = logging.getLogger(__name__)
 
 __all__ = ["earth_location_from_dict", "LazyFitsData", "HDULocation"]
 
@@ -20,13 +23,14 @@ class HDULocation:
     """
 
     def __init__(
-        self, hdu_class, base_dir=".", file_dir=None, file_name=None, hdu_name=None
+        self, hdu_class, base_dir=".", file_dir=None, file_name=None, hdu_name=None, cache=True
     ):
         self.hdu_class = hdu_class
         self.base_dir = base_dir
         self.file_dir = file_dir
         self.file_name = file_name
         self.hdu_name = hdu_name
+        self.cache = cache
 
     def info(self, file=None):
         """Print some summary info to stdout."""
@@ -78,7 +82,6 @@ class HDULocation:
             return GTI.read(filename, hdu=hdu)
         elif hdu_class == "map":
             from gammapy.maps import Map
-
             return Map.read(filename, hdu=hdu)
         else:
             cls = IRF_REGISTRY.get_cls(hdu_class)
@@ -106,19 +109,22 @@ class LazyFitsData(object):
             # Accessed on a class, not an instance
             return self
 
-        value = instance.__dict__.get(self.name)
-        if value is not None:
-            return value
-        else:
-            hdu_loc = instance.__dict__.get(self.name + "_hdu")
-            value = hdu_loc.load()
-            if self.cache:
+        try:
+            return instance.__dict__[self.name]
+        except KeyError:
+            hdu_loc = instance.__dict__[f"_{self.name}_hdu"]
+            try:
+                value = hdu_loc.load()
+            except KeyError:
+                value = None
+                log.warning(f"HDU '{hdu_loc.hdu_name}' not found")
+            if self.cache and hdu_loc.cache:
                 instance.__dict__[self.name] = value
             return value
 
     def __set__(self, instance, value):
         if isinstance(value, HDULocation):
-            instance.__dict__[self.name + "_hdu"] = value
+            instance.__dict__[f"_{self.name}_hdu"] = value
         else:
             instance.__dict__[self.name] = value
 

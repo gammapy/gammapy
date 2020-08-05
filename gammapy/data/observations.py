@@ -80,8 +80,8 @@ class Observation:
 
     @property
     def gti(self):
-        events = self.obs_filter.filter_gti(self._gti)
-        return events
+        gti = self.obs_filter.filter_gti(self._gti)
+        return gti
 
     @staticmethod
     def _get_obs_info(pointing, deadtime_fraction):
@@ -298,7 +298,7 @@ class Observation:
                 bkg = self.bkg
 
             bkg.plot(ax=ax_bkg)
-        except IndexError:
+        except AttributeError:
             logging.warning(f"No background model found for obs {self.obs_id}.")
 
         self.psf.plot_containment_vs_energy(ax=ax_psf)

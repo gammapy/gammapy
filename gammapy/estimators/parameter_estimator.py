@@ -142,7 +142,7 @@ class ParameterEstimator(Estimator):
                 self._freeze_parameters(parameter)
 
             if steps == "all":
-                steps = ["err", "ts", "errp-errn", "ul", "scan"]
+                steps = ["err", "ts", "errn-errp", "ul", "scan"]
 
             result = self._find_best_fit(parameter)
             TS1 = result["stat"]
@@ -151,10 +151,10 @@ class ParameterEstimator(Estimator):
 
             if "err" in steps:
                 res = self.fit.covariance()
-                value_err = res.parameters[parameter].error
+                value_err = res.parameters[parameter].error*self.n_sigma
                 result.update({f"{parameter.name}_err": value_err})
 
-            if "errp-errn" in steps:
+            if "errn-errp" in steps:
                 res = self.fit.confidence(parameter=parameter, sigma=self.n_sigma)
                 result.update(
                     {

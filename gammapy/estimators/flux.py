@@ -120,7 +120,7 @@ class FluxEstimator(ParameterEstimator):
             steps.remove("norm-err")
             steps.append("err")
         if steps == "all":
-            steps = ["err", "ts", "errp-errn", "ul", "scan"]
+            steps = ["err", "ts", "errn-errp", "ul", "scan"]
         return steps
 
     def run(self, datasets, steps="all"):
@@ -151,10 +151,10 @@ class FluxEstimator(ParameterEstimator):
         """
         datasets = self._check_datasets(datasets)
 
-        if not datasets.is_all_same_type or not datasets.is_all_same_energy_shape:
+        if not datasets.is_all_same_type or not datasets.energy_axes_are_aligned:
             raise ValueError(
-                "Flux point estimation requires a list of datasets"
-                " of the same type and data shape."
+               "Flux point estimation requires a list of datasets"
+               " of the same type and data shape."
             )
         dataset = datasets[0]
 
@@ -192,7 +192,7 @@ class FluxEstimator(ParameterEstimator):
             result.update({"norm_err": np.nan})
         if "ts" in steps:
             result.update({"sqrt_ts": np.nan, "ts": np.nan, "null_value": np.nan})
-        if "errp-errn" in steps:
+        if "errn-errp" in steps:
             result.update({"norm_errp": np.nan, "norm_errn": np.nan})
         if "ul" in steps:
             result.update({"norm_ul": np.nan})

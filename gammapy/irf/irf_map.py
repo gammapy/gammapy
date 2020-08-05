@@ -58,10 +58,10 @@ class IRFMap:
         return cls(irf_map, exposure_map)
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, hdu=None):
         """Read an IRF_map from file and create corresponding object"""
         with fits.open(filename, memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist)
+            return cls.from_hdulist(hdulist, hdu=hdu)
 
     def to_hdulist(self):
         """Convert to `~astropy.io.fits.HDUList`.
@@ -160,8 +160,8 @@ class IRFMap:
 
         Returns
         -------
-        map : `Map`
-            Downsampled map.
+        map : `IRFMap`
+            Downsampled irf map.
         """
         irf_map = self._irf_map.downsample(
             factor=factor, axis=axis, preserve_counts=True, weights=weights
@@ -175,3 +175,27 @@ class IRFMap:
 
         return self.__class__(irf_map, exposure_map=exposure_map)
 
+    def slice_by_idx(self, slices):
+        """Slice sub dataset.
+
+        The slicing only applies to the maps that define the corresponding axes.
+
+        Parameters
+        ----------
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            corresponding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
+
+        Returns
+        -------
+        map_out : `IRFMap`
+            Sliced irf map object.
+        """
+        irf_map = self._irf_map.slice_by_idx(slices=slices)
+        if "energy_true" in slices:
+            exposure_map = self.exposure_map.slice_by_idx(slices=slices)
+        else:
+            exposure_map = self.exposure_map
+        return self.__class__(irf_map, exposure_map=exposure_map)

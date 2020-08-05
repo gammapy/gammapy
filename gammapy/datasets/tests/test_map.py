@@ -1071,3 +1071,51 @@ def test_info_dict_on_off(images):
     assert_allclose(info_dict["alpha"], 0.0002117614)
     assert_allclose(info_dict["excess"], -22.52295)
     assert_allclose(info_dict["livetime"].value, 3600)
+
+
+def test_slice_by_idx():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=17)
+    axis_etrue = MapAxis.from_energy_bounds(
+        "0.1 TeV", "10 TeV", nbin=31, name="energy_true"
+    )
+
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        binsz=0.5,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+    dataset = MapDataset.create(
+        geom=geom, energy_axis_true=axis_etrue, binsz_irf=0.5
+    )
+
+    slices = {"energy": slice(5, 10)}
+    sub_dataset = dataset.slice_by_idx(slices)
+
+    assert sub_dataset.counts.geom.data_shape == (5, 4, 4)
+    assert sub_dataset.mask_safe.geom.data_shape == (5, 4, 4)
+    assert sub_dataset.background_model.map.geom.data_shape == (5, 4, 4)
+    assert sub_dataset.exposure.geom.data_shape == (31, 4, 4)
+    assert sub_dataset.edisp.edisp_map.geom.data_shape == (31, 5, 4, 4)
+    assert sub_dataset.psf.psf_map.geom.data_shape == (31, 66, 4, 4)
+
+    axis = sub_dataset.counts.geom.get_axis_by_name("energy")
+    assert_allclose(axis.edges[0].value, 0.387468, rtol=1e-5)
+
+    slices = {"energy_true": slice(5, 10)}
+    sub_dataset = dataset.slice_by_idx(slices)
+
+    assert sub_dataset.counts.geom.data_shape == (17, 4, 4)
+    assert sub_dataset.mask_safe.geom.data_shape == (17, 4, 4)
+    assert sub_dataset.background_model.map.geom.data_shape == (17, 4, 4)
+    assert sub_dataset.exposure.geom.data_shape == (5, 4, 4)
+    assert sub_dataset.edisp.edisp_map.geom.data_shape == (5, 17, 4, 4)
+    assert sub_dataset.psf.psf_map.geom.data_shape == (5, 66, 4, 4)
+
+    axis = sub_dataset.counts.geom.get_axis_by_name("energy")
+    assert_allclose(axis.edges[0].value, 0.1, rtol=1e-5)
+
+    axis = sub_dataset.exposure.geom.get_axis_by_name("energy_true")
+    assert_allclose(axis.edges[0].value, 0.210175, rtol=1e-5)
+

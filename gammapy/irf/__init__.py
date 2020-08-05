@@ -26,5 +26,7 @@ IRF_REGISTRY = Registry(
         PSFKing,
         Background3D,
         Background2D,
+        PSFMap,
+        EDispKernelMap,
     ]
 )
