@@ -7,6 +7,8 @@ from gammapy.datasets import MapDatasetOnOff
 from gammapy.maps import WcsNDMap
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
+from gammapy.makers.utils import _map_spectrum_weight
+from gammapy.modeling.models import PowerLawSpectralModel
 from .core import Estimator
 
 __all__ = ["ASmoothMapEstimator"]
@@ -33,6 +35,8 @@ class ASmoothMapEstimator(Estimator):
         Smoothing scales.
     kernel : `astropy.convolution.Kernel`
         Smoothing kernel.
+    spectrum : `SpectralModel`
+        Spectral model assumption
     method : {'asmooth', 'lima'}
         Significance estimation method.
     threshold : float
@@ -40,7 +44,11 @@ class ASmoothMapEstimator(Estimator):
     """
     tag = "ASmoothMapEstimator"
 
-    def __init__(self, scales, kernel=Gaussian2DKernel, method="lima", threshold=5):
+    def __init__(self, scales, kernel=Gaussian2DKernel, spectrum=None, method="lima", threshold=5):
+        if spectrum is None:
+            spectrum = PowerLawSpectralModel()
+
+        self.spectrum = spectrum
         self.parameters = {
             "kernel": kernel,
             "method": method,
@@ -126,7 +134,8 @@ class ASmoothMapEstimator(Estimator):
         background = background.sum_over_axes(keepdims=False)
 
         if dataset.exposure is not None:
-            exposure = dataset.exposure.sum_over_axes(keepdims=False)
+            exposure = _map_spectrum_weight(dataset.exposure, self.spectrum)
+            exposure = exposure.sum_over_axes(keepdims=False)
         else:
             exposure = None
 

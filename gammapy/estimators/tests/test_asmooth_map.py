@@ -79,7 +79,7 @@ def test_asmooth_dataset(input_dataset):
         "background": 0.184005,
         "scale": 0.056419,
         "significance": 72.971513,
-        "flux": 1.9627731416710178e-12,
+        "flux": 1.237119e-09,
 
     }
 
