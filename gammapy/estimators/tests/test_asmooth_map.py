@@ -66,7 +66,6 @@ def test_asmooth_dataset(input_dataset):
         asmooth.run(input_dataset)
 
     img = input_dataset.to_image()
-    img.models = img.models[1]
     smoothed = asmooth.run(img)
 
     assert smoothed["flux"].data.shape == (40, 50)

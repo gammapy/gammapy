@@ -550,6 +550,9 @@ class MapDataset(Dataset):
 
     @staticmethod
     def _mask_safe_irf(irf_map, mask, drop=None):
+        if mask is None:
+            return None
+
         geom = irf_map.geom
         geom_squash = irf_map.geom
         if drop:
@@ -1045,8 +1048,6 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset containing images.
         """
-        from gammapy.makers.utils import _map_spectrum_weight
-
         name = make_name(name)
         kwargs = {}
         kwargs["name"] = name
@@ -1055,36 +1056,28 @@ class MapDataset(Dataset):
         kwargs["psf"] = self.psf
 
         if self.mask_safe is not None:
-            mask_safe = self.mask_safe
-        else:
-            mask_safe = Map.from_geom(
-                geom=self._geom, data=np.ones(self.data_shape, dtype=bool)
+            kwargs["mask_safe"] = self.mask_safe.reduce_over_axes(
+                func=np.logical_or, keepdims=True
             )
-        kwargs["mask_safe"] = mask_safe.reduce_over_axes(
-            func=np.logical_or, keepdims=True
-        )
 
         if self.counts is not None:
-            counts = self.counts * mask_safe
-            kwargs["counts"] = counts.sum_over_axes(keepdims=True)
+            kwargs["counts"] = self.counts.sum_over_axes(
+                keepdims=True, weights=self.mask_safe
+            )
 
-        if self.models is not None:
-            models = Models()
-            for model in self.models:
-                if isinstance(model, BackgroundModel):
-                    background = self.background_model.evaluate() * mask_safe
-                    background = background.sum_over_axes(keepdims=True)
-                    model_new = BackgroundModel(background, datasets_names=[name], name=model.name)
-                else:
-                    model_new = model.copy(datasets_names=[name])
-                models.append(model_new)
-        kwargs["models"] = models
+        if self.background_model is not None:
+            background = self.background_model.evaluate()
+            background = background.sum_over_axes(
+                keepdims=True, weights=self.mask_safe
+            )
+            model = BackgroundModel(background, datasets_names=[name], name=f"{name}-bkg")
+            kwargs["models"] = [model]
 
         if isinstance(self.edisp, EDispKernelMap):
             mask_irf = self._mask_safe_irf(
-                self.edisp.edisp_map, mask_safe, drop="energy_true"
+                self.edisp.edisp_map, self.mask_safe, drop="energy_true"
             )
-            kwargs["edisp"] = self.edisp.to_image(mask=mask_irf)
+            kwargs["edisp"] = self.edisp.to_image(weights=mask_irf)
 
         else:  # None or EDispMap
             kwargs["edisp"] = self.edisp

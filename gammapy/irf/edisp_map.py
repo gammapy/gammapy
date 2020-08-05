@@ -499,19 +499,24 @@ class EDispKernelMap(IRFMap):
         )
         return cls.from_edisp_kernel(kernel, geom=geom)
 
-    def to_image(self, mask=None):
-        """"Return a 2D EdispKernelMap by summing the kernels over
-        the ereco axis.
+    def to_image(self, weights=None):
+        """"Return a 2D EdispKernelMap by summing over the reconstructed energy axis.
 
         Parameters
         ----------
-        mask: `~gammapy.maps.Map`, optional
-        Mask to be applied
+        weights: `~gammapy.maps.Map`, optional
+            Weights to be applied
+
+        Returns
+        -------
+        edisp : `EDispKernelMap`
+            Edisp kernel map
         """
 
         edisp = self.edisp_map.data
-        if mask:
-            edisp = edisp * mask.data
+        if weights:
+            edisp = edisp * weights.data
+
         data = np.sum(edisp, axis=1, keepdims=True)
         geom = self.edisp_map.geom.squash("energy")
         edisp_map = Map.from_geom(geom=geom, data=data)

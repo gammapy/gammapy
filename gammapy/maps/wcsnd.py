@@ -208,7 +208,7 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
 
-    def sum_over_axes(self, axes=None, keepdims=False):
+    def sum_over_axes(self, axes=None, keepdims=False, weights=None):
         """To sum map values over all non-spatial axes.
 
         Parameters
@@ -219,13 +219,15 @@ class WcsNDMap(WcsMap):
         axes: list
             Names of MapAxis to reduce over
             If None, all will summed over
+        weights : `WcsNDMapMap`
+            Weights to be applied.
 
         Returns
         -------
         map_out : `~WcsNDMap`
             Map with non-spatial axes summed over
         """
-        return self.reduce_over_axes(func=np.add, axes=axes, keepdims=keepdims)
+        return self.reduce_over_axes(func=np.add, axes=axes, keepdims=keepdims, weights=weights)
 
     def pad(self, pad_width, mode="constant", cval=0, order=1):
         if np.isscalar(pad_width):
