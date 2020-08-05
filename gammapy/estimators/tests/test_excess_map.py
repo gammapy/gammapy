@@ -131,3 +131,14 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     assert_allclose(result["excess"].data[0, 10, 10], 97)
     assert_allclose(result["background"].data[0, 10, 10], 97)
     assert_allclose(result["significance"].data[0, 10, 10], 5.741116, atol=1e-5)
+
+def test_incorrect_selection():
+    with pytest.raises(ValueError):
+        ExcessMapEstimator(0.11 * u.deg, selection=["bad"])
+
+    with pytest.raises(ValueError):
+        ExcessMapEstimator(0.11 * u.deg, selection=["ul", "bad"])
+
+    estimator = ExcessMapEstimator(0.11 * u.deg)
+    with pytest.raises(ValueError):
+        estimator.selection = "bad"

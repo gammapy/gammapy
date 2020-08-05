@@ -31,3 +31,11 @@ class Estimator(abc.ABC):
                 raise ValueError(
                     f"Incorrect selection. Available options are {self.available_selection}"
                 )
+
+    @property
+    def selection(self):
+        return self._selection
+
+    @selection.setter
+    def selection(self, selection):
+        self._selection = self._make_selection(selection)
