@@ -145,13 +145,10 @@ class TSMapEstimator(Estimator):
 
         self.model = model
         self.downsampling_factor = downsampling_factor
-
-        self.parameters = {
-            "n_sigma": n_sigma,
-            "n_sigma_ul": n_sigma_ul,
-            "threshold": threshold,
-            "rtol": rtol,
-        }
+        self.n_sigma = n_sigma
+        self.n_sigma_ul = n_sigma_ul
+        self.threshold = threshold
+        self.rtol = rtol
 
     def get_kernel(self, dataset):
         """Set the convolution kernel for the input dataset.
@@ -312,8 +309,6 @@ class TSMapEstimator(Estimator):
                 * flux_ul : upper limit map
 
         """
-        p = self.parameters
-
         if self.downsampling_factor:
             shape = dataset.counts.geom.to_image().data_shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
@@ -337,11 +332,14 @@ class TSMapEstimator(Estimator):
             steps = ["ts", "err", "errn-errp", "ul"]
 
         keys = ["ts", "sqrt_ts", "flux", "niter"]
+
         if "err" in steps:
             keys.append("flux_err")
+
         if "errn-errp" in steps:
             keys.append("flux_errp")
             keys.append("flux_errn")
+
         if "ul" in steps:
             keys.append("flux_ul")
 
@@ -352,7 +350,7 @@ class TSMapEstimator(Estimator):
 
         flux_map = self.flux_default(dataset, kernel.data)
 
-        if p["threshold"]:
+        if self.threshold:
             flux = flux_map.data
         else:
             flux = None
@@ -380,10 +378,10 @@ class TSMapEstimator(Estimator):
             compute_err=compute_err,
             compute_errn_errp=compute_errn_errp,
             compute_ul=compute_ul,
-            threshold=p["threshold"],
-            n_sigma=p["n_sigma"],
-            n_sigma_ul=p["n_sigma_ul"],
-            rtol=p["rtol"],
+            threshold=self.threshold,
+            n_sigma=self.n_sigma,
+            n_sigma_ul=self.n_sigma_ul,
+            rtol=self.rtol,
         )
 
         x, y = np.where(np.squeeze(mask.data))
@@ -408,7 +406,6 @@ class TSMapEstimator(Estimator):
         if "ul" in steps:
             result["flux_ul"].data[j, i] = [_["flux_ul"] for _ in results]
 
-
         if self.downsampling_factor:
             for name in keys:
                 order = 0 if name == "niter" else 1
@@ -430,14 +427,6 @@ class TSMapEstimator(Estimator):
             result["flux_ul"].unit = flux_map.unit
 
         return result
-
-    def __repr__(self):
-        p = self.parameters
-        info = self.__class__.__name__
-        info += "\n\nParameters:\n\n"
-        for key in p:
-            info += f"\t{key:13s}: {p[key]}\n"
-        return info
 
 
 def _ts_value(
