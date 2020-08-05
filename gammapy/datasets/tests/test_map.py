@@ -250,29 +250,38 @@ def test_info_dict(sky_model, geom, geom_etrue):
     assert info_dict["name"] == "test"
 
 
-@requires_data()
-def test_to_image(geom):
-
+def get_fermi_3fhl_gc_dataset():
     counts = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts-cube.fits.gz")
     background = Map.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-background-cube.fits.gz"
     )
-    background = BackgroundModel(background, datasets_names=["fermi"])
+    background = BackgroundModel(background, datasets_names=["fermi-3fhl-gc"])
 
     exposure = Map.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz"
     )
-    exposure = exposure.sum_over_axes(keepdims=True)
-    dataset = MapDataset(
-        counts=counts, models=[background], exposure=exposure, name="fermi"
+    return MapDataset(
+        counts=counts, models=[background], exposure=exposure, name="fermi-3fhl-gc"
     )
+
+
+@requires_data()
+def test_to_image_3fhl(geom):
+    dataset = get_fermi_3fhl_gc_dataset()
+
     dataset_im = dataset.to_image()
+    print(dataset)
     assert dataset_im.counts.data.sum() == dataset.counts.data.sum()
     assert_allclose(dataset_im.background_model.map.data.sum(), 28548.625, rtol=1e-5)
     assert_allclose(dataset_im.exposure.data, dataset.exposure.data, rtol=1e-5)
 
-    ebounds = np.logspace(-1.0, 1.0, 3)
-    axis = MapAxis.from_edges(ebounds, name="energy", unit=u.TeV, interp="log")
+    npred = dataset.npred()
+    npred_im = dataset_im.npred()
+    assert_allclose(npred.data.sum(), npred_im.data.sum())
+
+
+def test_to_image_mask_safe():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
     geom = WcsGeom.create(
         skydir=(0, 0), binsz=0.5, width=(1, 1), frame="icrs", axes=[axis]
     )
