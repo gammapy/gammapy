@@ -91,21 +91,16 @@ def test_compute_ts_map(input_dataset):
     spatial_model = GaussianSpatialModel(sigma="0.1 deg")
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
-    ts_estimator = TSMapEstimator(
-        model=model, method="leastsq iter", threshold=1, kernel_width="1 deg"
-    )
-    result = ts_estimator.run(input_dataset)
+    ts_estimator = TSMapEstimator(model=model, threshold=1, kernel_width="1 deg")
+    result = ts_estimator.run(input_dataset, steps=["ts", "err"])
 
-    assert "leastsq iter" in repr(ts_estimator)
     assert_allclose(result["ts"].data[99, 99], 1704.23, rtol=1e-2)
-    assert_allclose(result["niter"].data[99, 99], 3)
+    assert_allclose(result["niter"].data[99, 99], 9)
     assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
-    assert result["flux_ul"].unit == u.Unit("cm-2s-1")
 
     # Check mask is correctly taken into account
     assert np.isnan(result["ts"].data[30, 40])
@@ -116,42 +111,16 @@ def test_compute_ts_map_psf(fermi_dataset):
     estimator = TSMapEstimator(kernel_width="1 deg")
     result = estimator.run(fermi_dataset)
 
-    assert "root brentq" in repr(estimator)
     assert_allclose(result["ts"].data[29, 29], 852.1548, rtol=1e-2)
     assert_allclose(result["niter"].data[29, 29], 7)
     assert_allclose(result["flux"].data[29, 29], 1.419909e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[29, 29], 8.245766e-11, rtol=1e-2)
+    assert_allclose(result["flux_errp"].data[29, 29], 8.358404e-11, rtol=1e-2)
+    assert_allclose(result["flux_errn"].data[29, 29], 8.129863e-11, rtol=1e-2)
     assert_allclose(result["flux_ul"].data[29, 29], 1.584825e-09, rtol=1e-2)
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
     assert result["flux_ul"].unit == u.Unit("cm-2s-1")
-
-
-@requires_data()
-def test_compute_ts_map_newton(input_dataset):
-    """Minimal test of compute_ts_image"""
-    spatial_model = GaussianSpatialModel(sigma="0.1 deg")
-    spectral_model = PowerLawSpectralModel(index=2)
-    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
-
-    ts_estimator = TSMapEstimator(
-        model=model, method="root newton", threshold=1, kernel_width="1 deg"
-    )
-    result = ts_estimator.run(input_dataset)
-
-    assert "root newton" in repr(ts_estimator)
-    assert_allclose(result["ts"].data[99, 99], 1714.23, rtol=1e-2)
-    assert_allclose(result["niter"].data[99, 99], 0)
-    assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
-
-    assert result["flux"].unit == u.Unit("cm-2s-1")
-    assert result["flux_err"].unit == u.Unit("cm-2s-1")
-    assert result["flux_ul"].unit == u.Unit("cm-2s-1")
-
-    # Check mask is correctly taken into account
-    assert np.isnan(result["ts"].data[30, 40])
 
 
 @requires_data()
@@ -164,9 +133,6 @@ def test_compute_ts_map_downsampled(input_dataset):
     ts_estimator = TSMapEstimator(
         model=model,
         downsampling_factor=2,
-        method="root brentq",
-        error_method="conf",
-        ul_method="conf",
         kernel_width="1 deg",
     )
     result = ts_estimator.run(input_dataset)
@@ -195,11 +161,3 @@ def test_large_kernel(input_dataset):
 
     with pytest.raises(ValueError):
         ts_estimator.run(input_dataset)
-
-
-def test_incorrect_method():
-    model = GaussianSpatialModel(sigma="0.2 deg")
-    with pytest.raises(ValueError):
-        TSMapEstimator(model, method="bad")
-    with pytest.raises(ValueError):
-        TSMapEstimator(model, error_method="bad")

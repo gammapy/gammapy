@@ -120,7 +120,7 @@ class FluxEstimator(ParameterEstimator):
             steps.remove("norm-err")
             steps.append("err")
         if steps == "all":
-            steps = ["err", "ts", "errp-errn", "ul", "scan"]
+            steps = ["err", "ts", "errn-errp", "ul", "scan"]
         return steps
 
     def run(self, datasets, steps="all"):
@@ -192,7 +192,7 @@ class FluxEstimator(ParameterEstimator):
             result.update({"norm_err": np.nan})
         if "ts" in steps:
             result.update({"sqrt_ts": np.nan, "ts": np.nan, "null_value": np.nan})
-        if "errp-errn" in steps:
+        if "errn-errp" in steps:
             result.update({"norm_errp": np.nan, "norm_errn": np.nan})
         if "ul" in steps:
             result.update({"norm_ul": np.nan})
