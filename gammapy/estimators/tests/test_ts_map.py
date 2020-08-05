@@ -91,7 +91,7 @@ def test_compute_ts_map(input_dataset):
     spatial_model = GaussianSpatialModel(sigma="0.1 deg")
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
-    ts_estimator = TSMapEstimator(model=model, threshold=None, kernel_width="1 deg")
+    ts_estimator = TSMapEstimator(model=model, threshold=1, kernel_width="1 deg")
     result = ts_estimator.run(input_dataset, steps=["ts", "err"])
 
     assert_allclose(result["ts"].data[99, 99], 1704.23, rtol=1e-2)
