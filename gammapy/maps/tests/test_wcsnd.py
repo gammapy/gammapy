@@ -7,7 +7,7 @@ from astropy.convolution import Box2DKernel, Gaussian2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
-from regions import CircleSkyRegion, RectangleSkyRegion
+from regions import CircleSkyRegion, RectangleSkyRegion, PointSkyRegion
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
@@ -562,6 +562,10 @@ def test_get_spectrum():
 
     spec = m.get_spectrum()
     assert isinstance(spec.geom.region, RectangleSkyRegion)
+
+    region = PointSkyRegion(center)
+    spec = m.get_spectrum(region=region)
+    assert_allclose(spec.data.squeeze(), [1.0, 1.0, 1.0])
 
 
 def get_npred_map():

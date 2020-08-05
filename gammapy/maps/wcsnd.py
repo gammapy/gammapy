@@ -8,7 +8,7 @@ import scipy.signal
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.io import fits
-from regions import RectangleSkyRegion
+from regions import RectangleSkyRegion, PointSkyRegion
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -529,10 +529,17 @@ class WcsNDMap(WcsMap):
         geom = RegionGeom(region=region, axes=[energy_axis], wcs=self.geom.wcs)
 
         if region:
-            cutout = self.cutout(position=geom.center_skydir, width=geom.width)
-            mask = cutout.geom.region_mask([region])
-            data = cutout.data[mask].reshape(energy_axis.nbin, -1)
-            data = func(data, axis=1)
+            if isinstance(region, PointSkyRegion):
+                coords = {
+                    "skycoord": region.center,
+                    energy_axis.name : energy_axis.center
+                }
+                data = self.get_by_coord(coords=coords)
+            else:
+                cutout = self.cutout(position=geom.center_skydir, width=geom.width)
+                mask = cutout.geom.region_mask([region])
+                data = cutout.data[mask].reshape(energy_axis.nbin, -1)
+                data = func(data, axis=1)
         else:
             width, height = self.geom.width
             region = RectangleSkyRegion(
