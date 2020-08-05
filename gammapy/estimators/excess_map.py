@@ -55,13 +55,28 @@ class ExcessMapEstimator(Estimator):
     n_sigma_ul : float
         Confidence level for the upper limits expressed in number of sigma.
         Default is 3.
-    """
-    tag = "ExcessMapEstimator"
+    selection : list of str
+        Which additional maps to estimate besides delta TS, significance and symmetric error.
+        Available options are:
 
-    def __init__(self, correlation_radius="0.1 deg", n_sigma=1, n_sigma_ul=3):
+            * "errn-errp": estimate asymmetric errors.
+            * "ul": estimate upper limits.
+
+        By default all additional quantities are estimated.
+
+    """
+
+    tag = "ExcessMapEstimator"
+    available_selection = ["errn-errp", "ul"]
+
+    def __init__(
+        self, correlation_radius="0.1 deg", n_sigma=1, n_sigma_ul=3, selection="all"
+    ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+
+        self.selection = self._make_selection(selection)
 
     @property
     def correlation_radius(self):
@@ -72,21 +87,13 @@ class ExcessMapEstimator(Estimator):
         """Sets radius"""
         self._correlation_radius = Angle(correlation_radius)
 
-    def run(self, dataset, steps="all"):
+    def run(self, dataset):
         """Compute correlated excess, Li & Ma significance and flux maps
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             input image-like dataset
-        steps : list of str
-            Which maps to estimate besides delta TS, significance and symmetric error.
-            Available options are:
-
-                * "errn-errp": estimate asymmetric errors.
-                * "ul": estimate upper limits.
-
-            By default all steps are executed.
 
         Returns
         -------
@@ -121,22 +128,19 @@ class ExcessMapEstimator(Estimator):
 
         result = {"counts": n_on, "background": bkg, "excess": excess}
 
-        if steps == "all":
-            steps = ["errn-errp", "ul"]
-
         tsmap = Map.from_geom(geom, data=counts_stat.delta_ts)
         significance = Map.from_geom(geom, data=counts_stat.significance)
         result.update({"ts": tsmap, "significance": significance})
 
-        err = Map.from_geom(geom, data=counts_stat.error*self.n_sigma)
+        err = Map.from_geom(geom, data=counts_stat.error * self.n_sigma)
         result.update({"err": err})
 
-        if "errn-errp" in steps:
+        if "errn-errp" in self.selection:
             errn = Map.from_geom(geom, data=counts_stat.compute_errn(self.n_sigma))
             errp = Map.from_geom(geom, data=counts_stat.compute_errp(self.n_sigma))
             result.update({"errn": errn, "errp": errp})
 
-        if "ul" in steps:
+        if "ul" in self.selection:
             ul = Map.from_geom(
                 geom, data=counts_stat.compute_upper_limit(self.n_sigma_ul)
             )

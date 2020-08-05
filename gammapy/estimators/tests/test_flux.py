@@ -61,8 +61,10 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
 @requires_data()
 @requires_dependency("iminuit")
 def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
-    estimator = FluxEstimator(0, energy_range=["1 GeV", "100 GeV"], reoptimize=True)
-    result = estimator.run(fermi_datasets, steps=["err", "ts"])
+    estimator = FluxEstimator(
+        0, energy_range=["1 GeV", "100 GeV"], reoptimize=True, selection=[]
+    )
+    result = estimator.run(fermi_datasets)
 
     assert_allclose(result["norm"], 1.010983, atol=1e-3)
     assert_allclose(result["ts"], 20896.1864, atol=1e-3)
@@ -72,8 +74,10 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
 @requires_data()
 @requires_dependency("iminuit")
 def test_flux_estimator_1d(hess_datasets):
-    estimator = FluxEstimator(source="Crab", energy_range=[1, 10] * u.TeV)
-    result = estimator.run(hess_datasets, steps=["err", "ts", "errn-errp", "ul"])
+    estimator = FluxEstimator(
+        source="Crab", energy_range=[1, 10] * u.TeV, selection=["errn-errp", "ul"]
+    )
+    result = estimator.run(hess_datasets)
 
     assert_allclose(result["norm"], 1.176789, atol=1e-3)
     assert_allclose(result["ts"], 693.111777, atol=1e-3)

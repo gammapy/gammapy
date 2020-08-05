@@ -50,6 +50,7 @@ class ImageProfileEstimator(Estimator):
         smoothed.peek()
         plt.show()
     """
+
     tag = "ImageProfileEstimator"
 
     def __init__(self, x_edges=None, method="sum", axis="lon", center=None):

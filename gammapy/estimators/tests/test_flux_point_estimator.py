@@ -140,10 +140,10 @@ class TestFluxPointsEstimator:
         fp = fpe.run(datasets)
 
         actual = fp.table["e_min"].data
-        assert_allclose(actual, [0.316228,  1., 10.], rtol=1e-5)
+        assert_allclose(actual, [0.316228, 1.0, 10.0], rtol=1e-5)
 
         actual = fp.table["e_max"].data
-        assert_allclose(actual, [1., 10., 31.622777], rtol=1e-5)
+        assert_allclose(actual, [1.0, 10.0, 31.622777], rtol=1e-5)
 
         actual = fp.table["e_ref"].data
         assert_allclose(actual, [0.562341, 3.162278, 17.782794], rtol=1e-3)
@@ -186,7 +186,7 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, [0.1, 1.178769, 8.48342], rtol=1e-5)
 
         actual = fp.table["e_max"].data
-        assert_allclose(actual, [1.178769, 8.483429, 100.], rtol=1e-5)
+        assert_allclose(actual, [1.178769, 8.483429, 100.0], rtol=1e-5)
 
         actual = fp.table["e_ref"].data
         assert_allclose(actual, [0.343332, 3.162278, 29.126327], rtol=1e-5)

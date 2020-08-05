@@ -38,6 +38,7 @@ class ASmoothMapEstimator(Estimator):
     threshold : float
         Significance threshold.
     """
+
     tag = "ASmoothMapEstimator"
 
     def __init__(self, scales, kernel=Gaussian2DKernel, method="lima", threshold=5):
@@ -169,9 +170,7 @@ class ASmoothMapEstimator(Estimator):
             flux = (counts - background) / exposure
             cubes["flux"] = scale_cube(flux.data, kernels)
 
-        cubes["significance"] = self._significance_cube(
-            cubes, method=self.method
-        )
+        cubes["significance"] = self._significance_cube(cubes, method=self.method)
 
         smoothed = self._reduce_cubes(cubes, kernels)
 

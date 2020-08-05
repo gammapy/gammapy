@@ -38,7 +38,16 @@ class FluxEstimator(ParameterEstimator):
         Sigma to use for upper limit computation.
     reoptimize : bool
         Re-optimize other free model parameters.
+    selection : list of str
+        Which additional quantities to estimate. Available options are:
+
+            * "errn-errp": estimate asymmetric errors.
+            * "ul": estimate upper limits.
+            * "norm-scan": estimate fit statistic profiles.
+
+        By default all steps are executed.
     """
+
     tag = "FluxEstimator"
 
     def __init__(
@@ -52,6 +61,7 @@ class FluxEstimator(ParameterEstimator):
         n_sigma=1,
         n_sigma_ul=3,
         reoptimize=True,
+        selection="all",
     ):
 
         if norm_values is None:
@@ -64,9 +74,10 @@ class FluxEstimator(ParameterEstimator):
 
         self.energy_range = energy_range
 
-        super().__init__(
-            n_sigma, n_sigma_ul, reoptimize,
-        )
+        selection = self._prepare_selection(selection)
+
+        # TODO : check other default parameters
+        super().__init__(n_sigma, n_sigma_ul, reoptimize, selection=selection)
 
     @property
     def energy_range(self):
@@ -111,16 +122,15 @@ class FluxEstimator(ParameterEstimator):
             "ref_e2dnde": model(self.e_ref) * self.e_ref ** 2,
         }
 
-    def _prepare_steps(self, steps):
-        """Adapt the steps to the ParameterEstimator format."""
-        if "norm-scan" in steps:
-            steps.remove("norm-scan")
-            steps.append("scan")
-        if steps == "all":
-            steps = ["errn-errp", "ul", "scan"]
-        return steps
+    # TODO: do we need norm-scan rather than scan?
+    def _prepare_selection(self, selection):
+        """Adapt the selection to the ParameterEstimator format."""
+        if "norm-scan" in selection:
+            selection.remove("norm-scan")
+            selection.append("scan")
+        return selection
 
-    def run(self, datasets, steps="all"):
+    def run(self, datasets):
         """Estimate flux for a given energy range.
 
         The fit is performed in the energy range provided by the dataset masks.
@@ -130,14 +140,6 @@ class FluxEstimator(ParameterEstimator):
         ----------
         datasets : list of `~gammapy.spectrum.SpectrumDataset`
             Spectrum datasets.
-        steps : list of str
-            Which additional quantities to estimate. Available options are:
-
-                * "errn-errp": estimate asymmetric errors.
-                * "ul": estimate upper limits.
-                * "norm-scan": estimate fit statistic profiles.
-
-            By default all steps are executed.
 
         Returns
         -------
@@ -148,8 +150,8 @@ class FluxEstimator(ParameterEstimator):
 
         if not datasets.is_all_same_type or not datasets.energy_axes_are_aligned:
             raise ValueError(
-               "Flux point estimation requires a list of datasets"
-               " of the same type and data shape."
+                "Flux point estimation requires a list of datasets"
+                " of the same type and data shape."
             )
         dataset = datasets[0]
 
@@ -161,7 +163,6 @@ class FluxEstimator(ParameterEstimator):
 
         self._set_model(datasets, scale_model)
 
-        steps = self._prepare_steps(steps)
         result = self._prepare_result(scale_model.model)
 
         scale_model.norm.value = 1.0
@@ -169,27 +170,22 @@ class FluxEstimator(ParameterEstimator):
 
         result.update(
             super().run(
-                datasets,
-                scale_model.norm,
-                steps,
-                null_value=0,
-                scan_values=self.norm_values,
+                datasets, scale_model.norm, null_value=0, scan_values=self.norm_values,
             )
         )
         self._set_model(datasets, ref_model)
         return result
 
-    def _return_nan_result(self, model, steps="all"):
-        steps = self._prepare_steps(steps)
+    def _return_nan_result(self, model):
         result = self._prepare_result(model)
         result.update({"norm": np.nan, "stat": np.nan, "success": False})
         result.update({"norm_err": np.nan})
         result.update({"sqrt_ts": np.nan, "ts": np.nan, "null_value": np.nan})
-        if "errn-errp" in steps:
+        if "errn-errp" in self.selection:
             result.update({"norm_errp": np.nan, "norm_errn": np.nan})
-        if "ul" in steps:
+        if "ul" in self.selection:
             result.update({"norm_ul": np.nan})
-        if "scan" in steps:
+        if "scan" in self.selection:
             nans = np.nan * np.empty_like(self.norm_values)
             result.update({"norm_scan": nans, "stat_scan": nans})
         return result

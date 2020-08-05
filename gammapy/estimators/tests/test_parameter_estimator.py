@@ -36,9 +36,9 @@ def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
     for dataset in datasets:
         dataset.models = SkyModel(spectral_model=PLmodel, name="Crab")
 
-    estimator = ParameterEstimator(n_scan_values=10)
+    estimator = ParameterEstimator(n_scan_values=10, selection="all")
 
-    result = estimator.run(datasets, PLmodel.amplitude, steps="all")
+    result = estimator.run(datasets, PLmodel.amplitude)
 
     assert_allclose(result["amplitude"], 5.142843823441639e-11, rtol=1e-3)
     assert_allclose(result["amplitude_err"], 6.0075e-12, rtol=1e-3)
@@ -55,9 +55,9 @@ def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
 def test_parameter_estimator_3d(crab_datasets_fermi):
     datasets = crab_datasets_fermi
     parameter = datasets[0].models.parameters["amplitude"]
-    estimator = ParameterEstimator()
+    estimator = ParameterEstimator(selection=["ts", "err"])
 
-    result = estimator.run(datasets, parameter, steps=["ts", "err"])
+    result = estimator.run(datasets, parameter)
 
     assert_allclose(result["amplitude"], 0.328839, rtol=1e-3)
     assert_allclose(result["amplitude_err"], 0.002801, rtol=1e-3)
@@ -72,7 +72,7 @@ def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
     estimator = ParameterEstimator(reoptimize=False, n_scan_values=10)
     alpha_value = datasets[0].models.parameters["alpha"].value
 
-    result = estimator.run(datasets, parameter, steps="all")
+    result = estimator.run(datasets, parameter)
 
     assert not datasets[0].models.parameters["alpha"].frozen
     assert_allclose(datasets[0].models.parameters["alpha"].value, alpha_value)

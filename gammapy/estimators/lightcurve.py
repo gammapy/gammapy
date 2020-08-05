@@ -366,7 +366,16 @@ class LightCurveEstimator(FluxEstimator):
         Number of sigma to use for upper limit computation. Default is 2.
     reoptimize : bool
         reoptimize other parameters during fit statistic scan?
+    selection : list of str
+        Which steps to execute. Available options are:
+
+            * "errn-errp": estimate asymmetric errors.
+            * "ul": estimate upper limits.
+            * "norm-scan": estimate fit statistic profiles.
+
+        By default all steps are executed.
     """
+
     tag = "LightCurveEstimator"
 
     def __init__(
@@ -382,6 +391,7 @@ class LightCurveEstimator(FluxEstimator):
         n_sigma=1,
         n_sigma_ul=2,
         reoptimize=False,
+        selection="all",
     ):
 
         self.input_time_intervals = time_intervals
@@ -399,6 +409,7 @@ class LightCurveEstimator(FluxEstimator):
             n_sigma,
             n_sigma_ul,
             reoptimize,
+            selection,
         )
 
     def _check_and_sort_time_intervals(self, time_intervals):
@@ -424,7 +435,7 @@ class LightCurveEstimator(FluxEstimator):
                 for tstart, tstop in zip(time_start_sorted, time_stop_sorted)
             ]
 
-    def run(self, datasets, steps="all"):
+    def run(self, datasets):
         """Run light curve extraction.
 
         Normalize integral and energy flux between emin and emax.
@@ -433,16 +444,6 @@ class LightCurveEstimator(FluxEstimator):
         ----------
         datasets : list of `~gammapy.spectrum.SpectrumDataset` or `~gammapy.cube.MapDataset`
             Spectrum or Map datasets.
-        steps : list of str
-            Which steps to execute. Available options are:
-
-                * "err": estimate symmetric error.
-                * "errn-errp": estimate asymmetric errors.
-                * "ul": estimate upper limits.
-                * "ts": estimate ts and sqrt(ts) values.
-                * "norm-scan": estimate fit statistic profiles.
-
-            By default all steps are executed.
 
         Returns
         -------
@@ -474,14 +475,14 @@ class LightCurveEstimator(FluxEstimator):
             row = {"time_min": time_interval[0].mjd, "time_max": time_interval[1].mjd}
             interval_list_dataset = Datasets([datasets[int(_)] for _ in index_dataset])
             row.update(
-                self.estimate_time_bin_flux(interval_list_dataset, time_interval, steps)
+                self.estimate_time_bin_flux(interval_list_dataset, time_interval)
             )
             rows.append(row)
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         table = FluxPoints(table).to_sed_type("flux").table
         return LightCurve(table)
 
-    def estimate_time_bin_flux(self, datasets, time_interval, steps="all"):
+    def estimate_time_bin_flux(self, datasets, time_interval):
         """Estimate flux point for a single energy group.
 
         Parameters
@@ -504,7 +505,7 @@ class LightCurveEstimator(FluxEstimator):
         result : dict
             Dict with results for the flux point.
         """
-        result = super().run(datasets, steps=steps)
+        result = super().run(datasets)
         result.update(self._estimate_counts(datasets))
         if not result.pop("success"):
             log.warning(

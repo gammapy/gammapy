@@ -786,7 +786,16 @@ class FluxPointsEstimator(FluxEstimator):
         Number of sigma to use for upper limit computation. Default is 2.
     reoptimize : bool
         Re-optimize other free model parameters.
+    selection : list of str
+        Which additional quantities to estimate. Available options are:
+
+            * "errn-errp": estimate asymmetric errors on flux.
+            * "ul": estimate upper limits.
+            * "norm-scan": estimate fit statistic profiles.
+
+        By default all steps are executed.
     """
+
     tag = "FluxPointsEstimator"
 
     def __init__(
@@ -800,6 +809,7 @@ class FluxPointsEstimator(FluxEstimator):
         n_sigma=1,
         n_sigma_ul=2,
         reoptimize=False,
+        selection="all",
     ):
         self.e_edges = e_edges
         super().__init__(
@@ -812,6 +822,7 @@ class FluxPointsEstimator(FluxEstimator):
             n_sigma,
             n_sigma_ul,
             reoptimize,
+            selection,
         )
         self._contribute_to_stat = False
 
@@ -848,14 +859,14 @@ class FluxPointsEstimator(FluxEstimator):
 
         if not datasets.is_all_same_type or not datasets.energy_axes_are_aligned:
             raise ValueError(
-               "Flux point estimation requires a list of datasets"
-               " of the same type and data shape."
+                "Flux point estimation requires a list of datasets"
+                " of the same type and data shape."
             )
         self.datasets = datasets.copy()
 
         rows = []
         for e_min, e_max in zip(self.e_edges[:-1], self.e_edges[1:]):
-            row = self._estimate_flux_point(e_min=e_min, e_max=e_max, steps=steps)
+            row = self._estimate_flux_point(e_min=e_min, e_max=e_max)
             rows.append(row)
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
@@ -872,21 +883,13 @@ class FluxPointsEstimator(FluxEstimator):
         e_min, e_max = energy_axis.pix_to_coord(edges_idx)
         return e_min, e_max
 
-    def _estimate_flux_point(self, e_min, e_max, steps="all"):
+    def _estimate_flux_point(self, e_min, e_max):
         """Estimate flux point for a single energy group.
 
         Parameters
         ----------
         e_min, e_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
-        steps : list of str
-            Which additional quantities to estimate. Available options are:
-
-                * "errn-errp": estimate asymmetric errors on flux.
-                * "ul": estimate upper limits.
-                * "norm-scan": estimate fit statistic profiles.
-
-            By default all steps are executed.
 
         Returns
         -------
@@ -896,8 +899,8 @@ class FluxPointsEstimator(FluxEstimator):
         for dataset in self.datasets:
             e_min_new, e_max_new = self._get_energy_range(dataset, e_min, e_max)
             dataset.mask_fit = dataset.counts.geom.energy_mask(
-                    emin=e_min_new, emax=e_max_new
-                )
+                emin=e_min_new, emax=e_max_new
+            )
             if dataset.mask.any():
                 self.energy_range = [e_min_new, e_max_new]
 
@@ -905,11 +908,11 @@ class FluxPointsEstimator(FluxEstimator):
 
         if not self._contribute_to_stat:
             model = self.datasets[0].models[self.source].spectral_model
-            result = self._return_nan_result(model, steps=steps)
+            result = self._return_nan_result(model)
         else:
             with self.datasets.parameters.restore_values:
                 self._freeze_empty_background()
-                result = super().run(self.datasets, steps=steps)
+                result = super().run(self.datasets)
 
         result.update(self._estimate_counts())
         return result
