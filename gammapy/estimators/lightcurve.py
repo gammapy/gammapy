@@ -491,12 +491,10 @@ class LightCurveEstimator(FluxEstimator):
         time_interval : astropy.time.Time`
             Start and stop time for each interval
         steps : list of str
-            Which steps to execute. Available options are:
+            Which additional quantities to estimate for each time bin. Available options are:
 
-                * "err": estimate symmetric error.
                 * "errn-errp": estimate asymmetric errors.
                 * "ul": estimate upper limits.
-                * "ts": estimate ts and sqrt(ts) values.
                 * "norm-scan": estimate likelihood profiles.
 
             By default all steps are executed.

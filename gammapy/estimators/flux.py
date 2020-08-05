@@ -116,11 +116,8 @@ class FluxEstimator(ParameterEstimator):
         if "norm-scan" in steps:
             steps.remove("norm-scan")
             steps.append("scan")
-        if "norm-err" in steps:
-            steps.remove("norm-err")
-            steps.append("err")
         if steps == "all":
-            steps = ["err", "ts", "errn-errp", "ul", "scan"]
+            steps = ["errn-errp", "ul", "scan"]
         return steps
 
     def run(self, datasets, steps="all"):
@@ -134,12 +131,10 @@ class FluxEstimator(ParameterEstimator):
         datasets : list of `~gammapy.spectrum.SpectrumDataset`
             Spectrum datasets.
         steps : list of str
-            Which steps to execute. Available options are:
+            Which additional quantities to estimate. Available options are:
 
-                * "norm-err": estimate symmetric error.
                 * "errn-errp": estimate asymmetric errors.
                 * "ul": estimate upper limits.
-                * "ts": estimate ts and sqrt(ts) values.
                 * "norm-scan": estimate fit statistic profiles.
 
             By default all steps are executed.
@@ -188,10 +183,8 @@ class FluxEstimator(ParameterEstimator):
         steps = self._prepare_steps(steps)
         result = self._prepare_result(model)
         result.update({"norm": np.nan, "stat": np.nan, "success": False})
-        if "err" in steps:
-            result.update({"norm_err": np.nan})
-        if "ts" in steps:
-            result.update({"sqrt_ts": np.nan, "ts": np.nan, "null_value": np.nan})
+        result.update({"norm_err": np.nan})
+        result.update({"sqrt_ts": np.nan, "ts": np.nan, "null_value": np.nan})
         if "errn-errp" in steps:
             result.update({"norm_errp": np.nan, "norm_errn": np.nan})
         if "ul" in steps:

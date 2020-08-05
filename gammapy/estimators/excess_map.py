@@ -80,10 +80,9 @@ class ExcessMapEstimator(Estimator):
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             input image-like dataset
         steps : list of str
-            Which steps to execute. Available options are:
+            Which maps to estimate besides delta TS, significance and symmetric error.
+            Available options are:
 
-                * "ts": estimate delta TS and significance
-                * "err": estimate symmetric error
                 * "errn-errp": estimate asymmetric errors.
                 * "ul": estimate upper limits.
 
@@ -123,16 +122,14 @@ class ExcessMapEstimator(Estimator):
         result = {"counts": n_on, "background": bkg, "excess": excess}
 
         if steps == "all":
-            steps = ["ts", "err", "errn-errp", "ul"]
+            steps = ["errn-errp", "ul"]
 
-        if "ts" in steps:
-            tsmap = Map.from_geom(geom, data=counts_stat.delta_ts)
-            significance = Map.from_geom(geom, data=counts_stat.significance)
-            result.update({"ts": tsmap, "significance": significance})
+        tsmap = Map.from_geom(geom, data=counts_stat.delta_ts)
+        significance = Map.from_geom(geom, data=counts_stat.significance)
+        result.update({"ts": tsmap, "significance": significance})
 
-        if "err" in steps:
-            err = Map.from_geom(geom, data=counts_stat.error*self.n_sigma)
-            result.update({"err": err})
+        err = Map.from_geom(geom, data=counts_stat.error*self.n_sigma)
+        result.update({"err": err})
 
         if "errn-errp" in steps:
             errn = Map.from_geom(geom, data=counts_stat.compute_errn(self.n_sigma))

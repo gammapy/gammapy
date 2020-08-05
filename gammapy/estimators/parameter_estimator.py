@@ -12,8 +12,9 @@ class ParameterEstimator(Estimator):
     """Model parameter estimator.
 
     Estimates a model parameter for a group of datasets.
-    Compute best fit value, symmetric and asymmetric errors, delta TS for a given null value
-    as well as parameter upper limit and fit statistic profile.
+    Compute best fit value, symmetric and delta TS for a given null value.
+    Additionnally asymmetric errors as well as parameter upper limit and fit statistic profile
+    can be estimated.
 
     Parameters
     ----------
@@ -112,10 +113,8 @@ class ParameterEstimator(Estimator):
         parameter : `~gammapy.modeling.Parameter`
             the parameter to be estimated
         steps : list of str
-            Which steps to execute. Available options are:
-                * "err": estimate symmetric error from covariance
-                * "ts": estimate delta TS with parameter null (reference) value
-                * "errn-errp": estimate asymmetric errors.
+            Which additional quantities to estimate. Available options are:
+                * "errn-errp": estimate asymmetric errors on parameter best fit value.
                 * "ul": estimate upper limits.
                 * "scan": estimate fit statistic profiles.
 
@@ -142,17 +141,16 @@ class ParameterEstimator(Estimator):
                 self._freeze_parameters(parameter)
 
             if steps == "all":
-                steps = ["err", "ts", "errn-errp", "ul", "scan"]
+                steps = ["errn-errp", "ul", "scan"]
 
             result = self._find_best_fit(parameter)
             TS1 = result["stat"]
 
             value_max = result[parameter.name]
 
-            if "err" in steps:
-                res = self.fit.covariance()
-                value_err = res.parameters[parameter].error*self.n_sigma
-                result.update({f"{parameter.name}_err": value_err})
+            res = self.fit.covariance()
+            value_err = res.parameters[parameter].error*self.n_sigma
+            result.update({f"{parameter.name}_err": value_err})
 
             if "errn-errp" in steps:
                 res = self.fit.confidence(parameter=parameter, sigma=self.n_sigma)
@@ -167,14 +165,13 @@ class ParameterEstimator(Estimator):
                 res = self.fit.confidence(parameter=parameter, sigma=self.n_sigma_ul)
                 result.update({f"{parameter.name}_ul": res["errp"] + value_max})
 
-            if "ts" in steps:
-                TS0 = self._estimate_ts_for_null_value(parameter, null_value)
-                res = TS0 - TS1
-                result.update(
-                    {"sqrt_ts": np.sqrt(res), "ts": res, "null_value": null_value}
-                )
-                # TODO: should not need this
-                self.fit.optimize()
+            TS0 = self._estimate_ts_for_null_value(parameter, null_value)
+            res = TS0 - TS1
+            result.update(
+                {"sqrt_ts": np.sqrt(res), "ts": res, "null_value": null_value}
+            )
+            # TODO: should not need this
+            self.fit.optimize()
 
             if "scan" in steps:
                 if scan_values is None:

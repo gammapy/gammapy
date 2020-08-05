@@ -880,12 +880,10 @@ class FluxPointsEstimator(FluxEstimator):
         e_min, e_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
         steps : list of str
-            Which steps to execute. Available options are:
+            Which additional quantities to estimate. Available options are:
 
-                * "norm-err": estimate symmetric error.
-                * "errn-errp": estimate asymmetric errors.
+                * "errn-errp": estimate asymmetric errors on flux.
                 * "ul": estimate upper limits.
-                * "ts": estimate ts and sqrt(ts) values.
                 * "norm-scan": estimate fit statistic profiles.
 
             By default all steps are executed.

@@ -288,10 +288,9 @@ class TSMapEstimator(Estimator):
         dataset : `~gammapy.datasets.MapDataset`
             Input MapDataset.
         steps : list of str or 'all'
-            Which maps to compute. Available options are:
+            Which maps to compute besides delta TS, significance, flux and symmetric error on flux.
+            Available options are:
 
-                * "ts": estimate delta TS and significance (sqrt_ts)
-                * "err": estimate symmetric error on flux.
                 * "errn-errp": estimate assymmetric error on flux.
                 * "ul": estimate upper limits on flux.
 
@@ -329,12 +328,9 @@ class TSMapEstimator(Estimator):
         mask.data &= self.mask_default(exposure, background, kernel.data).data
 
         if steps == "all":
-            steps = ["ts", "err", "errn-errp", "ul"]
+            steps = ["errn-errp", "ul"]
 
-        keys = ["ts", "sqrt_ts", "flux", "niter"]
-
-        if "err" in steps:
-            keys.append("flux_err")
+        keys = ["ts", "sqrt_ts", "flux", "niter", "flux_err"]
 
         if "errn-errp" in steps:
             keys.append("flux_errp")
@@ -363,7 +359,6 @@ class TSMapEstimator(Estimator):
         # Compute null statistics per pixel for the whole image
         c_0 = cash(counts_array, background_array)
 
-        compute_err = True if "err" in steps else False
         compute_errn_errp = True if "errn-errp" in steps else False
         compute_ul = True if "ul" in steps else False
 
@@ -375,7 +370,6 @@ class TSMapEstimator(Estimator):
             c_0=c_0,
             kernel=kernel.data,
             flux=flux,
-            compute_err=compute_err,
             compute_errn_errp=compute_errn_errp,
             compute_ul=compute_ul,
             threshold=self.threshold,
@@ -391,13 +385,10 @@ class TSMapEstimator(Estimator):
         # Set TS values at given positions
         j, i = zip(*positions)
 
-        if "ts" in steps:
-            for name in ["ts", "flux", "niter"]:
-                result[name].data[j, i] = [_[name] for _ in results]
-            result["sqrt_ts"] = self.sqrt_ts(result["ts"])
-
-        if "err" in steps:
-            result["flux_err"].data[j, i] = [_["flux_err"] for _ in results]
+        for name in ["ts", "flux", "niter"]:
+            result[name].data[j, i] = [_[name] for _ in results]
+        result["sqrt_ts"] = self.sqrt_ts(result["ts"])
+        result["flux_err"].data[j, i] = [_["flux_err"] for _ in results]
 
         if "errn-errp" in steps:
             result["flux_errp"].data[j, i] = [_["flux_errp"] for _ in results]
@@ -415,10 +406,8 @@ class TSMapEstimator(Estimator):
                 result[name] = result[name].crop(crop_width=pad_width)
 
         # Set correct units
-        if "flux" in keys:
-            result["flux"].unit = flux_map.unit
-        if "flux_err" in keys:
-            result["flux_err"].unit = flux_map.unit
+        result["flux"].unit = flux_map.unit
+        result["flux_err"].unit = flux_map.unit
         if "flux_errp" in keys:
             result["flux_errp"].unit = flux_map.unit
         if "flux_errn" in keys:
@@ -437,7 +426,6 @@ def _ts_value(
     c_0,
     kernel,
     flux,
-    compute_err,
     compute_errn_errp,
     compute_ul,
     n_sigma,
@@ -490,8 +478,7 @@ def _ts_value(
             result["ts"] = (c_0 - c_1) * np.sign(amplitude)
             result["flux"] = amplitude
             result["niter"] = 0
-            if compute_err:
-                result["flux_err"] = np.nan
+            result["flux_err"] = np.nan
             if compute_errn_errp:
                 result["flux_errn"] = np.nan
                 result["flux_errp"] = np.nan
@@ -509,9 +496,9 @@ def _ts_value(
     result["flux"] = amplitude * FLUX_FACTOR
     result["niter"] = niter
 
-    if compute_err:
-        flux_err = _compute_flux_err_covar(amplitude, counts_, background_, model)
-        result["flux_err"] = flux_err * n_sigma
+    flux_err = _compute_flux_err_covar(amplitude, counts_, background_, model)
+    result["flux_err"] = flux_err * n_sigma
+
     if compute_errn_errp:
         flux_errp = _compute_flux_err_conf(
             amplitude, counts_, background_, model, c_1, n_sigma, True

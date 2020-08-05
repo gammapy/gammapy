@@ -130,7 +130,7 @@ class ExcessProfileEstimator(Estimator):
             err, errn, errp, ul, exposure, solid_angle)
         """
         if steps == "all":
-            steps = ["err", "ts", "errn-errp", "ul"]
+            steps = ["errn-errp", "ul"]
 
         results = []
 
@@ -173,12 +173,10 @@ class ExcessProfileEstimator(Estimator):
                 "excess": stats.excess,
             })
 
-            if "ts" in steps:
-                result["ts"] = stats.delta_ts
-                result["sqrt_ts"] = stats.significance
+            result["ts"] = stats.delta_ts
+            result["sqrt_ts"] = stats.significance
 
-            if "err" in steps:
-                result["err"] = stats.error * self.n_sigma
+            result["err"] = stats.error * self.n_sigma
 
             if "errn-errp" in steps:
                 result["errn"] = stats.compute_errn(self.n_sigma)
@@ -194,8 +192,7 @@ class ExcessProfileEstimator(Estimator):
                             spds.models[0].spectral_model.integral(e_reco_lo, e_reco_hi).value
             result["flux"] = flux
 
-            if "err" in steps:
-                result["flux_err"] = stats.error / stats.excess * flux
+            result["flux_err"] = stats.error / stats.excess * flux
 
             if "errn-errp" in steps:
                 result["flux_errn"] = np.abs(result["errn"]) / stats.excess * flux
@@ -221,8 +218,13 @@ class ExcessProfileEstimator(Estimator):
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the dataset to use for profile extraction
         steps : list of str
-            the steps to be used.
+            Additional quantities to be estimated. Possible options are:
 
+                * "errn-errp": estimate asymmetric errors.
+                * "ul": estimate upper limits.
+
+            By default all quantities are estimated.
+            
         Returns
         --------
         imageprofile : `~gammapy.estimators.ImageProfile`
