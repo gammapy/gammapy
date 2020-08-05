@@ -65,7 +65,9 @@ def test_asmooth_dataset(input_dataset):
     with pytest.raises(ValueError):
         asmooth.run(input_dataset)
 
-    smoothed = asmooth.run(input_dataset.to_image())
+    img = input_dataset.to_image()
+    img.models = img.models[1]
+    smoothed = asmooth.run(img)
 
     assert smoothed["flux"].data.shape == (40, 50)
     assert smoothed["flux"].unit == u.Unit("cm-2s-1")
@@ -74,17 +76,17 @@ def test_asmooth_dataset(input_dataset):
     assert smoothed["scale"].unit == u.Unit("deg")
 
     desired = {
-        "counts": 2.999937,
-        "background": 0.194681,
+        "counts": 369.479167,
+        "background": 0.184005,
         "scale": 0.056419,
-        "significance": 3.7041,
+        "significance": 72.971513,
         "flux": 1.9627731416710178e-12,
 
     }
 
     for name in smoothed:
-        actual = smoothed[name].data[20, 20]
-        assert_allclose(actual, desired[name], rtol=1e-3)
+        actual = smoothed[name].data[20, 25]
+        assert_allclose(actual, desired[name], rtol=1e-2)
 
 
 def test_asmooth_map_dataset_on_off():
