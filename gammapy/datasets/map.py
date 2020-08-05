@@ -1074,7 +1074,7 @@ class MapDataset(Dataset):
                 if isinstance(model, BackgroundModel):
                     background = self.background_model.evaluate() * mask_safe
                     background = background.sum_over_axes(keepdims=True)
-                    model_new = BackgroundModel(background, datasets_names=[name])
+                    model_new = BackgroundModel(background, datasets_names=[name], name=model.name)
                 else:
                     model_new = model.copy(datasets_names=[name])
                 models.append(model_new)

@@ -75,7 +75,7 @@ def test_asmooth_dataset(input_dataset):
 
     desired = {
         "counts": 2.999937,
-        "background": 0.14224,
+        "background": 0.194681,
         "scale": 0.056419,
         "significance": 3.7041,
         "flux": 1.9627731416710178e-12,
