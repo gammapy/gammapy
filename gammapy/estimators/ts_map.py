@@ -105,6 +105,14 @@ class TSMapEstimator(Estimator):
     rtol : float (0.001)
         Relative precision of the flux estimate. Used as a stopping criterion for
         the amplitude fit.
+    selection : list of str or 'all'
+        Which maps to compute besides delta TS, significance, flux and symmetric error on flux.
+        Available options are:
+
+            * "errn-errp": estimate assymmetric error on flux.
+            * "ul": estimate upper limits on flux.
+
+        By default all steps are executed.
 
     Notes
     -----
@@ -125,6 +133,7 @@ class TSMapEstimator(Estimator):
     [Stewart2009]_
     """
     tag = "TSMapEstimator"
+    available_selection = ["errn-errp", "ul"]
 
     def __init__(
         self,
@@ -135,6 +144,7 @@ class TSMapEstimator(Estimator):
         n_sigma_ul=2,
         threshold=None,
         rtol=0.001,
+        selection="all",
     ):
         self.kernel_width = Angle(kernel_width)
 
@@ -150,6 +160,8 @@ class TSMapEstimator(Estimator):
         self.n_sigma_ul = n_sigma_ul
         self.threshold = threshold
         self.rtol = rtol
+
+        self.selection = self._make_selection(selection)
 
     def get_kernel(self, dataset):
         """Set the convolution kernel for the input dataset.
@@ -277,7 +289,7 @@ class TSMapEstimator(Estimator):
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return map_ts.copy(data=sqrt_ts)
 
-    def run(self, dataset, steps="all"):
+    def run(self, dataset):
         """
         Run TS map estimation.
 
@@ -288,15 +300,6 @@ class TSMapEstimator(Estimator):
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Input MapDataset.
-        steps : list of str or 'all'
-            Which maps to compute. Available options are:
-
-                * "ts": estimate delta TS and significance (sqrt_ts)
-                * "err": estimate symmetric error on flux.
-                * "errn-errp": estimate assymmetric error on flux.
-                * "ul": estimate upper limits on flux.
-
-            By default all steps are executed.
 
         Returns
         -------
@@ -331,19 +334,13 @@ class TSMapEstimator(Estimator):
 
         mask.data &= self.mask_default(exposure, background, kernel.data).data
 
-        if steps == "all":
-            steps = ["ts", "err", "errn-errp", "ul"]
+        keys = ["ts", "sqrt_ts", "flux", "niter", "flux_err"]
 
-        keys = ["ts", "sqrt_ts", "flux", "niter"]
-
-        if "err" in steps:
-            keys.append("flux_err")
-
-        if "errn-errp" in steps:
+        if "errn-errp" in self.selection:
             keys.append("flux_errp")
             keys.append("flux_errn")
 
-        if "ul" in steps:
+        if "ul" in self.selection:
             keys.append("flux_ul")
 
         result = {}
@@ -366,9 +363,8 @@ class TSMapEstimator(Estimator):
         # Compute null statistics per pixel for the whole image
         c_0 = cash(counts_array, background_array)
 
-        compute_err = True if "err" in steps else False
-        compute_errn_errp = True if "errn-errp" in steps else False
-        compute_ul = True if "ul" in steps else False
+        compute_errn_errp = True if "errn-errp" in self.selection else False
+        compute_ul = True if "ul" in self.selection else False
 
         wrap = functools.partial(
             _ts_value,
@@ -378,7 +374,6 @@ class TSMapEstimator(Estimator):
             c_0=c_0,
             kernel=kernel.data,
             flux=flux,
-            compute_err=compute_err,
             compute_errn_errp=compute_errn_errp,
             compute_ul=compute_ul,
             threshold=self.threshold,
@@ -394,19 +389,16 @@ class TSMapEstimator(Estimator):
         # Set TS values at given positions
         j, i = zip(*positions)
 
-        if "ts" in steps:
-            for name in ["ts", "flux", "niter"]:
-                result[name].data[j, i] = [_[name] for _ in results]
-            result["sqrt_ts"] = self.sqrt_ts(result["ts"])
+        for name in ["ts", "flux", "niter"]:
+            result[name].data[j, i] = [_[name] for _ in results]
+        result["sqrt_ts"] = self.sqrt_ts(result["ts"])
+        result["flux_err"].data[j, i] = [_["flux_err"] for _ in results]
 
-        if "err" in steps:
-            result["flux_err"].data[j, i] = [_["flux_err"] for _ in results]
-
-        if "errn-errp" in steps:
+        if "errn-errp" in self.selection:
             result["flux_errp"].data[j, i] = [_["flux_errp"] for _ in results]
             result["flux_errn"].data[j, i] = [_["flux_errn"] for _ in results]
 
-        if "ul" in steps:
+        if "ul" in self.selection:
             result["flux_ul"].data[j, i] = [_["flux_ul"] for _ in results]
 
         if self.downsampling_factor:
@@ -418,10 +410,8 @@ class TSMapEstimator(Estimator):
                 result[name] = result[name].crop(crop_width=pad_width)
 
         # Set correct units
-        if "flux" in keys:
-            result["flux"].unit = flux_map.unit
-        if "flux_err" in keys:
-            result["flux_err"].unit = flux_map.unit
+        result["flux"].unit = flux_map.unit
+        result["flux_err"].unit = flux_map.unit
         if "flux_errp" in keys:
             result["flux_errp"].unit = flux_map.unit
         if "flux_errn" in keys:
@@ -440,7 +430,6 @@ def _ts_value(
     c_0,
     kernel,
     flux,
-    compute_err,
     compute_errn_errp,
     compute_ul,
     n_sigma,
@@ -493,8 +482,7 @@ def _ts_value(
             result["ts"] = (c_0 - c_1) * np.sign(amplitude)
             result["flux"] = amplitude
             result["niter"] = 0
-            if compute_err:
-                result["flux_err"] = np.nan
+            result["flux_err"] = np.nan
             if compute_errn_errp:
                 result["flux_errn"] = np.nan
                 result["flux_errp"] = np.nan
@@ -512,9 +500,9 @@ def _ts_value(
     result["flux"] = amplitude * FLUX_FACTOR
     result["niter"] = niter
 
-    if compute_err:
-        flux_err = _compute_flux_err_covar(amplitude, counts_, background_, model)
-        result["flux_err"] = flux_err * n_sigma
+    flux_err = _compute_flux_err_covar(amplitude, counts_, background_, model)
+    result["flux_err"] = flux_err * n_sigma
+
     if compute_errn_errp:
         flux_errp = _compute_flux_err_conf(
             amplitude, counts_, background_, model, c_1, n_sigma, True
@@ -532,7 +520,6 @@ def _ts_value(
         )
         result["flux_ul"] = FLUX_FACTOR * flux_ul + result["flux"]
     return result
-
 
 
 def _root_amplitude_brentq(counts, background, model, rtol=RTOL):
@@ -591,7 +578,9 @@ def _compute_flux_err_covar(x, counts, background, model):
         return np.sqrt(1.0 / stat.sum())
 
 
-def _compute_flux_err_conf(amplitude, counts, background, model, c_1, n_sigma, positive=True):
+def _compute_flux_err_conf(
+    amplitude, counts, background, model, c_1, n_sigma, positive=True
+):
     """
     Compute amplitude errors using likelihood profile method.
     """
@@ -621,7 +610,7 @@ def _compute_flux_err_conf(amplitude, counts, background, model, c_1, n_sigma, p
                 maxiter=MAX_NITER,
                 rtol=1e-3,
             )
-            return (result - amplitude)*factor
+            return (result - amplitude) * factor
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
             return np.nan

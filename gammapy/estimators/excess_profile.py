@@ -27,6 +27,13 @@ class ExcessProfileEstimator(Estimator):
     spectrum : `~gammapy.modeling.models.SpectralModel` (optional)
         Spectral model to compute the fluxes or brightness.
         Default is power-law with spectral index of 2.
+    selection : list of str
+        Additional quantities to be estimated. Possible options are:
+
+            * "errn-errp": estimate asymmetric errors.
+            * "ul": estimate upper limits.
+
+        By default all quantities are estimated.
 
     Example
     --------
@@ -69,9 +76,13 @@ class ExcessProfileEstimator(Estimator):
         ax = fermi_prof.plot("flux", ax=ax)
 
     """
-    tag = "ExcessProfileEstimator"
 
-    def __init__(self, regions, spectrum=None, n_sigma=1., n_sigma_ul=3.):
+    tag = "ExcessProfileEstimator"
+    available_selection = ["errn-errp", "ul"]
+
+    def __init__(
+        self, regions, spectrum=None, n_sigma=1.0, n_sigma_ul=3.0, selection="all"
+    ):
         self.regions = regions
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -80,6 +91,8 @@ class ExcessProfileEstimator(Estimator):
             spectrum = PowerLawSpectralModel()
 
         self.spectrum = spectrum
+
+        self.selection = self._make_selection(selection)
 
     def get_spectrum_datasets(self, dataset):
         """ Utility to make the final `~gammapy.datasts.Datasets`
@@ -113,7 +126,7 @@ class ExcessProfileEstimator(Estimator):
 
         return MapAxis.from_nodes(distance, name="projected distance")
 
-    def make_prof(self, sp_datasets, steps):
+    def make_prof(self, sp_datasets):
         """ Utility to make the profile in each region
 
         Parameters
@@ -121,17 +134,13 @@ class ExcessProfileEstimator(Estimator):
         sp_datasets : `~gammapy.datasets.MapDatasets` of `~gammapy.datasets.SpectrumDataset` or \
         `~gammapy.datasets.SpectrumDatasetOnOff`
             the dataset to use for profile extraction
-        steps : list of str
-            the steps to be used.
+
         Returns
         --------
         results : list of dictionary
             the list of results (list of keys: x_min, x_ref, x_max, alpha, counts, background, excess, ts, sqrt_ts, \
             err, errn, errp, ul, exposure, solid_angle)
         """
-        if steps == "all":
-            steps = ["err", "ts", "errn-errp", "ul"]
-
         results = []
 
         distance = self._get_projected_distance()
@@ -150,7 +159,7 @@ class ExcessProfileEstimator(Estimator):
                 stats = WStatCountsStatistic(
                     spds.counts.data[mask][:, 0, 0],
                     spds.counts_off.data[mask][:, 0, 0],
-                    spds.alpha.data[mask][:, 0, 0]
+                    spds.alpha.data[mask][:, 0, 0],
                 )
 
             else:
@@ -163,49 +172,53 @@ class ExcessProfileEstimator(Estimator):
                 "x_min": distance.edges[index],
                 "x_max": distance.edges[index + 1],
                 "x_ref": distance.center[index],
-                "energy_edge": e_reco
+                "energy_edge": e_reco,
             }
             if isinstance(spds, SpectrumDatasetOnOff):
                 result["alpha"] = stats.alpha
-            result.update({
-                "counts": stats.n_on,
-                "background": stats.background,
-                "excess": stats.excess,
-            })
+            result.update(
+                {
+                    "counts": stats.n_on,
+                    "background": stats.background,
+                    "excess": stats.excess,
+                }
+            )
 
-            if "ts" in steps:
-                result["ts"] = stats.delta_ts
-                result["sqrt_ts"] = stats.significance
+            result["ts"] = stats.delta_ts
+            result["sqrt_ts"] = stats.significance
 
-            if "err" in steps:
-                result["err"] = stats.error * self.n_sigma
+            result["err"] = stats.error * self.n_sigma
 
-            if "errn-errp" in steps:
+            if "errn-errp" in self.selection:
                 result["errn"] = stats.compute_errn(self.n_sigma)
                 result["errp"] = stats.compute_errp(self.n_sigma)
 
-            if "ul" in steps:
+            if "ul" in self.selection:
                 result["ul"] = stats.compute_upper_limit(self.n_sigma_ul)
 
             npred = spds.npred_sig().data[mask][:, 0, 0]
             e_reco_lo = e_reco[:-1]
             e_reco_hi = e_reco[1:]
-            flux = stats.excess / npred * \
-                            spds.models[0].spectral_model.integral(e_reco_lo, e_reco_hi).value
+            flux = (
+                stats.excess
+                / npred
+                * spds.models[0].spectral_model.integral(e_reco_lo, e_reco_hi).value
+            )
             result["flux"] = flux
 
-            if "err" in steps:
-                result["flux_err"] = stats.error / stats.excess * flux
+            result["flux_err"] = stats.error / stats.excess * flux
 
-            if "errn-errp" in steps:
+            if "errn-errp" in self.selection:
                 result["flux_errn"] = np.abs(result["errn"]) / stats.excess * flux
                 result["flux_errp"] = result["errp"] / stats.excess * flux
 
-            if "ul" in steps:
+            if "ul" in self.selection:
                 result["flux_ul"] = result["ul"] / stats.excess * flux
 
             solid_angle = spds.counts.geom.solid_angle()
-            result["solid_angle"] = np.full(result['counts'].shape, solid_angle.to_value("sr")) * u.sr
+            result["solid_angle"] = (
+                np.full(result["counts"].shape, solid_angle.to_value("sr")) * u.sr
+            )
 
             results.append(result)
             if old_model is not None:
@@ -213,15 +226,13 @@ class ExcessProfileEstimator(Estimator):
 
         return results
 
-    def run(self, dataset, steps="all"):
+    def run(self, dataset):
         """Make the profiles
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the dataset to use for profile extraction
-        steps : list of str
-            the steps to be used.
 
         Returns
         --------
@@ -229,7 +240,7 @@ class ExcessProfileEstimator(Estimator):
             Return an image profile class containing the result
         """
         spectrum_datasets = self.get_spectrum_datasets(dataset)
-        results = self.make_prof(spectrum_datasets, steps)
+        results = self.make_prof(spectrum_datasets)
         table = table_from_row_data(results)
         if isinstance(self.regions[0], RectangleSkyRegion):
             table.meta["PROFILE_TYPE"] = "orthogonal_rectangle"

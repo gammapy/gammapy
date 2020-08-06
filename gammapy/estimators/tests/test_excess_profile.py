@@ -18,21 +18,25 @@ def get_simple_dataset_on_off():
     dataset.counts_off += 1
     dataset.acceptance += 1
     dataset.acceptance_off += 1
-    dataset.exposure += 1000*u.m**2*u.s
+    dataset.exposure += 1000 * u.m ** 2 * u.s
     dataset.gti = GTI.create([0 * u.s], [5 * u.h], reference_time="2010-01-01T00:00:00")
     return dataset
 
 
 def make_boxes(wcs):
-    start_line = SkyCoord(0.08, -0.16, unit='deg', frame='icrs')
-    end_line = SkyCoord(359.9, 0.16, unit='deg', frame='icrs')
-    return make_orthogonal_rectangle_sky_regions(start_line, end_line, wcs, 0.1*u.deg, 8)
+    start_line = SkyCoord(0.08, -0.16, unit="deg", frame="icrs")
+    end_line = SkyCoord(359.9, 0.16, unit="deg", frame="icrs")
+    return make_orthogonal_rectangle_sky_regions(
+        start_line, end_line, wcs, 0.1 * u.deg, 8
+    )
 
 
 def make_horizontal_boxes(wcs):
-    start_line = SkyCoord(0.08, 0.1, unit='deg', frame='icrs')
-    end_line = SkyCoord(359.9, 0.1, unit='deg', frame='icrs')
-    return make_orthogonal_rectangle_sky_regions(start_line, end_line, wcs, 0.1*u.deg, 8)
+    start_line = SkyCoord(0.08, 0.1, unit="deg", frame="icrs")
+    end_line = SkyCoord(359.9, 0.1, unit="deg", frame="icrs")
+    return make_orthogonal_rectangle_sky_regions(
+        start_line, end_line, wcs, 0.1 * u.deg, 8
+    )
 
 
 def test_profile_content():
@@ -52,12 +56,12 @@ def test_profile_content():
     # assert_allclose(imp_prof.table[0]['ul'], [115.171871, 115.171871], atol=1e-5)
     # assert_allclose(imp_prof.table[0]['flux'], [7.99999987e-06, 8.00000010e-06], atol=1e-3)
     # assert_allclose(imp_prof.table[0]['solid_angle'], [6.853891e-07, 6.853891e-07], atol=1e-5)
-    assert_allclose(imp_prof[7]['x_min'], 0.1462, atol=1e-4)
-    assert_allclose(imp_prof[7]['x_ref'], 0.1575, atol=1e-4)
-    assert_allclose(imp_prof[7]['counts'], [100., 100.], atol=1e-2)
-    assert_allclose(imp_prof[7]['excess'], [80., 80.], atol=1e-2)
-    assert_allclose(imp_prof[7]['sqrt_ts'], [7.6302447, 7.6302447], atol=1e-5)
-    assert_allclose(imp_prof[7]['errn'], [-10.747017, -10.747017], atol=1e-5)
-    assert_allclose(imp_prof[0]['ul'], [115.171871, 115.171871], atol=1e-5)
-    assert_allclose(imp_prof[0]['flux'], [7.99999987e-06, 8.00000010e-06], atol=1e-3)
-    assert_allclose(imp_prof[0]['solid_angle'], [6.853891e-07, 6.853891e-07], atol=1e-5)
+    assert_allclose(imp_prof[7]["x_min"], 0.1462, atol=1e-4)
+    assert_allclose(imp_prof[7]["x_ref"], 0.1575, atol=1e-4)
+    assert_allclose(imp_prof[7]["counts"], [100.0, 100.0], atol=1e-2)
+    assert_allclose(imp_prof[7]["excess"], [80.0, 80.0], atol=1e-2)
+    assert_allclose(imp_prof[7]["sqrt_ts"], [7.6302447, 7.6302447], atol=1e-5)
+    assert_allclose(imp_prof[7]["errn"], [-10.747017, -10.747017], atol=1e-5)
+    assert_allclose(imp_prof[0]["ul"], [115.171871, 115.171871], atol=1e-5)
+    assert_allclose(imp_prof[0]["flux"], [7.99999987e-06, 8.00000010e-06], atol=1e-3)
+    assert_allclose(imp_prof[0]["solid_angle"], [6.853891e-07, 6.853891e-07], atol=1e-5)

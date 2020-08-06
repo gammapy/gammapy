@@ -91,8 +91,10 @@ def test_compute_ts_map(input_dataset):
     spatial_model = GaussianSpatialModel(sigma="0.1 deg")
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
-    ts_estimator = TSMapEstimator(model=model, threshold=1, kernel_width="1 deg")
-    result = ts_estimator.run(input_dataset, steps=["ts", "err"])
+    ts_estimator = TSMapEstimator(
+        model=model, threshold=1, kernel_width="1 deg", selection=[]
+    )
+    result = ts_estimator.run(input_dataset)
 
     assert_allclose(result["ts"].data[99, 99], 1704.23, rtol=1e-2)
     assert_allclose(result["niter"].data[99, 99], 9)
@@ -131,9 +133,7 @@ def test_compute_ts_map_downsampled(input_dataset):
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
     ts_estimator = TSMapEstimator(
-        model=model,
-        downsampling_factor=2,
-        kernel_width="1 deg",
+        model=model, downsampling_factor=2, kernel_width="1 deg",
     )
     result = ts_estimator.run(input_dataset)
 
