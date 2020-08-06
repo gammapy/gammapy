@@ -92,11 +92,12 @@ class ExcessMapEstimator(Estimator):
     tag = "ExcessMapEstimator"
     available_selection = ["errn-errp", "ul"]
 
-    def __init__(self,
+    def __init__(
+        self,
         correlation_radius="0.1 deg",
         n_sigma=1,
         n_sigma_ul=3,
-        selection='all',
+        selection="all",
         apply_mask_fit=False,
         return_image=False,
     ):

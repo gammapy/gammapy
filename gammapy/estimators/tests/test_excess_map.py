@@ -104,7 +104,6 @@ def test_compute_lima_on_off_image():
     assert_allclose(actual, desired, atol=0.2)
 
 
-
 def test_significance_map_estimator_map_dataset(simple_dataset):
     estimator = ExcessMapEstimator(0.1 * u.deg)
     result = estimator.run(simple_dataset)
@@ -119,9 +118,6 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     assert_allclose(result["ul"].data[0, 10, 10], 122.240837, atol=1e-3)
 
     estimator_image = ExcessMapEstimator(0.1 * u.deg, return_image=True)
-    result_image = estimator_image.run(simple_dataset)
-    assert result_image["counts"].data.shape == (20, 20)
-    assert_allclose(result_image["significance"].data[10, 10], 7.910732, atol=1e-5)
     result_image = estimator_image.run(simple_dataset)
     assert result_image["counts"].data.shape == (1, 20, 20)
     assert_allclose(result_image["significance"].data[0, 10, 10], 7.910732, atol=1e-5)
@@ -138,9 +134,6 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
 
     estimator_image = ExcessMapEstimator(0.11 * u.deg, return_image=True)
     result_image = estimator_image.run(simple_dataset_on_off)
-    assert result_image["counts"].data.shape == (20, 20)
-    assert_allclose(result_image["significance"].data[10, 10], 5.741116, atol=1e-3)
-    result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
     assert_allclose(result_image["significance"].data[0, 10, 10], 5.741116, atol=1e-3)
 
@@ -154,9 +147,6 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     estimator_image = ExcessMapEstimator(
         0.11 * u.deg, apply_mask_fit=True, return_image=True
     )
-    result_image = estimator_image.run(simple_dataset_on_off)
-    assert result_image["counts"].data.shape == (20, 20)
-    assert_allclose(result_image["significance"].data[10, 10], 5.08179, atol=1e-3)
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
     assert_allclose(result_image["significance"].data[0, 10, 10], 5.08179, atol=1e-3)
@@ -173,7 +163,7 @@ def test_incorrect_selection():
     with pytest.raises(ValueError):
         estimator.selection = "bad"
 
+
 def test_significance_map_estimator_incorrect_dataset():
     with pytest.raises(ValueError):
         ExcessMapEstimator("bad")
-
