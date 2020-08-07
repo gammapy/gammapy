@@ -40,6 +40,9 @@ MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
 
 BINSZ_IRF_DEFAULT = 0.2
 
+EVALUATION_MODE = "local"
+USE_NPRED_CACHE = True
+
 
 def create_map_dataset_geoms(
     geom, energy_axis_true=None, migra_axis=None, rad_axis=None, binsz_irf=None,
@@ -111,14 +114,6 @@ class MapDataset(Dataset):
         PSF kernel
     edisp : `~gammapy.irf.EDispKernel` or `~gammapy.cube.EDispMap`
         Energy dispersion kernel
-    evaluation_mode : {"local", "global"}
-        Model evaluation mode.
-        The "local" mode evaluates the model components on smaller grids to save computation time.
-        This mode is recommended for local optimization algorithms.
-        The "global" evaluation mode evaluates the model components on the full map.
-        This mode is recommended for global optimization algorithms.
-    use_cache : bool
-        Use cached values of frozen models or recompute them
     mask_safe : `~gammapy.maps.WcsNDMap`
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
@@ -155,15 +150,12 @@ class MapDataset(Dataset):
         psf=None,
         edisp=None,
         name=None,
-        evaluation_mode="local",
-        use_cache=True,
         mask_safe=None,
         gti=None,
         meta_table=None,
     ):
         self._name = make_name(name)
         self._background_model = None
-        self.evaluation_mode = evaluation_mode
         self.counts = counts
         self.exposure = exposure
         self.mask_fit = mask_fit
@@ -176,7 +168,6 @@ class MapDataset(Dataset):
         self.mask_safe = mask_safe
         self.models = models
         self.gti = gti
-        self.use_cache = use_cache
         self.meta_table = meta_table
 
     @property
@@ -302,7 +293,7 @@ class MapDataset(Dataset):
 
                 if evaluator is None:
                     evaluator = MapEvaluator(
-                        model=model, evaluation_mode=self.evaluation_mode, gti=self.gti
+                        model=model, evaluation_mode=EVALUATION_MODE, gti=self.gti, use_cache=USE_NPRED_CACHE
                     )
                     self._evaluators[model] = evaluator
 
@@ -341,9 +332,6 @@ class MapDataset(Dataset):
 
         for evaluator in self.evaluators.values():
             if evaluator.contributes:
-                if self.use_cache is False:
-                    evaluator._spatial_conv_cached = None
-                    evaluator._npred_cached = None
                 npred = evaluator.compute_npred()
                 npred_total.stack(npred)
         return npred_total
@@ -1407,7 +1395,6 @@ class MapDatasetOnOff(MapDataset):
         psf=None,
         edisp=None,
         name=None,
-        evaluation_mode="local",
         mask_safe=None,
         gti=None,
         meta_table=None,
@@ -1415,7 +1402,6 @@ class MapDatasetOnOff(MapDataset):
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
-        self.evaluation_mode = evaluation_mode
         self.counts = counts
         self.counts_off = counts_off
         self.exposure = exposure
@@ -1590,7 +1576,6 @@ class MapDatasetOnOff(MapDataset):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             name=dataset.name,
-            evaluation_mode=dataset.evaluation_mode,
         )
 
     @property
@@ -1938,6 +1923,8 @@ class MapEvaluator:
         GTI of the observation or union of GTI if it is a stacked observation
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
+    use_cache : bool
+        Use npred caching.
     """
 
     def __init__(
@@ -1948,6 +1935,7 @@ class MapEvaluator:
         edisp=None,
         gti=None,
         evaluation_mode="local",
+        use_cache=True
     ):
 
         self.model = model
@@ -1956,6 +1944,7 @@ class MapEvaluator:
         self.edisp = edisp
         self.gti = gti
         self.contributes = True
+        self.use_cache = use_cache
         self._npred_cached = None
         self._pars_cached = None
         self._spatial_pars_cached = None
@@ -1963,6 +1952,7 @@ class MapEvaluator:
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
+
         self.evaluation_mode = evaluation_mode
 
         # TODO: this is preliminary solution until we have further unified the model handling
@@ -2127,7 +2117,8 @@ class MapEvaluator:
                 if self.model.apply_irf["edisp"]:
                     npred = self.apply_edisp(npred)
 
-            self._npred_cached = npred
+            if self.use_cache:
+                self._npred_cached = npred
         return npred
 
     def _compute_flux_conv(self):
