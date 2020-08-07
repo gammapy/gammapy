@@ -23,7 +23,7 @@ def simple_dataset():
     axis = MapAxis.from_energy_bounds(0.1, 10, 1, unit="TeV")
     geom = WcsGeom.create(npix=20, binsz=0.02, axes=[axis])
     dataset = MapDataset.create(geom)
-    dataset.mask_safe += 1
+    dataset.mask_safe += np.ones(dataset.data_shape, dtype=bool)
     dataset.counts += 2
     dataset.background_model.map += 1
     return dataset
@@ -34,7 +34,7 @@ def simple_dataset_on_off():
     axis = MapAxis.from_energy_bounds(0.1, 10, 1, unit="TeV")
     geom = WcsGeom.create(npix=20, binsz=0.02, axes=[axis])
     dataset = MapDatasetOnOff.create(geom)
-    dataset.mask_safe += 1
+    dataset.mask_safe += np.ones(dataset.data_shape, dtype=bool)
     dataset.counts += 2
     dataset.counts_off += 1
     dataset.acceptance += 1

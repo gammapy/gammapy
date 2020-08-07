@@ -26,7 +26,7 @@ def convolved_map_dataset_counts_statistics(
 
     mask = np.ones(dataset.data_shape, dtype=bool)
     if dataset.mask_safe:
-        mask = dataset.mask_safe
+        mask *= dataset.mask_safe
     if apply_mask_fit:
         mask *= dataset.mask_fit
 
