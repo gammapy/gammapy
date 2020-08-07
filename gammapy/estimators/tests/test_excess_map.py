@@ -23,7 +23,7 @@ def simple_dataset():
     axis = MapAxis.from_energy_bounds(0.1, 10, 1, unit="TeV")
     geom = WcsGeom.create(npix=20, binsz=0.02, axes=[axis])
     dataset = MapDataset.create(geom)
-    dataset.mask_safe += 1
+    dataset.mask_safe += np.ones(dataset.data_shape, dtype=bool)
     dataset.counts += 2
     dataset.background_model.map += 1
     return dataset
@@ -34,7 +34,7 @@ def simple_dataset_on_off():
     axis = MapAxis.from_energy_bounds(0.1, 10, 1, unit="TeV")
     geom = WcsGeom.create(npix=20, binsz=0.02, axes=[axis])
     dataset = MapDatasetOnOff.create(geom)
-    dataset.mask_safe += 1
+    dataset.mask_safe += np.ones(dataset.data_shape, dtype=bool)
     dataset.counts += 2
     dataset.counts_off += 1
     dataset.acceptance += 1
@@ -104,11 +104,6 @@ def test_compute_lima_on_off_image():
     assert_allclose(actual, desired, atol=0.2)
 
 
-def test_significance_map_estimator_incorrect_dataset():
-    with pytest.raises(ValueError):
-        ExcessMapEstimator("bad")
-
-
 def test_significance_map_estimator_map_dataset(simple_dataset):
     estimator = ExcessMapEstimator(0.1 * u.deg)
     result = estimator.run(simple_dataset)
@@ -122,6 +117,11 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     assert_allclose(result["errn"].data[0, 10, 10], -12.396716, atol=1e-3)
     assert_allclose(result["ul"].data[0, 10, 10], 122.240837, atol=1e-3)
 
+    estimator_image = ExcessMapEstimator(0.1 * u.deg, return_image=True)
+    result_image = estimator_image.run(simple_dataset)
+    assert result_image["counts"].data.shape == (1, 20, 20)
+    assert_allclose(result_image["significance"].data[0, 10, 10], 7.910732, atol=1e-5)
+
 
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     estimator = ExcessMapEstimator(0.11 * u.deg, selection=None)
@@ -131,6 +131,26 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     assert_allclose(result["excess"].data[0, 10, 10], 97)
     assert_allclose(result["background"].data[0, 10, 10], 97)
     assert_allclose(result["significance"].data[0, 10, 10], 5.741116, atol=1e-5)
+
+    estimator_image = ExcessMapEstimator(0.11 * u.deg, return_image=True)
+    result_image = estimator_image.run(simple_dataset_on_off)
+    assert result_image["counts"].data.shape == (1, 20, 20)
+    assert_allclose(result_image["significance"].data[0, 10, 10], 5.741116, atol=1e-3)
+
+    mask_fit = Map.from_geom(
+        simple_dataset_on_off._geom,
+        data=np.ones(simple_dataset_on_off.counts.data.shape, dtype=bool),
+    )
+    mask_fit.data[:, :, 10] = False
+    mask_fit.data[:, 10, :] = False
+    simple_dataset_on_off.mask_fit = mask_fit
+    estimator_image = ExcessMapEstimator(
+        0.11 * u.deg, apply_mask_fit=True, return_image=True
+    )
+    result_image = estimator_image.run(simple_dataset_on_off)
+    assert result_image["counts"].data.shape == (1, 20, 20)
+    assert_allclose(result_image["significance"].data[0, 10, 10], 5.08179, atol=1e-3)
+
 
 def test_incorrect_selection():
     with pytest.raises(ValueError):
@@ -142,3 +162,8 @@ def test_incorrect_selection():
     estimator = ExcessMapEstimator(0.11 * u.deg)
     with pytest.raises(ValueError):
         estimator.selection = "bad"
+
+
+def test_significance_map_estimator_incorrect_dataset():
+    with pytest.raises(ValueError):
+        ExcessMapEstimator("bad")
