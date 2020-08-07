@@ -382,14 +382,15 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 @requires_data()
 def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1 = get_map_dataset(
-        sky_model, geom, geom_etrue, evaluation_mode="local", name="test-1"
+        sky_model, geom, geom_etrue, name="test-1"
     )
     dataset_1.background_model.norm.value = 0.5
     dataset_1.counts = dataset_1.npred()
 
     dataset_2 = get_map_dataset(
-        sky_model, geom, geom_etrue, evaluation_mode="global", name="test-2"
+        sky_model, geom, geom_etrue, name="test-2"
     )
+
     dataset_2.counts = dataset_2.npred()
 
     sky_model.parameters["sigma"].frozen = True
