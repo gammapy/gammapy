@@ -234,6 +234,17 @@ class TestFluxPointsEstimator:
         actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
         assert_allclose(actual, 0.480491, rtol=1e-2)
 
+    @staticmethod
+    @requires_dependency("iminuit")
+    @requires_data()
+    def test_flux_points_estimator_no_norm_scan(fpe_pwl):
+        datasets, fpe = fpe_pwl
+        fpe.selection = None
+
+        fp = fpe.run(datasets)
+
+        assert fp.sed_type == "dnde"
+        assert "norm_scan" not in fp.table.colnames
 
 def test_no_likelihood_contribution():
     dataset = simulate_spectrum_dataset(
@@ -277,3 +288,4 @@ def test_mask_shape():
     fp = fpe.run([dataset_2, dataset_1])
 
     assert_allclose(fp.table["counts"], 0)
+

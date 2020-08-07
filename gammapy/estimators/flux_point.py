@@ -28,8 +28,6 @@ REQUIRED_COLUMNS = {
         "e_ref",
         "ref_dnde",
         "norm",
-        "norm_scan",
-        "stat_scan",
     ],
 }
 
@@ -38,6 +36,7 @@ OPTIONAL_COLUMNS = {
     "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul", "is_ul"],
     "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "is_ul"],
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "is_ul"],
+    "likelihood": ["norm_scan", "stat_scan"],
 }
 
 DEFAULT_UNIT = {
@@ -870,8 +869,13 @@ class FluxPointsEstimator(FluxEstimator):
             rows.append(row)
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
-        return FluxPoints(table).to_sed_type("dnde")
 
+        flux_points = FluxPoints(table)
+        if "norm-scan" not in self.selection:
+            return flux_points.to_sed_type("dnde")
+        else:
+            return flux_points
+        
     @staticmethod
     def _get_energy_range(dataset, e_min, e_max):
         """Round e_min and e_max to grid"""
