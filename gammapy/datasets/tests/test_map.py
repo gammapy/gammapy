@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
@@ -598,6 +599,7 @@ def test_stack(sky_model):
         mask_safe=mask1,
         name="dataset-1",
         edisp=edisp,
+        meta_table=Table({"OBS_ID": [0]})
     )
 
     bkg2 = Map.from_geom(geom)
@@ -624,6 +626,7 @@ def test_stack(sky_model):
         mask_safe=mask2,
         name="dataset-2",
         edisp=edisp,
+        meta_table=Table({"OBS_ID": [1]})
     )
 
     dataset1.models.append(sky_model)
@@ -638,6 +641,8 @@ def test_stack(sky_model):
     assert_allclose(dataset1.counts.data.sum(), 9000, 1e-5)
     assert_allclose(dataset1.mask_safe.data.sum(), 4600)
     assert_allclose(dataset1.exposure.data.sum(), 150000000000.0)
+
+    assert_allclose(dataset1.meta_table["OBS_ID"][0], [0, 1])
 
 
 def test_stack_npred():

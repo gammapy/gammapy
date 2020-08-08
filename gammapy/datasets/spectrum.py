@@ -12,6 +12,7 @@ from gammapy.modeling.models import Models, ProperModels
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic, cash, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
+from gammapy.utils.table import hstack_columns
 from .map import MapEvaluator
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
@@ -591,6 +592,11 @@ class SpectrumDataset(Dataset):
         # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum of GTIs
         if self.livetime is not None:
             self.livetime += other.livetime
+
+        if self.meta_table and other.meta_table:
+            self.meta_table = hstack_columns(self.meta_table, other.meta_table)
+        elif other.meta_table:
+            self.meta_table = other.meta_table.copy()
 
     def peek(self, figsize=(16, 4)):
         """Quick-look summary plots."""
@@ -1348,4 +1354,5 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             acceptance_off=acceptance_off,
             gti=dataset.gti,
             name=dataset.name,
+            meta_table=dataset.meta_table
         )

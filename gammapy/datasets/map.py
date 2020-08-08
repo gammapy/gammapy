@@ -23,6 +23,7 @@ from gammapy.stats import cash, cash_sum_cython, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.fits import LazyFitsData, HDULocation
+from gammapy.utils.table import hstack_columns
 from .core import Dataset
 
 __all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
@@ -447,7 +448,7 @@ class MapDataset(Dataset):
 
         kwargs.update(geoms)
 
-        return cls.from_geoms(reference_time=reference_time, name=name, **kwargs,)
+        return cls.from_geoms(reference_time=reference_time, name=name, **kwargs)
 
     def stack(self, other):
         """Stack another dataset in place.
@@ -541,6 +542,12 @@ class MapDataset(Dataset):
 
         if self.gti and other.gti:
             self.gti = self.gti.stack(other.gti).union()
+
+        if self.meta_table and other.meta_table:
+            self.meta_table = hstack_columns(self.meta_table, other.meta_table)
+        elif other.meta_table:
+            self.meta_table = other.meta_table.copy()
+
 
     @staticmethod
     def _mask_safe_irf(irf_map, mask, drop=None):

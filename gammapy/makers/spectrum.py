@@ -161,7 +161,6 @@ class SpectrumDatasetMaker(Maker):
         """
         meta_table = Table()
         meta_table["TELESCOP"] = [observation.aeff.meta.get("TELESCOP")]
-        meta_table["INSTRUME"] = [observation.aeff.meta.get("INSTRUME")]
         meta_table["OBS_ID"] = [observation.obs_id]
         meta_table["RA_PNT"] = [observation.pointing_radec.icrs.ra.deg] * u.deg
         meta_table["DEC_PNT"] = [observation.pointing_radec.icrs.dec.deg] * u.deg
@@ -185,8 +184,8 @@ class SpectrumDatasetMaker(Maker):
         kwargs = {
             "gti": observation.gti,
             "livetime": observation.observation_live_time_duration,
+            "meta_table": self.make_meta_table(observation)
         }
-        kwargs["meta_table"] = self.make_meta_table(observation)
 
         energy_axis = dataset.counts.geom.get_axis_by_name("energy")
         energy_axis_true = dataset.aeff.data.axis("energy_true")
@@ -207,5 +206,5 @@ class SpectrumDatasetMaker(Maker):
             edisp = self.make_edisp(
                 region.center, energy_axis, energy_axis_true, observation
             )
-            kwargs["edisp"]  = EDispKernelMap.from_edisp_kernel(edisp, geom=dataset.counts.geom)
+            kwargs["edisp"] = EDispKernelMap.from_edisp_kernel(edisp, geom=dataset.counts.geom)
         return SpectrumDataset(name=dataset.name, **kwargs)
