@@ -181,12 +181,19 @@ class Datasets(collections.abc.MutableSequence):
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n"
-        str_ += "--------\n"
+        str_ += "--------\n\n"
 
         for idx, dataset in enumerate(self):
-            str_ += f"idx={idx}, id={hex(id(dataset))!r}, name={dataset.name!r}\n"
+            str_ += f"Dataset {idx}: \n\n"
+            str_ += f"\tType       : {dataset.tag}\n"
+            str_ += f"\tName       : {dataset.name}\n"
+            try:
+                instrument = set(dataset.meta_table["TELESCOP"]).pop()
+            except KeyError:
+                instrument = ""
+            str_ += f"\tInstrument : {instrument}\n\n"
 
-        return str_
+        return str_.expandtabs(tabsize=2)
 
     def copy(self):
         """A deep copy."""
