@@ -30,6 +30,11 @@ class Dataset(abc.ABC):
     }
 
     @property
+    @abc.abstractmethod
+    def tag(self):
+        pass
+
+    @property
     def mask(self):
         """Combined fit and safe mask"""
         mask_safe = (
