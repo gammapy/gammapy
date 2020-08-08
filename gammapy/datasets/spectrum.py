@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, vstack
 from gammapy.data import GTI
 from gammapy.datasets import Dataset
 from gammapy.irf import EDispKernel, EDispKernelMap, EffectiveAreaTable
@@ -591,6 +591,9 @@ class SpectrumDataset(Dataset):
         # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum of GTIs
         if self.livetime is not None:
             self.livetime += other.livetime
+
+        if self.meta_table and other.meta_table:
+            self.meta_table = vstack([self.meta_table, other.meta_table])
 
     def peek(self, figsize=(16, 4)):
         """Quick-look summary plots."""
