@@ -3,6 +3,7 @@ import abc
 import collections.abc
 import copy
 import numpy as np
+from astropy.table import vstack
 from gammapy.maps import Map
 from gammapy.modeling.models import Models, ProperModels
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
@@ -321,6 +322,14 @@ class Datasets(collections.abc.MutableSequence):
             rows.append(row)
 
         return table_from_row_data(rows=rows)
+
+    @property
+    def meta_table(self):
+        """Meta table"""
+        meta_table = vstack([d.meta_table for d in self])
+        meta_table.add_column([d.tag for d in self], index=0, name="TYPE")
+        meta_table.add_column(self.names, index=0, name="NAME")
+        return meta_table
 
     def __getitem__(self, key):
         return self._datasets[self.index(key)]

@@ -448,7 +448,7 @@ class MapDataset(Dataset):
 
         kwargs.update(geoms)
 
-        return cls.from_geoms(reference_time=reference_time, name=name, **kwargs,)
+        return cls.from_geoms(reference_time=reference_time, name=name, **kwargs)
 
     def stack(self, other):
         """Stack another dataset in place.
@@ -545,6 +545,9 @@ class MapDataset(Dataset):
 
         if self.meta_table and other.meta_table:
             self.meta_table = hstack_columns(self.meta_table, other.meta_table)
+        elif other.meta_table:
+            self.meta_table = other.meta_table.copy()
+
 
     @staticmethod
     def _mask_safe_irf(irf_map, mask, drop=None):
