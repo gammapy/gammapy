@@ -6,6 +6,7 @@ from gammapy.datasets import Dataset
 from gammapy.modeling import Fit, Parameter
 from gammapy.modeling.models import Model, Models
 from gammapy.utils.testing import requires_dependency
+from astropy.table import Table
 
 pytest.importorskip("iminuit")
 
@@ -19,11 +20,13 @@ class MyModel(Model):
 
 
 class MyDataset(Dataset):
+
     tag = "MyDataset"
     def __init__(self, name="test"):
         self.name = name
         self._models = Models([MyModel()])
         self.data_shape = (1,)
+        self.meta_table = Table()
 
     @property
     def models(self):

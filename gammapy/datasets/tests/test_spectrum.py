@@ -240,6 +240,7 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
         livetime=livetime,
         aeff=aeff,
         edisp=edisp1,
+        meta_table=Table({"OBS_ID": [0]})
     )
 
     livetime2 = livetime
@@ -251,8 +252,11 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
         livetime=livetime2,
         aeff=aeff2,
         edisp=edisp2,
+        meta_table=Table({"OBS_ID": [1]})
     )
     spectrum_dataset1.stack(spectrum_dataset2)
+
+    assert_allclose(spectrum_dataset1.meta_table["OBS_ID"][0], [0, 1])
 
     assert spectrum_dataset1.background is None
     assert spectrum_dataset1.livetime == 2 * livetime
