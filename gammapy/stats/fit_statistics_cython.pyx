@@ -68,38 +68,6 @@ def f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
     # the fit.
     return 2 * FLUX_FACTOR * sum
 
-@cython.cdivision(True)
-@cython.boundscheck(False)
-def x_best_leastsq(np.ndarray[np.float_t, ndim=2] counts,
-                    np.ndarray[np.float_t, ndim=2] background,
-                    np.ndarray[np.float_t, ndim=2] model,
-                    np.ndarray[np.float_t, ndim=2] weights):
-    """Best fit amplitude using weighted least squares fit.
-
-    For a single parameter amplitude fit this can be solved analytically.
-
-    Parameters
-    ----------
-    counts : `~numpy.ndarray`
-        Counts image
-    background : `~numpy.ndarray`
-        Background image
-    model : `~numpy.ndarray`
-        Source template (multiplied with exposure).
-    weights : `~numpy.ndarray`
-        Fit weights.
-    """
-    cdef np.float_t sum = 0
-    cdef np.float_t norm = 0
-    cdef unsigned int i, j, ni, nj
-    ni = counts.shape[1]
-    nj = counts.shape[0]
-    for j in range(nj):
-        for i in range(ni):
-            if model[j, i] > 0 and weights[j, i] > 0:
-                sum += (counts[j, i] - background[j, i]) * model[j, i] / weights[j, i]
-                norm += model[j, i] * model[j, i] / weights[j, i]
-    return sum / norm
 
 @cython.cdivision(True)
 @cython.boundscheck(False)

@@ -14,7 +14,6 @@ from gammapy.stats import (
     cash,
     cash_sum_cython,
     f_cash_root_cython,
-    x_best_leastsq,
 )
 from gammapy.makers.utils import _map_spectrum_weight
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
