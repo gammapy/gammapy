@@ -58,11 +58,6 @@ class ParameterEstimator(Estimator):
 
         self.selection = self._make_selection(selection)
 
-    def __str__(self):
-        s = f"{self.__class__.__name__}:\n"
-        s += str(self.datasets) + "\n"
-        return s
-
     def _check_datasets(self, datasets):
         """Check datasets geometry consistency and return Datasets object"""
         if not isinstance(datasets, Datasets):

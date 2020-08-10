@@ -834,11 +834,6 @@ class FluxPointsEstimator(FluxEstimator):
                 if dataset.background_model is not None:
                     dataset.background_model.parameters.freeze_all()
 
-    def __str__(self):
-        s = f"{self.__class__.__name__}:\n"
-        s += str(self.e_edges) + "\n"
-        return s
-
     def run(self, datasets):
         """Run the flux point estimator for all energy groups.
 

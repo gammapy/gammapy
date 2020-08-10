@@ -99,12 +99,6 @@ class FluxEstimator(ParameterEstimator):
     def e_ref(self):
         return np.sqrt(self.energy_range[0] * self.energy_range[1])
 
-    def __str__(self):
-        s = f"{self.__class__.__name__}:\n"
-        s += str(self.datasets) + "\n"
-        s += str(self.model) + "\n"
-        return s
-
     def _set_model(self, datasets, model):
         # set the model on all datasets
         for dataset in datasets:
