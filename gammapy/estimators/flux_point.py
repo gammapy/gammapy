@@ -870,12 +870,9 @@ class FluxPointsEstimator(FluxEstimator):
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
 
-        flux_points = FluxPoints(table)
-        if "norm-scan" not in self.selection:
-            return flux_points.to_sed_type("dnde")
-        else:
-            return flux_points
-        
+        #TODO: this should be changed once likelihood is fully supported
+        return FluxPoints(table).to_sed_type("dnde")
+
     @staticmethod
     def _get_energy_range(dataset, e_min, e_max):
         """Round e_min and e_max to grid"""
