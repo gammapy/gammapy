@@ -28,8 +28,6 @@ REQUIRED_COLUMNS = {
         "e_ref",
         "ref_dnde",
         "norm",
-        "norm_scan",
-        "stat_scan",
     ],
 }
 
@@ -38,6 +36,7 @@ OPTIONAL_COLUMNS = {
     "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul", "is_ul"],
     "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "is_ul"],
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "is_ul"],
+    "likelihood": ["norm_scan", "stat_scan"],
 }
 
 DEFAULT_UNIT = {
@@ -862,6 +861,8 @@ class FluxPointsEstimator(FluxEstimator):
             rows.append(row)
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
+
+        #TODO: this should be changed once likelihood is fully supported
         return FluxPoints(table).to_sed_type("dnde")
 
     @staticmethod
