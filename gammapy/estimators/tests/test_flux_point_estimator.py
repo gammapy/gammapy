@@ -217,7 +217,10 @@ class TestFluxPointsEstimator:
     @requires_data()
     def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
         datasets, fpe = fpe_map_pwl_reoptimize
-        fp = fpe.run(datasets, steps=["err", "norm-scan", "ts"])
+        fpe = fpe.copy()
+        fpe.selection = ["scan"]
+
+        fp = fpe.run(datasets)
 
         actual = fp.table["norm"].data
         assert_allclose(actual, 0.962368, rtol=1e-2)

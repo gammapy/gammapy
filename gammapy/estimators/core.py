@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+from copy import deepcopy
 
 __all__ = ["Estimator"]
 
@@ -32,6 +33,7 @@ class Estimator(abc.ABC):
                     f"Incorrect selection. Available options are {self.available_selection}"
                 )
 
+    # TODO: replace this type checking by using pydantic models in future
     @property
     def selection(self):
         return self._selection
@@ -39,3 +41,7 @@ class Estimator(abc.ABC):
     @selection.setter
     def selection(self, selection):
         self._selection = self._make_selection(selection)
+
+    def copy(self):
+        """Copy estimator"""
+        return deepcopy(self)

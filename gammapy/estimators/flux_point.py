@@ -839,16 +839,13 @@ class FluxPointsEstimator(FluxEstimator):
         s += str(self.e_edges) + "\n"
         return s
 
-    def run(self, datasets, steps="all"):
+    def run(self, datasets):
         """Run the flux point estimator for all energy groups.
 
         Parameters
         ----------
         datasets : list of `~gammapy.spectrum.SpectrumDataset`
             Spectrum datasets.
-        steps : list of str
-            Which steps to execute. See `estimate_flux_point` for details
-            and available options.
 
         Returns
         -------
