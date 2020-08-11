@@ -82,12 +82,11 @@ def test_dict_to_skymodels():
     assert_allclose(
         model2.spectral_model.values.data, [2.52894e-06, 1.2486e-06, 6.14648e-06]
     )
-    assert model2.spectral_model.values.unit == "1 / (cm2 MeV s sr)"
+    assert model2.spectral_model.values.unit == "1 / (cm2 MeV s)"
 
     assert "TemplateSpectralModel" in model2.spectral_model.tag
     assert "TemplateSpatialModel" in model2.spatial_model.tag
 
-    assert model2.spatial_model.parameters["norm"].value == 1.0
     assert not model2.spatial_model.normalize
     assert model2.spectral_model.parameters["norm"].value == 2.1
 

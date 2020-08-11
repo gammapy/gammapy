@@ -124,11 +124,7 @@ components:
     type: TemplateSpatialModel
     filename: $GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits
     normalize: false
-    parameters:
-    - name: norm
-      value: 1.0
-      unit: ''
-      frozen: false
+    parameters: []
   spectral:
     type: TemplateSpectralModel
     energy:
@@ -142,7 +138,7 @@ components:
       - 2.52894e-06
       - 1.2486e-06
       - 6.14648e-06
-      unit: 1 / (cm2 MeV s sr)
+      unit: 1 / (cm2 MeV s)
     parameters:
     - name: norm
       value: 2.1
