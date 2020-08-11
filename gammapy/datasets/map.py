@@ -2127,9 +2127,11 @@ class MapEvaluator:
 
         if isinstance(self.model, SkyDiffuseCube):
             spatial = self.model
+            geom_image = self.geom
             value = 1
         else:
             spatial = self.model.spatial_model
+            geom_image = self.geom.to_image()
             energy = self.geom.get_axis_by_name("energy_true").edges
             value = self.model.spectral_model.integral(
                 energy[:-1], energy[1:], intervals=True
@@ -2140,14 +2142,13 @@ class MapEvaluator:
             spatial_conv = self._spatial_conv_cached
             if self._spatial_pars_cached != spatial_pars or spatial_conv is None:
                 self._spatial_pars_cached = spatial_pars
-                geom_image = self.geom.to_image()
                 spatial_conv = spatial.integrate_geom(geom_image)
                 if self.psf and self.model.apply_irf["psf"]:
                     spatial_conv = self.apply_psf(spatial_conv)
                 self._spatial_conv_cached = spatial_conv
             value = value * spatial_conv.quantity
 
-        if self.model.temporal_model:
+        if getattr(self.model, "temporal_model", None):
             integral = self.model.temporal_model.integral(
                 self.gti.time_start, self.gti.time_stop
             )
