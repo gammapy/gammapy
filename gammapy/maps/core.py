@@ -327,7 +327,7 @@ class Map(abc.ABC):
             This option is only compatible with the 'gadf' format.
         """
         hdulist = self.to_hdulist(**kwargs)
-        hdulist.writeto(filename, overwrite=overwrite)
+        hdulist.writeto(make_path(filename), overwrite=overwrite)
 
     def iter_by_image(self):
         """Iterate over image planes of the map.
