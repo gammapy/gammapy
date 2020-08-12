@@ -36,18 +36,22 @@ def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
     for dataset in datasets:
         dataset.models = SkyModel(spectral_model=PLmodel, name="Crab")
 
-    estimator = ParameterEstimator(n_scan_values=10, selection="all")
+    estimator = ParameterEstimator(
+        parameter="amplitude",
+        scan_n_values=10,
+        selection="all"
+    )
 
-    result = estimator.run(datasets, PLmodel.amplitude)
+    result = estimator.run(datasets)
 
-    assert_allclose(result["amplitude"], 5.142843823441639e-11, rtol=1e-3)
-    assert_allclose(result["amplitude_err"], 6.0075e-12, rtol=1e-3)
-    assert_allclose(result["ts"], 353.2092043652601, rtol=1e-3)
-    assert_allclose(result["amplitude_errp"], 6.703e-12, rtol=5e-3)
-    assert_allclose(result["amplitude_errn"], 6.152e-12, rtol=5e-3)
+    assert_allclose(result["value"], 5.1428e-11, rtol=1e-3)
+    assert_allclose(result["err"], 6.0075e-12, rtol=1e-3)
+    assert_allclose(result["ts"], 353.2092, rtol=1e-3)
+    assert_allclose(result["errp"], 6.703e-12, rtol=5e-3)
+    assert_allclose(result["errn"], 6.152e-12, rtol=5e-3)
 
     # Add test for scan
-    assert_allclose(result["amplitude_scan"].shape, 10)
+    assert_allclose(result["scan"].shape, 10)
 
 
 @pytest.mark.xfail

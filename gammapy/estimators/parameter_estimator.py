@@ -43,146 +43,200 @@ class ParameterEstimator(Estimator):
 
     def __init__(
         self,
+        parameter,
         n_sigma=1,
         n_sigma_ul=2,
+        null_value=1e-150,
+        scan_n_sigma=3,
+        scan_min=None,
+        scan_max=None,
+        scan_n_values=30,
+        scan_values=None,
         reoptimize=True,
-        n_scan_values=30,
-        scan_n_err=3,
         selection="all",
     ):
+        self.parameter = parameter
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.null_value = null_value
+
+        # scan parameters
+        self.scan_n_sigma = scan_n_sigma
+        self.scan_n_values = scan_n_values
+        self.scan_values = scan_values
+        self.scan_min = scan_min
+        self.scan_max = scan_max
+
         self.reoptimize = reoptimize
-        self.n_scan_values = n_scan_values
-        self.scan_n_err = scan_n_err
-
         self.selection = self._make_selection(selection)
+        self._fit = None
 
-    def _check_datasets(self, datasets):
-        """Check datasets geometry consistency and return Datasets object"""
-        if not isinstance(datasets, Datasets):
-            datasets = Datasets(datasets)
-
-        return datasets
-
-    def _freeze_parameters(self, parameter):
-        """Freeze all other parameters"""
-        for par in self.datasets.parameters:
-            if par is not parameter:
-                par.frozen = True
-
-    def _compute_scan_values(self, value, value_error, par_min, par_max):
-        """Define parameter value range to be scanned"""
-        min_range = value - self.scan_n_err * value_error
-        if not np.isnan(par_min):
-            min_range = np.maximum(par_min, min_range)
-        max_range = value + self.scan_n_err * value_error
-        if not np.isnan(par_max):
-            max_range = np.minimum(par_max, max_range)
-
-        return np.linspace(min_range, max_range, self.n_scan_values)
-
-    def _find_best_fit(self, parameter):
-        """Find the best fit solution and store results."""
-        fit_result = self.fit.optimize()
-
-        if fit_result.success:
-            value = parameter.value
-        else:
-            value = np.nan
-
-        result = {
-            parameter.name: value,
-            "stat": fit_result.total_stat,
-            "success": fit_result.success,
-        }
-
-        self.fit_result = fit_result
-        return result
-
-    def _estimate_ts_for_null_value(self, parameter, null_value=1e-150):
-        """Returns the fit statistic value for a given null value of the parameter."""
-        with self.datasets.parameters.restore_values:
-            parameter.value = null_value
-            parameter.frozen = True
-            result = self.fit.optimize()
-        if not result.success:
-            log.warning(
-                "Fit failed for parameter null value, returning NaN. Check input null value."
-            )
-            return np.nan
-        return result.total_stat
-
-    def run(self, datasets, parameter, null_value=1e-150, scan_values=None):
-        """Run the parameter estimator.
+    def estimate_best_fit(self, datasets):
+        """Estimate parameter assymetric errors
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            The datasets used to estimate the model parameter
-        parameter : `~gammapy.modeling.Parameter`
-            the parameter to be estimated
-        null_value : float
-            the null value to be used for delta TS estimation.
-            Default is 1e-150 since 0 can be an issue for some parameters.
-        scan_values : `numpy.ndarray`
-            Array of parameter values to be used for the fit statistic profile.
-            If set to None, scan values are automatically calculated. Default is None.
+            Datasets
 
         Returns
         -------
         result : dict
             Dict with the various parameter estimation values.
         """
-        self.datasets = self._check_datasets(datasets)
-        self.fit = Fit(datasets)
-        self.fit_result = None
+        # TODO: make Fit stateless
+        parameter = datasets.parameters[self.parameter]
+        self._fit = Fit(datasets)
+        result_fit = self._fit.optimize()
+        _ = self._fit.covariance()
 
-        with self.datasets.parameters.restore_values:
+        return {
+            "value": parameter.value,
+            "stat": result_fit.total_stat,
+            "success": result_fit.success,
+            "err": parameter.error * self.n_sigma,
+        }
+
+    def estimate_ts(self, datasets):
+        """Estimate parameter ts
+
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets`
+            Datasets
+
+        Returns
+        -------
+        result : dict
+            Dict with the various parameter estimation values.
+        """
+        stat = datasets.stat_sum()
+
+        with datasets.parameters.restore_values:
+            parameter = datasets.parameters[self.parameter]
+
+            # compute ts value
+            parameter.value = self.null_value
+
+            if self.reoptimize:
+                parameter.frozen = True
+                _ = self._fit.optimize()
+
+            ts = datasets.stat_sum() - stat
+
+        return {"ts": ts, "sqrt_ts": self.get_sqrt_ts(ts)}
+
+    def estimate_errn_errp(self, datasets):
+        """Estimate parameter assymetric errors
+
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets`
+            Datasets
+
+        Returns
+        -------
+        result : dict
+            Dict with the various parameter estimation values.
+        """
+        # TODO: make Fit stateless and configurable
+        self._fit.optimize()
+        res = self._fit.confidence(
+            parameter=self.parameter,
+            sigma=self.n_sigma,
+            reoptimize=self.reoptimize
+        )
+        return {
+                "errp": res["errp"],
+                "errn": res["errn"],
+            }
+
+    def estimate_scan(self, datasets):
+        """Estimate parameter stat scan.
+
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets`
+            The datasets used to estimate the model parameter
+
+        Returns
+        -------
+        result : dict
+            Dict with the various parameter estimation values.
+
+        """
+        # TODO: make Fit stateless and configurable
+        parameter = datasets.parameters[self.parameter]
+
+        if self.scan_min and self.scan_max:
+            bounds = (self.scan_min, self.scan_max)
+        else:
+            bounds = self.scan_n_sigma
+
+        profile = self._fit.stat_profile(
+            parameter=parameter,
+            values=self.scan_values,
+            bounds=bounds,
+            nvalues=self.scan_n_values,
+            reoptimize=self.reoptimize
+        )
+
+        return {
+            "scan": profile["values"],
+            "stat_scan": profile["stat"]
+        }
+
+    def estimate_ul(self, datasets):
+        """Estimate parameter ul.
+
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets`
+            The datasets used to estimate the model parameter
+
+        Returns
+        -------
+        result : dict
+            Dict with the various parameter estimation values.
+
+        """
+        # TODO: make Fit stateless and configurable
+        parameter = datasets.parameters[self.parameter]
+        res = self._fit.confidence(parameter=parameter, sigma=self.n_sigma_ul)
+        return {"ul": res["errp"] + parameter.value}
+
+    def run(self, datasets):
+        """Run the parameter estimator.
+
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets`
+            The datasets used to estimate the model parameter
+
+        Returns
+        -------
+        result : dict
+            Dict with the various parameter estimation values.
+        """
+        datasets = Datasets(datasets)
+        parameters = datasets.models.parameters
+
+        with parameters.restore_values:
 
             if not self.reoptimize:
-                self._freeze_parameters(parameter)
+                parameters.freeze_all()
+                parameters[self.parameter].frozen = False
 
-            result = self._find_best_fit(parameter)
-            TS1 = result["stat"]
-
-            value_max = result[parameter.name]
-
-            res = self.fit.covariance()
-            value_err = res.parameters[parameter].error * self.n_sigma
-            result.update({f"{parameter.name}_err": value_err})
+            result = self.estimate_best_fit(datasets)
+            result.update(self.estimate_ts(datasets))
 
             if "errn-errp" in self.selection:
-                res = self.fit.confidence(parameter=parameter, sigma=self.n_sigma)
-                result.update(
-                    {
-                        f"{parameter.name}_errp": res["errp"],
-                        f"{parameter.name}_errn": res["errn"],
-                    }
-                )
+                result.update(self.estimate_errn_errp(datasets))
 
             if "ul" in self.selection:
-                res = self.fit.confidence(parameter=parameter, sigma=self.n_sigma_ul)
-                result.update({f"{parameter.name}_ul": res["errp"] + value_max})
-
-            TS0 = self._estimate_ts_for_null_value(parameter, null_value)
-            res = TS0 - TS1
-            result.update(
-                {"sqrt_ts": np.sqrt(res), "ts": res, "null_value": null_value}
-            )
-            # TODO: should not need this
-            self.fit.optimize()
+                result.update(self.estimate_ul(datasets))
 
             if "scan" in self.selection:
-                if scan_values is None:
-                    scan_values = self._compute_scan_values(
-                        value_max, value_err, parameter.min, parameter.max
-                    )
+                result.update(self.estimate_scan(datasets))
 
-                res = self.fit.stat_profile(
-                    parameter, values=scan_values, reoptimize=self.reoptimize
-                )
-                result.update(
-                    {f"{parameter.name}_scan": res["values"], "stat_scan": res["stat"]}
-                )
         return result
