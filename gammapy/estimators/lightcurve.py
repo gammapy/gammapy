@@ -6,9 +6,9 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.datasets import Datasets
 from gammapy.utils.scripts import make_path
-from gammapy.utils.table import table_from_row_data
-from .flux import FluxEstimator
-from .flux_point import FluxPoints
+from gammapy.utils.table import table_from_row_data, table_row_to_dict
+from .core import Estimator
+from .flux_point import FluxPoints, FluxPointsEstimator
 
 
 __all__ = ["LightCurve", "LightCurveEstimator"]
@@ -332,7 +332,7 @@ def group_datasets_in_time_interval(datasets, time_intervals, atol="1e-6 s"):
     return dataset_group_ID_table
 
 
-class LightCurveEstimator(FluxEstimator):
+class LightCurveEstimator(Estimator):
     """Compute light curve.
 
     The estimator will fit the source model component to datasets in each of the time intervals
@@ -371,7 +371,7 @@ class LightCurveEstimator(FluxEstimator):
 
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
-            * "norm-scan": estimate fit statistic profiles.
+            * "scan": estimate fit statistic profiles.
 
         By default all steps are executed.
     """
@@ -398,18 +398,17 @@ class LightCurveEstimator(FluxEstimator):
 
         self.group_table_info = None
         self.atol = u.Quantity(atol)
-
-        super().__init__(
-            source,
-            energy_range,
-            norm_min,
-            norm_max,
-            norm_n_values,
-            norm_values,
-            n_sigma,
-            n_sigma_ul,
-            reoptimize,
-            selection,
+        self.fpe = FluxPointsEstimator(
+            source=source,
+            e_edges=energy_range,
+            norm_min=norm_min,
+            norm_max=norm_max,
+            norm_n_values=norm_n_values,
+            norm_values=norm_values,
+            n_sigma=n_sigma,
+            n_sigma_ul=n_sigma_ul,
+            reoptimize=reoptimize,
+            selection=selection,
         )
 
     def _check_and_sort_time_intervals(self, time_intervals):
@@ -474,56 +473,26 @@ class LightCurveEstimator(FluxEstimator):
 
             row = {"time_min": time_interval[0].mjd, "time_max": time_interval[1].mjd}
             interval_list_dataset = Datasets([datasets[int(_)] for _ in index_dataset])
-            row.update(
-                self.estimate_time_bin_flux(interval_list_dataset, time_interval)
-            )
+
+            fp = self.estimate_time_bin_flux(interval_list_dataset)
+            row.update(table_row_to_dict(fp.table[0]))
             rows.append(row)
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         table = FluxPoints(table).to_sed_type("flux").table
         return LightCurve(table)
 
-    def estimate_time_bin_flux(self, datasets, time_interval):
+    def estimate_time_bin_flux(self, datasets):
         """Estimate flux point for a single energy group.
 
         Parameters
         ----------
         datasets : `~gammapy.modeling.Datasets`
             the list of dataset object
-        time_interval : astropy.time.Time`
-            Start and stop time for each interval
 
         Returns
         -------
         result : dict
             Dict with results for the flux point.
         """
-        result = super().run(datasets)
-        result.update(self._estimate_counts(datasets))
-        if not result.pop("success"):
-            log.warning(
-                "Fit failed for time bin between {t_min} and {t_max},".format(
-                    t_min=time_interval[0].mjd, t_max=time_interval[1].mjd
-                )
-            )
+        result = self.fpe.run(datasets)
         return result
-
-    def _estimate_counts(self, datasets):
-        """Estimate counts for the flux point.
-
-        Parameters
-        ----------
-        datasets : `~gammapy.modeling.Datasets`
-            the list of dataset object
-
-        Returns
-        -------
-        result : dict
-            Dict with an array with one entry per dataset with counts for the flux point.
-        """
-
-        counts = []
-        for dataset in datasets:
-            mask = dataset.mask
-            counts.append(dataset.counts.data[mask].sum())
-
-        return {"counts": np.array(counts, dtype=int).sum()}
