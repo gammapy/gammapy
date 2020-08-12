@@ -22,15 +22,6 @@ from .core import Model
 log = logging.getLogger(__name__)
 
 
-def _get_energy_axis(geom):
-    energy_name = None
-    if "energy_true" in [axe.name for axe in geom.axes]:
-        energy_name = "energy_true"
-    elif "energy" in [axe.name for axe in geom.axes]:
-        energy_name = "energy"
-    return energy_name
-
-
 def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     """Effective radius, used for the evaluation of elongated models"""
     phi_0 = position_angle(lon_0, lat_0, lon, lat)
@@ -122,9 +113,8 @@ class SpatialModel(Model):
 
     def evaluate_geom(self, geom):
         coords = geom.get_coord(frame=self.frame)
-        energy_name = _get_energy_axis(geom)
-        if energy_name is not None:
-            return self(coords.lon, coords.lat, coords[energy_name])
+        if "energy_true" in [axe.name for axe in geom.axes]:
+            return self(coords.lon, coords.lat, coords["energy_true"])
         else:
             return self(coords.lon, coords.lat)
 
@@ -140,6 +130,20 @@ class SpatialModel(Model):
         data["frame"] = self.frame
         data["parameters"] = data.pop("parameters")
         return data
+
+    def _get_plot_map(self, geom):
+        if self.evaluation_radius is None and geom is None:
+            raise ValueError(
+                f"{self.__class__.__name__} requires geom to be defined for plotting."
+            )
+
+        if geom is None:
+            width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
+            geom = WcsGeom.create(
+                skydir=self.position, frame=self.frame, width=width, binsz=0.02
+            )
+        data = self.evaluate_geom(geom)
+        return Map.from_geom(geom, data=data.value, unit=data.unit)
 
     def plot(self, ax=None, geom=None, **kwargs):
         """Plot spatial model.
@@ -158,25 +162,34 @@ class SpatialModel(Model):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-        if self.evaluation_radius is None and geom is None:
-            raise ValueError(
-                f"{self.__class__.__name__} requires geom to be defined for plotting."
-            )
-
-        if geom is None:
-            width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
-            geom = WcsGeom.create(
-                skydir=self.position, frame=self.frame, width=width, binsz=0.02
-            )
-
-        data = self.evaluate_geom(geom)
-        m = Map.from_geom(geom, data=data.value, unit=data.unit)
-
-        if len(m.data.shape) > 2:
-            m.plot_interactive(ax=ax, **kwargs)
-        else:
-            _, ax, _ = m.plot(ax=ax, **kwargs)
+        m = self._get_plot_map(geom)
+        if not m.geom.is_flat:
+            raise TypeError("Use .plot_interactive() for Map dimension > 2")
+        _, ax, _ = m.plot(ax=ax, **kwargs)
         return ax
+
+    def plot_interative(self, ax=None, geom=None, **kwargs):
+        """Plot spatial model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        geom : `~gammapy.maps.WcsGeom`, optional
+            Geom to use for plotting.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
+
+        m = self._get_plot_map(geom)
+        if m.geom.is_image:
+            raise TypeError("Use .plot() for 2D Maps")
+        m.plot_interactive(ax=ax, **kwargs)
 
     def plot_error(self, ax=None, **kwargs):
         """Plot position error
@@ -586,6 +599,8 @@ class TemplateSpatialModel(SpatialModel):
             if self.map.unit.is_equivalent(""):
                 self.map.unit = "sr-1"
                 log.warning("Missing spatial template unit, assuming sr^-1")
+        if "energy" in [axe.name for axe in self.map.geom.axes]:
+            self.map.geom.axes[0].name = "energy_true"
 
         self.meta = dict() if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
@@ -627,9 +642,10 @@ class TemplateSpatialModel(SpatialModel):
             "lon": lon.to_value("deg"),
             "lat": lat.to_value("deg"),
         }
-        energy_name = _get_energy_axis(self.map.geom)
-        if energy_name is not None and energy is not None:
-            coord[energy_name] = energy
+        if energy is not None:
+            coord["energy_true"] = energy
+        if energy is None and len(self.map.data.shape) > 2:
+            raise ValueError("Missing energy value for evaluation")
 
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=False)
@@ -672,4 +688,9 @@ class TemplateSpatialModel(SpatialModel):
     def plot(self, ax=None, geom=None, **kwargs):
         if geom is None:
             geom = self.map.geom
-        super(TemplateSpatialModel, self).plot(ax=ax, geom=geom, **kwargs)
+        super().plot(ax=ax, geom=geom, **kwargs)
+
+    def plot_interative(self, ax=None, geom=None, **kwargs):
+        if geom is None:
+            geom = self.map.geom
+        super().plot_interative(ax=ax, geom=geom, **kwargs)

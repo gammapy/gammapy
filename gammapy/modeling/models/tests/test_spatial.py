@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.wcs import WCS
@@ -222,6 +223,9 @@ def test_sky_diffuse_map():
     assert_allclose(radius.value, 0.64, rtol=1.0e-2)
     assert model.frame == "fk5"
     assert isinstance(model.to_region(), PolygonSkyRegion)
+    model.plot()
+    with pytest.raises(TypeError):
+        model.plot_interative()
 
 
 @requires_data()
@@ -232,12 +236,17 @@ def test_sky_diffuse_map_3d():
     lat = -39.8 * u.deg
     energy = 1 * u.GeV
     val = model(lon, lat, energy)
+    with pytest.raises(ValueError):
+        model(lon, lat)
     assert val.unit == "sr-1"
     model.map.unit = "cm-2 s-1 MeV-1 sr-1"
     val = model(lon, lat, energy)
     assert val.unit == "cm-2 s-1 MeV-1 sr-1"
     res = model.evaluate_geom(model.map.geom)
     assert_allclose(np.sum(res.value), 0.07829782953992401)
+    model.plot_interative()
+    with pytest.raises(TypeError):
+        model.plot()
 
 
 @requires_data()

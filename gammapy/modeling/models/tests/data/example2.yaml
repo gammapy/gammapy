@@ -1,5 +1,5 @@
 components:
--   name: ZjKOGg_h
+-   name: example_2
     type: SkyModel
     spectral:
         type: PowerLawSpectralModel
