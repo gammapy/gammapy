@@ -262,9 +262,7 @@ class TSMapEstimator(Estimator):
     @staticmethod
     def sqrt_ts(map_ts):
         r"""Compute sqrt(TS) map.
-
         Compute sqrt(TS) as defined by:
-
         .. math::
             \sqrt{TS} = \left \{
             \begin{array}{ll}
@@ -272,12 +270,10 @@ class TSMapEstimator(Estimator):
               \sqrt{TS} & : \text{else}
             \end{array}
             \right.
-
         Parameters
         ----------
         map_ts : `gammapy.maps.WcsNDMap`
             Input TS map.
-
         Returns
         -------
         sqrt_ts : `gammapy.maps.WcsNDMap`
@@ -390,6 +386,7 @@ class TSMapEstimator(Estimator):
 
         for name in ["ts", "flux", "niter"]:
             result[name].data[j, i] = [_[name] for _ in results]
+
         result["sqrt_ts"] = self.sqrt_ts(result["ts"])
         result["flux_err"].data[j, i] = [_["flux_err"] for _ in results]
 

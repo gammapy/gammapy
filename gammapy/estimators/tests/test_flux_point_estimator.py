@@ -247,7 +247,9 @@ class TestFluxPointsEstimator:
         fp = fpe.run(datasets)
 
         assert fp.sed_type == "dnde"
+        print(fp.table.colnames)
         assert "norm_scan" not in fp.table.colnames
+
 
 def test_no_likelihood_contribution():
     dataset = simulate_spectrum_dataset(

@@ -4,11 +4,12 @@ import numpy as np
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
-from gammapy.datasets import MapDataset
+from gammapy.datasets import MapDataset, Datasets
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
+from .core import Estimator
 from .flux import FluxEstimator
 
 
@@ -748,7 +749,7 @@ class FluxPoints:
         return ax
 
 
-class FluxPointsEstimator(FluxEstimator):
+class FluxPointsEstimator(Estimator):
     """Flux points estimator.
 
     Estimates flux points for a given list of datasets, energies and spectral model.
@@ -796,6 +797,7 @@ class FluxPointsEstimator(FluxEstimator):
     """
 
     tag = "FluxPointsEstimator"
+    available_selection = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
@@ -811,24 +813,38 @@ class FluxPointsEstimator(FluxEstimator):
         selection="all",
     ):
         self.e_edges = e_edges
-        super().__init__(
-            source,
-            e_edges[:2],
-            norm_min,
-            norm_max,
-            norm_n_values,
-            norm_values,
-            n_sigma,
-            n_sigma_ul,
-            reoptimize,
-            selection,
-        )
+        self.source = source
         self._contribute_to_stat = False
 
-    def _freeze_empty_background(self):
-        counts_all = self._estimate_counts()["counts"]
+        self.norm_min = norm_min
+        self.norm_max = norm_max
+        self.norm_n_values = norm_n_values
+        self.norm_values = norm_values
+        self.n_sigma = n_sigma
+        self.n_sigma_ul = n_sigma_ul
+        self.reoptimize = reoptimize
+        self.selection = selection
 
-        for counts, dataset in zip(counts_all, self.datasets):
+    def _flux_estimator(self, e_min, e_max):
+        return FluxEstimator(
+            source=self.source,
+            e_min=e_min,
+            e_max=e_max,
+            norm_min=self.norm_min,
+            norm_max=self.norm_max,
+            norm_n_values=self.norm_n_values,
+            norm_values=self.norm_values,
+            n_sigma=self.n_sigma,
+            n_sigma_ul=self.n_sigma_ul,
+            reoptimize=self.reoptimize,
+            selection=self.selection,
+
+        )
+
+    def _freeze_empty_background(self, datasets):
+        counts_all = self.estimate_counts(datasets)["counts"]
+
+        for counts, dataset in zip(counts_all, datasets):
             if isinstance(dataset, MapDataset) and counts == 0:
                 if dataset.background_model is not None:
                     dataset.background_model.parameters.freeze_all()
@@ -846,18 +862,12 @@ class FluxPointsEstimator(FluxEstimator):
         flux_points : `FluxPoints`
             Estimated flux points.
         """
-        datasets = self._check_datasets(datasets)
-
-        if not datasets.is_all_same_type or not datasets.energy_axes_are_aligned:
-            raise ValueError(
-                "Flux point estimation requires a list of datasets"
-                " of the same type and data shape."
-            )
-        self.datasets = datasets.copy()
+        datasets = Datasets(datasets)
 
         rows = []
+
         for e_min, e_max in zip(self.e_edges[:-1], self.e_edges[1:]):
-            row = self._estimate_flux_point(e_min=e_min, e_max=e_max)
+            row = self.estimate_flux_point(datasets, e_min=e_min, e_max=e_max)
             rows.append(row)
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
@@ -876,7 +886,7 @@ class FluxPointsEstimator(FluxEstimator):
         e_min, e_max = energy_axis.pix_to_coord(edges_idx)
         return e_min, e_max
 
-    def _estimate_flux_point(self, e_min, e_max):
+    def estimate_flux_point(self, datasets, e_min, e_max):
         """Estimate flux point for a single energy group.
 
         Parameters
@@ -889,28 +899,33 @@ class FluxPointsEstimator(FluxEstimator):
         result : dict
             Dict with results for the flux point.
         """
-        for dataset in self.datasets:
+        fe = self._flux_estimator(e_min, e_max)
+
+        for dataset in datasets:
             e_min_new, e_max_new = self._get_energy_range(dataset, e_min, e_max)
             dataset.mask_fit = dataset.counts.geom.energy_mask(
                 emin=e_min_new, emax=e_max_new
             )
             if dataset.mask.any():
-                self.energy_range = [e_min_new, e_max_new]
+                fe.e_min = e_min_new
+                fe.e_max = e_max_new
 
             self._contribute_to_stat |= dataset.mask.any()
 
         if not self._contribute_to_stat:
-            model = self.datasets[0].models[self.source].spectral_model
-            result = self._return_nan_result(model)
+            model = datasets[0].models[self.source].spectral_model
+            result = fe.nan_result
+            result.update(fe.get_reference_flux_values(model))
         else:
-            with self.datasets.parameters.restore_values:
-                self._freeze_empty_background()
-                result = super().run(self.datasets)
+            with datasets.parameters.restore_values:
+                self._freeze_empty_background(datasets)
+                result = fe.run(datasets)
 
-        result.update(self._estimate_counts())
+        result.update(self.estimate_counts(datasets))
         return result
 
-    def _estimate_counts(self):
+    @staticmethod
+    def estimate_counts(datasets):
         """Estimate counts for the flux point.
 
         Returns
@@ -919,7 +934,7 @@ class FluxPointsEstimator(FluxEstimator):
             Dict with an array with one entry per dataset with counts for the flux point.
         """
         counts = []
-        for dataset in self.datasets:
+        for dataset in datasets:
             mask = dataset.mask
             counts.append(dataset.counts.data[mask].sum())
 

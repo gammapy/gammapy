@@ -7,8 +7,9 @@ from astropy.time import Time
 from gammapy.datasets import Datasets
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data
-from .flux import FluxEstimator
+from .core import Estimator
 from .flux_point import FluxPoints
+from .flux import FluxEstimator
 
 
 __all__ = ["LightCurve", "LightCurveEstimator"]
@@ -332,7 +333,7 @@ def group_datasets_in_time_interval(datasets, time_intervals, atol="1e-6 s"):
     return dataset_group_ID_table
 
 
-class LightCurveEstimator(FluxEstimator):
+class LightCurveEstimator(Estimator):
     """Compute light curve.
 
     The estimator will fit the source model component to datasets in each of the time intervals
@@ -371,12 +372,13 @@ class LightCurveEstimator(FluxEstimator):
 
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
-            * "norm-scan": estimate fit statistic profiles.
+            * "scan": estimate fit statistic profiles.
 
         By default all steps are executed.
     """
 
     tag = "LightCurveEstimator"
+    available_selection = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
@@ -394,22 +396,36 @@ class LightCurveEstimator(FluxEstimator):
         selection="all",
     ):
 
+        self.source = source
         self.input_time_intervals = time_intervals
 
         self.group_table_info = None
         self.atol = u.Quantity(atol)
+        self.energy_range = energy_range
 
-        super().__init__(
-            source,
-            energy_range,
-            norm_min,
-            norm_max,
-            norm_n_values,
-            norm_values,
-            n_sigma,
-            n_sigma_ul,
-            reoptimize,
-            selection,
+        self.norm_min = norm_min
+        self.norm_max = norm_max
+        self.norm_n_values = norm_n_values
+        self.norm_values = norm_values
+        self.n_sigma = n_sigma
+        self.n_sigma_ul = n_sigma_ul
+        self.reoptimize = reoptimize
+        self.selection = selection
+
+    def _flux_estimator(self):
+        return FluxEstimator(
+            source=self.source,
+            e_min=self.energy_range[0],
+            e_max=self.energy_range[1],
+            norm_min=self.norm_min,
+            norm_max=self.norm_max,
+            norm_n_values=self.norm_n_values,
+            norm_values=self.norm_values,
+            n_sigma=self.n_sigma,
+            n_sigma_ul=self.n_sigma_ul,
+            reoptimize=self.reoptimize,
+            selection=self.selection,
+
         )
 
     def _check_and_sort_time_intervals(self, time_intervals):
@@ -474,53 +490,40 @@ class LightCurveEstimator(FluxEstimator):
 
             row = {"time_min": time_interval[0].mjd, "time_max": time_interval[1].mjd}
             interval_list_dataset = Datasets([datasets[int(_)] for _ in index_dataset])
-            row.update(
-                self.estimate_time_bin_flux(interval_list_dataset, time_interval)
-            )
+
+            data = self.estimate_time_bin_flux(interval_list_dataset)
+            row.update(data)
+            row.update(self.estimate_counts(interval_list_dataset))
             rows.append(row)
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         table = FluxPoints(table).to_sed_type("flux").table
         return LightCurve(table)
 
-    def estimate_time_bin_flux(self, datasets, time_interval):
+    def estimate_time_bin_flux(self, datasets):
         """Estimate flux point for a single energy group.
 
         Parameters
         ----------
         datasets : `~gammapy.modeling.Datasets`
             the list of dataset object
-        time_interval : astropy.time.Time`
-            Start and stop time for each interval
 
         Returns
         -------
         result : dict
             Dict with results for the flux point.
         """
-        result = super().run(datasets)
-        result.update(self._estimate_counts(datasets))
-        if not result.pop("success"):
-            log.warning(
-                "Fit failed for time bin between {t_min} and {t_max},".format(
-                    t_min=time_interval[0].mjd, t_max=time_interval[1].mjd
-                )
-            )
+        result = self._flux_estimator().run(datasets)
         return result
 
-    def _estimate_counts(self, datasets):
+    @staticmethod
+    def estimate_counts(datasets):
         """Estimate counts for the flux point.
-
-        Parameters
-        ----------
-        datasets : `~gammapy.modeling.Datasets`
-            the list of dataset object
 
         Returns
         -------
         result : dict
             Dict with an array with one entry per dataset with counts for the flux point.
         """
-
         counts = []
         for dataset in datasets:
             mask = dataset.mask

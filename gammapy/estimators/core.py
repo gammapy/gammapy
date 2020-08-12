@@ -16,7 +16,7 @@ class Estimator(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def run(self):
+    def run(self, datasets):
         pass
 
     def _make_selection(self, selection):
@@ -34,6 +34,33 @@ class Estimator(abc.ABC):
                 raise ValueError(
                     f"Incorrect selection. Available options are {self.available_selection}"
                 )
+
+    @staticmethod
+    def get_sqrt_ts(ts):
+        r"""Compute sqrt(TS) value.
+
+        Compute sqrt(TS) as defined by:
+
+        .. math::
+            \sqrt{TS} = \left \{
+            \begin{array}{ll}
+              -\sqrt{-TS} & : \text{if} \ TS < 0 \\
+              \sqrt{TS} & : \text{else}
+            \end{array}
+            \right.
+
+        Parameters
+        ----------
+        ts : `~numpy.ndarray`
+            TS value.
+
+        Returns
+        -------
+        sqrt_ts : `~numpy.ndarray`
+            Sqrt(TS) value.
+        """
+        with np.errstate(invalid="ignore", divide="ignore"):
+            return np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
 
     # TODO: replace this type checking by using pydantic models in future
     @property
