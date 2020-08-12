@@ -223,7 +223,6 @@ def test_sky_diffuse_map():
     assert_allclose(radius.value, 0.64, rtol=1.0e-2)
     assert model.frame == "fk5"
     assert isinstance(model.to_region(), PolygonSkyRegion)
-    model.plot()
     with pytest.raises(TypeError):
         model.plot_interative()
 
@@ -244,7 +243,6 @@ def test_sky_diffuse_map_3d():
     assert val.unit == "cm-2 s-1 MeV-1 sr-1"
     res = model.evaluate_geom(model.map.geom)
     assert_allclose(np.sum(res.value), 0.07829782953992401)
-    model.plot_interative()
     with pytest.raises(TypeError):
         model.plot()
 
