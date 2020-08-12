@@ -22,6 +22,15 @@ from .core import Model
 log = logging.getLogger(__name__)
 
 
+def _get_energy_axis(geom):
+    energy_name = None
+    if "energy_true" in [axe.name for axe in geom.axes]:
+        energy_name = "energy_true"
+    elif "energy" in [axe.name for axe in geom.axes]:
+        energy_name = "energy"
+    return energy_name
+
+
 def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     """Effective radius, used for the evaluation of elongated models"""
     phi_0 = position_angle(lon_0, lat_0, lon, lat)
@@ -113,8 +122,9 @@ class SpatialModel(Model):
 
     def evaluate_geom(self, geom):
         coords = geom.get_coord(frame=self.frame)
-        if "energy_true" in [axe.name for axe in geom.axes]:
-            return self(coords.lon, coords.lat, coords["energy_true"])
+        energy_name = _get_energy_axis(geom)
+        if energy_name is not None:
+            return self(coords.lon, coords.lat, coords[energy_name])
         else:
             return self(coords.lon, coords.lat)
 
@@ -617,8 +627,10 @@ class TemplateSpatialModel(SpatialModel):
             "lon": lon.to_value("deg"),
             "lat": lat.to_value("deg"),
         }
-        if energy:
-            coord["energy_true"] = energy
+        energy_name = _get_energy_axis(self.map.geom)
+        if energy_name is not None and energy is not None:
+            coord[energy_name] = energy
+
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=False)
 
