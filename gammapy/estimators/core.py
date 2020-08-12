@@ -16,7 +16,7 @@ class Estimator(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def run(self):
+    def run(self, datasets):
         pass
 
     def _make_selection(self, selection):

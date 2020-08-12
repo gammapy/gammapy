@@ -22,12 +22,20 @@ class ParameterEstimator(Estimator):
         Sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Sigma to use for upper limit computation. Default is 2.
+    null_value : float
+        Which null value to use for the parameter
+    scan_n_sigma : int
+        Range to scan in number of parameter error
+    scan_min : float
+        Minimum value to use for the stat scan
+    scan_max : int
+        Maximum value to use for the stat scan
+    scan_n_values : int
+        Number of values used to scan fit stat profile
+    scan_values : `~numpy.ndarray`
+        Values to use for the scan.
     reoptimize : bool
         Re-optimize other free model parameters. Default is True.
-    n_scan_values : int
-        Number of values used to scan fit stat profile
-    scan_n_err : float
-        Range to scan in number of parameter error
     selection : list of str
         Which additional quantities to estimate. Available options are:
             * "errn-errp": estimate asymmetric errors on parameter best fit value.
@@ -43,7 +51,6 @@ class ParameterEstimator(Estimator):
 
     def __init__(
         self,
-        parameter,
         n_sigma=1,
         n_sigma_ul=2,
         null_value=1e-150,
@@ -55,7 +62,6 @@ class ParameterEstimator(Estimator):
         reoptimize=True,
         selection="all",
     ):
-        self.parameter = parameter
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.null_value = null_value
@@ -71,39 +77,45 @@ class ParameterEstimator(Estimator):
         self.selection = self._make_selection(selection)
         self._fit = None
 
-    def estimate_best_fit(self, datasets):
+    def _setup_fit(self, datasets):
+        # TODO: make fit stateless and configurable
+        if self._fit is None or datasets is not self._fit.datasets:
+            self._fit = Fit(datasets)
+
+    def estimate_best_fit(self, datasets, parameter):
         """Estimate parameter assymetric errors
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
             Datasets
+        parameter : `Parameter`
+            For which parameter to get the value
 
         Returns
         -------
         result : dict
             Dict with the various parameter estimation values.
         """
-        # TODO: make Fit stateless
-        parameter = datasets.parameters[self.parameter]
-        self._fit = Fit(datasets)
-        result_fit = self._fit.optimize()
-        _ = self._fit.covariance()
+        self._setup_fit(datasets)
+        result_fit = self._fit.run()
 
         return {
-            "value": parameter.value,
+            f"{parameter.name}": parameter.value,
             "stat": result_fit.total_stat,
             "success": result_fit.success,
-            "err": parameter.error * self.n_sigma,
+            f"{parameter.name}_err": parameter.error * self.n_sigma,
         }
 
-    def estimate_ts(self, datasets):
+    def estimate_ts(self, datasets, parameter):
         """Estimate parameter ts
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
             Datasets
+        parameter : `Parameter`
+            For which parameter to get the value
 
         Returns
         -------
@@ -113,7 +125,6 @@ class ParameterEstimator(Estimator):
         stat = datasets.stat_sum()
 
         with datasets.parameters.restore_values:
-            parameter = datasets.parameters[self.parameter]
 
             # compute ts value
             parameter.value = self.null_value
@@ -126,13 +137,15 @@ class ParameterEstimator(Estimator):
 
         return {"ts": ts, "sqrt_ts": self.get_sqrt_ts(ts)}
 
-    def estimate_errn_errp(self, datasets):
+    def estimate_errn_errp(self, datasets, parameter):
         """Estimate parameter assymetric errors
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
             Datasets
+        parameter : `Parameter`
+            For which parameter to get the value
 
         Returns
         -------
@@ -140,24 +153,28 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
         """
         # TODO: make Fit stateless and configurable
+        self._setup_fit(datasets)
         self._fit.optimize()
+
         res = self._fit.confidence(
-            parameter=self.parameter,
+            parameter=parameter,
             sigma=self.n_sigma,
             reoptimize=self.reoptimize
         )
         return {
-                "errp": res["errp"],
-                "errn": res["errn"],
+                f"{parameter.name}_errp": res["errp"],
+                f"{parameter.name}_errn": res["errn"],
             }
 
-    def estimate_scan(self, datasets):
+    def estimate_scan(self, datasets, parameter):
         """Estimate parameter stat scan.
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
             The datasets used to estimate the model parameter
+        parameter : `Parameter`
+            For which parameter to get the value
 
         Returns
         -------
@@ -165,8 +182,8 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
 
         """
-        # TODO: make Fit stateless and configurable
-        parameter = datasets.parameters[self.parameter]
+        self._setup_fit(datasets)
+        self._fit.optimize()
 
         if self.scan_min and self.scan_max:
             bounds = (self.scan_min, self.scan_max)
@@ -182,17 +199,19 @@ class ParameterEstimator(Estimator):
         )
 
         return {
-            "scan": profile["values"],
+            f"{parameter.name}_scan": profile["values"],
             "stat_scan": profile["stat"]
         }
 
-    def estimate_ul(self, datasets):
+    def estimate_ul(self, datasets, parameter):
         """Estimate parameter ul.
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
             The datasets used to estimate the model parameter
+        parameter : `Parameter`
+            For which parameter to get the value
 
         Returns
         -------
@@ -200,18 +219,20 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
 
         """
-        # TODO: make Fit stateless and configurable
-        parameter = datasets.parameters[self.parameter]
+        self._setup_fit(datasets)
+        self._fit.optimize()
         res = self._fit.confidence(parameter=parameter, sigma=self.n_sigma_ul)
-        return {"ul": res["errp"] + parameter.value}
+        return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
-    def run(self, datasets):
+    def run(self, datasets, parameter):
         """Run the parameter estimator.
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
             The datasets used to estimate the model parameter
+        parameter : `str` or `Parameter`
+            For which parameter to run the estimator
 
         Returns
         -------
@@ -219,24 +240,24 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
         """
         datasets = Datasets(datasets)
-        parameters = datasets.models.parameters
+        parameter = datasets.parameters[parameter]
 
-        with parameters.restore_values:
+        with datasets.parameters.restore_values:
 
             if not self.reoptimize:
-                parameters.freeze_all()
-                parameters[self.parameter].frozen = False
+                datasets.parameters.freeze_all()
+                parameter.frozen = False
 
-            result = self.estimate_best_fit(datasets)
-            result.update(self.estimate_ts(datasets))
+            result = self.estimate_best_fit(datasets, parameter)
+            result.update(self.estimate_ts(datasets, parameter))
 
             if "errn-errp" in self.selection:
-                result.update(self.estimate_errn_errp(datasets))
+                result.update(self.estimate_errn_errp(datasets, parameter))
 
             if "ul" in self.selection:
-                result.update(self.estimate_ul(datasets))
+                result.update(self.estimate_ul(datasets, parameter))
 
             if "scan" in self.selection:
-                result.update(self.estimate_scan(datasets))
+                result.update(self.estimate_scan(datasets, parameter))
 
         return result
