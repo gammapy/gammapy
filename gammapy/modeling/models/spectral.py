@@ -421,7 +421,7 @@ class CompoundSpectralModel(SpectralModel):
             f"{self.__class__.__name__}\n"
             f"    Component 1 : {self.model1}\n"
             f"    Component 2 : {self.model2}\n"
-            f"    Operator : {self.operator}\n"
+            f"    Operator : {self.operator.__name__}\n"
         )
 
     def __call__(self, energy):
@@ -431,10 +431,22 @@ class CompoundSpectralModel(SpectralModel):
 
     def to_dict(self):
         return {
+            "type": self.tag[0],
             "model1": self.model1.to_dict(),
             "model2": self.model2.to_dict(),
-            "operator": self.operator,
+            "operator": self.operator.__name__,
         }
+
+    @classmethod
+    def from_dict(cls, data):
+        from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
+
+        model1_cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["model1"]["type"])
+        model1 = model1_cls.from_dict(data["model1"])
+        model2_cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["model2"]["type"])
+        model2 = model2_cls.from_dict(data["model1"])
+        operator = getattr(np, data["operator"])
+        return cls(model1, model2, operator)
 
 
 class PowerLawSpectralModel(SpectralModel):
