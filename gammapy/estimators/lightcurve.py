@@ -6,9 +6,10 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.datasets import Datasets
 from gammapy.utils.scripts import make_path
-from gammapy.utils.table import table_from_row_data, table_row_to_dict
+from gammapy.utils.table import table_from_row_data
 from .core import Estimator
-from .flux_point import FluxPoints, FluxPointsEstimator
+from .flux_point import FluxPoints
+from .flux import FluxEstimator
 
 
 __all__ = ["LightCurve", "LightCurveEstimator"]
@@ -377,6 +378,7 @@ class LightCurveEstimator(Estimator):
     """
 
     tag = "LightCurveEstimator"
+    available_selection = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
@@ -394,21 +396,36 @@ class LightCurveEstimator(Estimator):
         selection="all",
     ):
 
+        self.source = source
         self.input_time_intervals = time_intervals
 
         self.group_table_info = None
         self.atol = u.Quantity(atol)
-        self.fpe = FluxPointsEstimator(
-            source=source,
-            e_edges=energy_range,
-            norm_min=norm_min,
-            norm_max=norm_max,
-            norm_n_values=norm_n_values,
-            norm_values=norm_values,
-            n_sigma=n_sigma,
-            n_sigma_ul=n_sigma_ul,
-            reoptimize=reoptimize,
-            selection=selection,
+        self.energy_range = energy_range
+
+        self.norm_min = norm_min
+        self.norm_max = norm_max
+        self.norm_n_values = norm_n_values
+        self.norm_values = norm_values
+        self.n_sigma = n_sigma
+        self.n_sigma_ul = n_sigma_ul
+        self.reoptimize = reoptimize
+        self.selection = selection
+
+    def _flux_estimator(self):
+        return FluxEstimator(
+            source=self.source,
+            e_min=self.energy_range[0],
+            e_max=self.energy_range[1],
+            norm_min=self.norm_min,
+            norm_max=self.norm_max,
+            norm_n_values=self.norm_n_values,
+            norm_values=self.norm_values,
+            n_sigma=self.n_sigma,
+            n_sigma_ul=self.n_sigma_ul,
+            reoptimize=self.reoptimize,
+            selection=self.selection,
+
         )
 
     def _check_and_sort_time_intervals(self, time_intervals):
@@ -474,8 +491,9 @@ class LightCurveEstimator(Estimator):
             row = {"time_min": time_interval[0].mjd, "time_max": time_interval[1].mjd}
             interval_list_dataset = Datasets([datasets[int(_)] for _ in index_dataset])
 
-            fp = self.estimate_time_bin_flux(interval_list_dataset)
-            row.update(table_row_to_dict(fp.table[0]))
+            data = self.estimate_time_bin_flux(interval_list_dataset)
+            row.update(data)
+            row.update(self.estimate_counts(interval_list_dataset))
             rows.append(row)
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         table = FluxPoints(table).to_sed_type("flux").table
@@ -494,5 +512,21 @@ class LightCurveEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
-        result = self.fpe.run(datasets)
+        result = self._flux_estimator().run(datasets)
         return result
+
+    @staticmethod
+    def estimate_counts(datasets):
+        """Estimate counts for the flux point.
+
+        Returns
+        -------
+        result : dict
+            Dict with an array with one entry per dataset with counts for the flux point.
+        """
+        counts = []
+        for dataset in datasets:
+            mask = dataset.mask
+            counts.append(dataset.counts.data[mask].sum())
+
+        return {"counts": np.array(counts, dtype=int).sum()}

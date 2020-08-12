@@ -259,6 +259,31 @@ class TSMapEstimator(Estimator):
 
         return exposure.copy(data=mask.astype("int"), unit="")
 
+    @staticmethod
+    def sqrt_ts(map_ts):
+        r"""Compute sqrt(TS) map.
+        Compute sqrt(TS) as defined by:
+        .. math::
+            \sqrt{TS} = \left \{
+            \begin{array}{ll}
+              -\sqrt{-TS} & : \text{if} \ TS < 0 \\
+              \sqrt{TS} & : \text{else}
+            \end{array}
+            \right.
+        Parameters
+        ----------
+        map_ts : `gammapy.maps.WcsNDMap`
+            Input TS map.
+        Returns
+        -------
+        sqrt_ts : `gammapy.maps.WcsNDMap`
+            Sqrt(TS) map.
+        """
+        with np.errstate(invalid="ignore", divide="ignore"):
+            ts = map_ts.data
+            sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
+        return map_ts.copy(data=sqrt_ts)
+
     def run(self, dataset):
         """
         Run TS map estimation.
@@ -362,8 +387,7 @@ class TSMapEstimator(Estimator):
         for name in ["ts", "flux", "niter"]:
             result[name].data[j, i] = [_[name] for _ in results]
 
-        ts = result["ts"]
-        result["sqrt_ts"] = ts.copy(data=self.sqrt_ts(ts.data))
+        result["sqrt_ts"] = self.sqrt_ts(result["ts"])
         result["flux_err"].data[j, i] = [_["flux_err"] for _ in results]
 
         if "errn-errp" in self.selection:

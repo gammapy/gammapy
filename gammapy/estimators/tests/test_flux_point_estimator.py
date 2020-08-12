@@ -64,7 +64,7 @@ def simulate_map_dataset(random_state=0, name=None):
     )
 
     skydir = SkyCoord("0 deg", "0 deg", frame="galactic")
-    edges = np.logspace(-1, 2, 16) * u.TeV
+    edges = np.logspace(-1, 2, 15) * u.TeV
     energy_axis = MapAxis.from_edges(edges=edges, name="energy", interp="log")
 
     geom = WcsGeom.create(
