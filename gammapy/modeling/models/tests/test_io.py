@@ -175,7 +175,13 @@ def make_all_models():
         width="4 deg",
     )
     yield Model.create("ConstantSpectralModel", "spectral", const="99 cm-2 s-1 TeV-1")
-    # TODO: yield Model.create("CompoundSpectralModel")
+    yield Model.create(
+        "CompoundSpectralModel",
+        "spectral",
+        model1=Model.create("PowerLawSpectralModel", "spectral"),
+        model2=Model.create("PowerLawSpectralModel", "spectral"),
+        operator=np.add,
+    )
     yield Model.create("PowerLawSpectralModel", "spectral")
     yield Model.create("PowerLaw2SpectralModel", "spectral")
     yield Model.create("ExpCutoffPowerLawSpectralModel", "spectral")

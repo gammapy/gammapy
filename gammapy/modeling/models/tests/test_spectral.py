@@ -9,6 +9,7 @@ from gammapy.modeling.models import (
     AbsorbedSpectralModel,
     Absorption,
     ConstantSpectralModel,
+    CompoundSpectralModel,
     ExpCutoffPowerLaw3FGLSpectralModel,
     ExpCutoffPowerLawSpectralModel,
     GaussianSpectralModel,
@@ -352,6 +353,22 @@ def test_to_from_dict():
     new_model = model_class.from_dict(model_dict)
 
     assert isinstance(new_model, PowerLawSpectralModel)
+
+    actual = [par.value for par in new_model.parameters]
+    desired = [par.value for par in model.parameters]
+    assert_quantity_allclose(actual, desired)
+
+
+def test_to_from_dict_compound():
+    spectrum = TEST_MODELS[-2]
+    model = spectrum["model"]
+    assert spectrum["name"] == "compound6"
+    model_dict = model.to_dict()
+    assert model_dict["operator"] == "add"
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
+    new_model = model_class.from_dict(model_dict)
+
+    assert isinstance(new_model, CompoundSpectralModel)
 
     actual = [par.value for par in new_model.parameters]
     desired = [par.value for par in model.parameters]
