@@ -173,16 +173,24 @@ class FluxEstimator(Estimator):
 
         return result
 
-    def _return_nan_result(self, model):
-        result = self._prepare_result(model)
-        result.update({"norm": np.nan, "stat": np.nan, "success": False})
-        result.update({"norm_err": np.nan})
-        result.update({"sqrt_ts": np.nan, "ts": np.nan, "null_value": np.nan})
+    @property
+    def nan_result(self):
+        result = {
+            "norm": np.nan,
+            "stat": np.nan,
+            "success": False,
+            "norm_err": np.nan,
+            "ts": np.nan,
+        }
+
         if "errn-errp" in self.selection:
             result.update({"norm_errp": np.nan, "norm_errn": np.nan})
+
         if "ul" in self.selection:
             result.update({"norm_ul": np.nan})
+
         if "scan" in self.selection:
             nans = np.nan * np.empty_like(self.norm_values)
             result.update({"norm_scan": nans, "stat_scan": nans})
+
         return result
