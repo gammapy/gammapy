@@ -112,10 +112,14 @@ class SpatialModel(Model):
         )
 
     def evaluate_geom(self, geom):
-        coords = geom.get_coord(frame=self.frame)
         if "energy_true" in [axe.name for axe in geom.axes]:
-            return self(coords.lon, coords.lat, coords["energy_true"])
+            energy = geom.get_axis_by_name("energy_true").center[
+                :, np.newaxis, np.newaxis
+            ]
+            coords = geom.to_image().get_coord(frame=self.frame)
+            return self(coords.lon, coords.lat, energy)
         else:
+            coords = geom.get_coord(frame=self.frame)
             return self(coords.lon, coords.lat)
 
     def integrate_geom(self, geom):
