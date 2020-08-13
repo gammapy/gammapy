@@ -229,7 +229,7 @@ def test_sky_diffuse_map():
 
 @requires_data()
 def test_sky_diffuse_map_3d():
-    filename = "$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_gc.fits"
+    filename = "$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz"
     model = TemplateSpatialModel.read(filename, normalize=False)
     lon = [258.5, 0] * u.deg
     lat = -39.8 * u.deg
@@ -242,7 +242,7 @@ def test_sky_diffuse_map_3d():
     val = model(lon, lat, energy)
     assert val.unit == "cm-2 s-1 MeV-1 sr-1"
     res = model.evaluate_geom(model.map.geom)
-    assert_allclose(np.sum(res.value), 0.07829782953992401)
+    assert_allclose(np.sum(res.value), 0.11803847221522712)
     with pytest.raises(TypeError):
         model.plot()
 
