@@ -358,22 +358,6 @@ class LightCurveEstimator(Estimator):
         self.reoptimize = reoptimize
         self.selection = selection
 
-    def _flux_estimator(self):
-        return FluxEstimator(
-            source=self.source,
-            e_min=self.energy_range[0],
-            e_max=self.energy_range[1],
-            norm_min=self.norm_min,
-            norm_max=self.norm_max,
-            norm_n_values=self.norm_n_values,
-            norm_values=self.norm_values,
-            n_sigma=self.n_sigma,
-            n_sigma_ul=self.n_sigma_ul,
-            reoptimize=self.reoptimize,
-            selection=self.selection,
-
-        )
-
     def run(self, datasets):
         """Run light curve extraction.
 
@@ -436,8 +420,21 @@ class LightCurveEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
-        result = self._flux_estimator().run(datasets)
-        return result
+        fe = FluxEstimator(
+            source=self.source,
+            e_min=self.energy_range[0],
+            e_max=self.energy_range[1],
+            norm_min=self.norm_min,
+            norm_max=self.norm_max,
+            norm_n_values=self.norm_n_values,
+            norm_values=self.norm_values,
+            n_sigma=self.n_sigma,
+            n_sigma_ul=self.n_sigma_ul,
+            reoptimize=self.reoptimize,
+            selection=self.selection,
+
+        )
+        return fe.run(datasets)
 
     @staticmethod
     def estimate_counts(datasets):

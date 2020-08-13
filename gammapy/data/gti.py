@@ -152,7 +152,7 @@ class GTI:
 
         Parameters
         ----------
-        time_intervals : list of tuple
+        time_intervals : list of `~astropy.time.Time` objects
             Time intervals
         reference_time : `~astropy.time.Time`
             Reference time to use in GTI definition
