@@ -44,10 +44,13 @@ class SpatialModel(Model):
         if not hasattr(self, "frame"):
             self.frame = frame
 
-    def __call__(self, lon, lat):
+    def __call__(self, lon, lat, energy=None):
         """Call evaluate method"""
         kwargs = {par.name: par.quantity for par in self.parameters}
-        return self.evaluate(lon, lat, **kwargs)
+        if energy:
+            return self.evaluate(lon, lat, energy, **kwargs)
+        else:
+            return self.evaluate(lon, lat, **kwargs)
 
     @property
     def position(self):
@@ -109,9 +112,15 @@ class SpatialModel(Model):
         )
 
     def evaluate_geom(self, geom):
-        """Evaluate model on `~gammapy.maps.Geom`."""
-        coords = geom.get_coord(frame=self.frame)
-        return self(coords.lon, coords.lat)
+        if "energy_true" in [axe.name for axe in geom.axes]:
+            energy = geom.get_axis_by_name("energy_true").center[
+                :, np.newaxis, np.newaxis
+            ]
+            coords = geom.to_image().get_coord(frame=self.frame)
+            return self(coords.lon, coords.lat, energy)
+        else:
+            coords = geom.get_coord(frame=self.frame)
+            return self(coords.lon, coords.lat)
 
     def integrate_geom(self, geom):
         """Integrate model on `~gammapy.maps.Geom`."""
@@ -125,6 +134,20 @@ class SpatialModel(Model):
         data["frame"] = self.frame
         data["parameters"] = data.pop("parameters")
         return data
+
+    def _get_plot_map(self, geom):
+        if self.evaluation_radius is None and geom is None:
+            raise ValueError(
+                f"{self.__class__.__name__} requires geom to be defined for plotting."
+            )
+
+        if geom is None:
+            width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
+            geom = WcsGeom.create(
+                skydir=self.position, frame=self.frame, width=width, binsz=0.02
+            )
+        data = self.evaluate_geom(geom)
+        return Map.from_geom(geom, data=data.value, unit=data.unit)
 
     def plot(self, ax=None, geom=None, **kwargs):
         """Plot spatial model.
@@ -143,22 +166,34 @@ class SpatialModel(Model):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-        if self.evaluation_radius is None and geom is None:
-            raise ValueError(
-                f"{self.__class__.__name__} requires geom to be defined for plotting."
-            )
-
-        if geom is None:
-            width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
-            geom = WcsGeom.create(
-                skydir=self.position, frame=self.frame, width=width, binsz=0.02
-            )
-
-        data = self.evaluate_geom(geom)
-        m = Map.from_geom(geom, data=data.value, unit=data.unit)
+        m = self._get_plot_map(geom)
+        if not m.geom.is_flat:
+            raise TypeError("Use .plot_interactive() for Map dimension > 2")
         _, ax, _ = m.plot(ax=ax, **kwargs)
-
         return ax
+
+    def plot_interative(self, ax=None, geom=None, **kwargs):
+        """Plot spatial model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        geom : `~gammapy.maps.WcsGeom`, optional
+            Geom to use for plotting.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
+
+        m = self._get_plot_map(geom)
+        if m.geom.is_image:
+            raise TypeError("Use .plot() for 2D Maps")
+        m.plot_interactive(ax=ax, **kwargs)
 
     def plot_error(self, ax=None, **kwargs):
         """Plot position error
@@ -522,19 +557,14 @@ class ConstantSpatialModel(SpatialModel):
 
 
 class TemplateSpatialModel(SpatialModel):
-    """Spatial sky map template model (2D).
-
-    This is for a 2D image. The unit of the map has to be equivalent to ``sr-1``.
-
-    Use `~gammapy.modeling.models.SkyDiffuseCube` for 3D cubes with
-    an energy axis.
+    """Spatial sky map template model.
 
     For more information see :ref:`template-spatial-model`.
 
     Parameters
     ----------
     map : `~gammapy.maps.Map`
-        Map template. The unit has to be equivalent to ``sr-1``.
+        Map template.
     norm : float
         Norm parameter (multiplied with map values)
     meta : dict, optional
@@ -547,16 +577,9 @@ class TemplateSpatialModel(SpatialModel):
     """
 
     tag = ["TemplateSpatialModel", "template"]
-    norm = Parameter("norm", 1)
 
     def __init__(
-        self,
-        map,
-        norm=norm.quantity,
-        meta=None,
-        normalize=True,
-        interp_kwargs=None,
-        filename=None,
+        self, map, meta=None, normalize=True, interp_kwargs=None, filename=None,
     ):
         if (map.data < 0).any():
             log.warning("Diffuse map has negative values. Check and fix this!")
@@ -565,14 +588,21 @@ class TemplateSpatialModel(SpatialModel):
             filename = str(make_path(filename))
 
         self.map = map
-        if not self.map.unit.is_equivalent("sr-1"):
-            raise ValueError("The map unit should be equivalent to sr-1")
         self.normalize = normalize
         if normalize:
-            # Normalize the diffuse map model so that it integrates to unity."""
-            data = self.map.data / self.map.data.sum()
+            # Normalize the diffuse map model so that it integrates to unity
+            if len(self.map.data.shape) > 2:
+                # Normalize in each energy bin
+                data_sum = self.map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
+            else:
+                data_sum = self.map.data.sum()
+            data = self.map.data / data_sum
             data /= self.map.geom.solid_angle().to_value("sr")
             self.map = self.map.copy(data=data, unit="sr-1")
+        else:
+            if self.map.unit.is_equivalent(""):
+                self.map.unit = "sr-1"
+                log.warning("Missing spatial template unit, assuming sr^-1")
 
         self.meta = dict() if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
@@ -580,7 +610,7 @@ class TemplateSpatialModel(SpatialModel):
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
         self.filename = filename
-        super().__init__(norm=norm)
+        super().__init__()
 
     @property
     def evaluation_radius(self):
@@ -607,19 +637,20 @@ class TemplateSpatialModel(SpatialModel):
         """
         m = Map.read(filename, **kwargs)
 
-        if not m.unit.is_equivalent("sr-1"):
-            m.unit = "sr-1"
-            log.warning(
-                "Spatial template unit is not equivalent to sr^-1, unit changed to sr^-1"
-            )
-
         return cls(m, normalize=normalize, filename=filename)
 
-    def evaluate(self, lon, lat, norm):
-        """Evaluate model."""
-        coord = {"lon": lon.to_value("deg"), "lat": lat.to_value("deg")}
+    def evaluate(self, lon, lat, energy=None):
+        coord = {
+            "lon": lon.to_value("deg"),
+            "lat": lat.to_value("deg"),
+        }
+        if energy is not None:
+            coord["energy_true"] = energy
+        if energy is None and len(self.map.data.shape) > 2:
+            raise ValueError("Missing energy value for evaluation")
+
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
-        return u.Quantity(norm.value * val, self.map.unit, copy=False)
+        return u.Quantity(val, self.map.unit, copy=False)
 
     @property
     def position(self):
@@ -633,12 +664,6 @@ class TemplateSpatialModel(SpatialModel):
     @classmethod
     def from_dict(cls, data):
         m = Map.read(data["filename"])
-
-        if not m.unit.is_equivalent("sr-1"):
-            m.unit = "sr-1"
-            log.warning(
-                "Spatial template unit is not equivalent to sr^-1, unit changed to sr^-1"
-            )
 
         parameters = Parameters.from_dict(data["parameters"])
         return cls.from_parameters(
@@ -661,3 +686,13 @@ class TemplateSpatialModel(SpatialModel):
         return PolygonSkyRegion(
             vertices=SkyCoord(footprint, unit="deg", frame=self.frame, **kwargs)
         )
+
+    def plot(self, ax=None, geom=None, **kwargs):
+        if geom is None:
+            geom = self.map.geom
+        super().plot(ax=ax, geom=geom, **kwargs)
+
+    def plot_interative(self, ax=None, geom=None, **kwargs):
+        if geom is None:
+            geom = self.map.geom
+        super().plot_interative(ax=ax, geom=geom, **kwargs)

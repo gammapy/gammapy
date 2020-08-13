@@ -78,6 +78,7 @@ class SkyModel(SkyModelBase):
 
         self.apply_irf = apply_irf
         self.datasets_names = datasets_names
+        self._check_unit()
         super().__init__()
 
     @property
@@ -89,6 +90,26 @@ class SkyModel(SkyModelBase):
         if not self.parameters == self._covariance.parameters:
             self._covariance = Covariance.from_stack(
                 [model.covariance for model in self._models],
+            )
+
+    def _check_unit(self):
+        from astropy.time import Time
+        from gammapy.data.gti import GTI
+
+        # evaluate over a test geom to check output unit
+        # TODO simpler way to test this ?
+        axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy_true")
+        geom = WcsGeom.create(skydir=(0, 0), npix=(2, 2), frame="galactic", axes=[axis])
+        t_ref = Time(55555, format="mjd")
+        gti = GTI.create([1, 5] * u.day, [2, 6] * u.day, reference_time=t_ref)
+        value = self.evaluate_geom(geom, gti)
+        if self.spatial_model is not None:
+            ref_unit = "cm-2 s-1 MeV-1 sr-1"
+        else:
+            ref_unit = "cm-2 s-1 MeV-1"
+        if not value.unit.is_equivalent(ref_unit):
+            raise ValueError(
+                f"SkyModel unit {value.unit} is not equivalent to {ref_unit}"
             )
 
     @property
@@ -349,7 +370,9 @@ class SkyModel(SkyModelBase):
 
         str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
 
-        str_ += "\t{:26}: {}\n".format("Spectral model type", self.spectral_model.__class__.__name__)
+        str_ += "\t{:26}: {}\n".format(
+            "Spectral model type", self.spectral_model.__class__.__name__
+        )
 
         if self.spatial_model is not None:
             spatial_type = self.spatial_model.__class__.__name__
@@ -630,7 +653,9 @@ class BackgroundModel(Model):
         if isinstance(map, Map):
             axis = map.geom.get_axis_by_name("energy")
             if axis.node_type != "edges":
-                raise ValueError('Need an integrated map, energy axis node_type="edges"')
+                raise ValueError(
+                    'Need an integrated map, energy axis node_type="edges"'
+                )
 
         self.map = map
 
@@ -819,5 +844,4 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
         spatial_model=spatial_model,
         spectral_model=spectral_model,
         name="fermi-diffuse-iso",
-
     )
