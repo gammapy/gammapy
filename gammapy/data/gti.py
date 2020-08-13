@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from operator import lt, le
 from astropy.table import Table, vstack
 from astropy.time import Time
 from astropy.units import Quantity
@@ -222,13 +223,18 @@ class GTI:
         table = Table({"START": start, "STOP": end}, names=["START", "STOP"])
         return self.__class__(vstack([self.table, table]))
 
-    def union(self):
+    def union(self, overlap_ok=True, merge_equal=True):
         """Union of overlapping time intervals.
 
         Returns a new `~gammapy.data.GTI` object.
 
-        Intervals that touch will be merged, e.g.
-        ``(1, 2)`` and ``(2, 3)`` will result in ``(1, 3)``.
+        Parameters
+        ----------
+        overlap_ok : bool
+            Whether to raise an error when overlapping time bins are found.
+        merge_equal : bool
+            Whether to merge touching time bins e.g. ``(1, 2)`` and ``(2, 3)``
+            will result in ``(1, 3)``.
         """
         # Algorithm to merge overlapping intervals is well-known,
         # see e.g. https://stackoverflow.com/a/43600953/498873
