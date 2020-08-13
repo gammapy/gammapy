@@ -362,6 +362,18 @@ class Datasets(collections.abc.MutableSequence):
 
         return table_from_row_data(rows=rows)
 
+    # TODO: merge with meta table?
+    @property
+    def gti(self):
+        """GTI table"""
+        time_intervals = []
+
+        for dataset in self:
+            interval = (dataset.gti.time_start[0], dataset.gti.time_stop[-1])
+            time_intervals.append(interval)
+
+        return GTI.from_time_intervals(time_intervals)
+
     @property
     def meta_table(self):
         """Meta table"""
