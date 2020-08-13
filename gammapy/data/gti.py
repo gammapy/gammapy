@@ -242,15 +242,71 @@ class GTI:
         table = self.table.copy()
         table.sort("START")
 
+        compare = lt if merge_equal else le
+
         # We use Python dict instead of astropy.table.Row objects,
         # because on some versions modifying Row entries doesn't behave as expected
         merged = [{"START": table[0]["START"], "STOP": table[0]["STOP"]}]
         for row in table[1:]:
             interval = {"START": row["START"], "STOP": row["STOP"]}
-            if merged[-1]["STOP"] <= interval["START"]:
+            if compare(merged[-1]["STOP"], interval["START"]):
                 merged.append(interval)
             else:
+                if not overlap_ok:
+                    raise ValueError("Overlapping time bins")
+
                 merged[-1]["STOP"] = max(interval["STOP"], merged[-1]["STOP"])
 
         merged = Table(rows=merged, names=["START", "STOP"], meta=self.table.meta)
         return self.__class__(merged)
+
+    def group_table(self, time_intervals, atol="1e-6 s"):
+        """Compute the table with the info on the group to which belong each time interval.
+
+        The t_start and t_stop are stored in MJD from a scale in "utc".
+
+        Parameters
+        ----------
+        time_intervals : list of `astropy.time.Time`
+            Start and stop time for each interval to compute the LC
+        atol : `~astropy.units.Quantity`
+            Tolerance value for time comparison with different scale. Default 1e-6 sec.
+
+        Returns
+        -------
+        group_table : `~astropy.table.Table`
+            Contains the grouping info.
+        """
+        atol = Quantity(atol)
+
+        group_table = Table(
+            names=("group_idx", "time_min", "time_max", "bin_type"),
+            dtype=("i8", "f8", "f8", "S10"),
+        )
+        time_intervals_lowedges = Time(
+            [time_interval[0] for time_interval in time_intervals]
+        )
+        time_intervals_upedges = Time(
+            [time_interval[1] for time_interval in time_intervals]
+        )
+
+        for t_start, t_stop in zip(self.time_start, self.time_stop):
+            mask1 = t_start >= time_intervals_lowedges - atol
+            mask2 = t_stop <= time_intervals_upedges + atol
+            mask = mask1 & mask2
+            if np.any(mask):
+                group_index = np.where(mask)[0]
+                bin_type = ""
+            else:
+                group_index = -1
+                if np.any(mask1):
+                    bin_type = "overflow"
+                elif np.any(mask2):
+                    bin_type = "underflow"
+                else:
+                    bin_type = "outflow"
+            group_table.add_row(
+                [group_index, t_start.utc.mjd, t_stop.utc.mjd, bin_type]
+            )
+
+        return group_table
