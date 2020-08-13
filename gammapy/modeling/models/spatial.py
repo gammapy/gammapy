@@ -603,8 +603,6 @@ class TemplateSpatialModel(SpatialModel):
             if self.map.unit.is_equivalent(""):
                 self.map.unit = "sr-1"
                 log.warning("Missing spatial template unit, assuming sr^-1")
-        if "energy" in [axe.name for axe in self.map.geom.axes]:
-            self.map.geom.axes[0].name = "energy_true"
 
         self.meta = dict() if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs

@@ -229,7 +229,7 @@ def test_sky_diffuse_map():
 
 @requires_data()
 def test_sky_diffuse_map_3d():
-    filename = "$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits"
+    filename = "$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_gc.fits"
     model = TemplateSpatialModel.read(filename, normalize=False)
     lon = [258.5, 0] * u.deg
     lat = -39.8 * u.deg
