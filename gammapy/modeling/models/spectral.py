@@ -10,7 +10,11 @@ from astropy.table import Table
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.modeling import Covariance, Parameter, Parameters
-from gammapy.utils.integrate import evaluate_integral_pwl, trapz_loglog
+from gammapy.utils.integrate import (
+    evaluate_integral_pwl,
+    evaluate_integral_norm_pwl,
+    trapz_loglog,
+)
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .core import Model
@@ -449,7 +453,45 @@ class CompoundSpectralModel(SpectralModel):
         return cls(model1, model2, operator)
 
 
-class PowerLawSpectralModel(SpectralModel):
+class _PowerLawSpectralModelBase(SpectralModel):
+    r"""Base class for spectral power-law models."""
+
+    def integral(self, emin, emax, **kwargs):
+        r"""Integrate power law analytically.
+
+        .. math::
+            F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE = \left.
+            \phi_0 \frac{E_0}{-\Gamma + 1} \left( \frac{E}{E_0} \right)^{-\Gamma + 1}
+            \right \vert _{E_{min}}^{E_{max}}
+
+        Parameters
+        ----------
+        emin, emax : `~astropy.units.Quantity`
+            Lower and upper bound of integration range
+        """
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, emin)
+        return self.evaluate_integral(emin=emin, emax=emax, **kwargs)
+
+    def energy_flux(self, emin, emax):
+        r"""Compute energy flux in given energy range analytically.
+
+        .. math::
+            G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}E \phi(E)dE = \left.
+            \phi_0 \frac{E_0^2}{-\Gamma + 2} \left( \frac{E}{E_0} \right)^{-\Gamma + 2}
+            \right \vert _{E_{min}}^{E_{max}}
+
+        Parameters
+        ----------
+        emin, emax : `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
+        """
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, emin)
+        return self.evaluate_energy_flux(emin=emin, emax=emax, **kwargs)
+
+
+class PowerLawSpectralModel(_PowerLawSpectralModelBase):
     r"""Spectral power-law model.
 
     For more information see :ref:`powerlaw-spectral-model`.
@@ -494,40 +536,6 @@ class PowerLawSpectralModel(SpectralModel):
 
         return energy_flux
 
-    def integral(self, emin, emax, **kwargs):
-        r"""Integrate power law analytically.
-
-        .. math::
-            F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE = \left.
-            \phi_0 \frac{E_0}{-\Gamma + 1} \left( \frac{E}{E_0} \right)^{-\Gamma + 1}
-            \right \vert _{E_{min}}^{E_{max}}
-
-        Parameters
-        ----------
-        emin, emax : `~astropy.units.Quantity`
-            Lower and upper bound of integration range
-        """
-        kwargs = {par.name: par.quantity for par in self.parameters}
-        kwargs = self._convert_evaluate_unit(kwargs, emin)
-        return self.evaluate_integral(emin=emin, emax=emax, **kwargs)
-
-    def energy_flux(self, emin, emax):
-        r"""Compute energy flux in given energy range analytically.
-
-        .. math::
-            G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}E \phi(E)dE = \left.
-            \phi_0 \frac{E_0^2}{-\Gamma + 2} \left( \frac{E}{E_0} \right)^{-\Gamma + 2}
-            \right \vert _{E_{min}}^{E_{max}}
-
-        Parameters
-        ----------
-        emin, emax : `~astropy.units.Quantity`
-            Lower and upper bound of integration range.
-        """
-        kwargs = {par.name: par.quantity for par in self.parameters}
-        kwargs = self._convert_evaluate_unit(kwargs, emin)
-        return self.evaluate_energy_flux(emin=emin, emax=emax, **kwargs)
-
     def inverse(self, value):
         """Return energy for a given function value of the spectral model.
 
@@ -554,6 +562,99 @@ class PowerLawSpectralModel(SpectralModel):
         amplitude = self.amplitude.quantity
         cov_index_ampl = self.covariance.data[0, 1] * amplitude.unit
         return reference * np.exp(cov_index_ampl / (amplitude * index_err ** 2))
+
+
+class NormPowerLawSpectralModel(_PowerLawSpectralModelBase):
+    r"""Norm spectral power-law model.
+
+    For more information see :ref:`powerlaw-spectral-model`.
+
+    Parameters
+    ----------
+    index : `~astropy.units.Quantity`
+        :math:`\Gamma`
+    norm : `~astropy.units.Quantity`
+        :math:`\phi_0`
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`
+    """
+    # TODO: the information page could refers to the same than power-law model
+    # and explain the difference here ? because it's more likely that users look
+    # at PL page first then they can learn about norm-PL as an alternative parametrization
+    # and when to use it instead.
+
+    tag = ["NormPowerLawSpectralModel", "norm-pl"]
+    index = Parameter("index", 2.0)
+    norm = Parameter("norm", 1, unit="")
+    reference = Parameter("reference", "1 TeV", frozen=True)
+    evaluate_integral = staticmethod(evaluate_integral_norm_pwl)
+
+    @staticmethod
+    def evaluate(energy, index, norm, reference):
+        """Evaluate the model (static function)."""
+        return norm * np.power((energy / reference), -index)
+
+    @staticmethod
+    def evaluate_energy_flux(emin, emax, index, norm, reference):
+        """Evaluate the energy flux (static function)"""
+        val = -1 * index + 2
+
+        prefactor = norm * reference ** 2 / val
+        upper = (emax / reference) ** val
+        lower = (emin / reference) ** val
+        energy_flux = prefactor * (upper - lower)
+
+        mask = np.isclose(val, 0)
+
+        if mask.any():
+            # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
+            # for reference
+            energy_flux[mask] = norm * reference ** 2 * np.log(emax / emin)[mask]
+
+        return energy_flux
+
+    def inverse(self, value):
+        """Return energy for a given function value of the spectral model.
+
+        Parameters
+        ----------
+        value : `~astropy.units.Quantity`
+            Function value of the spectral model.
+        """
+        base = value / self.norm.quantity
+        return self.reference.quantity * np.power(base, -1.0 / self.index.value)
+
+    @property
+    def pivot_energy(self):
+        r"""The decorrelation energy is defined as:
+
+        .. math::
+
+            E_D = E_0 * \exp{cov(\phi_0, \Gamma) / (\phi_0 \Delta \Gamma^2)}
+
+        Formula (1) in https://arxiv.org/pdf/0910.4881.pdf
+        """
+        index_err = self.index.error
+        reference = self.reference.quantity
+        norm = self.norm.quantity
+        cov_index_norm = self.covariance.data[0, 1] * norm.unit
+        return reference * np.exp(cov_index_norm / (norm * index_err ** 2))
+
+
+#    TODO: should we redine a plot method with correct y-unit or user responsability ?
+#    def plot(
+#        self,
+#        energy_range,
+#        ax=None,
+#        energy_unit="TeV",
+#        flux_unit="",
+#        energy_power=0,
+#        n_points=100,
+#        **kwargs,
+#    ):
+#        super.plot(
+#            energy_range, ax, energy_unit, flux_unit, energy_power, n_points, **kwargs
+#        )
 
 
 class PowerLaw2SpectralModel(SpectralModel):
@@ -704,7 +805,30 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
         return pwl * brk
 
 
-class ExpCutoffPowerLawSpectralModel(SpectralModel):
+class _ExpCutoffPowerLawSpectralModelBase(SpectralModel):
+    r"""Base class for spectral exponential cutoff power-law models."""
+
+    @property
+    def e_peak(self):
+        r"""Spectral energy distribution peak energy (`~astropy.units.Quantity`).
+
+        This is the peak in E^2 x dN/dE and is given by:
+
+        .. math::
+            E_{Peak} =  \left(\frac{2 - \Gamma}{\alpha}\right)^{1/\alpha} / \lambda
+        """
+        reference = self.reference.quantity
+        index = self.index.quantity
+        lambda_ = self.lambda_.quantity
+        alpha = self.alpha.quantity
+
+        if index >= 2 or lambda_ == 0.0 or alpha == 0.0:
+            return np.nan * reference.unit
+        else:
+            return np.power((2 - index) / alpha, 1 / alpha) / lambda_
+
+
+class ExpCutoffPowerLawSpectralModel(_ExpCutoffPowerLawSpectralModelBase):
     r"""Spectral exponential cutoff power-law model.
 
     For more information see :ref:`exp-cutoff-powerlaw-spectral-model`.
@@ -739,24 +863,41 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
 
         return pwl * cutoff
 
-    @property
-    def e_peak(self):
-        r"""Spectral energy distribution peak energy (`~astropy.units.Quantity`).
 
-        This is the peak in E^2 x dN/dE and is given by:
+class NormExpCutoffPowerLawSpectralModel(_ExpCutoffPowerLawSpectralModelBase):
+    r"""Norm spectral exponential cutoff power-law model.
 
-        .. math::
-            E_{Peak} =  \left(\frac{2 - \Gamma}{\alpha}\right)^{1/\alpha} / \lambda
-        """
-        reference = self.reference.quantity
-        index = self.index.quantity
-        lambda_ = self.lambda_.quantity
-        alpha = self.alpha.quantity
+    For more information see :ref:`exp-cutoff-powerlaw-spectral-model`.
 
-        if index >= 2 or lambda_ == 0.0 or alpha == 0.0:
-            return np.nan * reference.unit
-        else:
-            return np.power((2 - index) / alpha, 1 / alpha) / lambda_
+    Parameters
+    ----------
+    index : `~astropy.units.Quantity`
+        :math:`\Gamma`
+    norm : `~astropy.units.Quantity`
+        :math:`\phi_0`
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`
+    lambda_ : `~astropy.units.Quantity`
+        :math:`\lambda`
+    alpha : `~astropy.units.Quantity`
+        :math:`\alpha`
+    """
+
+    tag = ["NormExpCutoffPowerLawSpectralModel", "norm-ecpl"]
+
+    index = Parameter("index", 1.5)
+    norm = Parameter("norm", 1, unit="")
+    reference = Parameter("reference", "1 TeV", frozen=True)
+    lambda_ = Parameter("lambda_", "0.1 TeV-1")
+    alpha = Parameter("alpha", "1.0", frozen=True)
+
+    @staticmethod
+    def evaluate(energy, index, norm, reference, lambda_, alpha):
+        """Evaluate the model (static function)."""
+        pwl = norm * (energy / reference) ** (-index)
+        cutoff = np.exp(-np.power(energy * lambda_, alpha))
+
+        return pwl * cutoff
 
 
 class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
@@ -869,7 +1010,25 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         return pwl * cutoff
 
 
-class LogParabolaSpectralModel(SpectralModel):
+class _LogParabolaSpectralModelBase(SpectralModel):
+    r"""Base spectral log parabola models."""
+
+    @property
+    def e_peak(self):
+        r"""Spectral energy distribution peak energy (`~astropy.units.Quantity`).
+
+        This is the peak in E^2 x dN/dE and is given by:
+
+        .. math::
+            E_{Peak} = E_{0} \exp{ (2 - \alpha) / (2 * \beta)}
+        """
+        reference = self.reference.quantity
+        alpha = self.alpha.quantity
+        beta = self.beta.quantity
+        return reference * np.exp((2 - alpha) / (2 * beta))
+
+
+class LogParabolaSpectralModel(_LogParabolaSpectralModelBase):
     r"""Spectral log parabola model.
 
     For more information see :ref:`logparabola-spectral-model`.
@@ -905,19 +1064,42 @@ class LogParabolaSpectralModel(SpectralModel):
         exponent = -alpha - beta * np.log(xx)
         return amplitude * np.power(xx, exponent)
 
-    @property
-    def e_peak(self):
-        r"""Spectral energy distribution peak energy (`~astropy.units.Quantity`).
 
-        This is the peak in E^2 x dN/dE and is given by:
+class NormLogParabolaSpectralModel(_LogParabolaSpectralModelBase):
+    r"""Norm spectral log parabola model.
 
-        .. math::
-            E_{Peak} = E_{0} \exp{ (2 - \alpha) / (2 * \beta)}
-        """
-        reference = self.reference.quantity
-        alpha = self.alpha.quantity
-        beta = self.beta.quantity
-        return reference * np.exp((2 - alpha) / (2 * beta))
+    For more information see :ref:`logparabola-spectral-model`.
+
+    Parameters
+    ----------
+    norm : `~astropy.units.Quantity`
+        :math:`\phi_0`
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`
+    alpha : `~astropy.units.Quantity`
+        :math:`\alpha`
+    beta : `~astropy.units.Quantity`
+        :math:`\beta`
+    """
+
+    tag = ["NormLogParabolaSpectralModel", "norm-lp"]
+    norm = Parameter("norm", 1, unit="")
+    reference = Parameter("reference", "10 TeV", frozen=True)
+    alpha = Parameter("alpha", 2)
+    beta = Parameter("beta", 1)
+
+    @classmethod
+    def from_log10(cls, norm, reference, alpha, beta):
+        """Construct from :math:`log_{10}` parametrization."""
+        beta_ = beta / np.log(10)
+        return cls(norm=norm, reference=reference, alpha=alpha, beta=beta_)
+
+    @staticmethod
+    def evaluate(energy, norm, reference, alpha, beta):
+        """Evaluate the model (static function)."""
+        xx = energy / reference
+        exponent = -alpha - beta * np.log(xx)
+        return norm * np.power(xx, exponent)
 
 
 class TemplateSpectralModel(SpectralModel):

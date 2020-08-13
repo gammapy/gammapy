@@ -22,6 +22,23 @@ def evaluate_integral_pwl(emin, emax, index, amplitude, reference):
     return integral
 
 
+def evaluate_integral_norm_pwl(emin, emax, index, norm, reference):
+    """Evaluate pwl integral (static function)."""
+    val = -1 * index + 1
+
+    prefactor = norm * reference / val
+    upper = np.power((emax / reference), val)
+    lower = np.power((emin / reference), val)
+    integral = prefactor * (upper - lower)
+
+    mask = np.isclose(val, 0)
+
+    if mask.any():
+        integral[mask] = (norm * reference * np.log(emax / emin))[mask]
+
+    return integral
+
+
 def trapz_loglog(y, x, axis=-1):
     """Integrate using the composite trapezoidal rule in log-log space.
 
