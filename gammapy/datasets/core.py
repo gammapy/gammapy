@@ -4,10 +4,13 @@ import collections.abc
 import copy
 import numpy as np
 from astropy.table import vstack
+from astropy import units as u
 from gammapy.maps import Map
 from gammapy.modeling.models import Models, ProperModels
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
+from gammapy.data import GTI
+
 
 __all__ = ["Dataset", "Datasets"]
 
@@ -178,6 +181,35 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self:
             stat_sum += dataset.stat_sum()
         return stat_sum
+
+    def select_time(self, t_min, t_max, atol="1e-6 s"):
+        """Select datasets in a given time interval.
+
+        Parameters
+        ----------
+        t_min, t_max : `~astropy.time.Time`
+            Time interval
+        atol : `~astropy.units.Quantity`
+            Tolerance value for time comparison with different scale. Default 1e-6 sec.
+
+        Returns
+        -------
+        datasets : `Datasets`
+            Datasets in the given time interval.
+
+        """
+        atol = u.Quantity(atol)
+
+        datasets = []
+
+        for dataset in self:
+            t_start = dataset.gti.time_start[0]
+            t_stop = dataset.gti.time_stop[-1]
+
+            if t_start >= (t_min - atol) and t_stop <= (t_max + atol):
+                datasets.append(dataset)
+
+        return self.__class__(datasets)
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n"
