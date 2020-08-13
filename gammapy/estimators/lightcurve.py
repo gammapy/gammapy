@@ -345,7 +345,6 @@ class LightCurveEstimator(Estimator):
         self.source = source
         self.time_intervals = time_intervals
 
-        self.group_table_info = None
         self.atol = u.Quantity(atol)
         self.energy_range = energy_range
 
