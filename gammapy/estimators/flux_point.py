@@ -875,17 +875,6 @@ class FluxPointsEstimator(Estimator):
         #TODO: this should be changed once likelihood is fully supported
         return FluxPoints(table).to_sed_type("dnde")
 
-    @staticmethod
-    def _get_energy_range(dataset, e_min, e_max):
-        """Round e_min and e_max to grid"""
-        # TODO: remove this special handling and just rely on Geom.energy_mask?
-        energy_axis = dataset.counts.geom.get_axis_by_name("energy")
-        edges_pix = energy_axis.coord_to_pix([e_min, e_max])
-        edges_pix = np.clip(edges_pix, -0.5, energy_axis.nbin - 0.5)
-        edges_idx = np.round(edges_pix + 0.5) - 0.5
-        e_min, e_max = energy_axis.pix_to_coord(edges_idx)
-        return e_min, e_max
-
     def estimate_flux_point(self, datasets, e_min, e_max):
         """Estimate flux point for a single energy group.
 
@@ -902,8 +891,10 @@ class FluxPointsEstimator(Estimator):
         fe = self._flux_estimator(e_min, e_max)
 
         for dataset in datasets:
-            e_min_new, e_max_new = self._get_energy_range(dataset, e_min, e_max)
-            dataset.mask_fit = dataset.counts.geom.energy_mask(
+            geom = dataset.counts.geom
+            energy_axis = geom.get_axis_by_name("energy")
+            e_min_new, e_max_new = energy_axis.round([e_min, e_max], clip=True)
+            dataset.mask_fit = geom.energy_mask(
                 emin=e_min_new, emax=e_max_new
             )
             if dataset.mask.any():

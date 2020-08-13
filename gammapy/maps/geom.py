@@ -677,6 +677,29 @@ class MapAxis:
         """
         return self._init_copy(**kwargs)
 
+    def round(self, coord, clip=False):
+        """Round coord to nearest axis edge.
+
+        Parameters
+        ----------
+        coord : `~astropy.units.Quantity`
+            Coordinates
+        clip : bool
+            Choose whether to clip indices to the valid range of the axis.
+
+        Returns
+        -------
+        coord : `~astropy.units.Quantity`
+            Rounded coordinates
+        """
+        edges_pix = self.coord_to_pix(coord)
+
+        if clip:
+            edges_pix = np.clip(edges_pix, -0.5, self.nbin - 0.5)
+
+        edges_idx = np.round(edges_pix + 0.5) - 0.5
+        return self.pix_to_coord(edges_idx)
+
     def group_table(self, edges):
         """Compute bin groups table for the map axis, given coarser bin edges.
 
