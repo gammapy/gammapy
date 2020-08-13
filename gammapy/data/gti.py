@@ -140,6 +140,34 @@ class GTI:
         met = Quantity(self.table["STOP"].astype("float64"), "second")
         return self.time_ref + met
 
+    @property
+    def time_intervals(self):
+        """List of time intervals"""
+        return [(t_start, t_stop) for t_start, t_stop in zip(self.time_start, self.time_stop)]
+
+    @classmethod
+    def from_time_intervals(cls, time_intervals, reference_time="2000-01-01"):
+        """From list of time intervals
+
+        Parameters
+        ----------
+        time_intervals : list of tuple
+            Time intervals
+        reference_time : `~astropy.time.Time`
+            Reference time to use in GTI definition
+
+        Returns
+        -------
+        gti : `GTI`
+            GTI table.
+        """
+        reference_time = Time(reference_time)
+        start = Time([_[0] for _ in time_intervals]) - reference_time
+        stop = Time([_[1] for _ in time_intervals]) - reference_time
+        meta = time_ref_to_dict(reference_time)
+        table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
+        return cls(table=table)
+
     def select_time(self, time_interval):
         """Select and crop GTIs in time interval.
 
