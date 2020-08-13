@@ -75,18 +75,27 @@ class Estimator(abc.ABC):
         """Copy estimator"""
         return deepcopy(self)
 
+    @property
+    def config_parameters(self):
+        """Config parameters"""
+        pars = {}
+        names = self.__init__.__code__.co_varnames
+        for name in names:
+            if name == "self":
+                continue
+
+            pars[name] = getattr(self, name)
+        return pars
+
     def __str__(self):
         s = f"{self.__class__.__name__}\n"
         s += "-" * (len(s) - 1) + "\n\n"
 
-        names = self.__init__.__code__.co_varnames
-        max_len = np.max([len(_) for _ in names]) + 1
+        pars = self.config_parameters
+        max_len = np.max([len(_) for _ in pars]) + 1
 
-        for name in names:
-            value = getattr(self, name, "not available")
-            if value == "not available":
-                continue
-            elif isinstance(value, Model):
+        for name, value in pars.items():
+            if isinstance(value, Model):
                 s += f"\t{name:{max_len}s}: {value.__class__.__name__}\n"
             elif isinstance(value, np.ndarray):
                 s += f"\t{name:{max_len}s}: {value}\n"
