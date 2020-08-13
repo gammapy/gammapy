@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.data import GTI
+from gammapy.datasets import Datasets
 from gammapy.estimators import LightCurve, LightCurveEstimator
 from gammapy.estimators.tests.test_flux_point_estimator import (
     simulate_map_dataset,
@@ -139,59 +140,40 @@ def get_spectrum_datasets():
 @requires_dependency("iminuit")
 def test_group_datasets_in_time_interval():
     # Doing a LC on one hour bin
-    datasets = get_spectrum_datasets()
+    datasets = Datasets(get_spectrum_datasets())
     time_intervals = [
         Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]),
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
     ]
-    selection = ["scan"]
-    estimator = LightCurveEstimator(
-        energy_range=[1, 10] * u.TeV,
-        norm_n_values=3,
-        time_intervals=time_intervals,
-        selection=selection,
-    )
-    estimator.run(datasets)
 
-    assert len(estimator.group_table_info) == 2
-    assert estimator.group_table_info["Name"][0] == "dataset_1"
-    assert_allclose(estimator.group_table_info["Tstart"], [55197.0, 55197.04166666667])
-    assert_allclose(
-        estimator.group_table_info["Tstop"], [55197.04166666667, 55197.083333333336]
-    )
-    assert_allclose(estimator.group_table_info["Group_ID"], [0, 1])
+    group_table = datasets.gti.group_table(time_intervals)
+
+    assert len(group_table) == 2
+    assert_allclose(group_table["time_min"], [55197.0, 55197.04166666667])
+    assert_allclose(group_table["time_max"], [55197.04166666667, 55197.083333333336])
+    assert_allclose(group_table["group_idx"], [0, 1])
 
 
 @requires_data()
 @requires_dependency("iminuit")
 def test_group_datasets_in_time_interval_outflows():
-    datasets = get_spectrum_datasets()
+    datasets = Datasets(get_spectrum_datasets())
     # Check Overflow
     time_intervals = [
         Time(["2010-01-01T00:00:00", "2010-01-01T00:55:00"]),
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
     ]
-    selection = ["scan"]
 
-    estimator = LightCurveEstimator(
-        energy_range=[1, 10] * u.TeV,
-        norm_n_values=3,
-        time_intervals=time_intervals,
-        selection=selection,
-    )
-    estimator.run(datasets)
-    assert estimator.group_table_info["Bin_type"][0] == "Overflow"
+    group_table = datasets.gti.group_table(time_intervals)
+    assert group_table["bin_type"][0] == "overflow"
 
     # Check underflow
     time_intervals = [
         Time(["2010-01-01T00:05:00", "2010-01-01T01:00:00"]),
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
     ]
-    estimator = LightCurveEstimator(
-        energy_range=[1, 10] * u.TeV, norm_n_values=3, time_intervals=time_intervals
-    )
-    estimator.run(datasets)
-    assert estimator.group_table_info["Bin_type"][0] == "Underflow"
+    group_table = datasets.gti.group_table(time_intervals)
+    assert group_table["bin_type"][0] == "underflow"
 
 
 @requires_data()
@@ -342,7 +324,8 @@ def test_lightcurve_estimator_spectrum_datasets_timeoverlaped():
     with pytest.raises(ValueError) as excinfo:
         estimator = LightCurveEstimator(norm_n_values=3, time_intervals=time_intervals)
         estimator.run(datasets)
-    msg = "LightCurveEstimator requires non-overlapping time bins."
+
+    msg = "Overlapping time bins"
     assert str(excinfo.value) == msg
 
 
