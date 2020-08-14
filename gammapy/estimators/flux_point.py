@@ -862,7 +862,7 @@ class FluxPointsEstimator(Estimator):
         flux_points : `FluxPoints`
             Estimated flux points.
         """
-        datasets = Datasets(datasets)
+        datasets = Datasets(datasets).copy()
 
         rows = []
 

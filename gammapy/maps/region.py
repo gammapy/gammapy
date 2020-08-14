@@ -57,6 +57,8 @@ class RegionGeom(Geom):
 
     @property
     def frame(self):
+        if self.region is None:
+            return "icrs"
         try:
             return self.region.center.frame.name
         except AttributeError:
@@ -104,6 +106,8 @@ class RegionGeom(Geom):
     @property
     def center_skydir(self):
         """Center skydir"""
+        if self.region is None:
+            return SkyCoord(np.nan * u.deg, np.nan * u.deg)
         try:
             return self.region.center
         except AttributeError:
@@ -231,18 +235,18 @@ class RegionGeom(Geom):
 
     def coord_to_pix(self, coords):
         if self.region is None:
-            raise ValueError("Region definition required.")
+            pix = (0, 0)
+        else:
+            coords = MapCoord.create(coords, frame=self.frame)
+            in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
 
-        coords = MapCoord.create(coords, frame=self.frame)
-        in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
+            x = np.zeros(coords.shape)
+            x[~in_region] = np.nan
 
-        x = np.zeros(coords.shape)
-        x[~in_region] = np.nan
+            y = np.zeros(coords.shape)
+            y[~in_region] = np.nan
 
-        y = np.zeros(coords.shape)
-        y[~in_region] = np.nan
-
-        pix = (x, y)
+            pix = (x, y)
 
         c = self.coord_to_tuple(coords)
         for coord, ax in zip(c[self._slice_non_spatial_axes], self.axes):
@@ -331,7 +335,7 @@ class RegionGeom(Geom):
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             HDU list
-        format : {"ogip"}
+        format : {"ogip", "ogip-arf"}
             HDU format
 
         Returns
@@ -353,7 +357,14 @@ class RegionGeom(Geom):
         else:
             region, wcs = None, None
 
-        axis = MapAxis.from_table_hdu(hdulist["EBOUNDS"])
+        if format == "ogip":
+            hdu = "EBOUNDS"
+        elif format == "ogip-arf":
+            hdu = "SPECRESP"
+        else:
+            raise ValueError(f"Unknown format {format}")
+
+        axis = MapAxis.from_table_hdu(hdulist[hdu], format=format)
         return cls(region=region, wcs=wcs, axes=[axis])
 
     def union(self, other):

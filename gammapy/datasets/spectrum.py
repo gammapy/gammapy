@@ -33,7 +33,7 @@ class SpectrumDataset(Dataset):
         Counts spectrum
     livetime : `~astropy.units.Quantity`
         Livetime
-    aeff : `~gammapy.irf.EffectiveAreaTable`
+    aeff : `~gammapy.maps.RegionNDMap`
         Effective area
     edisp : `~gammapy.irf.EDispKernelMap`
         Energy dispersion kernel.
@@ -134,12 +134,12 @@ class SpectrumDataset(Dataset):
         if self.aeff is not None:
             try:
                 aeff_min = np.min(
-                    self.aeff.data.data.value[self.aeff.data.data.value > 0]
+                    self.aeff.data[self.aeff.data > 0]
                 )
             except ValueError:
                 aeff_min = 0
-            aeff_max = np.max(self.aeff.data.data.value)
-            aeff_unit = self.aeff.data.data.unit
+            aeff_max = np.max(self.aeff.data)
+            aeff_unit = self.aeff.unit
 
         str_ += "\t{:32}: {:.2e} {}\n".format("Effective area min", aeff_min, aeff_unit)
         str_ += "\t{:32}: {:.2e} {}\n\n".format(
@@ -301,9 +301,7 @@ class SpectrumDataset(Dataset):
     @property
     def exposure(self):
         """Excess (aeff * livetime)"""
-        data = self.livetime * self.aeff.data.data
-        geom = RegionGeom(region=None, axes=[self.aeff.energy])
-        return RegionNDMap.from_geom(geom=geom, data=data.value, unit=data.unit)
+        return self.aeff * self.livetime
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
@@ -492,12 +490,7 @@ class SpectrumDataset(Dataset):
 
         counts = RegionNDMap.create(region=region, axes=[e_reco])
         background = RegionNDMap.create(region=region, axes=[e_reco])
-
-        aeff = EffectiveAreaTable(
-            e_true.edges[:-1],
-            e_true.edges[1:],
-            np.zeros(e_true.edges[:-1].shape) * u.m ** 2,
-        )
+        aeff = RegionNDMap.create(region=region, axes=[e_true], unit="cm2")
         edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, counts.geom)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
@@ -565,23 +558,13 @@ class SpectrumDataset(Dataset):
         if self.livetime is None or other.livetime is None:
             raise ValueError("IRF stacking requires livetime for both datasets.")
         else:
-            stacked_livetime = self.livetime + other.livetime
+            stacked_exposure = self.exposure
+            stacked_exposure.stack(other.exposure)
+            self.aeff = stacked_exposure / (self.livetime + other.livetime)
 
-            if self.exposure and other.exposure:
-                stacked_exposure = self.exposure
-                stacked_exposure.stack(other.exposure)
-
-                stacked_aeff = EffectiveAreaTable(
-                    stacked_exposure.geom.axes[0].edges[:-1],
-                    stacked_exposure.geom.axes[0].edges[1:],
-                    np.squeeze(stacked_exposure.quantity/stacked_livetime)
-                )
-
-            if self.edisp is not None:
-                self.edisp.edisp_map *= self.mask_safe.data
-                self.edisp.stack(other.edisp, weights=other.mask_safe)
-
-            self.aeff = stacked_aeff
+        if self.edisp is not None and other.edisp is not None:
+            self.edisp.edisp_map *= self.mask_safe.data
+            self.edisp.stack(other.edisp, weights=other.mask_safe)
 
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)
@@ -621,7 +604,7 @@ class SpectrumDataset(Dataset):
         ax1.legend(numpoints=1)
 
         ax2.set_title("Effective Area")
-        e_unit = self.aeff.energy.unit
+        e_unit = self.aeff.geom.axes[0].unit
         self.aeff.plot(ax=ax2)
         ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
         self._plot_energy_range(ax=ax2)
@@ -683,7 +666,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         OFF Counts spectrum
     livetime : `~astropy.units.Quantity`
         Livetime
-    aeff : `~gammapy.irf.EffectiveAreaTable`
+    aeff : `~gammapy.maps.RegionNDMap`
         Effective area
     edisp : `~gammapy.irf.EDispKernelMap`
         Energy dispersion kernel
@@ -1104,7 +1087,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         hdulist.writeto(outdir / phafile, overwrite=overwrite)
 
-        self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
+        self.aeff.write(outdir / arffile, overwrite=overwrite, format=hdu_format, ogip_column="SPECRESP")
 
         if self.counts_off is not None:
             counts_off_table = self.counts_off.to_table()
@@ -1216,7 +1199,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             counts_off, acceptance_off = None, None
 
         arffile = phafile.replace("pha", "arf")
-        aeff = EffectiveAreaTable.read(dirname / arffile)
+        aeff = RegionNDMap.read(dirname / arffile, format="ogip-arf")
 
         return cls(
             counts=counts,

@@ -214,14 +214,14 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert np.sum(spectrum_dataset.counts.data) == 1
     assert spectrum_dataset.data_shape == (2, 1, 1)
     assert spectrum_dataset.background.geom.axes[0].nbin == 2
-    assert spectrum_dataset.aeff.energy.nbin == 3
-    assert spectrum_dataset.aeff.data.data.unit == "m2"
+    assert spectrum_dataset.aeff.geom.axes[0].nbin == 3
+    assert spectrum_dataset.aeff.unit == "m2"
     assert spectrum_dataset.edisp.get_edisp_kernel().e_reco.nbin == 2
     assert spectrum_dataset.edisp.get_edisp_kernel().e_true.nbin == 3
-    assert spectrum_dataset_corrected.aeff.data.data.unit == "m2"
-    assert_allclose(spectrum_dataset.aeff.data.data.value[1], 853023.423047, rtol=1e-5)
+    assert spectrum_dataset_corrected.aeff.unit == "m2"
+    assert_allclose(spectrum_dataset.aeff.data[1], 853023.423047, rtol=1e-5)
     assert_allclose(
-        spectrum_dataset_corrected.aeff.data.data.value[1], 559476.3357, rtol=1e-5
+        spectrum_dataset_corrected.aeff.data[1], 559476.3357, rtol=1e-5
     )
 
 

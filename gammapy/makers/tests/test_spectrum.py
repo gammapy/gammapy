@@ -35,7 +35,7 @@ def observations_cta_dc1():
 @pytest.fixture()
 def spectrum_dataset_gc():
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
-    e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
+    e_true = MapAxis.from_edges(np.logspace(-1, 2, 13) * u.TeV, name="energy_true")
     pos = SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
     radius = Angle(0.11, "deg")
     region = CircleSkyRegion(pos, radius)
@@ -197,7 +197,10 @@ class TestSpectrumMakerChain:
         dataset = reflected_regions_bkg_maker.run(dataset, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
-        aeff_actual = dataset.aeff.data.evaluate(energy_true=5 * u.TeV)
+        aeff_actual = dataset.aeff.interp_by_coord(
+            {"energy_true": 5 * u.TeV, "skycoord": dataset.counts.geom.center_skydir}
+        ) * u.m ** 2
+
         edisp_actual = dataset._edisp_kernel.data.evaluate(
             energy_true=5 * u.TeV, energy=5.2 * u.TeV
         )

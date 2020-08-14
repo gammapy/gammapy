@@ -12,7 +12,6 @@ from gammapy.maps import MapAxis, RegionNDMap
 def spectrum_dataset():
     e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=20, name="energy_true")
     e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=4)
-    aeff = EffectiveAreaTable.from_constant(value=1e6 * u.m ** 2, energy=e_true.edges)
 
     background = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[e_reco])
     background.data += 3600
@@ -20,6 +19,8 @@ def spectrum_dataset():
     edisp = EDispKernelMap.from_diagonal_response(
         energy_axis_true=e_true, energy_axis=e_reco, geom=background.geom
     )
+    aeff = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[e_true], unit="m2")
+    aeff.data += 1e6
     return SpectrumDataset(aeff=aeff, livetime="1h", edisp=edisp, background=background)
 
 

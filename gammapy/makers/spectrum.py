@@ -88,38 +88,39 @@ class SpectrumDatasetMaker(Maker):
         data *= observation.observation_time_duration
         return RegionNDMap.from_geom(geom=geom, data=data.to_value(""))
 
-    def make_aeff(self, region, energy_axis_true, observation):
+    def make_aeff(self, geom, observation):
         """Make effective area.
 
         Parameters
         ----------
-        region : `~regions.SkyRegion`
-            Region to compute background effective area.
-        energy_axis_true : `~gammapy.maps.MapAxis`
-            True energy axis.
+        geom : `~gammapy.maps.RegionGeom`
+            Reference map geom.
         observation: `~gammapy.data.Observation`
             Observation to compute effective area for.
+
 
         Returns
         -------
         aeff : `~gammapy.irf.EffectiveAreaTable`
             Effective area table.
         """
-        offset = observation.pointing_radec.separation(region.center)
-        aeff = observation.aeff.to_effective_area_table(
-            offset, energy=energy_axis_true.edges
+        offset = observation.pointing_radec.separation(geom.center_skydir)
+        energy = geom.get_axis_by_name("energy_true")
+
+        data = observation.aeff.data.evaluate(
+            offset=offset, energy_true=energy.center
         )
 
         if self.containment_correction:
-            if not isinstance(region, CircleSkyRegion):
+            if not isinstance(geom.region, CircleSkyRegion):
                 raise TypeError(
                     "Containment correction only supported for circular regions."
                 )
             psf = observation.psf.to_energy_dependent_table_psf(theta=offset)
-            containment = psf.containment(aeff.energy.center, region.radius)
-            aeff.data.data *= containment.squeeze()
+            containment = psf.containment(energy.center, geom.region.radius)
+            data *= containment.squeeze()
 
-        return aeff
+        return RegionNDMap.from_geom(geom, data=data.value, unit=data.unit)
 
     @staticmethod
     def make_edisp(position, energy_axis, energy_axis_true, observation):
@@ -188,7 +189,7 @@ class SpectrumDatasetMaker(Maker):
         }
 
         energy_axis = dataset.counts.geom.get_axis_by_name("energy")
-        energy_axis_true = dataset.aeff.data.axis("energy_true")
+        energy_axis_true = dataset.aeff.geom.get_axis_by_name("energy_true")
         region = dataset.counts.geom.region
 
         if "counts" in self.selection:
@@ -200,7 +201,7 @@ class SpectrumDatasetMaker(Maker):
             )
 
         if "aeff" in self.selection:
-            kwargs["aeff"] = self.make_aeff(region, energy_axis_true, observation)
+            kwargs["aeff"] = self.make_aeff(dataset.aeff.geom, observation)
 
         if "edisp" in self.selection:
             edisp = self.make_edisp(

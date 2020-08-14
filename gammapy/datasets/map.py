@@ -1048,12 +1048,7 @@ class MapDataset(Dataset):
 
         if self.exposure is not None:
             exposure = self.exposure.get_spectrum(on_region, np.mean)
-            energy = exposure.geom.axes[0].edges
-            kwargs["aeff"] = EffectiveAreaTable(
-                energy_lo=energy[:-1],
-                energy_hi=energy[1:],
-                data=exposure.quantity[:, 0, 0] / kwargs["livetime"],
-            )
+            kwargs["aeff"] = exposure / kwargs["livetime"]
 
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
@@ -1062,13 +1057,12 @@ class MapDataset(Dataset):
                     " `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
-                raise ValueError("No PSFMap set. Containement correction impossible")
+                raise ValueError("No PSFMap set. Containment correction impossible")
             else:
                 psf = self.psf.get_energy_dependent_table_psf(on_region.center)
-                containment = psf.containment(
-                    kwargs["aeff"].energy.center, on_region.radius
-                )
-                kwargs["aeff"].data.data *= containment.squeeze()
+                energy = self.exposure.geom.get_axis_by_name("energy_true").center
+                containment = psf.containment(energy[:, np.newaxis], on_region.radius)
+                kwargs["aeff"].data *= containment
 
         if self.edisp is not None:
             energy_axis = self._geom.get_axis_by_name("energy")
