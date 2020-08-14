@@ -198,9 +198,11 @@ def test_geom_analysis_1d():
     analysis.get_datasets()
 
     assert len(analysis.datasets) == 1
-    assert len(analysis.datasets[0].aeff.energy.center) == 50
-    assert_allclose(analysis.datasets[0].aeff.energy.edges[0].to_value("TeV"), 0.03)
-    assert_allclose(analysis.datasets[0].aeff.energy.edges[-1].to_value("TeV"), 100)
+
+    axis = analysis.datasets[0].aeff.geom.axes[0]
+    assert axis.nbin == 50
+    assert_allclose(axis.edges[0].to_value("TeV"), 0.03)
+    assert_allclose(axis.edges[-1].to_value("TeV"), 100)
 
 
 @requires_data()
