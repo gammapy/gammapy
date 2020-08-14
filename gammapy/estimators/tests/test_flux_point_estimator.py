@@ -24,7 +24,7 @@ def simulate_spectrum_dataset(model, random_state=0):
     edges = np.logspace(-0.5, 1.5, 21) * u.TeV
     energy_axis = MapAxis.from_edges(edges, interp="log", name="energy")
 
-    aeff = EffectiveAreaTable.from_parametrization(energy=edges)
+    aeff = EffectiveAreaTable.from_parametrization(energy=edges).to_region_map()
     bkg_model = SkyModel(
         spectral_model=PowerLawSpectralModel(
             index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1"
