@@ -112,7 +112,6 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(1.080321705479446, ""),
         integral_1_10TeV=u.Quantity(3.765838739678921, "TeV"),
         eflux_1_10TeV=u.Quantity(9.901735870666526, "TeV2"),
-        e_peak=4 * u.TeV,
     ),
     dict(
         name="ecpl_3fgl",
@@ -163,7 +162,6 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(0.6387956571420305, ""),
         integral_1_10TeV=u.Quantity(2.255689748270628, "TeV"),
         eflux_1_10TeV=u.Quantity(3.9586515834989267, "TeV2"),
-        e_peak=0.74082 * u.TeV,
     ),
     dict(
         name="logpar10",
