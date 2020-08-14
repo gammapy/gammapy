@@ -558,19 +558,13 @@ class SpectrumDataset(Dataset):
         if self.livetime is None or other.livetime is None:
             raise ValueError("IRF stacking requires livetime for both datasets.")
         else:
-            stacked_livetime = self.livetime + other.livetime
+            stacked_exposure = self.exposure
+            stacked_exposure.stack(other.exposure)
+            self.aeff = stacked_exposure / (self.livetime + other.livetime)
 
-            if self.exposure and other.exposure:
-                stacked_exposure = self.exposure
-                stacked_exposure.stack(other.exposure)
-
-                stacked_aeff = stacked_exposure / stacked_livetime
-
-            if self.edisp is not None:
-                self.edisp.edisp_map *= self.mask_safe.data
-                self.edisp.stack(other.edisp, weights=other.mask_safe)
-
-            self.aeff = stacked_aeff
+        if self.edisp is not None and other.edisp is not None:
+            self.edisp.edisp_map *= self.mask_safe.data
+            self.edisp.stack(other.edisp, weights=other.mask_safe)
 
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)

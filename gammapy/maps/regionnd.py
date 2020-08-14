@@ -297,18 +297,18 @@ class RegionNDMap(Map):
         """
         if format == "ogip":
             hdu = "SPECTRUM"
-            unit = ""
         elif format == "ogip-arf":
             hdu = "SPECRESP"
             ogip_column = "SPECRESP"
-            unit = "cm2"
         else:
             raise ValueError(f"Unknown format: {format}")
 
         table = Table.read(hdulist[hdu])
         geom = RegionGeom.from_hdulist(hdulist, format=format)
 
-        return cls(geom=geom, data=table[ogip_column].data, meta=table.meta, unit=unit)
+        data = table[ogip_column].quantity
+
+        return cls(geom=geom, data=data.value, meta=table.meta, unit=data.unit)
 
     def crop(self):
         raise NotImplementedError("Crop is not supported by RegionNDMap")

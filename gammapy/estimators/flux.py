@@ -170,7 +170,6 @@ class FluxEstimator(Estimator):
             dataset.models[self.source].spectral_model = model
 
         result.update(self._parameter_estimator.run(datasets, model.norm))
-
         return result
 
     @property
