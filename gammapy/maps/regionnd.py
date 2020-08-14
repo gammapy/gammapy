@@ -2,9 +2,11 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from astropy.visualization import quantity_support
+from astropy.io import fits
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.regions import compound_region_to_list
+from gammapy.utils.scripts import make_path
 from .core import Map
 from .geom import pix_tuple_to_idx
 from .region import RegionGeom
@@ -243,28 +245,49 @@ class RegionNDMap(Map):
     def set_by_idx(self, idx, value):
         self.data[idx[::-1]] = value
 
-    @staticmethod
-    def read(cls, filename):
-        raise NotImplementedError
+    @classmethod
+    def read(cls, filename, format="ogip", ogip_column="COUNTS"):
+        """Read from file."""
+        filename = make_path(filename)
+        with fits.open(filename, memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column)
 
-    def write(self, filename):
-        raise NotImplementedError
+    def write(self, filename, overwrite=False, format="ogip", ogip_column="COUNTS"):
+        """"""
+        filename = make_path(filename)
+        self.to_hdulist(
+            format=format, ogip_column=ogip_column
+        ).writeto(filename, overwrite=overwrite)
 
-    def to_hdulist(self):
-        raise NotImplementedError
+    def to_hdulist(self, format="ogip", ogip_column="COUNTS"):
+        """Convert to `~astropy.io.fits.HDUList`.
+
+        Parameters
+        ----------
+        format : {"ogip", "ogip-sherpa"}
+            Format specification
+        ogip_column : {"COUNTS", "SPECRESP"}
+            Ogip column format
+
+        Returns
+        -------
+        hdulist : `~astropy.fits.HDUList`
+            HDU list
+        """
+        table = self.to_table(format=format, ogip_column=ogip_column)
+        return fits.HDUList([fits.PrimaryHDU(), fits.BinTableHDU(table, name=ogip_column)])
 
     @classmethod
     def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS"):
         """Create from `~astropy.io.fits.HDUList`.
 
-
         Parameters
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             HDU list.
-        format : {"ogip"}
+        format : {"ogip", "ogip-arf"}
             Format specification
-        ogip_column : str
+        ogip_column : {"COUNTS"}
             OGIP data format column
 
         Returns
@@ -272,13 +295,20 @@ class RegionNDMap(Map):
         region_nd_map : `RegionNDMap`
             Region map.
         """
-        if format != "ogip":
-            raise ValueError("Only 'ogip' format supported")
+        if format == "ogip":
+            hdu = "SPECTRUM"
+            unit = ""
+        elif format == "ogip-arf":
+            hdu = "SPECRESP"
+            ogip_column = "SPECRESP"
+            unit = "cm2"
+        else:
+            raise ValueError(f"Unknown format: {format}")
 
-        table = Table.read(hdulist["SPECTRUM"])
+        table = Table.read(hdulist[hdu])
         geom = RegionGeom.from_hdulist(hdulist, format=format)
 
-        return cls(geom=geom, data=table[ogip_column].data, meta=table.meta)
+        return cls(geom=geom, data=table[ogip_column].data, meta=table.meta, unit=unit)
 
     def crop(self):
         raise NotImplementedError("Crop is not supported by RegionNDMap")
@@ -319,16 +349,49 @@ class RegionNDMap(Map):
 
         self.data += data
 
-    def to_table(self):
+    def to_table(self, format="ogip", ogip_column="COUNTS"):
         """Convert to `~astropy.table.Table`.
 
         Data format specification: :ref:`gadf:ogip-pha`
+
+        Parameters
+        ----------
+        format : {"ogip", "ogip-sherpa"}
+            Format specification
+        ogip_column : {"COUNTS", "SPECRESP"}
+            Ogip column format
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table
         """
-        energy_axis = self.geom.axes[0]
-        channel = np.arange(energy_axis.nbin, dtype=np.int16)
-        counts = np.array(self.data[:, 0, 0], dtype=np.int32)
+        table = Table()
 
-        names = ["CHANNEL", "COUNTS"]
-        meta = {"name": "COUNTS"}
+        edges = self.geom.axes[0].edges
+        data = np.nan_to_num(self.quantity[:, 0, 0])
 
-        return Table([channel, counts], names=names, meta=meta)
+        if ogip_column == "COUNTS":
+            table["CHANNEL"] = np.arange(len(edges) - 1, dtype=np.int16)
+            table["COUNTS"] = np.array(data, dtype=np.int32)
+            table.meta = {"name": "COUNTS"}
+
+        elif ogip_column == "SPECRESP":
+            table.meta = {
+                "EXTNAME": "SPECRESP",
+                "hduclass": "OGIP",
+                "hduclas1": "RESPONSE",
+                "hduclas2": "SPECRESP",
+            }
+
+            if format == "ogip-sherpa":
+                edges = edges.to("keV")
+                data = data.to("cm2")
+
+            table["ENERG_LO"] = edges[:-1]
+            table["ENERG_HI"] = edges[1:]
+            table["SPECRESP"] = data
+        else:
+            raise ValueError(f"Unsupported ogip column: '{ogip_column}'")
+
+        return table
