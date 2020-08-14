@@ -3,7 +3,7 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, RegionNDMap, RegionGeom
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
@@ -225,6 +225,14 @@ class EffectiveAreaTable:
         table["ENERG_HI"] = energy[1:]
         table["SPECRESP"] = self.evaluate_fill_nan()
         return table
+
+    def to_region_map(self, region=None):
+        """"""
+        axis = self.data.axis("energy_true")
+        geom = RegionGeom(region=region, axes=[axis])
+        return RegionNDMap.from_geom(
+            geom=geom, data=self.data.data.value, unit=self.data.data.unit
+        )
 
     def to_hdulist(self, name=None, use_sherpa=False):
         """Convert to `~astropy.io.fits.HDUList`."""
@@ -474,8 +482,6 @@ class EffectiveAreaTable2D:
         ax.set_xlabel(f"Energy [{energy.unit}]")
         ax.set_ylabel(f"Effective Area [{self.data.data.unit}]")
         ax.set_xlim(min(energy.value), max(energy.value))
-
-
         return ax
 
     def plot_offset_dependence(self, ax=None, offset=None, energy=None, **kwargs):
