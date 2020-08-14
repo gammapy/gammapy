@@ -138,7 +138,7 @@ class SafeMaskMaker(Maker):
         aeff = EffectiveAreaTable(
             energy_lo=energy.edges[:-1],
             energy_hi=energy.edges[1:],
-            data=exposure.data.squeeze(),
+            data=(exposure.quantity / dataset.gti.time_sum).squeeze(),
         )
         aeff_thres = (self.aeff_percent / 100) * aeff.max_area
         e_min = aeff.find_energy(aeff_thres)
