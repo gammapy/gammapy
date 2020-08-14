@@ -2,7 +2,7 @@
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from regions import RectangleSkyRegion
+from regions import RectangleSkyRegion, CircleAnnulusSkyRegion
 from gammapy.utils.table import table_from_row_data
 from gammapy.stats import WStatCountsStatistic, CashCountsStatistic
 from gammapy.datasets import SpectrumDatasetOnOff, Datasets
@@ -115,16 +115,18 @@ class ExcessProfileEstimator(Estimator):
         return datasets
 
     def _get_projected_distance(self):
-        centers = []
+        distances = []
+        center = self.regions[0].center
 
-        for region in self.regions:
-            centers.append(region.center)
+        for idx, region in enumerate(self.regions):
+            if isinstance(region, CircleAnnulusSkyRegion):
+                distance = (region.inner_radius + region.outer_radius) / 2.
+            else:
+                distance = center.separation(region.center)
 
-        centers = SkyCoord(centers)
+            distances.append(distance)
 
-        distance = centers.separation(centers[0])
-
-        return MapAxis.from_nodes(distance, name="projected distance")
+        return MapAxis.from_nodes(u.Quantity(distances, "deg"), name="projected distance")
 
     def make_prof(self, sp_datasets):
         """ Utility to make the profile in each region

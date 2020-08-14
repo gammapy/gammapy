@@ -404,7 +404,7 @@ class EDispKernelMap(IRFMap):
             assert energy_axis == self.edisp_map.geom.get_axis_by_name("energy")
 
         if isinstance(self.edisp_map.geom, RegionGeom):
-            data = self.edisp_map.data.squeeze()
+            data = self.edisp_map.data[..., 0, 0]
         else:
             if position is None:
                 position = self.edisp_map.geom.center_skydir

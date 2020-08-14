@@ -25,15 +25,17 @@ from regions import (
     Region,
     SkyRegion,
     RectangleSkyRegion,
+    CircleAnnulusSkyRegion
 )
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import SkyCoord
 
 __all__ = [
     "make_region",
     "make_pixel_region",
     "make_orthogonal_rectangle_sky_regions",
+    "make_concentric_annulus_sky_regions",
     "compound_region_to_list",
     "list_to_compound_region"
 ]
@@ -191,7 +193,7 @@ class SphericalCircleSkyRegion(CircleSkyRegion):
         return separation < self.radius
 
 
-def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbins=1):
+def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=1):
     """Utility returning an array of regions to make orthogonal projections
 
     Parameters
@@ -204,22 +206,22 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbins
         Height of the rectangle region.
     wcs : `~astropy.wcs.WCS`
         WCS projection object
-    nbins : int
+    nbin : int
         Number of boxes along the line
 
     Returns
     --------
-    regions : Array of `~astropy.regions`
+    regions : list of `~regions.RectangleSkyRegion`
         Regions in which the profiles are made
     """
     pix_start = start_pos.to_pixel(wcs)
     pix_stop = end_pos.to_pixel(wcs)
 
-    points = np.linspace(start=pix_start, stop=pix_stop, num=nbins + 1).T
+    points = np.linspace(start=pix_start, stop=pix_stop, num=nbin + 1).T
     centers = 0.5 * (points[:, :-1] + points[:, 1:])
     coords = SkyCoord.from_pixel(centers[0], centers[1], wcs)
 
-    width = start_pos.separation(end_pos).to("rad") / nbins
+    width = start_pos.separation(end_pos).to("rad") / nbin
     angle = end_pos.position_angle(start_pos) - 90 * u.deg
 
     regions = []
@@ -230,3 +232,38 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbins
         regions.append(reg)
 
     return regions
+
+
+def make_concentric_annulus_sky_regions(center, radius_max, nbin=11):
+    """Make a list of concentric annulus regions.
+
+    Parameters
+    ----------
+    center : `~astropy.coordinates.SkyCoord`
+        Center coordinate
+    radius_max : `~astropy.units.Quantity`
+        Maximum radius.
+    nbin : int
+        Number of boxes along the line
+
+    Returns
+    -------
+    regions : list of `~regions.RectangleSkyRegion`
+        Regions in which the profiles are made
+    """
+    regions = []
+
+    edges = np.linspace(0 * u.deg, u.Quantity(radius_max), nbin)
+
+    for r_in, r_out in zip(edges[:-1], edges[1:]):
+        region = CircleAnnulusSkyRegion(
+            center=center,
+            inner_radius=r_in,
+            outer_radius=r_out,
+        )
+        regions.append(region)
+
+    return regions
+
+
+
