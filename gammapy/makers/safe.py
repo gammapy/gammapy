@@ -5,6 +5,7 @@ from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
 from gammapy.irf import EffectiveAreaTable, EDispKernelMap
 from gammapy.maps import Map, MapCoord
+from regions import PointSkyRegion
 from .core import Maker
 
 __all__ = ["SafeMaskMaker"]
@@ -123,24 +124,22 @@ class SafeMaskMaker(Maker):
         """
         geom = dataset._geom
 
-        if isinstance(dataset, MapDataset):
-            position = self.position
-            if position is None:
-                position = dataset.counts.geom.center_skydir
-            exposure = dataset.exposure
-            energy = exposure.geom.get_axis_by_name("energy_true")
-            coord = MapCoord.create(
-                {"skycoord": position, "energy_true": energy.center}
-            )
-            exposure_1d = exposure.interp_by_coord(coord)
-            aeff = EffectiveAreaTable(
-                energy_lo=energy.edges[:-1],
-                energy_hi=energy.edges[1:],
-                data=exposure_1d,
-            )
+        if self.position is None:
+            position = PointSkyRegion(dataset.counts.geom.center_skydir)
         else:
-            aeff = dataset.aeff
+            position = PointSkyRegion(self.position)
 
+        if isinstance(dataset, MapDataset):
+            exposure = dataset.exposure.get_spectrum(position)
+        else:
+            exposure = dataset.exposure
+
+        energy = exposure.geom.get_axis_by_name("energy_true")
+        aeff = EffectiveAreaTable(
+            energy_lo=energy.edges[:-1],
+            energy_hi=energy.edges[1:],
+            data=exposure.data.squeeze(),
+        )
         aeff_thres = (self.aeff_percent / 100) * aeff.max_area
         e_min = aeff.find_energy(aeff_thres)
         return geom.energy_mask(emin=e_min)
