@@ -877,7 +877,7 @@ class MapAxis:
         ----------
         hdu : `~astropy.io.fits.BinTableHDU`
             Table HDU
-        format : {"ogip", "fgst-ccube", "fgst-template"}
+        format : {"ogip", "ogip-arf", "fgst-ccube", "fgst-template"}
             Format specification
 
         Returns
@@ -892,6 +892,11 @@ class MapAxis:
             emax = table["E_MAX"].quantity
             edges = np.append(emin.value, emax.value[-1]) * emin.unit
             axis = cls.from_edges(edges, name="energy", interp="log")
+        elif format == "ogip-arf":
+            emin = table["ENERG_LO"].quantity
+            emax = table["ENERG_HI"].quantity
+            edges = np.append(emin.value, emax.value[-1]) * emin.unit
+            axis = cls.from_edges(edges, name="energy_true", interp="log")
         elif format == "fgst-template":
             allowed_names = ["Energy", "ENERGY", "energy"]
             for colname in table.colnames:
