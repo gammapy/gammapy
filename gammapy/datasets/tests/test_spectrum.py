@@ -41,11 +41,14 @@ def spectrum_dataset():
     temp_mod = ConstantTemporalModel()
 
     model = SkyModel(spectral_model=pwl, temporal_model=temp_mod, name="test-source")
-    aeff = EffectiveAreaTable.from_constant(energy, "1 cm2")
+
 
     axis = MapAxis.from_edges(energy, interp="log", name="energy")
-    background = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis])
+    axis_true = MapAxis.from_edges(energy, interp="log", name="energy_true")
 
+    background = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis])
+    aeff = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis_true])
+    aeff.quantity = u.Quantity("1 cm2")
     bkg_rate = np.ones(30) / u.s
     background.quantity = bkg_rate * livetime
 
@@ -163,7 +166,7 @@ def test_spectrum_dataset_create():
     assert empty_spectrum_dataset.data_shape[0] == 2
     assert empty_spectrum_dataset.background.data.sum() == 0
     assert empty_spectrum_dataset.background.geom.axes[0].nbin == 2
-    assert empty_spectrum_dataset.aeff.data.axis("energy_true").nbin == 3
+    assert empty_spectrum_dataset.aeff.geom.axes[0].nbin == 3
     assert empty_spectrum_dataset.edisp.edisp_map.geom.get_axis_by_name("energy").nbin == 2
     assert empty_spectrum_dataset.livetime.value == 0
     assert len(empty_spectrum_dataset.gti.table) == 0
@@ -177,7 +180,7 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     energy = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=30)
     energy_true = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=30, name="energy_true")
 
-    aeff = EffectiveAreaTable.from_parametrization(energy.edges, "HESS")
+    aeff = EffectiveAreaTable.from_parametrization(energy.edges, "HESS").to_region_map(geom.region)
     edisp = EDispKernelMap.from_diagonal_response(energy, energy_true, geom=geom.to_image())
     livetime = 100 * u.s
     background = spectrum_dataset.background
@@ -190,7 +193,7 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     )
 
     livetime2 = 0.5 * livetime
-    aeff2 = EffectiveAreaTable(energy.edges[:-1], energy.edges[1:], 2 * aeff.data.data)
+    aeff2 = aeff * 2
     bkg2 = RegionNDMap.from_geom(geom=geom, data=2 * background.data)
 
     geom = spectrum_dataset.counts.geom
@@ -215,8 +218,8 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     assert_allclose(spectrum_dataset1.background.data[1:], 3 * background.data[1:])
     assert_allclose(spectrum_dataset1.background.data[0], background.data[0])
     assert_allclose(
-        spectrum_dataset1.aeff.data.data.to_value("m2"),
-        4.0 / 3 * aeff.data.data.to_value("m2"),
+        spectrum_dataset1.aeff.quantity.to_value("m2"),
+        4.0 / 3 * aeff.quantity.to_value("m2"),
     )
     kernel = edisp.get_edisp_kernel()
     kernel_stacked = spectrum_dataset1.edisp.get_edisp_kernel()
@@ -228,11 +231,12 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
 def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
     energy = spectrum_dataset.counts.geom.axes[0]
 
-    aeff = EffectiveAreaTable.from_parametrization(energy.edges, "HESS")
 
     geom = spectrum_dataset.counts.geom.to_image()
     edisp1 = EDispKernelMap.from_gauss(energy, energy, 0.1, 0, geom=geom)
     edisp1.exposure_map.data += 1
+
+    aeff = EffectiveAreaTable.from_parametrization(energy.edges, "HESS").to_region_map(geom.region)
 
     livetime = 100 * u.s
     spectrum_dataset1 = SpectrumDataset(
@@ -244,7 +248,7 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
     )
 
     livetime2 = livetime
-    aeff2 = EffectiveAreaTable(energy.edges[:-1], energy.edges[1:], aeff.data.data)
+    aeff2 = aeff.copy()
     edisp2 = EDispKernelMap.from_gauss(energy, energy, 0.2, 0.0, geom=geom)
     edisp2.exposure_map.data += 1
     spectrum_dataset2 = SpectrumDataset(
@@ -261,7 +265,7 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
     assert spectrum_dataset1.background is None
     assert spectrum_dataset1.livetime == 2 * livetime
     assert_allclose(
-        spectrum_dataset1.aeff.data.data.to_value("m2"), aeff.data.data.to_value("m2")
+        spectrum_dataset1.aeff.quantity.to_value("m2"), aeff.quantity.to_value("m2")
     )
     kernel = edisp1.get_edisp_kernel()
     assert_allclose(kernel.get_bias(1 * u.TeV), 0.0, atol=1.2e-3)
@@ -291,7 +295,6 @@ class TestSpectrumOnOff:
         elo = ereco[:-1]
         ehi = ereco[1:]
         self.e_reco = MapAxis.from_edges(ereco, name="energy")
-        self.aeff = EffectiveAreaTable(etrue[:-1], etrue[1:], np.ones(9) * u.cm ** 2)
 
         start = u.Quantity([0], "s")
         stop = u.Quantity([1000], "s")
@@ -305,6 +308,11 @@ class TestSpectrumOnOff:
             make_region("icrs;box(-1.,-1.,0.1, 0.2,150)")
         )
         self.wcs = WcsGeom.create(npix=300, binsz=0.01, frame="icrs").wcs
+
+        self.aeff = RegionNDMap.create(
+            region=self.on_region, wcs=self.wcs, axes=[self.e_true], unit="cm2"
+        )
+        self.aeff.data += 1
 
         data = np.ones(elo.shape)
         data[-1] = 0  # to test stats calculation with empty bins
@@ -330,7 +338,8 @@ class TestSpectrumOnOff:
         acceptance_off = RegionNDMap.from_geom(self.off_counts.geom)
         acceptance_off.data += 10
 
-        self.edisp = EDispKernelMap.from_diagonal_response(self.e_reco, self.aeff.data.axis("energy_true"), self.on_counts.geom)
+        self.edisp = EDispKernelMap.from_diagonal_response(
+            self.e_reco, self.e_true, self.on_counts.geom)
 
         self.dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
@@ -377,8 +386,8 @@ class TestSpectrumOnOff:
         model = SkyModel(spectral_model=ConstantSpectralModel(const=const))
         livetime = 1 * u.s
 
-        e_reco = self.on_counts.geom.axes[0].edges
-        aeff = EffectiveAreaTable(e_reco[:-1], e_reco[1:], np.ones(4) * u.cm ** 2)
+        aeff = RegionNDMap.create(region=self.on_region, unit="cm2", axes=[self.e_reco.copy(name="energy_true")])
+        aeff.data += 1
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -387,8 +396,8 @@ class TestSpectrumOnOff:
             livetime=livetime,
         )
 
-        energy = aeff.energy.edges
-        expected = aeff.data.data[0] * (energy[-1] - energy[0]) * const * livetime
+        energy = aeff.geom.axes[0].edges
+        expected = aeff.data[0] * (energy[-1] - energy[0]) * const * livetime
 
         assert_allclose(dataset.npred_sig().data.sum(), expected.value)
 
@@ -625,14 +634,12 @@ class TestSpectralFit:
     def test_no_edisp(self):
         dataset = self.datasets[0].copy()
 
-        # Bring aeff in RECO space
-        energy = dataset.counts.geom.axes[0].center
-        data = dataset.aeff.data.evaluate(energy_true=energy)
-        e_edges = dataset.counts.geom.axes[0].edges
+        energy = dataset.counts.geom.axes[0].copy(name="energy_true")
 
-        dataset.aeff = EffectiveAreaTable(
-            data=data, energy_lo=e_edges[:-1], energy_hi=e_edges[1:]
-        )
+        geom = RegionGeom(region=None, axes=[energy])
+        data = dataset.aeff.interp_by_coord(geom.get_coord())
+        dataset.aeff = RegionNDMap.from_geom(geom=geom, data=data, unit="cm2")
+
         dataset.edisp = None
         dataset.models = self.pwl
 
@@ -680,7 +687,10 @@ def make_observation_list():
     dataoff_2[1] = 0
 
     axis = MapAxis.from_edges(energy, name="energy", interp="log")
+    axis_true = axis.copy(name="energy_true")
+
     geom = RegionGeom(region=None, axes=[axis])
+    geom_true = RegionGeom(region=None, axes=[axis_true])
 
     on_vector = RegionNDMap.from_geom(geom=geom, data=data_on)
     off_vector1 = RegionNDMap.from_geom(geom=geom, data=dataoff_1)
@@ -688,7 +698,7 @@ def make_observation_list():
     mask_safe = RegionNDMap.from_geom(geom, dtype=bool)
     mask_safe.data += True
 
-    aeff = EffectiveAreaTable.from_constant(energy, "1 cm2")
+    aeff = RegionNDMap.from_geom(geom_true, data=1, unit="m2")
     edisp = EDispKernelMap.from_gauss(
         energy_axis=axis, energy_axis_true=axis, sigma=0.2, bias=0, geom=geom
     )
@@ -873,7 +883,7 @@ class TestFit:
         self.src = RegionNDMap.from_geom(geom=geom, data=source_counts)
 
         self.src.livetime = 1 * u.s
-        self.aeff = EffectiveAreaTable.from_constant(energy, "1 cm2")
+        self.aeff = EffectiveAreaTable.from_constant(energy, "1 cm2").to_region_map(region=None)
 
         npred_bkg = bkg_model.integral(energy[:-1], energy[1:]).value
 
