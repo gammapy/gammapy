@@ -281,7 +281,7 @@ class EDispKernel:
         hdu2 : str, optional
             HDU containing the energy axis information, default, EBOUNDS
         """
-        with fits.open(make_path(filename), memmap=False) as hdulist:
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
 
     def to_hdulist(self, use_sherpa=False, **kwargs):
@@ -404,7 +404,7 @@ class EDispKernel:
 
     def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
-        filename = make_path(filename)
+        filename = str(make_path(filename))
         self.to_hdulist(use_sherpa=use_sherpa).writeto(filename, **kwargs)
 
     def get_resolution(self, e_true):

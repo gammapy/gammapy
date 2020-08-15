@@ -206,7 +206,7 @@ class PSF3D:
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(filename, *args, **kwargs)
+        self.to_fits().writeto(str(make_path(filename)), *args, **kwargs)
 
     def evaluate(self, energy=None, offset=None, rad=None):
         """Interpolate PSF value at a given offset and energy.

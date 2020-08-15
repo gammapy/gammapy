@@ -126,7 +126,7 @@ class Background3D:
     @classmethod
     def read(cls, filename, hdu="BACKGROUND"):
         """Read from file."""
-        with fits.open(make_path(filename), memmap=False) as hdulist:
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu=hdu)
 
     def to_table(self):
@@ -307,7 +307,7 @@ class Background2D:
     @classmethod
     def read(cls, filename, hdu="BACKGROUND"):
         """Read from file."""
-        with fits.open(make_path(filename), memmap=False) as hdulist:
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu=hdu)
 
     def to_table(self):

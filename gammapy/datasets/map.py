@@ -863,7 +863,7 @@ class MapDataset(Dataset):
         overwrite : bool
             Overwrite file if it exists.
         """
-        self.to_hdulist().writeto(make_path(filename), overwrite=overwrite)
+        self.to_hdulist().writeto(str(make_path(filename)), overwrite=overwrite)
 
     @classmethod
     def _read_lazy(cls, name, filename, cache):
@@ -921,12 +921,13 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset.
         """
+        filename = str(make_path(filename))
         name = make_name(name)
 
         if lazy:
             return cls._read_lazy(name=name, filename=filename, cache=cache)
         else:
-            with fits.open(make_path(filename), memmap=False) as hdulist:
+            with fits.open(filename, memmap=False) as hdulist:
                 return cls.from_hdulist(hdulist, name=name)
 
     @classmethod

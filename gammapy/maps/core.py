@@ -185,7 +185,7 @@ class Map(abc.ABC):
         map_out : `Map`
             Map object
         """
-        with fits.open(make_path(filename), memmap=False) as hdulist:
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
 
     @staticmethod
@@ -327,7 +327,7 @@ class Map(abc.ABC):
             This option is only compatible with the 'gadf' format.
         """
         hdulist = self.to_hdulist(**kwargs)
-        hdulist.writeto(make_path(filename), overwrite=overwrite)
+        hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
 
     def iter_by_image(self):
         """Iterate over image planes of the map.

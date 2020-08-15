@@ -108,7 +108,7 @@ class FluxPointsDataset(Dataset):
 
         table["mask_fit"] = mask_fit
         table["mask_safe"] = self.mask_safe
-        table.write(filename, overwrite=overwrite, **kwargs)
+        table.write(make_path(filename), overwrite=overwrite, **kwargs)
 
     @classmethod
     def from_dict(cls, data, models, **kwargs):

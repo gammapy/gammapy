@@ -197,7 +197,7 @@ class EffectiveAreaTable:
     @classmethod
     def read(cls, filename, hdu="SPECRESP"):
         """Read from file."""
-        filename = make_path(filename)
+        filename = str(make_path(filename))
         with fits.open(filename, memmap=False) as hdulist:
             try:
                 return cls.from_hdulist(hdulist, hdu=hdu)
@@ -239,7 +239,7 @@ class EffectiveAreaTable:
 
     def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
-        filename = make_path(filename)
+        filename = str(make_path(filename))
         self.to_hdulist(use_sherpa=use_sherpa).writeto(filename, **kwargs)
 
     def evaluate_fill_nan(self, **kwargs):
@@ -411,7 +411,7 @@ class EffectiveAreaTable2D:
     @classmethod
     def read(cls, filename, hdu="EFFECTIVE AREA"):
         """Read from file."""
-        with fits.open(make_path(filename), memmap=False) as hdulist:
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu=hdu)
 
     def to_effective_area_table(self, offset, energy=None):
