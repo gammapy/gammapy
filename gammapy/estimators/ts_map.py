@@ -340,8 +340,9 @@ class TSMapEstimator(Estimator):
 
         result = {}
         for name in keys:
+            unit = 1 / exposure.unit if "flux" in name else ""
             data = np.nan * np.ones_like(counts.data)
-            result[name] = counts.copy(data=data)
+            result[name] = counts.copy(data=data, unit=unit)
 
         flux_map = self.flux_default(dataset, kernel.data)
 
@@ -384,18 +385,18 @@ class TSMapEstimator(Estimator):
         # Set TS values at given positions
         j, i = zip(*positions)
 
-        for name in ["ts", "flux", "niter"]:
+        names = ["ts", "flux", "niter", "flux_err"]\
+
+        if "errn-errp" in self.selection:
+            names += ["flux_errp", "flux_errn"]
+
+        if "ul" in self.selection:
+            names += ["flux_ul"]
+
+        for name in names:
             result[name].data[j, i] = [_[name] for _ in results]
 
         result["sqrt_ts"] = self.sqrt_ts(result["ts"])
-        result["flux_err"].data[j, i] = [_["flux_err"] for _ in results]
-
-        if "errn-errp" in self.selection:
-            result["flux_errp"].data[j, i] = [_["flux_errp"] for _ in results]
-            result["flux_errn"].data[j, i] = [_["flux_errn"] for _ in results]
-
-        if "ul" in self.selection:
-            result["flux_ul"].data[j, i] = [_["flux_ul"] for _ in results]
 
         if self.downsampling_factor:
             for name in keys:
@@ -404,16 +405,6 @@ class TSMapEstimator(Estimator):
                     factor=self.downsampling_factor, preserve_counts=False, order=order
                 )
                 result[name] = result[name].crop(crop_width=pad_width)
-
-        # Set correct units
-        result["flux"].unit = flux_map.unit
-        result["flux_err"].unit = flux_map.unit
-        if "flux_errp" in keys:
-            result["flux_errp"].unit = flux_map.unit
-        if "flux_errn" in keys:
-            result["flux_errn"].unit = flux_map.unit
-        if "flux_ul" in keys:
-            result["flux_ul"].unit = flux_map.unit
 
         return result
 
@@ -584,14 +575,17 @@ def _compute_flux_err_conf(
     def ts_diff(x, counts, background, model):
         return (c_1 + n_sigma ** 2) - f_cash(x, counts, background, model)
 
+    bounds = amplitude_bounds_cython(counts.ravel(), background.ravel(), model.ravel())
+    amplitude_min, amplitude_max, _ = bounds
+
     args = (counts, background, model)
 
     if positive:
         min_amplitude = amplitude
-        max_amplitude = amplitude + 1e4
+        max_amplitude = amplitude_max
         factor = 1
     else:
-        min_amplitude = amplitude - 1e4
+        min_amplitude = amplitude_min
         max_amplitude = amplitude
         factor = -1
 
