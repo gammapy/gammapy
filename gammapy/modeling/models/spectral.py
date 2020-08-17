@@ -578,7 +578,7 @@ class PowerLawSpectralModel(SpectralModel):
         return reference * np.exp(cov_index_ampl / (amplitude * index_err ** 2))
 
 
-class NormPowerLawSpectralModel(SpectralModel):
+class PowerLawNormSpectralModel(SpectralModel):
     r"""Spectral power-law model with normalized amplitude parameter.
 
     Parameters
@@ -599,7 +599,7 @@ class NormPowerLawSpectralModel(SpectralModel):
 
     """
 
-    tag = ["NormPowerLawSpectralModel", "norm-pl"]
+    tag = ["PowerLawNormSpectralModel", "pl-norm"]
     tilt = Parameter("tilt", 2.0)
     norm = Parameter("norm", 1, unit="")
     reference = Parameter("reference", "1 TeV", frozen=True)
@@ -897,7 +897,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
             return np.power((2 - index) / alpha, 1 / alpha) / lambda_
 
 
-class NormExpCutoffPowerLawSpectralModel(SpectralModel):
+class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
     r"""Norm spectral exponential cutoff power-law model.
 
     Parameters
@@ -917,7 +917,7 @@ class NormExpCutoffPowerLawSpectralModel(SpectralModel):
     ExpCutoffPowerLawSpectralModel:
         Spectral exponential cutoff power-law model
     """
-    tag = ["NormExpCutoffPowerLawSpectralModel", "norm-ecpl"]
+    tag = ["ExpCutoffPowerLawNormSpectralModel", "ecpl-norm"]
 
     index = Parameter("index", 1.5)
     norm = Parameter("norm", 1, unit="")
@@ -1098,7 +1098,7 @@ class LogParabolaSpectralModel(SpectralModel):
         return reference * np.exp((2 - alpha) / (2 * beta))
 
 
-class NormLogParabolaSpectralModel(SpectralModel):
+class LogParabolaNormSpectralModel(SpectralModel):
     r"""Norm spectral log parabola model.
 
     Parameters
@@ -1116,7 +1116,7 @@ class NormLogParabolaSpectralModel(SpectralModel):
     LogParabolaSpectralModel:
         Spectral log parabola model
     """
-    tag = ["NormLogParabolaSpectralModel", "norm-lp"]
+    tag = ["LogParabolaNormSpectralModel", "lp-norm"]
     norm = Parameter("norm", 1, unit="")
     reference = Parameter("reference", "10 TeV", frozen=True)
     alpha = Parameter("alpha", 2)

@@ -12,14 +12,14 @@ from gammapy.modeling.models import (
     CompoundSpectralModel,
     ExpCutoffPowerLaw3FGLSpectralModel,
     ExpCutoffPowerLawSpectralModel,
-    NormExpCutoffPowerLawSpectralModel,
+    ExpCutoffPowerLawNormSpectralModel,
     GaussianSpectralModel,
     LogParabolaSpectralModel,
-    NormLogParabolaSpectralModel,
+    LogParabolaNormSpectralModel,
     NaimaSpectralModel,
     PowerLaw2SpectralModel,
     PowerLawSpectralModel,
-    NormPowerLawSpectralModel,
+    PowerLawNormSpectralModel,
     BrokenPowerLawSpectralModel,
     SmoothBrokenPowerLawSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
@@ -69,7 +69,7 @@ TEST_MODELS = [
     ),
     dict(
         name="norm-powerlaw",
-        model=NormPowerLawSpectralModel(
+        model=PowerLawNormSpectralModel(
             index=2 * u.Unit(""), norm=4.0 * u.Unit(""), reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(1.0, ""),
@@ -103,7 +103,7 @@ TEST_MODELS = [
     ),
     dict(
         name="norm-ecpl",
-        model=NormExpCutoffPowerLawSpectralModel(
+        model=ExpCutoffPowerLawNormSpectralModel(
             index=1.6 * u.Unit(""),
             norm=4 * u.Unit(""),
             reference=1 * u.TeV,
@@ -153,7 +153,7 @@ TEST_MODELS = [
     ),
     dict(
         name="norm-logpar",
-        model=NormLogParabolaSpectralModel(
+        model=LogParabolaNormSpectralModel(
             alpha=2.3 * u.Unit(""),
             norm=4 * u.Unit(""),
             reference=1 * u.TeV,

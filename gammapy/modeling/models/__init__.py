@@ -39,9 +39,9 @@ SPECTRAL_MODEL_REGISTRY = Registry(
         AbsorbedSpectralModel,
         NaimaSpectralModel,
         ScaleSpectralModel,
-        NormPowerLawSpectralModel,
-        NormLogParabolaSpectralModel,
-        NormExpCutoffPowerLawSpectralModel,
+        PowerLawNormSpectralModel,
+        LogParabolaNormSpectralModel,
+        ExpCutoffPowerLawNormSpectralModel,
     ]
 )
 """Registry of spectral model classes."""
