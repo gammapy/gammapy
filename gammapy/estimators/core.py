@@ -3,12 +3,15 @@ import abc
 from copy import deepcopy
 import numpy as np
 from gammapy.modeling.models import Model
+import inspect
 
 __all__ = ["Estimator"]
 
 
 class Estimator(abc.ABC):
     """Abstract estimator base class."""
+
+    _available_selection_optional = {}
 
     @property
     @abc.abstractmethod
@@ -19,21 +22,26 @@ class Estimator(abc.ABC):
     def run(self, datasets):
         pass
 
-    def _make_selection(self, selection):
+    @property
+    def selection_optional(self):
+        """"""
+        return self._selection_optional
+
+    @selection_optional.setter
+    def selection_optional(self, selection):
+        """Set optional selection"""
+        available = self._available_selection_optional
+
         if selection == "all":
-            return self.available_selection
+            self._selection_optional = available
         elif selection is None:
-            return set()
-        elif isinstance(selection, str) and selection in self.available_selection:
-            return set([selection])
+            self._selection_optional = []
         else:
-            selection = set(selection)
-            if selection.issubset(self.available_selection):
-                return selection
+            if set(selection).issubset(set(available)):
+                self._selection_optional = selection
             else:
-                raise ValueError(
-                    f"Incorrect selection. Available options are {self.available_selection}"
-                )
+                difference = set(selection).difference(set(available))
+                raise ValueError(f"{difference} is not a valid method.")
 
     @staticmethod
     def get_sqrt_ts(ts):
@@ -62,15 +70,6 @@ class Estimator(abc.ABC):
         with np.errstate(invalid="ignore", divide="ignore"):
             return np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
 
-    # TODO: replace this type checking by using pydantic models in future
-    @property
-    def selection(self):
-        return self._selection
-
-    @selection.setter
-    def selection(self, selection):
-        self._selection = self._make_selection(selection)
-
     def copy(self):
         """Copy estimator"""
         return deepcopy(self)
@@ -94,9 +93,11 @@ class Estimator(abc.ABC):
         pars = self.config_parameters
         max_len = np.max([len(_) for _ in pars]) + 1
 
-        for name, value in pars.items():
+        for name, value in sorted(pars.items()):
             if isinstance(value, Model):
                 s += f"\t{name:{max_len}s}: {value.__class__.__name__}\n"
+            elif inspect.isclass(value):
+                s += f"\t{name:{max_len}s}: {value.__name__}\n"
             elif isinstance(value, np.ndarray):
                 s += f"\t{name:{max_len}s}: {value}\n"
             else:

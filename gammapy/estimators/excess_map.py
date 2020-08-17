@@ -74,7 +74,7 @@ class ExcessMapEstimator(Estimator):
     n_sigma_ul : float
         Confidence level for the upper limits expressed in number of sigma.
         Default is 3.
-    selection : list of str
+    selection_optional : list of str
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
 
@@ -90,14 +90,14 @@ class ExcessMapEstimator(Estimator):
     """
 
     tag = "ExcessMapEstimator"
-    available_selection = ["errn-errp", "ul"]
+    _available_selection_optional = ["errn-errp", "ul"]
 
     def __init__(
         self,
         correlation_radius="0.1 deg",
         n_sigma=1,
         n_sigma_ul=3,
-        selection="all",
+        selection_optional="all",
         apply_mask_fit=False,
         return_image=False,
     ):
@@ -106,7 +106,7 @@ class ExcessMapEstimator(Estimator):
         self.n_sigma_ul = n_sigma_ul
         self.apply_mask_fit = apply_mask_fit
         self.return_image = return_image
-        self.selection = self._make_selection(selection)
+        self.selection_optional = selection_optional
 
     @property
     def correlation_radius(self):
@@ -170,12 +170,12 @@ class ExcessMapEstimator(Estimator):
         err = Map.from_geom(geom, data=counts_stat.error * self.n_sigma)
         result.update({"err": err})
 
-        if "errn-errp" in self.selection:
+        if "errn-errp" in self.selection_optional:
             errn = Map.from_geom(geom, data=counts_stat.compute_errn(self.n_sigma))
             errp = Map.from_geom(geom, data=counts_stat.compute_errp(self.n_sigma))
             result.update({"errn": errn, "errp": errp})
 
-        if "ul" in self.selection:
+        if "ul" in self.selection_optional:
             ul = Map.from_geom(
                 geom, data=counts_stat.compute_upper_limit(self.n_sigma_ul)
             )

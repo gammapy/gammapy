@@ -36,7 +36,7 @@ class ParameterEstimator(Estimator):
         Values to use for the scan.
     reoptimize : bool
         Re-optimize other free model parameters. Default is True.
-    selection : list of str
+    selection_optional : list of str
         Which additional quantities to estimate. Available options are:
             * "errn-errp": estimate asymmetric errors on parameter best fit value.
             * "ul": estimate upper limits.
@@ -47,7 +47,7 @@ class ParameterEstimator(Estimator):
     """
 
     tag = "ParameterEstimator"
-    available_selection = ["errn-errp", "ul", "scan"]
+    _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
@@ -60,7 +60,7 @@ class ParameterEstimator(Estimator):
         scan_n_values=30,
         scan_values=None,
         reoptimize=True,
-        selection="all",
+        selection_optional="all",
     ):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -74,7 +74,7 @@ class ParameterEstimator(Estimator):
         self.scan_max = scan_max
 
         self.reoptimize = reoptimize
-        self.selection = self._make_selection(selection)
+        self.selection_optional = selection_optional
         self._fit = None
 
     def _setup_fit(self, datasets):
@@ -251,13 +251,13 @@ class ParameterEstimator(Estimator):
             result = self.estimate_best_fit(datasets, parameter)
             result.update(self.estimate_ts(datasets, parameter))
 
-            if "errn-errp" in self.selection:
+            if "errn-errp" in self.selection_optional:
                 result.update(self.estimate_errn_errp(datasets, parameter))
 
-            if "ul" in self.selection:
+            if "ul" in self.selection_optional:
                 result.update(self.estimate_ul(datasets, parameter))
 
-            if "scan" in self.selection:
+            if "scan" in self.selection_optional:
                 result.update(self.estimate_scan(datasets, parameter))
 
         return result

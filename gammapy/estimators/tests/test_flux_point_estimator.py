@@ -242,12 +242,11 @@ class TestFluxPointsEstimator:
     @requires_data()
     def test_flux_points_estimator_no_norm_scan(fpe_pwl):
         datasets, fpe = fpe_pwl
-        fpe.selection = None
+        fpe.selection_optional = None
 
         fp = fpe.run(datasets)
 
         assert fp.sed_type == "dnde"
-        print(fp.table.colnames)
         assert "norm_scan" not in fp.table.colnames
 
 

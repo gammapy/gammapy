@@ -56,7 +56,7 @@ def test_compute_lima_image():
     dataset = MapDataset(counts=counts)
     dataset.models = background_model
 
-    estimator = ExcessMapEstimator("0.1 deg", selection=None)
+    estimator = ExcessMapEstimator("0.1 deg", selection_optional=None)
     result_lima = estimator.run(dataset)
 
     assert_allclose(result_lima["significance"].data[:, 100, 100], 30.814916, atol=1e-3)
@@ -86,7 +86,7 @@ def test_compute_lima_on_off_image():
 
     significance = Map.read(filename, hdu="SIGNIFICANCE")
     significance = image_to_cube(significance, "1 TeV", "10 TeV")
-    estimator = ExcessMapEstimator("0.1 deg", selection=None)
+    estimator = ExcessMapEstimator("0.1 deg", selection_optional=None)
     results = estimator.run(dataset)
 
     # Reproduce safe significance threshold from HESS software
@@ -124,7 +124,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
 
 
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
-    estimator = ExcessMapEstimator(0.11 * u.deg, selection=None)
+    estimator = ExcessMapEstimator(0.11 * u.deg, selection_optional=None)
     result = estimator.run(simple_dataset_on_off)
 
     assert_allclose(result["counts"].data[0, 10, 10], 194)
@@ -154,14 +154,14 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
 
 def test_incorrect_selection():
     with pytest.raises(ValueError):
-        ExcessMapEstimator(0.11 * u.deg, selection=["bad"])
+        ExcessMapEstimator(0.11 * u.deg, selection_optional=["bad"])
 
     with pytest.raises(ValueError):
-        ExcessMapEstimator(0.11 * u.deg, selection=["ul", "bad"])
+        ExcessMapEstimator(0.11 * u.deg, selection_optional=["ul", "bad"])
 
     estimator = ExcessMapEstimator(0.11 * u.deg)
     with pytest.raises(ValueError):
-        estimator.selection = "bad"
+        estimator.selection_optional = "bad"
 
 
 def test_significance_map_estimator_incorrect_dataset():

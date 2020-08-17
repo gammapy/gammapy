@@ -313,7 +313,7 @@ class LightCurveEstimator(Estimator):
         Number of sigma to use for upper limit computation. Default is 2.
     reoptimize : bool
         reoptimize other parameters during fit statistic scan?
-    selection : list of str
+    selection_optional : list of str
         Which steps to execute. Available options are:
 
             * "errn-errp": estimate asymmetric errors.
@@ -324,7 +324,7 @@ class LightCurveEstimator(Estimator):
     """
 
     tag = "LightCurveEstimator"
-    available_selection = ["errn-errp", "ul", "scan"]
+    _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
@@ -339,7 +339,7 @@ class LightCurveEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=2,
         reoptimize=False,
-        selection="all",
+        selection_optional="all",
     ):
 
         self.source = source
@@ -355,7 +355,7 @@ class LightCurveEstimator(Estimator):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.reoptimize = reoptimize
-        self.selection = selection
+        self.selection_optional = selection_optional
 
     def run(self, datasets):
         """Run light curve extraction.
@@ -430,7 +430,7 @@ class LightCurveEstimator(Estimator):
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
             reoptimize=self.reoptimize,
-            selection=self.selection,
+            selection_optional=self.selection_optional,
 
         )
         return fe.run(datasets)

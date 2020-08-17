@@ -45,11 +45,15 @@ class ASmoothMapEstimator(Estimator):
 
     tag = "ASmoothMapEstimator"
 
-    def __init__(self, scales, kernel=Gaussian2DKernel, spectrum=None, method="lima", threshold=5):
+    def __init__(self, scales=None, kernel=Gaussian2DKernel, spectrum=None, method="lima", threshold=5):
         if spectrum is None:
             spectrum = PowerLawSpectralModel()
 
         self.spectrum = spectrum
+
+        if scales is None:
+            scales = self.get_scales(n_scales=9, kernel=kernel)
+
         self.scales = scales
         self.kernel = kernel
         self.threshold = threshold

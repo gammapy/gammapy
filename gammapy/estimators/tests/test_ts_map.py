@@ -92,7 +92,7 @@ def test_compute_ts_map(input_dataset):
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     ts_estimator = TSMapEstimator(
-        model=model, threshold=1, kernel_width="1 deg", selection=[]
+        model=model, threshold=1, kernel_width="1 deg", selection_optional=[]
     )
     result = ts_estimator.run(input_dataset)
 
