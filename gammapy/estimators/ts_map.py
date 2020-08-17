@@ -540,13 +540,13 @@ def _root_amplitude_brentq(counts, background, model, rtol=RTOL):
         Number of function evaluations needed for the fit.
     """
     # Compute amplitude bounds and assert counts > 0
-    bounds = amplitude_bounds_cython(counts, background, model)
+    bounds = amplitude_bounds_cython(counts.ravel(), background.ravel(), model.ravel())
     amplitude_min, amplitude_max, amplitude_min_total = bounds
 
     if not counts.sum() > 0:
         return amplitude_min_total, 0
 
-    args = (counts, background, model)
+    args = (counts.ravel(), background.ravel(), model.ravel())
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
