@@ -2,24 +2,7 @@
 import numpy as np
 from .interpolation import LogScale
 
-__all__ = ["evaluate_integral_pwl", "trapz_loglog"]
-
-
-def evaluate_integral_pwl(emin, emax, index, amplitude, reference):
-    """Evaluate pwl integral (static function)."""
-    val = -1 * index + 1
-
-    prefactor = amplitude * reference / val
-    upper = np.power((emax / reference), val)
-    lower = np.power((emin / reference), val)
-    integral = prefactor * (upper - lower)
-
-    mask = np.isclose(val, 0)
-
-    if mask.any():
-        integral[mask] = (amplitude * reference * np.log(emax / emin))[mask]
-
-    return integral
+__all__ = ["trapz_loglog"]
 
 
 def trapz_loglog(y, x, axis=-1):
@@ -41,6 +24,8 @@ def trapz_loglog(y, x, axis=-1):
     trapz : float
         Definite integral as approximated by trapezoidal rule in loglog space.
     """
+    from gammapy.modeling.models import PowerLawSpectralModel as pl
+
     # see https://stackoverflow.com/a/56840428
     x, y = np.moveaxis(x, axis, 0), np.moveaxis(y, axis, 0)
 
@@ -52,6 +37,6 @@ def trapz_loglog(y, x, axis=-1):
     index = -log(vals_emin / vals_emax) / log(emin / emax)
     index[np.isnan(index)] = np.inf
 
-    return evaluate_integral_pwl(
+    return pl.evaluate_integral(
         emin=emin, emax=emax, index=index, reference=emin, amplitude=vals_emin
     )

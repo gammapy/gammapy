@@ -12,11 +12,14 @@ from gammapy.modeling.models import (
     CompoundSpectralModel,
     ExpCutoffPowerLaw3FGLSpectralModel,
     ExpCutoffPowerLawSpectralModel,
+    ExpCutoffPowerLawNormSpectralModel,
     GaussianSpectralModel,
     LogParabolaSpectralModel,
+    LogParabolaNormSpectralModel,
     NaimaSpectralModel,
     PowerLaw2SpectralModel,
     PowerLawSpectralModel,
+    PowerLawNormSpectralModel,
     BrokenPowerLawSpectralModel,
     SmoothBrokenPowerLawSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
@@ -65,6 +68,15 @@ TEST_MODELS = [
         eflux_1_10TeV=u.Quantity(9.210340371976184, "TeV cm-2 s-1"),
     ),
     dict(
+        name="norm-powerlaw",
+        model=PowerLawNormSpectralModel(
+            index=2 * u.Unit(""), norm=4.0 * u.Unit(""), reference=1 * u.TeV,
+        ),
+        val_at_2TeV=u.Quantity(1.0, ""),
+        integral_1_10TeV=u.Quantity(3.6, "TeV"),
+        eflux_1_10TeV=u.Quantity(9.210340371976184, "TeV2"),
+    ),
+    dict(
         name="powerlaw2",
         model=PowerLaw2SpectralModel(
             amplitude=u.Quantity(2.9227116204223784, "cm-2 s-1"),
@@ -88,6 +100,18 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(3.765838739678921, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(9.901735870666526, "TeV cm-2 s-1"),
         e_peak=4 * u.TeV,
+    ),
+    dict(
+        name="norm-ecpl",
+        model=ExpCutoffPowerLawNormSpectralModel(
+            index=1.6 * u.Unit(""),
+            norm=4 * u.Unit(""),
+            reference=1 * u.TeV,
+            lambda_=0.1 / u.TeV,
+        ),
+        val_at_2TeV=u.Quantity(1.080321705479446, ""),
+        integral_1_10TeV=u.Quantity(3.765838739678921, "TeV"),
+        eflux_1_10TeV=u.Quantity(9.901735870666526, "TeV2"),
     ),
     dict(
         name="ecpl_3fgl",
@@ -126,6 +150,18 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(2.255689748270628, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(3.9586515834989267, "TeV cm-2 s-1"),
         e_peak=0.74082 * u.TeV,
+    ),
+    dict(
+        name="norm-logpar",
+        model=LogParabolaNormSpectralModel(
+            alpha=2.3 * u.Unit(""),
+            norm=4 * u.Unit(""),
+            reference=1 * u.TeV,
+            beta=0.5 * u.Unit(""),
+        ),
+        val_at_2TeV=u.Quantity(0.6387956571420305, ""),
+        integral_1_10TeV=u.Quantity(2.255689748270628, "TeV"),
+        eflux_1_10TeV=u.Quantity(3.9586515834989267, "TeV2"),
     ),
     dict(
         name="logpar10",
@@ -253,10 +289,10 @@ TEST_MODELS.append(
 TEST_MODELS.append(
     dict(
         name="compound6",
-        model=TEST_MODELS[8]["model"] + u.Quantity(4, "cm-2 s-1 TeV-1"),
-        val_at_2TeV=TEST_MODELS[8]["val_at_2TeV"] * 2,
-        integral_1_10TeV=TEST_MODELS[8]["integral_1_10TeV"] * 2,
-        eflux_1_10TeV=TEST_MODELS[8]["eflux_1_10TeV"] * 2,
+        model=TEST_MODELS[11]["model"] + u.Quantity(4, "cm-2 s-1 TeV-1"),
+        val_at_2TeV=TEST_MODELS[11]["val_at_2TeV"] * 2,
+        integral_1_10TeV=TEST_MODELS[11]["integral_1_10TeV"] * 2,
+        eflux_1_10TeV=TEST_MODELS[11]["eflux_1_10TeV"] * 2,
     )
 )
 
