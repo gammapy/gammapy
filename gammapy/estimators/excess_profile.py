@@ -190,11 +190,11 @@ class ExcessProfileEstimator(Estimator):
 
             result["err"] = stats.error * self.n_sigma
 
-            if "errn-errp" in self.selection:
+            if "errn-errp" in self.selection_optional:
                 result["errn"] = stats.compute_errn(self.n_sigma)
                 result["errp"] = stats.compute_errp(self.n_sigma)
 
-            if "ul" in self.selection:
+            if "ul" in self.selection_optional:
                 result["ul"] = stats.compute_upper_limit(self.n_sigma_ul)
 
             npred = spds.npred_sig().data[mask][:, 0, 0]
@@ -209,11 +209,11 @@ class ExcessProfileEstimator(Estimator):
 
             result["flux_err"] = stats.error / stats.excess * flux
 
-            if "errn-errp" in self.selection:
+            if "errn-errp" in self.selection_optional:
                 result["flux_errn"] = np.abs(result["errn"]) / stats.excess * flux
                 result["flux_errp"] = result["errp"] / stats.excess * flux
 
-            if "ul" in self.selection:
+            if "ul" in self.selection_optional:
                 result["flux_ul"] = result["ul"] / stats.excess * flux
 
             solid_angle = spds.counts.geom.solid_angle()

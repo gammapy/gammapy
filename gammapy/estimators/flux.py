@@ -182,13 +182,13 @@ class FluxEstimator(Estimator):
             "ts": np.nan,
         }
 
-        if "errn-errp" in self.selection:
+        if "errn-errp" in self.selection_optional:
             result.update({"norm_errp": np.nan, "norm_errn": np.nan})
 
-        if "ul" in self.selection:
+        if "ul" in self.selection_optional:
             result.update({"norm_ul": np.nan})
 
-        if "scan" in self.selection:
+        if "scan" in self.selection_optional:
             nans = np.nan * np.empty_like(self.norm_values)
             result.update({"norm_scan": nans, "stat_scan": nans})
 

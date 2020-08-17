@@ -237,7 +237,7 @@ def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
         energy_range=[1, 100] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
-        selection=selection,
+        selection_optional=selection,
     )
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -253,7 +253,7 @@ def test_lightcurve_estimator_spectrum_datasets_default():
     datasets = get_spectrum_datasets()
     selection = ["scan"]
     estimator = LightCurveEstimator(
-        energy_range=[1, 100] * u.TeV, norm_n_values=3, selection=selection
+        energy_range=[1, 100] * u.TeV, norm_n_values=3, selection_optional=selection
     )
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -275,7 +275,7 @@ def test_lightcurve_estimator_spectrum_datasets_notordered():
         energy_range=[1, 100] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
-        selection=["scan"],
+        selection_optional=["scan"],
     )
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -293,7 +293,7 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
         energy_range=[1, 100] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
-        selection=["scan"],
+        selection_optional=["scan"],
     )
     lightcurve = estimator.run(datasets)
 
@@ -342,7 +342,7 @@ def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_interval
         energy_range=[1, 100] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
-        selection=["scan"],
+        selection_optional=["scan"],
     )
     with pytest.raises(ValueError) as excinfo:
         estimator.run(datasets)
@@ -381,7 +381,7 @@ def test_lightcurve_estimator_map_datasets():
         energy_range=[1, 100] * u.TeV,
         source="test_source",
         time_intervals=time_intervals,
-        selection=["scan"],
+        selection_optional=["scan"],
     )
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -406,7 +406,7 @@ def test_lightcurve_estimator_map_datasets():
         energy_range=[1, 100] * u.TeV,
         source="test_source",
         time_intervals=time_intervals2,
-        selection=["scan"],
+        selection_optional=["scan"],
     )
     lightcurve2 = estimator2.run(datasets)
 

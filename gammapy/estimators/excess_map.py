@@ -170,12 +170,12 @@ class ExcessMapEstimator(Estimator):
         err = Map.from_geom(geom, data=counts_stat.error * self.n_sigma)
         result.update({"err": err})
 
-        if "errn-errp" in self.selection:
+        if "errn-errp" in self.selection_optional:
             errn = Map.from_geom(geom, data=counts_stat.compute_errn(self.n_sigma))
             errp = Map.from_geom(geom, data=counts_stat.compute_errp(self.n_sigma))
             result.update({"errn": errn, "errp": errp})
 
-        if "ul" in self.selection:
+        if "ul" in self.selection_optional:
             ul = Map.from_geom(
                 geom, data=counts_stat.compute_upper_limit(self.n_sigma_ul)
             )

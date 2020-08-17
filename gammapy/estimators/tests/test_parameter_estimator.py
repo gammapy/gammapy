@@ -39,7 +39,7 @@ def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
 
     estimator = ParameterEstimator(
         scan_n_values=10,
-        selection="all"
+        selection_optional="all"
     )
 
     result = estimator.run(datasets, parameter="amplitude")

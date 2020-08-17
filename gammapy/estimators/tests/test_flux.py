@@ -67,7 +67,7 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
         e_min="1 GeV",
         e_max="100 GeV",
         reoptimize=True,
-        selection=[]
+        selection_optional=None
     )
     result = estimator.run(fermi_datasets)
 
@@ -80,7 +80,7 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
 @requires_dependency("iminuit")
 def test_flux_estimator_1d(hess_datasets):
     estimator = FluxEstimator(
-        source="Crab", e_min=1 * u.TeV, e_max=10 * u.TeV, selection=["errn-errp", "ul"]
+        source="Crab", e_min=1 * u.TeV, e_max=10 * u.TeV, selection_optional=["errn-errp", "ul"]
     )
     result = estimator.run(hess_datasets)
 

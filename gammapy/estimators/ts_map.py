@@ -332,11 +332,11 @@ class TSMapEstimator(Estimator):
 
         keys = ["ts", "sqrt_ts", "flux", "niter", "flux_err"]
 
-        if "errn-errp" in self.selection:
+        if "errn-errp" in self.selection_optional:
             keys.append("flux_errp")
             keys.append("flux_errn")
 
-        if "ul" in self.selection:
+        if "ul" in self.selection_optional:
             keys.append("flux_ul")
 
         result = {}
@@ -360,8 +360,8 @@ class TSMapEstimator(Estimator):
         # Compute null statistics per pixel for the whole image
         c_0 = cash(counts_array, background_array)
 
-        compute_errn_errp = True if "errn-errp" in self.selection else False
-        compute_ul = True if "ul" in self.selection else False
+        compute_errn_errp = True if "errn-errp" in self.selection_optional else False
+        compute_ul = True if "ul" in self.selection_optional else False
 
         wrap = functools.partial(
             _ts_value,
@@ -388,10 +388,10 @@ class TSMapEstimator(Estimator):
 
         names = ["ts", "flux", "niter", "flux_err"]\
 
-        if "errn-errp" in self.selection:
+        if "errn-errp" in self.selection_optional:
             names += ["flux_errp", "flux_errn"]
 
-        if "ul" in self.selection:
+        if "ul" in self.selection_optional:
             names += ["flux_ul"]
 
         for name in names:
