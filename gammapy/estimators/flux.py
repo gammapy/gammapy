@@ -40,7 +40,7 @@ class FluxEstimator(Estimator):
         Sigma to use for upper limit computation.
     reoptimize : bool
         Re-optimize other free model parameters.
-    selection : list of str
+    selection_optional : list of str
         Which additional quantities to estimate. Available options are:
 
             * "errn-errp": estimate asymmetric errors.
@@ -50,7 +50,7 @@ class FluxEstimator(Estimator):
         By default all steps are executed.
     """
     tag = "FluxEstimator"
-    available_selection = ["errn-errp", "ul", "scan"]
+    _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
@@ -64,7 +64,7 @@ class FluxEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=3,
         reoptimize=True,
-        selection="all",
+        selection_optional="all",
     ):
 
         if norm_values is None:
@@ -79,7 +79,7 @@ class FluxEstimator(Estimator):
         if self.e_min >= self.e_max:
             raise ValueError("Incorrect energy_range for Flux Estimator")
 
-        self.selection = selection
+        self.selection_optional = selection_optional
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.reoptimize = reoptimize
@@ -90,7 +90,7 @@ class FluxEstimator(Estimator):
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
             reoptimize=self.reoptimize,
-            selection=self.selection
+            selection_optional=self.selection_optional
         )
 
     @property

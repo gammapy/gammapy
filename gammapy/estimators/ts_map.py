@@ -132,7 +132,8 @@ class TSMapEstimator(Estimator):
     [Stewart2009]_
     """
     tag = "TSMapEstimator"
-    available_selection = ["errn-errp", "ul"]
+    _selection_base = ["flux", "flux_err", "ts", "sqrt_ts", "niter"]
+    _available_selection_optional = ["errn-errp", "ul"]
 
     def __init__(
         self,
@@ -143,7 +144,7 @@ class TSMapEstimator(Estimator):
         n_sigma_ul=2,
         threshold=None,
         rtol=0.001,
-        selection="all",
+        selection_optional="all",
     ):
         self.kernel_width = Angle(kernel_width)
 
@@ -160,7 +161,7 @@ class TSMapEstimator(Estimator):
         self.threshold = threshold
         self.rtol = rtol
 
-        self.selection = self._make_selection(selection)
+        self.selection_optional = selection_optional
 
     def get_kernel(self, dataset):
         """Set the convolution kernel for the input dataset.

@@ -27,7 +27,7 @@ class ExcessProfileEstimator(Estimator):
     spectrum : `~gammapy.modeling.models.SpectralModel` (optional)
         Spectral model to compute the fluxes or brightness.
         Default is power-law with spectral index of 2.
-    selection : list of str
+    selection_optional : list of str
         Additional quantities to be estimated. Possible options are:
 
             * "errn-errp": estimate asymmetric errors.
@@ -78,10 +78,10 @@ class ExcessProfileEstimator(Estimator):
     """
 
     tag = "ExcessProfileEstimator"
-    available_selection = ["errn-errp", "ul"]
+    _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
-        self, regions, spectrum=None, n_sigma=1.0, n_sigma_ul=3.0, selection="all"
+        self, regions, spectrum=None, n_sigma=1.0, n_sigma_ul=3.0, selection_optional="all"
     ):
         self.regions = regions
         self.n_sigma = n_sigma
@@ -91,8 +91,7 @@ class ExcessProfileEstimator(Estimator):
             spectrum = PowerLawSpectralModel()
 
         self.spectrum = spectrum
-
-        self.selection = self._make_selection(selection)
+        self.selection_optional = selection_optional
 
     def get_spectrum_datasets(self, dataset):
         """ Utility to make the final `~gammapy.datasts.Datasets`

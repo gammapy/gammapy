@@ -797,11 +797,11 @@ class FluxPointsEstimator(Estimator):
     """
 
     tag = "FluxPointsEstimator"
-    available_selection = ["errn-errp", "ul", "scan"]
+    _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
-        e_edges,
+        e_edges=[1, 10] * u.TeV,
         source=0,
         norm_min=0.2,
         norm_max=5,
@@ -810,7 +810,7 @@ class FluxPointsEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=2,
         reoptimize=False,
-        selection="all",
+        selection_optional="all",
     ):
         self.e_edges = e_edges
         self.source = source
@@ -823,7 +823,7 @@ class FluxPointsEstimator(Estimator):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.reoptimize = reoptimize
-        self.selection = selection
+        self.selection_optional = selection_optional
 
     def _flux_estimator(self, e_min, e_max):
         return FluxEstimator(
@@ -837,7 +837,7 @@ class FluxPointsEstimator(Estimator):
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
             reoptimize=self.reoptimize,
-            selection=self.selection,
+            selection_optional=self.selection_optional,
 
         )
 
