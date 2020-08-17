@@ -47,7 +47,7 @@ class ParameterEstimator(Estimator):
     """
 
     tag = "ParameterEstimator"
-    _available_selection_optional = {"errn-errp", "ul", "scan"}
+    _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
