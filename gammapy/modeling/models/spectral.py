@@ -476,10 +476,7 @@ class PowerLawSpectralModel(SpectralModel):
         
     See Also
     --------
-    PowerLaw2SpectralModel:
-        Spectral power-law model with integral as amplitude parameter
-    NormPowerLawSpectralModel:
-        Spectral power-law model with normalized amplitude parameter
+    PowerLaw2SpectralModel, PowerLawNormSpectralModel
     """
 
     tag = ["PowerLawSpectralModel", "pl"]
@@ -592,11 +589,7 @@ class PowerLawNormSpectralModel(SpectralModel):
         
     See Also
     --------
-    PowerLawSpectralModel:
-        Spectral power-law model 
-    PowerLaw2SpectralModel:
-        Spectral power-law model with integral as amplitude parameter
-
+    PowerLawSpectralModel, PowerLaw2SpectralModel
     """
 
     tag = ["PowerLawNormSpectralModel", "pl-norm"]
@@ -691,11 +684,7 @@ class PowerLaw2SpectralModel(SpectralModel):
     
     See Also
     --------
-    PowerLawSpectralModel:
-        Spectral power-law model 
-    NormPowerLawSpectralModel:
-        Spectral power-law model with normalized amplitude parameter
-
+    PowerLawSpectralModel, PowerLawNormSpectralModel
     """
     tag = ["PowerLaw2SpectralModel", "pl-2"]
 
@@ -775,8 +764,7 @@ class BrokenPowerLawSpectralModel(SpectralModel):
         
     See Also
     --------
-    SmoothBrokenPowerLawSpectralModel:
-        Spectral smooth broken power-law model
+    SmoothBrokenPowerLawSpectralModel
     """
 
     tag = ["BrokenPowerLawSpectralModel", "bpl"]
@@ -818,8 +806,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
         
     See Also
     --------
-    BrokenPowerLawSpectralModel:
-        Spectral broken power-law model
+    BrokenPowerLawSpectralModel
     """
 
     tag = ["SmoothBrokenPowerLawSpectralModel", "sbpl"]
@@ -856,11 +843,12 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         :math:`\lambda`
     alpha : `~astropy.units.Quantity`
         :math:`\alpha`
+
     See Also
     --------
-    NormExpCutoffPowerLawSpectralModel:
-        Spectral exponential cutoff power-law model with normalized amplitude parameter
+    ExpCutoffPowerLawNormSpectralModel
     """
+
     tag = ["ExpCutoffPowerLawSpectralModel", "ecpl"]
 
     index = Parameter("index", 1.5)
@@ -912,10 +900,10 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
         :math:`\lambda`
     alpha : `~astropy.units.Quantity`
         :math:`\alpha`
+
     See Also
     --------
-    ExpCutoffPowerLawSpectralModel:
-        Spectral exponential cutoff power-law model
+    ExpCutoffPowerLawSpectralModel
     """
     tag = ["ExpCutoffPowerLawNormSpectralModel", "ecpl-norm"]
 
@@ -1059,10 +1047,11 @@ class LogParabolaSpectralModel(SpectralModel):
         :math:`\alpha`
     beta : `~astropy.units.Quantity`
         :math:`\beta`
+
     See Also
     --------
-    NormLogParabolaSpectralModel:
-        Spectral log parabola model with normalized amplitude parameter
+    LogParabolaNormSpectralModel
+
     """
     tag = ["LogParabolaSpectralModel", "lp"]
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
@@ -1111,10 +1100,10 @@ class LogParabolaNormSpectralModel(SpectralModel):
         :math:`\alpha`
     beta : `~astropy.units.Quantity`
         :math:`\beta`
+
     See Also
     --------
-    LogParabolaSpectralModel:
-        Spectral log parabola model
+    LogParabolaSpectralModel
     """
     tag = ["LogParabolaNormSpectralModel", "lp-norm"]
     norm = Parameter("norm", 1, unit="")

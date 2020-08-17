@@ -122,6 +122,11 @@ class MapDataset(Dataset):
     meta_table : `~astropy.table.Table`
         Table listing informations on observations used to create the dataset.
         One line per observation for stacked datasets.
+
+
+    See Also
+    --------
+    MapDatasetOnOff, SpectrumDataset, FluxPointsDataset
     """
 
     stat_type = "cash"
@@ -1048,7 +1053,12 @@ class MapDataset(Dataset):
 
         if self.exposure is not None:
             exposure = self.exposure.get_spectrum(on_region, np.mean)
-            kwargs["aeff"] = exposure / kwargs["livetime"]
+            energy = exposure.geom.axes[0].edges
+            kwargs["aeff"] = EffectiveAreaTable(
+                energy_lo=energy[:-1],
+                energy_hi=energy[1:],
+                data=exposure.quantity[:, 0, 0] / kwargs["livetime"],
+            )
 
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
@@ -1057,12 +1067,13 @@ class MapDataset(Dataset):
                     " `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
-                raise ValueError("No PSFMap set. Containment correction impossible")
+                raise ValueError("No PSFMap set. Containement correction impossible")
             else:
                 psf = self.psf.get_energy_dependent_table_psf(on_region.center)
-                energy = self.exposure.geom.get_axis_by_name("energy_true").center
-                containment = psf.containment(energy[:, np.newaxis], on_region.radius)
-                kwargs["aeff"].data *= containment
+                containment = psf.containment(
+                    kwargs["aeff"].energy.center, on_region.radius
+                )
+                kwargs["aeff"].data.data *= containment.squeeze()
 
         if self.edisp is not None:
             energy_axis = self._geom.get_axis_by_name("energy")
@@ -1363,12 +1374,6 @@ class MapDatasetOnOff(MapDataset):
         PSF kernel
     edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
-    evaluation_mode : {"local", "global"}
-        Model evaluation mode.
-        The "local" mode evaluates the model components on smaller grids to save computation time.
-        This mode is recommended for local optimization algorithms.
-        The "global" evaluation mode evaluates the model components on the full map.
-        This mode is recommended for global optimization algorithms.
     mask_safe : `~numpy.ndarray`
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
@@ -1378,6 +1383,11 @@ class MapDatasetOnOff(MapDataset):
         One line per observation for stacked datasets.
     name : str
         Name of the dataset.
+
+
+    See Also
+    --------
+    MapDatasetOn, SpectrumDataset, FluxPointsDataset
 
     """
 
@@ -1924,6 +1934,10 @@ class MapEvaluator:
         GTI of the observation or union of GTI if it is a stacked observation
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
+        The "local" mode evaluates the model components on smaller grids to save computation time.
+        This mode is recommended for local optimization algorithms.
+        The "global" evaluation mode evaluates the model components on the full map.
+        This mode is recommended for global optimization algorithms.
     use_cache : bool
         Use npred caching.
     """

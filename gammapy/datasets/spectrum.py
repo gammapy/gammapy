@@ -53,7 +53,7 @@ class SpectrumDataset(Dataset):
 
     See Also
     --------
-    SpectrumDatasetOnOff, FluxPointsDataset, gammapy.cube.MapDataset
+    SpectrumDatasetOnOff, FluxPointsDataset, MapDataset
     """
 
     stat_type = "cash"
