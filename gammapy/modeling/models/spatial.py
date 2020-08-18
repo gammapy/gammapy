@@ -556,6 +556,48 @@ class ConstantSpatialModel(SpatialModel):
         )
 
 
+class ConstantFluxSpatialModel(SpatialModel):
+    """Spatially constant flux spatial model.
+
+    For more information see :ref:`constant-spatial-model`.
+
+    """
+
+    tag = ["ConstantFluxSpatialModel", "const-flux"]
+
+    frame = "icrs"
+    evaluation_radius = None
+    position = None
+
+    def to_dict(self):
+        """Create dict for YAML serilisation"""
+        # redefined to ignore frame attribute from parent class
+        data = super().to_dict()
+        data.pop("frame")
+        return data
+
+    @staticmethod
+    def evaluate_geom(geom):
+        """Evaluate model."""
+        return 1 / geom.solid_angle()
+
+    @staticmethod
+    def integrate_geom(geom):
+        """Evaluate model."""
+        return Map.from_geom(geom=geom, data=1)
+
+    @staticmethod
+    def to_region(**kwargs):
+        """Model outline (`~regions.EllipseSkyRegion`)."""
+        return EllipseSkyRegion(
+            center=SkyCoord(np.nan * u.deg, np.nan * u.deg),
+            height=np.nan * u.deg,
+            width=np.nan * u.deg,
+            angle=np.nan * u.deg,
+            **kwargs,
+        )
+
+
 class TemplateSpatialModel(SpatialModel):
     """Spatial sky map template model.
 
