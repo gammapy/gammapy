@@ -8,14 +8,15 @@ import scipy.optimize
 from astropy.coordinates import Angle
 from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import Map, WcsGeom
-from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import (
+    PointSpatialModel, PowerLawSpectralModel, SkyModel, ConstantFluxSpatialModel
+)
 from gammapy.stats import (
     amplitude_bounds_cython,
     cash,
     cash_sum_cython,
     f_cash_root_cython,
 )
-from gammapy.makers.utils import _map_spectrum_weight
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from .core import Estimator
 
@@ -48,13 +49,13 @@ def _extract_array(array, shape, position):
         The position of the small array's center with respect to the
         large array.
     """
-    x_width = shape[1] // 2
-    y_width = shape[0] // 2
+    x_width = shape[2] // 2
+    y_width = shape[1] // 2
     y_lo = position[0] - y_width
     y_hi = position[0] + y_width + 1
     x_lo = position[1] - x_width
     x_hi = position[1] + x_width + 1
-    return array[y_lo:y_hi, x_lo:x_hi]
+    return array[:, y_lo:y_hi, x_lo:x_hi]
 
 
 def f_cash(x, counts, background, model):
@@ -104,7 +105,7 @@ class TSMapEstimator(Estimator):
     rtol : float (0.001)
         Relative precision of the flux estimate. Used as a stopping criterion for
         the amplitude fit.
-    selection : list of str or 'all'
+    selection_optional : list of str or 'all'
         Which maps to compute besides delta TS, significance, flux and symmetric error on flux.
         Available options are:
 
@@ -132,7 +133,6 @@ class TSMapEstimator(Estimator):
     [Stewart2009]_
     """
     tag = "TSMapEstimator"
-    _selection_base = ["flux", "flux_err", "ts", "sqrt_ts", "niter"]
     _available_selection_optional = ["errn-errp", "ul"]
 
     def __init__(
@@ -193,7 +193,7 @@ class TSMapEstimator(Estimator):
         evaluator = MapEvaluator(model, evaluation_mode="global")
         evaluator.update(exposure, dataset.psf, dataset.edisp, dataset.counts.geom)
 
-        kernel = evaluator.compute_npred().sum_over_axes()
+        kernel = evaluator.compute_npred()
         kernel.data /= kernel.data.sum()
 
         if (self.kernel_width > geom.width).any():
@@ -203,13 +203,35 @@ class TSMapEstimator(Estimator):
             )
         return kernel
 
-    @staticmethod
-    def flux_default(dataset, kernel):
+    def get_exposure(self, dataset):
+        """Get exposure map in reco energy"""
+        # TODO: clean this up a bit...
+        models = dataset.models
+
+        model = SkyModel(
+            spectral_model=self.model.spectral_model,
+            spatial_model=ConstantFluxSpatialModel(),
+        )
+        model.apply_irf["psf"] = False
+
+        energy_axis = dataset.exposure.geom.get_axis_by_name("energy_true")
+        energy = energy_axis.edges
+
+        flux = model.spectral_model.integral(
+            emin=energy.min(), emax=energy.max()
+        )
+        dataset.models = [model]
+        npred = dataset.npred()
+        dataset.models = models
+        data = (npred.data / flux).to("cm2 s")
+        return npred.copy(data=data.value, unit=data.unit)
+
+    def get_flux_default(self, dataset, kernel):
         """Estimate default flux map using a given kernel.
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Input dataset.
         kernel : `~numpy.ndarray`
             Source model kernel.
@@ -219,22 +241,20 @@ class TSMapEstimator(Estimator):
         flux_approx : `~gammapy.maps.WcsNDMap`
             Approximate flux map (2D).
         """
-        flux = dataset.counts - dataset.npred()
-        flux = flux.sum_over_axes(keepdims=False)
-        flux /= dataset.exposure.sum_over_axes(keepdims=False)
-        flux /= np.sum(kernel ** 2)
-        return flux.convolve(kernel)
+        exposure = self.get_exposure(dataset)
+        kernel = kernel / np.sum(kernel ** 2)
+        flux = (dataset.counts - dataset.npred()) / exposure
+        flux = flux.convolve(kernel)
+        return flux.sum_over_axes()
 
     @staticmethod
-    def mask_default(exposure, background, kernel):
+    def get_mask_default(dataset, kernel):
         """Compute default mask where to estimate TS values.
 
         Parameters
         ----------
-        exposure : `~gammapy.maps.Map`
-            Input exposure map.
-        background : `~gammapy.maps.Map`
-            Input background map.
+        dataset : `~gammapy.datasets.MapDataset`
+            Input dataset.
         kernel : `~numpy.ndarray`
             Source model kernel.
 
@@ -243,27 +263,31 @@ class TSMapEstimator(Estimator):
         mask : `gammapy.maps.WcsNDMap`
             Mask map.
         """
-        mask = np.zeros(exposure.data.shape, dtype=int)
+        geom = dataset.counts.geom.to_image()
 
         # mask boundary
-        slice_x = slice(kernel.shape[1] // 2, -kernel.shape[1] // 2 + 1)
-        slice_y = slice(kernel.shape[0] // 2, -kernel.shape[0] // 2 + 1)
+        mask = np.zeros(geom.data_shape, dtype=bool)
+        slice_x = slice(kernel.shape[2] // 2, -kernel.shape[2] // 2 + 1)
+        slice_y = slice(kernel.shape[1] // 2, -kernel.shape[1] // 2 + 1)
         mask[slice_y, slice_x] = 1
 
-        # positions where exposure == 0 are not processed
-        mask &= exposure.data > 0
+        mask &= dataset.mask_safe.reduce_over_axes(
+                func=np.logical_or, keepdims=False
+            )
 
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
         # to fail, this is a temporary fix
-        mask[background.data == 0] = 0
-
-        return exposure.copy(data=mask.astype("int"), unit="")
+        background = dataset.npred().sum_over_axes(keepdims=False)
+        mask[background.data == 0] = False
+        return Map.from_geom(data=mask, geom=geom)
 
     @staticmethod
     def sqrt_ts(map_ts):
         r"""Compute sqrt(TS) map.
+
         Compute sqrt(TS) as defined by:
+
         .. math::
             \sqrt{TS} = \left \{
             \begin{array}{ll}
@@ -271,10 +295,12 @@ class TSMapEstimator(Estimator):
               \sqrt{TS} & : \text{else}
             \end{array}
             \right.
+
         Parameters
         ----------
         map_ts : `gammapy.maps.WcsNDMap`
             Input TS map.
+
         Returns
         -------
         sqrt_ts : `gammapy.maps.WcsNDMap`
@@ -315,37 +341,12 @@ class TSMapEstimator(Estimator):
             dataset = dataset.pad(pad_width).downsample(self.downsampling_factor)
 
         # First create 2D map arrays
-        counts = dataset.counts.sum_over_axes(keepdims=False)
-        background = dataset.npred().sum_over_axes(keepdims=False)
-
-        exposure = _map_spectrum_weight(dataset.exposure, self.model.spectral_model)
-        exposure = exposure.sum_over_axes(keepdims=False)
-
+        counts = dataset.counts
+        background = dataset.npred()
+        exposure = self.get_exposure(dataset)
         kernel = self.get_kernel(dataset)
-
-        if dataset.mask is not None:
-            mask = counts.copy(data=(dataset.mask.sum(axis=0) > 0).astype("int"))
-        else:
-            mask = counts.copy(data=np.ones_like(counts).astype("int"))
-
-        mask.data &= self.mask_default(exposure, background, kernel.data).data
-
-        keys = ["ts", "sqrt_ts", "flux", "niter", "flux_err"]
-
-        if "errn-errp" in self.selection_optional:
-            keys.append("flux_errp")
-            keys.append("flux_errn")
-
-        if "ul" in self.selection_optional:
-            keys.append("flux_ul")
-
-        result = {}
-        for name in keys:
-            unit = 1 / exposure.unit if "flux" in name else ""
-            data = np.nan * np.ones_like(counts.data)
-            result[name] = counts.copy(data=data, unit=unit)
-
-        flux_map = self.flux_default(dataset, kernel.data)
+        mask = self.get_mask_default(dataset, kernel.data)
+        flux_map = self.get_flux_default(dataset, kernel.data)
 
         if self.threshold:
             flux = flux_map.data
@@ -360,8 +361,8 @@ class TSMapEstimator(Estimator):
         # Compute null statistics per pixel for the whole image
         c_0 = cash(counts_array, background_array)
 
-        compute_errn_errp = True if "errn-errp" in self.selection_optional else False
-        compute_ul = True if "ul" in self.selection_optional else False
+        compute_errn_errp = "errn-errp" in self.selection_optional
+        compute_ul = "ul" in self.selection_optional
 
         wrap = functools.partial(
             _ts_value,
@@ -386,7 +387,7 @@ class TSMapEstimator(Estimator):
         # Set TS values at given positions
         j, i = zip(*positions)
 
-        names = ["ts", "flux", "niter", "flux_err"]\
+        names = ["ts", "flux", "niter", "flux_err"]
 
         if "errn-errp" in self.selection_optional:
             names += ["flux_errp", "flux_errn"]
@@ -394,13 +395,20 @@ class TSMapEstimator(Estimator):
         if "ul" in self.selection_optional:
             names += ["flux_ul"]
 
+        result = {}
+
+        geom = counts.geom.to_image()
+
         for name in names:
-            result[name].data[j, i] = [_[name] for _ in results]
+            unit = 1 / exposure.unit if "flux" in name else ""
+            m = Map.from_geom(geom=geom, data=np.nan, unit=unit)
+            m.data[j, i] = [_[name] for _ in results]
+            result[name] = m
 
         result["sqrt_ts"] = self.sqrt_ts(result["ts"])
 
         if self.downsampling_factor:
-            for name in keys:
+            for name in names:
                 order = 0 if name == "niter" else 1
                 result[name] = result[name].upsample(
                     factor=self.downsampling_factor, preserve_counts=False, order=order
