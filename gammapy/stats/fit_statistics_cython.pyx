@@ -68,7 +68,7 @@ def f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=1] counts,
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
-def amplitude_bounds_cython(np.ndarray[np.float_t, ndim=1] counts,
+def norm_bounds_cython(np.ndarray[np.float_t, ndim=1] counts,
                             np.ndarray[np.float_t, ndim=1] background,
                             np.ndarray[np.float_t, ndim=1] model):
     """Compute bounds for the root of `_f_cash_root_cython`.
