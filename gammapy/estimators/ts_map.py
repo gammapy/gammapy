@@ -167,7 +167,8 @@ class TSMapEstimator(Estimator):
             rtol=self.rtol,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
-            selection_optional=selection_optional
+            selection_optional=selection_optional,
+            ts_threshold=threshold
         )
 
     def estimate_kernel(self, dataset):
@@ -391,7 +392,6 @@ class TSMapEstimator(Estimator):
             background=background.data.astype(float),
             kernel=kernel.data,
             flux=flux.data,
-            threshold=self.threshold,
             flux_estimator=self._flux_estimator
         )
 
@@ -449,10 +449,11 @@ class SimpleMapDataset:
     """
     FLUX_FACTOR = 1e-12
 
-    def __init__(self, model, counts, background):
+    def __init__(self, model, counts, background, x_guess):
         self.model = model
         self.counts = counts
         self.background = background
+        self.x_guess = x_guess
 
     @lazyproperty
     def x_bounds(self):
@@ -483,15 +484,17 @@ class SimpleMapDataset:
             return (self.model ** 2 * self.counts / (self.background + x * self.FLUX_FACTOR * self.model) ** 2).sum()
 
     @classmethod
-    def from_arrays(cls, counts, background, exposure, position, kernel):
+    def from_arrays(cls, counts, background, exposure, flux, position, kernel):
         """"""
         counts_cutout = _extract_array(counts, kernel.shape, position)
         background_cutout = _extract_array(background, kernel.shape, position)
         exposure_cutout = _extract_array(exposure, kernel.shape, position)
+        x_guess = flux[position]
         return cls(
             counts=counts_cutout,
             background=background_cutout,
             model=kernel * exposure_cutout,
+            x_guess=x_guess
         )
 
 
@@ -621,6 +624,13 @@ class BrentqFluxEstimator(Estimator):
 
     def run(self, dataset):
         """"""
+        if self.ts_threshold is not None:
+            flux = dataset.x_guess
+            stat = dataset.stat_sum(x=flux / FLUX_FACTOR)
+            stat_null = dataset.stat_sum(x=0)
+            ts = (stat_null - stat) * np.sign(flux)
+            if ts < self.ts_threshold:
+                return self.nan_result
 
         result = self.estimate_best_fit(dataset)
 
@@ -640,7 +650,6 @@ def _ts_value(
     background,
     kernel,
     flux,
-    threshold,
     flux_estimator
 ):
     """Compute TS value at a given pixel position.
@@ -673,17 +682,8 @@ def _ts_value(
         background=background,
         exposure=exposure,
         kernel=kernel,
-        position=position
+        position=position,
+        flux=flux
     )
-
-    if threshold is not None:
-        flux_position = flux[position]
-        stat = dataset.stat_sum(x=flux_position / FLUX_FACTOR)
-        stat_null = dataset.stat_sum(x=0)
-        ts = (stat_null - stat) * np.sign(flux_position)
-        if ts < threshold:
-            result = flux_estimator.nan_result
-            result.update({"flux": flux_position, "ts": ts, "stat": stat})
-            return result
 
     return flux_estimator.run(dataset)
