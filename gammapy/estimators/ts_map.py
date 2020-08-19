@@ -393,7 +393,9 @@ class TSMapEstimator(Estimator):
         for name in names:
             unit = 1 / exposure.unit if "flux" in name else ""
             m = Map.from_geom(geom=geom, data=np.nan, unit=unit)
-            m.data[j, i] = [_[name] for _ in results]
+            m.data[j, i] = [_[name.replace("flux", "norm")] for _ in results]
+            if "flux" in name:
+                m.data *= 1e-12
             result[name] = m
 
         result["sqrt_ts"] = self.estimate_sqrt_ts(result["ts"])
@@ -518,38 +520,36 @@ class BrentqFluxEstimator(Estimator):
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
         result["ts"] = (stat_null - stat) * np.sign(norm)
-        result["flux"] = norm * dataset.FLUX_FACTOR
+        result["norm"] = norm
         result["niter"] = niter
-
-        flux_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
-        result["flux_err"] = flux_err * dataset.FLUX_FACTOR
+        result["norm_err"] = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
         result["stat"] = stat
         return result
 
     @property
     def nan_result(self):
         result = {
-            "flux": np.nan,
+            "norm": np.nan,
             "stat": np.nan,
             "success": False,
-            "flux_err": np.nan,
+            "norm_err": np.nan,
             "ts": np.nan,
             "niter": 0
         }
 
         if "errn-errp" in self.selection_optional:
-            result.update({"flux_errp": np.nan, "flux_errn": np.nan})
+            result.update({"norm_errp": np.nan, "norm_errn": np.nan})
 
         if "ul" in self.selection_optional:
-            result.update({"flux_ul": np.nan})
+            result.update({"norm_ul": np.nan})
 
         return result
 
     def _confidence(self, dataset, n_sigma, result, positive):
 
         stat_best = result["stat"]
-        norm = result["flux"] / dataset.FLUX_FACTOR
-        norm_err = result["flux_err"] / dataset.FLUX_FACTOR
+        norm = result["norm"]
+        norm_err = result["norm_err"]
 
         def ts_diff(x):
             return (stat_best + n_sigma ** 2) - dataset.stat_sum(x)
@@ -573,7 +573,7 @@ class BrentqFluxEstimator(Estimator):
                     maxiter=self.max_niter,
                     rtol=self.rtol,
                 )
-                return (result_fit - norm) * factor * dataset.FLUX_FACTOR
+                return (result_fit - norm) * factor
             except (RuntimeError, ValueError):
                 # Where the root finding fails NaN is set as norm
                 return np.nan
@@ -585,7 +585,7 @@ class BrentqFluxEstimator(Estimator):
             dataset=dataset, n_sigma=self.n_sigma_ul, result=result, positive=True
         )
 
-        return {"flux_ul": flux_ul}
+        return {"norm_ul": flux_ul}
 
     def estimate_errn_errp(self, dataset, result):
         """
@@ -598,7 +598,7 @@ class BrentqFluxEstimator(Estimator):
         flux_errp = self._confidence(
             dataset=dataset, result=result, n_sigma=self.n_sigma, positive=True
         )
-        return {"flux_errn": flux_errn, "flux_errp": flux_errp}
+        return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
     def run(self, dataset):
         """"""
