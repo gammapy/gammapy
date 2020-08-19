@@ -101,7 +101,7 @@ def test_compute_ts_map(input_dataset):
     result = ts_estimator.run(input_dataset)
 
     assert_allclose(result["ts"].data[99, 99], 1704.23, rtol=1e-2)
-    assert_allclose(result["niter"].data[99, 99], 9)
+    assert_allclose(result["niter"].data[99, 99], 8)
     assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
 
@@ -121,9 +121,9 @@ def test_compute_ts_map_psf(fermi_dataset):
     assert_allclose(result["niter"].data[29, 29], 7)
     assert_allclose(result["flux"].data[29, 29], 1.626651e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[29, 29], 9.548939e-11, rtol=1e-2)
-    assert_allclose(result["flux_errp"].data[29, 29], 9.701879e-11, rtol=1e-2)
-    assert_allclose(result["flux_errn"].data[29, 29], 9.448042e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[29, 29], 1.822968e-09, rtol=1e-2)
+    assert_allclose(result["flux_errp"].data[29, 29], 9.540259e-11, rtol=1e-2)
+    assert_allclose(result["flux_errn"].data[29, 29], 9.034366e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[29, 29], 1.961776e-10, rtol=1e-2)
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
     assert result["flux_ul"].unit == u.Unit("cm-2s-1")
@@ -142,10 +142,10 @@ def test_compute_ts_map_downsampled(input_dataset):
     result = ts_estimator.run(input_dataset)
 
     assert_allclose(result["ts"].data[99, 99], 1661.49, rtol=1e-2)
-    assert_allclose(result["niter"].data[99, 99], 9)
+    assert_allclose(result["niter"].data[99, 99], 7)
     assert_allclose(result["flux"].data[99, 99], 1.065988e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[99, 99], 4.005628e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[99, 99], 1.147133e-09, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[99, 99], 8.220152e-11, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
