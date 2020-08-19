@@ -13,21 +13,17 @@ from gammapy.modeling.models import (
     PointSpatialModel, PowerLawSpectralModel, SkyModel, ConstantFluxSpatialModel
 )
 from gammapy.stats import (
-    amplitude_bounds_cython,
-    cash,
+    norm_bounds_cython,
     cash_sum_cython,
     f_cash_root_cython,
 )
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
+from gammapy.utils.table import table_from_row_data
 from .core import Estimator
 
 __all__ = ["TSMapEstimator"]
 
 log = logging.getLogger(__name__)
-
-FLUX_FACTOR = 1e-12
-MAX_NITER = 20
-RTOL = 1e-3
 
 
 def round_up_to_odd(f):
@@ -59,29 +55,10 @@ def _extract_array(array, shape, position):
     return array[:, y_lo:y_hi, x_lo:x_hi]
 
 
-def f_cash(x, counts, background, model):
-    """Wrapper for cash statistics, that defines the model function.
-
-    Parameters
-    ----------
-    x : float
-        Model amplitude.
-    counts : `~numpy.ndarray`
-        Count image slice, where model is defined.
-    background : `~numpy.ndarray`
-        Background image slice, where model is defined.
-    model : `~numpy.ndarray`
-        Source template (multiplied with exposure).
-    """
-    return cash_sum_cython(
-        counts.ravel(), (background + x * FLUX_FACTOR * model).ravel()
-    )
-
-
 class TSMapEstimator(Estimator):
     r"""Compute TS map from a MapDataset using different optimization methods.
 
-    The map is computed fitting by a single parameter amplitude fit. The fit is
+    The map is computed fitting by a single parameter norm fit. The fit is
     simplified by finding roots of the the derivative of the fit statistics using
     various root finding algorithms. The approach is described in Appendix A
     in Stewart (2009).
@@ -105,7 +82,7 @@ class TSMapEstimator(Estimator):
         this threshold, the optimizing step is omitted to save computing time.
     rtol : float (0.001)
         Relative precision of the flux estimate. Used as a stopping criterion for
-        the amplitude fit.
+        the norm fit.
     selection_optional : list of str or 'all'
         Which maps to compute besides delta TS, significance, flux and symmetric error on flux.
         Available options are:
@@ -127,7 +104,7 @@ class TSMapEstimator(Estimator):
                  \end{array}
                \right.
 
-    Where :math:`F` is the fitted flux amplitude.
+    Where :math:`F` is the fitted flux norm.
 
     References
     ----------
@@ -200,11 +177,11 @@ class TSMapEstimator(Estimator):
 
         axis = dataset.exposure.geom.get_axis_by_name("energy_true")
 
-        geom = WcsGeom.create(
+        geom_kernel = WcsGeom.create(
             skydir=model.position, proj="TAN", npix=npix, axes=[axis], binsz=binsz
         )
 
-        exposure = Map.from_geom(geom, unit="cm2 s1")
+        exposure = Map.from_geom(geom_kernel, unit="cm2 s1")
         exposure.data += 1.0
 
         # We use global evaluation mode to not modify the geometry
@@ -214,7 +191,7 @@ class TSMapEstimator(Estimator):
         kernel = evaluator.compute_npred()
         kernel.data /= kernel.data.sum()
 
-        if (self.kernel_width > geom.width).any():
+        if (self.kernel_width + binsz >= geom.width).any():
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
                 " size of the kernel"
@@ -251,6 +228,8 @@ class TSMapEstimator(Estimator):
         flux = model.spectral_model.integral(
             emin=energy.min(), emax=energy.max()
         )
+
+        self._flux_estimator.flux_ref = flux.to_value("cm-2 s-1")
         dataset.models = [model]
         npred = dataset.npred()
         dataset.models = models
@@ -399,8 +378,7 @@ class TSMapEstimator(Estimator):
         positions = list(zip(x, y))
         results = list(map(wrap, positions))
 
-        # Set TS values at given positions
-        j, i = zip(*positions)
+        table = table_from_row_data(results)
 
         names = ["ts", "flux", "niter", "flux_err"]
 
@@ -414,10 +392,14 @@ class TSMapEstimator(Estimator):
 
         geom = counts.geom.to_image()
 
+        i, j = table["y_idx"], table["x_idx"]
+
         for name in names:
             unit = 1 / exposure.unit if "flux" in name else ""
             m = Map.from_geom(geom=geom, data=np.nan, unit=unit)
-            m.data[j, i] = [_[name] for _ in results]
+            m.data[j, i] = table[name.replace("flux", "norm")]
+            if "flux" in name:
+                m.data *= self._flux_estimator.flux_ref
             result[name] = m
 
         result["sqrt_ts"] = self.estimate_sqrt_ts(result["ts"])
@@ -447,8 +429,6 @@ class SimpleMapDataset:
         Kernel array
 
     """
-    FLUX_FACTOR = 1e-12
-
     def __init__(self, model, counts, background, x_guess):
         self.model = model
         self.counts = counts
@@ -456,32 +436,32 @@ class SimpleMapDataset:
         self.x_guess = x_guess
 
     @lazyproperty
-    def x_bounds(self):
+    def norm_bounds(self):
         """Bounds for x"""
-        return amplitude_bounds_cython(
+        return norm_bounds_cython(
             self.counts.ravel(), self.background.ravel(), self.model.ravel()
         )
 
-    def npred(self, x):
+    def npred(self, norm):
         """Predicted number of counts"""
-        return self.background + x * self.FLUX_FACTOR * self.model
+        return self.background + norm * self.model
 
-    def stat_sum(self, x):
+    def stat_sum(self, norm):
         """Stat sum"""
         return cash_sum_cython(
-            self.counts.ravel(), self.npred(x).ravel()
+            self.counts.ravel(), self.npred(norm).ravel()
         )
 
-    def stat_derivative(self, x):
+    def stat_derivative(self, norm):
         """Stat derivative"""
         return f_cash_root_cython(
-            x, self.counts.ravel(), self.background.ravel(), self.model.ravel()
+            norm, self.counts.ravel(), self.background.ravel(), self.model.ravel()
         )
 
-    def stat_2nd_derivative(self, x):
+    def stat_2nd_derivative(self, norm):
         """Stat 2nd derivative"""
         with np.errstate(invalid="ignore", divide="ignore"):
-            return (self.model ** 2 * self.counts / (self.background + x * self.FLUX_FACTOR * self.model) ** 2).sum()
+            return (self.model ** 2 * self.counts / (self.background + norm * self.model) ** 2).sum()
 
     @classmethod
     def from_arrays(cls, counts, background, exposure, flux, position, kernel):
@@ -511,78 +491,78 @@ class BrentqFluxEstimator(Estimator):
         self.selection_optional = selection_optional
         self.max_niter = max_niter
         self.ts_threshold = ts_threshold
+        self.flux_ref = 1e-12
 
     def estimate_best_fit(self, dataset):
         """Optimize for a single parameter"""
         result = {}
-        # Compute amplitude bounds and assert counts > 0
-        amplitude_min, amplitude_max, amplitude_min_total = dataset.x_bounds
+        # Compute norm bounds and assert counts > 0
+        norm_min, norm_max, norm_min_total = dataset.norm_bounds
 
         if not dataset.counts.sum() > 0:
-            amplitude, niter = amplitude_min_total, 0
+            norm, niter = norm_min_total, 0
 
         else:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 try:
                     result_fit = scipy.optimize.brentq(
-                        dataset.stat_derivative,
-                        amplitude_min,
-                        amplitude_max,
+                        f=dataset.stat_derivative,
+                        a=norm_min,
+                        b=norm_max,
                         maxiter=self.max_niter,
                         full_output=True,
                         rtol=self.rtol,
                     )
-                    amplitude = max(result_fit[0], amplitude_min_total)
+                    norm = max(result_fit[0], norm_min_total)
                     niter = result_fit[1].iterations
                 except (RuntimeError, ValueError):
-                    # Where the root finding fails NaN is set as amplitude
-                    amplitude, niter = np.nan, self.max_niter
+                    # Where the root finding fails NaN is set as norm
+                    norm, niter = np.nan, self.max_niter
 
-        stat = dataset.stat_sum(x=amplitude)
-        stat_null = dataset.stat_sum(x=0)
-        result["ts"] = (stat_null - stat) * np.sign(amplitude)
-        result["flux"] = amplitude * dataset.FLUX_FACTOR
+        stat = dataset.stat_sum(norm=norm)
+        stat_null = dataset.stat_sum(norm=0)
+        result["ts"] = (stat_null - stat) * np.sign(norm)
+        result["norm"] = norm
         result["niter"] = niter
-        result["flux_err"] = np.sqrt(1 / dataset.stat_2nd_derivative(amplitude)) * self.n_sigma
+        result["norm_err"] = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
         result["stat"] = stat
         return result
 
     @property
     def nan_result(self):
         result = {
-            "flux": np.nan,
+            "norm": np.nan,
             "stat": np.nan,
-            "success": False,
-            "flux_err": np.nan,
+            "norm_err": np.nan,
             "ts": np.nan,
             "niter": 0
         }
 
         if "errn-errp" in self.selection_optional:
-            result.update({"flux_errp": np.nan, "flux_errn": np.nan})
+            result.update({"norm_errp": np.nan, "norm_errn": np.nan})
 
         if "ul" in self.selection_optional:
-            result.update({"flux_ul": np.nan})
+            result.update({"norm_ul": np.nan})
 
         return result
 
     def _confidence(self, dataset, n_sigma, result, positive):
 
         stat_best = result["stat"]
-        amplitude = result["flux"] / FLUX_FACTOR
-        amplitude_err = result["flux_err"] / FLUX_FACTOR
+        norm = result["norm"]
+        norm_err = result["norm_err"]
 
         def ts_diff(x):
             return (stat_best + n_sigma ** 2) - dataset.stat_sum(x)
 
         if positive:
-            min_amplitude = amplitude
-            max_amplitude = amplitude + 1e2 * amplitude_err
+            min_norm = norm
+            max_norm = norm + 1e2 * norm_err
             factor = 1
         else:
-            min_amplitude = amplitude - 1e2 * amplitude_err
-            max_amplitude = amplitude
+            min_norm = norm - 1e2 * norm_err
+            max_norm = norm
             factor = -1
 
         with warnings.catch_warnings():
@@ -590,14 +570,14 @@ class BrentqFluxEstimator(Estimator):
             try:
                 result_fit = scipy.optimize.brentq(
                     ts_diff,
-                    min_amplitude,
-                    max_amplitude,
+                    min_norm,
+                    max_norm,
                     maxiter=self.max_niter,
                     rtol=self.rtol,
                 )
-                return (result_fit - amplitude) * factor * FLUX_FACTOR
+                return (result_fit - norm) * factor
             except (RuntimeError, ValueError):
-                # Where the root finding fails NaN is set as amplitude
+                # Where the root finding fails NaN is set as norm
                 return np.nan
 
     def estimate_ul(self, dataset, result):
@@ -607,11 +587,11 @@ class BrentqFluxEstimator(Estimator):
             dataset=dataset, n_sigma=self.n_sigma_ul, result=result, positive=True
         )
 
-        return {"flux_ul": flux_ul}
+        return {"norm_ul": flux_ul}
 
     def estimate_errn_errp(self, dataset, result):
         """
-        Compute amplitude errors using likelihood profile method.
+        Compute norm errors using likelihood profile method.
         """
 
         flux_errn = self._confidence(
@@ -620,14 +600,14 @@ class BrentqFluxEstimator(Estimator):
         flux_errp = self._confidence(
             dataset=dataset, result=result, n_sigma=self.n_sigma, positive=True
         )
-        return {"flux_errn": flux_errn, "flux_errp": flux_errp}
+        return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
     def run(self, dataset):
         """"""
         if self.ts_threshold is not None:
             flux = dataset.x_guess
-            stat = dataset.stat_sum(x=flux / FLUX_FACTOR)
-            stat_null = dataset.stat_sum(x=0)
+            stat = dataset.stat_sum(norm=flux / self.flux_ref)
+            stat_null = dataset.stat_sum(norm=0)
             ts = (stat_null - stat) * np.sign(flux)
             if ts < self.ts_threshold:
                 return self.nan_result
@@ -681,9 +661,12 @@ def _ts_value(
         counts=counts,
         background=background,
         exposure=exposure,
-        kernel=kernel,
+        kernel=kernel * flux_estimator.flux_ref,
         position=position,
         flux=flux
     )
 
-    return flux_estimator.run(dataset)
+    result = flux_estimator.run(dataset)
+    result["x_idx"] = position[0]
+    result["y_idx"] = position[1]
+    return result

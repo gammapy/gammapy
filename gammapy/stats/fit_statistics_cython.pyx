@@ -4,9 +4,6 @@ import numpy as np
 cimport numpy as np
 cimport cython
 
-cdef np.float_t FLUX_FACTOR = 1e-12
-
-
 cdef extern from "math.h":
     float log(float x)
 
@@ -59,20 +56,19 @@ def f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=1] counts,
     for i in range(ni):
         if model[i] > 0:
             if counts[i] > 0:
-                sum += model[i] * (1 - counts[i] / (x * model[i]
-                                                          * FLUX_FACTOR + background[i]))
+                sum += model[i] * (1 - counts[i] / (x * model[i] + background[i]))
             else:
                 sum += model[i]
 
-    # 2 * FLUX_FACTOR is required to maintain the correct normalization of the
+    # 2 is required to maintain the correct normalization of the
     # derivative of the likelihood function. It doesn't change the result of
     # the fit.
-    return 2 * FLUX_FACTOR * sum
+    return 2 * sum
 
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
-def amplitude_bounds_cython(np.ndarray[np.float_t, ndim=1] counts,
+def norm_bounds_cython(np.ndarray[np.float_t, ndim=1] counts,
                             np.ndarray[np.float_t, ndim=1] background,
                             np.ndarray[np.float_t, ndim=1] model):
     """Compute bounds for the root of `_f_cash_root_cython`.
@@ -105,4 +101,4 @@ def amplitude_bounds_cython(np.ndarray[np.float_t, ndim=1] counts,
                 sn_min_total = sn
     b_min = c_min / s_model - sn_min
     b_max = s_counts / s_model - sn_min
-    return b_min / FLUX_FACTOR, b_max / FLUX_FACTOR, -sn_min_total / FLUX_FACTOR
+    return b_min, b_max, -sn_min_total

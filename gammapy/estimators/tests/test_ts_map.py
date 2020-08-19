@@ -158,10 +158,7 @@ def test_compute_ts_map_downsampled(input_dataset):
 @requires_data()
 def test_large_kernel(input_dataset):
     """Minimal test of compute_ts_image"""
-    spatial_model = GaussianSpatialModel(sigma="4 deg")
-    spectral_model = PowerLawSpectralModel(index=2)
-    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
-    ts_estimator = TSMapEstimator(model=model, kernel_width="4 deg")
+    ts_estimator = TSMapEstimator(kernel_width="4 deg")
 
     with pytest.raises(ValueError):
         ts_estimator.run(input_dataset)
