@@ -227,6 +227,8 @@ class TSMapEstimator(Estimator):
         flux = model.spectral_model.integral(
             emin=energy.min(), emax=energy.max()
         )
+
+        self._flux_estimator.flux_ref = flux.to_value("cm-2 s-1")
         dataset.models = [model]
         npred = dataset.npred()
         dataset.models = models
@@ -503,9 +505,9 @@ class BrentqFluxEstimator(Estimator):
                 warnings.simplefilter("ignore")
                 try:
                     result_fit = scipy.optimize.brentq(
-                        dataset.stat_derivative,
-                        norm_min,
-                        norm_max,
+                        f=dataset.stat_derivative,
+                        a=norm_min,
+                        b=norm_max,
                         maxiter=self.max_niter,
                         full_output=True,
                         rtol=self.rtol,
