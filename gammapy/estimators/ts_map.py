@@ -425,10 +425,8 @@ class SimpleMapDataset:
         Kernel array
 
     """
-    FLUX_FACTOR = 1e-12
-
     def __init__(self, model, counts, background, x_guess):
-        self.model = model * self.FLUX_FACTOR
+        self.model = model
         self.counts = counts
         self.background = background
         self.x_guess = x_guess
@@ -481,6 +479,8 @@ class BrentqFluxEstimator(Estimator):
     """Single parameter flux estimator"""
     _available_selection_optional = ["errn-errp", "ul"]
     tag = "BrentqFluxEstimator"
+
+    FLUX_FACTOR = 1e-12
 
     def __init__(self, rtol, n_sigma, n_sigma_ul, selection_optional=None, max_niter=20, ts_threshold=None):
         self.rtol = rtol
@@ -604,7 +604,7 @@ class BrentqFluxEstimator(Estimator):
         """"""
         if self.ts_threshold is not None:
             flux = dataset.x_guess
-            stat = dataset.stat_sum(norm=flux / dataset.FLUX_FACTOR)
+            stat = dataset.stat_sum(norm=flux / self.FLUX_FACTOR)
             stat_null = dataset.stat_sum(norm=0)
             ts = (stat_null - stat) * np.sign(flux)
             if ts < self.ts_threshold:
@@ -659,7 +659,7 @@ def _ts_value(
         counts=counts,
         background=background,
         exposure=exposure,
-        kernel=kernel,
+        kernel=kernel * flux_estimator.FLUX_FACTOR,
         position=position,
         flux=flux
     )
