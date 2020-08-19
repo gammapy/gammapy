@@ -14,7 +14,6 @@ from gammapy.modeling.models import (
 )
 from gammapy.stats import (
     amplitude_bounds_cython,
-    cash,
     cash_sum_cython,
     f_cash_root_cython,
 )
@@ -24,10 +23,6 @@ from .core import Estimator
 __all__ = ["TSMapEstimator"]
 
 log = logging.getLogger(__name__)
-
-FLUX_FACTOR = 1e-12
-MAX_NITER = 20
-RTOL = 1e-3
 
 
 def round_up_to_odd(f):
@@ -57,25 +52,6 @@ def _extract_array(array, shape, position):
     x_lo = position[1] - x_width
     x_hi = position[1] + x_width + 1
     return array[:, y_lo:y_hi, x_lo:x_hi]
-
-
-def f_cash(x, counts, background, model):
-    """Wrapper for cash statistics, that defines the model function.
-
-    Parameters
-    ----------
-    x : float
-        Model amplitude.
-    counts : `~numpy.ndarray`
-        Count image slice, where model is defined.
-    background : `~numpy.ndarray`
-        Background image slice, where model is defined.
-    model : `~numpy.ndarray`
-        Source template (multiplied with exposure).
-    """
-    return cash_sum_cython(
-        counts.ravel(), (background + x * FLUX_FACTOR * model).ravel()
-    )
 
 
 class TSMapEstimator(Estimator):
@@ -447,12 +423,13 @@ class SimpleMapDataset:
         Kernel array
 
     """
+    FLUX_FACTOR = 1e-12
+
     def __init__(self, model, counts, background, x_guess):
-        self.model = model
+        self.model = model * self.FLUX_FACTOR
         self.counts = counts
         self.background = background
         self.x_guess = x_guess
-        self.FLUX_FACTOR = 1e-12
 
     @lazyproperty
     def x_bounds(self):
@@ -460,11 +437,11 @@ class SimpleMapDataset:
         x_min, x_max, x_min_total = amplitude_bounds_cython(
             self.counts.ravel(), self.background.ravel(), self.model.ravel()
         )
-        return x_min / self.FLUX_FACTOR, x_max / self.FLUX_FACTOR, x_min_total / self.FLUX_FACTOR
+        return x_min, x_max, x_min_total
 
     def npred(self, x):
         """Predicted number of counts"""
-        return self.background + x * self.FLUX_FACTOR * self.model
+        return self.background + x * self.model
 
     def stat_sum(self, x):
         """Stat sum"""
@@ -475,13 +452,13 @@ class SimpleMapDataset:
     def stat_derivative(self, x):
         """Stat derivative"""
         return f_cash_root_cython(
-            x * self.FLUX_FACTOR, self.counts.ravel(), self.background.ravel(), self.model.ravel()
-        ) * self.FLUX_FACTOR
+            x, self.counts.ravel(), self.background.ravel(), self.model.ravel()
+        )
 
     def stat_2nd_derivative(self, x):
         """Stat 2nd derivative"""
         with np.errstate(invalid="ignore", divide="ignore"):
-            return (self.model ** 2 * self.counts / (self.background + x * self.FLUX_FACTOR * self.model) ** 2).sum()
+            return (self.model ** 2 * self.counts / (self.background + x * self.model) ** 2).sum()
 
     @classmethod
     def from_arrays(cls, counts, background, exposure, flux, position, kernel):
@@ -544,7 +521,9 @@ class BrentqFluxEstimator(Estimator):
         result["ts"] = (stat_null - stat) * np.sign(amplitude)
         result["flux"] = amplitude * dataset.FLUX_FACTOR
         result["niter"] = niter
-        result["flux_err"] = np.sqrt(1 / dataset.stat_2nd_derivative(amplitude)) * self.n_sigma
+
+        flux_err = np.sqrt(1 / dataset.stat_2nd_derivative(amplitude)) * self.n_sigma
+        result["flux_err"] = flux_err * dataset.FLUX_FACTOR
         result["stat"] = stat
         return result
 
@@ -570,8 +549,8 @@ class BrentqFluxEstimator(Estimator):
     def _confidence(self, dataset, n_sigma, result, positive):
 
         stat_best = result["stat"]
-        amplitude = result["flux"] / FLUX_FACTOR
-        amplitude_err = result["flux_err"] / FLUX_FACTOR
+        amplitude = result["flux"] / dataset.FLUX_FACTOR
+        amplitude_err = result["flux_err"] / dataset.FLUX_FACTOR
 
         def ts_diff(x):
             return (stat_best + n_sigma ** 2) - dataset.stat_sum(x)
@@ -595,7 +574,7 @@ class BrentqFluxEstimator(Estimator):
                     maxiter=self.max_niter,
                     rtol=self.rtol,
                 )
-                return (result_fit - amplitude) * factor * FLUX_FACTOR
+                return (result_fit - amplitude) * factor * dataset.FLUX_FACTOR
             except (RuntimeError, ValueError):
                 # Where the root finding fails NaN is set as amplitude
                 return np.nan
@@ -626,7 +605,7 @@ class BrentqFluxEstimator(Estimator):
         """"""
         if self.ts_threshold is not None:
             flux = dataset.x_guess
-            stat = dataset.stat_sum(x=flux / FLUX_FACTOR)
+            stat = dataset.stat_sum(x=flux / dataset.FLUX_FACTOR)
             stat_null = dataset.stat_sum(x=0)
             ts = (stat_null - stat) * np.sign(flux)
             if ts < self.ts_threshold:
