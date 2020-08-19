@@ -447,20 +447,20 @@ class SimpleMapDataset:
         Kernel array
 
     """
-    FLUX_FACTOR = 1e-12
-
     def __init__(self, model, counts, background, x_guess):
         self.model = model
         self.counts = counts
         self.background = background
         self.x_guess = x_guess
+        self.FLUX_FACTOR = 1e-12
 
     @lazyproperty
     def x_bounds(self):
         """Bounds for x"""
-        return amplitude_bounds_cython(
+        x_min, x_max, x_min_total = amplitude_bounds_cython(
             self.counts.ravel(), self.background.ravel(), self.model.ravel()
         )
+        return x_min / self.FLUX_FACTOR, x_max / self.FLUX_FACTOR, x_min_total / self.FLUX_FACTOR
 
     def npred(self, x):
         """Predicted number of counts"""
@@ -475,8 +475,8 @@ class SimpleMapDataset:
     def stat_derivative(self, x):
         """Stat derivative"""
         return f_cash_root_cython(
-            x, self.counts.ravel(), self.background.ravel(), self.model.ravel()
-        )
+            x * self.FLUX_FACTOR, self.counts.ravel(), self.background.ravel(), self.model.ravel()
+        ) * self.FLUX_FACTOR
 
     def stat_2nd_derivative(self, x):
         """Stat 2nd derivative"""
