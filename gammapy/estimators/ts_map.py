@@ -395,7 +395,7 @@ class TSMapEstimator(Estimator):
             m = Map.from_geom(geom=geom, data=np.nan, unit=unit)
             m.data[j, i] = [_[name.replace("flux", "norm")] for _ in results]
             if "flux" in name:
-                m.data *= 1e-12
+                m.data *= self._flux_estimator.flux_ref
             result[name] = m
 
         result["sqrt_ts"] = self.estimate_sqrt_ts(result["ts"])
@@ -480,8 +480,6 @@ class BrentqFluxEstimator(Estimator):
     _available_selection_optional = ["errn-errp", "ul"]
     tag = "BrentqFluxEstimator"
 
-    FLUX_FACTOR = 1e-12
-
     def __init__(self, rtol, n_sigma, n_sigma_ul, selection_optional=None, max_niter=20, ts_threshold=None):
         self.rtol = rtol
         self.n_sigma = n_sigma
@@ -489,6 +487,7 @@ class BrentqFluxEstimator(Estimator):
         self.selection_optional = selection_optional
         self.max_niter = max_niter
         self.ts_threshold = ts_threshold
+        self.flux_ref = 1e-12
 
     def estimate_best_fit(self, dataset):
         """Optimize for a single parameter"""
@@ -604,7 +603,7 @@ class BrentqFluxEstimator(Estimator):
         """"""
         if self.ts_threshold is not None:
             flux = dataset.x_guess
-            stat = dataset.stat_sum(norm=flux / self.FLUX_FACTOR)
+            stat = dataset.stat_sum(norm=flux / self.flux_ref)
             stat_null = dataset.stat_sum(norm=0)
             ts = (stat_null - stat) * np.sign(flux)
             if ts < self.ts_threshold:
@@ -659,7 +658,7 @@ def _ts_value(
         counts=counts,
         background=background,
         exposure=exposure,
-        kernel=kernel * flux_estimator.FLUX_FACTOR,
+        kernel=kernel * flux_estimator.flux_ref,
         position=position,
         flux=flux
     )
