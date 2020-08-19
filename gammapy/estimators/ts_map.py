@@ -384,15 +384,11 @@ class TSMapEstimator(Estimator):
 
         flux = self.estimate_flux_default(dataset, kernel.data, exposure=exposure)
 
-        # Compute null statistics per pixel for the whole image
-        c_0 = cash(counts.data, background.data)
-
         wrap = functools.partial(
             _ts_value,
             counts=counts.data.astype(float),
             exposure=exposure.data.astype(float),
             background=background.data.astype(float),
-            c_0=c_0,
             kernel=kernel.data,
             flux=flux.data,
             threshold=self.threshold,
@@ -453,11 +449,10 @@ class SimpleMapDataset:
     """
     FLUX_FACTOR = 1e-12
 
-    def __init__(self, model, counts, background, c_0):
+    def __init__(self, model, counts, background):
         self.model = model
         self.counts = counts
         self.background = background
-        self.c_0 = c_0
 
     @lazyproperty
     def x_bounds(self):
@@ -487,29 +482,16 @@ class SimpleMapDataset:
         with np.errstate(invalid="ignore", divide="ignore"):
             return (self.model ** 2 * self.counts / (self.background + x * self.FLUX_FACTOR * self.model) ** 2).sum()
 
-    @lazyproperty
-    def ts_null(self):
-        """Stat value for null hypothesis, i.e. 0 expected signal counts"""
-        return self.c_0.sum()
-
-    def ts_approx(self, flux):
-        """Stat value for approximate flux value"""
-        with np.errstate(invalid="ignore", divide="ignore"):
-            ts = self.ts_null - self.stat_sum(flux)
-            return ts * np.sign(flux)
-
     @classmethod
-    def from_arrays(cls, counts, background, exposure, c_0, position, kernel):
+    def from_arrays(cls, counts, background, exposure, position, kernel):
         """"""
         counts_cutout = _extract_array(counts, kernel.shape, position)
         background_cutout = _extract_array(background, kernel.shape, position)
         exposure_cutout = _extract_array(exposure, kernel.shape, position)
-        c_0_cutout = _extract_array(c_0, kernel.shape, position)
         return cls(
             counts=counts_cutout,
             background=background_cutout,
             model=kernel * exposure_cutout,
-            c_0=c_0_cutout
         )
 
 
@@ -554,11 +536,13 @@ class BrentqFluxEstimator(Estimator):
                     # Where the root finding fails NaN is set as amplitude
                     amplitude, niter = np.nan, self.max_niter
 
-        result["ts"] = dataset.ts_approx(amplitude)
-        result["flux"] = amplitude * FLUX_FACTOR
+        stat = dataset.stat_sum(x=amplitude)
+        stat_null = dataset.stat_sum(x=0)
+        result["ts"] = (stat_null - stat) * np.sign(amplitude)
+        result["flux"] = amplitude * dataset.FLUX_FACTOR
         result["niter"] = niter
         result["flux_err"] = np.sqrt(1 / dataset.stat_2nd_derivative(amplitude)) * self.n_sigma
-        result["stat"] = dataset.stat_sum(amplitude)
+        result["stat"] = stat
         return result
 
     @property
@@ -654,7 +638,6 @@ def _ts_value(
     counts,
     exposure,
     background,
-    c_0,
     kernel,
     flux,
     threshold,
@@ -689,17 +672,18 @@ def _ts_value(
         counts=counts,
         background=background,
         exposure=exposure,
-        c_0=c_0,
         kernel=kernel,
         position=position
     )
 
     if threshold is not None:
         flux_position = flux[position]
-        ts = dataset.ts_approx(flux_position / FLUX_FACTOR)
+        stat = dataset.stat_sum(x=flux_position / FLUX_FACTOR)
+        stat_null = dataset.stat_sum(x=0)
+        ts = (stat_null - stat) * np.sign(flux_position)
         if ts < threshold:
             result = flux_estimator.nan_result
-            result.update({"flux": flux_position, "ts": ts})
+            result.update({"flux": flux_position, "ts": ts, "stat": stat})
             return result
 
     return flux_estimator.run(dataset)
