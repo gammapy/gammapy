@@ -58,8 +58,11 @@ def f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=1] counts,
     ni = counts.shape[0]
     for i in range(ni):
         if model[i] > 0:
-            sum += model[i] * (1 - counts[i] / (x * model[i]
-                                                      * FLUX_FACTOR + background[i]))
+            if counts[i] > 0:
+                sum += model[i] * (1 - counts[i] / (x * model[i]
+                                                          * FLUX_FACTOR + background[i]))
+            else:
+                sum += model[i]
 
     # 2 * FLUX_FACTOR is required to maintain the correct normalization of the
     # derivative of the likelihood function. It doesn't change the result of
