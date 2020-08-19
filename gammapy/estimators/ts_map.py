@@ -18,6 +18,7 @@ from gammapy.stats import (
     f_cash_root_cython,
 )
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
+from gammapy.utils.table import table_from_row_data
 from .core import Estimator
 
 __all__ = ["TSMapEstimator"]
@@ -176,11 +177,11 @@ class TSMapEstimator(Estimator):
 
         axis = dataset.exposure.geom.get_axis_by_name("energy_true")
 
-        geom = WcsGeom.create(
+        geom_kernel = WcsGeom.create(
             skydir=model.position, proj="TAN", npix=npix, axes=[axis], binsz=binsz
         )
 
-        exposure = Map.from_geom(geom, unit="cm2 s1")
+        exposure = Map.from_geom(geom_kernel, unit="cm2 s1")
         exposure.data += 1.0
 
         # We use global evaluation mode to not modify the geometry
@@ -190,7 +191,7 @@ class TSMapEstimator(Estimator):
         kernel = evaluator.compute_npred()
         kernel.data /= kernel.data.sum()
 
-        if (self.kernel_width > geom.width).any():
+        if (self.kernel_width + binsz >= geom.width).any():
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
                 " size of the kernel"
@@ -377,8 +378,7 @@ class TSMapEstimator(Estimator):
         positions = list(zip(x, y))
         results = list(map(wrap, positions))
 
-        # Set TS values at given positions
-        j, i = zip(*positions)
+        table = table_from_row_data(results)
 
         names = ["ts", "flux", "niter", "flux_err"]
 
@@ -392,10 +392,12 @@ class TSMapEstimator(Estimator):
 
         geom = counts.geom.to_image()
 
+        i, j = table["y_idx"], table["x_idx"]
+
         for name in names:
             unit = 1 / exposure.unit if "flux" in name else ""
             m = Map.from_geom(geom=geom, data=np.nan, unit=unit)
-            m.data[j, i] = [_[name.replace("flux", "norm")] for _ in results]
+            m.data[j, i] = table[name.replace("flux", "norm")]
             if "flux" in name:
                 m.data *= self._flux_estimator.flux_ref
             result[name] = m
@@ -532,7 +534,6 @@ class BrentqFluxEstimator(Estimator):
         result = {
             "norm": np.nan,
             "stat": np.nan,
-            "success": False,
             "norm_err": np.nan,
             "ts": np.nan,
             "niter": 0
@@ -665,4 +666,7 @@ def _ts_value(
         flux=flux
     )
 
-    return flux_estimator.run(dataset)
+    result = flux_estimator.run(dataset)
+    result["x_idx"] = position[0]
+    result["y_idx"] = position[1]
+    return result
