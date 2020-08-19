@@ -865,8 +865,9 @@ class WcsGeom(Geom):
         # compute area assuming a planar triangle
         area_low_right = 0.5 * low * right * np.sin(angle_low_right)
         area_up_left = 0.5 * up * left * np.sin(angle_up_left)
-
-        return u.Quantity(area_low_right + area_up_left, "sr", copy=False)
+        # TODO: for non-negative cdelt a negative solid angle is returned
+        #  find out why and fix properly
+        return np.abs(u.Quantity(area_low_right + area_up_left, "sr", copy=False))
 
     def bin_volume(self):
         """Bin volume (`~astropy.units.Quantity`)"""

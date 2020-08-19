@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
 from gammapy.estimators import TSMapEstimator
-from gammapy.irf import EnergyDependentTablePSF, PSFMap
+from gammapy.irf import EnergyDependentTablePSF, PSFMap, EDispKernelMap
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     BackgroundModel,
@@ -64,13 +64,17 @@ def fermi_dataset():
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz"
     )
     exposure = exposure.cutout(exposure.geom.center_skydir, size)
-    exposure.unit = "cm2s"
+    exposure.unit = "cm2 s"
     mask_safe = counts.copy(data=np.ones_like(counts.data).astype("bool"))
 
     psf = EnergyDependentTablePSF.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf-cube.fits.gz"
     )
     psfmap = PSFMap.from_energy_dependent_table_psf(psf)
+    edisp = EDispKernelMap.from_diagonal_response(
+        energy_axis=counts.geom.get_axis_by_name("energy"),
+        energy_axis_true=exposure.geom.get_axis_by_name("energy_true"),
+    )
 
     dataset = MapDataset(
         counts=counts,
@@ -79,10 +83,10 @@ def fermi_dataset():
         mask_safe=mask_safe,
         psf=psfmap,
         name="fermi-3fhl-gc",
+        edisp=edisp
     )
-    dataset = dataset.to_image()
 
-    return dataset
+    return dataset.to_image()
 
 
 @requires_data()
@@ -97,7 +101,7 @@ def test_compute_ts_map(input_dataset):
     result = ts_estimator.run(input_dataset)
 
     assert_allclose(result["ts"].data[99, 99], 1704.23, rtol=1e-2)
-    assert_allclose(result["niter"].data[99, 99], 9)
+    assert_allclose(result["niter"].data[99, 99], 8)
     assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
 
@@ -113,13 +117,13 @@ def test_compute_ts_map_psf(fermi_dataset):
     estimator = TSMapEstimator(kernel_width="1 deg")
     result = estimator.run(fermi_dataset)
 
-    assert_allclose(result["ts"].data[29, 29], 852.1548, rtol=1e-2)
+    assert_allclose(result["ts"].data[29, 29], 835.140605, rtol=1e-2)
     assert_allclose(result["niter"].data[29, 29], 7)
-    assert_allclose(result["flux"].data[29, 29], 1.419909e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[29, 29], 8.245766e-11, rtol=1e-2)
-    assert_allclose(result["flux_errp"].data[29, 29], 8.358404e-11, rtol=1e-2)
-    assert_allclose(result["flux_errn"].data[29, 29], 8.129863e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[29, 29], 1.584825e-09, rtol=1e-2)
+    assert_allclose(result["flux"].data[29, 29], 1.626651e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[29, 29], 9.548939e-11, rtol=1e-2)
+    assert_allclose(result["flux_errp"].data[29, 29], 9.540259e-11, rtol=1e-2)
+    assert_allclose(result["flux_errn"].data[29, 29], 9.034366e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[29, 29], 1.961776e-10, rtol=1e-2)
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
     assert result["flux_ul"].unit == u.Unit("cm-2s-1")
@@ -138,10 +142,10 @@ def test_compute_ts_map_downsampled(input_dataset):
     result = ts_estimator.run(input_dataset)
 
     assert_allclose(result["ts"].data[99, 99], 1661.49, rtol=1e-2)
-    assert_allclose(result["niter"].data[99, 99], 9)
+    assert_allclose(result["niter"].data[99, 99], 7)
     assert_allclose(result["flux"].data[99, 99], 1.065988e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[99, 99], 4.005628e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[99, 99], 1.147133e-09, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[99, 99], 8.220152e-11, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
