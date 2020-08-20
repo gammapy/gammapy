@@ -526,6 +526,19 @@ def test_convolve_pixel_scale_error():
         m.convolve(kernel)
 
 
+def test_convolve_kernel_size_error():
+    axis_1 = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)
+    axis_2 = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+
+    m = WcsNDMap.create(binsz=0.05 * u.deg, width=5 * u.deg, axes=[axis_1])
+
+    kgeom = WcsGeom.create(binsz=0.05 * u.deg, width=0.5 * u.deg, axes=[axis_2])
+    kernel = PSFKernel.from_gauss(kgeom, sigma=0.1 * u.deg, max_radius=1.5 * u.deg)
+
+    with pytest.raises(ValueError):
+        m.convolve(kernel)
+
+
 @requires_dependency("matplotlib")
 def test_plot():
     axis = MapAxis([0, 1], node_type="edges")
