@@ -18,7 +18,6 @@ from gammapy.stats import (
     f_cash_root_cython,
 )
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
-from gammapy.utils.table import table_from_row_data
 from .core import Estimator
 
 __all__ = ["TSMapEstimator"]
@@ -130,6 +129,7 @@ class TSMapEstimator(Estimator):
             model = SkyModel(
                 spectral_model=PowerLawSpectralModel(),
                 spatial_model=PointSpatialModel(),
+                name="ts-kernel"
             )
 
         self.model = model
@@ -378,8 +378,6 @@ class TSMapEstimator(Estimator):
         positions = list(zip(x, y))
         results = list(map(wrap, positions))
 
-        table = table_from_row_data(results)
-
         names = ["ts", "flux", "niter", "flux_err"]
 
         if "errn-errp" in self.selection_optional:
@@ -392,12 +390,12 @@ class TSMapEstimator(Estimator):
 
         geom = counts.geom.to_image()
 
-        i, j = table["y_idx"], table["x_idx"]
+        j, i = zip(*positions)
 
         for name in names:
             unit = 1 / exposure.unit if "flux" in name else ""
             m = Map.from_geom(geom=geom, data=np.nan, unit=unit)
-            m.data[j, i] = table[name.replace("flux", "norm")]
+            m.data[j, i] = [_[name.replace("flux", "norm")] for _ in results]
             if "flux" in name:
                 m.data *= self._flux_estimator.flux_ref
             result[name] = m
@@ -665,8 +663,4 @@ def _ts_value(
         position=position,
         flux=flux
     )
-
-    result = flux_estimator.run(dataset)
-    result["x_idx"] = position[0]
-    result["y_idx"] = position[1]
-    return result
+    return flux_estimator.run(dataset)
