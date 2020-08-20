@@ -604,10 +604,11 @@ class WcsNDMap(WcsMap):
 
         convolved_data = np.empty(geom.data_shape, dtype=np.float32)
 
-        shape_axes_kernel = kernel.shape[geom._slice_non_spatial_axes]
+        shape_axes_kernel = kernel.shape[slice(0, -2)]
 
-        if not geom.shape_axes == shape_axes_kernel:
-            raise ValueError(f"Incompatible shape between data {geom.shape_axes} and kernel {shape_axes_kernel}")
+        if len(shape_axes_kernel) > 0:
+            if not geom.shape_axes == shape_axes_kernel:
+                raise ValueError(f"Incompatible shape between data {geom.shape_axes} and kernel {shape_axes_kernel}")
 
         if self.geom.is_image and kernel.ndim == 3:
             for idx in range(kernel.shape[0]):
