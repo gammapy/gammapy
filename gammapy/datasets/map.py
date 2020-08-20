@@ -132,14 +132,7 @@ class MapDataset(Dataset):
     mask_fit = LazyFitsData(cache=True)
     mask_safe = LazyFitsData(cache=True)
 
-    _lazy_data_members = [
-        "counts",
-        "exposure",
-        "edisp",
-        "psf",
-        "mask_fit",
-        "mask_safe"
-    ]
+    _lazy_data_members = ["counts", "exposure", "edisp", "psf", "mask_fit", "mask_safe"]
 
     def __init__(
         self,
@@ -293,7 +286,10 @@ class MapDataset(Dataset):
 
                 if evaluator is None:
                     evaluator = MapEvaluator(
-                        model=model, evaluation_mode=EVALUATION_MODE, gti=self.gti, use_cache=USE_NPRED_CACHE
+                        model=model,
+                        evaluation_mode=EVALUATION_MODE,
+                        gti=self.gti,
+                        use_cache=USE_NPRED_CACHE,
                     )
                     self._evaluators[model] = evaluator
 
@@ -869,28 +865,40 @@ class MapDataset(Dataset):
         path = make_path(filename)
         for hdu_name in ["counts", "exposure", "mask_fit", "mask_safe"]:
             kwargs[hdu_name] = HDULocation(
-                hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name=hdu_name.upper(),
-                cache=cache
+                hdu_class="map",
+                file_dir=path.parent,
+                file_name=path.name,
+                hdu_name=hdu_name.upper(),
+                cache=cache,
             )
 
         kwargs["edisp"] = HDULocation(
-            hdu_class="edisp_kernel_map", file_dir=path.parent, file_name=path.name, hdu_name="EDISP",
-            cache=cache
+            hdu_class="edisp_kernel_map",
+            file_dir=path.parent,
+            file_name=path.name,
+            hdu_name="EDISP",
+            cache=cache,
         )
 
         kwargs["psf"] = HDULocation(
-            hdu_class="psf_map", file_dir=path.parent, file_name=path.name, hdu_name="PSF",
-            cache=cache
+            hdu_class="psf_map",
+            file_dir=path.parent,
+            file_name=path.name,
+            hdu_name="PSF",
+            cache=cache,
         )
 
         hduloc = HDULocation(
-            hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name="BACKGROUND",
-            cache=cache
+            hdu_class="map",
+            file_dir=path.parent,
+            file_name=path.name,
+            hdu_name="BACKGROUND",
+            cache=cache,
         )
 
-        kwargs["models"] = [BackgroundModel(
-            hduloc, datasets_names=[name], name=name + "-bkg"
-        )]
+        kwargs["models"] = [
+            BackgroundModel(hduloc, datasets_names=[name], name=name + "-bkg")
+        ]
 
         return cls(**kwargs)
 
@@ -1108,10 +1116,10 @@ class MapDataset(Dataset):
 
         if self.background_model is not None:
             background = self.background_model.evaluate()
-            background = background.sum_over_axes(
-                keepdims=True, weights=self.mask_safe
+            background = background.sum_over_axes(keepdims=True, weights=self.mask_safe)
+            model = BackgroundModel(
+                background, datasets_names=[name], name=f"{name}-bkg"
             )
-            model = BackgroundModel(background, datasets_names=[name], name=f"{name}-bkg")
             kwargs["models"] = [model]
 
         if isinstance(self.edisp, EDispKernelMap):
@@ -1399,7 +1407,7 @@ class MapDatasetOnOff(MapDataset):
         gti=None,
         meta_table=None,
     ):
-        if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
+        if mask_fit is not None and mask_fit.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
         self.counts = counts
@@ -1559,15 +1567,15 @@ class MapDatasetOnOff(MapDataset):
             Map dataset on off.
 
         """
-        kwargs = {"name": name}
 
         if counts_off is None and dataset.background_model is not None:
             alpha = acceptance / acceptance_off
-            kwargs["counts_off"] = dataset.background_model.evaluate() / alpha
+            counts_off = dataset.background_model.evaluate() / alpha
 
         return cls(
             counts=dataset.counts,
             exposure=dataset.exposure,
+            psf=dataset.psf,
             counts_off=counts_off,
             edisp=dataset.edisp,
             gti=dataset.gti,
@@ -1935,7 +1943,7 @@ class MapEvaluator:
         edisp=None,
         gti=None,
         evaluation_mode="local",
-        use_cache=True
+        use_cache=True,
     ):
 
         self.model = model

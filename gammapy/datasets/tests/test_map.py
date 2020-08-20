@@ -388,15 +388,11 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 @requires_dependency("matplotlib")
 @requires_data()
 def test_map_fit(sky_model, geom, geom_etrue):
-    dataset_1 = get_map_dataset(
-        sky_model, geom, geom_etrue, name="test-1"
-    )
+    dataset_1 = get_map_dataset(sky_model, geom, geom_etrue, name="test-1")
     dataset_1.background_model.norm.value = 0.5
     dataset_1.counts = dataset_1.npred()
 
-    dataset_2 = get_map_dataset(
-        sky_model, geom, geom_etrue, name="test-2"
-    )
+    dataset_2 = get_map_dataset(sky_model, geom, geom_etrue, name="test-2")
 
     dataset_2.counts = dataset_2.npred()
 
@@ -450,6 +446,24 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.models[0].spatial_model.lon_0.value = 150
     dataset_1.npred()
     assert not dataset_1._evaluators[dataset_1.models[0]].contributes
+
+
+@requires_dependency("iminuit")
+@requires_data()
+def test_map_onoff_fit(sky_model, geom, geom_etrue):
+    dataset = get_map_dataset(sky_model, geom, geom_etrue, name="test-1")
+
+    dataset.counts = dataset.npred()
+    dataset_on_off = MapDatasetOnOff.from_map_dataset(
+        dataset, acceptance=1.0, acceptance_off=2.0
+    )
+    dataset_on_off.models = sky_model
+
+    fit = Fit([dataset_on_off])
+    result = fit.run()
+
+    assert result.success
+    assert "minuit" in repr(result)
 
 
 @requires_dependency("iminuit")
@@ -1090,15 +1104,9 @@ def test_slice_by_idx():
     )
 
     geom = WcsGeom.create(
-        skydir=(0, 0),
-        binsz=0.5,
-        width=(2, 2),
-        frame="icrs",
-        axes=[axis],
+        skydir=(0, 0), binsz=0.5, width=(2, 2), frame="icrs", axes=[axis],
     )
-    dataset = MapDataset.create(
-        geom=geom, energy_axis_true=axis_etrue, binsz_irf=0.5
-    )
+    dataset = MapDataset.create(geom=geom, energy_axis_true=axis_etrue, binsz_irf=0.5)
 
     slices = {"energy": slice(5, 10)}
     sub_dataset = dataset.slice_by_idx(slices)
@@ -1128,4 +1136,3 @@ def test_slice_by_idx():
 
     axis = sub_dataset.exposure.geom.get_axis_by_name("energy_true")
     assert_allclose(axis.edges[0].value, 0.210175, rtol=1e-5)
-
