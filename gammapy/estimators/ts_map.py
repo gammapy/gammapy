@@ -4,6 +4,8 @@ import functools
 import logging
 import warnings
 import numpy as np
+import contextlib
+from multiprocessing import Pool
 import scipy.optimize
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
@@ -90,6 +92,8 @@ class TSMapEstimator(Estimator):
             * "ul": estimate upper limits on flux.
 
         By default all steps are executed.
+    n_jobs : int
+        Number of processes used in parallel for the computation.
 
     Notes
     -----
@@ -122,6 +126,7 @@ class TSMapEstimator(Estimator):
         threshold=None,
         rtol=0.01,
         selection_optional="all",
+        n_jobs=None
     ):
         self.kernel_width = Angle(kernel_width)
 
@@ -138,6 +143,7 @@ class TSMapEstimator(Estimator):
         self.n_sigma_ul = n_sigma_ul
         self.threshold = threshold
         self.rtol = rtol
+        self.n_jobs = n_jobs
 
         self.selection_optional = selection_optional
         self._flux_estimator = BrentqFluxEstimator(
@@ -376,7 +382,15 @@ class TSMapEstimator(Estimator):
 
         x, y = np.where(np.squeeze(mask.data))
         positions = list(zip(x, y))
-        results = list(map(wrap, positions))
+
+        if self.n_jobs is None:
+            results = list(map(wrap, positions))
+        else:
+            with contextlib.closing(Pool(processes=self.n_jobs)) as pool:
+                log.info("Using {} jobs to compute TS map.".format(self.n_jobs))
+                results = pool.map(wrap, positions)
+
+            pool.join()
 
         names = ["ts", "flux", "niter", "flux_err"]
 
