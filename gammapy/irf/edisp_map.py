@@ -78,7 +78,7 @@ class EDispMap(IRFMap):
 
     _hdu_name = "edisp"
 
-    def __init__(self, edisp_map, exposure_map):
+    def __init__(self, edisp_map, exposure_map=None):
         if edisp_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
             raise ValueError("Incorrect energy axis position in input Map")
 

@@ -827,7 +827,10 @@ class MapDataset(Dataset):
             )
         if "EDISP" in hdulist:
             edisp_map = Map.from_hdulist(hdulist, hdu="edisp")
-            exposure_map = Map.from_hdulist(hdulist, hdu="edisp_exposure")
+            try:
+                exposure_map = Map.from_hdulist(hdulist, hdu="edisp_exposure")
+            except:
+                exposure_map = None
             if edisp_map.geom.axes[0].name == "energy":
                 kwargs["edisp"] = EDispKernelMap(edisp_map, exposure_map)
             else:
