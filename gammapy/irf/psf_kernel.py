@@ -309,3 +309,7 @@ class PSFKernel:
 
         return self.__class__(spectrum_weighted_kernel.sum_over_axes(keepdims=keepdims))
 
+    def slice_by_idx(self, slices):
+        """Slice by idx"""
+        kernel = self.psf_kernel_map.slice_by_idx(slices=slices)
+        return self.__class__(psf_kernel_map=kernel)
