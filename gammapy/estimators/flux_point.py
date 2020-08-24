@@ -854,8 +854,8 @@ class FluxPointsEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : list of `~gammapy.spectrum.SpectrumDataset`
-            Spectrum datasets.
+        datasets : list of `~gammapy.datasets.Dataset`
+            Datasets
 
         Returns
         -------
@@ -875,6 +875,43 @@ class FluxPointsEstimator(Estimator):
         #TODO: this should be changed once likelihood is fully supported
         return FluxPoints(table).to_sed_type("dnde")
 
+    @staticmethod
+    def get_datasets(datasets, e_min, e_max):
+        """Select and slice datasets in energy range
+
+        Parameters
+        ----------
+        datasets : Datasets
+            Datasets
+        e_min, e_max : `~astropy.units.Quantity`
+            Energy bounds to compute the flux point for.
+
+        Returns
+        -------
+        datasets : Datasets
+            Datasets
+
+        """
+        datasets_to_fit = Datasets()
+
+        for dataset in datasets:
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            group = energy_axis.group_table(edges=[e_min, e_max])
+
+            slices = {"energy": slice(
+                int(group["idx_min"][0]),
+                int(group["idx_max"][0]) + 1)
+            }
+
+            try:
+                name = f"{dataset.name}-{e_min:.3f}-{e_max:.3f}"
+                dataset = dataset.slice_by_idx(slices, name=name)
+                datasets_to_fit.append(dataset)
+            except IndexError:
+                log.info(f"Dataset {dataset.name} does not contribute in the energy range")
+
+        return datasets_to_fit
+
     def estimate_flux_point(self, datasets, e_min, e_max):
         """Estimate flux point for a single energy group.
 
@@ -888,7 +925,15 @@ class FluxPointsEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
-        fe = self._flux_estimator(e_min, e_max)
+
+        datasets = self.get_datasets(datasets, e_min=e_min, e_max=e_max)
+
+        energy_axis = datasets[0].counts.
+        e_min, e_max =
+
+
+        fe = self._flux_estimator()
+
 
         for dataset in datasets:
             geom = dataset.counts.geom
