@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.datasets import MapDataset, Datasets
-from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, BackgroundModel
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -897,6 +897,8 @@ class FluxPointsEstimator(Estimator):
         for dataset in datasets:
             energy_axis = dataset.counts.geom.get_axis_by_name("energy")
             group = energy_axis.group_table(edges=[e_min, e_max])
+            is_normal = group["bin_type"] == "normal   "
+            group = group[is_normal]
 
             slices = {"energy": slice(
                 int(group["idx_min"][0]),
@@ -905,8 +907,19 @@ class FluxPointsEstimator(Estimator):
 
             try:
                 name = f"{dataset.name}-{e_min:.3f}-{e_max:.3f}"
-                dataset = dataset.slice_by_idx(slices, name=name)
-                datasets_to_fit.append(dataset)
+                dataset_sliced = dataset.slice_by_idx(slices, name=name)
+
+                # TODO: Simplify!!!!
+                models = []
+
+                for model in dataset.models:
+                    if isinstance(model, BackgroundModel):
+                        models.append(dataset_sliced.background_model)
+                    else:
+                        models.append(model)
+
+                dataset_sliced.models = models
+                datasets_to_fit.append(dataset_sliced)
             except IndexError:
                 log.info(f"Dataset {dataset.name} does not contribute in the energy range")
 
@@ -927,35 +940,15 @@ class FluxPointsEstimator(Estimator):
         """
 
         datasets = self.get_datasets(datasets, e_min=e_min, e_max=e_max)
+        energy_axis = datasets[0].counts.geom.get_axis_by_name("energy")
 
-        energy_axis = datasets[0].counts.
-        e_min, e_max =
+        e_min, e_max = energy_axis.edges.min(), energy_axis.edges.max()
 
-
-        fe = self._flux_estimator()
-
-
-        for dataset in datasets:
-            geom = dataset.counts.geom
-            energy_axis = geom.get_axis_by_name("energy")
-            e_min_new, e_max_new = energy_axis.round([e_min, e_max], clip=True)
-            dataset.mask_fit = geom.energy_mask(
-                emin=e_min_new, emax=e_max_new
-            )
-            if dataset.mask.any():
-                fe.e_min = e_min_new
-                fe.e_max = e_max_new
-
-            self._contribute_to_stat |= dataset.mask.any()
-
-        if not self._contribute_to_stat:
-            model = datasets[0].models[self.source].spectral_model
+        fe = self._flux_estimator(e_min=e_min, e_max=e_max)
+        if len(datasets) == 0:
             result = fe.nan_result
-            result.update(fe.get_reference_flux_values(model))
         else:
-            with datasets.parameters.restore_values:
-                self._freeze_empty_background(datasets)
-                result = fe.run(datasets)
+            result = fe.run(datasets=datasets)
 
         result.update(self.estimate_counts(datasets))
         return result

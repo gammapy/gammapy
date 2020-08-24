@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPointsEstimator
-from gammapy.irf import EffectiveAreaTable, load_cta_irfs
+from gammapy.irf import EffectiveAreaTable, load_cta_irfs, EDispKernelMap
 from gammapy.makers import MapDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
@@ -36,9 +36,14 @@ def simulate_spectrum_dataset(model, random_state=0):
 
     geom = RegionGeom(region=None, axes=[energy_axis])
     acceptance = RegionNDMap.from_geom(geom=geom, data=1)
+    edisp = EDispKernelMap.from_diagonal_response(
+        energy_axis=energy_axis,
+        energy_axis_true=energy_axis.copy(name="energy_true"),
+        geom=geom
+    )
 
     dataset = SpectrumDatasetOnOff(
-        aeff=aeff, livetime=100 * u.h, acceptance=acceptance, acceptance_off=5
+        aeff=aeff, livetime=100 * u.h, acceptance=acceptance, acceptance_off=5, edisp=edisp
     )
     dataset.models = bkg_model
     bkg_npred = dataset.npred_sig()
