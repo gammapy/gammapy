@@ -259,10 +259,13 @@ def test_no_likelihood_contribution():
     dataset = simulate_spectrum_dataset(
         SkyModel(spectral_model=PowerLawSpectralModel(), name="source")
     )
+
+    dataset_2 = dataset.slice_by_idx(slices={"energy": slice(0, 5)})
+
     dataset.mask_safe = RegionNDMap.from_geom(dataset.counts.geom, dtype=bool)
 
     fpe = FluxPointsEstimator(e_edges=[1, 3, 10] * u.TeV, source="source")
-    fp = fpe.run([dataset])
+    fp = fpe.run([dataset, dataset_2])
 
     assert np.isnan(fp.table["norm"]).all()
     assert np.isnan(fp.table["norm_err"]).all()

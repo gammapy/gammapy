@@ -814,8 +814,6 @@ class FluxPointsEstimator(Estimator):
     ):
         self.e_edges = e_edges
         self.source = source
-        self._contribute_to_stat = False
-
         self.norm_min = norm_min
         self.norm_max = norm_max
         self.norm_n_values = norm_n_values
@@ -840,14 +838,6 @@ class FluxPointsEstimator(Estimator):
             selection_optional=self.selection_optional,
 
         )
-
-    def _freeze_empty_background(self, datasets):
-        counts_all = self.estimate_counts(datasets)["counts"]
-
-        for counts, dataset in zip(counts_all, datasets):
-            if isinstance(dataset, MapDataset) and counts == 0:
-                if dataset.background_model is not None:
-                    dataset.background_model.parameters.freeze_all()
 
     def run(self, datasets):
         """Run the flux point estimator for all energy groups.
@@ -876,7 +866,7 @@ class FluxPointsEstimator(Estimator):
         return FluxPoints(table).to_sed_type("dnde")
 
     @staticmethod
-    def get_datasets(datasets, e_min, e_max):
+    def slice_datasets(datasets, e_min, e_max):
         """Select and slice datasets in energy range
 
         Parameters
@@ -895,8 +885,14 @@ class FluxPointsEstimator(Estimator):
         datasets_to_fit = Datasets()
 
         for dataset in datasets:
+            # TODO: implement slice_by_coord() and simplify?
             energy_axis = dataset.counts.geom.get_axis_by_name("energy")
-            group = energy_axis.group_table(edges=[e_min, e_max])
+            try:
+                group = energy_axis.group_table(edges=[e_min, e_max])
+            except ValueError:
+                log.info(f"Dataset {dataset.name} does not contribute in the energy range")
+                continue
+
             is_normal = group["bin_type"] == "normal   "
             group = group[is_normal]
 
@@ -905,23 +901,20 @@ class FluxPointsEstimator(Estimator):
                 int(group["idx_max"][0]) + 1)
             }
 
-            try:
-                name = f"{dataset.name}-{e_min:.3f}-{e_max:.3f}"
-                dataset_sliced = dataset.slice_by_idx(slices, name=name)
+            name = f"{dataset.name}-{e_min:.3f}-{e_max:.3f}"
+            dataset_sliced = dataset.slice_by_idx(slices, name=name)
 
-                # TODO: Simplify!!!!
-                models = []
+            # TODO: Simplify model handling!!!!
+            models = []
 
-                for model in dataset.models:
-                    if isinstance(model, BackgroundModel):
-                        models.append(dataset_sliced.background_model)
-                    else:
-                        models.append(model)
+            for model in dataset.models:
+                if isinstance(model, BackgroundModel):
+                    models.append(dataset_sliced.background_model)
+                else:
+                    models.append(model)
 
-                dataset_sliced.models = models
-                datasets_to_fit.append(dataset_sliced)
-            except IndexError:
-                log.info(f"Dataset {dataset.name} does not contribute in the energy range")
+            dataset_sliced.models = models
+            datasets_to_fit.append(dataset_sliced)
 
         return datasets_to_fit
 
@@ -930,6 +923,8 @@ class FluxPointsEstimator(Estimator):
 
         Parameters
         ----------
+        datasets : Datasets
+            Datasets
         e_min, e_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
 
@@ -938,24 +933,30 @@ class FluxPointsEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
+        result = self.estimate_counts(datasets, e_min=e_min, e_max=e_max)
 
-        datasets = self.get_datasets(datasets, e_min=e_min, e_max=e_max)
+        datasets = self.slice_datasets(datasets, e_min=e_min, e_max=e_max)
+
         energy_axis = datasets[0].counts.geom.get_axis_by_name("energy")
 
         e_min, e_max = energy_axis.edges.min(), energy_axis.edges.max()
 
         fe = self._flux_estimator(e_min=e_min, e_max=e_max)
-        if len(datasets) == 0:
-            result = fe.nan_result
-        else:
-            result = fe.run(datasets=datasets)
 
-        result.update(self.estimate_counts(datasets))
+        result.update(fe.run(datasets=datasets))
+
         return result
 
     @staticmethod
-    def estimate_counts(datasets):
+    def estimate_counts(datasets, e_min, e_max):
         """Estimate counts for the flux point.
+
+        Parameters
+        ----------
+        datasets : Datasets
+            Datasets
+        e_min, e_max : `~astropy.units.Quantity`
+            Energy bounds to compute the flux point for.
 
         Returns
         -------
@@ -963,8 +964,12 @@ class FluxPointsEstimator(Estimator):
             Dict with an array with one entry per dataset with counts for the flux point.
         """
         counts = []
+
         for dataset in datasets:
-            mask = dataset.mask
+            energy_mask = dataset.counts.geom.energy_mask(
+                emin=e_min, emax=e_max, round_to_edge=True
+            )
+            mask = dataset.mask & energy_mask
             counts.append(dataset.counts.data[mask].sum())
 
         return {"counts": np.array(counts, dtype=int)}
