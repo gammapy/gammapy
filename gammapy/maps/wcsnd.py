@@ -396,7 +396,10 @@ class WcsNDMap(WcsMap):
             else:
                 ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
-        data = np.squeeze(self.data.astype(float))
+        if self.geom.is_image:
+            data = self.data.astype(float)
+        else:
+            data = self.data[0].astype(float)
 
         kwargs.setdefault("interpolation", "nearest")
         kwargs.setdefault("origin", "lower")

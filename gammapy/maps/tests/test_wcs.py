@@ -492,3 +492,18 @@ def test_wcs_geom_to_binsz(npix, binsz, frame, proj, skypos, axes, result):
     geom_new = geom.to_binsz(binsz=0.5)
 
     assert_allclose(geom_new.pixel_scales.value, 0.5)
+
+
+def test_non_equal_binsz():
+    geom = WcsGeom.create(
+        width=(360, 180),
+        binsz=(360, 60),
+        frame='icrs',
+        skydir=(0, 0),
+        proj="CAR"
+    )
+
+    coords = geom.get_coord()
+
+    assert_allclose(coords["lon"].to_value("deg"), 0)
+    assert_allclose(coords["lat"].to_value("deg"), [[-60], [0], [60]])
