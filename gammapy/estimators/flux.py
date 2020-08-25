@@ -157,19 +157,27 @@ class FluxEstimator(Estimator):
         """
         datasets = Datasets(datasets)
 
-        if not datasets.is_all_same_type or not datasets.energy_axes_are_aligned:
+        if not datasets.is_all_same_type:
             raise ValueError(
                 "Flux point estimation requires a list of datasets"
                 " of the same type and data shape."
             )
 
         model = self.get_scale_model(datasets.models)
-        result = self.get_reference_flux_values(model.model)
 
-        for dataset in datasets:
-            dataset.models[self.source].spectral_model = model
+        with np.errstate(invalid="ignore", divide="ignore"):
+            result = self.get_reference_flux_values(model.model)
 
-        result.update(self._parameter_estimator.run(datasets, model.norm))
+        any_contribution = np.any([dataset.mask.any() for dataset in datasets])
+
+        if len(datasets) == 0 or not any_contribution:
+            result.update(self.nan_result)
+        else:
+            for dataset in datasets:
+                dataset.models[self.source].spectral_model = model
+
+            result.update(self._parameter_estimator.run(datasets, model.norm))
+
         return result
 
     @property

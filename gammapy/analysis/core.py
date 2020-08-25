@@ -169,7 +169,9 @@ class Analysis:
             if fit_settings.fit_range:
                 e_min = fit_settings.fit_range.min
                 e_max = fit_settings.fit_range.max
-                dataset.mask_fit = dataset.counts.geom.energy_mask(e_min, e_max)
+                geom = dataset.counts.geom
+                data = geom.energy_mask(e_min, e_max)
+                dataset.mask_fit = Map.from_geom(geom=geom, data=data)
 
         log.info("Fitting datasets.")
         self.fit = Fit(self.datasets)

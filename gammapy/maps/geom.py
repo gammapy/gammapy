@@ -1717,7 +1717,7 @@ class Geom(abc.ABC):
         """
         return self._init_copy(**kwargs)
 
-    def energy_mask(self, emin=None, emax=None):
+    def energy_mask(self, emin=None, emax=None, round_to_edge=False):
         """Create a mask for a given energy range.
 
         The energy bin must be fully contained to be included in the mask.
@@ -1734,6 +1734,10 @@ class Geom(abc.ABC):
         """
         # get energy axes and values
         energy_axis = self.get_axis_by_name("energy")
+
+        if round_to_edge:
+            emin, emax = energy_axis.round([emin, emax])
+
         # TODO: make this more general
         shape = (-1, 1) if self.is_hpx else (-1, 1, 1)
         edges = energy_axis.edges.reshape(shape)

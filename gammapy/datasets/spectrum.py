@@ -274,8 +274,8 @@ class SpectrumDataset(Dataset):
         """Predicted counts from source model (`RegionNDMap`)."""
         npred_total = RegionNDMap.from_geom(self._geom)
 
-        for key in self.evaluators:
-            npred = self.evaluators[key].compute_npred()
+        for evaluator in self.evaluators.values():
+            npred = evaluator.compute_npred()
             npred_total.stack(npred)
 
         return npred_total
@@ -646,6 +646,49 @@ class SpectrumDataset(Dataset):
         info["background_rate"] = info["background"] / info["livetime"]
         info["gamma_rate"] = info["excess"] / info["livetime"]
         return info
+
+    def slice_by_idx(self, slices, name=None):
+        """Slice sub dataset.
+
+        The slicing only applies to the maps that define the corresponding axes.
+
+        Parameters
+        ----------
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            corresponding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
+        name : str
+            Name of the sliced dataset.
+
+        Returns
+        -------
+        map_out : `Map`
+            Sliced map object.
+        """
+        name = make_name(name)
+        kwargs = {"gti": self.gti, "name": name}
+
+        if self.counts is not None:
+            kwargs["counts"] = self.counts.slice_by_idx(slices=slices)
+
+        if self.exposure is not None:
+            kwargs["aeff"] = self.aeff.slice_by_idx(slices=slices)
+
+        if self.background is not None:
+            kwargs["background"] = self.background.slice_by_idx(slices=slices)
+
+        if self.edisp is not None:
+            kwargs["edisp"] = self.edisp.slice_by_idx(slices=slices)
+
+        if self.mask_safe is not None:
+            kwargs["mask_safe"] = self.mask_safe.slice_by_idx(slices=slices)
+
+        if self.mask_fit is not None:
+            kwargs["mask_fit"] = self.mask_fit.slice_by_idx(slices=slices)
+
+        return self.__class__(**kwargs)
 
 
 class SpectrumDatasetOnOff(SpectrumDataset):
@@ -1339,3 +1382,48 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             name=dataset.name,
             meta_table=dataset.meta_table
         )
+
+    def slice_by_idx(self, slices, name=None):
+        """Slice sub dataset.
+
+        The slicing only applies to the maps that define the corresponding axes.
+
+        Parameters
+        ----------
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            corresponding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
+        name : str
+            Name of the sliced dataset.
+
+        Returns
+        -------
+        map_out : `Map`
+            Sliced map object.
+        """
+        name = make_name(name)
+        kwargs = {"gti": self.gti, "name": name}
+
+        if self.counts is not None:
+            kwargs["counts"] = self.counts.slice_by_idx(slices=slices)
+
+        if self.exposure is not None:
+            kwargs["aeff"] = self.aeff.slice_by_idx(slices=slices)
+
+        if self.edisp is not None:
+            kwargs["edisp"] = self.edisp.slice_by_idx(slices=slices)
+
+        if self.mask_safe is not None:
+            kwargs["mask_safe"] = self.mask_safe.slice_by_idx(slices=slices)
+
+        if self.mask_fit is not None:
+            kwargs["mask_fit"] = self.mask_fit.slice_by_idx(slices=slices)
+
+        kwargs["acceptance"] = self.acceptance.slice_by_idx(slices=slices)
+        kwargs["acceptance_off"] = self.acceptance_off.slice_by_idx(slices=slices)
+        kwargs["counts_off"] = self.counts_off.slice_by_idx(slices=slices)
+        kwargs["livetime"] = self.livetime
+
+        return self.__class__(**kwargs)
