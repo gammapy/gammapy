@@ -31,7 +31,10 @@ def make_axes(axes_in):
         if ax.name == "":
             ax.name = "axis{}".format(idx)
 
-        axes_out += [ax]
+        if ax.name not in [ax.name for ax in axes_out]:
+            axes_out += [ax]
+        else:
+            raise ValueError(f"Duplicated axis name: '{ax.name}'")
 
     return axes_out
 

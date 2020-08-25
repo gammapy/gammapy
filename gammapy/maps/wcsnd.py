@@ -511,9 +511,10 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=smoothed_data)
 
-    def to_region_nd_map(self, region, func=np.nansum):
+    def to_region_nd_map(self, region=None, func=np.nansum):
         """Get region ND map in a given region.
 
+        By default the whole map region is considered.
 
         Parameters
         ----------
@@ -547,12 +548,10 @@ class WcsNDMap(WcsMap):
         else:
             cutout = self.cutout(position=geom.center_skydir, width=geom.width)
             mask = cutout.geom.to_image().region_mask([region])
-            data = cutout.data * mask[np.newaxis, np.newaxis]
-            data = func(func(data, axis=-1), axis=-1)
+            idx_y, idx_x = np.where(mask)
+            data = func(cutout.data[..., idx_y, idx_x], axis=-1)
 
-        return RegionNDMap(
-            geom=geom, data=data.reshape(geom.data_shape), unit=self.unit
-        )
+        return RegionNDMap(geom=geom, data=data, unit=self.unit)
 
     def get_spectrum(self, region=None, func=np.nansum):
         """Extract spectrum in a given region.
