@@ -8,6 +8,7 @@ import scipy.signal
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.io import fits
+from astropy.coordinates import SkyCoord
 from regions import RectangleSkyRegion, PointSkyRegion
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
@@ -510,6 +511,49 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=smoothed_data)
 
+    def to_region_nd_map(self, region, func=np.nansum):
+        """Get region ND map in a given region.
+
+
+        Parameters
+        ----------
+        region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
+             Region.
+        func : numpy.ufunc
+            Function to reduce the data.
+
+        Returns
+        -------
+        spectrum : `~gammapy.maps.RegionNDMap`
+            Spectrum in the given region.
+        """
+        if isinstance(region, SkyCoord):
+            region = PointSkyRegion(region)
+        elif region is None:
+            width, height = self.geom.width
+            region = RectangleSkyRegion(
+                center=self.geom.center_skydir, width=width[0], height=height[0]
+            )
+
+        geom = RegionGeom(
+            region=region,
+            axes=self.geom.axes,
+            wcs=self.geom.wcs
+        )
+
+        if isinstance(region, PointSkyRegion):
+            coords = geom.get_coord()
+            data = self.get_by_coord(coords=coords)
+        else:
+            cutout = self.cutout(position=geom.center_skydir, width=geom.width)
+            mask = cutout.geom.to_image().region_mask([region])
+            data = cutout.data * mask[np.newaxis, np.newaxis]
+            data = func(func(data, axis=-1), axis=-1)
+
+        return RegionNDMap(
+            geom=geom, data=data.reshape(geom.data_shape), unit=self.unit
+        )
+
     def get_spectrum(self, region=None, func=np.nansum):
         """Extract spectrum in a given region.
 
@@ -529,33 +573,12 @@ class WcsNDMap(WcsMap):
         spectrum : `~gammapy.maps.RegionNDMap`
             Spectrum in the given region.
         """
-        energy_axis = self.geom.axes[0]
+        has_energy_axis = ("energy" in self.geom.axes_names) ^ ("energy_true" in self.geom.axes_names)
 
-        geom = RegionGeom(region=region, axes=[energy_axis], wcs=self.geom.wcs)
+        if not has_energy_axis:
+            raise ValueError("Energy axis required")
 
-        if region:
-            if isinstance(region, PointSkyRegion):
-                coords = {
-                    "skycoord": region.center,
-                    energy_axis.name : energy_axis.center
-                }
-                data = self.get_by_coord(coords=coords)
-            else:
-                cutout = self.cutout(position=geom.center_skydir, width=geom.width)
-                mask = cutout.geom.region_mask([region])
-                data = cutout.data[mask].reshape(energy_axis.nbin, -1)
-                data = func(data, axis=1)
-        else:
-            width, height = self.geom.width
-            region = RectangleSkyRegion(
-                center=self.geom.center_skydir, width=width[0], height=height[0]
-            )
-            geom = RegionGeom(region=region, axes=[energy_axis], wcs=self.geom.wcs)
-            data = func(self.data, axis=(1, 2))
-
-        return RegionNDMap(
-            geom=geom, data=data.reshape(geom.data_shape), unit=self.unit
-        )
+        return self.to_region_nd_map(region=region, func=func)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
