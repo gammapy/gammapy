@@ -465,6 +465,7 @@ class EDispKernelMap(IRFMap):
             Energy dispersion kernel map.
         """
         edisp_map = cls.from_diagonal_response(edisp.e_reco, edisp.e_true, geom)
+        edisp_map.edisp_map.data *= 0
         edisp_map.edisp_map.data[:, :, ...] = edisp.pdf_matrix[
             :, :, np.newaxis, np.newaxis
         ]
