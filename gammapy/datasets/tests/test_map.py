@@ -721,6 +721,7 @@ def to_cube(image):
 def images():
     """Load some `counts`, `counts_off`, `acceptance_on`, `acceptance_off" images"""
     filename = "$GAMMAPY_DATA/tests/unbundled/hess/survey/hess_survey_snippet.fits.gz"
+    on = WcsNDMap.read(filename, hdu="ON")
     return {
         "counts": to_cube(WcsNDMap.read(filename, hdu="ON")),
         "counts_off": to_cube(WcsNDMap.read(filename, hdu="OFF")),
@@ -890,18 +891,15 @@ def test_datasets_io_no_model(tmpdir):
 @requires_data()
 def test_map_dataset_on_off_to_spectrum_dataset(images):
     e_reco = MapAxis.from_bounds(0.1, 10.0, 1, name="energy", unit=u.TeV, interp="log")
-    new_images = dict()
-    for key, image in images.items():
-        new_images[key] = Map.from_geom(
-            image.geom.to_cube([e_reco]), data=image.data[np.newaxis, :, :]
-        )
-    dataset = get_map_dataset_onoff(new_images)
+    dataset = get_map_dataset_onoff(images)
+
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
     dataset.gti = gti
 
     on_region = CircleSkyRegion(
         center=dataset.counts.geom.center_skydir, radius=0.1 * u.deg
     )
+
     spectrum_dataset = dataset.to_spectrum_dataset(on_region)
 
     assert spectrum_dataset.counts.data[0] == 8
@@ -909,7 +907,7 @@ def test_map_dataset_on_off_to_spectrum_dataset(images):
     assert spectrum_dataset.counts_off.data[0] == 33914
     assert_allclose(spectrum_dataset.alpha.data[0], 0.0002143, atol=1e-7)
 
-    excess_map = new_images["counts"] - new_images["background"]
+    excess_map = images["counts"] - images["background"]
     excess_true = excess_map.get_spectrum(on_region, np.sum).data[0]
 
     excess = spectrum_dataset.excess.data[0]
@@ -1081,10 +1079,10 @@ def test_info_dict_on_off(images):
     info_dict = dataset.info_dict()
     assert_allclose(info_dict["n_on"], 4299)
     assert_allclose(info_dict["n_off"], 20407510.0)
-    assert_allclose(info_dict["a_on"], 0.068363324)
-    assert_allclose(info_dict["a_off"], 322.83185)
-    assert_allclose(info_dict["alpha"], 0.0002117614)
-    assert_allclose(info_dict["excess"], -22.52295)
+    assert_allclose(info_dict["a_on"], 0.068363324, rtol=1e-4)
+    assert_allclose(info_dict["a_off"], 322.83185, rtol=1e-4)
+    assert_allclose(info_dict["alpha"], 0.0002117614, rtol=1e-4)
+    assert_allclose(info_dict["excess"], -22.52295, rtol=1e-4)
     assert_allclose(info_dict["livetime"].value, 3600)
 
 
