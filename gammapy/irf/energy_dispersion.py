@@ -195,7 +195,7 @@ class EnergyDispersion2D:
         filename : str
             File name
         """
-        with fits.open(make_path(filename), memmap=False) as hdulist:
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu)
 
     def to_energy_dispersion(self, offset, e_true=None, e_reco=None):

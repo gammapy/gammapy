@@ -868,13 +868,13 @@ class MapDataset(Dataset):
         overwrite : bool
             Overwrite file if it exists.
         """
-        self.to_hdulist().writeto(make_path(filename), overwrite=overwrite)
+        self.to_hdulist().writeto(str(make_path(filename)), overwrite=overwrite)
 
     @classmethod
     def _read_lazy(cls, name, filename, cache):
         kwargs = {"name": name}
         try:
-            kwargs["gti"] = GTI(Table.read(filename, hdu="GTI"))
+            kwargs["gti"] = GTI.read(filename)
         except KeyError:
             pass
 
@@ -931,7 +931,7 @@ class MapDataset(Dataset):
         if lazy:
             return cls._read_lazy(name=name, filename=filename, cache=cache)
         else:
-            with fits.open(make_path(filename), memmap=False) as hdulist:
+            with fits.open(str(make_path(filename)), memmap=False) as hdulist:
                 return cls.from_hdulist(hdulist, name=name)
 
     @classmethod

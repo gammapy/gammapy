@@ -348,15 +348,15 @@ class EnergyDependentTablePSF:
         filename : str
             File name
         """
-        with fits.open(make_path(filename), memmap=False) as hdulist:
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_fits(hdulist)
 
-    def write(self, *args, **kwargs):
+    def write(self, filename, *args, **kwargs):
         """Write to FITS file.
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(*args, **kwargs)
+        self.to_fits().writeto(str(make_path(filename)), *args, **kwargs)
 
     def evaluate(self, energy=None, rad=None, method="linear"):
         """Evaluate the PSF at a given energy and offset

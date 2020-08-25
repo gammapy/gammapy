@@ -149,7 +149,7 @@ class PSFKing:
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(filename, *args, **kwargs)
+        self.to_fits().writeto(str(make_path(filename)), *args, **kwargs)
 
     @staticmethod
     def evaluate_direct(r, gamma, sigma):

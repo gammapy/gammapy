@@ -1085,7 +1085,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             region_hdu = fits.BinTableHDU(region_table, name="REGION")
             hdulist.append(region_hdu)
 
-        hdulist.writeto(outdir / phafile, overwrite=overwrite)
+        hdulist.writeto(str(outdir / phafile), overwrite=overwrite)
 
         self.aeff.write(outdir / arffile, overwrite=overwrite, format=hdu_format, ogip_column="SPECRESP")
 
@@ -1111,7 +1111,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
                 region_hdu = fits.BinTableHDU(region_table, name="REGION")
                 hdulist.append(region_hdu)
 
-            hdulist.writeto(outdir / bkgfile, overwrite=overwrite)
+            hdulist.writeto(str(outdir / bkgfile), overwrite=overwrite)
 
         if self.edisp is not None:
             self._edisp_kernel.write(
@@ -1161,7 +1161,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         filename = make_path(filename)
         dirname = filename.parent
 
-        with fits.open(filename, memmap=False) as hdulist:
+        with fits.open(str(filename), memmap=False) as hdulist:
             counts = RegionNDMap.from_hdulist(hdulist, format="ogip")
             acceptance = RegionNDMap.from_hdulist(
                 hdulist, format="ogip", ogip_column="BACKSCAL"
@@ -1189,7 +1189,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         try:
             bkgfile = phafile.replace("pha", "bkg")
-            with fits.open(dirname / bkgfile, memmap=False) as hdulist:
+            with fits.open(str(dirname / bkgfile), memmap=False) as hdulist:
                 counts_off = RegionNDMap.from_hdulist(hdulist, format="ogip")
                 acceptance_off = RegionNDMap.from_hdulist(
                     hdulist, ogip_column="BACKSCAL"

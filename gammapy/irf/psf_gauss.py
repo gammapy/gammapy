@@ -107,7 +107,7 @@ class EnergyDependentMultiGaussPSF:
         filename : str
             File name
         """
-        with fits.open(make_path(filename), memmap=False) as hdulist:
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_fits(hdulist[hdu])
 
     @classmethod
@@ -199,7 +199,7 @@ class EnergyDependentMultiGaussPSF:
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(filename, *args, **kwargs)
+        self.to_fits().writeto(str(make_path(filename)), *args, **kwargs)
 
     def psf_at_energy_and_theta(self, energy, theta):
         """
