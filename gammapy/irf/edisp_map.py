@@ -386,8 +386,8 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
-            the target position. Should be a single coordinates
+        position : `~astropy.coordinates.SkyCoord` or `~regions.SkyRegion`
+            The target position. Should be a single coordinates
         energy_axis : `MapAxis`
             Reconstructed energy axis, only used for checking.
 
@@ -396,28 +396,22 @@ class EDispKernelMap(IRFMap):
         edisp : `~gammapy.irf.EnergyDispersion`
             the energy dispersion (i.e. rmf object)
         """
-        energy_true_axis = self.edisp_map.geom.get_axis_by_name("energy_true")
-
-        if energy_axis is None:
-            energy_axis = self.edisp_map.geom.get_axis_by_name("energy")
-        else:
+        if energy_axis:
             assert energy_axis == self.edisp_map.geom.get_axis_by_name("energy")
 
         if isinstance(self.edisp_map.geom, RegionGeom):
-            data = self.edisp_map.data[..., 0, 0]
+            kernel_map = self.edisp_map
         else:
             if position is None:
                 position = self.edisp_map.geom.center_skydir
 
-            coords = {
-                "skycoord": position,
-                "energy": energy_axis.center,
-                "energy_true": energy_true_axis.center.reshape((-1, 1)),
-            }
+            kernel_map = self.edisp_map.to_region_nd_map(region=position)
 
-            data = self.edisp_map.get_by_coord(coords)
-
-        return EDispKernel(e_true=energy_true_axis, e_reco=energy_axis, data=data)
+        return EDispKernel(
+            e_true=kernel_map.geom.get_axis_by_name("energy_true"),
+            e_reco=kernel_map.geom.get_axis_by_name("energy"),
+            data=kernel_map.data[..., 0, 0]
+        )
 
     @classmethod
     def from_diagonal_response(cls, energy_axis, energy_axis_true, geom=None):
