@@ -7,10 +7,9 @@ from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.utils.scripts import make_path
-from gammapy.utils.table import table_from_row_data
+from gammapy.utils.table import table_from_row_data, table_row_to_dict
 from .core import Estimator
-from .flux_point import FluxPoints
-from .flux import FluxEstimator
+from .flux_point import FluxPoints, FluxPointsEstimator
 
 
 __all__ = ["LightCurve", "LightCurveEstimator"]
@@ -419,10 +418,9 @@ class LightCurveEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
-        fe = FluxEstimator(
+        fe = FluxPointsEstimator(
             source=self.source,
-            e_min=self.energy_range[0],
-            e_max=self.energy_range[1],
+            e_edges=self.energy_range,
             norm_min=self.norm_min,
             norm_max=self.norm_max,
             norm_n_values=self.norm_n_values,
@@ -433,7 +431,8 @@ class LightCurveEstimator(Estimator):
             selection_optional=self.selection_optional,
 
         )
-        return fe.run(datasets)
+        row = fe.run(datasets).table[0]
+        return table_row_to_dict(row)
 
     @staticmethod
     def estimate_counts(datasets):
