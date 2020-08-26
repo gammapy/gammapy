@@ -98,6 +98,7 @@ def test_flux_estimator_incorrect_energy_range():
 
 
 @requires_data()
+@requires_dependency("iminuit")
 def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
 
     for dataset in hess_datasets:
