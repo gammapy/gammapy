@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel, BackgroundModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel, PointSpatialModel
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -92,15 +92,30 @@ def test_flux_estimator_1d(hess_datasets):
     assert_allclose(result["norm_ul"], 1.431722, atol=1e-3)
 
 
-@requires_data()
-def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
-    fermi_datasets.append(hess_datasets[0])
-    with pytest.raises(ValueError):
-        estimator = FluxEstimator(source=0, e_min=1 * u.TeV, e_max=10 * u.TeV)
-        estimator.run(fermi_datasets)
-
-
-@requires_data()
 def test_flux_estimator_incorrect_energy_range():
     with pytest.raises(ValueError):
         FluxEstimator(source="Crab", e_min=10 * u.TeV, e_max=1 * u.TeV)
+
+
+@requires_data()
+def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
+
+    for dataset in hess_datasets:
+        dataset.models = fermi_datasets.models
+
+    datasets = Datasets()
+
+    datasets.extend(fermi_datasets)
+    datasets.extend(hess_datasets)
+
+    estimator = FluxEstimator(
+        source="Crab Nebula", e_min=1 * u.TeV, e_max=10 * u.TeV, selection_optional=None
+    )
+    result = estimator.run(datasets)
+
+    assert_allclose(result["norm"], 1.022802, atol=1e-3)
+    assert_allclose(result["ts"], 21584.515969, atol=1e-3)
+    assert_allclose(result["norm_err"], 0.01966, atol=1e-3)
+
+
+

@@ -157,12 +157,6 @@ class FluxEstimator(Estimator):
         """
         datasets = Datasets(datasets)
 
-        if not datasets.is_all_same_type:
-            raise ValueError(
-                "Flux point estimation requires a list of datasets"
-                " of the same type and data shape."
-            )
-
         model = self.get_scale_model(datasets.models)
 
         with np.errstate(invalid="ignore", divide="ignore"):
