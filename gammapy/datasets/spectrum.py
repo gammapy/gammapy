@@ -669,6 +669,7 @@ class SpectrumDataset(Dataset):
         """
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name}
+        kwargs["livetime"] = self.livetime
 
         if self.counts is not None:
             kwargs["counts"] = self.counts.slice_by_idx(slices=slices)
