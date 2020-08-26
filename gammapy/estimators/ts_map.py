@@ -12,7 +12,10 @@ from astropy.utils import lazyproperty
 from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import (
-    PointSpatialModel, PowerLawSpectralModel, SkyModel, ConstantFluxSpatialModel
+    PointSpatialModel,
+    PowerLawSpectralModel,
+    SkyModel,
+    ConstantFluxSpatialModel,
 )
 from gammapy.stats import (
     norm_bounds_cython,
@@ -29,6 +32,32 @@ log = logging.getLogger(__name__)
 
 def round_up_to_odd(f):
     return int(np.ceil(f) // 2 * 2 + 1)
+
+
+def compute_reco_exposure(dataset, spectral_model=None):
+    """
+    Create and exposure map in reco energies
+    Parameters
+    ----------
+    dataset:`~gammapy.cube.MapDataset` or `~gammapy.cube.MapDatasetOnOff`
+            the input dataset
+    spectral_model: `~gammapy.modeling.models.SpectralModel`
+            assumed spectral shape. If none, a Power Law of index 2 is assumed
+    """
+    if spectral_model is None:
+        spectral_model = PowerLawSpectralModel()
+    model = SkyModel(
+        spatial_model=ConstantFluxSpatialModel(), spectral_model=spectral_model
+    )
+    kernel = None
+    if dataset.edisp is not None:
+        kernel = dataset.edisp.get_edisp_kernel(position=dataset._geom.center_skydir)
+    meval = MapEvaluator(model=model, exposure=dataset.exposure, edisp=kernel)
+    npred = meval.compute_npred()
+    e_reco = dataset._geom.get_axis_by_name("energy").edges
+    ref_flux = spectral_model.integral(e_reco[:-1], e_reco[1:])
+    reco_exposure = npred / ref_flux[:, np.newaxis, np.newaxis]
+    return reco_exposure
 
 
 def _extract_array(array, shape, position):
@@ -67,7 +96,9 @@ class TSMapEstimator(Estimator):
     Parameters
     ----------
     model : `~gammapy.modeling.model.SkyModel`
-        Source model kernel. If set to None, assume point source model, PointSpatialModel.
+        Source model kernel. If set to None,
+        assume spatail model: point source model, PointSpatialModel.
+        spectral model: PowerLawSpectral Model of index 2
     kernel_width : `~astropy.coordinates.Angle`
         Width of the kernel to use: the kernel will be truncated at this size
     n_sigma : int
@@ -126,7 +157,7 @@ class TSMapEstimator(Estimator):
         threshold=None,
         rtol=0.01,
         selection_optional="all",
-        n_jobs=None
+        n_jobs=None,
     ):
         self.kernel_width = Angle(kernel_width)
 
@@ -134,7 +165,7 @@ class TSMapEstimator(Estimator):
             model = SkyModel(
                 spectral_model=PowerLawSpectralModel(),
                 spatial_model=PointSpatialModel(),
-                name="ts-kernel"
+                name="ts-kernel",
             )
 
         self.model = model
@@ -151,7 +182,7 @@ class TSMapEstimator(Estimator):
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
             selection_optional=selection_optional,
-            ts_threshold=threshold
+            ts_threshold=threshold,
         )
 
     def estimate_kernel(self, dataset):
@@ -204,44 +235,6 @@ class TSMapEstimator(Estimator):
             )
         return kernel
 
-    def estimate_exposure(self, dataset):
-        """Estimate exposure map in reco energy
-
-
-        Parameters
-        ----------
-        dataset : `~gammapy.datasets.MapDataset`
-            Input dataset.
-
-        Returns
-        -------
-        exposure : `Map`
-            Exposure map
-
-        """
-        # TODO: clean this up a bit...
-        models = dataset.models
-
-        model = SkyModel(
-            spectral_model=self.model.spectral_model,
-            spatial_model=ConstantFluxSpatialModel(),
-        )
-        model.apply_irf["psf"] = False
-
-        energy_axis = dataset.exposure.geom.get_axis_by_name("energy_true")
-        energy = energy_axis.edges
-
-        flux = model.spectral_model.integral(
-            emin=energy.min(), emax=energy.max()
-        )
-
-        self._flux_estimator.flux_ref = flux.to_value("cm-2 s-1")
-        dataset.models = [model]
-        npred = dataset.npred()
-        dataset.models = models
-        data = (npred.data / flux).to("cm2 s")
-        return npred.copy(data=data.value, unit=data.unit)
-
     def estimate_flux_default(self, dataset, kernel, exposure=None):
         """Estimate default flux map using a given kernel.
 
@@ -258,10 +251,11 @@ class TSMapEstimator(Estimator):
             Approximate flux map.
         """
         if exposure is None:
-            exposure = self.estimate_exposure(dataset)
+            exposure = compute_reco_exposure(dataset, self.model.spectral_model)
 
         kernel = kernel / np.sum(kernel ** 2)
         flux = (dataset.counts - dataset.npred()) / exposure
+        flux.quantity = flux.quantity.to("1 / (cm2 s)")
         flux = flux.convolve(kernel)
         return flux.sum_over_axes()
 
@@ -289,9 +283,7 @@ class TSMapEstimator(Estimator):
         slice_y = slice(kernel.shape[1] // 2, -kernel.shape[1] // 2 + 1)
         mask[slice_y, slice_x] = 1
 
-        mask &= dataset.mask_safe.reduce_over_axes(
-                func=np.logical_or, keepdims=False
-            )
+        mask &= dataset.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=False)
 
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
@@ -362,7 +354,7 @@ class TSMapEstimator(Estimator):
         counts = dataset.counts
         background = dataset.npred()
 
-        exposure = self.estimate_exposure(dataset)
+        exposure = compute_reco_exposure(dataset, self.model.spectral_model)
 
         kernel = self.estimate_kernel(dataset)
 
@@ -377,7 +369,7 @@ class TSMapEstimator(Estimator):
             background=background.data.astype(float),
             kernel=kernel.data,
             flux=flux.data,
-            flux_estimator=self._flux_estimator
+            flux_estimator=self._flux_estimator,
         )
 
         x, y = np.where(np.squeeze(mask.data))
@@ -412,6 +404,7 @@ class TSMapEstimator(Estimator):
             m.data[j, i] = [_[name.replace("flux", "norm")] for _ in results]
             if "flux" in name:
                 m.data *= self._flux_estimator.flux_ref
+                m.quantity = m.quantity.to("1 / (cm2 s)")
             result[name] = m
 
         result["sqrt_ts"] = self.estimate_sqrt_ts(result["ts"])
@@ -441,6 +434,7 @@ class SimpleMapDataset:
         Kernel array
 
     """
+
     def __init__(self, model, counts, background, x_guess):
         self.model = model
         self.counts = counts
@@ -460,9 +454,7 @@ class SimpleMapDataset:
 
     def stat_sum(self, norm):
         """Stat sum"""
-        return cash_sum_cython(
-            self.counts.ravel(), self.npred(norm).ravel()
-        )
+        return cash_sum_cython(self.counts.ravel(), self.npred(norm).ravel())
 
     def stat_derivative(self, norm):
         """Stat derivative"""
@@ -473,7 +465,11 @@ class SimpleMapDataset:
     def stat_2nd_derivative(self, norm):
         """Stat 2nd derivative"""
         with np.errstate(invalid="ignore", divide="ignore"):
-            return (self.model ** 2 * self.counts / (self.background + norm * self.model) ** 2).sum()
+            return (
+                self.model ** 2
+                * self.counts
+                / (self.background + norm * self.model) ** 2
+            ).sum()
 
     @classmethod
     def from_arrays(cls, counts, background, exposure, flux, position, kernel):
@@ -486,17 +482,26 @@ class SimpleMapDataset:
             counts=counts_cutout,
             background=background_cutout,
             model=kernel * exposure_cutout,
-            x_guess=x_guess
+            x_guess=x_guess,
         )
 
 
 # TODO: merge with `FluxEstimator`?
 class BrentqFluxEstimator(Estimator):
     """Single parameter flux estimator"""
+
     _available_selection_optional = ["errn-errp", "ul"]
     tag = "BrentqFluxEstimator"
 
-    def __init__(self, rtol, n_sigma, n_sigma_ul, selection_optional=None, max_niter=20, ts_threshold=None):
+    def __init__(
+        self,
+        rtol,
+        n_sigma,
+        n_sigma_ul,
+        selection_optional=None,
+        max_niter=20,
+        ts_threshold=None,
+    ):
         self.rtol = rtol
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -537,7 +542,9 @@ class BrentqFluxEstimator(Estimator):
         result["ts"] = (stat_null - stat) * np.sign(norm)
         result["norm"] = norm
         result["niter"] = niter
-        result["norm_err"] = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
+        result["norm_err"] = (
+            np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
+        )
         result["stat"] = stat
         return result
 
@@ -548,7 +555,7 @@ class BrentqFluxEstimator(Estimator):
             "stat": np.nan,
             "norm_err": np.nan,
             "ts": np.nan,
-            "niter": 0
+            "niter": 0,
         }
 
         if "errn-errp" in self.selection_optional:
@@ -581,11 +588,7 @@ class BrentqFluxEstimator(Estimator):
             warnings.simplefilter("ignore")
             try:
                 result_fit = scipy.optimize.brentq(
-                    ts_diff,
-                    min_norm,
-                    max_norm,
-                    maxiter=self.max_niter,
-                    rtol=self.rtol,
+                    ts_diff, min_norm, max_norm, maxiter=self.max_niter, rtol=self.rtol,
                 )
                 return (result_fit - norm) * factor
             except (RuntimeError, ValueError):
@@ -635,15 +638,7 @@ class BrentqFluxEstimator(Estimator):
         return result
 
 
-def _ts_value(
-    position,
-    counts,
-    exposure,
-    background,
-    kernel,
-    flux,
-    flux_estimator
-):
+def _ts_value(position, counts, exposure, background, kernel, flux, flux_estimator):
     """Compute TS value at a given pixel position.
 
     Uses approach described in Stewart (2009).
@@ -675,6 +670,6 @@ def _ts_value(
         exposure=exposure,
         kernel=kernel * flux_estimator.flux_ref,
         position=position,
-        flux=flux
+        flux=flux,
     )
     return flux_estimator.run(dataset)

@@ -8,6 +8,7 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.maps import Map
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from .core import Estimator
+from .ts_map import compute_reco_exposure
 
 __all__ = [
     "ExcessMapEstimator",
@@ -78,6 +79,7 @@ class ExcessMapEstimator(Estimator):
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
 
+            * "flux": estimate flux map
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
 
@@ -90,7 +92,7 @@ class ExcessMapEstimator(Estimator):
     """
 
     tag = "ExcessMapEstimator"
-    _available_selection_optional = ["errn-errp", "ul"]
+    _available_selection_optional = ["errn-errp", "ul", "flux"]
 
     def __init__(
         self,
@@ -136,6 +138,7 @@ class ExcessMapEstimator(Estimator):
                 * ts : delta TS map
                 * significance : sqrt(delta TS), or Li-Ma significance map
                 * err : symmetric error map (from covariance)
+                * flux : flux map. An exposure map must be present in the dataset to compute flux map
                 * errn : negative error map
                 * errp : positive error map
                 * ul : upper limit map
@@ -170,6 +173,12 @@ class ExcessMapEstimator(Estimator):
         err = Map.from_geom(geom, data=counts_stat.error * self.n_sigma)
         result.update({"err": err})
 
+        if "flux" in self.selection_optional:
+            if dataset.exposure:
+                flux = excess / compute_reco_exposure(dataset)
+                flux.quantity = flux.quantity.to("1 / (cm2 s)")
+                result.update({"flux": flux})
+
         if "errn-errp" in self.selection_optional:
             errn = Map.from_geom(geom, data=counts_stat.compute_errn(self.n_sigma))
             errp = Map.from_geom(geom, data=counts_stat.compute_errp(self.n_sigma))
@@ -180,4 +189,5 @@ class ExcessMapEstimator(Estimator):
                 geom, data=counts_stat.compute_upper_limit(self.n_sigma_ul)
             )
             result.update({"ul": ul})
+
         return result
