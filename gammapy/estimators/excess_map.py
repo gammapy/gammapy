@@ -8,7 +8,7 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.maps import Map
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from .core import Estimator
-from .ts_map import compute_reco_exposure
+from gammapy.makers.utils import compute_reco_exposure
 
 __all__ = [
     "ExcessMapEstimator",
@@ -92,7 +92,7 @@ class ExcessMapEstimator(Estimator):
     """
 
     tag = "ExcessMapEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "flux"]
+    _available_selection_optional = ["errn-errp", "ul"]
 
     def __init__(
         self,
@@ -173,11 +173,14 @@ class ExcessMapEstimator(Estimator):
         err = Map.from_geom(geom, data=counts_stat.error * self.n_sigma)
         result.update({"err": err})
 
-        if "flux" in self.selection_optional:
-            if dataset.exposure:
-                flux = excess / compute_reco_exposure(dataset)
-                flux.quantity = flux.quantity.to("1 / (cm2 s)")
-                result.update({"flux": flux})
+        if dataset.exposure:
+            flux = excess / compute_reco_exposure(dataset)
+            flux.quantity = flux.quantity.to("1 / (cm2 s)")
+        else:
+            flux = Map.from_geom(
+                geom=dataset.counts.geom, data=np.nan * np.ones(dataset.data_shape)
+            )
+        result.update({"flux": flux})
 
         if "errn-errp" in self.selection_optional:
             errn = Map.from_geom(geom, data=counts_stat.compute_errn(self.n_sigma))

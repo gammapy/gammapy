@@ -7,10 +7,9 @@ from gammapy.datasets import MapDatasetOnOff
 from gammapy.maps import WcsNDMap
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
-from gammapy.makers.utils import _map_spectrum_weight
+from gammapy.makers.utils import compute_reco_exposure
 from gammapy.modeling.models import PowerLawSpectralModel
 from .core import Estimator
-from .ts_map import compute_reco_exposure
 
 __all__ = ["ASmoothMapEstimator"]
 

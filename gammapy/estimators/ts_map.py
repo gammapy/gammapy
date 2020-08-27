@@ -9,13 +9,12 @@ from multiprocessing import Pool
 import scipy.optimize
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
-from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import Map, WcsGeom
+from gammapy.datasets.map import MapEvaluator
 from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    ConstantFluxSpatialModel,
 )
 from gammapy.stats import (
     norm_bounds_cython,
@@ -24,6 +23,7 @@ from gammapy.stats import (
 )
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from .core import Estimator
+from gammapy.makers.utils import compute_reco_exposure
 
 __all__ = ["TSMapEstimator"]
 
@@ -32,32 +32,6 @@ log = logging.getLogger(__name__)
 
 def round_up_to_odd(f):
     return int(np.ceil(f) // 2 * 2 + 1)
-
-
-def compute_reco_exposure(dataset, spectral_model=None):
-    """
-    Create and exposure map in reco energies
-    Parameters
-    ----------
-    dataset:`~gammapy.cube.MapDataset` or `~gammapy.cube.MapDatasetOnOff`
-            the input dataset
-    spectral_model: `~gammapy.modeling.models.SpectralModel`
-            assumed spectral shape. If none, a Power Law of index 2 is assumed
-    """
-    if spectral_model is None:
-        spectral_model = PowerLawSpectralModel()
-    model = SkyModel(
-        spatial_model=ConstantFluxSpatialModel(), spectral_model=spectral_model
-    )
-    kernel = None
-    if dataset.edisp is not None:
-        kernel = dataset.edisp.get_edisp_kernel(position=dataset._geom.center_skydir)
-    meval = MapEvaluator(model=model, exposure=dataset.exposure, edisp=kernel)
-    npred = meval.compute_npred()
-    e_reco = dataset._geom.get_axis_by_name("energy").edges
-    ref_flux = spectral_model.integral(e_reco[:-1], e_reco[1:])
-    reco_exposure = npred / ref_flux[:, np.newaxis, np.newaxis]
-    return reco_exposure
 
 
 def _extract_array(array, shape, position):

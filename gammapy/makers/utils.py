@@ -7,8 +7,13 @@ from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, PSFMap
 from gammapy.stats import WStatCountsStatistic
 from gammapy.maps import Map, WcsNDMap
-from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.modeling.models import (
+    PowerLawSpectralModel,
+    ConstantFluxSpatialModel,
+    SkyModel,
+)
 from gammapy.utils.coordinates import sky_to_fov
+from gammapy.datasets.map import MapEvaluator
 
 __all__ = [
     "make_map_background_irf",
@@ -17,7 +22,34 @@ __all__ = [
     "make_psf_map",
     "make_map_exposure_true_energy",
     "make_theta_squared_table",
+    "compute_reco_exposure" "",
 ]
+
+
+def compute_reco_exposure(dataset, spectral_model=None):
+    """
+    Create and exposure map in reco energies
+    Parameters
+    ----------
+    dataset:`~gammapy.cube.MapDataset` or `~gammapy.cube.MapDatasetOnOff`
+            the input dataset
+    spectral_model: `~gammapy.modeling.models.SpectralModel`
+            assumed spectral shape. If none, a Power Law of index 2 is assumed
+    """
+    if spectral_model is None:
+        spectral_model = PowerLawSpectralModel()
+    model = SkyModel(
+        spatial_model=ConstantFluxSpatialModel(), spectral_model=spectral_model
+    )
+    kernel = None
+    if dataset.edisp is not None:
+        kernel = dataset.edisp.get_edisp_kernel(position=dataset._geom.center_skydir)
+    meval = MapEvaluator(model=model, exposure=dataset.exposure, edisp=kernel)
+    npred = meval.compute_npred()
+    e_reco = dataset._geom.get_axis_by_name("energy").edges
+    ref_flux = spectral_model.integral(e_reco[:-1], e_reco[1:])
+    reco_exposure = npred / ref_flux[:, np.newaxis, np.newaxis]
+    return reco_exposure
 
 
 def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
@@ -303,7 +335,9 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
     return edisp_map.to_edisp_kernel_map(geom.get_axis_by_name("energy"))
 
 
-def make_theta_squared_table(observations, theta_squared_axis, position, position_off=None):
+def make_theta_squared_table(
+    observations, theta_squared_axis, position, position_off=None
+):
     """Make theta squared distribution in the same FoV for a list of `Observation`
     objects.
 
@@ -341,8 +375,8 @@ def make_theta_squared_table(observations, theta_squared_axis, position, positio
     table["theta2_max"] = theta_squared_axis.edges[1:]
     table["counts"] = 0
     table["counts_off"] = 0
-    table["acceptance"] = 0.
-    table["acceptance_off"] = 0.
+    table["acceptance"] = 0.0
+    table["acceptance_off"] = 0.0
 
     alpha_tot = np.zeros(len(table))
     livetime_tot = 0
