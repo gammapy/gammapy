@@ -83,7 +83,7 @@ def fermi_dataset():
         mask_safe=mask_safe,
         psf=psfmap,
         name="fermi-3fhl-gc",
-        edisp=edisp
+        edisp=edisp,
     )
 
     return dataset.to_image()
@@ -119,11 +119,11 @@ def test_compute_ts_map_psf(fermi_dataset):
 
     assert_allclose(result["ts"].data[29, 29], 835.140605, rtol=1e-2)
     assert_allclose(result["niter"].data[29, 29], 7)
-    assert_allclose(result["flux"].data[29, 29], 1.626651e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[29, 29], 9.548939e-11, rtol=1e-2)
-    assert_allclose(result["flux_errp"].data[29, 29], 9.540259e-11, rtol=1e-2)
-    assert_allclose(result["flux_errn"].data[29, 29], 9.034366e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[29, 29], 1.961776e-10, rtol=1e-2)
+    assert_allclose(result["flux"].data[29, 29], 1.351949e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[29, 29], 7.93751176e-11, rtol=1e-2)
+    assert_allclose(result["flux_errp"].data[29, 29], 7.9376134e-11, rtol=1e-2)
+    assert_allclose(result["flux_errn"].data[29, 29], 7.5180404579e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[29, 29], 1.63222157e-10, rtol=1e-2)
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
     assert result["flux_ul"].unit == u.Unit("cm-2s-1")

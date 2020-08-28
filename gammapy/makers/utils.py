@@ -303,7 +303,9 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
     return edisp_map.to_edisp_kernel_map(geom.get_axis_by_name("energy"))
 
 
-def make_theta_squared_table(observations, theta_squared_axis, position, position_off=None):
+def make_theta_squared_table(
+    observations, theta_squared_axis, position, position_off=None
+):
     """Make theta squared distribution in the same FoV for a list of `Observation`
     objects.
 
@@ -341,8 +343,8 @@ def make_theta_squared_table(observations, theta_squared_axis, position, positio
     table["theta2_max"] = theta_squared_axis.edges[1:]
     table["counts"] = 0
     table["counts_off"] = 0
-    table["acceptance"] = 0.
-    table["acceptance_off"] = 0.
+    table["acceptance"] = 0.0
+    table["acceptance_off"] = 0.0
 
     alpha_tot = np.zeros(len(table))
     livetime_tot = 0

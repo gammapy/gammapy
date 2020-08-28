@@ -8,6 +8,7 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.maps import Map
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from .core import Estimator
+from .utils import estimate_exposure_reco_energy
 
 __all__ = [
     "ExcessMapEstimator",
@@ -78,6 +79,7 @@ class ExcessMapEstimator(Estimator):
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
 
+            * "flux": estimate flux map
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
 
@@ -136,6 +138,7 @@ class ExcessMapEstimator(Estimator):
                 * ts : delta TS map
                 * significance : sqrt(delta TS), or Li-Ma significance map
                 * err : symmetric error map (from covariance)
+                * flux : flux map. An exposure map must be present in the dataset to compute flux map
                 * errn : negative error map
                 * errp : positive error map
                 * ul : upper limit map
@@ -170,6 +173,15 @@ class ExcessMapEstimator(Estimator):
         err = Map.from_geom(geom, data=counts_stat.error * self.n_sigma)
         result.update({"err": err})
 
+        if dataset.exposure:
+            flux = excess / estimate_exposure_reco_energy(dataset)
+            flux.quantity = flux.quantity.to("1 / (cm2 s)")
+        else:
+            flux = Map.from_geom(
+                geom=dataset.counts.geom, data=np.nan * np.ones(dataset.data_shape)
+            )
+        result.update({"flux": flux})
+
         if "errn-errp" in self.selection_optional:
             errn = Map.from_geom(geom, data=counts_stat.compute_errn(self.n_sigma))
             errp = Map.from_geom(geom, data=counts_stat.compute_errp(self.n_sigma))
@@ -180,4 +192,5 @@ class ExcessMapEstimator(Estimator):
                 geom, data=counts_stat.compute_upper_limit(self.n_sigma_ul)
             )
             result.update({"ul": ul})
+
         return result
