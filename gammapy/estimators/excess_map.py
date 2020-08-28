@@ -8,7 +8,7 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.maps import Map
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from .core import Estimator
-from gammapy.makers.utils import compute_reco_exposure
+from .utils import estimate_exposure_reco_energy
 
 __all__ = [
     "ExcessMapEstimator",
@@ -174,7 +174,7 @@ class ExcessMapEstimator(Estimator):
         result.update({"err": err})
 
         if dataset.exposure:
-            flux = excess / compute_reco_exposure(dataset)
+            flux = excess / estimate_exposure_reco_energy(dataset)
             flux.quantity = flux.quantity.to("1 / (cm2 s)")
         else:
             flux = Map.from_geom(

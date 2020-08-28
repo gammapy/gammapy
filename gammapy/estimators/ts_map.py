@@ -23,7 +23,7 @@ from gammapy.stats import (
 )
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from .core import Estimator
-from gammapy.makers.utils import compute_reco_exposure
+from .utils import estimate_exposure_reco_energy
 
 __all__ = ["TSMapEstimator"]
 
@@ -225,7 +225,7 @@ class TSMapEstimator(Estimator):
             Approximate flux map.
         """
         if exposure is None:
-            exposure = compute_reco_exposure(dataset, self.model.spectral_model)
+            exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
 
         kernel = kernel / np.sum(kernel ** 2)
         flux = (dataset.counts - dataset.npred()) / exposure
@@ -328,7 +328,7 @@ class TSMapEstimator(Estimator):
         counts = dataset.counts
         background = dataset.npred()
 
-        exposure = compute_reco_exposure(dataset, self.model.spectral_model)
+        exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
 
         kernel = self.estimate_kernel(dataset)
 

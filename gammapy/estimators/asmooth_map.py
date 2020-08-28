@@ -7,9 +7,9 @@ from gammapy.datasets import MapDatasetOnOff
 from gammapy.maps import WcsNDMap
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
-from gammapy.makers.utils import compute_reco_exposure
 from gammapy.modeling.models import PowerLawSpectralModel
 from .core import Estimator
+from .utils import estimate_exposure_reco_energy
 
 __all__ = ["ASmoothMapEstimator"]
 
@@ -143,7 +143,7 @@ class ASmoothMapEstimator(Estimator):
         background = background.sum_over_axes(keepdims=False)
 
         if dataset.exposure is not None:
-            exposure = compute_reco_exposure(dataset, self.spectrum)
+            exposure = estimate_exposure_reco_energy(dataset, self.spectrum)
             exposure = exposure.sum_over_axes(keepdims=False)
         else:
             exposure = None
