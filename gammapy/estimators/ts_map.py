@@ -9,8 +9,10 @@ from multiprocessing import Pool
 import scipy.optimize
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
-from gammapy.maps import Map, WcsGeom
+from astropy import units as u
+from gammapy.maps import Map, WcsGeom, MapAxis
 from gammapy.datasets.map import MapEvaluator
+from gammapy.datasets import Datasets
 from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
@@ -97,6 +99,11 @@ class TSMapEstimator(Estimator):
             * "ul": estimate upper limits on flux.
 
         By default all steps are executed.
+    e_edges : `~astropy.units.Quantity`
+        Energy edges of the maps bins.
+    sum_over_energy_groups : bool
+        Whether to sum over the energy groups or fit the norm on the full energy
+        cube.
     n_jobs : int
         Number of processes used in parallel for the computation.
 
@@ -131,6 +138,8 @@ class TSMapEstimator(Estimator):
         threshold=None,
         rtol=0.01,
         selection_optional="all",
+        e_edges=None,
+        sum_over_energy_groups=True,
         n_jobs=None,
     ):
         self.kernel_width = Angle(kernel_width)
@@ -149,8 +158,10 @@ class TSMapEstimator(Estimator):
         self.threshold = threshold
         self.rtol = rtol
         self.n_jobs = n_jobs
+        self.sum_over_energy_groups = sum_over_energy_groups
 
         self.selection_optional = selection_optional
+        self.e_edges = e_edges
         self._flux_estimator = BrentqFluxEstimator(
             rtol=self.rtol,
             n_sigma=self.n_sigma,
@@ -295,30 +306,8 @@ class TSMapEstimator(Estimator):
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return map_ts.copy(data=sqrt_ts)
 
-    def run(self, dataset):
-        """
-        Run TS map estimation.
-
-        Requires a MapDataset with counts, exposure and background_model
-        properly set to run.
-
-        Parameters
-        ----------
-        dataset : `~gammapy.datasets.MapDataset`
-            Input MapDataset.
-
-        Returns
-        -------
-        maps : dict
-             Dictionary containing result maps. Keys are:
-
-                * ts : delta TS map
-                * sqrt_ts : sqrt(delta TS), or significance map
-                * flux : flux map
-                * flux_err : symmetric error map
-                * flux_ul : upper limit map
-
-        """
+    def estimate_flux_map(self, dataset):
+        """"""
         if self.downsampling_factor:
             shape = dataset.counts.geom.to_image().data_shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
@@ -392,6 +381,64 @@ class TSMapEstimator(Estimator):
                 result[name] = result[name].crop(crop_width=pad_width)
 
         return result
+
+    def run(self, dataset):
+        """
+        Run TS map estimation.
+
+        Requires a MapDataset with counts, exposure and background_model
+        properly set to run.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            Input MapDataset.
+
+        Returns
+        -------
+        maps : dict
+             Dictionary containing result maps. Keys are:
+
+                * ts : delta TS map
+                * sqrt_ts : sqrt(delta TS), or significance map
+                * flux : flux map
+                * flux_err : symmetric error map
+                * flux_ul : upper limit map
+
+        """
+        # TODO: add support for joint likelihood fitting to TSMapEstimator
+        datasets = Datasets(dataset)
+
+        if self.e_edges is None:
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
+            print(e_edges)
+        else:
+            e_edges = self.e_edges
+
+        results = []
+
+        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
+            dataset = datasets.slice_energy(e_min, e_max)[0]
+
+            if self.sum_over_energy_groups:
+                dataset = dataset.to_image()
+
+            result = self.estimate_flux_map(dataset)
+            results.append(result)
+
+        result_all = {}
+
+        energy_axis = MapAxis.from_edges(e_edges, name="energy", interp="log")
+
+        for key in result:
+            images = [_[key] for _ in results]
+
+            result_all[key] = Map.from_images(
+                images=images, axis=energy_axis
+            )
+
+        return result_all
 
 
 # TODO: merge with MapDataset?
@@ -509,16 +556,18 @@ class BrentqFluxEstimator(Estimator):
                     niter = result_fit[1].iterations
                 except (RuntimeError, ValueError):
                     # Where the root finding fails NaN is set as norm
-                    norm, niter = np.nan, self.max_niter
+                    norm, niter = norm_min_total, self.max_niter
 
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
         result["ts"] = (stat_null - stat) * np.sign(norm)
         result["norm"] = norm
         result["niter"] = niter
-        result["norm_err"] = (
-            np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
-        )
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            result["norm_err"] = (
+                np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
+            )
         result["stat"] = stat
         return result
 
