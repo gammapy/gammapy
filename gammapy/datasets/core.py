@@ -3,13 +3,17 @@ import abc
 import collections.abc
 import copy
 import numpy as np
+import logging
 from astropy.table import vstack
 from astropy import units as u
 from gammapy.maps import Map
-from gammapy.modeling.models import Models, ProperModels
+from gammapy.modeling.models import Models, ProperModels, BackgroundModel
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
 from gammapy.data import GTI
+
+
+log = logging.getLogger(__name__)
 
 
 __all__ = ["Dataset", "Datasets"]
@@ -210,6 +214,57 @@ class Datasets(collections.abc.MutableSequence):
                 datasets.append(dataset)
 
         return self.__class__(datasets)
+
+    def slice_energy(self, e_min, e_max):
+        """Select and slice datasets in energy range
+
+        Parameters
+        ----------
+        e_min, e_max : `~astropy.units.Quantity`
+            Energy bounds to compute the flux point for.
+
+        Returns
+        -------
+        datasets : Datasets
+            Datasets
+
+        """
+        datasets = []
+
+        for dataset in self:
+            # TODO: implement slice_by_coord() and simplify?
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            try:
+                group = energy_axis.group_table(edges=[e_min, e_max])
+            except ValueError:
+                log.info(f"Dataset {dataset.name} does not contribute in the energy range")
+                continue
+
+            is_normal = group["bin_type"] == "normal   "
+            group = group[is_normal]
+
+            slices = {"energy": slice(
+                int(group["idx_min"][0]),
+                int(group["idx_max"][0]) + 1)
+            }
+
+            name = f"{dataset.name}-{e_min:.3f}-{e_max:.3f}"
+            dataset_sliced = dataset.slice_by_idx(slices, name=name)
+
+            # TODO: Simplify model handling!!!!
+            models = []
+
+            for model in dataset.models:
+                if isinstance(model, BackgroundModel):
+                    models.append(dataset_sliced.background_model)
+                else:
+                    models.append(model)
+
+            dataset_sliced.models = models
+            datasets.append(dataset_sliced)
+
+        return self.__class__(datasets=datasets)
+
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n"
