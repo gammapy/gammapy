@@ -1060,6 +1060,38 @@ class Map(abc.ABC):
         )
         return self._init_copy(geom=geom, data=data)
 
+    @classmethod
+    def from_images(cls, images, axis=None):
+        """Create Map from list of images and non-spatial axis.
+
+        Parameters
+        ----------
+        images : list of `Map` objects
+            Images
+        axis : `MapAxis`
+            Map axis
+
+        Returns
+        -------
+        map : `Map`
+            Map with additional non-spatial axis.
+
+        """
+        geom_ref = images[0].geom.to_image()
+
+        data = []
+
+        for image in images:
+            if not image.geom == geom_ref:
+                raise ValueError("Image geometries not aligned")
+            data.append(image.data)
+
+        return cls.from_geom(
+            data=np.stack(data),
+            geom=geom_ref.to_cube(axes=[axis]),
+            unit=images[0].unit
+        )
+
     def __repr__(self):
         geom = self.geom.__class__.__name__
         axes = ["skycoord"] if self.geom.is_hpx else ["lon", "lat"]
