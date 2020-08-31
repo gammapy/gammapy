@@ -105,26 +105,38 @@ def find_peaks(image, threshold, min_distance=1):
 
 
 def estimate_exposure_reco_energy(dataset, spectral_model=None):
-    """
-    Create and exposure map in reco energies
+    """Estimate an exposure map in reconstructed energy.
+
     Parameters
     ----------
     dataset:`~gammapy.cube.MapDataset` or `~gammapy.cube.MapDatasetOnOff`
             the input dataset
     spectral_model: `~gammapy.modeling.models.SpectralModel`
             assumed spectral shape. If none, a Power Law of index 2 is assumed
+
+    Returns
+    -------
+    exposure : `Map`
+        Exposure map in reconstructed energy
     """
     if spectral_model is None:
         spectral_model = PowerLawSpectralModel()
+
     model = SkyModel(
         spatial_model=ConstantFluxSpatialModel(), spectral_model=spectral_model
     )
-    kernel = None
+
+    energy_axis = dataset._geom.get_axis_by_name("energy")
+
+    edisp = None
+
     if dataset.edisp is not None:
-        kernel = dataset.edisp.get_edisp_kernel(position=dataset._geom.center_skydir)
-    meval = MapEvaluator(model=model, exposure=dataset.exposure, edisp=kernel)
+        edisp = dataset.edisp.get_edisp_kernel(
+            position=None, energy_axis=energy_axis
+        )
+
+    meval = MapEvaluator(model=model, exposure=dataset.exposure, edisp=edisp)
     npred = meval.compute_npred()
-    e_reco = dataset._geom.get_axis_by_name("energy").edges
-    ref_flux = spectral_model.integral(e_reco[:-1], e_reco[1:])
+    ref_flux = spectral_model.integral(energy_axis.edges[:-1], energy_axis.edges[1:])
     reco_exposure = npred / ref_flux[:, np.newaxis, np.newaxis]
     return reco_exposure
