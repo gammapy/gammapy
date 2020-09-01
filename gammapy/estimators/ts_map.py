@@ -170,6 +170,19 @@ class TSMapEstimator(Estimator):
             ts_threshold=threshold,
         )
 
+    @property
+    def selection_all(self):
+        """Which quantities are computed"""
+        selection = ["ts", "flux", "niter", "flux_err"]
+
+        if "errn-errp" in self.selection_optional:
+            selection += ["flux_errp", "flux_errn"]
+
+        if "ul" in self.selection_optional:
+            selection += ["flux_ul"]
+
+        return selection
+
     def estimate_kernel(self, dataset):
         """Get the convolution kernel for the input dataset.
 
@@ -314,11 +327,6 @@ class TSMapEstimator(Estimator):
         dataset : `MapDataset`
             Map dataset
         """
-        if self.downsampling_factor:
-            shape = dataset.counts.geom.to_image().data_shape
-            pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
-            dataset = dataset.pad(pad_width).downsample(self.downsampling_factor)
-
         # First create 2D map arrays
         counts = dataset.counts
         background = dataset.npred()
@@ -353,21 +361,13 @@ class TSMapEstimator(Estimator):
 
             pool.join()
 
-        names = ["ts", "flux", "niter", "flux_err"]
-
-        if "errn-errp" in self.selection_optional:
-            names += ["flux_errp", "flux_errn"]
-
-        if "ul" in self.selection_optional:
-            names += ["flux_ul"]
-
         result = {}
 
         j, i = zip(*positions)
 
         geom = counts.geom.squash(axis="energy")
 
-        for name in names:
+        for name in self.selection_all:
             unit = 1 / exposure.unit if "flux" in name else ""
             m = Map.from_geom(geom=geom, data=np.nan, unit=unit)
             m.data[0, j, i] = [_[name.replace("flux", "norm")] for _ in results]
@@ -375,16 +375,6 @@ class TSMapEstimator(Estimator):
                 m.data *= self._flux_estimator.flux_ref
                 m.quantity = m.quantity.to("1 / (cm2 s)")
             result[name] = m
-
-        result["sqrt_ts"] = self.estimate_sqrt_ts(result["ts"])
-
-        if self.downsampling_factor:
-            for name in names:
-                order = 0 if name == "niter" else 1
-                result[name] = result[name].upsample(
-                    factor=self.downsampling_factor, preserve_counts=False, order=order
-                )
-                result[name] = result[name].crop(crop_width=pad_width)
 
         return result
 
@@ -412,6 +402,11 @@ class TSMapEstimator(Estimator):
                 * flux_ul : upper limit map
 
         """
+        if self.downsampling_factor:
+            shape = dataset.counts.geom.to_image().data_shape
+            pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
+            dataset = dataset.pad(pad_width).downsample(self.downsampling_factor)
+
         # TODO: add support for joint likelihood fitting to TSMapEstimator
         datasets = Datasets(dataset)
 
@@ -434,9 +429,19 @@ class TSMapEstimator(Estimator):
 
         result_all = {}
 
-        for key in result:
-            result_all[key] = Map.from_images(images=[_[key] for _ in results])
+        for name in self.selection_all:
+            map_all = Map.from_images(images=[_[name] for _ in results])
 
+            if self.downsampling_factor:
+                order = 0 if name == "niter" else 1
+                map_all = map_all.upsample(
+                    factor=self.downsampling_factor, preserve_counts=False, order=order
+                )
+                map_all = map_all.crop(crop_width=pad_width)
+
+            result_all[name] = map_all
+
+        result_all["sqrt_ts"] = self.estimate_sqrt_ts(result_all["ts"])
         return result_all
 
 
