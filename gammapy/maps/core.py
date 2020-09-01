@@ -1062,7 +1062,10 @@ class Map(abc.ABC):
 
     @classmethod
     def from_images(cls, images, axis=None):
-        """Create Map from list of images and non-spatial axis.
+        """Create Map from list of images and a non-spatial axis.
+
+        If the images have a non-spatial axis of length 1 a new axes is generated
+        from by merging the individual axes. The image geometries must be aligned.
 
         Parameters
         ----------
@@ -1082,9 +1085,18 @@ class Map(abc.ABC):
         data = []
 
         for image in images:
-            if not image.geom == geom_ref:
+            if not image.geom.to_image() == geom_ref:
                 raise ValueError("Image geometries not aligned")
             data.append(image.data)
+
+        if axis is None:
+            try:
+                axis = MapAxis.from_stack(
+                    axes=[image.geom.axes[0] for image in images]
+                )
+            except IndexError:
+                ValueError("Images don't have a non-spatial axis. Please provide"
+                           " the axis separately")
 
         return cls.from_geom(
             data=np.stack(data),
