@@ -76,7 +76,7 @@ def fermi_dataset():
         energy_axis_true=exposure.geom.get_axis_by_name("energy_true"),
     )
 
-    dataset = MapDataset(
+    return MapDataset(
         counts=counts,
         models=[background],
         exposure=exposure,
@@ -85,8 +85,6 @@ def fermi_dataset():
         name="fermi-3fhl-gc",
         edisp=edisp,
     )
-
-    return dataset.to_image()
 
 
 @requires_data()
@@ -130,6 +128,25 @@ def test_compute_ts_map_psf(fermi_dataset):
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
     assert result["flux_ul"].unit == u.Unit("cm-2s-1")
+
+
+@requires_data()
+def test_compute_ts_map_energy(fermi_dataset):
+    estimator = TSMapEstimator(
+            kernel_width="0.6 deg",
+            e_edges=[10, 100, 1000] * u.GeV,
+            sum_over_energy_groups=False
+        )
+
+    result = estimator.run(fermi_dataset)
+
+    assert_allclose(result["ts"].data[:, 29, 29], [804.86171, 16.988756], rtol=1e-2)
+    assert_allclose(result["flux"].data[:, 29, 29], [1.233119e-09, 3.590694e-11], rtol=1e-2)
+    assert_allclose(result["flux_err"].data[:, 29, 29], [7.382305e-11, 1.338985e-11], rtol=1e-2)
+    assert_allclose(result["niter"].data[:, 29, 29], [6, 6])
+
+    energy_axis = result["ts"].geom.get_axis_by_name("energy")
+    assert_allclose(energy_axis.edges.to_value("GeV"), [10, 84.471641, 500], rtol=1e-4)
 
 
 @requires_data()
