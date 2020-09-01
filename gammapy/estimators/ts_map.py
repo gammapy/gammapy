@@ -307,7 +307,13 @@ class TSMapEstimator(Estimator):
         return map_ts.copy(data=sqrt_ts)
 
     def estimate_flux_map(self, dataset):
-        """"""
+        """Estimate flux and ts maps for single dataset
+
+        Parameters
+        ----------
+        dataset : `MapDataset`
+            Map dataset
+        """
         if self.downsampling_factor:
             shape = dataset.counts.geom.to_image().data_shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
@@ -357,14 +363,14 @@ class TSMapEstimator(Estimator):
 
         result = {}
 
-        geom = counts.geom.to_image()
-
         j, i = zip(*positions)
+
+        geom = counts.geom.squash(axis="energy")
 
         for name in names:
             unit = 1 / exposure.unit if "flux" in name else ""
             m = Map.from_geom(geom=geom, data=np.nan, unit=unit)
-            m.data[j, i] = [_[name.replace("flux", "norm")] for _ in results]
+            m.data[0, j, i] = [_[name.replace("flux", "norm")] for _ in results]
             if "flux" in name:
                 m.data *= self._flux_estimator.flux_ref
                 m.quantity = m.quantity.to("1 / (cm2 s)")
@@ -412,7 +418,6 @@ class TSMapEstimator(Estimator):
         if self.e_edges is None:
             energy_axis = dataset.counts.geom.get_axis_by_name("energy")
             e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
-            print(e_edges)
         else:
             e_edges = self.e_edges
 
@@ -429,14 +434,8 @@ class TSMapEstimator(Estimator):
 
         result_all = {}
 
-        energy_axis = MapAxis.from_edges(e_edges, name="energy", interp="log")
-
         for key in result:
-            images = [_[key] for _ in results]
-
-            result_all[key] = Map.from_images(
-                images=images, axis=energy_axis
-            )
+            result_all[key] = Map.from_images(images=[_[key] for _ in results])
 
         return result_all
 
