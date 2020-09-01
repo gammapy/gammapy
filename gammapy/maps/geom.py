@@ -538,6 +538,62 @@ class MapAxis:
 
         return cls(edges, node_type="edges", **kwargs)
 
+    def append(self, axis):
+        """Append another map axis to this axis
+
+        Name, interp type and node type must agree between the axes. If the node
+        type is "edges", the edges must be contiguous and non-overlapping.
+
+        Parameters
+        ----------
+        axis : `MapAxis`
+            Axis to append.
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Appended axis
+        """
+        if self.node_type != axis.node_type:
+            raise ValueError(f"Node type must agree, got {self.node_type} and {axis.node_type}")
+
+        if self.name != axis.name:
+            raise ValueError(f"Names must agree, got {self.name} and {axis.name} ")
+
+        if self.interp != axis.interp:
+            raise ValueError(f"Interp type must agree, got {self.interp} and {axis.interp}")
+
+        if self.node_type == "edges":
+            edges = np.append(self.edges, axis.edges[1:])
+            return self.from_edges(edges=edges, interp=self.interp, name=self.name)
+        else:
+            nodes = np.append(self.center, axis.center)
+            return self.from_nodes(nodes=nodes, interp=self.interp, name=self.name)
+
+    @classmethod
+    def from_stack(cls, axes):
+        """Create a map axis by merging a list of other map axes.
+
+        If the node type is "edges" the bin edges in the provided axes must be
+        contiguous and non-overlapping.
+
+        Parameters
+        ----------
+        axes : list of `MapAxis`
+            List of map axis to merge.
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Merged axis
+        """
+        ax_stacked = axes[0]
+
+        for ax in axes[1:]:
+            ax_stacked = ax_stacked.append(ax)
+
+        return ax_stacked
+
     def pix_to_coord(self, pix):
         """Transform from pixel to axis coordinates.
 
