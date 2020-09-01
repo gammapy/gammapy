@@ -290,7 +290,7 @@ class MapAxis:
             nodes = np.array(nodes)
 
         self._unit = u.Unit(unit)
-        self._nodes = nodes
+        self._nodes = nodes.astype(float)
         self._node_type = node_type
         self._interp = interp
 

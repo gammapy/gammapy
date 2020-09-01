@@ -281,7 +281,8 @@ class TSMapEstimator(Estimator):
         slice_y = slice(kernel.shape[1] // 2, -kernel.shape[1] // 2 + 1)
         mask[slice_y, slice_x] = 1
 
-        mask &= dataset.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=False)
+        if dataset.mask is not None:
+            mask &= dataset.mask.reduce_over_axes(func=np.logical_or, keepdims=False)
 
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
