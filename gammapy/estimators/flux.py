@@ -162,7 +162,7 @@ class FluxEstimator(Estimator):
         with np.errstate(invalid="ignore", divide="ignore"):
             result = self.get_reference_flux_values(model.model)
 
-        any_contribution = np.any([dataset.mask.any() for dataset in datasets])
+        any_contribution = np.any([dataset.mask.data.any() for dataset in datasets])
 
         if len(datasets) == 0 or not any_contribution:
             result.update(self.nan_result)

@@ -350,7 +350,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
     dataset_new = MapDataset.read(tmp_path / "test.fits")
     assert len(dataset_new.models) == 1
-    assert dataset_new.mask.dtype == bool
+    assert dataset_new.mask.data.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
     assert_allclose(
@@ -379,7 +379,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     assert stacked1.psf.exposure_map is not None
     assert stacked1.edisp.edisp_map is not None
     assert stacked1.edisp.exposure_map is not None
-    assert stacked.mask.dtype == bool
+    assert stacked.mask.data.dtype == bool
 
     assert_allclose(stacked1.psf.psf_map, stacked.psf.psf_map)
     assert_allclose(stacked1.edisp.edisp_map, stacked.edisp.edisp_map)
@@ -781,7 +781,7 @@ def test_map_dataset_on_off_fits_io(images, tmp_path):
 
     dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits")
     assert len(dataset_new.models) == 0
-    assert dataset_new.mask.dtype == bool
+    assert dataset_new.mask.data.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
     assert_allclose(dataset.counts_off.data, dataset_new.counts_off.data)

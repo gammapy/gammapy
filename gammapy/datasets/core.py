@@ -45,28 +45,21 @@ class Dataset(abc.ABC):
     @property
     def mask(self):
         """Combined fit and safe mask"""
-        mask_safe = (
-            self.mask_safe.data if isinstance(self.mask_safe, Map) else self.mask_safe
-        )
-        mask_fit = (
-            self.mask_fit.data if isinstance(self.mask_fit, Map) else self.mask_fit
-        )
-        if mask_safe is not None and mask_fit is not None:
-            mask = mask_safe & mask_fit
-        elif mask_fit is not None:
-            mask = mask_fit
-        elif mask_safe is not None:
-            mask = mask_safe
-        else:
-            mask = None
-        return mask
+        if self.mask_safe is not None and self.mask_fit is not None:
+            mask = self.mask_safe.data & self.mask_fit.data
+            # TODO: implement boolean operators for Map
+            return Map.from_geom(data=mask, geom=self.mask_safe.geom)
+        elif self.mask_fit is not None:
+            return self.mask_fit
+        elif self.mask_safe is not None:
+            return self.mask_safe
 
     def stat_sum(self):
         """Total statistic given the current model parameters."""
         stat = self.stat_array()
 
         if self.mask is not None:
-            stat = stat[self.mask]
+            stat = stat[self.mask.data]
 
         return np.sum(stat, dtype=np.float64)
 
