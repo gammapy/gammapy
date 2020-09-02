@@ -311,6 +311,27 @@ def test_map_arithmetics(map_type):
     ne_m2 = m2 != 500*u.cm**2
     assert_allclose(ne_m2, True)
 
+
+def test_boolean_arithmetics():
+    m_1 = Map.create(binsz=1, width=2)
+    m_1.data = True
+
+    m_2 = Map.create(binsz=1, width=2)
+    m_2.data = False
+
+    m_and = m_1 & m_2
+    assert not np.any(m_and.data)
+
+    m_or = m_1 | m_2
+    assert np.all(m_or.data)
+
+    m_not = ~m_2
+    assert np.all(m_not.data)
+
+    m_xor = m_1 ^ m_1
+    assert not np.any(m_xor.data)
+
+
 def test_arithmetics_inconsistent_geom():
     m_wcs = Map.create(binsz=0.1, width=1.0)
     m_wcs_incorrect = Map.create(binsz=0.1, width=2.0)

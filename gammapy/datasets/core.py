@@ -3,13 +3,17 @@ import abc
 import collections.abc
 import copy
 import numpy as np
+import logging
 from astropy.table import vstack
 from astropy import units as u
 from gammapy.maps import Map
-from gammapy.modeling.models import Models, ProperModels
+from gammapy.modeling.models import Models, ProperModels, BackgroundModel
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
 from gammapy.data import GTI
+
+
+log = logging.getLogger(__name__)
 
 
 __all__ = ["Dataset", "Datasets"]
@@ -41,28 +45,19 @@ class Dataset(abc.ABC):
     @property
     def mask(self):
         """Combined fit and safe mask"""
-        mask_safe = (
-            self.mask_safe.data if isinstance(self.mask_safe, Map) else self.mask_safe
-        )
-        mask_fit = (
-            self.mask_fit.data if isinstance(self.mask_fit, Map) else self.mask_fit
-        )
-        if mask_safe is not None and mask_fit is not None:
-            mask = mask_safe & mask_fit
-        elif mask_fit is not None:
-            mask = mask_fit
-        elif mask_safe is not None:
-            mask = mask_safe
-        else:
-            mask = None
-        return mask
+        if self.mask_safe is not None and self.mask_fit is not None:
+            return self.mask_safe & self.mask_fit
+        elif self.mask_fit is not None:
+            return self.mask_fit
+        elif self.mask_safe is not None:
+            return self.mask_safe
 
     def stat_sum(self):
         """Total statistic given the current model parameters."""
         stat = self.stat_array()
 
         if self.mask is not None:
-            stat = stat[self.mask]
+            stat = stat[self.mask.data]
 
         return np.sum(stat, dtype=np.float64)
 
@@ -211,6 +206,56 @@ class Datasets(collections.abc.MutableSequence):
 
         return self.__class__(datasets)
 
+    def slice_energy(self, e_min, e_max):
+        """Select and slice datasets in energy range
+
+        Parameters
+        ----------
+        e_min, e_max : `~astropy.units.Quantity`
+            Energy bounds to compute the flux point for.
+
+        Returns
+        -------
+        datasets : Datasets
+            Datasets
+
+        """
+        datasets = []
+
+        for dataset in self:
+            # TODO: implement slice_by_coord() and simplify?
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            try:
+                group = energy_axis.group_table(edges=[e_min, e_max])
+            except ValueError:
+                log.info(f"Dataset {dataset.name} does not contribute in the energy range")
+                continue
+
+            is_normal = group["bin_type"] == "normal   "
+            group = group[is_normal]
+
+            slices = {"energy": slice(
+                int(group["idx_min"][0]),
+                int(group["idx_max"][0]) + 1)
+            }
+
+            name = f"{dataset.name}-{e_min:.3f}-{e_max:.3f}"
+            dataset_sliced = dataset.slice_by_idx(slices, name=name)
+
+            # TODO: Simplify model handling!!!!
+            models = []
+
+            for model in dataset.models:
+                if isinstance(model, BackgroundModel):
+                    models.append(dataset_sliced.background_model)
+                else:
+                    models.append(model)
+
+            dataset_sliced.models = models
+            datasets.append(dataset_sliced)
+
+        return self.__class__(datasets=datasets)
+
     def __str__(self):
         str_ = self.__class__.__name__ + "\n"
         str_ += "--------\n\n"
@@ -221,7 +266,7 @@ class Datasets(collections.abc.MutableSequence):
             str_ += f"\tName       : {dataset.name}\n"
             try:
                 instrument = set(dataset.meta_table["TELESCOP"]).pop()
-            except KeyError:
+            except (KeyError, TypeError):
                 instrument = ""
             str_ += f"\tInstrument : {instrument}\n\n"
 

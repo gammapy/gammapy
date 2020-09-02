@@ -1060,6 +1060,50 @@ class Map(abc.ABC):
         )
         return self._init_copy(geom=geom, data=data)
 
+    @classmethod
+    def from_images(cls, images, axis=None):
+        """Create Map from list of images and a non-spatial axis.
+
+        If the images have a non-spatial axis of length 1 a new axes is generated
+        from by merging the individual axes. The image geometries must be aligned.
+
+        Parameters
+        ----------
+        images : list of `Map` objects
+            Images
+        axis : `MapAxis`
+            Map axis
+
+        Returns
+        -------
+        map : `Map`
+            Map with additional non-spatial axis.
+
+        """
+        geom_ref = images[0].geom.to_image()
+
+        data = []
+
+        for image in images:
+            if not image.geom.to_image() == geom_ref:
+                raise ValueError("Image geometries not aligned")
+            data.append(image.data)
+
+        if axis is None:
+            try:
+                axis = MapAxis.from_stack(
+                    axes=[image.geom.axes[0] for image in images]
+                )
+            except IndexError:
+                ValueError("Images don't have a non-spatial axis. Please provide"
+                           " the axis separately")
+
+        return cls.from_geom(
+            data=np.stack(data),
+            geom=geom_ref.to_cube(axes=[axis]),
+            unit=images[0].unit
+        )
+
     def __repr__(self):
         geom = self.geom.__class__.__name__
         axes = ["skycoord"] if self.geom.is_hpx else ["lon", "lat"]
@@ -1087,6 +1131,23 @@ class Map(abc.ABC):
 
         out = self.copy() if copy else self
         out.quantity = operator(out.quantity, q)
+        return out
+
+    def _boolean_arithmetics(self, operator, other, copy):
+        """Perform arithmetics on maps after checking geometry consistency."""
+        if operator == np.logical_not:
+            out = self.copy()
+            out.data = operator(out.data)
+            return out
+
+        if isinstance(other, Map):
+            if self.geom == other.geom:
+                other = other.data
+            else:
+                raise ValueError("Map Arithmetics: Inconsistent geometries.")
+
+        out = self.copy() if copy else self
+        out.data = operator(out.data, other)
         return out
 
     def __add__(self, other):
@@ -1130,6 +1191,27 @@ class Map(abc.ABC):
 
     def __ne__(self, other):
         return self._arithmetics(np.not_equal, other, copy=True)
+
+    def __and__(self, other):
+        return self._boolean_arithmetics(np.logical_and, other, copy=True)
+
+    def __or__(self, other):
+        return self._boolean_arithmetics(np.logical_or, other, copy=True)
+
+    def __invert__(self):
+        return self._boolean_arithmetics(np.logical_not, None, copy=True)
+
+    def __xor__(self, other):
+        return self._boolean_arithmetics(np.logical_xor, other, copy=True)
+
+    def __iand__(self, other):
+        return self._boolean_arithmetics(np.logical_and, other, copy=False)
+
+    def __ior__(self, other):
+        return self._boolean_arithmetics(np.logical_or, other, copy=False)
+
+    def __ixor__(self, other):
+        return self._boolean_arithmetics(np.logical_xor, other, copy=False)
 
     def __array__(self):
         return self.data

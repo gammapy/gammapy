@@ -9,8 +9,10 @@ from multiprocessing import Pool
 import scipy.optimize
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
-from gammapy.maps import Map, WcsGeom
+from astropy import units as u
+from gammapy.maps import Map, WcsGeom, MapAxis
 from gammapy.datasets.map import MapEvaluator
+from gammapy.datasets import Datasets
 from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
@@ -97,6 +99,11 @@ class TSMapEstimator(Estimator):
             * "ul": estimate upper limits on flux.
 
         By default all steps are executed.
+    e_edges : `~astropy.units.Quantity`
+        Energy edges of the maps bins.
+    sum_over_energy_groups : bool
+        Whether to sum over the energy groups or fit the norm on the full energy
+        cube.
     n_jobs : int
         Number of processes used in parallel for the computation.
 
@@ -131,6 +138,8 @@ class TSMapEstimator(Estimator):
         threshold=None,
         rtol=0.01,
         selection_optional="all",
+        e_edges=None,
+        sum_over_energy_groups=True,
         n_jobs=None,
     ):
         self.kernel_width = Angle(kernel_width)
@@ -149,8 +158,10 @@ class TSMapEstimator(Estimator):
         self.threshold = threshold
         self.rtol = rtol
         self.n_jobs = n_jobs
+        self.sum_over_energy_groups = sum_over_energy_groups
 
         self.selection_optional = selection_optional
+        self.e_edges = e_edges
         self._flux_estimator = BrentqFluxEstimator(
             rtol=self.rtol,
             n_sigma=self.n_sigma,
@@ -158,6 +169,19 @@ class TSMapEstimator(Estimator):
             selection_optional=selection_optional,
             ts_threshold=threshold,
         )
+
+    @property
+    def selection_all(self):
+        """Which quantities are computed"""
+        selection = ["ts", "flux", "niter", "flux_err"]
+
+        if "errn-errp" in self.selection_optional:
+            selection += ["flux_errp", "flux_errn"]
+
+        if "ul" in self.selection_optional:
+            selection += ["flux_ul"]
+
+        return selection
 
     def estimate_kernel(self, dataset):
         """Get the convolution kernel for the input dataset.
@@ -257,7 +281,8 @@ class TSMapEstimator(Estimator):
         slice_y = slice(kernel.shape[1] // 2, -kernel.shape[1] // 2 + 1)
         mask[slice_y, slice_x] = 1
 
-        mask &= dataset.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=False)
+        if dataset.mask is not None:
+            mask &= dataset.mask.reduce_over_axes(func=np.logical_or, keepdims=False)
 
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
@@ -295,35 +320,14 @@ class TSMapEstimator(Estimator):
             sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
         return map_ts.copy(data=sqrt_ts)
 
-    def run(self, dataset):
-        """
-        Run TS map estimation.
-
-        Requires a MapDataset with counts, exposure and background_model
-        properly set to run.
+    def estimate_flux_map(self, dataset):
+        """Estimate flux and ts maps for single dataset
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
-            Input MapDataset.
-
-        Returns
-        -------
-        maps : dict
-             Dictionary containing result maps. Keys are:
-
-                * ts : delta TS map
-                * sqrt_ts : sqrt(delta TS), or significance map
-                * flux : flux map
-                * flux_err : symmetric error map
-                * flux_ul : upper limit map
-
+        dataset : `MapDataset`
+            Map dataset
         """
-        if self.downsampling_factor:
-            shape = dataset.counts.geom.to_image().data_shape
-            pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
-            dataset = dataset.pad(pad_width).downsample(self.downsampling_factor)
-
         # First create 2D map arrays
         counts = dataset.counts
         background = dataset.npred()
@@ -358,40 +362,88 @@ class TSMapEstimator(Estimator):
 
             pool.join()
 
-        names = ["ts", "flux", "niter", "flux_err"]
-
-        if "errn-errp" in self.selection_optional:
-            names += ["flux_errp", "flux_errn"]
-
-        if "ul" in self.selection_optional:
-            names += ["flux_ul"]
-
         result = {}
-
-        geom = counts.geom.to_image()
 
         j, i = zip(*positions)
 
-        for name in names:
+        geom = counts.geom.squash(axis="energy")
+
+        for name in self.selection_all:
             unit = 1 / exposure.unit if "flux" in name else ""
             m = Map.from_geom(geom=geom, data=np.nan, unit=unit)
-            m.data[j, i] = [_[name.replace("flux", "norm")] for _ in results]
+            m.data[0, j, i] = [_[name.replace("flux", "norm")] for _ in results]
             if "flux" in name:
                 m.data *= self._flux_estimator.flux_ref
                 m.quantity = m.quantity.to("1 / (cm2 s)")
             result[name] = m
 
-        result["sqrt_ts"] = self.estimate_sqrt_ts(result["ts"])
+        return result
 
+    def run(self, dataset):
+        """
+        Run TS map estimation.
+
+        Requires a MapDataset with counts, exposure and background_model
+        properly set to run.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            Input MapDataset.
+
+        Returns
+        -------
+        maps : dict
+             Dictionary containing result maps. Keys are:
+
+                * ts : delta TS map
+                * sqrt_ts : sqrt(delta TS), or significance map
+                * flux : flux map
+                * flux_err : symmetric error map
+                * flux_ul : upper limit map
+
+        """
         if self.downsampling_factor:
-            for name in names:
+            shape = dataset.counts.geom.to_image().data_shape
+            pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
+            dataset = dataset.pad(pad_width).downsample(self.downsampling_factor)
+
+        # TODO: add support for joint likelihood fitting to TSMapEstimator
+        datasets = Datasets(dataset)
+
+        if self.e_edges is None:
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
+        else:
+            e_edges = self.e_edges
+
+        results = []
+
+        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
+            dataset = datasets.slice_energy(e_min, e_max)[0]
+
+            if self.sum_over_energy_groups:
+                dataset = dataset.to_image()
+
+            result = self.estimate_flux_map(dataset)
+            results.append(result)
+
+        result_all = {}
+
+        for name in self.selection_all:
+            map_all = Map.from_images(images=[_[name] for _ in results])
+
+            if self.downsampling_factor:
                 order = 0 if name == "niter" else 1
-                result[name] = result[name].upsample(
+                map_all = map_all.upsample(
                     factor=self.downsampling_factor, preserve_counts=False, order=order
                 )
-                result[name] = result[name].crop(crop_width=pad_width)
+                map_all = map_all.crop(crop_width=pad_width)
 
-        return result
+            result_all[name] = map_all
+
+        result_all["sqrt_ts"] = self.estimate_sqrt_ts(result_all["ts"])
+        return result_all
 
 
 # TODO: merge with MapDataset?
@@ -509,16 +561,18 @@ class BrentqFluxEstimator(Estimator):
                     niter = result_fit[1].iterations
                 except (RuntimeError, ValueError):
                     # Where the root finding fails NaN is set as norm
-                    norm, niter = np.nan, self.max_niter
+                    norm, niter = norm_min_total, self.max_niter
 
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
         result["ts"] = (stat_null - stat) * np.sign(norm)
         result["norm"] = norm
         result["niter"] = niter
-        result["norm_err"] = (
-            np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
-        )
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            result["norm_err"] = (
+                np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
+            )
         result["stat"] = stat
         return result
 

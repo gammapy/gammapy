@@ -4,8 +4,8 @@ import numpy as np
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
-from gammapy.datasets import MapDataset, Datasets
-from gammapy.modeling.models import PowerLawSpectralModel, BackgroundModel
+from gammapy.datasets import Datasets
+from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -865,59 +865,6 @@ class FluxPointsEstimator(Estimator):
         #TODO: this should be changed once likelihood is fully supported
         return FluxPoints(table).to_sed_type("dnde")
 
-    @staticmethod
-    def slice_datasets(datasets, e_min, e_max):
-        """Select and slice datasets in energy range
-
-        Parameters
-        ----------
-        datasets : Datasets
-            Datasets
-        e_min, e_max : `~astropy.units.Quantity`
-            Energy bounds to compute the flux point for.
-
-        Returns
-        -------
-        datasets : Datasets
-            Datasets
-
-        """
-        datasets_to_fit = Datasets()
-
-        for dataset in datasets:
-            # TODO: implement slice_by_coord() and simplify?
-            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
-            try:
-                group = energy_axis.group_table(edges=[e_min, e_max])
-            except ValueError:
-                log.info(f"Dataset {dataset.name} does not contribute in the energy range")
-                continue
-
-            is_normal = group["bin_type"] == "normal   "
-            group = group[is_normal]
-
-            slices = {"energy": slice(
-                int(group["idx_min"][0]),
-                int(group["idx_max"][0]) + 1)
-            }
-
-            name = f"{dataset.name}-{e_min:.3f}-{e_max:.3f}"
-            dataset_sliced = dataset.slice_by_idx(slices, name=name)
-
-            # TODO: Simplify model handling!!!!
-            models = []
-
-            for model in dataset.models:
-                if isinstance(model, BackgroundModel):
-                    models.append(dataset_sliced.background_model)
-                else:
-                    models.append(model)
-
-            dataset_sliced.models = models
-            datasets_to_fit.append(dataset_sliced)
-
-        return datasets_to_fit
-
     def estimate_flux_point(self, datasets, e_min, e_max):
         """Estimate flux point for a single energy group.
 
@@ -935,7 +882,7 @@ class FluxPointsEstimator(Estimator):
         """
         result = self.estimate_counts(datasets, e_min=e_min, e_max=e_max)
 
-        datasets = self.slice_datasets(datasets, e_min=e_min, e_max=e_max)
+        datasets = datasets.slice_energy(e_min=e_min, e_max=e_max)
 
         if len(datasets) > 0:
             # TODO: refactor energy handling of FluxEstimator?

@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.ndimage
+from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from gammapy.maps import WcsNDMap
@@ -47,9 +48,9 @@ def find_peaks(image, threshold, min_distance=1):
         The data value or pixel-wise data values to be used for the
         detection threshold.  A 2D ``threshold`` must have the same
         shape as tha map ``data``.
-    min_distance : int
-        Minimum pixel distance between peaks.
-        Smallest possible value and default is 1 pixel.
+    min_distance : int or `~astropy.units.Quantity`
+        Minimum distance between peaks. An integer value is interpreted
+        as pixels.
 
     Returns
     -------
@@ -64,6 +65,10 @@ def find_peaks(image, threshold, min_distance=1):
     if not image.geom.is_image:
         raise ValueError("find_peaks only supports 2D images")
 
+    if isinstance(min_distance, (str, u.Quantity)):
+        min_distance = np.mean(u.Quantity(min_distance) / image.geom.pixel_scales)
+        min_distance = np.round(min_distance).to_value("")
+ 
     size = 2 * min_distance + 1
 
     # Remove non-finite values to avoid warnings or spurious detection
