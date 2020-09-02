@@ -340,13 +340,19 @@ class TSMapEstimator(Estimator):
 
         flux = self.estimate_flux_default(dataset, kernel.data, exposure=exposure)
 
+        energy_axis = counts.geom.get_axis_by_name("energy")
+        flux_ref = self.model.spectral_model.integral(
+            energy_axis.edges[0], energy_axis.edges[-1]
+        )
+        exposure_npred = (exposure * flux_ref).quantity.to_value("")
+
         wrap = functools.partial(
             _ts_value,
             counts=counts.data.astype(float),
-            exposure=exposure.data.astype(float),
+            exposure=exposure_npred.astype(float),
             background=background.data.astype(float),
             kernel=kernel.data,
-            flux=flux.data,
+            norm=(flux.quantity / flux_ref).to_value(""),
             flux_estimator=self._flux_estimator,
         )
 
@@ -373,7 +379,7 @@ class TSMapEstimator(Estimator):
             m = Map.from_geom(geom=geom, data=np.nan, unit=unit)
             m.data[0, j, i] = [_[name.replace("flux", "norm")] for _ in results]
             if "flux" in name:
-                m.data *= self._flux_estimator.flux_ref
+                m.data *= flux_ref.to_value(m.unit)
                 m.quantity = m.quantity.to("1 / (cm2 s)")
             result[name] = m
 
@@ -498,12 +504,12 @@ class SimpleMapDataset:
             ).sum()
 
     @classmethod
-    def from_arrays(cls, counts, background, exposure, flux, position, kernel):
+    def from_arrays(cls, counts, background, exposure, norm, position, kernel):
         """"""
         counts_cutout = _extract_array(counts, kernel.shape, position)
         background_cutout = _extract_array(background, kernel.shape, position)
         exposure_cutout = _extract_array(exposure, kernel.shape, position)
-        norm_guess = flux[position]
+        norm_guess = norm[position]
         return cls(
             counts=counts_cutout,
             background=background_cutout,
@@ -534,7 +540,6 @@ class BrentqFluxEstimator(Estimator):
         self.selection_optional = selection_optional
         self.max_niter = max_niter
         self.ts_threshold = ts_threshold
-        self.flux_ref = 1e-12
 
     def estimate_best_fit(self, dataset):
         """Optimize for a single parameter"""
@@ -562,6 +567,7 @@ class BrentqFluxEstimator(Estimator):
                 except (RuntimeError, ValueError):
                     # Where the root finding fails NaN is set as norm
                     norm, niter = norm_min_total, self.max_niter
+
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
         result["ts"] = (stat_null - stat) * np.sign(norm)
@@ -627,7 +633,7 @@ class BrentqFluxEstimator(Estimator):
         return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
     def estimate_default(self, dataset):
-        norm = dataset.norm_guess / self.flux_ref
+        norm = dataset.norm_guess
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
         ts = (stat_null - stat) * np.sign(norm)
@@ -655,7 +661,7 @@ class BrentqFluxEstimator(Estimator):
         return result
 
 
-def _ts_value(position, counts, exposure, background, kernel, flux, flux_estimator):
+def _ts_value(position, counts, exposure, background, kernel, norm, flux_estimator):
     """Compute TS value at a given pixel position.
 
     Uses approach described in Stewart (2009).
@@ -672,8 +678,8 @@ def _ts_value(position, counts, exposure, background, kernel, flux, flux_estimat
         Exposure image
     kernel : `astropy.convolution.Kernel2D`
         Source model kernel
-    flux : `~numpy.ndarray`
-        Flux image. The flux value at the given pixel position is used as
+    norm : `~numpy.ndarray`
+        Norm image. The flux value at the given pixel position is used as
         starting value for the minimization.
 
     Returns
@@ -685,8 +691,8 @@ def _ts_value(position, counts, exposure, background, kernel, flux, flux_estimat
         counts=counts,
         background=background,
         exposure=exposure,
-        kernel=kernel * flux_estimator.flux_ref,
+        kernel=kernel,
         position=position,
-        flux=flux,
+        norm=norm,
     )
     return flux_estimator.run(dataset)
