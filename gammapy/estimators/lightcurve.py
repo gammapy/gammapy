@@ -279,14 +279,16 @@ class LightCurve:
 
 
 class LightCurveEstimator(Estimator):
-    """Compute light curve.
+    """Estimate light curve.
 
-    The estimator will fit the source model component to datasets in each of the time intervals
-    provided.
+    The estimator will fit the source model component to datasets in each of the
+    provided time intervals.
 
-    If no time intervals are provided, the estimator will use the time intervals defined by the datasets GTIs.
+    If no time intervals are provided, the estimator will use the time intervals
+    defined by the datasets GTIs.
 
-    To be included in the estimation, the dataset must have their GTI fully overlapping a time interval.
+    To be included in the estimation, the dataset must have their GTI fully
+    overlapping a time interval.
 
     Parameters
     ----------
@@ -294,8 +296,8 @@ class LightCurveEstimator(Estimator):
         Start and stop time for each interval to compute the LC
     source : str
         For which source in the model to compute the flux points. Default is 0
-    energy_range : tuple of `~astropy.units.Quantity`
-        Energy range on which to compute the flux. Default is 1-10 TeV
+    e_edges : `~astropy.units.Quantity`
+        Energy edges of the light curve.
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
     norm_min : float
@@ -396,10 +398,7 @@ class LightCurveEstimator(Estimator):
                 continue
 
             row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
-
-            data = self.estimate_time_bin_flux(datasets_to_fit)
-            row.update(data)
-            row.update(self.estimate_counts(datasets_to_fit))
+            row.update(self.estimate_time_bin_flux(datasets_to_fit))
             rows.append(row)
 
         if len(rows) == 0:
@@ -443,19 +442,3 @@ class LightCurveEstimator(Estimator):
         )
         result = fe.run(datasets)
         return table_row_to_dict(result.table[0])
-
-    @staticmethod
-    def estimate_counts(datasets):
-        """Estimate counts for the flux point.
-
-        Returns
-        -------
-        result : dict
-            Dict with an array with one entry per dataset with counts for the flux point.
-        """
-        counts = []
-        for dataset in datasets:
-            mask = dataset.mask
-            counts.append(dataset.counts.data[mask].sum())
-
-        return {"counts": np.array(counts, dtype=int).sum()}

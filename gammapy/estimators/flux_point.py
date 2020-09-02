@@ -786,7 +786,7 @@ class FluxPointsEstimator(Estimator):
         Number of sigma to use for upper limit computation. Default is 2.
     reoptimize : bool
         Re-optimize other free model parameters.
-    selection : list of str
+    selection_optional : list of str
         Which additional quantities to estimate. Available options are:
 
             * "errn-errp": estimate asymmetric errors on flux.
