@@ -4,7 +4,8 @@ import logging
 import numpy as np
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.datasets import MapDataset, MapDatasetOnOff
+import astropy.units as u
+from gammapy.datasets import MapDataset, MapDatasetOnOff, Datasets
 from gammapy.maps import Map
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from .core import Estimator
@@ -84,6 +85,8 @@ class ExcessMapEstimator(Estimator):
             * "ul": estimate upper limits.
 
         By default all additional quantities are estimated.
+    e_edges : `~astropy.units.Quantity`
+        Energy edges of the maps bins.
     apply_mask_fit : Bool
         Apply a mask for the computation.
         A `~gammapy.datasets.MapDataset.mask_fit` must be present on the input dataset
@@ -100,6 +103,7 @@ class ExcessMapEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=3,
         selection_optional="all",
+        e_edges=None,
         apply_mask_fit=False,
         return_image=False,
     ):
@@ -109,6 +113,7 @@ class ExcessMapEstimator(Estimator):
         self.apply_mask_fit = apply_mask_fit
         self.return_image = return_image
         self.selection_optional = selection_optional
+        self.e_edges = e_edges
 
     @property
     def correlation_radius(self):
@@ -146,6 +151,36 @@ class ExcessMapEstimator(Estimator):
         """
         if not isinstance(dataset, MapDataset):
             raise ValueError("Unsupported dataset type")
+
+        # TODO: add support for joint excess estimate to ExcessMapEstimator?
+        datasets = Datasets(dataset)
+
+        if self.e_edges is None:
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
+        else:
+            e_edges = self.e_edges
+
+        results = []
+
+        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
+            dataset = datasets.slice_energy(e_min, e_max)[0]
+
+            result = self.estimate_excess_map(dataset)
+            results.append(result)
+
+        return results
+
+    def estimate_excess_map(self, dataset):
+        """Estimate excess and ts maps for single dataset.
+
+        If exposure is defined, a flux map is also computed.
+
+        Parameters
+        ----------
+        dataset : `MapDataset`
+            Map dataset
+        """
 
         pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
         size = self.correlation_radius.deg / pixel_size
