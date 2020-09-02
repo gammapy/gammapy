@@ -213,16 +213,14 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
 
     assert np.sum(spectrum_dataset.counts.data) == 1
     assert spectrum_dataset.data_shape == (2, 1, 1)
-    assert spectrum_dataset.background.geom.axes[0].nbin == 2
+    assert spectrum_dataset.background_model.map.geom.axes[0].nbin == 2
     assert spectrum_dataset.aeff.geom.axes[0].nbin == 3
     assert spectrum_dataset.aeff.unit == "m2"
     assert spectrum_dataset.edisp.get_edisp_kernel().e_reco.nbin == 2
     assert spectrum_dataset.edisp.get_edisp_kernel().e_true.nbin == 3
     assert spectrum_dataset_corrected.aeff.unit == "m2"
     assert_allclose(spectrum_dataset.aeff.data[1], 853023.423047, rtol=1e-5)
-    assert_allclose(
-        spectrum_dataset_corrected.aeff.data[1], 559476.3357, rtol=1e-5
-    )
+    assert_allclose(spectrum_dataset_corrected.aeff.data[1], 559476.3357, rtol=1e-5)
 
 
 @requires_data()
@@ -389,15 +387,11 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 @requires_dependency("matplotlib")
 @requires_data()
 def test_map_fit(sky_model, geom, geom_etrue):
-    dataset_1 = get_map_dataset(
-        sky_model, geom, geom_etrue, name="test-1"
-    )
+    dataset_1 = get_map_dataset(sky_model, geom, geom_etrue, name="test-1")
     dataset_1.background_model.norm.value = 0.5
     dataset_1.counts = dataset_1.npred()
 
-    dataset_2 = get_map_dataset(
-        sky_model, geom, geom_etrue, name="test-2"
-    )
+    dataset_2 = get_map_dataset(sky_model, geom, geom_etrue, name="test-2")
 
     dataset_2.counts = dataset_2.npred()
 
@@ -599,7 +593,7 @@ def test_stack(sky_model):
         mask_safe=mask1,
         name="dataset-1",
         edisp=edisp,
-        meta_table=Table({"OBS_ID": [0]})
+        meta_table=Table({"OBS_ID": [0]}),
     )
 
     bkg2 = Map.from_geom(geom)
@@ -626,7 +620,7 @@ def test_stack(sky_model):
         mask_safe=mask2,
         name="dataset-2",
         edisp=edisp,
-        meta_table=Table({"OBS_ID": [1]})
+        meta_table=Table({"OBS_ID": [1]}),
     )
 
     dataset1.models.append(sky_model)
@@ -1093,15 +1087,9 @@ def test_slice_by_idx():
     )
 
     geom = WcsGeom.create(
-        skydir=(0, 0),
-        binsz=0.5,
-        width=(2, 2),
-        frame="icrs",
-        axes=[axis],
+        skydir=(0, 0), binsz=0.5, width=(2, 2), frame="icrs", axes=[axis],
     )
-    dataset = MapDataset.create(
-        geom=geom, energy_axis_true=axis_etrue, binsz_irf=0.5
-    )
+    dataset = MapDataset.create(geom=geom, energy_axis_true=axis_etrue, binsz_irf=0.5)
 
     slices = {"energy": slice(5, 10)}
     sub_dataset = dataset.slice_by_idx(slices)
@@ -1131,4 +1119,3 @@ def test_slice_by_idx():
 
     axis = sub_dataset.exposure.geom.get_axis_by_name("energy_true")
     assert_allclose(axis.edges[0].value, 0.210175, rtol=1e-5)
-

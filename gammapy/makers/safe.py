@@ -37,6 +37,7 @@ class SafeMaskMaker(Maker):
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
     """
+
     tag = "SafeMaskMaker"
     available_methods = {
         "aeff-default",
@@ -194,7 +195,7 @@ class SafeMaskMaker(Maker):
         if isinstance(dataset, MapDataset):
             background_spectrum = dataset.background_model.map.get_spectrum()
         else:
-            background_spectrum = dataset.background
+            background_spectrum = dataset.background_model.map
 
         idx = np.argmax(background_spectrum.data, axis=0)
         energy_axis = geom.get_axis_by_name("energy")
