@@ -41,8 +41,6 @@ class SpectrumDataset(Dataset):
         Effective area
     edisp : `~gammapy.irf.EDispKernelMap`
         Energy dispersion kernel.
-    background : `~gammapy.maps.RegionNDMap`
-        Background to use for the fit.
     mask_safe : `~gammapy.maps.RegionNDMap`
         Mask defining the safe data range.
     mask_fit : `~gammapy.maps.RegionNDMap`
@@ -895,12 +893,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         npred = self.npred()
         npred.data = random_state.poisson(npred.data)
 
-        npred_bkg = background_model.copy()
+        npred_bkg = background_model.evaluate().copy()
         npred_bkg.data = random_state.poisson(npred_bkg.data)
 
         self.counts = npred + npred_bkg
 
-        npred_off = background_model / self.alpha
+        npred_off = background_model.evaluate() / self.alpha
         npred_off.data = random_state.poisson(npred_off.data)
         self.counts_off = npred_off
 
