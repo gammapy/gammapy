@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    BackgroundModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -43,6 +44,7 @@ def simulate_spectrum_dataset(model, random_state=0):
     )
 
     dataset = SpectrumDatasetOnOff(
+        name="test_onoff",
         aeff=aeff,
         livetime=100 * u.h,
         acceptance=acceptance,
@@ -53,7 +55,10 @@ def simulate_spectrum_dataset(model, random_state=0):
     bkg_npred = dataset.npred()
 
     dataset.models = model
-    dataset.fake(random_state=random_state, background_model=bkg_npred)
+    dataset.fake(
+        random_state=random_state,
+        background_model=BackgroundModel(bkg_npred, datasets_names="test_onoff"),
+    )
     return dataset
 
 

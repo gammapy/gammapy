@@ -512,6 +512,7 @@ class TestSpectrumOnOff:
         """Test the fake dataset"""
         source_model = SkyModel(spectral_model=PowerLawSpectralModel())
         dataset = SpectrumDatasetOnOff(
+            name="test",
             counts=self.on_counts,
             counts_off=self.off_counts,
             models=source_model,
@@ -525,7 +526,10 @@ class TestSpectrumOnOff:
 
         background = RegionNDMap.from_geom(dataset.counts.geom)
         background.data += 1
-        dataset.fake(background_model=background, random_state=314)
+        background_model = BackgroundModel(
+            background, name="test-bkg", datasets_names="test"
+        )
+        dataset.fake(background_model=background_model, random_state=314)
 
         assert real_dataset.counts.data.shape == dataset.counts.data.shape
         assert real_dataset.counts_off.data.shape == dataset.counts_off.data.shape
