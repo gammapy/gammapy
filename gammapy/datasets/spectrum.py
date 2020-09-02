@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from pathlib import Path
 import numpy as np
+import logging
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
@@ -13,9 +14,12 @@ from gammapy.stats import CashCountsStatistic, WStatCountsStatistic, cash, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
+from gammapy.modeling.models import BackgroundModel
 from .map import MapEvaluator
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
+
+log = logging.getLogger(__name__)
 
 
 class SpectrumDataset(Dataset):
@@ -37,8 +41,6 @@ class SpectrumDataset(Dataset):
         Effective area
     edisp : `~gammapy.irf.EDispKernelMap`
         Energy dispersion kernel.
-    background : `~gammapy.maps.RegionNDMap`
-        Background to use for the fit.
     mask_safe : `~gammapy.maps.RegionNDMap`
         Mask defining the safe data range.
     mask_fit : `~gammapy.maps.RegionNDMap`
@@ -66,7 +68,6 @@ class SpectrumDataset(Dataset):
         livetime=None,
         aeff=None,
         edisp=None,
-        background=None,
         mask_safe=None,
         mask_fit=None,
         name=None,
@@ -86,7 +87,7 @@ class SpectrumDataset(Dataset):
         self.mask_fit = mask_fit
         self.aeff = aeff
         self.edisp = edisp
-        self.background = background
+        self._background_model = None
         self.mask_safe = mask_safe
         self.gti = gti
         self.meta_table = meta_table
@@ -126,16 +127,14 @@ class SpectrumDataset(Dataset):
             str_ += "\t{:32}: {:.2f}\n\n".format("Total off counts", counts_off)
 
         background = np.nan
-        if getattr(self, "background", None) is not None:
-            background = np.sum(self.background.data)
-            str_ += "\t{:32}: {:.2f}\n\n".format("Total background counts", background)
+        if self.background_model is not None:
+            background = np.sum(self.background_model.evaluate().data)
+        str_ += "\t{:32}: {:.2f}\n\n".format("Total background counts", background)
 
         aeff_min, aeff_max, aeff_unit = np.nan, np.nan, ""
         if self.aeff is not None:
             try:
-                aeff_min = np.min(
-                    self.aeff.data[self.aeff.data > 0]
-                )
+                aeff_min = np.min(self.aeff.data[self.aeff.data > 0])
             except ValueError:
                 aeff_min = 0
             aeff_max = np.max(self.aeff.data)
@@ -195,10 +194,7 @@ class SpectrumDataset(Dataset):
 
                 if evaluator is None:
                     evaluator = MapEvaluator(
-                        model=model,
-                        exposure=self.exposure,
-                        edisp=edisp,
-                        gti=self.gti,
+                        model=model, exposure=self.exposure, edisp=edisp, gti=self.gti,
                     )
                     self._evaluators[model] = evaluator
 
@@ -214,13 +210,26 @@ class SpectrumDataset(Dataset):
         """Models (`gammapy.modeling.models.Models`)."""
         return ProperModels(self)
 
+    @property
+    def background_model(self):
+        return self._background_model
+
     @models.setter
     def models(self, models):
         if models is None:
             self._models = None
         else:
             self._models = Models(models)
-        # reset evaluators
+
+        # TODO: clean this up (probably by removing)
+        for model in self.models:
+            if isinstance(model, BackgroundModel):
+                if model.datasets_names is not None:
+                    if self.name in model.datasets_names:
+                        self._background_model = model
+                        break
+        else:
+            log.warning(f"No background model defined for dataset {self.name}")
         self._evaluators = {}
 
     @property
@@ -254,10 +263,12 @@ class SpectrumDataset(Dataset):
         """Main analysis geometry"""
         if self.counts is not None:
             return self.counts.geom
+        elif self.background_model is not None:
+            return self.background_model.map.geom
         elif self.background is not None:
             return self.background.geom
         else:
-            raise ValueError("Either 'counts', 'background' must be defined.")
+            raise ValueError("Either 'counts', 'background_model' must be defined.")
 
     @property
     def data_shape(self):
@@ -270,8 +281,8 @@ class SpectrumDataset(Dataset):
         if self.edisp is not None:
             return self.edisp.get_edisp_kernel()
 
-    def npred_sig(self):
-        """Predicted counts from source model (`RegionNDMap`)."""
+    def npred(self):
+        """Predicted counts from source and background model (`RegionNDMap`)."""
         npred_total = RegionNDMap.from_geom(self._geom)
 
         for evaluator in self.evaluators.values():
@@ -280,23 +291,13 @@ class SpectrumDataset(Dataset):
 
         return npred_total
 
-    def npred(self):
-        """Return npred map (model + background)"""
-        npred = self.npred_sig()
-
-        if self.background:
-            npred += self.background
-
-        return npred
-
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
     @property
     def excess(self):
-        """Excess (counts - alpha * counts_off)"""
-        return self.counts - self.background
+        return self.counts - self.background_model.evaluate()
 
     @property
     def exposure(self):
@@ -386,7 +387,12 @@ class SpectrumDataset(Dataset):
             label="Measured excess",
             yerr=np.sqrt(np.abs(self.excess.data.flatten())),
         )
-        self.npred_sig().plot_hist(ax=ax, label="Predicted excess")
+        if self.background_model:
+            pred_excess = self.npred() - self.background_model.evaluate()
+        elif self.background:
+            pred_excess = self.npred() - self.background
+
+        pred_excess.plot_hist(ax=ax, label="Predicted excess")
 
         ax.legend(numpoints=1)
         ax.set_title("")
@@ -489,8 +495,12 @@ class SpectrumDataset(Dataset):
         if region is None:
             region = "icrs;circle(0, 0, 1)"
 
+        name = make_name(name)
         counts = RegionNDMap.create(region=region, axes=[e_reco])
         background = RegionNDMap.create(region=region, axes=[e_reco])
+        models = Models(
+            [BackgroundModel(background, name=name + "-bkg", datasets_names=[name])]
+        )
         aeff = RegionNDMap.create(region=region, axes=[e_true], unit="cm2")
         edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, counts.geom)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
@@ -502,9 +512,9 @@ class SpectrumDataset(Dataset):
             aeff=aeff,
             edisp=edisp,
             mask_safe=mask_safe,
-            background=background,
             livetime=livetime,
             gti=gti,
+            models=models,
             name=name,
         )
 
@@ -552,9 +562,13 @@ class SpectrumDataset(Dataset):
             self.counts *= self.mask_safe
             self.counts.stack(other.counts, weights=other.mask_safe)
 
-        if self.background is not None and self.stat_type == "cash":
-            self.background *= self.mask_safe
-            self.background.stack(other.background, weights=other.mask_safe)
+        if self.stat_type == "cash":
+            if self.background_model and other.background_model:
+                self._background_model.map *= self.mask_safe
+                self._background_model.stack(other.background_model, other.mask_safe)
+                self.models = Models([self.background_model])
+        else:
+            self.models = None
 
         if self.livetime is None or other.livetime is None:
             raise ValueError("IRF stacking requires livetime for both datasets.")
@@ -594,8 +608,8 @@ class SpectrumDataset(Dataset):
 
         if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
             self.background.plot_hist(ax=ax1, label="alpha * N_off")
-        elif self.background is not None:
-            self.background.plot_hist(ax=ax1, label="background")
+        elif self.background_model is not None:
+            self.background_model.evaluate().plot_hist(ax=ax1, label="background")
 
         self.counts.plot_hist(ax=ax1, label="n_on")
 
@@ -638,10 +652,15 @@ class SpectrumDataset(Dataset):
 
         info["n_on"] = self.counts.data[mask].sum()
 
-        info["background"] = self.background.data[mask].sum()
+        if self.background_model:
+            background = self.background_model.evaluate().data[mask].sum()
+        elif self.background:
+            background = self.background.data[mask].sum()
+
+        info["background"] = background
         info["excess"] = self.excess.data[mask].sum()
         info["significance"] = CashCountsStatistic(
-            self.counts.data[mask].sum(), self.background.data[mask].sum()
+            self.counts.data[mask].sum(), background
         ).significance
 
         info["background_rate"] = info["background"] / info["livetime"]
@@ -678,8 +697,11 @@ class SpectrumDataset(Dataset):
         if self.exposure is not None:
             kwargs["aeff"] = self.aeff.slice_by_idx(slices=slices)
 
-        if self.background is not None:
-            kwargs["background"] = self.background.slice_by_idx(slices=slices)
+        if self.background_model is not None:
+            m = self.background_model.evaluate().slice_by_idx(slices=slices)
+            bkg_model = BackgroundModel(map=m, datasets_names=[name])
+            bkg_model.norm.frozen = True
+            kwargs["models"] = bkg_model
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.slice_by_idx(slices=slices)
@@ -785,6 +807,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self._name = make_name(name)
         self.gti = gti
         self.models = models
+        self._background_model = None
 
         # TODO: this enforces the exposure on the edisp map, maybe better move
         #  to where the EDispKernelMap is created?
@@ -803,12 +826,23 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         str_acc = "\t{:32}: {}\n".format("Acceptance mean:", acceptance)
         str_list.insert(16, str_acc)
         str_ = "\n".join(str_list)
+
+        acceptance_off = np.nan
+        if self.acceptance_off is not None:
+            acceptance_off = np.sum(self.acceptance_off.data)
+        str_ += "\t{:32}: {:.0f} \n".format("Acceptance off", acceptance_off)
+
         return str_.expandtabs(tabsize=2)
 
     @property
     def background(self):
         """"""
         return self.alpha * self.counts_off.data
+
+    @property
+    def excess(self):
+        """counts - bkg"""
+        return self.counts - self.background
 
     @property
     def alpha(self):
@@ -833,7 +867,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
-        mu_sig = self.npred_sig().data
+        mu_sig = self.npred().data
         on_stat_ = wstat(
             n_on=self.counts.data,
             n_off=self.counts_off.data,
@@ -857,15 +891,15 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """
         random_state = get_random_state(random_state)
 
-        npred_sig = self.npred_sig()
-        npred_sig.data = random_state.poisson(npred_sig.data)
+        npred = self.npred()
+        npred.data = random_state.poisson(npred.data)
 
-        npred_bkg = background_model.copy()
+        npred_bkg = background_model.evaluate().copy()
         npred_bkg.data = random_state.poisson(npred_bkg.data)
 
-        self.counts = npred_sig + npred_bkg
+        self.counts = npred + npred_bkg
 
-        npred_off = background_model / self.alpha
+        npred_off = background_model.evaluate() / self.alpha
         npred_off.data = random_state.poisson(npred_off.data)
         self.counts_off = npred_off
 
@@ -1132,7 +1166,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         hdulist.writeto(str(outdir / phafile), overwrite=overwrite)
 
-        self.aeff.write(outdir / arffile, overwrite=overwrite, format=hdu_format, ogip_column="SPECRESP")
+        self.aeff.write(
+            outdir / arffile,
+            overwrite=overwrite,
+            format=hdu_format,
+            ogip_column="SPECRESP",
+        )
 
         if self.counts_off is not None:
             counts_off_table = self.counts_off.to_table()
@@ -1365,9 +1404,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Spectrum dataset on off.
 
         """
-        if counts_off is None and dataset.background is not None:
+        if counts_off is None and dataset.background_model is not None:
             alpha = acceptance / acceptance_off
-            counts_off = dataset.background / alpha
+            counts_off = dataset.background_model.evaluate() / alpha
 
         return cls(
             models=dataset.models,
@@ -1382,7 +1421,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             acceptance_off=acceptance_off,
             gti=dataset.gti,
             name=dataset.name,
-            meta_table=dataset.meta_table
+            meta_table=dataset.meta_table,
         )
 
     def slice_by_idx(self, slices, name=None):

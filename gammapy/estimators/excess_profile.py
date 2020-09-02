@@ -81,7 +81,12 @@ class ExcessProfileEstimator(Estimator):
     _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
-        self, regions, spectrum=None, n_sigma=1.0, n_sigma_ul=3.0, selection_optional="all"
+        self,
+        regions,
+        spectrum=None,
+        n_sigma=1.0,
+        n_sigma_ul=3.0,
+        selection_optional="all",
     ):
         self.regions = regions
         self.n_sigma = n_sigma
@@ -119,13 +124,15 @@ class ExcessProfileEstimator(Estimator):
 
         for idx, region in enumerate(self.regions):
             if isinstance(region, CircleAnnulusSkyRegion):
-                distance = (region.inner_radius + region.outer_radius) / 2.
+                distance = (region.inner_radius + region.outer_radius) / 2.0
             else:
                 distance = center.separation(region.center)
 
             distances.append(distance)
 
-        return MapAxis.from_nodes(u.Quantity(distances, "deg"), name="projected distance")
+        return MapAxis.from_nodes(
+            u.Quantity(distances, "deg"), name="projected distance"
+        )
 
     def make_prof(self, sp_datasets):
         """ Utility to make the profile in each region
@@ -197,7 +204,7 @@ class ExcessProfileEstimator(Estimator):
             if "ul" in self.selection_optional:
                 result["ul"] = stats.compute_upper_limit(self.n_sigma_ul)
 
-            npred = spds.npred_sig().data[mask][:, 0, 0]
+            npred = spds.npred().data[mask][:, 0, 0]
             e_reco_lo = e_reco[:-1]
             e_reco_hi = e_reco[1:]
             flux = (

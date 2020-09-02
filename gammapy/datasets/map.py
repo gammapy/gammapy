@@ -138,14 +138,7 @@ class MapDataset(Dataset):
     mask_fit = LazyFitsData(cache=True)
     mask_safe = LazyFitsData(cache=True)
 
-    _lazy_data_members = [
-        "counts",
-        "exposure",
-        "edisp",
-        "psf",
-        "mask_fit",
-        "mask_safe"
-    ]
+    _lazy_data_members = ["counts", "exposure", "edisp", "psf", "mask_fit", "mask_safe"]
 
     def __init__(
         self,
@@ -299,7 +292,10 @@ class MapDataset(Dataset):
 
                 if evaluator is None:
                     evaluator = MapEvaluator(
-                        model=model, evaluation_mode=EVALUATION_MODE, gti=self.gti, use_cache=USE_NPRED_CACHE
+                        model=model,
+                        evaluation_mode=EVALUATION_MODE,
+                        gti=self.gti,
+                        use_cache=USE_NPRED_CACHE,
                     )
                     self._evaluators[model] = evaluator
 
@@ -552,7 +548,6 @@ class MapDataset(Dataset):
             self.meta_table = hstack_columns(self.meta_table, other.meta_table)
         elif other.meta_table:
             self.meta_table = other.meta_table.copy()
-
 
     @staticmethod
     def _mask_safe_irf(irf_map, mask, drop=None):
@@ -887,28 +882,40 @@ class MapDataset(Dataset):
         path = make_path(filename)
         for hdu_name in ["counts", "exposure", "mask_fit", "mask_safe"]:
             kwargs[hdu_name] = HDULocation(
-                hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name=hdu_name.upper(),
-                cache=cache
+                hdu_class="map",
+                file_dir=path.parent,
+                file_name=path.name,
+                hdu_name=hdu_name.upper(),
+                cache=cache,
             )
 
         kwargs["edisp"] = HDULocation(
-            hdu_class="edisp_kernel_map", file_dir=path.parent, file_name=path.name, hdu_name="EDISP",
-            cache=cache
+            hdu_class="edisp_kernel_map",
+            file_dir=path.parent,
+            file_name=path.name,
+            hdu_name="EDISP",
+            cache=cache,
         )
 
         kwargs["psf"] = HDULocation(
-            hdu_class="psf_map", file_dir=path.parent, file_name=path.name, hdu_name="PSF",
-            cache=cache
+            hdu_class="psf_map",
+            file_dir=path.parent,
+            file_name=path.name,
+            hdu_name="PSF",
+            cache=cache,
         )
 
         hduloc = HDULocation(
-            hdu_class="map", file_dir=path.parent, file_name=path.name, hdu_name="BACKGROUND",
-            cache=cache
+            hdu_class="map",
+            file_dir=path.parent,
+            file_name=path.name,
+            hdu_name="BACKGROUND",
+            cache=cache,
         )
 
-        kwargs["models"] = [BackgroundModel(
-            hduloc, datasets_names=[name], name=name + "-bkg"
-        )]
+        kwargs["models"] = [
+            BackgroundModel(hduloc, datasets_names=[name], name=name + "-bkg")
+        ]
 
         return cls(**kwargs)
 
@@ -1042,6 +1049,7 @@ class MapDataset(Dataset):
         """
         from .spectrum import SpectrumDataset
 
+        name = make_name(name)
         kwargs = {"gti": self.gti, "name": name}
 
         if self.gti is not None:
@@ -1053,12 +1061,15 @@ class MapDataset(Dataset):
             kwargs["counts"] = self.counts.get_spectrum(on_region, np.sum)
 
         if self.background_model is not None:
-            kwargs["background"] = self.background_model.evaluate().get_spectrum(
-                on_region, np.sum
-            )
+            bkg = self.background_model.evaluate().get_spectrum(on_region, np.sum)
+            bkg_model = BackgroundModel(bkg, name=name + "-bkg", datasets_names=[name])
+            bkg_model.norm.frozen = True
+            kwargs["models"] = Models([bkg_model])
 
         if self.exposure is not None:
-            kwargs["aeff"] = self.exposure.get_spectrum(on_region, np.mean) / kwargs["livetime"]
+            kwargs["aeff"] = (
+                self.exposure.get_spectrum(on_region, np.mean) / kwargs["livetime"]
+            )
 
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
@@ -1119,10 +1130,10 @@ class MapDataset(Dataset):
 
         if self.background_model is not None:
             background = self.background_model.evaluate()
-            background = background.sum_over_axes(
-                keepdims=True, weights=self.mask_safe
+            background = background.sum_over_axes(keepdims=True, weights=self.mask_safe)
+            model = BackgroundModel(
+                background, datasets_names=[name], name=f"{name}-bkg"
             )
-            model = BackgroundModel(background, datasets_names=[name], name=f"{name}-bkg")
             kwargs["models"] = [model]
 
         if isinstance(self.edisp, EDispKernelMap):
@@ -1949,7 +1960,7 @@ class MapEvaluator:
         edisp=None,
         gti=None,
         evaluation_mode="local",
-        use_cache=True
+        use_cache=True,
     ):
 
         self.model = model

@@ -6,6 +6,7 @@ from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.estimators import SensitivityEstimator
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable
 from gammapy.maps import MapAxis, RegionNDMap
+from gammapy.modeling.models import BackgroundModel
 
 
 @pytest.fixture()
@@ -21,7 +22,13 @@ def spectrum_dataset():
     )
     aeff = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[e_true], unit="m2")
     aeff.data += 1e6
-    return SpectrumDataset(aeff=aeff, livetime="1h", edisp=edisp, background=background)
+    return SpectrumDataset(
+        name="test",
+        aeff=aeff,
+        livetime="1h",
+        edisp=edisp,
+        models=BackgroundModel(background, name="test-bkg", datasets_names="test"),
+    )
 
 
 def test_cta_sensitivity_estimator(spectrum_dataset):
