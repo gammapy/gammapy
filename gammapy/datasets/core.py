@@ -4,9 +4,8 @@ import collections.abc
 import copy
 import numpy as np
 import logging
-from astropy.table import vstack
+from astropy.table import vstack, Table
 from astropy import units as u
-from gammapy.maps import Map
 from gammapy.modeling.models import Models, ProperModels, BackgroundModel
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
@@ -256,6 +255,29 @@ class Datasets(collections.abc.MutableSequence):
 
         return self.__class__(datasets=datasets)
 
+    @property
+    # TODO: make this a method to support different methods?
+    def energy_ranges(self):
+        """Get global energy range of datasets.
+
+        The energy range is derived as the minimum / maximum of the energy
+        ranges of all datasets.
+
+        Returns
+        -------
+        e_min, e_max : `~astropy.units.Quantity`
+            Energy range.
+        """
+
+        e_mins, e_maxs = [], []
+
+        for dataset in self:
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            e_mins.append(energy_axis.edges[0])
+            e_maxs.append(energy_axis.edges[-1])
+
+        return u.Quantity(e_mins), u.Quantity(e_maxs)
+
     def __str__(self):
         str_ = self.__class__.__name__ + "\n"
         str_ += "--------\n\n"
@@ -414,15 +436,22 @@ class Datasets(collections.abc.MutableSequence):
         time_intervals = []
 
         for dataset in self:
-            interval = (dataset.gti.time_start[0], dataset.gti.time_stop[-1])
-            time_intervals.append(interval)
+            if dataset.gti is not None:
+                interval = (dataset.gti.time_start[0], dataset.gti.time_stop[-1])
+                time_intervals.append(interval)
 
         return GTI.from_time_intervals(time_intervals)
 
     @property
     def meta_table(self):
         """Meta table"""
-        meta_table = vstack([d.meta_table for d in self])
+        tables = [d.meta_table for d in self]
+
+        if np.all([table is None for table in tables]):
+            meta_table = Table()
+        else:
+            meta_table = vstack(tables)
+
         meta_table.add_column([d.tag for d in self], index=0, name="TYPE")
         meta_table.add_column(self.names, index=0, name="NAME")
         return meta_table

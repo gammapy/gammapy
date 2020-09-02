@@ -320,6 +320,7 @@ class SpectrumDataset(Dataset):
         self.counts = npred
 
     @property
+    # TODO: make this a method to support different methods?
     def energy_range(self):
         """Energy range defined by the safe mask"""
         energy = self._energy_axis.edges

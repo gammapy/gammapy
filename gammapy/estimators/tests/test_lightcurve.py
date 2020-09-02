@@ -187,7 +187,7 @@ def test_lightcurve_estimator_spectrum_datasets():
     ]
 
     estimator = LightCurveEstimator(
-        energy_range=[1, 30] * u.TeV, norm_n_values=3, time_intervals=time_intervals
+        e_edges=[1, 30] * u.TeV, norm_n_values=3, time_intervals=time_intervals
     )
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -235,7 +235,7 @@ def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
 
     selection = ["scan"]
     estimator = LightCurveEstimator(
-        energy_range=[1, 30] * u.TeV,
+        e_edges=[1, 30] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=selection,
@@ -254,7 +254,7 @@ def test_lightcurve_estimator_spectrum_datasets_default():
     datasets = get_spectrum_datasets()
     selection = ["scan"]
     estimator = LightCurveEstimator(
-        energy_range=[1, 30] * u.TeV, norm_n_values=3, selection_optional=selection
+        e_edges=[1, 30] * u.TeV, norm_n_values=3, selection_optional=selection
     )
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -273,7 +273,7 @@ def test_lightcurve_estimator_spectrum_datasets_notordered():
         Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]),
     ]
     estimator = LightCurveEstimator(
-        energy_range=[1, 100] * u.TeV,
+        e_edges=[1, 100] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
@@ -291,7 +291,7 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     datasets = get_spectrum_datasets()
     time_intervals = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
     estimator = LightCurveEstimator(
-        energy_range=[1, 30] * u.TeV,
+        e_edges=[1, 30] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
@@ -340,7 +340,7 @@ def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_interval
         Time(["2010-01-01T01:00:00", "2010-01-01T01:05:00"]),
     ]
     estimator = LightCurveEstimator(
-        energy_range=[1, 30] * u.TeV,
+        e_edges=[1, 30] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
@@ -379,7 +379,7 @@ def test_lightcurve_estimator_map_datasets():
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
     ]
     estimator = LightCurveEstimator(
-        energy_range=[1, 100] * u.TeV,
+        e_edges=[1, 100] * u.TeV,
         source="test_source",
         time_intervals=time_intervals,
         selection_optional=["scan"],
@@ -404,7 +404,7 @@ def test_lightcurve_estimator_map_datasets():
 
     time_intervals2 = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
     estimator2 = LightCurveEstimator(
-        energy_range=[1, 100] * u.TeV,
+        e_edges=[1, 100] * u.TeV,
         source="test_source",
         time_intervals=time_intervals2,
         selection_optional=["scan"],
