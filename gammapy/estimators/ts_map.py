@@ -461,11 +461,11 @@ class SimpleMapDataset:
 
     """
 
-    def __init__(self, model, counts, background, x_guess):
+    def __init__(self, model, counts, background, norm_guess):
         self.model = model
         self.counts = counts
         self.background = background
-        self.x_guess = x_guess
+        self.norm_guess = norm_guess
 
     @lazyproperty
     def norm_bounds(self):
@@ -503,12 +503,12 @@ class SimpleMapDataset:
         counts_cutout = _extract_array(counts, kernel.shape, position)
         background_cutout = _extract_array(background, kernel.shape, position)
         exposure_cutout = _extract_array(exposure, kernel.shape, position)
-        x_guess = flux[position]
+        norm_guess = flux[position]
         return cls(
             counts=counts_cutout,
             background=background_cutout,
             model=kernel * exposure_cutout,
-            x_guess=x_guess,
+            norm_guess=norm_guess,
         )
 
 
@@ -562,7 +562,6 @@ class BrentqFluxEstimator(Estimator):
                 except (RuntimeError, ValueError):
                     # Where the root finding fails NaN is set as norm
                     norm, niter = norm_min_total, self.max_niter
-
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
         result["ts"] = (stat_null - stat) * np.sign(norm)
@@ -574,24 +573,6 @@ class BrentqFluxEstimator(Estimator):
                 np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
             )
         result["stat"] = stat
-        return result
-
-    @property
-    def nan_result(self):
-        result = {
-            "norm": np.nan,
-            "stat": np.nan,
-            "norm_err": np.nan,
-            "ts": np.nan,
-            "niter": 0,
-        }
-
-        if "errn-errp" in self.selection_optional:
-            result.update({"norm_errp": np.nan, "norm_errn": np.nan})
-
-        if "ul" in self.selection_optional:
-            result.update({"norm_ul": np.nan})
-
         return result
 
     def _confidence(self, dataset, n_sigma, result, positive):
@@ -645,17 +626,25 @@ class BrentqFluxEstimator(Estimator):
         )
         return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
+    def estimate_default(self, dataset):
+        norm = dataset.norm_guess / self.flux_ref
+        stat = dataset.stat_sum(norm=norm)
+        stat_null = dataset.stat_sum(norm=0)
+        ts = (stat_null - stat) * np.sign(norm)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            norm_err = (
+                    np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
+            )
+        return {"norm": norm, "ts": ts, "norm_err": norm_err, "stat": stat, "niter": 0}
+
     def run(self, dataset):
         """"""
         if self.ts_threshold is not None:
-            flux = dataset.x_guess
-            stat = dataset.stat_sum(norm=flux / self.flux_ref)
-            stat_null = dataset.stat_sum(norm=0)
-            ts = (stat_null - stat) * np.sign(flux)
-            if ts < self.ts_threshold:
-                return self.nan_result
-
-        result = self.estimate_best_fit(dataset)
+            result = self.estimate_default(dataset)
+            if result["ts"] > self.ts_threshold:
+                result = self.estimate_best_fit(dataset)
+        else:
+            result = self.estimate_best_fit(dataset)
 
         if "ul" in self.selection_optional:
             result.update(self.estimate_ul(dataset, result))
