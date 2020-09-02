@@ -1133,6 +1133,23 @@ class Map(abc.ABC):
         out.quantity = operator(out.quantity, q)
         return out
 
+    def _boolean_arithmetics(self, operator, other, copy):
+        """Perform arithmetics on maps after checking geometry consistency."""
+        if operator == np.logical_not:
+            out = self.copy()
+            out.data = operator(out.data)
+            return out
+
+        if isinstance(other, Map):
+            if self.geom == other.geom:
+                other = other.data
+            else:
+                raise ValueError("Map Arithmetics: Inconsistent geometries.")
+
+        out = self.copy() if copy else self
+        out.data = operator(out.data, other)
+        return out
+
     def __add__(self, other):
         return self._arithmetics(np.add, other, copy=True)
 
@@ -1174,6 +1191,27 @@ class Map(abc.ABC):
 
     def __ne__(self, other):
         return self._arithmetics(np.not_equal, other, copy=True)
+
+    def __and__(self, other):
+        return self._boolean_arithmetics(np.logical_and, other, copy=True)
+
+    def __or__(self, other):
+        return self._boolean_arithmetics(np.logical_or, other, copy=True)
+
+    def __invert__(self):
+        return self._boolean_arithmetics(np.logical_not, None, copy=True)
+
+    def __xor__(self, other):
+        return self._boolean_arithmetics(np.logical_xor, other, copy=True)
+
+    def __iand__(self, other):
+        return self._boolean_arithmetics(np.logical_and, other, copy=False)
+
+    def __ior__(self, other):
+        return self._boolean_arithmetics(np.logical_or, other, copy=False)
+
+    def __ixor__(self, other):
+        return self._boolean_arithmetics(np.logical_xor, other, copy=False)
 
     def __array__(self):
         return self.data
