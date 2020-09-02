@@ -329,7 +329,7 @@ class LightCurveEstimator(Estimator):
         self,
         time_intervals=None,
         source=0,
-        energy_range=[1.0, 10.0] * u.TeV,
+        e_edges=None,
         atol="1e-6 s",
         norm_min=0.2,
         norm_max=5,
@@ -345,7 +345,11 @@ class LightCurveEstimator(Estimator):
         self.time_intervals = time_intervals
 
         self.atol = u.Quantity(atol)
-        self.energy_range = energy_range
+
+        if e_edges is not None and len(e_edges) > 2:
+            raise ValueError("So far the LightCurveEstimator only support a single energy bin.")
+
+        self.e_edges = e_edges
 
         self.norm_min = norm_min
         self.norm_max = norm_max
@@ -418,9 +422,15 @@ class LightCurveEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
+        if self.e_edges is None:
+            e_mins, e_maxs = datasets.energy_ranges
+            e_edges = e_mins.min(), e_maxs.max()
+        else:
+            e_edges = self.e_edges
+
         fe = FluxPointsEstimator(
             source=self.source,
-            e_edges=self.energy_range,
+            e_edges=e_edges,
             norm_min=self.norm_min,
             norm_max=self.norm_max,
             norm_n_values=self.norm_n_values,
@@ -431,8 +441,8 @@ class LightCurveEstimator(Estimator):
             selection_optional=self.selection_optional,
 
         )
-        row = fe.run(datasets).table[0]
-        return table_row_to_dict(row)
+        result = fe.run(datasets)
+        return table_row_to_dict(result.table[0])
 
     @staticmethod
     def estimate_counts(datasets):
