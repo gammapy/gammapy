@@ -4,7 +4,8 @@ import logging
 import numpy as np
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.datasets import MapDataset, MapDatasetOnOff
+import astropy.units as u
+from gammapy.datasets import MapDataset, MapDatasetOnOff, Datasets
 from gammapy.maps import Map
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from .core import Estimator
@@ -17,9 +18,7 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-def convolved_map_dataset_counts_statistics(
-    dataset, kernel, apply_mask_fit=False, return_image=False
-):
+def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=False):
     """Return CountsDataset objects containing smoothed maps from the MapDataset"""
     # Kernel is modified later make a copy here
     kernel = copy.deepcopy(kernel)
@@ -34,8 +33,7 @@ def convolved_map_dataset_counts_statistics(
     # fft convolution adds numerical noise, to ensure integer results we call
     # np.rint
     n_on = dataset.counts * mask
-    if return_image:
-        n_on = n_on.sum_over_axes(keepdims=True)
+    n_on = n_on.sum_over_axes(keepdims=True)
     n_on_conv = np.rint(n_on.convolve(kernel.array).data)
 
     if isinstance(dataset, MapDatasetOnOff):
@@ -43,9 +41,8 @@ def convolved_map_dataset_counts_statistics(
         background.data[dataset.acceptance_off.data == 0] = 0.0
         n_off = dataset.counts_off * mask
 
-        if return_image:
-            background = background.sum_over_axes(keepdims=True)
-            n_off = n_off.sum_over_axes(keepdims=True)
+        background = background.sum_over_axes(keepdims=True)
+        n_off = n_off.sum_over_axes(keepdims=True)
 
         background_conv = background.convolve(kernel.array)
         n_off_conv = n_off.convolve(kernel.array)
@@ -56,8 +53,7 @@ def convolved_map_dataset_counts_statistics(
         return WStatCountsStatistic(n_on_conv.data, n_off_conv.data, alpha_conv.data)
     else:
         npred = dataset.npred() * mask
-        if return_image:
-            npred = npred.sum_over_axes(keepdims=True)
+        npred = npred.sum_over_axes(keepdims=True)
         background_conv = npred.convolve(kernel.array)
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
@@ -84,11 +80,11 @@ class ExcessMapEstimator(Estimator):
             * "ul": estimate upper limits.
 
         By default all additional quantities are estimated.
+    e_edges : `~astropy.units.Quantity`
+        Energy edges of the target excess maps bins.
     apply_mask_fit : Bool
         Apply a mask for the computation.
         A `~gammapy.datasets.MapDataset.mask_fit` must be present on the input dataset
-    return_image : Bool
-        Reduce the input dataset to a 2D image and perform the computations.
     """
 
     tag = "ExcessMapEstimator"
@@ -100,6 +96,7 @@ class ExcessMapEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=3,
         selection_optional="all",
+        e_edges=None,
         apply_mask_fit=False,
         return_image=False,
     ):
@@ -107,8 +104,8 @@ class ExcessMapEstimator(Estimator):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.apply_mask_fit = apply_mask_fit
-        self.return_image = return_image
         self.selection_optional = selection_optional
+        self.e_edges = e_edges
 
     @property
     def correlation_radius(self):
@@ -147,18 +144,50 @@ class ExcessMapEstimator(Estimator):
         if not isinstance(dataset, MapDataset):
             raise ValueError("Unsupported dataset type")
 
+        # TODO: add support for joint excess estimate to ExcessMapEstimator?
+        datasets = Datasets(dataset)
+
+        if self.e_edges is None:
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
+        else:
+            e_edges = self.e_edges
+
+        results = []
+
+        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
+            sliced_dataset = datasets.slice_energy(e_min, e_max)[0]
+
+            result = self.estimate_excess_map(sliced_dataset)
+            results.append(result)
+
+        results_all = {}
+
+        for name in results[0].keys():
+            map_all = Map.from_images(images=[_[name] for _ in results])
+            results_all[name] = map_all
+
+        return results_all
+
+    def estimate_excess_map(self, dataset):
+        """Estimate excess and ts maps for single dataset.
+
+        If exposure is defined, a flux map is also computed.
+
+        Parameters
+        ----------
+        dataset : `MapDataset`
+            Map dataset
+        """
+
         pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
         size = self.correlation_radius.deg / pixel_size
         kernel = Tophat2DKernel(size)
 
-        geom = dataset.counts.geom
-
         counts_stat = convolved_map_dataset_counts_statistics(
-            dataset, kernel, self.apply_mask_fit, self.return_image
-        )
+            dataset, kernel, self.apply_mask_fit)
 
-        if self.return_image:
-            geom = dataset.counts.geom.squash("energy")
+        geom = dataset.counts.geom.squash("energy")
 
         n_on = Map.from_geom(geom, data=counts_stat.n_on)
         bkg = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.excess)
@@ -174,7 +203,9 @@ class ExcessMapEstimator(Estimator):
         result.update({"err": err})
 
         if dataset.exposure:
-            flux = excess / estimate_exposure_reco_energy(dataset)
+            reco_exposure = estimate_exposure_reco_energy(dataset)
+            reco_exposure = reco_exposure.sum_over_axes(keepdims=True)
+            flux = excess / reco_exposure
             flux.quantity = flux.quantity.to("1 / (cm2 s)")
         else:
             flux = Map.from_geom(

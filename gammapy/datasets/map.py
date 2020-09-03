@@ -1420,9 +1420,6 @@ class MapDatasetOnOff(MapDataset):
         gti=None,
         meta_table=None,
     ):
-        if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
-            raise ValueError("mask data must have dtype bool")
-
         self.counts = counts
         self.counts_off = counts_off
         self.exposure = exposure
@@ -1915,9 +1912,39 @@ class MapDatasetOnOff(MapDataset):
     def pad(self):
         raise NotImplementedError
 
-    def slice_by_idx(self, slices):
-        raise NotImplementedError
+    def slice_by_idx(self, slices, name=None):
+        """Slice sub dataset.
 
+        The slicing only applies to the maps that define the corresponding axes.
+
+        Parameters
+        ----------
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            corresponding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
+        name : str
+            Name of the sliced dataset.
+
+        Returns
+        -------
+        map_out : `Map`
+            Sliced map object.
+        """
+        kwargs = {"name": name}
+        dataset = super().slice_by_idx(slices,name)
+
+        if self.counts_off is not None:
+            kwargs["counts_off"] = self.counts_off.slice_by_idx(slices=slices)
+
+        if self.acceptance is not None:
+            kwargs["acceptance"] = self.acceptance.slice_by_idx(slices=slices)
+
+        if self.acceptance_off is not None:
+            kwargs["acceptance_off"] = self.acceptance_off.slice_by_idx(slices=slices)
+
+        return self.from_map_dataset(dataset, **kwargs)
 
 class MapEvaluator:
     """Sky model evaluation on maps.
