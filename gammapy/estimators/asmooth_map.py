@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Implementation of adaptive smoothing algorithms."""
 import numpy as np
+from astropy import units as u
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.datasets import MapDatasetOnOff
-from gammapy.maps import WcsNDMap
+from gammapy.datasets import MapDatasetOnOff, Datasets
+from gammapy.maps import WcsNDMap, Map
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
 from gammapy.modeling.models import PowerLawSpectralModel
@@ -52,6 +53,7 @@ class ASmoothMapEstimator(Estimator):
         spectrum=None,
         method="lima",
         threshold=5,
+        e_edges=None,
     ):
         if spectrum is None:
             spectrum = PowerLawSpectralModel()
@@ -65,6 +67,7 @@ class ASmoothMapEstimator(Estimator):
         self.kernel = kernel
         self.threshold = threshold
         self.method = method
+        self.e_edges = e_edges
 
     def selection_all(self):
         """Which quantities are computed"""
@@ -152,40 +155,37 @@ class ASmoothMapEstimator(Estimator):
                 * 'scales'
                 * 'sqrt_ts'.
         """
-        # Check dimensionality
-        if len(dataset.data_shape) == 3:
-            if dataset.data_shape[0] != 1:
-                raise ValueError(
-                    "ASmoothMapEstimator.run() requires a dataset with 1 energy bin at most."
-                )
+        datasets = Datasets([dataset])
 
-        counts = dataset.counts.sum_over_axes(keepdims=False)
-
-        background = dataset.npred()
-        if isinstance(dataset, MapDatasetOnOff):
-            background += dataset.background
-        background = background.sum_over_axes(keepdims=False)
-
-        if dataset.exposure is not None:
-            exposure = estimate_exposure_reco_energy(dataset, self.spectrum)
-            exposure = exposure.sum_over_axes(keepdims=False)
+        if self.e_edges is None:
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
-            exposure = None
+            e_edges = self.e_edges
 
-        return self.estimate_maps(counts, background, exposure)
+        results = []
 
-    def estimate_maps(self, counts, background, exposure=None):
+        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
+            dataset = datasets.slice_energy(e_min, e_max)[0]
+            result = self.estimate_maps(dataset)
+            results.append(result)
+
+        result_all = {}
+
+        for name in result.keys():
+            map_all = Map.from_images(images=[_[name] for _ in results])
+            result_all[name] = map_all
+
+        return result_all
+
+    def estimate_maps(self, dataset):
         """
         Run adaptive smoothing on input Maps.
 
         Parameters
         ----------
-        counts : `~gammapy.maps.Map`
-            counts map
-        background : `~gammapy.maps.Map`
-            estimated background counts map
-        exposure : `~gammapy.maps.Map`
-            exposure map. If set, it will produce a flux smoothed map.
+        dataset : `MapDataset`
+            Dataset
 
         Returns
         -------
@@ -197,21 +197,36 @@ class ASmoothMapEstimator(Estimator):
                 * 'scales'
                 * 'sqrt_ts'.
         """
-        pixel_scale = counts.geom.pixel_scales.mean()
+        dataset = dataset.to_image()
+
+        # extract 2d arrays
+        counts = dataset.counts.data[0].astype(float)
+        background = dataset.npred().data[0]
+
+        # TODO: remove once MapDatasetOnOff.npred() returns the correct thing
+        if isinstance(dataset, MapDatasetOnOff):
+            background += dataset.background
+
+        if dataset.exposure is not None:
+            exposure = estimate_exposure_reco_energy(dataset, self.spectrum)
+        else:
+            exposure = None
+
+        pixel_scale = dataset.counts.geom.pixel_scales.mean()
         kernels = self.get_kernels(pixel_scale)
 
         cubes = {}
-        cubes["counts"] = scale_cube(counts.data.astype(float), kernels)
+        cubes["counts"] = scale_cube(counts, kernels)
 
         if background is not None:
-            cubes["background"] = scale_cube(background.data, kernels)
+            cubes["background"] = scale_cube(background, kernels)
         else:
             # TODO: Estimate background with asmooth method
             raise ValueError("Background estimation required.")
 
         if exposure is not None:
-            flux = (counts - background) / exposure
-            cubes["flux"] = scale_cube(flux.data, kernels)
+            flux = (dataset.counts - background) / exposure
+            cubes["flux"] = scale_cube(flux.data[0], kernels)
 
         cubes["sqrt_ts"] = self._sqrt_ts_cube(cubes, method=self.method)
 
@@ -219,22 +234,23 @@ class ASmoothMapEstimator(Estimator):
 
         result = {}
 
-        for key in ["counts", "background", "scale", "sqrt_ts"]:
-            data = smoothed[key]
+        geom = dataset.counts.geom
 
+        for name, data in smoothed.items():
             # set remaining pixels with sqrt_ts < threshold to mean value
-            if key in ["counts", "background"]:
+            if name in ["counts", "background"]:
                 mask = np.isnan(data)
-                data[mask] = np.mean(locals()[key].data[mask])
-                result[key] = WcsNDMap(counts.geom, data, unit=counts.unit)
+                data[mask] = np.mean(locals()[name][mask])
+                result[name] = WcsNDMap(geom, data, unit="")
             else:
-                result[key] = WcsNDMap(counts.geom, data, unit="deg")
+                unit = "" if name == "scale" else ""
+                result[name] = WcsNDMap(geom, data, unit=unit)
 
         if exposure is not None:
             data = smoothed["flux"]
             mask = np.isnan(data)
-            data[mask] = np.mean(flux.data[mask])
-            result["flux"] = WcsNDMap(counts.geom, data, unit=flux.unit)
+            data[mask] = np.mean(flux.data[0][mask])
+            result["flux"] = WcsNDMap(geom, data, unit=flux.unit)
 
         return result
 
