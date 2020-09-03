@@ -45,7 +45,7 @@ def test_asmooth(input_maps):
         "counts": 6.454327,
         "background": 1.0,
         "scale": 0.056419,
-        "significance": 18.125747,
+        "sqrt_ts": 18.125747,
     }
 
     for name in smoothed:
@@ -79,7 +79,7 @@ def test_asmooth_dataset(input_dataset):
         "counts": 369.479167,
         "background": 0.184005,
         "scale": 0.056419,
-        "significance": 72.971513,
+        "sqrt_ts": 72.971513,
         "flux": 1.237119e-09,
 
     }
@@ -118,4 +118,4 @@ def test_asmooth_map_dataset_on_off():
     smoothed = asmooth.run(dataset)
     assert_allclose(smoothed["counts"].data[25, 25], 2)
     assert_allclose(smoothed["background"].data[25, 25], 1)
-    assert_allclose(smoothed["significance"].data[25, 25], 4.391334)
+    assert_allclose(smoothed["sqrt_ts"].data[25, 25], 4.391334)

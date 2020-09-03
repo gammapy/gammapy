@@ -14,7 +14,7 @@ from .utils import estimate_exposure_reco_energy
 __all__ = ["ASmoothMapEstimator"]
 
 
-def _significance_asmooth(counts, background):
+def _sqrt_ts_asmooth(counts, background):
     """Significance according to formula (5) in asmooth paper."""
     return (counts - background) / np.sqrt(counts + background)
 
@@ -22,12 +22,12 @@ def _significance_asmooth(counts, background):
 class ASmoothMapEstimator(Estimator):
     """Adaptively smooth counts image.
 
-    Achieves a roughly constant significance of features across the whole image.
+    Achieves a roughly constant sqrt_ts of features across the whole image.
 
     Algorithm based on https://ui.adsabs.harvard.edu/abs/2006MNRAS.368...65E
 
     The algorithm was slightly adapted to also allow Li & Ma  to estimate the
-    significance of a feature in the image.
+    sqrt_ts of a feature in the image.
 
     Parameters
     ----------
@@ -90,8 +90,7 @@ class ASmoothMapEstimator(Estimator):
         return sigma_0 * factor ** np.arange(n_scales)
 
     def get_kernels(self, pixel_scale):
-        """
-        Ring kernels according to the specified method.
+        """Get kernels according to the specified method.
 
         Parameters
         ----------
@@ -115,26 +114,24 @@ class ASmoothMapEstimator(Estimator):
         return kernels
 
     @staticmethod
-    def _significance_cube(cubes, method):
+    def _sqrt_ts_cube(cubes, method):
         if method in {"lima"}:
             scube = CashCountsStatistic(
                 cubes["counts"], cubes["background"]
             ).significance
         elif method == "asmooth":
-            scube = _significance_asmooth(cubes["counts"], cubes["background"])
+            scube = _sqrt_ts_asmooth(cubes["counts"], cubes["background"])
         elif method == "ts":
             raise NotImplementedError()
         else:
             raise ValueError(
-                "Not a valid significance estimation method."
+                "Not a valid sqrt_ts estimation method."
                 " Choose one of the following: 'lima' or 'asmooth'"
             )
         return scube
 
     def run(self, dataset):
-        """
-        Run adaptive smoothing on input MapDataset.
-        The latter should have
+        """Run adaptive smoothing on input MapDataset.
 
         Parameters
         ----------
@@ -149,7 +146,7 @@ class ASmoothMapEstimator(Estimator):
                 * 'background'
                 * 'flux' (optional)
                 * 'scales'
-                * 'significance'.
+                * 'sqrt_ts'.
         """
         # Check dimensionality
         if len(dataset.data_shape) == 3:
@@ -194,7 +191,7 @@ class ASmoothMapEstimator(Estimator):
                 * 'background'
                 * 'flux' (optional)
                 * 'scales'
-                * 'significance'.
+                * 'sqrt_ts'.
         """
         pixel_scale = counts.geom.pixel_scales.mean()
         kernels = self.get_kernels(pixel_scale)
@@ -212,16 +209,16 @@ class ASmoothMapEstimator(Estimator):
             flux = (counts - background) / exposure
             cubes["flux"] = scale_cube(flux.data, kernels)
 
-        cubes["significance"] = self._significance_cube(cubes, method=self.method)
+        cubes["sqrt_ts"] = self._sqrt_ts_cube(cubes, method=self.method)
 
         smoothed = self._reduce_cubes(cubes, kernels)
 
         result = {}
 
-        for key in ["counts", "background", "scale", "significance"]:
+        for key in ["counts", "background", "scale", "sqrt_ts"]:
             data = smoothed[key]
 
-            # set remaining pixels with significance < threshold to mean value
+            # set remaining pixels with sqrt_ts < threshold to mean value
             if key in ["counts", "background"]:
                 mask = np.isnan(data)
                 data[mask] = np.mean(locals()[key].data[mask])
@@ -250,7 +247,7 @@ class ASmoothMapEstimator(Estimator):
         smoothed = {}
 
         # Init smoothed data arrays
-        for key in ["counts", "background", "scale", "significance", "flux"]:
+        for key in ["counts", "background", "scale", "sqrt_ts", "flux"]:
             smoothed[key] = np.tile(np.nan, shape)
 
         for idx, scale in enumerate(self.scales):
@@ -258,10 +255,10 @@ class ASmoothMapEstimator(Estimator):
             slice_ = np.s_[:, :, idx]
 
             mask = np.isnan(smoothed["counts"])
-            mask = (cubes["significance"][slice_] > self.threshold) & mask
+            mask = (cubes["sqrt_ts"][slice_] > self.threshold) & mask
 
             smoothed["scale"][mask] = scale
-            smoothed["significance"][mask] = cubes["significance"][slice_][mask]
+            smoothed["sqrt_ts"][mask] = cubes["sqrt_ts"][slice_][mask]
 
             # renormalize smoothed data arrays
             norm = kernels[idx].array.sum()
