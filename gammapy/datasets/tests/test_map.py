@@ -905,7 +905,7 @@ def test_map_dataset_on_off_to_spectrum_dataset(images):
     excess_true = excess_map.get_spectrum(on_region, np.sum).data[0]
 
     excess = spectrum_dataset.excess.data[0]
-    assert_allclose(excess, excess_true, atol=1e-6)
+    assert_allclose(excess, excess_true, rtol=1e-3)
 
     assert spectrum_dataset.name != dataset.name
 
@@ -1052,7 +1052,7 @@ def test_stack_dataset_dataset_on_off():
     dataset_on_off.counts_off += 1
     dataset.stack(dataset_on_off)
 
-    assert_allclose(dataset.background_model.map.data, 0.2)
+    assert_allclose(dataset.background_model.map.data, 0.166667, rtol=1e-3)
 
 
 @requires_data()
@@ -1060,7 +1060,7 @@ def test_info_dict_on_off(images):
     dataset = get_map_dataset_onoff(images)
     info_dict = dataset.info_dict()
     assert_allclose(info_dict["counts"], 4299, rtol=1e-3)
-    assert_allclose(info_dict["excess"], -22.52, rtol=1e-3)
+    assert_allclose(info_dict["excess"], -22.5135, rtol=1e-3)
     assert_allclose(info_dict["aeff_min"].value, 0.0, rtol=1e-3)
     assert_allclose(info_dict["aeff_max"].value, 3.4298378e09, rtol=1e-3)
     assert_allclose(info_dict["npred"], 0.0, rtol=1e-3)
@@ -1076,7 +1076,7 @@ def test_info_dict_on_off(images):
     assert_allclose(info_dict["a_on"], 0.068363324, rtol=1e-4)
     assert_allclose(info_dict["a_off"], 322.83185, rtol=1e-4)
     assert_allclose(info_dict["alpha"], 0.0002117614, rtol=1e-4)
-    assert_allclose(info_dict["excess"], -22.52295, rtol=1e-4)
+    assert_allclose(info_dict["excess"], -22.513524, rtol=1e-4)
     assert_allclose(info_dict["livetime"].value, 3600)
 
 

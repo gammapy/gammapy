@@ -10,7 +10,13 @@ from gammapy.datasets import Dataset
 from gammapy.irf import EDispKernel, EDispKernelMap, EffectiveAreaTable
 from gammapy.maps import RegionGeom, RegionNDMap
 from gammapy.modeling.models import Models, ProperModels
-from gammapy.stats import CashCountsStatistic, WStatCountsStatistic, cash, wstat
+from gammapy.stats import (
+    CashCountsStatistic,
+    WStatCountsStatistic,
+    cash,
+    wstat,
+    get_wstat_mu_bkg,
+)
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
@@ -390,7 +396,7 @@ class SpectrumDataset(Dataset):
         if self.background_model:
             pred_excess = self.npred() - self.background_model.evaluate()
         elif self.background:
-            pred_excess = self.npred() - self.background
+            pred_excess = self.npred()
 
         pred_excess.plot_hist(ax=ax, label="Predicted excess")
 
@@ -607,7 +613,7 @@ class SpectrumDataset(Dataset):
         ax1.set_title("Counts")
 
         if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
-            self.background.plot_hist(ax=ax1, label="alpha * N_off")
+            self.background.plot_hist(ax=ax1, label="background")
         elif self.background_model is not None:
             self.background_model.evaluate().plot_hist(ax=ax1, label="background")
 
@@ -836,12 +842,18 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     @property
     def background(self):
-        """"""
-        return self.alpha * self.counts_off.data
+        """from wstat formula"""
+        mu_bkg = self.alpha.data * get_wstat_mu_bkg(
+            n_on=self.counts.data,
+            n_off=self.counts_off.data,
+            alpha=self.alpha.data,
+            mu_sig=self.npred().data,
+        )
+        return RegionNDMap.from_geom(geom=self._geom, data=mu_bkg)
 
     @property
     def excess(self):
-        """counts - bkg"""
+        """counts - background"""
         return self.counts - self.background
 
     @property

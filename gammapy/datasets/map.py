@@ -19,7 +19,7 @@ from gammapy.modeling.models import (
     ProperModels,
     SkyDiffuseCube,
 )
-from gammapy.stats import cash, cash_sum_cython, wstat
+from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.fits import LazyFitsData, HDULocation
@@ -1478,11 +1478,16 @@ class MapDatasetOnOff(MapDataset):
 
     @property
     def background(self):
-        """Predicted background in the on region.
-
-        Notice that this definition is valid under the assumption of cash statistic.
+        """Background counts in the on region.
         """
-        return self.alpha * self.counts_off
+        mu_bkg = self.alpha.data * get_wstat_mu_bkg(
+            n_on=self.counts.data,
+            n_off=self.counts_off.data,
+            alpha=self.alpha.data,
+            mu_sig=self.npred().data,
+        )
+        mu_bkg = np.nan_to_num(mu_bkg)
+        return Map.from_geom(geom=self._geom, data=mu_bkg)
 
     @property
     def excess(self):
@@ -1900,12 +1905,9 @@ class MapDatasetOnOff(MapDataset):
         if self.acceptance is not None:
             acceptance = self.acceptance * mask_safe
             kwargs["acceptance"] = acceptance.sum_over_axes(keepdims=True)
-
-            background = self.background * mask_safe
-            background = background.sum_over_axes(keepdims=True)
-            kwargs["acceptance_off"] = (
-                kwargs["acceptance"] * kwargs["counts_off"] / background
-            )
+        if self.acceptance_off is not None:
+            acceptance_off = self.acceptance_off * mask_safe
+            kwargs["acceptance_off"] = acceptance_off.sum_over_axes(keepdims=True)
 
         return self.from_map_dataset(dataset, **kwargs)
 
