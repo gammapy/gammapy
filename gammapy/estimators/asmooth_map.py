@@ -66,6 +66,10 @@ class ASmoothMapEstimator(Estimator):
         self.threshold = threshold
         self.method = method
 
+    def selection_all(self):
+        """Which quantities are computed"""
+        return
+
     @staticmethod
     def get_scales(n_scales, factor=np.sqrt(2), kernel=Gaussian2DKernel):
         """Create list of Gaussian widths.
@@ -197,7 +201,7 @@ class ASmoothMapEstimator(Estimator):
         kernels = self.get_kernels(pixel_scale)
 
         cubes = {}
-        cubes["counts"] = scale_cube(counts.data, kernels)
+        cubes["counts"] = scale_cube(counts.data.astype(float), kernels)
 
         if background is not None:
             cubes["background"] = scale_cube(background.data, kernels)
