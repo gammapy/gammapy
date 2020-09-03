@@ -5,9 +5,8 @@ import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from gammapy.datasets import Datasets, MapDatasetOnOff
 from gammapy.estimators import ASmoothMapEstimator
-from gammapy.maps import Map, WcsNDMap
+from gammapy.maps import Map, WcsNDMap, MapAxis
 from gammapy.utils.testing import requires_data
-from gammapy.modeling.models import BackgroundModel
 
 
 @pytest.fixture(scope="session")
@@ -66,8 +65,7 @@ def test_asmooth_dataset(input_dataset):
     with pytest.raises(ValueError):
         asmooth.run(input_dataset)
 
-    img = input_dataset.to_image()
-    smoothed = asmooth.run(img)
+    smoothed = asmooth.run(input_dataset)
 
     assert smoothed["flux"].data.shape == (40, 50)
     assert smoothed["flux"].unit == u.Unit("cm-2s-1")
@@ -97,15 +95,17 @@ def test_asmooth_map_dataset_on_off():
         kernel=kernel, scales=scales, method="lima", threshold=2.5
     )
 
-    counts = WcsNDMap.create(npix=(50, 50), binsz=0.02, unit="")
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+
+    counts = WcsNDMap.create(npix=(50, 50), binsz=0.02, unit="", axes=[axis])
     counts += 2
-    counts_off = WcsNDMap.create(npix=(50, 50), binsz=0.02, unit="")
+    counts_off = WcsNDMap.create(npix=(50, 50), binsz=0.02, unit="", axes=[axis])
     counts_off += 3
 
-    acceptance = WcsNDMap.create(npix=(50, 50), binsz=0.02, unit="")
+    acceptance = WcsNDMap.create(npix=(50, 50), binsz=0.02, unit="", axes=[axis])
     acceptance += 1
 
-    acceptance_off = WcsNDMap.create(npix=(50, 50), binsz=0.02, unit="")
+    acceptance_off = WcsNDMap.create(npix=(50, 50), binsz=0.02, unit="", axes=[axis])
     acceptance_off += 3
 
     dataset = MapDatasetOnOff(

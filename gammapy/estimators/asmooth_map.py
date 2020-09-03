@@ -217,12 +217,7 @@ class ASmoothMapEstimator(Estimator):
 
         cubes = {}
         cubes["counts"] = scale_cube(counts, kernels)
-
-        if background is not None:
-            cubes["background"] = scale_cube(background, kernels)
-        else:
-            # TODO: Estimate background with asmooth method
-            raise ValueError("Background estimation required.")
+        cubes["background"] = scale_cube(background, kernels)
 
         if exposure is not None:
             flux = (dataset.counts - background) / exposure
@@ -284,6 +279,7 @@ class ASmoothMapEstimator(Estimator):
             norm = kernels[idx].array.sum()
             for key in ["counts", "background"]:
                 smoothed[key][mask] = cubes[key][slice_][mask] / norm
+
             if "flux" in cubes:
                 smoothed["flux"][mask] = cubes["flux"][slice_][mask] / norm
 
