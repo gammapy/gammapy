@@ -54,6 +54,7 @@ def test_compute_lima_image():
     background = image_to_cube(background, "1 GeV", "100 GeV")
     background_model = BackgroundModel(background)
     dataset = MapDataset(counts=counts)
+    background_model.datasets_names = [dataset.name]
     dataset.models = background_model
 
     estimator = ExcessMapEstimator("0.1 deg", selection_optional=None)

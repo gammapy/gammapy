@@ -169,7 +169,13 @@ class ExcessMapEstimator(Estimator):
             result = self.estimate_excess_map(dataset)
             results.append(result)
 
-        return results
+        results_all = {}
+
+        for name in results[0].keys():
+            map_all = Map.from_images(images=[_[name] for _ in results])
+            results_all[name] = map_all
+
+        return results_all
 
     def estimate_excess_map(self, dataset):
         """Estimate excess and ts maps for single dataset.

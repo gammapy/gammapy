@@ -1409,9 +1409,6 @@ class MapDatasetOnOff(MapDataset):
         gti=None,
         meta_table=None,
     ):
-        if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
-            raise ValueError("mask data must have dtype bool")
-
         self.counts = counts
         self.counts_off = counts_off
         self.exposure = exposure
