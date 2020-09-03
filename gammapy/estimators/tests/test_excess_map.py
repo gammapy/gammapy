@@ -31,7 +31,7 @@ def simple_dataset():
 
 @pytest.fixture
 def simple_dataset_on_off():
-    axis = MapAxis.from_energy_bounds(0.1, 10, 1, unit="TeV")
+    axis = MapAxis.from_energy_bounds(0.1, 10, 2, unit="TeV")
     geom = WcsGeom.create(npix=20, binsz=0.02, axes=[axis])
     dataset = MapDatasetOnOff.create(geom)
     dataset.mask_safe += np.ones(dataset.data_shape, dtype=bool)
@@ -128,12 +128,13 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     estimator = ExcessMapEstimator(0.11 * u.deg, selection_optional=None)
     result = estimator.run(simple_dataset_on_off)
 
-    assert_allclose(result["counts"].data[0, 10, 10], 194)
-    assert_allclose(result["excess"].data[0, 10, 10], 97)
-    assert_allclose(result["background"].data[0, 10, 10], 97)
-    assert_allclose(result["significance"].data[0, 10, 10], 5.741116, atol=1e-5)
+    assert result["counts"].data.shape == (2, 20, 20)
+    assert_allclose(result["counts"].data[:, 10, 10], 194)
+    assert_allclose(result["excess"].data[:, 10, 10], 97)
+    assert_allclose(result["background"].data[:, 10, 10], 97)
+    assert_allclose(result["significance"].data[:, 10, 10], 5.741116, atol=1e-5)
 
-    estimator_image = ExcessMapEstimator(0.11 * u.deg, return_image=True)
+    estimator_image = ExcessMapEstimator(0.11 * u.deg, return_image=True, e_edges=[0.1*u.TeV, 1*u.TeV])
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
     assert_allclose(result_image["significance"].data[0, 10, 10], 5.741116, atol=1e-3)
@@ -153,7 +154,11 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     )
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
-    assert_allclose(result_image["significance"].data[0, 10, 10], 5.08179, atol=1e-3)
+    assert_allclose(result_image["counts"].data[0, 10, 10], 304)
+    assert_allclose(result_image["excess"].data[0, 10, 10], 152)
+    assert_allclose(result_image["background"].data[0, 10, 10], 152)
+
+    assert_allclose(result_image["significance"].data[0, 10, 10], 7.186745, atol=1e-3)
 
     assert result_image["flux"].unit == u.Unit("cm-2s-1")
     assert_allclose(result_image["flux"].data[0, 10, 10], 7.6e-9, rtol=1e-3)

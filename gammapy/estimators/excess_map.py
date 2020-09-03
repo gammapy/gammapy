@@ -164,9 +164,9 @@ class ExcessMapEstimator(Estimator):
         results = []
 
         for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
-            dataset = datasets.slice_energy(e_min, e_max)[0]
+            sliced_dataset = datasets.slice_energy(e_min, e_max)[0]
 
-            result = self.estimate_excess_map(dataset)
+            result = self.estimate_excess_map(sliced_dataset)
             results.append(result)
 
         results_all = {}
@@ -215,7 +215,10 @@ class ExcessMapEstimator(Estimator):
         result.update({"err": err})
 
         if dataset.exposure:
-            flux = excess / estimate_exposure_reco_energy(dataset)
+            reco_exposure = estimate_exposure_reco_energy(dataset)
+            if self.return_image:
+                reco_exposure = reco_exposure.sum_over_axes(keepdims=True)
+            flux = excess / reco_exposure
             flux.quantity = flux.quantity.to("1 / (cm2 s)")
         else:
             flux = Map.from_geom(
