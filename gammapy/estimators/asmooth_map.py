@@ -238,7 +238,7 @@ class ASmoothMapEstimator(Estimator):
                 data[mask] = np.mean(locals()[name][mask])
                 result[name] = WcsNDMap(geom, data, unit="")
             else:
-                unit = "" if name == "scale" else ""
+                unit = "deg" if name == "scale" else ""
                 result[name] = WcsNDMap(geom, data, unit=unit)
 
         if exposure is not None:
@@ -262,8 +262,11 @@ class ASmoothMapEstimator(Estimator):
         smoothed = {}
 
         # Init smoothed data arrays
-        for key in ["counts", "background", "scale", "sqrt_ts", "flux"]:
+        for key in ["counts", "background", "scale", "sqrt_ts"]:
             smoothed[key] = np.tile(np.nan, shape)
+
+        if "flux" in cubes:
+            smoothed["flux"] = np.tile(np.nan, shape)
 
         for idx, scale in enumerate(self.scales):
             # slice out 2D image at index idx out of cube

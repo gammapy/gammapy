@@ -3,19 +3,25 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
-from gammapy.datasets import Datasets, MapDatasetOnOff
+from gammapy.datasets import Datasets, MapDatasetOnOff, MapDataset
 from gammapy.estimators import ASmoothMapEstimator
 from gammapy.maps import Map, WcsNDMap, MapAxis
 from gammapy.utils.testing import requires_data
+from gammapy.modeling.models import BackgroundModel
 
 
 @pytest.fixture(scope="session")
-def input_maps():
+def input_dataset_simple():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
     filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz"
-    return {
-        "counts": Map.read(filename, hdu="counts"),
-        "background": Map.read(filename, hdu="background"),
-    }
+    bkg_map = Map.read(filename, hdu="background")
+    counts = Map.read(filename, hdu="counts")
+
+    counts = counts.to_cube(axes=[axis])
+    bkg_map = bkg_map.to_cube(axes=[axis])
+    bkg_model = BackgroundModel(bkg_map, datasets_names="test")
+
+    return MapDataset(counts=counts, models=[bkg_model], name="test")
 
 
 @pytest.fixture(scope="session")
@@ -31,14 +37,14 @@ def input_dataset():
 
 
 @requires_data()
-def test_asmooth(input_maps):
+def test_asmooth(input_dataset_simple):
     kernel = Tophat2DKernel
     scales = ASmoothMapEstimator.get_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
 
     asmooth = ASmoothMapEstimator(
         scales=scales, kernel=kernel, method="lima", threshold=2.5
     )
-    smoothed = asmooth.estimate_maps(input_maps["counts"], input_maps["background"])
+    smoothed = asmooth.estimate_maps(input_dataset_simple)
 
     desired = {
         "counts": 6.454327,
@@ -48,7 +54,7 @@ def test_asmooth(input_maps):
     }
 
     for name in smoothed:
-        actual = smoothed[name].data[100, 100]
+        actual = smoothed[name].data[0, 100, 100]
         assert_allclose(actual, desired[name], rtol=1e-5)
 
 
@@ -61,13 +67,9 @@ def test_asmooth_dataset(input_dataset):
         scales=scales, kernel=kernel, method="lima", threshold=2.5
     )
 
-    # First check that is fails if don't use to_image()
-    with pytest.raises(ValueError):
-        asmooth.run(input_dataset)
-
     smoothed = asmooth.run(input_dataset)
 
-    assert smoothed["flux"].data.shape == (40, 50)
+    assert smoothed["flux"].data.shape == (1, 40, 50)
     assert smoothed["flux"].unit == u.Unit("cm-2s-1")
     assert smoothed["counts"].unit == u.Unit("")
     assert smoothed["background"].unit == u.Unit("")
@@ -83,10 +85,11 @@ def test_asmooth_dataset(input_dataset):
     }
 
     for name in smoothed:
-        actual = smoothed[name].data[20, 25]
+        actual = smoothed[name].data[0, 20, 25]
         assert_allclose(actual, desired[name], rtol=1e-2)
 
 
+@pytest.mark.xfail
 def test_asmooth_map_dataset_on_off():
     kernel = Tophat2DKernel
     scales = ASmoothMapEstimator.get_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
