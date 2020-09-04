@@ -846,8 +846,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     @property
     def background(self):
         """from wstat formula"""
+        if self.counts:
+            n_on = self.counts.data
+        else:
+            n_on = self.alpha.data * self.counts_off.data
         mu_bkg = self.alpha.data * get_wstat_mu_bkg(
-            n_on=self.counts.data,
+            n_on=n_on,
             n_off=self.counts_off.data,
             alpha=self.alpha.data,
             mu_sig=self.npred().data,

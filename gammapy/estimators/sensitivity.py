@@ -32,6 +32,7 @@ class SensitivityEstimator(Estimator):
     For a usage example see `cta_sensitivity.html <../tutorials/cta_sensitivity.html>`__
 
     """
+
     tag = "SensitivityEstimator"
 
     def __init__(
@@ -61,7 +62,7 @@ class SensitivityEstimator(Estimator):
         n_off = dataset.counts_off.data
 
         stat = WStatCountsStatistic(
-            n_on=np.ones_like(n_off), n_off=n_off, alpha=dataset.alpha.data
+            n_on=dataset.alpha.data * n_off, n_off=n_off, alpha=dataset.alpha.data
         )
         excess_counts = stat.excess_matching_significance(self.n_sigma)
         is_gamma_limited = excess_counts < self.gamma_min

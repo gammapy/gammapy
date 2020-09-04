@@ -34,30 +34,33 @@ def convolved_map_dataset_counts_statistics(
     # fft convolution adds numerical noise, to ensure integer results we call
     # np.rint
     n_on = dataset.counts * mask
+    npred = dataset.npred() * mask
+
     if return_image:
         n_on = n_on.sum_over_axes(keepdims=True)
+        npred = npred.sum_over_axes(keepdims=True)
     n_on_conv = np.rint(n_on.convolve(kernel.array).data)
 
     if isinstance(dataset, MapDatasetOnOff):
-        background = dataset.background * mask
-        background.data[dataset.acceptance_off.data == 0] = 0.0
         n_off = dataset.counts_off * mask
+        a_on = dataset.acceptance * mask
+        a_off = dataset.acceptance_off * mask
 
         if return_image:
-            background = background.sum_over_axes(keepdims=True)
             n_off = n_off.sum_over_axes(keepdims=True)
+            a_on = a_on.sum_over_axes(keepdims=True)
+            a_off = a_off.sum_over_axes(keepdims=True)
 
-        background_conv = background.convolve(kernel.array)
         n_off_conv = n_off.convolve(kernel.array)
+        mu_sig_conv = npred.convolve(kernel.array)
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            alpha_conv = background_conv / n_off_conv
+            alpha_conv = a_on.convolve(kernel.array) / a_off.convolve(kernel.array)
 
-        return WStatCountsStatistic(n_on_conv.data, n_off_conv.data, alpha_conv.data)
+        return WStatCountsStatistic(
+            n_on_conv.data, n_off_conv.data, alpha_conv.data, mu_sig_conv
+        )
     else:
-        npred = dataset.npred() * mask
-        if return_image:
-            npred = npred.sum_over_axes(keepdims=True)
         background_conv = npred.convolve(kernel.array)
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 

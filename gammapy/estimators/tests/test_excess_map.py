@@ -128,14 +128,18 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     result = estimator.run(simple_dataset_on_off)
 
     assert_allclose(result["counts"].data[0, 10, 10], 194)
-    assert_allclose(result["excess"].data[0, 10, 10], 97)
-    assert_allclose(result["background"].data[0, 10, 10], 97)
-    assert_allclose(result["significance"].data[0, 10, 10], 5.741116, atol=1e-5)
+    assert_allclose(result["excess"].data[0, 10, 10], 48.5)
+    assert_allclose(result["background"].data[0, 10, 10], 145.5)
+    assert_allclose(result["significance"].data[0, 10, 10], 4.967916, atol=1e-5)
 
-    estimator_image = ExcessMapEstimator(0.11 * u.deg, return_image=True)
+    estimator_image = ExcessMapEstimator(
+        0.11 * u.deg, return_image=True, selection_optional=None
+    )
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
-    assert_allclose(result_image["significance"].data[0, 10, 10], 5.741116, atol=1e-3)
+    assert_allclose(
+        result_image["significance"].data[0, 10, 10], 4.967916823, atol=1e-3
+    )
 
     mask_fit = Map.from_geom(
         simple_dataset_on_off._geom,
@@ -145,17 +149,17 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     mask_fit.data[:, 10, :] = False
     simple_dataset_on_off.mask_fit = mask_fit
     estimator_image = ExcessMapEstimator(
-        0.11 * u.deg, apply_mask_fit=True, return_image=True
+        0.11 * u.deg, apply_mask_fit=True, return_image=True, selection_optional=None
     )
     simple_dataset_on_off.exposure.data = (
         np.ones(simple_dataset_on_off.exposure.data.shape) * 1e6
     )
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
-    assert_allclose(result_image["significance"].data[0, 10, 10], 5.08179, atol=1e-3)
+    assert_allclose(result_image["significance"].data[0, 10, 10], 4.397393, atol=1e-3)
 
     assert result_image["flux"].unit == u.Unit("cm-2s-1")
-    assert_allclose(result_image["flux"].data[0, 10, 10], 7.6e-9, rtol=1e-3)
+    assert_allclose(result_image["flux"].data[0, 10, 10], 3.8e-9, rtol=1e-3)
 
 
 def test_incorrect_selection():
