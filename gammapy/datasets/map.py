@@ -587,7 +587,7 @@ class MapDataset(Dataset):
             Residual map.
         """
         npred = self.npred()
-        if self.background:
+        if isinstance(self, MapDatasetOnOff):
             npred += self.background
         return self._compute_residuals(self.counts, npred, method=method)
 
