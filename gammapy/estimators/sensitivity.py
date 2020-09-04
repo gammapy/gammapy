@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.table import Column, Table
+from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
 from .core import Estimator
@@ -67,8 +68,7 @@ class SensitivityEstimator(Estimator):
         excess_counts = stat.excess_matching_significance(self.n_sigma)
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
-        excess = dataset.background.copy()
-        excess.data = excess_counts
+        excess = Map.from_geom(geom=dataset._geom, data=excess_counts)
         return excess
 
     def estimate_min_e2dnde(self, excess, dataset):

@@ -421,9 +421,9 @@ class SpectrumDataset(Dataset):
             Residual spectrum
         """
         npred = self.npred()
-        if self.background:
+        if isinstance(self, SpectrumDatasetOnOff):
             npred += self.background
-        residuals = self._compute_residuals(self.counts, self.npred, method)
+        residuals = self._compute_residuals(self.counts, npred, method)
         return residuals
 
     def plot_residuals(self, method="diff", ax=None, **kwargs):

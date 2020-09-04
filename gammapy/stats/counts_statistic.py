@@ -74,12 +74,15 @@ class CountsStatistic(abc.ABC):
 
         it = np.nditer(errp, flags=["multi_index"])
         while not it.finished:
-            errp[it.multi_index] = brentq(
-                self._stat_fcn,
-                self.excess[it.multi_index],
-                max_range[it.multi_index],
-                args=(self.TS_max[it.multi_index] + n_sigma ** 2, it.multi_index),
-            )
+            try:
+                errp[it.multi_index] = brentq(
+                    self._stat_fcn,
+                    self.excess[it.multi_index],
+                    max_range[it.multi_index],
+                    args=(self.TS_max[it.multi_index] + n_sigma ** 2, it.multi_index),
+                )
+            except ValueError:
+                errp[it.multi_index] = -self.n_on[it.multi_index]
             it.iternext()
 
         return errp - self.excess
@@ -102,14 +105,17 @@ class CountsStatistic(abc.ABC):
         it = np.nditer(ul, flags=["multi_index"])
 
         while not it.finished:
-            TS_ref = self._stat_fcn(min_range[it.multi_index], 0.0, it.multi_index)
+            try:
+                TS_ref = self._stat_fcn(min_range[it.multi_index], 0.0, it.multi_index)
 
-            ul[it.multi_index] = brentq(
-                self._stat_fcn,
-                min_range[it.multi_index],
-                max_range[it.multi_index],
-                args=(TS_ref + n_sigma ** 2, it.multi_index),
-            )
+                ul[it.multi_index] = brentq(
+                    self._stat_fcn,
+                    min_range[it.multi_index],
+                    max_range[it.multi_index],
+                    args=(TS_ref + n_sigma ** 2, it.multi_index),
+                )
+            except ValueError:
+                ul[it.multi_index] = -self.n_on[it.multi_index]
             it.iternext()
 
         return ul
