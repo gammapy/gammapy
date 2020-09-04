@@ -158,11 +158,11 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
 
-    assert_allclose(result_image["significance"].data[0, 10, 10], 4.397393, atol=1e-3)
+    assert_allclose(result_image["significance"].data[0, 10, 10], 6.218852, atol=1e-3)
 
     assert_allclose(result_image["counts"].data[0, 10, 10], 304)
-    assert_allclose(result_image["excess"].data[0, 10, 10], 152)
-    assert_allclose(result_image["background"].data[0, 10, 10], 152)
+    assert_allclose(result_image["excess"].data[0, 10, 10], 76)
+    assert_allclose(result_image["background"].data[0, 10, 10], 228.0)
 
 
     assert result_image["flux"].unit == u.Unit("cm-2s-1")
