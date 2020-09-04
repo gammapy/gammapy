@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Implementation of adaptive smoothing algorithms."""
 import numpy as np
+from astropy import units as u
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.datasets import MapDatasetOnOff
-from gammapy.maps import WcsNDMap
+from gammapy.datasets import MapDatasetOnOff, Datasets
+from gammapy.maps import WcsNDMap, Map
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
 from gammapy.modeling.models import PowerLawSpectralModel
@@ -14,7 +15,7 @@ from .utils import estimate_exposure_reco_energy
 __all__ = ["ASmoothMapEstimator"]
 
 
-def _significance_asmooth(counts, background):
+def _sqrt_ts_asmooth(counts, background):
     """Significance according to formula (5) in asmooth paper."""
     return (counts - background) / np.sqrt(counts + background)
 
@@ -22,12 +23,12 @@ def _significance_asmooth(counts, background):
 class ASmoothMapEstimator(Estimator):
     """Adaptively smooth counts image.
 
-    Achieves a roughly constant significance of features across the whole image.
+    Achieves a roughly constant sqrt_ts of features across the whole image.
 
     Algorithm based on https://ui.adsabs.harvard.edu/abs/2006MNRAS.368...65E
 
     The algorithm was slightly adapted to also allow Li & Ma  to estimate the
-    significance of a feature in the image.
+    sqrt_ts of a feature in the image.
 
     Parameters
     ----------
@@ -52,6 +53,7 @@ class ASmoothMapEstimator(Estimator):
         spectrum=None,
         method="lima",
         threshold=5,
+        e_edges=None,
     ):
         if spectrum is None:
             spectrum = PowerLawSpectralModel()
@@ -65,10 +67,37 @@ class ASmoothMapEstimator(Estimator):
         self.kernel = kernel
         self.threshold = threshold
         self.method = method
+        self.e_edges = e_edges
 
-    def kernels(self, pixel_scale):
+    def selection_all(self):
+        """Which quantities are computed"""
+        return
+
+    @staticmethod
+    def get_scales(n_scales, factor=np.sqrt(2), kernel=Gaussian2DKernel):
+        """Create list of Gaussian widths.
+
+        Parameters
+        ----------
+        n_scales : int
+            Number of scales
+        factor : float
+            Incremental factor
+
+        Returns
+        -------
+        scales : `~numpy.ndarray`
+            Scale array
         """
-        Ring kernels according to the specified method.
+        if kernel == Gaussian2DKernel:
+            sigma_0 = 1.0 / np.sqrt(9 * np.pi)
+        elif kernel == Tophat2DKernel:
+            sigma_0 = 1.0 / np.sqrt(np.pi)
+
+        return sigma_0 * factor ** np.arange(n_scales)
+
+    def get_kernels(self, pixel_scale):
+        """Get kernels according to the specified method.
 
         Parameters
         ----------
@@ -92,26 +121,24 @@ class ASmoothMapEstimator(Estimator):
         return kernels
 
     @staticmethod
-    def _significance_cube(cubes, method):
+    def _sqrt_ts_cube(cubes, method):
         if method in {"lima"}:
             scube = CashCountsStatistic(
                 cubes["counts"], cubes["background"]
             ).significance
         elif method == "asmooth":
-            scube = _significance_asmooth(cubes["counts"], cubes["background"])
+            scube = _sqrt_ts_asmooth(cubes["counts"], cubes["background"])
         elif method == "ts":
             raise NotImplementedError()
         else:
             raise ValueError(
-                "Not a valid significance estimation method."
+                "Not a valid sqrt_ts estimation method."
                 " Choose one of the following: 'lima' or 'asmooth'"
             )
         return scube
 
     def run(self, dataset):
-        """
-        Run adaptive smoothing on input MapDataset.
-        The latter should have
+        """Run adaptive smoothing on input MapDataset.
 
         Parameters
         ----------
@@ -126,42 +153,39 @@ class ASmoothMapEstimator(Estimator):
                 * 'background'
                 * 'flux' (optional)
                 * 'scales'
-                * 'significance'.
+                * 'sqrt_ts'.
         """
-        # Check dimensionality
-        if len(dataset.data_shape) == 3:
-            if dataset.data_shape[0] != 1:
-                raise ValueError(
-                    "ASmoothMapEstimator.run() requires a dataset with 1 energy bin at most."
-                )
+        datasets = Datasets([dataset])
 
-        counts = dataset.counts.sum_over_axes(keepdims=False)
-
-        background = dataset.npred()
-        if isinstance(dataset, MapDatasetOnOff):
-            background += dataset.background
-        background = background.sum_over_axes(keepdims=False)
-
-        if dataset.exposure is not None:
-            exposure = estimate_exposure_reco_energy(dataset, self.spectrum)
-            exposure = exposure.sum_over_axes(keepdims=False)
+        if self.e_edges is None:
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
-            exposure = None
+            e_edges = self.e_edges
 
-        return self.estimate_maps(counts, background, exposure)
+        results = []
 
-    def estimate_maps(self, counts, background, exposure=None):
+        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
+            dataset = datasets.slice_energy(e_min, e_max)[0]
+            result = self.estimate_maps(dataset)
+            results.append(result)
+
+        result_all = {}
+
+        for name in result.keys():
+            map_all = Map.from_images(images=[_[name] for _ in results])
+            result_all[name] = map_all
+
+        return result_all
+
+    def estimate_maps(self, dataset):
         """
         Run adaptive smoothing on input Maps.
 
         Parameters
         ----------
-        counts : `~gammapy.maps.Map`
-            counts map
-        background : `~gammapy.maps.Map`
-            estimated background counts map
-        exposure : `~gammapy.maps.Map`
-            exposure map. If set, it will produce a flux smoothed map.
+        dataset : `MapDataset`
+            Dataset
 
         Returns
         -------
@@ -171,47 +195,57 @@ class ASmoothMapEstimator(Estimator):
                 * 'background'
                 * 'flux' (optional)
                 * 'scales'
-                * 'significance'.
+                * 'sqrt_ts'.
         """
+        dataset = dataset.to_image()
 
-        pixel_scale = counts.geom.pixel_scales.mean()
-        kernels = self.kernels(pixel_scale)
+        # extract 2d arrays
+        counts = dataset.counts.data[0].astype(float)
+        background = dataset.npred().data[0]
+
+        # TODO: remove once MapDatasetOnOff.npred() returns the correct thing
+        if isinstance(dataset, MapDatasetOnOff):
+            background += dataset.background
+
+        if dataset.exposure is not None:
+            exposure = estimate_exposure_reco_energy(dataset, self.spectrum)
+        else:
+            exposure = None
+
+        pixel_scale = dataset.counts.geom.pixel_scales.mean()
+        kernels = self.get_kernels(pixel_scale)
 
         cubes = {}
-        cubes["counts"] = scale_cube(counts.data, kernels)
-
-        if background is not None:
-            cubes["background"] = scale_cube(background.data, kernels)
-        else:
-            # TODO: Estimate background with asmooth method
-            raise ValueError("Background estimation required.")
+        cubes["counts"] = scale_cube(counts, kernels)
+        cubes["background"] = scale_cube(background, kernels)
 
         if exposure is not None:
-            flux = (counts - background) / exposure
-            cubes["flux"] = scale_cube(flux.data, kernels)
+            flux = (dataset.counts - background) / exposure
+            cubes["flux"] = scale_cube(flux.data[0], kernels)
 
-        cubes["significance"] = self._significance_cube(cubes, method=self.method)
+        cubes["sqrt_ts"] = self._sqrt_ts_cube(cubes, method=self.method)
 
         smoothed = self._reduce_cubes(cubes, kernels)
 
         result = {}
 
-        for key in ["counts", "background", "scale", "significance"]:
-            data = smoothed[key]
+        geom = dataset.counts.geom
 
-            # set remaining pixels with significance < threshold to mean value
-            if key in ["counts", "background"]:
+        for name, data in smoothed.items():
+            # set remaining pixels with sqrt_ts < threshold to mean value
+            if name in ["counts", "background"]:
                 mask = np.isnan(data)
-                data[mask] = np.mean(locals()[key].data[mask])
-                result[key] = WcsNDMap(counts.geom, data, unit=counts.unit)
+                data[mask] = np.mean(locals()[name][mask])
+                result[name] = WcsNDMap(geom, data, unit="")
             else:
-                result[key] = WcsNDMap(counts.geom, data, unit="deg")
+                unit = "deg" if name == "scale" else ""
+                result[name] = WcsNDMap(geom, data, unit=unit)
 
         if exposure is not None:
             data = smoothed["flux"]
             mask = np.isnan(data)
-            data[mask] = np.mean(flux.data[mask])
-            result["flux"] = WcsNDMap(counts.geom, data, unit=flux.unit)
+            data[mask] = np.mean(flux.data[0][mask])
+            result["flux"] = WcsNDMap(geom, data, unit=flux.unit)
 
         return result
 
@@ -228,34 +262,28 @@ class ASmoothMapEstimator(Estimator):
         smoothed = {}
 
         # Init smoothed data arrays
-        for key in ["counts", "background", "scale", "significance", "flux"]:
+        for key in ["counts", "background", "scale", "sqrt_ts"]:
             smoothed[key] = np.tile(np.nan, shape)
+
+        if "flux" in cubes:
+            smoothed["flux"] = np.tile(np.nan, shape)
 
         for idx, scale in enumerate(self.scales):
             # slice out 2D image at index idx out of cube
             slice_ = np.s_[:, :, idx]
 
             mask = np.isnan(smoothed["counts"])
-            mask = (cubes["significance"][slice_] > self.threshold) & mask
+            mask = (cubes["sqrt_ts"][slice_] > self.threshold) & mask
 
             smoothed["scale"][mask] = scale
-            smoothed["significance"][mask] = cubes["significance"][slice_][mask]
+            smoothed["sqrt_ts"][mask] = cubes["sqrt_ts"][slice_][mask]
 
             # renormalize smoothed data arrays
             norm = kernels[idx].array.sum()
             for key in ["counts", "background"]:
                 smoothed[key][mask] = cubes[key][slice_][mask] / norm
+
             if "flux" in cubes:
                 smoothed["flux"][mask] = cubes["flux"][slice_][mask] / norm
 
         return smoothed
-
-    @staticmethod
-    def get_scales(n_scales, factor=np.sqrt(2), kernel=Gaussian2DKernel):
-        """Create list of Gaussian widths."""
-        if kernel == Gaussian2DKernel:
-            sigma_0 = 1.0 / np.sqrt(9 * np.pi)
-        elif kernel == Tophat2DKernel:
-            sigma_0 = 1.0 / np.sqrt(np.pi)
-
-        return sigma_0 * factor ** np.arange(n_scales)
