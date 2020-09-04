@@ -586,7 +586,10 @@ class MapDataset(Dataset):
         residuals : `gammapy.maps.WcsNDMap`
             Residual map.
         """
-        return self._compute_residuals(self.counts, self.npred(), method=method)
+        npred = self.npred()
+        if self.background:
+            npred += self.background
+        return self._compute_residuals(self.counts, npred, method=method)
 
     def plot_residuals(
         self,

@@ -420,7 +420,10 @@ class SpectrumDataset(Dataset):
         residuals : `RegionNDMap`
             Residual spectrum
         """
-        residuals = self._compute_residuals(self.counts, self.npred(), method)
+        npred = self.npred()
+        if self.background:
+            npred += self.background
+        residuals = self._compute_residuals(self.counts, self.npred, method)
         return residuals
 
     def plot_residuals(self, method="diff", ax=None, **kwargs):

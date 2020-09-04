@@ -3,7 +3,7 @@ import abc
 import numpy as np
 from scipy.optimize import brentq, newton
 from scipy.stats import chi2
-from .fit_statistics import cash, wstat
+from .fit_statistics import cash, wstat, get_wstat_mu_bkg
 
 __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
@@ -202,16 +202,22 @@ class WStatCountsStatistic(CountsStatistic):
         Measured counts in background only (OFF) region
     alpha : float
         Acceptance ratio of ON and OFF measurements
+    mu_sig : float
+        Expected counts in signal region
     """
 
-    def __init__(self, n_on, n_off, alpha):
+    def __init__(self, n_on, n_off, alpha, mu_sig=0):
         self.n_on = np.asanyarray(n_on)
         self.n_off = np.asanyarray(n_off)
         self.alpha = np.asanyarray(alpha)
+        self.mu_sig = np.asanyarray(mu_sig)
 
     @property
     def background(self):
-        return self.alpha * self.n_off
+        mu_bkg = self.alpha * get_wstat_mu_bkg(
+            n_on=self.n_on, n_off=self.n_off, alpha=self.alpha, mu_sig=self.mu_sig,
+        )
+        return np.nan_to_num(mu_bkg)
 
     @property
     def error(self):
