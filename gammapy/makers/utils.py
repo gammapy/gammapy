@@ -16,6 +16,7 @@ __all__ = [
     "make_edisp_kernel_map",
     "make_psf_map",
     "make_map_exposure_true_energy",
+    "make_map_exposure_from_map",
     "make_theta_squared_table",
 ]
 
@@ -59,7 +60,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
         geom=geom, data=exposure.value.reshape(geom.data_shape), unit=exposure.unit
     )
 
-def make_exposure_from_map(aeff, geom):
+def make_map_exposure_from_map(aeff, geom):
     """Compute exposure map for a given geom from an input
         all-sky map.
 
