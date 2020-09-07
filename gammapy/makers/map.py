@@ -3,7 +3,7 @@ import logging
 from astropy.table import Table
 import astropy.units as u
 from gammapy.datasets import MapDataset
-from gammapy.irf import EnergyDependentMultiGaussPSF
+from gammapy.irf import EnergyDependentMultiGaussPSF,EDispKernelMap
 from gammapy.maps import Map
 from gammapy.modeling.models import BackgroundModel
 from .core import Maker
@@ -14,6 +14,7 @@ from .utils import (
     make_map_exposure_true_energy,
     make_psf_map,
     interpolate_map_IRF,
+    interpolate_edisp_kernel_map,
 )
 
 __all__ = ["MapDatasetMaker"]
@@ -202,14 +203,22 @@ class MapDatasetMaker(Maker):
         edisp : `~gammapy.cube.EDispKernelMap`
             EdispKernel map.
         """
-        exposure = self.make_exposure_irf(geom.squash(axis="energy"), observation)
 
-        return make_edisp_kernel_map(
-            edisp=observation.edisp,
-            pointing=observation.pointing_radec,
-            geom=geom,
-            exposure_map=exposure,
-        )
+        if isinstance(observation.edisp,EDispKernelMap):
+            exposure_map = None
+            return interpolate_edisp_kernel_map(
+                edisp=observation.edisp, 
+                geom=geom, 
+                exposure_map=exposure_map)
+        else:
+            exposure = self.make_exposure_irf(geom.squash(axis="energy"), observation)
+
+            return make_edisp_kernel_map(
+                edisp=observation.edisp,
+                pointing=observation.pointing_radec,
+                geom=geom,
+                exposure_map=exposure,
+            )
 
     def make_psf(self, geom, observation):
         """Make psf map.
