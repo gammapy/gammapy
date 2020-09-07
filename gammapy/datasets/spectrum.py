@@ -14,6 +14,7 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from .map import MapEvaluator
+from .utils import get_figure, get_axes
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
 
@@ -334,24 +335,52 @@ class SpectrumDataset(Dataset):
 
         return u.Quantity([e_min.min(), e_max.max()])
 
-    def plot_fit(self):
-        """Plot counts and residuals in two panels.
+    def plot_fit(self, fig=None, fig_kwargs=None, ax_kwargs=None, method="diff", **kwargs):
+        """Plot spectrum and residuals in two panels.
 
-        Calls ``plot_counts`` and ``plot_residuals``.
+        Calls `~SpectrumDataset.plot_excess` and `~SpectrumDataset.plot_residuals`.
+
+        Parameters
+        ----------
+        fig : `~matplotlib.figure.Figure`
+            Figure to add AxesSubplot on. Overrides ``fig_kwargs``.
+        fig_kwargs: dict
+            Keyword arguments passed to `~matplotlib.pyplot.figure`.
+        ax_kwargs : dict
+            Keyword arguments passed to `~matplotlib.axes.Axes`.
+        method : {"diff", "diff/model", "diff/sqrt(model)"}
+            Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
+        **kwargs : dict
+            Keyword arguments passed to `gammapy.maps.RegionNDMap.plot`.
+
+        Returns
+        -------
+        fig : `~matplotlib.figure.Figure`
+            Figure object.
+        ax_spectrum, ax_residuals : `~matplotlib.axes.AxesSubplot`
+            Spectrum and residuals subplots.
         """
         from matplotlib.gridspec import GridSpec
-        import matplotlib.pyplot as plt
+
+        fig_kwargs = fig_kwargs or {}
+        fig_kwargs.setdefault("figsize", (7, 7))
+        fig = get_figure(None, fig, fig_kwargs)
+        fig.clf()
+        ax_kwargs = ax_kwargs or {}
 
         gs = GridSpec(7, 1)
+        ax_spectrum = fig.add_subplot(gs[:5, :], **ax_kwargs)
+        self.plot_excess(ax_spectrum)
 
-        ax_spectrum = plt.subplot(gs[:5, :])
-        self.plot_counts(ax=ax_spectrum)
+        ax_spectrum.label_outer()
 
-        ax_spectrum.set_xticks([] * u.TeV)
+        ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum, **ax_kwargs)
+        self.plot_residuals(ax_residuals, method=method, **kwargs)
 
-        ax_residuals = plt.subplot(gs[5:, :])
-        self.plot_residuals(ax=ax_residuals)
-        return ax_spectrum, ax_residuals
+        label = self._residuals_labels[method]
+        ax_residuals.set_ylabel(f"Residuals\n{label}")
+
+        return fig, (ax_spectrum, ax_residuals)
 
     @property
     def _e_unit(self):
@@ -363,33 +392,79 @@ class SpectrumDataset(Dataset):
         ax.axvline(e_min.to_value(self._e_unit), label="fit range", **kwargs)
         ax.axvline(e_max.to_value(self._e_unit), **kwargs)
 
-    def plot_counts(self, ax=None):
-        """Plot predicted and detected counts.
+    def plot_counts(self, ax=None, fig=None, ax_kwargs=None, fig_kwargs=None):
+        """Plot counts and background.
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes object.
+        ax : `~matplotlib.axes.Axes`
+            Axes to plot on. Overrides other parameters.
+        fig : `~matplotlib.figure.Figure`
+            Figure to add AxesSubplot on or get Axes from. Overrides ``fig_kwargs``.
+        ax_kwargs : dict
+            Keyword arguments passed to `~matplotlib.axes.Axes`.
+        fig_kwargs: dict
+            Keyword arguments passed to `~matplotlib.pyplot.figure`.
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axes`
+        fig : `~matplotlib.figure.Figure`
+            Figure of the Axes object.
+        ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        import matplotlib.pyplot as plt
+        ax, fig = get_axes(ax, fig, ax_kwargs, fig_kwargs)
+        ax.cla()
 
-        ax = plt.gca() if ax is None else ax
-        self._plot_energy_range(ax=ax)
+        self.counts.plot_hist(ax, label="n_on")
+
+        if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
+            self.background.plot_hist(ax, label="alpha * n_off")
+        elif self.background is not None:
+            self.background.plot_hist(ax, label="background")
+
+        self._plot_energy_range(ax)
+        e_min, e_max = self.energy_range
+        e_unit = self._e_unit
+        ax.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
+
+        ax.legend(numpoints=1)
+        return fig, ax
+
+    def plot_excess(self, ax=None, fig=None, ax_kwargs=None, fig_kwargs=None):
+        """Plot measured and predicted excess.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`
+            Axes to plot on. Overrides other parameters.
+        fig : `~matplotlib.figure.Figure`
+            Figure to add AxesSubplot on or get Axes from. Overrides ``fig_kwargs``.
+        ax_kwargs : dict
+            Keyword arguments passed to `~matplotlib.axes.Axes`.
+        fig_kwargs: dict
+            Keyword arguments passed to `~matplotlib.pyplot.figure`.
+
+        Returns
+        -------
+        fig : `~matplotlib.figure.Figure`
+            Figure of the Axes object.
+        ax : `~matplotlib.axes.Axes`
+            Axes object.
+        """
+        ax, fig = get_axes(ax, fig, ax_kwargs, fig_kwargs)
+        ax.cla()
+
         self.excess.plot(
             ax=ax,
             label="Measured excess",
             yerr=np.sqrt(np.abs(self.excess.data.flatten())),
         )
-        self.npred_sig().plot_hist(ax=ax, label="Predicted excess")
+        self.npred_sig().plot_hist(ax, label="Predicted excess")
+        self._plot_energy_range(ax)
 
         ax.legend(numpoints=1)
-        ax.set_title("")
-        return ax
+        return fig, ax
 
     def residuals(self, method="diff"):
         """Compute the spectral residuals.
@@ -410,45 +485,53 @@ class SpectrumDataset(Dataset):
         residuals = self._compute_residuals(self.counts, self.npred(), method)
         return residuals
 
-    def plot_residuals(self, method="diff", ax=None, **kwargs):
+    def plot_residuals(
+        self, ax=None, fig=None, ax_kwargs=None, fig_kwargs=None, method="diff", **kwargs
+    ):
         """Plot residuals.
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes object.
+        ax : `~matplotlib.axes.Axes`
+            Axes to plot on. Overrides the next three parameters.
+        fig : `~matplotlib.figure.Figure`
+            Figure to add AxesSubplot on or get Axes from. Overrides ``fig_kwargs``.
+        ax_kwargs : dict
+            Keyword arguments passed to `~matplotlib.axes.Axes`.
+        fig_kwargs: dict
+            Keyword arguments passed to `~matplotlib.pyplot.figure`.
         method : {"diff", "diff/model", "diff/sqrt(model)"}
-            Normalization used to compute the residuals, see `SpectrumDataset.residuals()`
+            Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
         **kwargs : dict
-            Keywords passed to `RegionNDMap.plot()`
+            Keyword arguments passed to `gammapy.maps.RegionNDMap.plot`.
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axes`
+        fig : `~matplotlib.figure.Figure`
+            Figure of the Axes object.
+        ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        import matplotlib.pyplot as plt
+        ax, fig = get_axes(ax, fig, ax_kwargs, fig_kwargs)
+        ax.cla()
 
-        ax = plt.gca() if ax is None else ax
-
-        residuals = self.residuals(method=method)
-        label = self._residuals_labels[method]
-
+        residuals = self.residuals(method)
         if method == "diff":
             yerr = np.sqrt((self.counts.data + self.npred().data).flatten())
         else:
             yerr = np.ones_like(residuals.data.flatten())
-        residuals.plot(ax=ax, color="black", yerr=yerr, **kwargs)
-        ax.axhline(0, color="black", lw=0.5)
 
-        ax.set_xlabel(f"Energy [{self._e_unit}]")
+        kwargs.setdefault("color", kwargs.pop("c", "black"))
+        residuals.plot(ax, yerr=yerr, **kwargs)
+        ax.axhline(0, color=kwargs["color"], lw=0.5)
+
+        label = self._residuals_labels[method]
         ax.set_ylabel(f"Residuals ({label})")
         ax.set_yscale("linear")
-
-        ymax = 1.05 * np.nanmax(residuals.data + yerr.data)
-        ymin = 1.05 * np.nanmin(residuals.data - yerr.data)
+        ymin = 1.05 * np.nanmin(residuals.data - yerr)
+        ymax = 1.05 * np.nanmax(residuals.data + yerr)
         ax.set_ylim(ymin, ymax)
-        return ax
+        return fig, ax
 
     @classmethod
     def create(
@@ -581,40 +664,50 @@ class SpectrumDataset(Dataset):
         elif other.meta_table:
             self.meta_table = other.meta_table.copy()
 
-    def peek(self, figsize=(16, 4)):
-        """Quick-look summary plots."""
-        import matplotlib.pyplot as plt
+    def peek(self, fig=None, fig_kwargs=None, ax_kwargs=None):
+        """Quick-look summary plots.
 
-        e_min, e_max = self.energy_range
+        Parameters
+        ----------
+        fig : `~matplotlib.figure.Figure`
+            Figure to add AxesSubplot on. Overrides ``fig_kwargs``.
+        fig_kwargs: dict
+            Keyword arguments passed to `~matplotlib.pyplot.figure`.
+        ax_kwargs : dict
+            Keyword arguments passed to `~matplotlib.axes.Axes`.
 
-        _, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=figsize)
+        Returns
+        -------
+        fig : `~matplotlib.figure.Figure`
+            Figure object.
+        ax1, ax2, ax3 : `~matplotlib.axes.AxesSubplot`
+            Counts, effective area and energy dispersion subplots.
+        """
+        fig_kwargs = fig_kwargs or {}
+        fig_kwargs.setdefault("figsize", (16, 4))
+        fig = get_figure(None, fig, fig_kwargs)
+        fig.clf()
 
+        ax_kwargs = ax_kwargs or {}
+        ax1, ax2, ax3 = fig.subplots(1, 3, **ax_kwargs)
+
+        self.plot_counts(ax1)
         ax1.set_title("Counts")
 
-        if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
-            self.background.plot_hist(ax=ax1, label="alpha * N_off")
-        elif self.background is not None:
-            self.background.plot_hist(ax=ax1, label="background")
-
-        self.counts.plot_hist(ax=ax1, label="n_on")
-
-        e_unit = e_min.unit
-        ax1.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
-        self._plot_energy_range(ax=ax1)
-        ax1.legend(numpoints=1)
-
+        self.aeff.plot(ax2)
+        self._plot_energy_range(ax2)
         ax2.set_title("Effective Area")
+        e_min, e_max = self.energy_range
         e_unit = self.aeff.geom.axes[0].unit
-        self.aeff.plot(ax=ax2)
         ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
-        self._plot_energy_range(ax=ax2)
 
-        ax3.set_title("Energy Dispersion")
         if self.edisp is not None:
-            self._edisp_kernel.plot_matrix(ax=ax3)
+            self._edisp_kernel.plot_matrix(ax3)
+        ax3.set_title("Energy Dispersion")
 
         # TODO: optimize layout
-        plt.subplots_adjust(wspace=0.3)
+        fig.subplots_adjust(wspace=0.3)
+        return fig, (ax1, ax2, ax3)
 
     def info_dict(self, in_safe_energy_range=True):
         """Info dict with summary statistics, summed over energy
