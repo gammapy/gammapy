@@ -311,6 +311,34 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     edispmap = Map.from_geom(geom, data=data, unit="")
     return EDispMap(edispmap, exposure_map)
 
+def interpolate_edisp_kernel_map(edisp, geom, exposure_map=None):
+    """Interpolate an all-sky edisp kernel map to the analysis geometry.
+
+    Expected axes : (reco) energy and true energy in this specific order
+    The name of the reco energy MapAxis is expected to be 'energy'.
+    The name of the true energy MapAxis is expected to be 'energy_true'.
+
+    Parameters
+    ----------
+    edisp :  `~gammapy.cube.EDispKernelMap`
+        the inpurt EDispKernelMap
+    geom : `~gammapy.maps.Geom`
+        the map geom to be used. It provides the target geometry.
+        energy and true energy axes should be given in this specific order.
+    exposure_map : `~gammapy.maps.Map`, optional
+        the associated exposure map.
+        default is None
+
+    Returns
+    -------
+    edispmap : `~gammapy.cube.EDispKernelMap`
+        the resulting EDispKernel map
+    """    
+    coords = geom.get_coord()
+    edispmap = EDispKernelMap.from_geom(geom)
+    edispmap.edisp_map.data = edisp.edisp_map.interp_by_coord(coords)
+    return edispmap
+
 
 def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
     """Make a edisp kernel map for a single observation
