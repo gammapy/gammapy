@@ -12,7 +12,6 @@ from .utils import (
     make_edisp_kernel_map,
     make_map_background_irf,
     make_map_exposure_true_energy,
-    make_map_exposure_from_map,
     make_psf_map,
     interpolate_map_IRF,
 )
