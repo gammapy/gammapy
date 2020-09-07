@@ -701,8 +701,8 @@ class MapDataset(Dataset):
             label = self._residuals_labels[method]
             ax_spec.set_ylabel(f"Residuals ({label})")
             ax_spec.set_yscale("linear")
-            ymin = 1.05 * np.nanmin(residuals.data - yerr.data)
-            ymax = 1.05 * np.nanmax(residuals.data + yerr.data)
+            ymin = 1.05 * np.nanmin(residuals.data - yerr)
+            ymax = 1.05 * np.nanmax(residuals.data + yerr)
             ax_spec.set_ylim(ymin, ymax)
 
             # Overlay spectral extraction region on the spatial residuals
