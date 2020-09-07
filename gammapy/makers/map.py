@@ -14,6 +14,7 @@ from .utils import (
     make_map_exposure_true_energy,
     make_map_exposure_from_map,
     make_psf_map,
+    interpolate_map_IRF,
 )
 
 __all__ = ["MapDatasetMaker"]
@@ -87,7 +88,7 @@ class MapDatasetMaker(Maker):
             Exposure map.
         """
         if isinstance(observation.aeff, Map):
-            return make_map_exposure_from_map(
+            return interpolate_map_IRF(
                 aeff=observation.aeff,
                 geom=geom,
             )
