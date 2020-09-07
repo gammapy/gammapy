@@ -19,6 +19,7 @@ __all__ = [
     "make_map_exposure_from_map",
     "make_theta_squared_table",
     "interpolate_map_IRF",
+    "interpolate_edisp_kernel_map",
 ]
 
 
