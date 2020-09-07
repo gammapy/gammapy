@@ -59,7 +59,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
         geom=geom, data=exposure.value.reshape(geom.data_shape), unit=exposure.unit
     )
 
-def make_exposure_from_map(livetime, aeff, geom):
+def make_exposure_from_map(aeff, geom):
     """Compute exposure map for a given geom from an input
         all-sky map.
 
@@ -68,8 +68,6 @@ def make_exposure_from_map(livetime, aeff, geom):
 
     Parameters
     ----------
-    livetime : `~astropy.units.Quantity`
-        Livetime
     aeff : `~gammapy.maps.Map`
         Effective area
     geom : `~gammapy.maps.WcsGeom`
@@ -80,11 +78,10 @@ def make_exposure_from_map(livetime, aeff, geom):
     map : `~gammapy.maps.WcsNDMap`
         Exposure map
     """
-
     coords = geom.get_coord()
     exposure = Map.from_geom(geom, unit=aeff.unit)
     values = aeff.interp_by_coord(coords)
-    exposure.data = livetime.value*values
+    exposure.data = values
     return exposure
 
 
