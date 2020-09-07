@@ -102,7 +102,7 @@ def interpolate_map_IRF(map_IRF, geom):
         Interpolated map
     """
     coords = geom.get_coord()
-    exposure = Map.from_geom(geom, unit=map_IRF.unit)
+    interp_map = Map.from_geom(geom, unit=map_IRF.unit)
     values = map_IRF.interp_by_coord(coords)
     interp_map.data = values
     return interp_map
