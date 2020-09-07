@@ -138,25 +138,31 @@ class MapDatasetMaker(Maker):
         background : `~gammapy.maps.Map`
             Background map.
         """
-        bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
-
-        if bkg_coordsys == "ALTAZ":
-            pointing = observation.fixed_pointing_info
-        elif bkg_coordsys == "RADEC":
-            pointing = observation.pointing_radec
-        else:
-            raise ValueError(
-                f"Invalid background coordinate system: {bkg_coordsys!r}\n"
-                "Options: ALTAZ, RADEC"
+        if isinstance(observation.bkg, Map):
+            return interpolate_map_IRF(
+                aeff=observation.bkg,
+                geom=geom,
             )
+        else:
+            bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
 
-        return make_map_background_irf(
-            pointing=pointing,
-            ontime=observation.observation_time_duration,
-            bkg=observation.bkg,
-            geom=geom,
-            oversampling=self.background_oversampling,
-        )
+            if bkg_coordsys == "ALTAZ":
+                pointing = observation.fixed_pointing_info
+            elif bkg_coordsys == "RADEC":
+                pointing = observation.pointing_radec
+            else:
+                raise ValueError(
+                    f"Invalid background coordinate system: {bkg_coordsys!r}\n"
+                    "Options: ALTAZ, RADEC"
+                )
+
+            return make_map_background_irf(
+                pointing=pointing,
+                ontime=observation.observation_time_duration,
+                bkg=observation.bkg,
+                geom=geom,
+                oversampling=self.background_oversampling,
+            )
 
     def make_edisp(self, geom, observation):
         """Make energy dispersion map.
