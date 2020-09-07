@@ -20,6 +20,7 @@ __all__ = [
     "make_theta_squared_table",
     "interpolate_map_IRF",
     "interpolate_edisp_kernel_map",
+    "interpolate_psf_map",
 ]
 
 
@@ -265,6 +266,34 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     data = psf_values.to_value("sr-1")
     psfmap = Map.from_geom(geom, data=data, unit="sr-1")
     return PSFMap(psfmap, exposure_map)
+
+def interpolate_psf_map(psf, geom, exposure_map=None):
+    """Interpolate an all-sky psf map to the analysis geometry
+
+    Expected axes : rad and true energy in this specific order
+    The name of the rad MapAxis is expected to be 'rad'
+
+    Parameters
+    ----------
+    psf : `~gammapy.irf.PSFMap`
+        the all-sky PSF IRF map
+    geom : `~gammapy.maps.Geom`
+        the map geom to be used. It provides the target geometry.
+        rad and true energy axes should be given in this specific order.
+    exposure_map : `~gammapy.maps.Map`, optional
+        the associated exposure map.
+        default is None
+
+    Returns
+    -------
+    psfmap : `~gammapy.irf.PSFMap`
+        the resulting PSF map
+    """
+
+    coords = geom.get_coord()
+    psfmap = PSFMap.from_geom(geom)
+    psfmap.psf_map.data = psf.psf_map.interp_by_coord(coords)
+    return psfmap
 
 
 def make_edisp_map(edisp, pointing, geom, exposure_map=None):
