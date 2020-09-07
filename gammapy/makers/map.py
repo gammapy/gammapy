@@ -12,6 +12,7 @@ from .utils import (
     make_edisp_kernel_map,
     make_map_background_irf,
     make_map_exposure_true_energy,
+    make_map_exposure_from_map,
     make_psf_map,
 )
 
@@ -85,12 +86,18 @@ class MapDatasetMaker(Maker):
         exposure : `~gammapy.maps.Map`
             Exposure map.
         """
-        return make_map_exposure_true_energy(
-            pointing=observation.pointing_radec,
-            livetime=observation.observation_live_time_duration,
-            aeff=observation.aeff,
-            geom=geom,
-        )
+        if isinstance(observation.aeff, Map):
+            return make_map_exposure_from_map(
+                aeff=observation.aeff,
+                geom=geom,
+            )
+        else:
+            return make_map_exposure_true_energy(
+                pointing=observation.pointing_radec,
+                livetime=observation.observation_live_time_duration,
+                aeff=observation.aeff,
+                geom=geom,
+            )
 
     @staticmethod
     def make_exposure_irf(geom, observation):
