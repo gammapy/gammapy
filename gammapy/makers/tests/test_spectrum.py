@@ -90,8 +90,8 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
     assert_allclose(datasets[0].livetime.value, 1581.736758)
     assert_allclose(datasets[1].livetime.value, 1572.686724)
 
-    assert_allclose(datasets[0].background.data.sum(), 7.74732, rtol=1e-5)
-    assert_allclose(datasets[1].background.data.sum(), 6.118879, rtol=1e-5)
+    assert_allclose(datasets[0].background_model.map.data.sum(), 7.74732, rtol=1e-5)
+    assert_allclose(datasets[1].background_model.map.data.sum(), 6.118879, rtol=1e-5)
 
 
 @requires_data()
@@ -110,8 +110,8 @@ def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_gc, observations_cta_d
     assert_allclose(datasets[0].livetime.value, 1764.000034)
     assert_allclose(datasets[1].livetime.value, 1764.000034)
 
-    assert_allclose(datasets[0].background.data.sum(), 2.238345, rtol=1e-5)
-    assert_allclose(datasets[1].background.data.sum(), 2.164593, rtol=1e-5)
+    assert_allclose(datasets[0].background_model.map.data.sum(), 2.238345, rtol=1e-5)
+    assert_allclose(datasets[1].background_model.map.data.sum(), 2.164593, rtol=1e-5)
 
 
 @requires_data()
@@ -147,14 +147,18 @@ def test_safe_mask_maker_dc1(spectrum_dataset_gc, observations_cta_dc1):
     assert_allclose(dataset.energy_range[0].value, 3.162278, rtol=1e-3)
     assert dataset.energy_range[0].unit == "TeV"
 
+
 @requires_data()
 def test_make_meta_table(observations_hess_dl3):
     maker_obs = SpectrumDatasetMaker()
-    map_spectrumdataset_meta_table = maker_obs.make_meta_table(observation=observations_hess_dl3[0])
+    map_spectrumdataset_meta_table = maker_obs.make_meta_table(
+        observation=observations_hess_dl3[0]
+    )
 
     assert_allclose(map_spectrumdataset_meta_table["RA_PNT"], 83.63333129882812)
     assert_allclose(map_spectrumdataset_meta_table["DEC_PNT"], 21.51444435119629)
     assert_allclose(map_spectrumdataset_meta_table["OBS_ID"], 23523)
+
 
 @requires_data()
 class TestSpectrumMakerChain:
@@ -197,9 +201,15 @@ class TestSpectrumMakerChain:
         dataset = reflected_regions_bkg_maker.run(dataset, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
-        aeff_actual = dataset.aeff.interp_by_coord(
-            {"energy_true": 5 * u.TeV, "skycoord": dataset.counts.geom.center_skydir}
-        ) * u.m ** 2
+        aeff_actual = (
+            dataset.aeff.interp_by_coord(
+                {
+                    "energy_true": 5 * u.TeV,
+                    "skycoord": dataset.counts.geom.center_skydir,
+                }
+            )
+            * u.m ** 2
+        )
 
         edisp_actual = dataset._edisp_kernel.data.evaluate(
             energy_true=5 * u.TeV, energy=5.2 * u.TeV

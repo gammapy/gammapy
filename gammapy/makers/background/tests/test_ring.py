@@ -84,7 +84,7 @@ def test_ring_bkg_maker(geom, observations, exclusion_mask):
             "obs_idx": 0,
             "method": "fixed_r_in",
             "counts_off": 2511417.0,
-            "acceptance_off": 2960679.91214,
+            "acceptance_off": 2960679.594648,
             "alpha": 0.000637456020,
             "exposure": 806254444.8480084,
         },
@@ -92,7 +92,7 @@ def test_ring_bkg_maker(geom, observations, exclusion_mask):
             "obs_idx": 0,
             "method": "fixed_width",
             "counts_off": 2511417.0,
-            "acceptance_off": 2960679.91214,
+            "acceptance_off": 2960679.594648,
             "alpha": 0.000637456020,
             "exposure": 806254444.8480084,
         },
@@ -141,5 +141,5 @@ def test_adaptive_ring_bkg_maker(pars, geom, observations, exclusion_mask):
     assert_allclose(
         dataset_on_off.acceptance_off.data[mask].sum(), pars["acceptance_off"]
     )
-    assert_allclose(dataset_on_off.alpha.data[0][100][100], pars["alpha"])
-    assert_allclose(dataset_on_off.exposure.data[0][100][100], pars["exposure"])
+    assert_allclose(dataset_on_off.alpha.data[0][100][100], pars["alpha"], rtol=1e-5)
+    assert_allclose(dataset_on_off.exposure.data[0][100][100], pars["exposure"], rtol=1e-5)

@@ -76,17 +76,15 @@ def fermi_dataset():
         energy_axis_true=exposure.geom.get_axis_by_name("energy_true"),
     )
 
-    dataset = MapDataset(
+    return MapDataset(
         counts=counts,
         models=[background],
         exposure=exposure,
         mask_safe=mask_safe,
         psf=psfmap,
         name="fermi-3fhl-gc",
-        edisp=edisp
+        edisp=edisp,
     )
-
-    return dataset.to_image()
 
 
 @requires_data()
@@ -100,16 +98,19 @@ def test_compute_ts_map(input_dataset):
     )
     result = ts_estimator.run(input_dataset)
 
-    assert_allclose(result["ts"].data[99, 99], 1704.23, rtol=1e-2)
-    assert_allclose(result["niter"].data[99, 99], 8)
-    assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
+    assert_allclose(result["ts"].data[0, 99, 99], 1704.23, rtol=1e-2)
+    assert_allclose(result["niter"].data[0, 99, 99], 8)
+    assert_allclose(result["flux"].data[0, 99, 99], 1.02e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[0, 99, 99], 3.84e-11, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
 
     # Check mask is correctly taken into account
-    assert np.isnan(result["ts"].data[30, 40])
+    assert np.isnan(result["ts"].data[0, 30, 40])
+
+    energy_axis = result["ts"].geom.get_axis_by_name("energy")
+    assert_allclose(energy_axis.edges.value, [0.1, 1])
 
 
 @requires_data()
@@ -117,16 +118,35 @@ def test_compute_ts_map_psf(fermi_dataset):
     estimator = TSMapEstimator(kernel_width="1 deg")
     result = estimator.run(fermi_dataset)
 
-    assert_allclose(result["ts"].data[29, 29], 835.140605, rtol=1e-2)
-    assert_allclose(result["niter"].data[29, 29], 7)
-    assert_allclose(result["flux"].data[29, 29], 1.626651e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[29, 29], 9.548939e-11, rtol=1e-2)
-    assert_allclose(result["flux_errp"].data[29, 29], 9.540259e-11, rtol=1e-2)
-    assert_allclose(result["flux_errn"].data[29, 29], 9.034366e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[29, 29], 1.961776e-10, rtol=1e-2)
+    assert_allclose(result["ts"].data[0, 29, 29], 835.140605, rtol=1e-2)
+    assert_allclose(result["niter"].data[0, 29, 29], 7)
+    assert_allclose(result["flux"].data[0, 29, 29], 1.351949e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[0, 29, 29], 7.93751176e-11, rtol=1e-2)
+    assert_allclose(result["flux_errp"].data[0, 29, 29], 7.9376134e-11, rtol=1e-2)
+    assert_allclose(result["flux_errn"].data[0, 29, 29], 7.5180404579e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[0, 29, 29], 1.63222157e-10, rtol=1e-2)
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
     assert result["flux_ul"].unit == u.Unit("cm-2s-1")
+
+
+@requires_data()
+def test_compute_ts_map_energy(fermi_dataset):
+    estimator = TSMapEstimator(
+            kernel_width="0.6 deg",
+            e_edges=[10, 100, 1000] * u.GeV,
+            sum_over_energy_groups=False
+        )
+
+    result = estimator.run(fermi_dataset)
+
+    assert_allclose(result["ts"].data[:, 29, 29], [804.86171, 16.988756], rtol=1e-2)
+    assert_allclose(result["flux"].data[:, 29, 29], [1.233119e-09, 3.590694e-11], rtol=1e-2)
+    assert_allclose(result["flux_err"].data[:, 29, 29], [7.382305e-11, 1.338985e-11], rtol=1e-2)
+    assert_allclose(result["niter"].data[:, 29, 29], [6, 6])
+
+    energy_axis = result["ts"].geom.get_axis_by_name("energy")
+    assert_allclose(energy_axis.edges.to_value("GeV"), [10, 84.471641, 500], rtol=1e-4)
 
 
 @requires_data()
@@ -141,18 +161,18 @@ def test_compute_ts_map_downsampled(input_dataset):
     )
     result = ts_estimator.run(input_dataset)
 
-    assert_allclose(result["ts"].data[99, 99], 1661.49, rtol=1e-2)
-    assert_allclose(result["niter"].data[99, 99], 7)
-    assert_allclose(result["flux"].data[99, 99], 1.065988e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[99, 99], 4.005628e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[99, 99], 8.220152e-11, rtol=1e-2)
+    assert_allclose(result["ts"].data[0, 99, 99], 1661.49, rtol=1e-2)
+    assert_allclose(result["niter"].data[0, 99, 99], 7)
+    assert_allclose(result["flux"].data[0, 99, 99], 1.065988e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[0, 99, 99], 4.005628e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[0, 99, 99], 8.220152e-11, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
     assert result["flux_ul"].unit == u.Unit("cm-2s-1")
 
     # Check mask is correctly taken into account
-    assert np.isnan(result["ts"].data[30, 40])
+    assert np.isnan(result["ts"].data[0, 30, 40])
 
 
 @requires_data()

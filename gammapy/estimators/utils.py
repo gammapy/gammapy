@@ -1,11 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.ndimage
+from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from gammapy.maps import WcsNDMap
+from gammapy.modeling.models import (
+    PowerLawSpectralModel,
+    ConstantFluxSpatialModel,
+    SkyModel,
+)
+from gammapy.datasets.map import MapEvaluator
 
-__all__ = ["find_peaks"]
+__all__ = ["find_peaks", "estimate_exposure_reco_energy"]
 
 
 def find_peaks(image, threshold, min_distance=1):
@@ -41,9 +48,9 @@ def find_peaks(image, threshold, min_distance=1):
         The data value or pixel-wise data values to be used for the
         detection threshold.  A 2D ``threshold`` must have the same
         shape as tha map ``data``.
-    min_distance : int
-        Minimum pixel distance between peaks.
-        Smallest possible value and default is 1 pixel.
+    min_distance : int or `~astropy.units.Quantity`
+        Minimum distance between peaks. An integer value is interpreted
+        as pixels.
 
     Returns
     -------
@@ -58,6 +65,10 @@ def find_peaks(image, threshold, min_distance=1):
     if not image.geom.is_image:
         raise ValueError("find_peaks only supports 2D images")
 
+    if isinstance(min_distance, (str, u.Quantity)):
+        min_distance = np.mean(u.Quantity(min_distance) / image.geom.pixel_scales)
+        min_distance = np.round(min_distance).to_value("")
+ 
     size = 2 * min_distance + 1
 
     # Remove non-finite values to avoid warnings or spurious detection
@@ -96,3 +107,41 @@ def find_peaks(image, threshold, min_distance=1):
     table.reverse()
 
     return table
+
+
+def estimate_exposure_reco_energy(dataset, spectral_model=None):
+    """Estimate an exposure map in reconstructed energy.
+
+    Parameters
+    ----------
+    dataset:`~gammapy.cube.MapDataset` or `~gammapy.cube.MapDatasetOnOff`
+            the input dataset
+    spectral_model: `~gammapy.modeling.models.SpectralModel`
+            assumed spectral shape. If none, a Power Law of index 2 is assumed
+
+    Returns
+    -------
+    exposure : `Map`
+        Exposure map in reconstructed energy
+    """
+    if spectral_model is None:
+        spectral_model = PowerLawSpectralModel()
+
+    model = SkyModel(
+        spatial_model=ConstantFluxSpatialModel(), spectral_model=spectral_model
+    )
+
+    energy_axis = dataset._geom.get_axis_by_name("energy")
+
+    edisp = None
+
+    if dataset.edisp is not None:
+        edisp = dataset.edisp.get_edisp_kernel(
+            position=None, energy_axis=energy_axis
+        )
+
+    meval = MapEvaluator(model=model, exposure=dataset.exposure, edisp=edisp)
+    npred = meval.compute_npred()
+    ref_flux = spectral_model.integral(energy_axis.edges[:-1], energy_axis.edges[1:])
+    reco_exposure = npred / ref_flux[:, np.newaxis, np.newaxis]
+    return reco_exposure

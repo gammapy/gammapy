@@ -6,6 +6,7 @@ from regions import CircleSkyRegion
 from gammapy.datasets import SpectrumDataset
 from gammapy.irf import EDispKernelMap
 from gammapy.maps import RegionNDMap
+from gammapy.modeling.models import BackgroundModel
 from .core import Maker
 
 __all__ = ["SpectrumDatasetMaker"]
@@ -28,6 +29,7 @@ class SpectrumDatasetMaker(Maker):
         Available: 'counts', 'aeff', 'background', 'edisp'
         By default, all spectra are made.
     """
+
     tag = "SpectrumDatasetMaker"
     available_selection = ["counts", "background", "aeff", "edisp"]
 
@@ -107,9 +109,7 @@ class SpectrumDatasetMaker(Maker):
         offset = observation.pointing_radec.separation(geom.center_skydir)
         energy = geom.get_axis_by_name("energy_true")
 
-        data = observation.aeff.data.evaluate(
-            offset=offset, energy_true=energy.center
-        )
+        data = observation.aeff.data.evaluate(offset=offset, energy_true=energy.center)
 
         if self.containment_correction:
             if not isinstance(geom.region, CircleSkyRegion):
@@ -185,7 +185,7 @@ class SpectrumDatasetMaker(Maker):
         kwargs = {
             "gti": observation.gti,
             "livetime": observation.observation_live_time_duration,
-            "meta_table": self.make_meta_table(observation)
+            "meta_table": self.make_meta_table(observation),
         }
 
         energy_axis = dataset.counts.geom.get_axis_by_name("energy")
@@ -196,9 +196,12 @@ class SpectrumDatasetMaker(Maker):
             kwargs["counts"] = self.make_counts(dataset.counts.geom, observation)
 
         if "background" in self.selection:
-            kwargs["background"] = self.make_background(
-                dataset.counts.geom, observation
+            bkg = self.make_background(dataset.counts.geom, observation)
+            bkg_model = BackgroundModel(
+                bkg, name=dataset.name + "-bkg", datasets_names=[dataset.name],
             )
+            bkg_model.norm.frozen = True
+            kwargs["models"] = bkg_model
 
         if "aeff" in self.selection:
             kwargs["aeff"] = self.make_aeff(dataset.aeff.geom, observation)
@@ -207,5 +210,7 @@ class SpectrumDatasetMaker(Maker):
             edisp = self.make_edisp(
                 region.center, energy_axis, energy_axis_true, observation
             )
-            kwargs["edisp"] = EDispKernelMap.from_edisp_kernel(edisp, geom=dataset.counts.geom)
+            kwargs["edisp"] = EDispKernelMap.from_edisp_kernel(
+                edisp, geom=dataset.counts.geom
+            )
         return SpectrumDataset(name=dataset.name, **kwargs)

@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    BackgroundModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -39,17 +40,25 @@ def simulate_spectrum_dataset(model, random_state=0):
     edisp = EDispKernelMap.from_diagonal_response(
         energy_axis=energy_axis,
         energy_axis_true=energy_axis.copy(name="energy_true"),
-        geom=geom
+        geom=geom,
     )
 
     dataset = SpectrumDatasetOnOff(
-        aeff=aeff, livetime=100 * u.h, acceptance=acceptance, acceptance_off=5, edisp=edisp
+        name="test_onoff",
+        aeff=aeff,
+        livetime=100 * u.h,
+        acceptance=acceptance,
+        acceptance_off=5,
+        edisp=edisp,
     )
     dataset.models = bkg_model
-    bkg_npred = dataset.npred_sig()
+    bkg_npred = dataset.npred()
 
     dataset.models = model
-    dataset.fake(random_state=random_state, background_model=bkg_npred)
+    dataset.fake(
+        random_state=random_state,
+        background_model=BackgroundModel(bkg_npred, datasets_names="test_onoff"),
+    )
     return dataset
 
 
@@ -300,4 +309,3 @@ def test_mask_shape():
     fp = fpe.run([dataset_2, dataset_1])
 
     assert_allclose(fp.table["counts"], 0)
-

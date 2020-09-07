@@ -7,10 +7,9 @@ from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.utils.scripts import make_path
-from gammapy.utils.table import table_from_row_data
+from gammapy.utils.table import table_from_row_data, table_row_to_dict
 from .core import Estimator
-from .flux_point import FluxPoints
-from .flux import FluxEstimator
+from .flux_point import FluxPoints, FluxPointsEstimator
 
 
 __all__ = ["LightCurve", "LightCurveEstimator"]
@@ -280,14 +279,16 @@ class LightCurve:
 
 
 class LightCurveEstimator(Estimator):
-    """Compute light curve.
+    """Estimate light curve.
 
-    The estimator will fit the source model component to datasets in each of the time intervals
-    provided.
+    The estimator will fit the source model component to datasets in each of the
+    provided time intervals.
 
-    If no time intervals are provided, the estimator will use the time intervals defined by the datasets GTIs.
+    If no time intervals are provided, the estimator will use the time intervals
+    defined by the datasets GTIs.
 
-    To be included in the estimation, the dataset must have their GTI fully overlapping a time interval.
+    To be included in the estimation, the dataset must have their GTI fully
+    overlapping a time interval.
 
     Parameters
     ----------
@@ -295,8 +296,8 @@ class LightCurveEstimator(Estimator):
         Start and stop time for each interval to compute the LC
     source : str
         For which source in the model to compute the flux points. Default is 0
-    energy_range : tuple of `~astropy.units.Quantity`
-        Energy range on which to compute the flux. Default is 1-10 TeV
+    e_edges : `~astropy.units.Quantity`
+        Energy edges of the light curve.
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
     norm_min : float
@@ -330,7 +331,7 @@ class LightCurveEstimator(Estimator):
         self,
         time_intervals=None,
         source=0,
-        energy_range=[1.0, 10.0] * u.TeV,
+        e_edges=None,
         atol="1e-6 s",
         norm_min=0.2,
         norm_max=5,
@@ -346,7 +347,11 @@ class LightCurveEstimator(Estimator):
         self.time_intervals = time_intervals
 
         self.atol = u.Quantity(atol)
-        self.energy_range = energy_range
+
+        if e_edges is not None and len(e_edges) > 2:
+            raise ValueError("So far the LightCurveEstimator only support a single energy bin.")
+
+        self.e_edges = e_edges
 
         self.norm_min = norm_min
         self.norm_max = norm_max
@@ -393,10 +398,7 @@ class LightCurveEstimator(Estimator):
                 continue
 
             row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
-
-            data = self.estimate_time_bin_flux(datasets_to_fit)
-            row.update(data)
-            row.update(self.estimate_counts(datasets_to_fit))
+            row.update(self.estimate_time_bin_flux(datasets_to_fit))
             rows.append(row)
 
         if len(rows) == 0:
@@ -419,10 +421,15 @@ class LightCurveEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
-        fe = FluxEstimator(
+        if self.e_edges is None:
+            e_mins, e_maxs = datasets.energy_ranges
+            e_edges = e_mins.min(), e_maxs.max()
+        else:
+            e_edges = self.e_edges
+
+        fe = FluxPointsEstimator(
             source=self.source,
-            e_min=self.energy_range[0],
-            e_max=self.energy_range[1],
+            e_edges=e_edges,
             norm_min=self.norm_min,
             norm_max=self.norm_max,
             norm_n_values=self.norm_n_values,
@@ -433,20 +440,5 @@ class LightCurveEstimator(Estimator):
             selection_optional=self.selection_optional,
 
         )
-        return fe.run(datasets)
-
-    @staticmethod
-    def estimate_counts(datasets):
-        """Estimate counts for the flux point.
-
-        Returns
-        -------
-        result : dict
-            Dict with an array with one entry per dataset with counts for the flux point.
-        """
-        counts = []
-        for dataset in datasets:
-            mask = dataset.mask
-            counts.append(dataset.counts.data[mask].sum())
-
-        return {"counts": np.array(counts, dtype=int).sum()}
+        result = fe.run(datasets)
+        return table_row_to_dict(result.table[0])

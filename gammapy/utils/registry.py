@@ -7,7 +7,9 @@ class Registry(list):
 
     def get_cls(self, tag):
         for cls in self:
-            if hasattr(cls, "tag") and tag in cls.tag:
+            tags = getattr(cls, "tag", [])
+            tags = [tags] if isinstance(tags, str) else tags
+            if tag in tags:
                 return cls
         raise KeyError(f"No model found with tag: {tag!r}")
 
