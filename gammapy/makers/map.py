@@ -89,7 +89,7 @@ class MapDatasetMaker(Maker):
         """
         if isinstance(observation.aeff, Map):
             return interpolate_map_IRF(
-                aeff=observation.aeff,
+                map_IRF=observation.aeff,
                 geom=geom,
             )
         else:
@@ -140,7 +140,7 @@ class MapDatasetMaker(Maker):
         """
         if isinstance(observation.bkg, Map):
             return interpolate_map_IRF(
-                aeff=observation.bkg,
+                map_IRF=observation.bkg,
                 geom=geom,
             )
         else:
