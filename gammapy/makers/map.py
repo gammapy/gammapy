@@ -3,7 +3,7 @@ import logging
 from astropy.table import Table
 import astropy.units as u
 from gammapy.datasets import MapDataset
-from gammapy.irf import EnergyDependentMultiGaussPSF,EDispKernelMap
+from gammapy.irf import EnergyDependentMultiGaussPSF,EDispKernelMap, PSFMap
 from gammapy.maps import Map
 from gammapy.modeling.models import BackgroundModel
 from .core import Maker
@@ -15,6 +15,7 @@ from .utils import (
     make_psf_map,
     interpolate_map_IRF,
     interpolate_edisp_kernel_map,
+    interpolate_psf_map,
 )
 
 __all__ = ["MapDatasetMaker"]
@@ -236,18 +237,24 @@ class MapDatasetMaker(Maker):
             Psf map.
         """
         psf = observation.psf
-        if isinstance(psf, EnergyDependentMultiGaussPSF):
-            rad_axis = geom.get_axis_by_name("theta")
-            psf = psf.to_psf3d(rad=rad_axis.center)
+        if isinstance(psf, PSFMap):
+            return interpolate_psf_map(
+                psf=psf,
+                geom=geom,
+                exposure_map=None)
+        else:
+            if isinstance(psf, EnergyDependentMultiGaussPSF):
+                rad_axis = geom.get_axis_by_name("theta")
+                psf = psf.to_psf3d(rad=rad_axis.center)
 
-        exposure = self.make_exposure_irf(geom.squash(axis="theta"), observation)
+            exposure = self.make_exposure_irf(geom.squash(axis="theta"), observation)
 
-        return make_psf_map(
-            psf=psf,
-            pointing=observation.pointing_radec,
-            geom=geom,
-            exposure_map=exposure,
-        )
+            return make_psf_map(
+                psf=psf,
+                pointing=observation.pointing_radec,
+                geom=geom,
+                exposure_map=exposure,
+            )
 
     @staticmethod
     def make_meta_table(observation):
