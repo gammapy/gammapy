@@ -204,7 +204,7 @@ class MapDatasetMaker(Maker):
             EdispKernel map.
         """
 
-        if isinstance(observation.edisp,EDispKernelMap):
+        if isinstance(observation.edisp, EDispKernelMap):
             exposure_map = None
             return interpolate_edisp_kernel_map(
                 edisp=observation.edisp, 

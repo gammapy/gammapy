@@ -322,7 +322,7 @@ def interpolate_edisp_kernel_map(edisp, geom, exposure_map=None):
     Parameters
     ----------
     edisp :  `~gammapy.cube.EDispKernelMap`
-        the inpurt EDispKernelMap
+        the input EDispKernelMap
     geom : `~gammapy.maps.Geom`
         the map geom to be used. It provides the target geometry.
         energy and true energy axes should be given in this specific order.
