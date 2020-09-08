@@ -300,7 +300,7 @@ class PSFMap(IRFMap):
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 
     @classmethod
-    def from_gauss(cls,energy, rad, sigma):
+    def from_gauss(cls, energy, rad, sigma):
         """Create all -sky PSF map from Gaussian width.
 
         This is used for testing and examples.
@@ -334,12 +334,12 @@ class PSFMap(IRFMap):
             # one width per energy
             energytable_temp = np.zeros(tableshape)*u.sr**-1
             for i in np.arange(tableshape[0]):
-                energytable_temp[i,:] = TablePSF.from_shape(shape='gauss', width=sigma[i], rad=rad).psf_value
+                energytable_temp[i, :] = TablePSF.from_shape(shape='gauss', width=sigma[i], rad=rad).psf_value
         else:
             raise AssertionError('There need to be the same number of sigma values as energies')
         energytable = EnergyDependentTablePSF(energy, rad, exposure=None, psf_value=energytable_temp)
-        psfmap = cls.from_energy_dependent_table_psf(energytable)
-        return psfmap
+        psf_map = cls.from_energy_dependent_table_psf(energytable)
+        return psf_map
 
     def to_image(self, spectrum=None, keepdims=True):
         """Reduce to a 2-D map after weighing

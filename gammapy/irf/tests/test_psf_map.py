@@ -384,8 +384,8 @@ def test_to_image():
     assert_allclose(psf2D.psf_map.data[0][0][12][12], 23255.41204827, rtol=1e-2)
 
 def test_psfmap_from_gauss():
-    rad = np.linspace(0,1.5,50)*u.deg
-    energy = np.logspace(-1,2,10)*u.TeV
+    rad = np.linspace(0, 1.5, 50)*u.deg
+    energy = np.logspace(-1, 2, 10)*u.TeV
     energy_axis = MapAxis.from_nodes(energy, name="energy_true", interp="log", unit="TeV")
     rad_axis = MapAxis.from_nodes(rad, name="theta", unit="deg")
     
@@ -404,11 +404,11 @@ def test_psfmap_from_gauss():
     )
     assert_almost_equal(
         psfmap.containment_radius_map(energy[3],0.68).data[0][0]/sigma[3].value, 
-        1.5095921854516636,decimal=2
+         1.5095921854516636, decimal=2
     )
     assert_almost_equal(
         psfmap.containment_radius_map(energy[3],0.95).data[0][0]/sigma[3].value,
-        2.4477468306808161,decimal=2
+         2.4477468306808161, decimal=2
     )
     
     # with constant sigma
@@ -421,11 +421,11 @@ def test_psfmap_from_gauss():
         psfmap1.get_energy_dependent_table_psf().containment_radius(1*u.TeV)[0],
          psfmap1.containment_radius_map(1*u.TeV).data[0][0]*u.deg
     )
-    
+
     # check that the PSF with the same sigma is the same
     psfvalue = psfmap.get_energy_dependent_table_psf().psf_value[0]
     psfvalue1 = psfmap1.get_energy_dependent_table_psf().psf_value[0]
-    assert_allclose(psfvalue,psfvalue1 ,atol=1e-7) 
+    assert_allclose(psfvalue, psfvalue1, atol=1e-7)
     
     # test that it won't work with different number of sigmas and energies
     with pytest.raises(AssertionError):
