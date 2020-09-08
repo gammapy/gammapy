@@ -29,7 +29,7 @@ in the following example:
 .. code-block:: python
 
     from gammapy.maps import MapAxis, WcsGeom
-    from gammapy.cube import MapDataset
+    from gammapy.datasets import MapDataset
 
     energy_axis = MapAxis.from_bounds(
         1, 10, nbin=11, name="energy", unit="TeV", interp="log"
@@ -44,7 +44,7 @@ additional options, e.g. it is also possible to specify a true energy axis:
 .. code-block:: python
 
     from gammapy.maps import MapAxis, WcsGeom
-    from gammapy.cube import MapDataset
+    from gammapy.datasets import MapDataset
 
     energy_axis = MapAxis.from_bounds(
         1, 10, nbin=11, name="energy", unit="TeV", interp="log"
@@ -62,7 +62,8 @@ data using the `MapDatasetMaker`:
 
 .. code-block:: python
 
-    from gammapy.cube import MapDatasetMaker, MapDataset
+    from gammapy.datasets import MapDataset
+    from gammapy.makers import MapDatasetMaker
     from gammapy.data import DataStore
     from gammapy.maps import MapAxis, WcsGeom
 
@@ -100,7 +101,8 @@ Here is an example how to use it:
 
 .. code-block:: python
 
-    from gammapy.cube import MapDatasetMaker, MapDataset, SafeMaskMaker
+    from gammapy.datasets import  MapDataset
+    from gammapy.makers import MapDatasetMaker, SafeMaskMaker
     from gammapy.data import DataStore
     from gammapy.maps import MapAxis, WcsGeom
 
@@ -145,7 +147,8 @@ observations, the larger dataset must be created first:
 
 .. code-block:: python
 
-    from gammapy.cube import MapDatasetMaker, MapDataset
+    from gammapy.datasets import  MapDataset
+    from gammapy.makers import MapDatasetMaker
     from gammapy.data import DataStore
     from gammapy.maps import MapAxis, WcsGeom
 
@@ -175,7 +178,8 @@ Finally the dataset per observation is stacked into a larger map.
 
 .. code-block:: python
 
-    from gammapy.cube import MapDatasetMaker, MapDataset, SafeMaskMaker
+    from gammapy.datasets import  MapDataset
+    from gammapy.makers import MapDatasetMaker, SafeMaskMaker
     from gammapy.data import DataStore
     from gammapy.maps import MapAxis, WcsGeom
 
