@@ -301,7 +301,7 @@ class PSFMap(IRFMap):
 
     @classmethod
     def from_gauss(cls,energy, rad, sigma):
-        """Create PSF map from Gaussian width.
+        """Create all -sky PSF map from Gaussian width.
 
         This is used for testing and examples.
 
@@ -326,13 +326,11 @@ class PSFMap(IRFMap):
         # note: it would be straightforward to also have disk shape instead
         # of gauss
         tableshape = (energy.shape[0], rad.shape[0])
-        
         if np.size(sigma) == 1:
             # same width for all energies
             tablepsf = TablePSF.from_shape(shape='gauss', width=sigma, rad=rad)
             energytable_temp = np.tile(tablepsf.psf_value, (tableshape[0], 1))
-            print(energytable_temp.shape)
-        elif np.size(sigma) == len(energy):
+        elif np.size(sigma) == np.size(energy):
             # one width per energy
             energytable_temp = np.zeros(tableshape)*u.sr**-1
             for i in np.arange(tableshape[0]):
