@@ -225,7 +225,7 @@ class WcsNDMap(WcsMap):
         axes: list
             Names of MapAxis to reduce over
             If None, all will summed over
-        weights : `WcsNDMapMap`
+        weights : `WcsNDMap`
             Weights to be applied.
 
         Returns
