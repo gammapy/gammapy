@@ -408,7 +408,7 @@ def test_psfmap_from_gauss():
     )
     assert_allclose(
         psfmap.containment_radius_map(energy[3], 0.95).data[0][0]/sigma[3].value,
-         2.45,atol=1e-3
+         2.45, atol=1e-3
     )
     
     # with constant sigma
@@ -430,4 +430,3 @@ def test_psfmap_from_gauss():
     # test that it won't work with different number of sigmas and energies
     with pytest.raises(AssertionError):
         psfmap2 = PSFMap.from_gauss(energy_axis, rad_axis, sigma[:3])
-        

@@ -312,9 +312,9 @@ class PSFMap(IRFMap):
         Parameters
         ----------
         energy_axis_true : `~gammapy.maps.MapAxis`
-            True energy axis. 
+            True energy axis.
         rad_axis : `~gammapy.maps.MapAxis`
-            Offset angle wrt source position axis. 
+            Offset angle wrt source position axis.
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
 
