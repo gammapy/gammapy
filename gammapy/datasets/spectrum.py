@@ -846,12 +846,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     @property
     def background(self):
         """from wstat formula"""
-        if self.counts:
-            n_on = self.counts.data
-        else:
-            n_on = self.alpha.data * self.counts_off.data
         mu_bkg = self.alpha.data * get_wstat_mu_bkg(
-            n_on=n_on,
+            n_on=self.counts.data,
             n_off=self.counts_off.data,
             alpha=self.alpha.data,
             mu_sig=self.npred().data,
@@ -859,9 +855,14 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         return RegionNDMap.from_geom(geom=self._geom, data=mu_bkg)
 
     @property
+    def normalised_off(self):
+        """ alpha * noff"""
+        return self.alpha * self.counts_off
+
+    @property
     def excess(self):
-        """counts - background"""
-        return self.counts - self.background
+        """counts - alpha * off"""
+        return self.counts - self.normalised_off
 
     @property
     def alpha(self):

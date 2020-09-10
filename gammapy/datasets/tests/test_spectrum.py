@@ -545,7 +545,7 @@ class TestSpectrumOnOff:
         assert_allclose(info_dict["a_off"], 10)
 
         assert_allclose(info_dict["alpha"], 0.1)
-        assert_allclose(info_dict["excess"], -0.909091, rtol=1e-2)
+        assert_allclose(info_dict["excess"], -1.0, rtol=1e-2)
         assert_allclose(info_dict["livetime"].value, 1e3)
         assert_allclose(info_dict["significance"], -0.50100, rtol=1e-2)
 

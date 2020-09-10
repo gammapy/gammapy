@@ -635,6 +635,9 @@ class MapDataset(Dataset):
 
         counts, npred = self.counts, self.npred()
 
+        if isinstance(self, MapDatasetOnOff):
+            npred += self.background
+
         if self.mask is not None:
             counts = counts * self.mask
             npred = npred * self.mask
@@ -1478,7 +1481,7 @@ class MapDatasetOnOff(MapDataset):
 
     @property
     def background(self):
-        """Background counts in the on region.
+        """Marginalised background counts in the on region.
         """
         mu_bkg = self.alpha.data * get_wstat_mu_bkg(
             n_on=self.counts.data,
@@ -1490,9 +1493,14 @@ class MapDatasetOnOff(MapDataset):
         return Map.from_geom(geom=self._geom, data=mu_bkg)
 
     @property
+    def normalised_off(self):
+        """ alpha * n_off"""
+        return self.alpha * self.counts_off
+
+    @property
     def excess(self):
         """Excess (counts - alpha * counts_off)"""
-        return self.counts.data - self.background.data
+        return self.counts - self.normalised_off
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
@@ -1589,7 +1597,7 @@ class MapDatasetOnOff(MapDataset):
 
         if counts_off is None and dataset.background_model is not None:
             alpha = acceptance / acceptance_off
-            kwargs["counts_off"] = dataset.background_model.evaluate() / alpha
+            counts_off = dataset.background_model.evaluate() / alpha
 
         return cls(
             counts=dataset.counts,
@@ -1602,6 +1610,7 @@ class MapDatasetOnOff(MapDataset):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             name=dataset.name,
+            psf=dataset.psf,
         )
 
     @property
@@ -1639,9 +1648,8 @@ class MapDatasetOnOff(MapDataset):
             raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
 
         # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
-        tmp_factor = (self.alpha * self.counts_off).copy()
-        tmp_factor.data[~self.mask_safe.data] = 0
-        tmp_factor.stack(other.alpha * other.counts_off, weights=other.mask_safe)
+        tmp_factor = self.normalised_off * self.mask_safe
+        tmp_factor.stack(other.normalised_off, weights=other.mask_safe)
 
         # Stack the off counts (in place)
         self.counts_off.data[~self.mask_safe.data] = 0
@@ -1831,9 +1839,9 @@ class MapDatasetOnOff(MapDataset):
 
         if self.acceptance is not None:
             kwargs["acceptance"] = self.acceptance.get_spectrum(on_region, np.mean)
-            background = self.background.get_spectrum(on_region, np.sum)
+            norm = self.normalised_off.get_spectrum(on_region, np.sum)
             kwargs["acceptance_off"] = (
-                kwargs["acceptance"] * kwargs["counts_off"] / background
+                kwargs["acceptance"] * kwargs["counts_off"] / norm
             )
 
         return SpectrumDatasetOnOff.from_spectrum_dataset(dataset=dataset, **kwargs)
@@ -1905,9 +1913,12 @@ class MapDatasetOnOff(MapDataset):
         if self.acceptance is not None:
             acceptance = self.acceptance * mask_safe
             kwargs["acceptance"] = acceptance.sum_over_axes(keepdims=True)
-        if self.acceptance_off is not None:
-            acceptance_off = self.acceptance_off * mask_safe
-            kwargs["acceptance_off"] = acceptance_off.sum_over_axes(keepdims=True)
+
+        norm_factor = self.normalised_off * mask_safe
+        norm_factor = norm_factor.sum_over_axes(keepdims=True)
+        kwargs["acceptance_off"] = (
+            kwargs["acceptance"] * kwargs["counts_off"] / norm_factor
+        )
 
         return self.from_map_dataset(dataset, **kwargs)
 
@@ -1938,7 +1949,7 @@ class MapDatasetOnOff(MapDataset):
             Sliced map object.
         """
         kwargs = {"name": name}
-        dataset = super().slice_by_idx(slices,name)
+        dataset = super().slice_by_idx(slices, name)
 
         if self.counts_off is not None:
             kwargs["counts_off"] = self.counts_off.slice_by_idx(slices=slices)
@@ -1950,6 +1961,7 @@ class MapDatasetOnOff(MapDataset):
             kwargs["acceptance_off"] = self.acceptance_off.slice_by_idx(slices=slices)
 
         return self.from_map_dataset(dataset, **kwargs)
+
 
 class MapEvaluator:
     """Sky model evaluation on maps.
