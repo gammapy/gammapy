@@ -169,7 +169,6 @@ class SkyModel(SkyModelBase):
     def spectral_model(self, model):
         if not (model is None or isinstance(model, SpectralModel)):
             raise TypeError(f"Invalid type: {model!r}")
-
         self._spectral_model = model
 
     @property
@@ -659,7 +658,7 @@ class BackgroundModel(Model):
         if spectral_model is None:
             spectral_model = PowerLawNormSpectralModel()
             spectral_model.tilt.frozen = True
-        self._spectral_model = spectral_model
+        self.spectral_model = spectral_model
 
         if isinstance(datasets_names, list):
             if len(datasets_names) != 1:
@@ -689,6 +688,7 @@ class BackgroundModel(Model):
     def spectral_model(self, model):
         if not (model is None or isinstance(model, SpectralModel)):
             raise TypeError(f"Invalid type: {model!r}")
+        self._spectral_model = model
 
     @property
     def parameters(self):

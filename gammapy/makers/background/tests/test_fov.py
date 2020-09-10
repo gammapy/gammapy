@@ -130,8 +130,8 @@ def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
     test_dataset.background_model.spectral_model.tilt.frozen = False
     dataset = fov_bkg_maker.run(test_dataset)
 
-    assert_allclose(dataset.background_model.spectral_model.norm.value, 0.9034, rtol=1e-4)
-    assert_allclose(dataset.background_model.spectral_model.tilt.value, 0.0728, rtol=1e-4)
+    assert_allclose(dataset.background_model.spectral_model.norm.value, 0.901523, rtol=1e-4)
+    assert_allclose(dataset.background_model.spectral_model.tilt.value, 0.071069, rtol=1e-4)
 
 
 @requires_data()
