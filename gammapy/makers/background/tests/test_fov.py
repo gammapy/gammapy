@@ -78,7 +78,9 @@ def test_fov_bkg_maker_scale(obs_dataset, exclusion_mask):
     test_dataset = obs_dataset.copy(name="test-fov")
     dataset = fov_bkg_maker.run(test_dataset)
 
-    assert_allclose(dataset.background_model.spectral_model.norm.value, 0.830789, rtol=1e-4)
+    assert_allclose(
+        dataset.background_model.spectral_model.norm.value, 0.830789, rtol=1e-4
+    )
     assert_allclose(dataset.background_model.spectral_model.tilt.value, 0.0, rtol=1e-4)
 
 
@@ -90,7 +92,9 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     test_dataset = obs_dataset.copy(name="test-fov")
     dataset = fov_bkg_maker.run(test_dataset)
 
-    assert_allclose(dataset.background_model.spectral_model.norm.value, 0.830789, rtol=1e-4)
+    assert_allclose(
+        dataset.background_model.spectral_model.norm.value, 0.830789, rtol=1e-4
+    )
     assert_allclose(dataset.background_model.spectral_model.tilt.value, 0.0, rtol=1e-4)
 
 
@@ -117,7 +121,9 @@ def test_fov_bkg_maker_fit_with_source_model(obs_dataset, exclusion_mask):
     assert not dataset.models.parameters["lon_0"].frozen
     assert not dataset.background_model.spectral_model.norm.frozen
 
-    assert_allclose(dataset.background_model.spectral_model.norm.value, 0.830789, rtol=1e-4)
+    assert_allclose(
+        dataset.background_model.spectral_model.norm.value, 0.830789, rtol=1e-4
+    )
     assert_allclose(dataset.background_model.spectral_model.tilt.value, 0.0, rtol=1e-4)
 
 
@@ -130,8 +136,12 @@ def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
     test_dataset.background_model.spectral_model.tilt.frozen = False
     dataset = fov_bkg_maker.run(test_dataset)
 
-    assert_allclose(dataset.background_model.spectral_model.norm.value, 0.901523, rtol=1e-4)
-    assert_allclose(dataset.background_model.spectral_model.tilt.value, 0.071069, rtol=1e-4)
+    assert_allclose(
+        dataset.background_model.spectral_model.norm.value, 0.901523, rtol=1e-4
+    )
+    assert_allclose(
+        dataset.background_model.spectral_model.tilt.value, 0.071069, rtol=1e-4
+    )
 
 
 @requires_data()

@@ -27,6 +27,7 @@ class FoVBackgroundMaker(Maker):
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask
     """
+
     tag = "FoVBackgroundMaker"
 
     def __init__(self, method="scale", exclusion_mask=None):

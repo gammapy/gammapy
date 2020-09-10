@@ -637,12 +637,7 @@ class BackgroundModel(Model):
     map = LazyFitsData(cache=True)
 
     def __init__(
-        self,
-        map,
-        spectral_model = None,
-        name=None,
-        filename=None,
-        datasets_names=None,
+        self, map, spectral_model=None, name=None, filename=None, datasets_names=None,
     ):
         if isinstance(map, Map):
             axis = map.geom.get_axis_by_name("energy")
@@ -695,7 +690,7 @@ class BackgroundModel(Model):
         parameters = []
         parameters.append(self.spectral_model.parameters)
         return Parameters.from_stack(parameters)
-            
+
     def evaluate(self):
         """Evaluate background model.
 
@@ -705,7 +700,7 @@ class BackgroundModel(Model):
             Background evaluated on the Map
         """
         value = self.spectral_model(self.energy_center).value
-        back_values =  self.map.data * value
+        back_values = self.map.data * value
         return self.map.copy(data=back_values)
 
     def to_dict(self):
@@ -748,7 +743,7 @@ class BackgroundModel(Model):
 
         return cls(
             map=bkg_map,
-            spectral_model = spectral_model,
+            spectral_model=spectral_model,
             name=data["name"],
             datasets_names=data.get("datasets_names"),
             filename=data.get("filename"),

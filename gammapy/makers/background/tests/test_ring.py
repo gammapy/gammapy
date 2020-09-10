@@ -139,7 +139,11 @@ def test_adaptive_ring_bkg_maker(pars, geom, observations, exclusion_mask):
     mask = dataset.mask_safe
     assert_allclose(dataset_on_off.counts_off.data[mask].sum(), pars["counts_off"])
     assert_allclose(
-        dataset_on_off.acceptance_off.data[mask].sum(), pars["acceptance_off"], rtol=1e-5
+        dataset_on_off.acceptance_off.data[mask].sum(),
+        pars["acceptance_off"],
+        rtol=1e-5,
     )
     assert_allclose(dataset_on_off.alpha.data[0][100][100], pars["alpha"], rtol=1e-5)
-    assert_allclose(dataset_on_off.exposure.data[0][100][100], pars["exposure"], rtol=1e-5)
+    assert_allclose(
+        dataset_on_off.exposure.data[0][100][100], pars["exposure"], rtol=1e-5
+    )

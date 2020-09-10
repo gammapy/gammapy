@@ -1933,7 +1933,7 @@ class MapDatasetOnOff(MapDataset):
             Sliced map object.
         """
         kwargs = {"name": name}
-        dataset = super().slice_by_idx(slices,name)
+        dataset = super().slice_by_idx(slices, name)
 
         if self.counts_off is not None:
             kwargs["counts_off"] = self.counts_off.slice_by_idx(slices=slices)
@@ -1945,6 +1945,7 @@ class MapDatasetOnOff(MapDataset):
             kwargs["acceptance_off"] = self.acceptance_off.slice_by_idx(slices=slices)
 
         return self.from_map_dataset(dataset, **kwargs)
+
 
 class MapEvaluator:
     """Sky model evaluation on maps.
