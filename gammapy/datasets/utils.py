@@ -1,7 +1,6 @@
-import matplotlib.pyplot as plt
-
-
 def get_figure(ax, fig, fig_kwargs):
+    import matplotlib.pyplot as plt
+
     if ax:
         return ax.figure
     elif fig:

@@ -281,7 +281,7 @@ class FluxPointsDataset(Dataset):
         from matplotlib.gridspec import GridSpec
 
         fig_kwargs = fig_kwargs or {}
-        fig_kwargs.setdefault("figsize", (7, 7))
+        fig_kwargs.setdefault("figsize", (8, 7))
         fig = get_figure(None, fig, fig_kwargs)
         fig.clf()
         ax_kwargs = ax_kwargs or {}
@@ -340,7 +340,6 @@ class FluxPointsDataset(Dataset):
             Axes object.
         """
         ax, fig = get_axes(ax, fig, ax_kwargs, fig_kwargs)
-        ax.cla()
 
         fp = self.data
         residuals = self.residuals(method)
@@ -407,7 +406,6 @@ class FluxPointsDataset(Dataset):
             Axes object.
         """
         ax, fig = get_axes(ax, fig, ax_kwargs, fig_kwargs)
-        ax.cla()
 
         fp_kwargs = fp_kwargs or {}
         model_kwargs = model_kwargs or {}

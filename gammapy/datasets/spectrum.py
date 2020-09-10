@@ -365,7 +365,7 @@ class SpectrumDataset(Dataset):
         from matplotlib.gridspec import GridSpec
 
         fig_kwargs = fig_kwargs or {}
-        fig_kwargs.setdefault("figsize", (7, 7))
+        fig_kwargs.setdefault("figsize", (8, 7))
         fig = get_figure(None, fig, fig_kwargs)
         fig.clf()
         ax_kwargs = ax_kwargs or {}
@@ -416,7 +416,6 @@ class SpectrumDataset(Dataset):
             Axes object.
         """
         ax, fig = get_axes(ax, fig, ax_kwargs, fig_kwargs)
-        ax.cla()
 
         self.counts.plot_hist(ax, label="n_on")
 
@@ -455,7 +454,6 @@ class SpectrumDataset(Dataset):
             Axes object.
         """
         ax, fig = get_axes(ax, fig, ax_kwargs, fig_kwargs)
-        ax.cla()
 
         self.excess.plot(
             ax=ax,
@@ -520,7 +518,6 @@ class SpectrumDataset(Dataset):
             Axes object.
         """
         ax, fig = get_axes(ax, fig, ax_kwargs, fig_kwargs)
-        ax.cla()
 
         residuals = self.residuals(method)
         if method == "diff":
