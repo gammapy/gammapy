@@ -202,7 +202,6 @@ class MapDatasetMaker(Maker):
         edisp : `~gammapy.cube.EDispKernelMap`
             EdispKernel map.
         """
-
         if isinstance(observation.edisp, EDispKernelMap):
             return interpolate_edisp_kernel_map(
                 edisp=observation.edisp,
