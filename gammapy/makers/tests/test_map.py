@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from numpy.testing import assert_allclose, assert_almost_equal
+from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
@@ -350,12 +350,12 @@ def test_interpolate_mapdataset():
     # make dummy map IRFs
     geom_allsky = WcsGeom.create(npix=(5, 3), proj="CAR", binsz=60, axes=[energy], skydir=(0, 0))
     geom_allsky_true = geom_allsky.drop('energy').to_cube([energy_true])
-    
+
     #background
     value = 30
     bkg_map = Map.from_geom(geom_allsky, unit="")
     bkg_map.data = value*np.ones(bkg_map.data.shape)
-    
+
     #effective area - with a gradient that also depends on energy
     aeff_map = Map.from_geom(geom_allsky_true, unit="cm2 s")
     ra_arr = np.arange(aeff_map.data.shape[1])
@@ -366,16 +366,17 @@ def test_interpolate_mapdataset():
 
     #psf map
     width = 0.2*u.deg
-    psfMap = PSFMap.from_gauss(energy.center, np.linspace(0, 2, 50)*u.deg, width)
-    
+    rad_axis = MapAxis.from_nodes(np.linspace(0, 2, 50), name="theta", unit="deg")
+    psfMap = PSFMap.from_gauss(energy_true, rad_axis, width)
+
     #edispmap
     edispmap = EDispKernelMap.from_gauss(energy, energy_true, sigma=0.1, bias=0.0, geom=geom_allsky)
-    
+
     #events and gti
     nr_ev = 10
     ev_t = Table()
     gti_t = Table()
-    
+
     ev_t['EVENT_ID'] = np.arange(nr_ev)
     ev_t['TIME'] = nr_ev*[Time('2011-01-01 00:00:00', scale='utc', format='iso')]
     ev_t['RA'] = np.linspace(-1, 1, nr_ev)*u.deg
@@ -384,12 +385,13 @@ def test_interpolate_mapdataset():
 
     gti_t['START'] = [Time('2010-12-31 00:00:00', scale='utc', format='iso')]
     gti_t['STOP'] = [Time('2011-01-02 00:00:00', scale='utc', format='iso')]
-    
+
     events = EventList(ev_t)
     gti = GTI(gti_t)
-    
+
     #define observation
-    obs = Observation(obs_id=0,
+    obs = Observation(
+        obs_id=0,
         obs_info={},
         gti=gti,
         aeff=aeff_map,
@@ -399,7 +401,7 @@ def test_interpolate_mapdataset():
         events=events,
         obs_filter=None,
     )
-    
+
     #define analysis geometry
     geom_target = WcsGeom.create(
         skydir=(0, 0),
@@ -407,33 +409,39 @@ def test_interpolate_mapdataset():
         binsz=0.1*u.deg,
         axes=[energy]
     )
-    
+
     maker = MapDatasetMaker(selection=["exposure", "counts", "background", "edisp", "psf"])
     dataset = MapDataset.create(geom=geom_target, energy_axis_true=energy_true, name="test")
     dataset = maker.run(dataset, obs)
-    
+
     # test counts
     assert dataset.counts.data.sum() == nr_ev
-    
+
     #test background
     coords_bg = {
-    'skycoord' : SkyCoord("0 deg", "0 deg"),
-    'energy' : energy.center[0]
+        'skycoord' : SkyCoord("0 deg", "0 deg"),
+        'energy' : energy.center[0]
     }
-    assert_almost_equal(dataset.background_model.evaluate().get_by_coord(coords_bg)[0], value, decimal=7)
-    
+    assert_allclose(
+        dataset.background_model.evaluate().get_by_coord(coords_bg)[0],
+        value,
+        atol=1e-7)
+
     #test effective area
     coords_aeff = {
-    'skycoord' : SkyCoord("0 deg", "0 deg"),
-    'energy_true' : energy_true.center[0]
+        'skycoord' : SkyCoord("0 deg", "0 deg"),
+        'energy_true' : energy_true.center[0]
     }
-    assert_almost_equal(aeff_map.get_by_coord(coords_aeff)[0]/dataset.exposure.get_by_coord(coords_aeff)[0], 1, decimal=3)
-    
+    assert_allclose(
+        aeff_map.get_by_coord(coords_aeff)[0]/dataset.exposure.get_by_coord(coords_aeff)[0],
+        1,
+        atol=1e-3)
+
     #test edispmap
     psfmatrix_preinterp = edispmap.get_edisp_kernel(SkyCoord("0 deg", "0 deg")).pdf_matrix
     psfmatrix_postinterp = dataset.edisp.get_edisp_kernel(SkyCoord("0 deg", "0 deg")).pdf_matrix
     assert_allclose(psfmatrix_preinterp, psfmatrix_postinterp, atol=1e-7)
-    
+
     #test psfmap
     geom_psf = geom_target.drop('energy').to_cube([energy_true])
     psfkernel_preinterp = psfMap.get_psf_kernel(SkyCoord("0 deg", "0 deg"), geom_psf, max_radius=2*u.deg).data

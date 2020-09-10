@@ -93,13 +93,12 @@ class MapDatasetMaker(Maker):
                 map_IRF=observation.aeff,
                 geom=geom,
             )
-        else:
-            return make_map_exposure_true_energy(
-                pointing=observation.pointing_radec,
-                livetime=observation.observation_live_time_duration,
-                aeff=observation.aeff,
-                geom=geom,
-            )
+        return make_map_exposure_true_energy(
+            pointing=observation.pointing_radec,
+            livetime=observation.observation_live_time_duration,
+            aeff=observation.aeff,
+            geom=geom,
+        )
 
     @staticmethod
     def make_exposure_irf(geom, observation):
@@ -144,26 +143,25 @@ class MapDatasetMaker(Maker):
                 map_IRF=observation.bkg,
                 geom=geom,
             )
+        bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
+
+        if bkg_coordsys == "ALTAZ":
+            pointing = observation.fixed_pointing_info
+        elif bkg_coordsys == "RADEC":
+            pointing = observation.pointing_radec
         else:
-            bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
-
-            if bkg_coordsys == "ALTAZ":
-                pointing = observation.fixed_pointing_info
-            elif bkg_coordsys == "RADEC":
-                pointing = observation.pointing_radec
-            else:
-                raise ValueError(
-                    f"Invalid background coordinate system: {bkg_coordsys!r}\n"
-                    "Options: ALTAZ, RADEC"
-                )
-
-            return make_map_background_irf(
-                pointing=pointing,
-                ontime=observation.observation_time_duration,
-                bkg=observation.bkg,
-                geom=geom,
-                oversampling=self.background_oversampling,
+            raise ValueError(
+                f"Invalid background coordinate system: {bkg_coordsys!r}\n"
+                "Options: ALTAZ, RADEC"
             )
+
+        return make_map_background_irf(
+            pointing=pointing,
+            ontime=observation.observation_time_duration,
+            bkg=observation.bkg,
+            geom=geom,
+            oversampling=self.background_oversampling,
+        )
 
     def make_edisp(self, geom, observation):
         """Make energy dispersion map.
@@ -206,20 +204,18 @@ class MapDatasetMaker(Maker):
         """
 
         if isinstance(observation.edisp, EDispKernelMap):
-            exposure_map = None
             return interpolate_edisp_kernel_map(
-                edisp=observation.edisp, 
-                geom=geom, 
-                exposure_map=exposure_map)
-        else:
-            exposure = self.make_exposure_irf(geom.squash(axis="energy"), observation)
-
-            return make_edisp_kernel_map(
                 edisp=observation.edisp,
-                pointing=observation.pointing_radec,
                 geom=geom,
-                exposure_map=exposure,
-            )
+                )
+        exposure = self.make_exposure_irf(geom.squash(axis="energy"), observation)
+
+        return make_edisp_kernel_map(
+            edisp=observation.edisp,
+            pointing=observation.pointing_radec,
+            geom=geom,
+            exposure_map=exposure,
+        )
 
     def make_psf(self, geom, observation):
         """Make psf map.
@@ -241,20 +237,19 @@ class MapDatasetMaker(Maker):
             return interpolate_psf_map(
                 psf=psf,
                 geom=geom,
-                exposure_map=None)
-        else:
-            if isinstance(psf, EnergyDependentMultiGaussPSF):
-                rad_axis = geom.get_axis_by_name("theta")
-                psf = psf.to_psf3d(rad=rad_axis.center)
+                )
+        if isinstance(psf, EnergyDependentMultiGaussPSF):
+            rad_axis = geom.get_axis_by_name("theta")
+            psf = psf.to_psf3d(rad=rad_axis.center)
 
-            exposure = self.make_exposure_irf(geom.squash(axis="theta"), observation)
+        exposure = self.make_exposure_irf(geom.squash(axis="theta"), observation)
 
-            return make_psf_map(
-                psf=psf,
-                pointing=observation.pointing_radec,
-                geom=geom,
-                exposure_map=exposure,
-            )
+        return make_psf_map(
+            psf=psf,
+            pointing=observation.pointing_radec,
+            geom=geom,
+            exposure_map=exposure,
+        )
 
     @staticmethod
     def make_meta_table(observation):

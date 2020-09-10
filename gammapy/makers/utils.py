@@ -66,6 +66,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
 def interpolate_map_IRF(map_IRF, geom):
     """Compute IRF map for a given geom from an input
         all-sky map.
+
     Parameters
     ----------
     map_IRF : `~gammapy.maps.Map`
@@ -242,7 +243,7 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     psfmap = Map.from_geom(geom, data=data, unit="sr-1")
     return PSFMap(psfmap, exposure_map)
 
-def interpolate_psf_map(psf, geom, exposure_map=None):
+def interpolate_psf_map(psf, geom):
     """Interpolate an all-sky psf map to the analysis geometry
 
     Expected axes : rad and true energy in this specific order
@@ -264,7 +265,6 @@ def interpolate_psf_map(psf, geom, exposure_map=None):
     psfmap : `~gammapy.irf.PSFMap`
         the resulting PSF map
     """
-
     coords = geom.get_coord()
     psfmap = PSFMap.from_geom(geom)
     psfmap.psf_map.data = psf.psf_map.interp_by_coord(coords)
@@ -316,7 +316,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     edispmap = Map.from_geom(geom, data=data, unit="")
     return EDispMap(edispmap, exposure_map)
 
-def interpolate_edisp_kernel_map(edisp, geom, exposure_map=None):
+def interpolate_edisp_kernel_map(edisp, geom):
     """Interpolate an all-sky edisp kernel map to the analysis geometry.
 
     Expected axes : (reco) energy and true energy in this specific order
@@ -338,7 +338,7 @@ def interpolate_edisp_kernel_map(edisp, geom, exposure_map=None):
     -------
     edispmap : `~gammapy.cube.EDispKernelMap`
         the resulting EDispKernel map
-    """    
+    """
     coords = geom.get_coord()
     edispmap = EDispKernelMap.from_geom(geom)
     edispmap.edisp_map.data = edisp.edisp_map.interp_by_coord(coords)
