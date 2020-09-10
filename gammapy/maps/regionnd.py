@@ -316,26 +316,6 @@ class RegionNDMap(Map):
     def pad(self):
         raise NotImplementedError("Pad is not supported by RegionNDMap")
 
-    def sum_over_axes(self, axes=None, keepdims=True, weights=None):
-        """To sum map values over all non-spatial axes.
-
-        Parameters
-        ----------
-        keepdims : bool, optional
-            If this is set to true, the axes which are summed over are left in
-            the map with a single bin
-        axes: list
-            Names of MapAxis to reduce over
-            If None, all will summed over
-        weights : `RegionNDMap`
-            Weights to be applied.
-
-        Returns
-        -------
-        map_out : `~RegionNDMap`
-            Map with non-spatial axes summed over
-        """
-        return self.reduce_over_axes(func=np.add, axes=axes, keepdims=keepdims, weights=weights)
 
     def stack(self, other, weights=None):
         """Stack other region map into map.

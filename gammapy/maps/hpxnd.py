@@ -184,19 +184,6 @@ class HpxNDMap(HpxMap):
         hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
         return WcsNDMap(wcs, wcs_data, unit=self.unit)
 
-    def sum_over_axes(self):
-        """Sum over all non-spatial dimensions.
-
-        Returns
-        -------
-        map_out : `~HpxNDMap`
-            Summed map.
-        """
-        geom = self.geom.to_image()
-        axis = tuple(range(self.data.ndim - 1))
-        data = np.nansum(self.data, axis=axis)
-        return self._init_copy(geom=geom, data=data)
-
     def pad(self, pad_width, mode="constant", cval=0, order=1):
         geom = self.geom.pad(pad_width)
         map_out = self._init_copy(geom=geom, data=None)

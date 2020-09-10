@@ -993,6 +993,28 @@ class Map(abc.ABC):
         geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
         return self._init_copy(geom=geom_reco, data=data)
 
+    def sum_over_axes(self, axes=None, keepdims=True, weights=None):
+        """To sum map values over all non-spatial axes.
+
+        Parameters
+        ----------
+        keepdims : bool, optional
+            If this is set to true, the axes which are summed over are left in
+            the map with a single bin
+        axes: list
+            Names of MapAxis to reduce over
+            If None, all will summed over
+        weights : `Map`
+            Weights to be applied. The Map should have the same geometry.
+
+        Returns
+        -------
+        map_out : `~Map`
+            Map with non-spatial axes summed over
+        """
+        return self.reduce_over_axes(func=np.add, axes=axes, keepdims=keepdims, weights=weights)
+
+
     def reduce_over_axes(self, func=np.add, keepdims=False, axes=None, weights=None):
         """Reduce map over non-spatial axes
 
