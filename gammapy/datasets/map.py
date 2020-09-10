@@ -598,8 +598,8 @@ class MapDataset(Dataset):
         smooth_kernel="gauss",
         smooth_radius="0.1 deg",
         region=None,
-        wcsnd_kwargs=None,
-        regnd_kwargs=None,
+        regionND_kwargs=None,
+        **kwargs,
     ):
         """
         Plot spatial and spectral residuals.
@@ -626,10 +626,10 @@ class MapDataset(Dataset):
             is interpreted as smoothing width in pixels.
         region: `~regions.SkyRegion`
             Target sky region.
-        wcsnd_kwargs : dict
-            Keyword arguments passed to `gammapy.maps.WcsNDMap.plot`.
-        regnd_kwargs : dict
+        regionND_kwargs : dict
             Keyword arguments passed to `gammapy.maps.RegionNDMap.plot`.
+        **kwargs : dict
+            Keyword arguments passed to `gammapy.maps.WcsNDMap.plot`.
 
         Returns
         -------
@@ -669,12 +669,11 @@ class MapDataset(Dataset):
         ax_image = fig.add_subplot(1, ncols, 1, projection=residuals_spatial.geom.wcs, **ax_kwargs)
         ax_spec = None
 
-        wcsnd_kwargs = wcsnd_kwargs or {}
-        wcsnd_kwargs.setdefault("add_cbar", True)
-        wcsnd_kwargs.setdefault("cmap", "coolwarm")
-        wcsnd_kwargs.setdefault("vmin", -5)
-        wcsnd_kwargs.setdefault("vmax", 5)
-        residuals_spatial.plot(ax_image, **wcsnd_kwargs)
+        kwargs.setdefault("add_cbar", True)
+        kwargs.setdefault("cmap", "coolwarm")
+        kwargs.setdefault("vmin", -5)
+        kwargs.setdefault("vmax", 5)
+        residuals_spatial.plot(ax_image, **kwargs)
 
         # Spectral residuals
         if region:
@@ -688,10 +687,10 @@ class MapDataset(Dataset):
             else:
                 yerr = np.ones_like(residuals.data.flatten())
 
-            regnd_kwargs = regnd_kwargs or {}
-            regnd_kwargs.setdefault("color", regnd_kwargs.pop("c", "black"))
-            residuals.plot(ax_spec, yerr=yerr, **regnd_kwargs)
-            ax_spec.axhline(0, color=regnd_kwargs["color"], lw=0.5)
+            regionND_kwargs = regionND_kwargs or {}
+            regionND_kwargs.setdefault("color", regionND_kwargs.pop("c", "black"))
+            residuals.plot(ax_spec, yerr=yerr, **regionND_kwargs)
+            ax_spec.axhline(0, color=regionND_kwargs["color"], lw=0.5)
 
             label = self._residuals_labels[method]
             ax_spec.set_ylabel(f"Residuals ({label})")
