@@ -70,7 +70,7 @@ TEST_MODELS = [
     dict(
         name="norm-powerlaw",
         model=PowerLawNormSpectralModel(
-            index=2 * u.Unit(""), norm=4.0 * u.Unit(""), reference=1 * u.TeV,
+            tilt=2 * u.Unit(""), norm=4.0 * u.Unit(""), reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(1.0, ""),
         integral_1_10TeV=u.Quantity(3.6, "TeV"),

@@ -700,7 +700,7 @@ class SpectrumDataset(Dataset):
         if self.background_model is not None:
             m = self.background_model.evaluate().slice_by_idx(slices=slices)
             bkg_model = BackgroundModel(map=m, datasets_names=[name])
-            bkg_model.norm.frozen = True
+            bkg_model.spectral_model.norm.frozen = True
             kwargs["models"] = bkg_model
 
         if self.edisp is not None:
