@@ -6,7 +6,7 @@ from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .irf_map import IRFMap
 from .psf_kernel import PSFKernel
-from .psf_table import EnergyDependentTablePSF
+from .psf_table import EnergyDependentTablePSF,TablePSF
 
 __all__ = ["PSFMap"]
 
@@ -298,6 +298,50 @@ class PSFMap(IRFMap):
         exposure_map = Map.from_geom(geom_exposure, unit="cm2 s")
         exposure_map.quantity += data
         return cls(psf_map=psf_map, exposure_map=exposure_map)
+
+    @classmethod
+    def from_gauss(cls, energy_axis_true, rad_axis, sigma):
+        """Create all -sky PSF map from Gaussian width.
+
+        This is used for testing and examples.
+
+        The width can be the same for all energies
+        or be an array with one value per energy node.
+        It does not depend on position.
+
+        Parameters
+        ----------
+        energy_axis_true : `~gammapy.maps.MapAxis`
+            True energy axis.
+        rad_axis : `~gammapy.maps.MapAxis`
+            Offset angle wrt source position axis.
+        sigma : `~astropy.coordinates.Angle`
+            Gaussian width.
+
+        Returns
+        -------
+        psf_map : `PSFMap`
+            Point spread function map.
+        """
+        # note: it would be straightforward to also have disk shape instead
+        # of gauss
+        energy = energy_axis_true.center
+        rad = rad_axis.center
+        tableshape = (energy.shape[0], rad.shape[0])
+        if np.size(sigma) == 1:
+            # same width for all energies
+            tablepsf = TablePSF.from_shape(shape='gauss', width=sigma, rad=rad)
+            energytable_temp = np.tile(tablepsf.psf_value, (tableshape[0], 1))
+        elif np.size(sigma) == np.size(energy):
+            # one width per energy
+            energytable_temp = np.zeros(tableshape)*u.sr**-1
+            for idx in np.arange(tableshape[0]):
+                energytable_temp[idx, :] = TablePSF.from_shape(shape='gauss', width=sigma[idx], rad=rad).psf_value
+        else:
+            raise AssertionError('There need to be the same number of sigma values as energies')
+        energytable = EnergyDependentTablePSF(energy, rad, exposure=None, psf_value=energytable_temp)
+        psf_map = cls.from_energy_dependent_table_psf(energytable)
+        return psf_map
 
     def to_image(self, spectrum=None, keepdims=True):
         """Reduce to a 2-D map after weighing
