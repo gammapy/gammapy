@@ -1618,35 +1618,6 @@ class HpxGeom(Geom):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def squash(self, axis):
-        """Squash geom axis.
-
-        Parameters
-        ----------
-        axis : str
-            Axis to squash.
-
-        Returns
-        -------
-        geom : `Geom`
-            Geom with squashed axis.
-        """
-        _ = self.get_axis_by_name(axis)
-
-        axes = []
-        for ax in copy.deepcopy(self.axes):
-            if ax.name == axis:
-                ax = ax.squash()
-            axes.append(ax)
-
-        return self.__class__(
-            np.max(self.nside),
-            nest=self.nest,
-            frame=self.frame,
-            region=self.region,
-            axes=axes,
-            sparse=self._sparse,
-       )
 
 class HpxToWcsMapping:
     """Stores the indices need to convert from HEALPIX to WCS.
