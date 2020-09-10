@@ -119,7 +119,5 @@ def test_asmooth_map_dataset_on_off():
 
     smoothed = asmooth.run(dataset)
     assert_allclose(smoothed["counts"].data[25, 25], 2)
-
     assert_allclose(smoothed["background"].data[25, 25], 1.25)
     assert_allclose(smoothed["significance"].data[25, 25], 3.079799117645, rtol=1e-2)
-

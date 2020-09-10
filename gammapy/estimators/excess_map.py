@@ -33,31 +33,27 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=Fals
     # fft convolution adds numerical noise, to ensure integer results we call
     # np.rint
     n_on = dataset.counts * mask
-    npred = dataset.npred() * mask
     n_on = n_on.sum_over_axes(keepdims=True)
-    npred = npred.sum_over_axes(keepdims=True)
-
     n_on_conv = np.rint(n_on.convolve(kernel.array).data)
 
     if isinstance(dataset, MapDatasetOnOff):
+        background = dataset.normalised_off * mask
+        background.data[dataset.acceptance_off.data == 0] = 0.0
         n_off = dataset.counts_off * mask
-        a_on = dataset.acceptance * mask
-        a_off = dataset.acceptance_off * mask
 
+        background = background.sum_over_axes(keepdims=True)
         n_off = n_off.sum_over_axes(keepdims=True)
-        a_on = a_on.sum_over_axes(keepdims=True)
-        a_off = a_off.sum_over_axes(keepdims=True)
-        
+
+        background_conv = background.convolve(kernel.array)
         n_off_conv = n_off.convolve(kernel.array)
-        mu_sig_conv = npred.convolve(kernel.array)
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            alpha_conv = a_on.convolve(kernel.array) / a_off.convolve(kernel.array)
+            alpha_conv = background_conv / n_off_conv
 
-        return WStatCountsStatistic(
-            n_on_conv.data, n_off_conv.data, alpha_conv.data, mu_sig_conv
-        )
+        return WStatCountsStatistic(n_on_conv.data, n_off_conv.data, alpha_conv.data)
     else:
+        npred = dataset.npred() * mask
+        npred = npred.sum_over_axes(keepdims=True)
         background_conv = npred.convolve(kernel.array)
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
@@ -189,7 +185,8 @@ class ExcessMapEstimator(Estimator):
         kernel = Tophat2DKernel(size)
 
         counts_stat = convolved_map_dataset_counts_statistics(
-            dataset, kernel, self.apply_mask_fit)
+            dataset, kernel, self.apply_mask_fit
+        )
 
         geom = dataset.counts.geom.squash("energy")
 

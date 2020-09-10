@@ -86,7 +86,7 @@ class SensitivityEstimator(Estimator):
         e2dnde : `~astropy.units.Quantity`
             Minimal differential flux.
         """
-        energy = dataset.background.geom.axes[0].center
+        energy = dataset._geom.get_axis_by_name("energy").center
 
         dataset.models = SkyModel(spectral_model=self.spectrum)
         npred = dataset.npred()
@@ -117,7 +117,7 @@ class SensitivityEstimator(Estimator):
         sensitivity : `~astropy.table.Table`
             Sensitivity table
         """
-        energy = dataset._edisp_kernel.e_reco.center
+        energy = dataset._geom.get_axis_by_name("energy").center
         excess = self.estimate_min_excess(dataset)
         e2dnde = self.estimate_min_e2dnde(excess, dataset)
         criterion = self._get_criterion(excess.data.squeeze())
@@ -143,7 +143,7 @@ class SensitivityEstimator(Estimator):
                     description="Number of excess counts in the bin",
                 ),
                 Column(
-                    data=dataset.background.data.squeeze(),
+                    data=dataset.normalised_off.data.squeeze(),
                     name="background",
                     format="5g",
                     description="Number of background counts in the bin",
