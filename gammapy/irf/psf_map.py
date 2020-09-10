@@ -300,7 +300,7 @@ class PSFMap(IRFMap):
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 
     @classmethod
-    def from_gauss(cls, energy, rad, sigma):
+    def from_gauss(cls, energy_axis_true, rad_axis, sigma):
         """Create all -sky PSF map from Gaussian width.
 
         This is used for testing and examples.
@@ -311,20 +311,22 @@ class PSFMap(IRFMap):
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
-            Energy (1-dim)
-        rad : `~astropy.units.Quantity` with angle units
-            Offset angle wrt source position (1-dim)
+        energy_axis_true : `~gammapy.maps.MapAxis`
+            True energy axis. 
+        rad_axis : `~gammapy.maps.MapAxis`
+            Offset angle wrt source position axis. 
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
+
         Returns
         -------
         psf_map : `PSFMap`
             Point spread function map.
-        """  
-
+        """
         # note: it would be straightforward to also have disk shape instead
         # of gauss
+        energy = energy_axis_true.center
+        rad = rad_axis.center
         tableshape = (energy.shape[0], rad.shape[0])
         if np.size(sigma) == 1:
             # same width for all energies
@@ -333,8 +335,8 @@ class PSFMap(IRFMap):
         elif np.size(sigma) == np.size(energy):
             # one width per energy
             energytable_temp = np.zeros(tableshape)*u.sr**-1
-            for i in np.arange(tableshape[0]):
-                energytable_temp[i, :] = TablePSF.from_shape(shape='gauss', width=sigma[i], rad=rad).psf_value
+            for idx in np.arange(tableshape[0]):
+                energytable_temp[idx, :] = TablePSF.from_shape(shape='gauss', width=sigma[idx], rad=rad).psf_value
         else:
             raise AssertionError('There need to be the same number of sigma values as energies')
         energytable = EnergyDependentTablePSF(energy, rad, exposure=None, psf_value=energytable_temp)
