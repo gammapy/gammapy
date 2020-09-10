@@ -783,8 +783,8 @@ class BackgroundModel(Model):
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
 
         bkg_map = self.map.cutout(**cutout_kwargs)
-        parameters = self.parameters.copy()
-        return self.__class__.from_parameters(parameters, map=bkg_map, name=name)
+        spectral_model = self.spectral_model.copy()
+        return self.__class__(bkg_map, spectral_model=spectral_model, name=name)
 
     def stack(self, other, weights=None):
         """Stack background model in place.
@@ -802,8 +802,8 @@ class BackgroundModel(Model):
         self.map = bkg
 
         # reset parameter values
-        self.norm.value = 1
-        self.tilt.value = 0
+        self.spectral_model.norm.value = 1
+        self.spectral_model.tilt.value = 0
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n\n"

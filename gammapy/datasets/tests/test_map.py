@@ -388,7 +388,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 @requires_data()
 def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1 = get_map_dataset(sky_model, geom, geom_etrue, name="test-1")
-    dataset_1.background_model.norm.value = 0.5
+    dataset_1.background_model.spectral_model.norm.value = 0.5
     dataset_1.counts = dataset_1.npred()
 
     dataset_2 = get_map_dataset(sky_model, geom, geom_etrue, name="test-2")
@@ -397,8 +397,8 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     sky_model.parameters["sigma"].frozen = True
 
-    dataset_1.background_model.norm.value = 0.49
-    dataset_2.background_model.norm.value = 0.99
+    dataset_1.background_model.spectral_model.norm.value = 0.49
+    dataset_2.background_model.spectral_model.norm.value = 0.99
 
     fit = Fit([dataset_1, dataset_2])
     result = fit.run()
@@ -456,7 +456,7 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
     dataset = get_map_dataset(sky_model, geom_image, geom_etrue)
     sky_model.spectral_model.index.value = 3.0
     sky_model.spectral_model.index.frozen = True
-    dataset.background_model.norm.value = 0.5
+    dataset.background_model.spectral_model.norm.value = 0.5
 
     dataset.counts = dataset.npred()
 

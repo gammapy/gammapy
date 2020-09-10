@@ -111,4 +111,4 @@ class FoVBackgroundMaker(Maker):
             )
         else:
             scale = count_tot / bkg_tot
-            dataset.background_model.norm.value = scale
+            dataset.background_model.spectral_model.norm.value = scale

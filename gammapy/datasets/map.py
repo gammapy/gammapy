@@ -1063,7 +1063,7 @@ class MapDataset(Dataset):
         if self.background_model is not None:
             bkg = self.background_model.evaluate().get_spectrum(on_region, np.sum)
             bkg_model = BackgroundModel(bkg, name=name + "-bkg", datasets_names=[name])
-            bkg_model.norm.frozen = True
+            bkg_model.spectral_model.norm.frozen = True
             kwargs["models"] = Models([bkg_model])
 
         if self.exposure is not None:
