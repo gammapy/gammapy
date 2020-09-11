@@ -17,7 +17,6 @@ __all__ = [
     "make_psf_map",
     "make_map_exposure_true_energy",
     "make_theta_squared_table",
-    "interpolate_map_IRF",
     "interpolate_edisp_kernel_map",
     "interpolate_psf_map",
 ]
@@ -62,28 +61,6 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
         geom=geom, data=exposure.value.reshape(geom.data_shape), unit=exposure.unit
     )
 
-
-def interpolate_map_IRF(map_IRF, geom):
-    """Compute IRF map for a given geom from an input
-        all-sky map.
-
-    Parameters
-    ----------
-    map_IRF : `~gammapy.maps.Map`
-        Effective area
-    geom : `~gammapy.maps.WcsGeom`
-        Map geometry (must have an energy axis)
-
-    Returns
-    -------
-    map : `~gammapy.maps.WcsNDMap`
-        Interpolated map
-    """
-    coords = geom.get_coord()
-    interp_map = Map.from_geom(geom, unit=map_IRF.unit)
-    values = map_IRF.interp_by_coord(coords)
-    interp_map.data = values
-    return interp_map
 
 def _map_spectrum_weight(map, spectrum=None):
     """Weight a map with a spectrum.

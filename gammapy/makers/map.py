@@ -13,7 +13,6 @@ from .utils import (
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_psf_map,
-    interpolate_map_IRF,
     interpolate_edisp_kernel_map,
     interpolate_psf_map,
 )
@@ -89,8 +88,7 @@ class MapDatasetMaker(Maker):
             Exposure map.
         """
         if isinstance(observation.aeff, Map):
-            return interpolate_map_IRF(
-                map_IRF=observation.aeff,
+            return observation.aeff.interp_to_geom(
                 geom=geom,
             )
         return make_map_exposure_true_energy(
@@ -139,8 +137,7 @@ class MapDatasetMaker(Maker):
             Background map.
         """
         if isinstance(observation.bkg, Map):
-            return interpolate_map_IRF(
-                map_IRF=observation.bkg,
+            return observation.bkg.interp_to_geom(
                 geom=geom,
             )
         bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
