@@ -22,18 +22,18 @@ class SpectrumDatasetMaker(Maker):
 
     Parameters
     ----------
-    containment_correction : bool
-        Apply containment correction for point sources and circular on regions.
     selection : list
         List of str, selecting which maps to make.
         Available: 'counts', 'aeff', 'background', 'edisp'
         By default, all spectra are made.
+    containment_correction : bool
+        Apply containment correction for point sources and circular on regions.
     """
 
     tag = "SpectrumDatasetMaker"
     available_selection = ["counts", "background", "aeff", "edisp"]
 
-    def __init__(self, containment_correction=False, selection=None):
+    def __init__(self, selection=None, containment_correction=False):
         self.containment_correction = containment_correction
 
         if selection is None:
