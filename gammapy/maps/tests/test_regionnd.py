@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.data import EventList
 from gammapy.irf import EDispKernel
-from gammapy.maps import Map, MapAxis
+from gammapy.maps import Map, MapAxis, RegionNDMap
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -43,6 +43,16 @@ def test_region_nd_map(region_map):
     assert region_map.data.dtype == np.int
     assert "RegionNDMap" in str(region_map)
     assert "1 / TeV" in str(region_map)
+
+def test_region_nd_map_sum_over_axes(region_map):
+    region_map_summed = region_map.sum_over_axes()
+    weights = RegionNDMap.from_geom(region_map.geom, data=1.)
+    weights.data[5,:,:]=0
+    region_map_summed_weights = region_map.sum_over_axes(weights=weights)
+
+    assert_allclose(region_map_summed.data, 15)
+    assert_allclose(region_map_summed.data.shape, (1,1,1,))
+    assert_allclose(region_map_summed_weights.data, 10)
 
 
 @requires_dependency("matplotlib")

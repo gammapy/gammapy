@@ -1548,6 +1548,48 @@ class Geom(abc.ABC):
         """
         pass
 
+    def squash(self, axis):
+        """Squash geom axis.
+
+        Parameters
+        ----------
+        axis : str
+            Axis to squash.
+
+        Returns
+        -------
+        geom : `Geom`
+            Geom with squashed axis.
+        """
+        axes = []
+        for ax in copy.deepcopy(self.axes):
+            if ax.name == axis:
+                ax = ax.squash()
+            axes.append(ax)
+
+        return self.to_image().to_cube(axes=axes)
+
+    def drop(self, axis):
+        """Drop an axis from the geom.
+
+        Parameters
+        ----------
+        axis : str
+            Name of the axis to remove.
+
+        Returns
+            -------
+        geom : `Geom`
+            New geom with the axis removed.
+        """
+        axes = []
+        for ax in copy.deepcopy(self.axes):
+            if ax.name == axis:
+                continue
+            axes.append(ax)
+
+        return self.to_image().to_cube(axes=axes)
+
     def coord_to_tuple(self, coord):
         """Generate a coordinate tuple compatible with this geometry.
 
