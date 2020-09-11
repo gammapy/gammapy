@@ -438,9 +438,9 @@ def test_interpolate_mapdataset():
         atol=1e-3)
 
     #test edispmap
-    psfmatrix_preinterp = edispmap.get_edisp_kernel(SkyCoord("0 deg", "0 deg")).pdf_matrix
-    psfmatrix_postinterp = dataset.edisp.get_edisp_kernel(SkyCoord("0 deg", "0 deg")).pdf_matrix
-    assert_allclose(psfmatrix_preinterp, psfmatrix_postinterp, atol=1e-7)
+    pdfmatrix_preinterp = edispmap.get_edisp_kernel(SkyCoord("0 deg", "0 deg")).pdf_matrix
+    pdfmatrix_postinterp = dataset.edisp.get_edisp_kernel(SkyCoord("0 deg", "0 deg")).pdf_matrix
+    assert_allclose(pdfmatrix_preinterp, pdfmatrix_postinterp, atol=1e-7)
 
     #test psfmap
     geom_psf = geom_target.drop('energy').to_cube([energy_true])
