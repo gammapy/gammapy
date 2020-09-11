@@ -772,7 +772,7 @@ class Map(abc.ABC):
         """
         pass
 
-    def interp_to_geom(self,geom):
+    def interp_to_geom(self, geom):
         """Interpolate map to input geometry.
 
         Parameters
@@ -782,7 +782,7 @@ class Map(abc.ABC):
 
         Returns
         -------
-        map : `Map`
+        interp_map : `Map`
             Interpolated Map
         """
         coords = geom.get_coord()
