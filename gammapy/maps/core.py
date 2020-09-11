@@ -772,6 +772,25 @@ class Map(abc.ABC):
         """
         pass
 
+    def interp_to_geom(self,geom):
+        """Interpolate map to input geometry.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Target Map geometry
+
+        Returns
+        -------
+        map : `Map`
+            Interpolated Map
+        """
+        coords = geom.get_coord()
+        interp_map = Map.from_geom(geom, unit=self.unit)
+        values = self.interp_by_coord(coords)
+        interp_map.data = values
+        return interp_map
+
     def fill_events(self, events):
         """Fill event coordinates (`~gammapy.data.EventList`)."""
         self.fill_by_coord(events.map_coord(self.geom))
