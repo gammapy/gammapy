@@ -17,8 +17,6 @@ __all__ = [
     "make_psf_map",
     "make_map_exposure_true_energy",
     "make_theta_squared_table",
-    "interpolate_edisp_kernel_map",
-    "interpolate_psf_map",
 ]
 
 
@@ -220,33 +218,6 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     psfmap = Map.from_geom(geom, data=data, unit="sr-1")
     return PSFMap(psfmap, exposure_map)
 
-def interpolate_psf_map(psf, geom):
-    """Interpolate an all-sky psf map to the analysis geometry
-
-    Expected axes : rad and true energy in this specific order
-    The name of the rad MapAxis is expected to be 'rad'
-
-    Parameters
-    ----------
-    psf : `~gammapy.irf.PSFMap`
-        the all-sky PSF IRF map
-    geom : `~gammapy.maps.Geom`
-        the map geom to be used. It provides the target geometry.
-        rad and true energy axes should be given in this specific order.
-    exposure_map : `~gammapy.maps.Map`, optional
-        the associated exposure map.
-        default is None
-
-    Returns
-    -------
-    psfmap : `~gammapy.irf.PSFMap`
-        the resulting PSF map
-    """
-    coords = geom.get_coord()
-    psfmap = PSFMap.from_geom(geom)
-    psfmap.psf_map.data = psf.psf_map.interp_by_coord(coords)
-    return psfmap
-
 
 def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     """Make a edisp map for a single observation
@@ -292,34 +263,6 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     data = edisp_values.to_value("")
     edispmap = Map.from_geom(geom, data=data, unit="")
     return EDispMap(edispmap, exposure_map)
-
-def interpolate_edisp_kernel_map(edisp, geom):
-    """Interpolate an all-sky edisp kernel map to the analysis geometry.
-
-    Expected axes : (reco) energy and true energy in this specific order
-    The name of the reco energy MapAxis is expected to be 'energy'.
-    The name of the true energy MapAxis is expected to be 'energy_true'.
-
-    Parameters
-    ----------
-    edisp :  `~gammapy.cube.EDispKernelMap`
-        the input EDispKernelMap
-    geom : `~gammapy.maps.Geom`
-        the map geom to be used. It provides the target geometry.
-        energy and true energy axes should be given in this specific order.
-    exposure_map : `~gammapy.maps.Map`, optional
-        the associated exposure map.
-        default is None
-
-    Returns
-    -------
-    edispmap : `~gammapy.cube.EDispKernelMap`
-        the resulting EDispKernel map
-    """
-    coords = geom.get_coord()
-    edispmap = EDispKernelMap.from_geom(geom)
-    edispmap.edisp_map.data = edisp.edisp_map.interp_by_coord(coords)
-    return edispmap
 
 
 def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):

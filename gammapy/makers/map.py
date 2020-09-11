@@ -13,8 +13,6 @@ from .utils import (
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_psf_map,
-    interpolate_edisp_kernel_map,
-    interpolate_psf_map,
 )
 
 __all__ = ["MapDatasetMaker"]
@@ -200,9 +198,11 @@ class MapDatasetMaker(Maker):
             EdispKernel map.
         """
         if isinstance(observation.edisp, EDispKernelMap):
-            return interpolate_edisp_kernel_map(
-                edisp=observation.edisp,
-                geom=geom,
+            exposure = None
+            interp_map = observation.edisp.edisp_map.interp_to_geom(geom)
+            return EDispKernelMap(
+                edisp_kernel_map = interp_map,
+                exposure_map = exposure
                 )
         exposure = self.make_exposure_irf(geom.squash(axis="energy"), observation)
 
@@ -230,10 +230,10 @@ class MapDatasetMaker(Maker):
         """
         psf = observation.psf
         if isinstance(psf, PSFMap):
-            return interpolate_psf_map(
-                psf=psf,
-                geom=geom,
+            return PSFMap(
+                psf.psf_map.interp_to_geom(geom)
                 )
+
         if isinstance(psf, EnergyDependentMultiGaussPSF):
             rad_axis = geom.get_axis_by_name("theta")
             psf = psf.to_psf3d(rad=rad_axis.center)
