@@ -342,11 +342,6 @@ class Map(abc.ABC):
         for idx in np.ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
 
-    @abc.abstractmethod
-    def sum_over_axes(self, axes=None, keepdims=False):
-        """Reduce to a 2D image by summing over non-spatial dimensions."""
-        pass
-
     def coadd(self, map_in, weights=None):
         """Add the contents of ``map_in`` to this map.
 
