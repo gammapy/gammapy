@@ -525,11 +525,11 @@ class MapDataset(Dataset):
             if isinstance(self.edisp, EDispMap) and isinstance(other.edisp, EDispMap):
                 mask_irf = self._mask_safe_irf(
                     self.edisp.exposure_map.sum_over_axes(),
-                    self.mask_safe.reduce_over_axes(func=np.logical_or),
+                    self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True),
                 )
                 mask_irf_other = self._mask_safe_irf(
                     other.edisp.exposure_map.sum_over_axes(),
-                    other_mask_safe.reduce_over_axes(func=np.logical_or),
+                    other_mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True),
                 )
 
             self.edisp.edisp_map.data *= mask_irf.data
@@ -647,7 +647,7 @@ class MapDataset(Dataset):
         )
 
         if self.mask_safe is not None:
-            mask = self.mask_safe.reduce_over_axes(func=np.logical_or)
+            mask = self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
             spatial_residuals.data[~mask.data] = np.nan
 
         # If no region is provided, skip spectral residuals

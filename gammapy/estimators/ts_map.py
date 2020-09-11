@@ -509,7 +509,7 @@ class SimpleMapDataset:
         counts_cutout = _extract_array(counts, kernel.shape, position)
         background_cutout = _extract_array(background, kernel.shape, position)
         exposure_cutout = _extract_array(exposure, kernel.shape, position)
-        norm_guess = norm[position]
+        norm_guess = norm[0, position[0], position[1]]
         return cls(
             counts=counts_cutout,
             background=background_cutout,
