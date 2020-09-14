@@ -8,7 +8,7 @@ from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.datasets import Dataset
 from gammapy.irf import EDispKernel, EDispKernelMap, EffectiveAreaTable
-from gammapy.maps import RegionGeom, RegionNDMap
+from gammapy.maps import RegionGeom, RegionNDMap, MapAxis
 from gammapy.modeling.models import Models, ProperModels
 from gammapy.stats import (
     CashCountsStatistic,
@@ -718,6 +718,59 @@ class SpectrumDataset(Dataset):
 
         return self.__class__(**kwargs)
 
+    def group_over_energy(self, e_edges=None, name=None):
+        """Group SpectrumDataset over reco energy edges.
+
+        Counts are summed taking into account safe mask.
+
+        Parameters
+        ----------
+        e_edges : `~astropy.units.Quantity`
+            the energy edges.
+        name: str
+            Name of the new dataset.
+
+        Returns
+        -------
+        dataset: `SpectrumDataset`
+            Resampled spectrum dataset .
+        """
+        if e_edges is None:
+            e_axis = self.counts.geom.get_axis_by_name("energy")
+            e_edges = u.Quantity([e_axis.edges[0], e_axis.edges[-1]])
+
+        axis = MapAxis.from_edges(e_edges, name="energy")
+
+        name = make_name(name)
+        kwargs = {}
+        kwargs["name"] = name
+        kwargs["gti"] = self.gti
+        kwargs["aeff"] = self.aeff
+        kwargs["livetime"] = self.livetime
+
+        if self.mask_safe is not None:
+            mask_safe = self.mask_safe
+        else:
+            mask_safe = 1
+
+        # Adapt resample_axis to take ufunc argument
+        kwargs["mask_safe"] = mask_safe.resample_axis(axis=axis, ufunc=np.logical_or)
+
+        if self.counts is not None:
+            kwargs["counts"] = self.counts.resample_axis(axis=axis, weights=mask_safe)
+
+        if self.background_model is not None:
+            background = self.background_model.evaluate()
+            background = background.resample_axis(axis=axis, weights=mask_safe)
+            model = BackgroundModel(
+                background, datasets_names=[name], name=f"{name}-bkg"
+            )
+            kwargs["models"] = [model]
+
+        if self.edisp is not None:
+            kwargs["edisp"] = self.edisp.resample_axis(axis=axis, weights=mask_safe)
+
+        return self.__class__(**kwargs)
 
 class SpectrumDatasetOnOff(SpectrumDataset):
     """Spectrum dataset for on-off likelihood fitting.
@@ -1488,3 +1541,49 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         kwargs["livetime"] = self.livetime
 
         return self.__class__(**kwargs)
+
+    def group_over_energy(self, e_edges=None, name=None):
+        """Group SpectrumDataset over reco energy edges.
+
+        Counts are summed taking into account safe mask.
+
+        Parameters
+        ----------
+        e_edges : `~astropy.units.Quantity`
+            the energy edges.
+        name: str
+            Name of the new dataset.
+
+        Returns
+        -------
+        dataset: `SpectrumDataset`
+            Resampled spectrum dataset .
+        """
+        dataset = super().group_over_energy(e_edges,name)
+        kwargs = {}
+        kwargs["dataset"] = dataset
+
+        axis = dataset.counts.geom.get_axis_by_name("energy")
+
+        if self.mask_safe is not None:
+            mask_safe = self.mask_safe
+        else:
+            mask_safe = 1
+
+        if dataset.counts_off is not None:
+            counts_off = dataset.counts_off
+            kwargs["counts_off"] = counts_off.resample_axis(axis=axis, weights=mask_safe)
+
+        if dataset.acceptance is not None:
+            acceptance = dataset.acceptance
+            kwargs["acceptance"] = acceptance.resample_axis(axis=axis, weights=mask_safe)
+
+            background = dataset.alpha * dataset.counts_off
+            background = background.resample_axis(axis=axis, weights=mask_safe)
+
+            kwargs["acceptance_off"] = (
+                    kwargs["acceptance"] * kwargs["counts_off"] / background
+            )
+
+        return self.__class__.from_spectrum_dataset(**kwargs)
+
