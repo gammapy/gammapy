@@ -1481,7 +1481,9 @@ class MapDatasetOnOff(MapDataset):
 
     @property
     def background(self):
-        """Marginalised background counts in the on region.
+        """
+        Background counts estimated from the marginalized likelihood estimate.
+        See :ref:wstat.
         """
         mu_bkg = self.alpha.data * get_wstat_mu_bkg(
             n_on=self.counts.data,
@@ -1493,14 +1495,14 @@ class MapDatasetOnOff(MapDataset):
         return Map.from_geom(geom=self._geom, data=mu_bkg)
 
     @property
-    def normalised_off(self):
+    def counts_off_normalised(self):
         """ alpha * n_off"""
         return self.alpha * self.counts_off
 
     @property
     def excess(self):
         """Excess (counts - alpha * counts_off)"""
-        return self.counts - self.normalised_off
+        return self.counts - self.counts_off_normalised
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
@@ -1648,8 +1650,8 @@ class MapDatasetOnOff(MapDataset):
             raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
 
         # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
-        tmp_factor = self.normalised_off * self.mask_safe
-        tmp_factor.stack(other.normalised_off, weights=other.mask_safe)
+        tmp_factor = self.counts_off_normalised * self.mask_safe
+        tmp_factor.stack(other.counts_off_normalised, weights=other.mask_safe)
 
         # Stack the off counts (in place)
         self.counts_off.data[~self.mask_safe.data] = 0
@@ -1839,7 +1841,7 @@ class MapDatasetOnOff(MapDataset):
 
         if self.acceptance is not None:
             kwargs["acceptance"] = self.acceptance.get_spectrum(on_region, np.mean)
-            norm = self.normalised_off.get_spectrum(on_region, np.sum)
+            norm = self.counts_off_normalised.get_spectrum(on_region, np.sum)
             kwargs["acceptance_off"] = (
                 kwargs["acceptance"] * kwargs["counts_off"] / norm
             )
@@ -1914,7 +1916,7 @@ class MapDatasetOnOff(MapDataset):
             acceptance = self.acceptance * mask_safe
             kwargs["acceptance"] = acceptance.sum_over_axes(keepdims=True)
 
-        norm_factor = self.normalised_off * mask_safe
+        norm_factor = self.counts_off_normalised * mask_safe
         norm_factor = norm_factor.sum_over_axes(keepdims=True)
         kwargs["acceptance_off"] = (
             kwargs["acceptance"] * kwargs["counts_off"] / norm_factor

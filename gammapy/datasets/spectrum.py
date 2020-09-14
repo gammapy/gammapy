@@ -127,11 +127,6 @@ class SpectrumDataset(Dataset):
             npred = np.sum(self.npred().data)
         str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
 
-        counts_off = np.nan
-        if getattr(self, "counts_off", None) is not None:
-            counts_off = np.sum(self.counts_off.data)
-            str_ += "\t{:32}: {:.2f}\n\n".format("Total off counts", counts_off)
-
         background = np.nan
         if self.background_model is not None:
             background = np.sum(self.background_model.evaluate().data)
@@ -395,7 +390,7 @@ class SpectrumDataset(Dataset):
         )
         if self.background_model:
             pred_excess = self.npred() - self.background_model.evaluate()
-        elif self.background:
+        elif isinstance(self, SpectrumDatasetOnOff):
             pred_excess = self.npred()
 
         pred_excess.plot_hist(ax=ax, label="Predicted excess")
@@ -616,7 +611,7 @@ class SpectrumDataset(Dataset):
         ax1.set_title("Counts")
 
         if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
-            self.background.plot_hist(ax=ax1, label="background")
+            self.counts_off_normalised.plot_hist(ax=ax1, label="alpha * N_off")
         elif self.background_model is not None:
             self.background_model.evaluate().plot_hist(ax=ax1, label="background")
 
@@ -828,6 +823,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         str_list = str_.split("\n")
 
+        if getattr(self, "counts_off", None) is not None:
+            counts_off = np.sum(self.counts_off.data)
+            str_ += "\t{:32}: {:.2f}\n\n".format("Total off counts", counts_off)
+
         acceptance = np.nan
         if self.acceptance is not None:
             acceptance = np.mean(self.acceptance.data)
@@ -845,7 +844,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     @property
     def background(self):
-        """from wstat formula"""
+        """Background counts estimated from the marginalized likelihood estimate.
+         See :ref:wstat."""
         mu_bkg = self.alpha.data * get_wstat_mu_bkg(
             n_on=self.counts.data,
             n_off=self.counts_off.data,
@@ -855,14 +855,14 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         return RegionNDMap.from_geom(geom=self._geom, data=mu_bkg)
 
     @property
-    def normalised_off(self):
+    def counts_off_normalised(self):
         """ alpha * noff"""
         return self.alpha * self.counts_off
 
     @property
     def excess(self):
         """counts - alpha * off"""
-        return self.counts - self.normalised_off
+        return self.counts - self.counts_off_normalised
 
     @property
     def alpha(self):
