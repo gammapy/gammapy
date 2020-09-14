@@ -427,6 +427,18 @@ def test_wcsndmap_resample_axis():
     assert m2.data.shape == (3, 2, 6, 7)
     assert_allclose(m2.data, 2)
 
+def test_wcsndmap_resample_axis_logical_and():
+    axis_1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="test-1")
+
+    geom = WcsGeom.create(npix=(2, 2), axes=[axis_1])
+    m = WcsNDMap(geom, dtype=bool)
+    m.data[:,:,:] = True
+    m.data[0,0,0] = False
+
+    new_axis = MapAxis.from_edges([1, 3, 5], name="test-1")
+    m2 = m.resample_axis(axis=new_axis, ufunc=np.logical_and)
+    assert_allclose(m2.data[0,0,0], False)
+    assert_allclose(m2.data[1,0,0], True)
 
 def test_coadd_unit():
     geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", frame="galactic")
