@@ -3,7 +3,7 @@ import logging
 from astropy.table import Table
 import astropy.units as u
 from gammapy.datasets import MapDataset
-from gammapy.irf import EnergyDependentMultiGaussPSF
+from gammapy.irf import EnergyDependentMultiGaussPSF,EDispKernelMap, PSFMap
 from gammapy.maps import Map
 from gammapy.modeling.models import BackgroundModel
 from .core import Maker
@@ -85,6 +85,10 @@ class MapDatasetMaker(Maker):
         exposure : `~gammapy.maps.Map`
             Exposure map.
         """
+        if isinstance(observation.aeff, Map):
+            return observation.aeff.interp_to_geom(
+                geom=geom,
+            )
         return make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
             livetime=observation.observation_live_time_duration,
@@ -130,6 +134,10 @@ class MapDatasetMaker(Maker):
         background : `~gammapy.maps.Map`
             Background map.
         """
+        if isinstance(observation.bkg, Map):
+            return observation.bkg.interp_to_geom(
+                geom=geom,
+            )
         bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
 
         if bkg_coordsys == "ALTAZ":
@@ -189,6 +197,13 @@ class MapDatasetMaker(Maker):
         edisp : `~gammapy.cube.EDispKernelMap`
             EdispKernel map.
         """
+        if isinstance(observation.edisp, EDispKernelMap):
+            exposure = None
+            interp_map = observation.edisp.edisp_map.interp_to_geom(geom)
+            return EDispKernelMap(
+                edisp_kernel_map = interp_map,
+                exposure_map = exposure
+                )
         exposure = self.make_exposure_irf(geom.squash(axis="energy"), observation)
 
         return make_edisp_kernel_map(
@@ -214,6 +229,11 @@ class MapDatasetMaker(Maker):
             Psf map.
         """
         psf = observation.psf
+        if isinstance(psf, PSFMap):
+            return PSFMap(
+                psf.psf_map.interp_to_geom(geom)
+                )
+
         if isinstance(psf, EnergyDependentMultiGaussPSF):
             rad_axis = geom.get_axis_by_name("theta")
             psf = psf.to_psf3d(rad=rad_axis.center)
