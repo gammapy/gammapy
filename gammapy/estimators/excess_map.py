@@ -37,7 +37,7 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=Fals
     n_on_conv = np.rint(n_on.convolve(kernel.array).data)
 
     if isinstance(dataset, MapDatasetOnOff):
-        background = dataset.normalised_off * mask
+        background = dataset.counts_off_normalised * mask
         background.data[dataset.acceptance_off.data == 0] = 0.0
         n_off = dataset.counts_off * mask
 

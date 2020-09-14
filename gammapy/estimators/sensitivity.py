@@ -143,7 +143,7 @@ class SensitivityEstimator(Estimator):
                     description="Number of excess counts in the bin",
                 ),
                 Column(
-                    data=dataset.normalised_off.data.squeeze(),
+                    data=dataset.counts_off_normalised.data.squeeze(),
                     name="background",
                     format="5g",
                     description="Number of background counts in the bin",

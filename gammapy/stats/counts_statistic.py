@@ -54,7 +54,7 @@ class CountsStatistic(abc.ABC):
                 )
                 errn[it.multi_index] = res - self.excess[it.multi_index]
             except ValueError:
-                errn[it.multi_index] = -self.n_on[it.multi_index]
+                errn[it.multi_index] = np.nan
             it.iternext()
 
         return errn
@@ -82,7 +82,7 @@ class CountsStatistic(abc.ABC):
                     args=(self.TS_max[it.multi_index] + n_sigma ** 2, it.multi_index),
                 )
             except ValueError:
-                errp[it.multi_index] = -self.n_on[it.multi_index]
+                errp[it.multi_index] = np.nan
             it.iternext()
 
         return errp - self.excess
@@ -115,7 +115,7 @@ class CountsStatistic(abc.ABC):
                     args=(TS_ref + n_sigma ** 2, it.multi_index),
                 )
             except ValueError:
-                ul[it.multi_index] = -self.n_on[it.multi_index]
+                ul[it.multi_index] = np.nan
             it.iternext()
 
         return ul
@@ -224,6 +224,14 @@ class WStatCountsStatistic(CountsStatistic):
             n_on=self.n_on, n_off=self.n_off, alpha=self.alpha, mu_sig=self.mu_sig,
         )
         return np.nan_to_num(mu_bkg)
+
+    @property
+    def counts_off_normalised(self):
+        return self.alpha * self.n_off
+
+    @property
+    def excess(self):
+        return self.n_on - self.counts_off_normalised
 
     @property
     def error(self):

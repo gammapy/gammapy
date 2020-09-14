@@ -83,12 +83,17 @@ def test_cash_excess_matching_significance(mu_bkg, significance, result):
 
 
 values = [
-    (1, 2, 1, [-0.5, -0.5044155295, 0.613969407]),
-    (5, 1, 1, [2.0, 1.4718179384, 0.14107005]),
-    (10, 5, 0.3, [6.5384, 3.52665, 0.000420849]),
-    (10, 23, 0.1, [7.0, 3.4361, 0.00059009325]),
-    (1, 20, 1.0, [-9.5, -3.9352929, 8.309529088425228e-05]),
-    (5 * ref_array, 1 * ref_array, 1 * ref_array, [2.0, 1.47181794, 0.14107005],),
+    (1, 2, 1, [-1.0, -0.5829220133009171, 0.55994580085]),
+    (5, 1, 1, [4.0, 1.7061745691234782, 0.087975582112]),
+    (10, 5, 0.3, [8.5, 3.5853812867949024, 3.365860865528742e-4]),
+    (10, 23, 0.1, [7.7, 3.443415522820395, 5.74416016688779e-4]),
+    (1, 20, 1.0, [-19, -4.590373638528086, 4.424532535784618e-06]),
+    (
+        5 * ref_array,
+        1 * ref_array,
+        1 * ref_array,
+        [4.0, 1.7061745691234782, 0.087975582112],
+    ),
 ]
 
 
@@ -105,12 +110,12 @@ def test_wstat_basic(n_on, n_off, alpha, result):
 
 
 values = [
-    (1, 2, 1, [-2.53608039, 1.3436209]),
-    (5, 1, 1, [-1.053445, 5.724167280597973]),
-    (10, 5, 0.3, [-1.466391, 6.276495253155]),
-    (10, 23, 0.1, [-2.248126, 4.3295081]),
-    (1, 20, 1.0, [-1.0, 0.7588444]),
-    (5 * ref_array, 1 * ref_array, 1 * ref_array, [-1.053445, 5.72416728]),
+    (1, 2, 1, [-1.942465, 1.762589]),
+    (5, 1, 1, [-2.310459, 2.718807]),
+    (10, 5, 0.3, [-2.932472, 3.55926]),
+    (10, 23, 0.1, [-2.884366, 3.533279]),
+    (1, 20, 1.0, [-4.897018, 4.299083]),
+    (5 * ref_array, 1 * ref_array, 1 * ref_array, [-2.310459, 2.718807]),
 ]
 
 
@@ -126,11 +131,11 @@ def test_wstat_errors(n_on, n_off, alpha, result):
 
 values = [
     (1, 2, 1, [6.272627]),
-    (5, 1, 1, [14.779598]),
-    (10, 5, 0.3, [21.6815]),
-    (10, 23, 0.1, [20.502903]),
+    (5, 1, 1, [14.222831]),
+    (10, 5, 0.3, [21.309229]),
+    (10, 23, 0.1, [20.45803]),
     (1, 20, 1.0, [4.884418]),
-    (5 * ref_array, 1 * ref_array, 1 * ref_array, [14.779598]),
+    (5 * ref_array, 1 * ref_array, 1 * ref_array, [14.222831]),
 ]
 
 
@@ -139,7 +144,7 @@ def test_wstat_ul(n_on, n_off, alpha, result):
     stat = WStatCountsStatistic(n_on, n_off, alpha)
     ul = stat.compute_upper_limit()
 
-    assert_allclose(ul, result[0], atol=1e-5)
+    assert_allclose(ul, result[0], rtol=1e-5)
 
 
 values = [
@@ -160,4 +165,4 @@ def test_wstat_excess_matching_significance(n_off, alpha, significance, result):
     stat = WStatCountsStatistic(1, n_off, alpha)
     excess = stat.excess_matching_significance(significance)
 
-    assert_allclose(excess, result, atol=1e-3)
+    assert_allclose(excess, result, rtol=1e-2)
