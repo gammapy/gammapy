@@ -1104,55 +1104,6 @@ class MapDataset(Dataset):
 
         return SpectrumDataset(**kwargs)
 
-    def to_image(self, name=None):
-        """Create images by summing over the reconstructed-energy axis.
-
-        Parameters
-        ----------
-        name : str
-            Name of the new dataset.
-
-        Returns
-        -------
-        dataset : `MapDataset`
-            Map dataset containing images.
-        """
-        name = make_name(name)
-        kwargs = {}
-        kwargs["name"] = name
-        kwargs["gti"] = self.gti
-        kwargs["exposure"] = self.exposure
-        kwargs["psf"] = self.psf
-
-        if self.mask_safe is not None:
-            kwargs["mask_safe"] = self.mask_safe.reduce_over_axes(
-                func=np.logical_or, keepdims=True
-            )
-
-        if self.counts is not None:
-            kwargs["counts"] = self.counts.sum_over_axes(
-                keepdims=True, weights=self.mask_safe
-            )
-
-        if self.background_model is not None:
-            background = self.background_model.evaluate()
-            background = background.sum_over_axes(keepdims=True, weights=self.mask_safe)
-            model = BackgroundModel(
-                background, datasets_names=[name], name=f"{name}-bkg"
-            )
-            kwargs["models"] = [model]
-
-        if isinstance(self.edisp, EDispKernelMap):
-            mask_irf = self._mask_safe_irf(
-                self.edisp.edisp_map, self.mask_safe, drop="energy_true"
-            )
-            kwargs["edisp"] = self.edisp.to_image(weights=mask_irf)
-
-        else:  # None or EDispMap
-            kwargs["edisp"] = self.edisp
-
-        return self.__class__(**kwargs)
-
     def cutout(self, position, width, mode="trim", name=None):
         """Cutout map dataset.
 
@@ -1366,6 +1317,79 @@ class MapDataset(Dataset):
             if self.__dict__.pop(name, False):
                 log.info(f"Clearing {name} cache for dataset {self.name}")
 
+    def group_over_energy(self, e_edges=None, name=None):
+        """Group MapDataset over reco energy edges.
+
+        Counts are summed taking into account safe mask.
+
+        Parameters
+        ----------
+        e_edges : `~astropy.units.Quantity`
+            the energy edges.
+        name: str
+            Name of the new dataset.
+
+        Returns
+        -------
+        dataset: `MapDataset`
+            Grouped dataset .
+        """
+        if e_edges is None:
+            e_axis = self._geom.get_axis_by_name("energy")
+            e_edges = u.Quantity([e_axis.edges[0], e_axis.edges[-1]])
+
+        axis = MapAxis.from_edges(e_edges, name="energy")
+
+        name = make_name(name)
+        kwargs = {}
+        kwargs["name"] = name
+        kwargs["gti"] = self.gti
+        kwargs["exposure"] = self.exposure
+        kwargs["psf"] = self.psf
+
+        if self.mask_safe is not None:
+            weights = self.mask_safe
+            kwargs["mask_safe"] = self.mask_safe.resample_axis(axis=axis, ufunc=np.logical_or)
+        else:
+            weights = None
+
+
+        if self.counts is not None:
+            kwargs["counts"] = self.counts.resample_axis(axis=axis, weights=weights)
+
+        if self.background_model is not None:
+            background = self.background_model.evaluate()
+            background = background.resample_axis(axis=axis, weights=weights)
+            model = BackgroundModel(
+                background, datasets_names=[name], name=f"{name}-bkg"
+            )
+            kwargs["models"] = [model]
+
+        # Mask_safe or mask_irf??
+        if isinstance(self.edisp, EDispKernelMap):
+            mask_irf = self._mask_safe_irf(
+                self.edisp.edisp_map, self.mask_safe, drop="energy_true"
+            )
+            kwargs["edisp"] = self.edisp.resample_axis(axis=axis, weights=mask_irf)
+        else:  # None or EDispMap
+            kwargs["edisp"] = self.edisp
+
+        return self.__class__(**kwargs)
+
+    def to_image(self, name=None):
+        """Create images by summing over the reconstructed-energy axis.
+
+        Parameters
+        ----------
+        name : str
+            Name of the new dataset.
+
+        Returns
+        -------
+        dataset : `MapDataset`
+            Map dataset containing images.
+        """
+        return self.group_over_energy(e_edges=None, name=name)
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
@@ -1962,6 +1986,55 @@ class MapDatasetOnOff(MapDataset):
             kwargs["acceptance_off"] = self.acceptance_off.slice_by_idx(slices=slices)
 
         return self.from_map_dataset(dataset, **kwargs)
+
+    def group_over_energy(self, e_edges=None, name=None):
+        """Group MapDatasetOnOff over reco energy edges.
+
+        Counts are summed taking into account safe mask.
+
+        Parameters
+        ----------
+        e_edges : `~astropy.units.Quantity`
+            the energy edges.
+        name: str
+            Name of the new dataset.
+
+        Returns
+        -------
+        dataset: `SpectrumDataset`
+            Resampled spectrum dataset .
+        """
+        dataset = super().group_over_energy(e_edges,name)
+
+        axis = dataset.counts.geom.get_axis_by_name("energy")
+
+        if self.mask_safe is not None:
+            weights = self.mask_safe
+        else:
+            weights = None
+
+        counts_off = None
+        if self.counts_off is not None:
+            counts_off = self.counts_off
+            counts_off = counts_off.resample_axis(axis=axis, weights=weights)
+
+        acceptance = 1
+        acceptance_off = None
+        if self.acceptance is not None:
+            acceptance = self.acceptance
+            acceptance = acceptance.resample_axis(axis=axis, weights=weights)
+
+            background = self.alpha * self.counts_off
+            background = background.resample_axis(axis=axis, weights=weights)
+
+            acceptance_off = acceptance * counts_off / background
+
+        return self.__class__.from_map_dataset(
+            dataset,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            counts_off=counts_off
+        )
 
 
 class MapEvaluator:
