@@ -25,17 +25,17 @@ class MapDatasetMaker(Maker):
 
     Parameters
     ----------
-    background_oversampling : int
-        Background evaluation oversampling factor in energy.
     selection : list
         List of str, selecting which maps to make.
         Available: 'counts', 'exposure', 'background', 'psf', 'edisp'
         By default, all maps are made.
+    background_oversampling : int
+        Background evaluation oversampling factor in energy.
     """
     tag = "MapDatasetMaker"
     available_selection = ["counts", "exposure", "background", "psf", "edisp"]
 
-    def __init__(self, background_oversampling=None, selection=None):
+    def __init__(self, selection=None, background_oversampling=None):
         self.background_oversampling = background_oversampling
 
         if selection is None:
