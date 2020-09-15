@@ -551,6 +551,27 @@ class TestSpectrumOnOff:
 
         assert info_dict["name"] == "test"
 
+    def test_group_over_energy(self):
+        grouped = self.dataset.group_over_energy(e_edges=[0.1, 1, 10]*u.TeV)
+
+        assert grouped.counts.data.shape == (2,1,1)
+        assert_allclose(grouped.aeff.data, 1.0)
+        assert_allclose(np.squeeze(grouped.counts), [2, 1])
+        assert_allclose(np.squeeze(grouped.counts_off), [20, 20])
+        assert grouped.edisp.edisp_map.data.shape == (9, 2, 1, 1)
+        assert_allclose(np.squeeze(grouped.acceptance), [2, 2])
+        assert_allclose(np.squeeze(grouped.acceptance_off), [20, 20])
+
+    def test_to_image(self):
+        grouped = self.dataset.to_image()
+
+        assert grouped.counts.data.shape == (1,1,1)
+        assert_allclose(grouped.aeff.data, 1.0)
+        assert_allclose(np.squeeze(grouped.counts), 3)
+        assert_allclose(np.squeeze(grouped.counts_off), 40)
+        assert grouped.edisp.edisp_map.data.shape == (9, 1, 1, 1)
+        assert_allclose(np.squeeze(grouped.acceptance), 4)
+        assert_allclose(np.squeeze(grouped.acceptance_off), 40)
 
 @requires_data()
 @requires_dependency("iminuit")
