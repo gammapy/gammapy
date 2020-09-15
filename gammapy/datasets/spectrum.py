@@ -630,7 +630,7 @@ class SpectrumDataset(Dataset):
 
         ax3.set_title("Energy Dispersion")
         if self.edisp is not None:
-            self._edisp_kernel.plot_matrix(ax=ax3)
+            self._edisp_kernel.plot_matrix(ax=ax3, vmin=0, vmax=1)
 
         # TODO: optimize layout
         plt.subplots_adjust(wspace=0.3)
@@ -771,6 +771,24 @@ class SpectrumDataset(Dataset):
             kwargs["edisp"] = self.edisp.resample_axis(axis=axis, weights=mask_safe)
 
         return self.__class__(**kwargs)
+
+    def to_image(self, name=None):
+        """Group SpectrumDataset into a single reco energy bin.
+
+        Counts are summed taking into account safe mask.
+
+        Parameters
+        ----------
+        name: str
+            Name of the new dataset.
+
+        Returns
+        -------
+        dataset: `SpectrumDataset`
+            Resampled spectrum dataset .
+        """
+        return self.group_over_energy(e_edges=None, name=name)
+
 
 class SpectrumDatasetOnOff(SpectrumDataset):
     """Spectrum dataset for on-off likelihood fitting.
@@ -1543,7 +1561,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         return self.__class__(**kwargs)
 
     def group_over_energy(self, e_edges=None, name=None):
-        """Group SpectrumDataset over reco energy edges.
+        """Group SpectrumDatasetOnOff over reco energy edges.
 
         Counts are summed taking into account safe mask.
 
@@ -1560,8 +1578,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Resampled spectrum dataset .
         """
         dataset = super().group_over_energy(e_edges,name)
-        kwargs = {}
-        kwargs["dataset"] = dataset
 
         axis = dataset.counts.geom.get_axis_by_name("energy")
 
@@ -1570,20 +1586,25 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         else:
             mask_safe = 1
 
-        if dataset.counts_off is not None:
-            counts_off = dataset.counts_off
-            kwargs["counts_off"] = counts_off.resample_axis(axis=axis, weights=mask_safe)
+        counts_off = None
+        if self.counts_off is not None:
+            counts_off = self.counts_off
+            counts_off = counts_off.resample_axis(axis=axis, weights=mask_safe)
 
-        if dataset.acceptance is not None:
-            acceptance = dataset.acceptance
-            kwargs["acceptance"] = acceptance.resample_axis(axis=axis, weights=mask_safe)
+        acceptance = 1
+        acceptance_off = None
+        if self.acceptance is not None:
+            acceptance = self.acceptance
+            acceptance = acceptance.resample_axis(axis=axis, weights=mask_safe)
 
-            background = dataset.alpha * dataset.counts_off
+            background = self.alpha * self.counts_off
             background = background.resample_axis(axis=axis, weights=mask_safe)
 
-            kwargs["acceptance_off"] = (
-                    kwargs["acceptance"] * kwargs["counts_off"] / background
-            )
+            acceptance_off = acceptance * counts_off / background
 
-        return self.__class__.from_spectrum_dataset(**kwargs)
-
+        return self.__class__.from_spectrum_dataset(
+            dataset,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            counts_off=counts_off
+        )
