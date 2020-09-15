@@ -1699,6 +1699,10 @@ class Geom(abc.ABC):
         axis_self = self.get_axis_by_name(axis.name)
         groups = axis_self.group_table(axis.edges)
 
+        # Keep only normal bins
+        #TODO: improve on this
+        groups = groups[groups["bin_type"]=="normal   "]
+
         edges = edges_from_lo_hi(
             groups[axis.name + "_min"], groups[axis.name + "_max"]
         )
