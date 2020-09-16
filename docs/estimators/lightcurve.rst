@@ -12,7 +12,7 @@ Lightcurves
 Lightcurve
 ==========
 
-Gammapy uses a simple container for light curves: the `~gammapy.time.LightCurve` class. It stores
+Gammapy uses a simple container for light curves: the `~gammapy.estimators.LightCurve` class. It stores
 the light curve in the form of a `~astropy.table.Table` and provides a few convenience methods,
 to create time objects and plots.
 
@@ -26,7 +26,7 @@ The latter gives access to a number of utilities such as plots and access to tim
     >>> from astropy.table import Table
     >>> url = 'https://github.com/gammapy/gamma-cat/raw/master/input/data/2006/2006A%2526A...460..743A/tev-000119-lc.ecsv'
     >>> table = Table.read(url, format='ascii.ecsv')
-    >>> from gammapy.time import LightCurve
+    >>> from gammapy.estimators import LightCurve
     >>> lc = LightCurve(table)
     >>> lc.time[:2].iso
     ['2004-05-23 01:47:08.160' '2004-05-23 02:17:31.200']

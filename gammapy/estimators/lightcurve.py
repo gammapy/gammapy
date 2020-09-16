@@ -374,7 +374,7 @@ class LightCurveEstimator(Estimator):
 
         Returns
         -------
-        lightcurve : `~gammapy.time.LightCurve`
+        lightcurve : `~gammapy.estimators.LightCurve`
             the Light Curve object
         """
         datasets = Datasets(datasets)

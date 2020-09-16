@@ -464,7 +464,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
     @property
     def lightcurve(self):
-        """Lightcurve (`~gammapy.time.LightCurve`)."""
+        """Lightcurve (`~gammapy.estimators.LightCurve`)."""
         flux = self.data["Flux_History"]
 
         # Flux error is given as asymmetric high/low
@@ -763,7 +763,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
 
     @property
     def lightcurve(self):
-        """Lightcurve (`~gammapy.time.LightCurve`)."""
+        """Lightcurve (`~gammapy.estimators.LightCurve`)."""
         flux = self.data["Flux_History"]
 
         # Flux error is given as asymmetric high/low

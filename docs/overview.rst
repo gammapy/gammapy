@@ -140,11 +140,9 @@ To learn more about modeling and fitting, see  :ref:`gammapy.modeling
 Time analysis
 -------------
 
-Light curves are represented as `~gammapy.time.LightCurve` objects, a wrapper
+Light curves are represented as `~gammapy.estimators.LightCurve` objects, a wrapper
 class around `~astropy.table.Table`. To compute light curves, use the
-`~gammapy.time.LightCurveEstimator`.
-
-To learn more about time, see :ref:`gammapy.time <time>`.
+`~gammapy.estimators.LightCurveEstimator`.
 
 .. _overview_simulation:
 

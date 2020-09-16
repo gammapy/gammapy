@@ -52,7 +52,7 @@ an new observation containing events in the specified time range. With the new
 `~gammapy.data.Observations` it is then possible to perform the usual data
 reduction which will produce datasets in the correct time range. The light curve
 extraction can then be performed as usual with the
-`~gammapy.time.LightCurveEstimator`. This is demonstrated in the `Light curve -
+`~gammapy.estimators.LightCurveEstimator`. This is demonstrated in the `Light curve -
 Flare <tutorials/light_curve_flare.html>`__ tutorial.
 
 Compute source significance
