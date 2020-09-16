@@ -625,12 +625,9 @@ class BackgroundModel(Model):
     ----------
     map : `~gammapy.maps.Map`
         Background model map
-    norm : float
-        Background normalization
-    tilt : float
-        Additional tilt in the spectrum
-    reference : `~astropy.units.Quantity`
-        Reference energy of the tilt.
+    spectral_model : `~gammapy.modeling.models.SpectralModel`
+        Normalized spectral model,
+        default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
     """
 
     tag = "BackgroundModel"
