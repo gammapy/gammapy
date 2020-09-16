@@ -17,7 +17,6 @@ from gammapy.modeling.models import (
     BackgroundModel,
     Models,
     ProperModels,
-    SkyDiffuseCube,
 )
 from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg
 from gammapy.utils.random import get_random_state
@@ -2233,20 +2232,7 @@ class MapEvaluator:
             self._pars_cached = pars
             if isinstance(self.model, BackgroundModel):
                 npred = self.model.evaluate()
-            elif isinstance(self.model, SkyDiffuseCube):
-                # TODO: remove once SkyDiffuseCube can be a spatial model
-                flux = self.compute_flux()
-
-                if self.model.apply_irf["exposure"]:
-                    npred = self.apply_exposure(flux)
-
-                if self.psf and self.model.apply_irf["psf"]:
-                    npred = self.apply_psf(npred)
-
-                if self.model.apply_irf["edisp"]:
-                    npred = self.apply_edisp(npred)
             else:
-
                 flux_conv = self._compute_flux_conv()
 
                 if self.model.apply_irf["exposure"]:
@@ -2272,8 +2258,7 @@ class MapEvaluator:
             spatial_conv = self._spatial_conv_cached
             if self._spatial_pars_cached != spatial_pars or spatial_conv is None:
                 self._spatial_pars_cached = spatial_pars
-                geom_image = self.geom.to_image()
-                spatial_conv = self.model.spatial_model.integrate_geom(geom_image)
+                spatial_conv = self.model.spatial_model.integrate_geom(self.geom)
                 if self.psf and self.model.apply_irf["psf"]:
                     spatial_conv = self.apply_psf(spatial_conv)
                 self._spatial_conv_cached = spatial_conv

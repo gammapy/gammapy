@@ -117,7 +117,11 @@ class SpatialModel(Model):
                 :, np.newaxis, np.newaxis
             ]
             coords = geom.to_image().get_coord(frame=self.frame)
-            return self(coords.lon, coords.lat, energy)
+            try:
+                data = self(coords.lon, coords.lat)
+            except:
+                data = self(coords.lon, coords.lat, energy)
+            return data
         else:
             coords = geom.get_coord(frame=self.frame)
             return self(coords.lon, coords.lat)

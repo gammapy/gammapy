@@ -15,7 +15,7 @@ from gammapy.modeling.models import (
     Models,
     PointSpatialModel,
     PowerLawSpectralModel,
-    SkyDiffuseCube,
+    TemplateSpatialModel,
     SkyModel,
 )
 
@@ -77,10 +77,11 @@ def make_datasets_example():
     obs_ids = [110380, 111140, 111159]
     data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
 
-    diffuse_model = SkyDiffuseCube.read(
-        "$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits"
+    diffuse_spatial = TemplateSpatialModel.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz"
     )
-
+    diffuse_model = SkyModel(PowerLawSpectralModel(), diffuse_spatial)
+    
     maker = MapDatasetMaker()
     datasets = Datasets()
 
@@ -103,6 +104,7 @@ def make_datasets_example():
         overwrite=True,
         write_covariance=False
     )
+    datasets.models.write(DATA_PATH / "examples.yaml", overwrite=True, write_covariance=False)
 
 
 if __name__ == "__main__":
