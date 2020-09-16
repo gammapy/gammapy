@@ -377,8 +377,8 @@ def test_interp_to_geom():
     energy_target = MapAxis.from_energy_bounds("1 TeV", "300 TeV", nbin=7, name="energy")
     value = 30
     coords = {
-        'skycoord' : SkyCoord("0 deg", "0 deg"),
-        'energy' : energy_target.center[3]
+        'skycoord': SkyCoord("0 deg", "0 deg"),
+        'energy': energy_target.center[3]
     }
 
     #WcsNDMap
@@ -392,7 +392,7 @@ def test_interp_to_geom():
         binsz=0.1*u.deg,
         axes=[energy_target]
     )
-    interp_wcs_map = wcs_map.interp_to_geom(wcs_geom_target)
+    interp_wcs_map = wcs_map.interp_to_geom(wcs_geom_target, interp=1)
 
     assert_allclose(interp_wcs_map.get_by_coord(coords)[0], value, atol=1e-7)
     assert isinstance(interp_wcs_map, WcsNDMap)

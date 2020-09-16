@@ -767,13 +767,15 @@ class Map(abc.ABC):
         """
         pass
 
-    def interp_to_geom(self, geom):
+    def interp_to_geom(self, geom, **kwargs):
         """Interpolate map to input geometry.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
             Target Map geometry
+        **kwargs : dict
+            Keyword arguments passed to `Map.interp_by_coord`
 
         Returns
         -------
@@ -781,10 +783,13 @@ class Map(abc.ABC):
             Interpolated Map
         """
         coords = geom.get_coord()
-        interp_map = Map.from_geom(geom, unit=self.unit)
-        values = self.interp_by_coord(coords)
-        interp_map.data = values
-        return interp_map
+
+        # set nearest neighbour interpolation for mask as default
+        if self.data.dtype == bool:
+            kwargs.setdefault("interp", 0)
+
+        data = self.interp_by_coord(coords, **kwargs)
+        return Map.from_geom(geom, data=data, unit=self.unit)
 
     def fill_events(self, events):
         """Fill event coordinates (`~gammapy.data.EventList`)."""
