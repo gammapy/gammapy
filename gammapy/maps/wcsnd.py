@@ -569,7 +569,7 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        kernel : `~gammapy.cube.PSFKernel` or `numpy.ndarray`
+        kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
             Convolution kernel.
         use_fft : bool
             Use `scipy.signal.fftconvolve` or `scipy.ndimage.convolve`.

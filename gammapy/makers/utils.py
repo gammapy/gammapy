@@ -190,7 +190,7 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
 
     Returns
     -------
-    psfmap : `~gammapy.cube.PSFMap`
+    psfmap : `~gammapy.irf.PSFMap`
         the resulting PSF map
     """
     energy_axis = geom.get_axis_by_name("energy_true")
@@ -240,7 +240,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
 
     Returns
     -------
-    edispmap : `~gammapy.cube.EDispMap`
+    edispmap : `~gammapy.irf.EDispMap`
         the resulting EDisp map
     """
     energy_axis = geom.get_axis_by_name("energy_true")
@@ -287,7 +287,7 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
 
     Returns
     -------
-    edispmap : `~gammapy.cube.EDispKernelMap`
+    edispmap : `~gammapy.irf.EDispKernelMap`
         the resulting EDispKernel map
     """
     # Use EnergyDispersion2D migra axis.

@@ -1,7 +1,8 @@
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDataset, make_map_exposure_true_energy
+from gammapy.datasets import MapDataset
+from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.irf import EffectiveAreaTable2D
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling import Fit

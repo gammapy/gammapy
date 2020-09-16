@@ -170,7 +170,7 @@ class MapDatasetMaker(Maker):
 
         Returns
         -------
-        edisp : `~gammapy.cube.EDispMap`
+        edisp : `~gammapy.irf.EDispMap`
             Edisp map.
         """
         exposure = self.make_exposure_irf(geom.squash(axis="migra"), observation)
@@ -194,7 +194,7 @@ class MapDatasetMaker(Maker):
 
         Returns
         -------
-        edisp : `~gammapy.cube.EDispKernelMap`
+        edisp : `~gammapy.irf.EDispKernelMap`
             EdispKernel map.
         """
         if isinstance(observation.edisp, EDispKernelMap):
@@ -225,7 +225,7 @@ class MapDatasetMaker(Maker):
 
         Returns
         -------
-        psf : `~gammapy.cube.PSFMap`
+        psf : `~gammapy.irf.PSFMap`
             Psf map.
         """
         psf = observation.psf
@@ -273,14 +273,14 @@ class MapDatasetMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Reference dataset.
         observation : `~gammapy.data.Observation`
             Observation
 
         Returns
         -------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
         """
         kwargs = {"gti": observation.gti}

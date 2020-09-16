@@ -47,7 +47,7 @@ PSF
 The `~gammapy.irf.TablePSF` and `~gammapy.irf.EnergyDependentTablePSF` classes
 represent radially-symmetric PSFs where the PSF is given at a number of offsets.
 
-The `~gammapy.cube.PSFKernel` represents a PSF kernel.
+The `~gammapy.irf.PSFKernel` represents a PSF kernel.
 
 .. plot:: irf/plot_fermi_psf.py
 

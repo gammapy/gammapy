@@ -111,9 +111,9 @@ class MapDataset(Dataset):
         Exposure cube
     mask_fit : `~gammapy.maps.WcsNDMap`
         Mask to apply to the likelihood for fitting.
-    psf : `~gammapy.cube.PSFKernel` or `~gammapy.cube.PSFMap`
+    psf : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
         PSF kernel
-    edisp : `~gammapy.irf.EDispKernel` or `~gammapy.cube.EDispMap`
+    edisp : `~gammapy.irf.EDispKernel` or `~gammapy.irf.EDispMap`
         Energy dispersion kernel
     mask_safe : `~gammapy.maps.WcsNDMap`
         Mask defining the safe data range.
@@ -456,7 +456,7 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        other: `~gammapy.cube.MapDataset` or `~gammapy.cube.MapDatasetOnOff`
+        other: `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             Map dataset to be stacked with this one. If other is an on-off
             dataset alpha * counts_off is used as a background model.
         """
@@ -1378,13 +1378,13 @@ class MapDatasetOnOff(MapDataset):
         Acceptance off
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
-    mask_fit : `~numpy.ndarray`
+    mask_fit : `~gammapy.maps.WcsNDMap`
         Mask to apply to the likelihood for fitting.
-    psf : `~gammapy.cube.PSFKernel`
+    psf : `~gammapy.irf.PSFKernel`
         PSF kernel
     edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
-    mask_safe : `~numpy.ndarray`
+    mask_safe : `~gammapy.maps.WcsNDMap`
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
@@ -1963,7 +1963,7 @@ class MapEvaluator:
         Sky model
     exposure : `~gammapy.maps.Map`
         Exposure map
-    psf : `~gammapy.cube.PSFKernel`
+    psf : `~gammapy.irf.PSFKernel`
         PSF kernel
     edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
@@ -2039,9 +2039,9 @@ class MapEvaluator:
         ----------
         exposure : `~gammapy.maps.Map`
             Exposure map.
-        psf : `gammapy.cube.PSFMap`
+        psf : `gammapy.irf.PSFMap`
             PSF map.
-        edisp : `gammapy.cube.EDispMap`
+        edisp : `gammapy.irf.EDispMap`
             Edisp map.
         geom : `WcsGeom`
             Counts geom

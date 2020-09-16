@@ -130,8 +130,7 @@ class PSFKernel:
 
         import numpy as np
         from gammapy.maps import Map, WcsGeom, MapAxis
-        from gammapy.irf import EnergyDependentMultiGaussPSF
-        from gammapy.cube import PSFKernel
+        from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel
         from astropy import units as u
 
         # Define energy axis
@@ -197,7 +196,7 @@ class PSFKernel:
 
         Returns
         -------
-        kernel : `~gammapy.cube.PSFKernel`
+        kernel : `~gammapy.irf.PSFKernel`
             the kernel Map with reduced geometry according to the max_radius
         """
         # TODO : use PSF containment radius if max_radius is None
@@ -236,7 +235,7 @@ class PSFKernel:
 
         Returns
         -------
-        kernel : `~gammapy.cube.PSFKernel`
+        kernel : `~gammapy.irf.PSFKernel`
             the kernel Map with reduced geometry according to the max_radius
         """
         sigma = Angle(sigma)

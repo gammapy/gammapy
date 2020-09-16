@@ -43,7 +43,7 @@ class FoVBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.fit.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Input map dataset.
 
         """

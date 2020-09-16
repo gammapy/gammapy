@@ -142,7 +142,7 @@ class ASmoothMapEstimator(Estimator):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset` or `~gammapy.cube.MapDatasetOnOff`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the input dataset (with one bin in energy at most)
 
         Returns

@@ -41,7 +41,7 @@ class EDispMap(IRFMap):
         from astropy.coordinates import SkyCoord
         from gammapy.maps import WcsGeom, MapAxis
         from gammapy.irf import EnergyDispersion2D, EffectiveAreaTable2D
-        from gammapy.cube import make_edisp_map, make_map_exposure_true_energy
+        from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
 
         # Define energy dispersion map geometry
         energy_axis = MapAxis.from_edges(np.logspace(-1, 1, 4), unit="TeV", name="energy")

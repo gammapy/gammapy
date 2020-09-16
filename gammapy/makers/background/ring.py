@@ -150,7 +150,7 @@ class AdaptiveRingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
@@ -196,12 +196,12 @@ class AdaptiveRingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.fit.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
         -------
-        dataset_on_off : `~gammapy.cube.fit.MapDatasetOnOff`
+        dataset_on_off : `~gammapy.datasets.MapDatasetOnOff`
             On off dataset.
         """
         from gammapy.datasets import MapDatasetOnOff
@@ -277,7 +277,7 @@ class RingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.fit.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
@@ -313,12 +313,12 @@ class RingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.fit.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
         -------
-        dataset_on_off : `~gammapy.cube.fit.MapDatasetOnOff`
+        dataset_on_off : `~gammapy.datasets.MapDatasetOnOff`
             On off dataset.
         """
         from gammapy.datasets import MapDatasetOnOff

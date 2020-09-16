@@ -58,7 +58,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
 
         Returns
@@ -101,7 +101,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset
 
         Returns
@@ -127,7 +127,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        edisp_map : `~gammapy.cube.EDispMap`
+        edisp_map : `~gammapy.irf.EDispMap`
             Energy dispersion map
         events : `~gammapy.data.EventList`
             Event list with the true energies
@@ -155,7 +155,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        psf_map : `~gammapy.cube.PSFMap`
+        psf_map : `~gammapy.irf.PSFMap`
             PSF map.
         events : `~gammapy.data.EventList`
             Event list.
@@ -209,7 +209,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
         observation : `~gammapy.data.Observation`
             In memory observation.
@@ -330,7 +330,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset
         observation : `~gammapy.data.Observation`
             In memory observation.

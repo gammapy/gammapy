@@ -31,7 +31,7 @@ class PSFMap(IRFMap):
         from astropy.coordinates import SkyCoord
         from gammapy.maps import Map, WcsGeom, MapAxis
         from gammapy.irf import EnergyDependentMultiGaussPSF, EffectiveAreaTable2D
-        from gammapy.cube import make_psf_map, PSFMap, make_map_exposure_true_energy
+        from gammapy.makers.utils import make_psf_map, PSFMap, make_map_exposure_true_energy
 
         # Define energy axis. Note that the name is fixed.
         energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
@@ -154,7 +154,7 @@ class PSFMap(IRFMap):
 
         Returns
         -------
-        kernel : `~gammapy.cube.PSFKernel`
+        kernel : `~gammapy.irf.PSFKernel`
             the resulting kernel
         """
         if position is None:

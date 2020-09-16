@@ -85,10 +85,10 @@ Detect sources in a map
 Gammapy provides methods to perform source detection in a 2D map. First step is
 to produce a significance map, i.e. a map giving the probability that the flux
 measured at each position is a background fluctuation. For a
-`~gammapy.cube.MapDataset`, the class `~gammapy.detect.TSMapEstimator` can be
+`~gammapy.datasets.MapDataset`, the class `~gammapy.estimators.TSMapEstimator` can be
 used. A simple correlated Li & Ma significance can be used, in particular for
 ON-OFF datasets. The second step consists in applying a peak finer algorithm,
-such as `~gammapy.detect.find_peaks`. This is demonstrated in the `Source
+such as `~gammapy.estimators.utils.find_peaks`. This is demonstrated in the `Source
 detection tutorial <tutorials/detect.html>`__.
 
 Astrophysical source modeling
