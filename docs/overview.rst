@@ -174,8 +174,8 @@ started. To learn more, see the following sub packages and documentation pages:
 :ref:`gammapy.scripts <CLI>` (``gammapy`` command line tool).
 
 Note that in Gammapy, 2D image analyses are partly done with actual 2D images
-that don't have an energy axis (e.g. in :ref:`gammapy.detect <detect>`), and
-partly with 3D cubes with a single energy bin, e.g. for modeling and fitting,
+that don't have an energy axis, and partly with 3D cubes with a single energy bin,
+e.g. for modeling and fitting,
 see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
 
 For 1D spectral modeling and fitting, `~gammapy.modeling.models.Models` are
