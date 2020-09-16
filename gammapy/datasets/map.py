@@ -1020,7 +1020,7 @@ class MapDataset(Dataset):
         return info
 
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
-        """Return a ~gammapy.spectrum.SpectrumDataset from on_region.
+        """Return a ~gammapy.datasets.SpectrumDataset from on_region.
 
         Counts and background are summed in the on_region.
 
@@ -1030,7 +1030,7 @@ class MapDataset(Dataset):
         The energy dispersion kernel is obtained at the on_region center.
         Only regions with centers are supported.
 
-        The model is not exported to the ~gammapy.spectrum.SpectrumDataset.
+        The model is not exported to the ~gammapy.datasets.SpectrumDataset.
         It must be set after the dataset extraction.
 
         Parameters
@@ -1044,7 +1044,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `~gammapy.spectrum.SpectrumDataset`
+        dataset : `~gammapy.datasets.SpectrumDataset`
             the resulting reduced dataset
         """
         from .spectrum import SpectrumDataset
@@ -1783,7 +1783,7 @@ class MapDatasetOnOff(MapDataset):
         return info
 
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
-        """Return a ~gammapy.spectrum.SpectrumDatasetOnOff from on_region.
+        """Return a ~gammapy.datasets.SpectrumDatasetOnOff from on_region.
 
         Counts and OFF counts are summed in the on_region.
 
@@ -1796,7 +1796,7 @@ class MapDatasetOnOff(MapDataset):
         The energy dispersion kernel is obtained at the on_region center.
         Only regions with centers are supported.
 
-        The model is not exported to the ~gammapy.spectrum.SpectrumDataset.
+        The model is not exported to the ~gammapy.dataset.SpectrumDataset.
         It must be set after the dataset extraction.
 
         Parameters
@@ -1810,7 +1810,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        dataset : `~gammapy.spectrum.SpectrumDatasetOnOff`
+        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
             the resulting reduced dataset
         """
         from .spectrum import SpectrumDatasetOnOff

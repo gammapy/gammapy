@@ -20,7 +20,7 @@ class FluxPointsDataset(Dataset):
     ----------
     models : `~gammapy.modeling.models.Models`
         Models (only spectral part needs to be set)
-    data : `~gammapy.spectrum.FluxPoints`
+    data : `~gammapy.estimators.FluxPoints`
         Flux points.
     mask_fit : `numpy.ndarray`
         Mask to apply for fitting

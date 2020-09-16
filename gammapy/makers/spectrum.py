@@ -74,7 +74,7 @@ class SpectrumDatasetMaker(Maker):
 
         Returns
         -------
-        background : `~gammapy.spectrum.RegionNDMap`
+        background : `~gammapy.maps.RegionNDMap`
             Background spectrum
         """
         offset = observation.pointing_radec.separation(geom.center_skydir)
@@ -172,14 +172,14 @@ class SpectrumDatasetMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.spectrum.SpectrumDataset`
+        dataset : `~gammapy.datasets.SpectrumDataset`
             Spectrum dataset.
         observation: `~gammapy.data.Observation`
             Observation to reduce.
 
         Returns
         -------
-        dataset : `~gammapy.spectrum.SpectrumDataset`
+        dataset : `~gammapy.datasets.SpectrumDataset`
             Spectrum dataset.
         """
         kwargs = {

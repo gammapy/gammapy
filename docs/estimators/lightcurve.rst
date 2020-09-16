@@ -38,16 +38,16 @@ Light Curve Extraction
 
 The extraction of a light curve from gamma-ray data follows the general approach of
 data reduction and modeling/fitting. Observations are first reduced to dataset objects
-(e.g. `~gammapy.cube.MapDataset` or `~gammapy.spectrum.SpectrumDatasetOnOff`). Then, after
+(e.g. `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDatasetOnOff`). Then, after
 setting the appropriate model the flux is extracted in each time bin with the
-`~gammapy.time.LightCurveEstimator`.
+`~gammapy.estimators.LightCurveEstimator`.
 
-To extract the light curve of a source, the `~gammapy.time.LightCurveEstimator`
+To extract the light curve of a source, the `~gammapy.estimators.LightCurveEstimator`
 fits a scale factor on the model component representing the source in each time bin
-and returns a `~gammapy.time.LightCurve`. It can work with spectral (1D) datasets as well
+and returns a `~gammapy.estimators.LightCurve`. It can work with spectral (1D) datasets as well
 as with map (3D) datasets.
 
-Once a `~gammapy.Fit.Datasets` object is build with a model set, one can call the estimator
+Once a `~gammapy.datasets.Datasets` object is build with a model set, one can call the estimator
 to compute the light curve in the datasets time intervals::
 
     >>> lc_estimator = LightCurveEstimator(datasets, source="source")
@@ -58,7 +58,7 @@ object produced by data reduction.
 The light curve notebook shows an example of `observation based light curve
 extraction <../tutorials/light_curve.html#Light-Curve-estimation:-by-observation>`__
 
-Similarly, `~gammapy.time.LightCurveEstimator` can be used to extract the light curve in user defined time intervals.
+Similarly, `~gammapy.estimators.LightCurveEstimator` can be used to extract the light curve in user defined time intervals.
 This can be useful to combine datasets to produce light curve by night, week or month::
 
     >>> lc_estimator = LightCurveEstimator(datasets, source="source", time_intervals=time_intervals)

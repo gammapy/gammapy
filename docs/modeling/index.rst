@@ -55,7 +55,7 @@ simulated crab runs using the `~gammapy.modeling.Fit` class.
 
 .. code-block:: python
 
-    from gammapy.spectrum import SpectrumDatasetOnOff
+    from gammapy.datasets import SpectrumDatasetOnOff
     from gammapy.modeling import Fit
     from gammapy.modeling.models import PowerLawSpectralModel
     import matplotlib.pyplot as plt

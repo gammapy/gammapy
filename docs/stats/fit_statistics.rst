@@ -36,7 +36,7 @@ the following formula for the Cash fit statistic:
     + \mu_{\mathrm{bkg}}) \right)
 
 The Cash statistic is implemented in `~gammapy.stats.cash` and is used as a `stat`
-function by the `~gammapy.cube.MapDataset` and the `~gammapy.spectrum.SpectrumDataset`.
+function by the `~gammapy.datasets.MapDataset` and the `~gammapy.datasets.SpectrumDataset`.
 
 
 Example
@@ -86,7 +86,7 @@ The WStat fit statistics is given by the following formula:
 To see how to derive it see the :ref:`wstat derivation <wstat_derivation>`.
 
 The WStat statistic is implemented in `~gammapy.stats.wstat` and is used as a `stat`
-function by the `~gammapy.cube.MapDatasetOnOff` and the `~gammapy.spectrum.SpectrumDatasetOnOff`.
+function by the `~gammapy.datasets.MapDatasetOnOff` and the `~gammapy.datasets.SpectrumDatasetOnOff`.
 
 
 Caveat

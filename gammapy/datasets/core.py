@@ -25,9 +25,9 @@ class Dataset(abc.ABC):
 
     For now, see existing examples in Gammapy how this works:
 
-    - `gammapy.cube.MapDataset`
-    - `gammapy.spectrum.SpectrumDataset`
-    - `gammapy.spectrum.FluxPointsDataset`
+    - `gammapy.datasets.MapDataset`
+    - `gammapy.datasets.SpectrumDataset`
+    - `gammapy.datasets.FluxPointsDataset`
     """
 
     _residuals_labels = {
@@ -318,7 +318,7 @@ class Datasets(collections.abc.MutableSequence):
 
         Returns
         -------
-        dataset : 'gammapy.modeling.Datasets'
+        dataset : `gammapy.datasets.Datasets`
             Datasets
         """
         from . import DATASET_REGISTRY

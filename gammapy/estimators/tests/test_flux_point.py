@@ -104,7 +104,7 @@ def test_dnde_from_flux():
 @pytest.mark.parametrize("method", ["table", "lafferty", "log_center"])
 def test_compute_flux_points_dnde_exp(method):
     """
-    Tests against analytical result or result from gammapy.spectrum.powerlaw.
+    Tests against analytical result or result from a powerlaw.
     """
     model = ExpTestModel()
 

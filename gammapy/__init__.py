@@ -14,21 +14,19 @@ it only contains this:
 
 
 The Gammapy functionality is available for import from
-the following sub-packages (e.g. `gammapy.spectrum`):
+the following sub-packages (e.g. `gammapy.makers`):
 
 ::
 
  astro        --- Astrophysical source and population models
  catalog      --- Source catalog tools
- cube         --- Cube analysis
+ makers       --- Data reduction functionality
  data         --- Data and observation handling
- detect       --- Source detection tools
  irf          --- Instrument response functions (IRFs)
  maps         --- Sky map data structures
  modeling     --- Models and fitting
- spectrum     --- Spectrum estimation and modeling
+ estimators   --- High level flux estimation
  stats        --- Statistics tools
- time         --- Time handling and analysis
  utils        --- Utility functions and classes
 """
 

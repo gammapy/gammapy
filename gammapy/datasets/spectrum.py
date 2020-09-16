@@ -552,7 +552,7 @@ class SpectrumDataset(Dataset):
 
         Parameters
         ----------
-        other : `~gammapy.spectrum.SpectrumDataset`
+        other : `~gammapy.datasets.SpectrumDataset`
             the dataset to stack to the current one
         """
         if not isinstance(other, SpectrumDataset):
@@ -1045,7 +1045,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         Parameters
         ----------
-        other : `~gammapy.spectrum.SpectrumDatasetOnOff`
+        other : `~gammapy.datasets.SpectrumDatasetOnOff`
             the dataset to stack to the current one
 
         Examples
@@ -1224,7 +1224,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     @classmethod
     def from_ogip_files(cls, filename):
-        """Read `~gammapy.spectrum.SpectrumDatasetOnOff` from OGIP files.
+        """Read `~gammapy.datasets.SpectrumDatasetOnOff` from OGIP files.
 
         BKG file, ARF, and RMF must be set in the PHA header and be present in
         the same folder.

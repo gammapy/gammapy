@@ -75,7 +75,7 @@ class FluxPoints:
     The `FluxPoints` object is most easily created by reading a file with
     flux points given in one of the formats documented above::
 
-        from gammapy.spectrum import FluxPoints
+        from gammapy.estimators import FluxPoints
         filename = '$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits'
         flux_points = FluxPoints.read(filename)
         flux_points.plot()
@@ -87,7 +87,7 @@ class FluxPoints:
 
         from astropy import units as u
         from astropy.table import Table
-        from gammapy.spectrum import FluxPoints
+        from gammapy.estimators import FluxPoints
         from gammapy.modeling.models import PowerLawSpectralModel
 
         table = Table()
@@ -106,7 +106,7 @@ class FluxPoints:
 
         from astropy import units as u
         from astropy.table import Table
-        from gammapy.spectrum import FluxPoints
+        from gammapy.estimators import FluxPoints
 
         table = Table.read('$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points_ctb_37b.txt',
                            format='ascii.csv', delimiter=' ', comment='#')
@@ -254,7 +254,7 @@ class FluxPoints:
 
         Examples
         --------
-        >>> from gammapy.spectrum import FluxPoints
+        >>> from gammapy.estimators import FluxPoints
         >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)
         >>> print(flux_points)
@@ -354,7 +354,7 @@ class FluxPoints:
 
         Examples
         --------
-        >>> from gammapy.spectrum import FluxPoints
+        >>> from gammapy.estimators import FluxPoints
         >>> from gammapy.modeling.models import PowerLawSpectralModel
         >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)

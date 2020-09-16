@@ -423,7 +423,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
     @property
     def flux_points(self):
-        """Flux points (`~gammapy.spectrum.FluxPoints`)."""
+        """Flux points (`~gammapy.estimators.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
 
@@ -722,7 +722,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
 
     @property
     def flux_points(self):
-        """Flux points (`~gammapy.spectrum.FluxPoints`)."""
+        """Flux points (`~gammapy.estimators.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
 
@@ -918,7 +918,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
 
     @property
     def flux_points(self):
-        """Integral flux points (`~gammapy.spectrum.FluxPoints`)."""
+        """Integral flux points (`~gammapy.estimators.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
         table["e_min"] = self._ebounds[:-1]
@@ -1091,7 +1091,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
 
     @property
     def flux_points(self):
-        """Flux points (`~gammapy.spectrum.FluxPoints`)."""
+        """Flux points (`~gammapy.estimators.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
         table["e_min"] = self._ebounds[:-1]

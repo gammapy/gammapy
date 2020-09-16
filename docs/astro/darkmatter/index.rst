@@ -102,8 +102,8 @@ likelihoods, for any combination of parameter values in some underlying
 particle model. GamLike can somehow be use to reproduce HESS results (Section
 6.2.2. of the DarkBit paper). But I don't fully understand how.
 
-Using `gammapy.spectrum`
-========================
+Using `gammapy.astro.darkmatter`
+================================
 
 For use cases please go to the tutorial notebooks:
 
