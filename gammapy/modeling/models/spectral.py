@@ -1136,8 +1136,6 @@ class TemplateSpectralModel(SpectralModel):
         Array of energies at which the model values are given
     values : array
         Array with the values of the model at energies ``energy``.
-    norm : float
-        Model scale that is multiplied to the supplied arrays. Defaults to 1.
     interp_kwargs : dict
         Interpolation keyword arguments pass to `scipy.interpolate.interp1d`.
         By default all values outside the interpolation range are set to zero.
@@ -1149,19 +1147,9 @@ class TemplateSpectralModel(SpectralModel):
     """
 
     tag = ["TemplateSpectralModel", "template"]
-    norm = Parameter("norm", 1, unit="")
-    tilt = Parameter("tilt", 0, unit="", frozen=True)
-    reference = Parameter("reference", "1 TeV", frozen=True)
 
     def __init__(
-        self,
-        energy,
-        values,
-        norm=norm.quantity,
-        tilt=tilt.quantity,
-        reference=reference.quantity,
-        interp_kwargs=None,
-        meta=None,
+        self, energy, values, interp_kwargs=None, meta=None,
     ):
         self.energy = energy
         self.values = u.Quantity(values, copy=False)
@@ -1174,7 +1162,7 @@ class TemplateSpectralModel(SpectralModel):
             points=(energy,), values=values, **interp_kwargs
         )
 
-        super().__init__(norm=norm, tilt=tilt, reference=reference)
+        super().__init__()
 
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
@@ -1226,16 +1214,13 @@ class TemplateSpectralModel(SpectralModel):
         kwargs.setdefault("interp_kwargs", {"values_scale": "lin"})
         return cls(energy=energy, values=values, **kwargs)
 
-    def evaluate(self, energy, norm, tilt, reference):
+    def evaluate(self, energy):
         """Evaluate the model (static function)."""
-        values = self._evaluate((energy,), clip=True)
-        tilt_factor = np.power(energy / reference, -tilt)
-        return norm * values * tilt_factor
+        return self._evaluate((energy,), clip=True)
 
     def to_dict(self):
         return {
             "type": self.tag[0],
-            "parameters": self.parameters.to_dict(),
             "energy": {
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
@@ -1248,10 +1233,9 @@ class TemplateSpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
-        parameters = Parameters.from_dict(data["parameters"])
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
-        return cls.from_parameters(parameters, energy=energy, values=values)
+        return cls(energy=energy, values=values)
 
 
 class ScaleSpectralModel(SpectralModel):

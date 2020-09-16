@@ -41,7 +41,7 @@ def table_model():
     )
     dnde = model(energy)
 
-    return TemplateSpectralModel(energy, dnde, 1)
+    return TemplateSpectralModel(energy, dnde)
 
 
 TEST_MODELS = [
@@ -499,7 +499,7 @@ def test_TemplateSpectralModel_evaluate_tiny():
     model = TemplateSpectralModel(
         energy=energy, values=values * u.Unit("MeV-1 s-1 sr-1")
     )
-    result = model.evaluate(energy, norm=1.0, tilt=0.0, reference=1 * u.TeV)
+    result = model.evaluate(energy)
     tiny = np.finfo(np.float32).tiny
     mask = abs(values) - tiny > tiny
     np.testing.assert_allclose(

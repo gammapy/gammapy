@@ -151,7 +151,10 @@ class Model:
         return cls(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.__class__.__name__}\n\n{self.parameters.to_table()}"
+        string = f"{self.__class__.__name__}\n"
+        if len(self.parameters) > 0:
+            string += f"\n{self.parameters.to_table()}"
+        return string
 
 
 class Models(collections.abc.MutableSequence):
