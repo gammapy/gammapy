@@ -395,6 +395,10 @@ class FluxPoints:
                     )
                 except KeyError:
                     continue
+        elif self.sed_type == sed_type:
+            # do nothing if the sed type is the same
+            pass
+
         else:
             raise NotImplementedError
 

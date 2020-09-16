@@ -11,7 +11,7 @@ class Registry(list):
             tags = [tags] if isinstance(tags, str) else tags
             if tag in tags:
                 return cls
-        raise KeyError(f"No model found with tag: {tag!r}")
+        raise KeyError(f"No object found with tag: {tag!r}")
 
     def __str__(self):
         info = "Registry\n"
