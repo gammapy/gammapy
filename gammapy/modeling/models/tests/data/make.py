@@ -81,7 +81,7 @@ def make_datasets_example():
         "$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz"
     )
     diffuse_model = SkyModel(PowerLawSpectralModel(), diffuse_spatial)
-    
+
     maker = MapDatasetMaker()
     datasets = Datasets()
 
@@ -102,7 +102,7 @@ def make_datasets_example():
         "$GAMMAPY_DATA/tests/models",
         prefix="gc_example",
         overwrite=True,
-        write_covariance=False
+        write_covariance=False,
     )
 
 

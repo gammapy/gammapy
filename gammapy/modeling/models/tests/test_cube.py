@@ -57,7 +57,7 @@ def diffuse_model():
         npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )
     m.data += 42
-    spatial_model =  TemplateSpatialModel(m, normalize=False)
+    spatial_model = TemplateSpatialModel(m, normalize=False)
     return SkyModel(PowerLawNormSpectralModel(), spatial_model)
 
 
@@ -371,7 +371,9 @@ class Test_Template_with_cube:
     def test_read():
         model = TemplateSpatialModel.read(
             "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits",
-        normalize=False, unit = "cm-2 s-1 MeV-1 sr-1")
+            normalize=False,
+            unit="cm-2 s-1 MeV-1 sr-1",
+        )
         assert model.map.unit == "cm-2 s-1 MeV-1 sr-1"
 
         # Check pixel inside map

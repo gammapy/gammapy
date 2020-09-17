@@ -232,10 +232,10 @@ class SkyModel(SkyModelBase):
 
         if self.spatial_model is not None:
             try:
-                spatial  = self.spatial_model(lon, lat) 
+                spatial = self.spatial_model(lon, lat)
             except:
-                spatial  = self.spatial_model(lon, lat, energy) 
-            value = value * spatial # pylint:disable=not-callable
+                spatial = self.spatial_model(lon, lat, energy)
+            value = value * spatial  # pylint:disable=not-callable
 
         if (self.temporal_model is not None) and (time is not None):
             value = value * self.temporal_model(time)

@@ -710,7 +710,7 @@ class TemplateSpatialModel(SpatialModel):
     @classmethod
     def from_dict(cls, data):
         filename = data["filename"]
-        normalize= data.get("normalize", True)
+        normalize = data.get("normalize", True)
         unit = data.get("unit", "")
         m = Map.read(filename)
         if m.unit.is_equivalent(""):
