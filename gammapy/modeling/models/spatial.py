@@ -611,8 +611,6 @@ class TemplateSpatialModel(SpatialModel):
     ----------
     map : `~gammapy.maps.Map`
         Map template.
-    norm : float
-        Norm parameter (multiplied with map values)
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     normalize : bool
@@ -709,21 +707,20 @@ class TemplateSpatialModel(SpatialModel):
 
     @classmethod
     def from_dict(cls, data):
-        m = Map.read(data["filename"])
-
-        parameters = Parameters.from_dict(data["parameters"])
-        return cls.from_parameters(
-            parameters=parameters,
-            map=m,
-            filename=data["filename"],
-            normalize=data.get("normalize", True),
-        )
+        filename = data["filename"]
+        normalize= data.get("normalize", True)
+        unit = data.get("unit", "")
+        m = Map.read(filename)
+        if m.unit.is_equivalent(""):
+            m.unit = unit
+        return cls(m, normalize=normalize, filename=filename)
 
     def to_dict(self):
         """Create dict for YAML serilisation"""
         data = super().to_dict()
         data["filename"] = self.filename
         data["normalize"] = self.normalize
+        data["unit"] = str(self.map.unit)
         return data
 
     def to_region(self, **kwargs):

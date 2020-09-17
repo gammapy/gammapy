@@ -104,7 +104,6 @@ def make_datasets_example():
         overwrite=True,
         write_covariance=False
     )
-    datasets.models.write(DATA_PATH / "examples.yaml", overwrite=True, write_covariance=False)
 
 
 if __name__ == "__main__":

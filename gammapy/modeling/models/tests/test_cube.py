@@ -370,9 +370,9 @@ class Test_Template_with_cube:
     @requires_data()
     def test_read():
         model = TemplateSpatialModel.read(
-            "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits"
-        )
-        assert model.map.unit == "cm-2 s-1 MeV-1 sr-1"
+            "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits",
+        normalize=False)
+        model.map.unit = "cm-2 s-1 MeV-1 sr-1"
 
         # Check pixel inside map
         val = model.evaluate(0 * u.deg, 0 * u.deg, 100 * u.GeV)
