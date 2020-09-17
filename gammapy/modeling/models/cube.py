@@ -11,7 +11,7 @@ from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.fits import LazyFitsData, HDULocation
 from .core import Model, Models
 from .spatial import SpatialModel
-from .spectral import SpectralModel
+from .spectral import SpectralModel, PowerLawNormSpectralModel
 from .temporal import TemporalModel
 
 
@@ -169,7 +169,6 @@ class SkyModel(SkyModelBase):
     def spectral_model(self, model):
         if not (model is None or isinstance(model, SpectralModel)):
             raise TypeError(f"Invalid type: {model!r}")
-
         self._spectral_model = model
 
     @property
@@ -626,29 +625,16 @@ class BackgroundModel(Model):
     ----------
     map : `~gammapy.maps.Map`
         Background model map
-    norm : float
-        Background normalization
-    tilt : float
-        Additional tilt in the spectrum
-    reference : `~astropy.units.Quantity`
-        Reference energy of the tilt.
+    spectral_model : `~gammapy.modeling.models.SpectralModel`
+        Normalized spectral model,
+        default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
     """
 
     tag = "BackgroundModel"
-    norm = Parameter("norm", 1, unit="", min=0)
-    tilt = Parameter("tilt", 0, unit="", frozen=True)
-    reference = Parameter("reference", "1 TeV", frozen=True)
     map = LazyFitsData(cache=True)
 
     def __init__(
-        self,
-        map,
-        norm=norm.quantity,
-        tilt=tilt.quantity,
-        reference=reference.quantity,
-        name=None,
-        filename=None,
-        datasets_names=None,
+        self, map, spectral_model=None, name=None, filename=None, datasets_names=None,
     ):
         if isinstance(map, Map):
             axis = map.geom.get_axis_by_name("energy")
@@ -658,18 +644,21 @@ class BackgroundModel(Model):
                 )
 
         self.map = map
-
         self._name = make_name(name)
         self.filename = filename
+
+        if spectral_model is None:
+            spectral_model = PowerLawNormSpectralModel()
+            spectral_model.tilt.frozen = True
+        self.spectral_model = spectral_model
 
         if isinstance(datasets_names, list):
             if len(datasets_names) != 1:
                 raise ValueError(
                     "Currently background models can only be assigned to one dataset."
                 )
-
         self.datasets_names = datasets_names
-        super().__init__(norm=norm, tilt=tilt, reference=reference)
+        super().__init__()
 
     @property
     def name(self):
@@ -682,6 +671,23 @@ class BackgroundModel(Model):
         energy = energy_axis.center
         return energy[:, np.newaxis, np.newaxis]
 
+    @property
+    def spectral_model(self):
+        """`~gammapy.modeling.models.SpectralModel`"""
+        return self._spectral_model
+
+    @spectral_model.setter
+    def spectral_model(self, model):
+        if not (model is None or isinstance(model, SpectralModel)):
+            raise TypeError(f"Invalid type: {model!r}")
+        self._spectral_model = model
+
+    @property
+    def parameters(self):
+        parameters = []
+        parameters.append(self.spectral_model.parameters)
+        return Parameters.from_stack(parameters)
+
     def evaluate(self):
         """Evaluate background model.
 
@@ -690,22 +696,18 @@ class BackgroundModel(Model):
         background_map : `~gammapy.maps.Map`
             Background evaluated on the Map
         """
-        norm = self.norm.value
-        tilt = self.tilt.value
-        reference = self.reference.quantity
-        tilt_factor = np.power((self.energy_center / reference).to(""), -tilt)
-        back_values = norm * self.map.data * tilt_factor.value
+        value = self.spectral_model(self.energy_center).value
+        back_values = self.map.data * value
         return self.map.copy(data=back_values)
 
     def to_dict(self):
         data = {}
         data["name"] = self.name
-        data.update(super().to_dict())
+        data["type"] = self.tag
+        data["spectral"] = self.spectral_model.to_dict()
 
         if self.filename is not None:
             data["filename"] = self.filename
-
-        data["parameters"] = data.pop("parameters")
 
         if self.datasets_names is not None:
             data["datasets_names"] = self.datasets_names
@@ -714,6 +716,15 @@ class BackgroundModel(Model):
 
     @classmethod
     def from_dict(cls, data):
+        from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
+
+        spectral_data = data.get("spectral")
+        if spectral_data is not None:
+            model_class = SPECTRAL_MODEL_REGISTRY.get_cls(spectral_data["type"])
+            spectral_model = model_class.from_dict(spectral_data)
+        else:
+            spectral_model = None
+
         if "filename" in data:
             bkg_map = Map.read(data["filename"])
         elif "map" in data:
@@ -727,11 +738,9 @@ class BackgroundModel(Model):
             )
             bkg_map = Map.from_geom(geom)
 
-        parameters = Parameters.from_dict(data["parameters"])
-
-        return cls.from_parameters(
-            parameters=parameters,
+        return cls(
             map=bkg_map,
+            spectral_model=spectral_model,
             name=data["name"],
             datasets_names=data.get("datasets_names"),
             filename=data.get("filename"),
@@ -766,8 +775,8 @@ class BackgroundModel(Model):
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
 
         bkg_map = self.map.cutout(**cutout_kwargs)
-        parameters = self.parameters.copy()
-        return self.__class__.from_parameters(parameters, map=bkg_map, name=name)
+        spectral_model = self.spectral_model.copy()
+        return self.__class__(bkg_map, spectral_model=spectral_model, name=name)
 
     def stack(self, other, weights=None):
         """Stack background model in place.
@@ -785,8 +794,8 @@ class BackgroundModel(Model):
         self.map = bkg
 
         # reset parameter values
-        self.norm.value = 1
-        self.tilt.value = 0
+        self.spectral_model.norm.value = 1
+        self.spectral_model.tilt.value = 0
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n\n"

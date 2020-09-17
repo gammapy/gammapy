@@ -49,7 +49,7 @@ def spectrum_dataset():
     background = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis])
 
     bkg_model = BackgroundModel(background, name=name + "-bkg", datasets_names=[name])
-    bkg_model.norm.frozen = True
+    bkg_model.spectral_model.norm.frozen = True
 
     models = Models([bkg_model, model])
     aeff = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis_true])

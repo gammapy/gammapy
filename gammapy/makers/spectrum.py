@@ -200,7 +200,7 @@ class SpectrumDatasetMaker(Maker):
             bkg_model = BackgroundModel(
                 bkg, name=dataset.name + "-bkg", datasets_names=[dataset.name],
             )
-            bkg_model.norm.frozen = True
+            bkg_model.spectral_model.norm.frozen = True
             kwargs["models"] = bkg_model
 
         if "aeff" in self.selection:

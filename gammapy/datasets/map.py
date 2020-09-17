@@ -1063,7 +1063,7 @@ class MapDataset(Dataset):
         if self.background_model is not None:
             bkg = self.background_model.evaluate().get_spectrum(on_region, np.sum)
             bkg_model = BackgroundModel(bkg, name=name + "-bkg", datasets_names=[name])
-            bkg_model.norm.frozen = True
+            bkg_model.spectral_model.norm.frozen = True
             kwargs["models"] = Models([bkg_model])
 
         if self.exposure is not None:
@@ -1933,7 +1933,7 @@ class MapDatasetOnOff(MapDataset):
             Sliced map object.
         """
         kwargs = {"name": name}
-        dataset = super().slice_by_idx(slices,name)
+        dataset = super().slice_by_idx(slices, name)
 
         if self.counts_off is not None:
             kwargs["counts_off"] = self.counts_off.slice_by_idx(slices=slices)
@@ -1945,6 +1945,7 @@ class MapDatasetOnOff(MapDataset):
             kwargs["acceptance_off"] = self.acceptance_off.slice_by_idx(slices=slices)
 
         return self.from_map_dataset(dataset, **kwargs)
+
 
 class MapEvaluator:
     """Sky model evaluation on maps.

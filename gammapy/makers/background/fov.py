@@ -27,6 +27,7 @@ class FoVBackgroundMaker(Maker):
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask
     """
+
     tag = "FoVBackgroundMaker"
 
     def __init__(self, method="scale", exclusion_mask=None):
@@ -111,4 +112,4 @@ class FoVBackgroundMaker(Maker):
             )
         else:
             scale = count_tot / bkg_tot
-            dataset.background_model.norm.value = scale
+            dataset.background_model.spectral_model.norm.value = scale
