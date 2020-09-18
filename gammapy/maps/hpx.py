@@ -1409,7 +1409,7 @@ class HpxGeom(Geom):
         else:
             return self.nside
 
-    def make_wcs(self, proj="AIT", oversample=2, drop_axes=True, width_pix=None):
+    def to_wcs_geom(self, proj="AIT", oversample=2, drop_axes=True, width_pix=None):
         """Make a WCS projection appropriate for this HPX pixelization.
 
         Parameters

@@ -106,14 +106,12 @@ class HpxNDMap(HpxMap):
         return map_out
 
     def make_wcs_mapping(
-        self, sum_bands=False, proj="AIT", oversample=2, width_pix=None
+        self, proj="AIT", oversample=2, width_pix=None
     ):
         """Make a HEALPix to WCS mapping object.
 
         Parameters
         ----------
-        sum_bands : bool
-            sum over non-spatial dimensions before reprojecting
         proj  : str
             WCS-projection
         oversample : float
@@ -132,7 +130,7 @@ class HpxNDMap(HpxMap):
         hpx2wcs : `~HpxToWcsMapping`
 
         """
-        self._wcs2d = self.geom.make_wcs(
+        self._wcs2d = self.geom.to_wcs_geom(
             proj=proj, oversample=oversample, width_pix=width_pix, drop_axes=True
         )
         self._hpx2wcs = HpxToWcsMapping.create(self.geom, self._wcs2d)
@@ -516,7 +514,7 @@ class HpxNDMap(HpxMap):
         from matplotlib.collections import PatchCollection
         import healpy as hp
 
-        wcs = self.geom.make_wcs(proj=proj, oversample=1)
+        wcs = self.geom.to_wcs_geom(proj=proj, oversample=1)
         if ax is None:
             fig = plt.gcf()
             ax = fig.add_subplot(111, projection=wcs.wcs, aspect="equal")

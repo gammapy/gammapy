@@ -396,11 +396,11 @@ def test_hpxgeom_make_wcs():
     ax0 = np.linspace(0.0, 3.0, 4)
 
     hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)")
-    wcs = hpx.make_wcs()
+    wcs = hpx.to_wcs_geom()
     assert_allclose(wcs.wcs.wcs.crval, np.array([110.0, 75.0]))
 
     hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
-    wcs = hpx.make_wcs()
+    wcs = hpx.to_wcs_geom()
     assert_allclose(wcs.wcs.wcs.crval, np.array([110.0, 75.0]))
 
 
@@ -462,7 +462,7 @@ def test_make_hpx_to_wcs_mapping():
     ax0 = np.linspace(0.0, 1.0, 3)
     hpx = HpxGeom(16, False, "galactic", region="DISK(110.,75.,2.)")
     # FIXME construct explicit WCS projection here
-    wcs = hpx.make_wcs()
+    wcs = hpx.to_wcs_geom()
     hpx2wcs = make_hpx_to_wcs_mapping(hpx, wcs)
     assert_allclose(
         hpx2wcs[0],
