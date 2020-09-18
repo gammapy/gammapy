@@ -276,7 +276,7 @@ class HpxMap(Map):
         hduname = hpxconv.hduname if hdu is None else hdu
         hduname_bands = hpxconv.bands_hdu if hdu_bands is None else hdu_bands
 
-        header = self.geom.make_header(format=format)
+        header = self.geom.to_header(format=format)
 
         if self.geom.axes:
             header["BANDSHDU"] = hduname_bands

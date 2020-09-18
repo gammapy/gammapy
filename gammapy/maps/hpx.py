@@ -1278,7 +1278,7 @@ class HpxGeom(Geom):
 
         return cls.from_header(hdu.header, hdu_bands=hdu_bands, pix=pix)
 
-    def make_header(self, format="gadf", **kwargs):
+    def to_header(self, format="gadf", **kwargs):
         """Build and return FITS header for this HEALPIX map."""
         header = fits.Header()
         format = kwargs.get("format", HPX_FITS_CONVENTIONS[format])

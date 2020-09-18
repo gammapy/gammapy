@@ -667,7 +667,7 @@ def test_hpxgeom_read_write(tmp_path, nside, nested, frame, region, axes):
     geom0 = HpxGeom(nside, nested, frame, region=region, axes=axes)
     hdu_bands = geom0.make_bands_hdu(hdu="BANDS")
     hdu_prim = fits.PrimaryHDU()
-    hdu_prim.header.update(geom0.make_header())
+    hdu_prim.header.update(geom0.to_header())
 
     hdulist = fits.HDUList([hdu_prim, hdu_bands])
     hdulist.writeto(tmp_path / "tmp.fits")

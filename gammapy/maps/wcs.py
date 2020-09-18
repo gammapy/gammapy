@@ -491,7 +491,7 @@ class WcsGeom(Geom):
             ]
         return cols
 
-    def make_header(self):
+    def to_header(self):
         header = self.wcs.to_header()
         self._fill_header_from_axes(header)
         shape = "{},{}".format(np.max(self.npix[0]), np.max(self.npix[1]))

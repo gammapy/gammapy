@@ -211,7 +211,7 @@ class WcsMap(Map):
         hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
             HDU containing the map data.
         """
-        header = self.geom.make_header()
+        header = self.geom.to_header()
 
         if hdu_bands is not None:
             header["BANDSHDU"] = hdu_bands
