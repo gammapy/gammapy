@@ -118,6 +118,14 @@ def test_wcsndmap_read_ccube():
     assert_allclose(energy_axis.edges.min().to_value("GeV"), 10, rtol=1e-3)
 
 
+@requires_data()
+def test_wcsndmap_read_exposure():
+    exposure = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz")
+    energy_axis = exposure.geom.get_axis_by_name("energy_true")
+    assert energy_axis.node_type == "center"
+    assert exposure.unit == "cm2 s"
+
+
 def test_wcs_nd_map_data_transpose_issue(tmp_path):
     # Regression test for https://github.com/gammapy/gammapy/issues/1346
 
