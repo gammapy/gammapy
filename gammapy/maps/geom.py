@@ -1286,7 +1286,7 @@ class Geom(abc.ABC):
 
         return cls.from_header(hdu.header, hdu_bands)
 
-    def make_bands_hdu(self, hdu=None, hdu_skymap=None, conv=None):
+    def make_bands_hdu(self, hdu=None, hdu_skymap=None, format=None):
         header = fits.Header()
         self._fill_header_from_axes(header)
         axis_names = None
@@ -1294,13 +1294,13 @@ class Geom(abc.ABC):
         # FIXME: Check whether convention is compatible with
         # dimensionality of geometry
 
-        if conv == "fgst-ccube":
+        if format == "fgst-ccube":
             hdu = "EBOUNDS"
             axis_names = ["energy"]
-        elif conv == "fgst-template":
+        elif format == "fgst-template":
             hdu = "ENERGIES"
             axis_names = ["energy"]
-        elif conv == "gadf" and hdu is None:
+        elif format == "gadf" and hdu is None:
             if hdu_skymap:
                 hdu = f"{hdu_skymap}_BANDS"
             else:

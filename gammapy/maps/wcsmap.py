@@ -74,8 +74,6 @@ class WcsMap(Map):
             be chosen to be center of the map.
         dtype : str, optional
             Data type, default is float32
-        conv : {'fgst-ccube','fgst-template','gadf'}, optional
-            FITS format convention.  Default is 'gadf'.
         meta : `dict`
             Dictionary to store meta data.
         unit : str or `~astropy.units.Unit`
@@ -137,7 +135,7 @@ class WcsMap(Map):
 
         return cls.from_hdu(hdu, hdu_bands)
 
-    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, conv="gadf"):
+    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, format="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -149,7 +147,7 @@ class WcsMap(Map):
         sparse : bool
             Sparsify the map by only writing pixels with non-zero
             amplitude.
-        conv : {'gadf', 'fgst-ccube','fgst-template'}
+        format : {'gadf', 'fgst-ccube','fgst-template'}
             FITS format convention.
 
         Returns
@@ -165,7 +163,7 @@ class WcsMap(Map):
         if sparse and hdu == "PRIMARY":
             raise ValueError("Sparse maps cannot be written to the PRIMARY HDU.")
 
-        if conv in ["fgst-ccube", "fgst-template"]:
+        if format in ["fgst-ccube", "fgst-template"]:
             if self.geom.axes[0].name != "energy" or len(self.geom.axes) > 1:
                 raise ValueError(
                     "All 'fgst' formats don't support extra axes except for energy."
@@ -173,13 +171,13 @@ class WcsMap(Map):
 
         if self.geom.axes:
             hdu_bands_out = self.geom.make_bands_hdu(
-                hdu=hdu_bands, hdu_skymap=hdu, conv=conv
+                hdu=hdu_bands, hdu_skymap=hdu, format=format
             )
             hdu_bands = hdu_bands_out.name
         else:
             hdu_bands = None
 
-        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, conv=conv)
+        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse)
 
         hdu_out.header["META"] = json.dumps(self.meta)
 
@@ -195,7 +193,7 @@ class WcsMap(Map):
 
         return fits.HDUList(hdulist)
 
-    def make_hdu(self, hdu="SKYMAP", hdu_bands=None, sparse=False, conv=None):
+    def make_hdu(self, hdu="SKYMAP", hdu_bands=None, sparse=False):
         """Make a FITS HDU from this map.
 
         Parameters

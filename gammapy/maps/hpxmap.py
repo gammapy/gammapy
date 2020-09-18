@@ -137,7 +137,7 @@ class HpxMap(Map):
 
         return cls.from_hdu(hdu_out, hdu_bands_out)
 
-    def to_hdulist(self, hdu="SKYMAP", hdu_bands=None, sparse=False, conv="gadf"):
+    def to_hdulist(self, hdu="SKYMAP", hdu_bands=None, sparse=False, format="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -149,7 +149,7 @@ class HpxMap(Map):
         sparse : bool
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
-        conv : {'fgst-ccube','fgst-template','gadf',None}, optional
+        format : {'fgst-ccube','fgst-template','gadf',None}, optional
             FITS format convention.  If None this will be set to the
             default convention of the map.
 
@@ -159,14 +159,14 @@ class HpxMap(Map):
         """
         if self.geom.axes:
             hdu_bands_out = self.geom.make_bands_hdu(
-                hdu=hdu_bands, hdu_skymap=hdu, conv=conv
+                hdu=hdu_bands, hdu_skymap=hdu, format=format
             )
             hdu_bands = hdu_bands_out.name
         else:
             hdu_bands_out = None
             hdu_bands = None
 
-        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, conv=conv)
+        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, format=format)
         hdu_out.header["META"] = json.dumps(self.meta)
         hdu_out.header["BUNIT"] = self.unit.to_string("fits")
 
@@ -251,7 +251,7 @@ class HpxMap(Map):
         """
         pass
 
-    def make_hdu(self, hdu=None, hdu_bands=None, sparse=False, conv=None):
+    def make_hdu(self, hdu=None, hdu_bands=None, sparse=False, format=None):
         """Make a FITS HDU with input data.
 
         Parameters
@@ -263,7 +263,7 @@ class HpxMap(Map):
         sparse : bool
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
-        conv : {'fgst-ccube', 'fgst-template', 'gadf', None}, optional
+        format : {'fgst-ccube', 'fgst-template', 'gadf', None}, optional
             FITS format convention.  If None this will be set to the
             default convention of the map.
 
@@ -272,11 +272,11 @@ class HpxMap(Map):
         hdu_out : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
             Output HDU containing map data.
         """
-        hpxconv = HpxConv.create(conv)
+        hpxconv = HpxConv.create(format)
         hduname = hpxconv.hduname if hdu is None else hdu
         hduname_bands = hpxconv.bands_hdu if hdu_bands is None else hdu_bands
 
-        header = self.geom.make_header(conv=conv)
+        header = self.geom.make_header(format=format)
 
         if self.geom.axes:
             header["BANDSHDU"] = hduname_bands

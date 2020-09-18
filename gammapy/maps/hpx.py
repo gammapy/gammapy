@@ -1278,10 +1278,10 @@ class HpxGeom(Geom):
 
         return cls.from_header(hdu.header, hdu_bands=hdu_bands, pix=pix)
 
-    def make_header(self, conv="gadf", **kwargs):
+    def make_header(self, format="gadf", **kwargs):
         """Build and return FITS header for this HEALPIX map."""
         header = fits.Header()
-        conv = kwargs.get("conv", HPX_FITS_CONVENTIONS[conv])
+        format = kwargs.get("format", HPX_FITS_CONVENTIONS[format])
 
         # FIXME: For some sparse maps we may want to allow EXPLICIT
         # with an empty region string
@@ -1295,11 +1295,11 @@ class HpxGeom(Geom):
             else:
                 indxschm = "LOCAL"
 
-        if "FGST" in conv.convname.upper():
+        if "FGST" in format.convname.upper():
             header["TELESCOP"] = "GLAST"
             header["INSTRUME"] = "LAT"
 
-        header[conv.frame] = frame_to_coordsys(self.frame)
+        header[format.frame] = frame_to_coordsys(self.frame)
         header["PIXTYPE"] = "HEALPIX"
         header["ORDERING"] = self.ordering
         header["INDXSCHM"] = indxschm
@@ -1307,7 +1307,7 @@ class HpxGeom(Geom):
         header["NSIDE"] = np.max(self._nside)
         header["FIRSTPIX"] = 0
         header["LASTPIX"] = np.max(self._maxpix) - 1
-        header["HPX_CONV"] = conv.convname.upper()
+        header["HPX_CONV"] = format.convname.upper()
 
         if self.frame == "icrs":
             header["EQUINOX"] = (2000.0, "Equinox of RA & DEC specifications")
