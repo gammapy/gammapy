@@ -190,7 +190,7 @@ class Map(abc.ABC):
 
     @staticmethod
     def from_geom(
-        geom, meta=None, data=None, map_type="auto", unit="", dtype="float32"
+        geom, meta=None, data=None, unit="", dtype="float32"
     ):
         """Generate an empty map from a `Geom` instance.
 
@@ -202,11 +202,6 @@ class Map(abc.ABC):
             data array
         meta : `dict`
             Dictionary to store meta data.
-        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
-            Map type.  Selects the class that will be used to
-            instantiate the map. The map type should be consistent
-            with the geometry. If map_type is 'auto' then an
-            appropriate map type will be inferred from type of ``geom``.
         unit : str or `~astropy.units.Unit`
             Data unit.
 
@@ -216,20 +211,18 @@ class Map(abc.ABC):
             Map object
 
         """
-        if map_type == "auto":
+        from .hpx import HpxGeom
+        from .wcs import WcsGeom
+        from .region import RegionGeom
 
-            from .hpx import HpxGeom
-            from .wcs import WcsGeom
-            from .region import RegionGeom
-
-            if isinstance(geom, HpxGeom):
-                map_type = "hpx"
-            elif isinstance(geom, WcsGeom):
-                map_type = "wcs"
-            elif isinstance(geom, RegionGeom):
-                map_type = "region"
-            else:
-                raise ValueError("Unrecognized geom type.")
+        if isinstance(geom, HpxGeom):
+            map_type = "hpx"
+        elif isinstance(geom, WcsGeom):
+            map_type = "wcs"
+        elif isinstance(geom, RegionGeom):
+            map_type = "region"
+        else:
+            raise ValueError("Unrecognized geom type.")
 
         cls_out = Map._get_map_cls(map_type)
         return cls_out(geom, data=data, meta=meta, unit=unit, dtype=dtype)
