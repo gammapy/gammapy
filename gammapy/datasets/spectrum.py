@@ -393,7 +393,7 @@ class SpectrumDataset(Dataset):
         elif isinstance(self, SpectrumDatasetOnOff):
             pred_excess = self.npred()
 
-        pred_excess.plot_hist(ax=ax, label="Predicted excess")
+        pred_excess.plot_hist(ax=ax, label="Predicted signal counts")
 
         ax.legend(numpoints=1)
         ax.set_title("")

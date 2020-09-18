@@ -1595,7 +1595,6 @@ class MapDatasetOnOff(MapDataset):
             Map dataset on off.
 
         """
-        kwargs = {"name": name}
 
         if counts_off is None and dataset.background_model is not None:
             alpha = acceptance / acceptance_off
