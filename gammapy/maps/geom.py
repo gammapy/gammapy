@@ -80,53 +80,6 @@ def make_axes_cols(axes, axis_names=None):
     return cols
 
 
-def axes_from_bands_hdu(hdu):
-    """Read and returns the map axes from a BANDS table.
-
-    Parameters
-    ----------
-    hdu : `~astropy.io.fits.BinTableHDU`
-        The BANDS table HDU.
-
-    Returns
-    -------
-    axes : list of `~MapAxis`
-        List of axis objects.
-    """
-    axes = []
-
-    bands = Table.read(hdu)
-
-    for idx in range(5):
-        axcols = bands.meta.get("AXCOLS{}".format(idx + 1))
-
-        if axcols is None:
-            break
-
-        colnames = axcols.split(",")
-        node_type = "edges" if len(colnames) == 2 else "center"
-
-        # TODO: check why this extra case is needed
-        if colnames[0] == "E_MIN":
-            name = "energy"
-        else:
-            name = colnames[0].replace("_MIN", "").lower()
-
-        interp = bands.meta.get("INTERP{}".format(idx + 1), "lin")
-
-        if node_type == "center":
-            nodes = np.unique(bands[colnames[0]].quantity)
-        else:
-            edges_min = np.unique(bands[colnames[0]].quantity)
-            edges_max = np.unique(bands[colnames[1]].quantity)
-            nodes = edges_from_lo_hi(edges_min, edges_max)
-
-        axis = MapAxis(nodes=nodes, node_type=node_type, interp=interp, name=name)
-        axes.append(axis)
-
-    return axes
-
-
 def find_and_read_bands(hdu):
     if hdu is None:
         return []
@@ -136,7 +89,14 @@ def find_and_read_bands(hdu):
     elif hdu.name == "EBOUNDS":
         axes = [MapAxis.from_table_hdu(hdu, format="fgst-ccube")]
     else:
-        axes = axes_from_bands_hdu(hdu)
+        axes = []
+
+        for idx in range(5):
+            try:
+                axis = MapAxis.from_table_hdu(hdu, format="gadf", idx=idx)
+                axes.append(axis)
+            except AttributeError:
+                continue
 
     return axes
 
@@ -929,7 +889,7 @@ class MapAxis:
         return hdu
 
     @classmethod
-    def from_table_hdu(cls, hdu, format="ogip"):
+    def from_table_hdu(cls, hdu, format="ogip", idx=0):
         """Instanciate MapAxis from table HDU
 
         Parameters
@@ -938,6 +898,8 @@ class MapAxis:
             Table HDU
         format : {"ogip", "ogip-arf", "fgst-ccube", "fgst-template"}
             Format specification
+        idx : int
+            Column index of the axis.
 
         Returns
         -------
@@ -951,11 +913,13 @@ class MapAxis:
             emax = table["E_MAX"].quantity
             edges = np.append(emin.value, emax.value[-1]) * emin.unit
             axis = cls.from_edges(edges, name="energy", interp="log")
+
         elif format == "ogip-arf":
             emin = table["ENERG_LO"].quantity
             emax = table["ENERG_HI"].quantity
             edges = np.append(emin.value, emax.value[-1]) * emin.unit
             axis = cls.from_edges(edges, name="energy_true", interp="log")
+
         elif format == "fgst-template":
             allowed_names = ["Energy", "ENERGY", "energy"]
             for colname in table.colnames:
@@ -965,6 +929,29 @@ class MapAxis:
 
             nodes = table[tag].data
             axis = cls.from_nodes(nodes=nodes, name="energy_true", unit="MeV", interp="log")
+
+        elif format == "gadf":
+            axcols = table.meta.get("AXCOLS{}".format(idx + 1))
+            colnames = axcols.split(",")
+            node_type = "edges" if len(colnames) == 2 else "center"
+
+            # TODO: check why this extra case is needed
+            if colnames[0] == "E_MIN":
+                name = "energy"
+            else:
+                name = colnames[0].replace("_MIN", "").lower()
+
+            interp = table.meta.get("INTERP{}".format(idx + 1), "lin")
+
+            if node_type == "center":
+                nodes = np.unique(table[colnames[0]].quantity)
+            else:
+                edges_min = np.unique(table[colnames[0]].quantity)
+                edges_max = np.unique(table[colnames[1]].quantity)
+                nodes = edges_from_lo_hi(edges_min, edges_max)
+
+            axis = MapAxis(nodes=nodes, node_type=node_type, interp=interp, name=name)
+
         else:
             raise ValueError(f"Format '{format}' not supported")
 
