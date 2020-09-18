@@ -177,7 +177,7 @@ class WcsMap(Map):
         else:
             hdu_bands = None
 
-        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse)
+        hdu_out = self.to_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse)
 
         hdu_out.header["META"] = json.dumps(self.meta)
 
@@ -193,7 +193,7 @@ class WcsMap(Map):
 
         return fits.HDUList(hdulist)
 
-    def make_hdu(self, hdu="SKYMAP", hdu_bands=None, sparse=False):
+    def to_hdu(self, hdu="SKYMAP", hdu_bands=None, sparse=False):
         """Make a FITS HDU from this map.
 
         Parameters

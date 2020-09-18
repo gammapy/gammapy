@@ -460,6 +460,7 @@ def test_irregular_geom_equality():
     with pytest.raises(NotImplementedError):
         geom0 == geom1
 
+
 @pytest.mark.parametrize("node_type", ["edges", "center"])
 @pytest.mark.parametrize("interp", ["log", "lin", "sqrt"])
 def test_read_write(tmp_path, node_type, interp):
@@ -470,7 +471,7 @@ def test_read_write(tmp_path, node_type, interp):
     m = Map.create(binsz=1, npix=10, axes=[e_ax, t_ax], unit="m2")
 
     # Check what Gammapy writes in the FITS header
-    header = m.make_hdu().header
+    header = m.to_hdu().header
     assert header["INTERP1"] == interp
     assert header["INTERP2"] == interp
 
