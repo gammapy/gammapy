@@ -170,7 +170,7 @@ class WcsMap(Map):
                 )
 
         if self.geom.axes:
-            hdu_bands_out = self.geom.make_bands_hdu(
+            hdu_bands_out = self.geom.to_bands_hdu(
                 hdu=hdu_bands, hdu_skymap=hdu, format=format
             )
             hdu_bands = hdu_bands_out.name

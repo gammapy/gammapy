@@ -457,7 +457,7 @@ class WcsGeom(Geom):
 
         return cls(wcs, npix, cdelt=cdelt, axes=axes, cutout_info=cutout_info)
 
-    def _make_bands_cols(self, hdu=None, conv=None):
+    def _make_bands_cols(self):
 
         cols = []
         if not self.is_regular:

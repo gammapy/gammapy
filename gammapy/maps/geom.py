@@ -1273,7 +1273,7 @@ class Geom(abc.ABC):
 
         return cls.from_header(hdu.header, hdu_bands)
 
-    def make_bands_hdu(self, hdu=None, hdu_skymap=None, format=None):
+    def to_bands_hdu(self, hdu=None, hdu_skymap=None, format=None):
         header = fits.Header()
         self._fill_header_from_axes(header)
         axis_names = None
