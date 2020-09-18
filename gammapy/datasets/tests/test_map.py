@@ -1121,6 +1121,7 @@ def test_slice_by_idx():
     assert_allclose(axis.edges[0].value, 0.210175, rtol=1e-5)
 
 
+@requires_dependency("matplotlib")
 def test_plot_residual_onoff():
     axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV")
     geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
