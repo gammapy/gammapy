@@ -6,7 +6,10 @@ from gammapy.datasets import MapDatasetOnOff
 from gammapy.data import GTI
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.estimators import ExcessProfileEstimator
-from gammapy.utils.regions import make_orthogonal_rectangle_sky_regions, make_concentric_annulus_sky_regions
+from gammapy.utils.regions import (
+    make_orthogonal_rectangle_sky_regions,
+    make_concentric_annulus_sky_regions,
+)
 
 
 def get_simple_dataset_on_off():
@@ -55,15 +58,13 @@ def test_profile_content():
     assert_allclose(imp_prof[7]["errn"], [-10.747017, -10.747017], atol=1e-5)
     assert_allclose(imp_prof[0]["ul"], [115.171871, 115.171871], atol=1e-5)
     assert_allclose(imp_prof[0]["flux"], [7.99999987e-06, 8.00000010e-06], atol=1e-3)
-    assert_allclose(imp_prof[0]["solid_angle"], [6.853891e-07, 6.853891e-07], atol=1e-5)
 
 
 def test_radial_profile():
     dataset = get_simple_dataset_on_off()
     geom = dataset.counts.geom
     regions = make_concentric_annulus_sky_regions(
-        center=geom.center_skydir,
-        radius_max=0.2 * u.deg,
+        center=geom.center_skydir, radius_max=0.2 * u.deg,
     )
 
     prof_maker = ExcessProfileEstimator(regions)

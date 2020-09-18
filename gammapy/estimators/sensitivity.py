@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.table import Column, Table
+from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
 from .core import Estimator
@@ -32,6 +33,7 @@ class SensitivityEstimator(Estimator):
     For a usage example see `cta_sensitivity.html <../tutorials/cta_sensitivity.html>`__
 
     """
+
     tag = "SensitivityEstimator"
 
     def __init__(
@@ -61,13 +63,12 @@ class SensitivityEstimator(Estimator):
         n_off = dataset.counts_off.data
 
         stat = WStatCountsStatistic(
-            n_on=np.ones_like(n_off), n_off=n_off, alpha=dataset.alpha.data
+            n_on=dataset.alpha.data * n_off, n_off=n_off, alpha=dataset.alpha.data
         )
         excess_counts = stat.excess_matching_significance(self.n_sigma)
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
-        excess = dataset.background.copy()
-        excess.data = excess_counts
+        excess = Map.from_geom(geom=dataset._geom, data=excess_counts)
         return excess
 
     def estimate_min_e2dnde(self, excess, dataset):
@@ -85,7 +86,7 @@ class SensitivityEstimator(Estimator):
         e2dnde : `~astropy.units.Quantity`
             Minimal differential flux.
         """
-        energy = dataset.background.geom.axes[0].center
+        energy = dataset._geom.get_axis_by_name("energy").center
 
         dataset.models = SkyModel(spectral_model=self.spectrum)
         npred = dataset.npred()
@@ -116,7 +117,7 @@ class SensitivityEstimator(Estimator):
         sensitivity : `~astropy.table.Table`
             Sensitivity table
         """
-        energy = dataset._edisp_kernel.e_reco.center
+        energy = dataset._geom.get_axis_by_name("energy").center
         excess = self.estimate_min_excess(dataset)
         e2dnde = self.estimate_min_e2dnde(excess, dataset)
         criterion = self._get_criterion(excess.data.squeeze())
@@ -142,7 +143,7 @@ class SensitivityEstimator(Estimator):
                     description="Number of excess counts in the bin",
                 ),
                 Column(
-                    data=dataset.background.data.squeeze(),
+                    data=dataset.counts_off_normalised.data.squeeze(),
                     name="background",
                     format="5g",
                     description="Number of background counts in the bin",

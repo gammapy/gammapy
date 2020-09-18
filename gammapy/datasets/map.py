@@ -19,7 +19,7 @@ from gammapy.modeling.models import (
     ProperModels,
     SkyDiffuseCube,
 )
-from gammapy.stats import cash, cash_sum_cython, wstat
+from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.fits import LazyFitsData, HDULocation
@@ -586,7 +586,10 @@ class MapDataset(Dataset):
         residuals : `gammapy.maps.WcsNDMap`
             Residual map.
         """
-        return self._compute_residuals(self.counts, self.npred(), method=method)
+        npred = self.npred()
+        if isinstance(self, MapDatasetOnOff):
+            npred += self.background
+        return self._compute_residuals(self.counts, npred, method=method)
 
     def plot_residuals(
         self,
@@ -631,6 +634,9 @@ class MapDataset(Dataset):
         fig = plt.figure(figsize=figsize)
 
         counts, npred = self.counts, self.npred()
+
+        if isinstance(self, MapDatasetOnOff):
+            npred += self.background
 
         if self.mask is not None:
             counts = counts * self.mask
@@ -1475,16 +1481,28 @@ class MapDatasetOnOff(MapDataset):
 
     @property
     def background(self):
-        """Predicted background in the on region.
-
-        Notice that this definition is valid under the assumption of cash statistic.
         """
+        Background counts estimated from the marginalized likelihood estimate.
+        See :ref:wstat.
+        """
+        mu_bkg = self.alpha.data * get_wstat_mu_bkg(
+            n_on=self.counts.data,
+            n_off=self.counts_off.data,
+            alpha=self.alpha.data,
+            mu_sig=self.npred().data,
+        )
+        mu_bkg = np.nan_to_num(mu_bkg)
+        return Map.from_geom(geom=self._geom, data=mu_bkg)
+
+    @property
+    def counts_off_normalised(self):
+        """ alpha * n_off"""
         return self.alpha * self.counts_off
 
     @property
     def excess(self):
         """Excess (counts - alpha * counts_off)"""
-        return self.counts.data - self.background.data
+        return self.counts - self.counts_off_normalised
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
@@ -1577,11 +1595,10 @@ class MapDatasetOnOff(MapDataset):
             Map dataset on off.
 
         """
-        kwargs = {"name": name}
 
         if counts_off is None and dataset.background_model is not None:
             alpha = acceptance / acceptance_off
-            kwargs["counts_off"] = dataset.background_model.evaluate() / alpha
+            counts_off = dataset.background_model.evaluate() / alpha
 
         return cls(
             counts=dataset.counts,
@@ -1594,6 +1611,7 @@ class MapDatasetOnOff(MapDataset):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             name=dataset.name,
+            psf=dataset.psf,
         )
 
     @property
@@ -1631,9 +1649,8 @@ class MapDatasetOnOff(MapDataset):
             raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
 
         # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
-        tmp_factor = (self.alpha * self.counts_off).copy()
-        tmp_factor.data[~self.mask_safe.data] = 0
-        tmp_factor.stack(other.alpha * other.counts_off, weights=other.mask_safe)
+        tmp_factor = self.counts_off_normalised * self.mask_safe
+        tmp_factor.stack(other.counts_off_normalised, weights=other.mask_safe)
 
         # Stack the off counts (in place)
         self.counts_off.data[~self.mask_safe.data] = 0
@@ -1823,9 +1840,9 @@ class MapDatasetOnOff(MapDataset):
 
         if self.acceptance is not None:
             kwargs["acceptance"] = self.acceptance.get_spectrum(on_region, np.mean)
-            background = self.background.get_spectrum(on_region, np.sum)
+            norm = self.counts_off_normalised.get_spectrum(on_region, np.sum)
             kwargs["acceptance_off"] = (
-                kwargs["acceptance"] * kwargs["counts_off"] / background
+                kwargs["acceptance"] * kwargs["counts_off"] / norm
             )
 
         return SpectrumDatasetOnOff.from_spectrum_dataset(dataset=dataset, **kwargs)
@@ -1898,11 +1915,11 @@ class MapDatasetOnOff(MapDataset):
             acceptance = self.acceptance * mask_safe
             kwargs["acceptance"] = acceptance.sum_over_axes(keepdims=True)
 
-            background = self.background * mask_safe
-            background = background.sum_over_axes(keepdims=True)
-            kwargs["acceptance_off"] = (
-                kwargs["acceptance"] * kwargs["counts_off"] / background
-            )
+        norm_factor = self.counts_off_normalised * mask_safe
+        norm_factor = norm_factor.sum_over_axes(keepdims=True)
+        kwargs["acceptance_off"] = (
+            kwargs["acceptance"] * kwargs["counts_off"] / norm_factor
+        )
 
         return self.from_map_dataset(dataset, **kwargs)
 

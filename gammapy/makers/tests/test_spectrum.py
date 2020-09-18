@@ -222,7 +222,7 @@ class TestSpectrumMakerChain:
         info = dataset.info_dict()
 
         assert info["n_on"] == results["n_on"]
-        assert_allclose(info["significance"], results["sigma"], atol=1e-2)
+        assert_allclose(info["significance"], results["sigma"], rtol=1e-2)
 
         gti_obs = obs.gti.table
         gti_dataset = dataset.gti.table

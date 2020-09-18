@@ -173,7 +173,7 @@ class ExcessProfileEstimator(Estimator):
             else:
                 stats = CashCountsStatistic(
                     spds.counts.data[mask][:, 0, 0],
-                    spds.background.data[mask][:, 0, 0],
+                    spds.background_model.evaluate().data[mask][:, 0, 0],
                 )
 
             result = {

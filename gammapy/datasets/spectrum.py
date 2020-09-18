@@ -10,7 +10,13 @@ from gammapy.datasets import Dataset
 from gammapy.irf import EDispKernel, EDispKernelMap, EffectiveAreaTable
 from gammapy.maps import RegionGeom, RegionNDMap
 from gammapy.modeling.models import Models, ProperModels
-from gammapy.stats import CashCountsStatistic, WStatCountsStatistic, cash, wstat
+from gammapy.stats import (
+    CashCountsStatistic,
+    WStatCountsStatistic,
+    cash,
+    wstat,
+    get_wstat_mu_bkg,
+)
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
@@ -120,11 +126,6 @@ class SpectrumDataset(Dataset):
         if self.models is not None:
             npred = np.sum(self.npred().data)
         str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
-
-        counts_off = np.nan
-        if getattr(self, "counts_off", None) is not None:
-            counts_off = np.sum(self.counts_off.data)
-            str_ += "\t{:32}: {:.2f}\n\n".format("Total off counts", counts_off)
 
         background = np.nan
         if self.background_model is not None:
@@ -389,10 +390,10 @@ class SpectrumDataset(Dataset):
         )
         if self.background_model:
             pred_excess = self.npred() - self.background_model.evaluate()
-        elif self.background:
-            pred_excess = self.npred() - self.background
+        elif isinstance(self, SpectrumDatasetOnOff):
+            pred_excess = self.npred()
 
-        pred_excess.plot_hist(ax=ax, label="Predicted excess")
+        pred_excess.plot_hist(ax=ax, label="Predicted signal counts")
 
         ax.legend(numpoints=1)
         ax.set_title("")
@@ -414,7 +415,10 @@ class SpectrumDataset(Dataset):
         residuals : `RegionNDMap`
             Residual spectrum
         """
-        residuals = self._compute_residuals(self.counts, self.npred(), method)
+        npred = self.npred()
+        if isinstance(self, SpectrumDatasetOnOff):
+            npred += self.background
+        residuals = self._compute_residuals(self.counts, npred, method)
         return residuals
 
     def plot_residuals(self, method="diff", ax=None, **kwargs):
@@ -607,7 +611,7 @@ class SpectrumDataset(Dataset):
         ax1.set_title("Counts")
 
         if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
-            self.background.plot_hist(ax=ax1, label="alpha * N_off")
+            self.counts_off_normalised.plot_hist(ax=ax1, label="alpha * N_off")
         elif self.background_model is not None:
             self.background_model.evaluate().plot_hist(ax=ax1, label="background")
 
@@ -819,6 +823,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         str_list = str_.split("\n")
 
+        if getattr(self, "counts_off", None) is not None:
+            counts_off = np.sum(self.counts_off.data)
+            str_ += "\t{:32}: {:.2f}\n\n".format("Total off counts", counts_off)
+
         acceptance = np.nan
         if self.acceptance is not None:
             acceptance = np.mean(self.acceptance.data)
@@ -836,13 +844,25 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     @property
     def background(self):
-        """"""
-        return self.alpha * self.counts_off.data
+        """Background counts estimated from the marginalized likelihood estimate.
+         See :ref:wstat."""
+        mu_bkg = self.alpha.data * get_wstat_mu_bkg(
+            n_on=self.counts.data,
+            n_off=self.counts_off.data,
+            alpha=self.alpha.data,
+            mu_sig=self.npred().data,
+        )
+        return RegionNDMap.from_geom(geom=self._geom, data=mu_bkg)
+
+    @property
+    def counts_off_normalised(self):
+        """ alpha * noff"""
+        return self.alpha * self.counts_off
 
     @property
     def excess(self):
-        """counts - bkg"""
-        return self.counts - self.background
+        """counts - alpha * off"""
+        return self.counts - self.counts_off_normalised
 
     @property
     def alpha(self):

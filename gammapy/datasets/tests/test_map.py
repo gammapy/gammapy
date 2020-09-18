@@ -905,7 +905,7 @@ def test_map_dataset_on_off_to_spectrum_dataset(images):
     excess_true = excess_map.get_spectrum(on_region, np.sum).data[0]
 
     excess = spectrum_dataset.excess.data[0]
-    assert_allclose(excess, excess_true, atol=1e-6)
+    assert_allclose(excess, excess_true, rtol=1e-3)
 
     assert spectrum_dataset.name != dataset.name
 
@@ -1052,7 +1052,7 @@ def test_stack_dataset_dataset_on_off():
     dataset_on_off.counts_off += 1
     dataset.stack(dataset_on_off)
 
-    assert_allclose(dataset.background_model.map.data, 0.2)
+    assert_allclose(dataset.background_model.map.data, 0.166667, rtol=1e-3)
 
 
 @requires_data()
@@ -1060,7 +1060,7 @@ def test_info_dict_on_off(images):
     dataset = get_map_dataset_onoff(images)
     info_dict = dataset.info_dict()
     assert_allclose(info_dict["counts"], 4299, rtol=1e-3)
-    assert_allclose(info_dict["excess"], -22.52, rtol=1e-3)
+    assert_allclose(info_dict["excess"], -22.52295, rtol=1e-3)
     assert_allclose(info_dict["aeff_min"].value, 0.0, rtol=1e-3)
     assert_allclose(info_dict["aeff_max"].value, 3.4298378e09, rtol=1e-3)
     assert_allclose(info_dict["npred"], 0.0, rtol=1e-3)
@@ -1119,3 +1119,24 @@ def test_slice_by_idx():
 
     axis = sub_dataset.exposure.geom.get_axis_by_name("energy_true")
     assert_allclose(axis.edges[0].value, 0.210175, rtol=1e-5)
+
+
+@requires_dependency("matplotlib")
+def test_plot_residual_onoff():
+    axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV")
+    geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
+
+    counts = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    counts_off = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance_off = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance_off *= 2
+
+    dataset = MapDatasetOnOff(
+        counts=counts,
+        counts_off=counts_off,
+        acceptance=acceptance,
+        acceptance_off=acceptance_off,
+    )
+    with mpl_plot_check():
+        dataset.plot_residuals()

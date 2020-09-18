@@ -104,9 +104,9 @@ def test_wstat_basic(n_on, n_off, alpha, result):
     significance = stat.significance
     p_value = stat.p_value
 
-    assert_allclose(excess, result[0])
-    assert_allclose(significance, result[1], atol=1e-5)
-    assert_allclose(p_value, result[2], atol=1e-5)
+    assert_allclose(excess, result[0], rtol=1e-4)
+    assert_allclose(significance, result[1], rtol=1e-4)
+    assert_allclose(p_value, result[2], rtol=1e-4)
 
 
 values = [
@@ -144,18 +144,18 @@ def test_wstat_ul(n_on, n_off, alpha, result):
     stat = WStatCountsStatistic(n_on, n_off, alpha)
     ul = stat.compute_upper_limit()
 
-    assert_allclose(ul, result[0], atol=1e-5)
+    assert_allclose(ul, result[0], rtol=1e-5)
 
 
 values = [
-    ([10, 20], [0.1, 0.1], 5, [9.82966, 12.038423]),
-    ([10, 10], [0.1, 0.3], 5, [9.82966, 16.664516]),
+    ([10, 20], [0.1, 0.1], 5, [9.82966, 12.129523]),
+    ([10, 10], [0.1, 0.3], 5, [9.82966, 17.130893]),
     ([10], [0.1], 3, [4.818497]),
     (
         [[10, 20], [10, 20]],
         [[0.1, 0.1], [0.1, 0.1]],
         5,
-        [[9.82966, 12.038423], [9.82966, 12.038423]],
+        [[9.82966, 12.129523], [9.82966, 12.129523]],
     ),
 ]
 
@@ -165,4 +165,4 @@ def test_wstat_excess_matching_significance(n_off, alpha, significance, result):
     stat = WStatCountsStatistic(1, n_off, alpha)
     excess = stat.excess_matching_significance(significance)
 
-    assert_allclose(excess, result, atol=1e-3)
+    assert_allclose(excess, result, rtol=1e-2)
