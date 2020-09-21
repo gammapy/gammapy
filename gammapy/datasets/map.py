@@ -2024,10 +2024,9 @@ class MapDatasetOnOff(MapDataset):
             acceptance = self.acceptance
             acceptance = acceptance.resample_axis(axis=axis, weights=weights)
 
-            background = self.alpha * self.counts_off
-            background = background.resample_axis(axis=axis, weights=weights)
+            norm_factor = self.counts_off_normalised.resample_axis(axis=axis, weights=weights)
 
-            acceptance_off = acceptance * counts_off / background
+            acceptance_off = acceptance * counts_off / norm_factor
 
         return self.__class__.from_map_dataset(
             dataset,
