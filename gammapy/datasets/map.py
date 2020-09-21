@@ -1317,8 +1317,8 @@ class MapDataset(Dataset):
             if self.__dict__.pop(name, False):
                 log.info(f"Clearing {name} cache for dataset {self.name}")
 
-    def group_over_energy(self, e_edges=None, name=None):
-        """Group MapDataset over reco energy edges.
+    def resample_energy_axis(self, e_edges=None, name=None):
+        """Resample MapDataset over reco energy edges.
 
         Counts are summed taking into account safe mask.
 
@@ -1332,7 +1332,7 @@ class MapDataset(Dataset):
         Returns
         -------
         dataset: `MapDataset`
-            Grouped dataset .
+            Resampled dataset .
         """
         if e_edges is None:
             e_axis = self._geom.get_axis_by_name("energy")
@@ -1389,7 +1389,7 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset containing images.
         """
-        return self.group_over_energy(e_edges=None, name=name)
+        return self.resample_energy_axis(e_edges=None, name=name)
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
@@ -1987,8 +1987,8 @@ class MapDatasetOnOff(MapDataset):
 
         return self.from_map_dataset(dataset, **kwargs)
 
-    def group_over_energy(self, e_edges=None, name=None):
-        """Group MapDatasetOnOff over reco energy edges.
+    def resample_energy_axis(self, e_edges=None, name=None):
+        """Resample MapDatasetOnOff over reco energy edges.
 
         Counts are summed taking into account safe mask.
 
@@ -2004,7 +2004,7 @@ class MapDatasetOnOff(MapDataset):
         dataset: `SpectrumDataset`
             Resampled spectrum dataset .
         """
-        dataset = super().group_over_energy(e_edges,name)
+        dataset = super().resample_energy_axis(e_edges,name)
 
         axis = dataset.counts.geom.get_axis_by_name("energy")
 

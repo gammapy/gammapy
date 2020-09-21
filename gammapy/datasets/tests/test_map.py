@@ -265,10 +265,10 @@ def get_fermi_3fhl_gc_dataset():
 
 
 @requires_data()
-def test_group_energy_3fhl():
+def test_resample_energy_3fhl():
     dataset = get_fermi_3fhl_gc_dataset()
 
-    grouped = dataset.group_over_energy(e_edges=[10, 35, 100]*u.GeV)
+    grouped = dataset.resample_energy_axis(e_edges=[10, 35, 100]*u.GeV)
 
     assert grouped.counts.data.shape == (2,200,400)
     assert grouped.counts.data[0].sum() == 28581

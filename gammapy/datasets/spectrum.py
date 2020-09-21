@@ -718,8 +718,8 @@ class SpectrumDataset(Dataset):
 
         return self.__class__(**kwargs)
 
-    def group_over_energy(self, e_edges=None, name=None):
-        """Group SpectrumDataset over reco energy edges.
+    def resample_energy_axis(self, e_edges=None, name=None):
+        """Resample SpectrumDataset over reco energy edges.
 
         Counts are summed taking into account safe mask.
 
@@ -787,7 +787,7 @@ class SpectrumDataset(Dataset):
         dataset: `SpectrumDataset`
             Resampled spectrum dataset .
         """
-        return self.group_over_energy(e_edges=None, name=name)
+        return self.resample_energy_axis(e_edges=None, name=name)
 
 
 class SpectrumDatasetOnOff(SpectrumDataset):
@@ -1560,8 +1560,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         return self.__class__(**kwargs)
 
-    def group_over_energy(self, e_edges=None, name=None):
-        """Group SpectrumDatasetOnOff over reco energy edges.
+    def resample_energy_axis(self, e_edges=None, name=None):
+        """Resample SpectrumDatasetOnOff over reco energy edges.
 
         Counts are summed taking into account safe mask.
 
@@ -1577,7 +1577,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         dataset: `SpectrumDataset`
             Resampled spectrum dataset .
         """
-        dataset = super().group_over_energy(e_edges,name)
+        dataset = super().resample_energy_axis(e_edges,name)
 
         axis = dataset.counts.geom.get_axis_by_name("energy")
 

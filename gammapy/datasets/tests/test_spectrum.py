@@ -551,8 +551,8 @@ class TestSpectrumOnOff:
 
         assert info_dict["name"] == "test"
 
-    def test_group_over_energy(self):
-        grouped = self.dataset.group_over_energy(e_edges=[0.1, 1, 10]*u.TeV)
+    def test_resample_energy_axis(self):
+        grouped = self.dataset.resample_energy_axis(e_edges=[0.1, 1, 10]*u.TeV)
 
         assert grouped.counts.data.shape == (2,1,1)
         assert_allclose(grouped.aeff.data, 1.0)
