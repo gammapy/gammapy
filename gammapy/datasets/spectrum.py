@@ -739,7 +739,7 @@ class SpectrumDataset(Dataset):
             e_axis = self.counts.geom.get_axis_by_name("energy")
             e_edges = u.Quantity([e_axis.edges[0], e_axis.edges[-1]])
 
-        axis = MapAxis.from_edges(e_edges, name="energy")
+        axis = MapAxis.from_edges(e_edges, name="energy", interp=self._geom.axes[0].interp)
 
         name = make_name(name)
         kwargs = {}
