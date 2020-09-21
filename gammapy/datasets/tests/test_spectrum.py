@@ -419,6 +419,12 @@ class TestSpectrumOnOff:
 
         assert_allclose(dataset.npred().data.sum(), expected.value)
 
+    def test_to_spectrum_dataset(self):
+        ds = self.dataset.to_spectrum_dataset()
+
+        assert isinstance(ds, SpectrumDataset)
+        assert_allclose(ds.background_model.map.data.sum(), 4)
+
     @requires_dependency("matplotlib")
     def test_peek(self):
         dataset = self.dataset.copy()

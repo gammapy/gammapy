@@ -1572,7 +1572,7 @@ class MapDatasetOnOff(MapDataset):
     def from_map_dataset(
         cls, dataset, acceptance, acceptance_off, counts_off=None, name=None
     ):
-        """Create spectrum dataseton off from another dataset.
+        """Create map dataseton off from another dataset.
 
         Parameters
         ----------
@@ -1612,6 +1612,37 @@ class MapDatasetOnOff(MapDataset):
             acceptance_off=acceptance_off,
             name=dataset.name,
             psf=dataset.psf,
+        )
+
+    def to_map_dataset(self, name=None):
+        """ Convert a MapDatasetOnOff to  MapDataset
+
+        Parameters:
+        -----------
+        name: str
+            Name of the new dataset
+
+        Returns:
+        -------
+        dataset: `MapDataset`
+            MapDatset with cash statistics
+        """
+
+        name = make_name(name)
+
+        background_model = BackgroundModel(self.counts_off * self.alpha)
+        background_model.datasets_names = [name]
+        return MapDataset(
+            counts=self.counts,
+            exposure=self.exposure,
+            psf=self.psf,
+            edisp=self.edisp,
+            name=name,
+            gti=self.gti,
+            mask_fit=self.mask_fit,
+            mask_safe=self.mask_safe,
+            models=background_model,
+            meta_table=self.meta_table,
         )
 
     @property
