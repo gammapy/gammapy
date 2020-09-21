@@ -110,6 +110,28 @@ def test_wstat_basic(n_on, n_off, alpha, result):
 
 
 values = [
+    (5, 1, 1, 3, [1, 0.422261, 0.672834, 0.178305]),
+    (5, 1, 1, 1, [3.0, 1.29828, 0.19419, 1.685535]),
+    (5, 1, 1, 6, [-2, -0.75585, 0.4497382, 0.571311]),
+]
+
+
+@pytest.mark.parametrize(("n_on", "n_off", "alpha", "mu_sig", "result"), values)
+def test_wstat_with_musig(n_on, n_off, alpha, mu_sig, result):
+
+    stat = WStatCountsStatistic(n_on, n_off, alpha, mu_sig)
+    excess = stat.excess
+    significance = stat.significance
+    p_value = stat.p_value
+    del_ts = stat.delta_ts
+
+    assert_allclose(excess, result[0], rtol=1e-4)
+    assert_allclose(significance, result[1], rtol=1e-4)
+    assert_allclose(p_value, result[2], rtol=1e-4)
+    assert_allclose(del_ts, result[3], rtol=1e-4)
+
+
+values = [
     (1, 2, 1, [-1.942465, 1.762589]),
     (5, 1, 1, [-2.310459, 2.718807]),
     (10, 5, 0.3, [-2.932472, 3.55926]),

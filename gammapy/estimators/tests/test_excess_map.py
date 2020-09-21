@@ -6,7 +6,12 @@ import astropy.units as u
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling.models import BackgroundModel
+from gammapy.modeling.models import (
+    BackgroundModel,
+    PowerLawSpectralModel,
+    GaussianSpatialModel,
+    SkyModel,
+)
 from gammapy.utils.testing import requires_data
 
 
@@ -167,6 +172,33 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     assert_allclose(result_image["background"].data[0, 10, 10], 152)
 
     assert result_image["flux"].unit == u.Unit("cm-2s-1")
+    assert_allclose(result_image["flux"].data[0, 10, 10], 7.6e-9, rtol=1e-3)
+
+    # test with an npred()
+    simple_dataset_on_off.exposure.data = (
+        np.ones(simple_dataset_on_off.exposure.data.shape) * 1e10
+    )
+    simple_dataset_on_off.psf = None
+    model = SkyModel(
+        PowerLawSpectralModel(),
+        GaussianSpatialModel(
+            lat_0=0.0 * u.deg, lon_0=0.0 * u.deg, sigma=0.1 * u.deg, frame="icrs"
+        ),
+        datasets_names=[simple_dataset_on_off.name],
+        name="sky_model",
+    )
+    simple_dataset_on_off.models.append(model)
+    estimator_mod = ExcessMapEstimator(0.11 * u.deg, apply_mask_fit=False)
+    result_mod = estimator_mod.run(simple_dataset_on_off)
+    assert result_mod["counts"].data.shape == (1, 20, 20)
+
+    assert_allclose(result_mod["significance"].data[0, 10, 10], 8.119164, atol=1e-3)
+
+    assert_allclose(result_mod["counts"].data[0, 10, 10], 388)
+    assert_allclose(result_mod["excess"].data[0, 10, 10], 194)
+    assert_allclose(result_mod["background"].data[0, 10, 10], 194)
+
+    assert result_mod["flux"].unit == u.Unit("cm-2s-1")
     assert_allclose(result_image["flux"].data[0, 10, 10], 7.6e-9, rtol=1e-3)
 
 
