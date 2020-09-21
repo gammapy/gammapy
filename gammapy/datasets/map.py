@@ -1355,7 +1355,6 @@ class MapDataset(Dataset):
 
         if self.counts is not None:
             kwargs["counts"] = self.counts.resample_axis(axis=axis, weights=weights)
-            print(kwargs["counts"].geom.axes[0].edges)
 
         if self.background_model is not None:
             background = self.background_model.evaluate()
