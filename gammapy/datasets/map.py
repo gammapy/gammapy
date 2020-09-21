@@ -1616,6 +1616,7 @@ class MapDatasetOnOff(MapDataset):
 
     def to_map_dataset(self, name=None):
         """ Convert a MapDatasetOnOff to  MapDataset
+        The background model template is taken as alpha*counts_off
 
         Parameters:
         -----------

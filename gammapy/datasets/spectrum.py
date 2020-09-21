@@ -1446,6 +1446,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def to_spectrum_dataset(self, name=None):
         """ Convert a SpectrumDatasetOnOff to a SpectrumDataset
+        The background model template is taken as alpha*counts_off
 
         Parameters:
         -----------
