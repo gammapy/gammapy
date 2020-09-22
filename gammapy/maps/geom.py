@@ -84,6 +84,7 @@ def find_and_read_bands(hdu, format):
     if hdu is None:
         return []
 
+    print(format)
     if hdu.name == "ENERGIES":
         axes = [MapAxis.from_table_hdu(hdu, format="fgst-template")]
     elif hdu.name == "EBOUNDS":

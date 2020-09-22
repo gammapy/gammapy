@@ -6,12 +6,12 @@ from astropy.io import fits
 from gammapy.maps import MapAxis, MapCoord
 from gammapy.maps.hpx import (
     HpxGeom,
+    HpxToWcsMapping,
     get_hpxregion_dir,
     get_hpxregion_size,
     get_pix_size_from_nside,
     get_subpixels,
     get_superpixels,
-    make_hpx_to_wcs_mapping,
     nside_to_order,
     ravel_hpx_index,
     unravel_hpx_index,
@@ -463,9 +463,9 @@ def test_make_hpx_to_wcs_mapping():
     hpx = HpxGeom(16, False, "galactic", region="DISK(110.,75.,2.)")
     # FIXME construct explicit WCS projection here
     wcs = hpx.to_wcs_geom()
-    hpx2wcs = make_hpx_to_wcs_mapping(hpx, wcs)
+    hpx2wcs = HpxToWcsMapping.create(hpx, wcs)
     assert_allclose(
-        hpx2wcs[0],
+        hpx2wcs.ipix,
         np.array(
             [
                 67,
@@ -508,7 +508,7 @@ def test_make_hpx_to_wcs_mapping():
         ),
     )
     assert_allclose(
-        hpx2wcs[1],
+        hpx2wcs.mult_val,
         np.array(
             [
                 0.11111111,
@@ -552,9 +552,9 @@ def test_make_hpx_to_wcs_mapping():
     )
 
     hpx = HpxGeom([8, 16], False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
-    hpx2wcs = make_hpx_to_wcs_mapping(hpx, wcs)
+    hpx2wcs = HpxToWcsMapping.create(hpx, wcs)
     assert_allclose(
-        hpx2wcs[0],
+        hpx2wcs.ipix,
         np.array(
             [
                 [

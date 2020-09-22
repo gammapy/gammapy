@@ -25,11 +25,6 @@ class HpxMap(Map):
         The map unit
     """
 
-    def __init__(self, geom, data, meta=None, unit=""):
-        super().__init__(geom, data, meta, unit)
-        self._wcs2d = None
-        self._hpx2wcs = None
-
     @classmethod
     def create(
         cls,
@@ -117,6 +112,14 @@ class HpxMap(Map):
             BinTableHDU in the file.
         hdu_bands : str
             Name or index of the HDU with the BANDS table.
+        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
+                  'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
+                  'galprop', 'galprop2'}
+            FITS format convention.  By default files will be written
+            to the gamma-astro-data-formats (GADF) format.  This
+            option can be used to write files that are compliant with
+            format conventions required by specific software (e.g. the
+            Fermi Science Tools).
 
         Returns
         -------
@@ -149,9 +152,14 @@ class HpxMap(Map):
         sparse : bool
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
-        format : {'fgst-ccube','fgst-template','gadf',None}, optional
-            FITS format convention.  If None this will be set to the
-            default convention of the map.
+        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
+                  'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
+                  'galprop', 'galprop2'}
+            FITS format convention.  By default files will be written
+            to the gamma-astro-data-formats (GADF) format.  This
+            option can be used to write files that are compliant with
+            format conventions required by specific software (e.g. the
+            Fermi Science Tools).
 
         Returns
         -------
@@ -166,7 +174,7 @@ class HpxMap(Map):
             hdu_bands_out = None
             hdu_bands = None
 
-        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, format=format)
+        hdu_out = self.to_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, format=format)
         hdu_out.header["META"] = json.dumps(self.meta)
         hdu_out.header["BUNIT"] = self.unit.to_string("fits")
 
@@ -251,7 +259,7 @@ class HpxMap(Map):
         """
         pass
 
-    def make_hdu(self, hdu=None, hdu_bands=None, sparse=False, format=None):
+    def to_hdu(self, hdu=None, hdu_bands=None, sparse=False, format=None):
         """Make a FITS HDU with input data.
 
         Parameters
