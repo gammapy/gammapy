@@ -1140,3 +1140,28 @@ def test_plot_residual_onoff():
     )
     with mpl_plot_check():
         dataset.plot_residuals()
+
+
+def test_to_map_dataset():
+    axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV")
+    geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
+
+    counts = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    counts_off = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance_off = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance_off *= 2
+
+    dataset_onoff = MapDatasetOnOff(
+        counts=counts,
+        counts_off=counts_off,
+        acceptance=acceptance,
+        acceptance_off=acceptance_off,
+    )
+
+    dataset = dataset_onoff.to_map_dataset(name="ds")
+
+    assert dataset.name == "ds"
+    assert_allclose(dataset.background_model.map.data.sum(), 100)
+    assert isinstance(dataset, MapDataset)
+    assert dataset.counts == dataset_onoff.counts

@@ -1444,6 +1444,38 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             meta_table=dataset.meta_table,
         )
 
+    def to_spectrum_dataset(self, name=None):
+        """ Convert a SpectrumDatasetOnOff to a SpectrumDataset
+        The background model template is taken as alpha*counts_off
+
+        Parameters:
+        -----------
+            name: str
+                Name of the new dataset
+
+        Returns:
+        -------
+            dataset: `SpectrumDataset`
+                SpectrumDatset with cash statistics
+        """
+
+        name = make_name(name)
+
+        background_model = BackgroundModel(self.counts_off * self.alpha)
+        background_model.datasets_names = [name]
+        return SpectrumDataset(
+            counts=self.counts,
+            livetime=self.livetime,
+            aeff=self.aeff,
+            edisp=self.edisp,
+            name=name,
+            gti=self.gti,
+            mask_fit=self.mask_fit,
+            mask_safe=self.mask_safe,
+            models=background_model,
+            meta_table=self.meta_table,
+        )
+
     def slice_by_idx(self, slices, name=None):
         """Slice sub dataset.
 
