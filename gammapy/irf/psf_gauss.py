@@ -254,7 +254,6 @@ class EnergyDependentMultiGaussPSF:
                     )
                     log.debug(f"Sigmas: {psf.sigmas} Norms: {psf.norms}")
                     radius[jdx, idx] = np.nan
-
         return Angle(radius, "deg")
 
     def plot_containment(
