@@ -84,8 +84,8 @@ def make_axes_cols(axes, axis_names=None):
 def find_and_read_bands(hdu, format):
     if hdu is None:
         return []
-    
-    if format in ["fgst-ccube", "fgst-template"]:
+
+    if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube"]:
         axes = [MapAxis.from_table_hdu(hdu, format=format)]
     else:
         axes = []
@@ -920,7 +920,7 @@ class MapAxis:
             edges = np.append(emin.value, emax.value[-1]) * emin.unit
             axis = cls.from_edges(edges, name="energy_true", interp="log")
 
-        elif format == "fgst-template":
+        elif format in ["fgst-template", "fgst-bexpcube"]:
             allowed_names = ["Energy", "ENERGY", "energy"]
             for colname in table.colnames:
                 if colname in allowed_names:

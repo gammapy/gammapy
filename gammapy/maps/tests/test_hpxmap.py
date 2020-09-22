@@ -119,6 +119,15 @@ def test_hpxmap_read_write_fgst(tmp_path):
     m2 = Map.read(path)
 
 
+def test_read_fgst_exposure():
+    exposure = Map.read(
+        "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_exposure_cube_hpx.fits.gz"
+    )
+    energy_axis = exposure.geom.get_axis_by_name("energy_true")
+    assert energy_axis.node_type == "center"
+    assert exposure.unit == "cm2 s"
+
+
 @pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_set_get_by_pix(nside, nested, frame, region, axes):
     m = create_map(nside, nested, frame, region, axes)

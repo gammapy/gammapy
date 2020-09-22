@@ -138,10 +138,13 @@ class HpxMap(Map):
         if hdu_bands is not None:
             hdu_bands_out = hdu_list[hdu_bands]
 
+        if format is None:
+            format = HpxConv.identify_hpx_format(hdu_out.header)
+
         hpx_map = cls.from_hdu(hdu_out, hdu_bands_out, format=format)
 
         # exposure maps have an additional GTI hdu
-        if format == "fgst-template" and "GTI" in hdu_list:
+        if format == "fgst-bexpcube" and "GTI" in hdu_list:
             hpx_map.unit = "cm2 s"
 
         return hpx_map
