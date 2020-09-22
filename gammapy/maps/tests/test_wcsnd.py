@@ -97,7 +97,7 @@ def test_wcsndmap_read_write_fgst(tmp_path):
 
     # Test Counts Cube
     m = WcsNDMap(geom)
-    m.write(path, conv="fgst-ccube", overwrite=True)
+    m.write(path, format="fgst-ccube", overwrite=True)
     with fits.open(path, memmap=False) as hdulist:
         assert "EBOUNDS" in hdulist
 
@@ -105,7 +105,7 @@ def test_wcsndmap_read_write_fgst(tmp_path):
     assert m2.geom.axes[0].name == "energy"
 
     # Test Model Cube
-    m.write(path, conv="fgst-template", overwrite=True)
+    m.write(path, format="fgst-template", overwrite=True)
     with fits.open(path, memmap=False) as hdulist:
         assert "ENERGIES" in hdulist
 
@@ -116,6 +116,14 @@ def test_wcsndmap_read_ccube():
     energy_axis = counts.geom.get_axis_by_name("energy")
     # for the 3FGL data the lower energy threshold should be at 10 GeV
     assert_allclose(energy_axis.edges.min().to_value("GeV"), 10, rtol=1e-3)
+
+
+@requires_data()
+def test_wcsndmap_read_exposure():
+    exposure = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz")
+    energy_axis = exposure.geom.get_axis_by_name("energy_true")
+    assert energy_axis.node_type == "center"
+    assert exposure.unit == "cm2 s"
 
 
 def test_wcs_nd_map_data_transpose_issue(tmp_path):

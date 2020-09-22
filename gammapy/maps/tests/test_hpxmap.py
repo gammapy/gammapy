@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis
 from gammapy.maps.utils import fill_poisson
-from gammapy.utils.testing import mpl_plot_check, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_dependency, requires_data
 
 pytest.importorskip("healpy")
 
@@ -99,7 +99,7 @@ def test_hpxmap_read_write_fgst(tmp_path):
 
     # Test Counts Cube
     m = create_map(8, False, "galactic", None, [axis])
-    m.write(path, conv="fgst-ccube", overwrite=True)
+    m.write(path, format="fgst-ccube", overwrite=True)
     with fits.open(path, memmap=False) as hdulist:
         assert "SKYMAP" in hdulist
         assert "EBOUNDS" in hdulist
@@ -109,7 +109,7 @@ def test_hpxmap_read_write_fgst(tmp_path):
     m2 = Map.read(path)
 
     # Test Model Cube
-    m.write(path, conv="fgst-template", overwrite=True)
+    m.write(path, format="fgst-template", overwrite=True)
     with fits.open(path, memmap=False) as hdulist:
         assert "SKYMAP" in hdulist
         assert "ENERGIES" in hdulist
@@ -117,6 +117,16 @@ def test_hpxmap_read_write_fgst(tmp_path):
         assert hdulist["SKYMAP"].header["TTYPE1"] == "ENERGY1"
 
     m2 = Map.read(path)
+
+
+@requires_data()
+def test_read_fgst_exposure():
+    exposure = Map.read(
+        "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_exposure_cube_hpx.fits.gz"
+    )
+    energy_axis = exposure.geom.get_axis_by_name("energy_true")
+    assert energy_axis.node_type == "center"
+    assert exposure.unit == "cm2 s"
 
 
 @pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)

@@ -4,7 +4,7 @@ from astropy.io import fits
 from astropy.units import Quantity
 from gammapy.utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
-from .hpx import HPX_FITS_CONVENTIONS, HpxGeom, HpxToWcsMapping, nside_to_order
+from .hpx import HPX_FITS_CONVENTIONS, HpxGeom, HpxToWcsMapping, nside_to_order, HpxConv
 from .hpxmap import HpxMap
 from .utils import INVALID_INDEX, interp_to_order
 
@@ -39,8 +39,6 @@ class HpxNDMap(HpxMap):
             data = self._make_default_data(geom, data_shape, dtype)
 
         super().__init__(geom, data, meta, unit)
-        self._wcs2d = None
-        self._hpx2wcs = None
 
     @staticmethod
     def _make_default_data(geom, shape_np, dtype):
@@ -54,7 +52,7 @@ class HpxNDMap(HpxMap):
         return data
 
     @classmethod
-    def from_hdu(cls, hdu, hdu_bands=None):
+    def from_hdu(cls, hdu, hdu_bands=None, format=None):
         """Make a HpxNDMap object from a FITS HDU.
 
         Parameters
@@ -63,20 +61,31 @@ class HpxNDMap(HpxMap):
             The FITS HDU
         hdu_bands  : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU
+        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
+                  'fgst-srcmap', 'fgst-template', 'fgst-srcmap-sparse',
+                  'galprop', 'galprop2'}
+            FITS convention. If None the format is guessed.
+
+        Returns
+        -------
+        map : `HpxMap`
+            HEALPix map
+
         """
-        hpx = HpxGeom.from_header(hdu.header, hdu_bands)
+        if format is None:
+            format = HpxConv.identify_hpx_format(hdu.header)
 
-        convname = HpxGeom.identify_hpx_convention(hdu.header)
-        hpx_conv = HPX_FITS_CONVENTIONS[convname]
+        geom = HpxGeom.from_header(hdu.header, hdu_bands, format=format)
 
-        shape = tuple([ax.nbin for ax in hpx.axes[::-1]])
-        # shape_data = shape + tuple([np.max(hpx.npix)])
+        hpx_conv = HPX_FITS_CONVENTIONS[format]
+
+        shape = tuple([ax.nbin for ax in geom.axes[::-1]])
 
         # TODO: Should we support extracting slices?
 
         meta = cls._get_meta_from_header(hdu.header)
         unit = unit_from_fits_image_hdu(hdu.header)
-        map_out = cls(hpx, None, meta=meta, unit=unit)
+        map_out = cls(geom, None, meta=meta, unit=unit)
 
         colnames = hdu.columns.names
         cnames = []
@@ -99,44 +108,11 @@ class HpxNDMap(HpxMap):
             if nbin == 1:
                 map_out.data = hdu.data.field(cnames[0])
             else:
-                for i, cname in enumerate(cnames):
-                    idx = np.unravel_index(i, shape)
+                for idx, cname in enumerate(cnames):
+                    idx = np.unravel_index(idx, shape)
                     map_out.data[idx + (slice(None),)] = hdu.data.field(cname)
 
         return map_out
-
-    def make_wcs_mapping(
-        self, sum_bands=False, proj="AIT", oversample=2, width_pix=None
-    ):
-        """Make a HEALPix to WCS mapping object.
-
-        Parameters
-        ----------
-        sum_bands : bool
-            sum over non-spatial dimensions before reprojecting
-        proj  : str
-            WCS-projection
-        oversample : float
-            Oversampling factor for WCS map. This will be the
-            approximate ratio of the width of a HPX pixel to a WCS
-            pixel. If this parameter is None then the width will be
-            set from ``width_pix``.
-        width_pix : int
-            Width of the WCS geometry in pixels.  The pixel size will
-            be set to the number of pixels satisfying ``oversample``
-            or ``width_pix`` whichever is smaller.  If this parameter
-            is None then the width will be set from ``oversample``.
-
-        Returns
-        -------
-        hpx2wcs : `~HpxToWcsMapping`
-
-        """
-        self._wcs2d = self.geom.make_wcs(
-            proj=proj, oversample=oversample, width_pix=width_pix, drop_axes=True
-        )
-        self._hpx2wcs = HpxToWcsMapping.create(self.geom, self._wcs2d)
-        return self._hpx2wcs
 
     def to_wcs(
         self,
@@ -161,9 +137,11 @@ class HpxNDMap(HpxMap):
 
         # FIXME: Check whether the old mapping is still valid and reuse it
         if hpx2wcs is None:
-            hpx2wcs = self.make_wcs_mapping(
-                oversample=oversample, proj=proj, width_pix=width_pix
+            geom_wcs_image = self.geom.to_wcs_geom(
+                proj=proj, oversample=oversample, width_pix=width_pix, drop_axes=True
             )
+
+            hpx2wcs = HpxToWcsMapping.create(self.geom, geom_wcs_image)
 
         # FIXME: Need a function to extract a valid shape from npix property
 
@@ -516,7 +494,7 @@ class HpxNDMap(HpxMap):
         from matplotlib.collections import PatchCollection
         import healpy as hp
 
-        wcs = self.geom.make_wcs(proj=proj, oversample=1)
+        wcs = self.geom.to_wcs_geom(proj=proj, oversample=1)
         if ax is None:
             fig = plt.gcf()
             ax = fig.add_subplot(111, projection=wcs.wcs, aspect="equal")

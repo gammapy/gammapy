@@ -47,6 +47,45 @@ class HpxConv:
     def create(cls, convname="gadf"):
         return copy.deepcopy(HPX_FITS_CONVENTIONS[convname])
 
+    @staticmethod
+    def identify_hpx_format(header):
+        """Identify the convention used to write this file."""
+        # Hopefully the file contains the HPX_CONV keyword specifying
+        # the convention used
+        if "HPX_CONV" in header:
+            return header["HPX_CONV"].lower()
+
+        # Try based on the EXTNAME keyword
+        hduname = header.get("EXTNAME", None)
+        if hduname == "HPXEXPOSURES":
+            return "fgst-bexpcube"
+        elif hduname == "SKYMAP2":
+            if "COORDTYPE" in header.keys():
+                return "galprop"
+            else:
+                return "galprop2"
+
+        # Check the name of the first column
+        colname = header["TTYPE1"]
+        if colname == "PIX":
+            colname = header["TTYPE2"]
+
+        if colname == "KEY":
+            return "fgst-srcmap-sparse"
+        elif colname == "ENERGY1":
+            return "fgst-template"
+        elif colname == "COSBINS":
+            return "fgst-ltcube"
+        elif colname == "Bin0":
+            return "galprop"
+        elif colname == "CHANNEL1" or colname == "CHANNEL0":
+            if hduname == "SKYMAP":
+                return "fgst-ccube"
+            else:
+                return "fgst-srcmap"
+        else:
+            raise ValueError("Could not identify HEALPIX convention")
+
 
 HPX_FITS_CONVENTIONS = {}
 """Various conventions for storing HEALPIX maps in FITS files"""
@@ -186,66 +225,6 @@ def get_pix_size_from_nside(nside):
         raise ValueError(f"HEALPIX order must be 0 to 13. Got: {order!r}")
 
     return HPX_ORDER_TO_PIXSIZE[order]
-
-
-def make_hpx_to_wcs_mapping(hpx, wcs):
-    """Make the pixel mapping from HPX- to a WCS-based geometry.
-
-    Parameters
-    ----------
-    hpx : `~gammapy.maps.HpxGeom`
-       The HEALPIX geometry
-    wcs : `~gammapy.maps.WcsGeom`
-       The WCS geometry
-
-    Returns
-    -------
-    ipix : `~numpy.ndarray`
-        array(nx,ny) of HEALPIX pixel indices for each wcs pixel
-    mult_val : `~numpy.ndarray`
-        array(nx,ny) of 1./number of WCS pixels pointing at each HEALPIX pixel
-    npix : tuple
-        tuple(nx,ny) with the shape of the WCS grid
-    """
-    import healpy as hp
-
-    npix = wcs.npix
-
-    # FIXME: Calculation of WCS pixel centers should be moved into a
-    # method of WcsGeom
-    pix_crds = np.dstack(np.meshgrid(np.arange(npix[0]), np.arange(npix[1])))
-    pix_crds = pix_crds.swapaxes(0, 1).reshape((-1, 2))
-    sky_crds = wcs.wcs.wcs_pix2world(pix_crds, 0)
-    sky_crds *= np.radians(1.0)
-    sky_crds[0:, 1] = (np.pi / 2) - sky_crds[0:, 1]
-
-    mask = ~np.any(np.isnan(sky_crds), axis=1)
-    ipix = -1 * np.ones((len(hpx.nside), int(npix[0] * npix[1])), int)
-    m = mask[None, :] * np.ones_like(ipix, dtype=bool)
-
-    ipix[m] = hp.ang2pix(
-        hpx.nside[..., None],
-        sky_crds[:, 1][mask][None, ...],
-        sky_crds[:, 0][mask][None, ...],
-        hpx.nest,
-    ).flatten()
-
-    # Here we are counting the number of HEALPIX pixels each WCS pixel
-    # points to and getting a multiplicative factor that tells use how
-    # to split up the counts in each HEALPIX pixel (by dividing the
-    # corresponding WCS pixels by the number of associated HEALPIX
-    # pixels).
-    mult_val = np.ones_like(ipix, dtype=float)
-    for i, t in enumerate(ipix):
-        count = np.unique(t, return_counts=True)
-        idx = np.searchsorted(count[0], t)
-        mult_val[i, ...] = 1.0 / count[1][idx]
-
-    if hpx.nside.size == 1:
-        ipix = np.squeeze(ipix, axis=0)
-        mult_val = np.squeeze(mult_val, axis=0)
-
-    return ipix, mult_val, npix
 
 
 def match_hpx_pix(nside, nest, nside_pix, ipix_ring):
@@ -1148,47 +1127,8 @@ class HpxGeom(Geom):
 
         return cls(nside, nest=nest, frame=frame, region=region, axes=axes)
 
-    @staticmethod
-    def identify_hpx_convention(header):
-        """Identify the convention used to write this file."""
-        # Hopefully the file contains the HPX_CONV keyword specifying
-        # the convention used
-        if "HPX_CONV" in header:
-            return header["HPX_CONV"].lower()
-
-        # Try based on the EXTNAME keyword
-        hduname = header.get("EXTNAME", None)
-        if hduname == "HPXEXPOSURES":
-            return "fgst-bexpcube"
-        elif hduname == "SKYMAP2":
-            if "COORDTYPE" in header.keys():
-                return "galprop"
-            else:
-                return "galprop2"
-
-        # Check the name of the first column
-        colname = header["TTYPE1"]
-        if colname == "PIX":
-            colname = header["TTYPE2"]
-
-        if colname == "KEY":
-            return "fgst-srcmap-sparse"
-        elif colname == "ENERGY1":
-            return "fgst-template"
-        elif colname == "COSBINS":
-            return "fgst-ltcube"
-        elif colname == "Bin0":
-            return "galprop"
-        elif colname == "CHANNEL1" or colname == "CHANNEL0":
-            if hduname == "SKYMAP":
-                return "fgst-ccube"
-            else:
-                return "fgst-srcmap"
-        else:
-            raise ValueError("Could not identify HEALPIX convention")
-
     @classmethod
-    def from_header(cls, header, hdu_bands=None, pix=None):
+    def from_header(cls, header, hdu_bands=None, format=None):
         """Create an HPX object from a FITS header.
 
         Parameters
@@ -1197,20 +1137,22 @@ class HpxGeom(Geom):
             The FITS header
         hdu_bands : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU.
-        pix : tuple
-            List of pixel index vectors defining the pixels
-            encompassed by the geometry.  For EXPLICIT geometries with
-            HPX_REG undefined this tuple defines the geometry.
+        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
+                  'fgst-srcmap', 'fgst-template', 'fgst-srcmap-sparse',
+                  'galprop', 'galprop2'}
+            FITS convention. If None the format is guessed.
 
         Returns
         -------
         hpx : `~HpxGeom`
             HEALPix geometry.
         """
-        convname = HpxGeom.identify_hpx_convention(header)
-        conv = HPX_FITS_CONVENTIONS[convname]
+        if format is None:
+            format = HpxConv.identify_hpx_format(header)
 
-        axes = find_and_read_bands(hdu_bands)
+        conv = HPX_FITS_CONVENTIONS[format]
+
+        axes = find_and_read_bands(hdu_bands, format=format)
         shape = [ax.nbin for ax in axes]
 
         if header["PIXTYPE"] != "HEALPIX":
@@ -1278,10 +1220,10 @@ class HpxGeom(Geom):
 
         return cls.from_header(hdu.header, hdu_bands=hdu_bands, pix=pix)
 
-    def make_header(self, conv="gadf", **kwargs):
+    def to_header(self, format="gadf", **kwargs):
         """Build and return FITS header for this HEALPIX map."""
         header = fits.Header()
-        conv = kwargs.get("conv", HPX_FITS_CONVENTIONS[conv])
+        format = kwargs.get("format", HPX_FITS_CONVENTIONS[format])
 
         # FIXME: For some sparse maps we may want to allow EXPLICIT
         # with an empty region string
@@ -1295,11 +1237,11 @@ class HpxGeom(Geom):
             else:
                 indxschm = "LOCAL"
 
-        if "FGST" in conv.convname.upper():
+        if "FGST" in format.convname.upper():
             header["TELESCOP"] = "GLAST"
             header["INSTRUME"] = "LAT"
 
-        header[conv.frame] = frame_to_coordsys(self.frame)
+        header[format.frame] = frame_to_coordsys(self.frame)
         header["PIXTYPE"] = "HEALPIX"
         header["ORDERING"] = self.ordering
         header["INDXSCHM"] = indxschm
@@ -1307,7 +1249,7 @@ class HpxGeom(Geom):
         header["NSIDE"] = np.max(self._nside)
         header["FIRSTPIX"] = 0
         header["LASTPIX"] = np.max(self._maxpix) - 1
-        header["HPX_CONV"] = conv.convname.upper()
+        header["HPX_CONV"] = format.convname.upper()
 
         if self.frame == "icrs":
             header["EQUINOX"] = (2000.0, "Equinox of RA & DEC specifications")
@@ -1409,7 +1351,7 @@ class HpxGeom(Geom):
         else:
             return self.nside
 
-    def make_wcs(self, proj="AIT", oversample=2, drop_axes=True, width_pix=None):
+    def to_wcs_geom(self, proj="AIT", oversample=2, drop_axes=True, width_pix=None):
         """Make a WCS projection appropriate for this HPX pixelization.
 
         Parameters
@@ -1688,9 +1630,47 @@ class HpxToWcsMapping:
         Returns
         -------
         hpx2wcs : `~HpxToWcsMapping`
+            Mapping
 
         """
-        ipix, mult_val, npix = make_hpx_to_wcs_mapping(hpx, wcs)
+        import healpy as hp
+
+        npix = wcs.npix
+
+        # FIXME: Calculation of WCS pixel centers should be moved into a
+        # method of WcsGeom
+        pix_crds = np.dstack(np.meshgrid(np.arange(npix[0]), np.arange(npix[1])))
+        pix_crds = pix_crds.swapaxes(0, 1).reshape((-1, 2))
+        sky_crds = wcs.wcs.wcs_pix2world(pix_crds, 0)
+        sky_crds *= np.radians(1.0)
+        sky_crds[0:, 1] = (np.pi / 2) - sky_crds[0:, 1]
+
+        mask = ~np.any(np.isnan(sky_crds), axis=1)
+        ipix = -1 * np.ones((len(hpx.nside), int(npix[0] * npix[1])), int)
+        m = mask[None, :] * np.ones_like(ipix, dtype=bool)
+
+        ipix[m] = hp.ang2pix(
+            hpx.nside[..., None],
+            sky_crds[:, 1][mask][None, ...],
+            sky_crds[:, 0][mask][None, ...],
+            hpx.nest,
+        ).flatten()
+
+        # Here we are counting the number of HEALPIX pixels each WCS pixel
+        # points to and getting a multiplicative factor that tells use how
+        # to split up the counts in each HEALPIX pixel (by dividing the
+        # corresponding WCS pixels by the number of associated HEALPIX
+        # pixels).
+        mult_val = np.ones_like(ipix, dtype=float)
+        for i, t in enumerate(ipix):
+            count = np.unique(t, return_counts=True)
+            idx = np.searchsorted(count[0], t)
+            mult_val[i, ...] = 1.0 / count[1][idx]
+
+        if hpx.nside.size == 1:
+            ipix = np.squeeze(ipix, axis=0)
+            mult_val = np.squeeze(mult_val, axis=0)
+
         return cls(hpx, wcs, ipix, mult_val, npix)
 
     def fill_wcs_map_from_hpx_data(

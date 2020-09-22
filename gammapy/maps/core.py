@@ -8,7 +8,7 @@ from astropy import units as u
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
 from .geom import MapCoord, pix_tuple_to_idx, MapAxis
-from .utils import INVALID_VALUE, edges_from_lo_hi
+from .utils import INVALID_VALUE
 
 __all__ = ["Map"]
 
@@ -160,7 +160,7 @@ class Map(abc.ABC):
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @staticmethod
-    def read(filename, hdu=None, hdu_bands=None, map_type="auto"):
+    def read(filename, hdu=None, hdu_bands=None, map_type="auto", format=None):
         """Read a map from a FITS file.
 
         Parameters
@@ -186,11 +186,11 @@ class Map(abc.ABC):
             Map object
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
+            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type, format=format)
 
     @staticmethod
     def from_geom(
-        geom, meta=None, data=None, map_type="auto", unit="", dtype="float32"
+        geom, meta=None, data=None, unit="", dtype="float32"
     ):
         """Generate an empty map from a `Geom` instance.
 
@@ -202,11 +202,6 @@ class Map(abc.ABC):
             data array
         meta : `dict`
             Dictionary to store meta data.
-        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
-            Map type.  Selects the class that will be used to
-            instantiate the map. The map type should be consistent
-            with the geometry. If map_type is 'auto' then an
-            appropriate map type will be inferred from type of ``geom``.
         unit : str or `~astropy.units.Unit`
             Data unit.
 
@@ -216,31 +211,29 @@ class Map(abc.ABC):
             Map object
 
         """
-        if map_type == "auto":
+        from .hpx import HpxGeom
+        from .wcs import WcsGeom
+        from .region import RegionGeom
 
-            from .hpx import HpxGeom
-            from .wcs import WcsGeom
-            from .region import RegionGeom
-
-            if isinstance(geom, HpxGeom):
-                map_type = "hpx"
-            elif isinstance(geom, WcsGeom):
-                map_type = "wcs"
-            elif isinstance(geom, RegionGeom):
-                map_type = "region"
-            else:
-                raise ValueError("Unrecognized geom type.")
+        if isinstance(geom, HpxGeom):
+            map_type = "hpx"
+        elif isinstance(geom, WcsGeom):
+            map_type = "wcs"
+        elif isinstance(geom, RegionGeom):
+            map_type = "region"
+        else:
+            raise ValueError("Unrecognized geom type.")
 
         cls_out = Map._get_map_cls(map_type)
         return cls_out(geom, data=data, meta=meta, unit=unit, dtype=dtype)
 
     @staticmethod
-    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto"):
+    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None):
         """Create from `astropy.io.fits.HDUList`."""
         if map_type == "auto":
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
-        return cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
+        return cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format)
 
     @staticmethod
     def _get_meta_from_header(header):
@@ -313,15 +306,14 @@ class Map(abc.ABC):
         hdu_bands : str
             Set the name of the bands table extension.  By default this will
             be set to BANDS.
-        conv : str
+        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
+                  'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
+                  'galprop', 'galprop2'}
             FITS format convention.  By default files will be written
             to the gamma-astro-data-formats (GADF) format.  This
             option can be used to write files that are compliant with
             format conventions required by specific software (e.g. the
-            Fermi Science Tools).  Supported conventions are 'gadf',
-            'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
-            'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
-            'galprop', and 'galprop2'.
+            Fermi Science Tools).
         sparse : bool
             Sparsify the map by dropping pixels with zero amplitude.
             This option is only compatible with the 'gadf' format.
@@ -1037,8 +1029,9 @@ class Map(abc.ABC):
         map_out : `~Map`
             Map with non-spatial axes summed over
         """
-        return self.reduce_over_axes(func=np.add, axes=axes, keepdims=keepdims, weights=weights)
-
+        return self.reduce_over_axes(
+            func=np.add, axes=axes, keepdims=keepdims, weights=weights
+        )
 
     def reduce_over_axes(self, func=np.add, keepdims=False, axes=None, weights=None):
         """Reduce map over non-spatial axes

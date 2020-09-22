@@ -9,6 +9,17 @@ from .wcs import WcsGeom
 __all__ = ["WcsMap"]
 
 
+def identify_wcs_format(hdu):
+    if hdu is None:
+        return "gadf"
+    elif hdu.name == "ENERGIES":
+        return "fgst-template"
+    elif hdu.name == "EBOUNDS":
+        return "fgst-ccube"
+    else:
+        return "gadf"
+
+
 class WcsMap(Map):
     """Base class for WCS map classes.
 
@@ -74,8 +85,6 @@ class WcsMap(Map):
             be chosen to be center of the map.
         dtype : str, optional
             Data type, default is float32
-        conv : {'fgst-ccube','fgst-template','gadf'}, optional
-            FITS format convention.  Default is 'gadf'.
         meta : `dict`
             Dictionary to store meta data.
         unit : str or `~astropy.units.Unit`
@@ -107,7 +116,7 @@ class WcsMap(Map):
             raise ValueError(f"Invalid map type: {map_type!r}")
 
     @classmethod
-    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None):
+    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format=None):
         """Make a WcsMap object from a FITS HDUList.
 
         Parameters
@@ -118,6 +127,8 @@ class WcsMap(Map):
             Name or index of the HDU with the map data.
         hdu_bands : str
             Name or index of the HDU with the BANDS table.
+        format : {'gadf', 'fgst-ccube', 'fgst-template'}
+            FITS format convention.
 
         Returns
         -------
@@ -135,9 +146,17 @@ class WcsMap(Map):
         if hdu_bands is not None:
             hdu_bands = hdu_list[hdu_bands]
 
-        return cls.from_hdu(hdu, hdu_bands)
+        format = identify_wcs_format(hdu_bands)
 
-    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, conv="gadf"):
+        wcs_map = cls.from_hdu(hdu, hdu_bands, format=format)
+
+        # exposure maps have an additional GTI hdu
+        if format == "fgst-template" and "GTI" in hdu_list:
+            wcs_map.unit = "cm2 s"
+
+        return wcs_map
+
+    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, format="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -149,7 +168,7 @@ class WcsMap(Map):
         sparse : bool
             Sparsify the map by only writing pixels with non-zero
             amplitude.
-        conv : {'gadf', 'fgst-ccube','fgst-template'}
+        format : {'gadf', 'fgst-ccube','fgst-template'}
             FITS format convention.
 
         Returns
@@ -165,21 +184,21 @@ class WcsMap(Map):
         if sparse and hdu == "PRIMARY":
             raise ValueError("Sparse maps cannot be written to the PRIMARY HDU.")
 
-        if conv in ["fgst-ccube", "fgst-template"]:
+        if format in ["fgst-ccube", "fgst-template"]:
             if self.geom.axes[0].name != "energy" or len(self.geom.axes) > 1:
                 raise ValueError(
                     "All 'fgst' formats don't support extra axes except for energy."
                 )
 
         if self.geom.axes:
-            hdu_bands_out = self.geom.make_bands_hdu(
-                hdu=hdu_bands, hdu_skymap=hdu, conv=conv
+            hdu_bands_out = self.geom.to_bands_hdu(
+                hdu=hdu_bands, hdu_skymap=hdu, format=format
             )
             hdu_bands = hdu_bands_out.name
         else:
             hdu_bands = None
 
-        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, conv=conv)
+        hdu_out = self.to_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse)
 
         hdu_out.header["META"] = json.dumps(self.meta)
 
@@ -195,7 +214,7 @@ class WcsMap(Map):
 
         return fits.HDUList(hdulist)
 
-    def make_hdu(self, hdu="SKYMAP", hdu_bands=None, sparse=False, conv=None):
+    def to_hdu(self, hdu="SKYMAP", hdu_bands=None, sparse=False):
         """Make a FITS HDU from this map.
 
         Parameters
@@ -213,7 +232,7 @@ class WcsMap(Map):
         hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
             HDU containing the map data.
         """
-        header = self.geom.make_header()
+        header = self.geom.to_header()
 
         if hdu_bands is not None:
             header["BANDSHDU"] = hdu_bands

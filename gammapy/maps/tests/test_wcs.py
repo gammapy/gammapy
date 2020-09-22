@@ -92,9 +92,9 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, frame, proj, skydir, axes):
 def test_wcsgeom_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
     geom0 = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
 
-    hdu_bands = geom0.make_bands_hdu(hdu="BANDS")
+    hdu_bands = geom0.to_bands_hdu(hdu="BANDS")
     hdu_prim = fits.PrimaryHDU()
-    hdu_prim.header.update(geom0.make_header())
+    hdu_prim.header.update(geom0.to_header())
 
     hdulist = fits.HDUList([hdu_prim, hdu_bands])
     hdulist.writeto(tmp_path / "tmp.fits")
@@ -110,7 +110,7 @@ def test_wcsgeom_to_hdulist():
     npix, binsz, frame, proj, skydir, axes = wcs_test_geoms[3]
     geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
 
-    hdu = geom.make_bands_hdu(hdu="TEST")
+    hdu = geom.to_bands_hdu(hdu="TEST")
     assert hdu.header["AXCOLS1"] == "E_MIN,E_MAX"
     assert hdu.header["AXCOLS2"] == "AXIS1_MIN,AXIS1_MAX"
 
@@ -245,7 +245,7 @@ def test_cutout_info():
     assert cutout_geom.cutout_info["cutout-slices"][0].start == 0
     assert cutout_geom.cutout_info["cutout-slices"][1].start == 0
 
-    header = cutout_geom.make_header()
+    header = cutout_geom.to_header()
     assert "PSLICE1" in header
     assert "PSLICE2" in header
     assert "CSLICE1" in header
@@ -469,6 +469,7 @@ def test_irregular_geom_equality():
     with pytest.raises(NotImplementedError):
         geom0 == geom1
 
+
 @pytest.mark.parametrize("node_type", ["edges", "center"])
 @pytest.mark.parametrize("interp", ["log", "lin", "sqrt"])
 def test_read_write(tmp_path, node_type, interp):
@@ -479,7 +480,7 @@ def test_read_write(tmp_path, node_type, interp):
     m = Map.create(binsz=1, npix=10, axes=[e_ax, t_ax], unit="m2")
 
     # Check what Gammapy writes in the FITS header
-    header = m.make_hdu().header
+    header = m.to_hdu().header
     assert header["INTERP1"] == interp
     assert header["INTERP2"] == interp
 
