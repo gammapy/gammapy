@@ -718,15 +718,15 @@ class SpectrumDataset(Dataset):
 
         return self.__class__(**kwargs)
 
-    def resample_energy_axis(self, e_edges=None, name=None):
-        """Resample SpectrumDataset over reco energy edges.
+    def resample_energy_axis(self, axis=None, name=None):
+        """Resample SpectrumDataset over new reco energy axis.
 
         Counts are summed taking into account safe mask.
 
         Parameters
         ----------
-        e_edges : `~astropy.units.Quantity`
-            the energy edges.
+        axis : `~gammapy.maps.MapAxis`
+            the new reco energy axis.
         name: str
             Name of the new dataset.
 
@@ -735,11 +735,10 @@ class SpectrumDataset(Dataset):
         dataset: `SpectrumDataset`
             Resampled spectrum dataset .
         """
-        if e_edges is None:
+        if axis is None:
             e_axis = self.counts.geom.get_axis_by_name("energy")
             e_edges = u.Quantity([e_axis.edges[0], e_axis.edges[-1]])
-
-        axis = MapAxis.from_edges(e_edges, name="energy", interp=self._geom.axes[0].interp)
+            axis = MapAxis.from_edges(e_edges, name="energy", interp=self._geom.axes[0].interp)
 
         name = make_name(name)
         kwargs = {}
@@ -787,7 +786,7 @@ class SpectrumDataset(Dataset):
         dataset: `SpectrumDataset`
             Resampled spectrum dataset .
         """
-        return self.resample_energy_axis(e_edges=None, name=name)
+        return self.resample_energy_axis(axis=None, name=name)
 
 
 class SpectrumDatasetOnOff(SpectrumDataset):
@@ -1560,15 +1559,16 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         return self.__class__(**kwargs)
 
-    def resample_energy_axis(self, e_edges=None, name=None):
-        """Resample SpectrumDatasetOnOff over reco energy edges.
+    def resample_energy_axis(self, axis=None, name=None):
+        """Resample SpectrumDatasetOnOff over new reco energy axis.
 
         Counts are summed taking into account safe mask.
 
         Parameters
         ----------
-        e_edges : `~astropy.units.Quantity`
-            the energy edges.
+        axis : `~gammapy.maps.MapAxis`
+            the new reco energy axis. If None, reduce energy axis to one bin.
+            Default is None.
         name: str
             Name of the new dataset.
 
@@ -1577,7 +1577,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         dataset: `SpectrumDataset`
             Resampled spectrum dataset .
         """
-        dataset = super().resample_energy_axis(e_edges,name)
+        dataset = super().resample_energy_axis(axis,name)
 
         axis = dataset.counts.geom.get_axis_by_name("energy")
 

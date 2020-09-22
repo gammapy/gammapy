@@ -552,7 +552,8 @@ class TestSpectrumOnOff:
         assert info_dict["name"] == "test"
 
     def test_resample_energy_axis(self):
-        grouped = self.dataset.resample_energy_axis(e_edges=[0.1, 1, 10]*u.TeV)
+        axis = MapAxis([0.1, 1, 10]*u.TeV, name="energy", interp='log')
+        grouped = self.dataset.resample_energy_axis(axis=axis)
 
         assert grouped.counts.data.shape == (2,1,1)
         assert_allclose(grouped.aeff.data, 1.0)

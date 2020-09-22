@@ -1317,15 +1317,15 @@ class MapDataset(Dataset):
             if self.__dict__.pop(name, False):
                 log.info(f"Clearing {name} cache for dataset {self.name}")
 
-    def resample_energy_axis(self, e_edges=None, name=None):
-        """Resample MapDataset over reco energy edges.
+    def resample_energy_axis(self, axis=None, name=None):
+        """Resample MapDataset over new reco energy axis.
 
         Counts are summed taking into account safe mask.
 
         Parameters
         ----------
-        e_edges : `~astropy.units.Quantity`
-            the energy edges.
+        axis : `~gammapy.maps.MapAxis`
+            the new reco energy axis.
         name: str
             Name of the new dataset.
 
@@ -1334,11 +1334,10 @@ class MapDataset(Dataset):
         dataset: `MapDataset`
             Resampled dataset .
         """
-        if e_edges is None:
+        if axis is None:
             e_axis = self._geom.get_axis_by_name("energy")
             e_edges = u.Quantity([e_axis.edges[0], e_axis.edges[-1]])
-
-        axis = MapAxis.from_edges(e_edges, name="energy", interp=self._geom.axes[0].interp)
+            axis = MapAxis.from_edges(e_edges, name="energy", interp=self._geom.axes[0].interp)
 
         name = make_name(name)
         kwargs = {}
@@ -1388,7 +1387,7 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset containing images.
         """
-        return self.resample_energy_axis(e_edges=None, name=name)
+        return self.resample_energy_axis(axis=None, name=name)
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
@@ -1912,40 +1911,6 @@ class MapDatasetOnOff(MapDataset):
 
         return cutout_dataset
 
-    def to_image(self, name=None):
-        """Create images by summing over the energy axis.
-
-        name : str
-
-        Returns
-        -------
-        dataset : `MapDatasetOnOff`
-            Map dataset containing images.
-        """
-        kwargs = {"name": name}
-        dataset = super().to_image(name)
-
-        if self.mask_safe is not None:
-            mask_safe = self.mask_safe
-        else:
-            mask_safe = 1
-
-        if self.counts_off is not None:
-            counts_off = self.counts_off * mask_safe
-            kwargs["counts_off"] = counts_off.sum_over_axes(keepdims=True)
-
-        if self.acceptance is not None:
-            acceptance = self.acceptance * mask_safe
-            kwargs["acceptance"] = acceptance.sum_over_axes(keepdims=True)
-
-        norm_factor = self.counts_off_normalised * mask_safe
-        norm_factor = norm_factor.sum_over_axes(keepdims=True)
-        kwargs["acceptance_off"] = (
-            kwargs["acceptance"] * kwargs["counts_off"] / norm_factor
-        )
-
-        return self.from_map_dataset(dataset, **kwargs)
-
     def downsample(self):
         raise NotImplementedError
 
@@ -1986,15 +1951,15 @@ class MapDatasetOnOff(MapDataset):
 
         return self.from_map_dataset(dataset, **kwargs)
 
-    def resample_energy_axis(self, e_edges=None, name=None):
+    def resample_energy_axis(self, axis=None, name=None):
         """Resample MapDatasetOnOff over reco energy edges.
 
         Counts are summed taking into account safe mask.
 
         Parameters
         ----------
-        e_edges : `~astropy.units.Quantity`
-            the energy edges.
+        axis : `~gammapy.maps.MapAxis`
+            the new reco energy axis.
         name: str
             Name of the new dataset.
 
@@ -2003,7 +1968,7 @@ class MapDatasetOnOff(MapDataset):
         dataset: `SpectrumDataset`
             Resampled spectrum dataset .
         """
-        dataset = super().resample_energy_axis(e_edges,name)
+        dataset = super().resample_energy_axis(axis,name)
 
         axis = dataset.counts.geom.get_axis_by_name("energy")
 
