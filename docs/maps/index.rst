@@ -470,7 +470,7 @@ using a format other than the GADF format:
     m = Map.create(binsz=0.1, map_type='wcs', width=10.0,
                       axes=[energy_axis])
     # Write a counts cube in a format compatible with the Fermi Science Tools
-    m.write('ccube.fits', conv='fgst-ccube')
+    m.write('ccube.fits', format='fgst-ccube')
 
 Visualization
 -------------
@@ -509,7 +509,7 @@ This example shows how to fill a counts cube from an event list:
     events = EventList.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz")
 
     m.fill_by_coord({'skycoord': events.radec, 'energy': events.energy})
-    m.write('ccube.fits', conv='fgst-ccube')
+    m.write('ccube.fits', format='fgst-ccube')
 
 To make a counts map, create an empty map with a geometry of your choice
 and then fill it using this function
@@ -554,7 +554,7 @@ using the `WcsNDMap.cutout` method:
     m = WcsNDMap.read('$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz')
     position = SkyCoord(0, 0, frame="galactic", unit="deg")
     m_cutout = m.cutout(position=position, width=(5 * u.deg, 2 * u.deg))
-    m_cutout.write('cutout.fits', conv='fgst-template')
+    m_cutout.write('cutout.fits', format='fgst-template')
 
 Using `gammapy.maps`
 ====================

@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis
 from gammapy.maps.utils import fill_poisson
-from gammapy.utils.testing import mpl_plot_check, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_dependency, requires_data
 
 pytest.importorskip("healpy")
 
@@ -119,6 +119,7 @@ def test_hpxmap_read_write_fgst(tmp_path):
     m2 = Map.read(path)
 
 
+@requires_data()
 def test_read_fgst_exposure():
     exposure = Map.read(
         "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_exposure_cube_hpx.fits.gz"
