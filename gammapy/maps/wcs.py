@@ -17,7 +17,6 @@ from .geom import (
     Geom,
     MapCoord,
     MapAxes,
-    find_and_read_bands,
     get_shape,
     pix_tuple_to_idx,
     skycoord_to_lonlat,
@@ -428,7 +427,7 @@ class WcsGeom(Geom):
         # TODO: see https://github.com/astropy/astropy/issues/9259
         wcs._naxis = wcs._naxis[:2]
 
-        axes = find_and_read_bands(hdu_bands, format=format)
+        axes = MapAxes.from_table_hdu(hdu_bands, format=format)
         shape = tuple([ax.nbin for ax in axes])
 
         if hdu_bands is not None and "NPIX" in hdu_bands.columns.names:

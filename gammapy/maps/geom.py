@@ -19,26 +19,6 @@ __all__ = ["MapCoord", "Geom", "MapAxis"]
 log = logging.getLogger(__name__)
 
 
-# TODO: remove and use proper format handling
-def find_and_read_bands(hdu, format):
-    if hdu is None:
-        return []
-
-    if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube"]:
-        axes = [MapAxis.from_table_hdu(hdu, format=format)]
-    else:
-        axes = []
-
-        for idx in range(5):
-            try:
-                axis = MapAxis.from_table_hdu(hdu, format="gadf", idx=idx)
-                axes.append(axis)
-            except AttributeError:
-                continue
-
-    return axes
-
-
 def get_shape(param):
     if param is None:
         return tuple()
@@ -159,7 +139,7 @@ class MapAxes(Sequence):
         else:
             raise TypeError(f"Invalid type: {type(idx)!r}")
 
-    def make_axes_cols(axes, axis_names=None):
+    def to_fits_columns(self, axis_names=None):
         """Make FITS table columns for map axes.
 
         Parameters
@@ -172,19 +152,19 @@ class MapAxes(Sequence):
         cols : list
             Python list of `~astropy.io.fits.Column`
         """
-        size = np.prod([ax.nbin for ax in axes])
+        size = np.prod([ax.nbin for ax in self])
         chan = np.arange(0, size)
         cols = [fits.Column("CHANNEL", "I", array=chan)]
 
         if axis_names is None:
-            axis_names = [ax.name for ax in axes]
+            axis_names = [ax.name for ax in self]
         axis_names = [_.upper() for _ in axis_names]
 
-        axes_ctr = np.meshgrid(*[ax.center for ax in axes])
-        axes_min = np.meshgrid(*[ax.edges[:-1] for ax in axes])
-        axes_max = np.meshgrid(*[ax.edges[1:] for ax in axes])
+        axes_ctr = np.meshgrid(*[ax.center for ax in self])
+        axes_min = np.meshgrid(*[ax.edges[:-1] for ax in self])
+        axes_max = np.meshgrid(*[ax.edges[1:] for ax in self])
 
-        for i, (ax, name) in enumerate(zip(axes, axis_names)):
+        for i, (ax, name) in enumerate(zip(self, axis_names)):
 
             if name == "ENERGY":
                 colnames = ["ENERGY", "E_MIN", "E_MAX"]
@@ -198,6 +178,26 @@ class MapAxes(Sequence):
                 cols.append(fits.Column(colname, "E", array=array, unit=unit))
 
         return cols
+
+    @classmethod
+    def from_table_hdu(cls, hdu, format):
+        """Create MapAxes from BinTableHDU"""
+        if hdu is None:
+            return cls([])
+
+        if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube"]:
+            axes = [MapAxis.from_table_hdu(hdu, format=format)]
+        else:
+            axes = []
+
+            for idx in range(5):
+                try:
+                    axis = MapAxis.from_table_hdu(hdu, format="gadf", idx=idx)
+                    axes.append(axis)
+                except AttributeError:
+                    continue
+
+        return cls(axes)
 
     @classmethod
     def from_default(cls, axes):
@@ -957,7 +957,6 @@ class MapAxis:
         header["HDUVERS"] = "1.2.0", "Version of file format"
         return hdu
 
-
     @classmethod
     def from_table_hdu(cls, hdu, format="ogip", idx=0):
         """Instanciate MapAxis from table HDU
@@ -1365,7 +1364,7 @@ class Geom(abc.ABC):
         # else:
         #     raise ValueError('Unknown conv: {}'.format(conv))
 
-        cols = make_axes_cols(self.axes, axis_names)
+        cols = self.axes.to_fits_columns(axis_names)
         cols += self._make_bands_cols()
         return fits.BinTableHDU.from_columns(cols, header, name=hdu)
 

@@ -9,7 +9,6 @@ from astropy.units import Quantity
 from .geom import (
     Geom,
     MapCoord,
-    find_and_read_bands,
     MapAxes,
     pix_tuple_to_idx,
     skycoord_to_lonlat,
@@ -1153,7 +1152,7 @@ class HpxGeom(Geom):
 
         conv = HPX_FITS_CONVENTIONS[format]
 
-        axes = find_and_read_bands(hdu_bands, format=format)
+        axes = MapAxes.from_table_hdu(hdu_bands, format=format)
         shape = [ax.nbin for ax in axes]
 
         if header["PIXTYPE"] != "HEALPIX":
