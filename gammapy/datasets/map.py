@@ -570,6 +570,49 @@ class MapDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
+    @property
+    def _energy_axis(self):
+        if self.counts:
+            return self.counts.geom.get_axis_by_name("energy")
+        elif self.background_model:
+            return self.background_model.map.geom.get_axis_by_name("energy")
+        elif self.exposure:
+            return self.exposure.geom.get_axis_by_name("energy_true")
+        elif self.psf:
+            return self.psf.psf_map.geom.get_axis_by_name("energy_true")
+        elif self.edisp:
+            return self.edisp.edisp_map.geom.get_axis_by_name("energy_true")
+
+        raise ValueError("Either 'counts', 'background_model', 'exposure', 'psf' or 'edisp' must be defined.")
+
+    def energy_range(self, region=None):
+        """Energy range of the region in the safe mask.
+
+        By default, the whole dataset map region is considered.
+
+        Parameters
+        ----------
+        region : `~regions.Region` or `~astropy.coordinates.SkyCoord`
+            Region for extraction.
+
+        Returns
+        -------
+        energy_range : `~astropy.units.Quantity`
+            The safe energy range.
+        """
+        energy = self._energy_axis.edges
+        e_min, e_max = energy[:-1], energy[1:]
+
+        if self.mask_safe:
+            if self.mask_safe.data.any():
+                mask_safe = self.mask_safe.get_spectrum(region, np.any)
+                e_min = e_min[mask_safe.data[:, 0, 0]]
+                e_max = e_max[mask_safe.data[:, 0, 0]]
+            else:
+                return None, None
+
+        return u.Quantity([e_min.min(), e_max.max()])
+
     def residuals(self, method="diff"):
         """Compute residuals map.
 
@@ -1536,6 +1579,13 @@ class MapDatasetOnOff(MapDataset):
             mu_sig=mu_sig,
         )
         return np.nan_to_num(on_stat_)
+
+    @property
+    def _energy_axis(self):
+        raise NotImplementedError
+
+    def energy_range(self, region=None):
+        raise NotImplementedError
 
     @classmethod
     def from_geoms(
