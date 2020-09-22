@@ -40,7 +40,6 @@ class HpxNDMap(HpxMap):
 
         super().__init__(geom, data, meta, unit)
         self._wcs2d = None
-        self._hpx2wcs = None
 
     @staticmethod
     def _make_default_data(geom, shape_np, dtype):
@@ -117,37 +116,6 @@ class HpxNDMap(HpxMap):
 
         return map_out
 
-    def make_wcs_mapping(
-        self, proj="AIT", oversample=2, width_pix=None
-    ):
-        """Make a HEALPix to WCS mapping object.
-
-        Parameters
-        ----------
-        proj  : str
-            WCS-projection
-        oversample : float
-            Oversampling factor for WCS map. This will be the
-            approximate ratio of the width of a HPX pixel to a WCS
-            pixel. If this parameter is None then the width will be
-            set from ``width_pix``.
-        width_pix : int
-            Width of the WCS geometry in pixels.  The pixel size will
-            be set to the number of pixels satisfying ``oversample``
-            or ``width_pix`` whichever is smaller.  If this parameter
-            is None then the width will be set from ``oversample``.
-
-        Returns
-        -------
-        hpx2wcs : `~HpxToWcsMapping`
-
-        """
-        self._wcs2d = self.geom.to_wcs_geom(
-            proj=proj, oversample=oversample, width_pix=width_pix, drop_axes=True
-        )
-        self._hpx2wcs = HpxToWcsMapping.create(self.geom, self._wcs2d)
-        return self._hpx2wcs
-
     def to_wcs(
         self,
         sum_bands=False,
@@ -171,9 +139,11 @@ class HpxNDMap(HpxMap):
 
         # FIXME: Check whether the old mapping is still valid and reuse it
         if hpx2wcs is None:
-            hpx2wcs = self.make_wcs_mapping(
-                oversample=oversample, proj=proj, width_pix=width_pix
+            geom_wcs_image = self.geom.to_wcs_geom(
+                proj=proj, oversample=oversample, width_pix=width_pix, drop_axes=True
             )
+
+            hpx2wcs = HpxToWcsMapping.create(self.geom, geom_wcs_image)
 
         # FIXME: Need a function to extract a valid shape from npix property
 
