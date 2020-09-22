@@ -16,9 +16,9 @@ from regions import SkyRegion
 from .geom import (
     Geom,
     MapCoord,
+    MapAxes,
     find_and_read_bands,
     get_shape,
-    make_axes,
     pix_tuple_to_idx,
     skycoord_to_lonlat,
 )
@@ -113,7 +113,7 @@ class WcsGeom(Geom):
         self._wcs = wcs
         self._frame = wcs_to_celestial_frame(wcs).name
         self._projection = wcs.wcs.ctype[0][5:]
-        self._axes = make_axes(axes)
+        self._axes = MapAxes.from_default(axes)
 
         if cdelt is None:
             cdelt = tuple(np.abs(self.wcs.wcs.cdelt))

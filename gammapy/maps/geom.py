@@ -3,6 +3,7 @@ import abc
 import copy
 import inspect
 import logging
+from collections.abc import Sequence
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
@@ -16,68 +17,6 @@ from .utils import INVALID_INDEX, edges_from_lo_hi, find_bands_hdu, find_hdu
 __all__ = ["MapCoord", "Geom", "MapAxis"]
 
 log = logging.getLogger(__name__)
-
-
-def make_axes(axes_in):
-    """Make a sequence of `~MapAxis` objects."""
-    if axes_in is None:
-        return []
-
-    axes_out = []
-    for idx, ax in enumerate(axes_in):
-        if isinstance(ax, np.ndarray):
-            ax = MapAxis(ax)
-
-        if ax.name == "":
-            ax.name = "axis{}".format(idx)
-
-        if ax.name not in [ax.name for ax in axes_out]:
-            axes_out += [ax]
-        else:
-            raise ValueError(f"Duplicated axis name: '{ax.name}'")
-
-    return axes_out
-
-
-def make_axes_cols(axes, axis_names=None):
-    """Make FITS table columns for map axes.
-
-    Parameters
-    ----------
-    axes : list
-        Python list of `MapAxis` objects
-
-    Returns
-    -------
-    cols : list
-        Python list of `~astropy.io.fits.Column`
-    """
-    size = np.prod([ax.nbin for ax in axes])
-    chan = np.arange(0, size)
-    cols = [fits.Column("CHANNEL", "I", array=chan)]
-
-    if axis_names is None:
-        axis_names = [ax.name for ax in axes]
-    axis_names = [_.upper() for _ in axis_names]
-
-    axes_ctr = np.meshgrid(*[ax.center for ax in axes])
-    axes_min = np.meshgrid(*[ax.edges[:-1] for ax in axes])
-    axes_max = np.meshgrid(*[ax.edges[1:] for ax in axes])
-
-    for i, (ax, name) in enumerate(zip(axes, axis_names)):
-
-        if name == "ENERGY":
-            colnames = ["ENERGY", "E_MIN", "E_MAX"]
-        else:
-            s = "AXIS%i" % i if name == "" else name
-            colnames = [s, s + "_MIN", s + "_MAX"]
-
-        for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
-            array = np.ravel(v[i])
-            unit = ax.unit.to_string("fits")
-            cols.append(fits.Column(colname, "E", array=array, unit=unit))
-
-    return cols
 
 
 # TODO: remove and use proper format handling
@@ -193,6 +132,93 @@ def pix_to_coord(edges, pix, interp="lin"):
     )
 
     return scale.inverse(interp_fn(pix))
+
+
+class MapAxes(Sequence):
+    """MapAxis container class"""
+    def __init__(self, axes):
+        self._axes = axes
+
+    def __len__(self):
+        return len(self._axes)
+
+    def __add__(self, other):
+        return self.__class__(list(self) + list(other))
+
+    def __setitem__(self, key, value):
+        self._axes[key] = value
+
+    def __getitem__(self, idx):
+        if isinstance(idx, (int, slice)):
+            return self._axes[idx]
+        elif isinstance(idx, str):
+            for ax in self._axes:
+                if ax.name == idx:
+                    return ax
+            raise IndexError(f"No axes: {idx!r}")
+        else:
+            raise TypeError(f"Invalid type: {type(idx)!r}")
+
+    def make_axes_cols(axes, axis_names=None):
+        """Make FITS table columns for map axes.
+
+        Parameters
+        ----------
+        axes : list
+            Python list of `MapAxis` objects
+
+        Returns
+        -------
+        cols : list
+            Python list of `~astropy.io.fits.Column`
+        """
+        size = np.prod([ax.nbin for ax in axes])
+        chan = np.arange(0, size)
+        cols = [fits.Column("CHANNEL", "I", array=chan)]
+
+        if axis_names is None:
+            axis_names = [ax.name for ax in axes]
+        axis_names = [_.upper() for _ in axis_names]
+
+        axes_ctr = np.meshgrid(*[ax.center for ax in axes])
+        axes_min = np.meshgrid(*[ax.edges[:-1] for ax in axes])
+        axes_max = np.meshgrid(*[ax.edges[1:] for ax in axes])
+
+        for i, (ax, name) in enumerate(zip(axes, axis_names)):
+
+            if name == "ENERGY":
+                colnames = ["ENERGY", "E_MIN", "E_MAX"]
+            else:
+                s = "AXIS%i" % i if name == "" else name
+                colnames = [s, s + "_MIN", s + "_MAX"]
+
+            for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
+                array = np.ravel(v[i])
+                unit = ax.unit.to_string("fits")
+                cols.append(fits.Column(colname, "E", array=array, unit=unit))
+
+        return cols
+
+    @classmethod
+    def from_default(cls, axes):
+        """Make a sequence of `~MapAxis` objects."""
+        if axes is None:
+            return cls([])
+
+        axes_out = []
+        for idx, ax in enumerate(axes):
+            if isinstance(ax, np.ndarray):
+                ax = MapAxis(ax)
+
+            if ax.name == "":
+                ax.name = "axis{}".format(idx)
+
+            if ax.name not in [ax.name for ax in axes_out]:
+                axes_out += [ax]
+            else:
+                raise ValueError(f"Duplicated axis name: '{ax.name}'")
+
+        return cls(axes_out)
 
 
 class MapAxis:

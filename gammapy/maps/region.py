@@ -12,7 +12,7 @@ from gammapy.utils.regions import (
     make_region,
 )
 from .core import MapCoord
-from .geom import Geom, MapAxis, make_axes, pix_tuple_to_idx
+from .geom import Geom, MapAxis, MapAxes, pix_tuple_to_idx
 from .wcs import WcsGeom
 
 __all__ = ["RegionGeom"]
@@ -42,7 +42,7 @@ class RegionGeom(Geom):
 
     def __init__(self, region, axes=None, wcs=None):
         self._region = region
-        self._axes = make_axes(axes)
+        self._axes = MapAxes.from_default(axes)
 
         if wcs is None and region is not None:
             wcs = WcsGeom.create(
