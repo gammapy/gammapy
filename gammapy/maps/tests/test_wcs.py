@@ -306,6 +306,15 @@ def test_wcsgeom_drop():
     geom_drop = geom.drop(axis="ax1")
     assert geom_drop.data_shape == (4, 2, 3, 3)
 
+def test_wcsgeom_resample_overflows():
+    ax1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="ax1")
+    ax2 = MapAxis.from_nodes([1, 2, 3], name="ax2")
+    geom = WcsGeom.create(npix=(3, 3), axes=[ax1, ax2])
+    new_axis = MapAxis.from_edges([-1., 1, 2.3,4.8,6], name="ax1")
+    geom_resample = geom.resample_axis(axis=new_axis)
+
+    assert geom_resample.data_shape == (3, 2, 3, 3)
+    assert_allclose(geom_resample.axes[0].edges, [1, 2, 5])
 
 def test_wcsgeom_get_pix_coords():
     geom = WcsGeom.create(

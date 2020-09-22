@@ -8,7 +8,7 @@ from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.datasets import Dataset
 from gammapy.irf import EDispKernel, EDispKernelMap, EffectiveAreaTable
-from gammapy.maps import RegionGeom, RegionNDMap
+from gammapy.maps import RegionGeom, RegionNDMap, MapAxis
 from gammapy.modeling.models import Models, ProperModels
 from gammapy.stats import (
     CashCountsStatistic,
@@ -630,7 +630,7 @@ class SpectrumDataset(Dataset):
 
         ax3.set_title("Energy Dispersion")
         if self.edisp is not None:
-            self._edisp_kernel.plot_matrix(ax=ax3)
+            self._edisp_kernel.plot_matrix(ax=ax3, vmin=0, vmax=1)
 
         # TODO: optimize layout
         plt.subplots_adjust(wspace=0.3)
@@ -717,6 +717,76 @@ class SpectrumDataset(Dataset):
             kwargs["mask_fit"] = self.mask_fit.slice_by_idx(slices=slices)
 
         return self.__class__(**kwargs)
+
+    def resample_energy_axis(self, axis=None, name=None):
+        """Resample SpectrumDataset over new reco energy axis.
+
+        Counts are summed taking into account safe mask.
+
+        Parameters
+        ----------
+        axis : `~gammapy.maps.MapAxis`
+            the new reco energy axis.
+        name: str
+            Name of the new dataset.
+
+        Returns
+        -------
+        dataset: `SpectrumDataset`
+            Resampled spectrum dataset .
+        """
+        if axis is None:
+            e_axis = self.counts.geom.get_axis_by_name("energy")
+            e_edges = u.Quantity([e_axis.edges[0], e_axis.edges[-1]])
+            axis = MapAxis.from_edges(e_edges, name="energy", interp=self._geom.axes[0].interp)
+
+        name = make_name(name)
+        kwargs = {}
+        kwargs["name"] = name
+        kwargs["gti"] = self.gti
+        kwargs["aeff"] = self.aeff
+        kwargs["livetime"] = self.livetime
+
+        if self.mask_safe is not None:
+            mask_safe = self.mask_safe
+        else:
+            mask_safe = 1
+
+        # Adapt resample_axis to take ufunc argument
+        kwargs["mask_safe"] = mask_safe.resample_axis(axis=axis, ufunc=np.logical_or)
+
+        if self.counts is not None:
+            kwargs["counts"] = self.counts.resample_axis(axis=axis, weights=mask_safe)
+
+        if self.background_model is not None:
+            background = self.background_model.evaluate()
+            background = background.resample_axis(axis=axis, weights=mask_safe)
+            model = BackgroundModel(
+                background, datasets_names=[name], name=f"{name}-bkg"
+            )
+            kwargs["models"] = [model]
+
+        if self.edisp is not None:
+            kwargs["edisp"] = self.edisp.resample_axis(axis=axis, weights=mask_safe)
+
+        return self.__class__(**kwargs)
+
+    def to_image(self, name=None):
+        """Group SpectrumDataset into a single reco energy bin.
+
+        Counts are summed taking into account safe mask.
+
+        Parameters
+        ----------
+        name: str
+            Name of the new dataset.
+
+        Returns
+        -------
+        dataset: `SpectrumDataset`
+            Resampled spectrum dataset .
+        """
+        return self.resample_energy_axis(axis=None, name=name)
 
 
 class SpectrumDatasetOnOff(SpectrumDataset):
@@ -1520,3 +1590,53 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         kwargs["livetime"] = self.livetime
 
         return self.__class__(**kwargs)
+
+    def resample_energy_axis(self, axis=None, name=None):
+        """Resample SpectrumDatasetOnOff over new reco energy axis.
+
+        Counts are summed taking into account safe mask.
+
+        Parameters
+        ----------
+        axis : `~gammapy.maps.MapAxis`
+            the new reco energy axis. If None, reduce energy axis to one bin.
+            Default is None.
+        name: str
+            Name of the new dataset.
+
+        Returns
+        -------
+        dataset: `SpectrumDataset`
+            Resampled spectrum dataset .
+        """
+        dataset = super().resample_energy_axis(axis,name)
+
+        axis = dataset.counts.geom.get_axis_by_name("energy")
+
+        if self.mask_safe is not None:
+            mask_safe = self.mask_safe
+        else:
+            mask_safe = 1
+
+        counts_off = None
+        if self.counts_off is not None:
+            counts_off = self.counts_off
+            counts_off = counts_off.resample_axis(axis=axis, weights=mask_safe)
+
+        acceptance = 1
+        acceptance_off = None
+        if self.acceptance is not None:
+            acceptance = self.acceptance
+            acceptance = acceptance.resample_axis(axis=axis, weights=mask_safe)
+
+            background = self.alpha * self.counts_off
+            background = background.resample_axis(axis=axis, weights=mask_safe)
+
+            acceptance_off = acceptance * counts_off / background
+
+        return self.__class__.from_spectrum_dataset(
+            dataset,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            counts_off=counts_off
+        )

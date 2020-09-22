@@ -457,8 +457,11 @@ class Map(abc.ABC):
         """
         pass
 
-    def resample_axis(self, axis, weights=None):
-        """Resample map to a new axis binning by grouping and summing smaller bins.
+    def resample_axis(self, axis, weights=None, ufunc=np.add):
+        """Resample map to a new axis binning by grouping over smaller bins and apply ufunc to the bin contents.
+
+        By default, the map content are summed over the smaller bins. Other numpy ufunc can be used,
+        e.g. np.logical_and, np.logical_or
 
         Parameters
         ----------
@@ -467,6 +470,9 @@ class Map(abc.ABC):
         weights : `Map`
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
+        ufunc : `~numpy.ufunc`
+            ufunc to use to resample the axis. Default is numpy.add.
+
 
         Returns
         -------
@@ -487,7 +493,7 @@ class Map(abc.ABC):
 
         weights = 1 if weights is None else weights.data
 
-        data = np.add.reduceat(self.data * weights, indices=indices, axis=idx)
+        data = ufunc.reduceat(self.data * weights, indices=indices, axis=idx)
 
         return self._init_copy(data=data, geom=geom)
 

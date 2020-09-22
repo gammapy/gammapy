@@ -265,11 +265,29 @@ def get_fermi_3fhl_gc_dataset():
 
 
 @requires_data()
-def test_to_image_3fhl(geom):
+def test_resample_energy_3fhl():
+    dataset = get_fermi_3fhl_gc_dataset()
+
+    new_axis = MapAxis.from_edges([10, 35, 100]*u.GeV, interp='log', name="energy")
+    grouped = dataset.resample_energy_axis(axis=new_axis)
+
+    assert grouped.counts.data.shape == (2,200,400)
+    assert grouped.counts.data[0].sum() == 28581
+    assert_allclose(grouped.background_model.map.data.sum(axis=(1,2)), [25074.366386,  3474.265917], rtol=1e-5)
+    assert_allclose(grouped.exposure.data, dataset.exposure.data, rtol=1e-5)
+
+    axis = grouped.counts.geom.axes[0]
+    npred = dataset.npred()
+    npred_grouped = grouped.npred()
+    assert_allclose(npred.resample_axis(axis=axis).data.sum(), npred_grouped.data.sum())
+
+
+@requires_data()
+def test_to_image_3fhl():
     dataset = get_fermi_3fhl_gc_dataset()
 
     dataset_im = dataset.to_image()
-    print(dataset)
+
     assert dataset_im.counts.data.sum() == dataset.counts.data.sum()
     assert_allclose(dataset_im.background_model.map.data.sum(), 28548.625, rtol=1e-5)
     assert_allclose(dataset_im.exposure.data, dataset.exposure.data, rtol=1e-5)

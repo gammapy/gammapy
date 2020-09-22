@@ -518,3 +518,28 @@ class EDispKernelMap(IRFMap):
         return self.__class__(
             edisp_kernel_map=edisp_map, exposure_map=self.exposure_map
         )
+
+
+    def resample_axis(self, axis, weights=None):
+        """Returns a resampled EdispKernelMap grouped according to the
+        edges of the reconstructed energy axis provided.
+
+        The true energy is left unchanged.
+
+        Parameters
+        ----------
+        axis : `~gammapy.maps.MapAxis`
+            The reco energy axis to use for the reco energy grouping
+        weights: `~gammapy.maps.Map`, optional
+            Weights to be applied
+
+        Returns
+        -------
+        edisp : `EDispKernelMap`
+            Edisp kernel map
+        """
+        new_edisp_map = self.edisp_map.resample_axis(axis, weights)
+        return self.__class__(
+            edisp_kernel_map=new_edisp_map, exposure_map=self.exposure_map
+        )
+
