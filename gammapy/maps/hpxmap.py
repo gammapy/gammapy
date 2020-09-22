@@ -138,7 +138,13 @@ class HpxMap(Map):
         if hdu_bands is not None:
             hdu_bands_out = hdu_list[hdu_bands]
 
-        return cls.from_hdu(hdu_out, hdu_bands_out, format=format)
+        hpx_map = cls.from_hdu(hdu_out, hdu_bands_out, format=format)
+
+        # exposure maps have an additional GTI hdu
+        if format == "fgst-template" and "GTI" in hdu_list:
+            hpx_map.unit = "cm2 s"
+
+        return hpx_map
 
     def to_hdulist(self, hdu="SKYMAP", hdu_bands=None, sparse=False, format="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.

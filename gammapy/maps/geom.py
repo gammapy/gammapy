@@ -80,15 +80,13 @@ def make_axes_cols(axes, axis_names=None):
     return cols
 
 
+# TODO: remove and use proper format handling
 def find_and_read_bands(hdu, format):
     if hdu is None:
         return []
-
-    print(format)
-    if hdu.name == "ENERGIES":
-        axes = [MapAxis.from_table_hdu(hdu, format="fgst-template")]
-    elif hdu.name == "EBOUNDS":
-        axes = [MapAxis.from_table_hdu(hdu, format="fgst-ccube")]
+    
+    if format in ["fgst-ccube", "fgst-template"]:
+        axes = [MapAxis.from_table_hdu(hdu, format=format)]
     else:
         axes = []
 
@@ -888,6 +886,7 @@ class MapAxis:
         header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
         header["HDUVERS"] = "1.2.0", "Version of file format"
         return hdu
+
 
     @classmethod
     def from_table_hdu(cls, hdu, format="ogip", idx=0):

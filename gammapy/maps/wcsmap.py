@@ -9,6 +9,17 @@ from .wcs import WcsGeom
 __all__ = ["WcsMap"]
 
 
+def identify_wcs_format(hdu):
+    if hdu is None:
+        return "gadf"
+    elif hdu.name == "ENERGIES":
+        return "fgst-template"
+    elif hdu.name == "EBOUNDS":
+        return "fgst-ccube"
+    else:
+        return "gadf"
+
+
 class WcsMap(Map):
     """Base class for WCS map classes.
 
@@ -116,7 +127,7 @@ class WcsMap(Map):
             Name or index of the HDU with the map data.
         hdu_bands : str
             Name or index of the HDU with the BANDS table.
-        format : {'gadf', 'fgst-ccube','fgst-template'}
+        format : {'gadf', 'fgst-ccube', 'fgst-template'}
             FITS format convention.
 
         Returns
@@ -135,7 +146,15 @@ class WcsMap(Map):
         if hdu_bands is not None:
             hdu_bands = hdu_list[hdu_bands]
 
-        return cls.from_hdu(hdu, hdu_bands, format=format)
+        format = identify_wcs_format(hdu_bands)
+
+        wcs_map = cls.from_hdu(hdu, hdu_bands, format=format)
+
+        # exposure maps have an additional GTI hdu
+        if format == "fgst-template" and "GTI" in hdu_list:
+            wcs_map.unit = "cm2 s"
+
+        return wcs_map
 
     def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, format="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.

@@ -72,21 +72,20 @@ class HpxNDMap(HpxMap):
             HEALPix map
 
         """
-        hpx = HpxGeom.from_header(hdu.header, hdu_bands)
-
         if format is None:
             format = HpxConv.identify_hpx_format(hdu.header)
 
+        geom = HpxGeom.from_header(hdu.header, hdu_bands, format=format)
+
         hpx_conv = HPX_FITS_CONVENTIONS[format]
 
-        shape = tuple([ax.nbin for ax in hpx.axes[::-1]])
-        # shape_data = shape + tuple([np.max(hpx.npix)])
+        shape = tuple([ax.nbin for ax in geom.axes[::-1]])
 
         # TODO: Should we support extracting slices?
 
         meta = cls._get_meta_from_header(hdu.header)
         unit = unit_from_fits_image_hdu(hdu.header)
-        map_out = cls(hpx, None, meta=meta, unit=unit)
+        map_out = cls(geom, None, meta=meta, unit=unit)
 
         colnames = hdu.columns.names
         cnames = []
