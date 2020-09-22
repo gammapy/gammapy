@@ -8,7 +8,7 @@ from astropy import units as u
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
 from .geom import MapCoord, pix_tuple_to_idx, MapAxis
-from .utils import INVALID_VALUE, edges_from_lo_hi
+from .utils import INVALID_VALUE
 
 __all__ = ["Map"]
 
@@ -306,15 +306,14 @@ class Map(abc.ABC):
         hdu_bands : str
             Set the name of the bands table extension.  By default this will
             be set to BANDS.
-        format : str
+        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
+                  'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
+                  'galprop', 'galprop2'}
             FITS format convention.  By default files will be written
             to the gamma-astro-data-formats (GADF) format.  This
             option can be used to write files that are compliant with
             format conventions required by specific software (e.g. the
-            Fermi Science Tools).  Supported conventions are 'gadf',
-            'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
-            'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
-            'galprop', and 'galprop2'.
+            Fermi Science Tools).
         sparse : bool
             Sparsify the map by dropping pixels with zero amplitude.
             This option is only compatible with the 'gadf' format.
@@ -1024,8 +1023,9 @@ class Map(abc.ABC):
         map_out : `~Map`
             Map with non-spatial axes summed over
         """
-        return self.reduce_over_axes(func=np.add, axes=axes, keepdims=keepdims, weights=weights)
-
+        return self.reduce_over_axes(
+            func=np.add, axes=axes, keepdims=keepdims, weights=weights
+        )
 
     def reduce_over_axes(self, func=np.add, keepdims=False, axes=None, weights=None):
         """Reduce map over non-spatial axes

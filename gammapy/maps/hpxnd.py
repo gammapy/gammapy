@@ -39,7 +39,6 @@ class HpxNDMap(HpxMap):
             data = self._make_default_data(geom, data_shape, dtype)
 
         super().__init__(geom, data, meta, unit)
-        self._wcs2d = None
 
     @staticmethod
     def _make_default_data(geom, shape_np, dtype):
