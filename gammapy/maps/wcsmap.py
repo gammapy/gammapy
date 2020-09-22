@@ -105,7 +105,7 @@ class WcsMap(Map):
             raise ValueError(f"Invalid map type: {map_type!r}")
 
     @classmethod
-    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None):
+    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format=None):
         """Make a WcsMap object from a FITS HDUList.
 
         Parameters
@@ -116,6 +116,8 @@ class WcsMap(Map):
             Name or index of the HDU with the map data.
         hdu_bands : str
             Name or index of the HDU with the BANDS table.
+        format : {'gadf', 'fgst-ccube','fgst-template'}
+            FITS format convention.
 
         Returns
         -------
@@ -133,7 +135,7 @@ class WcsMap(Map):
         if hdu_bands is not None:
             hdu_bands = hdu_list[hdu_bands]
 
-        return cls.from_hdu(hdu, hdu_bands)
+        return cls.from_hdu(hdu, hdu_bands, format=format)
 
     def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, format="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.

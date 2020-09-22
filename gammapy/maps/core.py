@@ -160,7 +160,7 @@ class Map(abc.ABC):
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @staticmethod
-    def read(filename, hdu=None, hdu_bands=None, map_type="auto"):
+    def read(filename, hdu=None, hdu_bands=None, map_type="auto", format=None):
         """Read a map from a FITS file.
 
         Parameters
@@ -186,7 +186,7 @@ class Map(abc.ABC):
             Map object
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
+            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type, format=format)
 
     @staticmethod
     def from_geom(
@@ -228,12 +228,12 @@ class Map(abc.ABC):
         return cls_out(geom, data=data, meta=meta, unit=unit, dtype=dtype)
 
     @staticmethod
-    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto"):
+    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None):
         """Create from `astropy.io.fits.HDUList`."""
         if map_type == "auto":
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
-        return cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
+        return cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format)
 
     @staticmethod
     def _get_meta_from_header(header):

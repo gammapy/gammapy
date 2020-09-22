@@ -80,7 +80,7 @@ def make_axes_cols(axes, axis_names=None):
     return cols
 
 
-def find_and_read_bands(hdu):
+def find_and_read_bands(hdu, format):
     if hdu is None:
         return []
 

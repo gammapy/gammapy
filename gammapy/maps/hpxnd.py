@@ -54,7 +54,7 @@ class HpxNDMap(HpxMap):
         return data
 
     @classmethod
-    def from_hdu(cls, hdu, hdu_bands=None):
+    def from_hdu(cls, hdu, hdu_bands=None, format=None):
         """Make a HpxNDMap object from a FITS HDU.
 
         Parameters
@@ -63,11 +63,23 @@ class HpxNDMap(HpxMap):
             The FITS HDU
         hdu_bands  : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU
+        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
+                  'fgst-srcmap', 'fgst-template', 'fgst-srcmap-sparse',
+                  'galprop', 'galprop2'}
+            FITS convention. If None the format is guessed.
+
+        Returns
+        -------
+        map : `HpxMap`
+            HEALPix map
+
         """
         hpx = HpxGeom.from_header(hdu.header, hdu_bands)
 
-        convname = HpxGeom.identify_hpx_convention(hdu.header)
-        hpx_conv = HPX_FITS_CONVENTIONS[convname]
+        if format is None:
+            format = HpxGeom.identify_hpx_convention(hdu.header)
+
+        hpx_conv = HPX_FITS_CONVENTIONS[format]
 
         shape = tuple([ax.nbin for ax in hpx.axes[::-1]])
         # shape_data = shape + tuple([np.max(hpx.npix)])
@@ -99,8 +111,8 @@ class HpxNDMap(HpxMap):
             if nbin == 1:
                 map_out.data = hdu.data.field(cnames[0])
             else:
-                for i, cname in enumerate(cnames):
-                    idx = np.unravel_index(i, shape)
+                for idx, cname in enumerate(cnames):
+                    idx = np.unravel_index(idx, shape)
                     map_out.data[idx + (slice(None),)] = hdu.data.field(cname)
 
         return map_out

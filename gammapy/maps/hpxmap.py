@@ -104,7 +104,7 @@ class HpxMap(Map):
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @classmethod
-    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None):
+    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format=None):
         """Make a HpxMap object from a FITS HDUList.
 
         Parameters
@@ -135,7 +135,7 @@ class HpxMap(Map):
         if hdu_bands is not None:
             hdu_bands_out = hdu_list[hdu_bands]
 
-        return cls.from_hdu(hdu_out, hdu_bands_out)
+        return cls.from_hdu(hdu_out, hdu_bands_out, format=format)
 
     def to_hdulist(self, hdu="SKYMAP", hdu_bands=None, sparse=False, format="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.

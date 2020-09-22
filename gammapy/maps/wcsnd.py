@@ -70,7 +70,7 @@ class WcsNDMap(WcsMap):
         return data
 
     @classmethod
-    def from_hdu(cls, hdu, hdu_bands=None):
+    def from_hdu(cls, hdu, hdu_bands=None, format=None):
         """Make a WcsNDMap object from a FITS HDU.
 
         Parameters
@@ -79,8 +79,15 @@ class WcsNDMap(WcsMap):
             The map FITS HDU.
         hdu_bands : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU.
+        format : {'gadf', 'fgst-ccube','fgst-template'}
+            FITS format convention.
+
+        Returns
+        -------
+        map : `WcsNDMap`
+            Wcs map
         """
-        geom = WcsGeom.from_header(hdu.header, hdu_bands)
+        geom = WcsGeom.from_header(hdu.header, hdu_bands, format=format)
         shape = tuple([ax.nbin for ax in geom.axes])
         shape_wcs = tuple([np.max(geom.npix[0]), np.max(geom.npix[1])])
 

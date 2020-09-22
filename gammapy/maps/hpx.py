@@ -1188,7 +1188,7 @@ class HpxGeom(Geom):
             raise ValueError("Could not identify HEALPIX convention")
 
     @classmethod
-    def from_header(cls, header, hdu_bands=None, pix=None):
+    def from_header(cls, header, hdu_bands=None, format=None):
         """Create an HPX object from a FITS header.
 
         Parameters
@@ -1197,20 +1197,22 @@ class HpxGeom(Geom):
             The FITS header
         hdu_bands : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU.
-        pix : tuple
-            List of pixel index vectors defining the pixels
-            encompassed by the geometry.  For EXPLICIT geometries with
-            HPX_REG undefined this tuple defines the geometry.
+        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
+                  'fgst-srcmap', 'fgst-template', 'fgst-srcmap-sparse',
+                  'galprop', 'galprop2'}
+            FITS convention. If None the format is guessed.
 
         Returns
         -------
         hpx : `~HpxGeom`
             HEALPix geometry.
         """
-        convname = HpxGeom.identify_hpx_convention(header)
-        conv = HPX_FITS_CONVENTIONS[convname]
+        if format is None:
+            format = HpxGeom.identify_hpx_convention(header)
 
-        axes = find_and_read_bands(hdu_bands)
+        conv = HPX_FITS_CONVENTIONS[format]
+
+        axes = find_and_read_bands(hdu_bands, format=format)
         shape = [ax.nbin for ax in axes]
 
         if header["PIXTYPE"] != "HEALPIX":

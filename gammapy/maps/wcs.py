@@ -407,7 +407,7 @@ class WcsGeom(Geom):
         return cls(wcs, npix, cdelt=binsz, axes=axes)
 
     @classmethod
-    def from_header(cls, header, hdu_bands=None):
+    def from_header(cls, header, hdu_bands=None, format=None):
         """Create a WCS geometry object from a FITS header.
 
         Parameters
@@ -416,6 +416,8 @@ class WcsGeom(Geom):
             The FITS header
         hdu_bands : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU.
+        format : {'gadf', 'fgst-ccube','fgst-template'}
+            FITS format convention.
 
         Returns
         -------
@@ -426,7 +428,7 @@ class WcsGeom(Geom):
         # TODO: see https://github.com/astropy/astropy/issues/9259
         wcs._naxis = wcs._naxis[:2]
 
-        axes = find_and_read_bands(hdu_bands)
+        axes = find_and_read_bands(hdu_bands, format=format)
         shape = tuple([ax.nbin for ax in axes])
 
         if hdu_bands is not None and "NPIX" in hdu_bands.columns.names:
