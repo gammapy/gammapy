@@ -1151,7 +1151,7 @@ class TemplateSpectralModel(SpectralModel):
     def __init__(
         self, energy, values, interp_kwargs=None, meta=None,
     ):
-        self.energy = u.Quantity(energy, copy=False)
+        self.energy = energy
         self.values = u.Quantity(values, copy=False)
         self.meta = dict() if meta is None else meta
         interp_kwargs = interp_kwargs or {}
@@ -1159,7 +1159,7 @@ class TemplateSpectralModel(SpectralModel):
         interp_kwargs.setdefault("points_scale", ("log",))
 
         self._evaluate = ScaledRegularGridInterpolator(
-            points=(self.energy,), values=self.values, **interp_kwargs
+            points=(energy,), values=values, **interp_kwargs
         )
 
         super().__init__()
@@ -1288,18 +1288,18 @@ class Absorption:
     tag = "Absorption"
 
     def __init__(self, energy, param, data, filename=None, interp_kwargs=None):
-        self.energy = u.Quantity(energy, copy=False)
-        self.data = u.Quantity(data, copy=False)
+        self.data = data
         self.filename = filename
         # set values log centers
         self.param = param
+        self.energy = energy
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("points_scale", ("log", "lin"))
         interp_kwargs.setdefault("extrapolate", True)
 
         self._evaluate = ScaledRegularGridInterpolator(
-            points=(self.param, self.energy), values=self.data, **interp_kwargs
+            points=(self.param, self.energy), values=data, **interp_kwargs
         )
 
     def to_dict(self):
