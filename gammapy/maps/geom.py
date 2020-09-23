@@ -408,9 +408,7 @@ class MapAxis:
         return cls(nodes, **kwargs)
 
     @classmethod
-    def from_energy_edges(
-        cls, edges, unit=None, name=None, interp="log"
-    ):
+    def from_energy_edges(cls, edges, unit=None, name=None, interp="log"):
         """Make an energy axis from adjacent edges.
 
         Parameters
@@ -441,9 +439,7 @@ class MapAxis:
         if name not in ["energy", "energy_true"]:
             raise ValueError("Energy axis can only be named 'energy' or 'energy_true'")
 
-        return cls.from_edges(
-            edges, unit=unit, interp=interp, name=name
-        )
+        return cls.from_edges(edges, unit=unit, interp=interp, name=name)
 
     @classmethod
     def from_energy_bounds(
@@ -489,7 +485,13 @@ class MapAxis:
             raise ValueError("Energy axis can only be named 'energy' or 'energy_true'")
 
         return cls.from_bounds(
-            emin.value, emax.value, nbin=nbin, unit=unit, interp="log", name=name, node_type=node_type
+            emin.value,
+            emax.value,
+            nbin=nbin,
+            unit=unit,
+            interp="log",
+            name=name,
+            node_type=node_type,
         )
 
     @classmethod
@@ -552,13 +554,17 @@ class MapAxis:
             Appended axis
         """
         if self.node_type != axis.node_type:
-            raise ValueError(f"Node type must agree, got {self.node_type} and {axis.node_type}")
+            raise ValueError(
+                f"Node type must agree, got {self.node_type} and {axis.node_type}"
+            )
 
         if self.name != axis.name:
             raise ValueError(f"Names must agree, got {self.name} and {axis.name} ")
 
         if self.interp != axis.interp:
-            raise ValueError(f"Interp type must agree, got {self.interp} and {axis.interp}")
+            raise ValueError(
+                f"Interp type must agree, got {self.interp} and {axis.interp}"
+            )
 
         if self.node_type == "edges":
             edges = np.append(self.edges, axis.edges[1:])
@@ -1725,17 +1731,13 @@ class Geom(abc.ABC):
         groups = axis_self.group_table(axis.edges)
 
         # Keep only normal bins
-        #TODO: improve on this
-        groups = groups[groups["bin_type"]=="normal   "]
+        # TODO: improve on this
+        groups = groups[groups["bin_type"] == "normal   "]
 
-        edges = edges_from_lo_hi(
-            groups[axis.name + "_min"], groups[axis.name + "_max"]
-        )
+        edges = edges_from_lo_hi(groups[axis.name + "_min"], groups[axis.name + "_max"])
 
         axis_resampled = MapAxis.from_edges(
-            edges=edges,
-            interp=axis.interp,
-            name=axis.name
+            edges=edges, interp=axis.interp, name=axis.name
         )
 
         axes = []

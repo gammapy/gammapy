@@ -2,12 +2,12 @@
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from regions import RectangleSkyRegion, CircleAnnulusSkyRegion
-from gammapy.utils.table import table_from_row_data
-from gammapy.stats import WStatCountsStatistic, CashCountsStatistic
-from gammapy.datasets import SpectrumDatasetOnOff, Datasets
+from regions import CircleAnnulusSkyRegion, RectangleSkyRegion
+from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.maps import MapAxis
-from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
+from gammapy.utils.table import table_from_row_data
 from .core import Estimator
 
 __all__ = ["ExcessProfileEstimator"]
