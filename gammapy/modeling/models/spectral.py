@@ -455,9 +455,9 @@ class CompoundSpectralModel(SpectralModel):
         model1_cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["model1"]["type"])
         model1 = model1_cls.from_dict(data["model1"])
         model2_cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["model2"]["type"])
-        model2 = model2_cls.from_dict(data["model1"])
-        operator = getattr(np, data["operator"])
-        return cls(model1, model2, operator)
+        model2 = model2_cls.from_dict(data["model2"])
+        op = getattr(operator, data["operator"])
+        return cls(model1, model2, op)
 
 
 class PowerLawSpectralModel(SpectralModel):
