@@ -81,7 +81,7 @@ def test_radial_profile():
     assert_allclose(imp_prof[0]["solid_angle"], [6.853891e-07, 6.853891e-07], atol=1e-5)
 
 
-def test_radial_profile():
+def test_radial_profile_one_interval():
     dataset = get_simple_dataset_on_off()
     geom = dataset.counts.geom
     regions = make_concentric_annulus_sky_regions(
