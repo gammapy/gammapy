@@ -1288,18 +1288,19 @@ class Absorption:
     tag = "Absorption"
 
     def __init__(self, energy, param, data, filename=None, interp_kwargs=None):
-        self.data = data
         self.filename = filename
         # set values log centers
         self.param = param
         self.energy = energy
+        self.energy = energy
+        self.data = u.Quantity(data, copy=False)
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("points_scale", ("log", "lin"))
         interp_kwargs.setdefault("extrapolate", True)
 
         self._evaluate = ScaledRegularGridInterpolator(
-            points=(self.param, self.energy), values=data, **interp_kwargs
+            points=(self.param, self.energy), values=self.data, **interp_kwargs
         )
 
     def to_dict(self):
