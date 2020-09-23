@@ -1943,8 +1943,51 @@ class MapDatasetOnOff(MapDataset):
 
         return cutout_dataset
 
-    def downsample(self):
-        raise NotImplementedError
+    def downsample(self, factor, axis_name=None, name=None):
+        """Downsample map dataset.
+
+        The PSFMap and EDispKernelMap are not downsampled, except if
+        a corresponding axis is given.
+
+        Parameters
+        ----------
+        factor : int
+            Downsampling factor.
+        axis_name : str
+            Which non-spatial axis to downsample. By default only spatial axes are downsampled.
+        name : str
+            Name of the downsampled dataset.
+
+        Returns
+        -------
+        dataset : `MapDatasetOnOff`
+            Downsampled map dataset.
+        """
+
+        dataset = super().downsample(factor, axis_name, name)
+
+        counts_off = None
+        if self.counts_off is not None:
+            counts_off = self.counts_off.downsample(
+                factor=factor, preserve_counts=True, axis=axis_name, weights=self.mask_safe
+            )
+
+        acceptance, acceptance_off = None, None
+        if self.acceptance_off is not None:
+            acceptance = self.acceptance.downsample(
+                factor=factor, preserve_counts=False, axis=axis_name
+            )
+            factor = self.counts_off_normalised.downsample(
+                factor=factor, preserve_counts=True, axis=axis_name, weights=self.mask_safe
+            )
+            acceptance_off = acceptance * counts_off / factor
+
+        return self.__class__.from_map_dataset(
+            dataset,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            counts_off=counts_off
+        )
 
     def pad(self):
         raise NotImplementedError
