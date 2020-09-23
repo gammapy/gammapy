@@ -408,6 +408,44 @@ class MapAxis:
         return cls(nodes, **kwargs)
 
     @classmethod
+    def from_energy_edges(
+        cls, edges, unit=None, name=None, interp="log"
+    ):
+        """Make an energy axis from adjacent edges.
+
+        Parameters
+        ----------
+        edges : `~astropy.units.Quantity`, float
+            Energy edges
+        unit : `~astropy.units.Unit`
+            Energy unit
+        name : str
+            Name of the energy axis, either 'energy' or 'energy_true'
+        interp: str
+            interpolation mode. Default is 'log'.
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Axis with name "energy" and interp "log".
+        """
+        edges = u.Quantity(edges, unit)
+
+        if unit is None:
+            unit = edges.unit
+            edges = edges.to(unit)
+
+        if name is None:
+            name = "energy"
+
+        if name not in ["energy", "energy_true"]:
+            raise ValueError("Energy axis can only be named 'energy' or 'energy_true'")
+
+        return cls.from_edges(
+            edges, unit=unit, interp=interp, name=name
+        )
+
+    @classmethod
     def from_energy_bounds(
         cls, emin, emax, nbin, unit=None, per_decade=False, name=None, node_type="edges"
     ):

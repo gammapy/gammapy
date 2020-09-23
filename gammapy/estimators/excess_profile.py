@@ -254,7 +254,7 @@ class ExcessProfileEstimator(Estimator):
         """
         axis = None
         if self.e_edges is not None:
-            axis = MapAxis.from_edges(self.e_edges, name="energy", interp="log")
+            axis = MapAxis.from_energy_edges(self.e_edges)
 
         dataset = dataset.resample_energy_axis(axis=axis)
 
