@@ -273,7 +273,8 @@ class MapDataset(Dataset):
                         self._background_model = model
                         break
         else:
-            log.warning(f"No background model defined for dataset {self.name}")
+            if not isinstance(self, MapDatasetOnOff):
+                log.warning(f"No background model defined for dataset {self.name}")
         self._evaluators = {}
 
     @property
