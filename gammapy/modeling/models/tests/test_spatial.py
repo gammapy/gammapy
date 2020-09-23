@@ -237,8 +237,7 @@ def test_sky_diffuse_map_3d():
     val = model(lon, lat, energy)
     with pytest.raises(ValueError):
         model(lon, lat)
-    assert val.unit == "sr-1"
-    model.map.unit = "cm-2 s-1 MeV-1 sr-1"
+    assert model.map.unit == "cm-2 s-1 MeV-1 sr-1"
     val = model(lon, lat, energy)
     assert val.unit == "cm-2 s-1 MeV-1 sr-1"
     res = model.evaluate_geom(model.map.geom)

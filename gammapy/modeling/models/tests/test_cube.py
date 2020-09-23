@@ -372,7 +372,6 @@ class Test_Template_with_cube:
         model = TemplateSpatialModel.read(
             "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits",
             normalize=False,
-            unit="cm-2 s-1 MeV-1 sr-1",
         )
         assert model.map.unit == "cm-2 s-1 MeV-1 sr-1"
 

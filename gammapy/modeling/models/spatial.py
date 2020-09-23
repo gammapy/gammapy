@@ -665,9 +665,9 @@ class TemplateSpatialModel(SpatialModel):
         return np.max(self.map.geom.width) / 2.0
 
     @classmethod
-    def read(cls, filename, normalize=True, unit=None, **kwargs):
+    def read(cls, filename, normalize=True, **kwargs):
         """Read spatial template model from FITS image.
-        If unit is not given in the FITS header or as argument the default is ``sr-1``.
+        If unit is not given in the FITS header the default is ``sr-1``.
 
         Parameters
         ----------
@@ -675,14 +675,10 @@ class TemplateSpatialModel(SpatialModel):
             FITS image filename.
         normalize : bool
             Normalize the input map so that it integrates to unity.
-        unit : str
-            Unit of the map, used only if not specified in the FITS header
         kwargs : dict
             Keyword arguments passed to `Map.read()`.
         """
         m = Map.read(filename, **kwargs)
-        if unit is not None and m.unit.is_equivalent(""):
-            m.unit = unit
         return cls(m, normalize=normalize, filename=filename)
 
     def evaluate(self, lon, lat, energy=None):
@@ -711,10 +707,7 @@ class TemplateSpatialModel(SpatialModel):
     def from_dict(cls, data):
         filename = data["filename"]
         normalize = data.get("normalize", True)
-        unit = data.get("unit", "")
         m = Map.read(filename)
-        if m.unit.is_equivalent(""):
-            m.unit = unit
         return cls(m, normalize=normalize, filename=filename)
 
     def to_dict(self):
