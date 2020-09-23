@@ -95,7 +95,7 @@ class ExcessProfileEstimator(Estimator):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
 
-        self.e_edges = e_edges
+        self.e_edges = u.Quantity(e_edges) if e_edges is not None else None
 
         if spectrum is None:
             spectrum = PowerLawSpectralModel()
@@ -254,7 +254,7 @@ class ExcessProfileEstimator(Estimator):
         """
         axis = None
         if self.e_edges is not None:
-            axis = MapAxis.from_edges(self.e_edges, name="energy")
+            axis = MapAxis.from_edges(self.e_edges, name="energy", interp="log")
 
         dataset = dataset.resample_energy_axis(axis=axis)
 
