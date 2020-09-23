@@ -325,6 +325,20 @@ def test_to_image_mask_safe():
     dataset_im = dataset_copy.to_image()
     assert dataset_im.counts is None
 
+@requires_data()
+def test_downsample():
+    dataset = get_fermi_3fhl_gc_dataset()
+
+    downsampled = dataset.downsample(2)
+
+    assert downsampled.counts.data.shape == (11,100,200)
+    assert downsampled.counts.data.sum() == dataset.counts.data.sum()
+    assert_allclose(downsampled.background_model.map.data.sum(axis=(1,2)), dataset.background_model.map.data.sum(axis=(1,2)), rtol=1e-5)
+    assert_allclose(downsampled.exposure.data[5,50,100], 3.318082e+11, rtol=1e-5)
+
+    with pytest.raises(ValueError):
+        dataset.downsample(2, axis_name="energy")
+
 
 @requires_data()
 def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
