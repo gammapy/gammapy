@@ -117,7 +117,11 @@ class SpatialModel(Model):
                 :, np.newaxis, np.newaxis
             ]
             coords = geom.to_image().get_coord(frame=self.frame)
-            return self(coords.lon, coords.lat, energy)
+            try:
+                data = self(coords.lon, coords.lat)
+            except:
+                data = self(coords.lon, coords.lat, energy)
+            return data
         else:
             coords = geom.get_coord(frame=self.frame)
             return self(coords.lon, coords.lat)
@@ -607,8 +611,6 @@ class TemplateSpatialModel(SpatialModel):
     ----------
     map : `~gammapy.maps.Map`
         Map template.
-    norm : float
-        Norm parameter (multiplied with map values)
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     normalize : bool
@@ -665,8 +667,7 @@ class TemplateSpatialModel(SpatialModel):
     @classmethod
     def read(cls, filename, normalize=True, **kwargs):
         """Read spatial template model from FITS image.
-
-        The unit of the map has to be equivalent to ``sr-1``. If no unit the default is ``sr-1``.
+        If unit is not given in the FITS header the default is ``sr-1``.
 
         Parameters
         ----------
@@ -678,7 +679,6 @@ class TemplateSpatialModel(SpatialModel):
             Keyword arguments passed to `Map.read()`.
         """
         m = Map.read(filename, **kwargs)
-
         return cls(m, normalize=normalize, filename=filename)
 
     def evaluate(self, lon, lat, energy=None):
@@ -705,21 +705,17 @@ class TemplateSpatialModel(SpatialModel):
 
     @classmethod
     def from_dict(cls, data):
-        m = Map.read(data["filename"])
-
-        parameters = Parameters.from_dict(data["parameters"])
-        return cls.from_parameters(
-            parameters=parameters,
-            map=m,
-            filename=data["filename"],
-            normalize=data.get("normalize", True),
-        )
+        filename = data["filename"]
+        normalize = data.get("normalize", True)
+        m = Map.read(filename)
+        return cls(m, normalize=normalize, filename=filename)
 
     def to_dict(self):
         """Create dict for YAML serilisation"""
         data = super().to_dict()
         data["filename"] = self.filename
         data["normalize"] = self.normalize
+        data["unit"] = str(self.map.unit)
         return data
 
     def to_region(self, **kwargs):

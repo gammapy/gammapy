@@ -428,9 +428,9 @@ class Models(collections.abc.MutableSequence):
         del self._models[self.index(key)]
 
     def __setitem__(self, key, model):
-        from gammapy.modeling.models import SkyModel, SkyDiffuseCube
+        from gammapy.modeling.models import SkyModel, BackgroundModel
 
-        if isinstance(model, (SkyModel, SkyDiffuseCube)):
+        if isinstance(model, (SkyModel, BackgroundModel)):
             self._models[self.index(key)] = model
         else:
             raise TypeError(f"Invalid type: {model!r}")
@@ -536,11 +536,11 @@ class ProperModels(Models):
                     d._models.remove(key)
 
     def __setitem__(self, key, model):
-        from gammapy.modeling.models import SkyModel, SkyDiffuseCube
+        from gammapy.modeling.models import SkyModel, BackgroundModel
 
         for d in self._datasets:
             if model not in d._models:
-                if isinstance(model, (SkyModel, SkyDiffuseCube)):
+                if isinstance(model, (SkyModel, BackgroundModel)):
                     d._models[key] = model
 
                 else:
@@ -553,11 +553,11 @@ class ProperModels(Models):
                 model.datasets_names.append(d.name)
 
     def insert(self, idx, model):
-        from gammapy.modeling.models import SkyModel, SkyDiffuseCube
+        from gammapy.modeling.models import SkyModel, BackgroundModel
 
         for d in self._datasets:
             if model not in d._models:
-                if isinstance(model, (SkyModel, SkyDiffuseCube)):
+                if isinstance(model, (SkyModel, BackgroundModel)):
                     if idx == len(self):
                         index = len(d._models)
                     else:

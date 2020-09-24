@@ -208,7 +208,7 @@ def make_all_models():
     m1 = Map.create(
         npix=(10, 20, 30), axes=[MapAxis.from_nodes([1, 2] * u.TeV, name="energy")]
     )
-    yield Model.create("SkyDiffuseCube", map=m1)
+    yield Model.create("TemplateSpatialModel", "spatial", map=m1)
     m2 = Map.create(
         npix=(10, 20, 30), axes=[MapAxis.from_edges([1, 2] * u.TeV, name="energy")]
     )

@@ -150,9 +150,12 @@ class WcsMap(Map):
 
         wcs_map = cls.from_hdu(hdu, hdu_bands, format=format)
 
-        # exposure maps have an additional GTI hdu
-        if format == "fgst-template" and "GTI" in hdu_list:
-            wcs_map.unit = "cm2 s"
+        if wcs_map.unit.is_equivalent(""):
+            if format == "fgst-template":
+                if "GTI" in hdu_list:  # exposure maps have an additional GTI hdu
+                    wcs_map.unit = "cm2 s"
+                else:
+                    wcs_map.unit = "cm-2 s-1 MeV-1 sr-1"
 
         return wcs_map
 

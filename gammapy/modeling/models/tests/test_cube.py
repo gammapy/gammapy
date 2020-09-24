@@ -16,7 +16,8 @@ from gammapy.modeling.models import (
     Models,
     PointSpatialModel,
     PowerLawSpectralModel,
-    SkyDiffuseCube,
+    PowerLawNormSpectralModel,
+    TemplateSpatialModel,
     SkyModel,
     create_fermi_isotropic_diffuse_model,
 )
@@ -56,7 +57,8 @@ def diffuse_model():
         npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )
     m.data += 42
-    return SkyDiffuseCube(m)
+    spatial_model = TemplateSpatialModel(m, normalize=False)
+    return SkyModel(PowerLawNormSpectralModel(), spatial_model)
 
 
 @pytest.fixture(scope="session")
@@ -336,7 +338,7 @@ class TestSkyModel:
         sky_model.apply_irf["edisp"] = True
 
 
-class TestSkyDiffuseCube:
+class Test_Template_with_cube:
     @staticmethod
     def test_evaluate_scalar(diffuse_model):
         # Check pixel inside map
@@ -367,8 +369,9 @@ class TestSkyDiffuseCube:
     @staticmethod
     @requires_data()
     def test_read():
-        model = SkyDiffuseCube.read(
-            "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits"
+        model = TemplateSpatialModel.read(
+            "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits",
+            normalize=False,
         )
         assert model.map.unit == "cm-2 s-1 MeV-1 sr-1"
 
@@ -412,7 +415,7 @@ class TestSkyDiffuseCube:
         assert "datasets_names" not in out
 
 
-class TestSkyDiffuseCubeMapEvaluator:
+class Test_template_cube_MapEvaluator:
     @staticmethod
     def test_compute_dnde(diffuse_evaluator):
         out = diffuse_evaluator.compute_dnde()
