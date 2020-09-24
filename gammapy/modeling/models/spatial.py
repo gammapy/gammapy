@@ -47,10 +47,11 @@ class SpatialModel(Model):
     def __call__(self, lon, lat, energy=None):
         """Call evaluate method"""
         kwargs = {par.name: par.quantity for par in self.parameters}
-        if energy:
-            return self.evaluate(lon, lat, energy, **kwargs)
-        else:
-            return self.evaluate(lon, lat, **kwargs)
+
+        if energy is not None:
+            kwargs["energy"] = energy
+
+        return self.evaluate(lon, lat, **kwargs)
 
     @property
     def position(self):
@@ -633,13 +634,15 @@ class TemplateSpatialModel(SpatialModel):
 
         self.map = map
         self.normalize = normalize
+
         if normalize:
             # Normalize the diffuse map model so that it integrates to unity
-            if len(self.map.data.shape) > 2:
+            if self.map.geom.is_image:
+                data_sum = self.map.data.sum()
+            else:
                 # Normalize in each energy bin
                 data_sum = self.map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
-            else:
-                data_sum = self.map.data.sum()
+
             data = self.map.data / data_sum
             data /= self.map.geom.solid_angle().to_value("sr")
             self.map = self.map.copy(data=data, unit="sr-1")
@@ -688,6 +691,7 @@ class TemplateSpatialModel(SpatialModel):
         }
         if energy is not None:
             coord["energy_true"] = energy
+
         if energy is None and len(self.map.data.shape) > 2:
             raise ValueError("Missing energy value for evaluation")
 
