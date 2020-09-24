@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.irf import (
@@ -32,6 +32,18 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 @pytest.fixture
 def geom():
     axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    return WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+
+
+@pytest.fixture
+def geom10():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=20)
     return WcsGeom.create(
         skydir=(266.40498829, -28.93617776),
         binsz=0.02,
@@ -221,6 +233,28 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset_corrected.aeff.unit == "m2"
     assert_allclose(spectrum_dataset.aeff.data[1], 853023.423047, rtol=1e-5)
     assert_allclose(spectrum_dataset_corrected.aeff.data[1], 559476.3357, rtol=1e-5)
+
+
+@requires_data()
+def test_energy_range(sky_model, geom10, geom_etrue):
+    sky_coord1 = SkyCoord(266.5, -29.3, unit="deg")
+    region1 = CircleSkyRegion(sky_coord1, 0.5 * u.deg)
+    mask1 = geom10.region_mask([region1]) & geom10.energy_mask(1 * u.TeV, 7 * u.TeV)
+    sky_coord2 = SkyCoord(266.5, -28.7, unit="deg")
+    region2 = CircleSkyRegion(sky_coord2, 0.5 * u.deg)
+    mask2 = geom10.region_mask([region2]) & geom10.energy_mask(2 * u.TeV, 8 * u.TeV)
+    mask3 = geom10.energy_mask(3 * u.TeV, 6 * u.TeV)
+
+    mask_safe = Map.from_geom(geom10, data=mask1 | mask2 | mask3)
+    dataset = get_map_dataset(sky_model, geom10, geom_etrue, edisp=None, mask_safe=mask_safe)
+    axis = geom10.axes[0]
+
+    assert_allclose(dataset.energy_range(region=SkyCoord(267, -29, unit="deg")), u.Quantity([axis.edges[15], axis.edges[17]]))
+    assert_allclose(dataset.energy_range(region=sky_coord1), u.Quantity([axis.edges[10], axis.edges[18]]))
+    assert_allclose(dataset.energy_range(region=sky_coord2), u.Quantity([axis.edges[14], axis.edges[19]]))
+    region = RectangleSkyRegion(SkyCoord(265.75, -29, unit="deg"), 0.5 * u.deg, 1 * u.deg)
+    assert_allclose(dataset.energy_range(region=region), u.Quantity([axis.edges[10], axis.edges[19]]))
+    assert_allclose(dataset.energy_range(), u.Quantity([axis.edges[10], axis.edges[19]]))
 
 
 @requires_data()

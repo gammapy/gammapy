@@ -1468,7 +1468,7 @@ class MapDatasetOnOff(MapDataset):
 
     See Also
     --------
-    MapDatasetOn, SpectrumDataset, FluxPointsDataset
+    MapDataset, SpectrumDataset, FluxPointsDataset
 
     """
 
@@ -1579,13 +1579,6 @@ class MapDatasetOnOff(MapDataset):
             mu_sig=mu_sig,
         )
         return np.nan_to_num(on_stat_)
-
-    @property
-    def _energy_axis(self):
-        raise NotImplementedError
-
-    def energy_range(self, region=None):
-        raise NotImplementedError
 
     @classmethod
     def from_geoms(
