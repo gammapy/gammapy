@@ -2224,11 +2224,42 @@ class MapEvaluator:
         return self.model.evaluate_geom(self.geom, self.gti)
 
     def compute_flux(self):
-        """Compute model integral flux over map pixel volumes.
-
-        For now, we simply multiply dnde with bin volume.
-        """
+        """Compute flux"""
         return self.model.integrate_geom(self.geom, self.gti)
+
+    def compute_psf_convolved_flux(self):
+        """Compute psf convolved and temporal model corrected flux."""
+        value = self.compute_flux_spectral()
+
+        if self.model.spatial_model and not isinstance(self.geom, RegionGeom):
+            value = value * self.compute_flux_spatial().quantity
+
+        if self.model.temporal_model:
+            value *= self.compute_temporal_norm()
+
+        return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
+
+    def compute_flux_spatial(self):
+        """Compute spatial flux"""
+        value = self.model.spatial_model.integrate_geom(self.geom)
+        if self.psf and self.model.apply_irf["psf"]:
+            value = self.apply_psf(value)
+        return value
+
+    def compute_flux_spectral(self):
+        """Compute spectral flux"""
+        energy = self.geom.get_axis_by_name("energy_true").edges
+        value = self.model.spectral_model.integral(
+            energy[:-1], energy[1:], intervals=True
+        )
+        return value.reshape((-1, 1, 1))
+
+    def compute_temporal_norm(self):
+        """Compute temporal norm """
+        integral = self.model.temporal_model.integral(
+            self.gti.time_start, self.gti.time_stop
+        )
+        return np.sum(integral)
 
     def apply_exposure(self, flux):
         """Compute npred cube
@@ -2276,7 +2307,7 @@ class MapEvaluator:
             if isinstance(self.model, BackgroundModel):
                 npred = self.model.evaluate()
             else:
-                flux_conv = self._compute_flux_conv()
+                flux_conv = self.compute_psf_convolved_flux()
 
                 if self.model.apply_irf["exposure"]:
                     npred = self.apply_exposure(flux_conv)
@@ -2289,29 +2320,3 @@ class MapEvaluator:
 
         return npred
 
-    def _compute_flux_conv(self):
-        """ compute_flux with caching of psf-convolved spatial model"""
-        energy = self.geom.get_axis_by_name("energy_true").edges
-
-        value = self.model.spectral_model.integral(
-            energy[:-1], energy[1:], intervals=True
-        ).reshape((-1, 1, 1))
-
-        if self.model.spatial_model and not isinstance(self.geom, RegionGeom):
-            spatial_pars = list(self.model.spatial_model.parameters.values)
-            spatial_conv = self._spatial_conv_cached
-            if self._spatial_pars_cached != spatial_pars or spatial_conv is None:
-                self._spatial_pars_cached = spatial_pars
-                spatial_conv = self.model.spatial_model.integrate_geom(self.geom)
-                if self.psf and self.model.apply_irf["psf"]:
-                    spatial_conv = self.apply_psf(spatial_conv)
-                self._spatial_conv_cached = spatial_conv
-            value = value * spatial_conv.quantity
-
-        if self.model.temporal_model:
-            integral = self.model.temporal_model.integral(
-                self.gti.time_start, self.gti.time_stop
-            )
-            value = value * np.sum(integral)
-
-        return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)

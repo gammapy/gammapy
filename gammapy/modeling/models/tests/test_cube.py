@@ -59,7 +59,10 @@ def diffuse_model():
     )
     m.data += 42
     spatial_model = TemplateSpatialModel(m, normalize=False)
-    return SkyModel(PowerLawNormSpectralModel(), spatial_model)
+    return SkyModel(
+        PowerLawNormSpectralModel(),
+        spatial_model
+    )
 
 
 @pytest.fixture(scope="session")
