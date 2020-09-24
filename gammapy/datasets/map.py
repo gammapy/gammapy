@@ -2243,6 +2243,7 @@ class MapEvaluator:
 
             if self.use_cache:
                 self._npred_cached = npred
+
         return npred
 
     def _compute_flux_conv(self):

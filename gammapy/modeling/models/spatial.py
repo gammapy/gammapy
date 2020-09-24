@@ -5,6 +5,7 @@ import numpy as np
 import scipy.integrate
 import scipy.special
 import astropy.units as u
+from astropy.utils import lazyproperty
 from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
 from regions import (
@@ -14,7 +15,7 @@ from regions import (
     PolygonSkyRegion,
 )
 from gammapy.maps import Map, WcsGeom
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from .core import Model
@@ -48,10 +49,19 @@ class SpatialModel(Model):
         """Call evaluate method"""
         kwargs = {par.name: par.quantity for par in self.parameters}
 
+        if energy is None and self.is_energy_dependent:
+            raise ValueError("Missing energy value for evaluation")
+
         if energy is not None:
             kwargs["energy"] = energy
 
         return self.evaluate(lon, lat, **kwargs)
+
+    # TODO: make this a hard-coded class attribute?
+    @lazyproperty
+    def is_energy_dependent(self):
+        varnames = self.evaluate.__code__.co_varnames
+        return "energy" in varnames
 
     @property
     def position(self):
@@ -113,18 +123,12 @@ class SpatialModel(Model):
         )
 
     def evaluate_geom(self, geom):
-        if "energy_true" in [axe.name for axe in geom.axes]:
-            energy = geom.get_axis_by_name("energy_true").center[
-                :, np.newaxis, np.newaxis
-            ]
-            coords = geom.to_image().get_coord(frame=self.frame)
-            try:
-                data = self(coords.lon, coords.lat)
-            except:
-                data = self(coords.lon, coords.lat, energy)
-            return data
+        coords = geom.to_image().get_coord(frame=self.frame)
+
+        if self.is_energy_dependent:
+            energy = geom.get_axis_by_name("energy_true").center
+            return self(coords.lon, coords.lat, energy[:, np.newaxis, np.newaxis])
         else:
-            coords = geom.get_coord(frame=self.frame)
             return self(coords.lon, coords.lat)
 
     def integrate_geom(self, geom):
@@ -632,24 +636,25 @@ class TemplateSpatialModel(SpatialModel):
         if filename is not None:
             filename = str(make_path(filename))
 
-        self.map = map
         self.normalize = normalize
 
         if normalize:
             # Normalize the diffuse map model so that it integrates to unity
-            if self.map.geom.is_image:
-                data_sum = self.map.data.sum()
+            if map.geom.is_image:
+                data_sum = map.data.sum()
             else:
                 # Normalize in each energy bin
-                data_sum = self.map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
+                data_sum = map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
 
-            data = self.map.data / data_sum
-            data /= self.map.geom.solid_angle().to_value("sr")
-            self.map = self.map.copy(data=data, unit="sr-1")
-        else:
-            if self.map.unit.is_equivalent(""):
-                self.map.unit = "sr-1"
-                log.warning("Missing spatial template unit, assuming sr^-1")
+            data = map.data / data_sum
+            data /= map.geom.solid_angle().to_value("sr")
+            map = map.copy(data=data, unit="sr-1")
+
+        if map.unit.is_equivalent(""):
+            map = map.copy(unit="sr-1")
+            log.warning("Missing spatial template unit, assuming sr^-1")
+
+        self.map = map
 
         self.meta = dict() if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
@@ -658,6 +663,10 @@ class TemplateSpatialModel(SpatialModel):
         self._interp_kwargs = interp_kwargs
         self.filename = filename
         super().__init__()
+
+    @property
+    def is_energy_dependent(self):
+        return "energy_true" in self.map.geom.axes_names
 
     @property
     def evaluation_radius(self):
@@ -691,9 +700,6 @@ class TemplateSpatialModel(SpatialModel):
         }
         if energy is not None:
             coord["energy_true"] = energy
-
-        if energy is None and len(self.map.data.shape) > 2:
-            raise ValueError("Missing energy value for evaluation")
 
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=False)

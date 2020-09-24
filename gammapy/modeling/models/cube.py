@@ -231,10 +231,11 @@ class SkyModel(SkyModelBase):
         # TODO: case if self.temporal_model is not None, introduce time in arguments ?
 
         if self.spatial_model is not None:
-            try:
-                spatial = self.spatial_model(lon, lat)
-            except:
+            if self.spatial_model.is_energy_dependent:
                 spatial = self.spatial_model(lon, lat, energy)
+            else:
+                spatial = self.spatial_model(lon, lat)
+
             value = value * spatial  # pylint:disable=not-callable
 
         if (self.temporal_model is not None) and (time is not None):
@@ -431,6 +432,7 @@ class BackgroundModel(Model):
         if spectral_model is None:
             spectral_model = PowerLawNormSpectralModel()
             spectral_model.tilt.frozen = True
+
         self.spectral_model = spectral_model
 
         if isinstance(datasets_names, list):
