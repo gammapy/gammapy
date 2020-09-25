@@ -2142,6 +2142,24 @@ class MapEvaluator:
         self._cached_parameter_values = None
         self._cached_parameter_values_spatial = None
 
+    # workaround for the lru_cache pickle issue
+    # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        for key, value in state.items():
+            func = getattr(value, "__wrapped__", None)
+            if func is not None:
+                state[key] = func
+
+        return state
+
+    def __setstate__(self, state):
+        for key, value in state.items():
+            if key in ["_compute_npred", "_compute_flux_spatial"]:
+                state[key] = lru_cache()(value)
+
+        self.__dict__ = state
+
     @property
     def geom(self):
         """True energy map geometry (`~gammapy.maps.Geom`)"""

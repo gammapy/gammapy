@@ -72,18 +72,13 @@ class MapDatasetEventSampler:
                 continue
 
             evaluator = dataset.evaluators.get(model)
-
-            evaluator = copy.deepcopy(evaluator)
             flux = evaluator.compute_flux()
             npred = evaluator.apply_exposure(flux)
 
-            if hasattr(model, "temporal_model"):
-                if getattr(model, "temporal_model") is None:
-                    temporal_model = ConstantTemporalModel()
-                else:
-                    temporal_model = model.temporal_model
-            else:
+            if model.temporal_model is None:
                 temporal_model = ConstantTemporalModel()
+            else:
+                temporal_model = model.temporal_model
 
             table = self._sample_coord_time(npred, temporal_model, dataset.gti)
             if len(table) > 0:
