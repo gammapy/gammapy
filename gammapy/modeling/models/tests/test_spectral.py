@@ -519,6 +519,10 @@ def test_TemplateSpectralModel_compound():
     model = CompoundSpectralModel(template, correction, operator=operator.mul)
     assert np.allclose(model(energy), 2 * values)
 
+    model_mul = template * correction
+    assert isinstance(model_mul, CompoundSpectralModel)
+    assert np.allclose(model_mul(energy), 2 * values)
+
     model_dict = model.to_dict()
     assert model_dict["operator"] == "mul"
     model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])

@@ -77,6 +77,12 @@ class SpectralModel(Model):
             model = ConstantSpectralModel(const=model)
         return CompoundSpectralModel(self, model, operator.add)
 
+    def __mul__(self, other):
+        if isinstance(other, SpectralModel):
+            return CompoundSpectralModel(self, other, operator.mul)
+        else:
+            raise TypeError(f"Multiplication invalid for type {other!r}")
+
     def __radd__(self, model):
         return self.__add__(model)
 
