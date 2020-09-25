@@ -1179,7 +1179,7 @@ class MapDataset(Dataset):
 
         if self.counts is not None:
             kwargs["counts"] = self.counts.downsample(
-                factor=factor, preserve_counts=True, axis=axis_name, weights=self.mask_safe
+                factor=factor, preserve_counts=True, axis_name=axis_name, weights=self.mask_safe
             )
 
         if self.exposure is not None:
@@ -1192,13 +1192,13 @@ class MapDataset(Dataset):
 
         if self.background_model is not None:
             m = self.background_model.evaluate().downsample(
-                factor=factor, axis=axis_name, weights=self.mask_safe
+                factor=factor, axis_name=axis_name, weights=self.mask_safe
             )
             kwargs["models"] = BackgroundModel(map=m, datasets_names=[name])
 
         if self.edisp is not None:
             if axis_name is not None:
-                kwargs["edisp"] = self.edisp.downsample(factor=factor, axis=axis_name)
+                kwargs["edisp"] = self.edisp.downsample(factor=factor, axis_name=axis_name)
             else:
                 kwargs["edisp"] = self.edisp.copy()
 
@@ -1207,12 +1207,12 @@ class MapDataset(Dataset):
 
         if self.mask_safe is not None:
             kwargs["mask_safe"] = self.mask_safe.downsample(
-                factor=factor, preserve_counts=False, axis=axis_name
+                factor=factor, preserve_counts=False, axis_name=axis_name
             )
 
         if self.mask_fit is not None:
             kwargs["mask_fit"] = self.mask_fit.downsample(
-                factor=factor, preserve_counts=False, axis=axis_name
+                factor=factor, preserve_counts=False, axis_name=axis_name
             )
 
         return self.__class__(**kwargs)
@@ -1969,16 +1969,16 @@ class MapDatasetOnOff(MapDataset):
         counts_off = None
         if self.counts_off is not None:
             counts_off = self.counts_off.downsample(
-                factor=factor, preserve_counts=True, axis=axis_name, weights=self.mask_safe
+                factor=factor, preserve_counts=True, axis_name=axis_name, weights=self.mask_safe
             )
 
         acceptance, acceptance_off = None, None
         if self.acceptance_off is not None:
             acceptance = self.acceptance.downsample(
-                factor=factor, preserve_counts=False, axis=axis_name
+                factor=factor, preserve_counts=False, axis_name=axis_name
             )
             factor = self.counts_off_normalised.downsample(
-                factor=factor, preserve_counts=True, axis=axis_name, weights=self.mask_safe
+                factor=factor, preserve_counts=True, axis_name=axis_name, weights=self.mask_safe
             )
             acceptance_off = acceptance * counts_off / factor
 
