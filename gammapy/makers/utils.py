@@ -132,7 +132,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
 
     # Get altaz coords for map
     if oversampling is not None:
-        geom = geom.upsample(factor=oversampling, axis="energy")
+        geom = geom.upsample(factor=oversampling, axis_name="energy")
 
     map_coord = geom.to_image().get_coord()
     sky_coord = map_coord.skycoord
@@ -164,7 +164,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
     bkg_map = WcsNDMap(geom, data=data)
 
     if oversampling is not None:
-        bkg_map = bkg_map.downsample(factor=oversampling, axis="energy")
+        bkg_map = bkg_map.downsample(factor=oversampling, axis_name="energy")
 
     return bkg_map
 
