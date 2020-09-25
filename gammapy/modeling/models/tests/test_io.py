@@ -88,10 +88,6 @@ def test_dict_to_skymodels():
     assert "TemplateSpatialModel" in model2.spatial_model.tag
 
     assert not model2.spatial_model.normalize
-    assert model2.spectral_model.parameters["norm"].value == 2.1
-
-    # TODO problem of duplicate parameter name between TemplateSpatialModel and TemplateSpectralModel
-    # assert model2.parameters["norm"].value == 2.1 # fail
 
 
 @requires_data()

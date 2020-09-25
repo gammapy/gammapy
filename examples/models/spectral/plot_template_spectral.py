@@ -28,16 +28,28 @@ from gammapy.modeling.models import Models, SkyModel, TemplateSpectralModel
 energy_range = [0.1, 1] * u.TeV
 energy = np.array([1e6, 3e6, 1e7, 3e7]) * u.MeV
 values = np.array([4.4e-38, 2.0e-38, 8.8e-39, 3.9e-39]) * u.Unit("MeV-1 s-1 cm-2")
-model = TemplateSpectralModel(energy=energy, values=values)
-model.plot(energy_range)
+template = TemplateSpectralModel(energy=energy, values=values)
+template.plot(energy_range)
 plt.grid(which="both")
+
+# %%
+# Spectral correction
+# Corrections to templates can be applied by multiplication with a normalized spectral model,
+# for example `gammapy.modeling.models.PowerLawNormSpectralModel`.
+# This operation create a new `gammapy.modeling.models.CompoundSpectralModel`
+#
+from gammapy.modeling.models import PowerLawNormSpectralModel
+
+new_model = template * PowerLawNormSpectralModel(norm=2, tilt=0)
+
+print(new_model)
 
 # %%
 # YAML representation
 # -------------------
 # Here is an example YAML file using the model:
 
-model = SkyModel(spectral_model=model, name="template-model")
+model = SkyModel(spectral_model=template, name="template-model")
 models = Models([model])
 
 print(models.to_yaml())
