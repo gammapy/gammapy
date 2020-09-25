@@ -631,7 +631,10 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
     kwargs.setdefault("interp_kwargs", {"fill_value": None})
 
     spatial_model = ConstantSpatialModel()
-    spectral_model = TemplateSpectralModel(energy=energy, values=values, **kwargs)
+    spectral_model = (
+        TemplateSpectralModel(energy=energy, values=values, **kwargs)
+        * PowerLawNormSpectralModel()
+    )
     return SkyModel(
         spatial_model=spatial_model,
         spectral_model=spectral_model,

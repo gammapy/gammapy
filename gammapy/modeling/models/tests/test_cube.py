@@ -18,6 +18,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     PowerLawNormSpectralModel,
     TemplateSpatialModel,
+    CompoundSpectralModel,
     SkyModel,
     create_fermi_isotropic_diffuse_model,
 )
@@ -556,3 +557,4 @@ def test_fermi_isotropic():
 
     assert_allclose(flux.value, 1.463e-13, rtol=1e-3)
     assert flux.unit == "MeV-1 cm-2 s-1 sr-1"
+    assert isinstance(model.spectral_model, CompoundSpectralModel)
