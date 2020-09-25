@@ -74,10 +74,8 @@ class MapDatasetEventSampler:
             evaluator = dataset.evaluators.get(model)
 
             evaluator = copy.deepcopy(evaluator)
-            evaluator.use_cache = False
-            evaluator.model.apply_irf["psf"] = False
-            evaluator.model.apply_irf["edisp"] = False
-            npred = evaluator.compute_npred()
+            flux = evaluator.compute_flux()
+            npred = evaluator.apply_exposure(flux)
 
             if hasattr(model, "temporal_model"):
                 if getattr(model, "temporal_model") is None:
