@@ -74,6 +74,7 @@ class MapDatasetEventSampler:
             evaluator = dataset.evaluators.get(model)
 
             evaluator = copy.deepcopy(evaluator)
+            evaluator.use_cache = False
             evaluator.model.apply_irf["psf"] = False
             evaluator.model.apply_irf["edisp"] = False
             npred = evaluator.compute_npred()
