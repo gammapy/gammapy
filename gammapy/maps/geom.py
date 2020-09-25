@@ -1631,14 +1631,14 @@ class Geom(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def downsample(self, factor, axis):
+    def downsample(self, factor, axis_name):
         """Downsample the spatial dimension of the geometry by a given factor.
 
         Parameters
         ----------
         factor : int
             Downsampling factor.
-        axis : str
+        axis_name : str
             Axis to downsample.
 
         Returns
@@ -1650,14 +1650,14 @@ class Geom(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def upsample(self, factor, axis):
+    def upsample(self, factor, axis_name):
         """Upsample the spatial dimension of the geometry by a given factor.
 
         Parameters
         ----------
         factor : int
             Upsampling factor.
-        axis : str
+        axis_name : str
             Axis to upsample.
 
         Returns

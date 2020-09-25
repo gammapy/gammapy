@@ -407,7 +407,7 @@ def test_wcsndmap_upsample_axis():
     m = WcsNDMap(geom, unit="m2")
     m.data += 1
 
-    m2 = m.upsample(2, preserve_counts=True, axis="test")
+    m2 = m.upsample(2, preserve_counts=True, axis_name="test")
     assert m2.data.shape == (8, 4, 4)
     assert_allclose(m.data.sum(), m2.data.sum())
 
@@ -418,7 +418,7 @@ def test_wcsndmap_downsample_axis():
     m = WcsNDMap(geom, unit="m2")
     m.data += 1
 
-    m2 = m.downsample(2, preserve_counts=True, axis="test")
+    m2 = m.downsample(2, preserve_counts=True, axis_name="test")
     assert m2.data.shape == (2, 4, 4)
 
 

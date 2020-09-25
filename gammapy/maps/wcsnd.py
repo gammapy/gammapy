@@ -294,18 +294,18 @@ class WcsNDMap(WcsMap):
 
         return map_out
 
-    def upsample(self, factor, order=0, preserve_counts=True, axis=None):
-        geom = self.geom.upsample(factor, axis=axis)
+    def upsample(self, factor, order=0, preserve_counts=True, axis_name=None):
+        geom = self.geom.upsample(factor, axis_name=axis_name)
         idx = geom.get_idx()
 
-        if axis is None:
+        if axis_name is None:
             pix = (
                 (idx[0] - 0.5 * (factor - 1)) / factor,
                 (idx[1] - 0.5 * (factor - 1)) / factor,
             ) + idx[2:]
         else:
             pix = list(idx)
-            idx_ax = self.geom.get_axis_index_by_name(axis)
+            idx_ax = self.geom.get_axis_index_by_name(axis_name)
             pix[idx_ax] = (pix[idx_ax] - 0.5 * (factor - 1)) / factor
 
         data = scipy.ndimage.map_coordinates(
@@ -313,21 +313,21 @@ class WcsNDMap(WcsMap):
         )
 
         if preserve_counts:
-            if axis is None:
+            if axis_name is None:
                 data /= factor ** 2
             else:
                 data /= factor
 
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
-    def downsample(self, factor, preserve_counts=True, axis=None, weights=None):
-        geom = self.geom.downsample(factor, axis=axis)
+    def downsample(self, factor, preserve_counts=True, axis_name=None, weights=None):
+        geom = self.geom.downsample(factor, axis_name=axis_name)
 
-        if axis is None:
+        if axis_name is None:
             block_size = (factor, factor) + (1,) * len(self.geom.axes)
         else:
             block_size = [1] * self.data.ndim
-            idx = self.geom.get_axis_index_by_name(axis)
+            idx = self.geom.get_axis_index_by_name(axis_name)
             block_size[idx + 2] = factor
 
         func = np.nansum if preserve_counts else np.nanmean

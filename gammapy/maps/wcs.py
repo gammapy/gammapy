@@ -710,8 +710,8 @@ class WcsGeom(Geom):
         cdelt = copy.deepcopy(self._cdelt)
         return self.__class__(wcs, npix, cdelt=cdelt, axes=copy.deepcopy(self.axes))
 
-    def downsample(self, factor, axis=None):
-        if axis is None:
+    def downsample(self, factor, axis_name=None):
+        if axis_name is None:
             if np.any(np.mod(self.npix, factor) > 0):
                 raise ValueError(
                     f"Spatial shape not divisible by factor {factor!r} in all axes."
@@ -729,12 +729,12 @@ class WcsGeom(Geom):
                 )
 
             axes = copy.deepcopy(self.axes)
-            idx = self.get_axis_index_by_name(axis)
+            idx = self.get_axis_index_by_name(axis_name)
             axes[idx] = axes[idx].downsample(factor)
             return self._init_copy(axes=axes)
 
-    def upsample(self, factor, axis=None):
-        if axis is None:
+    def upsample(self, factor, axis_name=None):
+        if axis_name is None:
             npix = (self.npix[0] * factor, self.npix[1] * factor)
             cdelt = (self._cdelt[0] / factor, self._cdelt[1] / factor)
             wcs = get_resampled_wcs(self.wcs, factor, False)
@@ -745,7 +745,7 @@ class WcsGeom(Geom):
                     "Upsampling in non-spatial axes not supported for irregular geometries"
                 )
             axes = copy.deepcopy(self.axes)
-            idx = self.get_axis_index_by_name(axis)
+            idx = self.get_axis_index_by_name(axis_name)
             axes[idx] = axes[idx].upsample(factor)
             return self._init_copy(axes=axes)
 

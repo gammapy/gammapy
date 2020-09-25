@@ -1152,7 +1152,7 @@ class MapDataset(Dataset):
 
         return self.__class__(**kwargs)
 
-    def downsample(self, factor, axis=None, name=None):
+    def downsample(self, factor, axis_name=None, name=None):
         """Downsample map dataset.
 
         The PSFMap and EDispKernelMap are not downsampled, except if
@@ -1162,8 +1162,8 @@ class MapDataset(Dataset):
         ----------
         factor : int
             Downsampling factor.
-        axis : str
-            Which axis to downsample. By default only spatial axes are downsampled.
+        axis_name : str
+            Which non-spatial axis to downsample. By default only spatial axes are downsampled.
         name : str
             Name of the downsampled dataset.
 
@@ -1178,11 +1178,11 @@ class MapDataset(Dataset):
 
         if self.counts is not None:
             kwargs["counts"] = self.counts.downsample(
-                factor=factor, preserve_counts=True, axis=axis, weights=self.mask_safe
+                factor=factor, preserve_counts=True, axis_name=axis_name, weights=self.mask_safe
             )
 
         if self.exposure is not None:
-            if axis is None:
+            if axis_name is None:
                 kwargs["exposure"] = self.exposure.downsample(
                     factor=factor, preserve_counts=False
                 )
@@ -1191,13 +1191,13 @@ class MapDataset(Dataset):
 
         if self.background_model is not None:
             m = self.background_model.evaluate().downsample(
-                factor=factor, axis=axis, weights=self.mask_safe
+                factor=factor, axis_name=axis_name, weights=self.mask_safe
             )
             kwargs["models"] = BackgroundModel(map=m, datasets_names=[name])
 
         if self.edisp is not None:
-            if axis is not None:
-                kwargs["edisp"] = self.edisp.downsample(factor=factor, axis=axis)
+            if axis_name is not None:
+                kwargs["edisp"] = self.edisp.downsample(factor=factor, axis_name=axis_name)
             else:
                 kwargs["edisp"] = self.edisp.copy()
 
@@ -1206,12 +1206,12 @@ class MapDataset(Dataset):
 
         if self.mask_safe is not None:
             kwargs["mask_safe"] = self.mask_safe.downsample(
-                factor=factor, preserve_counts=False, axis=axis
+                factor=factor, preserve_counts=False, axis_name=axis_name
             )
 
         if self.mask_fit is not None:
             kwargs["mask_fit"] = self.mask_fit.downsample(
-                factor=factor, preserve_counts=False, axis=axis
+                factor=factor, preserve_counts=False, axis_name=axis_name
             )
 
         return self.__class__(**kwargs)
@@ -1942,8 +1942,51 @@ class MapDatasetOnOff(MapDataset):
 
         return cutout_dataset
 
-    def downsample(self):
-        raise NotImplementedError
+    def downsample(self, factor, axis_name=None, name=None):
+        """Downsample map dataset.
+
+        The PSFMap and EDispKernelMap are not downsampled, except if
+        a corresponding axis is given.
+
+        Parameters
+        ----------
+        factor : int
+            Downsampling factor.
+        axis_name : str
+            Which non-spatial axis to downsample. By default only spatial axes are downsampled.
+        name : str
+            Name of the downsampled dataset.
+
+        Returns
+        -------
+        dataset : `MapDatasetOnOff`
+            Downsampled map dataset.
+        """
+
+        dataset = super().downsample(factor, axis_name, name)
+
+        counts_off = None
+        if self.counts_off is not None:
+            counts_off = self.counts_off.downsample(
+                factor=factor, preserve_counts=True, axis_name=axis_name, weights=self.mask_safe
+            )
+
+        acceptance, acceptance_off = None, None
+        if self.acceptance_off is not None:
+            acceptance = self.acceptance.downsample(
+                factor=factor, preserve_counts=False, axis_name=axis_name
+            )
+            factor = self.counts_off_normalised.downsample(
+                factor=factor, preserve_counts=True, axis_name=axis_name, weights=self.mask_safe
+            )
+            acceptance_off = acceptance * counts_off / factor
+
+        return self.__class__.from_map_dataset(
+            dataset,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            counts_off=counts_off
+        )
 
     def pad(self):
         raise NotImplementedError
