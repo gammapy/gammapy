@@ -570,21 +570,6 @@ class MapDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
-    @property
-    def _energy_axis(self):
-        if self.counts:
-            return self.counts.geom.get_axis_by_name("energy")
-        elif self.background_model:
-            return self.background_model.map.geom.get_axis_by_name("energy")
-        elif self.exposure:
-            return self.exposure.geom.get_axis_by_name("energy_true")
-        elif self.psf:
-            return self.psf.psf_map.geom.get_axis_by_name("energy_true")
-        elif self.edisp:
-            return self.edisp.edisp_map.geom.get_axis_by_name("energy_true")
-
-        raise ValueError("Either 'counts', 'background_model', 'exposure', 'psf' or 'edisp' must be defined.")
-
     def energy_range(self, region=None):
         """Energy range of the region in the safe mask.
 
@@ -600,7 +585,7 @@ class MapDataset(Dataset):
         energy_range : `~astropy.units.Quantity`
             The safe energy range.
         """
-        energy = self._energy_axis.edges
+        energy = self._geom.get_axis_by_name("energy").edges
         e_min, e_max = energy[:-1], energy[1:]
 
         if self.mask_safe:

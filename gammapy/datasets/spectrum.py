@@ -249,17 +249,6 @@ class SpectrumDataset(Dataset):
             raise ValueError(f"Must be `RegionNDMap` and not {type(mask)}")
 
     @property
-    def _energy_axis(self):
-        if self.counts is not None:
-            e_axis = self.counts.geom.get_axis_by_name("energy")
-        elif self.edisp is not None:
-            e_axis = self.edisp.data.axis("energy")
-        elif self.aeff is not None:
-            # assume e_reco = e_true
-            e_axis = self.aeff.data.axis("energy_true")
-        return e_axis
-
-    @property
     def _geom(self):
         """Main analysis geometry"""
         if self.counts is not None:
@@ -325,7 +314,7 @@ class SpectrumDataset(Dataset):
     # TODO: make this a method to support different methods?
     def energy_range(self):
         """Energy range defined by the safe mask"""
-        energy = self._energy_axis.edges
+        energy = self._geom.get_axis_by_name("energy").edges
         e_min, e_max = energy[:-1], energy[1:]
 
         if self.mask_safe is not None:
