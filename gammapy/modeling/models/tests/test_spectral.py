@@ -512,8 +512,8 @@ def test_TemplateSpectralModel_evaluate_tiny():
 
 def test_TemplateSpectralModel_compound():
     energy = [1.00e06, 1.25e06, 1.58e06, 1.99e06] * u.MeV
-
     values = [4.39e-7, 1.96e-7, 8.80e-7, 3.94e-7] * u.Unit("MeV-1 s-1 sr-1")
+
     template = TemplateSpectralModel(energy=energy, values=values)
     correction = PowerLawNormSpectralModel(norm=2)
     model = CompoundSpectralModel(template, correction, operator=operator.mul)
