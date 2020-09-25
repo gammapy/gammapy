@@ -125,8 +125,29 @@ class MapAxes(Sequence):
     def __add__(self, other):
         return self.__class__(list(self) + list(other))
 
-    def __setitem__(self, key, value):
-        self._axes[key] = value
+    def upsample(self, factor, axis_name):
+        """"""
+        axes = []
+
+        for ax in self:
+            if ax.name == axis_name:
+                ax = ax.upsample(factor=factor)
+
+            axes.append(ax.copy())
+
+        return self.__class__(axes=axes)
+
+    def downsample(self, factor, axis_name):
+        """"""
+        axes = []
+
+        for ax in self:
+            if ax.name == axis_name:
+                ax = ax.downsample(factor=factor)
+
+            axes.append(ax.copy())
+
+        return self.__class__(axes=axes)
 
     def __getitem__(self, idx):
         if isinstance(idx, (int, slice)):
@@ -139,19 +160,53 @@ class MapAxes(Sequence):
         else:
             raise TypeError(f"Invalid type: {type(idx)!r}")
 
-    def to_fits_columns(self, axis_names=None):
+    def _get_fits_header(self):
+        header = fits.Header()
+
+        for idx, ax in enumerate(self, start=1):
+            key = "AXCOLS%i" % idx
+            name = ax.name.upper()
+            if ax.name == "energy" and ax.node_type == "edges":
+                header[key] = "E_MIN,E_MAX"
+            elif ax.name == "energy" and ax.node_type == "center":
+                header[key] = "ENERGY"
+            elif ax.node_type == "edges":
+                header[key] = f"{name}_MIN,{name}_MAX"
+            elif ax.node_type == "center":
+                header[key] = name
+            else:
+                raise ValueError(f"Invalid node type {ax.node_type!r}")
+
+            key_interp = "INTERP%i" % idx
+            header[key_interp] = ax.interp
+        return header
+
+    def to_table_hdu(self, format=None, hdu=None):
         """Make FITS table columns for map axes.
 
         Parameters
         ----------
-        axes : list
-            Python list of `MapAxis` objects
+        format : {}
 
         Returns
         -------
-        cols : list
-            Python list of `~astropy.io.fits.Column`
+        hdu : `~astropy.io.fits.BinTableHDU`
+            Bin table HDU.
         """
+        # FIXME: Check whether convention is compatible with
+        # dimensionality of geometry
+        if format == "fgst-ccube":
+            hdu = "EBOUNDS"
+            axis_names = ["energy"]
+        elif format == "fgst-template":
+            hdu = "ENERGIES"
+            axis_names = ["energy"]
+        elif format == "gadf" and hdu is not None:
+            if hdu:
+                hdu = f"{hdu}_BANDS"
+            else:
+                hdu = "BANDS"
+
         size = np.prod([ax.nbin for ax in self])
         chan = np.arange(0, size)
         cols = [fits.Column("CHANNEL", "I", array=chan)]
@@ -177,7 +232,8 @@ class MapAxes(Sequence):
                 unit = ax.unit.to_string("fits")
                 cols.append(fits.Column(colname, "E", array=array, unit=unit))
 
-        return cols
+        header = self._get_fits_header()
+        return fits.BinTableHDU.from_columns(cols, hdu=hdu, header=header)
 
     @classmethod
     def from_table_hdu(cls, hdu, format):
@@ -1343,30 +1399,11 @@ class Geom(abc.ABC):
         return cls.from_header(hdu.header, hdu_bands)
 
     def to_bands_hdu(self, hdu=None, hdu_skymap=None, format=None):
-        header = fits.Header()
-        self._fill_header_from_axes(header)
-        axis_names = None
-
-        # FIXME: Check whether convention is compatible with
-        # dimensionality of geometry
-
-        if format == "fgst-ccube":
-            hdu = "EBOUNDS"
-            axis_names = ["energy"]
-        elif format == "fgst-template":
-            hdu = "ENERGIES"
-            axis_names = ["energy"]
-        elif format == "gadf" and hdu is None:
-            if hdu_skymap:
-                hdu = f"{hdu_skymap}_BANDS"
-            else:
-                hdu = "BANDS"
-        # else:
-        #     raise ValueError('Unknown conv: {}'.format(conv))
-
-        cols = self.axes.to_fits_columns(axis_names)
-        cols += self._make_bands_cols()
-        return fits.BinTableHDU.from_columns(cols, header, name=hdu)
+        table_hdu = self.axes.to_table_hdu(format=format, hdu=hdu_skymap)
+        cols = self._make_bands_cols()
+        return fits.BinTableHDU.from_columns(
+            [table_hdu, cols], header=table_hdu.header, name=table_hdu.name
+        )
 
     @abc.abstractmethod
     def _make_bands_cols(self):
@@ -1778,24 +1815,6 @@ class Geom(abc.ABC):
     def solid_angle(self):
         """Solid angle (`~astropy.units.Quantity` in ``sr``)."""
         pass
-
-    def _fill_header_from_axes(self, header):
-        for idx, ax in enumerate(self.axes, start=1):
-            key = "AXCOLS%i" % idx
-            name = ax.name.upper()
-            if ax.name == "energy" and ax.node_type == "edges":
-                header[key] = "E_MIN,E_MAX"
-            elif ax.name == "energy" and ax.node_type == "center":
-                header[key] = "ENERGY"
-            elif ax.node_type == "edges":
-                header[key] = f"{name}_MIN,{name}_MAX"
-            elif ax.node_type == "center":
-                header[key] = name
-            else:
-                raise ValueError(f"Invalid node type {ax.node_type!r}")
-
-            key_interp = "INTERP%i" % idx
-            header[key_interp] = ax._interp
 
     @property
     def is_image(self):

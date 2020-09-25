@@ -193,15 +193,11 @@ class RegionGeom(Geom):
         return self._init_copy(axes=None)
 
     def upsample(self, factor, axis_name):
-        axes = copy.deepcopy(self.axes)
-        idx = self.get_axis_index_by_name(axis_name)
-        axes[idx] = axes[idx].upsample(factor)
+        axes = self.axes.upsample(factor=factor, axis_name=axis_name)
         return self._init_copy(axes=axes)
 
     def downsample(self, factor, axis_name):
-        axes = copy.deepcopy(self.axes)
-        idx = self.get_axis_index_by_name(axis_name)
-        axes[idx] = axes[idx].downsample(factor)
+        axes = self.axes.downsample(factor=factor, axis_name=axis_name)
         return self._init_copy(axes=axes)
 
     def pix_to_coord(self, pix):

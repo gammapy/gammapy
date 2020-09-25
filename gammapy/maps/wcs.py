@@ -726,10 +726,7 @@ class WcsGeom(Geom):
                 raise NotImplementedError(
                     "Upsampling in non-spatial axes not supported for irregular geometries"
                 )
-
-            axes = copy.deepcopy(self.axes)
-            idx = self.get_axis_index_by_name(axis_name)
-            axes[idx] = axes[idx].downsample(factor)
+            axes = self.axes.downsample(factor=factor, axis_name=axis_name)
             return self._init_copy(axes=axes)
 
     def upsample(self, factor, axis_name=None):
@@ -743,9 +740,7 @@ class WcsGeom(Geom):
                 raise NotImplementedError(
                     "Upsampling in non-spatial axes not supported for irregular geometries"
                 )
-            axes = copy.deepcopy(self.axes)
-            idx = self.get_axis_index_by_name(axis_name)
-            axes[idx] = axes[idx].upsample(factor)
+            axes = self.axes.upsample(factor=factor, axis_name=axis_name)
             return self._init_copy(axes=axes)
 
     def to_binsz(self, binsz):
