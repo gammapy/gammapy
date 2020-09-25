@@ -590,7 +590,7 @@ class MapDataset(Dataset):
 
         if self.mask_safe:
             if self.mask_safe.data.any():
-                mask_safe = self.mask_safe.get_spectrum(region, np.any)
+                mask_safe = self.mask_safe.get_spectrum(region, np.logical_or)
                 e_min = e_min[mask_safe.data[:, 0, 0]]
                 e_max = e_max[mask_safe.data[:, 0, 0]]
             else:
