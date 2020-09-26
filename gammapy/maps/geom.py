@@ -115,9 +115,26 @@ def pix_to_coord(edges, pix, interp="lin"):
 
 
 class MapAxes(Sequence):
-    """MapAxis container class"""
+    """MapAxis container class.
+
+    Parameters
+    ----------
+    axes : list of `MapAxis`
+        List of map axis objects.
+    """
     def __init__(self, axes):
+        unique_names = []
+        for ax in axes:
+            if ax.name in unique_names:
+                raise (ValueError("Model names must be unique"))
+            unique_names.append(ax.name)
+
         self._axes = axes
+
+    @property
+    def names(self):
+        """Names of the axes"""
+        return [ax.name for ax in self]
 
     def __len__(self):
         return len(self._axes)
@@ -126,7 +143,9 @@ class MapAxes(Sequence):
         return self.__class__(list(self) + list(other))
 
     def upsample(self, factor, axis_name):
-        """"""
+        """Upsample axis by a given factor
+
+        """
         axes = []
 
         for ax in self:
@@ -138,7 +157,9 @@ class MapAxes(Sequence):
         return self.__class__(axes=axes)
 
     def downsample(self, factor, axis_name):
-        """"""
+        """Downsample axis by a given factor
+
+        """
         axes = []
 
         for ax in self:
@@ -156,7 +177,7 @@ class MapAxes(Sequence):
             for ax in self._axes:
                 if ax.name == idx:
                     return ax
-            raise IndexError(f"No axes: {idx!r}")
+            raise KeyError(f"No axes: {idx!r}")
         else:
             raise TypeError(f"Invalid type: {type(idx)!r}")
 
@@ -178,7 +199,7 @@ class MapAxes(Sequence):
             header = fits.Header()
 
         for idx, ax in enumerate(self, start=1):
-            key = "AXCOLS%i" % idx
+            key = f"AXCOLS{idx}"
             name = ax.name.upper()
             if ax.name == "energy" and ax.node_type == "edges":
                 header[key] = "E_MIN,E_MAX"
@@ -191,7 +212,7 @@ class MapAxes(Sequence):
             else:
                 raise ValueError(f"Invalid node type {ax.node_type!r}")
 
-            key_interp = "INTERP%i" % idx
+            key_interp = f"INTERP{idx}"
             header[key_interp] = ax.interp
         return header
 
@@ -200,7 +221,7 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        format : {"gadf", "fgts-ccube", "fgst-template"}
+        format : {"gadf", "fgst-ccube", "fgst-template"}
             Format to use.
         prefix : str
             HDU name prefix to use
@@ -239,8 +260,7 @@ class MapAxes(Sequence):
             if name == "ENERGY":
                 colnames = ["ENERGY", "E_MIN", "E_MAX"]
             else:
-                s = f"AXIS{idx}"if name == "" else name
-                colnames = [s, s + "_MIN", s + "_MAX"]
+                colnames = [name, name + "_MIN", name + "_MAX"]
 
             for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
                 array = np.ravel(v[idx])
@@ -285,10 +305,7 @@ class MapAxes(Sequence):
             if ax.name == "":
                 ax.name = f"axis{idx}"
 
-            if ax.name not in [ax.name for ax in axes_out]:
-                axes_out += [ax]
-            else:
-                raise ValueError(f"Duplicated axis name: '{ax.name}'")
+            axes_out.append(ax)
 
         return cls(axes_out)
 
@@ -980,6 +997,25 @@ class MapAxis:
 
         return self._up_down_sample(nbin)
 
+    def to_header(self, header, format="ogip"):
+        """"""
+
+        if format == "ogip":
+            header["EXTNAME"] = "EBOUNDS", "Name of this binary table extension"
+            header["TELESCOP"] = "DUMMY", "Mission/satellite name"
+            header["INSTRUME"] = "DUMMY", "Instrument/detector"
+            header["FILTER"] = "None", "Filter information"
+            header["CHANTYPE"] = "PHA", "Type of channels (PHA, PI etc)"
+            header["DETCHANS"] = self.nbin, "Total number of detector PHA channels"
+            header["HDUCLASS"] = "OGIP", "Organisation devising file format"
+            header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
+            header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
+            header["HDUVERS"] = "1.2.0", "Version of file format"
+        else:
+            raise ValueError(f"Unknown format {format}")
+
+        return header
+
     def to_table_hdu(self, format="ogip"):
         """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
 
@@ -991,7 +1027,6 @@ class MapAxis:
         ----------
         format : {"ogip", "ogip-sherpa"}
             Format specification
-
 
         Returns
         -------
@@ -1015,18 +1050,7 @@ class MapAxis:
         table["E_MAX"] = edges[1:]
 
         hdu = fits.BinTableHDU(table)
-
-        header = hdu.header
-        header["EXTNAME"] = "EBOUNDS", "Name of this binary table extension"
-        header["TELESCOP"] = "DUMMY", "Mission/satellite name"
-        header["INSTRUME"] = "DUMMY", "Instrument/detector"
-        header["FILTER"] = "None", "Filter information"
-        header["CHANTYPE"] = "PHA", "Type of channels (PHA, PI etc)"
-        header["DETCHANS"] = self.nbin, "Total number of detector PHA channels"
-        header["HDUCLASS"] = "OGIP", "Organisation devising file format"
-        header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
-        header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
-        header["HDUVERS"] = "1.2.0", "Version of file format"
+        hdu.header = self.to_header(hdu.header, format=format)
         return hdu
 
     @classmethod
@@ -1377,10 +1401,6 @@ class Geom(abc.ABC):
     def center_skydir(self):
         pass
 
-    @property
-    def axes_names(self):
-        return [ax.name for ax in self.axes]
-
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
         """Load a geometry object from a FITS HDUList.
@@ -1415,7 +1435,6 @@ class Geom(abc.ABC):
         return cls.from_header(hdu.header, hdu_bands)
 
     def to_bands_hdu(self, hdu=None, hdu_skymap=None, format=None):
-
         table_hdu = self.axes.to_table_hdu(format=format, prefix=hdu_skymap)
         cols = table_hdu.columns.columns
         cols.extend(self._make_bands_cols())
@@ -1865,8 +1884,7 @@ class Geom(abc.ABC):
         axis : `~gammapy.maps.MapAxis`
             Axis
         """
-        axes = {axis.name.upper(): axis for axis in self.axes}
-        return axes[name.upper()]
+        return self.axes[name]
 
     def get_axis_index_by_name(self, name):
         """Get an axis index by name (case in-sensitive).

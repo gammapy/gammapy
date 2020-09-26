@@ -584,7 +584,7 @@ class WcsGeom(Geom):
             is_finite = np.isfinite(coords[0])
             coords = tuple([c[is_finite] for c in coords])
 
-        axes_names = ["lon", "lat"] + [ax.name for ax in self.axes]
+        axes_names = ["lon", "lat"] + self.axes.names
         cdict = dict(zip(axes_names, coords))
 
         if frame is None:

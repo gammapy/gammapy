@@ -559,7 +559,7 @@ class WcsNDMap(WcsMap):
         spectrum : `~gammapy.maps.RegionNDMap`
             Spectrum in the given region.
         """
-        has_energy_axis = ("energy" in self.geom.axes_names) ^ ("energy_true" in self.geom.axes_names)
+        has_energy_axis = ("energy" in self.geom.axes.names) ^ ("energy_true" in self.geom.axes.names)
 
         if not has_energy_axis:
             raise ValueError("Energy axis required")

@@ -561,9 +561,11 @@ class MapDataset(Dataset):
         if drop:
             geom = geom.drop(drop)
             geom_squash = geom_squash.squash(drop)
-        if "energy_true" in geom.axes_names:
+
+        if "energy_true" in geom.axes.names:
             ax = geom.get_axis_by_name("energy_true").copy(name="energy")
             geom = geom.to_image().to_cube([ax])
+
         coords = geom.get_coord()
         data = mask.get_by_coord(coords).astype(bool)
         return Map.from_geom(geom=geom_squash, data=data[:, np.newaxis])

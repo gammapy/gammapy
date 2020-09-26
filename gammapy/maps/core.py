@@ -571,8 +571,7 @@ class Map(abc.ABC):
             image = m_wcs.get_image_by_coord({'energy': 0.5 * u.TeV, 'time': 1 * u.h})
         """
         if isinstance(coords, tuple):
-            axes_names = [_.name for _ in self.geom.axes]
-            coords = dict(zip(axes_names, coords))
+            coords = dict(zip(self.geom.axes.names, coords))
 
         idx = []
         for ax in self.geom.axes:
