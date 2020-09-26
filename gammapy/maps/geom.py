@@ -161,7 +161,19 @@ class MapAxes(Sequence):
             raise TypeError(f"Invalid type: {type(idx)!r}")
 
     def to_header(self, header=None):
-        """"""
+        """Convert axes to FITS header
+
+        Parameters
+        ----------
+        header : `~astropy.io.fits.Header`
+            If a header is provided it is extended with the information.
+            Otherwise a new one is created.
+
+        Returns
+        -------
+        header : `~astropy.io.fits.Header`
+            FITS header.
+        """
         if header is None:
             header = fits.Header()
 
@@ -183,12 +195,15 @@ class MapAxes(Sequence):
             header[key_interp] = ax.interp
         return header
 
-    def to_table_hdu(self, format=None, hdu=None, hdu_skymap=None):
+    def to_table_hdu(self, format=None, prefix=None):
         """Make FITS table columns for map axes.
 
         Parameters
         ----------
-        format : {}
+        format : {"gadf", "fgts-ccube", "fgst-template"}
+            Format to use.
+        prefix : str
+            HDU name prefix to use
 
         Returns
         -------
@@ -197,43 +212,38 @@ class MapAxes(Sequence):
         """
         # FIXME: Check whether convention is compatible with
         #  dimensionality of geometry and simplify!!!
-        axis_names = None
 
-        if hdu is None:
-            if format == "fgst-ccube":
-                hdu = "EBOUNDS"
-                axis_names = ["energy"]
-            elif format == "fgst-template":
-                hdu = "ENERGIES"
-                axis_names = ["energy"]
-            elif format == "gadf" and hdu_skymap is not None:
-                if hdu_skymap:
-                    hdu = f"{hdu_skymap}_BANDS"
-                else:
-                    hdu = "BANDS"
+        if format == "fgst-ccube":
+            hdu = "EBOUNDS"
+        elif format == "fgst-template":
+            hdu = "ENERGIES"
+        elif format == "gadf" or format is None:
+            if prefix:
+                hdu = f"{prefix}_BANDS"
+            else:
+                hdu = "BANDS"
+        else:
+            raise ValueError(f"Unknown format {format}")
 
         size = np.prod([ax.nbin for ax in self])
         chan = np.arange(0, size)
         cols = [fits.Column("CHANNEL", "I", array=chan)]
 
-        if axis_names is None:
-            axis_names = [ax.name for ax in self]
-        axis_names = [_.upper() for _ in axis_names]
-
         axes_ctr = np.meshgrid(*[ax.center for ax in self])
         axes_min = np.meshgrid(*[ax.edges[:-1] for ax in self])
         axes_max = np.meshgrid(*[ax.edges[1:] for ax in self])
 
-        for i, (ax, name) in enumerate(zip(self, axis_names)):
+        for idx, ax in enumerate(self):
+            name = ax.name.upper()
 
             if name == "ENERGY":
                 colnames = ["ENERGY", "E_MIN", "E_MAX"]
             else:
-                s = "AXIS%i" % i if name == "" else name
+                s = f"AXIS{idx}"if name == "" else name
                 colnames = [s, s + "_MIN", s + "_MAX"]
 
             for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
-                array = np.ravel(v[i])
+                array = np.ravel(v[idx])
                 unit = ax.unit.to_string("fits")
                 cols.append(fits.Column(colname, "E", array=array, unit=unit))
 
@@ -241,8 +251,9 @@ class MapAxes(Sequence):
         return fits.BinTableHDU.from_columns(cols, name=hdu, header=header)
 
     @classmethod
-    def from_table_hdu(cls, hdu, format):
-        """Create MapAxes from BinTableHDU"""
+    def from_table_hdu(cls, hdu, format=None):
+        """Create MapAxes from BinTableHDU
+        """
         if hdu is None:
             return cls([])
 
@@ -272,7 +283,7 @@ class MapAxes(Sequence):
                 ax = MapAxis(ax)
 
             if ax.name == "":
-                ax.name = "axis{}".format(idx)
+                ax.name = f"axis{idx}"
 
             if ax.name not in [ax.name for ax in axes_out]:
                 axes_out += [ax]
@@ -318,8 +329,7 @@ class MapAxis:
     # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
-
-        self.name = name
+        self._name = name
 
         if len(nodes) != len(np.unique(nodes)):
             raise ValueError("MapAxis: node values must be unique")
@@ -416,8 +426,9 @@ class MapAxis:
         return self._name
 
     @name.setter
-    def name(self, val):
-        self._name = val
+    def name(self, value):
+        """Name of the axis."""
+        self._name = value
 
     @lazyproperty
     def edges(self):
@@ -1404,7 +1415,8 @@ class Geom(abc.ABC):
         return cls.from_header(hdu.header, hdu_bands)
 
     def to_bands_hdu(self, hdu=None, hdu_skymap=None, format=None):
-        table_hdu = self.axes.to_table_hdu(format=format, hdu=hdu, hdu_skymap=hdu_skymap)
+
+        table_hdu = self.axes.to_table_hdu(format=format, prefix=hdu_skymap)
         cols = table_hdu.columns.columns
         cols.extend(self._make_bands_cols())
         return fits.BinTableHDU.from_columns(
