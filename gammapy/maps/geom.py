@@ -160,8 +160,10 @@ class MapAxes(Sequence):
         else:
             raise TypeError(f"Invalid type: {type(idx)!r}")
 
-    def _get_fits_header(self):
-        header = fits.Header()
+    def to_header(self, header=None):
+        """"""
+        if header is None:
+            header = fits.Header()
 
         for idx, ax in enumerate(self, start=1):
             key = "AXCOLS%i" % idx
@@ -181,7 +183,7 @@ class MapAxes(Sequence):
             header[key_interp] = ax.interp
         return header
 
-    def to_table_hdu(self, format=None, hdu=None):
+    def to_table_hdu(self, format=None, hdu=None, hdu_skymap=None):
         """Make FITS table columns for map axes.
 
         Parameters
@@ -194,18 +196,21 @@ class MapAxes(Sequence):
             Bin table HDU.
         """
         # FIXME: Check whether convention is compatible with
-        # dimensionality of geometry
-        if format == "fgst-ccube":
-            hdu = "EBOUNDS"
-            axis_names = ["energy"]
-        elif format == "fgst-template":
-            hdu = "ENERGIES"
-            axis_names = ["energy"]
-        elif format == "gadf" and hdu is not None:
-            if hdu:
-                hdu = f"{hdu}_BANDS"
-            else:
-                hdu = "BANDS"
+        #  dimensionality of geometry and simplify!!!
+        axis_names = None
+
+        if hdu is None:
+            if format == "fgst-ccube":
+                hdu = "EBOUNDS"
+                axis_names = ["energy"]
+            elif format == "fgst-template":
+                hdu = "ENERGIES"
+                axis_names = ["energy"]
+            elif format == "gadf" and hdu_skymap is not None:
+                if hdu_skymap:
+                    hdu = f"{hdu_skymap}_BANDS"
+                else:
+                    hdu = "BANDS"
 
         size = np.prod([ax.nbin for ax in self])
         chan = np.arange(0, size)
@@ -232,8 +237,8 @@ class MapAxes(Sequence):
                 unit = ax.unit.to_string("fits")
                 cols.append(fits.Column(colname, "E", array=array, unit=unit))
 
-        header = self._get_fits_header()
-        return fits.BinTableHDU.from_columns(cols, hdu=hdu, header=header)
+        header = self.to_header()
+        return fits.BinTableHDU.from_columns(cols, name=hdu, header=header)
 
     @classmethod
     def from_table_hdu(cls, hdu, format):
@@ -1399,10 +1404,11 @@ class Geom(abc.ABC):
         return cls.from_header(hdu.header, hdu_bands)
 
     def to_bands_hdu(self, hdu=None, hdu_skymap=None, format=None):
-        table_hdu = self.axes.to_table_hdu(format=format, hdu=hdu_skymap)
-        cols = self._make_bands_cols()
+        table_hdu = self.axes.to_table_hdu(format=format, hdu=hdu, hdu_skymap=hdu_skymap)
+        cols = table_hdu.columns.columns
+        cols.extend(self._make_bands_cols())
         return fits.BinTableHDU.from_columns(
-            [table_hdu, cols], header=table_hdu.header, name=table_hdu.name
+            cols, header=table_hdu.header, name=table_hdu.name
         )
 
     @abc.abstractmethod

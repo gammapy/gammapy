@@ -494,7 +494,7 @@ class WcsGeom(Geom):
 
     def to_header(self):
         header = self.wcs.to_header()
-        self._fill_header_from_axes(header)
+        header = self.axes.to_header(header)
         shape = "{},{}".format(np.max(self.npix[0]), np.max(self.npix[1]))
         for ax in self.axes:
             shape += f",{ax.nbin}"
