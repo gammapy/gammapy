@@ -206,11 +206,14 @@ class WStatCountsStatistic(CountsStatistic):
         Expected counts in signal region
     """
 
-    def __init__(self, n_on, n_off, alpha, mu_sig=0):
+    def __init__(self, n_on, n_off, alpha, mu_sig=None):
         self.n_on = np.asanyarray(n_on)
         self.n_off = np.asanyarray(n_off)
         self.alpha = np.asanyarray(alpha)
-        self.mu_sig = np.asanyarray(mu_sig)
+        if mu_sig is None:
+            self.mu_sig = np.zeros_like(self.n_on)
+        else:
+            self.mu_sig = np.asanyarray(mu_sig)
 
     @property
     def background(self):
@@ -243,7 +246,15 @@ class WStatCountsStatistic(CountsStatistic):
         return wstat(self.n_on, self.n_off, self.alpha, self.excess + self.mu_sig)
 
     def _stat_fcn(self, mu, delta=0, index=None):
-        return wstat(self.n_on[index], self.n_off[index], self.alpha[index], mu) - delta
+        return (
+            wstat(
+                self.n_on[index],
+                self.n_off[index],
+                self.alpha[index],
+                (mu + self.mu_sig[index]),
+            )
+            - delta
+        )
 
     def _excess_matching_significance_fcn(self, excess, significance, index):
         TS0 = wstat(
