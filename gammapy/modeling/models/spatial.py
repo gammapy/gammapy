@@ -666,7 +666,7 @@ class TemplateSpatialModel(SpatialModel):
 
     @property
     def is_energy_dependent(self):
-        return "energy_true" in self.map.geom.axes_names
+        return "energy_true" in self.map.geom.axes.names
 
     @property
     def evaluation_radius(self):

@@ -131,9 +131,7 @@ class RegionGeom(Geom):
 
     @property
     def _shape(self):
-        npix_shape = [1, 1]
-        ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)
+        return tuple((1, 1) + self.axes.shape)
 
     def get_coord(self, frame=None):
         """Get map coordinates from the geometry.

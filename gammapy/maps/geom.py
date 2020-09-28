@@ -132,6 +132,10 @@ class MapAxes(Sequence):
         self._axes = axes
 
     @property
+    def shape(self):
+        return tuple([ax.nbin for ax in self])
+
+    @property
     def names(self):
         """Names of the axes"""
         return [ax.name for ax in self]
@@ -145,6 +149,17 @@ class MapAxes(Sequence):
     def upsample(self, factor, axis_name):
         """Upsample axis by a given factor
 
+        Parameters
+        ----------
+        factor : int
+            Upsampling factor.
+        axis_name : str
+            Axis to upsample.
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Map axes
         """
         axes = []
 
@@ -158,6 +173,18 @@ class MapAxes(Sequence):
 
     def downsample(self, factor, axis_name):
         """Downsample axis by a given factor
+
+        Parameters
+        ----------
+        factor : int
+            Upsampling factor.
+        axis_name : str
+            Axis to upsample.
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Map axes
 
         """
         axes = []
@@ -431,6 +458,10 @@ class MapAxis:
 
     def __hash__(self):
         return id(self)
+
+    @property
+    def is_energy_axis(self):
+        return self.name in ["energy", "enerh"]
 
     @property
     def interp(self):
@@ -998,7 +1029,20 @@ class MapAxis:
         return self._up_down_sample(nbin)
 
     def to_header(self, header, format="ogip"):
-        """"""
+        """Create FITS header
+
+        Parameters
+        ----------
+        header : `~astropy.io.fits.Header`
+            Header to extend.
+        format : {"ogip"}
+            Format specification
+
+        Returns
+        -------
+        header : `~astropy.io.fits.Header`
+            Header to extend.
+        """
 
         if format == "ogip":
             header["EXTNAME"] = "EBOUNDS", "Name of this binary table extension"
@@ -1629,7 +1673,7 @@ class Geom(abc.ABC):
         slices : dict
             Dict of axes names and integers or `slice` object pairs. Contains one
             element for each non-spatial dimension. For integer indexing the
-            correspoding axes is dropped from the map. Axes not specified in the
+            corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
 
         Returns
@@ -1830,7 +1874,6 @@ class Geom(abc.ABC):
         groups = axis_self.group_table(axis.edges)
 
         # Keep only normal bins
-        # TODO: improve on this
         groups = groups[groups["bin_type"] == "normal   "]
 
         edges = edges_from_lo_hi(groups[axis.name + "_min"], groups[axis.name + "_max"])
