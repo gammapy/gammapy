@@ -313,7 +313,7 @@ class EnergyDependentTablePSF:
 
         return cls(energy, rad, exposure, psf_value)
 
-    def to_fits(self):
+    def to_hdulist(self):
         """Convert to FITS HDU list format.
 
         Returns
@@ -356,7 +356,7 @@ class EnergyDependentTablePSF:
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(str(make_path(filename)), *args, **kwargs)
+        self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
 
     def evaluate(self, energy=None, rad=None, method="linear"):
         """Evaluate the PSF at a given energy and offset
