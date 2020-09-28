@@ -68,11 +68,11 @@ class TestIRFWrite:
         assert_allclose(self.aeff.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
 
         assert self.aeff.to_fits().header["EXTNAME"] == "EFFECTIVE AREA"
-        assert self.edisp.to_fits().header["EXTNAME"] == "ENERGY DISPERSION"
+        assert self.edisp.to_table_hdu().header["EXTNAME"] == "ENERGY DISPERSION"
         assert self.bkg.to_table_hdu().header["EXTNAME"] == "BACKGROUND"
 
         assert self.aeff.to_fits(name="TEST").header["EXTNAME"] == "TEST"
-        assert self.edisp.to_fits(name="TEST").header["EXTNAME"] == "TEST"
+        assert self.edisp.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
         assert self.bkg.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
 
         hdu = self.aeff.to_fits()
@@ -82,11 +82,11 @@ class TestIRFWrite:
         hdu = self.aeff.to_fits()
         assert_allclose(hdu.data[hdu.header["TTYPE5"]][0].T, self.aeff.data.data.value)
 
-        hdu = self.edisp.to_fits()
+        hdu = self.edisp.to_table_hdu()
         assert_allclose(
             hdu.data[hdu.header["TTYPE1"]][0], self.edisp.data.axes[0].edges[:-1].value
         )
-        hdu = self.edisp.to_fits()
+        hdu = self.edisp.to_table_hdu()
         assert_allclose(hdu.data[hdu.header["TTYPE7"]][0].T, self.edisp.data.data.value)
 
         hdu = self.bkg.to_table_hdu()
@@ -102,7 +102,7 @@ class TestIRFWrite:
             [
                 fits.PrimaryHDU(),
                 self.aeff.to_fits(),
-                self.edisp.to_fits(),
+                self.edisp.to_table_hdu(),
                 self.bkg.to_table_hdu(),
             ]
         ).writeto(path)

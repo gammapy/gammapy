@@ -435,6 +435,6 @@ class EnergyDispersion2D:
         table["MATRIX"] = self.data.data.T[np.newaxis]
         return table
 
-    def to_fits(self, name="ENERGY DISPERSION"):
+    def to_table_hdu(self, name="ENERGY DISPERSION"):
         """Convert to `~astropy.io.fits.BinTable`."""
         return fits.BinTableHDU(self.to_table(), name=name)
