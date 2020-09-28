@@ -4,10 +4,11 @@ import copy
 from os.path import split
 import numpy as np
 import astropy.units as u
-from astropy.table import Table
+from astropy.table import Table, hstack
 import yaml
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
+from gammapy.utils.table import table_from_row_data
 
 
 def _set_link(shared_register, model):
@@ -360,6 +361,46 @@ class Models(collections.abc.MutableSequence):
             }
         else:
             return {"components": models_data}
+
+    def to_parameters_table(self):
+        """Convert Models parameters to an astropy Table."""
+        pars = self.parameters.to_table()
+        rows = []
+        for name in self.parameters_unique_names:
+            row = {}
+            #Warning: splitting of parameters will break is source name has a "." in its name.
+            parts = name.split(".")
+            if len(parts) == 3:
+                row["model"], row["type"], _ = parts
+            elif len(parts) == 2:
+                row["model"], row["type"] = parts[0], ""
+            rows.append(row)
+        table = table_from_row_data(rows)
+        table = hstack([table, pars])
+        self._table_cached = table
+        return  table
+
+    def update_from_table(self, t):
+        """Update Models from an astropy Table."""
+        self._check_non_editable_columns(t, self._table_cached)
+        parameters_dict = [dict(zip( t.colnames, row)) for row in t]
+        for k, data in enumerate(parameters_dict):
+            self._update_from_dict(self.parameters[k], data)
+
+    def _update_from_dict(self, parameter, data):
+        """Update Models from a dictionary of parameters."""
+        parameter.quantity = f'{data["value"]} {data["unit"]}'
+        if np.isfinite(data["min"]):
+            parameter.min = data["min"]
+        if np.isfinite(data["max"]):
+            parameter.max = data["max"]
+        parameter.frozen = bool(data["frozen"])
+
+    def _check_non_editable_columns(self, table, table_cached):
+        non_editable = ["model", "type", "name", "error"]
+        for tag in non_editable:
+            if np.any(table[tag] != table_cached[tag]):
+                raise ValueError("Column {tag} should not be updated")
 
     def read_covariance(self, path, filename="_covariance.dat", **kwargs):
         """Read covariance data from file
