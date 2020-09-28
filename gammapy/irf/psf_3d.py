@@ -145,7 +145,7 @@ class PSF3D:
 
         return cls(energy_lo, energy_hi, offset, rad_lo, rad_hi, psf_value, **opts)
 
-    def to_fits(self):
+    def to_hdulist(self):
         """
         Convert PSF table data to FITS HDU list.
 
@@ -191,7 +191,7 @@ class PSF3D:
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(str(make_path(filename)), *args, **kwargs)
+        self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
 
     def evaluate(self, energy=None, offset=None, rad=None):
         """Interpolate PSF value at a given offset and energy.

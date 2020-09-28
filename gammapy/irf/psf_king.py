@@ -112,7 +112,7 @@ class PSFKing:
 
         return cls(energy_lo, energy_hi, offset, gamma, sigma, **opts)
 
-    def to_fits(self):
+    def to_hdulist(self):
         """
         Convert PSF table data to FITS HDU list.
 
@@ -149,7 +149,7 @@ class PSFKing:
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(str(make_path(filename)), *args, **kwargs)
+        self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
 
     @staticmethod
     def evaluate_direct(r, gamma, sigma):
