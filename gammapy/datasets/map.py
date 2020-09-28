@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from functools import lru_cache
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
@@ -8,7 +9,7 @@ from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI
-from gammapy.irf import EDispKernel, EffectiveAreaTable
+from gammapy.irf import EDispKernel
 from gammapy.irf.edisp_map import EDispMap, EDispKernelMap
 from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
@@ -2125,10 +2126,6 @@ class MapEvaluator:
         self.gti = gti
         self.contributes = True
         self.use_cache = use_cache
-        self._npred_cached = None
-        self._pars_cached = None
-        self._spatial_pars_cached = None
-        self._spatial_conv_cached = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -2138,6 +2135,30 @@ class MapEvaluator:
         # TODO: this is preliminary solution until we have further unified the model handling
         if isinstance(self.model, BackgroundModel):
             self.evaluation_mode = "global"
+
+        # define cached computations
+        self._compute_npred = lru_cache()(self._compute_npred)
+        self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
+        self._cached_parameter_values = None
+        self._cached_parameter_values_spatial = None
+
+    # workaround for the lru_cache pickle issue
+    # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        for key, value in state.items():
+            func = getattr(value, "__wrapped__", None)
+            if func is not None:
+                state[key] = func
+
+        return state
+
+    def __setstate__(self, state):
+        for key, value in state.items():
+            if key in ["_compute_npred", "_compute_flux_spatial"]:
+                state[key] = lru_cache()(value)
+
+        self.__dict__ = state
 
     @property
     def geom(self):
@@ -2209,8 +2230,8 @@ class MapEvaluator:
         else:
             self.exposure = exposure
 
-        self._npred_cached = None
-        self._spatial_conv_cached = None
+        self._compute_npred.cache_clear()
+        self._compute_flux_spatial.cache_clear()
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -2224,11 +2245,48 @@ class MapEvaluator:
         return self.model.evaluate_geom(self.geom, self.gti)
 
     def compute_flux(self):
-        """Compute model integral flux over map pixel volumes.
-
-        For now, we simply multiply dnde with bin volume.
-        """
+        """Compute flux"""
         return self.model.integrate_geom(self.geom, self.gti)
+
+    def compute_flux_psf_convolved(self):
+        """Compute psf convolved and temporal model corrected flux."""
+        value = self.compute_flux_spectral()
+
+        if self.model.spatial_model and not isinstance(self.geom, RegionGeom):
+            value = value * self.compute_flux_spatial().quantity
+
+        if self.model.temporal_model:
+            value *= self.compute_temporal_norm()
+
+        return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
+
+    def _compute_flux_spatial(self):
+        """Compute spatial flux"""
+        value = self.model.spatial_model.integrate_geom(self.geom)
+        if self.psf and self.model.apply_irf["psf"]:
+            value = self.apply_psf(value)
+        return value
+
+    def compute_flux_spatial(self):
+        """Compute spatial flux using caching"""
+        if self.parameters_spatial_changed or not self.use_cache:
+            self._compute_flux_spatial.cache_clear()
+        return self._compute_flux_spatial()
+
+    def compute_flux_spectral(self):
+        """Compute spectral flux"""
+        energy = self.geom.get_axis_by_name("energy_true").edges
+        value = self.model.spectral_model.integral(
+            energy[:-1], energy[1:], intervals=True
+        )
+        return value.reshape((-1, 1, 1))
+
+    def compute_temporal_norm(self):
+        """Compute temporal norm """
+        integral = self.model.temporal_model.integral(
+            self.gti.time_start, self.gti.time_stop
+        )
+        return np.sum(integral)
 
     def apply_exposure(self, flux):
         """Compute npred cube
@@ -2259,59 +2317,56 @@ class MapEvaluator:
         """
         return npred.apply_edisp(self.edisp)
 
+    def _compute_npred(self):
+        """Compute npred"""
+        if isinstance(self.model, BackgroundModel):
+            npred = self.model.evaluate()
+        else:
+            flux_conv = self.compute_flux_psf_convolved()
+
+            if self.model.apply_irf["exposure"]:
+                npred = self.apply_exposure(flux_conv)
+
+            if self.model.apply_irf["edisp"]:
+                npred = self.apply_edisp(npred)
+
+        return npred
+
     def compute_npred(self):
-        """
-        Evaluate model predicted counts.
+        """Evaluate model predicted counts.
 
         Returns
         -------
         npred : `~gammapy.maps.Map`
             Predicted counts on the map (in reco energy bins)
         """
+        if self.parameters_changed or not self.use_cache:
+            self._compute_npred.cache_clear()
 
-        pars = list(self.model.parameters.values)
-        npred = self._npred_cached
-        if self._pars_cached != pars or self._npred_cached is None:
-            self._pars_cached = pars
-            if isinstance(self.model, BackgroundModel):
-                npred = self.model.evaluate()
-            else:
-                flux_conv = self._compute_flux_conv()
+        return self._compute_npred()
 
-                if self.model.apply_irf["exposure"]:
-                    npred = self.apply_exposure(flux_conv)
+    @property
+    def parameters_changed(self):
+        """Parameters changed"""
+        values = self.model.parameters.values
 
-                if self.model.apply_irf["edisp"]:
-                    npred = self.apply_edisp(npred)
+        # TODO: possibly allow for a tolerance here?
+        changed = ~np.all(self._cached_parameter_values == values)
 
-            if self.use_cache:
-                self._npred_cached = npred
+        if changed:
+            self._cached_parameter_values = values
 
-        return npred
+        return changed
 
-    def _compute_flux_conv(self):
-        """ compute_flux with caching of psf-convolved spatial model"""
-        energy = self.geom.get_axis_by_name("energy_true").edges
+    @property
+    def parameters_spatial_changed(self):
+        """Parameters changed"""
+        values = self.model.spatial_model.parameters.values
 
-        value = self.model.spectral_model.integral(
-            energy[:-1], energy[1:], intervals=True
-        ).reshape((-1, 1, 1))
+        # TODO: possibly allow for a tolerance here?
+        changed = ~np.all(self._cached_parameter_values_spatial == values)
 
-        if self.model.spatial_model and not isinstance(self.geom, RegionGeom):
-            spatial_pars = list(self.model.spatial_model.parameters.values)
-            spatial_conv = self._spatial_conv_cached
-            if self._spatial_pars_cached != spatial_pars or spatial_conv is None:
-                self._spatial_pars_cached = spatial_pars
-                spatial_conv = self.model.spatial_model.integrate_geom(self.geom)
-                if self.psf and self.model.apply_irf["psf"]:
-                    spatial_conv = self.apply_psf(spatial_conv)
-                self._spatial_conv_cached = spatial_conv
-            value = value * spatial_conv.quantity
+        if changed:
+            self._cached_parameter_values_spatial = values
 
-        if self.model.temporal_model:
-            integral = self.model.temporal_model.integral(
-                self.gti.time_start, self.gti.time_stop
-            )
-            value = value * np.sum(integral)
-
-        return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
+        return changed
