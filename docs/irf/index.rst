@@ -39,7 +39,7 @@ See `~gammapy.irf.EffectiveAreaTable` and `~gammapy.irf.EffectiveAreaTable2D`.
 Background
 ==========
 
-See `~gammapy.irf.Background2D` and `~gammapy.irf.Background2D`.
+See `~gammapy.irf.Background2D` and `~gammapy.irf.Background3D`.
 
 PSF
 ===
