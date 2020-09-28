@@ -67,19 +67,19 @@ class TestIRFWrite:
     def test_container_to_fits(self):
         assert_allclose(self.aeff.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
 
-        assert self.aeff.to_fits().header["EXTNAME"] == "EFFECTIVE AREA"
+        assert self.aeff.to_table_hdu().header["EXTNAME"] == "EFFECTIVE AREA"
         assert self.edisp.to_table_hdu().header["EXTNAME"] == "ENERGY DISPERSION"
         assert self.bkg.to_table_hdu().header["EXTNAME"] == "BACKGROUND"
 
-        assert self.aeff.to_fits(name="TEST").header["EXTNAME"] == "TEST"
+        assert self.aeff.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
         assert self.edisp.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
         assert self.bkg.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
 
-        hdu = self.aeff.to_fits()
+        hdu = self.aeff.to_table_hdu()
         assert_allclose(
             hdu.data[hdu.header["TTYPE1"]][0], self.aeff.data.axes[0].edges[:-1].value
         )
-        hdu = self.aeff.to_fits()
+        hdu = self.aeff.to_table_hdu()
         assert_allclose(hdu.data[hdu.header["TTYPE5"]][0].T, self.aeff.data.data.value)
 
         hdu = self.edisp.to_table_hdu()
@@ -101,7 +101,7 @@ class TestIRFWrite:
         fits.HDUList(
             [
                 fits.PrimaryHDU(),
-                self.aeff.to_fits(),
+                self.aeff.to_table_hdu(),
                 self.edisp.to_table_hdu(),
                 self.bkg.to_table_hdu(),
             ]

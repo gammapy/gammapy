@@ -158,7 +158,7 @@ class TestEffectiveAreaTable:
             offset_hi=offset_hi,
             data=data,
         )
-        hdu = aeff.to_fits()
+        hdu = aeff.to_table_hdu()
         assert_equal(
             hdu.data["ENERG_LO"][0], aeff.data.axis("energy_true").edges[:-1].value
         )
