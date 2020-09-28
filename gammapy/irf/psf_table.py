@@ -298,7 +298,7 @@ class EnergyDependentTablePSF:
         return ss
 
     @classmethod
-    def from_fits(cls, hdu_list):
+    def from_hdulist(cls, hdu_list):
         """Create `EnergyDependentTablePSF` from ``gtpsf`` format HDU list.
 
         Parameters
@@ -349,7 +349,7 @@ class EnergyDependentTablePSF:
             File name
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_fits(hdulist)
+            return cls.from_hdulist(hdulist)
 
     def write(self, filename, *args, **kwargs):
         """Write to FITS file.
