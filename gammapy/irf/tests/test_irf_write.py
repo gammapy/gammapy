@@ -69,11 +69,11 @@ class TestIRFWrite:
 
         assert self.aeff.to_fits().header["EXTNAME"] == "EFFECTIVE AREA"
         assert self.edisp.to_fits().header["EXTNAME"] == "ENERGY DISPERSION"
-        assert self.bkg.to_fits().header["EXTNAME"] == "BACKGROUND"
+        assert self.bkg.to_table_hdu().header["EXTNAME"] == "BACKGROUND"
 
         assert self.aeff.to_fits(name="TEST").header["EXTNAME"] == "TEST"
         assert self.edisp.to_fits(name="TEST").header["EXTNAME"] == "TEST"
-        assert self.bkg.to_fits(name="TEST").header["EXTNAME"] == "TEST"
+        assert self.bkg.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
 
         hdu = self.aeff.to_fits()
         assert_allclose(
@@ -89,11 +89,11 @@ class TestIRFWrite:
         hdu = self.edisp.to_fits()
         assert_allclose(hdu.data[hdu.header["TTYPE7"]][0].T, self.edisp.data.data.value)
 
-        hdu = self.bkg.to_fits()
+        hdu = self.bkg.to_table_hdu()
         assert_allclose(
             hdu.data[hdu.header["TTYPE1"]][0], self.bkg.data.axes[1].edges[:-1].value
         )
-        hdu = self.bkg.to_fits()
+        hdu = self.bkg.to_table_hdu()
         assert_allclose(hdu.data[hdu.header["TTYPE7"]][0], self.bkg.data.data.value)
 
     def test_writeread(self, tmp_path):
@@ -103,7 +103,7 @@ class TestIRFWrite:
                 fits.PrimaryHDU(),
                 self.aeff.to_fits(),
                 self.edisp.to_fits(),
-                self.bkg.to_fits(),
+                self.bkg.to_table_hdu(),
             ]
         ).writeto(path)
 

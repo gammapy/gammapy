@@ -147,7 +147,7 @@ class Background3D:
         table["BKG"] = self.data.data[np.newaxis]
         return table
 
-    def to_fits(self, name="BACKGROUND"):
+    def to_table_hdu(self, name="BACKGROUND"):
         """Convert to `~astropy.io.fits.BinTableHDU`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
@@ -325,7 +325,7 @@ class Background2D:
         table["BKG"] = self.data.data[np.newaxis]
         return table
 
-    def to_fits(self, name="BACKGROUND"):
+    def to_table_hdu(self, name="BACKGROUND"):
         """Convert to `~astropy.io.fits.BinTableHDU`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
