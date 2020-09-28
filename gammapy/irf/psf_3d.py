@@ -76,9 +76,9 @@ class PSF3D:
 
     @lazyproperty
     def _interpolate(self):
-        energy = self._energy_logcenter()
+        energy = self.energy_axis.center
         offset = self.offset.to("deg")
-        rad = self._rad_center()
+        rad = self.rad_axis.center
 
         return ScaledRegularGridInterpolator(
             points=(rad, offset, energy), values=self.psf_value, **self._interp_kwargs
@@ -99,21 +99,6 @@ class PSF3D:
         # TODO: should quote containment values also
 
         return ss
-
-    def _energy_logcenter(self):
-        """Get logcenters of energy bins.
-
-        Returns
-        -------
-        energies : `~astropy.units.Quantity`
-            Logcenters of energy bins
-        """
-        return np.sqrt(self.energy_lo * self.energy_hi)
-
-    def _rad_center(self):
-        """Get centers of rad bins (`~astropy.coordinates.Angle` in deg).
-        """
-        return ((self.rad_hi + self.rad_lo) / 2).to("deg")
 
     @classmethod
     def read(cls, filename, hdu="PSF_2D_TABLE"):
@@ -226,11 +211,11 @@ class PSF3D:
             Interpolated value
         """
         if energy is None:
-            energy = self._energy_logcenter()
+            energy = self.energy_axis.center
         if offset is None:
             offset = self.offset
         if rad is None:
-            rad = self._rad_center()
+            rad = self.rad_axis.center
 
         rad = np.atleast_1d(u.Quantity(rad))
         offset = np.atleast_1d(u.Quantity(offset))
@@ -264,10 +249,10 @@ class PSF3D:
             Energy-dependent PSF
         """
         theta = Angle(theta)
-        energies = self._energy_logcenter()
+        energies = self.energy_axis.center
 
         if rad is None:
-            rad = self._rad_center()
+            rad = self.rad_axis.center
         else:
             rad = Angle(rad)
 
@@ -294,7 +279,7 @@ class PSF3D:
         energy = u.Quantity(energy)
         theta = Angle(theta)
         psf_value = self.evaluate(energy, theta).squeeze()
-        rad = self._rad_center()
+        rad = self.rad_axis.center
         return TablePSF(rad, psf_value, **kwargs)
 
     def containment_radius(
@@ -381,7 +366,7 @@ class PSF3D:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self._energy_logcenter()
+        energy = self.energy_axis.center
         offset = self.offset
 
         # Set up and compute data
