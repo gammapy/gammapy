@@ -341,7 +341,8 @@ def test_make_mean_psf(data_store):
     psf = psf_map_1.get_energy_dependent_table_psf()
 
     assert not np.isnan(psf.psf_value.value).any()
-    assert_allclose(psf.psf_value.value[22, 22], 12206.167892)
+    assert_allclose(psf.psf_value.value[22, 22], 12206.1665)
+
 
 def test_interpolate_mapdataset():
     energy = MapAxis.from_energy_bounds("1 TeV", "300 TeV", nbin=5, name="energy")

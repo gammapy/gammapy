@@ -108,10 +108,10 @@ class EnergyDependentMultiGaussPSF:
             File name
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_fits(hdulist[hdu])
+            return cls.from_table_hdu(hdulist[hdu])
 
     @classmethod
-    def from_fits(cls, hdu):
+    def from_table_hdu(cls, hdu):
         """Create `EnergyDependentMultiGaussPSF` from HDU list.
 
         Parameters
@@ -145,7 +145,7 @@ class EnergyDependentMultiGaussPSF:
 
         return cls(energy_lo, energy_hi, theta, sigmas, norms, **opts)
 
-    def to_fits(self):
+    def to_hdulist(self):
         """
         Convert psf table data to FITS hdu list.
 
@@ -199,7 +199,7 @@ class EnergyDependentMultiGaussPSF:
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(str(make_path(filename)), *args, **kwargs)
+        self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
 
     def psf_at_energy_and_theta(self, energy, theta):
         """

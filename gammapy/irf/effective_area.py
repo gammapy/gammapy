@@ -584,6 +584,6 @@ class EffectiveAreaTable2D:
         table["EFFAREA"] = self.data.data.T[np.newaxis]
         return table
 
-    def to_fits(self, name="EFFECTIVE AREA"):
+    def to_table_hdu(self, name="EFFECTIVE AREA"):
         """Convert to `~astropy.io.fits.BinTableHDU`."""
         return fits.BinTableHDU(self.to_table(), name=name)

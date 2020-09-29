@@ -298,7 +298,7 @@ class EnergyDependentTablePSF:
         return ss
 
     @classmethod
-    def from_fits(cls, hdu_list):
+    def from_hdulist(cls, hdu_list):
         """Create `EnergyDependentTablePSF` from ``gtpsf`` format HDU list.
 
         Parameters
@@ -313,7 +313,7 @@ class EnergyDependentTablePSF:
 
         return cls(energy, rad, exposure, psf_value)
 
-    def to_fits(self):
+    def to_hdulist(self):
         """Convert to FITS HDU list format.
 
         Returns
@@ -349,14 +349,14 @@ class EnergyDependentTablePSF:
             File name
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_fits(hdulist)
+            return cls.from_hdulist(hdulist)
 
     def write(self, filename, *args, **kwargs):
         """Write to FITS file.
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(str(make_path(filename)), *args, **kwargs)
+        self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
 
     def evaluate(self, energy=None, rad=None, method="linear"):
         """Evaluate the PSF at a given energy and offset

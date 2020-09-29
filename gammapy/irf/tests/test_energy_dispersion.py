@@ -175,7 +175,7 @@ class TestEnergyDispersion2D:
             data=data,
         )
 
-        hdu = edisp.to_fits()
+        hdu = edisp.to_table_hdu()
         energy = edisp.data.axis("energy_true").edges
         assert_equal(hdu.data["ENERG_LO"][0], energy[:-1].value)
         assert hdu.header["TUNIT1"] == edisp.data.axis("energy_true").unit

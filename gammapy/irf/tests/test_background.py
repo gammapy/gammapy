@@ -54,7 +54,7 @@ def test_background_3d_basics(bkg_3d):
 
 
 def test_background_3d_read_write(tmp_path, bkg_3d):
-    bkg_3d.to_fits().writeto(tmp_path / "bkg3d.fits")
+    bkg_3d.to_table_hdu().writeto(tmp_path / "bkg3d.fits")
     bkg_3d_2 = Background3D.read(tmp_path / "bkg3d.fits")
 
     axis = bkg_3d_2.data.axis("energy")
@@ -197,7 +197,7 @@ def test_background_2d_evaluate(bkg_2d):
 
 
 def test_background_2d_read_write(tmp_path, bkg_2d):
-    bkg_2d.to_fits().writeto(tmp_path / "tmp.fits")
+    bkg_2d.to_table_hdu().writeto(tmp_path / "tmp.fits")
     bkg_2d_2 = Background2D.read(tmp_path / "tmp.fits")
 
     axis = bkg_2d_2.data.axis("energy")
