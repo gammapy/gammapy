@@ -542,7 +542,8 @@ class MapDataset(Dataset):
         self.mask_safe.stack(other_mask_safe)
 
         if self.gti and other.gti:
-            self.gti = self.gti.stack(other.gti).union()
+            self.gti.stack(other.gti)
+            self.gti = self.gti.union()
 
         if self.meta_table and other.meta_table:
             self.meta_table = hstack_columns(self.meta_table, other.meta_table)
