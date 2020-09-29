@@ -689,12 +689,12 @@ def test_reduce():
     geom = WcsGeom.create(npix=(5, 5), axes=[ax1, ax2, ax3])
     m1 = Map.from_geom(geom=geom)
     m1.data = np.ones(m1.data.shape)
-    m2 = m1.reduce(axis="ax1", keepdims=True)
+    m2 = m1.reduce(axis_name="ax1", keepdims=True)
 
     assert_allclose(m2.geom.data_shape, (2, 3, 1, 5, 5))
     assert_allclose(m2.data[0][0][0][0][0], 4.0)
 
-    m3 = m1.reduce(axis="ax1", keepdims=False)
+    m3 = m1.reduce(axis_name="ax1", keepdims=False)
     assert_allclose(m3.geom.data_shape, (2, 3, 5, 5))
     assert_allclose(m3.data[0][0][0][0], 4.0)
 

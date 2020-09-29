@@ -160,15 +160,13 @@ class WcsGeom(Geom):
 
     @property
     def _shape(self):
-        npix_shape = [np.max(self.npix[0]), np.max(self.npix[1])]
-        ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)
+        npix_shape = tuple([np.max(self.npix[0]), np.max(self.npix[1])])
+        return npix_shape + self.axes.shape
 
     @property
     def _shape_edges(self):
-        npix_shape = [np.max(self.npix[0]) + 1, np.max(self.npix[1]) + 1]
-        ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)
+        npix_shape = tuple([np.max(self.npix[0]) + 1, np.max(self.npix[1]) + 1])
+        return npix_shape + self.axes.shape
 
     @property
     def shape_axes(self):

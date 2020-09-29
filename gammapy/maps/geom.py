@@ -133,6 +133,7 @@ class MapAxes(Sequence):
 
     @property
     def shape(self):
+        """Shape of the axes"""
         return tuple([ax.nbin for ax in self])
 
     @property
@@ -171,6 +172,42 @@ class MapAxes(Sequence):
 
         return self.__class__(axes=axes)
 
+    def resample(self, axis):
+        """Resample axis binning.
+
+        This method groups the existing bins into a new binning.
+
+        Parameters
+        ----------
+        axis : `MapAxis`
+            New map axis.
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Axes object with resampled axis.
+        """
+        axis_self = self[axis.name]
+        groups = axis_self.group_table(axis.edges)
+
+        # Keep only normal bins
+        groups = groups[groups["bin_type"] == "normal   "]
+
+        edges = edges_from_lo_hi(groups[axis.name + "_min"], groups[axis.name + "_max"])
+
+        axis_resampled = MapAxis.from_edges(
+            edges=edges, interp=axis.interp, name=axis.name
+        )
+
+        axes = []
+        for ax in self:
+            if ax.name == axis.name:
+                axes.append(axis_resampled)
+            else:
+                axes.append(ax.copy())
+
+        return self.__class__(axes=axes)
+
     def downsample(self, factor, axis_name):
         """Downsample axis by a given factor
 
@@ -197,6 +234,49 @@ class MapAxes(Sequence):
 
         return self.__class__(axes=axes)
 
+    def squash(self, axis_name):
+        """Squash geom axis.
+
+        Parameters
+        ----------
+        axis_name : str
+            Axis to squash.
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Axes with squashed axis.
+        """
+        axes = []
+
+        for ax in self:
+            if ax.name == axis_name:
+                ax = ax.squash()
+            axes.append(ax.copy())
+
+        return self.__class__(axes=axes)
+
+    def drop(self, axis_name):
+        """Drop an axis from the geom.
+
+        Parameters
+        ----------
+        axis_name : str
+            Name of the axis to remove.
+
+        Returns
+            -------
+        geom : `Geom`
+            New geom with the axis removed.
+        """
+        axes = []
+        for ax in self:
+            if ax.name == axis_name:
+                continue
+            axes.append(ax.copy())
+
+        return self.__class__(axes=axes)
+
     def __getitem__(self, idx):
         if isinstance(idx, (int, slice)):
             return self._axes[idx]
@@ -207,6 +287,37 @@ class MapAxes(Sequence):
             raise KeyError(f"No axes: {idx!r}")
         else:
             raise TypeError(f"Invalid type: {type(idx)!r}")
+
+    def get_coord(self):
+        """"""
+        pass
+
+    def slice_by_idx(self, slices):
+        """Create a new geometry by slicing the non-spatial axes.
+
+        Parameters
+        ----------
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            corresponding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
+
+        Returns
+        -------
+        geom : `~Geom`
+            Sliced geometry.
+        """
+        axes = []
+        for ax in self:
+            ax_slice = slices.get(ax.name, slice(None))
+
+            # in the case where isinstance(ax_slice, int) the axes is dropped
+            if isinstance(ax_slice, slice):
+                ax_sliced = ax.slice(ax_slice)
+                axes.append(ax_sliced.copy())
+
+        return self.__class__(axes=axes)
 
     def to_header(self, header=None):
         """Convert axes to FITS header
@@ -1681,14 +1792,7 @@ class Geom(abc.ABC):
         geom : `~Geom`
             Sliced geometry.
         """
-        axes = []
-        for ax in self.axes:
-            ax_slice = slices.get(ax.name, slice(None))
-            if isinstance(ax_slice, slice):
-                ax_sliced = ax.slice(ax_slice)
-                axes.append(ax_sliced)
-                # in the case where isinstance(ax_slice, int) the axes is dropped
-
+        axes = self.axes.slice_by_idx(slices)
         return self._init_copy(axes=axes)
 
     @abc.abstractmethod
@@ -1722,12 +1826,12 @@ class Geom(abc.ABC):
         """
         pass
 
-    def squash(self, axis):
+    def squash(self, axis_name):
         """Squash geom axis.
 
         Parameters
         ----------
-        axis : str
+        axis_name : str
             Axis to squash.
 
         Returns
@@ -1735,20 +1839,15 @@ class Geom(abc.ABC):
         geom : `Geom`
             Geom with squashed axis.
         """
-        axes = []
-        for ax in copy.deepcopy(self.axes):
-            if ax.name == axis:
-                ax = ax.squash()
-            axes.append(ax)
-
+        axes = self.axes.squash(axis_name=axis_name)
         return self.to_image().to_cube(axes=axes)
 
-    def drop(self, axis):
+    def drop(self, axis_name):
         """Drop an axis from the geom.
 
         Parameters
         ----------
-        axis : str
+        axis_name : str
             Name of the axis to remove.
 
         Returns
@@ -1756,12 +1855,7 @@ class Geom(abc.ABC):
         geom : `Geom`
             New geom with the axis removed.
         """
-        axes = []
-        for ax in copy.deepcopy(self.axes):
-            if ax.name == axis:
-                continue
-            axes.append(ax)
-
+        axes = self.axes.drop(axis_name=axis_name)
         return self.to_image().to_cube(axes=axes)
 
     def coord_to_tuple(self, coord):
@@ -1870,25 +1964,7 @@ class Geom(abc.ABC):
         map : `Geom`
             Geom with resampled axis.
         """
-        axis_self = self.get_axis_by_name(axis.name)
-        groups = axis_self.group_table(axis.edges)
-
-        # Keep only normal bins
-        groups = groups[groups["bin_type"] == "normal   "]
-
-        edges = edges_from_lo_hi(groups[axis.name + "_min"], groups[axis.name + "_max"])
-
-        axis_resampled = MapAxis.from_edges(
-            edges=edges, interp=axis.interp, name=axis.name
-        )
-
-        axes = []
-        for ax in self.axes:
-            if ax.name == axis.name:
-                axes.append(axis_resampled)
-            else:
-                axes.append(ax)
-
+        axes = self.axes.resample(axis=axis)
         return self._init_copy(axes=axes)
 
     @abc.abstractmethod

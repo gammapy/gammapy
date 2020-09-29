@@ -1059,14 +1059,15 @@ class Map(abc.ABC):
         map_out = self.copy()
         for ax in axes:
             map_out = map_out.reduce(ax, func=func, keepdims=keepdims, weights=weights)
+
         return map_out
 
-    def reduce(self, axis, func=np.add, keepdims=False, weights=None):
+    def reduce(self, axis_name, func=np.add, keepdims=False, weights=None):
         """Reduce map over a single non-spatial axis
 
         Parameters
         ----------
-        axis: str
+        axis_name: str
             The name of the axis to reduce over
         func : `~numpy.ufunc`
             Function to use for reducing the data.
@@ -1082,12 +1083,12 @@ class Map(abc.ABC):
             Map with the given non-spatial axes reduced
         """
         if keepdims:
-            geom = self.geom.squash(axis=axis)
+            geom = self.geom.squash(axis_name=axis_name)
         else:
-            geom = self.geom.drop(axis=axis)
+            geom = self.geom.drop(axis_name=axis_name)
 
         names = [ax.name for ax in reversed(self.geom.axes)]
-        idx = names.index(axis)
+        idx = names.index(axis_name)
 
         data = self.data
 
