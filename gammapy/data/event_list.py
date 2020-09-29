@@ -79,7 +79,7 @@ class EventListBase:
         return cls(table=table)
 
     @classmethod
-    def stack(cls, event_lists, **kwargs):
+    def from_stack(cls, event_lists, **kwargs):
         """Stack (concatenate) list of event lists.
 
         Calls `~astropy.table.vstack`.
