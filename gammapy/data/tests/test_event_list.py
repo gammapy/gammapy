@@ -75,6 +75,11 @@ class TestEventListHESS:
         stacked_list = EventList.from_stack(event_lists)
         assert len(stacked_list.table) == 11243 * 2
 
+    def test_stack(self):
+        other = self.events
+        stacked_list = self.events.stack(other)
+        assert len(stacked_list.table) == 11243 * 2
+
     def test_offset_selection(self):
         offset_range = u.Quantity([0.5, 1.0]*u.deg)
         new_list = self.events.select_offset(offset_range)
