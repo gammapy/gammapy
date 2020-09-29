@@ -77,13 +77,13 @@ class TestEventListHESS:
 
     def test_stack(self):
         other = self.events
-        stacked_list = self.events.stack(other)
-        assert len(stacked_list.table) == 11243 * 2
+        self.events.stack(other)
+        assert len(self.events.table) == 11243 * 2
 
     def test_offset_selection(self):
         offset_range = u.Quantity([0.5, 1.0]*u.deg)
         new_list = self.events.select_offset(offset_range)
-        assert len(new_list.table) == 1820
+        assert len(new_list.table) == 1820 * 2
 
     @requires_dependency("matplotlib")
     def test_plot_time(self):

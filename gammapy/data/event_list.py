@@ -94,7 +94,7 @@ class EventListBase:
         return cls(stacked_table)
 
     def stack(self, other):
-        """Stack with another EventList.
+        """Stack with another EventList in place.
 
         Calls `~astropy.table.vstack`.
 
@@ -102,13 +102,8 @@ class EventListBase:
         ----------
         other : `~gammapy.data.EventList`
             Event list to stack to self
-
-        Returns
-        -------
-        new_event_list : `~gammapy.data.EventList`
-            New event list
         """
-        return self.__class__(vstack_tables([self.table, other.table]))
+        self.table = vstack_tables([self.table, other.table])
 
     def __str__(self):
         ss = (
