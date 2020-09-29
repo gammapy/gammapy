@@ -590,8 +590,9 @@ class SpectrumDataset(Dataset):
             self.mask_safe.stack(other.mask_safe)
 
         if self.gti is not None:
-            self.gti = self.gti.stack(other.gti).union()
-
+            self.gti.stack(other.gti)
+            self.gti = self.gti.union()
+            
         # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum of GTIs
         if self.livetime is not None:
             self.livetime += other.livetime

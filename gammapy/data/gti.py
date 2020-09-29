@@ -203,7 +203,7 @@ class GTI:
         return self.__class__(gti_within)
 
     def stack(self, other):
-        """Stack with another GTI.
+        """Stack with another GTI in place.
 
         This simply changes the time reference of the second GTI table
         and stack the two tables. No logic is applied to the intervals.
@@ -213,15 +213,11 @@ class GTI:
         other : `~gammapy.data.GTI`
             GTI to stack to self
 
-        Returns
-        -------
-        new_gti : `~gammapy.data.GTI`
-            New GTI
         """
         start = (other.time_start - self.time_ref).sec
         end = (other.time_stop - self.time_ref).sec
         table = Table({"START": start, "STOP": end}, names=["START", "STOP"])
-        return self.__class__(vstack([self.table, table]))
+        self.table = vstack([self.table, table])
 
     def union(self, overlap_ok=True, merge_equal=True):
         """Union of overlapping time intervals.

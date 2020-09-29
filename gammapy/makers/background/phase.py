@@ -45,7 +45,7 @@ class PhaseBackgroundMaker(Maker):
             )
             event_lists.append(events)
 
-        events = EventList.stack(event_lists)
+        events = EventList.from_stack(event_lists)
         counts = RegionNDMap.from_geom(dataset.counts.geom)
         counts.fill_events(events)
         return counts

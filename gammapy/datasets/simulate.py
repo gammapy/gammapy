@@ -88,7 +88,7 @@ class MapDatasetEventSampler:
                 table.add_column(mcid)
             events_all.append(EventList(table))
 
-        return EventList.stack(events_all)
+        return EventList.from_stack(events_all)
 
     def sample_background(self, dataset):
         """Sample background
@@ -353,13 +353,13 @@ class MapDatasetEventSampler:
 
             if dataset.background_model:
                 events_bkg = self.sample_background(dataset)
-                events = EventList.stack([events_bkg, events_src])
+                events = EventList.from_stack([events_bkg, events_src])
             else:
                 events = events_src
 
         if len(dataset.models) == 1 and dataset.background_model is not None:
             events_bkg = self.sample_background(dataset)
-            events = EventList.stack([events_bkg])
+            events = EventList.from_stack([events_bkg])
 
         events = self.event_det_coords(observation, events)
         events.table["EVENT_ID"] = np.arange(len(events.table))
