@@ -118,7 +118,7 @@ class LightCurve:
         """
         self.table.write(make_path(filename), **kwargs)
 
-    def plot(self, ax=None, time_format="mjd", flux_unit="cm-2 s-1", **kwargs):
+    def plot(self, ax=None, energy_index=0, time_format="mjd", flux_unit="cm-2 s-1", **kwargs):
         """Plot flux points.
 
         Parameters
@@ -145,9 +145,9 @@ class LightCurve:
         if ax is None:
             ax = plt.gca()
 
-        x, xerr = self._get_times_and_errors(time_format)
-        y, yerr = self._get_fluxes_and_errors(flux_unit)
-        is_ul, yul = self._get_flux_uls(flux_unit)
+        x, xerr = self._get_times_and_errors(time_format=time_format)
+        y, yerr = self._get_fluxes_and_errors(energy_index=energy_index, unit=flux_unit)
+        is_ul, yul = self._get_flux_uls(energy_index=energy_index, unit=flux_unit)
 
         # length of the ul arrow
         ul_arr = (
@@ -163,9 +163,13 @@ class LightCurve:
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("ls", "None")
 
-        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, uplims=is_ul, **kwargs)
+        e_min = self.table["e_min"].quantity[0,energy_index]
+        e_max = self.table["e_max"].quantity[0,energy_index]
+        energy_label = f"{e_min:1.3} - {e_max:1.3} "
+        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, uplims=is_ul, label=energy_label, **kwargs)
         ax.set_xlabel("Time ({})".format(time_format.upper()))
         ax.set_ylabel("Flux ({:FITS})".format(u.Unit(flux_unit)))
+        ax.legend()
         if time_format == "iso":
             ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
             plt.setp(
@@ -177,7 +181,7 @@ class LightCurve:
 
         return ax
 
-    def _get_fluxes_and_errors(self, unit="cm-2 s-1"):
+    def _get_fluxes_and_errors(self, energy_index=0, unit="cm-2 s-1"):
         """Extract fluxes and corresponding errors
 
         Helper function for the plot method.
@@ -194,20 +198,20 @@ class LightCurve:
         (yn, yp) : tuple of `numpy.ndarray`
             Flux error values
         """
-        y = self.table["flux"].quantity.to(unit)
+        y = self.table["flux"].quantity.to(unit)[:,energy_index]
 
         if all(k in self.table.colnames for k in ["flux_errp", "flux_errn"]):
-            yp = self.table["flux_errp"].quantity.to(unit)
-            yn = self.table["flux_errn"].quantity.to(unit)
+            yp = self.table["flux_errp"].quantity.to(unit)[:,energy_index]
+            yn = self.table["flux_errn"].quantity.to(unit)[:,energy_index]
         elif "flux_err" in self.table.colnames:
-            yp = self.table["flux_err"].quantity.to(unit)
-            yn = self.table["flux_err"].quantity.to(unit)
+            yp = self.table["flux_err"].quantity.to(unit)[:,energy_index]
+            yn = self.table["flux_err"].quantity.to(unit)[:,energy_index]
         else:
             yp, yn = np.zeros_like(y), np.zeros_like(y)
 
         return y.value, (yn.value, yp.value)
 
-    def _get_flux_uls(self, unit="cm-2 s-1"):
+    def _get_flux_uls(self, energy_index=0, unit="cm-2 s-1"):
         """Extract flux upper limits
 
         Helper function for the plot method.
@@ -225,14 +229,14 @@ class LightCurve:
             Flux upper limit values
         """
         try:
-            is_ul = self.table["is_ul"].data.astype("bool")
+            is_ul = self.table["is_ul"].data[:,energy_index].astype("bool")
         except KeyError:
-            is_ul = np.zeros_like(self.table["flux"]).data.astype("bool")
+            is_ul = np.zeros_like(self.table["flux"]).data[:,energy_index].astype("bool")
 
         if is_ul.any():
-            yul = self.table["flux_ul"].quantity.to(unit)
+            yul = self.table["flux_ul"].quantity.to(unit)[:,energy_index]
         else:
-            yul = np.zeros_like(self.table["flux"]).quantity
+            yul = np.zeros_like(self.table["flux"]).quantity[:,energy_index]
             yul[:] = np.nan
 
         return is_ul, yul.value
@@ -348,8 +352,8 @@ class LightCurveEstimator(Estimator):
 
         self.atol = u.Quantity(atol)
 
-        if e_edges is not None and len(e_edges) > 2:
-            raise ValueError("So far the LightCurveEstimator only support a single energy bin.")
+#        if e_edges is not None and len(e_edges) > 2:
+#            raise ValueError("So far the LightCurveEstimator only support a single energy bin.")
 
         self.e_edges = e_edges
 
@@ -397,18 +401,14 @@ class LightCurveEstimator(Estimator):
                 log.debug(f"No Dataset for the time interval {t_min} to {t_max}")
                 continue
 
-            fp = self.estimate_time_bin_flux(datasets_to_fit)
-            times = t_min.mjd
-            fp.table.add_column(col= times, index=0,name="time_min")
             row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
             row.update(self.estimate_time_bin_flux(datasets_to_fit))
             rows.append(row)
-
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
- #       table = FluxPoints(table).to_sed_type("flux").table
+        table = FluxPoints(table).to_sed_type("flux").table
         return LightCurve(table)
 
     def estimate_time_bin_flux(self, datasets):
