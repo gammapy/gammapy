@@ -141,6 +141,10 @@ class MapAxes(Sequence):
         """Names of the axes"""
         return [ax.name for ax in self]
 
+    def index(self, value):
+        """Get index"""
+        return self.names.index(value)
+
     def __len__(self):
         return len(self._axes)
 
@@ -572,7 +576,7 @@ class MapAxis:
 
     @property
     def is_energy_axis(self):
-        return self.name in ["energy", "enerh"]
+        return self.name in ["energy", "energy_true"]
 
     @property
     def interp(self):
@@ -1989,22 +1993,6 @@ class Geom(abc.ABC):
             for axis in self.axes:
                 valid = valid and (axis.nbin == 1)
             return valid
-
-    def get_axis_index_by_name(self, name):
-        """Get an axis index by name (case in-sensitive).
-
-        Parameters
-        ----------
-        name : str
-           Axis name
-
-        Returns
-        -------
-        index : int
-            Axis index
-        """
-        names = [axis.name.upper() for axis in self.axes]
-        return names.index(name.upper())
 
     def _init_copy(self, **kwargs):
         """Init map geom instance by copying missing init arguments from self.

@@ -422,9 +422,9 @@ def test_check_width_bad_input():
 def test_get_axis_index_by_name():
     e_axis = MapAxis.from_edges([1, 5], name="energy")
     geom = WcsGeom.create(width=5, binsz=1.0, axes=[e_axis])
-    assert geom.get_axis_index_by_name("Energy") == 0
+    assert geom.axes.index("energy") == 0
     with pytest.raises(ValueError):
-        geom.get_axis_index_by_name("time")
+        geom.axes.index("time")
 
 
 test_axis1 = [MapAxis(nodes=(1, 2, 3, 4), unit="TeV", node_type="center")]

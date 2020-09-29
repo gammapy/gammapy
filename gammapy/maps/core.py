@@ -478,7 +478,7 @@ class Map(abc.ABC):
 
         indices = axis_self.coord_to_idx(axis_resampled.edges[:-1])
 
-        idx = self.geom.get_axis_index_by_name(axis.name)
+        idx = self.geom.axes.index(axis.name)
 
         # transform to data idx
         idx = len(geom.axes) - idx - 1
@@ -997,7 +997,7 @@ class Map(abc.ABC):
         """
         # TODO: either use sparse matrix mutiplication or something like edisp.is_diagonal
         if edisp is not None:
-            loc = self.geom.get_axis_index_by_name("energy_true")
+            loc = self.geom.axes.index("energy_true")
             data = np.rollaxis(self.data, loc, len(self.data.shape))
             data = np.dot(data, edisp.pdf_matrix)
             data = np.rollaxis(data, -1, loc)
