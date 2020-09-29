@@ -70,9 +70,9 @@ class TestEventListHESS:
         assert_allclose(altaz[0].alt.deg, 53.258024, atol=1e-3)
         # TODO: add asserts for frame properties
 
-    def test_stack(self):
+    def test_from_stack(self):
         event_lists = [self.events] * 2
-        stacked_list = EventList.stack(event_lists)
+        stacked_list = EventList.from_stack(event_lists)
         assert len(stacked_list.table) == 11243 * 2
 
     def test_offset_selection(self):
