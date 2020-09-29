@@ -206,11 +206,14 @@ class WStatCountsStatistic(CountsStatistic):
         Expected counts in signal region
     """
 
-    def __init__(self, n_on, n_off, alpha, mu_sig=0):
+    def __init__(self, n_on, n_off, alpha, mu_sig=None):
         self.n_on = np.asanyarray(n_on)
         self.n_off = np.asanyarray(n_off)
         self.alpha = np.asanyarray(alpha)
-        self.mu_sig = np.asanyarray(mu_sig)
+        if mu_sig is None:
+            self.mu_sig = np.zeros_like(self.n_on)
+        else:
+            self.mu_sig = np.asanyarray(mu_sig)
 
     @property
     def background(self):
@@ -225,7 +228,7 @@ class WStatCountsStatistic(CountsStatistic):
 
     @property
     def excess(self):
-        return self.n_on - self.counts_off_normalised
+        return self.n_on - self.counts_off_normalised - self.mu_sig
 
     @property
     def error(self):
@@ -234,16 +237,24 @@ class WStatCountsStatistic(CountsStatistic):
 
     @property
     def TS_null(self):
-        """Stat value for null hypothesis, i.e. 0 expected signal counts"""
-        return wstat(self.n_on, self.n_off, self.alpha, 0)
+        """Stat value for null hypothesis, i.e. mu_sig expected signal counts"""
+        return wstat(self.n_on, self.n_off, self.alpha, self.mu_sig)
 
     @property
     def TS_max(self):
-        """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - alpha * n_off"""
-        return wstat(self.n_on, self.n_off, self.alpha, self.excess)
+        """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - alpha * n_off - mu_sig"""
+        return wstat(self.n_on, self.n_off, self.alpha, self.excess + self.mu_sig)
 
     def _stat_fcn(self, mu, delta=0, index=None):
-        return wstat(self.n_on[index], self.n_off[index], self.alpha[index], mu) - delta
+        return (
+            wstat(
+                self.n_on[index],
+                self.n_off[index],
+                self.alpha[index],
+                (mu + self.mu_sig[index]),
+            )
+            - delta
+        )
 
     def _excess_matching_significance_fcn(self, excess, significance, index):
         TS0 = wstat(
