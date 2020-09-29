@@ -230,7 +230,8 @@ class SpectrumDataset(Dataset):
                         self._background_model = model
                         break
         else:
-            log.warning(f"No background model defined for dataset {self.name}")
+            if not isinstance(self, SpectrumDatasetOnOff):
+                log.warning(f"No background model defined for dataset {self.name}")
         self._evaluators = {}
 
     @property

@@ -2,12 +2,12 @@
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from regions import RectangleSkyRegion, CircleAnnulusSkyRegion
-from gammapy.utils.table import table_from_row_data
-from gammapy.stats import WStatCountsStatistic, CashCountsStatistic
-from gammapy.datasets import SpectrumDatasetOnOff, Datasets
+from regions import CircleAnnulusSkyRegion, RectangleSkyRegion
+from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.maps import MapAxis
-from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
+from gammapy.utils.table import table_from_row_data
 from .core import Estimator
 
 __all__ = ["ExcessProfileEstimator"]
@@ -20,6 +20,8 @@ class ExcessProfileEstimator(Estimator):
     ----------
     regions : list of `regions`
         regions to use
+    e_edges : `~astropy.units.Quantity`
+        Energy edges of the profiles to be computed.
     n_sigma : float (optional)
         Number of sigma to compute errors. By default, it is 1.
     n_sigma_ul : float (optional)
@@ -83,6 +85,7 @@ class ExcessProfileEstimator(Estimator):
     def __init__(
         self,
         regions,
+        e_edges=None,
         spectrum=None,
         n_sigma=1.0,
         n_sigma_ul=3.0,
@@ -91,6 +94,8 @@ class ExcessProfileEstimator(Estimator):
         self.regions = regions
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+
+        self.e_edges = u.Quantity(e_edges) if e_edges is not None else None
 
         if spectrum is None:
             spectrum = PowerLawSpectralModel()
@@ -247,6 +252,12 @@ class ExcessProfileEstimator(Estimator):
         imageprofile : `~gammapy.estimators.ImageProfile`
             Return an image profile class containing the result
         """
+        axis = None
+        if self.e_edges is not None:
+            axis = MapAxis.from_energy_edges(self.e_edges)
+
+        dataset = dataset.resample_energy_axis(axis=axis)
+
         spectrum_datasets = self.get_spectrum_datasets(dataset)
         results = self.make_prof(spectrum_datasets)
         table = table_from_row_data(results)
