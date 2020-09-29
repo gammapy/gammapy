@@ -126,7 +126,7 @@ class SpatialModel(Model):
         coords = geom.to_image().get_coord(frame=self.frame)
 
         if self.is_energy_dependent:
-            energy = geom.get_axis_by_name("energy_true").center
+            energy = geom.axes["energy_true"].center
             return self(coords.lon, coords.lat, energy[:, np.newaxis, np.newaxis])
         else:
             return self(coords.lon, coords.lat)

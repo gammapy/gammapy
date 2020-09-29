@@ -72,8 +72,8 @@ def fermi_dataset():
     )
     psfmap = PSFMap.from_energy_dependent_table_psf(psf)
     edisp = EDispKernelMap.from_diagonal_response(
-        energy_axis=counts.geom.get_axis_by_name("energy"),
-        energy_axis_true=exposure.geom.get_axis_by_name("energy_true"),
+        energy_axis=counts.geom.axes["energy"],
+        energy_axis_true=exposure.geom.axes["energy_true"],
     )
 
     return MapDataset(
@@ -109,7 +109,7 @@ def test_compute_ts_map(input_dataset):
     # Check mask is correctly taken into account
     assert np.isnan(result["ts"].data[0, 30, 40])
 
-    energy_axis = result["ts"].geom.get_axis_by_name("energy")
+    energy_axis = result["ts"].geom.axes["energy"]
     assert_allclose(energy_axis.edges.value, [0.1, 1])
 
 
@@ -145,7 +145,7 @@ def test_compute_ts_map_energy(fermi_dataset):
     assert_allclose(result["flux_err"].data[:, 29, 29], [7.382305e-11, 1.338985e-11], rtol=1e-2)
     assert_allclose(result["niter"].data[:, 29, 29], [6, 6])
 
-    energy_axis = result["ts"].geom.get_axis_by_name("energy")
+    energy_axis = result["ts"].geom.axes["energy"]
     assert_allclose(energy_axis.edges.to_value("GeV"), [10, 84.471641, 500], rtol=1e-4)
 
 

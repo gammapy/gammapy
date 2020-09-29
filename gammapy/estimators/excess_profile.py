@@ -163,7 +163,7 @@ class ExcessProfileEstimator(Estimator):
             if spds.models is not None:
                 old_model = spds.models
             spds.models = SkyModel(spectral_model=self.spectrum)
-            e_reco = spds.counts.geom.get_axis_by_name("energy").edges
+            e_reco = spds.counts.geom.axes["energy"].edges
 
             # ToDo: When the function to_spectrum_dataset will manage the masks, use the following line
             # mask = spds.mask if spds.mask is not None else slice(None)

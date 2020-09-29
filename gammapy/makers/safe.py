@@ -135,7 +135,7 @@ class SafeMaskMaker(Maker):
         else:
             exposure = dataset.exposure
 
-        energy = exposure.geom.get_axis_by_name("energy_true")
+        energy = exposure.geom.axes["energy_true"]
         aeff = EffectiveAreaTable(
             energy_lo=energy.edges[:-1],
             energy_hi=energy.edges[1:],
@@ -163,7 +163,7 @@ class SafeMaskMaker(Maker):
         position = self.position
         if position is None:
             position = dataset.counts.geom.center_skydir
-            e_reco = dataset.counts.geom.get_axis_by_name("energy").edges
+            e_reco = dataset.counts.geom.axes["energy"].edges
         if isinstance(edisp, EDispKernelMap):
             edisp = edisp.get_edisp_kernel(position)
         else:
@@ -198,7 +198,7 @@ class SafeMaskMaker(Maker):
             background_spectrum = dataset.background_model.map
 
         idx = np.argmax(background_spectrum.data, axis=0)
-        energy_axis = geom.get_axis_by_name("energy")
+        energy_axis = geom.axes["energy"]
         e_min = energy_axis.pix_to_coord(idx)
         return geom.energy_mask(emin=e_min)
 

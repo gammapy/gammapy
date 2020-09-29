@@ -113,7 +113,7 @@ def test_wcsndmap_read_write_fgst(tmp_path):
 @requires_data()
 def test_wcsndmap_read_ccube():
     counts = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts-cube.fits.gz")
-    energy_axis = counts.geom.get_axis_by_name("energy")
+    energy_axis = counts.geom.axes["energy"]
     # for the 3FGL data the lower energy threshold should be at 10 GeV
     assert_allclose(energy_axis.edges.min().to_value("GeV"), 10, rtol=1e-3)
 
@@ -121,7 +121,7 @@ def test_wcsndmap_read_ccube():
 @requires_data()
 def test_wcsndmap_read_exposure():
     exposure = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz")
-    energy_axis = exposure.geom.get_axis_by_name("energy_true")
+    energy_axis = exposure.geom.axes["energy_true"]
     assert energy_axis.node_type == "center"
     assert exposure.unit == "cm2 s"
 

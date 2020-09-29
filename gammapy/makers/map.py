@@ -235,7 +235,7 @@ class MapDatasetMaker(Maker):
                 )
 
         if isinstance(psf, EnergyDependentMultiGaussPSF):
-            rad_axis = geom.get_axis_by_name("theta")
+            rad_axis = geom.axes["theta"]
             psf = psf.to_psf3d(rad=rad_axis.center)
 
         exposure = self.make_exposure_irf(geom.squash(axis_name="theta"), observation)

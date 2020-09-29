@@ -168,7 +168,7 @@ def test_spectrum_dataset_create():
     assert empty_spectrum_dataset.background_model.map.geom.axes[0].nbin == 2
     assert empty_spectrum_dataset.aeff.geom.axes[0].nbin == 3
     assert (
-        empty_spectrum_dataset.edisp.edisp_map.geom.get_axis_by_name("energy").nbin == 2
+        empty_spectrum_dataset.edisp.edisp_map.geom.axes["energy"].nbin == 2
     )
     assert empty_spectrum_dataset.livetime.value == 0
     assert len(empty_spectrum_dataset.gti.table) == 0

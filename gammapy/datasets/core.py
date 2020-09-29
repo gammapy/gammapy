@@ -165,7 +165,7 @@ class Datasets(collections.abc.MutableSequence):
     @property
     def energy_axes_are_aligned(self):
         """Whether all contained datasets have aligned energy axis"""
-        axes = [d.counts.geom.get_axis_by_name("energy") for d in self]
+        axes = [d.counts.geom.axes["energy"] for d in self]
         return np.all([axes[0].is_aligned(ax) for ax in axes])
 
     def stat_sum(self):
@@ -223,7 +223,7 @@ class Datasets(collections.abc.MutableSequence):
 
         for dataset in self:
             # TODO: implement slice_by_coord() and simplify?
-            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            energy_axis = dataset.counts.geom.axes["energy"]
             try:
                 group = energy_axis.group_table(edges=[e_min, e_max])
             except ValueError:
@@ -272,7 +272,7 @@ class Datasets(collections.abc.MutableSequence):
         e_mins, e_maxs = [], []
 
         for dataset in self:
-            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            energy_axis = dataset.counts.geom.axes["energy"]
             e_mins.append(energy_axis.edges[0])
             e_maxs.append(energy_axis.edges[-1])
 

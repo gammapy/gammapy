@@ -75,7 +75,7 @@ def create_map_dataset_geoms(
         if energy_axis_true.name != "energy_true":
             raise ValueError("True enery axis name must be 'energy_true'")
     else:
-        energy_axis_true = geom.get_axis_by_name("energy").copy(name="energy_true")
+        energy_axis_true = geom.axes["energy"].copy(name="energy_true")
 
     binsz_irf = binsz_irf or BINSZ_IRF_DEFAULT
     geom_image = geom.to_image()
@@ -87,7 +87,7 @@ def create_map_dataset_geoms(
         geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
     else:
         geom_edisp = geom_irf.to_cube(
-            [geom.get_axis_by_name("energy"), energy_axis_true]
+            [geom.axes["energy"], energy_axis_true]
         )
 
     return {
@@ -563,7 +563,7 @@ class MapDataset(Dataset):
             geom_squash = geom_squash.squash(drop)
 
         if "energy_true" in geom.axes.names:
-            ax = geom.get_axis_by_name("energy_true").copy(name="energy")
+            ax = geom.axes["energy_true"].copy(name="energy")
             geom = geom.to_image().to_cube([ax])
 
         coords = geom.get_coord()
@@ -1091,12 +1091,12 @@ class MapDataset(Dataset):
                 raise ValueError("No PSFMap set. Containement correction impossible")
             else:
                 psf = self.psf.get_energy_dependent_table_psf(on_region.center)
-                energy = kwargs["aeff"].geom.get_axis_by_name("energy_true").center
+                energy = kwargs["aeff"].geom.axes["energy_true"].center
                 containment = psf.containment(energy, on_region.radius)
                 kwargs["aeff"].data *= containment[:, np.newaxis]
 
         if self.edisp is not None:
-            energy_axis = self._geom.get_axis_by_name("energy")
+            energy_axis = self._geom.axes["energy"]
             edisp = self.edisp.get_edisp_kernel(
                 on_region.center, energy_axis=energy_axis
             )
@@ -1339,7 +1339,7 @@ class MapDataset(Dataset):
             Resampled dataset .
         """
         if axis is None:
-            e_axis = self._geom.get_axis_by_name("energy")
+            e_axis = self._geom.axes["energy"]
             e_edges = u.Quantity([e_axis.edges[0], e_axis.edges[-1]])
             axis = MapAxis.from_edges(e_edges, name="energy", interp=self._geom.axes[0].interp)
 
@@ -2049,7 +2049,7 @@ class MapDatasetOnOff(MapDataset):
         """
         dataset = super().resample_energy_axis(axis,name)
 
-        axis = dataset.counts.geom.get_axis_by_name("energy")
+        axis = dataset.counts.geom.axes["energy"]
 
         if self.mask_safe is not None:
             weights = self.mask_safe
@@ -2205,7 +2205,7 @@ class MapEvaluator:
 
         # lookup edisp
         if edisp:
-            energy_axis = geom.get_axis_by_name("energy")
+            energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
                 self.model.position, energy_axis=energy_axis
             )
@@ -2279,7 +2279,7 @@ class MapEvaluator:
 
     def compute_flux_spectral(self):
         """Compute spectral flux"""
-        energy = self.geom.get_axis_by_name("energy_true").edges
+        energy = self.geom.axes["energy_true"].edges
         value = self.model.spectral_model.integral(
             energy[:-1], energy[1:], intervals=True
         )

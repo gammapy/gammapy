@@ -1990,21 +1990,6 @@ class Geom(abc.ABC):
                 valid = valid and (axis.nbin == 1)
             return valid
 
-    def get_axis_by_name(self, name):
-        """Get an axis by name (case in-sensitive).
-
-        Parameters
-        ----------
-        name : str
-           Name of the requested axis
-
-        Returns
-        -------
-        axis : `~gammapy.maps.MapAxis`
-            Axis
-        """
-        return self.axes[name]
-
     def get_axis_index_by_name(self, name):
         """Get an axis index by name (case in-sensitive).
 
@@ -2064,7 +2049,7 @@ class Geom(abc.ABC):
             Energy mask
         """
         # get energy axes and values
-        energy_axis = self.get_axis_by_name("energy")
+        energy_axis = self.axes["energy"]
 
         if round_to_edge:
             emin, emax = energy_axis.round([emin, emax])

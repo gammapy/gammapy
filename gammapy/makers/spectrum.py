@@ -78,7 +78,7 @@ class SpectrumDatasetMaker(Maker):
             Background spectrum
         """
         offset = observation.pointing_radec.separation(geom.center_skydir)
-        e_reco = geom.get_axis_by_name("energy").edges
+        e_reco = geom.axes["energy"].edges
 
         bkg = observation.bkg
 
@@ -107,7 +107,7 @@ class SpectrumDatasetMaker(Maker):
             Effective area table.
         """
         offset = observation.pointing_radec.separation(geom.center_skydir)
-        energy = geom.get_axis_by_name("energy_true")
+        energy = geom.axes["energy_true"]
 
         data = observation.aeff.data.evaluate(offset=offset, energy_true=energy.center)
 
@@ -188,8 +188,8 @@ class SpectrumDatasetMaker(Maker):
             "meta_table": self.make_meta_table(observation),
         }
 
-        energy_axis = dataset.counts.geom.get_axis_by_name("energy")
-        energy_axis_true = dataset.aeff.geom.get_axis_by_name("energy_true")
+        energy_axis = dataset.counts.geom.axes["energy"]
+        energy_axis_true = dataset.aeff.geom.axes["energy_true"]
         region = dataset.counts.geom.region
 
         if "counts" in self.selection:

@@ -94,8 +94,8 @@ def background(geom):
 
 @pytest.fixture(scope="session")
 def edisp(geom, geom_true):
-    e_reco = geom.get_axis_by_name("energy").edges
-    e_true = geom_true.get_axis_by_name("energy_true").edges
+    e_reco = geom.axes["energy"].edges
+    e_true = geom_true.axes["energy_true"].edges
     return EDispKernel.from_diagonal_response(e_true=e_true, e_reco=e_reco)
 
 

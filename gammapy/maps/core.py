@@ -473,8 +473,8 @@ class Map(abc.ABC):
         """
         geom = self.geom.resample_axis(axis)
 
-        axis_self = self.geom.get_axis_by_name(axis.name)
-        axis_resampled = geom.get_axis_by_name(axis.name)
+        axis_self = self.geom.axes[axis.name]
+        axis_resampled = geom.axes[axis.name]
 
         indices = axis_self.coord_to_idx(axis_resampled.edges[:-1])
 
@@ -1004,7 +1004,7 @@ class Map(abc.ABC):
             e_reco_axis = edisp.e_reco.copy(name="energy")
         else:
             data = self.data
-            e_reco_axis = self.geom.get_axis_by_name("energy_true").copy(name="energy")
+            e_reco_axis = self.geom.axes["energy_true"].copy(name="energy")
 
         geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
         return self._init_copy(geom=geom_reco, data=data)

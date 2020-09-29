@@ -108,8 +108,8 @@ class PSFMap(IRFMap):
                 "EnergyDependentTablePSF can be extracted at one single position only."
             )
 
-        energy = self.psf_map.geom.get_axis_by_name("energy_true").center
-        rad = self.psf_map.geom.get_axis_by_name("theta").center
+        energy = self.psf_map.geom.axes["energy_true"].center
+        rad = self.psf_map.geom.axes["theta"].center
 
         coords = {
             "skycoord": position,
@@ -231,7 +231,7 @@ class PSFMap(IRFMap):
         """
 
         random_state = get_random_state(random_state)
-        rad_axis = self.psf_map.geom.get_axis_by_name("theta")
+        rad_axis = self.psf_map.geom.axes["theta"]
 
         coord = {
             "skycoord": map_coord.skycoord.reshape(-1, 1),

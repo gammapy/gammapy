@@ -66,9 +66,9 @@ class RegionNDMap(Map):
             )
 
         try:
-            axis = self.geom.get_axis_by_name("energy")
+            axis = self.geom.axes["energy"]
         except KeyError:
-            axis = self.geom.get_axis_by_name("energy_true")
+            axis = self.geom.axes["energy_true"]
 
         kwargs.setdefault("fmt", ".")
         kwargs.setdefault("capsize", 2)
