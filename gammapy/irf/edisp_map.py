@@ -175,7 +175,7 @@ class EDispMap(IRFMap):
         if "energy_true" not in [ax.name for ax in geom.axes]:
             raise ValueError("EDispMap requires true energy axis")
 
-        geom_exposure_edisp = geom.squash(axis="migra")
+        geom_exposure_edisp = geom.squash(axis_name="migra")
         exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
 
         migra_axis = geom.get_axis_by_name("migra")
@@ -302,7 +302,7 @@ class EDispMap(IRFMap):
         exposure_map = None
         if self.exposure_map is not None:
             exposure_map = Map.from_geom(
-                geom.squash(axis=energy_axis.name),
+                geom.squash(axis_name=energy_axis.name),
                 data=self.exposure_map.data,
                 unit=self.exposure_map.unit,
                 meta=self.exposure_map.meta,
@@ -369,7 +369,7 @@ class EDispKernelMap(IRFMap):
         if "energy" not in axis_names:
             raise ValueError("EDispKernelMap requires energy axis")
 
-        geom_exposure = geom.squash(axis="energy")
+        geom_exposure = geom.squash(axis_name="energy")
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
 
         energy_axis = geom.get_axis_by_name("energy")
@@ -513,12 +513,11 @@ class EDispKernelMap(IRFMap):
             edisp = edisp * weights.data
 
         data = np.sum(edisp, axis=1, keepdims=True)
-        geom = self.edisp_map.geom.squash("energy")
+        geom = self.edisp_map.geom.squash(axis_name="energy")
         edisp_map = Map.from_geom(geom=geom, data=data)
         return self.__class__(
             edisp_kernel_map=edisp_map, exposure_map=self.exposure_map
         )
-
 
     def resample_axis(self, axis, weights=None):
         """Returns a resampled EdispKernelMap grouped according to the

@@ -56,7 +56,7 @@ def make_edisp_map_test():
     )
 
     aeff2d = fake_aeff2d()
-    exposure_geom = geom.squash(axis="migra")
+    exposure_geom = geom.squash(axis_name="migra")
     exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
     return make_edisp_map(edisp2d, pointing, geom, exposure_map)
@@ -147,8 +147,12 @@ def test_edisp_from_diagonal_response(position):
     energy_axis_true = MapAxis.from_energy_bounds(
         "0.3 TeV", "10 TeV", nbin=31, name="energy_true"
     )
+    energy_axis = MapAxis.from_energy_bounds(
+        "0.3 TeV", "10 TeV", nbin=31, name="energy"
+    )
+
     edisp_map = EDispMap.from_diagonal_response(energy_axis_true)
-    edisp_kernel = edisp_map.get_edisp_kernel(position, energy_axis=energy_axis_true)
+    edisp_kernel = edisp_map.get_edisp_kernel(position, energy_axis=energy_axis)
 
     sum_kernel = np.sum(edisp_kernel.data.data, axis=1).data
 

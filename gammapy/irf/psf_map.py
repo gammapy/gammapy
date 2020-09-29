@@ -208,7 +208,7 @@ class PSFMap(IRFMap):
         psf_map : `PSFMap`
             Point spread function map.
         """
-        geom_exposure_psf = geom.squash(axis="theta")
+        geom_exposure_psf = geom.squash(axis_name="theta")
         exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
         psf_map = Map.from_geom(geom, unit="sr-1")
         return cls(psf_map, exposure_psf)
@@ -291,7 +291,7 @@ class PSFMap(IRFMap):
         ).to_value("sr-1")
         psf_map = Map.from_geom(geom, data=data, unit="sr-1")
 
-        geom_exposure = geom.squash(axis="theta")
+        geom_exposure = geom.squash(axis_name="theta")
 
         data = table_psf.exposure.reshape((-1, 1, 1, 1))
 

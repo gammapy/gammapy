@@ -372,7 +372,7 @@ class TSMapEstimator(Estimator):
 
         j, i = zip(*positions)
 
-        geom = counts.geom.squash(axis="energy")
+        geom = counts.geom.squash(axis_name="energy")
 
         for name in self.selection_all:
             unit = 1 / exposure.unit if "flux" in name else ""

@@ -14,7 +14,7 @@ from astropy.utils import lazyproperty
 from gammapy.utils.interpolation import interpolation_scale
 from .utils import INVALID_INDEX, edges_from_lo_hi, find_bands_hdu, find_hdu
 
-__all__ = ["MapCoord", "Geom", "MapAxis"]
+__all__ = ["MapCoord", "Geom", "MapAxis", "MapAxes"]
 
 log = logging.getLogger(__name__)
 
@@ -126,7 +126,7 @@ class MapAxes(Sequence):
         unique_names = []
         for ax in axes:
             if ax.name in unique_names:
-                raise (ValueError("Model names must be unique"))
+                raise (ValueError("Axis names must be unique"))
             unique_names.append(ax.name)
 
         self._axes = axes
