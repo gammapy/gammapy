@@ -93,6 +93,23 @@ class EventListBase:
         stacked_table = vstack_tables(tables, **kwargs)
         return cls(stacked_table)
 
+    def stack(self, other):
+        """Stack with another EventList.
+        
+        Calls `~astropy.table.vstack`.
+
+        Parameters
+        ----------
+        other : `~gammapy.data.EventList`
+            Event list to stack to self
+
+        Returns
+        -------
+        new_event_list : `~gammapy.data.EventList`
+            New event list
+        """
+        return self.__class__(vstack([self.table, other.table]))
+
     def __str__(self):
         ss = (
             "EventList info:\n"
