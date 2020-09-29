@@ -219,8 +219,8 @@ class EnergyDispersion2D:
             Energy dispersion matrix
         """
         offset = Angle(offset)
-        e_true = self.data.axis("energy_true").edges if e_true is None else e_true
-        e_reco = self.data.axis("energy_true").edges if e_reco is None else e_reco
+        e_true = self.data.axes["energy_true"].edges if e_true is None else e_true
+        e_reco = self.data.axes["energy_true"].edges if e_reco is None else e_reco
 
         data = []
         for energy in MapAxis.from_edges(e_true, interp="log").center:
@@ -262,7 +262,7 @@ class EnergyDispersion2D:
         """
         e_true = Quantity(e_true)
 
-        migra_axis = self.data.axis("migra")
+        migra_axis = self.data.axes["migra"]
 
         if e_reco is None:
             # Default: e_reco nodes = migra nodes * e_true nodes
@@ -330,7 +330,7 @@ class EnergyDispersion2D:
         else:
             e_true = np.atleast_1d(Quantity(e_true))
 
-        migra = self.data.axis("migra").center if migra is None else migra
+        migra = self.data.axes["migra"].center if migra is None else migra
 
         for ener in e_true:
             for off in offset:
@@ -374,8 +374,8 @@ class EnergyDispersion2D:
         if offset is None:
             offset = Angle(1, "deg")
 
-        e_true = self.data.axis("energy_true")
-        migra = self.data.axis("migra")
+        e_true = self.data.axes["energy_true"]
+        migra = self.data.axes["migra"]
 
         x = e_true.edges.value
         y = migra.edges.value
@@ -421,9 +421,9 @@ class EnergyDispersion2D:
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
 
-        energy = self.data.axis("energy_true").edges
-        migra = self.data.axis("migra").edges
-        theta = self.data.axis("offset").edges
+        energy = self.data.axes["energy_true"].edges
+        migra = self.data.axes["migra"].edges
+        theta = self.data.axes["offset"].edges
 
         table = Table(meta=meta)
         table["ENERG_LO"] = energy[:-1][np.newaxis]

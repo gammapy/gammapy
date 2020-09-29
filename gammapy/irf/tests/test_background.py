@@ -33,15 +33,15 @@ def bkg_3d():
 def test_background_3d_basics(bkg_3d):
     assert "NDDataArray summary info" in str(bkg_3d.data)
 
-    axis = bkg_3d.data.axis("energy")
+    axis = bkg_3d.data.axes["energy"]
     assert axis.nbin == 2
     assert axis.unit == "TeV"
 
-    axis = bkg_3d.data.axis("fov_lon")
+    axis = bkg_3d.data.axes["fov_lon"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
-    axis = bkg_3d.data.axis("fov_lat")
+    axis = bkg_3d.data.axes["fov_lat"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
@@ -57,15 +57,15 @@ def test_background_3d_read_write(tmp_path, bkg_3d):
     bkg_3d.to_table_hdu().writeto(tmp_path / "bkg3d.fits")
     bkg_3d_2 = Background3D.read(tmp_path / "bkg3d.fits")
 
-    axis = bkg_3d_2.data.axis("energy")
+    axis = bkg_3d_2.data.axes["energy"]
     assert axis.nbin == 2
     assert axis.unit == "TeV"
 
-    axis = bkg_3d_2.data.axis("fov_lon")
+    axis = bkg_3d_2.data.axes["fov_lon"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
-    axis = bkg_3d_2.data.axis("fov_lat")
+    axis = bkg_3d_2.data.axes["fov_lat"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
@@ -200,11 +200,11 @@ def test_background_2d_read_write(tmp_path, bkg_2d):
     bkg_2d.to_table_hdu().writeto(tmp_path / "tmp.fits")
     bkg_2d_2 = Background2D.read(tmp_path / "tmp.fits")
 
-    axis = bkg_2d_2.data.axis("energy")
+    axis = bkg_2d_2.data.axes["energy"]
     assert axis.nbin == 2
     assert axis.unit == "TeV"
 
-    axis = bkg_2d_2.data.axis("offset")
+    axis = bkg_2d_2.data.axes["offset"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 

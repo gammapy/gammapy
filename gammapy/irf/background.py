@@ -133,9 +133,9 @@ class Background3D:
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
 
-        detx = self.data.axis("fov_lon").edges
-        dety = self.data.axis("fov_lat").edges
-        energy = self.data.axis("energy").edges
+        detx = self.data.axes["fov_lon"].edges
+        dety = self.data.axes["fov_lat"].edges
+        energy = self.data.axes["energy"].edges
 
         table = Table(meta=meta)
         table["DETX_LO"] = detx[:-1][np.newaxis]
@@ -206,12 +206,12 @@ class Background3D:
 
         This takes the values at Y = 0 and X >= 0.
         """
-        idx_lon = self.data.axis("fov_lon").coord_to_idx(0 * u.deg)[0]
-        idx_lat = self.data.axis("fov_lat").coord_to_idx(0 * u.deg)[0]
+        idx_lon = self.data.axes["fov_lon"].coord_to_idx(0 * u.deg)[0]
+        idx_lat = self.data.axes["fov_lat"].coord_to_idx(0 * u.deg)[0]
         data = self.data.data[:, idx_lon:, idx_lat].copy()
 
-        energy = self.data.axis("energy").edges
-        offset = self.data.axis("fov_lon").edges[idx_lon:]
+        energy = self.data.axes["energy"].edges
+        offset = self.data.axes["fov_lon"].edges[idx_lon:]
 
         return Background2D(
             energy_lo=energy[:-1],
@@ -315,8 +315,8 @@ class Background2D:
         meta = self.meta.copy()
         table = Table(meta=meta)
 
-        theta = self.data.axis("offset").edges
-        energy = self.data.axis("energy").edges
+        theta = self.data.axes["offset"].edges
+        energy = self.data.axes["energy"].edges
 
         table["THETA_LO"] = theta[:-1][np.newaxis]
         table["THETA_HI"] = theta[1:][np.newaxis]
@@ -394,8 +394,8 @@ class Background2D:
 
         ax = plt.gca() if ax is None else ax
 
-        x = self.data.axis("energy").edges.to_value("TeV")
-        y = self.data.axis("offset").edges.to_value("deg")
+        x = self.data.axes["energy"].edges.to_value("TeV")
+        y = self.data.axes["offset"].edges.to_value("deg")
         z = self.data.data.T.value
 
         kwargs.setdefault("cmap", "GnBu")
@@ -435,11 +435,12 @@ class Background2D:
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
-            e_min, e_max = np.log10(self.data.axis("energy").center.value[[0, -1]])
-            energy = np.logspace(e_min, e_max, 4) * self.data.axis("energy").unit
+            energy_axis = self.data.axes["energy"]
+            e_min, e_max = np.log10(energy_axis.center.value[[0, -1]])
+            energy = np.logspace(e_min, e_max, 4) * energy_axis.unit
 
         if offset is None:
-            offset = self.data.axis("offset").center
+            offset = self.data.axes["offset"].center
 
         for ee in energy:
             bkg = self.data.evaluate(offset=offset, energy=ee)
@@ -448,7 +449,7 @@ class Background2D:
             label = f"energy = {ee:.1f}"
             ax.plot(offset, bkg.value, label=label, **kwargs)
 
-        ax.set_xlabel(f"Offset ({self.data.axis('offset').unit})")
+        ax.set_xlabel(f"Offset ({self.data.axes['offset'].unit})")
         ax.set_ylabel(f"Background rate ({self.data.data.unit})")
         ax.set_yscale("log")
         ax.legend(loc="upper right")
@@ -478,11 +479,12 @@ class Background2D:
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            off_min, off_max = self.data.axis("offset").center.value[[0, -1]]
-            offset = np.linspace(off_min, off_max, 4) * self.data.axis("offset").unit
+            offset_axis = self.data.axes["offset"]
+            off_min, off_max = offset_axis.center.value[[0, -1]]
+            offset = np.linspace(off_min, off_max, 4) * offset_axis.unit
 
         if energy is None:
-            energy = self.data.axis("energy").center
+            energy = self.data.axes["energy"].center
 
         for off in offset:
             bkg = self.data.evaluate(offset=off, energy=energy)
@@ -516,8 +518,8 @@ class Background2D:
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
-        offset = self.data.axis("offset").edges
-        energy = self.data.axis("energy").center
+        offset = self.data.axes["offset"].edges
+        energy = self.data.axes["energy"].center
 
         bkg = []
         for ee in energy:

@@ -53,14 +53,6 @@ class NDDataArray:
         """Array holding the axes in correct order"""
         return self._axes
 
-    def axis(self, name):
-        """Return axis by name"""
-        try:
-            idx = [_.name for _ in self.axes].index(name)
-        except ValueError:
-            raise ValueError(f"Axis {name} not found")
-        return self.axes[idx]
-
     @property
     def data(self):
         """Array holding the n-dimensional data."""
