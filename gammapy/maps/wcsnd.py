@@ -324,7 +324,7 @@ class WcsNDMap(WcsMap):
         geom = self.geom.downsample(factor, axis_name=axis_name)
 
         if axis_name is None:
-            block_size = (factor, factor) + (1,) * len(self.geom.axes)
+            block_size = (1,) * len(self.geom.axes) + (factor, factor)
         else:
             block_size = [1] * self.data.ndim
             idx = self.geom.axes.index_data(axis_name)
@@ -337,7 +337,7 @@ class WcsNDMap(WcsMap):
         else:
             weights = weights.data
 
-        data = block_reduce(self.data * weights, tuple(block_size[::-1]), func=func)
+        data = block_reduce(self.data * weights, tuple(block_size), func=func)
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
     def plot(self, ax=None, fig=None, add_cbar=False, stretch="linear", **kwargs):

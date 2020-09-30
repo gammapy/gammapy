@@ -947,12 +947,19 @@ class MapAxis:
         idx : `~numpy.ndarray`
             Array of bin indices.
         """
-        coord = u.Quantity(coord, self.unit, copy=False).value
-        pix = np.round(self.coord_to_pix(coord)).astype(int)
-        if clip:
-            pix = np.clip(pix, 0, self.nbin - 1)
+        coord = u.Quantity(coord, self.unit, copy=False, ndmin=1).value
+        edges = self.edges.value
+        idx = np.digitize(coord, edges) - 1
 
-        return pix
+        if clip:
+            idx = np.clip(idx, 0, self.nbin - 1)
+        else:
+            with np.errstate(invalid="ignore"):
+                idx[coord > edges[-1]] = INVALID_INDEX.int
+
+        idx[~np.isfinite(coord)] = INVALID_INDEX.int
+
+        return idx
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
