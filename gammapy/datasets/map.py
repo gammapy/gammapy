@@ -1321,15 +1321,15 @@ class MapDataset(Dataset):
             if self.__dict__.pop(name, False):
                 log.info(f"Clearing {name} cache for dataset {self.name}")
 
-    def resample_energy_axis(self, axis=None, name=None):
+    def resample_energy_axis(self, energy_axis, name=None):
         """Resample MapDataset over new reco energy axis.
 
         Counts are summed taking into account safe mask.
 
         Parameters
         ----------
-        axis : `~gammapy.maps.MapAxis`
-            the new reco energy axis.
+        energy_axis : `~gammapy.maps.MapAxis`
+            New reconstructed energy axis.
         name: str
             Name of the new dataset.
 
@@ -1338,12 +1338,8 @@ class MapDataset(Dataset):
         dataset: `MapDataset`
             Resampled dataset .
         """
-        if axis is None:
-            e_axis = self._geom.axes["energy"]
-            e_edges = u.Quantity([e_axis.edges[0], e_axis.edges[-1]])
-            axis = MapAxis.from_edges(e_edges, name="energy", interp=self._geom.axes[0].interp)
-
         name = make_name(name)
+
         kwargs = {}
         kwargs["name"] = name
         kwargs["gti"] = self.gti
@@ -1352,16 +1348,16 @@ class MapDataset(Dataset):
 
         if self.mask_safe is not None:
             weights = self.mask_safe
-            kwargs["mask_safe"] = self.mask_safe.resample_axis(axis=axis, ufunc=np.logical_or)
+            kwargs["mask_safe"] = self.mask_safe.resample_axis(axis=energy_axis, ufunc=np.logical_or)
         else:
             weights = None
 
         if self.counts is not None:
-            kwargs["counts"] = self.counts.resample_axis(axis=axis, weights=weights)
+            kwargs["counts"] = self.counts.resample_axis(axis=energy_axis, weights=weights)
 
         if self.background_model is not None:
             background = self.background_model.evaluate()
-            background = background.resample_axis(axis=axis, weights=weights)
+            background = background.resample_axis(axis=energy_axis, weights=weights)
             model = BackgroundModel(
                 background, datasets_names=[name], name=f"{name}-bkg"
             )
@@ -1372,14 +1368,14 @@ class MapDataset(Dataset):
             mask_irf = self._mask_safe_irf(
                 self.edisp.edisp_map, self.mask_safe, drop="energy_true"
             )
-            kwargs["edisp"] = self.edisp.resample_axis(axis=axis, weights=mask_irf)
+            kwargs["edisp"] = self.edisp.resample_axis(axis=energy_axis, weights=mask_irf)
         else:  # None or EDispMap
             kwargs["edisp"] = self.edisp
 
         return self.__class__(**kwargs)
 
     def to_image(self, name=None):
-        """Create images by summing over the reconstructed-energy axis.
+        """Create images by summing over the reconstructed energy axis.
 
         Parameters
         ----------
@@ -1391,7 +1387,9 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset containing images.
         """
-        return self.resample_energy_axis(axis=None, name=name)
+        energy_axis = self._geom.axes["energy"].squash()
+        return self.resample_energy_axis(energy_axis=energy_axis, name=name)
+
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
@@ -2030,15 +2028,15 @@ class MapDatasetOnOff(MapDataset):
 
         return self.from_map_dataset(dataset, **kwargs)
 
-    def resample_energy_axis(self, axis=None, name=None):
-        """Resample MapDatasetOnOff over reco energy edges.
+    def resample_energy_axis(self, energy_axis, name=None):
+        """Resample MapDatasetOnOff over reconstructed energy edges.
 
         Counts are summed taking into account safe mask.
 
         Parameters
         ----------
-        axis : `~gammapy.maps.MapAxis`
-            the new reco energy axis.
+        energy_axis : `~gammapy.maps.MapAxis`
+            New reco energy axis.
         name: str
             Name of the new dataset.
 
@@ -2047,9 +2045,7 @@ class MapDatasetOnOff(MapDataset):
         dataset: `SpectrumDataset`
             Resampled spectrum dataset .
         """
-        dataset = super().resample_energy_axis(axis,name)
-
-        axis = dataset.counts.geom.axes["energy"]
+        dataset = super().resample_energy_axis(energy_axis, name)
 
         if self.mask_safe is not None:
             weights = self.mask_safe
@@ -2059,15 +2055,15 @@ class MapDatasetOnOff(MapDataset):
         counts_off = None
         if self.counts_off is not None:
             counts_off = self.counts_off
-            counts_off = counts_off.resample_axis(axis=axis, weights=weights)
+            counts_off = counts_off.resample_axis(axis=energy_axis, weights=weights)
 
         acceptance = 1
         acceptance_off = None
         if self.acceptance is not None:
             acceptance = self.acceptance
-            acceptance = acceptance.resample_axis(axis=axis, weights=weights)
+            acceptance = acceptance.resample_axis(axis=energy_axis, weights=weights)
 
-            norm_factor = self.counts_off_normalised.resample_axis(axis=axis, weights=weights)
+            norm_factor = self.counts_off_normalised.resample_axis(axis=energy_axis, weights=weights)
 
             acceptance_off = acceptance * counts_off / norm_factor
 

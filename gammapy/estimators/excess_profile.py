@@ -252,13 +252,14 @@ class ExcessProfileEstimator(Estimator):
         imageprofile : `~gammapy.estimators.ImageProfile`
             Return an image profile class containing the result
         """
-        axis = None
         if self.e_edges is not None:
             axis = MapAxis.from_energy_edges(self.e_edges)
-
-        dataset = dataset.resample_energy_axis(axis=axis)
+            dataset = dataset.resample_energy_axis(energy_axis=axis)
+        else:
+            dataset = dataset.to_image()
 
         spectrum_datasets = self.get_spectrum_datasets(dataset)
+
         results = self.make_prof(spectrum_datasets)
         table = table_from_row_data(results)
         if isinstance(self.regions[0], RectangleSkyRegion):

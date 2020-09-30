@@ -486,7 +486,6 @@ class Map(abc.ABC):
         weights = 1 if weights is None else weights.data
 
         data = ufunc.reduceat(self.data * weights, indices=indices, axis=idx)
-
         return self._init_copy(data=data, geom=geom)
 
     def slice_by_idx(self, slices, ):

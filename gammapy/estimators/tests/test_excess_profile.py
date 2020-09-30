@@ -16,7 +16,7 @@ def get_simple_dataset_on_off():
     axis = MapAxis.from_energy_bounds(0.1, 10, 2, unit="TeV")
     geom = WcsGeom.create(npix=40, binsz=0.01, axes=[axis])
     dataset = MapDatasetOnOff.create(geom)
-    dataset.mask_safe += 1
+    dataset.mask_safe += True
     dataset.counts += 5
     dataset.counts_off += 1
     dataset.acceptance += 1
