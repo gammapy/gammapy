@@ -187,12 +187,13 @@ class RegionNDMap(Map):
 
     def downsample(self, factor, preserve_counts=True, axis_name="energy"):
         geom = self.geom.downsample(factor=factor, axis_name=axis_name)
+
         block_size = [1] * self.data.ndim
-        idx = self.geom.axes.index(axis_name)
-        block_size[-(idx + 1)] = factor
+        idx = self.geom.axes.index_data(axis_name)
+        block_size[idx] = factor
 
         func = np.nansum if preserve_counts else np.nanmean
-        data = block_reduce(self.data, tuple(block_size[::-1]), func=func)
+        data = block_reduce(self.data, tuple(block_size), func=func)
 
         return self._init_copy(geom=geom, data=data)
 
@@ -315,7 +316,6 @@ class RegionNDMap(Map):
 
     def pad(self):
         raise NotImplementedError("Pad is not supported by RegionNDMap")
-
 
     def stack(self, other, weights=None):
         """Stack other region map into map.

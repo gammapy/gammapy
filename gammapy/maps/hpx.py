@@ -511,9 +511,8 @@ class HpxGeom(Geom):
     @property
     def data_shape(self):
         """Shape of the Numpy data array matching this geometry."""
-        npix_shape = [np.max(self.npix)]
-        ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)[::-1]
+        npix_shape = tuple([np.max(self.npix)])
+        return (npix_shape + self.axes.shape)[::-1]
 
     def _create_lookup(self, region):
         """Create local-to-global pixel lookup table."""
@@ -664,17 +663,12 @@ class HpxGeom(Geom):
     def coord_to_pix(self, coords):
         import healpy as hp
 
-        coords = MapCoord.create(coords, frame=self.frame)
+        coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
         theta, phi = coords.theta, coords.phi
 
-        c = self.coord_to_tuple(coords)
-
         if self.axes:
-            bins = []
-            idxs = []
-            for i, ax in enumerate(self.axes):
-                bins += [ax.coord_to_pix(c[i + 2])]
-                idxs += [ax.coord_to_idx(c[i + 2])]
+            idxs = self.axes.coord_to_idx(coords, clip=True)
+            bins = self.axes.coord_to_pix(coords)
 
             # FIXME: Figure out how to handle coordinates out of
             # bounds of non-spatial dimensions
@@ -687,7 +681,7 @@ class HpxGeom(Geom):
             theta[m] = 0.0
             phi[m] = 0.0
             pix = hp.ang2pix(nside, theta, phi, nest=self.nest)
-            pix = tuple([pix] + bins)
+            pix = tuple([pix]) + bins
             if np.any(m):
                 for p in pix:
                     p[m] = INVALID_INDEX.int
@@ -790,7 +784,7 @@ class HpxGeom(Geom):
     @property
     def shape_axes(self):
         """Shape of non-spatial axes."""
-        return tuple([ax.nbin for ax in self._axes])
+        return self.axes.shape
 
     @property
     def ndim(self):
@@ -1153,7 +1147,6 @@ class HpxGeom(Geom):
         conv = HPX_FITS_CONVENTIONS[format]
 
         axes = MapAxes.from_table_hdu(hdu_bands, format=format)
-        shape = [ax.nbin for ax in axes]
 
         if header["PIXTYPE"] != "HEALPIX":
             raise ValueError(
@@ -1170,7 +1163,7 @@ class HpxGeom(Geom):
             )
 
         if hdu_bands is not None and "NSIDE" in hdu_bands.columns.names:
-            nside = hdu_bands.data.field("NSIDE").reshape(shape).astype(int)
+            nside = hdu_bands.data.field("NSIDE").reshape(axes.shape).astype(int)
         elif "NSIDE" in header:
             nside = header["NSIDE"]
         elif "ORDER" in header:

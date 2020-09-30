@@ -79,7 +79,7 @@ class HpxNDMap(HpxMap):
 
         hpx_conv = HPX_FITS_CONVENTIONS[format]
 
-        shape = tuple([ax.nbin for ax in geom.axes[::-1]])
+        shape = geom.axes.shape[::-1]
 
         # TODO: Should we support extracting slices?
 
