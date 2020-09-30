@@ -118,7 +118,7 @@ class RegionGeom(Geom):
         if self.region is None:
             raise ValueError("Region definition required.")
 
-        coords = MapCoord.create(coords)
+        coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
         return self.region.contains(coords.skycoord, self.wcs)
 
     def separation(self, position):
@@ -228,10 +228,14 @@ class RegionGeom(Geom):
         return tuple(idxs)
 
     def coord_to_pix(self, coords):
+        coords = MapCoord.create(
+            coords, frame=self.frame, axis_names=self.axes.names
+        )
+        print(coords)
+
         if self.region is None:
             pix = (0, 0)
         else:
-            coords = MapCoord.create(coords, frame=self.frame)
             in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
 
             x = np.zeros(coords.shape)
@@ -242,10 +246,7 @@ class RegionGeom(Geom):
 
             pix = (x, y)
 
-        c = self.coord_to_tuple(coords)
-        for coord, ax in zip(c[self._slice_non_spatial_axes], self.axes):
-            pix += (ax.coord_to_pix(coord),)
-
+        pix += self.axes.coord_to_pix(coords)
         return pix
 
     def get_idx(self):

@@ -477,11 +477,7 @@ class Map(abc.ABC):
         axis_resampled = geom.axes[axis.name]
 
         indices = axis_self.coord_to_idx(axis_resampled.edges[:-1])
-
-        idx = self.geom.axes.index(axis.name)
-
-        # transform to data idx
-        idx = len(geom.axes) - idx - 1
+        idx = self.geom.axes.index_data(axis.name)
 
         weights = 1 if weights is None else weights.data
 
@@ -641,7 +637,7 @@ class Map(abc.ABC):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        coords = MapCoord.create(coords, frame=self.geom.frame)
+        coords = MapCoord.create(coords, frame=self.geom.frame, axis_names=self.geom.axes.names)
         pix = self.geom.coord_to_pix(coords)
         vals = self.get_by_pix(pix)
         return vals
@@ -1082,8 +1078,7 @@ class Map(abc.ABC):
         else:
             geom = self.geom.drop(axis_name=axis_name)
 
-        names = [ax.name for ax in reversed(self.geom.axes)]
-        idx = names.index(axis_name)
+        idx = self.geom.axes.index_data(axis_name)
 
         data = self.data
 

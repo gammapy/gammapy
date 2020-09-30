@@ -88,7 +88,7 @@ class WcsNDMap(WcsMap):
             Wcs map
         """
         geom = WcsGeom.from_header(hdu.header, hdu_bands, format=format)
-        shape = tuple([ax.nbin for ax in geom.axes])
+        shape = geom.axes.shape
         shape_wcs = tuple([np.max(geom.npix[0]), np.max(geom.npix[1])])
 
         meta = cls._get_meta_from_header(hdu.header)
@@ -324,11 +324,11 @@ class WcsNDMap(WcsMap):
         geom = self.geom.downsample(factor, axis_name=axis_name)
 
         if axis_name is None:
-            block_size = (factor, factor) + (1,) * len(self.geom.axes)
+            block_size = (1,) * len(self.geom.axes) + (factor, factor)
         else:
             block_size = [1] * self.data.ndim
-            idx = self.geom.axes.index(axis_name)
-            block_size[idx + 2] = factor
+            idx = self.geom.axes.index_data(axis_name)
+            block_size[idx] = factor
 
         func = np.nansum if preserve_counts else np.nanmean
 
@@ -337,7 +337,7 @@ class WcsNDMap(WcsMap):
         else:
             weights = weights.data
 
-        data = block_reduce(self.data * weights, tuple(block_size[::-1]), func=func)
+        data = block_reduce(self.data * weights, tuple(block_size), func=func)
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
     def plot(self, ax=None, fig=None, add_cbar=False, stretch="linear", **kwargs):
@@ -723,7 +723,7 @@ class WcsNDMap(WcsMap):
         coords = self.geom.pix_to_coord(coords_pix[::-1])
 
         # TODO: pix_to_coord should return a MapCoord object
-        axes_names = ["lon", "lat"] + [ax.name for ax in self.geom.axes]
+        axes_names = ["lon", "lat"] + self.geom.axes.names
         cdict = OrderedDict(zip(axes_names, coords))
 
         return MapCoord.create(cdict, frame=self.geom.frame)

@@ -426,7 +426,7 @@ class WcsGeom(Geom):
         wcs._naxis = wcs._naxis[:2]
 
         axes = MapAxes.from_table_hdu(hdu_bands, format=format)
-        shape = tuple([ax.nbin for ax in axes])
+        shape = axes.shape
 
         if hdu_bands is not None and "NPIX" in hdu_bands.columns.names:
             npix = hdu_bands.data.field("NPIX").reshape(shape + (2,))
@@ -591,20 +591,14 @@ class WcsGeom(Geom):
         return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
 
     def coord_to_pix(self, coords):
-        coords = MapCoord.create(coords, frame=self.frame)
+        coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
 
         if coords.size == 0:
             return tuple([np.array([]) for i in range(coords.ndim)])
 
-        c = self.coord_to_tuple(coords)
         # Variable Bin Size
         if not self.is_regular:
-            idxs = tuple(
-                [
-                    np.clip(ax.coord_to_idx(c[i + 2]), 0, ax.nbin - 1)
-                    for i, ax in enumerate(self.axes)
-                ]
-            )
+            idxs = self.axes.coord_to_idx(coords, clip=True)
             crpix = [t[idxs] for t in self._crpix]
             cdelt = [t[idxs] for t in self._cdelt]
             pix = world2pix(self.wcs, cdelt, crpix, (coords.lon, coords.lat))
@@ -612,9 +606,7 @@ class WcsGeom(Geom):
         else:
             pix = self._wcs.wcs_world2pix(coords.lon, coords.lat, 0)
 
-        for coord, ax in zip(c[self._slice_non_spatial_axes], self.axes):
-            pix += [ax.coord_to_pix(coord)]
-
+        pix += self.axes.coord_to_pix(coords)
         return tuple(pix)
 
     def pix_to_coord(self, pix):
@@ -627,15 +619,14 @@ class WcsGeom(Geom):
         else:
             coords = self._wcs.wcs_pix2world(pix[0], pix[1], 0)
 
-        coords = [
+        coords = (
             u.Quantity(coords[0], unit="deg", copy=False),
             u.Quantity(coords[1], unit="deg", copy=False),
-        ]
+        )
 
-        for ax, t in zip(self.axes, pix[self._slice_non_spatial_axes]):
-            coords += [ax.pix_to_coord(t)]
+        coords += self.axes.pix_to_coord(pix[self._slice_non_spatial_axes])
 
-        return tuple(coords)
+        return coords
 
     def pix_to_idx(self, pix, clip=False):
         # TODO: copy idx to avoid modifying input pix?

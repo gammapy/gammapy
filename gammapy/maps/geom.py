@@ -73,25 +73,6 @@ def pix_tuple_to_idx(pix):
     return tuple(idx)
 
 
-def coord_to_idx(edges, x, clip=False):
-    """Convert axis coordinates ``x`` to bin indices.
-
-    Returns -1 for values below/above the lower/upper edge.
-    """
-    x = np.array(x, ndmin=1)
-    ibin = np.digitize(x, edges) - 1
-
-    if clip:
-        ibin[x < edges[0]] = 0
-        ibin[x > edges[-1]] = len(edges) - 1
-    else:
-        with np.errstate(invalid="ignore"):
-            ibin[x > edges[-1]] = INVALID_INDEX.int
-
-    ibin[~np.isfinite(x)] = INVALID_INDEX.int
-    return ibin
-
-
 def coord_to_pix(edges, coord, interp="lin"):
     """Convert axis to pixel coordinates for given interpolation scheme."""
     scale = interpolation_scale(interp)
@@ -141,9 +122,25 @@ class MapAxes(Sequence):
         """Names of the axes"""
         return [ax.name for ax in self]
 
-    def index(self, value):
-        """Get index"""
-        return self.names.index(value)
+    def index(self, axis_name):
+        """Get index in list"""
+        return self.names.index(axis_name)
+
+    def index_data(self, axis_name):
+        """Get data index of the axes
+
+        Parameters
+        ----------
+        axis_name : str
+            Name of the axis.
+
+        Returns
+        -------
+        idx : int
+            Data index
+        """
+        idx = self.names.index(axis_name)
+        return len(self) - idx - 1
 
     def __len__(self):
         return len(self._axes)
@@ -297,7 +294,7 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        coord : dict of `~numpy.ndarray`
+        coord : dict of `~numpy.ndarray` or `MapCoord`
             Array of axis coordinate values.
 
         Returns
@@ -950,8 +947,19 @@ class MapAxis:
         idx : `~numpy.ndarray`
             Array of bin indices.
         """
-        coord = u.Quantity(coord, self.unit, copy=False).value
-        return coord_to_idx(self.edges.value, coord, clip)
+        coord = u.Quantity(coord, self.unit, copy=False, ndmin=1).value
+        edges = self.edges.value
+        idx = np.digitize(coord, edges) - 1
+
+        if clip:
+            idx = np.clip(idx, 0, self.nbin - 1)
+        else:
+            with np.errstate(invalid="ignore"):
+                idx[coord > edges[-1]] = INVALID_INDEX.int
+
+        idx[~np.isfinite(coord)] = INVALID_INDEX.int
+
+        return idx
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
@@ -1414,7 +1422,7 @@ class MapCoord:
         return SkyCoord(self.lon, self.lat, unit="deg", frame=self.frame)
 
     @classmethod
-    def _from_lonlat(cls, coords, frame=None):
+    def _from_lonlat(cls, coords, frame=None, axis_names=None):
         """Create a `~MapCoord` from a tuple of coordinate vectors.
 
         The first two elements of the tuple should be longitude and latitude in degrees.
@@ -1429,24 +1437,27 @@ class MapCoord:
         coord : `~MapCoord`
             A coordinates object.
         """
+        if axis_names is None:
+            axis_names = [f"axis{idx}" for idx in range(len(coords) - 2)]
+
         if isinstance(coords, (list, tuple)):
             coords_dict = {"lon": coords[0], "lat": coords[1]}
-            for i, c in enumerate(coords[2:]):
-                coords_dict[f"axis{i}"] = c
+            for name, c in zip(axis_names, coords[2:]):
+                coords_dict[name] = c
         else:
             raise ValueError("Unrecognized input type.")
 
         return cls(coords_dict, frame=frame, match_by_name=False)
 
     @classmethod
-    def _from_tuple(cls, coords, frame=None):
+    def _from_tuple(cls, coords, frame=None, axis_names=None):
         """Create from tuple of coordinate vectors."""
         if isinstance(coords[0], (list, np.ndarray)) or np.isscalar(coords[0]):
-            return cls._from_lonlat(coords, frame=frame)
+            return cls._from_lonlat(coords, frame=frame, axis_names=axis_names)
         elif isinstance(coords[0], SkyCoord):
             lon, lat, frame = skycoord_to_lonlat(coords[0], frame=frame)
             coords = (lon, lat) + coords[1:]
-            return cls._from_lonlat(coords, frame=frame)
+            return cls._from_lonlat(coords, frame=frame, axis_names=axis_names)
         else:
             raise TypeError(f"Type not supported: {type(coords)!r}")
 
@@ -1467,7 +1478,7 @@ class MapCoord:
             raise ValueError("coords dict must contain 'lon'/'lat' or 'skycoord'.")
 
     @classmethod
-    def create(cls, data, frame=None):
+    def create(cls, data, frame=None, axis_names=None):
         """Create a new `~MapCoord` object.
 
         This method can be used to create either unnamed (with tuple input)
@@ -1481,6 +1492,8 @@ class MapCoord:
             Set the coordinate system for longitude and latitude. If
             None longitude and latitude will be assumed to be in
             the coordinate system native to a given map geometry.
+        axis_names : list of str
+            Axis names use if a tuple is provided
 
         Examples
         --------
@@ -1505,9 +1518,9 @@ class MapCoord:
         elif isinstance(data, dict):
             return cls._from_dict(data, frame=frame)
         elif isinstance(data, (list, tuple)):
-            return cls._from_tuple(data, frame=frame)
+            return cls._from_tuple(data, frame=frame, axis_names=axis_names)
         elif isinstance(data, SkyCoord):
-            return cls._from_tuple((data,), frame=frame)
+            return cls._from_tuple((data,), frame=frame, axis_names=axis_names)
         else:
             raise TypeError(f"Unsupported input type: {type(data)!r}")
 
@@ -1902,25 +1915,6 @@ class Geom(abc.ABC):
         """
         axes = self.axes.drop(axis_name=axis_name)
         return self.to_image().to_cube(axes=axes)
-
-    def coord_to_tuple(self, coord):
-        """Generate a coordinate tuple compatible with this geometry.
-
-        Parameters
-        ----------
-        coord : `~MapCoord`
-        """
-        if self.ndim != coord.ndim:
-            raise ValueError("ndim mismatch")
-
-        if not coord.match_by_name:
-            return tuple(coord._data.values())
-
-        coord_tuple = [coord.lon, coord.lat]
-        for ax in self.axes:
-            coord_tuple += [coord[ax.name]]
-
-        return coord_tuple
 
     @abc.abstractmethod
     def pad(self, pad_width):
