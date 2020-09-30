@@ -328,6 +328,7 @@ class PSFMap(IRFMap):
         energy = energy_axis_true.center
         rad = rad_axis.center
         tableshape = (energy.shape[0], rad.shape[0])
+
         if np.size(sigma) == 1:
             # same width for all energies
             tablepsf = TablePSF.from_shape(shape='gauss', width=sigma, rad=rad)
@@ -339,9 +340,9 @@ class PSFMap(IRFMap):
                 energytable_temp[idx, :] = TablePSF.from_shape(shape='gauss', width=sigma[idx], rad=rad).psf_value
         else:
             raise AssertionError('There need to be the same number of sigma values as energies')
-        energytable = EnergyDependentTablePSF(energy, rad, exposure=None, psf_value=energytable_temp)
-        psf_map = cls.from_energy_dependent_table_psf(energytable)
-        return psf_map
+
+        table_psf = EnergyDependentTablePSF(energy, rad, exposure=None, psf_value=energytable_temp)
+        return cls.from_energy_dependent_table_psf(table_psf)
 
     def to_image(self, spectrum=None, keepdims=True):
         """Reduce to a 2-D map after weighing

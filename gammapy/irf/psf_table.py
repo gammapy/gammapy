@@ -381,8 +381,8 @@ class EnergyDependentTablePSF:
         if rad is None:
             rad = self.rad
 
-        energy = np.atleast_1d(u.Quantity(energy))[:, np.newaxis]
-        rad = np.atleast_1d(u.Quantity(rad))
+        energy = u.Quantity(energy, ndmin=1)[:, np.newaxis]
+        rad = u.Quantity(rad, ndmin=1)
         return self._interpolate((energy, rad), clip=True, method=method)
 
     def table_psf_at_energy(self, energy, method="linear", **kwargs):
