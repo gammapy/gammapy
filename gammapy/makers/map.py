@@ -173,7 +173,7 @@ class MapDatasetMaker(Maker):
         edisp : `~gammapy.irf.EDispMap`
             Edisp map.
         """
-        exposure = self.make_exposure_irf(geom.squash(axis="migra"), observation)
+        exposure = self.make_exposure_irf(geom.squash(axis_name="migra"), observation)
 
         return make_edisp_map(
             edisp=observation.edisp,
@@ -204,7 +204,7 @@ class MapDatasetMaker(Maker):
                 edisp_kernel_map = interp_map,
                 exposure_map = exposure
                 )
-        exposure = self.make_exposure_irf(geom.squash(axis="energy"), observation)
+        exposure = self.make_exposure_irf(geom.squash(axis_name="energy"), observation)
 
         return make_edisp_kernel_map(
             edisp=observation.edisp,
@@ -235,10 +235,10 @@ class MapDatasetMaker(Maker):
                 )
 
         if isinstance(psf, EnergyDependentMultiGaussPSF):
-            rad_axis = geom.get_axis_by_name("theta")
+            rad_axis = geom.axes["theta"]
             psf = psf.to_psf3d(rad=rad_axis.center)
 
-        exposure = self.make_exposure_irf(geom.squash(axis="theta"), observation)
+        exposure = self.make_exposure_irf(geom.squash(axis_name="theta"), observation)
 
         return make_psf_map(
             psf=psf,

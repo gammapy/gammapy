@@ -118,8 +118,8 @@ class EDispMap(IRFMap):
                 "EnergyDispersion can be extracted at one single position only."
             )
 
-        energy_axis_true = self.edisp_map.geom.get_axis_by_name("energy_true")
-        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
+        energy_axis_true = self.edisp_map.geom.axes["energy_true"]
+        migra_axis = self.edisp_map.geom.axes["migra"]
 
         coords = {
             "skycoord": position,
@@ -175,10 +175,10 @@ class EDispMap(IRFMap):
         if "energy_true" not in [ax.name for ax in geom.axes]:
             raise ValueError("EDispMap requires true energy axis")
 
-        geom_exposure_edisp = geom.squash(axis="migra")
+        geom_exposure_edisp = geom.squash(axis_name="migra")
         exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
 
-        migra_axis = geom.get_axis_by_name("migra")
+        migra_axis = geom.axes["migra"]
         edisp_map = Map.from_geom(geom, unit="")
         migra_0 = migra_axis.coord_to_pix(1)
 
@@ -206,7 +206,7 @@ class EDispMap(IRFMap):
             Sequence of Edisp-corrected coordinates of the input map_coord map.
         """
         random_state = get_random_state(random_state)
-        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
+        migra_axis = self.edisp_map.geom.axes["migra"]
 
         coord = {
             "skycoord": map_coord.skycoord.reshape(-1, 1),
@@ -267,8 +267,8 @@ class EDispMap(IRFMap):
             Energy dispersion kernel map.
         """
         axis = 0
-        energy_axis_true = self.edisp_map.geom.get_axis_by_name("energy_true")
-        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
+        energy_axis_true = self.edisp_map.geom.axes["energy_true"]
+        migra_axis = self.edisp_map.geom.axes["migra"]
 
         data = []
 
@@ -302,7 +302,7 @@ class EDispMap(IRFMap):
         exposure_map = None
         if self.exposure_map is not None:
             exposure_map = Map.from_geom(
-                geom.squash(axis=energy_axis.name),
+                geom.squash(axis_name=energy_axis.name),
                 data=self.exposure_map.data,
                 unit=self.exposure_map.unit,
                 meta=self.exposure_map.meta,
@@ -369,11 +369,11 @@ class EDispKernelMap(IRFMap):
         if "energy" not in axis_names:
             raise ValueError("EDispKernelMap requires energy axis")
 
-        geom_exposure = geom.squash(axis="energy")
+        geom_exposure = geom.squash(axis_name="energy")
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
 
-        energy_axis = geom.get_axis_by_name("energy")
-        energy_axis_true = geom.get_axis_by_name("energy_true")
+        energy_axis = geom.axes["energy"]
+        energy_axis_true = geom.axes["energy_true"]
 
         data = get_overlap_fraction(energy_axis, energy_axis_true)
 
@@ -397,7 +397,7 @@ class EDispKernelMap(IRFMap):
             the energy dispersion (i.e. rmf object)
         """
         if energy_axis:
-            assert energy_axis == self.edisp_map.geom.get_axis_by_name("energy")
+            assert energy_axis == self.edisp_map.geom.axes["energy"]
 
         if isinstance(self.edisp_map.geom, RegionGeom):
             kernel_map = self.edisp_map
@@ -408,8 +408,8 @@ class EDispKernelMap(IRFMap):
             kernel_map = self.edisp_map.to_region_nd_map(region=position)
 
         return EDispKernel(
-            e_true=kernel_map.geom.get_axis_by_name("energy_true"),
-            e_reco=kernel_map.geom.get_axis_by_name("energy"),
+            e_true=kernel_map.geom.axes["energy_true"],
+            e_reco=kernel_map.geom.axes["energy"],
             data=kernel_map.data[..., 0, 0]
         )
 
@@ -513,12 +513,11 @@ class EDispKernelMap(IRFMap):
             edisp = edisp * weights.data
 
         data = np.sum(edisp, axis=1, keepdims=True)
-        geom = self.edisp_map.geom.squash("energy")
+        geom = self.edisp_map.geom.squash(axis_name="energy")
         edisp_map = Map.from_geom(geom=geom, data=data)
         return self.__class__(
             edisp_kernel_map=edisp_map, exposure_map=self.exposure_map
         )
-
 
     def resample_axis(self, axis, weights=None):
         """Returns a resampled EdispKernelMap grouped according to the

@@ -12,7 +12,7 @@ from gammapy.utils.regions import (
     make_region,
 )
 from .core import MapCoord
-from .geom import Geom, MapAxis, make_axes, pix_tuple_to_idx
+from .geom import Geom, MapAxis, MapAxes, pix_tuple_to_idx
 from .wcs import WcsGeom
 
 __all__ = ["RegionGeom"]
@@ -42,7 +42,7 @@ class RegionGeom(Geom):
 
     def __init__(self, region, axes=None, wcs=None):
         self._region = region
-        self._axes = make_axes(axes)
+        self._axes = MapAxes.from_default(axes)
 
         if wcs is None and region is not None:
             wcs = WcsGeom.create(
@@ -131,9 +131,7 @@ class RegionGeom(Geom):
 
     @property
     def _shape(self):
-        npix_shape = [1, 1]
-        ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)
+        return tuple((1, 1) + self.axes.shape)
 
     def get_coord(self, frame=None):
         """Get map coordinates from the geometry.
@@ -193,15 +191,11 @@ class RegionGeom(Geom):
         return self._init_copy(axes=None)
 
     def upsample(self, factor, axis_name):
-        axes = copy.deepcopy(self.axes)
-        idx = self.get_axis_index_by_name(axis_name)
-        axes[idx] = axes[idx].upsample(factor)
+        axes = self.axes.upsample(factor=factor, axis_name=axis_name)
         return self._init_copy(axes=axes)
 
     def downsample(self, factor, axis_name):
-        axes = copy.deepcopy(self.axes)
-        idx = self.get_axis_index_by_name(axis_name)
-        axes[idx] = axes[idx].downsample(factor)
+        axes = self.axes.downsample(factor=factor, axis_name=axis_name)
         return self._init_copy(axes=axes)
 
     def pix_to_coord(self, pix):

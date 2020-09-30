@@ -158,7 +158,7 @@ class ASmoothMapEstimator(Estimator):
         datasets = Datasets([dataset])
 
         if self.e_edges is None:
-            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            energy_axis = dataset.counts.geom.axes["energy"]
             e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
             e_edges = self.e_edges

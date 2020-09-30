@@ -82,10 +82,12 @@ def test_map_get_image_by_coord(binsz, width, map_type, skydir, axes, unit):
     m.data = np.arange(m.data.size, dtype=float).reshape(m.data.shape)
 
     coords = (3.456, 0.1234)[: len(m.geom.axes)]
+
     m_image = m.get_image_by_coord(coords)
 
     im_geom = m.geom.to_image()
     skycoord = im_geom.get_coord().skycoord
+
     m_vals = m.get_by_coord((skycoord,) + coords)
     assert_equal(m_image.data, m_vals)
 

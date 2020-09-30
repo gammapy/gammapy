@@ -108,8 +108,8 @@ class PSFMap(IRFMap):
                 "EnergyDependentTablePSF can be extracted at one single position only."
             )
 
-        energy = self.psf_map.geom.get_axis_by_name("energy_true").center
-        rad = self.psf_map.geom.get_axis_by_name("theta").center
+        energy = self.psf_map.geom.axes["energy_true"].center
+        rad = self.psf_map.geom.axes["theta"].center
 
         coords = {
             "skycoord": position,
@@ -208,7 +208,7 @@ class PSFMap(IRFMap):
         psf_map : `PSFMap`
             Point spread function map.
         """
-        geom_exposure_psf = geom.squash(axis="theta")
+        geom_exposure_psf = geom.squash(axis_name="theta")
         exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
         psf_map = Map.from_geom(geom, unit="sr-1")
         return cls(psf_map, exposure_psf)
@@ -231,7 +231,7 @@ class PSFMap(IRFMap):
         """
 
         random_state = get_random_state(random_state)
-        rad_axis = self.psf_map.geom.get_axis_by_name("theta")
+        rad_axis = self.psf_map.geom.axes["theta"]
 
         coord = {
             "skycoord": map_coord.skycoord.reshape(-1, 1),
@@ -291,7 +291,7 @@ class PSFMap(IRFMap):
         ).to_value("sr-1")
         psf_map = Map.from_geom(geom, data=data, unit="sr-1")
 
-        geom_exposure = geom.squash(axis="theta")
+        geom_exposure = geom.squash(axis_name="theta")
 
         data = table_psf.exposure.reshape((-1, 1, 1, 1))
 

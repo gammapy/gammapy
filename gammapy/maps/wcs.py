@@ -16,9 +16,8 @@ from regions import SkyRegion
 from .geom import (
     Geom,
     MapCoord,
-    find_and_read_bands,
+    MapAxes,
     get_shape,
-    make_axes,
     pix_tuple_to_idx,
     skycoord_to_lonlat,
 )
@@ -113,7 +112,7 @@ class WcsGeom(Geom):
         self._wcs = wcs
         self._frame = wcs_to_celestial_frame(wcs).name
         self._projection = wcs.wcs.ctype[0][5:]
-        self._axes = make_axes(axes)
+        self._axes = MapAxes.from_default(axes)
 
         if cdelt is None:
             cdelt = tuple(np.abs(self.wcs.wcs.cdelt))
@@ -161,15 +160,13 @@ class WcsGeom(Geom):
 
     @property
     def _shape(self):
-        npix_shape = [np.max(self.npix[0]), np.max(self.npix[1])]
-        ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)
+        npix_shape = tuple([np.max(self.npix[0]), np.max(self.npix[1])])
+        return npix_shape + self.axes.shape
 
     @property
     def _shape_edges(self):
-        npix_shape = [np.max(self.npix[0]) + 1, np.max(self.npix[1]) + 1]
-        ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)
+        npix_shape = tuple([np.max(self.npix[0]) + 1, np.max(self.npix[1]) + 1])
+        return npix_shape + self.axes.shape
 
     @property
     def shape_axes(self):
@@ -428,7 +425,7 @@ class WcsGeom(Geom):
         # TODO: see https://github.com/astropy/astropy/issues/9259
         wcs._naxis = wcs._naxis[:2]
 
-        axes = find_and_read_bands(hdu_bands, format=format)
+        axes = MapAxes.from_table_hdu(hdu_bands, format=format)
         shape = tuple([ax.nbin for ax in axes])
 
         if hdu_bands is not None and "NPIX" in hdu_bands.columns.names:
@@ -495,7 +492,7 @@ class WcsGeom(Geom):
 
     def to_header(self):
         header = self.wcs.to_header()
-        self._fill_header_from_axes(header)
+        header = self.axes.to_header(header)
         shape = "{},{}".format(np.max(self.npix[0]), np.max(self.npix[1]))
         for ax in self.axes:
             shape += f",{ax.nbin}"
@@ -585,7 +582,7 @@ class WcsGeom(Geom):
             is_finite = np.isfinite(coords[0])
             coords = tuple([c[is_finite] for c in coords])
 
-        axes_names = ["lon", "lat"] + [ax.name for ax in self.axes]
+        axes_names = ["lon", "lat"] + self.axes.names
         cdict = dict(zip(axes_names, coords))
 
         if frame is None:
@@ -727,10 +724,7 @@ class WcsGeom(Geom):
                 raise NotImplementedError(
                     "Upsampling in non-spatial axes not supported for irregular geometries"
                 )
-
-            axes = copy.deepcopy(self.axes)
-            idx = self.get_axis_index_by_name(axis_name)
-            axes[idx] = axes[idx].downsample(factor)
+            axes = self.axes.downsample(factor=factor, axis_name=axis_name)
             return self._init_copy(axes=axes)
 
     def upsample(self, factor, axis_name=None):
@@ -744,9 +738,7 @@ class WcsGeom(Geom):
                 raise NotImplementedError(
                     "Upsampling in non-spatial axes not supported for irregular geometries"
                 )
-            axes = copy.deepcopy(self.axes)
-            idx = self.get_axis_index_by_name(axis_name)
-            axes[idx] = axes[idx].upsample(factor)
+            axes = self.axes.upsample(factor=factor, axis_name=axis_name)
             return self._init_copy(axes=axes)
 
     def to_binsz(self, binsz):

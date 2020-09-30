@@ -210,7 +210,7 @@ class TSMapEstimator(Estimator):
 
         npix = round_up_to_odd(width_pix.to_value(""))
 
-        axis = dataset.exposure.geom.get_axis_by_name("energy_true")
+        axis = dataset.exposure.geom.axes["energy_true"]
 
         geom_kernel = WcsGeom.create(
             skydir=model.position, proj="TAN", npix=npix, axes=[axis], binsz=binsz
@@ -340,7 +340,7 @@ class TSMapEstimator(Estimator):
 
         flux = self.estimate_flux_default(dataset, kernel.data, exposure=exposure)
 
-        energy_axis = counts.geom.get_axis_by_name("energy")
+        energy_axis = counts.geom.axes["energy"]
         flux_ref = self.model.spectral_model.integral(
             energy_axis.edges[0], energy_axis.edges[-1]
         )
@@ -372,7 +372,7 @@ class TSMapEstimator(Estimator):
 
         j, i = zip(*positions)
 
-        geom = counts.geom.squash(axis="energy")
+        geom = counts.geom.squash(axis_name="energy")
 
         for name in self.selection_all:
             unit = 1 / exposure.unit if "flux" in name else ""
@@ -418,7 +418,7 @@ class TSMapEstimator(Estimator):
         datasets = Datasets(dataset)
 
         if self.e_edges is None:
-            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            energy_axis = dataset.counts.geom.axes["energy"]
             e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
             e_edges = self.e_edges

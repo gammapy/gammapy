@@ -245,7 +245,7 @@ class SkyModel(SkyModelBase):
 
     def evaluate_geom(self, geom, gti=None):
         """Evaluate model on `~gammapy.maps.Geom`."""
-        energy = geom.get_axis_by_name("energy_true").center[:, np.newaxis, np.newaxis]
+        energy = geom.axes["energy_true"].center[:, np.newaxis, np.newaxis]
         value = self.spectral_model(energy)
 
         if self.spatial_model:
@@ -272,7 +272,7 @@ class SkyModel(SkyModelBase):
         flux : `Map`
             Predicted flux map
         """
-        energy = geom.get_axis_by_name("energy_true").edges
+        energy = geom.axes["energy_true"].edges
         value = self.spectral_model.integral(
             energy[:-1], energy[1:], intervals=True
         ).reshape((-1, 1, 1))
@@ -419,7 +419,7 @@ class BackgroundModel(Model):
         self, map, spectral_model=None, name=None, filename=None, datasets_names=None,
     ):
         if isinstance(map, Map):
-            axis = map.geom.get_axis_by_name("energy")
+            axis = map.geom.axes["energy"]
             if axis.node_type != "edges":
                 raise ValueError(
                     'Need an integrated map, energy axis node_type="edges"'
@@ -450,7 +450,7 @@ class BackgroundModel(Model):
     @property
     def energy_center(self):
         """True energy axis bin centers (`~astropy.units.Quantity`)"""
-        energy_axis = self.map.geom.get_axis_by_name("energy")
+        energy_axis = self.map.geom.axes["energy"]
         energy = energy_axis.center
         return energy[:, np.newaxis, np.newaxis]
 

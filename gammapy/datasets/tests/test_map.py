@@ -111,8 +111,8 @@ def get_map_dataset(
     psf = get_psf()
     exposure = get_exposure(geom_etrue)
 
-    e_reco = geom.get_axis_by_name("energy")
-    e_true = geom_etrue.get_axis_by_name("energy_true")
+    e_reco = geom.axes["energy"]
+    e_true = geom_etrue.axes["energy_true"]
 
     if edisp == "edispmap":
         edisp = EDispMap.from_diagonal_response(energy_axis_true=e_true)
@@ -481,7 +481,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 @requires_dependency("iminuit")
 @requires_data()
 def test_map_fit_one_energy_bin(sky_model, geom_image):
-    energy_axis = geom_image.get_axis_by_name("energy")
+    energy_axis = geom_image.axes["energy"]
     geom_etrue = geom_image.to_image().to_cube([energy_axis.copy(name="energy_true")])
 
     dataset = get_map_dataset(sky_model, geom_image, geom_etrue)
@@ -830,7 +830,7 @@ def test_create_onoff(geom):
 
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
-    energy_axis = geom.get_axis_by_name("energy").copy(name="energy_true")
+    energy_axis = geom.axes["energy"].copy(name="energy_true")
 
     empty_dataset = MapDatasetOnOff.create(geom, energy_axis, migra_axis, rad_axis)
 
@@ -961,7 +961,7 @@ def test_map_dataset_on_off_cutout(images):
 
 def test_map_dataset_on_off_fake(geom):
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
-    energy_true_axis = geom.get_axis_by_name("energy").copy(name="energy_true")
+    energy_true_axis = geom.axes["energy"].copy(name="energy_true")
 
     empty_dataset = MapDataset.create(geom, energy_true_axis, rad_axis=rad_axis)
     empty_dataset = MapDatasetOnOff.from_map_dataset(
@@ -1132,7 +1132,7 @@ def test_slice_by_idx():
     assert sub_dataset.edisp.edisp_map.geom.data_shape == (31, 5, 4, 4)
     assert sub_dataset.psf.psf_map.geom.data_shape == (31, 66, 4, 4)
 
-    axis = sub_dataset.counts.geom.get_axis_by_name("energy")
+    axis = sub_dataset.counts.geom.axes["energy"]
     assert_allclose(axis.edges[0].value, 0.387468, rtol=1e-5)
 
     slices = {"energy_true": slice(5, 10)}
@@ -1145,10 +1145,10 @@ def test_slice_by_idx():
     assert sub_dataset.edisp.edisp_map.geom.data_shape == (5, 17, 4, 4)
     assert sub_dataset.psf.psf_map.geom.data_shape == (5, 66, 4, 4)
 
-    axis = sub_dataset.counts.geom.get_axis_by_name("energy")
+    axis = sub_dataset.counts.geom.axes["energy"]
     assert_allclose(axis.edges[0].value, 0.1, rtol=1e-5)
 
-    axis = sub_dataset.exposure.geom.get_axis_by_name("energy_true")
+    axis = sub_dataset.exposure.geom.axes["energy_true"]
     assert_allclose(axis.edges[0].value, 0.210175, rtol=1e-5)
 
 

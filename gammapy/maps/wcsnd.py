@@ -305,7 +305,7 @@ class WcsNDMap(WcsMap):
             ) + idx[2:]
         else:
             pix = list(idx)
-            idx_ax = self.geom.get_axis_index_by_name(axis_name)
+            idx_ax = self.geom.axes.index(axis_name)
             pix[idx_ax] = (pix[idx_ax] - 0.5 * (factor - 1)) / factor
 
         data = scipy.ndimage.map_coordinates(
@@ -327,7 +327,7 @@ class WcsNDMap(WcsMap):
             block_size = (factor, factor) + (1,) * len(self.geom.axes)
         else:
             block_size = [1] * self.data.ndim
-            idx = self.geom.get_axis_index_by_name(axis_name)
+            idx = self.geom.axes.index(axis_name)
             block_size[idx + 2] = factor
 
         func = np.nansum if preserve_counts else np.nanmean
@@ -559,7 +559,7 @@ class WcsNDMap(WcsMap):
         spectrum : `~gammapy.maps.RegionNDMap`
             Spectrum in the given region.
         """
-        has_energy_axis = ("energy" in self.geom.axes_names) ^ ("energy_true" in self.geom.axes_names)
+        has_energy_axis = ("energy" in self.geom.axes.names) ^ ("energy_true" in self.geom.axes.names)
 
         if not has_energy_axis:
             raise ValueError("Energy axis required")

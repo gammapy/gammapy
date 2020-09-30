@@ -473,12 +473,12 @@ class Map(abc.ABC):
         """
         geom = self.geom.resample_axis(axis)
 
-        axis_self = self.geom.get_axis_by_name(axis.name)
-        axis_resampled = geom.get_axis_by_name(axis.name)
+        axis_self = self.geom.axes[axis.name]
+        axis_resampled = geom.axes[axis.name]
 
         indices = axis_self.coord_to_idx(axis_resampled.edges[:-1])
 
-        idx = self.geom.get_axis_index_by_name(axis.name)
+        idx = self.geom.axes.index(axis.name)
 
         # transform to data idx
         idx = len(geom.axes) - idx - 1
@@ -571,14 +571,9 @@ class Map(abc.ABC):
             image = m_wcs.get_image_by_coord({'energy': 0.5 * u.TeV, 'time': 1 * u.h})
         """
         if isinstance(coords, tuple):
-            axes_names = [_.name for _ in self.geom.axes]
-            coords = dict(zip(axes_names, coords))
+            coords = dict(zip(self.geom.axes.names, coords))
 
-        idx = []
-        for ax in self.geom.axes:
-            value = coords[ax.name]
-            idx.append(ax.coord_to_idx(value))
-
+        idx = self.geom.axes.coord_to_idx(coords)
         return self.get_image_by_idx(idx)
 
     def get_image_by_pix(self, pix):
@@ -998,14 +993,14 @@ class Map(abc.ABC):
         """
         # TODO: either use sparse matrix mutiplication or something like edisp.is_diagonal
         if edisp is not None:
-            loc = self.geom.get_axis_index_by_name("energy_true")
+            loc = self.geom.axes.index("energy_true")
             data = np.rollaxis(self.data, loc, len(self.data.shape))
             data = np.dot(data, edisp.pdf_matrix)
             data = np.rollaxis(data, -1, loc)
             e_reco_axis = edisp.e_reco.copy(name="energy")
         else:
             data = self.data
-            e_reco_axis = self.geom.get_axis_by_name("energy_true").copy(name="energy")
+            e_reco_axis = self.geom.axes["energy_true"].copy(name="energy")
 
         geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
         return self._init_copy(geom=geom_reco, data=data)
@@ -1060,14 +1055,15 @@ class Map(abc.ABC):
         map_out = self.copy()
         for ax in axes:
             map_out = map_out.reduce(ax, func=func, keepdims=keepdims, weights=weights)
+
         return map_out
 
-    def reduce(self, axis, func=np.add, keepdims=False, weights=None):
+    def reduce(self, axis_name, func=np.add, keepdims=False, weights=None):
         """Reduce map over a single non-spatial axis
 
         Parameters
         ----------
-        axis: str
+        axis_name: str
             The name of the axis to reduce over
         func : `~numpy.ufunc`
             Function to use for reducing the data.
@@ -1083,12 +1079,12 @@ class Map(abc.ABC):
             Map with the given non-spatial axes reduced
         """
         if keepdims:
-            geom = self.geom.squash(axis=axis)
+            geom = self.geom.squash(axis_name=axis_name)
         else:
-            geom = self.geom.drop(axis=axis)
+            geom = self.geom.drop(axis_name=axis_name)
 
         names = [ax.name for ax in reversed(self.geom.axes)]
-        idx = names.index(axis)
+        idx = names.index(axis_name)
 
         data = self.data
 

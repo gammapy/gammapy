@@ -255,7 +255,7 @@ class MapDatasetEventSampler:
         meta["DSUNI2"] = "TeV"
         meta[
             "DSVAL2"
-        ] = f'{dataset._geom.get_axis_by_name("energy").edges.min().value}:{dataset._geom.get_axis_by_name("energy").edges.max().value}'
+        ] = f'{dataset._geom.axes["energy"].edges.min().value}:{dataset._geom.axes["energy"].edges.max().value}'
         meta["DSTYP3"] = "POS(RA,DEC)     "
         meta[
             "DSVAL3"

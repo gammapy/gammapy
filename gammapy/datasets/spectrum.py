@@ -252,7 +252,7 @@ class SpectrumDataset(Dataset):
     @property
     def _energy_axis(self):
         if self.counts is not None:
-            e_axis = self.counts.geom.get_axis_by_name("energy")
+            e_axis = self.counts.geom.axes["energy"]
         elif self.edisp is not None:
             e_axis = self.edisp.data.axis("energy")
         elif self.aeff is not None:
@@ -738,7 +738,7 @@ class SpectrumDataset(Dataset):
             Resampled spectrum dataset .
         """
         if axis is None:
-            e_axis = self.counts.geom.get_axis_by_name("energy")
+            e_axis = self.counts.geom.axes["energy"]
             e_edges = u.Quantity([e_axis.edges[0], e_axis.edges[-1]])
             axis = MapAxis.from_edges(e_edges, name="energy", interp=self._geom.axes[0].interp)
 
@@ -1613,7 +1613,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """
         dataset = super().resample_energy_axis(axis,name)
 
-        axis = dataset.counts.geom.get_axis_by_name("energy")
+        axis = dataset.counts.geom.axes["energy"]
 
         if self.mask_safe is not None:
             mask_safe = self.mask_safe

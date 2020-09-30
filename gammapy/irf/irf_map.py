@@ -112,7 +112,7 @@ class IRFMap:
         self._irf_map.stack(other._irf_map * other.exposure_map.data, weights=weights)
 
         # stack exposure map
-        if weights and "energy" in weights.geom.axes_names:
+        if weights and "energy" in weights.geom.axes.names:
             weights = weights.reduce_over_axes(func=np.logical_or, axes=["energy"], keepdims=True)
         self.exposure_map.stack(other.exposure_map, weights=weights)
 

@@ -25,12 +25,12 @@ class TestEffectiveAreaTable2D:
     @staticmethod
     @requires_data()
     def test(aeff):
-        assert aeff.data.axis("energy_true").nbin == 96
-        assert aeff.data.axis("offset").nbin == 6
+        assert aeff.data.axes["energy_true"].nbin == 96
+        assert aeff.data.axes["offset"].nbin == 6
         assert aeff.data.data.shape == (96, 6)
 
-        assert aeff.data.axis("energy_true").unit == "TeV"
-        assert aeff.data.axis("offset").unit == "deg"
+        assert aeff.data.axes["energy_true"].unit == "TeV"
+        assert aeff.data.axes["offset"].unit == "deg"
         assert aeff.data.data.unit == "m2"
 
         assert_quantity_allclose(aeff.high_threshold, 100 * u.TeV, rtol=1e-3)
@@ -93,7 +93,7 @@ class TestEffectiveAreaTable:
 
         test_aeff = 0.6 * arf.max_area
         node_above = np.where(arf.data.data > test_aeff)[0][0]
-        energy = arf.data.axis("energy_true")
+        energy = arf.data.axes["energy_true"]
         ener_above = energy.center[node_above]
         ener_below = energy.center[node_above - 1]
         test_ener = arf.find_energy(test_aeff)
@@ -160,9 +160,9 @@ class TestEffectiveAreaTable:
         )
         hdu = aeff.to_table_hdu()
         assert_equal(
-            hdu.data["ENERG_LO"][0], aeff.data.axis("energy_true").edges[:-1].value
+            hdu.data["ENERG_LO"][0], aeff.data.axes["energy_true"].edges[:-1].value
         )
-        assert hdu.header["TUNIT1"] == aeff.data.axis("energy_true").unit
+        assert hdu.header["TUNIT1"] == aeff.data.axes["energy_true"].unit
 
 
 def test_compute_thresholds_from_parametrization():

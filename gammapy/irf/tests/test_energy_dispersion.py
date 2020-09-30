@@ -130,9 +130,9 @@ class TestEnergyDispersion2D:
         # Check evaluation at all nodes
         actual = self.edisp.data.evaluate().shape
         desired = (
-            self.edisp.data.axis("energy_true").nbin,
-            self.edisp.data.axis("migra").nbin,
-            self.edisp.data.axis("offset").nbin,
+            self.edisp.data.axes["energy_true"].nbin,
+            self.edisp.data.axes["migra"].nbin,
+            self.edisp.data.axes["offset"].nbin,
         )
         assert_equal(actual, desired)
 
@@ -176,9 +176,9 @@ class TestEnergyDispersion2D:
         )
 
         hdu = edisp.to_table_hdu()
-        energy = edisp.data.axis("energy_true").edges
+        energy = edisp.data.axes["energy_true"].edges
         assert_equal(hdu.data["ENERG_LO"][0], energy[:-1].value)
-        assert hdu.header["TUNIT1"] == edisp.data.axis("energy_true").unit
+        assert hdu.header["TUNIT1"] == edisp.data.axes["energy_true"].unit
 
     @requires_dependency("matplotlib")
     def test_plot_migration(self):

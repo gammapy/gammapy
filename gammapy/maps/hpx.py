@@ -9,8 +9,7 @@ from astropy.units import Quantity
 from .geom import (
     Geom,
     MapCoord,
-    find_and_read_bands,
-    make_axes,
+    MapAxes,
     pix_tuple_to_idx,
     skycoord_to_lonlat,
 )
@@ -474,7 +473,8 @@ class HpxGeom(Geom):
         # FIXME: Require NSIDE to be power of two when nest=True
 
         self._nside = np.array(nside, ndmin=1)
-        self._axes = make_axes(axes)
+        self._axes = MapAxes.from_default(axes)
+
         if self.nside.size > 1 and self.nside.shape != self.shape_axes:
             raise ValueError(
                 "Wrong dimensionality for nside. nside must "
@@ -1152,7 +1152,7 @@ class HpxGeom(Geom):
 
         conv = HPX_FITS_CONVENTIONS[format]
 
-        axes = find_and_read_bands(hdu_bands, format=format)
+        axes = MapAxes.from_table_hdu(hdu_bands, format=format)
         shape = [ax.nbin for ax in axes]
 
         if header["PIXTYPE"] != "HEALPIX":

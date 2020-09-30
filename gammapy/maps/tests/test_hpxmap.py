@@ -124,7 +124,7 @@ def test_read_fgst_exposure():
     exposure = Map.read(
         "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_exposure_cube_hpx.fits.gz"
     )
-    energy_axis = exposure.geom.get_axis_by_name("energy_true")
+    energy_axis = exposure.geom.axes["energy_true"]
     assert energy_axis.node_type == "center"
     assert exposure.unit == "cm2 s"
 

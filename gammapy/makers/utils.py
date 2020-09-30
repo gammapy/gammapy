@@ -43,7 +43,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
         Exposure map
     """
     offset = geom.separation(pointing)
-    energy = geom.get_axis_by_name("energy_true").center
+    energy = geom.axes["energy_true"].center
 
     exposure = aeff.data.evaluate(
         offset=offset, energy_true=energy[:, np.newaxis, np.newaxis]
@@ -86,7 +86,7 @@ def _map_spectrum_weight(map, spectrum=None):
         spectrum = PowerLawSpectralModel(index=2.0)
 
     # Compute weights vector
-    energy_edges = map.geom.get_axis_by_name("energy_true").edges
+    energy_edges = map.geom.axes["energy_true"].edges
     weights = spectrum.integral(
         emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
     )
@@ -151,7 +151,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
         fov_lon = pseudo_fov_coord.lon
         fov_lat = pseudo_fov_coord.lat
 
-    energies = geom.get_axis_by_name("energy").edges
+    energies = geom.axes["energy"].edges
 
     bkg_de = bkg.evaluate_integrate(
         fov_lon=fov_lon,
@@ -193,10 +193,10 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     psfmap : `~gammapy.irf.PSFMap`
         the resulting PSF map
     """
-    energy_axis = geom.get_axis_by_name("energy_true")
+    energy_axis = geom.axes["energy_true"]
     energy = energy_axis.center
 
-    rad_axis = geom.get_axis_by_name("theta")
+    rad_axis = geom.axes["theta"]
     rad = rad_axis.center
 
     # Compute separations with pointing position
@@ -243,10 +243,10 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     edispmap : `~gammapy.irf.EDispMap`
         the resulting EDisp map
     """
-    energy_axis = geom.get_axis_by_name("energy_true")
+    energy_axis = geom.axes["energy_true"]
     energy = energy_axis.center
 
-    migra_axis = geom.get_axis_by_name("migra")
+    migra_axis = geom.axes["migra"]
     migra = migra_axis.center
 
     # Compute separations with pointing position
@@ -291,16 +291,16 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
         the resulting EDispKernel map
     """
     # Use EnergyDispersion2D migra axis.
-    migra_axis = edisp.data.axis("migra")
+    migra_axis = edisp.data.axes["migra"]
 
     # Create temporary EDispMap Geom
     new_geom = geom.to_image().to_cube(
-        [migra_axis, geom.get_axis_by_name("energy_true")]
+        [migra_axis, geom.axes["energy_true"]]
     )
 
     edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map)
 
-    return edisp_map.to_edisp_kernel_map(geom.get_axis_by_name("energy"))
+    return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
 
 
 def make_theta_squared_table(

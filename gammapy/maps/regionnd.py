@@ -66,9 +66,9 @@ class RegionNDMap(Map):
             )
 
         try:
-            axis = self.geom.get_axis_by_name("energy")
+            axis = self.geom.axes["energy"]
         except KeyError:
-            axis = self.geom.get_axis_by_name("energy_true")
+            axis = self.geom.axes["energy_true"]
 
         kwargs.setdefault("fmt", ".")
         kwargs.setdefault("capsize", 2)
@@ -188,7 +188,7 @@ class RegionNDMap(Map):
     def downsample(self, factor, preserve_counts=True, axis_name="energy"):
         geom = self.geom.downsample(factor=factor, axis_name=axis_name)
         block_size = [1] * self.data.ndim
-        idx = self.geom.get_axis_index_by_name(axis_name)
+        idx = self.geom.axes.index(axis_name)
         block_size[-(idx + 1)] = factor
 
         func = np.nansum if preserve_counts else np.nanmean

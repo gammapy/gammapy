@@ -74,7 +74,7 @@ class EffectiveAreaTable:
 
     @property
     def energy(self):
-        return self.data.axis("energy_true")
+        return self.data.axes["energy_true"]
 
     def plot(self, ax=None, energy=None, show_energy=None, **kwargs):
         """Plot effective area.
@@ -228,7 +228,7 @@ class EffectiveAreaTable:
 
     def to_region_map(self, region=None):
         """"""
-        axis = self.data.axis("energy_true")
+        axis = self.data.axes["energy_true"]
         geom = RegionGeom(region=region, axes=[axis])
         return RegionNDMap.from_geom(
             geom=geom, data=self.data.data.value, unit=self.data.data.unit
@@ -433,7 +433,7 @@ class EffectiveAreaTable2D:
             Energy axis bin edges
         """
         if energy is None:
-            energy = self.data.axis("energy_true").edges
+            energy = self.data.axes["energy_true"].edges
 
         area = self.data.evaluate(
             offset=offset, energy_true=MapAxis.from_edges(energy, interp="log").center
@@ -467,11 +467,11 @@ class EffectiveAreaTable2D:
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            off_min, off_max = self.data.axis("offset").center[[0, -1]]
+            off_min, off_max = self.data.axes["offset"].center[[0, -1]]
             offset = np.linspace(off_min.value, off_max.value, 4) * off_min.unit
 
         if energy is None:
-            energy = self.data.axis("energy_true").center
+            energy = self.data.axes["energy_true"].center
 
         for off in offset:
             area = self.data.evaluate(offset=off, energy_true=energy)
@@ -506,11 +506,12 @@ class EffectiveAreaTable2D:
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
-            e_min, e_max = np.log10(self.data.axis("energy_true").center.value[[0, -1]])
-            energy = np.logspace(e_min, e_max, 4) * self.data.axis("energy_true").unit
+            energy_axis = self.data.axes["energy_true"]
+            e_min, e_max = np.log10(energy_axis.center.value[[0, -1]])
+            energy = np.logspace(e_min, e_max, 4) * energy_axis.unit
 
         if offset is None:
-            offset = self.data.axis("offset").center
+            offset = self.data.axes["offset"].center
 
         for ee in energy:
             area = self.data.evaluate(offset=offset, energy_true=ee)
@@ -521,7 +522,7 @@ class EffectiveAreaTable2D:
             ax.plot(offset, area, label=label, **kwargs)
 
         ax.set_ylim(0, 1.1)
-        ax.set_xlabel(f"Offset ({self.data.axis('offset').unit})")
+        ax.set_xlabel(f"Offset ({self.data.axes['offset'].unit})")
         ax.set_ylabel("Relative Effective Area")
         ax.legend(loc="best")
 
@@ -533,8 +534,8 @@ class EffectiveAreaTable2D:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.data.axis("energy_true").edges
-        offset = self.data.axis("offset").edges
+        energy = self.data.axes["energy_true"].edges
+        offset = self.data.axes["offset"].edges
         aeff = self.data.evaluate(offset=offset, energy_true=energy[:, np.newaxis])
 
         vmin, vmax = np.nanmin(aeff.value), np.nanmax(aeff.value)
@@ -573,8 +574,8 @@ class EffectiveAreaTable2D:
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
 
-        energy = self.data.axis("energy_true").edges
-        theta = self.data.axis("offset").edges
+        energy = self.data.axes["energy_true"].edges
+        theta = self.data.axes["offset"].edges
 
         table = Table(meta=meta)
         table["ENERG_LO"] = energy[:-1][np.newaxis]

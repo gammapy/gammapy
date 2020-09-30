@@ -95,7 +95,7 @@ def make_test_psfmap(size, shape="gauss"):
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
-    exposure_geom = geom.squash(axis="theta")
+    exposure_geom = geom.squash(axis_name="theta")
 
     exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
@@ -226,7 +226,7 @@ def test_sample_coord_gauss():
 
 def make_psf_map_obs(geom, obs):
     exposure_map = make_map_exposure_true_energy(
-        geom=geom.squash(axis="theta"),
+        geom=geom.squash(axis_name="theta"),
         pointing=obs.pointing_radec,
         aeff=obs.aeff,
         livetime=obs.observation_live_time_duration,

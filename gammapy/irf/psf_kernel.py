@@ -95,8 +95,8 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
     factor : int
         the oversample factor to compute the PSF
     """
-    energy_axis = geom.get_axis_by_name("energy_true")
-    energy_idx = geom.axes.index(energy_axis)
+    energy_axis = geom.axes["energy_true"]
+    energy_idx = geom.axes.index("energy_true")
 
     # prepare map and compute distances to map center
     kernel_map, rads = _compute_kernel_separations(geom, factor)
@@ -296,7 +296,7 @@ class PSFKernel:
             raise ValueError("Incorrect exposure_array shape")
 
         # Compute weights vector
-        energy_edges = map.geom.get_axis_by_name("energy_true").edges
+        energy_edges = map.geom.axes["energy_true"].edges
         weights = spectrum.integral(
             emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
         )

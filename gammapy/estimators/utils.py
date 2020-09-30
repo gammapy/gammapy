@@ -131,7 +131,7 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None):
         spatial_model=ConstantFluxSpatialModel(), spectral_model=spectral_model
     )
 
-    energy_axis = dataset._geom.get_axis_by_name("energy")
+    energy_axis = dataset._geom.axes["energy"]
 
     edisp = None
 

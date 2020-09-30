@@ -126,7 +126,7 @@ class SpatialModel(Model):
         coords = geom.to_image().get_coord(frame=self.frame)
 
         if self.is_energy_dependent:
-            energy = geom.get_axis_by_name("energy_true").center
+            energy = geom.axes["energy_true"].center
             return self(coords.lon, coords.lat, energy[:, np.newaxis, np.newaxis])
         else:
             return self(coords.lon, coords.lat)
@@ -666,7 +666,7 @@ class TemplateSpatialModel(SpatialModel):
 
     @property
     def is_energy_dependent(self):
-        return "energy_true" in self.map.geom.axes_names
+        return "energy_true" in self.map.geom.axes.names
 
     @property
     def evaluation_radius(self):

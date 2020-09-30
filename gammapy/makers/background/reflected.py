@@ -317,7 +317,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
         finder = self._get_finder(dataset, observation)
         finder.run()
 
-        energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+        energy_axis = dataset.counts.geom.axes["energy"]
 
         if len(finder.reflected_regions) > 0:
             region_union = list_to_compound_region(finder.reflected_regions)

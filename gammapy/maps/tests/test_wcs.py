@@ -294,7 +294,7 @@ def test_wcsgeom_instance_cache():
 def test_wcsgeom_squash():
     axis = MapAxis.from_nodes([1, 2, 3], name="test-axis")
     geom = WcsGeom.create(npix=(3, 3), axes=[axis])
-    geom_squashed = geom.squash(axis="test-axis")
+    geom_squashed = geom.squash(axis_name="test-axis")
     assert geom_squashed.data_shape == (1, 3, 3)
 
 
@@ -303,8 +303,9 @@ def test_wcsgeom_drop():
     ax2 = MapAxis.from_nodes([1, 2], name="ax2")
     ax3 = MapAxis.from_nodes([1, 2, 3, 4], name="ax3")
     geom = WcsGeom.create(npix=(3, 3), axes=[ax1, ax2, ax3])
-    geom_drop = geom.drop(axis="ax1")
+    geom_drop = geom.drop(axis_name="ax1")
     assert geom_drop.data_shape == (4, 2, 3, 3)
+
 
 def test_wcsgeom_resample_overflows():
     ax1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="ax1")
@@ -315,6 +316,7 @@ def test_wcsgeom_resample_overflows():
 
     assert geom_resample.data_shape == (3, 2, 3, 3)
     assert_allclose(geom_resample.axes[0].edges, [1, 2, 5])
+
 
 def test_wcsgeom_get_pix_coords():
     geom = WcsGeom.create(
@@ -420,9 +422,9 @@ def test_check_width_bad_input():
 def test_get_axis_index_by_name():
     e_axis = MapAxis.from_edges([1, 5], name="energy")
     geom = WcsGeom.create(width=5, binsz=1.0, axes=[e_axis])
-    assert geom.get_axis_index_by_name("Energy") == 0
+    assert geom.axes.index("energy") == 0
     with pytest.raises(ValueError):
-        geom.get_axis_index_by_name("time")
+        geom.axes.index("time")
 
 
 test_axis1 = [MapAxis(nodes=(1, 2, 3, 4), unit="TeV", node_type="center")]
