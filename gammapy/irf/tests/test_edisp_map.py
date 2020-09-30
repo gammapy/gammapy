@@ -286,6 +286,7 @@ def test_edisp_kernel_map_to_image():
     assert im.edisp_map.data.shape == (5, 1, 1, 2)
     assert_allclose(im.edisp_map.data[0, 0, 0, 0], 0.87605894, rtol=1e-5)
 
+
 def test_edisp_kernel_map_resample_axis():
     e_reco = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=4)
     e_true = MapAxis.from_energy_bounds(
@@ -294,7 +295,7 @@ def test_edisp_kernel_map_resample_axis():
     edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true)
 
     e_reco = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
-    im = edisp.resample_axis(axis=e_reco)
+    im = edisp.resample_energy_axis(energy_axis=e_reco)
 
     res = np.sum(im.edisp_map.data[4, :, 0, 0])
 

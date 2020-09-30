@@ -720,14 +720,14 @@ class SpectrumDataset(Dataset):
 
         return self.__class__(**kwargs)
 
-    def resample_energy_axis(self, axis=None, name=None):
+    def resample_energy_axis(self, energy_axis, name=None):
         """Resample SpectrumDataset over new reco energy axis.
 
         Counts are summed taking into account safe mask.
 
         Parameters
         ----------
-        axis : `~gammapy.maps.MapAxis`
+        energy_axis : `~gammapy.maps.MapAxis`
             the new reco energy axis.
         name: str
             Name of the new dataset.
@@ -737,39 +737,30 @@ class SpectrumDataset(Dataset):
         dataset: `SpectrumDataset`
             Resampled spectrum dataset .
         """
-        if axis is None:
-            e_axis = self.counts.geom.axes["energy"]
-            e_edges = u.Quantity([e_axis.edges[0], e_axis.edges[-1]])
-            axis = MapAxis.from_edges(e_edges, name="energy", interp=self._geom.axes[0].interp)
-
         name = make_name(name)
+
         kwargs = {}
         kwargs["name"] = name
         kwargs["gti"] = self.gti
         kwargs["aeff"] = self.aeff
         kwargs["livetime"] = self.livetime
 
-        if self.mask_safe is not None:
-            mask_safe = self.mask_safe
-        else:
-            mask_safe = 1
-
         # Adapt resample_axis to take ufunc argument
-        kwargs["mask_safe"] = mask_safe.resample_axis(axis=axis, ufunc=np.logical_or)
+        kwargs["mask_safe"] = self.mask_safe.resample_axis(axis=energy_axis, ufunc=np.logical_or)
 
         if self.counts is not None:
-            kwargs["counts"] = self.counts.resample_axis(axis=axis, weights=mask_safe)
+            kwargs["counts"] = self.counts.resample_axis(axis=energy_axis, weights=self.mask_safe)
 
         if self.background_model is not None:
             background = self.background_model.evaluate()
-            background = background.resample_axis(axis=axis, weights=mask_safe)
+            background = background.resample_axis(axis=energy_axis, weights=self.mask_safe)
             model = BackgroundModel(
                 background, datasets_names=[name], name=f"{name}-bkg"
             )
             kwargs["models"] = [model]
 
         if self.edisp is not None:
-            kwargs["edisp"] = self.edisp.resample_axis(axis=axis, weights=mask_safe)
+            kwargs["edisp"] = self.edisp.resample_energy_axis(energy_axis=energy_axis, weights=self.mask_safe)
 
         return self.__class__(**kwargs)
 
@@ -788,7 +779,8 @@ class SpectrumDataset(Dataset):
         dataset: `SpectrumDataset`
             Resampled spectrum dataset .
         """
-        return self.resample_energy_axis(axis=None, name=name)
+        energy_axis = self._geom.axes["energy"].squash()
+        return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
 
 class SpectrumDatasetOnOff(SpectrumDataset):
@@ -1593,16 +1585,15 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         return self.__class__(**kwargs)
 
-    def resample_energy_axis(self, axis=None, name=None):
-        """Resample SpectrumDatasetOnOff over new reco energy axis.
+    def resample_energy_axis(self, energy_axis, name=None):
+        """Resample SpectrumDatasetOnOff over new reconstructed energy axis.
 
         Counts are summed taking into account safe mask.
 
         Parameters
         ----------
-        axis : `~gammapy.maps.MapAxis`
-            the new reco energy axis. If None, reduce energy axis to one bin.
-            Default is None.
+        energy_axis : `~gammapy.maps.MapAxis`
+            New reconstructed energy axis
         name: str
             Name of the new dataset.
 
@@ -1611,28 +1602,23 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         dataset: `SpectrumDataset`
             Resampled spectrum dataset .
         """
-        dataset = super().resample_energy_axis(axis,name)
+        dataset = super().resample_energy_axis(energy_axis=energy_axis, name=name)
 
         axis = dataset.counts.geom.axes["energy"]
-
-        if self.mask_safe is not None:
-            mask_safe = self.mask_safe
-        else:
-            mask_safe = 1
 
         counts_off = None
         if self.counts_off is not None:
             counts_off = self.counts_off
-            counts_off = counts_off.resample_axis(axis=axis, weights=mask_safe)
+            counts_off = counts_off.resample_axis(axis=axis, weights=self.mask_safe)
 
         acceptance = 1
         acceptance_off = None
         if self.acceptance is not None:
             acceptance = self.acceptance
-            acceptance = acceptance.resample_axis(axis=axis, weights=mask_safe)
+            acceptance = acceptance.resample_axis(axis=axis, weights=self.mask_safe)
 
             background = self.alpha * self.counts_off
-            background = background.resample_axis(axis=axis, weights=mask_safe)
+            background = background.resample_axis(axis=axis, weights=self.mask_safe)
 
             acceptance_off = acceptance * counts_off / background
 

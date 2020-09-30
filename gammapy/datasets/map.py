@@ -1347,17 +1347,14 @@ class MapDataset(Dataset):
         kwargs["psf"] = self.psf
 
         if self.mask_safe is not None:
-            weights = self.mask_safe
             kwargs["mask_safe"] = self.mask_safe.resample_axis(axis=energy_axis, ufunc=np.logical_or)
-        else:
-            weights = None
 
         if self.counts is not None:
-            kwargs["counts"] = self.counts.resample_axis(axis=energy_axis, weights=weights)
+            kwargs["counts"] = self.counts.resample_axis(axis=energy_axis, weights=self.mask_safe)
 
         if self.background_model is not None:
             background = self.background_model.evaluate()
-            background = background.resample_axis(axis=energy_axis, weights=weights)
+            background = background.resample_axis(axis=energy_axis, weights=self.mask_safe)
             model = BackgroundModel(
                 background, datasets_names=[name], name=f"{name}-bkg"
             )
@@ -1368,7 +1365,7 @@ class MapDataset(Dataset):
             mask_irf = self._mask_safe_irf(
                 self.edisp.edisp_map, self.mask_safe, drop="energy_true"
             )
-            kwargs["edisp"] = self.edisp.resample_axis(axis=energy_axis, weights=mask_irf)
+            kwargs["edisp"] = self.edisp.resample_energy_axis(energy_axis=energy_axis, weights=mask_irf)
         else:  # None or EDispMap
             kwargs["edisp"] = self.edisp
 
@@ -2047,23 +2044,18 @@ class MapDatasetOnOff(MapDataset):
         """
         dataset = super().resample_energy_axis(energy_axis, name)
 
-        if self.mask_safe is not None:
-            weights = self.mask_safe
-        else:
-            weights = None
-
         counts_off = None
         if self.counts_off is not None:
             counts_off = self.counts_off
-            counts_off = counts_off.resample_axis(axis=energy_axis, weights=weights)
+            counts_off = counts_off.resample_axis(axis=energy_axis, weights=self.mask_safe)
 
         acceptance = 1
         acceptance_off = None
         if self.acceptance is not None:
             acceptance = self.acceptance
-            acceptance = acceptance.resample_axis(axis=energy_axis, weights=weights)
+            acceptance = acceptance.resample_axis(axis=energy_axis, weights=self.mask_safe)
 
-            norm_factor = self.counts_off_normalised.resample_axis(axis=energy_axis, weights=weights)
+            norm_factor = self.counts_off_normalised.resample_axis(axis=energy_axis, weights=self.mask_safe)
 
             acceptance_off = acceptance * counts_off / norm_factor
 
