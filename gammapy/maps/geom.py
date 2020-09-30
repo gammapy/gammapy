@@ -239,7 +239,7 @@ class MapAxes(Sequence):
         return self.__class__(axes=axes)
 
     def squash(self, axis_name):
-        """Squash geom axis.
+        """Squash axis.
 
         Parameters
         ----------
@@ -261,7 +261,7 @@ class MapAxes(Sequence):
         return self.__class__(axes=axes)
 
     def drop(self, axis_name):
-        """Drop an axis from the geom.
+        """Drop an axis.
 
         Parameters
         ----------
@@ -269,9 +269,9 @@ class MapAxes(Sequence):
             Name of the axis to remove.
 
         Returns
-            -------
-        geom : `Geom`
-            New geom with the axis removed.
+        -------
+        axes : `MapAxes`
+            Axes with squashed axis.
         """
         axes = []
         for ax in self:
@@ -292,9 +292,50 @@ class MapAxes(Sequence):
         else:
             raise TypeError(f"Invalid type: {type(idx)!r}")
 
-    def get_coord(self):
-        """"""
-        pass
+    def coord_to_idx(self, coord, clip=True):
+        """Transform from axis to pixel indices.
+
+        Parameters
+        ----------
+        coord : dict of `~numpy.ndarray`
+            Array of axis coordinate values.
+
+        Returns
+        -------
+        pix : tuple of `~numpy.ndarray`
+            Array of pixel indices values.
+        """
+        return tuple([ax.coord_to_idx(coord[ax.name], clip=clip) for ax in self])
+
+    def coord_to_pix(self, coord):
+        """Transform from axis to pixel coordinates.
+
+        Parameters
+        ----------
+        coord : dict of `~numpy.ndarray`
+            Array of axis coordinate values.
+
+        Returns
+        -------
+        pix : tuple of `~numpy.ndarray`
+            Array of pixel coordinate values.
+        """
+        return tuple([ax.coord_to_pix(coord[ax.name]) for ax in self])
+
+    def pix_to_coord(self, pix):
+        """Convert pixel coordinates to map coordinates.
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of pixel coordinates.
+
+        Returns
+        -------
+        coords : tuple
+            Tuple of map coordinates.
+        """
+        return tuple([ax.pix_to_coord(p) for ax, p in zip(self, pix)])
 
     def slice_by_idx(self, slices):
         """Create a new geometry by slicing the non-spatial axes.

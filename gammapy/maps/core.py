@@ -573,11 +573,7 @@ class Map(abc.ABC):
         if isinstance(coords, tuple):
             coords = dict(zip(self.geom.axes.names, coords))
 
-        idx = []
-        for ax in self.geom.axes:
-            value = coords[ax.name]
-            idx.append(ax.coord_to_idx(value))
-
+        idx = self.geom.axes.coord_to_idx(coords)
         return self.get_image_by_idx(idx)
 
     def get_image_by_pix(self, pix):
