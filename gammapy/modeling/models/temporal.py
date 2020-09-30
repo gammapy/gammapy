@@ -50,6 +50,28 @@ class TemporalModel(Model):
         # TODO: this is a work-around for https://github.com/astropy/astropy/issues/10501
         return u.Quantity(np.sum(diff.to_value("day")), "day")
 
+    def plot(self, time_range, ax=None):
+        """
+        Plot Temporal Model.
+
+        Parameters
+        ----------
+        time_range : `~astropy.time.Time`
+            times to plot the model
+        ax : `~matplotlib.axes.Axes`, optional
+            axis
+        """
+
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+        t_min, t_max = time_range
+        n_value = 100
+        delta = (t_max-t_min)
+        times = t_min + delta * np.linspace(0, 1, n_value)
+        val = self(times)
+        ax.plot(times.mjd, val)
+        return ax
 
 class ConstantTemporalModel(TemporalModel):
     """Constant temporal model."""
