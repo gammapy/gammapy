@@ -113,20 +113,20 @@ class EventList:
         telescope = self.table.meta.get("TELESCOP")
         info += f"\tTelescope        : {telescope}\n"
 
-        obs_id = self.table.meta.get("OBS_ID")
+        obs_id = self.table.meta.get("OBS_ID", "")
         info += f"\tObs. ID          : {obs_id}\n\n"
 
         info += f"\tNumber of events : {len(self.table)}\n"
 
         rate = len(self.table) / self.observation_time_duration
-        info += f"\tEvent rate       : {rate:.1f}\n\n"
+        info += f"\tEvent rate       : {rate:.3f}\n\n"
 
         info += f"\tTime start       : {self.observation_time_start}\n"
         info += f"\tTime stop        : {self.observation_time_stop}\n\n"
 
-        info += f"\tMin. energy      : {np.min(self.energy):.3g}\n"
-        info += f"\tMax. energy      : {np.max(self.energy):.3g}\n"
-        info += f"\tMedian energy    : {np.median(self.energy):.3g}\n\n"
+        info += f"\tMin. energy      : {np.min(self.energy):.2e}\n"
+        info += f"\tMax. energy      : {np.max(self.energy):.2e}\n"
+        info += f"\tMedian energy    : {np.median(self.energy):.2e}\n\n"
 
         if self.is_pointed_observation:
             offset_max = np.max(self.offset)
@@ -630,9 +630,12 @@ class EventList:
         import matplotlib.pyplot as plt
         import matplotlib.gridspec as gridspec
 
-        gs = gridspec.GridSpec(nrows=2, ncols=3)
-
-        fig = plt.figure(figsize=(12, 8))
+        if allsky:
+            gs = gridspec.GridSpec(nrows=2, ncols=2)
+            fig = plt.figure(figsize=(8, 8))
+        else:
+            gs = gridspec.GridSpec(nrows=2, ncols=3)
+            fig = plt.figure(figsize=(12, 8))
 
         # energy plot
         ax_energy = fig.add_subplot(gs[1, 0])
