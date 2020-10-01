@@ -299,6 +299,53 @@ def test_downsample():
     assert axis_down.node_type == axis.node_type
 
 
+def test_upsample_non_regular():
+    axis = MapAxis.from_edges([0, 1, 3, 7], name="test", interp="lin")
+    axis_up = axis.upsample(2)
+
+    assert_allclose(axis_up.nbin, 2 * axis.nbin)
+    assert_allclose(axis_up.edges[0], axis.edges[0])
+    assert_allclose(axis_up.edges[-1], axis.edges[-1])
+    assert axis_up.node_type == axis.node_type
+
+
+def test_upsample_non_regular_nodes():
+    axis = MapAxis.from_nodes([0, 1, 3, 7], name="test", interp="lin")
+    axis_up = axis.upsample(2)
+
+    assert_allclose(axis_up.nbin, 2 * axis.nbin - 1)
+    assert_allclose(axis_up.center[0], axis.center[0])
+    assert_allclose(axis_up.center[-1], axis.center[-1])
+    assert axis_up.node_type == axis.node_type
+
+
+def test_downsample_non_regular():
+    axis = MapAxis.from_edges([0, 1, 3, 7, 13], name="test", interp="lin")
+    axis_down = axis.downsample(2)
+
+    assert_allclose(axis_down.nbin, 0.5 * axis.nbin)
+    assert_allclose(axis_down.edges[0], axis.edges[0])
+    assert_allclose(axis_down.edges[-1], axis.edges[-1])
+    assert axis_down.node_type == axis.node_type
+
+
+def test_downsample_non_regular_nodes():
+    axis = MapAxis.from_edges([0, 1, 3, 7, 9], name="test", interp="lin")
+    axis_down = axis.downsample(2)
+
+    assert_allclose(axis_down.nbin, 0.5 * axis.nbin)
+    assert_allclose(axis_down.edges[0], axis.edges[0])
+    assert_allclose(axis_down.edges[-1], axis.edges[-1])
+    assert axis_down.node_type == axis.node_type
+
+
+@pytest.mark.parametrize("factor", [1, 3, 5, 7, 11])
+def test_up_downsample_consistency(factor):
+    axis = MapAxis.from_edges([0, 1, 3, 7, 13], name="test", interp="lin")
+    axis_new = axis.upsample(factor).downsample(factor)
+    assert_allclose(axis.edges, axis_new.edges)
+
+
 @pytest.fixture(scope="session")
 def energy_axis_ref():
     edges = np.arange(1, 11) * u.TeV
