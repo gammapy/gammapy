@@ -104,25 +104,34 @@ class EventList:
         self.table = vstack_tables([self.table, other.table])
 
     def __str__(self):
-        ss = (
-            "EventList info:\n"
-            f"- Number of events: {len(self.table)}\n"
-            f"- Median energy: {np.median(self.energy.value):.3g} {self.energy.unit}\n"
-        )
+        info = self.__class__.__name__ + "\n"
+        info += "-" * len(self.__class__.__name__) + "\n\n"
 
-        if "OBS_ID" in self.table.meta:
-            ss += "- OBS_ID = {}".format(self.table.meta["OBS_ID"])
+        instrument = self.table.meta.get("INSTRUME")
+        info += f"\tInstrument       : {instrument}\n"
 
-        # TODO: add time, RA, DEC and if present GLON, GLAT info ...
+        telescope = self.table.meta.get("TELESCOP")
+        info += f"\tTelescope        : {telescope}\n"
 
-        if "AZ" in self.table.colnames:
-            # TODO: azimuth should be circular median
-            ss += "- Median azimuth: {}\n".format(np.median(self.table["AZ"]))
+        obs_id = self.table.meta.get("OBS_ID")
+        info += f"\tObs. ID          : {obs_id}\n\n"
 
-        if "ALT" in self.table.colnames:
-            ss += "- Median altitude: {}\n".format(np.median(self.table["ALT"]))
+        info += f"\tNumber of events : {len(self.table)}\n"
 
-        return ss
+        rate = len(self.table) / self.observation_time_duration
+        info += f"\tEvent rate       : {rate:.1f}\n\n"
+
+        info += f"\tTime start       : {self.observation_time_start}\n"
+        info += f"\tTime stop        : {self.observation_time_stop}\n\n"
+
+        info += f"\tMin. energy      : {np.min(self.energy):.3g}\n"
+        info += f"\tMax. energy      : {np.max(self.energy):.3g}\n"
+        info += f"\tMedian energy    : {np.median(self.energy):.3g}\n\n"
+
+        if self.is_pointed_observation:
+            offset_max = np.max(self.offset)
+            info += f"\tMax. offset      : {offset_max:.1f}\n"
+        return info.expandtabs(tabsize=2)
 
     @property
     def time_ref(self):
@@ -420,6 +429,9 @@ class EventList:
 
         offset2 = center.separation(self.radec).deg ** 2
 
+        kwargs.setdefault("histtype", "step")
+        kwargs.setdefault("bins", 30)
+
         ax.hist(offset2, **kwargs)
         ax.set_xlabel("Offset^2 (deg^2)")
         ax.set_ylabel("Counts")
@@ -644,16 +656,7 @@ class EventList:
         else:
             ax_image = fig.add_subplot(gs[0, 0], projection=m.geom.wcs)
         m.plot(ax=ax_image, stretch="sqrt", vmin=0)
-
-        # text summary
-        ax_text = fig.add_subplot(gs[1, 2])
-        self._plot_text_summary(ax=ax_text)
         plt.subplots_adjust(wspace=0.3)
-
-    def _plot_text_summary(self, ax):
-        ax.axis("off")
-        txt = str(self)
-        ax.text(0, 1, txt, fontsize=12, verticalalignment="top")
 
     @property
     def _plot_center(self):
@@ -665,9 +668,11 @@ class EventList:
     @property
     def _plot_width(self):
         if self.is_pointed_observation:
-            return self.offset.max()
+            offset = self.offset
         else:
-            return self.offset_from_median.max()
+            offset = self.offset_from_median
+
+        return 2 * offset.max()
 
     def _counts_image(self, allsky):
         if allsky:
