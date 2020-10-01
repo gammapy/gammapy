@@ -54,27 +54,15 @@ class Background3D:
 
     def __init__(
         self,
-        energy_lo,
-        energy_hi,
-        fov_lon_lo,
-        fov_lon_hi,
-        fov_lat_lo,
-        fov_lat_hi,
+        energy_axis,
+        fov_lon_axis,
+        fov_lat_axis,
         data,
         meta=None,
         interp_kwargs=None,
     ):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
-
-        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
-
-        fov_lon_edges = edges_from_lo_hi(fov_lon_lo, fov_lon_hi)
-        fov_lon_axis = MapAxis.from_edges(fov_lon_edges, interp="lin", name="fov_lon")
-
-        fov_lat_edges = edges_from_lo_hi(fov_lat_lo, fov_lat_hi)
-        fov_lat_axis = MapAxis.from_edges(fov_lat_edges, interp="lin", name="fov_lat")
 
         self.data = NDDataArray(
             axes=[energy_axis, fov_lon_axis, fov_lat_axis],
@@ -107,13 +95,27 @@ class Background3D:
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
+        # TODO: move to MapAxis.from_table()
+        energy_lo = table["ENERG_LO"].quantity[0]
+        energy_hi = table["ENERG_HI"].quantity[0]
+        fov_lon_lo = table["DETX_LO"].quantity[0]
+        fov_lon_hi = table["DETX_HI"].quantity[0]
+        fov_lat_lo = table["DETY_LO"].quantity[0]
+        fov_lat_hi = table["DETY_HI"].quantity[0]
+
+        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
+        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
+
+        fov_lon_edges = edges_from_lo_hi(fov_lon_lo, fov_lon_hi)
+        fov_lon_axis = MapAxis.from_edges(fov_lon_edges, interp="lin", name="fov_lon")
+
+        fov_lat_edges = edges_from_lo_hi(fov_lat_lo, fov_lat_hi)
+        fov_lat_axis = MapAxis.from_edges(fov_lat_edges, interp="lin", name="fov_lat")
+
         return cls(
-            energy_lo=table["ENERG_LO"].quantity[0],
-            energy_hi=table["ENERG_HI"].quantity[0],
-            fov_lon_lo=table["DETX_LO"].quantity[0],
-            fov_lon_hi=table["DETX_HI"].quantity[0],
-            fov_lat_lo=table["DETY_LO"].quantity[0],
-            fov_lat_hi=table["DETY_HI"].quantity[0],
+            energy_axis=energy_axis,
+            fov_lon_axis=fov_lon_axis,
+            fov_lat_axis=fov_lat_axis,
             data=table[bkg_name].data[0] * data_unit,
             meta=table.meta,
         )

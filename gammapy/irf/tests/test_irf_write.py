@@ -29,11 +29,22 @@ class TestIRFWrite:
         )
         self.fov_lon_lo = np.linspace(-6, 6, 11)[:-1] * u.deg
         self.fov_lon_hi = np.linspace(-6, 6, 11)[1:] * u.deg
+        self.fov_lon_axis = MapAxis.from_bounds(
+            -6, 6, nbin=10, name="fov_lon"
+
+        )
+
         self.fov_lat_lo = np.linspace(-6, 6, 11)[:-1] * u.deg
         self.fov_lat_hi = np.linspace(-6, 6, 11)[1:] * u.deg
+        self.fov_lat_axis = MapAxis.from_bounds(
+            -6, 6, nbin=10, name="fov_lat"
+
+        )
+
         self.aeff_data = np.random.rand(10, 3) * u.cm * u.cm
         self.edisp_data = np.random.rand(10, 3, 3)
         self.bkg_data = np.random.rand(10, 10, 10) / u.MeV / u.s / u.sr
+
         self.aeff = EffectiveAreaTable2D(
             energy_axis_true=self.energy_axis_true,
             offset_axis=self.offset_axis,
@@ -46,12 +57,9 @@ class TestIRFWrite:
             data=self.edisp_data,
         )
         self.bkg = Background3D(
-            energy_lo=self.energy_lo,
-            energy_hi=self.energy_hi,
-            fov_lon_lo=self.fov_lon_lo,
-            fov_lon_hi=self.fov_lon_hi,
-            fov_lat_lo=self.fov_lat_lo,
-            fov_lat_hi=self.fov_lat_hi,
+            energy_axis=self.energy_axis_true.copy(name="energy"),
+            fov_lon_axis=self.fov_lon_axis,
+            fov_lat_axis=self.fov_lat_axis,
             data=self.bkg_data,
         )
 
