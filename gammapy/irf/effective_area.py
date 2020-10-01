@@ -61,14 +61,10 @@ class EffectiveAreaTable:
     0.185368478744 TeV
     """
 
-    def __init__(self, energy_lo, energy_hi, data, meta=None):
-
-        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy_true")
-
+    def __init__(self, energy_axis_true, data, meta=None):
         interp_kwargs = {"extrapolate": False, "bounds_error": False}
         self.data = NDDataArray(
-            axes=[energy_axis], data=data, interp_kwargs=interp_kwargs
+            axes=[energy_axis_true], data=data, interp_kwargs=interp_kwargs
         )
         self.meta = meta or {}
 
@@ -153,16 +149,17 @@ class EffectiveAreaTable:
             ss += "Valid instruments: HESS, HESS2, CTA"
             raise ValueError(ss)
 
-        xx = MapAxis.from_edges(energy, interp="log").center.to_value("MeV")
+        energy_axis_true = MapAxis.from_edges(energy, interp="log", name="energy_true")
 
         g1 = pars[instrument][0]
         g2 = pars[instrument][1]
         g3 = -pars[instrument][2]
 
-        value = g1 * xx ** (-g2) * np.exp(g3 / xx)
+        energy = energy_axis_true.center.to_value("MeV")
+        value = g1 * energy ** (-g2) * np.exp(g3 / energy)
         data = u.Quantity(value, "cm2", copy=False)
 
-        return cls(energy_lo=energy[:-1], energy_hi=energy[1:], data=data)
+        return cls(energy_axis_true=energy_axis_true, data=data)
 
     @classmethod
     def from_constant(cls, energy, value):
@@ -176,7 +173,8 @@ class EffectiveAreaTable:
             Effective area
         """
         data = np.ones((len(energy) - 1)) * u.Quantity(value)
-        return cls(energy_lo=energy[:-1], energy_hi=energy[1:], data=data)
+        energy_axis_true = MapAxis.from_energy_edges(energy, name="energy_true")
+        return cls(energy_axis_true=energy_axis_true, data=data)
 
     @classmethod
     def from_table(cls, table):
@@ -184,10 +182,9 @@ class EffectiveAreaTable:
 
         Data format specification: :ref:`gadf:ogip-arf`
         """
-        energy_lo = table["ENERG_LO"].quantity
-        energy_hi = table["ENERG_HI"].quantity
+        energy_axis_true = MapAxis.from_table(table, format="ogip-arf")
         data = table["SPECRESP"].quantity
-        return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
+        return cls(energy_axis_true=energy_axis_true, data=data)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu="SPECRESP"):
@@ -436,14 +433,16 @@ class EffectiveAreaTable2D:
             Energy axis bin edges
         """
         if energy is None:
-            energy = self.data.axes["energy_true"].edges
+            energy_axis_true = self.data.axes["energy_true"]
+        else:
+            energy_axis_true = MapAxis.from_energy_edges(energy, name="energy_true")
 
         area = self.data.evaluate(
-            offset=offset, energy_true=MapAxis.from_edges(energy, interp="log").center
+            offset=offset, energy_true=energy_axis_true.center
         )
 
         return EffectiveAreaTable(
-            energy_lo=energy[:-1], energy_hi=energy[1:], data=area
+            energy_axis_true=energy_axis_true, data=area
         )
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):

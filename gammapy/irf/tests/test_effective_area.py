@@ -47,8 +47,10 @@ class TestEffectiveAreaTable2D:
 
         energy = np.sqrt(e_axis[:-1] * e_axis[1:])
         area = aeff.data.evaluate(energy_true=energy, offset=offset)
+
+        energy_axis_true = MapAxis.from_energy_edges(e_axis, name="energy_true")
         effarea1d = EffectiveAreaTable(
-            energy_lo=e_axis[:-1], energy_hi=e_axis[1:], data=area
+            energy_axis_true=energy_axis_true, data=area
         )
 
         actual = effareafrom2d.data.evaluate(energy_true="2.34 TeV")
@@ -113,9 +115,9 @@ class TestEffectiveAreaTable:
 
         # Test evaluation outside safe range
         data = [np.nan, np.nan, 0, 0, 1, 2, 3, np.nan, np.nan]
-        energy = np.logspace(0, 10, 10) * u.TeV
+        energy_axis_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=9, name="energy_true")
         aeff = EffectiveAreaTable(
-            data=data, energy_lo=energy[:-1], energy_hi=energy[1:]
+            data=data, energy_axis_true=energy_axis_true
         )
         vals = aeff.evaluate_fill_nan()
         assert vals[1] == 0

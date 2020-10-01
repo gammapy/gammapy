@@ -1275,13 +1275,13 @@ class MapAxis:
         return hdu
 
     @classmethod
-    def from_table_hdu(cls, hdu, format="ogip", idx=0):
+    def from_table(cls, table, format="ogip", idx=0):
         """Instanciate MapAxis from table HDU
 
         Parameters
         ----------
-        hdu : `~astropy.io.fits.BinTableHDU`
-            Table HDU
+        table : `~astropy.table.Table`
+            Table
         format : {"ogip", "ogip-arf", "fgst-ccube", "fgst-template"}
             Format specification
         idx : int
@@ -1292,8 +1292,6 @@ class MapAxis:
         axis : `MapAxis`
             Map Axis
         """
-        table = Table.read(hdu)
-
         if format in ["ogip", "fgst-ccube"]:
             emin = table["E_MIN"].quantity
             emax = table["E_MAX"].quantity
@@ -1342,6 +1340,27 @@ class MapAxis:
             raise ValueError(f"Format '{format}' not supported")
 
         return axis
+
+    @classmethod
+    def from_table_hdu(cls, hdu, format="ogip", idx=0):
+        """Instanciate MapAxis from table HDU
+
+        Parameters
+        ----------
+        hdu : `~astropy.io.fits.BinTableHDU`
+            Table HDU
+        format : {"ogip", "ogip-arf", "fgst-ccube", "fgst-template"}
+            Format specification
+        idx : int
+            Column index of the axis.
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Map Axis
+        """
+        table = Table.read(hdu)
+        return cls.from_table(table, format=format, idx=idx)
 
 
 class MapCoord:
