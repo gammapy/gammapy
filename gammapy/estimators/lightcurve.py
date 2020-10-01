@@ -352,9 +352,6 @@ class LightCurveEstimator(Estimator):
 
         self.atol = u.Quantity(atol)
 
-#        if e_edges is not None and len(e_edges) > 2:
-#            raise ValueError("So far the LightCurveEstimator only support a single energy bin.")
-
         self.e_edges = e_edges
 
         self.norm_min = norm_min
@@ -408,7 +405,7 @@ class LightCurveEstimator(Estimator):
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
-        table = FluxPoints(table).to_sed_type("flux").table
+ #       table = FluxPoints(table).to_sed_type("flux").table
         return LightCurve(table)
 
     def estimate_time_bin_flux(self, datasets):
@@ -450,4 +447,4 @@ class LightCurveEstimator(Estimator):
         for colname in fp.table.colnames:
             result[colname] = fp.table[colname].quantity
 
-        return result
+        return fp#.to_sed_type("flux")#result

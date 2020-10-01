@@ -924,4 +924,4 @@ class FluxPointsEstimator(Estimator):
             mask = dataset.mask & energy_mask
             counts.append(dataset.counts.data[mask].sum())
 
-        return {"counts": np.array(counts, dtype=int)}
+        return {"counts": np.array(counts, dtype=int).sum()}
