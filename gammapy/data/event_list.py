@@ -2,29 +2,27 @@
 import collections
 import logging
 import numpy as np
+from regions import CircleSkyRegion
 from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from astropy.units import Quantity, Unit
-from gammapy.maps import MapAxis, MapCoord, WcsNDMap
+from astropy import units as u
+from gammapy.maps import MapAxis, MapCoord, WcsNDMap, RegionGeom
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.regions import make_region
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 
-__all__ = ["EventListBase", "EventList", "EventListLAT"]
+__all__ = ["EventList"]
 
 log = logging.getLogger(__name__)
 
 
-class EventListBase:
+class EventList:
     """Event list.
-
-    This class represents the base for two different event lists:
-    - EventList: targeted for IACT event lists
-    - EventListLAT: targeted for Fermi-LAT event lists
 
     Event list data is stored in ``table`` (`~astropy.table.Table`) data member.
 
@@ -150,7 +148,7 @@ class EventListBase:
         return self.time_ref + Quantity(self.table.meta["TSTART"], "second")
 
     @property
-    def observation_time_end(self):
+    def observation_time_stop(self):
         """Observation stop time (`~astropy.time.Time`)."""
         return self.time_ref + Quantity(self.table.meta["TSTOP"], "second")
 
@@ -172,6 +170,14 @@ class EventListBase:
     def energy(self):
         """Event energies (`~astropy.units.Quantity`)."""
         return self.table["ENERGY"].quantity
+
+    @property
+    def galactic_median(self):
+        """Median position in radec"""
+        galactic = self.galactic
+        median_lon = np.median(galactic.l.wrap_at("180d"))
+        median_lat = np.median(galactic.b)
+        return SkyCoord(median_lon, median_lat, frame="galactic")
 
     def select_row_subset(self, row_specifier):
         """Select table row subset.
@@ -261,8 +267,8 @@ class EventListBase:
         event_list : `EventList`
             Copy of event list with selection applied.
         """
-        region = make_region(region)
-        mask = region.contains(self.radec, wcs)
+        geom = RegionGeom.create(region, wcs=wcs)
+        mask = geom.contains(self.radec)
         return self.select_row_subset(mask)
 
     def select_parameter(self, parameter, band):
@@ -410,7 +416,7 @@ class EventListBase:
         ax = plt.gca() if ax is None else ax
 
         if center is None:
-            center = self.pointing_radec
+            center = self._plot_center
 
         offset2 = center.separation(self.radec).deg ** 2
 
@@ -420,27 +426,31 @@ class EventListBase:
 
         return ax
 
-    def plot_energy_offset(self, ax=None):
+    def plot_energy_offset(self, ax=None, center=None):
         """Plot counts histogram with energy and offset axes."""
         import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
 
         ax = plt.gca() if ax is None else ax
 
-        energy_bounds = self._default_plot_ebounds().to_value("TeV")
-        offsetangle = self.pointing_radec.separation(self.radec).max().to("deg").value
-        offset_bounds = np.linspace(0, offsetangle, 30)
+        if center is None:
+            center = self._plot_center
+
+        energy_bounds = self._default_plot_ebounds().to_value(self.energy.unit)
+        offset = center.separation(self.radec)
+        offset_max = offset.max()
+        offset_bounds = np.linspace(0, offset_max.deg, 30)
 
         counts = np.histogram2d(
             x=self.energy.value,
-            y=self.offset.value,
+            y=offset.deg,
             bins=(energy_bounds, offset_bounds),
         )[0]
 
         ax.pcolormesh(energy_bounds, offset_bounds, counts.T, norm=LogNorm())
         ax.set_xscale("log")
         ax.set_xlabel(f"Energy ({self.energy.unit})")
-        ax.set_ylabel(f"Offset ({self.offset.unit})")
+        ax.set_ylabel(f"Offset ({offset.unit})")
 
     def check(self, checks="all"):
         """Run checks.
@@ -489,28 +499,6 @@ class EventListBase:
         valid = values > 0
         return self.select_row_subset(valid)
 
-
-class EventList(EventListBase):
-    """Event list for IACT dataset.
-
-    Data format specification: :ref:`gadf:iact-events`
-
-    For further information, see the base class: `~gammapy.data.EventListBase`.
-
-    Parameters
-    ----------
-    table : `~astropy.table.Table`
-        Event list table
-
-    Examples
-    --------
-    To load an example H.E.S.S. event list:
-
-    >>> from gammapy.data import EventList
-    >>> filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
-    >>> events = EventList.read(filename)
-    """
-
     @property
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)."""
@@ -523,7 +511,8 @@ class EventList(EventListBase):
         This is a keyword related to IACTs
         The wall time, including dead-time.
         """
-        return Quantity(self.table.meta["ONTIME"], "second")
+        time_delta = (self.observation_time_stop - self.observation_time_start).sec
+        return Quantity(time_delta, "s")
 
     @property
     def observation_live_time_duration(self):
@@ -587,6 +576,14 @@ class EventList(EventListBase):
         offset = center.separation(position)
         return Angle(offset, unit="deg")
 
+    @property
+    def offset_from_median(self):
+        """Event offset from the median position (`~astropy.coordinates.Angle`)."""
+        position = self.radec
+        center = self.galactic_median
+        offset = center.separation(position)
+        return Angle(offset, unit="deg")
+
     def select_offset(self, offset_band):
         """Select events in offset band.
 
@@ -605,84 +602,93 @@ class EventList(EventListBase):
         mask &= offset < offset_band[1]
         return self.select_row_subset(mask)
 
-    def peek(self):
-        """Quick look plots."""
+    @property
+    def is_pointed_observation(self):
+        """Whether observation is pointed"""
+        return "RA_PNT" in self.table.meta
+
+    def peek(self, allsky=False):
+        """Quick look plots.
+
+        Parameters
+        ----------
+        allsky : bool
+            Wheter to look at the events allsky
+        """
         import matplotlib.pyplot as plt
+        import matplotlib.gridspec as gridspec
 
-        fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
-        self.plot_energy(ax=axes[0, 0])
+        gs = gridspec.GridSpec(nrows=2, ncols=3)
 
-        off_max = self.pointing_radec.separation(self.radec).max().deg
-        bins = np.linspace(start=0, stop=off_max ** 2, num=30)
-        self.plot_offset2_distribution(ax=axes[0, 1], bins=bins)
+        fig = plt.figure(figsize=(12, 8))
 
-        self.plot_time(ax=axes[0, 2])
+        ax_energy = fig.add_subplot(gs[1, 0])
+        self.plot_energy(ax=ax_energy)
 
-        axes[1, 0].axis("off")
-        m = self._counts_image()
-        ax = plt.subplot(2, 3, 4, projection=m.geom.wcs)
-        m.plot(ax=ax, stretch="linear")
+        if not allsky:
+            ax_offset = fig.add_subplot(gs[0, 1])
+            self.plot_offset2_distribution(ax=ax_offset)
+            ax_energy_offset = fig.add_subplot(gs[0, 2])
+            self.plot_energy_offset(ax=ax_energy_offset)
 
-        self.plot_energy_offset(ax=axes[1, 1])
+        ax_time = fig.add_subplot(gs[1, 1])
+        self.plot_time(ax=ax_time)
 
-        self._plot_text_summary(ax=axes[1, 2])
-        plt.subplots_adjust(hspace=0.3, wspace=0.2)
+        m = self._counts_image(allsky=allsky)
+        if allsky:
+            ax_image = fig.add_subplot(gs[0, :], projection=m.geom.wcs)
+        else:
+            ax_image = fig.add_subplot(gs[0, 0], projection=m.geom.wcs)
+        m.plot(ax=ax_image, stretch="sqrt", vmin=0)
+
+        ax_text = fig.add_subplot(gs[1, 2])
+        self._plot_text_summary(ax=ax_text)
+        plt.subplots_adjust(wspace=0.3)
 
     def _plot_text_summary(self, ax):
         ax.axis("off")
         txt = str(self)
         ax.text(0, 1, txt, fontsize=12, verticalalignment="top")
 
-    def _counts_image(self):
-        width = self.galactic.b.max().deg - self.galactic.b.min().deg
-        opts = {
-            "width": (width, width),
-            "binsz": 0.05,
-            "proj": "TAN",
-            "frame": "galactic",
-            "skydir": self.pointing_radec,
-        }
+    @property
+    def _plot_center(self):
+        if self.is_pointed_observation:
+            return self.pointing_radec
+        else:
+            return self.galactic_median
+
+    @property
+    def _plot_width(self):
+        if self.is_pointed_observation:
+            return self.offset.max()
+        else:
+            return self.offset_from_median.max()
+
+    def _counts_image(self, allsky):
+        if allsky:
+            opts = {
+                "npix": (360, 180),
+                "binsz": 1.0,
+                "proj": "AIT",
+                "frame": "galactic"
+            }
+        else:
+            opts = {
+                "width": self._plot_width,
+                "binsz": 0.05,
+                "proj": "TAN",
+                "frame": "galactic",
+                "skydir": self._plot_center,
+            }
+
         m = WcsNDMap.create(**opts)
         m.fill_by_coord(self.radec)
         m = m.smooth(width=0.5)
         return m
 
-    def plot_image(self):
+    def plot_image(self, allsky=False):
         """Quick look counts map sky plot."""
-        m = self._counts_image()
-        m.plot(stretch="sqrt")
-
-
-class EventListLAT(EventListBase):
-    """Event list for Fermi-LAT dataset.
-
-    Fermi-LAT data products
-    https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/LAT_DP.html
-    Data format specification (columns)
-    https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/LAT_Data_Columns.html
-
-    For further information, see the base class: `~gammapy.data.EventListBase`.
-
-    Parameters
-    ----------
-    table : `~astropy.table.Table`
-        Event list table
-
-    Examples
-    --------
-    To load an example Fermi-LAT event list:
-
-    >>> from gammapy.data import EventListLAT
-    >>> filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
-    >>> events = EventListLAT.read(filename)
-    """
-
-    def plot_image(self):
-        """Quick look counts map sky plot."""
-        from gammapy.maps import WcsNDMap
-
-        m = WcsNDMap.create(npix=(360, 180), binsz=1.0, proj="AIT", frame="galactic")
-        m.fill_by_coord(self.radec)
+        m = self._counts_image(allsky=allsky)
         m.plot(stretch="sqrt")
 
 
@@ -786,7 +792,7 @@ class EventListChecker(Checker):
         if dt.min() < self.accuracy["time"].to_value("s"):
             yield self._record(level="error", msg="Event times before obs start time")
 
-        dt = (self.event_list.time - self.event_list.observation_time_end).sec
+        dt = (self.event_list.time - self.event_list.observation_time_stop).sec
         if dt.max() > self.accuracy["time"].to_value("s"):
             yield self._record(level="error", msg="Event times after the obs end time")
 
