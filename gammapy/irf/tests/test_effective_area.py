@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from gammapy.irf import EffectiveAreaTable, EffectiveAreaTable2D
+from gammapy.maps import MapAxis
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
@@ -143,19 +144,18 @@ class TestEffectiveAreaTable:
 
     @staticmethod
     def test_write():
-        energy = np.logspace(0, 1, 11) * u.TeV
-        energy_lo = energy[:-1]
-        energy_hi = energy[1:]
+        energy_axis_true = MapAxis.from_energy_bounds(
+            "1 TeV", "10 TeV", nbin=10, name="energy_true"
+        )
+
         offset = np.linspace(0, 1, 4) * u.deg
-        offset_lo = offset[:-1]
-        offset_hi = offset[1:]
-        data = np.ones(shape=(len(energy_lo), len(offset_lo))) * u.cm * u.cm
+        offset_axis = MapAxis.from_nodes(offset, name="offset")
+
+        data = np.ones(shape=(energy_axis_true.nbin, offset_axis.nbin)) * u.cm ** 2
 
         aeff = EffectiveAreaTable2D(
-            energy_lo=energy_lo,
-            energy_hi=energy_hi,
-            offset_lo=offset_lo,
-            offset_hi=offset_hi,
+            energy_axis_true=energy_axis_true,
+            offset_axis=offset_axis,
             data=data,
         )
         hdu = aeff.to_table_hdu()

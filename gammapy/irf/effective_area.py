@@ -357,10 +357,8 @@ class EffectiveAreaTable2D:
 
     def __init__(
         self,
-        energy_lo,
-        energy_hi,
-        offset_lo,
-        offset_hi,
+        energy_axis_true,
+        offset_axis,
         data,
         meta=None,
         interp_kwargs=None,
@@ -369,18 +367,8 @@ class EffectiveAreaTable2D:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy_true")
-
-        # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
-        if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):
-            offset_axis = MapAxis.from_nodes(offset_lo, interp="lin", name="offset")
-        else:
-            offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
-            offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
-
         self.data = NDDataArray(
-            axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs
+            axes=[energy_axis_true, offset_axis], data=data, interp_kwargs=interp_kwargs
         )
         self.meta = meta or {}
 
@@ -402,11 +390,26 @@ class EffectiveAreaTable2D:
     @classmethod
     def from_table(cls, table):
         """Read from `~astropy.table.Table`."""
+        # TODO: move to MapAxis.from_table()
+        energy_lo = table["ENERG_LO"].quantity[0]
+        energy_hi = table["ENERG_HI"].quantity[0]
+        offset_lo = table["THETA_LO"].quantity[0]
+        offset_hi = table["THETA_HI"].quantity[0]
+
+        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
+        energy_axis_true = MapAxis.from_edges(e_edges, interp="log", name="energy_true")
+
+        # TODO: for some reason the H.E.S.S. DL3 files contain the same values for
+        #  offset_hi and offset_lo
+        if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):
+            offset_axis = MapAxis.from_nodes(offset_lo, interp="lin", name="offset")
+        else:
+            offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
+            offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
+
         return cls(
-            energy_lo=table["ENERG_LO"].quantity[0],
-            energy_hi=table["ENERG_HI"].quantity[0],
-            offset_lo=table["THETA_LO"].quantity[0],
-            offset_hi=table["THETA_HI"].quantity[0],
+            energy_axis_true=energy_axis_true,
+            offset_axis=offset_axis,
             data=table["EFFAREA"].quantity[0].transpose(),
             meta=table.meta,
         )
