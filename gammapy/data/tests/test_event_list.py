@@ -72,6 +72,15 @@ class TestEventListHESS:
         assert_allclose(altaz[0].alt.deg, 53.258024, atol=1e-3)
         # TODO: add asserts for frame properties
 
+    def test_median_position(self):
+        coord = self.events.galactic_median
+        assert_allclose(coord.l.deg, 320.539346, atol=1e-3)
+        assert_allclose(coord.b.deg, -0.882515, atol=1e-3)
+
+    def test_median_offset(self):
+        offset_max = self.events.offset_from_median.max()
+        assert_allclose(offset_max.to_value("deg"), 36.346379, atol=1e-3)
+
     def test_from_stack(self):
         event_lists = [self.events] * 2
         stacked_list = EventList.from_stack(event_lists)
@@ -131,9 +140,9 @@ class TestEventListFermi:
         assert not self.events.is_pointed_observation
 
     @requires_dependency("matplotlib")
-    def test_plot_image(self):
+    def test_peek(self):
         with mpl_plot_check():
-            self.events.plot_image()
+            self.events.peek(allsky=True)
 
 
 @requires_data()

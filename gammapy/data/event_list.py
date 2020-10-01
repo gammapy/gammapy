@@ -345,8 +345,8 @@ class EventList:
 
         ax.set_xlabel("Time (sec)")
         ax.set_ylabel("Counts")
-        y, x_edges = np.histogram(time, bins=30)
-        # x = (x_edges[1:] + x_edges[:-1]) / 2
+        y, x_edges = np.histogram(time, bins=20)
+
         xerr = np.diff(x_edges) / 2
         x = x_edges[:-1] + xerr
         yerr = np.sqrt(y)
@@ -622,18 +622,22 @@ class EventList:
 
         fig = plt.figure(figsize=(12, 8))
 
+        # energy plot
         ax_energy = fig.add_subplot(gs[1, 0])
         self.plot_energy(ax=ax_energy)
 
+        # offset plots
         if not allsky:
             ax_offset = fig.add_subplot(gs[0, 1])
             self.plot_offset2_distribution(ax=ax_offset)
             ax_energy_offset = fig.add_subplot(gs[0, 2])
             self.plot_energy_offset(ax=ax_energy_offset)
 
+        # time plot
         ax_time = fig.add_subplot(gs[1, 1])
         self.plot_time(ax=ax_time)
 
+        # image plot
         m = self._counts_image(allsky=allsky)
         if allsky:
             ax_image = fig.add_subplot(gs[0, :], projection=m.geom.wcs)
@@ -641,6 +645,7 @@ class EventList:
             ax_image = fig.add_subplot(gs[0, 0], projection=m.geom.wcs)
         m.plot(ax=ax_image, stretch="sqrt", vmin=0)
 
+        # text summary
         ax_text = fig.add_subplot(gs[1, 2])
         self._plot_text_summary(ax=ax_text)
         plt.subplots_adjust(wspace=0.3)
