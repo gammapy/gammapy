@@ -1134,32 +1134,18 @@ class MapAxis:
         groups.add_column(group_idx, name="group_idx", index=0)
         return groups
 
-    def _up_down_sample(self, nbin):
-        if self.node_type == "edges":
-            nodes = self.edges
-        else:
-            nodes = self.center
-
-        lo_bnd, hi_bnd = nodes.min(), nodes.max()
-
-        return self.from_bounds(
-            lo_bnd=lo_bnd.value,
-            hi_bnd=hi_bnd.value,
-            nbin=nbin,
-            interp=self.interp,
-            node_type=self.node_type,
-            unit=self.unit,
-            name=self.name,
-        )
-
     def upsample(self, factor):
         """Upsample map axis by a given factor.
+
+        When up-sampling for each node specified in the axis, the corresponding
+        number of sub-nodes are introduced and preserving the initial nodes. For
+        node type "edges" this results in nbin * factor new bins. For node type
+        "center" this results in (nbin - 1) * factor + 1 new bins.
 
         Parameters
         ----------
         factor : int
             Upsampling factor.
-
 
         Returns
         -------
@@ -1167,11 +1153,26 @@ class MapAxis:
             Usampled map axis.
 
         """
-        nbin = self.nbin * factor
-        return self._up_down_sample(nbin)
+        if self.node_type == "edges":
+            pix = self.coord_to_pix(self.edges)
+            nbin = int(self.nbin * factor) + 1
+            pix_new = np.linspace(pix.min(), pix.max(), nbin)
+            edges = self.pix_to_coord(pix_new)
+            return self.from_edges(edges, name=self.name, interp=self.interp)
+        else:
+            pix = self.coord_to_pix(self.center)
+            nbin = int((self.nbin - 1) * factor) + 1
+            pix_new = np.linspace(pix.min(), pix.max(), nbin)
+            nodes = self.pix_to_coord(pix_new)
+            return self.from_nodes(nodes, name=self.name, interp=self.interp)
 
     def downsample(self, factor):
         """Downsample map axis by a given factor.
+
+        When down-sampling each n-th (given by the factor) bin is selected from
+        the axis while preserving the axis limits. For node type "edges" this
+        requires nbin to be dividable by the factor, for node type "center" this
+        requires nbin - 1 to be dividable by the factor.
 
         Parameters
         ----------
@@ -1183,14 +1184,23 @@ class MapAxis:
         -------
         axis : `MapAxis`
             Downsampled map axis.
-
         """
-        nbin = self.nbin / factor
+        if self.node_type == "edges":
+            nbin = self.nbin / factor
 
-        if np.mod(nbin, 1) > 0:
-            raise ValueError(f"Number of {self.name} bins is not divisible by {factor}")
+            if np.mod(nbin, 1) > 0:
+                raise ValueError(f"Number of {self.name} bins is not divisible by {factor}")
 
-        return self._up_down_sample(nbin)
+            edges = self.edges[::factor]
+            return self.from_edges(edges, name=self.name, interp=self.interp)
+        else:
+            nbin = (self.nbin - 1) / factor
+
+            if np.mod(nbin, 1) > 0:
+                raise ValueError(f"Number of {self.name} bins - 1 is not divisible by {factor}")
+
+            nodes = self.center[::factor]
+            return self.from_nodes(nodes, name=self.name, interp=self.interp)
 
     def to_header(self, header, format="ogip"):
         """Create FITS header

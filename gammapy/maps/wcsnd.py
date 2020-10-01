@@ -308,15 +308,17 @@ class WcsNDMap(WcsMap):
             idx_ax = self.geom.axes.index(axis_name)
             pix[idx_ax] = (pix[idx_ax] - 0.5 * (factor - 1)) / factor
 
+        if preserve_counts:
+            data = self.data / self.geom.bin_volume().value
+        else:
+            data = self.data
+
         data = scipy.ndimage.map_coordinates(
-            self.data.T, tuple(pix), order=order, mode="nearest"
+            data.T, tuple(pix), order=order, mode="nearest"
         )
 
         if preserve_counts:
-            if axis_name is None:
-                data /= factor ** 2
-            else:
-                data /= factor
+            data *= geom.bin_volume().value
 
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
