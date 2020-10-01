@@ -9,7 +9,7 @@ import scipy.interpolate
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.table import Column, QTable, Table
+from astropy.table import Column, Table
 from astropy.utils import lazyproperty
 from gammapy.utils.interpolation import interpolation_scale
 from .utils import INVALID_INDEX, edges_from_lo_hi, find_bands_hdu, find_hdu
@@ -194,7 +194,10 @@ class MapAxes(Sequence):
         # Keep only normal bins
         groups = groups[groups["bin_type"] == "normal   "]
 
-        edges = edges_from_lo_hi(groups[axis.name + "_min"], groups[axis.name + "_max"])
+        edges = edges_from_lo_hi(
+            groups[axis.name + "_min"].quantity,
+            groups[axis.name + "_max"].quantity,
+        )
 
         axis_resampled = MapAxis.from_edges(
             edges=edges, interp=axis.interp, name=axis.name
@@ -1095,7 +1098,7 @@ class MapAxis:
         edges_idx = np.unique(edges_idx)
         edges_ref = self.pix_to_coord(edges_idx)
 
-        groups = QTable()
+        groups = Table()
         groups[f"{self.name}_min"] = edges_ref[:-1]
         groups[f"{self.name}_max"] = edges_ref[1:]
 

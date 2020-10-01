@@ -360,8 +360,8 @@ def test_group_table_basic(energy_axis_ref):
     assert_allclose(groups["group_idx"], [0, 1])
     assert_allclose(groups["idx_min"], [0, 1])
     assert_allclose(groups["idx_max"], [0, 8])
-    assert_allclose(groups["energy_min"].to_value("TeV"), [1, 2])
-    assert_allclose(groups["energy_max"].to_value("TeV"), [2, 10])
+    assert_allclose(groups["energy_min"], [1, 2])
+    assert_allclose(groups["energy_max"], [2, 10])
 
     bin_type = [_.strip() for _ in groups["bin_type"]]
     assert_equal(bin_type, ["normal", "normal"])
@@ -376,8 +376,8 @@ def test_group_table_edges(energy_axis_ref, e_edges):
     assert_allclose(groups["group_idx"], [0, 1, 2, 3])
     assert_allclose(groups["idx_min"], [0, 1, 4, 6])
     assert_allclose(groups["idx_max"], [0, 3, 5, 8])
-    assert_allclose(groups["energy_min"].to_value("TeV"), [1, 2, 5, 7])
-    assert_allclose(groups["energy_max"].to_value("TeV"), [2, 5, 7, 10])
+    assert_allclose(groups["energy_min"].quantity.to_value("TeV"), [1, 2, 5, 7])
+    assert_allclose(groups["energy_max"].quantity.to_value("TeV"), [2, 5, 7, 10])
 
     bin_type = [_.strip() for _ in groups["bin_type"]]
     assert_equal(bin_type, ["underflow", "normal", "normal", "overflow"])
@@ -390,8 +390,8 @@ def test_group_table_below_range(energy_axis_ref):
     assert_allclose(groups["group_idx"], [0, 1])
     assert_allclose(groups["idx_min"], [0, 3])
     assert_allclose(groups["idx_max"], [2, 8])
-    assert_allclose(groups["energy_min"].to_value("TeV"), [1, 4])
-    assert_allclose(groups["energy_max"].to_value("TeV"), [4, 10])
+    assert_allclose(groups["energy_min"], [1, 4])
+    assert_allclose(groups["energy_max"], [4, 10])
 
     bin_type = [_.strip() for _ in groups["bin_type"]]
     assert_equal(bin_type, ["normal", "overflow"])
@@ -404,8 +404,8 @@ def test_group_table_above_range(energy_axis_ref):
     assert_allclose(groups["group_idx"], [0, 1, 2])
     assert_allclose(groups["idx_min"], [0, 4, 6])
     assert_allclose(groups["idx_max"], [3, 5, 8])
-    assert_allclose(groups["energy_min"].to_value("TeV"), [1, 5, 7])
-    assert_allclose(groups["energy_max"].to_value("TeV"), [5, 7, 10])
+    assert_allclose(groups["energy_min"], [1, 5, 7])
+    assert_allclose(groups["energy_max"], [5, 7, 10])
 
     bin_type = [_.strip() for _ in groups["bin_type"]]
     assert_equal(bin_type, ["underflow", "normal", "normal"])
