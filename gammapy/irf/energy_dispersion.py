@@ -22,12 +22,12 @@ class EnergyDispersion2D:
 
     Parameters
     ----------
-    e_true_lo, e_true_hi : `~astropy.units.Quantity`
-        True energy axis binning
-    migra_lo, migra_hi : `~numpy.ndarray`
-        Energy migration axis binning
-    offset_lo, offset_hi : `~astropy.coordinates.Angle`
-        Field of view offset axis binning
+    energy_axis_true : `MapAxis`
+        True energy axis
+    migra_axis : `MapAxis`
+        Energy migration axis
+    offset_axis : `MapAxis`
+        Field of view offset axis
     data : `~numpy.ndarray`
         Energy dispersion probability density
 

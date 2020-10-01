@@ -18,8 +18,8 @@ class EffectiveAreaTable:
 
     Parameters
     ----------
-    energy_lo, energy_hi : `~astropy.units.Quantity`
-        Energy axis bin edges
+    energy_axis_true : `MapAxis`
+        Energy axis
     data : `~astropy.units.Quantity`
         Effective area
 
@@ -311,10 +311,10 @@ class EffectiveAreaTable2D:
 
     Parameters
     ----------
-    energy_lo, energy_hi : `~astropy.units.Quantity`
-        Energy binning
-    offset_lo, offset_hi : `~astropy.units.Quantity`
-        Field of view offset angle.
+    energy_axis_true : `MapAxis`
+        True energy axis
+    offset_axis : `MapAxis`
+        Field of view offset axis.
     data : `~astropy.units.Quantity`
         Effective area
 
