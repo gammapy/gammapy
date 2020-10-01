@@ -4,14 +4,24 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.io import fits
 from gammapy.irf import Background3D, EffectiveAreaTable2D, EnergyDispersion2D
+from gammapy.maps import MapAxis
 
 
 class TestIRFWrite:
     def setup(self):
         self.energy_lo = np.logspace(0, 1, 11)[:-1] * u.TeV
         self.energy_hi = np.logspace(0, 1, 11)[1:] * u.TeV
+        self.energy_axis_true = MapAxis.from_energy_bounds(
+            "1 TeV", "10 TeV", nbin=10, name="energy_true"
+        )
+
         self.offset_lo = np.linspace(0, 1, 4)[:-1] * u.deg
         self.offset_hi = np.linspace(0, 1, 4)[1:] * u.deg
+
+        self.offset_axis = MapAxis.from_bounds(
+            0, 1, nbin=3, unit="deg", name="offset", node_type="edges"
+
+        )
         self.migra_lo = np.linspace(0, 3, 4)[:-1]
         self.migra_hi = np.linspace(0, 3, 4)[1:]
         self.fov_lon_lo = np.linspace(-6, 6, 11)[:-1] * u.deg
@@ -22,10 +32,8 @@ class TestIRFWrite:
         self.edisp_data = np.random.rand(10, 3, 3)
         self.bkg_data = np.random.rand(10, 10, 10) / u.MeV / u.s / u.sr
         self.aeff = EffectiveAreaTable2D(
-            energy_lo=self.energy_lo,
-            energy_hi=self.energy_hi,
-            offset_lo=self.offset_lo,
-            offset_hi=self.offset_hi,
+            energy_axis_true=self.energy_axis_true,
+            offset_axis=self.offset_axis,
             data=self.aeff_data,
         )
         self.edisp = EnergyDispersion2D(
