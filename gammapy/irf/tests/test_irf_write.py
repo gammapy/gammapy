@@ -24,6 +24,9 @@ class TestIRFWrite:
         )
         self.migra_lo = np.linspace(0, 3, 4)[:-1]
         self.migra_hi = np.linspace(0, 3, 4)[1:]
+        self.migra_axis = MapAxis.from_bounds(
+            0, 3, nbin=3, name="migra", node_type="edges"
+        )
         self.fov_lon_lo = np.linspace(-6, 6, 11)[:-1] * u.deg
         self.fov_lon_hi = np.linspace(-6, 6, 11)[1:] * u.deg
         self.fov_lat_lo = np.linspace(-6, 6, 11)[:-1] * u.deg
@@ -37,12 +40,9 @@ class TestIRFWrite:
             data=self.aeff_data,
         )
         self.edisp = EnergyDispersion2D(
-            e_true_lo=self.energy_lo,
-            e_true_hi=self.energy_hi,
-            migra_lo=self.migra_lo,
-            migra_hi=self.migra_hi,
-            offset_lo=self.offset_lo,
-            offset_hi=self.offset_hi,
+            energy_axis_true=self.energy_axis_true,
+            offset_axis=self.offset_axis,
+            migra_axis=self.migra_axis,
             data=self.edisp_data,
         )
         self.bkg = Background3D(

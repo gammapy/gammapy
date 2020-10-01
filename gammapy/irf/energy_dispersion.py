@@ -56,12 +56,9 @@ class EnergyDispersion2D:
 
     def __init__(
         self,
-        e_true_lo,
-        e_true_hi,
-        migra_lo,
-        migra_hi,
-        offset_lo,
-        offset_hi,
+        energy_axis_true,
+        migra_axis,
+        offset_axis,
         data,
         interp_kwargs=None,
         meta=None,
@@ -69,22 +66,8 @@ class EnergyDispersion2D:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-        e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
-        e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="energy_true")
 
-        migra_edges = edges_from_lo_hi(migra_lo, migra_hi)
-        migra_axis = MapAxis.from_edges(
-            migra_edges, interp="lin", name="migra", unit=""
-        )
-
-        # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
-        if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):
-            offset_axis = MapAxis.from_nodes(offset_lo, interp="lin", name="offset")
-        else:
-            offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
-            offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
-
-        axes = [e_true_axis, migra_axis, offset_axis]
+        axes = [energy_axis_true, migra_axis, offset_axis]
 
         self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
         self.meta = meta or {}
@@ -123,9 +106,11 @@ class EnergyDispersion2D:
         """
         e_true = Quantity(e_true)
         # erf does not work with Quantities
-        true = MapAxis.from_edges(e_true, interp="log").center.to_value("TeV")
+        energy_axis_true = MapAxis.from_energy_edges(
+            e_true, interp="log", name="energy_true"
+        )
 
-        true2d, migra2d = np.meshgrid(true, migra)
+        true2d, migra2d = np.meshgrid(energy_axis_true.center, migra)
 
         migra2d_lo = migra2d[:-1, :]
         migra2d_hi = migra2d[1:, :]
@@ -136,48 +121,61 @@ class EnergyDispersion2D:
         t2 = (migra2d_lo - 1 - bias) / s
         pdf = (scipy.special.erf(t1) - scipy.special.erf(t2)) / 2
 
-        pdf_array = pdf.T[:, :, np.newaxis] * np.ones(len(offset) - 1)
+        data = pdf.T[:, :, np.newaxis] * np.ones(len(offset) - 1)
 
-        pdf_array[pdf_array < pdf_threshold] = 0
+        data[data < pdf_threshold] = 0
 
+        offset_axis = MapAxis.from_edges(offset, name="offset")
+        migra_axis = MapAxis.from_edges(migra, name="migra")
         return cls(
-            e_true[:-1],
-            e_true[1:],
-            migra[:-1],
-            migra[1:],
-            offset[:-1],
-            offset[1:],
-            pdf_array,
+            energy_axis_true=energy_axis_true,
+            migra_axis=migra_axis,
+            offset_axis=offset_axis,
+            data=data
         )
 
     @classmethod
     def from_table(cls, table):
         """Create from `~astropy.table.Table`."""
+        # TODO: move this to MapAxis.from_table()
+
         if "ENERG_LO" in table.colnames:
-            e_lo = table["ENERG_LO"].quantity[0]
-            e_hi = table["ENERG_HI"].quantity[0]
+            e_true_lo = table["ENERG_LO"].quantity[0]
+            e_true_hi = table["ENERG_HI"].quantity[0]
         elif "ETRUE_LO" in table.colnames:
-            e_lo = table["ETRUE_LO"].quantity[0]
-            e_hi = table["ETRUE_HI"].quantity[0]
+            e_true_lo = table["ETRUE_LO"].quantity[0]
+            e_true_hi = table["ETRUE_HI"].quantity[0]
         else:
             raise ValueError(
                 'Invalid column names. Need "ENERG_LO/ENERG_HI" or "ETRUE_LO/ETRUE_HI"'
             )
-        o_lo = table["THETA_LO"].quantity[0]
-        o_hi = table["THETA_HI"].quantity[0]
-        m_lo = table["MIGRA_LO"].quantity[0]
-        m_hi = table["MIGRA_HI"].quantity[0]
+        offset_lo = table["THETA_LO"].quantity[0]
+        offset_hi = table["THETA_HI"].quantity[0]
+        migra_lo = table["MIGRA_LO"].quantity[0]
+        migra_hi = table["MIGRA_HI"].quantity[0]
 
         # TODO Why does this need to be transposed?
         matrix = table["MATRIX"].quantity[0].transpose()
 
+        e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
+        energy_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="energy_true")
+
+        migra_edges = edges_from_lo_hi(migra_lo, migra_hi)
+        migra_axis = MapAxis.from_edges(
+            migra_edges, interp="lin", name="migra", unit=""
+        )
+
+        # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
+        if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):
+            offset_axis = MapAxis.from_nodes(offset_lo, interp="lin", name="offset")
+        else:
+            offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
+            offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
+
         return cls(
-            e_true_lo=e_lo,
-            e_true_hi=e_hi,
-            offset_lo=o_lo,
-            offset_hi=o_hi,
-            migra_lo=m_lo,
-            migra_hi=m_hi,
+            energy_axis_true=energy_true_axis,
+            offset_axis=offset_axis,
+            migra_axis=migra_axis,
             data=matrix,
         )
 
