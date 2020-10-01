@@ -402,18 +402,18 @@ def test_wcsndmap_upsample(npix, binsz, frame, proj, skydir, axes):
 
 
 def test_wcsndmap_upsample_axis():
-    axis = MapAxis.from_nodes([1, 2, 3, 4], name="test")
+    axis = MapAxis.from_edges([1, 2, 3, 4], name="test")
     geom = WcsGeom.create(npix=(4, 4), axes=[axis])
     m = WcsNDMap(geom, unit="m2")
     m.data += 1
 
     m2 = m.upsample(2, preserve_counts=True, axis_name="test")
-    assert m2.data.shape == (8, 4, 4)
+    assert m2.data.shape == (6, 4, 4)
     assert_allclose(m.data.sum(), m2.data.sum())
 
 
 def test_wcsndmap_downsample_axis():
-    axis = MapAxis.from_nodes([1, 2, 3, 4], name="test")
+    axis = MapAxis.from_edges([1, 2, 3, 4, 5], name="test")
     geom = WcsGeom.create(npix=(4, 4), axes=[axis])
     m = WcsNDMap(geom, unit="m2")
     m.data += 1
@@ -435,18 +435,20 @@ def test_wcsndmap_resample_axis():
     assert m2.data.shape == (3, 2, 6, 7)
     assert_allclose(m2.data, 2)
 
+
 def test_wcsndmap_resample_axis_logical_and():
     axis_1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="test-1")
 
     geom = WcsGeom.create(npix=(2, 2), axes=[axis_1])
     m = WcsNDMap(geom, dtype=bool)
-    m.data[:,:,:] = True
-    m.data[0,0,0] = False
+    m.data[:, :, :] = True
+    m.data[0, 0, 0] = False
 
     new_axis = MapAxis.from_edges([1, 3, 5], name="test-1")
     m2 = m.resample_axis(axis=new_axis, ufunc=np.logical_and)
     assert_allclose(m2.data[0,0,0], False)
     assert_allclose(m2.data[1,0,0], True)
+
 
 def test_coadd_unit():
     geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", frame="galactic")
