@@ -67,7 +67,7 @@ class TemporalModel(Model):
         ax = plt.gca() if ax is None else ax
         t_min, t_max = time_range
         n_value = 100
-        delta = (t_max-t_min)
+        delta = (t_max - t_min)
         times = t_min + delta * np.linspace(0, 1, n_value)
         val = self(times)
         ax.plot(times.mjd, val)
@@ -180,6 +180,8 @@ class ExpDecayTemporalModel(TemporalModel):
         return -t0 * value / self.time_sum(t_min, t_max)
 
 
+
+
 class GaussianTemporalModel(TemporalModel):
     """A Gaussian temporal profile
 
@@ -238,7 +240,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     The model does linear interpolation for times between the given ``(time, norm)`` values.
 
-    The implementation currently uses `scipy.interpolate.InterpolatedUnivariateSpline`,
+    The implementation currently uses `scipy.interpolate. InterpolatedUnivariateSpline`,
     using degree ``k=1`` to get linear interpolation.
     This class also contains an ``integral`` method, making the computation of
     mean fluxes for a given time interval a one-liner.
