@@ -1137,11 +1137,15 @@ class MapAxis:
     def upsample(self, factor):
         """Upsample map axis by a given factor.
 
+        When up-sampling for each node specified in the axis, the corresponding
+        number of sub-nodes are introduced and preserving the initial nodes. For
+        node type "edges" this results in nbin * factor new bins. For node type
+        "center" this results in (nbin - 1) * factor + 1 new bins.
+
         Parameters
         ----------
         factor : int
             Upsampling factor.
-
 
         Returns
         -------
@@ -1164,6 +1168,11 @@ class MapAxis:
 
     def downsample(self, factor):
         """Downsample map axis by a given factor.
+
+        When down-sampling each n-th (given by the factor) bin is selected from
+        the axis while preserving the axis limits. For node type "edges" this
+        requires nbin to be dividable by the factor, for node type "center" this
+        requires nbin - 1 to be dividable by the factor.
 
         Parameters
         ----------
