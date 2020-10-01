@@ -22,12 +22,12 @@ class Background3D:
 
     Parameters
     ----------
-    energy_lo, energy_hi : `~astropy.units.Quantity`
-        Energy binning
-    fov_lon_lo, fov_lon_hi : `~astropy.units.Quantity`
-        FOV coordinate X-axis binning.
-    fov_lat_lo, fov_lat_hi : `~astropy.units.Quantity`
-        FOV coordinate Y-axis binning.
+    energy_axis : `MapAxis`
+        Energy axis
+    fov_lon_axis: `MapAxis`
+        FOV coordinate X-axis
+    fov_lat_axis : `MapAxis`
+        FOV coordinate Y-axis.
     data : `~astropy.units.Quantity`
         Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
 
@@ -208,18 +208,17 @@ class Background3D:
 
         This takes the values at Y = 0 and X >= 0.
         """
+        # TODO: this is incorrect as it misses the Jacobian?
         idx_lon = self.data.axes["fov_lon"].coord_to_idx(0 * u.deg)[0]
         idx_lat = self.data.axes["fov_lat"].coord_to_idx(0 * u.deg)[0]
         data = self.data.data[:, idx_lon:, idx_lat].copy()
 
-        energy = self.data.axes["energy"].edges
         offset = self.data.axes["fov_lon"].edges[idx_lon:]
 
+        offset_axis = MapAxis.from_edges(offset, name="offset")
         return Background2D(
-            energy_lo=energy[:-1],
-            energy_hi=energy[1:],
-            offset_lo=offset[:-1],
-            offset_hi=offset[1:],
+            energy_axis=self.data.axes["energy"],
+            offset_axis=offset_axis,
             data=data,
         )
 
@@ -234,10 +233,10 @@ class Background2D:
 
     Parameters
     ----------
-    energy_lo, energy_hi : `~astropy.units.Quantity`
-        Energy binning
-    offset_lo, offset_hi : `~astropy.units.Quantity`
-        FOV coordinate offset-axis binning
+    energy_axis : `MapAxis`
+        Energy axis
+    offset_axis : `MapAxis`
+        FOV coordinate offset-axis
     data : `~astropy.units.Quantity`
         Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
     """
@@ -247,22 +246,14 @@ class Background2D:
 
     def __init__(
         self,
-        energy_lo,
-        energy_hi,
-        offset_lo,
-        offset_hi,
+        energy_axis,
+        offset_axis,
         data,
         meta=None,
         interp_kwargs=None,
     ):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
-
-        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
-
-        offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
-        offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
 
         self.data = NDDataArray(
             axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs
@@ -292,11 +283,20 @@ class Background2D:
             log.warning(
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
+
+        energy_lo = table["ENERG_LO"].quantity[0]
+        energy_hi = table["ENERG_HI"].quantity[0]
+        offset_lo = table["THETA_LO"].quantity[0]
+        offset_hi = table["THETA_HI"].quantity[0]
+
+        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
+        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
+
+        offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
+        offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
         return cls(
-            energy_lo=table["ENERG_LO"].quantity[0],
-            energy_hi=table["ENERG_HI"].quantity[0],
-            offset_lo=table["THETA_LO"].quantity[0],
-            offset_hi=table["THETA_HI"].quantity[0],
+            energy_axis=energy_axis,
+            offset_axis=offset_axis,
             data=table[bkg_name].data[0] * data_unit,
             meta=table.meta,
         )

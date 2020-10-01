@@ -154,15 +154,16 @@ def test_plot(bkg_2d):
 def bkg_2d():
     """A simple Background2D test case"""
     energy = [0.1, 10, 1000] * u.TeV
+    energy_axis = MapAxis.from_energy_edges(energy)
+
     offset = [0, 1, 2, 3] * u.deg
+    offset_axis = MapAxis.from_edges(offset, name="offset")
     data = np.zeros((2, 3)) * u.Unit("s-1 MeV-1 sr-1")
     data.value[1, 0] = 2
     data.value[1, 1] = 4
     return Background2D(
-        energy_lo=energy[:-1],
-        energy_hi=energy[1:],
-        offset_lo=offset[:-1],
-        offset_hi=offset[1:],
+        energy_axis=energy_axis,
+        offset_axis=offset_axis,
         data=data,
     )
 
