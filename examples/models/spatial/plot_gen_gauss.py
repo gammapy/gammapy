@@ -14,10 +14,10 @@ By default, the Generalized Gaussian is defined as :
 the normalization is expressed as:
 
 .. math::
-    N = \frac{1}{ \pi (1-e) r_{\rm eff}^2 2^\eta \left[ \eta \Gamma(\eta) \right]^3}\,,
+    N = \frac{1}{ 2 \pi (1-e) r_{\rm eff}^2 \eta \Gamma(2\eta)}\,,
 where :math:`\Gamma` is the gamma function.
-This analytical norm is approximated so it may not integrate to unity in extremal cases,
-for example if ellipticity tend to one, or if :math:`\eta` is defined outside the default range.
+This analytical norm is approximated so it may not integrate to unity in extremal cases 
+if ellipticity tend to one with large radius or :math:`\eta` much larger than one (outside the default range).
 
 """
 

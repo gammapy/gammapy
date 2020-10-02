@@ -413,11 +413,9 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         x_min = -(lon - lon_0) * sin_phi + (lat - lat_0) * cos_phi
         z = np.sqrt((x_maj / a) ** 2 + (x_min / b) ** 2)
         norm = 1 / (
-            2 ** eta
-            * np.pi
-            * (1 - e)
-            * r_eff ** 2.0
-            * (eta * scipy.special.gamma(eta)) ** 3.0
+            2 * np.pi
+            * (1 - e) * r_eff ** 2.0
+            * eta * scipy.special.gamma(2*eta)
         )
         return (norm * np.exp(-(z ** (1 / eta)))).to("sr-1")
 
