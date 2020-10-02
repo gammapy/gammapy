@@ -1,0 +1,84 @@
+r"""
+.. _generalized-gaussian-spatial-model:
+
+Generalized Gaussian Spatial Model
+==================================
+
+This is a spatial model parametrising a generalized Gaussian function.
+
+By default, the Generalized Gaussian is defined as :
+
+.. math::
+    \phi(\text{lon}, \text{lat})  = \phi(\text{r}) = N \times \exp \left[ - \left( \frac{r}{r_{\rm eff}} \right)^ \left( 1/\eta \right) \right] \,,
+
+the normalization is expressed as:
+
+.. math::
+    N = \frac{1}{ \pi (1-e) r_{\rm eff}^2 2^\eta \left[ \eta \Gamma(\eta) \right]^3}\,,
+where :math:`\Gamma` is the gamma function.
+This analytical norm is approximated so it may not integrate to unity in extremal cases,
+for example if ellipticity tend to one, or if :math:`\eta` is defined outside the default range.
+
+"""
+
+# %%
+# Example plot
+# ------------
+# Here is an example plot of the model for different shape parameter:
+
+from gammapy.maps import WcsGeom, Map
+from gammapy.modeling.models import (
+    GeneralizedGaussianSpatialModel,
+    Models,
+    PowerLawSpectralModel,
+    SkyModel,
+)
+from astropy import units as u
+import matplotlib.pyplot as plt
+
+lon_0 = 20
+lat_0 = 0
+reval = 3
+dr = 0.02
+geom = WcsGeom.create(
+    skydir=(lon_0, lat_0), binsz=dr, width=(2 * reval, 2 * reval), frame="galactic",
+)
+
+tags = [r"Disk, $\eta=0.01$", r"Gaussian, $\eta=0.5$", r"Laplacian, $\eta=1$"]
+eta_range = [0.01, 0.5, 1]
+r_eff = 1
+e = 0.5
+phi = 45 * u.deg
+fig, axes = plt.subplots(1, 3, figsize=(9, 6))
+for k, eta in enumerate(eta_range):
+    model = GeneralizedGaussianSpatialModel(
+        lon_0=lon_0 * u.deg,
+        lat_0=lat_0 * u.deg,
+        eta=eta,
+        r_eff=r_eff * u.deg,
+        e=e,
+        phi=phi,
+        frame="galactic",
+    )
+    meval = model.evaluate_geom(geom)
+    ax = axes[k]
+    Map.from_geom(geom=geom, data=meval.value, unit=meval.unit).plot(ax=ax)
+    pixreg = model.to_region().to_pixel(geom.wcs)
+    pixreg.plot(ax=ax, edgecolor="g", facecolor="none", lw=2)
+    ax.set_title(tags[k])
+    ax.set_xticks([])
+    ax.set_yticks([])
+plt.tight_layout()
+
+# %%
+# YAML representation
+# -------------------
+# Here is an example YAML file using the model:
+
+pwl = PowerLawSpectralModel()
+gengauss = GeneralizedGaussianSpatialModel()
+
+model = SkyModel(spectral_model=pwl, spatial_model=gengauss, name="pwl-gengauss-model")
+models = Models([model])
+
+print(models.to_yaml())

@@ -15,6 +15,7 @@ SPATIAL_MODEL_REGISTRY = Registry(
         TemplateSpatialModel,
         DiskSpatialModel,
         GaussianSpatialModel,
+        GeneralizedGaussianSpatialModel,
         PointSpatialModel,
         ShellSpatialModel,
     ]

@@ -6,7 +6,7 @@ import scipy.integrate
 import scipy.special
 import astropy.units as u
 from astropy.utils import lazyproperty
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import Angle, SkyCoord, Longitude
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
 from regions import (
     CircleAnnulusSkyRegion,
@@ -365,6 +365,76 @@ class GaussianSpatialModel(SpatialModel):
         return EllipseSkyRegion(
             center=self.position,
             height=2 * self.sigma.quantity,
+            width=2 * minor_axis,
+            angle=self.phi.quantity,
+            **kwargs,
+        )
+
+
+class GeneralizedGaussianSpatialModel(SpatialModel):
+    r"""Two-dimensional Generealized Gaussian model.
+
+    For more information see :ref:`generalized-gaussian-spatial-model`.
+
+    Parameters
+    ----------
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
+    r_eff : `~astropy.coordinates.Angle`
+        Effective radius (semi-major axis if elliptical), in angular units.
+    eta : `float`
+        Shape parameter whitin (0, 1]. Special cases for disk: ->0, Gaussian: 0.5, Laplacian:1
+    e : `float`
+        Eccentricity (:math:`0< e< 1`).
+    phi : `~astropy.coordinates.Angle`
+        Rotation angle :math:`\phi`: of the major semiaxis.
+        Increases counter-clockwise from the North direction.
+    frame : {"icrs", "galactic"}
+        Center position coordinate frame
+    """
+
+    tag = ["GeneralizedGaussianSpatialModel", "gen-gauss"]
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+    r_eff = Parameter("r_eff", "1 deg")
+    eta = Parameter("eta", 0.5, min=0.01, max=1.0)
+    e = Parameter("e", 0.0, min=0.0, max=1.0, frozen=True)
+    phi = Parameter("phi", "0 deg", frozen=True)
+
+    def evaluate(self, lon, lat, lon_0, lat_0, r_eff, eta, e, phi):
+        lon = Longitude(lon).wrap_at(f"{np.min(lon)+180*u.deg}")
+        lon_0 = Longitude(lon_0).wrap_at(f"{np.min(lon)+180*u.deg}")
+        if isinstance(eta, u.Quantity):
+            eta = eta.value  # gamma function does not allow quantities
+        a, b = r_eff, (1 - e) * r_eff
+        phi = -phi + 90.0 * u.deg
+        cos_phi, sin_phi = np.cos(phi), np.sin(phi)
+        x_maj = (lon - lon_0) * cos_phi + (lat - lat_0) * sin_phi
+        x_min = -(lon - lon_0) * sin_phi + (lat - lat_0) * cos_phi
+        z = np.sqrt((x_maj / a) ** 2 + (x_min / b) ** 2)
+        norm = 1 / (
+            2 ** eta
+            * np.pi
+            * (1 - e)
+            * r_eff ** 2.0
+            * (eta * scipy.special.gamma(eta)) ** 3.0
+        )
+        return (norm * np.exp(-(z ** (1 / eta)))).to("sr-1")
+
+    @property
+    def evaluation_radius(self):
+        r"""Evaluation radius (`~astropy.coordinates.Angle`).
+
+        Set as :math:`5 r_{\rm eff}`.
+        """
+        return 5 * self.parameters["r_eff"].quantity
+
+    def to_region(self, **kwargs):
+        """Model outline (`~regions.EllipseSkyRegion`)."""
+        minor_axis = Angle(self.r_eff.quantity * (1 - self.e.quantity))
+        return EllipseSkyRegion(
+            center=self.position,
+            height=2 * self.r_eff.quantity,
             width=2 * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
