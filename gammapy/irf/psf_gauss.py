@@ -268,7 +268,7 @@ class EnergyDependentMultiGaussPSF:
         return Angle(radius, "deg")
 
     def plot_containment(
-        self, fraction=0.68, ax=None, show_safe_energy=False, add_cbar=True, **kwargs
+        self, fraction=0.68, ax=None, add_cbar=True, **kwargs
     ):
         """
         Plot containment image with energy and theta axes.
@@ -307,8 +307,7 @@ class EnergyDependentMultiGaussPSF:
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
 
-        if show_safe_energy:
-            self._plot_safe_energy_range(ax)
+        self._plot_safe_energy_range(ax)
 
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
@@ -319,8 +318,8 @@ class EnergyDependentMultiGaussPSF:
     def _plot_safe_energy_range(self, ax):
         """add safe energy range lines to the plot"""
         esafe = self.energy_thresh_lo
-        omin = self.offset.value.min()
-        omax = self.offset.value.max()
+        omin = self.offset_axis.center.min()
+        omax = self.offset_axis.center.max()
         ax.hlines(y=esafe.value, xmin=omin, xmax=omax)
         label = f"Safe energy threshold: {esafe:3.2f}"
         ax.text(x=0.1, y=0.9 * esafe.value, s=label, va="top")
