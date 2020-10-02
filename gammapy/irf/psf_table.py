@@ -231,10 +231,10 @@ class EnergyDependentTablePSF:
 
     Parameters
     ----------
-    energy : `~astropy.units.Quantity`
-        Energy (1-dim)
-    rad : `~astropy.units.Quantity` with angle units
-        Offset angle wrt source position (1-dim)
+    energy_axis_true : `MapAxis`
+        Energy axis
+    rad_axis : `MapAxis`
+        Offset angle wrt source position axis
     exposure : `~astropy.units.Quantity`
         Exposure (1-dim)
     psf_value : `~astropy.units.Quantity`
@@ -243,49 +243,59 @@ class EnergyDependentTablePSF:
         Interpolation keyword arguments pass to `ScaledRegularGridInterpolator`.
     """
 
-    def __init__(self, energy, rad, exposure=None, psf_value=None, interp_kwargs=None):
-        self.energy = u.Quantity(energy).to("GeV")
-        self.rad = u.Quantity(rad).to("radian")
+    def __init__(self, energy_axis_true, rad_axis, exposure=None, psf_value=None, interp_kwargs=None):
+        self._rad_axis = rad_axis
+        self._energy_axis_true = energy_axis_true
+
         if exposure is None:
-            self.exposure = u.Quantity(np.ones(len(energy)), "cm^2 s")
+            self.exposure = u.Quantity(np.ones(self.energy_axis_true.nbin), "cm^2 s")
         else:
             self.exposure = u.Quantity(exposure).to("cm^2 s")
 
         if psf_value is None:
-            self.psf_value = u.Quantity(np.zeros(len(energy), len(rad)), "sr^-1")
+            shape = (energy_axis_true.nbin, rad_axis.nbin)
+            self.psf_value = np.zeros(shape) * u.Unit("sr^-1")
         else:
             self.psf_value = u.Quantity(psf_value).to("sr^-1")
 
         self._interp_kwargs = interp_kwargs or {}
 
+    @property
+    def energy_axis_true(self):
+        return self._energy_axis_true
+
+    @property
+    def rad_axis(self):
+        return self._rad_axis
+
     @lazyproperty
     def _interpolate(self):
-        points = (self.energy, self.rad)
+        points = (self.energy_axis_true.center, self.rad_axis.center)
         return ScaledRegularGridInterpolator(
             points=points, values=self.psf_value, **self._interp_kwargs
         )
 
     @lazyproperty
     def _interpolate_containment(self):
-        if self.rad[0] > 0:
-            rad = self.rad.insert(0, 0)
-        else:
-            rad = self.rad
+        rad = self.rad_axis.center
 
-        rad_drad = 2 * np.pi * rad * self.evaluate(energy=self.energy, rad=rad)
+        if rad[0] > 0:
+            rad = rad.insert(0, 0)
+
+        rad_drad = 2 * np.pi * rad * self.evaluate(energy=self.energy_axis_true.center, rad=rad)
         values = scipy.integrate.cumtrapz(
             rad_drad.to_value("rad-1"), rad.to_value("rad"), initial=0, axis=1
         )
 
-        points = (self.energy, rad)
+        points = (self.energy_axis_true.center, rad)
         return ScaledRegularGridInterpolator(points=points, values=values, fill_value=1)
 
     def __str__(self):
         ss = "EnergyDependentTablePSF\n"
         ss += "-----------------------\n"
         ss += "\nAxis info:\n"
-        ss += "  " + array_stats_str(self.rad.to("deg"), "rad")
-        ss += "  " + array_stats_str(self.energy, "energy")
+        ss += "  " + array_stats_str(self.rad_axis.center.to("deg"), "rad")
+        ss += "  " + array_stats_str(self.energy_axis_true.center, "energy")
         ss += "\nContainment info:\n"
         # Print some example containment radii
         fractions = [0.68, 0.95]
@@ -306,12 +316,20 @@ class EnergyDependentTablePSF:
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with ``THETA`` and ``PSF`` extensions.
         """
+        # TODO: move this to MapAxis.from_table()
         rad = Angle(hdu_list["THETA"].data["Theta"], "deg")
+        rad_axis = MapAxis.from_nodes(rad, name="theta")
         energy = u.Quantity(hdu_list["PSF"].data["Energy"], "MeV")
+        energy_axis_true = MapAxis.from_nodes(energy, name="energy_true", interp="log")
         exposure = u.Quantity(hdu_list["PSF"].data["Exposure"], "cm^2 s")
         psf_value = u.Quantity(hdu_list["PSF"].data["PSF"], "sr^-1")
 
-        return cls(energy, rad, exposure, psf_value)
+        return cls(
+            energy_axis_true=energy_axis_true,
+            rad_axis=rad_axis,
+            exposure=exposure,
+            psf_value=psf_value,
+        )
 
     def to_hdulist(self):
         """Convert to FITS HDU list format.
@@ -323,12 +341,12 @@ class EnergyDependentTablePSF:
         """
         # TODO: write HEADER keywords as gtpsf
 
-        data = Table([self.rad.to("deg")], names=["Theta"])
+        data = Table([self.rad_axis.center.to("deg")], names=["Theta"])
         theta_hdu = fits.BinTableHDU(data=data, name="THETA")
 
         data = Table(
             [
-                self.energy.to("MeV"),
+                self.energy_axis_true.center.to("MeV"),
                 self.exposure.to("cm^2 s"),
                 self.psf_value.to("sr^-1"),
             ],
@@ -376,10 +394,10 @@ class EnergyDependentTablePSF:
             Interpolated value
         """
         if energy is None:
-            energy = self.energy
+            energy = self.energy_axis_true.center
 
         if rad is None:
-            rad = self.rad
+            rad = self.rad_axis.center
 
         energy = u.Quantity(energy, ndmin=1)[:, np.newaxis]
         rad = u.Quantity(rad, ndmin=1)
@@ -401,7 +419,7 @@ class EnergyDependentTablePSF:
             Table PSF
         """
         psf_value = self.evaluate(energy=energy, method=method)[0, :]
-        return TablePSF(self.rad, psf_value, **kwargs)
+        return TablePSF(self.rad_axis.center, psf_value, **kwargs)
 
     def table_psf_in_energy_band(self, energy_band, spectrum=None, n_bins=11, **kwargs):
         """Average PSF in a given energy band.
@@ -430,7 +448,7 @@ class EnergyDependentTablePSF:
         if spectrum is None:
             spectrum = PowerLawSpectralModel()
 
-        exposure = TemplateSpectralModel(self.energy, self.exposure)
+        exposure = TemplateSpectralModel(self.energy_axis_true.center, self.exposure)
 
         e_min, e_max = energy_band
         energy = MapAxis.from_energy_bounds(e_min, e_max, n_bins).edges
@@ -440,7 +458,7 @@ class EnergyDependentTablePSF:
 
         psf_value = self.evaluate(energy=energy)
         psf_value_weighted = weights[:, np.newaxis] * psf_value
-        return TablePSF(self.rad, psf_value_weighted.sum(axis=0), **kwargs)
+        return TablePSF(self.rad_axis.center, psf_value_weighted.sum(axis=0), **kwargs)
 
     def containment_radius(self, energy, fraction=0.68):
         """Containment radius.
@@ -458,7 +476,7 @@ class EnergyDependentTablePSF:
             Containment radius in deg
         """
         # upsamle for better precision
-        rad_max = Angle(np.linspace(0, self.rad[-1].value, 10 * len(self.rad)), "rad")
+        rad_max = self.rad_axis.upsample(factor=10).center
         containment = self.containment(energy=energy, rad_max=rad_max)
 
         # find nearest containment value
@@ -509,7 +527,7 @@ class EnergyDependentTablePSF:
             psf_value = np.squeeze(self.evaluate(energy=energy))
             label = f"{energy:.0f}"
             ax.plot(
-                self.rad.to_value("deg"),
+                self.rad_axis.center.to_value("deg"),
                 psf_value.to_value("sr-1"),
                 label=label,
                 **kwargs,
@@ -530,9 +548,9 @@ class EnergyDependentTablePSF:
         ax = plt.gca() if ax is None else ax
 
         for fraction in fractions:
-            rad = self.containment_radius(self.energy, fraction)
+            rad = self.containment_radius(self.energy_axis_true.center, fraction)
             label = f"{100 * fraction:.1f}% Containment"
-            ax.plot(self.energy.value, rad.value, label=label, **kwargs)
+            ax.plot(self.energy_axis_true.center.value, rad.value, label=label, **kwargs)
 
         ax.semilogx()
         ax.legend(loc="best")
@@ -544,7 +562,7 @@ class EnergyDependentTablePSF:
         import matplotlib.pyplot as plt
 
         plt.figure(figsize=(4, 3))
-        plt.plot(self.energy, self.exposure, color="black", lw=3)
+        plt.plot(self.energy_axis_true.center, self.exposure, color="black", lw=3)
         plt.semilogx()
         plt.xlabel("Energy (MeV)")
         plt.ylabel("Exposure (cm^2 s)")
@@ -574,5 +592,8 @@ class EnergyDependentTablePSF:
             psf_value = np.nan_to_num(psf_value / exposure)
 
         return self.__class__(
-            energy=self.energy, rad=self.rad, psf_value=psf_value.T, exposure=exposure
+            energy_axis_true=self.energy_axis_true,
+            rad_axis=self.rad_axis,
+            psf_value=psf_value.T,
+            exposure=exposure
         )

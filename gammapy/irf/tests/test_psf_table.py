@@ -102,8 +102,8 @@ class TestEnergyDependentTablePSF:
     def test_write(self, tmp_path):
         self.psf.write(tmp_path / "test.fits")
         new = EnergyDependentTablePSF.read(tmp_path / "test.fits")
-        assert_allclose(new.rad.to_value("deg"), self.psf.rad.to_value("deg"))
-        assert_allclose(new.energy.to_value("GeV"), self.psf.energy.to_value("GeV"))
+        assert_allclose(new.rad_axis.center, self.psf.rad_axis.center)
+        assert_allclose(new.energy_axis_true.center, self.psf.energy_axis_true.center)
         assert_allclose(new.psf_value.value, self.psf.psf_value.value)
 
     def test_repr(self):
