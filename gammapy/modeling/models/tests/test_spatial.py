@@ -122,7 +122,7 @@ def test_generalized_gaussian():
                 integ_geom = model.integrate_geom(geom)
                 assert eval_geom.unit.is_equivalent("sr-1")
                 assert integ_geom.unit.is_equivalent("")
-                assert_allclose(integ_geom.data.sum(), 1.0, atol=1e-2)
+                assert_allclose(integ_geom.data.sum(), 1.0, atol=3e-2)
     assert isinstance(model.to_region(), EllipseSkyRegion)
     new_model = GeneralizedGaussianSpatialModel.from_dict(model.to_dict())
     assert isinstance(new_model, GeneralizedGaussianSpatialModel)
