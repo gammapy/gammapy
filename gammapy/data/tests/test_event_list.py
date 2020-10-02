@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion, RectangleSkyRegion
-from gammapy.data import EventList, EventListBase, EventListLAT
+from gammapy.data import EventList
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -12,7 +12,7 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 @requires_data()
 class TestEventListBase:
     def setup_class(self):
-        self.events = EventListBase.read(
+        self.events = EventList.read(
             "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
         )
 
@@ -30,6 +30,8 @@ class TestEventListHESS:
 
     def test_basics(self):
         assert "EventList" in str(self.events)
+
+        assert self.events.is_pointed_observation
 
         assert len(self.events.table) == 11243
         assert self.events.time[0].iso == "2004-03-26 02:57:47.004"
@@ -69,6 +71,15 @@ class TestEventListHESS:
         assert_allclose(altaz[0].az.deg, 193.337965, atol=1e-3)
         assert_allclose(altaz[0].alt.deg, 53.258024, atol=1e-3)
         # TODO: add asserts for frame properties
+
+    def test_median_position(self):
+        coord = self.events.galactic_median
+        assert_allclose(coord.l.deg, 320.539346, atol=1e-3)
+        assert_allclose(coord.b.deg, -0.882515, atol=1e-3)
+
+    def test_median_offset(self):
+        offset_max = self.events.offset_from_median.max()
+        assert_allclose(offset_max.to_value("deg"), 36.346379, atol=1e-3)
 
     def test_from_stack(self):
         event_lists = [self.events] * 2
@@ -119,18 +130,19 @@ class TestEventListHESS:
 @requires_data()
 class TestEventListFermi:
     def setup_class(self):
-        self.events = EventListLAT.read(
+        self.events = EventList.read(
             "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
         )
 
     def test_basics(self):
         assert "EventList" in str(self.events)
         assert len(self.events.table) == 32843
+        assert not self.events.is_pointed_observation
 
     @requires_dependency("matplotlib")
-    def test_plot_image(self):
+    def test_peek(self):
         with mpl_plot_check():
-            self.events.plot_image()
+            self.events.peek(allsky=True)
 
 
 @requires_data()
@@ -153,7 +165,7 @@ class TestEventSelection:
         table["ENERGY"] = [1.0, 1.5, 1.5, 10.0] * u.TeV
         table["OFFSET"] = [0.1, 0.5, 1.0, 1.5] * u.deg
 
-        self.events = EventListBase(table)
+        self.events = EventList(table)
 
         center1 = SkyCoord(0.0, 0.0, frame="icrs", unit="deg")
         on_region1 = CircleSkyRegion(center1, radius=1.0 * u.deg)
