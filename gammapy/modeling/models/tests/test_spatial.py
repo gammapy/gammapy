@@ -128,6 +128,7 @@ def test_generalized_gaussian():
     assert isinstance(new_model, GeneralizedGaussianSpatialModel)
     assert_allclose(new_model.integrate_geom(geom).data.sum(), integ_geom.data.sum())
 
+
 def test_sky_disk():
     # Test the disk case (e=0)
     r_0 = 2 * u.deg

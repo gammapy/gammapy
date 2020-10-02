@@ -401,6 +401,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     e = Parameter("e", 0.0, min=0.0, max=1.0, frozen=True)
     phi = Parameter("phi", "0 deg", frozen=True)
 
+    @staticmethod
     def evaluate(self, lon, lat, lon_0, lat_0, r_eff, eta, e, phi):
         lon = Longitude(lon).wrap_at(f"{np.min(lon)+180*u.deg}")
         lon_0 = Longitude(lon_0).wrap_at(f"{np.min(lon)+180*u.deg}")
@@ -413,9 +414,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         x_min = -(lon - lon_0) * sin_phi + (lat - lat_0) * cos_phi
         z = np.sqrt((x_maj / a) ** 2 + (x_min / b) ** 2)
         norm = 1 / (
-            2 * np.pi
-            * (1 - e) * r_eff ** 2.0
-            * eta * scipy.special.gamma(2*eta)
+            2 * np.pi * (1 - e) * r_eff ** 2.0 * eta * scipy.special.gamma(2 * eta)
         )
         return (norm * np.exp(-(z ** (1 / eta)))).to("sr-1")
 
