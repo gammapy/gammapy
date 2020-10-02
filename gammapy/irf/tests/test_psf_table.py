@@ -43,12 +43,7 @@ class TestTablePSF:
 
         # test info
         info = psf.info()
-        assert info.find("integral") == 58
-
-        # test broaden
-        psf.broaden(2, normalize=True)
-        actual = psf.containment_radius(0.25).deg
-        assert_allclose(actual, 2 * radius.deg, rtol=1e-4)
+        assert info.find("integral") == 66
 
 
 @requires_data()

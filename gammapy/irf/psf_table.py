@@ -23,7 +23,7 @@ class TablePSF:
 
     Parameters
     ----------
-    rad : `~astropy.units.Quantity` with angle units
+    rad_axis : `~astropy.units.Quantity` with angle units
         Offset wrt source position
     psf_value : `~astropy.units.Quantity` with sr^-1 units
         PSF value array
@@ -31,25 +31,31 @@ class TablePSF:
         Keyword arguments passed to `ScaledRegularGridInterpolator`
     """
 
-    def __init__(self, rad, psf_value, interp_kwargs=None):
-        self.rad = Angle(rad).to("rad")
+    def __init__(self, rad_axis, psf_value, interp_kwargs=None):
+        assert rad_axis.name == "rad"
+        self._rad_axis = rad_axis
+
         self.psf_value = u.Quantity(psf_value).to("sr^-1")
 
         self._interp_kwargs = interp_kwargs or {}
 
+    @property
+    def rad_axis(self):
+        return self._rad_axis
+
     @lazyproperty
     def _interpolate(self):
-        points = (self.rad,)
+        points = (self.rad_axis.center,)
         return ScaledRegularGridInterpolator(
             points=points, values=self.psf_value, **self._interp_kwargs
         )
 
     @lazyproperty
     def _interpolate_containment(self):
-        if self.rad[0] > 0:
-            rad = self.rad.insert(0, 0)
-        else:
-            rad = self.rad
+        rad = self.rad_axis.center
+
+        if rad[0] > 0:
+            rad = rad.insert(0, 0)
 
         rad_drad = 2 * np.pi * rad * self.evaluate(rad)
         values = scipy.integrate.cumtrapz(
@@ -99,13 +105,13 @@ class TablePSF:
             raise ValueError(f"Invalid shape: {shape}")
 
         psf_value = u.Quantity(psf_value, "sr^-1")
-
-        return cls(rad, psf_value)
+        rad_axis = MapAxis.from_nodes(rad, name="rad")
+        return cls(rad_axis=rad_axis, psf_value=psf_value)
 
     def info(self):
         """Print basic info."""
-        ss = array_stats_str(self.rad.deg, "offset")
-        ss += f"integral = {self.containment(self.rad[-1])}\n"
+        ss = array_stats_str(self.rad_axis.center, "offset")
+        ss += f"integral = {self.containment(self.rad_axis.edges[-1])}\n"
 
         for containment in [68, 80, 95]:
             radius = self.containment_radius(0.01 * containment)
@@ -165,7 +171,9 @@ class TablePSF:
         rad : `~astropy.coordinates.Angle`
             Containment radius angle
         """
-        rad_max = Angle(np.linspace(0, self.rad[-1].value, 10 * len(self.rad)), "rad")
+        # TODO: check whether starting
+        rad_max = Angle(np.linspace(0 * u.deg, self.rad_axis.center[-1], 10 * self.rad_axis.nbin), "rad")
+
         containment = self.containment(rad_max=rad_max)
 
         fraction = np.atleast_1d(fraction)
@@ -179,30 +187,8 @@ class TablePSF:
         Computes the total PSF integral via the :math:`dP / dr` spline
         and then divides the :math:`dP / dr` array.
         """
-        integral = self.containment(self.rad[-1])
+        integral = self.containment(self.rad_axis.edges[-1])
         self.psf_value /= integral
-
-    def broaden(self, factor, normalize=True):
-        r"""Broaden PSF by scaling the offset array.
-
-        For a broadening factor :math:`f` and the offset
-        array :math:`r`, the offset array scaled
-        in the following way:
-
-        .. math::
-            r_{new} = f \times r_{old}
-            \frac{dP}{dr}(r_{new}) = \frac{dP}{dr}(r_{old})
-
-        Parameters
-        ----------
-        factor : float
-            Broadening factor
-        normalize : bool
-            Normalize PSF after broadening
-        """
-        self.rad *= factor
-        if normalize:
-            self.normalize()
 
     def plot_psf_vs_rad(self, ax=None, **kwargs):
         """Plot PSF vs radius.
@@ -218,7 +204,7 @@ class TablePSF:
 
         ax = plt.gca() if ax is None else ax
 
-        ax.plot(self.rad.to_value("deg"), self.psf_value.to_value("sr-1"), **kwargs)
+        ax.plot(self.rad_axis.center.to_value("deg"), self.psf_value.to_value("sr-1"), **kwargs)
         ax.set_yscale("log")
         ax.set_xlabel("Radius (deg)")
         ax.set_ylabel("PSF (sr-1)")
@@ -422,7 +408,7 @@ class EnergyDependentTablePSF:
             Table PSF
         """
         psf_value = self.evaluate(energy=energy, method=method)[0, :]
-        return TablePSF(self.rad_axis.center, psf_value, **kwargs)
+        return TablePSF(rad_axis=self.rad_axis, psf_value=psf_value, **kwargs)
 
     def table_psf_in_energy_band(self, energy_band, spectrum=None, n_bins=11, **kwargs):
         """Average PSF in a given energy band.
@@ -461,7 +447,7 @@ class EnergyDependentTablePSF:
 
         psf_value = self.evaluate(energy=energy)
         psf_value_weighted = weights[:, np.newaxis] * psf_value
-        return TablePSF(self.rad_axis.center, psf_value_weighted.sum(axis=0), **kwargs)
+        return TablePSF(self.rad_axis, psf_value_weighted.sum(axis=0), **kwargs)
 
     def containment_radius(self, energy, fraction=0.68):
         """Containment radius.
@@ -479,7 +465,7 @@ class EnergyDependentTablePSF:
             Containment radius in deg
         """
         # upsamle for better precision
-        rad_max = self.rad_axis.upsample(factor=10).center
+        rad_max = Angle(self.rad_axis.upsample(factor=10).center)
         containment = self.containment(energy=energy, rad_max=rad_max)
 
         # find nearest containment value

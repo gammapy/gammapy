@@ -63,6 +63,9 @@ class EffectiveAreaTable:
 
     def __init__(self, energy_axis_true, data, meta=None):
         interp_kwargs = {"extrapolate": False, "bounds_error": False}
+
+        assert energy_axis_true.name == "energy_true"
+
         self.data = NDDataArray(
             axes=[energy_axis_true], data=data, interp_kwargs=interp_kwargs
         )

@@ -274,8 +274,7 @@ class PSF3D:
         energy = u.Quantity(energy)
         theta = Angle(theta)
         psf_value = self.evaluate(energy, theta).squeeze()
-        rad = self.rad_axis.center
-        return TablePSF(rad, psf_value, **kwargs)
+        return TablePSF(rad_axis=self.rad_axis, psf_value=psf_value, **kwargs)
 
     def containment_radius(
         self, energy, theta="0 deg", fraction=0.68, interp_kwargs=None
