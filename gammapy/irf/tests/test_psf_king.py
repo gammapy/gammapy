@@ -43,9 +43,10 @@ def test_psf_king_to_table(psf_king):
     assert_quantity_allclose(psf_king_table_off2.psf_value[8, 200], value_off2)
 
     # Test that the integral value is close to one
-    bin_off = psf_king_table_off1.rad[1] - psf_king_table_off1.rad[0]
+    bin_off = psf_king_table_off1.rad_axis.bin_width[0]
+
     integral = np.sum(
-        psf_king_table_off1.psf_value[8] * 2 * np.pi * psf_king_table_off1.rad * bin_off
+        psf_king_table_off1.psf_value[8] * 2 * np.pi * psf_king_table_off1.rad_axis.center * bin_off
     )
     assert_quantity_allclose(integral, 1, atol=0.03)
 

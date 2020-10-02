@@ -441,8 +441,8 @@ class EnergyDependentMultiGaussPSF:
 
         if rad is None:
             rad = Angle(np.arange(0, 1.5, 0.005), "deg")
-        else:
-            rad = Angle(rad).to("deg")
+
+        rad_axis = MapAxis.from_nodes(rad, name="theta")
 
         psf_value = u.Quantity(np.zeros((energies.size, rad.size)), "deg^-2")
 
@@ -451,7 +451,10 @@ class EnergyDependentMultiGaussPSF:
             psf_value[idx] = u.Quantity(psf_gauss(rad), "deg^-2")
 
         return EnergyDependentTablePSF(
-            energy=energies, rad=rad, exposure=exposure, psf_value=psf_value
+            energy_axis_true=self.energy_axis_true,
+            rad_axis=rad_axis,
+            exposure=exposure,
+            psf_value=psf_value
         )
 
     def to_psf3d(self, rad=None):

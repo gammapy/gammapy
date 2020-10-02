@@ -238,16 +238,18 @@ class PSF3D:
             Energy-dependent PSF
         """
         theta = Angle(theta)
-        energies = self.energy_axis.center
 
-        if rad is None:
-            rad = self.rad_axis.center
+        if rad is not None:
+            rad_axis = MapAxis.from_edges(rad, name="theta")
         else:
-            rad = Angle(rad)
+            rad_axis = self.rad_axis
 
-        psf_value = self.evaluate(offset=theta, rad=rad).squeeze()
+        psf_value = self.evaluate(offset=theta, rad=rad_axis.center).squeeze()
         return EnergyDependentTablePSF(
-            energy=energies, rad=rad, exposure=exposure, psf_value=psf_value.T
+            energy_axis_true=self.energy_axis,
+            rad_axis=rad_axis,
+            exposure=exposure,
+            psf_value=psf_value.T
         )
 
     def to_table_psf(self, energy, theta="0 deg", **kwargs):

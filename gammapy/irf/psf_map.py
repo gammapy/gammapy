@@ -133,7 +133,10 @@ class PSFMap(IRFMap):
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(
-            energy=energy, rad=rad, psf_value=psf_values, exposure=exposure
+            energy_axis_true=self.psf_map.geom.axes["energy_true"],
+            rad_axis=self.psf_map.geom.axes["theta"],
+            psf_value=psf_values,
+            exposure=exposure
         )
 
     def get_psf_kernel(self, position, geom, max_radius=None, factor=4):
@@ -275,13 +278,8 @@ class PSFMap(IRFMap):
         psf_map : `PSFMap`
             Point spread function map.
         """
-        energy_axis = MapAxis.from_nodes(
-            table_psf.energy, name="energy_true", interp="log"
-        )
-        rad_axis = MapAxis.from_nodes(table_psf.rad, name="theta")
-
         geom = WcsGeom.create(
-            npix=(2, 1), proj="CAR", binsz=180, axes=[rad_axis, energy_axis]
+            npix=(2, 1), proj="CAR", binsz=180, axes=[table_psf.rad_axis, table_psf.energy_axis_true]
         )
         coords = geom.get_coord()
 
@@ -341,7 +339,12 @@ class PSFMap(IRFMap):
         else:
             raise AssertionError('There need to be the same number of sigma values as energies')
 
-        table_psf = EnergyDependentTablePSF(energy, rad, exposure=None, psf_value=energytable_temp)
+        table_psf = EnergyDependentTablePSF(
+            energy_axis_true=energy_axis_true,
+            rad_axis=rad_axis,
+            exposure=None,
+            psf_value=energytable_temp
+        )
         return cls.from_energy_dependent_table_psf(table_psf)
 
     def to_image(self, spectrum=None, keepdims=True):

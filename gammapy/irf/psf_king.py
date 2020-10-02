@@ -5,6 +5,8 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
+from gammapy.maps import MapAxis
+from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.scripts import make_path
 from .psf_table import EnergyDependentTablePSF
@@ -53,6 +55,15 @@ class PSFKing:
 
         self.energy_thresh_lo = Quantity(energy_thresh_lo).to("TeV")
         self.energy_thresh_hi = Quantity(energy_thresh_hi).to("TeV")
+
+    @property
+    def energy_axis_true(self):
+        edges = edges_from_lo_hi(self.energy_lo, self.energy_hi)
+        return MapAxis.from_edges(edges, name="energy_true", interp="log")
+
+    @property
+    def offset_axis(self):
+        return MapAxis.from_nodes(self.offset, name="theta", interp="lin")
 
     def info(self):
         """Print some basic info.
@@ -241,7 +252,12 @@ class PSFKing:
 
         # Defaults
         theta = theta if theta is not None else Angle(0, "deg")
-        rad = rad if rad is not None else Angle(np.arange(0, 1.5, 0.005), "deg")
+
+        if rad is None:
+            rad = Angle(np.arange(0, 1.5, 0.005), "deg")
+
+        rad_axis = MapAxis.from_nodes(rad, name="theta")
+
         psf_value = Quantity(np.empty((len(energies), len(rad))), "deg^-2")
 
         for i, energy in enumerate(energies):
@@ -250,5 +266,8 @@ class PSFKing:
             psf_value[i] = Quantity(val, "deg^-2")
 
         return EnergyDependentTablePSF(
-            energy=energies, rad=rad, exposure=exposure, psf_value=psf_value
+            energy_axis_true=self.energy_axis_true,
+            rad_axis=rad_axis,
+            exposure=exposure,
+            psf_value=psf_value
         )

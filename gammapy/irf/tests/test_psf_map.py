@@ -252,9 +252,9 @@ def make_psf_map_obs(geom, obs):
         {
             "energy": None,
             "rad": None,
-            "energy_shape": (32,),
-            "psf_energy": 865.9643,
-            "rad_shape": (144,),
+            "energy_shape": 32,
+            "psf_energy": 0.8659643,
+            "rad_shape": 144,
             "psf_rad": 0.0015362848,
             "psf_exposure": 3.14711e12,
             "psf_value_shape": (32, 144),
@@ -263,9 +263,9 @@ def make_psf_map_obs(geom, obs):
         {
             "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
             "rad": None,
-            "energy_shape": (100,),
-            "psf_energy": 1428.893959,
-            "rad_shape": (144,),
+            "energy_shape": 100,
+            "psf_energy": 1.428893959,
+            "rad_shape": 144,
             "psf_rad": 0.0015362848,
             "psf_exposure": 4.723409e12,
             "psf_value_shape": (100, 144),
@@ -274,9 +274,9 @@ def make_psf_map_obs(geom, obs):
         {
             "energy": None,
             "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="theta"),
-            "energy_shape": (32,),
-            "psf_energy": 865.9643,
-            "rad_shape": (1000,),
+            "energy_shape": 32,
+            "psf_energy": 0.8659643,
+            "rad_shape": 1000,
             "psf_rad": 0.000524,
             "psf_exposure": 3.14711e12,
             "psf_value_shape": (32, 1000),
@@ -285,9 +285,9 @@ def make_psf_map_obs(geom, obs):
         {
             "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
             "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="theta"),
-            "energy_shape": (100,),
-            "psf_energy": 1428.893959,
-            "rad_shape": (1000,),
+            "energy_shape": 100,
+            "psf_energy": 1.428893959,
+            "rad_shape": 1000,
             "psf_rad": 0.000524,
             "psf_exposure": 4.723409e12,
             "psf_value_shape": (100, 1000),
@@ -318,16 +318,17 @@ def test_make_psf(pars, data_store):
     psf_map = make_psf_map_obs(geom, obs)
     psf = psf_map.get_energy_dependent_table_psf(position)
 
-    assert psf.energy.unit == "GeV"
-    assert psf.energy.shape == pars["energy_shape"]
-    assert_allclose(psf.energy.value[15], pars["psf_energy"], rtol=1e-3)
+    axis = psf.energy_axis_true
+    assert axis.unit == "TeV"
+    assert axis.nbin == pars["energy_shape"]
+    assert_allclose(axis.center.value[15], pars["psf_energy"], rtol=1e-3)
 
-    assert psf.rad.unit == "rad"
-    assert psf.rad.shape == pars["rad_shape"]
-    assert_allclose(psf.rad.value[15], pars["psf_rad"], rtol=1e-3)
+    assert psf.rad_axis.unit == "deg"
+    assert psf.rad_axis.nbin == pars["rad_shape"]
+    assert_allclose(psf.rad_axis.center.to_value("rad")[15], pars["psf_rad"], rtol=1e-3)
 
     assert psf.exposure.unit == "cm2 s"
-    assert psf.exposure.shape == pars["energy_shape"]
+    assert psf.exposure.shape == (pars["energy_shape"],)
     assert_allclose(psf.exposure.value[15], pars["psf_exposure"], rtol=1e-3)
 
     assert psf.psf_value.unit == "sr-1"
@@ -383,14 +384,15 @@ def test_to_image():
     assert_allclose(psf2D.exposure_map.geom.data_shape, (1, 1, 25, 25))
     assert_allclose(psf2D.psf_map.data[0][0][12][12], 23255.41204827, rtol=1e-2)
 
+
 def test_psfmap_from_gauss():
-    rad = np.linspace(0, 1.5, 50)*u.deg
-    energy = np.logspace(-1, 2, 10)*u.TeV
+    rad = np.linspace(0, 1.5, 50) * u.deg
+    energy = np.logspace(-1, 2, 10) * u.TeV
     energy_axis = MapAxis.from_nodes(energy, name="energy_true", interp="log", unit="TeV")
     rad_axis = MapAxis.from_nodes(rad, name="theta", unit="deg")
 
     # define sigmas starting at 0.1 in steps of 0.1 deg
-    sigma = (np.arange(energy.shape[0])*0.1 +0.1)*u.deg
+    sigma = (np.arange(energy.shape[0]) * 0.1 + 0.1) * u.deg
     
     # with energy-dependent sigma
     psfmap = PSFMap.from_gauss(energy_axis, rad_axis, sigma)
@@ -404,11 +406,11 @@ def test_psfmap_from_gauss():
     )
     assert_allclose(
         psfmap.containment_radius_map(energy[3], 0.68).data[0][0]/sigma[3].value,
-          1.51, atol=1e-3
+          1.51, atol=1e-2
     )
     assert_allclose(
         psfmap.containment_radius_map(energy[3], 0.95).data[0][0]/sigma[3].value,
-         2.45, atol=1e-3
+         2.45, atol=1e-2
     )
     
     # with constant sigma
