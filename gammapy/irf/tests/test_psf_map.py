@@ -300,7 +300,7 @@ def test_make_psf(pars, data_store):
     psf = obs.psf
 
     if pars["energy"] is None:
-        energy_axis = psf.energy_axis
+        energy_axis = psf.energy_axis_true
     else:
         energy_axis = pars["energy"]
 
@@ -344,7 +344,7 @@ def test_make_mean_psf(data_store):
     psf = observations[0].psf
 
     geom = WcsGeom.create(
-        skydir=position, npix=(3, 3), axes=[psf.rad_axis, psf.energy_axis], binsz=0.2
+        skydir=position, npix=(3, 3), axes=[psf.rad_axis, psf.energy_axis_true], binsz=0.2
     )
 
     psf_map_1 = make_psf_map_obs(geom, observations[0])

@@ -292,7 +292,7 @@ def test_make_psf(pars, data_store):
     psf = data_store.obs(23523).psf
 
     if energy_axis is None:
-        energy_axis = psf.energy_axis
+        energy_axis = psf.energy_axis_true
 
     if rad_axis is None:
         rad_axis = psf.rad_axis
@@ -329,7 +329,7 @@ def test_make_mean_psf(data_store):
     psf = data_store.obs(23523).psf
 
     geom = RegionGeom.create(
-        region="icrs;point(83.63, 22.01)", axes=[psf.rad_axis, psf.energy_axis]
+        region="icrs;point(83.63, 22.01)", axes=[psf.rad_axis, psf.energy_axis_true]
     )
 
     maker = MapDatasetMaker()

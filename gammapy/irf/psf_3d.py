@@ -47,7 +47,7 @@ class PSF3D:
         energy_thresh_hi=u.Quantity(100, "TeV"),
         interp_kwargs=None,
     ):
-        self._energy_axis = energy_axis_true
+        self._energy_axis_true = energy_axis_true
         self._offset_axis = offset_axis
         self._rad_axis = rad_axis
         self.psf_value = psf_value.to("sr^-1")
@@ -57,8 +57,8 @@ class PSF3D:
         self._interp_kwargs = interp_kwargs or {}
 
     @property
-    def energy_axis(self):
-        return self._energy_axis
+    def energy_axis_true(self):
+        return self._energy_axis_true
 
     @property
     def rad_axis(self):
@@ -70,7 +70,7 @@ class PSF3D:
 
     @lazyproperty
     def _interpolate(self):
-        energy = self.energy_axis.center
+        energy = self.energy_axis_true.center
         offset = self.offset_axis.center
         rad = self.rad_axis.center
 
@@ -158,7 +158,7 @@ class PSF3D:
         table = Table()
 
         offset = self.offset_axis.center
-        energy = self.energy_axis.edges
+        energy = self.energy_axis_true.edges
         rad = self.rad_axis.edges
 
         table["THETA_LO"] = offset[np.newaxis]
@@ -200,7 +200,7 @@ class PSF3D:
             Interpolated value
         """
         if energy is None:
-            energy = self.energy_axis.center
+            energy = self.energy_axis_true.center
         if offset is None:
             offset = self.offset_axis.center
         if rad is None:
@@ -246,7 +246,7 @@ class PSF3D:
 
         psf_value = self.evaluate(offset=theta, rad=rad_axis.center).squeeze()
         return EnergyDependentTablePSF(
-            energy_axis_true=self.energy_axis,
+            energy_axis_true=self.energy_axis_true,
             rad_axis=rad_axis,
             exposure=exposure,
             psf_value=psf_value.T
@@ -312,7 +312,7 @@ class PSF3D:
         ax = plt.gca() if ax is None else ax
 
         energy = MapAxis.from_energy_bounds(
-            self.energy_axis.edges[0], self.energy_axis.edges[-1], 100
+            self.energy_axis_true.edges[0], self.energy_axis_true.edges[-1], 100
         ).edges
 
         for theta in thetas:
@@ -356,7 +356,7 @@ class PSF3D:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.energy_axis.center
+        energy = self.energy_axis_true.center
         offset = self.offset_axis.center
 
         # Set up and compute data

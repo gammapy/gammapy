@@ -18,9 +18,9 @@ def test_psf_3d_basics(psf_3d):
     assert psf_3d.rad_axis.nbin == 144
     assert psf_3d.rad_axis.unit == "deg"
 
-    assert_allclose(psf_3d.energy_axis.edges[0].value, 0.01)
-    assert psf_3d.energy_axis.nbin == 32
-    assert psf_3d.energy_axis.unit == "TeV"
+    assert_allclose(psf_3d.energy_axis_true.edges[0].value, 0.01)
+    assert psf_3d.energy_axis_true.nbin == 32
+    assert psf_3d.energy_axis_true.unit == "TeV"
 
     assert psf_3d.psf_value.shape == (144, 6, 32)
     assert psf_3d.psf_value.unit == "sr-1"
@@ -64,7 +64,7 @@ def test_psf_3d_write(psf_3d, tmp_path):
     psf_3d.write(tmp_path / "tmp.fits")
     psf_3d = PSF3D.read(tmp_path / "tmp.fits", hdu=1)
 
-    assert_allclose(psf_3d.energy_axis.edges[0].value, 0.01)
+    assert_allclose(psf_3d.energy_axis_true.edges[0].value, 0.01)
 
 
 @requires_data()
