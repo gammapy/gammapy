@@ -77,11 +77,11 @@ class PSFMap(IRFMap):
         self._irf_map = value
 
     def __init__(self, psf_map, exposure_map=None):
-        if psf_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
+        if psf_map.geom.axes[1].name != "energy_true":
             raise ValueError("Incorrect energy axis position in input Map")
 
-        if psf_map.geom.axes[0].name.upper() != "THETA":
-            raise ValueError("Incorrect theta axis position in input Map")
+        if psf_map.geom.axes[0].name != "rad":
+            raise ValueError("Incorrect rad axis position in input Map")
 
         super().__init__(irf_map=psf_map, exposure_map=exposure_map)
 
@@ -109,12 +109,12 @@ class PSFMap(IRFMap):
             )
 
         energy = self.psf_map.geom.axes["energy_true"].center
-        rad = self.psf_map.geom.axes["theta"].center
+        rad = self.psf_map.geom.axes["rad"].center
 
         coords = {
             "skycoord": position,
             "energy_true": energy.reshape((-1, 1, 1, 1)),
-            "theta": rad.reshape((1, -1, 1, 1)),
+            "rad": rad.reshape((1, -1, 1, 1)),
         }
 
         data = self.psf_map.interp_by_coord(coords)
@@ -124,7 +124,7 @@ class PSFMap(IRFMap):
             coords = {
                 "skycoord": position,
                 "energy_true": energy.reshape((-1, 1, 1)),
-                "theta": 0 * u.deg,
+                "rad": 0 * u.deg,
             }
             data = self.exposure_map.interp_by_coord(coords).squeeze()
             exposure = data * self.exposure_map.unit
@@ -134,7 +134,7 @@ class PSFMap(IRFMap):
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(
             energy_axis_true=self.psf_map.geom.axes["energy_true"],
-            rad_axis=self.psf_map.geom.axes["theta"],
+            rad_axis=self.psf_map.geom.axes["rad"],
             psf_value=psf_values,
             exposure=exposure
         )
@@ -234,12 +234,12 @@ class PSFMap(IRFMap):
         """
 
         random_state = get_random_state(random_state)
-        rad_axis = self.psf_map.geom.axes["theta"]
+        rad_axis = self.psf_map.geom.axes["rad"]
 
         coord = {
             "skycoord": map_coord.skycoord.reshape(-1, 1),
             "energy_true": map_coord["energy_true"].reshape(-1, 1),
-            "theta": rad_axis.center,
+            "rad": rad_axis.center,
         }
 
         pdf = (
@@ -285,11 +285,11 @@ class PSFMap(IRFMap):
 
         # TODO: support broadcasting in .evaluate()
         data = table_psf._interpolate(
-            (coords["energy_true"], coords["theta"])
+            (coords["energy_true"], coords["rad"])
         ).to_value("sr-1")
         psf_map = Map.from_geom(geom, data=data, unit="sr-1")
 
-        geom_exposure = geom.squash(axis_name="theta")
+        geom_exposure = geom.squash(axis_name="rad")
 
         data = table_psf.exposure.reshape((-1, 1, 1, 1))
 

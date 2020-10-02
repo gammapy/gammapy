@@ -360,6 +360,8 @@ class EffectiveAreaTable2D:
         meta=None,
         interp_kwargs=None,
     ):
+        assert energy_axis_true.name == "energy_true"
+        assert offset_axis.name == "offset"
 
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs

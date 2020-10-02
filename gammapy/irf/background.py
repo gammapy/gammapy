@@ -255,6 +255,8 @@ class Background2D:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
+        assert offset_axis.name == "offset"
+
         self.data = NDDataArray(
             axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs
         )

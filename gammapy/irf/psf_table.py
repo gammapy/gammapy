@@ -247,6 +247,9 @@ class EnergyDependentTablePSF:
         self._rad_axis = rad_axis
         self._energy_axis_true = energy_axis_true
 
+        assert energy_axis_true.name == "energy_true"
+        assert rad_axis.name == "rad"
+
         if exposure is None:
             self.exposure = u.Quantity(np.ones(self.energy_axis_true.nbin), "cm^2 s")
         else:
@@ -318,7 +321,7 @@ class EnergyDependentTablePSF:
         """
         # TODO: move this to MapAxis.from_table()
         rad = Angle(hdu_list["THETA"].data["Theta"], "deg")
-        rad_axis = MapAxis.from_nodes(rad, name="theta")
+        rad_axis = MapAxis.from_nodes(rad, name="rad")
         energy = u.Quantity(hdu_list["PSF"].data["Energy"], "MeV")
         energy_axis_true = MapAxis.from_nodes(energy, name="energy_true", interp="log")
         exposure = u.Quantity(hdu_list["PSF"].data["Exposure"], "cm^2 s")

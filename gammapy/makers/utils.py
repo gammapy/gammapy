@@ -196,7 +196,7 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     energy_axis = geom.axes["energy_true"]
     energy = energy_axis.center
 
-    rad_axis = geom.axes["theta"]
+    rad_axis = geom.axes["rad"]
     rad = rad_axis.center
 
     # Compute separations with pointing position

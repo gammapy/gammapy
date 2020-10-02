@@ -72,7 +72,7 @@ def test_make_psf_map():
     energy_axis = MapAxis(
         nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true"
     )
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
 
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
@@ -95,14 +95,14 @@ def make_test_psfmap(size, shape="gauss"):
         nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true"
     )
     rad_axis = MapAxis.from_nodes(
-        nodes=np.linspace(0.0, 0.6, 50), unit="deg", name="theta"
+        nodes=np.linspace(0.0, 0.6, 50), unit="deg", name="rad"
     )
 
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
-    exposure_geom = geom.squash(axis_name="theta")
+    exposure_geom = geom.squash(axis_name="rad")
 
     exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
@@ -167,7 +167,7 @@ def test_containment_radius_map():
     psf = fake_psf3d(0.15 * u.deg)
     pointing = SkyCoord(0, 0, unit="deg")
     energy_axis = MapAxis(nodes=[0.2, 1, 2], unit="TeV", name="energy_true")
-    psf_theta_axis = MapAxis(nodes=np.linspace(0.0, 0.6, 30), unit="deg", name="theta")
+    psf_theta_axis = MapAxis(nodes=np.linspace(0.0, 0.6, 30), unit="deg", name="rad")
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.5, width=(4, 3), axes=[psf_theta_axis, energy_axis]
     )
@@ -233,7 +233,7 @@ def test_sample_coord_gauss():
 
 def make_psf_map_obs(geom, obs):
     exposure_map = make_map_exposure_true_energy(
-        geom=geom.squash(axis_name="theta"),
+        geom=geom.squash(axis_name="rad"),
         pointing=obs.pointing_radec,
         aeff=obs.aeff,
         livetime=obs.observation_live_time_duration,
@@ -273,7 +273,7 @@ def make_psf_map_obs(geom, obs):
         },
         {
             "energy": None,
-            "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="theta"),
+            "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="rad"),
             "energy_shape": 32,
             "psf_energy": 0.8659643,
             "rad_shape": 1000,
@@ -284,7 +284,7 @@ def make_psf_map_obs(geom, obs):
         },
         {
             "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
-            "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="theta"),
+            "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="rad"),
             "energy_shape": 100,
             "psf_energy": 1.428893959,
             "rad_shape": 1000,
@@ -389,7 +389,7 @@ def test_psfmap_from_gauss():
     rad = np.linspace(0, 1.5, 50) * u.deg
     energy = np.logspace(-1, 2, 10) * u.TeV
     energy_axis = MapAxis.from_nodes(energy, name="energy_true", interp="log", unit="TeV")
-    rad_axis = MapAxis.from_nodes(rad, name="theta", unit="deg")
+    rad_axis = MapAxis.from_nodes(rad, name="rad", unit="deg")
 
     # define sigmas starting at 0.1 in steps of 0.1 deg
     sigma = (np.arange(energy.shape[0]) * 0.1 + 0.1) * u.deg

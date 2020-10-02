@@ -71,6 +71,9 @@ class EnergyDependentMultiGaussPSF:
         energy_thresh_lo="0.1 TeV",
         energy_thresh_hi="100 TeV",
     ):
+        assert energy_axis_true.name == "energy_true"
+        assert offset_axis.name == "offset"
+
         self._energy_axis_true = energy_axis_true
         self._offset_axis = offset_axis
 
@@ -131,7 +134,7 @@ class EnergyDependentMultiGaussPSF:
         energy_axis_true = MapAxis.from_edges(edges, name="energy_true", interp="log")
 
         theta = Angle(hdu.data["THETA_LO"][0], "deg")
-        offset_axis = MapAxis.from_nodes(theta, name="theta", interp="lin")
+        offset_axis = MapAxis.from_nodes(theta, name="offset", interp="lin")
 
         # Get sigmas
         shape = (len(theta), len(energy_hi))
@@ -444,7 +447,7 @@ class EnergyDependentMultiGaussPSF:
         if rad is None:
             rad = Angle(np.arange(0, 1.5, 0.005), "deg")
 
-        rad_axis = MapAxis.from_nodes(rad, name="theta")
+        rad_axis = MapAxis.from_nodes(rad, name="rad")
 
         psf_value = u.Quantity(np.zeros((energies.size, rad.size)), "deg^-2")
 

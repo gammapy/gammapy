@@ -47,6 +47,10 @@ class PSF3D:
         energy_thresh_hi=u.Quantity(100, "TeV"),
         interp_kwargs=None,
     ):
+        assert energy_axis_true.name == "energy_true"
+        assert offset_axis.name == "offset"
+        assert rad_axis.name == "rad"
+
         self._energy_axis_true = energy_axis_true
         self._offset_axis = offset_axis
         self._rad_axis = rad_axis
@@ -136,7 +140,7 @@ class PSF3D:
         offset_axis = MapAxis.from_nodes(offset, interp="lin", name="offset")
 
         rad_edges = edges_from_lo_hi(rad_lo, rad_hi)
-        rad_axis = MapAxis.from_edges(rad_edges, interp="lin", name="theta")
+        rad_axis = MapAxis.from_edges(rad_edges, interp="lin", name="rad")
 
         return cls(
             energy_axis_true=energy_axis_true,
@@ -240,7 +244,7 @@ class PSF3D:
         theta = Angle(theta)
 
         if rad is not None:
-            rad_axis = MapAxis.from_edges(rad, name="theta")
+            rad_axis = MapAxis.from_edges(rad, name="rad")
         else:
             rad_axis = self.rad_axis
 

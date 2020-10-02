@@ -43,7 +43,10 @@ class PSFKing:
         energy_thresh_lo=Quantity(0.1, "TeV"),
         energy_thresh_hi=Quantity(100, "TeV"),
     ):
+        assert energy_axis_true.name == "energy_true"
         self._energy_axis_true = energy_axis_true
+
+        assert offset_axis.name == "offset"
         self._offset_axis = offset_axis
 
         self.gamma = np.asanyarray(gamma)
@@ -65,8 +68,8 @@ class PSFKing:
         """
         ss = "\nSummary PSFKing info\n"
         ss += "---------------------\n"
-        ss += array_stats_str(self.offset, "offset")
-        ss += array_stats_str(self.energy, "energy")
+        ss += array_stats_str(self.offset_axis.center, "offset")
+        ss += array_stats_str(self.energy_axis_true.center, "energy")
         ss += array_stats_str(self.gamma, "gamma")
         ss += array_stats_str(self.sigma, "sigma")
 
@@ -105,7 +108,7 @@ class PSFKing:
         offset = (offset_hi + offset_lo) / 2
         offset = Angle(offset, unit=table["THETA_LO"].unit)
 
-        offset_axis = MapAxis.from_nodes(offset, name="theta", interp="lin")
+        offset_axis = MapAxis.from_nodes(offset, name="offset", interp="lin")
 
         energy_lo = table["ENERG_LO"].quantity[0]
         energy_hi = table["ENERG_HI"].quantity[0]
@@ -267,7 +270,7 @@ class PSFKing:
         if rad is None:
             rad = Angle(np.arange(0, 1.5, 0.005), "deg")
 
-        rad_axis = MapAxis.from_nodes(rad, name="theta")
+        rad_axis = MapAxis.from_nodes(rad, name="rad")
 
         psf_value = Quantity(np.empty((len(energies), len(rad))), "deg^-2")
 
