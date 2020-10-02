@@ -4,7 +4,7 @@ import numpy as np
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
 from gammapy.irf import EffectiveAreaTable, EDispKernelMap
-from gammapy.maps import Map, MapCoord
+from gammapy.maps import Map
 from regions import PointSkyRegion
 from .core import Maker
 
@@ -137,8 +137,7 @@ class SafeMaskMaker(Maker):
 
         energy = exposure.geom.axes["energy_true"]
         aeff = EffectiveAreaTable(
-            energy_lo=energy.edges[:-1],
-            energy_hi=energy.edges[1:],
+            energy_axis_true=energy,
             data=(exposure.quantity / dataset.gti.time_sum).squeeze(),
         )
         aeff_thres = (self.aeff_percent / 100) * aeff.max_area
