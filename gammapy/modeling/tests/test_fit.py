@@ -22,6 +22,7 @@ class MyModel(Model):
 class MyDataset(Dataset):
 
     tag = "MyDataset"
+
     def __init__(self, name="test"):
         self.name = name
         self._models = Models([MyModel()])
@@ -147,6 +148,51 @@ def test_stat_profile_reoptimize():
 
     assert_allclose(result["values"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat"], [4, 0, 4], atol=1e-7)
+
+
+def test_stat_profile_2D():
+    dataset = MyDataset()
+    fit = Fit([dataset])
+    fit.run()
+    x_values = [1, 2, 3]
+    y_values = [2e2, 3e2, 4e2]
+    result = fit.stat_profile_2D("x", "y", x_values=x_values, y_values=y_values)
+
+    assert_allclose(result["x_values"], x_values, atol=1e-7)
+    assert_allclose(result["y_values"], y_values, atol=1e-7)
+    expected_stat = [
+        [1.0001e04, 1.0000e00, 1.0001e04],
+        [1.0000e04, 0.0000e00, 1.0000e04],
+        [1.0001e04, 1.0000e00, 1.0001e04],
+    ]
+    assert_allclose(list(result["stat"]), expected_stat, atol=1e-7)
+
+    # Check that original value state wasn't changed
+    assert_allclose(dataset.models.parameters["x"].value, 2)
+    assert_allclose(dataset.models.parameters["y"].value, 3e2)
+
+
+def test_stat_profile_2D_reoptimize():
+    dataset = MyDataset()
+    fit = Fit([dataset])
+    fit.run()
+
+    dataset.models.parameters["z"].value = 0
+    x_values = [1, 2, 3]
+    y_values = [2e2, 3e2, 4e2]
+    result = fit.stat_profile_2D(
+        "x", "y", x_values=x_values, y_values=y_values, reoptimize=True
+    )
+
+    assert_allclose(result["x_values"], x_values, atol=1e-7)
+    assert_allclose(result["y_values"], y_values, atol=1e-7)
+    expected_stat = [
+        [1.0001e04, 1.0000e00, 1.0001e04],
+        [1.0000e04, 0.0000e00, 1.0000e04],
+        [1.0001e04, 1.0000e00, 1.0001e04],
+    ]
+
+    assert_allclose(list(result["stat"]), expected_stat, atol=1e-7)
 
 
 def test_minos_contour():
