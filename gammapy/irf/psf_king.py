@@ -23,12 +23,10 @@ class PSFKing:
 
     Parameters
     ----------
-    energy_lo : `~astropy.units.Quantity`
-        Lower energy boundary of the energy bin.
-    energy_hi : `~astropy.units.Quantity`
-        Upper energy boundary of the energy bin.
-    offset : `~astropy.coordinates.Angle`
-        Offset nodes (1D)
+    energy_axis_true : `MapAxis`
+        True energy axis
+    offset_axis : `MapAxis`
+        Offset axis
     gamma : `~numpy.ndarray`
         PSF parameter (2D)
     sigma : `~astropy.coordinates.Angle`
@@ -38,18 +36,16 @@ class PSFKing:
 
     def __init__(
         self,
-        energy_lo,
-        energy_hi,
-        offset,
+        energy_axis_true,
+        offset_axis,
         gamma,
         sigma,
         energy_thresh_lo=Quantity(0.1, "TeV"),
         energy_thresh_hi=Quantity(100, "TeV"),
     ):
-        self.energy_lo = energy_lo.to("TeV")
-        self.energy_hi = energy_hi.to("TeV")
-        self.offset = Angle(offset)
-        self.energy = np.sqrt(self.energy_lo * self.energy_hi)
+        self._energy_axis_true = energy_axis_true
+        self._offset_axis = offset_axis
+
         self.gamma = np.asanyarray(gamma)
         self.sigma = Angle(sigma)
 
@@ -58,12 +54,11 @@ class PSFKing:
 
     @property
     def energy_axis_true(self):
-        edges = edges_from_lo_hi(self.energy_lo, self.energy_hi)
-        return MapAxis.from_edges(edges, name="energy_true", interp="log")
+        return self._energy_axis_true
 
     @property
     def offset_axis(self):
-        return MapAxis.from_nodes(self.offset, name="theta", interp="lin")
+        return self._offset_axis
 
     def info(self):
         """Print some basic info.
@@ -103,13 +98,20 @@ class PSFKing:
         table : `~astropy.table.Table`
             Table King PSF info.
         """
+        # TODO: move to MapAxes.from_table()
+
         offset_lo = table["THETA_LO"].quantity[0]
         offset_hi = table["THETA_HI"].quantity[0]
         offset = (offset_hi + offset_lo) / 2
         offset = Angle(offset, unit=table["THETA_LO"].unit)
 
+        offset_axis = MapAxis.from_nodes(offset, name="theta", interp="lin")
+
         energy_lo = table["ENERG_LO"].quantity[0]
         energy_hi = table["ENERG_HI"].quantity[0]
+
+        edges = edges_from_lo_hi(energy_lo, energy_hi)
+        energy_axis_true = MapAxis.from_edges(edges, name="energy_true", interp="log")
 
         gamma = table["GAMMA"].quantity[0]
         sigma = table["SIGMA"].quantity[0]
@@ -121,7 +123,13 @@ class PSFKing:
         except KeyError:
             pass
 
-        return cls(energy_lo, energy_hi, offset, gamma, sigma, **opts)
+        return cls(
+            energy_axis_true=energy_axis_true,
+            offset_axis=offset_axis,
+            gamma=gamma,
+            sigma=sigma,
+            **opts
+        )
 
     def to_hdulist(self):
         """
@@ -132,14 +140,15 @@ class PSFKing:
         hdu_list : `~astropy.io.fits.HDUList`
             PSF in HDU list format.
         """
+        # TODO: move to MapAxes.to_table()
         # Set up data
         names = ["ENERG_LO", "ENERG_HI", "THETA_LO", "THETA_HI", "SIGMA", "GAMMA"]
         units = ["TeV", "TeV", "deg", "deg", "deg", ""]
         data = [
-            self.energy_lo,
-            self.energy_hi,
-            self.offset,
-            self.offset,
+            self.energy_axis_true.edges[:-1],
+            self.energy_axis_true.edges[1:],
+            self.offset_axis.center,
+            self.offset_axis.center,
             self.sigma,
             self.gamma,
         ]
@@ -214,8 +223,10 @@ class PSFKing:
         offset = Angle(offset)
 
         # Find nearest energy value
-        i = np.argmin(np.abs(self.energy - energy))
-        j = np.argmin(np.abs(self.offset - offset))
+
+        # Find nearest energy value
+        i = np.argmin(np.abs(self.energy_axis_true.center - energy))
+        j = np.argmin(np.abs(self.offset_axis.center - offset))
 
         # TODO: Use some kind of interpolation to get PSF
         # parameters for every energy and theta
@@ -248,7 +259,7 @@ class PSFKing:
             Energy-dependent PSF
         """
         # self.energy is already the logcenter
-        energies = self.energy
+        energies = self.energy_axis_true.center
 
         # Defaults
         theta = theta if theta is not None else Angle(0, "deg")

@@ -56,7 +56,7 @@ def test_psf_king_write(psf_king, tmp_path):
     psf_king.write(tmp_path / "tmp.fits")
     psf_king2 = PSFKing.read(tmp_path / "tmp.fits")
 
-    assert_quantity_allclose(psf_king2.energy, psf_king.energy)
-    assert_quantity_allclose(psf_king2.offset, psf_king.offset)
+    assert_quantity_allclose(psf_king2.energy_axis_true.edges, psf_king.energy_axis_true.edges)
+    assert_quantity_allclose(psf_king2.offset_axis.center, psf_king.offset_axis.center)
     assert_quantity_allclose(psf_king2.gamma, psf_king.gamma)
     assert_quantity_allclose(psf_king2.sigma, psf_king.sigma)
