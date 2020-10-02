@@ -17,8 +17,7 @@ the normalization is expressed as:
     N = \frac{1}{ 2 \pi (1-e) r_{\rm eff}^2 \eta \Gamma(2\eta)}\,,
 where :math:`\Gamma` is the gamma function.
 This analytical norm is approximated so it may not integrate to unity in extremal cases 
-if ellipticity tend to one with large radius or :math:`\eta` much larger than one (outside the default range).
-
+if ellipticity tend to one and radius is large  or :math:`\eta` much larger than one (outside the default range).
 """
 
 # %%
