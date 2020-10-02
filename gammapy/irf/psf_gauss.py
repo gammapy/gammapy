@@ -22,19 +22,16 @@ log = logging.getLogger(__name__)
 
 
 class EnergyDependentMultiGaussPSF:
-    """
-    Triple Gauss analytical PSF depending on energy and theta.
+    """Triple Gauss analytical PSF depending on energy and theta.
 
     To evaluate the PSF call the ``to_energy_dependent_table_psf`` or ``psf_at_energy_and_theta`` methods.
 
     Parameters
     ----------
-    energy_lo : `~astropy.units.u.Quantity`
-        Lower energy boundary of the energy bin.
-    energy_hi : `~astropy.units.u.Quantity`
-        Upper energy boundary of the energy bin.
-    theta : `~astropy.units.u.Quantity`
-        Center values of the theta bins.
+    energy_axis_true : `MapAxis`
+        True energy axis
+    offset_axis : `MapAxis`
+        Offset axis.
     sigmas : list of 'numpy.ndarray'
         Triple Gauss sigma parameters, where every entry is
         a two dimensional 'numpy.ndarray' containing the sigma
@@ -60,25 +57,23 @@ class EnergyDependentMultiGaussPSF:
         from gammapy.irf import EnergyDependentMultiGaussPSF
         filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
-        psf.plot_containment(0.68, show_safe_energy=False)
+        psf.plot_containment(0.68)
         plt.show()
     """
     tag = "psf_3gauss"
     
     def __init__(
         self,
-        energy_lo,
-        energy_hi,
-        theta,
+        energy_axis_true,
+        offset_axis,
         sigmas,
         norms,
         energy_thresh_lo="0.1 TeV",
         energy_thresh_hi="100 TeV",
     ):
-        self.energy_lo = u.Quantity(energy_lo, "TeV")
-        self.energy_hi = u.Quantity(energy_hi, "TeV")
-        self.energy = np.sqrt(self.energy_hi * self.energy_lo)
-        self.theta = u.Quantity(theta, "deg")
+        self._energy_axis_true = energy_axis_true
+        self._offset_axis = offset_axis
+
         sigmas[0][sigmas[0] == 0] = 1
         sigmas[1][sigmas[1] == 0] = 1
         sigmas[2][sigmas[2] == 0] = 1
@@ -93,18 +88,17 @@ class EnergyDependentMultiGaussPSF:
 
     @property
     def energy_axis_true(self):
-        edges = edges_from_lo_hi(self.energy_lo, self.energy_hi)
-        return MapAxis.from_edges(edges, name="energy_true", interp="log")
+        return self._energy_axis_true
 
     @property
     def offset_axis(self):
-        return MapAxis.from_nodes(self.theta, name="theta", interp="lin")
+        return self._offset_axis
 
     def _setup_interpolators(self, values_list):
         interps = []
         for values in values_list:
             interp = ScaledRegularGridInterpolator(
-                points=(self.theta, self.energy), values=values
+                points=(self.offset_axis.center, self.energy_axis_true.center), values=values
             )
             interps.append(interp)
         return interps
@@ -132,7 +126,12 @@ class EnergyDependentMultiGaussPSF:
         """
         energy_lo = u.Quantity(hdu.data["ENERG_LO"][0], "TeV")
         energy_hi = u.Quantity(hdu.data["ENERG_HI"][0], "TeV")
+
+        edges = edges_from_lo_hi(energy_lo, energy_hi)
+        energy_axis_true = MapAxis.from_edges(edges, name="energy_true", interp="log")
+
         theta = Angle(hdu.data["THETA_LO"][0], "deg")
+        offset_axis = MapAxis.from_nodes(theta, name="theta", interp="lin")
 
         # Get sigmas
         shape = (len(theta), len(energy_hi))
@@ -154,7 +153,13 @@ class EnergyDependentMultiGaussPSF:
         except KeyError:
             pass
 
-        return cls(energy_lo, energy_hi, theta, sigmas, norms, **opts)
+        return cls(
+            energy_axis_true=energy_axis_true,
+            offset_axis=offset_axis,
+            sigmas=sigmas,
+            norms=norms,
+            **opts
+        )
 
     def to_hdulist(self):
         """
@@ -181,10 +186,10 @@ class EnergyDependentMultiGaussPSF:
         units = ["TeV", "TeV", "deg", "deg", "", "deg", "", "deg", "", "deg"]
 
         data = [
-            self.energy_lo,
-            self.energy_hi,
-            self.theta,
-            self.theta,
+            self.energy_axis_true.edges[:-1],
+            self.energy_axis_true.edges[1:],
+            self.offset_axis.center,
+            self.offset_axis.center,
             self.norms[0],
             self.sigmas[0],
             self.norms[1],
@@ -284,8 +289,9 @@ class EnergyDependentMultiGaussPSF:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.energy_hi
-        offset = self.theta
+        # TODO: whu upper bound here?
+        energy = self.energy_axis_true.edges[1:]
+        offset = self.offset_axis.center
 
         # Set up and compute data
         containment = self.containment_radius(energy, offset, fraction)
@@ -320,9 +326,9 @@ class EnergyDependentMultiGaussPSF:
         esafe = self.energy_thresh_lo
         omin = self.offset_axis.center.min()
         omax = self.offset_axis.center.max()
-        ax.hlines(y=esafe.value, xmin=omin, xmax=omax)
+        ax.vlines(x=esafe.value, ymin=omin.value, ymax=omax.value)
         label = f"Safe energy threshold: {esafe:3.2f}"
-        ax.text(x=0.1, y=0.9 * esafe.value, s=label, va="top")
+        ax.text(x=1.1 * esafe.value, y=0.3, s=label, va="top")
 
     def plot_containment_vs_energy(
         self, fractions=[0.68, 0.95], thetas=Angle([0, 1], "deg"), ax=None, **kwargs
@@ -333,9 +339,7 @@ class EnergyDependentMultiGaussPSF:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = MapAxis.from_energy_bounds(
-            self.energy_lo[0], self.energy_hi[-1], 100
-        ).edges
+        energy = self.energy_axis_true.center
 
         for theta in thetas:
             for fraction in fractions:
@@ -392,9 +396,9 @@ class EnergyDependentMultiGaussPSF:
         """
         ss = "\nSummary PSF info\n"
         ss += "----------------\n"
-        ss += array_stats_str(self.theta.to("deg"), "Theta")
-        ss += array_stats_str(self.energy_hi, "Energy hi")
-        ss += array_stats_str(self.energy_lo, "Energy lo")
+        ss += array_stats_str(self.offset_axis.center.to("deg"), "Theta")
+        ss += array_stats_str(self.energy_axis_true.edges[1:], "Energy hi")
+        ss += array_stats_str(self.energy_axis_true.edges[:-1], "Energy lo")
         ss += f"Safe energy threshold lo: {self.energy_thresh_lo:6.3f}\n"
         ss += f"Safe energy threshold hi: {self.energy_thresh_hi:6.3f}\n"
 
@@ -411,8 +415,7 @@ class EnergyDependentMultiGaussPSF:
         return ss
 
     def to_energy_dependent_table_psf(self, theta=None, rad=None, exposure=None):
-        """
-        Convert triple Gaussian PSF ot table PSF.
+        """Convert triple Gaussian PSF ot table PSF.
 
         Parameters
         ----------
@@ -431,7 +434,7 @@ class EnergyDependentMultiGaussPSF:
             Instance of `EnergyDependentTablePSF`.
         """
         # Convert energies to log center
-        energies = self.energy
+        energies = self.energy_axis_true.center
         # Defaults and input handling
         if theta is None:
             theta = Angle(0, "deg")
