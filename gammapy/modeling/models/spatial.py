@@ -402,7 +402,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     phi = Parameter("phi", "0 deg", frozen=True)
 
     @staticmethod
-    def evaluate(self, lon, lat, lon_0, lat_0, r_eff, eta, e, phi):
+    def evaluate(lon, lat, lon_0, lat_0, r_eff, eta, e, phi):
         lon = Longitude(lon).wrap_at(f"{np.min(lon)+180*u.deg}")
         lon_0 = Longitude(lon_0).wrap_at(f"{np.min(lon)+180*u.deg}")
         if isinstance(eta, u.Quantity):
