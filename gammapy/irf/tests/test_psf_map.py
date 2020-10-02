@@ -19,26 +19,32 @@ def data_store():
 
 
 def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
-    offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
-    energy = np.logspace(-1, 1, 5) * u.TeV
-    energy_lo = energy[:-1]
-    energy_hi = energy[1:]
-    energy = np.sqrt(energy_lo * energy_hi)
-    rad = np.linspace(0, 1.0, 101) * u.deg
-    rad_lo = rad[:-1]
-    rad_hi = rad[1:]
+    offset_axis = MapAxis.from_nodes([0, 1, 2, 3] * u.deg, name="offset")
 
-    O, R, E = np.meshgrid(offsets, rad, energy)
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+
+    rad = np.linspace(0, 1.0, 101) * u.deg
+    rad_axis = MapAxis.from_edges(rad, name="rad")
+
+    O, R, E = np.meshgrid(offset_axis.center, rad_axis.edges, energy_axis_true.center)
 
     Rmid = 0.5 * (R[:-1] + R[1:])
     if shape == "gauss":
         val = np.exp(-0.5 * Rmid ** 2 / sigma ** 2)
     else:
         val = Rmid < sigma
-    drad = 2 * np.pi * (np.cos(R[:-1]) - np.cos(R[1:])) * u.Unit("sr")
-    psf_values = val / ((val * drad).sum(0)[0])
 
-    return PSF3D(energy_lo, energy_hi, offsets, rad_lo, rad_hi, psf_values)
+    drad = 2 * np.pi * (np.cos(R[:-1]) - np.cos(R[1:])) * u.Unit("sr")
+    psf_value = val / ((val * drad).sum(0)[0])
+
+    return PSF3D(
+        energy_axis_true=energy_axis_true,
+        rad_axis=rad_axis,
+        offset_axis=offset_axis,
+        psf_value=psf_value
+    )
 
 
 def fake_aeff2d(area=1e6 * u.m ** 2):
