@@ -1324,6 +1324,9 @@ class MapAxis:
                 name = "energy"
             else:
                 name = colnames[0].replace("_MIN", "").lower()
+                # this is need for backward compatibility
+                if name == "theta":
+                    name = "rad"
 
             interp = table.meta.get("INTERP{}".format(idx + 1), "lin")
 

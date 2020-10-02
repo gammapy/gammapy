@@ -239,7 +239,7 @@ def test_interpolate_map_dataset():
 
     #psf map
     width = 0.2*u.deg
-    rad_axis = MapAxis.from_nodes(np.linspace(0, 2, 50), name="theta", unit="deg")
+    rad_axis = MapAxis.from_nodes(np.linspace(0, 2, 50), name="rad", unit="deg")
     psfMap = PSFMap.from_gauss(energy_true, rad_axis, width)
 
     #edispmap
