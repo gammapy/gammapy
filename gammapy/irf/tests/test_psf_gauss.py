@@ -51,8 +51,8 @@ class TestEnergyDependentMultiGaussPSF:
     def test_to_psf3d(self, psf):
         rads = np.linspace(0.0, 1.0, 101) * u.deg
         psf_3d = psf.to_psf3d(rads)
-        assert psf_3d.rad_lo.shape == (100,)
-        assert psf_3d.rad_lo.unit == "deg"
+        assert psf_3d.rad_axis.nbin == 100
+        assert psf_3d.rad_axis.unit == "deg"
 
         theta = 0.5 * u.deg
         energy = 0.5 * u.TeV

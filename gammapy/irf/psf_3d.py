@@ -66,7 +66,7 @@ class PSF3D:
 
     @property
     def offset_axis(self):
-        return self._rad_axis
+        return self._offset_axis
 
     @lazyproperty
     def _interpolate(self):
@@ -78,21 +78,13 @@ class PSF3D:
             points=(rad, offset, energy), values=self.psf_value, **self._interp_kwargs
         )
 
-    def info(self):
+    def __repr__(self):
         """Print some basic info.
         """
-        ss = "\nSummary PSF3D info\n"
-        ss += "---------------------\n"
-        ss += array_stats_str(self.energy_lo, "energy_lo")
-        ss += array_stats_str(self.energy_hi, "energy_hi")
-        ss += array_stats_str(self.offset, "offset")
-        ss += array_stats_str(self.rad_lo, "rad_lo")
-        ss += array_stats_str(self.rad_hi, "rad_hi")
-        ss += array_stats_str(self.psf_value, "psf_value")
-
-        # TODO: should quote containment values also
-
-        return ss
+        info = self.__class__.__name__ + "\n"
+        info += "-" * len(self.__class__.__name__) + "\n\n"
+        info += f"\tshape      : {self.psf_value.shape}\n"
+        return info
 
     @classmethod
     def read(cls, filename, hdu="PSF_2D_TABLE"):
@@ -117,6 +109,7 @@ class PSF3D:
         table : `~astropy.table.Table`
             Table Table-PSF info.
         """
+        # TODO: move this code MapAxes.from_table()
         theta_lo = table["THETA_LO"].quantity[0]
         theta_hi = table["THETA_HI"].quantity[0]
         offset = (theta_hi + theta_lo) / 2
@@ -138,15 +131,20 @@ class PSF3D:
             pass
 
         e_edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
+        energy_axis_true = MapAxis.from_edges(e_edges, interp="log", name="energy_true")
 
-        fov_lon_edges = edges_from_lo_hi(fov_lon_lo, fov_lon_hi)
-        fov_lon_axis = MapAxis.from_edges(fov_lon_edges, interp="lin", name="fov_lon")
+        offset_axis = MapAxis.from_nodes(offset, interp="lin", name="offset")
 
-        fov_lat_edges = edges_from_lo_hi(fov_lat_lo, fov_lat_hi)
-        fov_lat_axis = MapAxis.from_edges(fov_lat_edges, interp="lin", name="fov_lat")
+        rad_edges = edges_from_lo_hi(rad_lo, rad_hi)
+        rad_axis = MapAxis.from_edges(rad_edges, interp="lin", name="theta")
 
-        return cls(energy_lo, energy_hi, offset, rad_lo, rad_hi, psf_value, **opts)
+        return cls(
+            energy_axis_true=energy_axis_true,
+            offset_axis=offset_axis,
+            rad_axis=rad_axis,
+            psf_value=psf_value,
+            **opts
+        )
 
     def to_hdulist(self):
         """Convert PSF table data to FITS HDU list.
@@ -159,16 +157,17 @@ class PSF3D:
         # TODO: move this to `MapAxis.to_table()` and `MapAxes.to_table()`
         table = Table()
 
-        theta = self.offset_axis.edges
+        offset = self.offset_axis.center
         energy = self.energy_axis.edges
         rad = self.rad_axis.edges
 
-        table["THETA_LO"] = theta[:-1][np.newaxis]
-        table["THETA_HI"] = theta[1:][np.newaxis]
+        table["THETA_LO"] = offset[np.newaxis]
+        table["THETA_HI"] = offset[np.newaxis]
         table["ENERG_LO"] = energy[:-1][np.newaxis]
         table["ENERG_HI"] = energy[1:][np.newaxis]
-        table["ENERG_LO"] = rad[:-1][np.newaxis]
-        table["ENERG_HI"] = rad[1:][np.newaxis]
+        table["RAD_LO"] = rad[:-1][np.newaxis]
+        table["RAD_HI"] = rad[1:][np.newaxis]
+        table["RPSF"] = self.psf_value[np.newaxis]
 
         hdu = fits.BinTableHDU(table)
         hdu.header["LO_THRES"] = self.energy_thresh_lo.value

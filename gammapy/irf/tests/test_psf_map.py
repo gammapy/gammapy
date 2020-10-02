@@ -300,14 +300,12 @@ def test_make_psf(pars, data_store):
     psf = obs.psf
 
     if pars["energy"] is None:
-        edges = edges_from_lo_hi(psf.energy_lo, psf.energy_hi)
-        energy_axis = MapAxis.from_edges(edges, interp="log", name="energy_true")
+        energy_axis = psf.energy_axis
     else:
         energy_axis = pars["energy"]
 
     if pars["rad"] is None:
-        edges = edges_from_lo_hi(psf.rad_lo, psf.rad_hi)
-        rad_axis = MapAxis.from_edges(edges, name="theta")
+        rad_axis = psf.rad_axis
     else:
         rad_axis = pars["rad"]
 
@@ -316,6 +314,7 @@ def test_make_psf(pars, data_store):
     geom = WcsGeom.create(
         skydir=position, npix=(3, 3), axes=[rad_axis, energy_axis], binsz=0.2
     )
+
     psf_map = make_psf_map_obs(geom, obs)
     psf = psf_map.get_energy_dependent_table_psf(position)
 
@@ -343,14 +342,8 @@ def test_make_mean_psf(data_store):
 
     psf = observations[0].psf
 
-    edges = edges_from_lo_hi(psf.energy_lo, psf.energy_hi)
-    energy_axis = MapAxis.from_edges(edges, interp="log", name="energy_true")
-
-    edges = edges_from_lo_hi(psf.rad_lo, psf.rad_hi)
-    rad_axis = MapAxis.from_edges(edges, name="theta")
-
     geom = WcsGeom.create(
-        skydir=position, npix=(3, 3), axes=[rad_axis, energy_axis], binsz=0.2
+        skydir=position, npix=(3, 3), axes=[psf.rad_axis, psf.energy_axis], binsz=0.2
     )
 
     psf_map_1 = make_psf_map_obs(geom, observations[0])
