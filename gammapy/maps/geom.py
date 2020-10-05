@@ -1349,7 +1349,7 @@ class MapAxis:
 
             # background models are stored in reconstructed energy
             extname = table.meta.get("EXTNAME")
-            if extname == "BACKGROUND" and column_prefix == "ENERG":
+            if extname in ["BACKGROUND", "BKG"] and column_prefix == "ENERG":
                 name = "energy"
 
             edges_lo = table[f"{column_prefix}_LO"].quantity[0]

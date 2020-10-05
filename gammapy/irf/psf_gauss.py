@@ -127,17 +127,13 @@ class EnergyDependentMultiGaussPSF:
         hdu : `~astropy.io.fits.BinTableHDU`
             HDU
         """
-        energy_lo = u.Quantity(hdu.data["ENERG_LO"][0], "TeV")
-        energy_hi = u.Quantity(hdu.data["ENERG_HI"][0], "TeV")
+        table = Table.read(hdu)
 
-        edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis_true = MapAxis.from_edges(edges, name="energy_true", interp="log")
-
-        theta = Angle(hdu.data["THETA_LO"][0], "deg")
-        offset_axis = MapAxis.from_nodes(theta, name="offset", interp="lin")
+        energy_axis_true = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
+        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
 
         # Get sigmas
-        shape = (len(theta), len(energy_hi))
+        shape = (offset_axis.nbin, energy_axis_true.nbin)
         sigmas = []
         for key in ["SIGMA_1", "SIGMA_2", "SIGMA_3"]:
             sigma = hdu.data[key].reshape(shape).copy()

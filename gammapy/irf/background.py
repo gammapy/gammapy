@@ -259,7 +259,7 @@ class Background2D:
         """Read from `~astropy.table.Table`."""
         # Spec says key should be "BKG", but there are files around
         # (e.g. CTA 1DC) that use "BGD". For now we support both
-        print(table.meta)
+
         if "BKG" in table.colnames:
             bkg_name = "BKG"
         elif "BGD" in table.colnames:
