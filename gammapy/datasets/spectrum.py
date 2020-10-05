@@ -1378,6 +1378,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         arffile = phafile.replace("pha", "arf")
         aeff = RegionNDMap.read(dirname / arffile, format="ogip-arf")
         exposure = aeff * livetime
+        exposure.meta["livetime"] = livetime
 
         if edisp is not None:
             edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]

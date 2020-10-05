@@ -900,6 +900,9 @@ def test_datasets_stack_reduce():
         datasets.append(ds)
 
     stacked = datasets.stack_reduce(name="stacked")
+
+    assert_allclose(stacked.exposure.meta["livetime"].to_value("s"), 6313.8116406202325)
+
     info_table = datasets.info_table()
     assert_allclose(info_table["n_on"], [124, 126, 119, 90])
 
