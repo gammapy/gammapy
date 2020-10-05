@@ -201,6 +201,7 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     edisp = EDispKernelMap.from_diagonal_response(
         energy, energy_true, geom=geom.to_image()
     )
+    edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
 
     background = spectrum_dataset.background_model.map.copy()
 
@@ -222,11 +223,14 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     data = np.ones(spectrum_dataset.data_shape, dtype="bool")
     data[0] = False
     safe_mask2 = RegionNDMap.from_geom(geom=geom, data=data)
+    exposure2 = aeff2 * livetime2
 
+    edisp = edisp.copy()
+    edisp.exposure_map.data = exposure2.data[:, :, np.newaxis, :]
     spectrum_dataset2 = SpectrumDataset(
         name="ds2",
         counts=spectrum_dataset.counts.copy(),
-        exposure=aeff2 * livetime2,
+        exposure=exposure2,
         edisp=edisp,
         models=BackgroundModel(bkg2, name="ds2-bkg", datasets_names=["ds2"]),
         mask_safe=safe_mask2,
@@ -349,7 +353,7 @@ class TestSpectrumOnOff:
 
         axis = MapAxis.from_edges(ereco, name="energy", interp="log")
         self.on_counts = RegionNDMap.create(
-            region=self.on_region, wcs=self.wcs, axes=[axis]
+            region=self.on_region, wcs=self.wcs, axes=[axis], meta={"EXPOSURE": self.livetime.to_value("s")}
         )
         self.on_counts.data += 1
         self.on_counts.data[-1] = 0
@@ -372,10 +376,13 @@ class TestSpectrumOnOff:
             self.e_reco, self.e_true, self.on_counts.geom.to_image()
         )
 
+        exposure = self.aeff * self.livetime
+        exposure.meta["livetime"] = self.livetime
+
         self.dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
-            exposure=self.aeff * self.livetime,
+            exposure=exposure,
             edisp=self.edisp,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
@@ -486,9 +493,12 @@ class TestSpectrumOnOff:
         mask_safe = RegionNDMap.from_geom(self.on_counts.geom, dtype=bool)
         mask_safe.data += True
 
+        exposure = self.aeff * self.livetime
+        exposure.meta["livetime"] = self.livetime
+
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
-            exposure=self.aeff * self.livetime,
+            exposure=exposure,
             mask_safe=mask_safe,
             acceptance=1,
             name="test",
@@ -768,10 +778,13 @@ def make_observation_list():
     gti1 = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]}, time_ref=time_ref)
     gti2 = make_gti({"START": [14], "STOP": [15]}, time_ref=time_ref)
 
+    exposure = aeff * livetime
+    exposure.meta["livetime"] = livetime
+
     obs1 = SpectrumDatasetOnOff(
         counts=on_vector,
         counts_off=off_vector1,
-        exposure=aeff * livetime,
+        exposure=exposure,
         edisp=edisp,
         mask_safe=mask_safe,
         acceptance=1,
@@ -782,7 +795,7 @@ def make_observation_list():
     obs2 = SpectrumDatasetOnOff(
         counts=on_vector,
         counts_off=off_vector2,
-        exposure=aeff * livetime,
+        exposure=exposure.copy(),
         edisp=edisp,
         mask_safe=mask_safe,
         acceptance=1,

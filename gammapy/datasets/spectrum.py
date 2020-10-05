@@ -1250,7 +1250,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         hdulist.writeto(str(outdir / phafile), overwrite=overwrite)
 
-        aeff = self.exposure / self.gti.time_sum
+        aeff = self.exposure / self.exposure.meta["livetime"]
 
         aeff.write(
             outdir / arffile,
@@ -1290,6 +1290,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def _ogip_meta(self):
         """Meta info for the OGIP data format"""
+        try:
+            livetime = self.exposure.meta["livetime"]
+        except KeyError:
+            raise ValueError("Storing in ogip format require the livetime "
+                             "to be defined in the exposure meta data")
         return {
             "name": "SPECTRUM",
             "hduclass": "OGIP",
@@ -1304,7 +1309,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             "hduclas4": "TYPE:1",
             "lo_thres": self.energy_range[0].to_value("TeV"),
             "hi_thres": self.energy_range[1].to_value("TeV"),
-            "exposure": self.gti.time_sum.to_value("s"),
+            "exposure": livetime.to_value("s"),
             "obs_id": self.name,
         }
 
@@ -1373,6 +1378,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         arffile = phafile.replace("pha", "arf")
         aeff = RegionNDMap.read(dirname / arffile, format="ogip-arf")
         exposure = aeff * livetime
+
+        if edisp is not None:
+            edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
+
         return cls(
             counts=counts,
             exposure=exposure,
