@@ -41,9 +41,7 @@ class SpectrumDataset(Dataset):
         Fit model
     counts : `~gammapy.maps.RegionNDMap`
         Counts spectrum
-    livetime : `~astropy.units.Quantity`
-        Livetime
-    aeff : `~gammapy.maps.RegionNDMap`
+    exposure : `~gammapy.maps.RegionNDMap`
         Effective area
     edisp : `~gammapy.irf.EDispKernelMap`
         Energy dispersion kernel.
@@ -71,8 +69,7 @@ class SpectrumDataset(Dataset):
         self,
         models=None,
         counts=None,
-        livetime=None,
-        aeff=None,
+        exposure=None,
         edisp=None,
         mask_safe=None,
         mask_fit=None,
@@ -86,12 +83,8 @@ class SpectrumDataset(Dataset):
 
         self.counts = counts
 
-        if livetime is not None:
-            livetime = u.Quantity(livetime)
-
-        self.livetime = livetime
         self.mask_fit = mask_fit
-        self.aeff = aeff
+        self.exposure = exposure
         self.edisp = edisp
         self._background_model = None
         self.mask_safe = mask_safe
@@ -132,24 +125,17 @@ class SpectrumDataset(Dataset):
             background = np.sum(self.background_model.evaluate().data)
         str_ += "\t{:32}: {:.2f}\n\n".format("Total background counts", background)
 
-        aeff_min, aeff_max, aeff_unit = np.nan, np.nan, ""
-        if self.aeff is not None:
-            try:
-                aeff_min = np.min(self.aeff.data[self.aeff.data > 0])
-            except ValueError:
-                aeff_min = 0
-            aeff_max = np.max(self.aeff.data)
-            aeff_unit = self.aeff.unit
+        exposure_min, exposure_max, exposure_unit = np.nan, np.nan, ""
+        non_zero = self.exposure.data > 0
+        if self.exposure is not None and non_zero.any():
+            exposure_min = np.min(self.exposure.data[non_zero])
+            exposure_max = np.max(self.exposure.data)
+            exposure_unit = self.exposure.unit
 
-        str_ += "\t{:32}: {:.2e} {}\n".format("Effective area min", aeff_min, aeff_unit)
+        str_ += "\t{:32}: {:.2e} {}\n".format("Exposure min", exposure_min, exposure_unit)
         str_ += "\t{:32}: {:.2e} {}\n\n".format(
-            "Effective area max", aeff_max, aeff_unit
+            "Exposure max", exposure_max, exposure_unit
         )
-
-        livetime = np.nan
-        if self.livetime is not None:
-            livetime = self.livetime
-        str_ += "\t{:32}: {:.2e}\n\n".format("Livetime", livetime)
 
         # data section
         n_bins = 0
@@ -255,9 +241,9 @@ class SpectrumDataset(Dataset):
             e_axis = self.counts.geom.axes["energy"]
         elif self.edisp is not None:
             e_axis = self.edisp.data.axis("energy")
-        elif self.aeff is not None:
+        elif self.exposure is not None:
             # assume e_reco = e_true
-            e_axis = self.aeff.data.axis("energy_true")
+            e_axis = self.exposure.data.axis("energy_true")
         return e_axis
 
     @property
@@ -322,11 +308,6 @@ class SpectrumDataset(Dataset):
     @property
     def excess(self):
         return self.counts - self.background_model.evaluate()
-
-    @property
-    def exposure(self):
-        """Excess (aeff * livetime)"""
-        return self.aeff * self.livetime
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
@@ -521,18 +502,16 @@ class SpectrumDataset(Dataset):
         models = Models(
             [BackgroundModel(background, name=name + "-bkg", datasets_names=[name])]
         )
-        aeff = RegionNDMap.create(region=region, axes=[e_true], unit="cm2")
+        exposure = RegionNDMap.create(region=region, axes=[e_true], unit="cm2 s")
         edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, counts.geom)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
-        livetime = gti.time_sum
 
         return SpectrumDataset(
             counts=counts,
-            aeff=aeff,
+            exposure=exposure,
             edisp=edisp,
             mask_safe=mask_safe,
-            livetime=livetime,
             gti=gti,
             models=models,
             name=name,
@@ -590,12 +569,8 @@ class SpectrumDataset(Dataset):
         else:
             self.models = None
 
-        if self.livetime is None or other.livetime is None:
-            raise ValueError("IRF stacking requires livetime for both datasets.")
-        else:
-            stacked_exposure = self.exposure
-            stacked_exposure.stack(other.exposure)
-            self.aeff = stacked_exposure / (self.livetime + other.livetime)
+        if self.exposure is not None and other.exposure is not None:
+            self.exposure.stack(other.exposure)
 
         if self.edisp is not None and other.edisp is not None:
             self.edisp.edisp_map *= self.mask_safe.data
@@ -607,10 +582,6 @@ class SpectrumDataset(Dataset):
         if self.gti is not None:
             self.gti.stack(other.gti)
             self.gti = self.gti.union()
-
-        # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum of GTIs
-        if self.livetime is not None:
-            self.livetime += other.livetime
 
         if self.meta_table and other.meta_table:
             self.meta_table = hstack_columns(self.meta_table, other.meta_table)
@@ -639,9 +610,9 @@ class SpectrumDataset(Dataset):
         self._plot_energy_range(ax=ax1)
         ax1.legend(numpoints=1)
 
-        ax2.set_title("Effective Area")
-        e_unit = self.aeff.geom.axes[0].unit
-        self.aeff.plot(ax=ax2)
+        ax2.set_title("Exposure")
+        e_unit = self.exposure.geom.axes[0].unit
+        self.exposure.plot(ax=ax2)
         ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
         self._plot_energy_range(ax=ax2)
 
@@ -669,7 +640,7 @@ class SpectrumDataset(Dataset):
         mask = self.mask_safe.data if in_safe_energy_range else slice(None)
 
         info["name"] = self.name
-        info["livetime"] = self.livetime.copy()
+        info["livetime"] = self.gti.time_sum
 
         info["n_on"] = self.counts.data[mask].sum()
 
@@ -710,13 +681,12 @@ class SpectrumDataset(Dataset):
         """
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name}
-        kwargs["livetime"] = self.livetime
 
         if self.counts is not None:
             kwargs["counts"] = self.counts.slice_by_idx(slices=slices)
 
         if self.exposure is not None:
-            kwargs["aeff"] = self.aeff.slice_by_idx(slices=slices)
+            kwargs["exposure"] = self.exposure.slice_by_idx(slices=slices)
 
         if self.background_model is not None:
             m = self.background_model.evaluate().slice_by_idx(slices=slices)
@@ -757,8 +727,7 @@ class SpectrumDataset(Dataset):
         kwargs = {}
         kwargs["name"] = name
         kwargs["gti"] = self.gti
-        kwargs["aeff"] = self.aeff
-        kwargs["livetime"] = self.livetime
+        kwargs["exposure"] = self.exposure
 
         # Adapt resample_axis to take ufunc argument
         kwargs["mask_safe"] = self.mask_safe.resample_axis(
@@ -822,10 +791,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         ON Counts spectrum
     counts_off : `~gammapy.maps.RegionNDMap`
         OFF Counts spectrum
-    livetime : `~astropy.units.Quantity`
-        Livetime
-    aeff : `~gammapy.maps.RegionNDMap`
-        Effective area
+    exposure : `~gammapy.maps.RegionNDMap`
+        Exposure
     edisp : `~gammapy.irf.EDispKernelMap`
         Energy dispersion kernel
     mask_safe : `~gammapy.maps.RegionNDMap`
@@ -857,8 +824,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         models=None,
         counts=None,
         counts_off=None,
-        livetime=None,
-        aeff=None,
+        exposure=None,
         edisp=None,
         mask_safe=None,
         mask_fit=None,
@@ -872,12 +838,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.counts = counts
         self.counts_off = counts_off
 
-        if livetime is not None:
-            livetime = u.Quantity(livetime)
-
-        self.livetime = livetime
         self.mask_fit = mask_fit
-        self.aeff = aeff
+        self.exposure = exposure
         self.edisp = edisp
         self.mask_safe = mask_safe
         self.meta_table = meta_table
@@ -903,7 +865,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         # TODO: this enforces the exposure on the edisp map, maybe better move
         #  to where the EDispKernelMap is created?
         if edisp is not None:
-            self.edisp.exposure_map.data = self.exposure.data
+            self.edisp.exposure_map = self.exposure.copy()
 
     def __str__(self):
         str_ = super().__str__()
@@ -1193,8 +1155,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         >>> stacked = datasets[0]
         >>> for ds in datasets[1:]:
         >>>     stacked.stack(ds)
-        >>> print(stacked.livetime)
-        6313.8116406202325 s
+        >>> print(stacked)
         """
         if not isinstance(other, SpectrumDatasetOnOff):
             raise TypeError("Incompatible types for SpectrumDatasetOnOff stacking")
@@ -1299,7 +1260,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         hdulist.writeto(str(outdir / phafile), overwrite=overwrite)
 
-        self.aeff.write(
+        aeff = self.exposure / self.gti.time_sum
+
+        aeff.write(
             outdir / arffile,
             overwrite=overwrite,
             format=hdu_format,
@@ -1351,7 +1314,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             "hduclas4": "TYPE:1",
             "lo_thres": self.energy_range[0].to_value("TeV"),
             "hi_thres": self.energy_range[1].to_value("TeV"),
-            "exposure": self.livetime.to_value("s"),
+            "exposure": self.gti.time_sum.to_value("s"),
             "obs_id": self.name,
         }
 
@@ -1383,10 +1346,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             acceptance = RegionNDMap.from_hdulist(
                 hdulist, format="ogip", ogip_column="BACKSCAL"
             )
+            livetime = counts.meta["EXPOSURE"] * u.s
+
             if "GTI" in hdulist:
                 gti = GTI(Table.read(hdulist["GTI"]))
             else:
-                gti = None
+                gti = GTI.create(start=0 * u.s, stop=livetime)
 
             mask_safe = RegionNDMap.from_hdulist(
                 hdulist, format="ogip", ogip_column="QUALITY"
@@ -1418,12 +1383,13 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         arffile = phafile.replace("pha", "arf")
         aeff = RegionNDMap.read(dirname / arffile, format="ogip-arf")
 
+        exposure = aeff * livetime
+
         return cls(
             counts=counts,
-            aeff=aeff,
+            exposure=exposure,
             counts_off=counts_off,
             edisp=edisp,
-            livetime=counts.meta["EXPOSURE"] * u.s,
             mask_safe=mask_safe,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
@@ -1463,7 +1429,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             self.counts_off.data[mask].sum(),
             self.alpha.data[0, 0, 0],
         ).significance
-
         return info
 
     def to_dict(self, filename, *args, **kwargs):
@@ -1521,7 +1486,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Parameters
         ----------
         dataset : `SpectrumDataset`
-            Spectrum dataset defining counts, edisp, aeff, livetime etc.
+            Spectrum dataset defining counts, edisp, exposure etc.
         acceptance : `~numpy.array` or float
             Relative background efficiency in the on region.
         acceptance_off : `~numpy.array` or float
@@ -1544,10 +1509,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         return cls(
             models=dataset.models,
             counts=dataset.counts,
-            aeff=dataset.aeff,
+            exposure=dataset.exposure,
             counts_off=counts_off,
             edisp=dataset.edisp,
-            livetime=dataset.livetime,
             mask_safe=dataset.mask_safe,
             mask_fit=dataset.mask_fit,
             acceptance=acceptance,
@@ -1578,8 +1542,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         background_model.datasets_names = [name]
         return SpectrumDataset(
             counts=self.counts,
-            livetime=self.livetime,
-            aeff=self.aeff,
+            exposure=self.exposure,
             edisp=self.edisp,
             name=name,
             gti=self.gti,
@@ -1616,7 +1579,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             kwargs["counts"] = self.counts.slice_by_idx(slices=slices)
 
         if self.exposure is not None:
-            kwargs["aeff"] = self.aeff.slice_by_idx(slices=slices)
+            kwargs["exposure"] = self.exposure.slice_by_idx(slices=slices)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.slice_by_idx(slices=slices)
@@ -1630,8 +1593,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         kwargs["acceptance"] = self.acceptance.slice_by_idx(slices=slices)
         kwargs["acceptance_off"] = self.acceptance_off.slice_by_idx(slices=slices)
         kwargs["counts_off"] = self.counts_off.slice_by_idx(slices=slices)
-        kwargs["livetime"] = self.livetime
-
         return self.__class__(**kwargs)
 
     def resample_energy_axis(self, energy_axis, name=None):
