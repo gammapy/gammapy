@@ -768,3 +768,18 @@ class TestSpectralModelErrorPropagation:
 
         out = model.evaluate_error(0.1 * u.TeV)
         assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
+
+
+def test_integral_error():
+    emin = 1 * u.TeV
+    emax = 10 * u.TeV
+
+    powerlaw = PowerLawSpectralModel()
+    powerlaw.parameters['index'].error = 0.4
+    powerlaw.parameters['amplitude'].error = 1e-13
+
+    flux, flux_error = powerlaw.integral_error(emin,emax)
+
+    assert_allclose(flux.value, 9.e-13, rtol=1e-3)
+    assert_allclose(flux_error.value, 2.947307639914628e-13, rtol=1e-14)
+
