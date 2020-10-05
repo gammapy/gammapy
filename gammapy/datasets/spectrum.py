@@ -94,11 +94,6 @@ class SpectrumDataset(Dataset):
         self._name = make_name(name)
         self.models = models
 
-        # TODO: this enforces the exposure on the edisp map, maybe better move
-        #  to where the EDispKernelMap is created?
-        if edisp is not None:
-            self.edisp.exposure_map.data = self.exposure.data
-
     @property
     def name(self):
         return self._name
@@ -253,8 +248,6 @@ class SpectrumDataset(Dataset):
             return self.counts.geom
         elif self.background_model is not None:
             return self.background_model.map.geom
-        elif self.background is not None:
-            return self.background.geom
         else:
             raise ValueError("Either 'counts', 'background_model' must be defined.")
 
@@ -503,7 +496,7 @@ class SpectrumDataset(Dataset):
             [BackgroundModel(background, name=name + "-bkg", datasets_names=[name])]
         )
         exposure = RegionNDMap.create(region=region, axes=[e_true], unit="cm2 s")
-        edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, counts.geom)
+        edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, counts.geom.to_image())
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
 
@@ -579,7 +572,7 @@ class SpectrumDataset(Dataset):
         if self.mask_safe is not None and other.mask_safe is not None:
             self.mask_safe.stack(other.mask_safe)
 
-        if self.gti is not None:
+        if self.gti is not None and other.gti is not None:
             self.gti.stack(other.gti)
             self.gti = self.gti.union()
 
@@ -640,7 +633,8 @@ class SpectrumDataset(Dataset):
         mask = self.mask_safe.data if in_safe_energy_range else slice(None)
 
         info["name"] = self.name
-        info["livetime"] = self.gti.time_sum
+        if self.gti:
+            info["livetime"] = self.gti.time_sum
 
         info["n_on"] = self.counts.data[mask].sum()
 
@@ -655,8 +649,9 @@ class SpectrumDataset(Dataset):
             self.counts.data[mask].sum(), background
         ).significance
 
-        info["background_rate"] = info["background"] / info["livetime"]
-        info["gamma_rate"] = info["excess"] / info["livetime"]
+        if self.gti:
+            info["background_rate"] = info["background"] / info["livetime"]
+            info["gamma_rate"] = info["excess"] / info["livetime"]
         return info
 
     def slice_by_idx(self, slices, name=None):
@@ -861,11 +856,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.gti = gti
         self.models = models
         self._background_model = None
-
-        # TODO: this enforces the exposure on the edisp map, maybe better move
-        #  to where the EDispKernelMap is created?
-        if edisp is not None:
-            self.edisp.exposure_map = self.exposure.copy()
 
     def __str__(self):
         str_ = super().__str__()
@@ -1351,7 +1341,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             if "GTI" in hdulist:
                 gti = GTI(Table.read(hdulist["GTI"]))
             else:
-                gti = GTI.create(start=0 * u.s, stop=livetime)
+                gti = None
 
             mask_safe = RegionNDMap.from_hdulist(
                 hdulist, format="ogip", ogip_column="QUALITY"
@@ -1363,7 +1353,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         try:
             rmffile = phafile.replace("pha", "rmf")
             kernel = EDispKernel.read(dirname / rmffile)
-            edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=counts.geom)
+            edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=counts.geom.to_image())
 
         except OSError:
             # TODO : Add logger and echo warning
@@ -1382,9 +1372,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         arffile = phafile.replace("pha", "arf")
         aeff = RegionNDMap.read(dirname / arffile, format="ogip-arf")
-
         exposure = aeff * livetime
-
         return cls(
             counts=counts,
             exposure=exposure,

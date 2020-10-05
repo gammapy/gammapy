@@ -747,28 +747,3 @@ class WcsNDMap(WcsMap):
 
         return MapCoord.create(cdict, frame=self.geom.frame)
 
-    def to_cube(self, axes):
-        """Append non-spatial axes to create a higher-dimensional Map.
-
-        This will result in a Map with a new geometry with
-        N+M dimensions where N is the number of current dimensions and
-        M is the number of axes in the list. The data is reshaped onto the
-        new geometry
-
-        Parameters
-        ----------
-        axes : list
-            Axes that will be appended to this Map.
-            The axes should have only one bin
-
-        Returns
-        -------
-        map : `~gammapy.maps.WcsNDMap`
-            new map
-        """
-        for ax in axes:
-            if ax.nbin > 1:
-                raise ValueError(ax.name, "should have only one bin")
-        geom = self.geom.to_cube(axes)
-        data = self.data.reshape((1,) * len(axes) + self.data.shape)
-        return self.from_geom(data=data, geom=geom, unit=self.unit)

@@ -106,7 +106,7 @@ class IRFMap:
             slices = cutout_info["parent-slices"]
             parent_slices = Ellipsis, slices[0], slices[1]
         else:
-            parent_slices = None
+            parent_slices = slice(None)
 
         self._irf_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
         self._irf_map.stack(other._irf_map * other.exposure_map.data, weights=weights)
