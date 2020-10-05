@@ -169,18 +169,17 @@ class SpectralModel(Model):
 
         Parameters
         ----------
-        emin, emax : `~astropy.units.Quantity`
-            Lower and upper bound of integration range.
+        emin, emax : `~numpy.array`
+            Arrays of minimum and maximum energies.
 
         Returns
         -------
         flux, flux_err : tuple of `~astropy.units.Quantity`
             Integral flux and flux error betwen emin and emax.
         """
-        E = np.linspace(emin,emax,1000)
-        dE = E[1] - E[0]
-        flux = np.sum(self.integral(E[:-1],E[1:]))
-        flux_err = np.sum(self.evaluate_error(E[:-1], epsilon=1e-4)[1]) * dE
+        dE = emax - emin
+        flux = np.sum(self.integral(emin,emax))
+        flux_err = np.sum(self.evaluate_error(emin, epsilon=1e-4)[1] * dE)
 
         return u.Quantity([flux.value, flux_err.value], unit=flux.unit)
 

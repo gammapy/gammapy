@@ -771,8 +771,12 @@ class TestSpectralModelErrorPropagation:
 
 
 def test_integral_error():
-    emin = 1 * u.TeV
-    emax = 10 * u.TeV
+    min = 1 * u.TeV
+    max = 10 * u.TeV
+
+    energy = np.linspace(min,max,1000)
+    emin = energy[:-1]
+    emax = energy[1:]
 
     powerlaw = PowerLawSpectralModel()
     powerlaw.parameters['index'].error = 0.4
