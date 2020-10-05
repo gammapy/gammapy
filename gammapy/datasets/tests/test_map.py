@@ -220,7 +220,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset.edisp.get_edisp_kernel().e_true.nbin == 3
     assert spectrum_dataset_corrected.aeff.unit == "m2"
     assert_allclose(spectrum_dataset.aeff.data[1], 853023.423047, rtol=1e-5)
-    assert_allclose(spectrum_dataset_corrected.aeff.data[1], 559476.3357, rtol=1e-5)
+    assert_allclose(spectrum_dataset_corrected.aeff.data[1], 565527.524246, rtol=1e-5)
 
 
 @requires_data()
@@ -439,7 +439,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     npred = dataset_1.npred().data.sum()
     assert_allclose(npred, 7525.790688, rtol=1e-3)
-    assert_allclose(result.total_stat, 21700.253246, rtol=1e-3)
+    assert_allclose(result.total_stat, 21659.2139, rtol=1e-3)
 
     pars = result.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
@@ -465,7 +465,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_2.mask_safe = Map.from_geom(geom, data=mask_safe)
 
     stat = fit.datasets.stat_sum()
-    assert_allclose(stat, 14824.173099, rtol=1e-5)
+    assert_allclose(stat, 14823.579908, rtol=1e-5)
 
     region = sky_model.spatial_model.to_region()
 

@@ -190,7 +190,7 @@ class EnergyDependentMultiGaussPSF:
 
         axes = MapAxes([self.energy_axis_true, self.offset_axis])
         table = axes.to_table(format="gadf-dl3")
-        
+
         for name_, data_, unit_ in zip(names, data, units):
             table[name_] = [data_]
             table[name_].unit = unit_

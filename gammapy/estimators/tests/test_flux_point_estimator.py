@@ -224,7 +224,7 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, [0.2, 1, 5])
 
         actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-        assert_allclose(actual, [1.628746e02, 1.416280e-01, 2.006994e03], rtol=1e-2)
+        assert_allclose(actual, [1.628530e+02, 1.436323e-01, 2.007461e+03], rtol=1e-2)
 
     @staticmethod
     @requires_dependency("iminuit")
