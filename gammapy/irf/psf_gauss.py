@@ -7,8 +7,7 @@ from astropy.io import fits
 from astropy.stats import gaussian_fwhm_to_sigma
 from astropy.table import Table
 from astropy import units as u
-from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
+from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.gauss import MultiGauss2D
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
@@ -171,10 +170,6 @@ class EnergyDependentMultiGaussPSF:
         """
         # Set up data
         names = [
-            "ENERG_LO",
-            "ENERG_HI",
-            "THETA_LO",
-            "THETA_HI",
             "SCALE",
             "SIGMA_1",
             "AMPL_2",
@@ -182,13 +177,9 @@ class EnergyDependentMultiGaussPSF:
             "AMPL_3",
             "SIGMA_3",
         ]
-        units = ["TeV", "TeV", "deg", "deg", "", "deg", "", "deg", "", "deg"]
+        units = ["", "deg", "", "deg", "", "deg"]
 
         data = [
-            self.energy_axis_true.edges[:-1],
-            self.energy_axis_true.edges[1:],
-            self.offset_axis.center,
-            self.offset_axis.center,
             self.norms[0],
             self.sigmas[0],
             self.norms[1],
@@ -197,7 +188,9 @@ class EnergyDependentMultiGaussPSF:
             self.sigmas[2],
         ]
 
-        table = Table()
+        axes = MapAxes([self.energy_axis_true, self.offset_axis])
+        table = axes.to_table(format="gadf-dl3")
+        
         for name_, data_, unit_ in zip(names, data, units):
             table[name_] = [data_]
             table[name_].unit = unit_

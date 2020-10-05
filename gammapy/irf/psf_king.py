@@ -5,8 +5,7 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
-from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
+from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.scripts import make_path
 from .psf_table import EnergyDependentTablePSF
@@ -131,20 +130,17 @@ class PSFKing:
         hdu_list : `~astropy.io.fits.HDUList`
             PSF in HDU list format.
         """
-        # TODO: move to MapAxes.to_table()
+        axes = MapAxes([self.energy_axis_true, self.offset_axis])
+        table = axes.to_table(format="gadf-dl3")
+
         # Set up data
-        names = ["ENERG_LO", "ENERG_HI", "THETA_LO", "THETA_HI", "SIGMA", "GAMMA"]
-        units = ["TeV", "TeV", "deg", "deg", "deg", ""]
+        names = ["SIGMA", "GAMMA"]
+        units = ["deg", ""]
         data = [
-            self.energy_axis_true.edges[:-1],
-            self.energy_axis_true.edges[1:],
-            self.offset_axis.center,
-            self.offset_axis.center,
             self.sigma,
             self.gamma,
         ]
 
-        table = Table()
         for name_, data_, unit_ in zip(names, data, units):
             table[name_] = [data_]
             table[name_].unit = unit_

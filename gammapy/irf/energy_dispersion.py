@@ -399,19 +399,8 @@ class EnergyDispersion2D:
 
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
-        meta = self.meta.copy()
-
-        energy = self.data.axes["energy_true"].edges
-        migra = self.data.axes["migra"].edges
-        theta = self.data.axes["offset"].edges
-
-        table = Table(meta=meta)
-        table["ENERG_LO"] = energy[:-1][np.newaxis]
-        table["ENERG_HI"] = energy[1:][np.newaxis]
-        table["MIGRA_LO"] = migra[:-1][np.newaxis]
-        table["MIGRA_HI"] = migra[1:][np.newaxis]
-        table["THETA_LO"] = theta[:-1][np.newaxis]
-        table["THETA_HI"] = theta[1:][np.newaxis]
+        table = self.data.axes.to_table(format="gadf-dl3")
+        table.meta = self.meta.copy()
         table["MATRIX"] = self.data.data.T[np.newaxis]
         return table
 

@@ -9,7 +9,7 @@ import scipy.interpolate
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.table import Column, Table
+from astropy.table import Column, Table, hstack
 from astropy.utils import lazyproperty
 from gammapy.utils.interpolation import interpolation_scale
 from .utils import INVALID_INDEX, edges_from_lo_hi, find_bands_hdu, find_hdu
@@ -398,6 +398,27 @@ class MapAxes(Sequence):
             key_interp = f"INTERP{idx}"
             header[key_interp] = ax.interp
         return header
+
+    def to_table(self, format=None):
+        """Convert axes to table
+
+        Parameters
+        ----------
+        format : {"gadf-dl3"}
+            Format to use.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table with axis data
+        """
+
+        tables = []
+
+        for ax in self:
+            tables.append(ax.to_table(format=format))
+
+        return hstack(tables)
 
     def to_table_hdu(self, format=None, prefix=None):
         """Make FITS table columns for map axes.
@@ -1237,6 +1258,59 @@ class MapAxis:
 
         return header
 
+    def to_table(self, format="ogip"):
+        """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
+
+        See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
+
+        The 'ogip-sherpa' format is equivalent to 'ogip' but uses keV energy units.
+
+        Parameters
+        ----------
+        format : {"ogip", "ogip-sherpa", "gadf-dl3"}
+            Format specification
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table HDU
+        """
+        table = Table()
+
+        if format in ["ogip", "ogip-sherpa"]:
+            if "energy" not in self.name:
+                raise ValueError("Only energy axes can be converted to HDU")
+
+            edges = self.edges
+
+            if format == "ogip-sherpa":
+                edges = edges.to("keV")
+
+            table["CHANNEL"] = np.arange(self.nbin, dtype=np.int16)
+            table["E_MIN"] = edges[:-1]
+            table["E_MAX"] = edges[1:]
+        elif format == "gadf-dl3":
+            from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
+
+            if self.name == "energy":
+                column_prefix = "ENERG"
+            else:
+                for column_prefix, spec in IRF_DL3_AXES_SPECIFICATION.items():
+                    if spec["name"] == self.name:
+                        break
+
+            if self.node_type == "edges":
+                edges_hi, edges_lo = self.edges[:-1], self.edges[1:]
+            else:
+                edges_hi, edges_lo = self.center, self.center
+
+            table[f"{column_prefix}_LO"] = edges_hi[np.newaxis]
+            table[f"{column_prefix}_HI"] = edges_lo[np.newaxis]
+        else:
+            raise ValueError(f"{format} is not a valid format")
+
+        return table
+
     def to_table_hdu(self, format="ogip"):
         """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
 
@@ -1254,24 +1328,10 @@ class MapAxis:
         hdu : `~astropy.io.fits.BinTableHDU`
             Table HDU
         """
-        if format not in ["ogip", "ogip-sherpa"]:
-            raise ValueError("Only 'ogip' and 'ogip-sherpa' format supported")
-
-        if "energy" not in self.name:
-            raise ValueError("Only energy axes can be converted to HDU")
-
-        edges = self.edges
-
-        if format == "ogip-sherpa":
-            edges = edges.to("keV")
-
-        table = Table()
-        table["CHANNEL"] = np.arange(self.nbin, dtype=np.int16)
-        table["E_MIN"] = edges[:-1]
-        table["E_MAX"] = edges[1:]
-
+        table = self.to_table(format=format)
         hdu = fits.BinTableHDU(table)
-        hdu.header = self.to_header(hdu.header, format=format)
+        if format in ["ogip", "ogip-sherpa"]:
+            hdu.header = self.to_header(hdu.header, format=format)
         return hdu
 
     @classmethod

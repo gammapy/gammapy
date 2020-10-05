@@ -5,9 +5,7 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
-from gammapy.utils.array import array_stats_str
+from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .psf_table import EnergyDependentTablePSF, TablePSF
@@ -142,19 +140,9 @@ class PSF3D:
         hdu_list : `~astropy.io.fits.HDUList`
             PSF in HDU list format.
         """
-        # TODO: move this to `MapAxis.to_table()` and `MapAxes.to_table()`
-        table = Table()
+        axes = MapAxes([self.offset_axis, self.energy_axis_true, self.rad_axis])
+        table = axes.to_table(format="gadf-dl3")
 
-        offset = self.offset_axis.center
-        energy = self.energy_axis_true.edges
-        rad = self.rad_axis.edges
-
-        table["THETA_LO"] = offset[np.newaxis]
-        table["THETA_HI"] = offset[np.newaxis]
-        table["ENERG_LO"] = energy[:-1][np.newaxis]
-        table["ENERG_HI"] = energy[1:][np.newaxis]
-        table["RAD_LO"] = rad[:-1][np.newaxis]
-        table["RAD_HI"] = rad[1:][np.newaxis]
         table["RPSF"] = self.psf_value[np.newaxis]
 
         hdu = fits.BinTableHDU(table)

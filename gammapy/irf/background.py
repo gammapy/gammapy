@@ -4,8 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
+from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
@@ -120,19 +119,10 @@ class Background3D:
 
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
-        meta = self.meta.copy()
-
-        detx = self.data.axes["fov_lon"].edges
-        dety = self.data.axes["fov_lat"].edges
-        energy = self.data.axes["energy"].edges
-
-        table = Table(meta=meta)
-        table["DETX_LO"] = detx[:-1][np.newaxis]
-        table["DETX_HI"] = detx[1:][np.newaxis]
-        table["DETY_LO"] = dety[:-1][np.newaxis]
-        table["DETY_HI"] = dety[1:][np.newaxis]
-        table["ENERG_LO"] = energy[:-1][np.newaxis]
-        table["ENERG_HI"] = energy[1:][np.newaxis]
+        # TODO: fix axis order
+        axes = MapAxes(self.data.axes[::-1])
+        table = axes.to_table(format="gadf-dl3")
+        table.meta = self.meta.copy()
         table["BKG"] = self.data.data[np.newaxis]
         return table
 
@@ -297,16 +287,8 @@ class Background2D:
 
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
-        meta = self.meta.copy()
-        table = Table(meta=meta)
-
-        theta = self.data.axes["offset"].edges
-        energy = self.data.axes["energy"].edges
-
-        table["THETA_LO"] = theta[:-1][np.newaxis]
-        table["THETA_HI"] = theta[1:][np.newaxis]
-        table["ENERG_LO"] = energy[:-1][np.newaxis]
-        table["ENERG_HI"] = energy[1:][np.newaxis]
+        table = self.data.axes.to_table(format="gadf-dl3")
+        table.meta = self.meta.copy()
         table["BKG"] = self.data.data[np.newaxis]
         return table
 
