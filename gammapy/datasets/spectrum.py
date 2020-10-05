@@ -293,6 +293,32 @@ class SpectrumDataset(Dataset):
 
         return npred_total
 
+    def npred_sig(self, model=None):
+        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
+        Else, the total signal counts are returned.
+
+        Parameters
+        -------------
+        model: `~gammapy.modeling.models.Models`, optional
+            The model to computed the npred for. If none, the sum of all components (minus the background model)
+            is returned
+
+        Returns
+        ----------
+        npred_sig: `gammapy.maps.RegionNDMap`
+        """
+        if model is None:
+            if self.background_model is None:
+                return self.npred()
+            return self.npred() - self.background_model.evaluate()
+        else:
+            return MapEvaluator(
+                model=model,
+                exposure=self.exposure,
+                edisp=self._edisp_kernel,
+                gti=self.gti,
+            ).compute_npred()
+
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
@@ -389,12 +415,7 @@ class SpectrumDataset(Dataset):
             label="Measured excess",
             yerr=np.sqrt(np.abs(self.excess.data.flatten())),
         )
-        if self.background_model:
-            pred_excess = self.npred() - self.background_model.evaluate()
-        elif isinstance(self, SpectrumDatasetOnOff):
-            pred_excess = self.npred()
-
-        pred_excess.plot_hist(ax=ax, label="Predicted signal counts")
+        self.npred_sig().plot_hist(ax=ax, label="Predicted signal counts")
 
         ax.legend(numpoints=1)
         ax.set_title("")
@@ -417,8 +438,6 @@ class SpectrumDataset(Dataset):
             Residual spectrum
         """
         npred = self.npred()
-        if isinstance(self, SpectrumDatasetOnOff):
-            npred += self.background
         residuals = self._compute_residuals(self.counts, npred, method)
         return residuals
 
@@ -592,7 +611,7 @@ class SpectrumDataset(Dataset):
         if self.gti is not None:
             self.gti.stack(other.gti)
             self.gti = self.gti.union()
-            
+
         # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum of GTIs
         if self.livetime is not None:
             self.livetime += other.livetime
@@ -746,21 +765,29 @@ class SpectrumDataset(Dataset):
         kwargs["livetime"] = self.livetime
 
         # Adapt resample_axis to take ufunc argument
-        kwargs["mask_safe"] = self.mask_safe.resample_axis(axis=energy_axis, ufunc=np.logical_or)
+        kwargs["mask_safe"] = self.mask_safe.resample_axis(
+            axis=energy_axis, ufunc=np.logical_or
+        )
 
         if self.counts is not None:
-            kwargs["counts"] = self.counts.resample_axis(axis=energy_axis, weights=self.mask_safe)
+            kwargs["counts"] = self.counts.resample_axis(
+                axis=energy_axis, weights=self.mask_safe
+            )
 
         if self.background_model is not None:
             background = self.background_model.evaluate()
-            background = background.resample_axis(axis=energy_axis, weights=self.mask_safe)
+            background = background.resample_axis(
+                axis=energy_axis, weights=self.mask_safe
+            )
             model = BackgroundModel(
                 background, datasets_names=[name], name=f"{name}-bkg"
             )
             kwargs["models"] = [model]
 
         if self.edisp is not None:
-            kwargs["edisp"] = self.edisp.resample_energy_axis(energy_axis=energy_axis, weights=self.mask_safe)
+            kwargs["edisp"] = self.edisp.resample_energy_axis(
+                energy_axis=energy_axis, weights=self.mask_safe
+            )
 
         return self.__class__(**kwargs)
 
@@ -914,7 +941,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             n_on=self.counts.data,
             n_off=self.counts_off.data,
             alpha=self.alpha.data,
-            mu_sig=self.npred().data,
+            mu_sig=self.npred_sig().data,
         )
         return RegionNDMap.from_geom(geom=self._geom, data=mu_bkg)
 
@@ -932,6 +959,28 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     def alpha(self):
         """Exposure ratio between signal and background regions"""
         return self.acceptance / self.acceptance_off
+
+    def npred_sig(self, model=None):
+        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
+            Else, the total signal counts are returned.
+
+            Parameters
+            -------------
+            model: `~gammapy.modeling.models.Models`, optional
+               The model to computed the npred for.
+
+            Returns
+            ----------
+            npred_sig: `gammapy.maps.RegionNDMap`
+        """
+        if model is None:
+            return super().npred()
+        else:
+            return super().npred_sig(model=model)
+
+    def npred(self):
+        """Predicted counts from source + background(`RegionNDMap`)."""
+        return self.npred_sig() + self.background
 
     @property
     def _geom(self):
@@ -951,7 +1000,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
-        mu_sig = self.npred().data
+        mu_sig = self.npred_sig().data
         on_stat_ = wstat(
             n_on=self.counts.data,
             n_off=self.counts_off.data,
@@ -959,6 +1008,28 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             mu_sig=mu_sig,
         )
         return np.nan_to_num(on_stat_)
+
+    def npred_sig(self, model=None):
+        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
+            Else, the total signal counts are returned.
+
+            Parameters
+            -------------
+            model: `~gammapy.modeling.models.Models`, optional
+               The model to computed the npred for.
+
+            Returns
+            ----------
+            npred_sig: `gammapy.maps.RegionNDMap`
+        """
+        if model is None:
+            return super().npred()
+        else:
+            return super().npred_sig(model=model)
+
+    def npred(self):
+        """Predicted counts from source + background(`RegionNDMap`)."""
+        return self.npred_sig() + self.background
 
     def fake(self, background_model, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
@@ -975,7 +1046,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """
         random_state = get_random_state(random_state)
 
-        npred = self.npred()
+        npred = self.npred_sig()
         npred.data = random_state.poisson(npred.data)
 
         npred_bkg = background_model.evaluate().copy()
@@ -1626,5 +1697,5 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             dataset,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
-            counts_off=counts_off
+            counts_off=counts_off,
         )

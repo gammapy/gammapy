@@ -86,9 +86,7 @@ def create_map_dataset_geoms(
     if migra_axis:
         geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
     else:
-        geom_edisp = geom_irf.to_cube(
-            [geom.axes["energy"], energy_axis_true]
-        )
+        geom_edisp = geom_irf.to_cube([geom.axes["energy"], energy_axis_true])
 
     return {
         "geom": geom,
@@ -338,6 +336,32 @@ class MapDataset(Dataset):
                 npred = evaluator.compute_npred()
                 npred_total.stack(npred)
         return npred_total
+
+    def npred_sig(self, model=None):
+        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
+        Else, the total signal counts are returned.
+
+        Parameters
+        -------------
+        model: `~gammapy.modeling.models.Models`, optional
+            The model to computed the npred for. If none, the sum of all components (minus the background model)
+            is returned
+
+        Returns
+        ----------
+        npred_sig: `gammapy.maps.WcsNDMap`
+        """
+        if model is None:
+            if self.background_model is None:
+                return self.npred()
+            return self.npred() - self.background_model.evaluate()
+        else:
+            return MapEvaluator(
+                model=model,
+                exposure=self.exposure,
+                edisp=self._edisp_kernel,
+                gti=self.gti,
+            ).compute_npred()
 
     @classmethod
     def from_geoms(
@@ -590,10 +614,7 @@ class MapDataset(Dataset):
         residuals : `gammapy.maps.WcsNDMap`
             Residual map.
         """
-        npred = self.npred()
-        if isinstance(self, MapDatasetOnOff):
-            npred += self.background
-        return self._compute_residuals(self.counts, npred, method=method)
+        return self._compute_residuals(self.counts, self.npred(), method=method)
 
     def plot_residuals(
         self,
@@ -638,9 +659,6 @@ class MapDataset(Dataset):
         fig = plt.figure(figsize=figsize)
 
         counts, npred = self.counts, self.npred()
-
-        if isinstance(self, MapDatasetOnOff):
-            npred += self.background
 
         if self.mask is not None:
             counts = counts * self.mask
@@ -1183,7 +1201,10 @@ class MapDataset(Dataset):
 
         if self.counts is not None:
             kwargs["counts"] = self.counts.downsample(
-                factor=factor, preserve_counts=True, axis_name=axis_name, weights=self.mask_safe
+                factor=factor,
+                preserve_counts=True,
+                axis_name=axis_name,
+                weights=self.mask_safe,
             )
 
         if self.exposure is not None:
@@ -1202,7 +1223,9 @@ class MapDataset(Dataset):
 
         if self.edisp is not None:
             if axis_name is not None:
-                kwargs["edisp"] = self.edisp.downsample(factor=factor, axis_name=axis_name)
+                kwargs["edisp"] = self.edisp.downsample(
+                    factor=factor, axis_name=axis_name
+                )
             else:
                 kwargs["edisp"] = self.edisp.copy()
 
@@ -1347,14 +1370,20 @@ class MapDataset(Dataset):
         kwargs["psf"] = self.psf
 
         if self.mask_safe is not None:
-            kwargs["mask_safe"] = self.mask_safe.resample_axis(axis=energy_axis, ufunc=np.logical_or)
+            kwargs["mask_safe"] = self.mask_safe.resample_axis(
+                axis=energy_axis, ufunc=np.logical_or
+            )
 
         if self.counts is not None:
-            kwargs["counts"] = self.counts.resample_axis(axis=energy_axis, weights=self.mask_safe)
+            kwargs["counts"] = self.counts.resample_axis(
+                axis=energy_axis, weights=self.mask_safe
+            )
 
         if self.background_model is not None:
             background = self.background_model.evaluate()
-            background = background.resample_axis(axis=energy_axis, weights=self.mask_safe)
+            background = background.resample_axis(
+                axis=energy_axis, weights=self.mask_safe
+            )
             model = BackgroundModel(
                 background, datasets_names=[name], name=f"{name}-bkg"
             )
@@ -1365,7 +1394,9 @@ class MapDataset(Dataset):
             mask_irf = self._mask_safe_irf(
                 self.edisp.edisp_map, self.mask_safe, drop="energy_true"
             )
-            kwargs["edisp"] = self.edisp.resample_energy_axis(energy_axis=energy_axis, weights=mask_irf)
+            kwargs["edisp"] = self.edisp.resample_energy_axis(
+                energy_axis=energy_axis, weights=mask_irf
+            )
         else:  # None or EDispMap
             kwargs["edisp"] = self.edisp
 
@@ -1510,7 +1541,7 @@ class MapDatasetOnOff(MapDataset):
             n_on=self.counts.data,
             n_off=self.counts_off.data,
             alpha=self.alpha.data,
-            mu_sig=self.npred().data,
+            mu_sig=self.npred_sig().data,
         )
         mu_bkg = np.nan_to_num(mu_bkg)
         return Map.from_geom(geom=self._geom, data=mu_bkg)
@@ -1525,9 +1556,31 @@ class MapDatasetOnOff(MapDataset):
         """Excess (counts - alpha * counts_off)"""
         return self.counts - self.counts_off_normalised
 
+    def npred_sig(self, model=None):
+        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
+            Else, the total signal counts are returned.
+
+            Parameters
+            -------------
+            model: `~gammapy.modeling.models.Models`, optional
+               The model to computed the npred for.
+
+            Returns
+            ----------
+            npred_sig: `gammapy.maps.WcsNDMap`
+        """
+        if model is None:
+            return super().npred()
+        else:
+            return super().npred_sig(model=model)
+
+    def npred(self):
+        """Predicted counts from source + background(`WcsNDMap`)."""
+        return self.npred_sig() + self.background
+
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
-        mu_sig = self.npred().data
+        mu_sig = self.npred_sig().data
         on_stat_ = wstat(
             n_on=self.counts.data,
             n_off=self.counts_off.data,
@@ -1730,7 +1783,7 @@ class MapDatasetOnOff(MapDataset):
                 Passed to `~gammapy.utils.random.get_random_state`.
         """
         random_state = get_random_state(random_state)
-        npred = self.npred()
+        npred = self.npred_sig()
         npred.data = random_state.poisson(npred.data)
 
         npred_bkg = background_model.copy()
@@ -1968,7 +2021,10 @@ class MapDatasetOnOff(MapDataset):
         counts_off = None
         if self.counts_off is not None:
             counts_off = self.counts_off.downsample(
-                factor=factor, preserve_counts=True, axis_name=axis_name, weights=self.mask_safe
+                factor=factor,
+                preserve_counts=True,
+                axis_name=axis_name,
+                weights=self.mask_safe,
             )
 
         acceptance, acceptance_off = None, None
@@ -1977,7 +2033,10 @@ class MapDatasetOnOff(MapDataset):
                 factor=factor, preserve_counts=False, axis_name=axis_name
             )
             factor = self.counts_off_normalised.downsample(
-                factor=factor, preserve_counts=True, axis_name=axis_name, weights=self.mask_safe
+                factor=factor,
+                preserve_counts=True,
+                axis_name=axis_name,
+                weights=self.mask_safe,
             )
             acceptance_off = acceptance * counts_off / factor
 
@@ -1985,7 +2044,7 @@ class MapDatasetOnOff(MapDataset):
             dataset,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
-            counts_off=counts_off
+            counts_off=counts_off,
         )
 
     def pad(self):
@@ -2047,15 +2106,21 @@ class MapDatasetOnOff(MapDataset):
         counts_off = None
         if self.counts_off is not None:
             counts_off = self.counts_off
-            counts_off = counts_off.resample_axis(axis=energy_axis, weights=self.mask_safe)
+            counts_off = counts_off.resample_axis(
+                axis=energy_axis, weights=self.mask_safe
+            )
 
         acceptance = 1
         acceptance_off = None
         if self.acceptance is not None:
             acceptance = self.acceptance
-            acceptance = acceptance.resample_axis(axis=energy_axis, weights=self.mask_safe)
+            acceptance = acceptance.resample_axis(
+                axis=energy_axis, weights=self.mask_safe
+            )
 
-            norm_factor = self.counts_off_normalised.resample_axis(axis=energy_axis, weights=self.mask_safe)
+            norm_factor = self.counts_off_normalised.resample_axis(
+                axis=energy_axis, weights=self.mask_safe
+            )
 
             acceptance_off = acceptance * counts_off / norm_factor
 
@@ -2063,7 +2128,7 @@ class MapDatasetOnOff(MapDataset):
             dataset,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
-            counts_off=counts_off
+            counts_off=counts_off,
         )
 
 

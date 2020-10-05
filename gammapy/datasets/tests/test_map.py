@@ -268,12 +268,16 @@ def get_fermi_3fhl_gc_dataset():
 def test_resample_energy_3fhl():
     dataset = get_fermi_3fhl_gc_dataset()
 
-    new_axis = MapAxis.from_edges([10, 35, 100]*u.GeV, interp='log', name="energy")
+    new_axis = MapAxis.from_edges([10, 35, 100] * u.GeV, interp="log", name="energy")
     grouped = dataset.resample_energy_axis(energy_axis=new_axis)
 
-    assert grouped.counts.data.shape == (2,200,400)
+    assert grouped.counts.data.shape == (2, 200, 400)
     assert grouped.counts.data[0].sum() == 28581
-    assert_allclose(grouped.background_model.map.data.sum(axis=(1,2)), [25074.366386,  3474.265917], rtol=1e-5)
+    assert_allclose(
+        grouped.background_model.map.data.sum(axis=(1, 2)),
+        [25074.366386, 3474.265917],
+        rtol=1e-5,
+    )
     assert_allclose(grouped.exposure.data, dataset.exposure.data, rtol=1e-5)
 
     axis = grouped.counts.geom.axes[0]
@@ -325,19 +329,25 @@ def test_to_image_mask_safe():
     dataset_im = dataset_copy.to_image()
     assert dataset_im.counts is None
 
+
 @requires_data()
 def test_downsample():
     dataset = get_fermi_3fhl_gc_dataset()
 
     downsampled = dataset.downsample(2)
 
-    assert downsampled.counts.data.shape == (11,100,200)
+    assert downsampled.counts.data.shape == (11, 100, 200)
     assert downsampled.counts.data.sum() == dataset.counts.data.sum()
-    assert_allclose(downsampled.background_model.map.data.sum(axis=(1,2)), dataset.background_model.map.data.sum(axis=(1,2)), rtol=1e-5)
-    assert_allclose(downsampled.exposure.data[5,50,100], 3.318082e+11, rtol=1e-5)
+    assert_allclose(
+        downsampled.background_model.map.data.sum(axis=(1, 2)),
+        dataset.background_model.map.data.sum(axis=(1, 2)),
+        rtol=1e-5,
+    )
+    assert_allclose(downsampled.exposure.data[5, 50, 100], 3.318082e11, rtol=1e-5)
 
     with pytest.raises(ValueError):
         dataset.downsample(2, axis_name="energy")
+
 
 @requires_data()
 def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
@@ -1094,7 +1104,7 @@ def test_info_dict_on_off(images):
     assert_allclose(info_dict["excess"], -22.52295, rtol=1e-3)
     assert_allclose(info_dict["aeff_min"].value, 0.0, rtol=1e-3)
     assert_allclose(info_dict["aeff_max"].value, 3.4298378e09, rtol=1e-3)
-    assert_allclose(info_dict["npred"], 0.0, rtol=1e-3)
+    assert_allclose(info_dict["npred"], 4321.518, rtol=1e-3)
     assert_allclose(info_dict["counts_off"], 20407510.0, rtol=1e-3)
     assert_allclose(info_dict["acceptance"], 4272.7075, rtol=1e-3)
     assert_allclose(info_dict["acceptance_off"], 20175596.0, rtol=1e-3)
@@ -1217,7 +1227,7 @@ def test_downsample_onoff():
 
     downsampled = dataset_onoff.downsample(2, axis_name="energy")
 
-    assert downsampled.counts.data.shape == (2,10,10)
+    assert downsampled.counts.data.shape == (2, 10, 10)
     assert downsampled.counts.data.sum() == dataset_onoff.counts.data.sum()
     assert downsampled.counts_off.data.sum() == dataset_onoff.counts_off.data.sum()
     assert_allclose(downsampled.alpha.data, 0.5)
