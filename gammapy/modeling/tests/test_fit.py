@@ -150,13 +150,13 @@ def test_stat_profile_reoptimize():
     assert_allclose(result["stat"], [4, 0, 4], atol=1e-7)
 
 
-def test_stat_surface_2D():
+def test_stat_surface():
     dataset = MyDataset()
     fit = Fit([dataset])
     fit.run()
     x_values = [1, 2, 3]
     y_values = [2e2, 3e2, 4e2]
-    result = fit.stat_profile_2D("x", "y", x_values=x_values, y_values=y_values)
+    result = fit.stat_surface("x", "y", x_values=x_values, y_values=y_values)
 
     assert_allclose(result["x_values"], x_values, atol=1e-7)
     assert_allclose(result["y_values"], y_values, atol=1e-7)
@@ -180,7 +180,7 @@ def test_stat_surface_reoptimize():
     dataset.models.parameters["z"].value = 0
     x_values = [1, 2, 3]
     y_values = [2e2, 3e2, 4e2]
-    result = fit.stat_profile_2D(
+    result = fit.stat_surface(
         "x", "y", x_values=x_values, y_values=y_values, reoptimize=True
     )
 
