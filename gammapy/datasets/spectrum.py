@@ -936,7 +936,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     @property
     def background(self):
         """Background counts estimated from the marginalized likelihood estimate.
-         See :ref:wstat."""
+         See :ref:`wstat`
+         """
         mu_bkg = self.alpha.data * get_wstat_mu_bkg(
             n_on=self.counts.data,
             n_off=self.counts_off.data,
