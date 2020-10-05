@@ -771,10 +771,7 @@ class TestSpectralModelErrorPropagation:
 
 
 def test_integral_error():
-    min = 1 * u.TeV
-    max = 10 * u.TeV
-
-    energy = np.linspace(min,max,1000)
+    energy = np.linspace(1 * u.TeV, 10 * u.TeV, 1000)
     emin = energy[:-1]
     emax = energy[1:]
 
