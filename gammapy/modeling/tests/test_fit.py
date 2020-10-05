@@ -150,7 +150,7 @@ def test_stat_profile_reoptimize():
     assert_allclose(result["stat"], [4, 0, 4], atol=1e-7)
 
 
-def test_stat_profile_2D():
+def test_stat_surface_2D():
     dataset = MyDataset()
     fit = Fit([dataset])
     fit.run()
@@ -172,7 +172,7 @@ def test_stat_profile_2D():
     assert_allclose(dataset.models.parameters["y"].value, 3e2)
 
 
-def test_stat_profile_2D_reoptimize():
+def test_stat_surface_reoptimize():
     dataset = MyDataset()
     fit = Fit([dataset])
     fit.run()

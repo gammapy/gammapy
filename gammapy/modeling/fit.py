@@ -359,7 +359,7 @@ class Fit:
 
         return {"values": values, "stat": np.array(stats)}
 
-    def stat_profile_2D(
+    def stat_surface(
         self, x, y, x_values, y_values, reoptimize=False, **optimize_opts
     ):
         """Compute fit statistic contour.
