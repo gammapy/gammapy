@@ -1077,11 +1077,6 @@ class MapDataset(Dataset):
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name}
 
-        if self.gti is not None:
-            kwargs["livetime"] = self.gti.time_sum
-        else:
-            raise ValueError("No GTI in `MapDataset`, cannot compute livetime")
-
         if self.mask_safe is not None:
             kwargs["mask_safe"] = self.mask_safe.get_spectrum(on_region, func=np.any)
 
@@ -1095,9 +1090,7 @@ class MapDataset(Dataset):
             kwargs["models"] = Models([bkg_model])
 
         if self.exposure is not None:
-            kwargs["aeff"] = (
-                self.exposure.get_spectrum(on_region, np.mean) / kwargs["livetime"]
-            )
+            kwargs["exposure"] = self.exposure.get_spectrum(on_region, np.mean)
 
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
@@ -1106,12 +1099,12 @@ class MapDataset(Dataset):
                     " `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
-                raise ValueError("No PSFMap set. Containement correction impossible")
+                raise ValueError("No PSFMap set. Containment correction impossible")
             else:
                 psf = self.psf.get_energy_dependent_table_psf(on_region.center)
-                energy = kwargs["aeff"].geom.axes["energy_true"].center
+                energy = kwargs["exposure"].geom.axes["energy_true"].center
                 containment = psf.containment(energy, on_region.radius)
-                kwargs["aeff"].data *= containment[:, np.newaxis]
+                kwargs["exposure"].data *= containment[:, np.newaxis]
 
         # TODO: Compute average edisp in region
         if self.edisp is not None:

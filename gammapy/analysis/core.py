@@ -312,7 +312,7 @@ class Analysis:
             ] = datasets_settings.containment_correction
         e_reco = self._make_energy_axis(datasets_settings.geom.axes.energy)
 
-        maker_config["selection"] = ["counts", "aeff", "edisp"]
+        maker_config["selection"] = ["counts", "exposure", "edisp"]
         dataset_maker = SpectrumDatasetMaker(**maker_config)
 
         bkg_maker_config = {}
