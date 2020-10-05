@@ -33,7 +33,7 @@ log = logging.getLogger(__name__)
 CUTOUT_MARGIN = 0.1 * u.deg
 RAD_MAX = 0.66
 RAD_AXIS_DEFAULT = MapAxis.from_bounds(
-    0, RAD_MAX, nbin=66, node_type="edges", name="theta", unit="deg"
+    0, RAD_MAX, nbin=66, node_type="edges", name="rad", unit="deg"
 )
 MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
     0.2, 5, nbin=48, node_type="edges", name="migra"
@@ -500,13 +500,13 @@ class MapDataset(Dataset):
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
                 mask_irf = self._mask_safe_irf(
-                    self.psf.exposure_map, self.mask_safe, drop="theta"
+                    self.psf.exposure_map, self.mask_safe, drop="rad"
                 )
                 self.psf.psf_map.data *= mask_irf.data
                 self.psf.exposure_map.data *= mask_irf.data
 
                 mask_irf_other = self._mask_safe_irf(
-                    other.psf.exposure_map, other_mask_safe, drop="theta"
+                    other.psf.exposure_map, other_mask_safe, drop="rad"
                 )
                 self.psf.stack(other.psf, weights=mask_irf_other)
             else:

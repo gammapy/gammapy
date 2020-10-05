@@ -139,16 +139,13 @@ def bkg_3d_custom(symmetry="constant"):
     else:
         raise ValueError(f"Unkown value for symmetry: {symmetry}")
 
-    energy = [0.1, 10, 1000] * u.TeV
-    fov_lon = [-3, -1, 1, 3] * u.deg
-    fov_lat = [-3, -1, 1, 3] * u.deg
+    energy_axis = MapAxis.from_energy_edges([0.1, 10, 1000] * u.TeV)
+    fov_lon_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lon")
+    fov_lat_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lat")
     return Background3D(
-        energy_lo=energy[:-1],
-        energy_hi=energy[1:],
-        fov_lon_lo=fov_lon[:-1],
-        fov_lon_hi=fov_lon[1:],
-        fov_lat_lo=fov_lat[:-1],
-        fov_lat_hi=fov_lat[1:],
+        energy_axis=energy_axis,
+        fov_lat_axis=fov_lat_axis,
+        fov_lon_axis=fov_lon_axis,
         data=data,
     )
 

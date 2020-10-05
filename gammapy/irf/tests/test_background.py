@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import Background2D, Background3D
+from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -11,20 +12,22 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 def bkg_3d():
     """Example with simple values to test evaluate"""
     energy = [0.1, 10, 1000] * u.TeV
+    energy_axis = MapAxis.from_energy_edges(energy)
+
     fov_lon = [0, 1, 2, 3] * u.deg
+    fov_lon_axis = MapAxis.from_edges(fov_lon, name="fov_lon")
+
     fov_lat = [0, 1, 2, 3] * u.deg
+    fov_lat_axis = MapAxis.from_edges(fov_lat, name="fov_lat")
 
     data = np.ones((2, 3, 3)) * u.Unit("s-1 GeV-1 sr-1")
     # Axis order is (energy, fov_lon, fov_lat)
     # data.value[1, 0, 0] = 1
     data.value[1, 1, 1] = 100
     return Background3D(
-        energy_lo=energy[:-1],
-        energy_hi=energy[1:],
-        fov_lon_lo=fov_lon[:-1],
-        fov_lon_hi=fov_lon[1:],
-        fov_lat_lo=fov_lat[:-1],
-        fov_lat_hi=fov_lat[1:],
+        energy_axis=energy_axis,
+        fov_lon_axis=fov_lon_axis,
+        fov_lat_axis=fov_lat_axis,
         data=data,
     )
 
@@ -151,15 +154,16 @@ def test_plot(bkg_2d):
 def bkg_2d():
     """A simple Background2D test case"""
     energy = [0.1, 10, 1000] * u.TeV
+    energy_axis = MapAxis.from_energy_edges(energy)
+
     offset = [0, 1, 2, 3] * u.deg
+    offset_axis = MapAxis.from_edges(offset, name="offset")
     data = np.zeros((2, 3)) * u.Unit("s-1 MeV-1 sr-1")
     data.value[1, 0] = 2
     data.value[1, 1] = 4
     return Background2D(
-        energy_lo=energy[:-1],
-        energy_hi=energy[1:],
-        offset_lo=offset[:-1],
-        offset_hi=offset[1:],
+        energy_axis=energy_axis,
+        offset_axis=offset_axis,
         data=data,
     )
 

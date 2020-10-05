@@ -19,41 +19,48 @@ def data_store():
 
 
 def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
-    offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
-    energy = np.logspace(-1, 1, 5) * u.TeV
-    energy_lo = energy[:-1]
-    energy_hi = energy[1:]
-    energy = np.sqrt(energy_lo * energy_hi)
-    rad = np.linspace(0, 1.0, 101) * u.deg
-    rad_lo = rad[:-1]
-    rad_hi = rad[1:]
+    offset_axis = MapAxis.from_nodes([0, 1, 2, 3] * u.deg, name="offset")
 
-    O, R, E = np.meshgrid(offsets, rad, energy)
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+
+    rad = np.linspace(0, 1.0, 101) * u.deg
+    rad_axis = MapAxis.from_edges(rad, name="rad")
+
+    O, R, E = np.meshgrid(offset_axis.center, rad_axis.edges, energy_axis_true.center)
 
     Rmid = 0.5 * (R[:-1] + R[1:])
     if shape == "gauss":
         val = np.exp(-0.5 * Rmid ** 2 / sigma ** 2)
     else:
         val = Rmid < sigma
-    drad = 2 * np.pi * (np.cos(R[:-1]) - np.cos(R[1:])) * u.Unit("sr")
-    psf_values = val / ((val * drad).sum(0)[0])
 
-    return PSF3D(energy_lo, energy_hi, offsets, rad_lo, rad_hi, psf_values)
+    drad = 2 * np.pi * (np.cos(R[:-1]) - np.cos(R[1:])) * u.Unit("sr")
+    psf_value = val / ((val * drad).sum(0)[0])
+
+    return PSF3D(
+        energy_axis_true=energy_axis_true,
+        rad_axis=rad_axis,
+        offset_axis=offset_axis,
+        psf_value=psf_value
+    )
 
 
 def fake_aeff2d(area=1e6 * u.m ** 2):
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
-    energy = np.logspace(-1, 1, 5) * u.TeV
-    energy_lo = energy[:-1]
-    energy_hi = energy[1:]
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+
+    offset_axis = MapAxis.from_edges(offsets, name="offset")
 
     aeff_values = np.ones((4, 3)) * area
 
     return EffectiveAreaTable2D(
-        energy_lo,
-        energy_hi,
-        offset_lo=offsets[:-1],
-        offset_hi=offsets[1:],
+        energy_axis_true=energy_axis_true,
+        offset_axis=offset_axis,
         data=aeff_values,
     )
 
@@ -65,7 +72,7 @@ def test_make_psf_map():
     energy_axis = MapAxis(
         nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true"
     )
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
 
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
@@ -88,14 +95,14 @@ def make_test_psfmap(size, shape="gauss"):
         nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true"
     )
     rad_axis = MapAxis.from_nodes(
-        nodes=np.linspace(0.0, 0.6, 50), unit="deg", name="theta"
+        nodes=np.linspace(0.0, 0.6, 50), unit="deg", name="rad"
     )
 
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
-    exposure_geom = geom.squash(axis_name="theta")
+    exposure_geom = geom.squash(axis_name="rad")
 
     exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
@@ -160,7 +167,7 @@ def test_containment_radius_map():
     psf = fake_psf3d(0.15 * u.deg)
     pointing = SkyCoord(0, 0, unit="deg")
     energy_axis = MapAxis(nodes=[0.2, 1, 2], unit="TeV", name="energy_true")
-    psf_theta_axis = MapAxis(nodes=np.linspace(0.0, 0.6, 30), unit="deg", name="theta")
+    psf_theta_axis = MapAxis(nodes=np.linspace(0.0, 0.6, 30), unit="deg", name="rad")
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.5, width=(4, 3), axes=[psf_theta_axis, energy_axis]
     )
@@ -226,7 +233,7 @@ def test_sample_coord_gauss():
 
 def make_psf_map_obs(geom, obs):
     exposure_map = make_map_exposure_true_energy(
-        geom=geom.squash(axis_name="theta"),
+        geom=geom.squash(axis_name="rad"),
         pointing=obs.pointing_radec,
         aeff=obs.aeff,
         livetime=obs.observation_live_time_duration,
@@ -245,9 +252,9 @@ def make_psf_map_obs(geom, obs):
         {
             "energy": None,
             "rad": None,
-            "energy_shape": (32,),
-            "psf_energy": 865.9643,
-            "rad_shape": (144,),
+            "energy_shape": 32,
+            "psf_energy": 0.8659643,
+            "rad_shape": 144,
             "psf_rad": 0.0015362848,
             "psf_exposure": 3.14711e12,
             "psf_value_shape": (32, 144),
@@ -256,9 +263,9 @@ def make_psf_map_obs(geom, obs):
         {
             "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
             "rad": None,
-            "energy_shape": (100,),
-            "psf_energy": 1428.893959,
-            "rad_shape": (144,),
+            "energy_shape": 100,
+            "psf_energy": 1.428893959,
+            "rad_shape": 144,
             "psf_rad": 0.0015362848,
             "psf_exposure": 4.723409e12,
             "psf_value_shape": (100, 144),
@@ -266,10 +273,10 @@ def make_psf_map_obs(geom, obs):
         },
         {
             "energy": None,
-            "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="theta"),
-            "energy_shape": (32,),
-            "psf_energy": 865.9643,
-            "rad_shape": (1000,),
+            "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="rad"),
+            "energy_shape": 32,
+            "psf_energy": 0.8659643,
+            "rad_shape": 1000,
             "psf_rad": 0.000524,
             "psf_exposure": 3.14711e12,
             "psf_value_shape": (32, 1000),
@@ -277,10 +284,10 @@ def make_psf_map_obs(geom, obs):
         },
         {
             "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
-            "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="theta"),
-            "energy_shape": (100,),
-            "psf_energy": 1428.893959,
-            "rad_shape": (1000,),
+            "rad": MapAxis.from_nodes(np.arange(0, 2, 0.002), unit="deg", name="rad"),
+            "energy_shape": 100,
+            "psf_energy": 1.428893959,
+            "rad_shape": 1000,
             "psf_rad": 0.000524,
             "psf_exposure": 4.723409e12,
             "psf_value_shape": (100, 1000),
@@ -293,14 +300,12 @@ def test_make_psf(pars, data_store):
     psf = obs.psf
 
     if pars["energy"] is None:
-        edges = edges_from_lo_hi(psf.energy_lo, psf.energy_hi)
-        energy_axis = MapAxis.from_edges(edges, interp="log", name="energy_true")
+        energy_axis = psf.energy_axis_true
     else:
         energy_axis = pars["energy"]
 
     if pars["rad"] is None:
-        edges = edges_from_lo_hi(psf.rad_lo, psf.rad_hi)
-        rad_axis = MapAxis.from_edges(edges, name="theta")
+        rad_axis = psf.rad_axis
     else:
         rad_axis = pars["rad"]
 
@@ -309,19 +314,21 @@ def test_make_psf(pars, data_store):
     geom = WcsGeom.create(
         skydir=position, npix=(3, 3), axes=[rad_axis, energy_axis], binsz=0.2
     )
+
     psf_map = make_psf_map_obs(geom, obs)
     psf = psf_map.get_energy_dependent_table_psf(position)
 
-    assert psf.energy.unit == "GeV"
-    assert psf.energy.shape == pars["energy_shape"]
-    assert_allclose(psf.energy.value[15], pars["psf_energy"], rtol=1e-3)
+    axis = psf.energy_axis_true
+    assert axis.unit == "TeV"
+    assert axis.nbin == pars["energy_shape"]
+    assert_allclose(axis.center.value[15], pars["psf_energy"], rtol=1e-3)
 
-    assert psf.rad.unit == "rad"
-    assert psf.rad.shape == pars["rad_shape"]
-    assert_allclose(psf.rad.value[15], pars["psf_rad"], rtol=1e-3)
+    assert psf.rad_axis.unit == "deg"
+    assert psf.rad_axis.nbin == pars["rad_shape"]
+    assert_allclose(psf.rad_axis.center.to_value("rad")[15], pars["psf_rad"], rtol=1e-3)
 
     assert psf.exposure.unit == "cm2 s"
-    assert psf.exposure.shape == pars["energy_shape"]
+    assert psf.exposure.shape == (pars["energy_shape"],)
     assert_allclose(psf.exposure.value[15], pars["psf_exposure"], rtol=1e-3)
 
     assert psf.psf_value.unit == "sr-1"
@@ -336,14 +343,8 @@ def test_make_mean_psf(data_store):
 
     psf = observations[0].psf
 
-    edges = edges_from_lo_hi(psf.energy_lo, psf.energy_hi)
-    energy_axis = MapAxis.from_edges(edges, interp="log", name="energy_true")
-
-    edges = edges_from_lo_hi(psf.rad_lo, psf.rad_hi)
-    rad_axis = MapAxis.from_edges(edges, name="theta")
-
     geom = WcsGeom.create(
-        skydir=position, npix=(3, 3), axes=[rad_axis, energy_axis], binsz=0.2
+        skydir=position, npix=(3, 3), axes=[psf.rad_axis, psf.energy_axis_true], binsz=0.2
     )
 
     psf_map_1 = make_psf_map_obs(geom, observations[0])
@@ -383,14 +384,15 @@ def test_to_image():
     assert_allclose(psf2D.exposure_map.geom.data_shape, (1, 1, 25, 25))
     assert_allclose(psf2D.psf_map.data[0][0][12][12], 23255.41204827, rtol=1e-2)
 
+
 def test_psfmap_from_gauss():
-    rad = np.linspace(0, 1.5, 50)*u.deg
-    energy = np.logspace(-1, 2, 10)*u.TeV
+    rad = np.linspace(0, 1.5, 50) * u.deg
+    energy = np.logspace(-1, 2, 10) * u.TeV
     energy_axis = MapAxis.from_nodes(energy, name="energy_true", interp="log", unit="TeV")
-    rad_axis = MapAxis.from_nodes(rad, name="theta", unit="deg")
+    rad_axis = MapAxis.from_nodes(rad, name="rad", unit="deg")
 
     # define sigmas starting at 0.1 in steps of 0.1 deg
-    sigma = (np.arange(energy.shape[0])*0.1 +0.1)*u.deg
+    sigma = (np.arange(energy.shape[0]) * 0.1 + 0.1) * u.deg
     
     # with energy-dependent sigma
     psfmap = PSFMap.from_gauss(energy_axis, rad_axis, sigma)
@@ -404,11 +406,11 @@ def test_psfmap_from_gauss():
     )
     assert_allclose(
         psfmap.containment_radius_map(energy[3], 0.68).data[0][0]/sigma[3].value,
-          1.51, atol=1e-3
+          1.51, atol=1e-2
     )
     assert_allclose(
         psfmap.containment_radius_map(energy[3], 0.95).data[0][0]/sigma[3].value,
-         2.45, atol=1e-3
+         2.45, atol=1e-2
     )
     
     # with constant sigma

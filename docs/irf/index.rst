@@ -26,6 +26,23 @@ EDISP and PSF for a given dataset.
 Most (at some point maybe all) classes in `gammapy.irf` have an
 `gammapy.utils.nddata.NDDataArray` as data attribute to support interpolation.
 
+
+IRF Axis naming
+---------------
+In the IRF classes we use the following axis naming convention:
+
+================= ===================================
+Variable          Definition
+================= ===================================
+``energy``        Reconstructed energy axis
+``energy_true``   True energy axis
+``offset``        Field of view offset from center
+``fov_lon``       Field of view	longitude
+``fov_lat``       Field of view latitude
+``migra``         Energy migration
+``rad``        	  Offset angle from source position
+================= ===================================
+
 Getting Started
 ===============
 

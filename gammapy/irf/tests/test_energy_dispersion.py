@@ -154,24 +154,27 @@ class TestEnergyDispersion2D:
         assert_equal(actual, desired)
 
     def test_write(self):
-        energy_lo = np.logspace(0, 1, 11)[:-1] * u.TeV
-        energy_hi = np.logspace(0, 1, 11)[1:] * u.TeV
-        offset_lo = np.linspace(0, 1, 4)[:-1] * u.deg
-        offset_hi = np.linspace(0, 1, 4)[1:] * u.deg
-        migra_lo = np.linspace(0, 3, 4)[:-1]
-        migra_hi = np.linspace(0, 3, 4)[1:]
-
-        data = (
-            np.ones(shape=(len(energy_lo), len(migra_lo), len(offset_lo))) * u.cm * u.cm
+        energy_axis_true = MapAxis.from_energy_bounds(
+            "1 TeV", "10 TeV", nbin=10, name="energy_true"
         )
 
+        offset_axis = MapAxis.from_bounds(
+            0, 1, nbin=3, unit="deg", name="offset", node_type="edges"
+
+        )
+
+        migra_axis = MapAxis.from_bounds(
+            0, 3, nbin=3, name="migra", node_type="edges"
+        )
+
+        shape = (energy_axis_true.nbin, migra_axis.nbin, offset_axis.nbin)
+        
+        data = np.ones(shape=shape) * u.cm ** 2
+
         edisp = EnergyDispersion2D(
-            e_true_lo=energy_lo,
-            e_true_hi=energy_hi,
-            migra_lo=migra_lo,
-            migra_hi=migra_hi,
-            offset_lo=offset_lo,
-            offset_hi=offset_hi,
+            energy_axis_true=energy_axis_true,
+            migra_axis=migra_axis,
+            offset_axis=offset_axis,
             data=data,
         )
 

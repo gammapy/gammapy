@@ -518,7 +518,7 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
 
 def test_create():
     # tests empty datasets created
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
     e_reco = MapAxis.from_edges(
         np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
     )
@@ -548,7 +548,7 @@ def test_create():
 def test_create_with_migra(tmp_path):
     # tests empty datasets created
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
     e_reco = MapAxis.from_edges(
         np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
     )
@@ -829,7 +829,7 @@ def test_create_onoff(geom):
     # tests empty datasets created
 
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
     energy_axis = geom.axes["energy"].copy(name="energy_true")
 
     empty_dataset = MapDatasetOnOff.create(geom, energy_axis, migra_axis, rad_axis)
@@ -960,7 +960,7 @@ def test_map_dataset_on_off_cutout(images):
 
 
 def test_map_dataset_on_off_fake(geom):
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
     energy_true_axis = geom.axes["energy"].copy(name="energy_true")
 
     empty_dataset = MapDataset.create(geom, energy_true_axis, rad_axis=rad_axis)

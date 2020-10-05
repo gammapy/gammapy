@@ -19,17 +19,18 @@ from gammapy.utils.regions import make_region
 
 def fake_aeff2d(area=1e6 * u.m ** 2):
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
-    energy = np.logspace(-1, 1, 5) * u.TeV
-    energy_lo = energy[:-1]
-    energy_hi = energy[1:]
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+
+    offset_axis = MapAxis.from_edges(offsets, name="offset")
 
     aeff_values = np.ones((4, 3)) * area
 
     return EffectiveAreaTable2D(
-        energy_lo,
-        energy_hi,
-        offset_lo=offsets[:-1],
-        offset_hi=offsets[1:],
+        energy_axis_true=energy_axis_true,
+        offset_axis=offset_axis,
         data=aeff_values,
     )
 
