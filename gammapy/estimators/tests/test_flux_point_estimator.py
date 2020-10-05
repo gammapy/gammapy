@@ -52,7 +52,7 @@ def simulate_spectrum_dataset(model, random_state=0):
         edisp=edisp,
     )
     dataset.models = bkg_model
-    bkg_npred = dataset.npred()
+    bkg_npred = dataset.npred_sig()
 
     dataset.models = model
     dataset.fake(
