@@ -380,8 +380,6 @@ class Fit:
             Parameter values to evaluate the fit statistic for.
         reoptimize : bool
             Re-optimize other parameters, when computing the fit statistic profile.
-        backend : str
-            Which backend to use (see ``gammapy.modeling.registry``)
         **optimize_opts : dict
             Keyword arguments passed to the optimizer. See `Fit.optimize` for further details.
 
