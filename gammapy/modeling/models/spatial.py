@@ -380,8 +380,8 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
-    r_eff : `~astropy.coordinates.Angle`
-        Effective radius (semi-major axis if elliptical), in angular units.
+    r_0 : `~astropy.coordinates.Angle`
+        Length of the major semiaxis, in angular units.
     eta : `float`
         Shape parameter whitin (0, 1]. Special cases for disk: ->0, Gaussian: 0.5, Laplacian:1
     e : `float`
@@ -396,26 +396,19 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     tag = ["GeneralizedGaussianSpatialModel", "gen-gauss"]
     lon_0 = Parameter("lon_0", "0 deg")
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
-    r_eff = Parameter("r_eff", "1 deg")
+    r_0 = Parameter("r_0", "1 deg")
     eta = Parameter("eta", 0.5, min=0.01, max=1.0)
     e = Parameter("e", 0.0, min=0.0, max=1.0, frozen=True)
     phi = Parameter("phi", "0 deg", frozen=True)
 
     @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0, r_eff, eta, e, phi):
-        lon = Longitude(lon).wrap_at(f"{np.min(lon)+180*u.deg}")
-        lon_0 = Longitude(lon_0).wrap_at(f"{np.min(lon)+180*u.deg}")
+    def evaluate(lon, lat, lon_0, lat_0, r_0, eta, e, phi):
+        sep = angular_separation(lon, lat, lon_0, lat_0)
         if isinstance(eta, u.Quantity):
             eta = eta.value  # gamma function does not allow quantities
-        a, b = r_eff, (1 - e) * r_eff
-        phi = -phi + 90.0 * u.deg
-        cos_phi, sin_phi = np.cos(phi), np.sin(phi)
-        x_maj = (lon - lon_0) * cos_phi + (lat - lat_0) * sin_phi
-        x_min = -(lon - lon_0) * sin_phi + (lat - lat_0) * cos_phi
-        z = np.sqrt((x_maj / a) ** 2 + (x_min / b) ** 2)
-        norm = 1 / (
-            2 * np.pi * (1 - e) * r_eff ** 2.0 * eta * scipy.special.gamma(2 * eta)
-        )
+        minor_axis, r_eff = compute_sigma_eff(lon_0, lat_0, lon, lat, phi, r_0, e)
+        z = sep / r_eff
+        norm = 1 / (2 * np.pi * minor_axis * r_0 * eta * scipy.special.gamma(2 * eta))
         return (norm * np.exp(-(z ** (1 / eta)))).to("sr-1")
 
     @property
@@ -424,14 +417,14 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
         Set as :math:`5 r_{\rm eff}`.
         """
-        return 5 * self.parameters["r_eff"].quantity
+        return 5 * self.parameters["r_0"].quantity
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
-        minor_axis = Angle(self.r_eff.quantity * (1 - self.e.quantity))
+        minor_axis = Angle(self.r_0.quantity * (1 - self.e.quantity))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * self.r_eff.quantity,
+            height=2 * self.r_0.quantity,
             width=2 * minor_axis,
             angle=self.phi.quantity,
             **kwargs,

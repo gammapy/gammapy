@@ -45,26 +45,25 @@ geom = WcsGeom.create(
 
 tags = [r"Disk, $\eta=0.01$", r"Gaussian, $\eta=0.5$", r"Laplacian, $\eta=1$"]
 eta_range = [0.01, 0.5, 1]
-r_eff = 1
+r_0 = 1
 e = 0.5
 phi = 45 * u.deg
 fig, axes = plt.subplots(1, 3, figsize=(9, 6))
-for k, eta in enumerate(eta_range):
+for ax, eta, tag in zip(axes, eta_range, tags):
     model = GeneralizedGaussianSpatialModel(
         lon_0=lon_0 * u.deg,
         lat_0=lat_0 * u.deg,
         eta=eta,
-        r_eff=r_eff * u.deg,
+        r_0=r_0 * u.deg,
         e=e,
         phi=phi,
         frame="galactic",
     )
     meval = model.evaluate_geom(geom)
-    ax = axes[k]
     Map.from_geom(geom=geom, data=meval.value, unit=meval.unit).plot(ax=ax)
     pixreg = model.to_region().to_pixel(geom.wcs)
     pixreg.plot(ax=ax, edgecolor="g", facecolor="none", lw=2)
-    ax.set_title(tags[k])
+    ax.set_title(tag)
     ax.set_xticks([])
     ax.set_yticks([])
 plt.tight_layout()
