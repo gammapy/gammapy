@@ -24,14 +24,14 @@ class SpectrumDatasetMaker(Maker):
     ----------
     selection : list
         List of str, selecting which maps to make.
-        Available: 'counts', 'aeff', 'background', 'edisp'
+        Available: 'counts', 'exposure', 'background', 'edisp'
         By default, all spectra are made.
     containment_correction : bool
         Apply containment correction for point sources and circular on regions.
     """
 
     tag = "SpectrumDatasetMaker"
-    available_selection = ["counts", "background", "aeff", "edisp"]
+    available_selection = ["counts", "background", "exposure", "edisp"]
 
     def __init__(self, selection=None, containment_correction=False):
         self.containment_correction = containment_correction
@@ -90,8 +90,8 @@ class SpectrumDatasetMaker(Maker):
         data *= observation.observation_time_duration
         return RegionNDMap.from_geom(geom=geom, data=data.to_value(""))
 
-    def make_aeff(self, geom, observation):
-        """Make effective area.
+    def make_exposure(self, geom, observation):
+        """Make exposure.
 
         Parameters
         ----------
@@ -100,11 +100,10 @@ class SpectrumDatasetMaker(Maker):
         observation: `~gammapy.data.Observation`
             Observation to compute effective area for.
 
-
         Returns
         -------
-        aeff : `~gammapy.irf.EffectiveAreaTable`
-            Effective area table.
+        exposure : `~gammapy.irf.EffectiveAreaTable`
+            Exposure map.
         """
         offset = observation.pointing_radec.separation(geom.center_skydir)
         energy = geom.axes["energy_true"]
@@ -120,6 +119,7 @@ class SpectrumDatasetMaker(Maker):
             containment = psf.containment(energy.center, geom.region.radius)
             data *= containment.squeeze()
 
+        data = data * observation.observation_live_time_duration
         return RegionNDMap.from_geom(geom, data=data.value, unit=data.unit)
 
     @staticmethod
@@ -184,12 +184,11 @@ class SpectrumDatasetMaker(Maker):
         """
         kwargs = {
             "gti": observation.gti,
-            "livetime": observation.observation_live_time_duration,
             "meta_table": self.make_meta_table(observation),
         }
 
         energy_axis = dataset.counts.geom.axes["energy"]
-        energy_axis_true = dataset.aeff.geom.axes["energy_true"]
+        energy_axis_true = dataset.exposure.geom.axes["energy_true"]
         region = dataset.counts.geom.region
 
         if "counts" in self.selection:
@@ -203,8 +202,8 @@ class SpectrumDatasetMaker(Maker):
             bkg_model.spectral_model.norm.frozen = True
             kwargs["models"] = bkg_model
 
-        if "aeff" in self.selection:
-            kwargs["aeff"] = self.make_aeff(dataset.aeff.geom, observation)
+        if "exposure" in self.selection:
+            kwargs["exposure"] = self.make_exposure(dataset.exposure.geom, observation)
 
         if "edisp" in self.selection:
             edisp = self.make_edisp(
