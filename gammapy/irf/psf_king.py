@@ -101,20 +101,8 @@ class PSFKing:
         table : `~astropy.table.Table`
             Table King PSF info.
         """
-        # TODO: move to MapAxes.from_table()
-
-        offset_lo = table["THETA_LO"].quantity[0]
-        offset_hi = table["THETA_HI"].quantity[0]
-        offset = (offset_hi + offset_lo) / 2
-        offset = Angle(offset, unit=table["THETA_LO"].unit)
-
-        offset_axis = MapAxis.from_nodes(offset, name="offset", interp="lin")
-
-        energy_lo = table["ENERG_LO"].quantity[0]
-        energy_hi = table["ENERG_HI"].quantity[0]
-
-        edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis_true = MapAxis.from_edges(edges, name="energy_true", interp="log")
+        energy_axis_true = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
+        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
 
         gamma = table["GAMMA"].quantity[0]
         sigma = table["SIGMA"].quantity[0]
