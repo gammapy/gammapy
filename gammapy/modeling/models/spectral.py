@@ -164,7 +164,8 @@ class SpectralModel(Model):
             return integrate_spectrum(self, emin, emax, **kwargs)
 
     def integral_error(self, emin, emax):
-        """Evaluate spectral model with error propagation.
+        """Evaluate the error of the integral flux of a given spectrum in
+        a given energy range.
 
         Parameters
         ----------

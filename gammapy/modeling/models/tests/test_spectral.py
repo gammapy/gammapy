@@ -782,4 +782,3 @@ def test_integral_error():
 
     assert_allclose(flux.value, 9.e-13, rtol=1e-3)
     assert_allclose(flux_error.value, 2.947307639914628e-13, rtol=1e-14)
-
