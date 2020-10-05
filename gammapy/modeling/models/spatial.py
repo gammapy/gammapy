@@ -6,7 +6,7 @@ import scipy.integrate
 import scipy.special
 import astropy.units as u
 from astropy.utils import lazyproperty
-from astropy.coordinates import Angle, SkyCoord, Longitude
+from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
 from regions import (
     CircleAnnulusSkyRegion,
