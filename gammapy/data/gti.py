@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import copy
 from operator import lt, le
 from astropy.table import Table, vstack
 from astropy.time import Time
@@ -60,7 +61,7 @@ class GTI:
         self.table = table
 
     def copy(self):
-        return self.__class__(self.table)
+        return copy.deepcopy(self)
 
     @classmethod
     def create(cls, start, stop, reference_time="2000-01-01"):
