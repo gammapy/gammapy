@@ -52,8 +52,8 @@ def spectrum_dataset():
     bkg_model.spectral_model.norm.frozen = True
 
     models = Models([bkg_model, model])
-    aeff = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis_true])
-    aeff.quantity = u.Quantity("1 cm2")
+    exposure = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis_true])
+    exposure.quantity = u.Quantity("1 cm2") * livetime
     bkg_rate = np.ones(30) / u.s
     background.quantity = bkg_rate * livetime
 
@@ -63,7 +63,7 @@ def spectrum_dataset():
     gti = GTI.create(start, stop, reference_time=t_ref)
 
     dataset = SpectrumDataset(
-        models=models, aeff=aeff, livetime=livetime, name=name, gti=gti,
+        models=models, exposure=exposure, name=name, gti=gti,
     )
     dataset.fake(random_state=23)
     return dataset
@@ -91,7 +91,7 @@ def test_info_dict(spectrum_dataset):
 
     assert_allclose(info_dict["significance"], 2924.522174)
     assert_allclose(info_dict["excess"], 904010)
-    assert_allclose(info_dict["livetime"].value, 1e2)
+    assert_allclose(info_dict["livetime"].value, 216000)
 
     assert info_dict["name"] == "test"
 
@@ -100,7 +100,7 @@ def test_incorrect_mask(spectrum_dataset):
     mask_fit = np.ones(30, dtype=np.dtype("float"))
     with pytest.raises(ValueError):
         SpectrumDataset(
-            counts=spectrum_dataset.counts.copy(), livetime="1h", mask_fit=mask_fit,
+            counts=spectrum_dataset.counts.copy(), mask_fit=mask_fit,
         )
 
 
@@ -119,8 +119,7 @@ def test_set_model(spectrum_dataset):
 def test_npred_models():
     e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
     spectrum_dataset = SpectrumDataset.create(e_reco=e_reco)
-    spectrum_dataset.livetime = 1 * u.h
-    spectrum_dataset.aeff.data.data += 1e10 * u.Unit("cm2")
+    spectrum_dataset.exposure.quantity = 1e10 * u.Unit("cm2 h")
 
     pwl_1 = PowerLawSpectralModel(index=2)
     pwl_2 = PowerLawSpectralModel(index=2)
@@ -172,9 +171,11 @@ def test_spectrum_dataset_create():
     assert empty_spectrum_dataset.data_shape[0] == 2
     assert empty_spectrum_dataset.background_model.map.data.sum() == 0
     assert empty_spectrum_dataset.background_model.map.geom.axes[0].nbin == 2
-    assert empty_spectrum_dataset.aeff.geom.axes[0].nbin == 3
-    assert empty_spectrum_dataset.edisp.edisp_map.geom.axes["energy"].nbin == 2
-    assert empty_spectrum_dataset.livetime.value == 0
+    assert empty_spectrum_dataset.exposure.geom.axes[0].nbin == 3
+    assert (
+        empty_spectrum_dataset.edisp.edisp_map.geom.axes["energy"].nbin == 2
+    )
+    assert empty_spectrum_dataset.gti.time_sum.value == 0
     assert len(empty_spectrum_dataset.gti.table) == 0
     assert empty_spectrum_dataset.energy_range[0] is None
     assert_allclose(empty_spectrum_dataset.mask_safe, 0)
@@ -191,21 +192,29 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     aeff = EffectiveAreaTable.from_parametrization(energy.edges, "HESS").to_region_map(
         geom.region
     )
+
+    livetime = 100 * u.s
+    gti = GTI.create(start=0 * u.s, stop=livetime)
+
+    exposure = aeff * livetime
+
     edisp = EDispKernelMap.from_diagonal_response(
         energy, energy_true, geom=geom.to_image()
     )
-    livetime = 100 * u.s
+
     background = spectrum_dataset.background_model.map
+
     spectrum_dataset1 = SpectrumDataset(
         name="ds1",
         counts=spectrum_dataset.counts.copy(),
-        livetime=livetime,
-        aeff=aeff,
+        exposure=exposure.copy(),
         edisp=edisp.copy(),
         models=BackgroundModel(background, name="ds1-bkg", datasets_names=["ds1"]),
+        gti=gti.copy()
     )
 
     livetime2 = 0.5 * livetime
+    gti2 = GTI.create(start=0 * u.s, stop=livetime2)
     aeff2 = aeff * 2
     bkg2 = RegionNDMap.from_geom(geom=geom, data=2 * background.data)
 
@@ -217,25 +226,32 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     spectrum_dataset2 = SpectrumDataset(
         name="ds2",
         counts=spectrum_dataset.counts.copy(),
-        livetime=livetime2,
-        aeff=aeff2,
+        exposure=(aeff2 * livetime2).copy(),
         edisp=edisp,
         models=BackgroundModel(bkg2, name="ds2-bkg", datasets_names=["ds2"]),
         mask_safe=safe_mask2,
+        gti=gti2
     )
+
     spectrum_dataset1.stack(spectrum_dataset2)
+
+    print(spectrum_dataset1.exposure.quantity.squeeze())
+    print(spectrum_dataset2.exposure.quantity.squeeze())
 
     reference = spectrum_dataset.counts.data
     assert_allclose(spectrum_dataset1.counts.data[1:], reference[1:] * 2)
     assert_allclose(spectrum_dataset1.counts.data[0], 141363)
-    assert spectrum_dataset1.livetime == 1.5 * livetime
+    assert_allclose(spectrum_dataset1.exposure.data[0], 7.133465e+09)
     assert_allclose(
         spectrum_dataset1.background_model.map.data[1:], 3 * background.data[1:]
     )
     assert_allclose(spectrum_dataset1.background_model.map.data[0], background.data[0])
+
+    #print((aeff * livetime).quantity.to_value("m2s").squeeze())
+
     assert_allclose(
-        spectrum_dataset1.aeff.quantity.to_value("m2"),
-        4.0 / 3 * aeff.quantity.to_value("m2"),
+        spectrum_dataset1.exposure.quantity.to_value("m2s"),
+        (aeff * livetime).quantity.to_value("m2s"),
     )
     kernel = edisp.get_edisp_kernel()
     kernel_stacked = spectrum_dataset1.edisp.get_edisp_kernel()
@@ -255,32 +271,31 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
         geom.region
     )
 
-    livetime = 100 * u.s
+    gti = GTI.create(start=[0] * u.s, stop=[100] * u.s)
     spectrum_dataset1 = SpectrumDataset(
         counts=spectrum_dataset.counts.copy(),
-        livetime=livetime,
-        aeff=aeff,
+        exposure=aeff * gti.time_sum,
         edisp=edisp1,
         meta_table=Table({"OBS_ID": [0]}),
+        gti=gti.copy()
     )
 
-    livetime2 = livetime
     aeff2 = aeff.copy()
     edisp2 = EDispKernelMap.from_gauss(energy, energy, 0.2, 0.0, geom=geom)
     edisp2.exposure_map.data += 1
     spectrum_dataset2 = SpectrumDataset(
         counts=spectrum_dataset.counts.copy(),
-        livetime=livetime2,
-        aeff=aeff2,
+        exposure=aeff2 * gti.time_sum,
         edisp=edisp2,
         meta_table=Table({"OBS_ID": [1]}),
+        gti=gti.copy()
     )
     spectrum_dataset1.stack(spectrum_dataset2)
 
     assert_allclose(spectrum_dataset1.meta_table["OBS_ID"][0], [0, 1])
 
     assert spectrum_dataset1.background_model is None
-    assert spectrum_dataset1.livetime == 2 * livetime
+    assert spectrum_dataset1.gti.time_sum == 2 * gti.time_sum
     assert_allclose(
         spectrum_dataset1.aeff.quantity.to_value("m2"), aeff.quantity.to_value("m2")
     )
@@ -362,9 +377,8 @@ class TestSpectrumOnOff:
         self.dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
-            aeff=self.aeff,
+            exposure=self.aeff * self.livetime,
             edisp=self.edisp,
-            livetime=self.livetime,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             name="test",
@@ -413,9 +427,8 @@ class TestSpectrumOnOff:
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
-            aeff=aeff,
+            exposure=aeff * livetime,
             models=model,
-            livetime=livetime,
         )
 
         energy = aeff.geom.axes[0].edges
@@ -476,8 +489,7 @@ class TestSpectrumOnOff:
 
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
-            aeff=self.aeff,
-            livetime=self.livetime,
+            exposure=self.aeff * self.livetime,
             mask_safe=mask_safe,
             acceptance=1,
             name="test",
@@ -509,8 +521,7 @@ class TestSpectrumOnOff:
             counts=self.on_counts,
             counts_off=self.off_counts,
             models=model,
-            aeff=self.aeff,
-            livetime=self.livetime,
+            exposure=self.aeff * self.livetime,
             edisp=self.edisp,
             acceptance=1,
             acceptance_off=10,
@@ -526,8 +537,7 @@ class TestSpectrumOnOff:
             counts=self.on_counts,
             counts_off=self.off_counts,
             models=source_model,
-            aeff=self.aeff,
-            livetime=self.livetime,
+            exposure=self.aeff * self.livetime,
             edisp=self.edisp,
             acceptance=1,
             acceptance_off=10,
@@ -564,7 +574,6 @@ class TestSpectrumOnOff:
     def test_resample_energy_axis(self):
         axis = MapAxis([0.1, 1, 10] * u.TeV, name="energy", interp="log")
         grouped = self.dataset.resample_energy_axis(energy_axis=axis)
-
         assert grouped.counts.data.shape == (2, 1, 1)
         assert_allclose(grouped.aeff.data, 1.0)
         assert_allclose(np.squeeze(grouped.counts), [2, 1])
@@ -577,7 +586,7 @@ class TestSpectrumOnOff:
         grouped = self.dataset.to_image()
 
         assert grouped.counts.data.shape == (1, 1, 1)
-        assert_allclose(grouped.aeff.data, 1.0)
+        assert_allclose(grouped.exposure.data, 1.0)
         assert_allclose(np.squeeze(grouped.counts), 3)
         assert_allclose(np.squeeze(grouped.counts_off), 40)
         assert grouped.edisp.edisp_map.data.shape == (9, 1, 1, 1)
@@ -694,6 +703,7 @@ class TestSpectralFit:
 
         geom = RegionGeom(region=None, axes=[energy])
         data = dataset.aeff.interp_by_coord(geom.get_coord())
+
         dataset.aeff = RegionNDMap.from_geom(geom=geom, data=data, unit="cm2")
 
         dataset.edisp = None
@@ -766,9 +776,8 @@ def make_observation_list():
     obs1 = SpectrumDatasetOnOff(
         counts=on_vector,
         counts_off=off_vector1,
-        aeff=aeff,
+        exposure=aeff * livetime,
         edisp=edisp,
-        livetime=livetime,
         mask_safe=mask_safe,
         acceptance=1,
         acceptance_off=2,
@@ -778,9 +787,8 @@ def make_observation_list():
     obs2 = SpectrumDatasetOnOff(
         counts=on_vector,
         counts_off=off_vector2,
-        aeff=aeff,
+        exposure=aeff * livetime,
         edisp=edisp,
-        livetime=livetime,
         mask_safe=mask_safe,
         acceptance=1,
         acceptance_off=4,
@@ -875,15 +883,15 @@ class TestSpectrumDatasetOnOffStack:
 
 @requires_data("gammapy-data")
 def test_datasets_stack_reduce():
-    obs_ids = [23523, 23526, 23559, 23592]
-    dataset_list = []
-    for obs in obs_ids:
-        filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{}.fits"
-        ds = SpectrumDatasetOnOff.from_ogip_files(filename.format(obs))
-        dataset_list.append(ds)
-    datasets = Datasets(dataset_list)
+    datasets = Datasets()
+
+    for obs_id in [23523, 23526, 23559, 23592]:
+        filename = f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        ds = SpectrumDatasetOnOff.from_ogip_files(filename)
+        datasets.append(ds)
+
     stacked = datasets.stack_reduce(name="stacked")
-    assert_allclose(stacked.livetime.to_value("s"), 6313.8116406202325)
+    assert_allclose(stacked.gti.time_sum.to_value("s"), 6313.8116406202325)
 
     info_table = datasets.info_table()
     assert_allclose(info_table["n_on"], [124, 126, 119, 90])
@@ -940,7 +948,7 @@ class TestFit:
 
         self.src = RegionNDMap.from_geom(geom=geom, data=source_counts)
 
-        self.src.livetime = 1 * u.s
+        self.livetime = 1 * u.s
         self.aeff = EffectiveAreaTable.from_constant(energy, "1 cm2").to_region_map(
             region=None
         )
@@ -957,8 +965,7 @@ class TestFit:
         dataset = SpectrumDataset(
             models=self.source_model,
             counts=self.src,
-            aeff=self.aeff,
-            livetime=self.src.livetime,
+            exposure=self.aeff * self.livetime,
         )
 
         npred = dataset.npred().data
@@ -984,8 +991,7 @@ class TestFit:
         dataset = SpectrumDatasetOnOff(
             counts=on_vector,
             counts_off=self.off,
-            aeff=self.aeff,
-            livetime=self.src.livetime,
+            exposure=self.aeff * self.livetime,
             acceptance=1,
             acceptance_off=1 / self.alpha,
         )
@@ -1022,8 +1028,7 @@ class TestFit:
 
         dataset = SpectrumDataset(
             models=self.source_model,
-            aeff=self.aeff,
-            livetime=self.src.livetime,
+            exposure=self.aeff * self.livetime,
             counts=self.src,
             mask_safe=mask_safe,
         )

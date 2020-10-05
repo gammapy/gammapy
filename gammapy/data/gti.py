@@ -75,8 +75,8 @@ class GTI:
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         """
-        start = np.atleast_1d(Quantity(start))
-        stop = np.atleast_1d(Quantity(stop))
+        start = Quantity(start, ndmin=1)
+        stop = Quantity(stop, ndmin=1)
         reference_time = Time(reference_time)
         meta = time_ref_to_dict(reference_time)
         table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)

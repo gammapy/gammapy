@@ -199,7 +199,7 @@ def test_geom_analysis_1d():
 
     assert len(analysis.datasets) == 1
 
-    axis = analysis.datasets[0].aeff.geom.axes[0]
+    axis = analysis.datasets[0].exposure.geom.axes["energy_true"]
     assert axis.nbin == 50
     assert_allclose(axis.edges[0].to_value("TeV"), 0.03)
     assert_allclose(axis.edges[-1].to_value("TeV"), 100)

@@ -202,23 +202,22 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
         on_region, containment_correction=True
     )
     mask = np.ones_like(dataset_ref.counts, dtype='bool')
-    mask[1,40:60,40:60]=0
+    mask[1, 40:60, 40:60] = 0
     dataset_ref.mask_safe = Map.from_geom(dataset_ref.counts.geom, data=mask)
     spectrum_dataset_mask = dataset_ref.to_spectrum_dataset(on_region)
-
 
     assert np.sum(spectrum_dataset.counts.data) == 1
     assert spectrum_dataset.data_shape == (2, 1, 1)
     assert spectrum_dataset.background_model.map.geom.axes[0].nbin == 2
-    assert spectrum_dataset.aeff.geom.axes[0].nbin == 3
-    assert spectrum_dataset.aeff.unit == "m2"
+    assert spectrum_dataset.exposure.geom.axes[0].nbin == 3
+    assert spectrum_dataset.exposure.unit == "m2s"
     assert spectrum_dataset.edisp.get_edisp_kernel().e_reco.nbin == 2
     assert spectrum_dataset.edisp.get_edisp_kernel().e_true.nbin == 3
-    assert spectrum_dataset_corrected.aeff.unit == "m2"
-    assert_allclose(spectrum_dataset.aeff.data[1], 853023.423047, rtol=1e-5)
-    assert_allclose(spectrum_dataset_corrected.aeff.data[1], 565527.524246, rtol=1e-5)
     assert np.sum(spectrum_dataset_mask.counts.data) == 0
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
+    assert spectrum_dataset_corrected.exposure.unit == "m2s"
+    assert_allclose(spectrum_dataset.exposure.data[1], 3.070884e+09, rtol=1e-5)
+    assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.014115e+09, rtol=1e-5)
 
 
 @requires_data()
