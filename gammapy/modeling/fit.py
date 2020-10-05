@@ -396,6 +396,8 @@ class Fit:
         stats = []
         with parameters.restore_values:
             for x_value, y_value in itertools.product(x_values, y_values):
+                # TODO: Remove log.info() and provide a nice progress bar
+                log.info(f"Processing: x={x_value}, y={y_value}")
                 x.value = x_value
                 y.value = y_value
                 if reoptimize:
