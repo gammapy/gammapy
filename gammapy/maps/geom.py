@@ -1275,17 +1275,19 @@ class MapAxis:
         return hdu
 
     @classmethod
-    def from_table(cls, table, format="ogip", idx=0):
+    def from_table(cls, table, format="ogip", idx=0, column_prefix=""):
         """Instanciate MapAxis from table HDU
 
         Parameters
         ----------
         table : `~astropy.table.Table`
             Table
-        format : {"ogip", "ogip-arf", "fgst-ccube", "fgst-template"}
+        format : {"ogip", "ogip-arf", "fgst-ccube", "fgst-template", "gadf", "gadf-dl3"}
             Format specification
         idx : int
             Column index of the axis.
+        column_prefix : str
+            Column name prefix of the axis, used for
 
         Returns
         -------
@@ -1339,6 +1341,25 @@ class MapAxis:
 
             axis = MapAxis(nodes=nodes, node_type=node_type, interp=interp, name=name)
 
+        elif format == "gadf-dl3":
+            from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
+
+            spec = IRF_DL3_AXES_SPECIFICATION[column_prefix]
+            name, interp = spec["name"], spec["interp"]
+
+            # background models are stored in reconstructed energy
+            extname = table.meta.get("EXTNAME")
+            if extname == "BACKGROUND" and column_prefix == "ENERG":
+                name = "energy"
+
+            edges_lo = table[f"{column_prefix}_LO"].quantity[0]
+            edges_hi = table[f"{column_prefix}_HI"].quantity[0]
+
+            if np.allclose(edges_hi, edges_lo):
+                axis = MapAxis.from_nodes(edges_hi, interp=interp, name=name)
+            else:
+                edges = edges_from_lo_hi(edges_lo, edges_hi)
+                axis = MapAxis.from_edges(edges, interp=interp, name=name)
         else:
             raise ValueError(f"Format '{format}' not supported")
 

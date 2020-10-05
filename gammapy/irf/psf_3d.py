@@ -113,18 +113,6 @@ class PSF3D:
         table : `~astropy.table.Table`
             Table Table-PSF info.
         """
-        # TODO: move this code MapAxes.from_table()
-        theta_lo = table["THETA_LO"].quantity[0]
-        theta_hi = table["THETA_HI"].quantity[0]
-        offset = (theta_hi + theta_lo) / 2
-        offset = Angle(offset, unit=table["THETA_LO"].unit)
-
-        energy_lo = table["ENERG_LO"].quantity[0]
-        energy_hi = table["ENERG_HI"].quantity[0]
-
-        rad_lo = table["RAD_LO"].quantity[0]
-        rad_hi = table["RAD_HI"].quantity[0]
-
         psf_value = table["RPSF"].quantity[0]
 
         opts = {}
@@ -134,13 +122,9 @@ class PSF3D:
         except KeyError:
             pass
 
-        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis_true = MapAxis.from_edges(e_edges, interp="log", name="energy_true")
-
-        offset_axis = MapAxis.from_nodes(offset, interp="lin", name="offset")
-
-        rad_edges = edges_from_lo_hi(rad_lo, rad_hi)
-        rad_axis = MapAxis.from_edges(rad_edges, interp="lin", name="rad")
+        energy_axis_true = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
+        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
+        rad_axis = MapAxis.from_table(table, column_prefix="RAD", format="gadf-dl3")
 
         return cls(
             energy_axis_true=energy_axis_true,

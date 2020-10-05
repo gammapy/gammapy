@@ -140,40 +140,22 @@ class EnergyDispersion2D:
         # TODO: move this to MapAxis.from_table()
 
         if "ENERG_LO" in table.colnames:
-            e_true_lo = table["ENERG_LO"].quantity[0]
-            e_true_hi = table["ENERG_HI"].quantity[0]
+            energy_axis_true = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
         elif "ETRUE_LO" in table.colnames:
-            e_true_lo = table["ETRUE_LO"].quantity[0]
-            e_true_hi = table["ETRUE_HI"].quantity[0]
+            energy_axis_true = MapAxis.from_table(table, column_prefix="ETRUE", format="gadf-dl3")
         else:
             raise ValueError(
                 'Invalid column names. Need "ENERG_LO/ENERG_HI" or "ETRUE_LO/ETRUE_HI"'
             )
-        offset_lo = table["THETA_LO"].quantity[0]
-        offset_hi = table["THETA_HI"].quantity[0]
-        migra_lo = table["MIGRA_LO"].quantity[0]
-        migra_hi = table["MIGRA_HI"].quantity[0]
+
+        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
+        migra_axis = MapAxis.from_table(table, column_prefix="MIGRA", format="gadf-dl3")
 
         # TODO Why does this need to be transposed?
         matrix = table["MATRIX"].quantity[0].transpose()
 
-        e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
-        energy_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="energy_true")
-
-        migra_edges = edges_from_lo_hi(migra_lo, migra_hi)
-        migra_axis = MapAxis.from_edges(
-            migra_edges, interp="lin", name="migra", unit=""
-        )
-
-        # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
-        if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):
-            offset_axis = MapAxis.from_nodes(offset_lo, interp="lin", name="offset")
-        else:
-            offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
-            offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
-
         return cls(
-            energy_axis_true=energy_true_axis,
+            energy_axis_true=energy_axis_true,
             offset_axis=offset_axis,
             migra_axis=migra_axis,
             data=matrix,

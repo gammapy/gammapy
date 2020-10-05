@@ -95,22 +95,9 @@ class Background3D:
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
-        # TODO: move to MapAxis.from_table()
-        energy_lo = table["ENERG_LO"].quantity[0]
-        energy_hi = table["ENERG_HI"].quantity[0]
-        fov_lon_lo = table["DETX_LO"].quantity[0]
-        fov_lon_hi = table["DETX_HI"].quantity[0]
-        fov_lat_lo = table["DETY_LO"].quantity[0]
-        fov_lat_hi = table["DETY_HI"].quantity[0]
-
-        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
-
-        fov_lon_edges = edges_from_lo_hi(fov_lon_lo, fov_lon_hi)
-        fov_lon_axis = MapAxis.from_edges(fov_lon_edges, interp="lin", name="fov_lon")
-
-        fov_lat_edges = edges_from_lo_hi(fov_lat_lo, fov_lat_hi)
-        fov_lat_axis = MapAxis.from_edges(fov_lat_edges, interp="lin", name="fov_lat")
+        energy_axis = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
+        fov_lon_axis = MapAxis.from_table(table, column_prefix="DETX", format="gadf-dl3")
+        fov_lat_axis = MapAxis.from_table(table, column_prefix="DETY", format="gadf-dl3")
 
         return cls(
             energy_axis=energy_axis,
@@ -272,6 +259,7 @@ class Background2D:
         """Read from `~astropy.table.Table`."""
         # Spec says key should be "BKG", but there are files around
         # (e.g. CTA 1DC) that use "BGD". For now we support both
+        print(table.meta)
         if "BKG" in table.colnames:
             bkg_name = "BKG"
         elif "BGD" in table.colnames:
@@ -286,16 +274,9 @@ class Background2D:
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
-        energy_lo = table["ENERG_LO"].quantity[0]
-        energy_hi = table["ENERG_HI"].quantity[0]
-        offset_lo = table["THETA_LO"].quantity[0]
-        offset_hi = table["THETA_HI"].quantity[0]
+        energy_axis = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
+        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
 
-        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
-
-        offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
-        offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
         return cls(
             energy_axis=energy_axis,
             offset_axis=offset_axis,
