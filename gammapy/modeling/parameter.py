@@ -101,7 +101,7 @@ class Parameter:
         if instance is None:
             return self
         par = instance.__dict__[self.name]
-        par._type = instance.type
+        par._type = getattr(instance, "type", None)
         return par
 
     def __set__(self, instance, value):

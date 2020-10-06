@@ -20,8 +20,8 @@ class MyModel(Model):
 
 
 class MyDataset(Dataset):
-
     tag = "MyDataset"
+
     def __init__(self, name="test"):
         self.name = name
         self._models = Models([MyModel()])
