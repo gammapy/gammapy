@@ -9,14 +9,12 @@ from gammapy.utils.testing import requires_data
 
 class MyModel(Model):
     """Simple model example"""
-
     x = Parameter("x", 1, "cm")
     y = Parameter("y", 2)
 
 
 class CoModel(Model):
     """Compound model example"""
-
     norm = Parameter("norm", 42, "cm")
 
     def __init__(self, m1, m2, norm=norm.quantity):

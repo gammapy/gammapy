@@ -54,6 +54,11 @@ class SkyModel(SkyModelBase):
         Temporal model
     name : str
         Model identifier
+    apply_irf : dict
+        Dictionary declaring which IRFs should be applied to this model. Options
+        are {"exposure": True, "psf": True, "edisp": True}
+    datasets_names : list of str
+        Which datasets this model is applied to.
     """
 
     tag = "SkyModel"
@@ -84,7 +89,7 @@ class SkyModel(SkyModelBase):
     @property
     def _models(self):
         models = self.spectral_model, self.spatial_model, self.temporal_model
-        return [_ for _ in models if _]
+        return [model for model in models if model is not None]
 
     def _check_covariance(self):
         if not self.parameters == self._covariance.parameters:

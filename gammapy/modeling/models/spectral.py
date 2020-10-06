@@ -57,11 +57,16 @@ def integrate_spectrum(func, emin, emax, ndecade=100, intervals=False):
 
 class SpectralModel(Model):
     """Spectral model base class."""
+    _type = "spectral"
 
     def __call__(self, energy):
         kwargs = {par.name: par.quantity for par in self.parameters}
         kwargs = self._convert_evaluate_unit(kwargs, energy)
         return self.evaluate(energy, **kwargs)
+
+    @property
+    def type(self):
+        return self._type
 
     @staticmethod
     def _convert_evaluate_unit(kwargs_ref, energy):
