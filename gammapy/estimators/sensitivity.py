@@ -89,7 +89,7 @@ class SensitivityEstimator(Estimator):
         energy = dataset._geom.axes["energy"].center
 
         dataset.models = SkyModel(spectral_model=self.spectrum)
-        npred = dataset.npred()
+        npred = dataset.npred_sig()
 
         phi_0 = excess / npred
 

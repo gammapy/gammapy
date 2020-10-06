@@ -201,11 +201,10 @@ class ASmoothMapEstimator(Estimator):
 
         # extract 2d arrays
         counts = dataset.counts.data[0].astype(float)
-        background = dataset.npred().data[0]
+        background = dataset.background_model.evaluate().data[0]
 
-        # TODO: remove once MapDatasetOnOff.npred() returns the correct thing
         if isinstance(dataset, MapDatasetOnOff):
-            background += dataset.background
+            background = dataset.counts_off_normalised.data[0]
 
         if dataset.exposure is not None:
             exposure = estimate_exposure_reco_energy(dataset, self.spectrum)

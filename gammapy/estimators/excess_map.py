@@ -36,9 +36,6 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=Fals
     n_on = n_on.sum_over_axes(keepdims=True)
     n_on_conv = np.rint(n_on.convolve(kernel.array).data)
 
-    npred = dataset.npred() * mask
-    npred = npred.sum_over_axes(keepdims=True)
-
     if isinstance(dataset, MapDatasetOnOff):
         background = dataset.counts_off_normalised * mask
         background.data[dataset.acceptance_off.data == 0] = 0.0
@@ -50,7 +47,9 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=Fals
         background_conv = background.convolve(kernel.array)
         n_off_conv = n_off.convolve(kernel.array)
 
-        mu_sig = npred.convolve(kernel.array)
+        npred_sig = dataset.npred_sig() * mask
+        npred_sig = npred_sig.sum_over_axes(keepdims=True)
+        mu_sig = npred_sig.convolve(kernel.array)
 
         with np.errstate(invalid="ignore", divide="ignore"):
             alpha_conv = background_conv / n_off_conv
@@ -59,6 +58,9 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=Fals
             n_on_conv.data, n_off_conv.data, alpha_conv.data, mu_sig.data
         )
     else:
+
+        npred = dataset.npred() * mask
+        npred = npred.sum_over_axes(keepdims=True)
         background_conv = npred.convolve(kernel.array)
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 

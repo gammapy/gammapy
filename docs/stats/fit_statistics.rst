@@ -62,11 +62,12 @@ measurement containing only background to estimate it.
 
 In the OFF region, which contains background only, the number of counts
 :math:`n_{\mathrm{off}}` is a Poisson random variable of mean value
-:math:`\mu_{\mathrm{bkg}}`
+:math:`\alpha,\mu_{\mathrm{bkg}}`
 In the ON region which contains signal and background contribution, the number
 of counts, :math:`n_{\mathrm{on}}`, is a Poisson random variable of mean value
-:math:`\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}}`, where :math:`\alpha` is
-the ratio of the ON and OFF region acceptances.
+:math:`\mu_{\mathrm{sig}} +  \mu_{\mathrm{bkg}}`, where :math:`\alpha` is
+the ratio of the ON and OFF region acceptances, and :math:`\mu_{\mathrm{bkg}}`
+the mean background counts in the ON region.
 
 It is possible define a likelihood function and marginalize it over the unknown
 :math:`\mu_{\mathrm{bkg}}` to obtain :math:`\mu_{\mathrm{sig}}`.
@@ -76,12 +77,9 @@ for ON-OFF measurements in ground based gamma-ray astronomy.
 The WStat fit statistics is given by the following formula:
 
 .. math::
-    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
-    n_{\mathrm{on}} - n_{\mathrm{off}} - & n_{\mathrm{on}}
-    (\log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}}) -
-    \log{(n_{\mathrm{on}})}})\\
-    -& n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}})} -
-    \log{(n_{\mathrm{off}})})\big)
+    W = 2 \big(\mu_{\mathrm{sig}} + (1 + 1/\alpha)\mu_{\mathrm{bkg}}
+    - n_{\mathrm{on}} \log{(\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}})}
+    - n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}}/\alpha)}\big)
 
 To see how to derive it see the :ref:`wstat derivation <wstat_derivation>`.
 

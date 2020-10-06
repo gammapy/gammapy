@@ -132,6 +132,12 @@ def test_npred_models():
 
     assert_allclose(npred.data.sum(), 64.8)
 
+    npred_sig = spectrum_dataset.npred_sig()
+    assert_allclose(npred_sig.data.sum(), 64.8)
+
+    npred_sig_model1 = spectrum_dataset.npred_sig(model=model_1)
+    assert_allclose(npred_sig_model1.data.sum(), 32.4)
+
 
 @requires_dependency("iminuit")
 def test_fit(spectrum_dataset):
@@ -167,9 +173,7 @@ def test_spectrum_dataset_create():
     assert empty_spectrum_dataset.background_model.map.data.sum() == 0
     assert empty_spectrum_dataset.background_model.map.geom.axes[0].nbin == 2
     assert empty_spectrum_dataset.aeff.geom.axes[0].nbin == 3
-    assert (
-        empty_spectrum_dataset.edisp.edisp_map.geom.axes["energy"].nbin == 2
-    )
+    assert empty_spectrum_dataset.edisp.edisp_map.geom.axes["energy"].nbin == 2
     assert empty_spectrum_dataset.livetime.value == 0
     assert len(empty_spectrum_dataset.gti.table) == 0
     assert empty_spectrum_dataset.energy_range[0] is None
@@ -417,7 +421,7 @@ class TestSpectrumOnOff:
         energy = aeff.geom.axes[0].edges
         expected = aeff.data[0] * (energy[-1] - energy[0]) * const * livetime
 
-        assert_allclose(dataset.npred().data.sum(), expected.value)
+        assert_allclose(dataset.npred_sig().data.sum(), expected.value)
 
     def test_to_spectrum_dataset(self):
         ds = self.dataset.to_spectrum_dataset()
@@ -558,10 +562,10 @@ class TestSpectrumOnOff:
         assert info_dict["name"] == "test"
 
     def test_resample_energy_axis(self):
-        axis = MapAxis([0.1, 1, 10]*u.TeV, name="energy", interp='log')
+        axis = MapAxis([0.1, 1, 10] * u.TeV, name="energy", interp="log")
         grouped = self.dataset.resample_energy_axis(energy_axis=axis)
 
-        assert grouped.counts.data.shape == (2,1,1)
+        assert grouped.counts.data.shape == (2, 1, 1)
         assert_allclose(grouped.aeff.data, 1.0)
         assert_allclose(np.squeeze(grouped.counts), [2, 1])
         assert_allclose(np.squeeze(grouped.counts_off), [20, 20])
@@ -831,7 +835,7 @@ class TestSpectrumDatasetOnOffStack:
         assert_allclose(e_max.value, 4.466836e10, rtol=1e-3)
 
     def test_verify_npred(self):
-        """Veryfing npred is preserved during the stacking"""
+        """Verifying npred is preserved during the stacking"""
         pwl = SkyModel(
             spectral_model=PowerLawSpectralModel(
                 index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
@@ -840,13 +844,15 @@ class TestSpectrumDatasetOnOffStack:
 
         self.stacked_dataset.models = pwl
 
-        npred_stacked = self.stacked_dataset.npred().data
+        npred_stacked = self.stacked_dataset.npred_sig().data
         npred_stacked[~self.stacked_dataset.mask_safe.data] = 0
         npred_summed = np.zeros_like(npred_stacked)
 
         for dataset in self.datasets:
             dataset.models = pwl
-            npred_summed[dataset.mask_safe] += dataset.npred().data[dataset.mask_safe]
+            npred_summed[dataset.mask_safe] += dataset.npred_sig().data[
+                dataset.mask_safe
+            ]
 
         assert_allclose(npred_stacked, npred_summed, rtol=1e-6)
 

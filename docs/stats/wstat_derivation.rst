@@ -24,14 +24,14 @@ constant terms, we define the **WStat**.
 .. math::
     W = 2 \big(\mu_{\mathrm{sig}} + (1 + 1/\alpha)\mu_{\mathrm{bkg}}
     - n_{\mathrm{on}} \log{(\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}})}
-    - n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}}/alpha)}\big)
+    - n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}}/\alpha)}\big)
 
 In the most general case, where :math:`\mu_{\mathrm{src}}` and
 :math:`\mu_{\mathrm{bkg}}` are free the minimum of :math:`W` is at
 
 .. math::
     \mu_{\mathrm{sig}} = n_{\mathrm{on}} - \alpha\,n_{\mathrm{off}} \\
-    \mu_{\mathrm{bkg}} = n_{\mathrm{off}}
+    \mu_{\mathrm{bkg}} = \alpha\,n_{\mathrm{off}}
 
 
 Profile Likelihood
