@@ -38,6 +38,7 @@ def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
 
 class SpatialModel(Model):
     """Spatial model base class."""
+    _type = "spatial"
 
     def __init__(self, **kwargs):
         frame = kwargs.pop("frame", "icrs")
@@ -56,6 +57,10 @@ class SpatialModel(Model):
             kwargs["energy"] = energy
 
         return self.evaluate(lon, lat, **kwargs)
+
+    @property
+    def type(self):
+        return self._type
 
     # TODO: make this a hard-coded class attribute?
     @lazyproperty

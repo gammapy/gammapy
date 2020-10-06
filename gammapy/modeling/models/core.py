@@ -217,31 +217,15 @@ class Models(collections.abc.MutableSequence):
 
     @property
     def parameters_unique_names(self):
-        from gammapy.modeling.models import SkyModel
+        """List of unique parameter names as model_name.par_type.par_name"""
+        names = []
+        for model in self:
+            for par in model.parameters:
+                components = [model.name, par.type, par.name]
+                name = ".".join(components)
+                names.append(name)
 
-        param_names = []
-        for m in self._models:
-            if isinstance(m, SkyModel):
-                for p in m.parameters:
-                    if (
-                        m.spectral_model is not None
-                        and p in m.spectral_model.parameters
-                    ):
-                        tag = ".spectral."
-                    elif (
-                        m.spatial_model is not None and p in m.spatial_model.parameters
-                    ):
-                        tag = ".spatial."
-                    elif (
-                        m.temporal_model is not None
-                        and p in m.temporal_model.parameters
-                    ):
-                        tag = ".temporal."
-                    param_names.append(m.name + tag + p.name)
-            else:
-                for p in m.parameters:
-                    param_names.append(m.name + "." + p.name)
-        return param_names
+        return names
 
     @property
     def names(self):

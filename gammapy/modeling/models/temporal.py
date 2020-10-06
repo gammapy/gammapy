@@ -17,6 +17,7 @@ from .core import Model
 class TemporalModel(Model):
     """Temporal model base class.
     evaluates on  astropy.time.Time objects"""
+    _type = "temporal"
 
     def __call__(self, time):
         """Evaluate model
@@ -29,6 +30,10 @@ class TemporalModel(Model):
         kwargs = {par.name: par.quantity for par in self.parameters}
         time = u.Quantity(time.mjd, "day")
         return self.evaluate(time, **kwargs)
+
+    @property
+    def type(self):
+        return self._type
 
     @staticmethod
     def time_sum(t_min, t_max):

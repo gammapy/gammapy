@@ -114,10 +114,12 @@ def test_generalized_gaussian(eta, r_0, e):
     geom = WcsGeom.create(
         skydir=(0, 0), binsz=dr, width=(2 * reval, 2 * reval), frame="galactic",
     )
-    # check normalization is robut for a large set of values
+
+    # check normalization is robust for a large set of values
     model = GeneralizedGaussianSpatialModel(
         eta=eta, r_0=r_0 * u.deg, e=e, frame="galactic"
     )
+
     eval_geom = model.evaluate_geom(geom)
     integ_geom = model.integrate_geom(geom)
     assert eval_geom.unit.is_equivalent("sr-1")
