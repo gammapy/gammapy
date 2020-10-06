@@ -163,6 +163,26 @@ class SpectralModel(Model):
         else:
             return integrate_spectrum(self, emin, emax, **kwargs)
 
+    def integral_error(self, emin, emax):
+        """Evaluate the error of the integral flux of a given spectrum in
+        a given energy range.
+
+        Parameters
+        ----------
+        emin, emax :  `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
+
+        Returns
+        -------
+        flux, flux_err : tuple of `~astropy.units.Quantity`
+            Integral flux and flux error betwen emin and emax.
+        """
+        energy = np.sqrt(emin * emax)
+        flux = self.integral(emin, emax, intervals=True)
+        dnde, dnde_err = self.evaluate_error(energy, epsilon=1e-4)
+        flux_err = flux * dnde_err / dnde
+        return u.Quantity([flux.value, flux_err.value], unit=flux.unit)
+
     def energy_flux(self, emin, emax, **kwargs):
         r"""Compute energy flux in given energy range.
 
