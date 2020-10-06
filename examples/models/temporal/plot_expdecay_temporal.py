@@ -6,6 +6,9 @@ ExpDecay Temporal Model
 
 This model parametrises an ExpDecay time model.
 
+.. math::
+                F(t) = exp(t - t_{ref})/t0
+
 
 """
 

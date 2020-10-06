@@ -134,10 +134,10 @@ class ConstantTemporalModel(TemporalModel):
 
 
 class ExpDecayTemporalModel(TemporalModel):
-    """Temporal model with an exponential decay.
+    r"""Temporal model with an exponential decay.
 
-        ..math::
-                F(t) = exp(t - t_ref)/t0
+    .. math::
+            F(t) = exp(t - t_ref)/t0
 
     Parameters
     ----------
@@ -183,7 +183,10 @@ class ExpDecayTemporalModel(TemporalModel):
 
 
 class GaussianTemporalModel(TemporalModel):
-    """A Gaussian temporal profile
+    r"""A Gaussian temporal profile
+
+    ..math::
+            F(t) = exp( -0.5 * \frac{ (t - t_{ref})^2 } { \sigma^2 })
 
     Parameters
     ----------

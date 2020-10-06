@@ -7,6 +7,8 @@ Gaussian Temporal Model
 This model parametrises a gaussian time model.
 
 
+.. math::
+    F(t) = exp(-0.5* \frac{ (t - t_{ref})^2 } { \sigma^2 })
 """
 
 # %%
