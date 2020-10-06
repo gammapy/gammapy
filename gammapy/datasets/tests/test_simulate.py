@@ -148,7 +148,7 @@ def test_mde_sample_psf(dataset):
     assert_allclose(events.table["RA"][0], 266.2757792220, rtol=1e-5)
     assert events.table["RA"].unit == "deg"
 
-    assert_allclose(events.table["DEC"][0], -29.030257126, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -29.030939, rtol=1e-5)
     assert events.table["DEC"].unit == "deg"
 
 

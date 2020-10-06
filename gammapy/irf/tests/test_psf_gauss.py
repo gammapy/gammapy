@@ -89,7 +89,7 @@ def test_psf_cta_1dc():
     # Check that evaluation works for an energy / offset where an energy is available
     psf = psf_irf.to_energy_dependent_table_psf("2 deg")
     psf = psf.table_psf_at_energy("1 TeV")
-    assert_allclose(psf.containment_radius(0.68).deg, 0.053838, atol=1e-4)
+    assert_allclose(psf.containment_radius(0.68).deg, 0.052841, atol=1e-4)
 
 
 class TestHESS:

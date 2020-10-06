@@ -7,8 +7,7 @@ from astropy.io import fits
 from astropy.stats import gaussian_fwhm_to_sigma
 from astropy.table import Table
 from astropy import units as u
-from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
+from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.gauss import MultiGauss2D
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
@@ -127,17 +126,13 @@ class EnergyDependentMultiGaussPSF:
         hdu : `~astropy.io.fits.BinTableHDU`
             HDU
         """
-        energy_lo = u.Quantity(hdu.data["ENERG_LO"][0], "TeV")
-        energy_hi = u.Quantity(hdu.data["ENERG_HI"][0], "TeV")
+        table = Table.read(hdu)
 
-        edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis_true = MapAxis.from_edges(edges, name="energy_true", interp="log")
-
-        theta = Angle(hdu.data["THETA_LO"][0], "deg")
-        offset_axis = MapAxis.from_nodes(theta, name="offset", interp="lin")
+        energy_axis_true = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
+        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
 
         # Get sigmas
-        shape = (len(theta), len(energy_hi))
+        shape = (offset_axis.nbin, energy_axis_true.nbin)
         sigmas = []
         for key in ["SIGMA_1", "SIGMA_2", "SIGMA_3"]:
             sigma = hdu.data[key].reshape(shape).copy()
@@ -175,10 +170,6 @@ class EnergyDependentMultiGaussPSF:
         """
         # Set up data
         names = [
-            "ENERG_LO",
-            "ENERG_HI",
-            "THETA_LO",
-            "THETA_HI",
             "SCALE",
             "SIGMA_1",
             "AMPL_2",
@@ -186,13 +177,9 @@ class EnergyDependentMultiGaussPSF:
             "AMPL_3",
             "SIGMA_3",
         ]
-        units = ["TeV", "TeV", "deg", "deg", "", "deg", "", "deg", "", "deg"]
+        units = ["", "deg", "", "deg", "", "deg"]
 
         data = [
-            self.energy_axis_true.edges[:-1],
-            self.energy_axis_true.edges[1:],
-            self.offset_axis.center,
-            self.offset_axis.center,
             self.norms[0],
             self.sigmas[0],
             self.norms[1],
@@ -201,7 +188,9 @@ class EnergyDependentMultiGaussPSF:
             self.sigmas[2],
         ]
 
-        table = Table()
+        axes = MapAxes([self.energy_axis_true, self.offset_axis])
+        table = axes.to_table(format="gadf-dl3")
+
         for name_, data_, unit_ in zip(names, data, units):
             table[name_] = [data_]
             table[name_].unit = unit_

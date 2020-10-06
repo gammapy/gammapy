@@ -5,9 +5,7 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
-from gammapy.utils.array import array_stats_str
+from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .psf_table import EnergyDependentTablePSF, TablePSF
@@ -113,18 +111,6 @@ class PSF3D:
         table : `~astropy.table.Table`
             Table Table-PSF info.
         """
-        # TODO: move this code MapAxes.from_table()
-        theta_lo = table["THETA_LO"].quantity[0]
-        theta_hi = table["THETA_HI"].quantity[0]
-        offset = (theta_hi + theta_lo) / 2
-        offset = Angle(offset, unit=table["THETA_LO"].unit)
-
-        energy_lo = table["ENERG_LO"].quantity[0]
-        energy_hi = table["ENERG_HI"].quantity[0]
-
-        rad_lo = table["RAD_LO"].quantity[0]
-        rad_hi = table["RAD_HI"].quantity[0]
-
         psf_value = table["RPSF"].quantity[0]
 
         opts = {}
@@ -134,13 +120,9 @@ class PSF3D:
         except KeyError:
             pass
 
-        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis_true = MapAxis.from_edges(e_edges, interp="log", name="energy_true")
-
-        offset_axis = MapAxis.from_nodes(offset, interp="lin", name="offset")
-
-        rad_edges = edges_from_lo_hi(rad_lo, rad_hi)
-        rad_axis = MapAxis.from_edges(rad_edges, interp="lin", name="rad")
+        energy_axis_true = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
+        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
+        rad_axis = MapAxis.from_table(table, column_prefix="RAD", format="gadf-dl3")
 
         return cls(
             energy_axis_true=energy_axis_true,
@@ -158,19 +140,9 @@ class PSF3D:
         hdu_list : `~astropy.io.fits.HDUList`
             PSF in HDU list format.
         """
-        # TODO: move this to `MapAxis.to_table()` and `MapAxes.to_table()`
-        table = Table()
+        axes = MapAxes([self.offset_axis, self.energy_axis_true, self.rad_axis])
+        table = axes.to_table(format="gadf-dl3")
 
-        offset = self.offset_axis.center
-        energy = self.energy_axis_true.edges
-        rad = self.rad_axis.edges
-
-        table["THETA_LO"] = offset[np.newaxis]
-        table["THETA_HI"] = offset[np.newaxis]
-        table["ENERG_LO"] = energy[:-1][np.newaxis]
-        table["ENERG_HI"] = energy[1:][np.newaxis]
-        table["RAD_LO"] = rad[:-1][np.newaxis]
-        table["RAD_HI"] = rad[1:][np.newaxis]
         table["RPSF"] = self.psf_value[np.newaxis]
 
         hdu = fits.BinTableHDU(table)
