@@ -362,12 +362,12 @@ class Fit:
     def stat_surface(
         self, x, y, x_values, y_values, reoptimize=False, **optimize_opts
     ):
-        """Compute fit statistic contour.
+        """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.
         So this is taking a "slice" or "scan" of the fit statistic.
 
-        Caveat: This method can be very computationally intensive and slow. In future releases, parallel computation
+        Caveat: This method can be very computationally intensive and slow. In future releases, multi-core computation
         will make it more efficient.
 
         See also: `Fit.minos_contour`
