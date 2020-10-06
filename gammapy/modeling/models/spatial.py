@@ -393,7 +393,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         Center position coordinate frame
     """
 
-    tag = ["GeneralizedGaussianSpatialModel", "gen-gauss"]
+    tag = ["GeneralizedGaussianSpatialModel", "gauss-general"]
     lon_0 = Parameter("lon_0", "0 deg")
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
     r_0 = Parameter("r_0", "1 deg")
