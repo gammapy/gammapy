@@ -405,7 +405,7 @@ class LightCurveEstimator(Estimator):
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
- #       table = FluxPoints(table).to_sed_type("flux").table
+        table = FluxPoints(table).to_sed_type("flux").table
         return LightCurve(table)
 
     def estimate_time_bin_flux(self, datasets):
@@ -445,6 +445,10 @@ class LightCurveEstimator(Estimator):
         #TODO: remove once FluxPointsEstimator returns object with all energies in one row
         result = {}
         for colname in fp.table.colnames:
-            result[colname] = fp.table[colname].quantity
+            if colname is not "counts":
+                result[colname] = fp.table[colname].quantity
+            else:
+                result[colname] = fp.table[colname].quantity.sum()
 
-        return fp#.to_sed_type("flux")#result
+        #return fp.to_sed_type("flux")#
+        return result
