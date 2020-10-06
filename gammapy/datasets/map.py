@@ -343,25 +343,22 @@ class MapDataset(Dataset):
 
         Parameters
         -------------
-        model: `~gammapy.modeling.models.Models`, optional
-            The model to computed the npred for. If none, the sum of all components (minus the background model)
+        model: `~gammapy.modeling.models.SkyModel`, optional
+            Sky model to compute the npred for.
+            If none, the sum of all components (minus the background model)
             is returned
 
         Returns
         ----------
         npred_sig: `gammapy.maps.WcsNDMap`
+            Map of the predicted signal counts
         """
         if model is None:
             if self.background_model is None:
                 return self.npred()
             return self.npred() - self.background_model.evaluate()
         else:
-            return MapEvaluator(
-                model=model,
-                exposure=self.exposure,
-                edisp=self._edisp_kernel,
-                gti=self.gti,
-            ).compute_npred()
+            return self.evaluators.get(model).compute_npred()
 
     @classmethod
     def from_geoms(
@@ -1560,14 +1557,14 @@ class MapDatasetOnOff(MapDataset):
         """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
             Else, the total signal counts are returned.
 
-            Parameters
-            -------------
-            model: `~gammapy.modeling.models.Models`, optional
-               The model to computed the npred for.
+        Parameters
+        -------------
+        model: `~gammapy.modeling.models.Models`, optional
+           The model to computed the npred for.
 
-            Returns
-            ----------
-            npred_sig: `gammapy.maps.WcsNDMap`
+        Returns
+        ----------
+        npred_sig: `gammapy.maps.WcsNDMap`
         """
         if model is None:
             return super().npred()

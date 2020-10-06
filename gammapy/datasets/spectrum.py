@@ -299,25 +299,21 @@ class SpectrumDataset(Dataset):
 
         Parameters
         -------------
-        model: `~gammapy.modeling.models.Models`, optional
-            The model to computed the npred for. If none, the sum of all components (minus the background model)
+        model: `~gammapy.modeling.models.SpectralModel`, optional
+            The model to compute the npred for. If none, the sum of all components (minus the background model)
             is returned
 
         Returns
         ----------
         npred_sig: `gammapy.maps.RegionNDMap`
+            Predicted signal counts
         """
         if model is None:
             if self.background_model is None:
                 return self.npred()
             return self.npred() - self.background_model.evaluate()
         else:
-            return MapEvaluator(
-                model=model,
-                exposure=self.exposure,
-                edisp=self._edisp_kernel,
-                gti=self.gti,
-            ).compute_npred()
+            return self.evaluators.get(model).compute_npred()
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
@@ -963,16 +959,17 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def npred_sig(self, model=None):
         """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
-            Else, the total signal counts are returned.
+        Else, the total signal counts are returned.
 
-            Parameters
-            -------------
-            model: `~gammapy.modeling.models.Models`, optional
-               The model to computed the npred for.
+        Parameters
+        -------------
+        model: `~gammapy.modeling.models.Models`, optional
+           The model to computed the npred for.
 
-            Returns
-            ----------
-            npred_sig: `gammapy.maps.RegionNDMap`
+        Returns
+        ----------
+        npred_sig: `gammapy.maps.RegionNDMap`
+            Predicted signal counts
         """
         if model is None:
             return super().npred()
@@ -1009,28 +1006,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             mu_sig=mu_sig,
         )
         return np.nan_to_num(on_stat_)
-
-    def npred_sig(self, model=None):
-        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
-            Else, the total signal counts are returned.
-
-            Parameters
-            -------------
-            model: `~gammapy.modeling.models.Models`, optional
-               The model to computed the npred for.
-
-            Returns
-            ----------
-            npred_sig: `gammapy.maps.RegionNDMap`
-        """
-        if model is None:
-            return super().npred()
-        else:
-            return super().npred_sig(model=model)
-
-    def npred(self):
-        """Predicted counts from source + background(`RegionNDMap`)."""
-        return self.npred_sig() + self.background
 
     def fake(self, background_model, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.

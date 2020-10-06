@@ -680,6 +680,21 @@ def test_stack(sky_model):
     assert_allclose(dataset1.meta_table["OBS_ID"][0], [0, 1])
 
 
+@requires_data()
+def test_npred_sig(sky_model, geom, geom_etrue):
+    dataset = get_map_dataset(sky_model, geom, geom_etrue)
+    pwl = PowerLawSpectralModel()
+    gauss = GaussianSpatialModel(
+        lon_0="0.0 deg", lat_0="0.0 deg", sigma="0.5 deg", frame="galactic"
+    )
+    model1 = SkyModel(pwl, gauss)
+    dataset.models.append(model1)
+
+    assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
+    assert_allclose(dataset.npred_sig().data.sum(), 5676.04790, rtol=1e-3)
+    assert_allclose(dataset.npred_sig(model=model1).data.sum(), 150.7487, rtol=1e-3)
+
+
 def test_stack_npred():
     pwl = PowerLawSpectralModel()
     gauss = GaussianSpatialModel(sigma="0.2 deg")
