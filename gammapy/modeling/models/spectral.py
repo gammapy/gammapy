@@ -169,8 +169,8 @@ class SpectralModel(Model):
 
         Parameters
         ----------
-        emin, emax : `~numpy.array`
-            Arrays of minimum and maximum energies.
+        emin, emax :  `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
 
         Returns
         -------
