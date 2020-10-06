@@ -182,7 +182,7 @@ def test_different_exposure_unit(sky_model, geom):
     dataset = get_map_dataset(sky_model, geom, geom_gev, edisp="None")
     npred = dataset.npred()
 
-    assert_allclose(npred.data[0, 50, 50], 6.081644)
+    assert_allclose(npred.data[0, 50, 50], 6.086019)
 
 
 @pytest.mark.parametrize(("edisp_mode"), ["edispmap", "edispkernelmap", "edispkernel"])
