@@ -417,7 +417,7 @@ class BackgroundIRFModel(Model):
         if dataset_name is None:
             raise ValueError("Dataset name a is required argument")
 
-        self._datasets_name = dataset_name
+        self._datasets_names = [dataset_name]
 
         if spectral_model is None:
             spectral_model = PowerLawNormSpectralModel()
@@ -433,11 +433,11 @@ class BackgroundIRFModel(Model):
     @property
     def datasets_names(self):
         """Dataset names"""
-        return [self._datasets_name]
+        return self._datasets_names
 
     @property
     def name(self):
-        return self._datasets_name + "-bkg"
+        return self._datasets_names[0] + "-bkg"
 
     @property
     def parameters(self):

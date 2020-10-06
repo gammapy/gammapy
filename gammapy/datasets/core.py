@@ -69,6 +69,7 @@ class Dataset(abc.ABC):
         new = copy.deepcopy(self)
         name = make_name(name)
         new._name = name
+
         # propagate new dataset name
         if new._models is not None:
             for m in new._models:
@@ -76,8 +77,6 @@ class Dataset(abc.ABC):
                     for k, d in enumerate(m.datasets_names):
                         if d == self.name:
                             m.datasets_names[k] = name
-                    if hasattr(new, "background_model") and m == new.background_model:
-                        m._name = name + "-bkg"
         return new
 
     @staticmethod

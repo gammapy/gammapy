@@ -181,7 +181,7 @@ class MapDataset(Dataset):
     @background.setter
     def background(self, value):
         """Background IRF"""
-        if isinstance(value, Map):
+        if isinstance(value, Map) or value is None:
             self._background = value
 
     @property
@@ -347,12 +347,7 @@ class MapDataset(Dataset):
 
     def npred(self):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
-        npred_total = Map.from_geom(self._geom, dtype=float)
-
-        for evaluator in self.evaluators.values():
-            if evaluator.contributes:
-                npred = evaluator.compute_npred()
-                npred_total.stack(npred)
+        npred_total = self.npred_sig()
 
         if self.background:
             npred_total += self.background
@@ -375,12 +370,17 @@ class MapDataset(Dataset):
         npred_sig: `gammapy.maps.Map`
             Map of the predicted signal counts
         """
-        if model is None:
-            if self.background_model is None:
-                return self.npred()
-            return self.npred() - self.background_model.evaluate()
-        else:
-            return self.evaluators.get(model).compute_npred()
+        npred_total = Map.from_geom(self._geom, dtype=float)
+
+        for evaluator in self.evaluators.values():
+            if model is evaluator.model:
+                return evaluator.compute_npred()
+
+            if evaluator.contributes:
+                npred = evaluator.compute_npred()
+                npred_total.stack(npred)
+
+        return npred_total
 
     @classmethod
     def from_geoms(
@@ -596,7 +596,7 @@ class MapDataset(Dataset):
                 else:
                     self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
 
-        if self.background and other.background:
+        if self.background and other.background and self.stat_type == "cash":
             background = self.background * self.mask_safe
             background.stack(other.background, other.mask_safe)
             self.background = background
@@ -1250,7 +1250,7 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
-        if self.background is not None:
+        if self.background is not None and self.stat_type == "cash":
             kwargs["background"] = self.background.cutout(**cutout_kwargs)
 
         if self.edisp is not None:
@@ -1307,7 +1307,7 @@ class MapDataset(Dataset):
             else:
                 kwargs["exposure"] = self.exposure.copy()
 
-        if self.background is not None:
+        if self.background is not None and self.stat_type == "cash":
             kwargs["background"] = self.background.downsample(
                 factor=factor, axis_name=axis_name, weights=self.mask_safe
             )
@@ -1473,8 +1473,10 @@ class MapDataset(Dataset):
                 axis=energy_axis, weights=self.mask_safe
             )
 
-        if self.background is not No<<ne:
-            kwargs["background"] = self.background.resample_axis(axis=energy_axis, weights=self.mask_safe)
+        if self.background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.background.resample_axis(
+                axis=energy_axis, weights=self.mask_safe
+            )
 
         # Mask_safe or mask_irf??
         if isinstance(self.edisp, EDispKernelMap):
@@ -1640,28 +1642,6 @@ class MapDatasetOnOff(MapDataset):
         """Excess (counts - alpha * counts_off)"""
         return self.counts - self.counts_off_normalised
 
-    def npred_sig(self, model=None):
-        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
-            Else, the total signal counts are returned.
-
-        Parameters
-        -------------
-        model: `~gammapy.modeling.models.Models`, optional
-           The model to computed the npred for.
-
-        Returns
-        ----------
-        npred_sig: `gammapy.maps.WcsNDMap`
-        """
-        if model is None:
-            return super().npred()
-        else:
-            return super().npred_sig(model=model)
-
-    def npred(self):
-        """Predicted counts from source + background(`WcsNDMap`)."""
-        return self.npred_sig() + self.background
-
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
         mu_sig = self.npred_sig().data
@@ -1755,9 +1735,9 @@ class MapDatasetOnOff(MapDataset):
 
         """
 
-        if counts_off is None and dataset.background_model is not None:
+        if counts_off is None and dataset.background is not None:
             alpha = acceptance / acceptance_off
-            counts_off = dataset.background_model.evaluate() / alpha
+            counts_off = dataset.background / alpha
 
         return cls(
             counts=dataset.counts,
@@ -1790,8 +1770,6 @@ class MapDatasetOnOff(MapDataset):
 
         name = make_name(name)
 
-        background_model = BackgroundModel(self.counts_off * self.alpha)
-        background_model.datasets_names = [name]
         return MapDataset(
             counts=self.counts,
             exposure=self.exposure,
@@ -1801,7 +1779,7 @@ class MapDatasetOnOff(MapDataset):
             gti=self.gti,
             mask_fit=self.mask_fit,
             mask_safe=self.mask_safe,
-            models=background_model,
+            background=self.counts_off * self.alpha,
             meta_table=self.meta_table,
         )
 
@@ -1890,6 +1868,9 @@ class MapDatasetOnOff(MapDataset):
         """
         hdulist = super().to_hdulist()
         exclude_primary = slice(1, None)
+
+        del hdulist["BACKGROUND"]
+        del hdulist["BACKGROUND_BANDS"]
 
         if self.counts_off is not None:
             hdulist += self.counts_off.to_hdulist(hdu="counts_off")[exclude_primary]

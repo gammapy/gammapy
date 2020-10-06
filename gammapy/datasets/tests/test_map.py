@@ -1061,7 +1061,6 @@ def test_map_dataset_on_off_cutout(images):
     assert cutout_dataset.counts_off.data.shape == (1, 50, 50)
     assert cutout_dataset.acceptance.data.shape == (1, 50, 50)
     assert cutout_dataset.acceptance_off.data.shape == (1, 50, 50)
-    assert cutout_dataset.background_model == None
     assert cutout_dataset.name != dataset.name
 
 
@@ -1124,16 +1123,14 @@ def test_map_dataset_geom(geom, sky_model):
     e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5, name="energy_true")
     dataset = MapDataset.create(geom, energy_axis_true=e_true)
     dataset.counts = None
-    dataset._background_model = None
-    with pytest.raises(AttributeError):
-        dataset.background_model = None
-
+    dataset.background = None
     dataset.models = sky_model
 
     npred = dataset.npred()
     assert npred.geom == geom
 
     dataset.mask_safe = None
+    dataset.mask_fit = None
 
     with pytest.raises(ValueError):
         dataset._geom
@@ -1141,11 +1138,10 @@ def test_map_dataset_geom(geom, sky_model):
 
 @requires_data()
 def test_names(geom, geom_etrue, sky_model):
-
     m = Map.from_geom(geom)
     m.quantity = 0.2 * np.ones(m.data.shape)
-    background_model1 = BackgroundModel(m, name="bkg1", datasets_names=["test"])
-    assert background_model1.name == "bkg1"
+    background_model1 = BackgroundIRFModel(dataset_name="test")
+    assert background_model1.name == "test-bkg"
 
     c_map1 = Map.from_geom(geom)
     c_map1.quantity = 0.3 * np.ones(c_map1.data.shape)
@@ -1160,16 +1156,19 @@ def test_names(geom, geom_etrue, sky_model):
         counts=c_map1,
         models=Models([model1, model2, background_model1]),
         exposure=get_exposure(geom_etrue),
+        background=m,
         name="test",
     )
 
     dataset2 = dataset1.copy()
+    print(dataset2.models)
     assert dataset2.name != dataset1.name
-    assert dataset2.background_model
+    assert dataset2.models[f"{dataset2.name}-bkg"]
     dataset2 = dataset1.copy(name="dataset2")
+
     assert dataset2.name == "dataset2"
-    assert dataset2.background_model.name == "dataset2-bkg"
-    assert dataset2.background_model is not dataset1.background_model
+    assert dataset2.models["dataset2-bkg"].name == "dataset2-bkg"
+    assert dataset2.models["dataset2-bkg"] is not dataset1.models["test-bkg"]
     assert dataset2.models.names == ["model1", "model2", "dataset2-bkg"]
     assert dataset2.models is not dataset1.models
 
@@ -1189,7 +1188,7 @@ def test_stack_dataset_dataset_on_off():
     dataset_on_off.counts_off += 1
     dataset.stack(dataset_on_off)
 
-    assert_allclose(dataset.background_model.map.data, 0.166667, rtol=1e-3)
+    assert_allclose(dataset.background.data, 0.166667, rtol=1e-3)
 
 
 @requires_data()
@@ -1224,7 +1223,7 @@ def test_slice_by_idx():
 
     assert sub_dataset.counts.geom.data_shape == (5, 4, 4)
     assert sub_dataset.mask_safe.geom.data_shape == (5, 4, 4)
-    assert sub_dataset.background_model.map.geom.data_shape == (5, 4, 4)
+    assert sub_dataset.background.geom.data_shape == (5, 4, 4)
     assert sub_dataset.exposure.geom.data_shape == (31, 4, 4)
     assert sub_dataset.edisp.edisp_map.geom.data_shape == (31, 5, 4, 4)
     assert sub_dataset.psf.psf_map.geom.data_shape == (31, 66, 4, 4)
@@ -1237,7 +1236,7 @@ def test_slice_by_idx():
 
     assert sub_dataset.counts.geom.data_shape == (17, 4, 4)
     assert sub_dataset.mask_safe.geom.data_shape == (17, 4, 4)
-    assert sub_dataset.background_model.map.geom.data_shape == (17, 4, 4)
+    assert sub_dataset.background.geom.data_shape == (17, 4, 4)
     assert sub_dataset.exposure.geom.data_shape == (5, 4, 4)
     assert sub_dataset.edisp.edisp_map.geom.data_shape == (5, 17, 4, 4)
     assert sub_dataset.psf.psf_map.geom.data_shape == (5, 66, 4, 4)
@@ -1290,7 +1289,7 @@ def test_to_map_dataset():
     dataset = dataset_onoff.to_map_dataset(name="ds")
 
     assert dataset.name == "ds"
-    assert_allclose(dataset.background_model.map.data.sum(), 100)
+    assert_allclose(dataset.background.data.sum(), 100)
     assert isinstance(dataset, MapDataset)
     assert dataset.counts == dataset_onoff.counts
 
