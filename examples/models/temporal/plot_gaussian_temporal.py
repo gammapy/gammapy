@@ -21,9 +21,19 @@ from gammapy.modeling.models import Models, GaussianTemporalModel, SkyModel
 sigma = "3 h"
 t_ref = Time("2020-10-01")
 time_range = [t_ref - 0.5 * u.d , t_ref + 0.5 * u.d]
-model = GaussianTemporalModel(t_ref = t_ref.mjd * u.d, sigma=sigma)
-model.plot(time_range)
+gaussian_model = GaussianTemporalModel(t_ref = t_ref.mjd * u.d, sigma=sigma)
+gaussian_model.plot(time_range)
 plt.grid(which="both")
+
+# %%
+# YAML representation
+# -------------------
+# Here is an example YAML file using the model:
+from gammapy.modeling.models import PowerLawSpectralModel
+model = SkyModel(spectral_model=PowerLawSpectralModel(), temporal_model= gaussian_model, name="gaissian_model")
+models = Models([model])
+
+print(models.to_yaml())
 
 
 
