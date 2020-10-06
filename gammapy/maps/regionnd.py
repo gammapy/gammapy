@@ -343,13 +343,6 @@ class RegionNDMap(Map):
 
         self.data += data
 
-        # TODO: check whether this can be improved
-        if "livetime" in other.meta:
-            if "livetime" in self.meta:
-                self.meta["livetime"] += other.meta["livetime"]
-            else:
-                self.meta["livetime"] = other.meta["livetime"]
-
     def to_table(self, format="ogip", ogip_column="COUNTS"):
         """Convert to `~astropy.table.Table`.
 

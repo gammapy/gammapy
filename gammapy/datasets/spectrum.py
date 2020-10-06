@@ -496,7 +496,7 @@ class SpectrumDataset(Dataset):
             [BackgroundModel(background, name=name + "-bkg", datasets_names=[name])]
         )
         exposure = RegionNDMap.create(region=region, axes=[e_true], unit="cm2 s")
-        edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, counts.geom.to_image())
+        edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, geom=counts.geom)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
 
@@ -564,6 +564,13 @@ class SpectrumDataset(Dataset):
 
         if self.exposure is not None and other.exposure is not None:
             self.exposure.stack(other.exposure)
+
+            # TODO: check whether this can be improved e.g. handling this in GTI
+            if "livetime" in other.exposure.meta:
+                if "livetime" in self.exposure.meta:
+                    self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
+                else:
+                    self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
 
         if self.edisp is not None and other.edisp is not None:
             self.edisp.edisp_map *= self.mask_safe.data
@@ -1358,7 +1365,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         try:
             rmffile = phafile.replace("pha", "rmf")
             kernel = EDispKernel.read(dirname / rmffile)
-            edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=counts.geom.to_image())
+            edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=counts.geom)
 
         except OSError:
             # TODO : Add logger and echo warning
