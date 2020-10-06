@@ -177,10 +177,8 @@ class SpectralModel(Model):
         flux, flux_err : tuple of `~astropy.units.Quantity`
             Integral flux and flux error betwen emin and emax.
         """
-        dE = emax - emin
-        flux = np.sum(self.integral(emin,emax))
-        flux_err = np.sum(self.evaluate_error(emin, epsilon=1e-4)[1] * dE)
-
+        flux = self.integral(emin,emax)
+        flux_err = flux * self.evaluate_error(emin, epsilon=1e-4)[1] / self(emin)
         return u.Quantity([flux.value, flux_err.value], unit=flux.unit)
 
     def energy_flux(self, emin, emax, **kwargs):

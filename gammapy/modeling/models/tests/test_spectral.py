@@ -771,7 +771,7 @@ class TestSpectralModelErrorPropagation:
 
 
 def test_integral_error():
-    energy = np.linspace(1 * u.TeV, 10 * u.TeV, 1000)
+    energy = np.linspace(1 * u.TeV, 10 * u.TeV, 10)
     emin = energy[:-1]
     emax = energy[1:]
 
@@ -781,5 +781,5 @@ def test_integral_error():
 
     flux, flux_error = powerlaw.integral_error(emin,emax)
 
-    assert_allclose(flux.value, 9.e-13, rtol=1e-3)
-    assert_allclose(flux_error.value, 2.947307639914628e-13, rtol=5e-14)
+    assert_allclose(flux.value[0], 5.e-13, rtol=5e-14)
+    assert_allclose(flux_error.value[0], 4.9999999999580744e-14, rtol=5e-14)
