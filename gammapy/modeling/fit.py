@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+import itertools
 from astropy.utils import lazyproperty
 from .covariance import Covariance
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
@@ -100,7 +101,6 @@ class Fit:
         fit_result : `FitResult`
             Results
         """
-
 
         if optimize_opts is None:
             optimize_opts = {}
@@ -359,23 +359,62 @@ class Fit:
 
         return {"values": values, "stat": np.array(stats)}
 
-    def stat_contour(self):
-        """Compute fit statistic contour.
+    def stat_surface(
+        self, x, y, x_values, y_values, reoptimize=False, **optimize_opts
+    ):
+        """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.
         So this is taking a "slice" or "scan" of the fit statistic.
+
+        Caveat: This method can be very computationally intensive and slow
 
         See also: `Fit.minos_contour`
 
         Parameters
         ----------
-        TODO
+        x, y : `~gammapy.modeling.Parameter`
+            Parameters of interest
+        x_values, y_values : list or `numpy.ndarray`
+            Parameter values to evaluate the fit statistic for.
+        reoptimize : bool
+            Re-optimize other parameters, when computing the fit statistic profile.
+        **optimize_opts : dict
+            Keyword arguments passed to the optimizer. See `Fit.optimize` for further details.
 
         Returns
         -------
-        TODO
+        results : dict
+            Dictionary with keys "x_values", "y_values" and "stat".
+
         """
-        raise NotImplementedError
+        parameters = self._parameters
+        x = parameters[x]
+        y = parameters[y]
+
+        stats = []
+        with parameters.restore_values:
+            for x_value, y_value in itertools.product(x_values, y_values):
+                # TODO: Remove log.info() and provide a nice progress bar
+                log.info(f"Processing: x={x_value}, y={y_value}")
+                x.value = x_value
+                y.value = y_value
+                if reoptimize:
+                    x.frozen = True
+                    y.frozen = True
+                    result = self.optimize(**optimize_opts)
+                    stat = result.total_stat
+                else:
+                    stat = self.datasets.stat_sum()
+
+                stats.append(stat)
+
+        stats = np.array(stats)
+        stats = stats.reshape(
+            (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
+        )
+
+        return {"x_values": x_values, "y_values": y_values, "stat": stats}
 
     def minos_contour(self, x, y, numpoints=10, sigma=1.0):
         """Compute MINOS contour.
