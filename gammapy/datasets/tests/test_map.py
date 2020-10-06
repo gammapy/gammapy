@@ -172,26 +172,17 @@ def test_fake(sky_model, geom, geom_etrue):
     assert_allclose(dataset.counts.data.sum(), 9723)
 
 
-@pytest.mark.xfail
 @requires_data()
 def test_different_exposure_unit(sky_model, geom):
-    dataset_ref = get_map_dataset(sky_model, geom, geom, edisp="None")
-    npred_ref = dataset_ref.npred()
-
     ebounds_true = np.logspace(2, 4, 3)
-    axis = MapAxis.from_edges(ebounds_true, name="energy", unit="GeV", interp="log")
-    geom_gev = WcsGeom.create(
-        skydir=(266.40498829, -28.93617776),
-        binsz=0.02,
-        width=(2, 2),
-        frame="icrs",
-        axes=[axis],
+    axis = MapAxis.from_edges(
+        ebounds_true, name="energy_true", unit="GeV", interp="log"
     )
-
+    geom_gev = geom.to_image().to_cube([axis])
     dataset = get_map_dataset(sky_model, geom, geom_gev, edisp="None")
     npred = dataset.npred()
 
-    assert_allclose(npred.data[0, 50, 50], npred_ref.data[0, 50, 50])
+    assert_allclose(npred.data[0, 50, 50], 6.081644)
 
 
 @pytest.mark.parametrize(("edisp_mode"), ["edispmap", "edispkernelmap", "edispkernel"])
@@ -339,6 +330,7 @@ def test_downsample():
     with pytest.raises(ValueError):
         dataset.downsample(2, axis_name="energy")
 
+
 @requires_data()
 def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset = get_map_dataset(sky_model, geom, geom_etrue)
@@ -402,8 +394,8 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
     # To test io of psf and edisp map
     stacked = MapDataset.create(geom)
-    stacked.write("test.fits", overwrite=True)
-    stacked1 = MapDataset.read("test.fits")
+    stacked.write(tmp_path / "test-2.fits", overwrite=True)
+    stacked1 = MapDataset.read(tmp_path / "test-2.fits")
     assert stacked1.psf.psf_map is not None
     assert stacked1.psf.exposure_map is not None
     assert stacked1.edisp.edisp_map is not None
