@@ -6,8 +6,11 @@ Constant Temporal Model
 
 This model parametrises a constant time model.
 
+.. math:: F(E) = k
 
 """
+
+
 
 # %%
 # Example plot

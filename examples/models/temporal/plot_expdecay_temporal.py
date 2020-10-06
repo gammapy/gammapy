@@ -1,5 +1,5 @@
 r"""
-.. _constant-temporal-model:
+.. _expdecay-temporal-model:
 
 ExpDecay Temporal Model
 =======================

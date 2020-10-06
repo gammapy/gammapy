@@ -60,7 +60,13 @@ class TemporalModel(Model):
             times to plot the model
         ax : `~matplotlib.axes.Axes`, optional
             axis
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            axis
         """
+
 
         import matplotlib.pyplot as plt
 
