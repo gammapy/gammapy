@@ -402,6 +402,72 @@ class SkyModel(SkyModelBase):
         return str_.expandtabs(tabsize=2)
 
 
+class BackgroundIRFModel(Model):
+    """Background IRF model
+
+    Parameters
+    ----------
+    spectral_model : `~gammapy.modeling.models.SpectralModel`
+        Normalized spectral model.
+    dataset_name : str
+        Dataset name
+
+    """
+    def __init__(self, spectral_model=None, dataset_name=None):
+        if dataset_name is None:
+            raise ValueError("Dataset name a is required argument")
+
+        self._datasets_name = dataset_name
+
+        if spectral_model is None:
+            spectral_model = PowerLawNormSpectralModel()
+
+        self._spectral_model = spectral_model
+        super().__init__()
+
+    @property
+    def spectral_model(self):
+        """Spectral norm model"""
+        return self._spectral_model
+
+    @property
+    def datasets_names(self):
+        """Dataset names"""
+        return [self._datasets_name]
+
+    @property
+    def name(self):
+        return self._datasets_name + "-bkg"
+
+    @property
+    def parameters(self):
+        """Model parameters"""
+        parameters = []
+        parameters.append(self.spectral_model.parameters)
+        return Parameters.from_stack(parameters)
+
+    def __str__(self):
+        str_ = self.__class__.__name__ + "\n\n"
+        str_ += "\t{:26}: {}\n".format("Name", self.name)
+        str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
+
+        str_ += "\tParameters:\n"
+        info = _get_parameters_str(self.parameters)
+        lines = info.split("\n")
+        str_ += "\t" + "\n\t".join(lines[:-1])
+
+        str_ += "\n\n"
+        return str_.expandtabs(tabsize=2)
+
+    def evaluate_map(self, background):
+        """Evaluate map"""
+        energy_axis = background.geom.axes["energy"]
+        energy = energy_axis.center[:, np.newaxis, np.newaxis]
+        value = self.spectral_model(energy)
+        data = background.data * value.value
+        return background.copy(data=data)
+
+
 class BackgroundModel(Model):
     """Background model.
 

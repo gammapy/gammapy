@@ -16,6 +16,7 @@ from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling.models import (
     BackgroundModel,
+    BackgroundIRFModel,
     Models,
     ProperModels,
 )
@@ -143,16 +144,17 @@ class MapDataset(Dataset):
         models=None,
         counts=None,
         exposure=None,
-        mask_fit=None,
+        background=None,
         psf=None,
         edisp=None,
-        name=None,
         mask_safe=None,
+        mask_fit=None,
         gti=None,
         meta_table=None,
+        name=None,
     ):
         self._name = make_name(name)
-        self._background_model = None
+        self.background = background
         self.counts = counts
         self.exposure = exposure
         self.mask_fit = mask_fit
@@ -166,6 +168,21 @@ class MapDataset(Dataset):
         self.models = models
         self.gti = gti
         self.meta_table = meta_table
+
+    @property
+    def background(self):
+        """Background """
+        try:
+            model = self.models[self.name + "-bkg"]
+            return model.evaluate_map(self._background)
+        except ValueError:
+            return self._background
+
+    @background.setter
+    def background(self, value):
+        """Background IRF"""
+        if isinstance(value, Map):
+            self._background = value
 
     @property
     def name(self):
@@ -271,23 +288,13 @@ class MapDataset(Dataset):
         else:
             self._models = Models(models)
 
-        # TODO: clean this up (probably by removing)
-        for model in self.models:
-            if isinstance(model, BackgroundModel):
-                if model.datasets_names is not None:
-                    if self.name in model.datasets_names:
-                        self._background_model = model
-                        break
-        else:
-            if not isinstance(self, MapDatasetOnOff):
-                log.warning(f"No background model defined for dataset {self.name}")
         self._evaluators = {}
 
     @property
     def evaluators(self):
         """Model evaluators"""
-
         models = self.models
+
         if models:
             keys = list(self._evaluators.keys())
             for key in keys:
@@ -295,6 +302,9 @@ class MapDataset(Dataset):
                     del self._evaluators[key]
 
             for model in models:
+                if isinstance(model, BackgroundIRFModel):
+                    continue
+
                 evaluator = self._evaluators.get(model)
 
                 if evaluator is None:
@@ -314,6 +324,23 @@ class MapDataset(Dataset):
         return self._evaluators
 
     @property
+    def _geom(self):
+        """Main analysis geometry"""
+        if self.counts is not None:
+            return self.counts.geom
+        elif self.background is not None:
+            return self.background.geom
+        elif self.mask_safe is not None:
+            return self.mask_safe.geom
+        elif self.mask_fit is not None:
+            return self.mask_fit.geom
+        else:
+            raise ValueError(
+                "Either 'counts', 'background', 'mask_fit'"
+                " or 'mask_safe' must be defined."
+            )
+
+    @property
     def data_shape(self):
         """Shape of the counts or background data (tuple)"""
         return self._geom.data_shape
@@ -326,6 +353,10 @@ class MapDataset(Dataset):
             if evaluator.contributes:
                 npred = evaluator.compute_npred()
                 npred_total.stack(npred)
+
+        if self.background:
+            npred_total += self.background
+
         return npred_total
 
     def npred_sig(self, model=None):
@@ -390,11 +421,7 @@ class MapDataset(Dataset):
         kwargs = kwargs.copy()
         kwargs["name"] = name
         kwargs["counts"] = Map.from_geom(geom, unit="")
-
-        background = Map.from_geom(geom, unit="")
-        kwargs["models"] = Models(
-            [BackgroundModel(background, name=name + "-bkg", datasets_names=[name])]
-        )
+        kwargs["background"] = Map.from_geom(geom, unit="")
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
 
         if geom_edisp.axes[0].name.lower() == "energy":
@@ -562,22 +589,17 @@ class MapDataset(Dataset):
 
         if self.exposure and other.exposure:
             self.exposure.stack(other.exposure, weights=other.mask_safe_image)
-
-            # TODO: check whether this can be improved e.g. handling this in GTI
+             # TODO: check whether this can be improved e.g. handling this in GTI
             if "livetime" in other.exposure.meta:
                 if "livetime" in self.exposure.meta:
                     self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
                 else:
                     self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
 
-        # TODO: unify background model handling
-        if other.stat_type == "wstat":
-            background_model = BackgroundModel(other.background)
-        else:
-            background_model = other.background_model
-
-        if self.background_model and background_model:
-            self.background_model.stack(background_model, weights=other.mask_safe)
+        if self.background and other.background:
+            background = self.background * self.mask_safe
+            background.stack(other.background, other.mask_safe)
+            self.background = background
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
@@ -793,8 +815,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
 
-        if self.background_model is not None:
-            hdulist += self.background_model.map.to_hdulist(hdu="background")[
+        if self.background is not None:
+            hdulist += self.background.to_hdulist(hdu="background")[
                 exclude_primary
             ]
 
@@ -868,19 +890,13 @@ class MapDataset(Dataset):
             kwargs["exposure"] = exposure
 
         if "BACKGROUND" in hdulist:
-            background_map = Map.from_hdulist(hdulist, hdu="background")
-            kwargs["models"] = Models(
-                [
-                    BackgroundModel(
-                        background_map, datasets_names=[name], name=name + "-bkg"
-                    )
-                ]
-            )
+            kwargs["background"] = Map.from_hdulist(hdulist, hdu="background")
 
         if "EDISP_MATRIX" in hdulist:
             kwargs["edisp"] = EDispKernel.from_hdulist(
                 hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
             )
+
         if "EDISP" in hdulist:
             edisp_map = Map.from_hdulist(hdulist, hdu="edisp")
             try:
@@ -1164,11 +1180,11 @@ class MapDataset(Dataset):
         if self.counts is not None:
             kwargs["counts"] = self.counts.get_spectrum(on_region, np.sum, weights=self.mask_safe)
 
-        if self.background_model is not None:
-            bkg = self.background_model.evaluate().get_spectrum(on_region, np.sum, weights=self.mask_safe)
-            bkg_model = BackgroundModel(bkg, name=name + "-bkg", datasets_names=[name])
-            bkg_model.spectral_model.norm.frozen = True
-            kwargs["models"] = Models([bkg_model])
+        if self.background is not None:
+            kwargs["models"] = BackgroundModel(
+                self.background.get_spectrum(on_region, func=np.sum, weights=self.mask_safe),
+                datasets_names=[name]
+            )
 
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.get_spectrum(on_region, np.mean)
@@ -1234,10 +1250,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
-        if self.background_model is not None:
-            model = self.background_model.cutout(**cutout_kwargs, name=name + "-bkg")
-            model.datasets_names = [name]
-            kwargs["models"] = model
+        if self.background is not None:
+            kwargs["background"] = self.background.cutout(**cutout_kwargs)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
@@ -1293,12 +1307,10 @@ class MapDataset(Dataset):
             else:
                 kwargs["exposure"] = self.exposure.copy()
 
-        if self.background_model is not None:
-            m = self.background_model.evaluate().downsample(
+        if self.background is not None:
+            kwargs["background"] = self.background.downsample(
                 factor=factor, axis_name=axis_name, weights=self.mask_safe
             )
-            kwargs["models"] = BackgroundModel(map=m, datasets_names=[name])
-
         if self.edisp is not None:
             if axis_name is not None:
                 kwargs["edisp"] = self.edisp.downsample(
@@ -1351,9 +1363,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.pad(pad_width=pad_width, mode=mode)
 
-        if self.background_model is not None:
-            m = self.background_model.evaluate().pad(pad_width=pad_width, mode=mode)
-            kwargs["models"] = BackgroundModel(map=m, datasets_names=[name])
+        if self.background is not None:
+            kwargs["background"] = self.background.pad(pad_width=pad_width, mode=mode)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.copy()
@@ -1398,9 +1409,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.slice_by_idx(slices=slices)
 
-        if self.background_model is not None:
-            m = self.background_model.evaluate().slice_by_idx(slices=slices)
-            kwargs["models"] = BackgroundModel(map=m, datasets_names=[name])
+        if self.background is not None:
+            kwargs["background"] = self.background.slice_by_idx(slices=slices)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.slice_by_idx(slices=slices)
@@ -1463,15 +1473,8 @@ class MapDataset(Dataset):
                 axis=energy_axis, weights=self.mask_safe
             )
 
-        if self.background_model is not None:
-            background = self.background_model.evaluate()
-            background = background.resample_axis(
-                axis=energy_axis, weights=self.mask_safe
-            )
-            model = BackgroundModel(
-                background, datasets_names=[name], name=f"{name}-bkg"
-            )
-            kwargs["models"] = [model]
+        if self.background is not No<<ne:
+            kwargs["background"] = self.background.resample_axis(axis=energy_axis, weights=self.mask_safe)
 
         # Mask_safe or mask_irf??
         if isinstance(self.edisp, EDispKernelMap):

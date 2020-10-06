@@ -686,7 +686,7 @@ class PowerLawNormSpectralModel(SpectralModel):
 
     tag = ["PowerLawNormSpectralModel", "pl-norm"]
     norm = Parameter("norm", 1, unit="")
-    tilt = Parameter("tilt", 0)
+    tilt = Parameter("tilt", 0, frozen=True)
     reference = Parameter("reference", "1 TeV", frozen=True)
 
     @staticmethod
