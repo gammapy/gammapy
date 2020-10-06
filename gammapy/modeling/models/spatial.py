@@ -371,6 +371,66 @@ class GaussianSpatialModel(SpatialModel):
         )
 
 
+class GeneralizedGaussianSpatialModel(SpatialModel):
+    r"""Two-dimensional Generealized Gaussian model.
+
+    For more information see :ref:`generalized-gaussian-spatial-model`.
+
+    Parameters
+    ----------
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
+    r_0 : `~astropy.coordinates.Angle`
+        Length of the major semiaxis, in angular units.
+    eta : `float`
+        Shape parameter whitin (0, 1]. Special cases for disk: ->0, Gaussian: 0.5, Laplacian:1
+    e : `float`
+        Eccentricity (:math:`0< e< 1`).
+    phi : `~astropy.coordinates.Angle`
+        Rotation angle :math:`\phi`: of the major semiaxis.
+        Increases counter-clockwise from the North direction.
+    frame : {"icrs", "galactic"}
+        Center position coordinate frame
+    """
+
+    tag = ["GeneralizedGaussianSpatialModel", "gen-gauss"]
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+    r_0 = Parameter("r_0", "1 deg")
+    eta = Parameter("eta", 0.5, min=0.01, max=1.0)
+    e = Parameter("e", 0.0, min=0.0, max=1.0, frozen=True)
+    phi = Parameter("phi", "0 deg", frozen=True)
+
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, r_0, eta, e, phi):
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+        if isinstance(eta, u.Quantity):
+            eta = eta.value  # gamma function does not allow quantities
+        minor_axis, r_eff = compute_sigma_eff(lon_0, lat_0, lon, lat, phi, r_0, e)
+        z = sep / r_eff
+        norm = 1 / (2 * np.pi * minor_axis * r_0 * eta * scipy.special.gamma(2 * eta))
+        return (norm * np.exp(-(z ** (1 / eta)))).to("sr-1")
+
+    @property
+    def evaluation_radius(self):
+        r"""Evaluation radius (`~astropy.coordinates.Angle`).
+
+        Set as :math:`5 r_{\rm eff}`.
+        """
+        return 5 * self.parameters["r_0"].quantity
+
+    def to_region(self, **kwargs):
+        """Model outline (`~regions.EllipseSkyRegion`)."""
+        minor_axis = Angle(self.r_0.quantity * (1 - self.e.quantity))
+        return EllipseSkyRegion(
+            center=self.position,
+            height=2 * self.r_0.quantity,
+            width=2 * minor_axis,
+            angle=self.phi.quantity,
+            **kwargs,
+        )
+
+
 class DiskSpatialModel(SpatialModel):
     r"""Constant disk model.
 

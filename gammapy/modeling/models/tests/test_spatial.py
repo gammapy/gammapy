@@ -12,12 +12,14 @@ from regions import (
 )
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import (
+    Models,
     ConstantSpatialModel,
     DiskSpatialModel,
     GaussianSpatialModel,
     PointSpatialModel,
     ShellSpatialModel,
     TemplateSpatialModel,
+    GeneralizedGaussianSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -101,6 +103,30 @@ def test_sky_gaussian():
     assert_allclose(ratio_minor_rotated, np.exp(0.5))
 
     assert isinstance(model.to_region(), EllipseSkyRegion)
+
+
+@pytest.mark.parametrize("eta", np.arange(0.1, 1.01, 0.3))
+@pytest.mark.parametrize("r_0", np.arange(0.1, 1.01, 0.3))
+@pytest.mark.parametrize("e", np.arange(0.0, 0.801, 0.4))
+def test_generalized_gaussian(eta, r_0, e):
+    reval = 6
+    dr = 0.01
+    geom = WcsGeom.create(
+        skydir=(0, 0), binsz=dr, width=(2 * reval, 2 * reval), frame="galactic",
+    )
+    # check normalization is robut for a large set of values
+    model = GeneralizedGaussianSpatialModel(
+        eta=eta, r_0=r_0 * u.deg, e=e, frame="galactic"
+    )
+    eval_geom = model.evaluate_geom(geom)
+    integ_geom = model.integrate_geom(geom)
+    assert eval_geom.unit.is_equivalent("sr-1")
+    assert integ_geom.unit.is_equivalent("")
+    assert_allclose(integ_geom.data.sum(), 1.0, atol=3e-2)
+    assert isinstance(model.to_region(), EllipseSkyRegion)
+    new_model = GeneralizedGaussianSpatialModel.from_dict(model.to_dict())
+    assert isinstance(new_model, GeneralizedGaussianSpatialModel)
+    assert_allclose(new_model.integrate_geom(geom).data.sum(), integ_geom.data.sum())
 
 
 def test_sky_disk():
