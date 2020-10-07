@@ -275,7 +275,7 @@ def test_analysis_ring_background():
     analysis.get_datasets()
     assert isinstance(analysis.datasets[0], MapDataset)
     assert_allclose(
-        analysis.datasets[0].background_model.map.data[0, 10, 10], 0.091799, rtol=1e-5
+        analysis.datasets[0].background.data[0, 10, 10], 0.091799, rtol=1e-5
     )
 
 
@@ -339,6 +339,7 @@ def test_analysis_3d_joint_datasets():
     analysis.get_observations()
     analysis.get_datasets()
     assert len(analysis.datasets) == 2
+
     assert_allclose(
         analysis.datasets[0].background_model.spectral_model.norm.value,
         1.031743694988066,

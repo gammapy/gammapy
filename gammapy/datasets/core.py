@@ -342,8 +342,10 @@ class Datasets(collections.abc.MutableSequence):
                 data["filename"] = str(make_path(path / data["filename"]))
 
             dataset_cls = DATASET_REGISTRY.get_cls(data["type"])
-            dataset = dataset_cls.from_dict(data, models, lazy=lazy, cache=cache)
+            dataset = dataset_cls.from_dict(data, lazy=lazy, cache=cache)
+            dataset.models = models
             datasets.append(dataset)
+
         return cls(datasets)
 
     def write(self, path, prefix="", overwrite=False, write_covariance=True):

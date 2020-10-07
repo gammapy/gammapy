@@ -133,11 +133,12 @@ class MapDataset(Dataset):
     counts = LazyFitsData(cache=True)
     exposure = LazyFitsData(cache=True)
     edisp = LazyFitsData(cache=True)
+    _background = LazyFitsData(cache=True)
     psf = LazyFitsData(cache=True)
     mask_fit = LazyFitsData(cache=True)
     mask_safe = LazyFitsData(cache=True)
 
-    _lazy_data_members = ["counts", "exposure", "edisp", "psf", "mask_fit", "mask_safe"]
+    _lazy_data_members = ["counts", "exposure", "edisp", "psf", "mask_fit", "mask_safe", "_background"]
 
     def __init__(
         self,
@@ -172,17 +173,23 @@ class MapDataset(Dataset):
     @property
     def background(self):
         """Background """
-        try:
-            model = self.models[self.name + "-bkg"]
-            return model.evaluate_map(self._background)
-        except ValueError:
-            return self._background
+        if self._background:
+            try:
+                model = self.models[self.name + "-bkg"]
+                return model.evaluate_map(self._background)
+            except ValueError:
+                return self._background
 
     @background.setter
     def background(self, value):
         """Background IRF"""
         if isinstance(value, Map) or value is None:
             self._background = value
+
+    # TODO: keep or remove?
+    @property
+    def background_model(self):
+        return self.models[f"{self.name}-bkg"]
 
     @property
     def name(self):
@@ -982,18 +989,8 @@ class MapDataset(Dataset):
             cache=cache,
         )
 
-        hduloc = HDULocation(
-            hdu_class="map",
-            file_dir=path.parent,
-            file_name=path.name,
-            hdu_name="BACKGROUND",
-            cache=cache,
-        )
-
-        kwargs["models"] = [
-            BackgroundModel(hduloc, datasets_names=[name], name=name + "-bkg")
-        ]
-
+        # TODO: reactivate lazy loading for background
+        kwargs["background"] = Map.read(path.parent / path.name, hdu="BACKGROUND")
         return cls(**kwargs)
 
     @classmethod
@@ -1025,22 +1022,10 @@ class MapDataset(Dataset):
                 return cls.from_hdulist(hdulist, name=name)
 
     @classmethod
-    def from_dict(cls, data, models, lazy=False, cache=True):
+    def from_dict(cls, data, lazy=False, cache=True):
         """Create from dicts and models list generated from YAML serialization."""
-
-        # TODO: remove handling models here
         filename = make_path(data["filename"])
         dataset = cls.read(filename, name=data["name"], lazy=lazy, cache=cache)
-
-        for model in models:
-            if (
-                isinstance(model, BackgroundModel)
-                and model.filename is None
-                and dataset.name == model.datasets_names[0]
-            ):
-                model.map = dataset.background_model.map
-
-        dataset.models = models
         return dataset
 
     def to_dict(self, filename=""):
