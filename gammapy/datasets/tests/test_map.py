@@ -201,6 +201,11 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     spectrum_dataset_corrected = dataset_ref.to_spectrum_dataset(
         on_region, containment_correction=True
     )
+    mask = np.ones_like(dataset_ref.counts, dtype='bool')
+    mask[1,:,:]=0
+    dataset_ref.mask_safe = Map.from_geom(dataset_ref.counts.geom, data=mask)
+    spectrum_dataset_mask = dataset_ref.to_spectrum_dataset(on_region)
+
 
     assert np.sum(spectrum_dataset.counts.data) == 1
     assert spectrum_dataset.data_shape == (2, 1, 1)
@@ -212,6 +217,8 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset_corrected.aeff.unit == "m2"
     assert_allclose(spectrum_dataset.aeff.data[1], 853023.423047, rtol=1e-5)
     assert_allclose(spectrum_dataset_corrected.aeff.data[1], 565527.524246, rtol=1e-5)
+    assert np.sum(spectrum_dataset_mask.counts.data) == 0
+    assert spectrum_dataset_mask.data_shape == (2, 1, 1)
 
 
 @requires_data()
