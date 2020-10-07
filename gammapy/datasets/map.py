@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import ray
 import logging
 import numpy as np
 import astropy.units as u
@@ -26,7 +27,12 @@ from .core import Dataset
 from .evaluator import MapEvaluator
 from .utils import get_axes
 
-__all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
+__all__ = [
+    "MapDataset",
+    "MapDatasetActor",
+    "MapDatasetOnOff",
+    "create_map_dataset_geoms",
+]
 
 log = logging.getLogger(__name__)
 
@@ -1991,6 +1997,24 @@ class MapDataset(Dataset):
         self.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
         plot_mask(ax=axes[3], mask=self.mask_fit_image, alpha=0.2)
         plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+
+@ray.remote
+class MapDatasetActor(MapDataset):
+    "A modified map MapDataset for parallel evaluation with ray"
+
+    def __init__(self, dataset):
+        self.__dict__.update(dataset.__dict__)
+
+    #        TODO: how to keep the acces to property ?
+
+    def set_parameter_values(self, values):
+        #        TODO: remove this if acces to properties is working
+        idx = 0
+        for parameter in self.models.parameters:
+            if not parameter.frozen:
+                parameter.value = values[idx]
+                idx += 1
 
 
 class MapDatasetOnOff(MapDataset):

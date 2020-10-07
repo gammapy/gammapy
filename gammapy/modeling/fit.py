@@ -119,10 +119,16 @@ class Fit:
         covariance_opts=None,
         confidence_opts=None,
         store_trace=False,
+        parallel=False,
     ):
         self.store_trace = store_trace
         self.backend = backend
+        from gammapy.datasets import Datasets, DatasetsActor, MapDataset
 
+        if parallel and np.all([isinstance(d, MapDataset) for d in datasets]):
+            self.datasets = DatasetsActor(datasets)
+        else:
+            self.datasets = Datasets(datasets)
         if optimize_opts is None:
             optimize_opts = {"backend": backend}
 

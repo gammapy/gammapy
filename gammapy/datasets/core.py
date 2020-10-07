@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+import ray
 import collections.abc
 import copy
 import html
@@ -14,7 +15,7 @@ from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 log = logging.getLogger(__name__)
 
 
-__all__ = ["Dataset", "Datasets"]
+__all__ = ["Dataset", "Datasets", "DatasetsActor"]
 
 
 class Dataset(abc.ABC):
@@ -595,3 +596,30 @@ class Datasets(collections.abc.MutableSequence):
 
     def __len__(self):
         return len(self._datasets)
+
+
+class DatasetsActor(Datasets):
+    """A modified Dataset collection for parallel evaluation using ray actors.
+    Fore now only available if composed only of MapDataset.
+
+    Parameters
+    ----------
+    datasets : `Datasets`
+        Datasets
+    """
+
+    def __init__(self, datasets):
+        from .map import MapDatasetActor
+
+        self._datasets = datasets
+        self._actors = [MapDatasetActor.remote(d) for d in datasets]
+
+    def stat_sum(self):
+        """Compute joint likelihood"""
+        args = [d.models.parameters.get_parameter_values() for d in self._datasets]
+        ray.get(
+            [a.set_parameter_values.remote(arg) for a, arg in zip(self._actors, args)]
+        )
+        # blocked until set_parameters_factors on actors complete
+        res = ray.get([a.stat_sum.remote() for a in self._actors])
+        return np.sum(res)
