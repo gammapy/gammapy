@@ -553,11 +553,11 @@ class ProperModels(Models):
                 model.datasets_names.append(d.name)
 
     def insert(self, idx, model):
-        from gammapy.modeling.models import SkyModel, BackgroundModel
+        from gammapy.modeling.models import SkyModel, BackgroundModel, BackgroundIRFModel
 
         for d in self._datasets:
             if model not in d._models:
-                if isinstance(model, (SkyModel, BackgroundModel)):
+                if isinstance(model, (SkyModel, BackgroundModel, BackgroundIRFModel)):
                     if idx == len(self):
                         index = len(d._models)
                     else:

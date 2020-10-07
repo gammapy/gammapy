@@ -11,6 +11,7 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    PowerLawNormSpectralModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -78,10 +79,9 @@ def test_fov_bkg_maker_scale(obs_dataset, exclusion_mask):
     test_dataset = obs_dataset.copy(name="test-fov")
     dataset = fov_bkg_maker.run(test_dataset)
 
-    assert_allclose(
-        dataset.background_model.spectral_model.norm.value, 0.830789, rtol=1e-4
-    )
-    assert_allclose(dataset.background_model.spectral_model.tilt.value, 0.0, rtol=1e-4)
+    model = dataset.models[f"{dataset.name}-bkg"].spectral_model
+    assert_allclose(model.norm.value, 0.830789, rtol=1e-4)
+    assert_allclose(model.tilt.value, 0.0, rtol=1e-4)
 
 
 @requires_data()
@@ -92,10 +92,9 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     test_dataset = obs_dataset.copy(name="test-fov")
     dataset = fov_bkg_maker.run(test_dataset)
 
-    assert_allclose(
-        dataset.background_model.spectral_model.norm.value, 0.830789, rtol=1e-4
-    )
-    assert_allclose(dataset.background_model.spectral_model.tilt.value, 0.0, rtol=1e-4)
+    model = dataset.models[f"{dataset.name}-bkg"].spectral_model
+    assert_allclose(model.norm.value, 0.830789, rtol=1e-4)
+    assert_allclose(model.tilt.value, 0.0, rtol=1e-4)
 
 
 @requires_data()
@@ -119,29 +118,29 @@ def test_fov_bkg_maker_fit_with_source_model(obs_dataset, exclusion_mask):
     # Here we check that source parameters are correctly thawed after fit.
     assert not dataset.models.parameters["index"].frozen
     assert not dataset.models.parameters["lon_0"].frozen
-    assert not dataset.background_model.spectral_model.norm.frozen
 
-    assert_allclose(
-        dataset.background_model.spectral_model.norm.value, 0.830789, rtol=1e-4
-    )
-    assert_allclose(dataset.background_model.spectral_model.tilt.value, 0.0, rtol=1e-4)
+    model = dataset.models[f"{dataset.name}-bkg"].spectral_model
+    assert not model.norm.frozen
+    assert_allclose(model.norm.value, 0.830789, rtol=1e-4)
+    assert_allclose(model.tilt.value, 0.0, rtol=1e-4)
 
 
 @requires_data()
 @requires_dependency("iminuit")
 def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
-    fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
+    spectral_norm_model = PowerLawNormSpectralModel()
+    spectral_norm_model.tilt.frozen = False
+
+    fov_bkg_maker = FoVBackgroundMaker(
+        method="fit", exclusion_mask=exclusion_mask, spectral_norm_model=spectral_norm_model
+    )
 
     test_dataset = obs_dataset.copy(name="test-fov")
-    test_dataset.background_model.spectral_model.tilt.frozen = False
     dataset = fov_bkg_maker.run(test_dataset)
 
-    assert_allclose(
-        dataset.background_model.spectral_model.norm.value, 0.901523, rtol=1e-4
-    )
-    assert_allclose(
-        dataset.background_model.spectral_model.tilt.value, 0.071069, rtol=1e-4
-    )
+    model = dataset.models[f"{dataset.name}-bkg"].spectral_model
+    assert_allclose(model.norm.value, 0.901523, rtol=1e-4)
+    assert_allclose(model.tilt.value, 0.071069, rtol=1e-4)
 
 
 @requires_data()
@@ -151,10 +150,11 @@ def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask):
 
     test_dataset = obs_dataset.copy(name="test-fov")
     # Putting negative background model to prevent convergence
-    test_dataset.background_model.map.data *= -1
+    test_dataset.background.data *= -1
     dataset = fov_bkg_maker.run(test_dataset)
 
-    assert_allclose(dataset.background_model.spectral_model.norm.value, 1, rtol=1e-4)
+    model = dataset.models[f"{dataset.name}-bkg"].spectral_model
+    assert_allclose(model.norm.value, 1, rtol=1e-4)
 
 
 @requires_data()
@@ -163,7 +163,8 @@ def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask):
 
     test_dataset = obs_dataset.copy()
     # Putting negative background model to prevent correct scaling
-    test_dataset.background_model.map.data *= -1
+    test_dataset.background.data *= -1
     dataset = fov_bkg_maker.run(test_dataset)
 
-    assert_allclose(dataset.background_model.spectral_model.norm.value, 1, rtol=1e-4)
+    model = dataset.models[f"{dataset.name}-bkg"].spectral_model
+    assert_allclose(model.norm.value, 1, rtol=1e-4)
