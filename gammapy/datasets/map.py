@@ -1082,11 +1082,22 @@ class MapDataset(Dataset):
         else:
             raise ValueError("No GTI in `MapDataset`, cannot compute livetime")
 
+        if self.mask_safe is not None:
+            mask_safe = self.mask_safe
+        else:
+            print(self.data_shape)
+            print(self._geom.data_shape)
+            mask_safe = Map.from_geom(self._geom, data=np.ones(self.data_shape), dtype='bool')
+
+        kwargs["mask_safe"] = mask_safe.get_spectrum(on_region)
+
         if self.counts is not None:
-            kwargs["counts"] = self.counts.get_spectrum(on_region, np.sum)
+            counts = self.counts * mask_safe
+            kwargs["counts"] = counts.get_spectrum(on_region, np.sum)
 
         if self.background_model is not None:
-            bkg = self.background_model.evaluate().get_spectrum(on_region, np.sum)
+            bkg = self.background_model.evaluate() * mask_safe
+            bkg = bkg.get_spectrum(on_region, np.sum)
             bkg_model = BackgroundModel(bkg, name=name + "-bkg", datasets_names=[name])
             bkg_model.spectral_model.norm.frozen = True
             kwargs["models"] = Models([bkg_model])
@@ -1110,6 +1121,7 @@ class MapDataset(Dataset):
                 containment = psf.containment(energy, on_region.radius)
                 kwargs["aeff"].data *= containment[:, np.newaxis]
 
+        # TODO: Compute average edisp in region
         if self.edisp is not None:
             energy_axis = self._geom.axes["energy"]
             edisp = self.edisp.get_edisp_kernel(
@@ -1937,13 +1949,21 @@ class MapDatasetOnOff(MapDataset):
 
         dataset = super().to_spectrum_dataset(on_region, containment_correction, name)
 
+        if self.mask_safe is not None:
+            mask_safe = self.mask_safe
+        else:
+            mask_safe = Map.from_geom(self._geom, data=np.ones(self.data_shape))
+
         kwargs = {}
         if self.counts_off is not None:
-            kwargs["counts_off"] = self.counts_off.get_spectrum(on_region, np.sum)
+            counts_off = self.counts_off * mask_safe
+            kwargs["counts_off"] = counts_off.get_spectrum(on_region, np.sum)
 
         if self.acceptance is not None:
-            kwargs["acceptance"] = self.acceptance.get_spectrum(on_region, np.mean)
-            norm = self.counts_off_normalised.get_spectrum(on_region, np.sum)
+            acceptance = self.acceptance * mask_safe
+            kwargs["acceptance"] = acceptance.get_spectrum(on_region, np.mean)
+            counts_off_normalised = self.counts_off_normalised * mask_safe
+            norm = counts_off_normalised.get_spectrum(on_region, np.sum)
             kwargs["acceptance_off"] = (
                 kwargs["acceptance"] * kwargs["counts_off"] / norm
             )
