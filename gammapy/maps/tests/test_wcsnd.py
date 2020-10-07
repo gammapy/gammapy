@@ -602,6 +602,29 @@ def test_get_spectrum():
     spec = m.get_spectrum(region=region)
     assert_allclose(spec.data.squeeze(), [1.0, 1.0, 1.0])
 
+def test_get_spectrum_type():
+    axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
+
+    geom = WcsGeom.create(
+        skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], frame="galactic"
+    )
+
+    m_int = Map.from_geom(geom, dtype='int')
+    m_int.data += 1
+
+    m_bool = Map.from_geom(geom, dtype='bool')
+    m_bool.data += True
+
+    center = SkyCoord(0, 0, frame="galactic", unit="deg")
+    region = CircleSkyRegion(center=center, radius=1 * u.deg)
+
+    spec_int = m_int.get_spectrum(region=region)
+    assert spec_int.data.dtype == np.dtype('int')
+    assert_allclose(spec_int.data.squeeze(), [13, 13, 13])
+
+    spec_bool = m_bool.get_spectrum(region=region)
+    assert spec_bool.data.dtype == np.dtype('bool')
+    assert_allclose(spec_bool.data.squeeze(), [1, 1, 1])
 
 def get_npred_map():
     position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")

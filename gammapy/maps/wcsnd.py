@@ -540,7 +540,7 @@ class WcsNDMap(WcsMap):
             idx_y, idx_x = np.where(mask)
             data = func(cutout.data[..., idx_y, idx_x], axis=-1)
 
-        return RegionNDMap(geom=geom, data=data, unit=self.unit, dtype=self.data.dtype)
+        return RegionNDMap(geom=geom, data=data.astype(self.data.dtype), unit=self.unit)
 
     def get_spectrum(self, region=None, func=np.nansum):
         """Extract spectrum in a given region.
