@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 
 class WcsNDMap(WcsMap):
-    """HEALPix map with any number of non-spatial dimensions.
+    """WCS map with any number of non-spatial dimensions.
 
     This class uses an ND numpy array to store map values. For maps with
     non-spatial dimensions and variable pixel size it will allocate an

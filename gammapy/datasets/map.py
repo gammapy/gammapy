@@ -1085,9 +1085,7 @@ class MapDataset(Dataset):
         if self.mask_safe is not None:
             mask_safe = self.mask_safe
         else:
-            print(self.data_shape)
-            print(self._geom.data_shape)
-            mask_safe = Map.from_geom(self._geom, data=np.ones(self.data_shape), dtype='bool')
+            mask_safe = Map.from_geom(self._geom, data=np.ones(self.data_shape).astype('bool'))
 
         kwargs["mask_safe"] = mask_safe.get_spectrum(on_region)
 
