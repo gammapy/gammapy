@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 
 class WcsNDMap(WcsMap):
-    """HEALPix map with any number of non-spatial dimensions.
+    """WCS map with any number of non-spatial dimensions.
 
     This class uses an ND numpy array to store map values. For maps with
     non-spatial dimensions and variable pixel size it will allocate an
@@ -500,7 +500,7 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=smoothed_data)
 
-    def to_region_nd_map(self, region=None, func=np.nansum):
+    def to_region_nd_map(self, region=None, func=np.nansum, weights=None):
         """Get region ND map in a given region.
 
         By default the whole map region is considered.
@@ -509,8 +509,11 @@ class WcsNDMap(WcsMap):
         ----------
         region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
              Region.
-        func : numpy.ufunc
-            Function to reduce the data.
+        func : numpy.func
+            Function to reduce the data. Default is np.nansum.
+            For boolean Map, use np.any or np.all.
+        weights : `WcsNDMap`
+            Array to be used as weights. The geometry must be equivalent.
 
         Returns
         -------
@@ -525,6 +528,10 @@ class WcsNDMap(WcsMap):
                 center=self.geom.center_skydir, width=width[0], height=height[0]
             )
 
+        if weights is not None:
+            if not self.geom == weights.geom:
+                raise ValueError("Incompatible spatial geoms between map and weights")
+
         geom = RegionGeom(
             region=region,
             axes=self.geom.axes,
@@ -534,15 +541,22 @@ class WcsNDMap(WcsMap):
         if isinstance(region, PointSkyRegion):
             coords = geom.get_coord()
             data = self.get_by_coord(coords=coords)
+            if weights is not None:
+                data *= weights.get_by_coord(coords=coords)
         else:
             cutout = self.cutout(position=geom.center_skydir, width=geom.width)
+
+            if weights is not None:
+                weights_cutout = weights.cutout(position=geom.center_skydir, width=geom.width)
+                cutout.data *= weights_cutout.data
+
             mask = cutout.geom.to_image().region_mask([region])
             idx_y, idx_x = np.where(mask)
             data = func(cutout.data[..., idx_y, idx_x], axis=-1)
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit)
 
-    def get_spectrum(self, region=None, func=np.nansum):
+    def get_spectrum(self, region=None, func=np.nansum, weights=None):
         """Extract spectrum in a given region.
 
         The spectrum can be computed by summing (or, more generally, applying ``func``)
@@ -553,8 +567,11 @@ class WcsNDMap(WcsMap):
         ----------
         region: `~regions.Region`
              Region (pixel or sky regions accepted).
-        func : numpy.ufunc
-            Function to reduce the data.
+        func : numpy.func
+            Function to reduce the data. Default is np.nansum.
+            For a boolean Map, use np.any or np.all.
+        weights : `WcsNDMap`
+            Array to be used as weights. The geometry must be equivalent.
 
         Returns
         -------
@@ -566,7 +583,7 @@ class WcsNDMap(WcsMap):
         if not has_energy_axis:
             raise ValueError("Energy axis required")
 
-        return self.to_region_nd_map(region=region, func=func)
+        return self.to_region_nd_map(region=region, func=func, weights=weights)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """

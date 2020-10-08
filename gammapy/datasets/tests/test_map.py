@@ -201,6 +201,11 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     spectrum_dataset_corrected = dataset_ref.to_spectrum_dataset(
         on_region, containment_correction=True
     )
+    mask = np.ones_like(dataset_ref.counts, dtype='bool')
+    mask[1,40:60,40:60]=0
+    dataset_ref.mask_safe = Map.from_geom(dataset_ref.counts.geom, data=mask)
+    spectrum_dataset_mask = dataset_ref.to_spectrum_dataset(on_region)
+
 
     assert np.sum(spectrum_dataset.counts.data) == 1
     assert spectrum_dataset.data_shape == (2, 1, 1)
@@ -212,6 +217,8 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset_corrected.aeff.unit == "m2"
     assert_allclose(spectrum_dataset.aeff.data[1], 853023.423047, rtol=1e-5)
     assert_allclose(spectrum_dataset_corrected.aeff.data[1], 565527.524246, rtol=1e-5)
+    assert np.sum(spectrum_dataset_mask.counts.data) == 0
+    assert spectrum_dataset_mask.data_shape == (2, 1, 1)
 
 
 @requires_data()
@@ -931,7 +938,6 @@ def test_datasets_io_no_model(tmpdir):
 
 @requires_data()
 def test_map_dataset_on_off_to_spectrum_dataset(images):
-    e_reco = MapAxis.from_bounds(0.1, 10.0, 1, name="energy", unit=u.TeV, interp="log")
     dataset = get_map_dataset_onoff(images)
 
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
@@ -955,6 +961,49 @@ def test_map_dataset_on_off_to_spectrum_dataset(images):
     assert_allclose(excess, excess_true, rtol=1e-3)
 
     assert spectrum_dataset.name != dataset.name
+
+@requires_data()
+def test_map_dataset_on_off_to_spectrum_dataset_weights():
+    e_reco = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
+
+    geom = WcsGeom.create(
+        skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[e_reco], frame="galactic"
+    )
+    counts = Map.from_geom(geom)
+    counts.data += 1
+    counts_off = Map.from_geom(geom)
+    counts_off.data += 2
+    acceptance = Map.from_geom(geom)
+    acceptance.data += 1
+    acceptance_off = Map.from_geom(geom)
+    acceptance_off.data += 4
+
+    weights = Map.from_geom(geom, dtype='bool')
+    weights.data[1:, 2:4, 2] = True
+
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+
+    dataset = MapDatasetOnOff(
+        counts=counts,
+        counts_off=counts_off,
+        acceptance = acceptance,
+        acceptance_off=acceptance_off,
+        mask_safe=weights,
+        gti=gti,
+    )
+
+    on_region = CircleSkyRegion(
+        center=dataset.counts.geom.center_skydir, radius=1.5 * u.deg
+    )
+
+    spectrum_dataset = dataset.to_spectrum_dataset(on_region)
+
+    assert_allclose(spectrum_dataset.counts.data[:,0,0], [0, 2, 2])
+    assert_allclose(spectrum_dataset.counts_off.data[:,0,0], [0, 4, 4])
+    assert_allclose(spectrum_dataset.acceptance.data[:,0,0], [0, 0.08, 0.08])
+    assert_allclose(spectrum_dataset.acceptance_off.data[:,0,0], [0, 0.32, 0.32])
+    assert_allclose(spectrum_dataset.alpha.data[:,0,0], [0, 0.25, 0.25])
+
 
 
 @requires_data()
