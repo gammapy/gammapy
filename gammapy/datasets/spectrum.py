@@ -667,7 +667,6 @@ class SpectrumDataset(Dataset):
         """
         info = dict()
         mask = self.mask_safe.data if in_safe_energy_range else slice(None)
-        print(self.mask_safe.data)
 
         info["name"] = self.name
         info["livetime"] = self.livetime.copy()

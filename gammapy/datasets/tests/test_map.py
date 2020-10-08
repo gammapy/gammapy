@@ -202,7 +202,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
         on_region, containment_correction=True
     )
     mask = np.ones_like(dataset_ref.counts, dtype='bool')
-    mask[1,:,:]=0
+    mask[1,40:60,40:60]=0
     dataset_ref.mask_safe = Map.from_geom(dataset_ref.counts.geom, data=mask)
     spectrum_dataset_mask = dataset_ref.to_spectrum_dataset(on_region)
 
