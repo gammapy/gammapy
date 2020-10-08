@@ -62,7 +62,7 @@ class FoVBackgroundMaker(Maker):
         background : ``
         """
         background_model = BackgroundIRFModel(
-            spectral_model=self.spectral_norm_model, dataset_name=dataset.name
+            spectral_model=self.spectral_norm_model.copy(), dataset_name=dataset.name
         )
 
         dataset.models.append(background_model)

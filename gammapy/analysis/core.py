@@ -18,7 +18,7 @@ from gammapy.makers import (
 )
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
-from gammapy.modeling.models import BackgroundModel, Models
+from gammapy.modeling.models import BackgroundIRFModel, Models
 from gammapy.utils.scripts import make_path
 
 __all__ = ["Analysis"]
@@ -269,6 +269,7 @@ class Analysis:
             )
 
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
+        stacked.models = [BackgroundIRFModel(dataset_name="stacked")]
 
         if datasets_settings.stack:
             for obs in self.observations:
@@ -278,13 +279,13 @@ class Analysis:
                 dataset = maker_safe_mask.run(dataset, obs)
                 if bkg_maker is not None:
                     dataset = bkg_maker.run(dataset)
-                if bkg_method == "ring":
-                    dataset.models = Models([BackgroundModel(dataset.background)])
+
                 log.debug(dataset)
                 stacked.stack(dataset)
             datasets = [stacked]
         else:
             datasets = []
+
             for obs in self.observations:
                 log.info(f"Processing observation {obs.obs_id}")
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
@@ -294,6 +295,7 @@ class Analysis:
                     dataset = bkg_maker.run(dataset)
                 log.debug(dataset)
                 datasets.append(dataset)
+
         self.datasets = Datasets(datasets)
 
     def _spectrum_extraction(self):

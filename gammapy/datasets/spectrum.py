@@ -1063,15 +1063,13 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.to_ogip_files(outdir=outdir, overwrite=overwrite)
 
     @classmethod
-    def from_dict(cls, data, models, **kwargs):
+    def from_dict(cls, data, **kwargs):
         """Create flux point dataset from dict.
 
         Parameters
         ----------
         data : dict
             Dict containing data to create dataset from.
-        models : list of `SkyModel`
-            List of model components.
 
         Returns
         -------
@@ -1083,7 +1081,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         filename = make_path(data["filename"])
         dataset = cls.from_ogip_files(filename=filename)
         dataset.mask_fit = None
-        dataset.models = models
         return dataset
 
     @classmethod

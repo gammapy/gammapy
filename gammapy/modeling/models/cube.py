@@ -413,6 +413,8 @@ class BackgroundIRFModel(Model):
         Dataset name
 
     """
+    tag = "BackgroundIRFModel"
+
     def __init__(self, spectral_model=None, dataset_name=None):
         if dataset_name is None:
             raise ValueError("Dataset name a is required argument")
@@ -450,7 +452,9 @@ class BackgroundIRFModel(Model):
         str_ = self.__class__.__name__ + "\n\n"
         str_ += "\t{:26}: {}\n".format("Name", self.name)
         str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
-
+        str_ += "\t{:26}: {}\n".format(
+            "Spectral model type", self.spectral_model.__class__.__name__
+        )
         str_ += "\tParameters:\n"
         info = _get_parameters_str(self.parameters)
         lines = info.split("\n")
@@ -466,6 +470,45 @@ class BackgroundIRFModel(Model):
         value = self.spectral_model(energy)
         data = background.data * value.value
         return background.copy(data=data)
+
+    def to_dict(self):
+        data = {}
+        data["type"] = self.tag
+        data["spectral"] = self.spectral_model.to_dict()
+        data["datasets_names"] = self.datasets_names
+        return data
+
+    @classmethod
+    def from_dict(cls, data):
+        """Create model from dict
+
+        Parameters
+        ----------
+        data : dict
+            Data dictionary
+        """
+        from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
+
+        spectral_data = data.get("spectral")
+        if spectral_data is not None:
+            model_class = SPECTRAL_MODEL_REGISTRY.get_cls(spectral_data["type"])
+            spectral_model = model_class.from_dict(spectral_data)
+        else:
+            spectral_model = None
+
+        datasets_names = data.get("datasets_names")
+
+        if datasets_names is None:
+            raise ValueError("BackgroundIRFModel must define a dataset name")
+
+        print(datasets_names)
+        if len(datasets_names) > 1:
+            raise ValueError("BackgroundIRFModel can only be assigned to one dataset")
+
+        return cls(
+            spectral_model=spectral_model,
+            dataset_name=datasets_names[0],
+        )
 
 
 class BackgroundModel(Model):

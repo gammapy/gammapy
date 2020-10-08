@@ -159,7 +159,7 @@ class AdaptiveRingBackgroundMaker(Maker):
             Dictionary containing ``counts_off``, ``acceptance`` and ``acceptance_off`` cubes.
         """
         counts = dataset.counts
-        background = dataset.background_model.map
+        background = dataset.background
         kernels = self.kernels(counts)
 
         if self.exclusion_mask is not None:
@@ -286,7 +286,7 @@ class RingBackgroundMaker(Maker):
             Dictionary containing `counts_off` and `acceptance_off` maps.
         """
         counts = dataset.counts
-        background = dataset.background_model.map
+        background = dataset.background
 
         if self.exclusion_mask is not None:
             # reproject exclusion mask
@@ -324,7 +324,7 @@ class RingBackgroundMaker(Maker):
         from gammapy.datasets import MapDatasetOnOff
 
         maps_off = self.make_maps_off(dataset)
-        maps_off["acceptance"] = dataset.background_model.map
+        maps_off["acceptance"] = dataset.background
 
         mask_safe = dataset.mask_safe.copy()
         not_has_off_acceptance = maps_off["acceptance_off"].data <= 0
