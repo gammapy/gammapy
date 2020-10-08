@@ -2016,6 +2016,15 @@ class MapDatasetActor(MapDataset):
                 parameter.value = values[idx]
                 idx += 1
 
+    def get_models(self):
+        return list(self.models)
+
+    def set_models(self, models):
+        self.models = models
+
+    def get_name(self):
+        return self.name
+
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.

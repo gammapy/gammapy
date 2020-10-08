@@ -126,7 +126,10 @@ class Fit:
         from gammapy.datasets import Datasets, DatasetsActor, MapDataset
 
         if parallel and np.all([isinstance(d, MapDataset) for d in datasets]):
-            self.datasets = DatasetsActor(datasets)
+            if not isinstance(datasets, DatasetsActor):
+                self.datasets = DatasetsActor(datasets)
+            else:
+                self.datasets = datasets
         else:
             self.datasets = Datasets(datasets)
         if optimize_opts is None:
@@ -169,8 +172,11 @@ class Fit:
         fit_result : `FitResult`
             Fit result.
         """
+        from gammapy.datasets import DatasetsActor
         optimize_result = self.optimize(datasets=datasets)
 
+        if isinstance(self.datasets, DatasetsActor):
+            self.datasets._update_remote_models()
         if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
             return FitResult(optimize_result=optimize_result)

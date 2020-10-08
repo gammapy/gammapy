@@ -13,7 +13,7 @@ from gammapy.modeling.models import (
 from gammapy.makers import MapDatasetMaker, SafeMaskMaker
 from gammapy.modeling import Fit
 from gammapy.data import Observation
-from gammapy.datasets import MapDataset, Datasets, MapDatasetActor
+from gammapy.datasets import MapDataset, Datasets, MapDatasetActor, DatasetsActor
 
 ray.shutdown()
 ray.init(num_cpus=3, num_gpus=1)
@@ -80,31 +80,6 @@ exec_time = time.time() - start_time
 print("\n fake: time in seconds: ", exec_time)
 
 #%%
-## Create datasets with ray
-# start_time = time.time()
-# @ray.remote
-# def fake_dataset(idx, pointing):
-#    empty = MapDataset.create(geom, name=f"obs_{idx}")
-#    obs = Observation.create(pointing=pointing, livetime=livetime, irfs=irfs)
-#    dataset = maker.run(empty, obs)
-#    dataset = maker_safe_mask.run(dataset, obs)
-#    dataset.models.append(model_simu)
-#    dataset.fake()
-#    dataset.models.remove(model_simu)
-#    print(idx, pointing)
-#    return dataset
-# datasets_list = ray.get([fake_dataset.remote(k, p) for  k , p in enumerate(pointings)])
-# exec_time = time.time() - start_time
-# print("\n fake: ray time in seconds: ", exec_time)
-#
-
-# This a bit is faster  but cause fail afterward in fit with the following error:
-#  File "/Users/qremy/Work/GitHub/gammapy/gammapy/modeling/covariance.py", line 139, in set_subcovariance
-#    self._data[np.ix_(idx, idx)] = covar.data
-#
-# ValueError: assignment destination is read-only
-
-#%%
 
 # Define sky model to fit the data
 spatial_model1 = GaussianSpatialModel(
@@ -120,8 +95,9 @@ model_fit = SkyModel(
 datasets = Datasets(datasets_list)
 datasets.models.append(model_fit)
 print("\n", datasets.models)
-
 init_values = datasets.parameters.get_parameter_values()
+
+del datasets_list
 
 #%%
 
@@ -151,6 +127,7 @@ for k in range(ncall):
 exec_time = time.time() - start_time
 print(f"\n {ncall} stat_sum: ray time in seconds: ", exec_time)
 
+del actors
 
 #%%
 # fit
@@ -172,3 +149,57 @@ print("\n ray Fit time in seconds: ", exec_time)
 print("ray fit parameters:", datasets.parameters.get_parameter_values())
 
 # result.parameters.to_table()
+
+del datasets
+
+#%%
+# model management
+
+# Create datasets with ray
+start_time = time.time()
+
+
+@ray.remote
+def fake_dataset(idx, pointing):
+    empty = MapDataset.create(geom, name=f"obs_{idx}")
+    obs = Observation.create(pointing=pointing, livetime=livetime, irfs=irfs)
+    dataset = maker.run(empty, obs)
+    dataset = maker_safe_mask.run(dataset, obs)
+    dataset.models.append(model_simu)
+    dataset.fake()
+    dataset.models.remove(model_simu)
+    return dataset
+
+
+datasets_list = ray.get([fake_dataset.remote(k, p) for k, p in enumerate(pointings)])
+exec_time = time.time() - start_time
+print("\n fake: ray time in seconds: ", exec_time)
+
+# convert datasets to actors
+actors = []
+while datasets_list:
+    actors.append(MapDatasetActor.remote(datasets_list[0]))
+    datasets_list.remove(datasets_list[0])
+
+# Define sky model to fit the data
+spatial_model1 = GaussianSpatialModel(
+    lon_0="0.1 deg", lat_0="0.1 deg", sigma="0.5 deg", frame="galactic"
+)
+spectral_model1 = PowerLawSpectralModel(
+    index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
+)
+model_fit = SkyModel(
+    spatial_model=spatial_model1, spectral_model=spectral_model1, name="model-fit",
+)
+
+start_time = time.time()
+da = DatasetsActor.from_actors(actors)
+# append  model on each (ghost) dataset but their remote actor is not updated yet
+da.models.append(model_fit)
+
+fit = Fit(da, parallel=True)
+# remote actors updated only on fit.run()
+result = fit.run(optimize_opts={"print_level": 1})
+exec_time = time.time() - start_time
+print("\n ray Fit time in seconds: ", exec_time)
+print("ray fit parameters:", da.parameters.get_parameter_values())

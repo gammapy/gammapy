@@ -608,11 +608,44 @@ class DatasetsActor(Datasets):
         Datasets
     """
 
-    def __init__(self, datasets):
+    def __init__(self, datasets=None):
         from .map import MapDatasetActor
 
-        self._datasets = datasets
-        self._actors = [MapDatasetActor.remote(d) for d in datasets]
+        if datasets is not None:
+            self._datasets = datasets._datasets
+            self._actors = [MapDatasetActor.remote(d) for d in self._datasets]
+            self._copy_cavariance_data()
+
+    @classmethod
+    def from_actors(cls, actors):
+        """create from previously defined actors
+        This will work only if models are unique to their datasets,
+        for example using actors obtain after data reduction with only background
+        """
+        from .map import MapDataset
+
+        da = cls()
+        da._actors = actors
+        names = ray.get([a.get_name.remote() for a in actors])
+        # create ghost datasets linked to actors by name
+        da._datasets = [MapDataset(name=name) for name in names]
+        # copy model to create global model
+        a_models = ray.get([a.get_models.remote() for a in actors])
+        for d, models in zip(da._datasets, a_models):
+            d.models = Models(models)
+        da._copy_cavariance_data()
+        return da
+
+    def _copy_cavariance_data(self):
+        # TODO: this avoid  ValueError: assignment destination is read-only in set_subcovariance
+        # self._data[np.ix_(idx, idx)] = covar.data.copy()
+        # better way/place to do that ?
+        for m in self.models:
+            m._covariance.data = m._covariance._data.copy()
+
+    def _update_remote_models(self):
+        args = [list(d.models) for d in self._datasets]
+        ray.get([a.set_models.remote(arg) for a, arg in zip(self._actors, args)])
 
     def stat_sum(self):
         """Compute joint likelihood"""
