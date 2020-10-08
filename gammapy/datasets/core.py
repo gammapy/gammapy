@@ -6,7 +6,7 @@ import numpy as np
 import logging
 from astropy.table import vstack, Table
 from astropy import units as u
-from gammapy.modeling.models import Models, ProperModels, BackgroundModel
+from gammapy.modeling.models import Models, ProperModels, BackgroundIRFModel
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
 from gammapy.data import GTI
@@ -237,14 +237,13 @@ class Datasets(collections.abc.MutableSequence):
                 int(group["idx_max"][0]) + 1)
             }
 
-            name = f"{dataset.name}-{e_min:.3f}-{e_max:.3f}"
+            name = f"{dataset.name}-{e_min:.1f}-{e_max:.1f}"
             dataset_sliced = dataset.slice_by_idx(slices, name=name)
-
             # TODO: Simplify model handling!!!!
             models = []
 
             for model in dataset.models:
-                if isinstance(model, BackgroundModel):
+                if isinstance(model, BackgroundIRFModel):
                     models.append(dataset_sliced.background_model)
                 else:
                     models.append(model)

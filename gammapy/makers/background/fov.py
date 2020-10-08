@@ -27,46 +27,17 @@ class FoVBackgroundMaker(Maker):
         the normalization method to be applied. Default 'scale'.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask
-    spectral_norm_model : str or `SpectralModel`
-        Spectral norm model to be used for the correction
     """
 
     tag = "FoVBackgroundMaker"
 
-    def __init__(self, method="scale", exclusion_mask=None, spectral_norm_model="pl-norm"):
+    def __init__(self, method="scale", exclusion_mask=None):
         if method in ["fit", "scale"]:
             self.method = method
         else:
             raise ValueError(f"Not a valid method for FoVBackgroundMaker: {method}.")
 
         self.exclusion_mask = exclusion_mask
-
-        if isinstance(spectral_norm_model, str):
-            spectral_norm_model = SPECTRAL_MODEL_REGISTRY.get_cls(spectral_norm_model)()
-
-        if "norm" not in spectral_norm_model.tag[0].lower():
-            raise ValueError("Only spectral norm models can be used or the FoV background")
-
-        self.spectral_norm_model = spectral_norm_model
-
-    def make_background_model(self, dataset):
-        """Make background
-
-        Parameters
-        ----------
-        dataset : `~gammapy.datasets.MapDataset`
-            Input map dataset.
-
-        Returns
-        -------
-        background : ``
-        """
-        background_model = BackgroundIRFModel(
-            spectral_model=self.spectral_norm_model.copy(), dataset_name=dataset.name
-        )
-
-        dataset.models.append(background_model)
-        return dataset
 
     def run(self, dataset, observation=None):
         """Run FoV background maker.
@@ -81,8 +52,6 @@ class FoVBackgroundMaker(Maker):
         """
         mask_fit = dataset.mask_fit
         dataset.mask_fit = self._reproject_exclusion_mask(dataset)
-
-        dataset = self.make_background_model(dataset)
 
         if self.method == "fit":
             self._fit_bkg(dataset)
@@ -116,7 +85,7 @@ class FoVBackgroundMaker(Maker):
         parameters_frozen = []
         for par in datasets.parameters:
             parameters_frozen.append(par.frozen)
-            if par not in self.spectral_norm_model.parameters:
+            if par not in dataset.background_model.parameters:
                 par.frozen = True
 
         fit = Fit(datasets)

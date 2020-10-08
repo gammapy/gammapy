@@ -385,7 +385,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset.write(tmp_path / "test.fits")
 
     dataset_new = MapDataset.read(tmp_path / "test.fits")
-    assert len(dataset_new.models) == 0
+    assert len(dataset_new.models) == 1
     assert dataset_new.mask.data.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
@@ -713,7 +713,7 @@ def test_stack_npred():
     dataset_1.psf = None
     dataset_1.exposure.data += 1
     dataset_1.mask_safe.data = geom.energy_mask(emin=1 * u.TeV)
-    dataset_1.background.data += 1
+    dataset_1._background.data += 1
     dataset_1.models.append(model)
 
     dataset_2 = MapDataset.create(
@@ -725,7 +725,7 @@ def test_stack_npred():
     dataset_2.psf = None
     dataset_2.exposure.data += 1
     dataset_2.mask_safe.data = geom.energy_mask(emin=0.2 * u.TeV)
-    dataset_2.background.data += 1
+    dataset_2._background.data += 1
     dataset_2.models.append(model)
 
     npred_1 = dataset_1.npred()

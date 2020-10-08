@@ -31,18 +31,17 @@ def input_dataset():
     exposure = exposure2D.to_cube([energy_true])
     background2D = Map.read(filename, hdu="background")
     background = background2D.to_cube([energy])
-    name = "test-dataset"
-    background_model = BackgroundModel(background, datasets_names=[name])
 
     # add mask
     mask2D_data = np.ones_like(background2D.data).astype("bool")
     mask2D_data[0:40, :] = False
     mask2D = Map.from_geom(geom=counts2D.geom, data=mask2D_data)
     mask = mask2D.to_cube([energy])
+    name = "test-dataset"
     return MapDataset(
         counts=counts,
         exposure=exposure,
-        models=background_model,
+        background=background,
         mask_safe=mask,
         name=name,
     )
@@ -58,7 +57,6 @@ def fermi_dataset():
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-background-cube.fits.gz"
     )
     background = background.cutout(background.geom.center_skydir, size)
-    background = BackgroundModel(background, datasets_names=["fermi-3fhl-gc"])
 
     exposure = Map.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz"
@@ -77,7 +75,7 @@ def fermi_dataset():
 
     return MapDataset(
         counts=counts,
-        models=[background],
+        background=background,
         exposure=exposure,
         psf=psfmap,
         name="fermi-3fhl-gc",

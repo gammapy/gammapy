@@ -139,7 +139,7 @@ def test_map_maker(pars, observations):
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.mean(), pars["exposure"], rtol=3e-3)
 
-    background = stacked.background_model.map
+    background = stacked.background
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-4)
 
@@ -153,7 +153,7 @@ def test_map_maker(pars, observations):
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.sum(), pars["exposure_image"], rtol=1e-3)
 
-    background = image_dataset.background_model.map
+    background = image_dataset.background
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-4)
 
@@ -175,7 +175,7 @@ def test_map_maker_obs(observations):
 
     map_dataset = maker_obs.run(reference, observations[0])
     assert map_dataset.counts.geom == geom_reco
-    assert map_dataset.background_model.map.geom == geom_reco
+    assert map_dataset.background.geom == geom_reco
     assert isinstance(map_dataset.edisp, EDispKernelMap)
     assert map_dataset.edisp.edisp_map.data.shape == (3, 2, 5, 10)
     assert map_dataset.edisp.exposure_map.data.shape == (3, 1, 5, 10)
@@ -298,6 +298,14 @@ def test_interpolate_map_dataset():
 
     #test background
     assert np.floor(np.sum(dataset.background_model.map.data)) == np.sum(bkg_map.data)
+    coords_bg = {
+        'skycoord' : SkyCoord("0 deg", "0 deg"),
+        'energy' : energy.center[0]
+    }
+    assert_allclose(
+        dataset.background.get_by_coord(coords_bg)[0],
+        value,
+        atol=1e-7)
 
     #test effective area
     coords_aeff = {

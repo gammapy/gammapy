@@ -201,7 +201,7 @@ class ASmoothMapEstimator(Estimator):
 
         # extract 2d arrays
         counts = dataset.counts.data[0].astype(float)
-        background = dataset.background_model.evaluate().data[0]
+        background = dataset.background.data[0]
 
         if isinstance(dataset, MapDatasetOnOff):
             background = dataset.counts_off_normalised.data[0]

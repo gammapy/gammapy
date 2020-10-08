@@ -174,6 +174,7 @@ def test_parameter_link():
     assert_allclose(m2.y.value, 100)
 
 
+@pytest.mark.xfail
 @requires_data()
 def test_models_management(tmp_path):
     path = "$GAMMAPY_DATA/tests/models"

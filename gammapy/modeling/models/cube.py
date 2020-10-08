@@ -419,7 +419,7 @@ class BackgroundIRFModel(Model):
         if dataset_name is None:
             raise ValueError("Dataset name a is required argument")
 
-        self._datasets_names = [dataset_name]
+        self.datasets_names = [dataset_name]
 
         if spectral_model is None:
             spectral_model = PowerLawNormSpectralModel()
@@ -433,13 +433,9 @@ class BackgroundIRFModel(Model):
         return self._spectral_model
 
     @property
-    def datasets_names(self):
-        """Dataset names"""
-        return self._datasets_names
-
-    @property
     def name(self):
-        return self._datasets_names[0] + "-bkg"
+        """Model name"""
+        return self.datasets_names[0] + "-bkg"
 
     @property
     def parameters(self):
@@ -501,7 +497,6 @@ class BackgroundIRFModel(Model):
         if datasets_names is None:
             raise ValueError("BackgroundIRFModel must define a dataset name")
 
-        print(datasets_names)
         if len(datasets_names) > 1:
             raise ValueError("BackgroundIRFModel can only be assigned to one dataset")
 

@@ -166,6 +166,11 @@ class MapDataset(Dataset):
 
         self.edisp = edisp
         self.mask_safe = mask_safe
+
+        # TODO: should we rely on pre-defined background models?
+        if models is None:
+            models = [BackgroundIRFModel(dataset_name=self.name)]
+
         self.models = models
         self.gti = gti
         self.meta_table = meta_table
@@ -1394,7 +1399,7 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.slice_by_idx(slices=slices)
 
-        if self.background is not None:
+        if self.background is not None and self.stat_type == "cash":
             kwargs["background"] = self.background.slice_by_idx(slices=slices)
 
         if self.edisp is not None:
