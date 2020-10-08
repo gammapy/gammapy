@@ -622,9 +622,34 @@ def test_get_spectrum_type():
     assert spec_int.data.dtype == np.dtype('int')
     assert_allclose(spec_int.data.squeeze(), [13, 13, 13])
 
-    spec_bool = m_bool.get_spectrum(region=region)
+    spec_bool = m_bool.get_spectrum(region=region, func=np.any)
     assert spec_bool.data.dtype == np.dtype('bool')
     assert_allclose(spec_bool.data.squeeze(), [1, 1, 1])
+
+def test_get_spectrum_weights():
+    axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
+
+    geom = WcsGeom.create(
+        skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], frame="galactic"
+    )
+
+    m_int = Map.from_geom(geom,dtype='int')
+    m_int.data += 1
+
+    weights = Map.from_geom(geom, dtype='bool')
+    weights.data[:,2,2]=True
+
+    bad_weights = Map.from_geom(geom.to_image(), dtype='bool')
+
+    center = SkyCoord(0, 0, frame="galactic", unit="deg")
+    region = CircleSkyRegion(center=center, radius=1 * u.deg)
+
+    spec_int = m_int.get_spectrum(region=region, weights=weights)
+    assert spec_int.data.dtype == np.dtype('int')
+    assert_allclose(spec_int.data.squeeze(), [1, 1, 1])
+
+    with pytest.raises(ValueError):
+        m_int.get_spectrum(region=region, weights=bad_weights)
 
 def get_npred_map():
     position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")

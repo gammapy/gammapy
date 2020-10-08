@@ -956,7 +956,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     @property
     def alpha(self):
         """Exposure ratio between signal and background regions"""
-        return self.acceptance / self.acceptance_off
+        alpha = self.acceptance / self.acceptance_off
+        np.nan_to_num(alpha.data, copy=False)
+        return alpha
 
     def npred_sig(self, model=None):
         """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.

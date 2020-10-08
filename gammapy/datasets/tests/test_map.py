@@ -938,7 +938,6 @@ def test_datasets_io_no_model(tmpdir):
 
 @requires_data()
 def test_map_dataset_on_off_to_spectrum_dataset(images):
-    e_reco = MapAxis.from_bounds(0.1, 10.0, 1, name="energy", unit=u.TeV, interp="log")
     dataset = get_map_dataset_onoff(images)
 
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
@@ -962,6 +961,49 @@ def test_map_dataset_on_off_to_spectrum_dataset(images):
     assert_allclose(excess, excess_true, rtol=1e-3)
 
     assert spectrum_dataset.name != dataset.name
+
+@requires_data()
+def test_map_dataset_on_off_to_spectrum_dataset_weights():
+    e_reco = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
+
+    geom = WcsGeom.create(
+        skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[e_reco], frame="galactic"
+    )
+    counts = Map.from_geom(geom)
+    counts.data += 1
+    counts_off = Map.from_geom(geom)
+    counts_off.data += 2
+    acceptance = Map.from_geom(geom)
+    acceptance.data += 1
+    acceptance_off = Map.from_geom(geom)
+    acceptance_off.data += 4
+
+    weights = Map.from_geom(geom, dtype='bool')
+    weights.data[1:, 2:4, 2] = True
+
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+
+    dataset = MapDatasetOnOff(
+        counts=counts,
+        counts_off=counts_off,
+        acceptance = acceptance,
+        acceptance_off=acceptance_off,
+        mask_safe=weights,
+        gti=gti,
+    )
+
+    on_region = CircleSkyRegion(
+        center=dataset.counts.geom.center_skydir, radius=1.5 * u.deg
+    )
+
+    spectrum_dataset = dataset.to_spectrum_dataset(on_region)
+
+    assert_allclose(spectrum_dataset.counts.data[:,0,0], [0, 2, 2])
+    assert_allclose(spectrum_dataset.counts_off.data[:,0,0], [0, 4, 4])
+    assert_allclose(spectrum_dataset.acceptance.data[:,0,0], [0, 0.08, 0.08])
+    assert_allclose(spectrum_dataset.acceptance_off.data[:,0,0], [0, 0.32, 0.32])
+    assert_allclose(spectrum_dataset.alpha.data[:,0,0], [0, 0.25, 0.25])
+
 
 
 @requires_data()
