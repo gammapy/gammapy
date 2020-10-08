@@ -43,10 +43,12 @@ def simulate_spectrum_dataset(model, random_state=0):
         geom=geom,
     )
 
+    livetime = 100 * u.h
+    exposure = aeff * livetime
+
     dataset = SpectrumDatasetOnOff(
         name="test_onoff",
-        aeff=aeff,
-        livetime=100 * u.h,
+        exposure=exposure,
         acceptance=acceptance,
         acceptance_off=5,
         edisp=edisp,

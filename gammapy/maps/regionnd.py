@@ -36,6 +36,9 @@ class RegionNDMap(Map):
         if data is None:
             data = np.zeros(geom.data_shape, dtype=dtype)
 
+        if meta is None:
+            meta = {}
+
         self._geom = geom
         self.data = data
         self.meta = meta

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import copy
 from operator import lt, le
 from astropy.table import Table, vstack
 from astropy.time import Time
@@ -60,7 +61,7 @@ class GTI:
         self.table = table
 
     def copy(self):
-        return self.__class__(self.table)
+        return copy.deepcopy(self)
 
     @classmethod
     def create(cls, start, stop, reference_time="2000-01-01"):
@@ -75,8 +76,8 @@ class GTI:
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         """
-        start = np.atleast_1d(Quantity(start))
-        stop = np.atleast_1d(Quantity(stop))
+        start = Quantity(start, ndmin=1)
+        stop = Quantity(stop, ndmin=1)
         reference_time = Time(reference_time)
         meta = time_ref_to_dict(reference_time)
         table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import numpy as np
 from astropy.table import Table
 from astropy import units as u
 from regions import CircleSkyRegion
@@ -24,14 +25,14 @@ class SpectrumDatasetMaker(Maker):
     ----------
     selection : list
         List of str, selecting which maps to make.
-        Available: 'counts', 'aeff', 'background', 'edisp'
+        Available: 'counts', 'exposure', 'background', 'edisp'
         By default, all spectra are made.
     containment_correction : bool
         Apply containment correction for point sources and circular on regions.
     """
 
     tag = "SpectrumDatasetMaker"
-    available_selection = ["counts", "background", "aeff", "edisp"]
+    available_selection = ["counts", "background", "exposure", "edisp"]
 
     def __init__(self, selection=None, containment_correction=False):
         self.containment_correction = containment_correction
@@ -90,8 +91,8 @@ class SpectrumDatasetMaker(Maker):
         data *= observation.observation_time_duration
         return RegionNDMap.from_geom(geom=geom, data=data.to_value(""))
 
-    def make_aeff(self, geom, observation):
-        """Make effective area.
+    def make_exposure(self, geom, observation):
+        """Make exposure.
 
         Parameters
         ----------
@@ -100,11 +101,10 @@ class SpectrumDatasetMaker(Maker):
         observation: `~gammapy.data.Observation`
             Observation to compute effective area for.
 
-
         Returns
         -------
-        aeff : `~gammapy.irf.EffectiveAreaTable`
-            Effective area table.
+        exposure : `~gammapy.irf.EffectiveAreaTable`
+            Exposure map.
         """
         offset = observation.pointing_radec.separation(geom.center_skydir)
         energy = geom.axes["energy_true"]
@@ -120,32 +120,44 @@ class SpectrumDatasetMaker(Maker):
             containment = psf.containment(energy.center, geom.region.radius)
             data *= containment.squeeze()
 
-        return RegionNDMap.from_geom(geom, data=data.value, unit=data.unit)
+        data = data * observation.observation_live_time_duration
+        meta = {
+            "livetime": observation.observation_live_time_duration
+        }
+        return RegionNDMap.from_geom(geom, data=data.value, unit=data.unit, meta=meta)
 
-    @staticmethod
-    def make_edisp(position, energy_axis, energy_axis_true, observation):
+    def make_edisp_kernel(self, geom, observation):
         """Make energy dispersion.
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
-            Position to compute energy dispersion for.
-        energy_axis : `~gammapy.maps.MapAxis`
-            Reconstructed energy axis.
-        energy_axis_true : `~gammapy.maps.MapAxis`
-            True energy axis.
+        geom : `~gammapy.maps.Geom`
+            Reference geom. Must contain "energy" and "energy_true" axes in that order.
         observation: `~gammapy.data.Observation`
             Observation to compute edisp for.
 
         Returns
         -------
-        edisp : `~gammapy.irf.EDispKernel`
-            Energy dispersion
+        edisp : `~gammapy.irf.EDispKernelMap`
+            Energy dispersion kernel map
         """
+        position = geom.center_skydir
+        energy_axis = geom.axes["energy"]
+        energy_axis_true = geom.axes["energy_true"]
+
         offset = observation.pointing_radec.separation(position)
-        return observation.edisp.to_energy_dispersion(
+
+        kernel = observation.edisp.to_energy_dispersion(
             offset, e_reco=energy_axis.edges, e_true=energy_axis_true.edges
         )
+
+        edisp = EDispKernelMap.from_edisp_kernel(
+            kernel, geom=geom.to_image()
+        )
+
+        exposure = self.make_exposure(geom.squash("energy"), observation)
+        edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
+        return edisp
 
     @staticmethod
     def make_meta_table(observation):
@@ -184,13 +196,8 @@ class SpectrumDatasetMaker(Maker):
         """
         kwargs = {
             "gti": observation.gti,
-            "livetime": observation.observation_live_time_duration,
             "meta_table": self.make_meta_table(observation),
         }
-
-        energy_axis = dataset.counts.geom.axes["energy"]
-        energy_axis_true = dataset.aeff.geom.axes["energy_true"]
-        region = dataset.counts.geom.region
 
         if "counts" in self.selection:
             kwargs["counts"] = self.make_counts(dataset.counts.geom, observation)
@@ -203,14 +210,10 @@ class SpectrumDatasetMaker(Maker):
             bkg_model.spectral_model.norm.frozen = True
             kwargs["models"] = bkg_model
 
-        if "aeff" in self.selection:
-            kwargs["aeff"] = self.make_aeff(dataset.aeff.geom, observation)
+        if "exposure" in self.selection:
+            kwargs["exposure"] = self.make_exposure(dataset.exposure.geom, observation)
 
         if "edisp" in self.selection:
-            edisp = self.make_edisp(
-                region.center, energy_axis, energy_axis_true, observation
-            )
-            kwargs["edisp"] = EDispKernelMap.from_edisp_kernel(
-                edisp, geom=dataset.counts.geom
-            )
+            kwargs["edisp"] = self.make_edisp_kernel(dataset.edisp.edisp_map.geom, observation)
+
         return SpectrumDataset(name=dataset.name, **kwargs)

@@ -87,8 +87,8 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
     assert_allclose(datasets[0].counts.data.sum(), 100)
     assert_allclose(datasets[1].counts.data.sum(), 92)
 
-    assert_allclose(datasets[0].livetime.value, 1581.736758)
-    assert_allclose(datasets[1].livetime.value, 1572.686724)
+    assert_allclose(datasets[0].exposure.meta["livetime"].value, 1581.736758)
+    assert_allclose(datasets[1].exposure.meta["livetime"].value, 1572.686724)
 
     assert_allclose(datasets[0].background_model.map.data.sum(), 7.74732, rtol=1e-5)
     assert_allclose(datasets[1].background_model.map.data.sum(), 6.118879, rtol=1e-5)
@@ -107,8 +107,8 @@ def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_gc, observations_cta_d
     assert_allclose(datasets[0].counts.data.sum(), 53)
     assert_allclose(datasets[1].counts.data.sum(), 47)
 
-    assert_allclose(datasets[0].livetime.value, 1764.000034)
-    assert_allclose(datasets[1].livetime.value, 1764.000034)
+    assert_allclose(datasets[0].exposure.meta["livetime"].value, 1764.000034)
+    assert_allclose(datasets[1].exposure.meta["livetime"].value, 1764.000034)
 
     assert_allclose(datasets[0].background_model.map.data.sum(), 2.238345, rtol=1e-5)
     assert_allclose(datasets[1].background_model.map.data.sum(), 2.164593, rtol=1e-5)
@@ -201,19 +201,20 @@ class TestSpectrumMakerChain:
         dataset = reflected_regions_bkg_maker.run(dataset, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
-        aeff_actual = (
-            dataset.aeff.interp_by_coord(
+        exposure_actual = (
+            dataset.exposure.interp_by_coord(
                 {
                     "energy_true": 5 * u.TeV,
                     "skycoord": dataset.counts.geom.center_skydir,
                 }
             )
-            * u.m ** 2
+            * dataset.exposure.unit
         )
 
         edisp_actual = dataset._edisp_kernel.data.evaluate(
             energy_true=5 * u.TeV, energy=5.2 * u.TeV
         )
+        aeff_actual = exposure_actual / dataset.exposure.meta["livetime"]
 
         assert_quantity_allclose(aeff_actual, results["aeff"], rtol=1e-3)
         assert_quantity_allclose(edisp_actual, results["edisp"], rtol=1e-3)

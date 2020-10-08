@@ -231,7 +231,6 @@ class RegionGeom(Geom):
         coords = MapCoord.create(
             coords, frame=self.frame, axis_names=self.axes.names
         )
-        print(coords)
 
         if self.region is None:
             pix = (0, 0)
@@ -365,7 +364,6 @@ class RegionGeom(Geom):
     def union(self, other):
         """Stack a RegionGeom by making the union"""
         if not self == other:
-            print(self, other)
             raise ValueError("Can only make union if extra axes are equivalent.")
         if other.region:
             if self.region:

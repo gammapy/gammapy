@@ -22,10 +22,13 @@ def spectrum_dataset():
     )
     aeff = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[e_true], unit="m2")
     aeff.data += 1e6
+
+    livetime = 1 * u.h
+    exposure = aeff * livetime
+
     return SpectrumDataset(
         name="test",
-        aeff=aeff,
-        livetime="1h",
+        exposure=exposure,
         edisp=edisp,
         models=BackgroundModel(background, name="test-bkg", datasets_names="test"),
     )
