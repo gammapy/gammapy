@@ -9,7 +9,6 @@ from gammapy.estimators import TSMapEstimator
 from gammapy.irf import EnergyDependentTablePSF, PSFMap, EDispKernelMap
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
-    BackgroundModel,
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,

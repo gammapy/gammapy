@@ -7,7 +7,6 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
-    BackgroundModel,
     PowerLawSpectralModel,
     GaussianSpatialModel,
     SkyModel,
