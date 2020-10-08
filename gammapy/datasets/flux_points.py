@@ -241,65 +241,57 @@ class FluxPointsDataset(Dataset):
         residuals[fp.is_ul] = np.nan
         return residuals
 
-    def peek(
-        self,
-        fig=None,
-        fig_kwargs=None,
-        ax_kwargs=None,
-        fp_kwargs=None,
-        model_kwargs=None,
-        method="diff/model",
-        **kwargs
-    ):
+    def plot_fit(self, ax_spectrum=None, ax_residuals=None, kwargs_spectrum=None, kwargs_residuals=None):
         """Plot flux points, best fit model and residuals.
+
+        Calls `~FluxPointsDataset.plot_spectrum` and `~FluxPointsDataset.plot_residuals`.
 
         Parameters
         ----------
-        fig : `~matplotlib.figure.Figure`
-            Figure to add AxesSubplot on. Overrides ``fig_kwargs``.
-        fig_kwargs: dict
-            Keyword arguments passed to `~matplotlib.pyplot.figure`.
-        ax_kwargs : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes`.
-        fp_kwargs : dict
-            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot`.
-        model_kwargs : dict
-            Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
-            `gammapy.modeling.models.SpectralModel.plot_error`.
-        method : {"diff", "diff/model"}
-            Normalization used to compute the residuals, see `FluxPointsDataset.residuals`.
-        **kwargs : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar` for the residuals.
+        ax_spectrum : `~matplotlib.axes.Axes`
+            Axes to plot flux points and best fit model on.
+        ax_residuals : `~matplotlib.axes.Axes`
+            Axes to plot residuals on.
+        kwargs_spectrum : dict
+            Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`.
+        kwargs_residuals : dict
+            Keyword arguments passed to `~FluxPointsDataset.plot_residuals`.
 
         Returns
         -------
-        fig : `~matplotlib.figure.Figure`
-            Figure object.
-        ax_spectrum, ax_residuals : `~matplotlib.axes.AxesSubplot`
-            Spectrum and residuals subplots.
+        ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
+            Spectrum and residuals plots.
         """
+        import matplotlib.pyplot as plt
         from matplotlib.gridspec import GridSpec
 
-        fig_kwargs = fig_kwargs or {}
-        fig_kwargs.setdefault("figsize", (8, 7))
-        fig = get_figure(None, fig, fig_kwargs)
-        fig.clf()
-        ax_kwargs = ax_kwargs or {}
+        if not ax_spectrum and not ax_residuals:
+            if plt.get_fignums():
+                fig = plt.gcf()
+                fig.clf()
+            else:
+                fig = plt.figure(figsize=(8, 7))
 
-        gs = GridSpec(7, 1)
-        ax_spectrum = fig.add_subplot(gs[:5, :], **ax_kwargs)
-        self.plot_spectrum(ax_spectrum, fp_kwargs=fp_kwargs, model_kwargs=model_kwargs)
+            gs = GridSpec(7, 1)
+            ax_spectrum = fig.add_subplot(gs[:5, :])
+            ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)
+        elif not ax_spectrum or not ax_residuals:
+            raise ValueError("Either both or no Axes must be provided")
 
+        kwargs_spectrum = kwargs_spectrum or {}
+        kwargs_residuals = kwargs_residuals or {}
+        kwargs_residuals.setdefault("method", "diff/model")
+
+        self.plot_spectrum(ax_spectrum, **kwargs_spectrum)
         ax_spectrum.label_outer()
 
-        ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum, **ax_kwargs)
-        self.plot_residuals(ax_residuals, method=method, **kwargs)
-
+        self.plot_residuals(ax_residuals, **kwargs_residuals)
+        method = kwargs_residuals["method"]
         label = self._residuals_labels[method]
         unit = self.data._plot_get_flux_err(self.data.sed_type)[0].unit if method == "diff" else ""
         ax_residuals.set_ylabel("Residuals\n" + label + (f"\n[{unit}]" if unit else ""))
 
-        return fig, (ax_spectrum, ax_residuals)
+        return ax_spectrum, ax_residuals
 
     @property
     def _e_range(self):
@@ -312,21 +304,13 @@ class FluxPointsDataset(Dataset):
     def _e_unit(self):
         return self.data.e_ref.unit
 
-    def plot_residuals(
-        self, ax=None, fig=None, ax_kwargs=None, fig_kwargs=None, method="diff", **kwargs
-    ):
+    def plot_residuals(self, ax=None, method="diff", **kwargs):
         """Plot flux point residuals.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
-            Axes to plot on. Overrides the next three parameters.
-        fig : `~matplotlib.figure.Figure`
-            Figure to add AxesSubplot on or get Axes from. Overrides ``fig_kwargs``.
-        ax_kwargs : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes`.
-        fig_kwargs: dict
-            Keyword arguments passed to `~matplotlib.pyplot.figure`.
+            Axes to plot on.
         method : {"diff", "diff/model"}
             Normalization used to compute the residuals, see `FluxPointsDataset.residuals`.
         **kwargs : dict
@@ -334,12 +318,12 @@ class FluxPointsDataset(Dataset):
 
         Returns
         -------
-        fig : `~matplotlib.figure.Figure`
-            Figure of the Axes object.
         ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        ax, fig = get_axes(ax, fig, ax_kwargs, fig_kwargs)
+        import matplotlib.pyplot as plt
+
+        ax = ax or plt.gca()
 
         fp = self.data
         residuals = self.residuals(method)
@@ -375,23 +359,15 @@ class FluxPointsDataset(Dataset):
         ymin = 1.05 * np.nanmin(residuals.value - yerr[0])
         ymax = 1.05 * np.nanmax(residuals.value + yerr[1])
         ax.set_ylim(ymin, ymax)
-        return fig, ax
+        return ax
 
-    def plot_spectrum(
-        self, ax=None, fig=None, ax_kwargs=None, fig_kwargs=None, fp_kwargs=None, model_kwargs=None
-    ):
+    def plot_spectrum(self, ax=None, fp_kwargs=None, model_kwargs=None):
         """Plot spectrum including flux points and model.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
             Axes to plot on. Overrides the next three parameters.
-        fig : `~matplotlib.figure.Figure`
-            Figure to add AxesSubplot on or get Axes from. Overrides ``fig_kwargs``.
-        ax_kwargs : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes`.
-        fig_kwargs: dict
-            Keyword arguments passed to `~matplotlib.pyplot.figure`.
         fp_kwargs : dict
             Keyword arguments passed to `gammapy.estimators.FluxPoints.plot`.
         model_kwargs : dict

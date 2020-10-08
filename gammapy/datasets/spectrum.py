@@ -360,24 +360,18 @@ class SpectrumDataset(Dataset):
         import matplotlib.pyplot as plt
         from matplotlib.gridspec import GridSpec
 
-        if not ax_spectrum or not ax_residuals:
-            gs = GridSpec(7, 1)
-
-            if ax_spectrum:
-                fig = ax_spectrum.figure
-                ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)
-            elif ax_residuals:
-                fig = ax_residuals.figure
-                ax_spectrum = fig.add_subplot(gs[:5, :], sharex=ax_residuals)
+        if not ax_spectrum and not ax_residuals:
+            if plt.get_fignums():
+                fig = plt.gcf()
+                fig.clf()
             else:
-                if plt.get_fignums():
-                    fig = plt.gcf()
-                    fig.clf()
-                else:
-                    fig = plt.figure(figsize=(8, 7))
+                fig = plt.figure(figsize=(8, 7))
 
-                ax_spectrum = fig.add_subplot(gs[:5, :])
-                ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)
+            gs = GridSpec(7, 1)
+            ax_spectrum = fig.add_subplot(gs[:5, :])
+            ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)
+        elif not ax_spectrum or not ax_residuals:
+            raise ValueError("Either both or no Axes must be provided")
 
         kwargs_spectrum = kwargs_spectrum or {}
         kwargs_residuals = kwargs_residuals or {}
@@ -402,77 +396,89 @@ class SpectrumDataset(Dataset):
         ax.axvline(e_min.to_value(self._e_unit), label="fit range", **kwargs)
         ax.axvline(e_max.to_value(self._e_unit), **kwargs)
 
-    def plot_counts(self, ax=None, **kwargs):
+    def plot_counts(self, ax=None, counts_kwargs=None, bkg_kwargs=None, **kwargs):
         """Plot counts and background.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
             Axes to plot on.
+        counts_kwargs: dict
+            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the counts.
+        bkg_kwargs: dict
+            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the background.
         **kwargs: dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.hist`.
+            Keyword arguments passed to both `~matplotlib.axes.Axes.hist`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        import matplotlib.pyplot as plt
+        counts_kwargs = counts_kwargs or {}
+        bkg_kwargs = bkg_kwargs or {}
 
-        ax = ax or plt.gca()
+        plot_kwargs = kwargs.copy()
+        plot_kwargs.update(counts_kwargs)
+        plot_kwargs.setdefault("label", "n_on")
+        ax = self.counts.plot_hist(ax, **plot_kwargs)
 
-        self.counts.plot_hist(ax, label="n_on", **kwargs)
-
+        plot_kwargs = kwargs.copy()
+        plot_kwargs.update(bkg_kwargs)
         if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
-            self.background.plot_hist(ax, label="alpha * n_off", **kwargs)
+            plot_kwargs.setdefault("label", "alpha * n_off")
+            self.background.plot_hist(ax, **plot_kwargs)
         elif self.background_model is not None:
-            self.background_model.evaluate().plot_hist(ax, label="background", **kwargs)
+            plot_kwargs.setdefault("label", "background")
+            self.background_model.evaluate().plot_hist(ax, **plot_kwargs)
 
         self._plot_energy_range(ax)
         e_min, e_max = self.energy_range
-        e_unit = self._e_unit
-        ax.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
+        ax.set_xlim(0.7 * e_min.value, 1.3 * e_max.value)
 
         ax.legend(numpoints=1)
         return ax
 
-    def plot_excess(self, ax=None, kwargs_errorbar=None, kwargs_hist=None):
+    def plot_excess(self, ax=None, measured_kwargs=None, pred_kwargs=None, **kwargs):
         """Plot measured and predicted excess.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
             Axes to plot on.
-        kwargs_errorbar: dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
-        kwargs_hist : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.hist`.
+        measured_kwargs: dict
+            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar` for
+            the measured excess.
+        pred_kwargs : dict
+            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the
+            predicted excess.
+        **kwargs: dict
+            Keyword arguments passed to both plot methods.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        import matplotlib.pyplot as plt
+        measured_kwargs = measured_kwargs or {}
+        pred_kwargs = pred_kwargs or {}
 
-        ax = ax or plt.gca()
-        kwargs_errorbar = kwargs_errorbar or {}
-        kwargs_hist = kwargs_hist or {}
+        plot_kwargs = kwargs.copy()
+        plot_kwargs.update(measured_kwargs)
+        plot_kwargs.setdefault("label", "Measured excess")
+        ax = self.excess.plot(ax, yerr=np.sqrt(np.abs(self.excess.data.flatten())), **plot_kwargs)
 
-        self.excess.plot(
-            ax=ax,
-            label="Measured excess",
-            yerr=np.sqrt(np.abs(self.excess.data.flatten())),
-            **kwargs_errorbar,
-        )
         if self.background_model:
             pred_excess = self.npred() - self.background_model.evaluate()
         elif self.background:
             pred_excess = self.npred() - self.background
 
-        pred_excess.plot_hist(ax, label="Predicted excess", **kwargs_hist)
-        self._plot_energy_range(ax)
+        plot_kwargs = kwargs.copy()
+        plot_kwargs.update(pred_kwargs)
+        plot_kwargs.setdefault("label", "Predicted excess")
+        pred_excess.plot_hist(ax, **plot_kwargs)
 
+        self._plot_energy_range(ax)
         ax.legend(numpoints=1)
         return ax
 
@@ -512,10 +518,6 @@ class SpectrumDataset(Dataset):
         ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        import matplotlib.pyplot as plt
-
-        ax = ax or plt.gca()
-
         residuals = self.residuals(method)
         if method == "diff":
             yerr = np.sqrt((self.counts.data + self.npred().data).flatten())
@@ -523,7 +525,7 @@ class SpectrumDataset(Dataset):
             yerr = np.ones_like(residuals.data.flatten())
 
         kwargs.setdefault("color", kwargs.pop("c", "black"))
-        residuals.plot(ax, yerr=yerr, **kwargs)
+        ax = residuals.plot(ax, yerr=yerr, **kwargs)
         ax.axhline(0, color=kwargs["color"], lw=0.5)
 
         label = self._residuals_labels[method]
@@ -686,12 +688,14 @@ class SpectrumDataset(Dataset):
         ax1, ax2, ax3 : `~matplotlib.axes.AxesSubplot`
             Counts, effective area and energy dispersion subplots.
         """
-        if not plt.get_fignums():
-            fig = plt.figure(figsize=(16, 4))
-        else:
+        import matplotlib.pyplot as plt
+
+        if plt.get_fignums():
             if not fig:
                 fig = plt.gcf()
             fig.clf()
+        else:
+            fig = plt.figure(figsize=(16, 4))
 
         ax1, ax2, ax3 = fig.subplots(1, 3)
 
@@ -702,8 +706,7 @@ class SpectrumDataset(Dataset):
         self.aeff.plot(ax2)
         self._plot_energy_range(ax2)
         e_min, e_max = self.energy_range
-        e_unit = self.aeff.geom.axes[0].unit
-        ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
+        ax2.set_xlim(0.7 * e_min.value, 1.3 * e_max.value)
 
         ax3.set_title("Energy Dispersion")
         if self.edisp is not None:
