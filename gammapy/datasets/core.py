@@ -288,7 +288,8 @@ class Datasets(collections.abc.MutableSequence):
                 instrument = set(dataset.meta_table["TELESCOP"]).pop()
             except (KeyError, TypeError):
                 instrument = ""
-            str_ += f"\tInstrument : {instrument}\n\n"
+            str_ += f"\tInstrument : {instrument}\n"
+            str_ += f"\tModels     : {dataset.models.names}\n\n"
 
         return str_.expandtabs(tabsize=2)
 

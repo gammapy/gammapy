@@ -269,7 +269,6 @@ class Analysis:
             )
 
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
-        stacked.models = [BackgroundIRFModel(dataset_name="stacked")]
 
         if datasets_settings.stack:
             for obs in self.observations:

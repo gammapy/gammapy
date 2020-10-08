@@ -338,6 +338,16 @@ class MapDataset(Dataset):
         return self._evaluators
 
     @property
+    def geoms(self):
+        """Map geoms contained in the dataset"""
+        return {
+            "geom": self.counts.geom,
+            "geom_exposure": self.exposure.geom,
+            "geom_edisp": self.edisp.edisp_map.geom,
+            "geom_psf": self.psf.psf_map.geom,
+        }
+
+    @property
     def _geom(self):
         """Main analysis geometry"""
         if self.counts is not None:
@@ -766,7 +776,7 @@ class MapDataset(Dataset):
                 yerr = np.sqrt((counts_spec.data + npred_spec.data).flatten())
             else:
                 yerr = np.ones_like(residuals.data.flatten())
-            ax = residuals.plot(color="black", yerr=yerr, fmt=".", capsize=2, lw=1)
+            ax = residuals.plot(yerr=yerr, fmt=".", capsize=2, lw=1)
             ax.set_yscale("linear")
             ax.axhline(0, color="black", lw=0.5)
             ymax = 1.05 * np.nanmax(residuals.data + yerr.data)
