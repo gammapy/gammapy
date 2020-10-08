@@ -280,6 +280,9 @@ class Analysis:
                 if bkg_maker is not None:
                     dataset = bkg_maker.run(dataset)
 
+                if bkg_method == "ring":
+                    dataset = dataset.to_map_dataset()
+
                 log.debug(dataset)
                 stacked.stack(dataset)
             datasets = [stacked]

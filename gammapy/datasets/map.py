@@ -180,8 +180,10 @@ class MapDataset(Dataset):
         """Background """
         if self._background:
             try:
-                model = self.models[self.name + "-bkg"]
-                return model.evaluate_map(self._background)
+                values = self.background_model.evaluate_geom(
+                    geom=self._background.geom
+                )
+                return self._background * values
             except ValueError:
                 return self._background
 

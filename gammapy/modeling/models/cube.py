@@ -459,13 +459,14 @@ class BackgroundIRFModel(Model):
         str_ += "\n\n"
         return str_.expandtabs(tabsize=2)
 
-    def evaluate_map(self, background):
+    def evaluate_geom(self, geom):
         """Evaluate map"""
-        energy_axis = background.geom.axes["energy"]
-        energy = energy_axis.center[:, np.newaxis, np.newaxis]
-        value = self.spectral_model(energy)
-        data = background.data * value.value
-        return background.copy(data=data)
+        energy = geom.axes["energy"].center[:, np.newaxis, np.newaxis]
+        return self.evaluate(energy=energy)
+
+    def evaluate(self, energy):
+        """Evaluate model"""
+        return self.spectral_model(energy)
 
     def to_dict(self):
         data = {}
