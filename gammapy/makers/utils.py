@@ -55,11 +55,8 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
 
     exposure = (exposure * livetime).to("m2 s")
 
-    meta = {
-        "livetime": livetime
-    }
     return Map.from_geom(
-        geom=geom, data=exposure.value.reshape(geom.data_shape), unit=exposure.unit, meta=meta
+        geom=geom, data=exposure.value.reshape(geom.data_shape), unit=exposure.unit,
     )
 
 
