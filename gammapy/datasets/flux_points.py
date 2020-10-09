@@ -6,7 +6,7 @@ from astropy.table import Table
 from gammapy.modeling.models import Models, ProperModels
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
-from .utils import get_figure, get_axes
+from .utils import get_axes
 
 log = logging.getLogger(__name__)
 
@@ -242,7 +242,7 @@ class FluxPointsDataset(Dataset):
         return residuals
 
     def plot_fit(self, ax_spectrum=None, ax_residuals=None, kwargs_spectrum=None, kwargs_residuals=None):
-        """Plot flux points, best fit model and residuals.
+        """Plot flux points, best fit model and residuals in two panels.
 
         Calls `~FluxPointsDataset.plot_spectrum` and `~FluxPointsDataset.plot_residuals`.
 
@@ -262,22 +262,12 @@ class FluxPointsDataset(Dataset):
         ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
             Spectrum and residuals plots.
         """
-        import matplotlib.pyplot as plt
         from matplotlib.gridspec import GridSpec
 
-        if not ax_spectrum and not ax_residuals:
-            if plt.get_fignums():
-                fig = plt.gcf()
-                fig.clf()
-            else:
-                fig = plt.figure(figsize=(8, 7))
-
-            gs = GridSpec(7, 1)
-            ax_spectrum = fig.add_subplot(gs[:5, :])
-            ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)
-        elif not ax_spectrum or not ax_residuals:
-            raise ValueError("Either both or no Axes must be provided")
-
+        gs = GridSpec(7, 1)
+        ax_spectrum, ax_residuals = get_axes(
+            ax_spectrum, ax_residuals, 8, 7, (gs[:5, :]), (gs[5:, :]), kwargs2={sharex:ax_spectrum}
+        )
         kwargs_spectrum = kwargs_spectrum or {}
         kwargs_residuals = kwargs_residuals or {}
         kwargs_residuals.setdefault("method", "diff/model")
@@ -361,40 +351,38 @@ class FluxPointsDataset(Dataset):
         ax.set_ylim(ymin, ymax)
         return ax
 
-    def plot_spectrum(self, ax=None, fp_kwargs=None, model_kwargs=None):
+    def plot_spectrum(self, ax=None, fp_kwargs=None, model_kwargs=None, **kwargs):
         """Plot spectrum including flux points and model.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
-            Axes to plot on. Overrides the next three parameters.
+            Axes to plot on.
         fp_kwargs : dict
             Keyword arguments passed to `gammapy.estimators.FluxPoints.plot`.
         model_kwargs : dict
             Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
             `gammapy.modeling.models.SpectralModel.plot_error`.
+        **kwargs: dict
+            Keyword arguments passed to all plot methods.
 
         Returns
         -------
-        fig : `~matplotlib.figure.Figure`
-            Figure of the Axes object.
         ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        ax, fig = get_axes(ax, fig, ax_kwargs, fig_kwargs)
-
         fp_kwargs = fp_kwargs or {}
         model_kwargs = model_kwargs or {}
-        kwargs = {
-            "flux_unit": "erg-1 cm-2 s-1",
-            "energy_unit": "TeV",
-            "energy_power": 2,
-        }
+
+        kwargs.setdefault("energy_power", 2)
+        kwargs.setdefault("energy_unit", "TeV")
+        kwargs.setdefault("flux_unit", "erg-1 cm-2 s-1")
+
         # plot flux points
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(fp_kwargs)
         plot_kwargs.setdefault("label", "Flux points")
-        self.data.plot(ax, **plot_kwargs)
+        ax = self.data.plot(ax, **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(model_kwargs)
@@ -416,4 +404,4 @@ class FluxPointsDataset(Dataset):
 
         # format axes
         ax.set_xlim(self._e_range.to_value(self._e_unit))
-        return fig, ax
+        return ax

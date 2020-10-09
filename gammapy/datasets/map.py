@@ -25,7 +25,7 @@ from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.fits import LazyFitsData, HDULocation
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
-from .utils import get_figure
+from .utils import get_axes
 
 __all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
 
@@ -697,7 +697,7 @@ class MapDataset(Dataset):
     def plot_residuals(
         self, ax_spatial=None, ax_spectral=None, kwargs_spatial=None, kwargs_spectral=None
     ):
-        """Plot spatial and spectral residuals.
+        """Plot spatial and spectral residuals in two panels.
 
         Calls `~MapDataset.plot_spatial_residuals` and `~MapDataset.plot_spectral_residuals`.
         The spectral residuals are extracted from the provided region, and the
@@ -720,23 +720,12 @@ class MapDataset(Dataset):
         ax_spatial, ax_spectral : `~astropy.visualization.wcsaxes.WCSAxes`, `~matplotlib.axes.Axes`
             Spatial and spectral residuals plots.
         """
-        import matplotlib.pyplot as plt
-
         if not kwargs_spectral:
             raise ValueError("'region' is a required parameter in 'kwargs_spectral'")
 
-        if not ax_spatial and not ax_spectral:
-            if plt.get_fignums():
-                fig = plt.gcf()
-                fig.clf()
-            else:
-                fig = plt.figure(figsize=(12, 4))
-
-            ax_spatial = fig.add_subplot(1, 2, 1, projection=self._geom.to_image().wcs)
-            ax_spectral = fig.add_subplot(1, 2, 2)
-        elif not ax_spatial or not ax_spectral:
-            raise ValueError("Either both or no Axes must be provided")
-
+        ax_spatial, ax_spectral = get_axes(
+            ax_spatial, ax_spectral, 12, 4, (1, 2, 1), (1, 2, 2), {projection:self._geom.to_image().wcs}
+        )
         kwargs_spatial = kwargs_spatial or {}
 
         self.plot_spatial_residuals(ax_spatial, **kwargs_spatial)

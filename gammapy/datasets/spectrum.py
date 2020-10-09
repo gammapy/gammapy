@@ -16,6 +16,7 @@ from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from gammapy.modeling.models import BackgroundModel
 from .map import MapEvaluator
+from .utils import get_figure, get_axes
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
 
@@ -357,22 +358,12 @@ class SpectrumDataset(Dataset):
         ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
             Spectrum and residuals plots.
         """
-        import matplotlib.pyplot as plt
         from matplotlib.gridspec import GridSpec
 
-        if not ax_spectrum and not ax_residuals:
-            if plt.get_fignums():
-                fig = plt.gcf()
-                fig.clf()
-            else:
-                fig = plt.figure(figsize=(8, 7))
-
-            gs = GridSpec(7, 1)
-            ax_spectrum = fig.add_subplot(gs[:5, :])
-            ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)
-        elif not ax_spectrum or not ax_residuals:
-            raise ValueError("Either both or no Axes must be provided")
-
+        gs = GridSpec(7, 1)
+        ax_spectrum, ax_residuals = get_axes(
+            ax_spectrum, ax_residuals, 8, 7, (gs[:5, :]), (gs[5:, :]), kwargs2={sharex:ax_spectrum}
+        )
         kwargs_spectrum = kwargs_spectrum or {}
         kwargs_residuals = kwargs_residuals or {}
 
@@ -688,15 +679,7 @@ class SpectrumDataset(Dataset):
         ax1, ax2, ax3 : `~matplotlib.axes.AxesSubplot`
             Counts, effective area and energy dispersion subplots.
         """
-        import matplotlib.pyplot as plt
-
-        if plt.get_fignums():
-            if not fig:
-                fig = plt.gcf()
-            fig.clf()
-        else:
-            fig = plt.figure(figsize=(16, 4))
-
+        fig = get_figure(fig, 16, 4)
         ax1, ax2, ax3 = fig.subplots(1, 3)
 
         ax1.set_title("Counts")
