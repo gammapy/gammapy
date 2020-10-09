@@ -16,6 +16,7 @@ def spectrum_dataset():
 
     background = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[e_reco])
     background.data += 3600
+    background.data[0] *= 1e3
     background.data[-1] *= 1e-3
     edisp = EDispKernelMap.from_diagonal_response(
         energy_axis_true=e_true, energy_axis=e_reco, geom=background.geom
@@ -35,7 +36,7 @@ def test_cta_sensitivity_estimator(spectrum_dataset):
     dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
         dataset=spectrum_dataset, acceptance=1, acceptance_off=5
     )
-    sens = SensitivityEstimator(gamma_min=20)
+    sens = SensitivityEstimator(gamma_min=25, bkg_syst_fraction=0.075)
     table = sens.run(dataset_on_off)
 
     assert len(table) == 4
@@ -45,14 +46,21 @@ def test_cta_sensitivity_estimator(spectrum_dataset):
 
     row = table[0]
     assert_allclose(row["energy"], 1.33352, rtol=1e-3)
-    assert_allclose(row["e2dnde"], 3.40101e-11, rtol=1e-3)
+    assert_allclose(row["e2dnde"], 2.74559e-08, rtol=1e-3)
+    assert_allclose(row["excess"], 270000, rtol=1e-3)
+    assert_allclose(row["background"], 3.6e+06, rtol=1e-3)
+    assert row["criterion"] == "bkg"
+
+    row = table[1]
+    assert_allclose(row["energy"], 2.37137, rtol=1e-3)
+    assert_allclose(row["e2dnde"], 6.04795e-11, rtol=1e-3)
     assert_allclose(row["excess"], 334.454, rtol=1e-3)
     assert_allclose(row["background"], 3600, rtol=1e-3)
     assert row["criterion"] == "significance"
 
     row = table[3]
     assert_allclose(row["energy"], 7.49894, rtol=1e-3)
-    assert_allclose(row["e2dnde"], 1.14367e-11, rtol=1e-3)
-    assert_allclose(row["excess"], 20, rtol=1e-3)
+    assert_allclose(row["e2dnde"], 1.42959e-11, rtol=1e-3)
+    assert_allclose(row["excess"], 25, rtol=1e-3)
     assert_allclose(row["background"], 3.6, rtol=1e-3)
     assert row["criterion"] == "gamma"
