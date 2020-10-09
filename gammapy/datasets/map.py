@@ -19,7 +19,7 @@ from gammapy.modeling.models import (
     Models,
     ProperModels,
 )
-from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg
+from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg, WStatCountsStatistic
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.fits import LazyFitsData, HDULocation
@@ -995,7 +995,7 @@ class MapDataset(Dataset):
         """Convert to dict for YAML serialization."""
         return {"name": self.name, "type": self.tag, "filename": str(filename)}
 
-    def info_dict(self, region=None):
+    def info_dict(self, in_safe_data_range=True):
         """Basic info dict with summary statistics
 
         If a region is passed, then a spectrum dataset is
@@ -1003,46 +1003,16 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        region : `~regions.SkyRegion`, optional
-            the input ON region on which to extract the spectrum
+        in_safe_data_range : bool
+            Whether to sum only in the safe energy range
 
         Returns
         -------
         info_dict : dict
             Dictionary with summary info.
         """
-        if self.gti is not None:
-            if region is None:
-                region = RectangleSkyRegion(
-                    center=self._geom.center_skydir,
-                    width=self._geom.width[0][0],
-                    height=self._geom.width[1][0],
-                )
-            info = self.to_spectrum_dataset(on_region=region).info_dict()
-        else:
-            info = dict()
-            if self.counts:
-                info["counts"] = np.sum(self.counts.data)
-            if self.background_model:
-                info["background"] = np.sum(self.background_model.evaluate().data)
-                info["excess"] = info["counts"] - info["background"]
-
-            info["npred"] = np.sum(self.npred())
-            if self.mask_safe is not None:
-                mask = self.mask_safe.reduce_over_axes(np.logical_or).data
-                if not mask.any():
-                    mask = None
-            else:
-                mask = None
-            if self.exposure:
-                exposure_min = np.min(self.exposure.data[..., mask])
-                exposure_max = np.max(self.exposure.data[..., mask])
-                info["aeff_min"] = exposure_min * self.exposure.unit
-                info["aeff_max"] = exposure_max * self.exposure.unit
-
-        info["name"] = self.name
-
-        return info
+        from .spectrum import SpectrumDataset
+        return SpectrumDataset.info_dict(self, in_safe_data_range)
 
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
         """Return a ~gammapy.datasets.SpectrumDataset from on_region.
@@ -1871,7 +1841,7 @@ class MapDatasetOnOff(MapDataset):
             kwargs["gti"] = gti
         return cls(**kwargs)
 
-    def info_dict(self, region=None):
+    def info_dict(self, in_safe_data_range=True):
         """Basic info dict with summary statistics
 
         If a region is passed, then a spectrum dataset is
@@ -1879,27 +1849,53 @@ class MapDatasetOnOff(MapDataset):
 
         Parameters
         ----------
-        region : `~regions.SkyRegion`, optional
-            the input ON region on which to extract the spectrum
+        in_safe_data_range : bool
+            Whether to sum only in the safe energy range
 
         Returns
         -------
         info_dict : dict
             Dictionary with summary info.
         """
-        info = super().info_dict(region)
-        info["name"] = self.name
-        if self.gti is None:
-            if self.counts_off is not None:
-                info["counts_off"] = np.sum(self.counts_off.data)
+        # TODO: remove code duplication with SpectrumDatasetOnOff
+        info = super().info_dict(in_safe_data_range)
 
-            if self.acceptance is not None:
-                info["acceptance"] = np.sum(self.acceptance.data)
+        if self.mask_safe and in_safe_data_range:
+            mask = self.mask_safe.data.astype(bool)
+        else:
+            mask = slice(None)
 
-            if self.acceptance_off is not None:
-                info["acceptance_off"] = np.sum(self.acceptance_off.data)
+        counts_off = np.nan
+        if self.counts_off is not None:
+            counts_off = self.counts_off.data[mask].sum()
 
-            info["excess"] = np.sum(self.excess.data)
+        info["counts_off"] = counts_off
+
+        acceptance = 1
+        if self.acceptance:
+            # TODO: handle energy dependent a_on / a_off
+            acceptance = self.acceptance.data[mask].sum()
+
+        info["acceptance"] = acceptance
+
+        acceptance_off = np.nan
+        if self.acceptance_off:
+            acceptance_off = acceptance * counts_off / info["background"]
+
+        info["acceptance_off"] = acceptance_off
+
+        alpha = np.nan
+        if self.acceptance_off and self.acceptance:
+            alpha = np.mean(self.alpha.data[mask])
+
+        info["alpha"] = alpha
+
+        info["sqrt_ts"] = WStatCountsStatistic(
+            info["counts"],
+            info["counts_off"],
+            acceptance / acceptance_off,
+        ).significance
+        info["stat_sum"] = self.stat_sum()
         return info
 
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
