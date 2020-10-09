@@ -99,57 +99,26 @@ class SpectrumDataset(Dataset):
         return self._name
 
     def __str__(self):
-        str_ = self.__class__.__name__ + "\n"
+        str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__) + "\n"
         str_ += "\n"
+        str_ += "\t{:32}: {{name}} \n\n".format("Name")
+        str_ += "\t{:32}: {{counts:.0f}} \n".format("Total counts")
+        str_ += "\t{:32}: {{npred:.2f}}\n".format("Total predicted counts")
+        str_ += "\t{:32}: {{background:.2f}}\n\n".format("Total background counts")
 
-        str_ += "\t{:32}: {} \n\n".format("Name", self.name)
+        str_ += "\t{:32}: {{exposure_min:.2e}}\n".format("Exposure min")
+        str_ += "\t{:32}: {{exposure_max:.2e}}\n\n".format("Exposure max")
 
-        counts = np.nan
-        if self.counts is not None:
-            counts = np.sum(self.counts.data)
-        str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
-
-        npred = np.nan
-        if self.models is not None:
-            npred = np.sum(self.npred().data)
-        str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
-
-        background = np.nan
-        if self.background_model is not None:
-            background = np.sum(self.background_model.evaluate().data)
-        str_ += "\t{:32}: {:.2f}\n\n".format("Total background counts", background)
-
-        exposure_min, exposure_max, exposure_unit = np.nan, np.nan, ""
-        non_zero = self.exposure.data > 0
-        if self.exposure is not None and non_zero.any():
-            exposure_min = np.min(self.exposure.data[non_zero])
-            exposure_max = np.max(self.exposure.data)
-            exposure_unit = self.exposure.unit
-
-        str_ += "\t{:32}: {:.2e} {}\n".format("Exposure min", exposure_min, exposure_unit)
-        str_ += "\t{:32}: {:.2e} {}\n\n".format(
-            "Exposure max", exposure_max, exposure_unit
-        )
-
-        # data section
-        n_bins = 0
-        if self.counts is not None:
-            n_bins = self.counts.data.size
-        str_ += "\t{:32}: {} \n".format("Number of total bins", n_bins)
-
-        n_fit_bins = 0
-        if self.mask is not None:
-            n_fit_bins = np.sum(self.mask)
-        str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
+        str_ += "\t{:32}: {{n_bins}} \n".format("Number of total bins")
+        str_ += "\t{:32}: {{n_fit_bins}} \n\n".format("Number of fit bins")
 
         # likelihood section
-        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.stat_type)
+        str_ += "\t{:32}: {{stat_type}}\n".format("Fit statistic type")
+        str_ += "\t{:32}: {{stat_sum:.2f}}\n\n".format("Fit statistic value (-2 log(L))")
 
-        stat = np.nan
-        if self.models is not None and self.counts is not None:
-            stat = self.stat_sum()
-        str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
+        info = self.info_dict()
+        str_ = str_.format(**info)
 
         n_pars, n_free_pars = 0, 0
         if self.models is not None:
@@ -668,10 +637,17 @@ class SpectrumDataset(Dataset):
         info["npred"] = npred
 
         exposure_min, exposure_max, livetime = np.nan, np.nan, np.nan
-        non_zero = self.exposure.data > 0
-        if self.exposure is not None and non_zero.any():
-            exposure_min = np.min(self.exposure.quantity[non_zero])
-            exposure_max = np.max(self.exposure.quantity[non_zero])
+
+        if self.mask_safe is not None:
+            mask = self.mask_safe.reduce_over_axes(np.logical_or).data
+            if not mask.any():
+                mask = None
+        else:
+            mask = None
+
+        if self.exposure is not None:
+            exposure_min = np.min(self.exposure.quantity[..., mask])
+            exposure_max = np.max(self.exposure.quantity[..., mask])
             livetime = self.exposure.meta.get("livetime", np.nan)
 
         info["exposure_min"] = exposure_min
@@ -684,7 +660,6 @@ class SpectrumDataset(Dataset):
 
         info["ontime"] = ontime
 
-        print(info)
         info["counts_rate"] = info["counts"] / info["livetime"]
         info["background_rate"] = info["background"] / info["livetime"]
         info["excess_rate"] = info["excess"] / info["livetime"]
@@ -926,14 +901,15 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         if self.acceptance is not None:
             acceptance = np.mean(self.acceptance.data)
 
-        str_acc = "\t{:32}: {}\n".format("Acceptance mean:", acceptance)
-        str_list.insert(16, str_acc)
-        str_ = "\n".join(str_list)
+        str_acc = "\t{:32}: {:.3f}\n".format("Acceptance mean", acceptance)
 
         acceptance_off = np.nan
         if self.acceptance_off is not None:
             acceptance_off = np.sum(self.acceptance_off.data)
-        str_ += "\t{:32}: {:.0f} \n".format("Acceptance off", acceptance_off)
+        str_acc += "\t{:32}: {:.3f} \n".format("Acceptance off", acceptance_off)
+
+        str_list.insert(15, str_acc)
+        str_ = "\n".join(str_list)
 
         return str_.expandtabs(tabsize=2)
 

@@ -175,61 +175,23 @@ class MapDataset(Dataset):
         str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__) + "\n"
         str_ += "\n"
+        str_ += "\t{:32}: {{name}} \n\n".format("Name")
+        str_ += "\t{:32}: {{counts:.0f}} \n".format("Total counts")
+        str_ += "\t{:32}: {{npred:.2f}}\n".format("Total predicted counts")
+        str_ += "\t{:32}: {{background:.2f}}\n\n".format("Total background counts")
 
-        str_ += "\t{:32}: {} \n\n".format("Name", self.name)
+        str_ += "\t{:32}: {{exposure_min:.2e}}\n".format("Exposure min")
+        str_ += "\t{:32}: {{exposure_max:.2e}}\n\n".format("Exposure max")
 
-        counts = np.nan
-        if self.counts is not None:
-            counts = np.sum(self.counts.data)
-        str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
-
-        npred = np.nan
-        if self.models is not None:
-            npred = np.sum(self.npred().data)
-        str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
-
-        background = np.nan
-        if self.background_model is not None:
-            background = np.sum(self.background_model.evaluate().data)
-        str_ += "\t{:32}: {:.2f}\n\n".format("Total background counts", background)
-
-        exposure_min, exposure_max, exposure_unit = np.nan, np.nan, ""
-        if self.exposure is not None:
-            if self.mask_safe is not None:
-                mask = self.mask_safe.reduce_over_axes(np.logical_or).data
-                if not mask.any():
-                    mask = None
-            else:
-                mask = None
-            exposure_min = np.min(self.exposure.data[..., mask])
-            exposure_max = np.max(self.exposure.data[..., mask])
-            exposure_unit = self.exposure.unit
-
-        str_ += "\t{:32}: {:.2e} {}\n".format(
-            "Exposure min", exposure_min, exposure_unit
-        )
-        str_ += "\t{:32}: {:.2e} {}\n\n".format(
-            "Exposure max", exposure_max, exposure_unit
-        )
-
-        # data section
-        n_bins = 0
-        if self.counts is not None:
-            n_bins = self.counts.data.size
-        str_ += "\t{:32}: {} \n".format("Number of total bins", n_bins)
-
-        n_fit_bins = 0
-        if self.mask is not None:
-            n_fit_bins = np.sum(self.mask.data)
-        str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
+        str_ += "\t{:32}: {{n_bins}} \n".format("Number of total bins")
+        str_ += "\t{:32}: {{n_fit_bins}} \n\n".format("Number of fit bins")
 
         # likelihood section
-        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.stat_type)
+        str_ += "\t{:32}: {{stat_type}}\n".format("Fit statistic type")
+        str_ += "\t{:32}: {{stat_sum:.2f}}\n\n".format("Fit statistic value (-2 log(L))")
 
-        stat = np.nan
-        if self.counts is not None and self.models is not None:
-            stat = self.stat_sum()
-        str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
+        info = self.info_dict()
+        str_ = str_.format(**info)
 
         # model section
         n_models, n_pars, n_free_pars = 0, 0, 0
