@@ -36,7 +36,7 @@
     - cta-1dc
   tutorial: True
 - name: background_model
-  url: https://github.com/gammapy/gammapy/blob/master/docs/tutorials/background_model.ipynb
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/background_model.ipynb
   datasets:
     - hess-dl3-dr1
   tutorial: True
