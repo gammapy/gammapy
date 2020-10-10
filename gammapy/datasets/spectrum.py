@@ -638,16 +638,15 @@ class SpectrumDataset(Dataset):
 
         exposure_min, exposure_max, livetime = np.nan, np.nan, np.nan
 
-        if self.mask_safe is not None:
-            mask = self.mask_safe.reduce_over_axes(np.logical_or).data
-            if not mask.any():
-                mask = None
-        else:
-            mask = None
-
         if self.exposure is not None:
-            exposure_min = np.min(self.exposure.quantity[..., mask])
-            exposure_max = np.max(self.exposure.quantity[..., mask])
+            mask_exposure = (self.exposure.data > 0)
+
+            if self.mask_safe is not None:
+                mask_spatial = self.mask_safe.reduce_over_axes(func=np.logical_or).data
+                mask_exposure = mask_exposure & mask_spatial[np.newaxis, :, :]
+
+            exposure_min = np.min(self.exposure.quantity[mask_exposure])
+            exposure_max = np.max(self.exposure.quantity[mask_exposure])
             livetime = self.exposure.meta.get("livetime", np.nan)
 
         info["exposure_min"] = exposure_min

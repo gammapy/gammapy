@@ -721,12 +721,12 @@ def test_sum_over_axes():
     geom = WcsGeom.create(npix=(5, 5), axes=[ax1, ax2, ax3])
     m1 = Map.from_geom(geom=geom)
     m1.data = np.ones(m1.data.shape)
-    m2 = m1.sum_over_axes(axes=["ax1", "ax3"], keepdims=True)
+    m2 = m1.sum_over_axes(axes_names=["ax1", "ax3"], keepdims=True)
 
     assert_allclose(m2.geom.data_shape, (1, 3, 1, 5, 5))
     assert_allclose(m2.data[0][0][0][0][0], 8.0)
 
-    m3 = m1.sum_over_axes(axes=["ax3", "ax2"], keepdims=False)
+    m3 = m1.sum_over_axes(axes_names=["ax3", "ax2"], keepdims=False)
     assert_allclose(m3.geom.data_shape, (4, 5, 5))
     assert_allclose(m3.data[0][0][0], 6.0)
 
