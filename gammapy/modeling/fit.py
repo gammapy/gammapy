@@ -326,7 +326,8 @@ class Fit:
         Returns
         -------
         results : dict
-            Dictionary with keys "values" and "stat".
+            Dictionary with keys "values", "stat" and "results". The latter contains an
+            empty list, if `reoptimize` is set to False
         """
         parameters = self._parameters
         parameter = parameters[parameter]
@@ -346,6 +347,7 @@ class Fit:
             values = np.linspace(parmin, parmax, nvalues)
 
         stats = []
+        results = []
         with parameters.restore_values:
             for value in values:
                 parameter.value = value
@@ -353,15 +355,14 @@ class Fit:
                     parameter.frozen = True
                     result = self.optimize(**optimize_opts)
                     stat = result.total_stat
+                    results.append(result)
                 else:
                     stat = self.datasets.stat_sum()
                 stats.append(stat)
 
-        return {"values": values, "stat": np.array(stats)}
+        return {"values": values, "stat": np.array(stats), "results": results}
 
-    def stat_surface(
-        self, x, y, x_values, y_values, reoptimize=False, **optimize_opts
-    ):
+    def stat_surface(self, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
         """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.
@@ -385,7 +386,9 @@ class Fit:
         Returns
         -------
         results : dict
-            Dictionary with keys "x_values", "y_values" and "stat".
+        Dictionary with keys "x_values", "y_values", "stat" and "results". The latter contains an
+        empty list, if `reoptimize` is set to False
+
 
         """
         parameters = self._parameters
@@ -393,6 +396,7 @@ class Fit:
         y = parameters[y]
 
         stats = []
+        results = []
         with parameters.restore_values:
             for x_value, y_value in itertools.product(x_values, y_values):
                 # TODO: Remove log.info() and provide a nice progress bar
@@ -404,17 +408,25 @@ class Fit:
                     y.frozen = True
                     result = self.optimize(**optimize_opts)
                     stat = result.total_stat
+                    results.append(result)
                 else:
                     stat = self.datasets.stat_sum()
 
                 stats.append(stat)
 
+        shape = (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
         stats = np.array(stats)
-        stats = stats.reshape(
-            (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
-        )
+        stats = stats.reshape(shape)
+        if reoptimize:
+            results = np.array(results)
+            results = results.reshape(shape)
 
-        return {"x_values": x_values, "y_values": y_values, "stat": stats}
+        return {
+            "x_values": x_values,
+            "y_values": y_values,
+            "stat": stats,
+            "results": results,
+        }
 
     def minos_contour(self, x, y, numpoints=10, sigma=1.0):
         """Compute MINOS contour.
