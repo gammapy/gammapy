@@ -99,29 +99,6 @@ class SpectrumDataset(MapDataset):
         return None
 
     @property
-    def evaluators(self):
-        """Model evaluators"""
-
-        edisp = self._edisp_kernel
-
-        if self.models:
-            for model in self.models:
-                evaluator = self._evaluators.get(model)
-
-                if evaluator is None:
-                    evaluator = MapEvaluator(
-                        model=model, exposure=self.exposure, edisp=edisp, gti=self.gti,
-                    )
-                    self._evaluators[model] = evaluator
-
-        keys = list(self._evaluators.keys())
-        for key in keys:
-            if key not in self.models:
-                del self._evaluators[key]
-
-        return self._evaluators
-
-    @property
     def mask_safe(self):
         if self._mask_safe is None:
             data = np.ones(self._geom.data_shape, dtype=bool)

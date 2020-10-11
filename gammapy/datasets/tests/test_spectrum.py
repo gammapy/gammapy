@@ -324,11 +324,11 @@ class TestSpectrumOnOff:
 
     def setup(self):
         etrue = np.logspace(-1, 1, 10) * u.TeV
-        self.e_true = MapAxis.from_edges(etrue, name="energy_true")
+        self.e_true = MapAxis.from_energy_edges(etrue, name="energy_true")
         ereco = np.logspace(-1, 1, 5) * u.TeV
         elo = ereco[:-1]
         ehi = ereco[1:]
-        self.e_reco = MapAxis.from_edges(ereco, name="energy")
+        self.e_reco = MapAxis.from_energy_edges(ereco, name="energy")
 
         start = u.Quantity([0], "s")
         stop = u.Quantity([1000], "s")

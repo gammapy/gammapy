@@ -2218,7 +2218,7 @@ class MapEvaluator:
         self.evaluation_mode = evaluation_mode
 
         # TODO: this is preliminary solution until we have further unified the model handling
-        if isinstance(self.model, BackgroundModel):
+        if isinstance(self.model, BackgroundModel) or self.model.spatial_model is None:
             self.evaluation_mode = "global"
 
         # define cached computations
@@ -2258,8 +2258,6 @@ class MapEvaluator:
             return False
         elif self.exposure is None:
             return True
-        elif isinstance(self.geom, RegionGeom):
-            return False
         elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False
         else:
