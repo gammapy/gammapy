@@ -668,11 +668,11 @@ def test_stack(sky_model):
     dataset1.models.append(sky_model)
     npred_b = dataset1.npred()
 
-    assert_allclose(npred_b.data.sum(), 1459.96, 1e-5)
+    assert_allclose(npred_b.data.sum(), 1459.985035, 1e-5)
     assert_allclose(dataset1.background_model.map.data.sum(), 1360.00, 1e-5)
     assert_allclose(dataset1.counts.data.sum(), 9000, 1e-5)
     assert_allclose(dataset1.mask_safe.data.sum(), 4600)
-    assert_allclose(dataset1.exposure.data.sum(), 150000000000.0)
+    assert_allclose(dataset1.exposure.data.sum(), 1.6e+11)
 
     assert_allclose(dataset1.meta_table["OBS_ID"][0], [0, 1])
 

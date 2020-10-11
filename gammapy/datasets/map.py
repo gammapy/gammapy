@@ -435,6 +435,11 @@ class MapDataset(Dataset):
 
         return cls.from_geoms(reference_time=reference_time, name=name, **kwargs)
 
+    @property
+    def mask_safe_image(self):
+        """Reduced mask safe"""
+        return self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
+
     def stack(self, other):
         """Stack another dataset in place.
 
@@ -461,11 +466,8 @@ class MapDataset(Dataset):
             self.counts.stack(other.counts, weights=other_mask_safe)
 
         if self.exposure and other.exposure:
-            mask_exposure = self._mask_safe_irf(self.exposure, self.mask_safe)
-            self.exposure *= mask_exposure.data
-
-            mask_exposure_other = self._mask_safe_irf(other.exposure, other_mask_safe)
-            self.exposure.stack(other.exposure, weights=mask_exposure_other)
+            self.exposure *= self.mask_safe_image.data
+            self.exposure.stack(other.exposure, weights=other.mask_safe_image)
 
         # TODO: unify background model handling
         if other.stat_type == "wstat":
