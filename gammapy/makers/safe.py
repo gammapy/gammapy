@@ -4,7 +4,7 @@ import numpy as np
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
 from gammapy.irf import EffectiveAreaTable, EDispKernelMap
-from gammapy.maps import Map
+from gammapy.maps import Map, WcsGeom
 from regions import PointSkyRegion
 from .core import Maker
 
@@ -130,10 +130,7 @@ class SafeMaskMaker(Maker):
         else:
             position = PointSkyRegion(self.position)
 
-        if isinstance(dataset, MapDataset):
-            exposure = dataset.exposure.get_spectrum(position)
-        else:
-            exposure = dataset.exposure
+        exposure = dataset.exposure.get_spectrum(position)
 
         energy = exposure.geom.axes["energy_true"]
         aeff = EffectiveAreaTable(
@@ -190,11 +187,7 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
         geom = dataset.counts.geom
-
-        if isinstance(dataset, MapDataset):
-            background_spectrum = dataset.background_model.map.get_spectrum()
-        else:
-            background_spectrum = dataset.background_model.map
+        background_spectrum = dataset.background_model.map.get_spectrum()
 
         idx = np.argmax(background_spectrum.data, axis=0)
         energy_axis = geom.axes["energy"]

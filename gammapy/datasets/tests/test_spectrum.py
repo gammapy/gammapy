@@ -153,10 +153,10 @@ def test_fit(spectrum_dataset):
 
     pars = result.parameters
     assert_allclose(pars["index"].value, 2.1, rtol=1e-2)
-    assert_allclose(pars["index"].error, 0.001206, rtol=1e-2)
+    assert_allclose(pars["index"].error, 0.001276, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e5, rtol=1e-3)
-    assert_allclose(pars["amplitude"].error, 139.61, rtol=1e-2)
+    assert_allclose(pars["amplitude"].error, 153.450825, rtol=1e-2)
 
 
 def test_spectrum_dataset_create():
@@ -663,8 +663,8 @@ class TestSpectralFit:
         result = self.fit.run()
         pars = result.parameters
 
-        assert_allclose(pars["index"].error, 0.156045, rtol=1e-3)
-        assert_allclose(pars["amplitude"].error, 6.473577e-12, rtol=1e-3)
+        assert_allclose(pars["index"].error, 0.149633, rtol=1e-3)
+        assert_allclose(pars["amplitude"].error, 6.423139e-12, rtol=1e-3)
         pars.to_table()
 
     def test_ecpl_fit(self):

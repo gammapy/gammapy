@@ -168,7 +168,7 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, [0.070675, 0.057445, 0.185618], rtol=1e-2)
+        assert_allclose(actual, [0.066374, 0.061025, 0.179729], rtol=1e-2)
 
         actual = fp.table["norm_errn"].data
         assert_allclose(actual, [0.065803, 0.060403, 0.171376], rtol=1e-2)

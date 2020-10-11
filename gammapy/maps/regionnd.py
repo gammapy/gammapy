@@ -389,3 +389,7 @@ class RegionNDMap(Map):
             raise ValueError(f"Unsupported ogip column: '{ogip_column}'")
 
         return table
+
+    def get_spectrum(self, *args, **kwargs):
+        """Return self"""
+        return self
