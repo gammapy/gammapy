@@ -748,15 +748,6 @@ def test_stack_npred():
     assert_allclose(npred_stacked.data, stacked_npred.data)
 
 
-@requires_data()
-def test_stack_simple_edisp(sky_model, geom, geom_etrue):
-    dataset1 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispkernel")
-    dataset2 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispkernel")
-
-    with pytest.raises(ValueError):
-        dataset1.stack(dataset2)
-
-
 def to_cube(image):
     # introduce a fake enery axis for now
     axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy")
