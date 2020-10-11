@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import itertools
 from astropy.utils import lazyproperty
+from gammapy.utils.pbar import pbar
 from .covariance import Covariance
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
 from .scipy import confidence_scipy, optimize_scipy
@@ -232,7 +233,7 @@ class Fit:
         )
 
     def confidence(
-        self, parameter, backend="minuit", sigma=1, reoptimize=True, **kwargs
+            self, parameter, backend="minuit", sigma=1, reoptimize=True, **kwargs
     ):
         """Estimate confidence interval.
 
@@ -291,13 +292,14 @@ class Fit:
         return result
 
     def stat_profile(
-        self,
-        parameter,
-        values=None,
-        bounds=2,
-        nvalues=11,
-        reoptimize=False,
-        optimize_opts=None,
+            self,
+            parameter,
+            values=None,
+            bounds=2,
+            nvalues=11,
+            reoptimize=False,
+            optimize_opts=None,
+            show_pbar=True
     ):
         """Compute fit statistic profile.
 
@@ -322,6 +324,8 @@ class Fit:
             Number of parameter grid points to use.
         reoptimize : bool
             Re-optimize other parameters, when computing the fit statistic profile.
+        show_pbar : bool
+            Display progress bar.
 
         Returns
         -------
@@ -346,21 +350,23 @@ class Fit:
             values = np.linspace(parmin, parmax, nvalues)
 
         stats = []
-        with parameters.restore_values:
-            for value in values:
-                parameter.value = value
-                if reoptimize:
-                    parameter.frozen = True
-                    result = self.optimize(**optimize_opts)
-                    stat = result.total_stat
-                else:
-                    stat = self.datasets.stat_sum()
-                stats.append(stat)
+        with pbar(total=len(values), show_pbar=show_pbar) as pb:
+            with parameters.restore_values:
+                for value in values:
+                    parameter.value = value
+                    if reoptimize:
+                        parameter.frozen = True
+                        result = self.optimize(**optimize_opts)
+                        stat = result.total_stat
+                    else:
+                        stat = self.datasets.stat_sum()
+                    stats.append(stat)
+                    pb.update(1)
 
         return {"values": values, "stat": np.array(stats)}
 
     def stat_surface(
-        self, x, y, x_values, y_values, reoptimize=False, **optimize_opts
+            self, x, y, x_values, y_values, reoptimize=False, **optimize_opts
     ):
         """Compute fit statistic surface.
 
@@ -381,6 +387,8 @@ class Fit:
             Re-optimize other parameters, when computing the fit statistic profile.
         **optimize_opts : dict
             Keyword arguments passed to the optimizer. See `Fit.optimize` for further details.
+        show_pbar : bool
+            Display progress bar.
 
         Returns
         -------
@@ -393,21 +401,23 @@ class Fit:
         y = parameters[y]
 
         stats = []
-        with parameters.restore_values:
-            for x_value, y_value in itertools.product(x_values, y_values):
-                # TODO: Remove log.info() and provide a nice progress bar
-                log.info(f"Processing: x={x_value}, y={y_value}")
-                x.value = x_value
-                y.value = y_value
-                if reoptimize:
-                    x.frozen = True
-                    y.frozen = True
-                    result = self.optimize(**optimize_opts)
-                    stat = result.total_stat
-                else:
-                    stat = self.datasets.stat_sum()
+        with pbar(total=len(x_values) * len(y_values), show_pbar=show_pbar) as pb:
+            with parameters.restore_values:
+                for x_value, y_value in itertools.product(x_values, y_values):
+                    # TODO: Remove log.info() and provide a nice progress bar
+                    log.info(f"Processing: x={x_value}, y={y_value}")
+                    x.value = x_value
+                    y.value = y_value
+                    if reoptimize:
+                        x.frozen = True
+                        y.frozen = True
+                        result = self.optimize(**optimize_opts)
+                        stat = result.total_stat
+                    else:
+                        stat = self.datasets.stat_sum()
 
-                stats.append(stat)
+                    stats.append(stat)
+                    pb.update(1)
 
         stats = np.array(stats)
         stats = stats.reshape(
