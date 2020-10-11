@@ -211,7 +211,7 @@ class TestSpectrumMakerChain:
             * dataset.exposure.unit
         )
 
-        edisp_actual = dataset._edisp_kernel.data.evaluate(
+        edisp_actual = dataset.edisp.get_edisp_kernel().data.evaluate(
             energy_true=5 * u.TeV, energy=5.2 * u.TeV
         )
         aeff_actual = exposure_actual / dataset.exposure.meta["livetime"]

@@ -496,6 +496,34 @@ class MapDataset(Dataset):
     def stack(self, other):
         """Stack another dataset in place.
 
+        Safe mask is applied to compute the stacked counts data. Counts outside
+        each dataset safe mask are lost.
+
+        The stacking of 2 datasets is implemented as follows. Here, :math:`k`
+        denotes a bin in reconstructed energy and :math:`j = {1,2}` is the dataset number
+
+        The ``mask_safe`` of each dataset is defined as:
+
+        .. math::
+            \epsilon_{jk} =\left\{\begin{array}{cl} 1, &
+            \mbox{if bin k is inside the thresholds}\\ 0, &
+            \mbox{otherwise} \end{array}\right.
+
+        Then the total ``counts`` and model background ``bkg`` are computed according to:
+
+        .. math::
+            \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
+             \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
+
+            \overline{bkg}_k = bkg_{1k} \cdot \epsilon_{1k} +
+             bkg_{2k} \cdot \epsilon_{2k}
+
+        The stacked ``safe_mask`` is then:
+
+        .. math::
+            \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
+
+
         Parameters
         ----------
         other: `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
@@ -516,7 +544,6 @@ class MapDataset(Dataset):
                     self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
                 else:
                     self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
-
 
         # TODO: unify background model handling
         if other.stat_type == "wstat":
