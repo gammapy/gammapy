@@ -326,7 +326,7 @@ class Fit:
         Returns
         -------
         results : dict
-            Dictionary with keys "values" and "stat".
+            Dictionary with keys "values" and "stat_scan".
         """
         parameters = self._parameters
         parameter = parameters[parameter]
@@ -357,11 +357,9 @@ class Fit:
                     stat = self.datasets.stat_sum()
                 stats.append(stat)
 
-        return {"values": values, "stat": np.array(stats)}
+        return {f"{parameter.name}_scan": values, "stat_scan": np.array(stats)}
 
-    def stat_surface(
-        self, x, y, x_values, y_values, reoptimize=False, **optimize_opts
-    ):
+    def stat_surface(self, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
         """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.
@@ -385,7 +383,7 @@ class Fit:
         Returns
         -------
         results : dict
-            Dictionary with keys "x_values", "y_values" and "stat".
+            Dictionary with keys "x_values", "y_values" and "stat_scan".
 
         """
         parameters = self._parameters
@@ -414,7 +412,11 @@ class Fit:
             (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
         )
 
-        return {"x_values": x_values, "y_values": y_values, "stat": stats}
+        return {
+            f"{x.name}_scan": x_values,
+            f"{y.name}_scan": y_values,
+            "stat_scan": stats,
+        }
 
     def minos_contour(self, x, y, numpoints=10, sigma=1.0):
         """Compute MINOS contour.
@@ -453,15 +455,17 @@ class Fit:
         with parameters.restore_values:
             result = mncontour(self.minuit, parameters, x, y, numpoints, sigma)
 
+        x_name = x.name
+        y_name = y.name
         x = result["x"] * x.scale
         y = result["y"] * y.scale
 
         return {
-            "x": x,
-            "y": y,
+            f"{x_name}_scan": x,
+            f"{y_name}_scan": y,
             "success": result["success"],
-            "x_info": result["x_info"],
-            "y_info": result["y_info"],
+            f"{x_name}_info": result["x_info"],
+            f"{y_name}_info": result["y_info"],
         }
 
 
