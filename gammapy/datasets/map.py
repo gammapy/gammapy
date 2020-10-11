@@ -438,7 +438,14 @@ class MapDataset(Dataset):
     @property
     def mask_safe_image(self):
         """Reduced mask safe"""
-        return self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
+        return self.mask_safe.reduce_over_axes(func=np.logical_or)
+
+    @property
+    def mask_safe_psf(self):
+        """Mask safe for IRF maps"""
+        geom = self.psf.exposure_map.geom.squash("energy_true")
+        mask_safe_psf = self.mask_safe_image.interp_to_geom(geom.to_image())
+        return mask_safe_psf.to_cube(geom.axes)
 
     def stack(self, other):
         """Stack another dataset in place.
@@ -484,16 +491,9 @@ class MapDataset(Dataset):
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
-                mask_irf = self._mask_safe_irf(
-                    self.psf.exposure_map, self.mask_safe, drop="rad"
-                )
-                self.psf.psf_map.data *= mask_irf.data
-                self.psf.exposure_map.data *= mask_irf.data
-
-                mask_irf_other = self._mask_safe_irf(
-                    other.psf.exposure_map, other_mask_safe, drop="rad"
-                )
-                self.psf.stack(other.psf, weights=mask_irf_other)
+                self.psf.psf_map *= self.mask_safe_psf.data
+                self.psf.exposure_map *= self.mask_safe_psf.data
+                self.psf.stack(other.psf, weights=other.mask_safe_psf)
             else:
                 raise ValueError("Stacking of PSF kernels not supported")
 
