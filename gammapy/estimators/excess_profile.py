@@ -8,6 +8,7 @@ from gammapy.maps import MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from gammapy.utils.table import table_from_row_data
+from gammapy.utils.pbar import pbar
 from .core import Estimator
 
 __all__ = ["ExcessProfileEstimator"]
@@ -158,84 +159,88 @@ class ExcessProfileEstimator(Estimator):
 
         distance = self._get_projected_distance()
 
-        for index, spds in enumerate(sp_datasets):
-            old_model = None
-            if spds.models is not None:
-                old_model = spds.models
-            spds.models = SkyModel(spectral_model=self.spectrum)
-            e_reco = spds.counts.geom.axes["energy"].edges
+        with pbar(total=len(sp_datasets), show_pbar=True) as pb:
+            for index, spds in enumerate(sp_datasets):
+                old_model = None
+                if spds.models is not None:
+                    old_model = spds.models
+                spds.models = SkyModel(spectral_model=self.spectrum)
+                e_reco = spds.counts.geom.axes["energy"].edges
 
-            # ToDo: When the function to_spectrum_dataset will manage the masks, use the following line
-            # mask = spds.mask if spds.mask is not None else slice(None)
-            mask = slice(None)
-            if isinstance(spds, SpectrumDatasetOnOff):
-                stats = WStatCountsStatistic(
-                    spds.counts.data[mask][:, 0, 0],
-                    spds.counts_off.data[mask][:, 0, 0],
-                    spds.alpha.data[mask][:, 0, 0],
-                )
+                # ToDo: When the function to_spectrum_dataset will manage the masks, use the following line
+                # mask = spds.mask if spds.mask is not None else slice(None)
+                mask = slice(None)
 
-            else:
-                stats = CashCountsStatistic(
-                    spds.counts.data[mask][:, 0, 0],
-                    spds.background_model.evaluate().data[mask][:, 0, 0],
-                )
+                if isinstance(spds, SpectrumDatasetOnOff):
+                    stats = WStatCountsStatistic(
+                        spds.counts.data[mask][:, 0, 0],
+                        spds.counts_off.data[mask][:, 0, 0],
+                        spds.alpha.data[mask][:, 0, 0],
+                    )
 
-            result = {
-                "x_min": distance.edges[index],
-                "x_max": distance.edges[index + 1],
-                "x_ref": distance.center[index],
-                "energy_edge": e_reco,
-            }
-            if isinstance(spds, SpectrumDatasetOnOff):
-                result["alpha"] = stats.alpha
-            result.update(
-                {
-                    "counts": stats.n_on,
-                    "background": stats.background,
-                    "excess": stats.excess,
+                else:
+                    stats = CashCountsStatistic(
+                        spds.counts.data[mask][:, 0, 0],
+                        spds.background_model.evaluate().data[mask][:, 0, 0],
+                    )
+
+                result = {
+                    "x_min": distance.edges[index],
+                    "x_max": distance.edges[index + 1],
+                    "x_ref": distance.center[index],
+                    "energy_edge": e_reco,
                 }
-            )
+                if isinstance(spds, SpectrumDatasetOnOff):
+                    result["alpha"] = stats.alpha
+                result.update(
+                    {
+                        "counts": stats.n_on,
+                        "background": stats.background,
+                        "excess": stats.excess,
+                    }
+                )
 
-            result["ts"] = stats.delta_ts
-            result["sqrt_ts"] = stats.significance
+                result["ts"] = stats.delta_ts
+                result["sqrt_ts"] = stats.significance
 
-            result["err"] = stats.error * self.n_sigma
+                result["err"] = stats.error * self.n_sigma
 
-            if "errn-errp" in self.selection_optional:
-                result["errn"] = stats.compute_errn(self.n_sigma)
-                result["errp"] = stats.compute_errp(self.n_sigma)
+                if "errn-errp" in self.selection_optional:
+                    result["errn"] = stats.compute_errn(self.n_sigma)
+                    result["errp"] = stats.compute_errp(self.n_sigma)
 
-            if "ul" in self.selection_optional:
-                result["ul"] = stats.compute_upper_limit(self.n_sigma_ul)
+                if "ul" in self.selection_optional:
+                    result["ul"] = stats.compute_upper_limit(self.n_sigma_ul)
 
-            npred = spds.npred().data[mask][:, 0, 0]
-            e_reco_lo = e_reco[:-1]
-            e_reco_hi = e_reco[1:]
-            flux = (
-                stats.excess
-                / npred
-                * spds.models[0].spectral_model.integral(e_reco_lo, e_reco_hi).value
-            )
-            result["flux"] = flux
+                npred = spds.npred().data[mask][:, 0, 0]
+                e_reco_lo = e_reco[:-1]
+                e_reco_hi = e_reco[1:]
+                flux = (
+                    stats.excess
+                    / npred
+                    * spds.models[0].spectral_model.integral(e_reco_lo, e_reco_hi).value
+                )
+                result["flux"] = flux
 
-            result["flux_err"] = stats.error / stats.excess * flux
+                result["flux_err"] = stats.error / stats.excess * flux
 
-            if "errn-errp" in self.selection_optional:
-                result["flux_errn"] = np.abs(result["errn"]) / stats.excess * flux
-                result["flux_errp"] = result["errp"] / stats.excess * flux
+                if "errn-errp" in self.selection_optional:
+                    result["flux_errn"] = np.abs(result["errn"]) / stats.excess * flux
+                    result["flux_errp"] = result["errp"] / stats.excess * flux
 
-            if "ul" in self.selection_optional:
-                result["flux_ul"] = result["ul"] / stats.excess * flux
+                if "ul" in self.selection_optional:
+                    result["flux_ul"] = result["ul"] / stats.excess * flux
 
-            solid_angle = spds.counts.geom.solid_angle()
-            result["solid_angle"] = (
-                np.full(result["counts"].shape, solid_angle.to_value("sr")) * u.sr
-            )
+                solid_angle = spds.counts.geom.solid_angle()
+                result["solid_angle"] = (
+                    np.full(result["counts"].shape, solid_angle.to_value("sr")) * u.sr
+                )
 
-            results.append(result)
-            if old_model is not None:
-                spds.models = old_model
+                results.append(result)
+                if old_model is not None:
+                    spds.models = old_model
+
+                pb.update(1)
 
         return results
 

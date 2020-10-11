@@ -24,6 +24,7 @@ from gammapy.stats import (
     f_cash_root_cython,
 )
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
+from gammapy.utils.pbar import pbar
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
 
@@ -425,14 +426,16 @@ class TSMapEstimator(Estimator):
 
         results = []
 
-        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
-            dataset = datasets.slice_energy(e_min, e_max)[0]
+        with pbar(total=len(e_edges) - 1, show_pbar=True) as pb:
+            for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
+                dataset = datasets.slice_energy(e_min, e_max)[0]
 
-            if self.sum_over_energy_groups:
-                dataset = dataset.to_image()
+                if self.sum_over_energy_groups:
+                    dataset = dataset.to_image()
 
-            result = self.estimate_flux_map(dataset)
-            results.append(result)
+                result = self.estimate_flux_map(dataset)
+                results.append(result)
+                pb.update(1)
 
         result_all = {}
 

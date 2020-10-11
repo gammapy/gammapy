@@ -7,6 +7,7 @@ from astropy.coordinates import Angle
 from gammapy.datasets import MapDatasetOnOff, Datasets
 from gammapy.maps import WcsNDMap, Map
 from gammapy.stats import CashCountsStatistic
+from gammapy.utils.pbar import pbar
 from gammapy.utils.array import scale_cube
 from gammapy.modeling.models import PowerLawSpectralModel
 from .core import Estimator
@@ -165,10 +166,12 @@ class ASmoothMapEstimator(Estimator):
 
         results = []
 
-        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
-            dataset = datasets.slice_energy(e_min, e_max)[0]
-            result = self.estimate_maps(dataset)
-            results.append(result)
+        with pbar(total=len(e_edges) - 1, show_pbar=True) as pb:
+            for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
+                dataset = datasets.slice_energy(e_min, e_max)[0]
+                result = self.estimate_maps(dataset)
+                results.append(result)
+                pb.update(1)
 
         result_all = {}
 

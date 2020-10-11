@@ -195,7 +195,8 @@ class ParameterEstimator(Estimator):
             values=self.scan_values,
             bounds=bounds,
             nvalues=self.scan_n_values,
-            reoptimize=self.reoptimize
+            reoptimize=self.reoptimize,
+            show_pbar=False,
         )
 
         return {

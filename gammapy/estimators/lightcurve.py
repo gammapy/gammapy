@@ -8,6 +8,7 @@ from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_row_to_dict
+from gammapy.utils.pbar import pbar
 from .core import Estimator
 from .flux_point import FluxPoints, FluxPointsEstimator
 
@@ -388,18 +389,20 @@ class LightCurveEstimator(Estimator):
 
         rows = []
 
-        for t_min, t_max in gti.time_intervals:
-            datasets_to_fit = datasets.select_time(
-                t_min=t_min, t_max=t_max, atol=self.atol
-            )
+        with pbar(total=len(gti.time_intervals), show_pbar=True) as pb:
+            for t_min, t_max in gti.time_intervals:
+                datasets_to_fit = datasets.select_time(
+                    t_min=t_min, t_max=t_max, atol=self.atol
+                )
 
-            if len(datasets_to_fit) == 0:
-                log.debug(f"No Dataset for the time interval {t_min} to {t_max}")
-                continue
+                if len(datasets_to_fit) == 0:
+                    log.debug(f"No Dataset for the time interval {t_min} to {t_max}")
+                    continue
 
-            row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
-            row.update(self.estimate_time_bin_flux(datasets_to_fit))
-            rows.append(row)
+                row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
+                row.update(self.estimate_time_bin_flux(datasets_to_fit))
+                rows.append(row)
+                pb.update(1)
 
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")

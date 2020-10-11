@@ -9,6 +9,7 @@ from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
+from gammapy.utils.pbar import pbar
 from .core import Estimator
 from .flux import FluxEstimator
 
@@ -860,9 +861,11 @@ class FluxPointsEstimator(Estimator):
 
         rows = []
 
-        for e_min, e_max in zip(self.e_edges[:-1], self.e_edges[1:]):
-            row = self.estimate_flux_point(datasets, e_min=e_min, e_max=e_max)
-            rows.append(row)
+        with pbar(total=len(self.e_edges) - 1, show_pbar=True) as pb:
+            for e_min, e_max in zip(self.e_edges[:-1], self.e_edges[1:]):
+                row = self.estimate_flux_point(datasets, e_min=e_min, e_max=e_max)
+                rows.append(row)
+                pb.update(1)
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
 

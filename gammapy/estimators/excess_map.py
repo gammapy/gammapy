@@ -5,6 +5,7 @@ import numpy as np
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
 import astropy.units as u
+from gammapy.utils.pbar import pbar
 from gammapy.datasets import MapDataset, MapDatasetOnOff, Datasets
 from gammapy.maps import Map
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
@@ -162,11 +163,13 @@ class ExcessMapEstimator(Estimator):
 
         results = []
 
-        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
-            sliced_dataset = datasets.slice_energy(e_min, e_max)[0]
+        with pbar(total=len(e_edges) - 1, show_pbar=True) as pb:
+            for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
+                sliced_dataset = datasets.slice_energy(e_min, e_max)[0]
 
-            result = self.estimate_excess_map(sliced_dataset)
-            results.append(result)
+                result = self.estimate_excess_map(sliced_dataset)
+                results.append(result)
+                pb.update(1)
 
         results_all = {}
 
