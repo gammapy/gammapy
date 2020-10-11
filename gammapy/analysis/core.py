@@ -20,6 +20,7 @@ from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import BackgroundModel, Models
 from gammapy.utils.scripts import make_path
+from gammapy.utils.pbar import pbar
 
 __all__ = ["Analysis"]
 
@@ -270,30 +271,31 @@ class Analysis:
 
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
-        if datasets_settings.stack:
-            for obs in self.observations:
-                log.info(f"Processing observation {obs.obs_id}")
-                cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
-                dataset = maker.run(cutout, obs)
-                dataset = maker_safe_mask.run(dataset, obs)
-                if bkg_maker is not None:
-                    dataset = bkg_maker.run(dataset)
-                if bkg_method == "ring":
-                    dataset.models = Models([BackgroundModel(dataset.background)])
-                log.debug(dataset)
-                stacked.stack(dataset)
-            datasets = [stacked]
-        else:
-            datasets = []
-            for obs in self.observations:
-                log.info(f"Processing observation {obs.obs_id}")
-                cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
-                dataset = maker.run(cutout, obs)
-                dataset = maker_safe_mask.run(dataset, obs)
-                if bkg_maker is not None:
-                    dataset = bkg_maker.run(dataset)
-                log.debug(dataset)
-                datasets.append(dataset)
+        with pbar(total=len(self.observations), show_pbar=True) as pb:
+            if datasets_settings.stack:
+                for obs in self.observations:
+                    cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
+                    dataset = maker.run(cutout, obs)
+                    dataset = maker_safe_mask.run(dataset, obs)
+                    if bkg_maker is not None:
+                        dataset = bkg_maker.run(dataset)
+                    if bkg_method == "ring":
+                        dataset.models = Models([BackgroundModel(dataset.background)])
+                    log.debug(dataset)
+                    stacked.stack(dataset)
+                    pb.update(1)
+                datasets = [stacked]
+            else:
+                datasets = []
+                for obs in self.observations:
+                    cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
+                    dataset = maker.run(cutout, obs)
+                    dataset = maker_safe_mask.run(dataset, obs)
+                    if bkg_maker is not None:
+                        dataset = bkg_maker.run(dataset)
+                    log.debug(dataset)
+                    datasets.append(dataset)
+                    pb.update(1)
         self.datasets = Datasets(datasets)
 
     def _spectrum_extraction(self):
@@ -347,19 +349,20 @@ class Analysis:
         )
 
         datasets = []
-        for obs in self.observations:
-            log.info(f"Processing observation {obs.obs_id}")
-            dataset = dataset_maker.run(reference.copy(), obs)
-            if bkg_maker is not None:
-                dataset = bkg_maker.run(dataset, obs)
-                if dataset.counts_off is None:
-                    log.info(
-                        f"No OFF region found for observation {obs.obs_id}. Discarding."
-                    )
-                    continue
-            dataset = safe_mask_maker.run(dataset, obs)
-            log.debug(dataset)
-            datasets.append(dataset)
+        with pbar(total=len(self.observations), show_pbar=True) as pb:
+            for obs in self.observations:
+                dataset = dataset_maker.run(reference.copy(), obs)
+                if bkg_maker is not None:
+                    dataset = bkg_maker.run(dataset, obs)
+                    if dataset.counts_off is None:
+                        log.info(
+                            f"No OFF region found for observation {obs.obs_id}. Discarding."
+                        )
+                        continue
+                dataset = safe_mask_maker.run(dataset, obs)
+                log.debug(dataset)
+                datasets.append(dataset)
+                pb.update(1)
 
         self.datasets = Datasets(datasets)
 
