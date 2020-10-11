@@ -467,6 +467,28 @@ class MapDataset(Dataset):
 
         return self.mask_safe.interp_to_geom(geom)
 
+    def apply_mask_safe(self):
+        """Apply mask safe to the dataset"""
+        if self.mask_safe is None:
+            return
+
+        if self.counts:
+            self.counts *= self.mask_safe
+
+        if self.exposure:
+            self.exposure *= self.mask_safe_image.data
+
+        if self.background_model:
+            self.background_model.map *= self.mask_safe
+
+        if self.psf:
+            self.psf.psf_map *= self.mask_safe_psf.data
+            self.psf.exposure_map *= self.mask_safe_psf.data
+
+        if self.edisp:
+            self.edisp.edisp_map *= self.mask_safe_edisp.data
+            #self.edisp.exposure_map *= self.mask_safe_edisp.data
+
     def stack(self, other):
         """Stack another dataset in place.
 
@@ -476,24 +498,12 @@ class MapDataset(Dataset):
             Map dataset to be stacked with this one. If other is an on-off
             dataset alpha * counts_off is used as a background model.
         """
-        if self.mask_safe is None:
-            self.mask_safe = Map.from_geom(
-                self._geom, data=np.ones_like(self.data_shape)
-            )
-
-        if other.mask_safe is None:
-            other_mask_safe = Map.from_geom(
-                other._geom, data=np.ones_like(other.data_shape)
-            )
-        else:
-            other_mask_safe = other.mask_safe
+        self.apply_mask_safe()
 
         if self.counts and other.counts:
-            self.counts *= self.mask_safe
-            self.counts.stack(other.counts, weights=other_mask_safe)
+            self.counts.stack(other.counts, weights=other.mask_safe)
 
         if self.exposure and other.exposure:
-            self.exposure *= self.mask_safe_image.data
             self.exposure.stack(other.exposure, weights=other.mask_safe_image)
 
         # TODO: unify background model handling
@@ -503,29 +513,19 @@ class MapDataset(Dataset):
             background_model = other.background_model
 
         if self.background_model and background_model:
-            self._background_model.map *= self.mask_safe
-            self._background_model.stack(background_model, other_mask_safe)
-            self.models = Models([self.background_model])
-        else:
-            self.models = None
+            self.background_model.stack(background_model, weights=other.mask_safe)
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
-                self.psf.psf_map *= self.mask_safe_psf.data
-                self.psf.exposure_map *= self.mask_safe_psf.data
                 self.psf.stack(other.psf, weights=other.mask_safe_psf)
             else:
                 raise ValueError("Stacking of PSF kernels not supported")
 
         if self.edisp and other.edisp:
-            self.edisp.edisp_map *= self.mask_safe_edisp.data
-            # Question: Should mask be applied on exposure map as well?
-            # Mask here is on the reco energy.
-            # self.edisp.exposure_map.data *= mask_irf.data
-
             self.edisp.stack(other.edisp, weights=other.mask_safe_edisp)
 
-        self.mask_safe.stack(other_mask_safe)
+        if self.mask_safe and other.mask_safe:
+            self.mask_safe.stack(other.mask_safe)
 
         if self.gti and other.gti:
             self.gti.stack(other.gti)

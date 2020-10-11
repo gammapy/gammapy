@@ -30,6 +30,7 @@ def hstack_columns(table, table_other):
         Stacked table
     """
     stacked = Table()
+
     for column in table.colnames:
         data = np.hstack(
             [table[column].data[0], table_other[column].data[0]]
