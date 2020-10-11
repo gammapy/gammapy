@@ -19,7 +19,7 @@ from gammapy.modeling.models import (
     Models,
     ProperModels,
 )
-from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg, WStatCountsStatistic
+from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg, WStatCountsStatistic, CashCountsStatistic
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.fits import LazyFitsData, HDULocation
@@ -217,6 +217,10 @@ class MapDataset(Dataset):
     @property
     def background_model(self):
         return self._background_model
+
+    @property
+    def excess(self):
+        return self.counts - self.background_model.evaluate()
 
     @models.setter
     def models(self, models):
@@ -505,6 +509,14 @@ class MapDataset(Dataset):
 
         if self.exposure and other.exposure:
             self.exposure.stack(other.exposure, weights=other.mask_safe_image)
+
+            # TODO: check whether this can be improved e.g. handling this in GTI
+            if "livetime" in other.exposure.meta:
+                if "livetime" in self.exposure.meta:
+                    self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
+                else:
+                    self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
+
 
         # TODO: unify background model handling
         if other.stat_type == "wstat":
@@ -943,10 +955,7 @@ class MapDataset(Dataset):
         return {"name": self.name, "type": self.tag, "filename": str(filename)}
 
     def info_dict(self, in_safe_data_range=True):
-        """Basic info dict with summary statistics
-
-        If a region is passed, then a spectrum dataset is
-        extracted, and the corresponding info returned.
+        """Info dict with summary statistics, summed over energy
 
         Parameters
         ----------
@@ -958,8 +967,84 @@ class MapDataset(Dataset):
         info_dict : dict
             Dictionary with summary info.
         """
-        from .spectrum import SpectrumDataset
-        return SpectrumDataset.info_dict(self, in_safe_data_range)
+        info = {}
+        info["name"] = self.name
+
+        if self.mask_safe and in_safe_data_range:
+            mask = self.mask_safe.data.astype(bool)
+        else:
+            mask = slice(None)
+
+        counts = np.nan
+        if self.counts:
+            counts = self.counts.data[mask].sum()
+
+        info["counts"] = counts
+
+        background = np.nan
+        if self.background_model:
+            background = self.background_model.evaluate().data[mask].sum()
+        elif self.background:
+            background = self.background.data[mask].sum()
+
+        info["background"] = background
+
+        info["excess"] = counts - background
+        info["sqrt_ts"] = CashCountsStatistic(counts, background).significance
+
+        npred = np.nan
+        if self.models or not np.isnan(background):
+            npred = self.npred().data[mask].sum()
+
+        info["npred"] = npred
+
+        exposure_min, exposure_max, livetime = np.nan, np.nan, np.nan
+
+        if self.exposure is not None:
+            mask_exposure = (self.exposure.data > 0)
+
+            if self.mask_safe is not None:
+                mask_spatial = self.mask_safe.reduce_over_axes(func=np.logical_or).data
+                mask_exposure = mask_exposure & mask_spatial[np.newaxis, :, :]
+
+            exposure_min = np.min(self.exposure.quantity[mask_exposure])
+            exposure_max = np.max(self.exposure.quantity[mask_exposure])
+            livetime = self.exposure.meta.get("livetime", np.nan)
+
+        info["exposure_min"] = exposure_min
+        info["exposure_max"] = exposure_max
+        info["livetime"] = livetime
+
+        ontime = u.Quantity(np.nan, "s")
+        if self.gti:
+            ontime = self.gti.time_sum
+
+        info["ontime"] = ontime
+
+        info["counts_rate"] = info["counts"] / info["livetime"]
+        info["background_rate"] = info["background"] / info["livetime"]
+        info["excess_rate"] = info["excess"] / info["livetime"]
+
+        # data section
+        n_bins = 0
+        if self.counts is not None:
+            n_bins = self.counts.data.size
+        info["n_bins"] = n_bins
+
+        n_fit_bins = 0
+        if self.mask is not None:
+            n_fit_bins = np.sum(self.mask.data)
+
+        info["n_fit_bins"] = n_fit_bins
+        info["stat_type"] = self.stat_type
+
+        stat_sum = np.nan
+        if self.counts is not None and self.models is not None:
+            stat_sum = self.stat_sum()
+
+        info["stat_sum"] = stat_sum
+
+        return info
 
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
         """Return a ~gammapy.datasets.SpectrumDataset from on_region.
@@ -1279,9 +1364,15 @@ class MapDataset(Dataset):
 
         kwargs = {}
         kwargs["name"] = name
-        kwargs["gti"] = self.gti
-        kwargs["exposure"] = self.exposure
-        kwargs["psf"] = self.psf
+
+        if self.gti:
+            kwargs["gti"] = self.gti
+
+        if self.exposure:
+            kwargs["exposure"] = self.exposure
+
+        if self.psf:
+            kwargs["psf"] = self.psf
 
         if self.mask_safe is not None:
             kwargs["mask_safe"] = self.mask_safe.resample_axis(
@@ -2167,6 +2258,8 @@ class MapEvaluator:
             return False
         elif self.exposure is None:
             return True
+        elif isinstance(self.geom, RegionGeom):
+            return False
         elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False
         else:
