@@ -70,7 +70,7 @@ def get_exposure(geom_etrue):
 
     exposure_map = make_map_exposure_true_energy(
         pointing=SkyCoord(1, 0.5, unit="deg", frame="galactic"),
-        livetime="1 hour",
+        livetime=1 * u.hr,
         aeff=aeff,
         geom=geom_etrue,
     )
@@ -229,19 +229,19 @@ def test_info_dict(sky_model, geom, geom_etrue):
     assert_allclose(info_dict["counts"], 9526, rtol=1e-3)
     assert_allclose(info_dict["background"], 4000.0)
     assert_allclose(info_dict["excess"], 5525.756, rtol=1e-3)
-    assert_allclose(info_dict["aeff_min"].value, 8.32e8, rtol=1e-3)
-    assert_allclose(info_dict["aeff_max"].value, 1.105e10, rtol=1e-3)
-    assert info_dict["aeff_max"].unit == "m2 s"
+    assert_allclose(info_dict["exposure_min"].value, 8.32e8, rtol=1e-3)
+    assert_allclose(info_dict["exposure_max"].value, 1.105e10, rtol=1e-3)
+    assert info_dict["exposure_max"].unit == "m2 s"
     assert info_dict["name"] == "test"
 
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
     dataset.gti = gti
     info_dict = dataset.info_dict()
-    assert_allclose(info_dict["n_on"], 9526, rtol=1e-3)
+    assert_allclose(info_dict["counts"], 9526, rtol=1e-3)
     assert_allclose(info_dict["background"], 4000.0, rtol=1e-3)
-    assert_allclose(info_dict["significance"], 74.024180, rtol=1e-3)
+    assert_allclose(info_dict["sqrt_ts"], 74.024180, rtol=1e-3)
     assert_allclose(info_dict["excess"], 5525.756, rtol=1e-3)
-    assert_allclose(info_dict["livetime"].value, 3600)
+    assert_allclose(info_dict["ontime"].value, 3600)
 
     assert info_dict["name"] == "test"
 
@@ -768,7 +768,6 @@ def to_cube(image):
 def images():
     """Load some `counts`, `counts_off`, `acceptance_on`, `acceptance_off" images"""
     filename = "$GAMMAPY_DATA/tests/unbundled/hess/survey/hess_survey_snippet.fits.gz"
-    on = WcsNDMap.read(filename, hdu="ON")
     return {
         "counts": to_cube(WcsNDMap.read(filename, hdu="ON")),
         "counts_off": to_cube(WcsNDMap.read(filename, hdu="OFF")),
@@ -784,6 +783,7 @@ def get_map_dataset_onoff(images, **kwargs):
     mask_geom = images["counts"].geom
     mask_data = np.ones(images["counts"].data.shape, dtype=bool)
     mask_safe = Map.from_geom(mask_geom, data=mask_data)
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
 
     return MapDatasetOnOff(
         counts=images["counts"],
@@ -792,6 +792,7 @@ def get_map_dataset_onoff(images, **kwargs):
         acceptance_off=images["acceptance_off"],
         exposure=images["exposure"],
         mask_safe=mask_safe,
+        gti=gti,
         **kwargs
     )
 
@@ -1156,23 +1157,14 @@ def test_info_dict_on_off(images):
     info_dict = dataset.info_dict()
     assert_allclose(info_dict["counts"], 4299, rtol=1e-3)
     assert_allclose(info_dict["excess"], -22.52295, rtol=1e-3)
-    assert_allclose(info_dict["aeff_min"].value, 0.0, rtol=1e-3)
-    assert_allclose(info_dict["aeff_max"].value, 3.4298378e09, rtol=1e-3)
+    assert_allclose(info_dict["exposure_min"].value, 1.739467e+08, rtol=1e-3)
+    assert_allclose(info_dict["exposure_max"].value, 3.4298378e09, rtol=1e-3)
     assert_allclose(info_dict["npred"], 4321.518, rtol=1e-3)
     assert_allclose(info_dict["counts_off"], 20407510.0, rtol=1e-3)
     assert_allclose(info_dict["acceptance"], 4272.7075, rtol=1e-3)
     assert_allclose(info_dict["acceptance_off"], 20175596.0, rtol=1e-3)
-
-    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
-    dataset.gti = gti
-    info_dict = dataset.info_dict()
-    assert_allclose(info_dict["n_on"], 4299)
-    assert_allclose(info_dict["n_off"], 20407510.0)
-    assert_allclose(info_dict["a_on"], 0.068363324, rtol=1e-4)
-    assert_allclose(info_dict["a_off"], 322.83185, rtol=1e-4)
-    assert_allclose(info_dict["alpha"], 0.0002117614, rtol=1e-4)
-    assert_allclose(info_dict["excess"], -22.52295, rtol=1e-4)
-    assert_allclose(info_dict["livetime"].value, 3600)
+    assert_allclose(info_dict["alpha"], 0.000169, rtol=1e-3)
+    assert_allclose(info_dict["ontime"].value, 3600)
 
 
 def test_slice_by_idx():

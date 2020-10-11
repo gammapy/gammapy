@@ -169,14 +169,14 @@ class TestSpectrumMakerChain:
             (
                 dict(containment_correction=False),
                 dict(
-                    n_on=125, sigma=18.953014, aeff=580254.9 * u.m ** 2, edisp=0.235864
+                    n_on=125, sigma=15.518994, aeff=580254.9 * u.m ** 2, edisp=0.235864
                 ),
             ),
             (
                 dict(containment_correction=True),
                 dict(
                     n_on=125,
-                    sigma=18.953014,
+                    sigma=15.518994,
                     aeff=361924.746081 * u.m ** 2,
                     edisp=0.235864,
                 ),
@@ -222,8 +222,8 @@ class TestSpectrumMakerChain:
         # TODO: Introduce assert_stats_allclose
         info = dataset.info_dict()
 
-        assert info["n_on"] == results["n_on"]
-        assert_allclose(info["significance"], results["sigma"], rtol=1e-2)
+        assert info["counts"] == results["n_on"]
+        assert_allclose(info["sqrt_ts"], results["sigma"], rtol=1e-2)
 
         gti_obs = obs.gti.table
         gti_dataset = dataset.gti.table

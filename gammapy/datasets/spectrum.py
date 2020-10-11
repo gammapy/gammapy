@@ -99,57 +99,26 @@ class SpectrumDataset(Dataset):
         return self._name
 
     def __str__(self):
-        str_ = self.__class__.__name__ + "\n"
+        str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__) + "\n"
         str_ += "\n"
+        str_ += "\t{:32}: {{name}} \n\n".format("Name")
+        str_ += "\t{:32}: {{counts:.0f}} \n".format("Total counts")
+        str_ += "\t{:32}: {{npred:.2f}}\n".format("Total predicted counts")
+        str_ += "\t{:32}: {{background:.2f}}\n\n".format("Total background counts")
 
-        str_ += "\t{:32}: {} \n\n".format("Name", self.name)
+        str_ += "\t{:32}: {{exposure_min:.2e}}\n".format("Exposure min")
+        str_ += "\t{:32}: {{exposure_max:.2e}}\n\n".format("Exposure max")
 
-        counts = np.nan
-        if self.counts is not None:
-            counts = np.sum(self.counts.data)
-        str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
-
-        npred = np.nan
-        if self.models is not None:
-            npred = np.sum(self.npred().data)
-        str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
-
-        background = np.nan
-        if self.background_model is not None:
-            background = np.sum(self.background_model.evaluate().data)
-        str_ += "\t{:32}: {:.2f}\n\n".format("Total background counts", background)
-
-        exposure_min, exposure_max, exposure_unit = np.nan, np.nan, ""
-        non_zero = self.exposure.data > 0
-        if self.exposure is not None and non_zero.any():
-            exposure_min = np.min(self.exposure.data[non_zero])
-            exposure_max = np.max(self.exposure.data)
-            exposure_unit = self.exposure.unit
-
-        str_ += "\t{:32}: {:.2e} {}\n".format("Exposure min", exposure_min, exposure_unit)
-        str_ += "\t{:32}: {:.2e} {}\n\n".format(
-            "Exposure max", exposure_max, exposure_unit
-        )
-
-        # data section
-        n_bins = 0
-        if self.counts is not None:
-            n_bins = self.counts.data.size
-        str_ += "\t{:32}: {} \n".format("Number of total bins", n_bins)
-
-        n_fit_bins = 0
-        if self.mask is not None:
-            n_fit_bins = np.sum(self.mask)
-        str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
+        str_ += "\t{:32}: {{n_bins}} \n".format("Number of total bins")
+        str_ += "\t{:32}: {{n_fit_bins}} \n\n".format("Number of fit bins")
 
         # likelihood section
-        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.stat_type)
+        str_ += "\t{:32}: {{stat_type}}\n".format("Fit statistic type")
+        str_ += "\t{:32}: {{stat_sum:.2f}}\n\n".format("Fit statistic value (-2 log(L))")
 
-        stat = np.nan
-        if self.models is not None and self.counts is not None:
-            stat = self.stat_sum()
-        str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
+        info = self.info_dict()
+        str_ = str_.format(**info)
 
         n_pars, n_free_pars = 0, 0
         if self.models is not None:
@@ -623,12 +592,12 @@ class SpectrumDataset(Dataset):
         # TODO: optimize layout
         plt.subplots_adjust(wspace=0.3)
 
-    def info_dict(self, in_safe_energy_range=True):
+    def info_dict(self, in_safe_data_range=True):
         """Info dict with summary statistics, summed over energy
 
         Parameters
         ----------
-        in_safe_energy_range : bool
+        in_safe_data_range : bool
             Whether to sum only in the safe energy range
 
         Returns
@@ -636,29 +605,83 @@ class SpectrumDataset(Dataset):
         info_dict : dict
             Dictionary with summary info.
         """
-        info = dict()
-        mask = self.mask_safe.data if in_safe_energy_range else slice(None)
-
+        info = {}
         info["name"] = self.name
-        if self.gti:
-            info["livetime"] = self.gti.time_sum
 
-        info["n_on"] = self.counts.data[mask].sum()
+        if self.mask_safe and in_safe_data_range:
+            mask = self.mask_safe.data.astype(bool)
+        else:
+            mask = slice(None)
 
+        counts = np.nan
+        if self.counts:
+            counts = self.counts.data[mask].sum()
+
+        info["counts"] = counts
+
+        background = np.nan
         if self.background_model:
             background = self.background_model.evaluate().data[mask].sum()
         elif self.background:
             background = self.background.data[mask].sum()
 
         info["background"] = background
-        info["excess"] = self.excess.data[mask].sum()
-        info["significance"] = CashCountsStatistic(
-            self.counts.data[mask].sum(), background
-        ).significance
 
+        info["excess"] = counts - background
+        info["sqrt_ts"] = CashCountsStatistic(counts, background).significance
+
+        npred = np.nan
+        if self.models or not np.isnan(background):
+            npred = self.npred().data[mask].sum()
+
+        info["npred"] = npred
+
+        exposure_min, exposure_max, livetime = np.nan, np.nan, np.nan
+
+        if self.exposure is not None:
+            mask_exposure = (self.exposure.data > 0)
+
+            if self.mask_safe is not None:
+                mask_spatial = self.mask_safe.reduce_over_axes(func=np.logical_or).data
+                mask_exposure = mask_exposure & mask_spatial[np.newaxis, :, :]
+
+            exposure_min = np.min(self.exposure.quantity[mask_exposure])
+            exposure_max = np.max(self.exposure.quantity[mask_exposure])
+            livetime = self.exposure.meta.get("livetime", np.nan)
+
+        info["exposure_min"] = exposure_min
+        info["exposure_max"] = exposure_max
+        info["livetime"] = livetime
+
+        ontime = u.Quantity(np.nan, "s")
         if self.gti:
-            info["background_rate"] = info["background"] / info["livetime"]
-            info["gamma_rate"] = info["excess"] / info["livetime"]
+            ontime = self.gti.time_sum
+
+        info["ontime"] = ontime
+
+        info["counts_rate"] = info["counts"] / info["livetime"]
+        info["background_rate"] = info["background"] / info["livetime"]
+        info["excess_rate"] = info["excess"] / info["livetime"]
+
+        # data section
+        n_bins = 0
+        if self.counts is not None:
+            n_bins = self.counts.data.size
+        info["n_bins"] = n_bins
+
+        n_fit_bins = 0
+        if self.mask is not None:
+            n_fit_bins = np.sum(self.mask.data)
+
+        info["n_fit_bins"] = n_fit_bins
+        info["stat_type"] = self.stat_type
+
+        stat_sum = np.nan
+        if self.counts is not None and self.models is not None:
+            stat_sum = self.stat_sum()
+
+        info["stat_sum"] = stat_sum
+
         return info
 
     def slice_by_idx(self, slices, name=None):
@@ -877,14 +900,15 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         if self.acceptance is not None:
             acceptance = np.mean(self.acceptance.data)
 
-        str_acc = "\t{:32}: {}\n".format("Acceptance mean:", acceptance)
-        str_list.insert(16, str_acc)
-        str_ = "\n".join(str_list)
+        str_acc = "\t{:32}: {:.3f}\n".format("Acceptance mean", acceptance)
 
         acceptance_off = np.nan
         if self.acceptance_off is not None:
             acceptance_off = np.sum(self.acceptance_off.data)
-        str_ += "\t{:32}: {:.0f} \n".format("Acceptance off", acceptance_off)
+        str_acc += "\t{:32}: {:.3f} \n".format("Acceptance off", acceptance_off)
+
+        str_list.insert(15, str_acc)
+        str_ = "\n".join(str_list)
 
         return str_.expandtabs(tabsize=2)
 
@@ -1402,12 +1426,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             gti=gti,
         )
 
-    def info_dict(self, in_safe_energy_range=True, **kwargs):
+    def info_dict(self, in_safe_data_range=True):
         """Info dict with summary statistics, summed over energy
 
         Parameters
         ----------
-        in_safe_energy_range : bool
+        in_safe_data_range : bool
             Whether to sum only in the safe energy range
 
         Returns
@@ -1415,25 +1439,44 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         info_dict : dict
             Dictionary with summary info.
         """
-        info = super().info_dict(in_safe_energy_range)
-        mask = self.mask_safe.data if in_safe_energy_range else slice(None)
+        info = super().info_dict(in_safe_data_range)
 
-        # TODO: handle energy dependent a_on / a_off
-        info["a_on"] = self.acceptance.data[0, 0, 0].copy()
-
-        if self.counts_off is not None:
-            info["n_off"] = self.counts_off.data[mask].sum()
-            info["a_off"] = self.acceptance_off.data[0, 0, 0].copy()
+        if self.mask_safe and in_safe_data_range:
+            mask = self.mask_safe.data.astype(bool)
         else:
-            info["n_off"] = 0
-            info["a_off"] = 1
+            mask = slice(None)
 
-        info["alpha"] = self.alpha.data[0, 0, 0].copy()
-        info["significance"] = WStatCountsStatistic(
-            self.counts.data[mask].sum(),
-            self.counts_off.data[mask].sum(),
-            self.alpha.data[0, 0, 0],
+        counts_off = np.nan
+        if self.counts_off is not None:
+            counts_off = self.counts_off.data[mask].sum()
+
+        info["counts_off"] = counts_off
+
+        acceptance = 1
+        if self.acceptance:
+            # TODO: handle energy dependent a_on / a_off
+            acceptance = self.acceptance.data[mask].sum()
+
+        info["acceptance"] = acceptance
+
+        acceptance_off = np.nan
+        if self.acceptance_off:
+            acceptance_off = acceptance * counts_off / info["background"]
+
+        info["acceptance_off"] = acceptance_off
+
+        alpha = np.nan
+        if self.acceptance_off and self.acceptance:
+            alpha = np.mean(self.alpha.data[mask])
+
+        info["alpha"] = alpha
+
+        info["sqrt_ts"] = WStatCountsStatistic(
+            info["counts"],
+            info["counts_off"],
+            acceptance / acceptance_off,
         ).significance
+        info["stat_sum"] = self.stat_sum()
         return info
 
     def to_dict(self, filename, *args, **kwargs):

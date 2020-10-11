@@ -1000,7 +1000,7 @@ class Map(abc.ABC):
         geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
         return self._init_copy(geom=geom_reco, data=data)
 
-    def sum_over_axes(self, axes=None, keepdims=True, weights=None):
+    def sum_over_axes(self, axes_names=None, keepdims=True, weights=None):
         """To sum map values over all non-spatial axes.
 
         Parameters
@@ -1008,9 +1008,8 @@ class Map(abc.ABC):
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
             the map with a single bin
-        axes: list
-            Names of MapAxis to reduce over
-            If None, all will summed over
+        axes_names: list of str
+            Names of MapAxis to reduce over. If None, all will summed over
         weights : `Map`
             Weights to be applied. The Map should have the same geometry.
 
@@ -1020,10 +1019,10 @@ class Map(abc.ABC):
             Map with non-spatial axes summed over
         """
         return self.reduce_over_axes(
-            func=np.add, axes=axes, keepdims=keepdims, weights=weights
+            func=np.add, axes_names=axes_names, keepdims=keepdims, weights=weights
         )
 
-    def reduce_over_axes(self, func=np.add, keepdims=False, axes=None, weights=None):
+    def reduce_over_axes(self, func=np.add, keepdims=False, axes_names=None, weights=None):
         """Reduce map over non-spatial axes
 
         Parameters
@@ -1033,7 +1032,7 @@ class Map(abc.ABC):
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
             the map with a single bin
-        axes: list
+        axes_names: list
             Names of MapAxis to reduce over
             If None, all will reduced
         weights : `Map`
@@ -1044,12 +1043,12 @@ class Map(abc.ABC):
         map_out : `~Map`
             Map with non-spatial axes reduced
         """
-        if axes is None:
-            axes = [ax.name for ax in self.geom.axes]
+        if axes_names is None:
+            axes_names = self.geom.axes.names
 
         map_out = self.copy()
-        for ax in axes:
-            map_out = map_out.reduce(ax, func=func, keepdims=keepdims, weights=weights)
+        for axis_name in axes_names:
+            map_out = map_out.reduce(axis_name, func=func, keepdims=keepdims, weights=weights)
 
         return map_out
 

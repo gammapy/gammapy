@@ -86,12 +86,12 @@ def test_energy_range(spectrum_dataset):
 def test_info_dict(spectrum_dataset):
     info_dict = spectrum_dataset.info_dict()
 
-    assert_allclose(info_dict["n_on"], 907010)
+    assert_allclose(info_dict["counts"], 907010)
     assert_allclose(info_dict["background"], 3000.0)
 
-    assert_allclose(info_dict["significance"], 2924.522174)
+    assert_allclose(info_dict["sqrt_ts"], 2924.522174)
     assert_allclose(info_dict["excess"], 904010)
-    assert_allclose(info_dict["livetime"].value, 216000)
+    assert_allclose(info_dict["ontime"].value, 216000)
 
     assert info_dict["name"] == "test"
 
@@ -568,15 +568,15 @@ class TestSpectrumOnOff:
     def test_info_dict(self):
         info_dict = self.dataset.info_dict()
 
-        assert_allclose(info_dict["n_on"], 3)
-        assert_allclose(info_dict["n_off"], 40)
-        assert_allclose(info_dict["a_on"], 1)
-        assert_allclose(info_dict["a_off"], 10)
+        assert_allclose(info_dict["counts"], 3)
+        assert_allclose(info_dict["counts_off"], 40)
+        assert_allclose(info_dict["acceptance"], 4)
+        assert_allclose(info_dict["acceptance_off"], 40.930232)
 
         assert_allclose(info_dict["alpha"], 0.1)
-        assert_allclose(info_dict["excess"], -1.0, rtol=1e-2)
-        assert_allclose(info_dict["livetime"].value, 1e3)
-        assert_allclose(info_dict["significance"], -0.50100, rtol=1e-2)
+        assert_allclose(info_dict["excess"], -0.909, rtol=1e-2)
+        assert_allclose(info_dict["ontime"].value, 1e3)
+        assert_allclose(info_dict["sqrt_ts"], -0.459427, rtol=1e-2)
 
         assert info_dict["name"] == "test"
 
@@ -904,10 +904,10 @@ def test_datasets_stack_reduce():
     assert_allclose(stacked.exposure.meta["livetime"].to_value("s"), 6313.8116406202325)
 
     info_table = datasets.info_table()
-    assert_allclose(info_table["n_on"], [124, 126, 119, 90])
+    assert_allclose(info_table["counts"], [124, 126, 119, 90])
 
     info_table_cum = datasets.info_table(cumulative=True)
-    assert_allclose(info_table_cum["n_on"], [124, 250, 369, 459])
+    assert_allclose(info_table_cum["counts"], [124, 250, 369, 459])
     assert stacked.name == "stacked"
 
 
