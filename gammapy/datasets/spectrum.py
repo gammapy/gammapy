@@ -130,28 +130,6 @@ class SpectrumDataset(MapDataset):
         if self.edisp is not None:
             return self.edisp.get_edisp_kernel()
 
-    def npred_sig(self, model=None):
-        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
-        Else, the total signal counts are returned.
-
-        Parameters
-        -------------
-        model: `~gammapy.modeling.models.SpectralModel`, optional
-            The model to compute the npred for. If none, the sum of all components (minus the background model)
-            is returned
-
-        Returns
-        ----------
-        npred_sig: `gammapy.maps.RegionNDMap`
-            Predicted signal counts
-        """
-        if model is None:
-            if self.background_model is None:
-                return self.npred()
-            return self.npred() - self.background_model.evaluate()
-        else:
-            return self.evaluators.get(model).compute_npred()
-
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
