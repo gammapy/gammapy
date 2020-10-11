@@ -326,7 +326,7 @@ class Fit:
         Returns
         -------
         results : dict
-            Dictionary with keys "values" and "stat_scan".
+            Dictionary containing the scan of parameter and stat (-2 loglike) values.
         """
         parameters = self._parameters
         parameter = parameters[parameter]
@@ -383,7 +383,7 @@ class Fit:
         Returns
         -------
         results : dict
-            Dictionary with keys "x_values", "y_values" and "stat_scan".
+            Dictionary containing the scan of parameters and stat (-2 loglike) values.
 
         """
         parameters = self._parameters
@@ -443,10 +443,8 @@ class Fit:
         Returns
         -------
         result : dict
-            Dictionary with keys "x", "y" (Numpy arrays with contour points)
-            and a boolean flag "success".
-            The result objects from ``mncontour`` are in the additional
-            keys "x_info" and "y_info".
+            Dictionary containing the parameter values defining the contour, with the
+            boolean flag "success" and the info objects from ``mncontour``.
         """
         parameters = self._parameters
         x = parameters[x]
@@ -461,8 +459,8 @@ class Fit:
         y = result["y"] * y.scale
 
         return {
-            f"{x_name}_scan": x,
-            f"{y_name}_scan": y,
+            x_name: x,
+            y_name: y,
             "success": result["success"],
             f"{x_name}_info": result["x_info"],
             f"{y_name}_info": result["y_info"],
