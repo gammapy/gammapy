@@ -233,7 +233,7 @@ class Fit:
         )
 
     def confidence(
-            self, parameter, backend="minuit", sigma=1, reoptimize=True, **kwargs
+        self, parameter, backend="minuit", sigma=1, reoptimize=True, **kwargs
     ):
         """Estimate confidence interval.
 
@@ -292,14 +292,14 @@ class Fit:
         return result
 
     def stat_profile(
-            self,
-            parameter,
-            values=None,
-            bounds=2,
-            nvalues=11,
-            reoptimize=False,
-            optimize_opts=None,
-            show_pbar=True
+        self,
+        parameter,
+        values=None,
+        bounds=2,
+        nvalues=11,
+        reoptimize=False,
+        optimize_opts=None,
+        show_pbar=True,
     ):
         """Compute fit statistic profile.
 
@@ -366,7 +366,14 @@ class Fit:
         return {"values": values, "stat": np.array(stats)}
 
     def stat_surface(
-            self, x, y, x_values, y_values, reoptimize=False, **optimize_opts
+        self,
+        x,
+        y,
+        x_values,
+        y_values,
+        reoptimize=False,
+        show_pbar=True,
+        **optimize_opts,
     ):
         """Compute fit statistic surface.
 
