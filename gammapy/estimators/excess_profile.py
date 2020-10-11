@@ -140,7 +140,7 @@ class ExcessProfileEstimator(Estimator):
             u.Quantity(distances, "deg"), name="projected distance"
         )
 
-    def make_prof(self, sp_datasets):
+    def make_prof(self, sp_datasets, show_pbar):
         """ Utility to make the profile in each region
 
         Parameters
@@ -148,6 +148,8 @@ class ExcessProfileEstimator(Estimator):
         sp_datasets : `~gammapy.datasets.MapDatasets` of `~gammapy.datasets.SpectrumDataset` or \
         `~gammapy.datasets.SpectrumDatasetOnOff`
             the dataset to use for profile extraction
+        show_pbar : bool
+            Display progress bar.
 
         Returns
         --------
@@ -159,7 +161,7 @@ class ExcessProfileEstimator(Estimator):
 
         distance = self._get_projected_distance()
 
-        with pbar(total=len(sp_datasets), show_pbar=True) as pb:
+        with pbar(total=len(sp_datasets), show_pbar=show_pbar) as pb:
             for index, spds in enumerate(sp_datasets):
                 old_model = None
                 if spds.models is not None:
@@ -244,13 +246,15 @@ class ExcessProfileEstimator(Estimator):
 
         return results
 
-    def run(self, dataset):
+    def run(self, dataset, show_pbar=True):
         """Make the profiles
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the dataset to use for profile extraction
+        show_pbar : bool
+            Display progress bar.
 
         Returns
         --------
@@ -265,7 +269,7 @@ class ExcessProfileEstimator(Estimator):
 
         spectrum_datasets = self.get_spectrum_datasets(dataset)
 
-        results = self.make_prof(spectrum_datasets)
+        results = self.make_prof(spectrum_datasets, show_pbar=show_pbar)
         table = table_from_row_data(results)
         if isinstance(self.regions[0], RectangleSkyRegion):
             table.meta["PROFILE_TYPE"] = "orthogonal_rectangle"

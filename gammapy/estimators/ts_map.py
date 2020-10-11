@@ -386,7 +386,7 @@ class TSMapEstimator(Estimator):
 
         return result
 
-    def run(self, dataset):
+    def run(self, dataset, show_pbar=True):
         """
         Run TS map estimation.
 
@@ -397,6 +397,8 @@ class TSMapEstimator(Estimator):
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Input MapDataset.
+        show_pbar : bool
+            Display progress bar.
 
         Returns
         -------
@@ -426,7 +428,7 @@ class TSMapEstimator(Estimator):
 
         results = []
 
-        with pbar(total=len(e_edges) - 1, show_pbar=True) as pb:
+        with pbar(total=len(e_edges) - 1, show_pbar=show_pbar) as pb:
             for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
                 dataset = datasets.slice_energy(e_min, e_max)[0]
 

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for progress bar display"""
 from contextlib import contextmanager
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
 
 @contextmanager

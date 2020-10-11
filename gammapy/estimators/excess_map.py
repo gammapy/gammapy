@@ -124,13 +124,15 @@ class ExcessMapEstimator(Estimator):
         """Sets radius"""
         self._correlation_radius = Angle(correlation_radius)
 
-    def run(self, dataset):
+    def run(self, dataset, show_pbar=True):
         """Compute correlated excess, Li & Ma significance and flux maps
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             input dataset
+        show_pbar : bool
+            Display progress bar.
 
         Returns
         -------
@@ -163,7 +165,7 @@ class ExcessMapEstimator(Estimator):
 
         results = []
 
-        with pbar(total=len(e_edges) - 1, show_pbar=True) as pb:
+        with pbar(total=len(e_edges) - 1, show_pbar=show_pbar) as pb:
             for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
                 sliced_dataset = datasets.slice_energy(e_min, e_max)[0]
 
