@@ -389,7 +389,8 @@ class WcsNDMap(WcsMap):
         if self.geom.is_image:
             data = self.data.astype(float)
         else:
-            data = self.data[0].astype(float)
+            axis = tuple(np.arange(len(self.geom.axes)))
+            data = np.squeeze(self.data, axis=axis).astype(float)
 
         kwargs.setdefault("interpolation", "nearest")
         kwargs.setdefault("origin", "lower")

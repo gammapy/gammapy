@@ -438,14 +438,34 @@ class MapDataset(Dataset):
     @property
     def mask_safe_image(self):
         """Reduced mask safe"""
+        if self.mask_safe is None:
+            return None
         return self.mask_safe.reduce_over_axes(func=np.logical_or)
 
     @property
     def mask_safe_psf(self):
-        """Mask safe for IRF maps"""
+        """Mask safe for psf maps"""
+        if self.mask_safe is None:
+            return None
+
         geom = self.psf.exposure_map.geom.squash("energy_true")
         mask_safe_psf = self.mask_safe_image.interp_to_geom(geom.to_image())
         return mask_safe_psf.to_cube(geom.axes)
+
+    @property
+    def mask_safe_edisp(self):
+        """Mask safe for edisp maps"""
+        if self.mask_safe is None:
+            return None
+
+        geom = self.edisp.edisp_map.geom.squash("energy_true")
+
+        if "migra" in geom.axes.names:
+            geom = geom.squash("migra")
+            mask_safe_edisp = self.mask_safe_image.interp_to_geom(geom.to_image())
+            return mask_safe_edisp.to_cube(geom.axes)
+
+        return self.mask_safe.interp_to_geom(geom)
 
     def stack(self, other):
         """Stack another dataset in place.
@@ -498,32 +518,12 @@ class MapDataset(Dataset):
                 raise ValueError("Stacking of PSF kernels not supported")
 
         if self.edisp and other.edisp:
-            if isinstance(self.edisp, EDispKernelMap) and isinstance(
-                other.edisp, EDispKernelMap
-            ):
-                mask_irf = self._mask_safe_irf(
-                    self.edisp.edisp_map, self.mask_safe, drop="energy_true"
-                )
-                mask_irf_other = self._mask_safe_irf(
-                    other.edisp.edisp_map, other_mask_safe, drop="energy_true"
-                )
-
-            if isinstance(self.edisp, EDispMap) and isinstance(other.edisp, EDispMap):
-                mask_irf = self._mask_safe_irf(
-                    self.edisp.exposure_map.sum_over_axes(),
-                    self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True),
-                )
-                mask_irf_other = self._mask_safe_irf(
-                    other.edisp.exposure_map.sum_over_axes(),
-                    other_mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True),
-                )
-
-            self.edisp.edisp_map.data *= mask_irf.data
+            self.edisp.edisp_map *= self.mask_safe_edisp.data
             # Question: Should mask be applied on exposure map as well?
             # Mask here is on the reco energy.
             # self.edisp.exposure_map.data *= mask_irf.data
 
-            self.edisp.stack(other.edisp, weights=mask_irf_other)
+            self.edisp.stack(other.edisp, weights=other.mask_safe_edisp)
 
         self.mask_safe.stack(other_mask_safe)
 
@@ -535,25 +535,6 @@ class MapDataset(Dataset):
             self.meta_table = hstack_columns(self.meta_table, other.meta_table)
         elif other.meta_table:
             self.meta_table = other.meta_table.copy()
-
-    @staticmethod
-    def _mask_safe_irf(irf_map, mask, drop=None):
-        if mask is None:
-            return None
-
-        geom = irf_map.geom
-        geom_squash = irf_map.geom
-        if drop:
-            geom = geom.drop(drop)
-            geom_squash = geom_squash.squash(drop)
-
-        if "energy_true" in geom.axes.names:
-            ax = geom.axes["energy_true"].copy(name="energy")
-            geom = geom.to_image().to_cube([ax])
-
-        coords = geom.get_coord()
-        data = mask.get_by_coord(coords).astype(bool)
-        return Map.from_geom(geom=geom_squash, data=data[:, np.newaxis])
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
@@ -1322,11 +1303,8 @@ class MapDataset(Dataset):
 
         # Mask_safe or mask_irf??
         if isinstance(self.edisp, EDispKernelMap):
-            mask_irf = self._mask_safe_irf(
-                self.edisp.edisp_map, self.mask_safe, drop="energy_true"
-            )
             kwargs["edisp"] = self.edisp.resample_energy_axis(
-                energy_axis=energy_axis, weights=mask_irf
+                energy_axis=energy_axis, weights=self.mask_safe_edisp
             )
         else:  # None or EDispMap
             kwargs["edisp"] = self.edisp

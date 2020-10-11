@@ -65,7 +65,6 @@ def fermi_dataset():
     )
     exposure = exposure.cutout(exposure.geom.center_skydir, size)
     exposure.unit = "cm2 s"
-    mask_safe = counts.copy(data=np.ones_like(counts.data).astype("bool"))
 
     psf = EnergyDependentTablePSF.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf-cube.fits.gz"
@@ -80,7 +79,6 @@ def fermi_dataset():
         counts=counts,
         models=[background],
         exposure=exposure,
-        mask_safe=mask_safe,
         psf=psfmap,
         name="fermi-3fhl-gc",
         edisp=edisp,

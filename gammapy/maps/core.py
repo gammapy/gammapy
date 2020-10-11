@@ -774,9 +774,9 @@ class Map(abc.ABC):
 
         # set nearest neighbour interpolation for mask as default
         if self.data.dtype == bool:
-            kwargs.setdefault("interp", 0)
-
-        data = self.interp_by_coord(coords, **kwargs)
+            data = self.get_by_coord(coords, **kwargs)
+        else:
+            data = self.interp_by_coord(coords, **kwargs)
         return Map.from_geom(geom, data=data, unit=self.unit)
 
     def fill_events(self, events):
