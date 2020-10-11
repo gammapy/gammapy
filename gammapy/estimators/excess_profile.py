@@ -140,7 +140,7 @@ class ExcessProfileEstimator(Estimator):
             u.Quantity(distances, "deg"), name="projected distance"
         )
 
-    def make_prof(self, sp_datasets, show_pbar):
+    def make_prof(self, sp_datasets, show_pbar=True):
         """ Utility to make the profile in each region
 
         Parameters
