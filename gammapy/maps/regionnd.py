@@ -393,3 +393,8 @@ class RegionNDMap(Map):
     def get_spectrum(self, *args, **kwargs):
         """Return self"""
         return self
+
+    def cutout(self, *args, **kwargs):
+        """Return self"""
+        return self
+

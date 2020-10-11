@@ -113,23 +113,6 @@ class SpectrumDataset(MapDataset):
         else:
             raise ValueError(f"Must be `RegionNDMap` and not {type(mask)}")
 
-    @property
-    def _energy_axis(self):
-        if self.counts is not None:
-            e_axis = self.counts.geom.axes["energy"]
-        elif self.edisp is not None:
-            e_axis = self.edisp.data.axis("energy")
-        elif self.exposure is not None:
-            # assume e_reco = e_true
-            e_axis = self.exposure.data.axis("energy_true")
-        return e_axis
-
-    @property
-    def _edisp_kernel(self):
-        """The edisp kernel stored in the EDispMapKernel"""
-        if self.edisp is not None:
-            return self.edisp.get_edisp_kernel()
-
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
@@ -147,7 +130,7 @@ class SpectrumDataset(MapDataset):
     # TODO: make this a method to support different methods?
     def energy_range(self):
         """Energy range defined by the safe mask"""
-        energy = self._energy_axis.edges
+        energy = self._geom.axes["energy"].edges
         e_min, e_max = energy[:-1], energy[1:]
 
         if self.mask_safe is not None:
@@ -423,7 +406,8 @@ class SpectrumDataset(MapDataset):
 
         ax3.set_title("Energy Dispersion")
         if self.edisp is not None:
-            self._edisp_kernel.plot_matrix(ax=ax3, vmin=0, vmax=1)
+            kernel = self.edisp.get_edisp_kernel()
+            kernel.plot_matrix(ax=ax3, vmin=0, vmax=1)
 
         # TODO: optimize layout
         plt.subplots_adjust(wspace=0.3)
@@ -944,7 +928,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             hdulist.writeto(str(outdir / bkgfile), overwrite=overwrite)
 
         if self.edisp is not None:
-            self._edisp_kernel.write(
+            kernel = self.edisp.get_edisp_kernel()
+            kernel.write(
                 outdir / rmffile, overwrite=overwrite, use_sherpa=use_sherpa
             )
 
