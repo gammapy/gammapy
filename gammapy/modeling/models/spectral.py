@@ -57,6 +57,7 @@ def integrate_spectrum(func, emin, emax, ndecade=100, intervals=False):
 
 class SpectralModel(Model):
     """Spectral model base class."""
+
     _type = "spectral"
 
     def __call__(self, energy):
@@ -858,7 +859,10 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
 
 
 class PiecewiseBrokenPowerLawNormSpectralModel(SpectralModel):
-    """Template spectral model renormalization at fixed energy nodes.
+    """ Piecewise broken power-law spectral model
+       with renormalization at fixed energy nodes.
+       
+       For more information see :ref:`piecewise-broken-powerlaw-norm-spectral`.
 
     Parameters
     ----------
@@ -867,12 +871,15 @@ class PiecewiseBrokenPowerLawNormSpectralModel(SpectralModel):
     norms : array
         Array with the initial norms of the model at energies ``energy``.
         A normalisation parameters is created for each value.
+        Default is one at each node.
     """
 
     tag = ["PiecewiseBrokenPowerLawNormSpectralModel", "pbpl-norm"]
 
-    def __init__(self, energy, norms):
+    def __init__(self, energy, norms=None):
         self._energy = energy
+        if norms is None:
+            norms = np.ones(len(energy))
         if len(norms) != len(energy):
             raise ValueError("dimension mismatch")
         if len(norms) < 2:
@@ -909,7 +916,7 @@ class PiecewiseBrokenPowerLawNormSpectralModel(SpectralModel):
         loge_data = np.log10(np.atleast_1d(energy.value))
         loge = np.log10(self.energy.to(energy.unit).value)
         logv = np.log10(self.norms)
-        log_interp = 10**np.interp(loge_data, loge, logv)
+        log_interp = 10 ** np.interp(loge_data, loge, logv)
         return log_interp
 
     def to_dict(self):

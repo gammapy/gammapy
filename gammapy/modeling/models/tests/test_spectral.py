@@ -279,7 +279,7 @@ TEST_MODELS = [
         model=PiecewiseBrokenPowerLawNormSpectralModel(
             energy=[1, 3, 7, 10] * u.TeV, norms=[1, 5, 3, 0.5] * u.Unit(""),
         ),
-        val_at_2TeV=u.Quantity(2.76058404,),
+        val_at_2TeV=u.Quantity(2.76058404, ""),
         integral_1_10TeV=u.Quantity(24.757573885411876, "TeV"),
         eflux_1_10TeV=u.Quantity(117.74087966682515, "TeV2"),
     ),
@@ -542,19 +542,6 @@ def test_TemplateSpectralModel_compound():
     assert np.allclose(new_model(energy), 2 * values)
 
 
-def test_PiecewiseBrokenPowerLawSpectralModel_from_template():
-    energy = np.array([1.00000000e06, 1.25892541e06, 1.58489319e06, 1.99526231e06])
-    values = np.array([4.39150790e-38, 1.96639562e-38, 8.80497507e-39, 3.94262401e-39])
-
-    model = TemplateSpectralModel(
-        energy=energy * u.TeV, values=values * u.Unit("MeV-1 s-1 sr-1")
-    )
-    PiecewiseBrokenPowerLawSpectralModel.from_template(model)
-    PiecewiseBrokenPowerLawSpectralModel.from_template(
-        model, energy=[0.1, 1, 10] * u.TeV
-    )
-
-
 @requires_dependency("naima")
 class TestNaimaModel:
     # Used to test model value at 2 TeV
@@ -800,26 +787,26 @@ def test_integral_error_PowerLaw():
     emax = energy[1:]
 
     powerlaw = PowerLawSpectralModel()
-    powerlaw.parameters['index'].error = 0.4
-    powerlaw.parameters['amplitude'].error = 1e-13
+    powerlaw.parameters["index"].error = 0.4
+    powerlaw.parameters["amplitude"].error = 1e-13
 
-    flux, flux_error = powerlaw.integral_error(emin,emax)
+    flux, flux_error = powerlaw.integral_error(emin, emax)
 
-    assert_allclose(flux.value[0]/1e-13, 5.0, rtol=0.1)
-    assert_allclose(flux_error.value[0]/1e-14, 8.546615432273905, rtol=0.01)
+    assert_allclose(flux.value[0] / 1e-13, 5.0, rtol=0.1)
+    assert_allclose(flux_error.value[0] / 1e-14, 8.546615432273905, rtol=0.01)
 
 
 def test_integral_error_ExpCutOffPowerLaw():
     energy = np.linspace(1 * u.TeV, 10 * u.TeV, 10)
     emin = energy[:-1]
     emax = energy[1:]
-    
+
     exppowerlaw = ExpCutoffPowerLawSpectralModel()
-    exppowerlaw.parameters['index'].error = 0.4
-    exppowerlaw.parameters['amplitude'].error = 1e-13
-    exppowerlaw.parameters['lambda_'].error = 0.03
-    
+    exppowerlaw.parameters["index"].error = 0.4
+    exppowerlaw.parameters["amplitude"].error = 1e-13
+    exppowerlaw.parameters["lambda_"].error = 0.03
+
     flux, flux_error = exppowerlaw.integral_error(emin, emax)
-    
-    assert_allclose(flux.value[0]/1e-13, 5.05855622, rtol=0.01)
-    assert_allclose(flux_error.value[0]/1e-14, 8.90907063, rtol=0.01)
+
+    assert_allclose(flux.value[0] / 1e-13, 5.05855622, rtol=0.01)
+    assert_allclose(flux_error.value[0] / 1e-14, 8.90907063, rtol=0.01)

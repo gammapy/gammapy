@@ -127,7 +127,7 @@ def test_PiecewiseBrokenPowerLawNormSpectralModel_io(tmp_path):
     assert_allclose(new_model.parameters[0].value, 2)
     assert_allclose(new_model.energy, energy)
     assert_allclose(new_model.norms, [2, 5, 3, 0.5])
-    
+
 
 @requires_data()
 def test_absorption_io(tmp_path):
@@ -214,10 +214,11 @@ def make_all_models():
     )  # TODO: add unit validation?
     yield Model.create(
         "PiecewiseBrokenPowerLawNormSpectralModel",
+        "spectral",
         energy=[1, 2] * u.cm,
         norms=[3, 4] * u.cm,
     )
-    yield Model.create("GaussianSpectralModel")
+    yield Model.create("GaussianSpectralModel", "spectral")
     # TODO: yield Model.create("AbsorbedSpectralModel")
     # TODO: yield Model.create("NaimaSpectralModel")
     # TODO: yield Model.create("ScaleSpectralModel")
