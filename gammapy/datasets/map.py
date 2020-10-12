@@ -435,6 +435,60 @@ class MapDataset(Dataset):
 
         return cls.from_geoms(reference_time=reference_time, name=name, **kwargs)
 
+    @property
+    def mask_safe_image(self):
+        """Reduced mask safe"""
+        if self.mask_safe is None:
+            return None
+        return self.mask_safe.reduce_over_axes(func=np.logical_or)
+
+    @property
+    def mask_safe_psf(self):
+        """Mask safe for psf maps"""
+        if self.mask_safe is None:
+            return None
+
+        geom = self.psf.exposure_map.geom.squash("energy_true")
+        mask_safe_psf = self.mask_safe_image.interp_to_geom(geom.to_image())
+        return mask_safe_psf.to_cube(geom.axes)
+
+    @property
+    def mask_safe_edisp(self):
+        """Mask safe for edisp maps"""
+        if self.mask_safe is None:
+            return None
+
+        geom = self.edisp.edisp_map.geom.squash("energy_true")
+
+        if "migra" in geom.axes.names:
+            geom = geom.squash("migra")
+            mask_safe_edisp = self.mask_safe_image.interp_to_geom(geom.to_image())
+            return mask_safe_edisp.to_cube(geom.axes)
+
+        return self.mask_safe.interp_to_geom(geom)
+
+    def apply_mask_safe(self):
+        """Apply mask safe to the dataset"""
+        if self.mask_safe is None:
+            return
+
+        if self.counts:
+            self.counts *= self.mask_safe
+
+        if self.exposure:
+            self.exposure *= self.mask_safe_image.data
+
+        if self.background_model:
+            self.background_model.map *= self.mask_safe
+
+        if self.psf:
+            self.psf.psf_map *= self.mask_safe_psf.data
+            self.psf.exposure_map *= self.mask_safe_psf.data
+
+        if self.edisp:
+            self.edisp.edisp_map *= self.mask_safe_edisp.data
+            #self.edisp.exposure_map *= self.mask_safe_edisp.data
+
     def stack(self, other):
         """Stack another dataset in place.
 
@@ -444,28 +498,13 @@ class MapDataset(Dataset):
             Map dataset to be stacked with this one. If other is an on-off
             dataset alpha * counts_off is used as a background model.
         """
-        if self.mask_safe is None:
-            self.mask_safe = Map.from_geom(
-                self._geom, data=np.ones_like(self.data_shape)
-            )
-
-        if other.mask_safe is None:
-            other_mask_safe = Map.from_geom(
-                other._geom, data=np.ones_like(other.data_shape)
-            )
-        else:
-            other_mask_safe = other.mask_safe
+        self.apply_mask_safe()
 
         if self.counts and other.counts:
-            self.counts *= self.mask_safe
-            self.counts.stack(other.counts, weights=other_mask_safe)
+            self.counts.stack(other.counts, weights=other.mask_safe)
 
         if self.exposure and other.exposure:
-            mask_exposure = self._mask_safe_irf(self.exposure, self.mask_safe)
-            self.exposure *= mask_exposure.data
-
-            mask_exposure_other = self._mask_safe_irf(other.exposure, other_mask_safe)
-            self.exposure.stack(other.exposure, weights=mask_exposure_other)
+            self.exposure.stack(other.exposure, weights=other.mask_safe_image)
 
         # TODO: unify background model handling
         if other.stat_type == "wstat":
@@ -474,56 +513,19 @@ class MapDataset(Dataset):
             background_model = other.background_model
 
         if self.background_model and background_model:
-            self._background_model.map *= self.mask_safe
-            self._background_model.stack(background_model, other_mask_safe)
-            self.models = Models([self.background_model])
-        else:
-            self.models = None
+            self.background_model.stack(background_model, weights=other.mask_safe)
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
-                mask_irf = self._mask_safe_irf(
-                    self.psf.exposure_map, self.mask_safe, drop="rad"
-                )
-                self.psf.psf_map.data *= mask_irf.data
-                self.psf.exposure_map.data *= mask_irf.data
-
-                mask_irf_other = self._mask_safe_irf(
-                    other.psf.exposure_map, other_mask_safe, drop="rad"
-                )
-                self.psf.stack(other.psf, weights=mask_irf_other)
+                self.psf.stack(other.psf, weights=other.mask_safe_psf)
             else:
                 raise ValueError("Stacking of PSF kernels not supported")
 
         if self.edisp and other.edisp:
-            if isinstance(self.edisp, EDispKernelMap) and isinstance(
-                other.edisp, EDispKernelMap
-            ):
-                mask_irf = self._mask_safe_irf(
-                    self.edisp.edisp_map, self.mask_safe, drop="energy_true"
-                )
-                mask_irf_other = self._mask_safe_irf(
-                    other.edisp.edisp_map, other_mask_safe, drop="energy_true"
-                )
+            self.edisp.stack(other.edisp, weights=other.mask_safe_edisp)
 
-            if isinstance(self.edisp, EDispMap) and isinstance(other.edisp, EDispMap):
-                mask_irf = self._mask_safe_irf(
-                    self.edisp.exposure_map.sum_over_axes(),
-                    self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True),
-                )
-                mask_irf_other = self._mask_safe_irf(
-                    other.edisp.exposure_map.sum_over_axes(),
-                    other_mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True),
-                )
-
-            self.edisp.edisp_map.data *= mask_irf.data
-            # Question: Should mask be applied on exposure map as well?
-            # Mask here is on the reco energy.
-            # self.edisp.exposure_map.data *= mask_irf.data
-
-            self.edisp.stack(other.edisp, weights=mask_irf_other)
-
-        self.mask_safe.stack(other_mask_safe)
+        if self.mask_safe and other.mask_safe:
+            self.mask_safe.stack(other.mask_safe)
 
         if self.gti and other.gti:
             self.gti.stack(other.gti)
@@ -533,25 +535,6 @@ class MapDataset(Dataset):
             self.meta_table = hstack_columns(self.meta_table, other.meta_table)
         elif other.meta_table:
             self.meta_table = other.meta_table.copy()
-
-    @staticmethod
-    def _mask_safe_irf(irf_map, mask, drop=None):
-        if mask is None:
-            return None
-
-        geom = irf_map.geom
-        geom_squash = irf_map.geom
-        if drop:
-            geom = geom.drop(drop)
-            geom_squash = geom_squash.squash(drop)
-
-        if "energy_true" in geom.axes.names:
-            ax = geom.axes["energy_true"].copy(name="energy")
-            geom = geom.to_image().to_cube([ax])
-
-        coords = geom.get_coord()
-        data = mask.get_by_coord(coords).astype(bool)
-        return Map.from_geom(geom=geom_squash, data=data[:, np.newaxis])
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
@@ -1320,11 +1303,8 @@ class MapDataset(Dataset):
 
         # Mask_safe or mask_irf??
         if isinstance(self.edisp, EDispKernelMap):
-            mask_irf = self._mask_safe_irf(
-                self.edisp.edisp_map, self.mask_safe, drop="energy_true"
-            )
             kwargs["edisp"] = self.edisp.resample_energy_axis(
-                energy_axis=energy_axis, weights=mask_irf
+                energy_axis=energy_axis, weights=self.mask_safe_edisp
             )
         else:  # None or EDispMap
             kwargs["edisp"] = self.edisp
