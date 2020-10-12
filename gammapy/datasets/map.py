@@ -2189,18 +2189,23 @@ class MapEvaluator:
         """
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
-        # cache current position of the model component
+        energy_axis = geom.axes["energy"]
 
         # lookup edisp
         if edisp:
-            energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
                 self.model.position, energy_axis=energy_axis
             )
 
         if isinstance(psf, PSFMap):
+            energy_axis_psf = psf.psf_map.geom.axes["energy_true"]
+            if energy_axis.is_aligned(energy_axis_psf):
+                geom = geom.to_image()
+            else:
+                geom = exposure.geom
+
             # lookup psf
-            self.psf = psf.get_psf_kernel(self.model.position, geom=exposure.geom)
+            self.psf = psf.get_psf_kernel(self.model.position, geom=geom)
         else:
             self.psf = psf
 
@@ -2314,10 +2319,10 @@ class MapEvaluator:
         if isinstance(self.model, BackgroundModel):
             npred = self.model.evaluate()
         else:
-            flux_conv = self.compute_flux_psf_convolved()
+            flux = self.compute_flux_psf_convolved()
 
             if self.model.apply_irf["exposure"]:
-                npred = self.apply_exposure(flux_conv)
+                npred = self.apply_exposure(flux)
 
             if self.model.apply_irf["edisp"]:
                 npred = self.apply_edisp(npred)

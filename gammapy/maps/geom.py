@@ -1969,6 +1969,12 @@ class Geom(abc.ABC):
         axes = self.axes.slice_by_idx(slices)
         return self._init_copy(axes=axes)
 
+    @property
+    def as_energy_true(self):
+        """If the geom contains an energy axis rename it to energy true"""
+        energy_axis = self.axes["energy"].copy(name="energy_true")
+        return self.to_image().to_cube([energy_axis])
+
     @abc.abstractmethod
     def to_image(self):
         """Create 2D image geometry (drop non-spatial dimensions).
