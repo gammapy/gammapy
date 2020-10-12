@@ -105,10 +105,20 @@ class Model:
         """A deep copy."""
         return copy.deepcopy(self)
 
-    def to_dict(self):
+    def to_dict(self, full_output=True):
         """Create dict for YAML serialisation"""
         tag = self.tag[0] if isinstance(self.tag, list) else self.tag
-        return {"type": tag, "parameters": self.parameters.to_dict()}
+        params = self.parameters.to_dict()
+
+        if full_output is False:
+            base = self.__class__
+            names = self.parameters.names
+            for k, name in enumerate(names):
+                init = base.__dict__[name].to_dict()
+                for item in ["min", "max", "frozen", "error"]:
+                    if params[k][item] == init[item] or np.isnan(init[item]):
+                        del params[k][item]
+        return {"type": tag, "parameters": params}
 
     @classmethod
     def from_dict(cls, data):
@@ -281,7 +291,7 @@ class Models(collections.abc.MutableSequence):
                 shared_register = _set_link(shared_register, model)
         return models
 
-    def write(self, path, overwrite=False, write_covariance=True):
+    def write(self, path, overwrite=False, full_output=True, write_covariance=True):
         """Write to YAML file.
 
         Parameters
@@ -315,14 +325,14 @@ class Models(collections.abc.MutableSequence):
 
         path.write_text(self.to_yaml())
 
-    def to_yaml(self):
+    def to_yaml(self, full_output=True):
         """Convert to YAML string."""
-        data = self.to_dict()
+        data = self.to_dict(full_output)
         return yaml.dump(
             data, sort_keys=False, indent=4, width=80, default_flow_style=False
         )
 
-    def to_dict(self):
+    def to_dict(self, full_output=True):
         """Convert to dict."""
         # update linked parameters labels
         params_list = []
@@ -338,7 +348,7 @@ class Models(collections.abc.MutableSequence):
 
         models_data = []
         for model in self._models:
-            model_data = model.to_dict()
+            model_data = model.to_dict(full_output)
             models_data.append(model_data)
         if self._covar_file is not None:
             return {

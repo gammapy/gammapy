@@ -8,6 +8,7 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
+    PowerLawSpectralModel,
     AbsorbedSpectralModel,
     Absorption,
     BackgroundModel,
@@ -231,6 +232,16 @@ def test_missing_parameters():
     models = Models.read(filename)
     assert models["source1"].spatial_model.e in models.parameters
     assert len(models["source1"].spatial_model.parameters) == 6
+
+
+def test_simplified_output():
+    model = PowerLawSpectralModel()
+    full = model.to_dict()
+    simplified = model.to_dict(full_output=False)
+    for k, name in enumerate(model.parameters.names):
+        for item in ["min", "max", "frozen", "error"]:
+            assert item in full["parameters"][k]
+            assert item not in simplified["parameters"][k]
 
 
 def test_registries_print():

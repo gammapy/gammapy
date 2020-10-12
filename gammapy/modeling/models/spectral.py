@@ -57,6 +57,7 @@ def integrate_spectrum(func, emin, emax, ndecade=100, intervals=False):
 
 class SpectralModel(Model):
     """Spectral model base class."""
+
     _type = "spectral"
 
     def __call__(self, energy):
@@ -471,11 +472,11 @@ class CompoundSpectralModel(SpectralModel):
         val2 = self.model2(energy)
         return self.operator(val1, val2)
 
-    def to_dict(self):
+    def to_dict(self, full_output=True):
         return {
             "type": self.tag[0],
-            "model1": self.model1.to_dict(),
-            "model2": self.model2.to_dict(),
+            "model1": self.model1.to_dict(full_output),
+            "model2": self.model2.to_dict(full_output),
             "operator": self.operator.__name__,
         }
 
@@ -1249,7 +1250,7 @@ class TemplateSpectralModel(SpectralModel):
         """Evaluate the model (static function)."""
         return self._evaluate((energy,), clip=True)
 
-    def to_dict(self):
+    def to_dict(self, full_output=True):
         return {
             "type": self.tag[0],
             "energy": {
@@ -1334,7 +1335,7 @@ class Absorption:
             points=(self.param, self.energy), values=self.data, **interp_kwargs
         )
 
-    def to_dict(self):
+    def to_dict(self, full_output=True):
         if self.filename is None:
             return {
                 "type": self.tag,
@@ -1539,11 +1540,11 @@ class AbsorbedSpectralModel(SpectralModel):
         absorption = np.power(absorption, alpha_norm)
         return dnde * absorption
 
-    def to_dict(self):
+    def to_dict(self, full_output=True):
         return {
             "type": self.tag,
-            "base_model": self.spectral_model.to_dict(),
-            "absorption": self.absorption.to_dict(),
+            "base_model": self.spectral_model.to_dict(full_output),
+            "absorption": self.absorption.to_dict(full_output),
             "absorption_parameter": {"name": "redshift", "value": self.redshift.value,},
             "parameters": Parameters([self.redshift, self.alpha_norm]).to_dict(),
         }

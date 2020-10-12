@@ -217,4 +217,3 @@ def test_plot_constant_model():
     constant_model = ConstantTemporalModel(const=1)
     with mpl_plot_check():
         constant_model.plot(time_range)
-

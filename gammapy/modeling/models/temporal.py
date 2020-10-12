@@ -17,6 +17,7 @@ from .core import Model
 class TemporalModel(Model):
     """Temporal model base class.
     evaluates on  astropy.time.Time objects"""
+
     _type = "temporal"
 
     def __call__(self, time):
@@ -72,17 +73,17 @@ class TemporalModel(Model):
             axis
         """
 
-
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
         t_min, t_max = time_range
         n_value = 100
-        delta = (t_max - t_min)
+        delta = t_max - t_min
         times = t_min + delta * np.linspace(0, 1, n_value)
         val = self(times)
         ax.plot(times.mjd, val)
         return ax
+
 
 class ConstantTemporalModel(TemporalModel):
     """Constant temporal model."""
@@ -189,8 +190,6 @@ class ExpDecayTemporalModel(TemporalModel):
         t_ref = Time(pars["t_ref"].quantity, format="mjd")
         value = self.evaluate(t_max, t0, t_ref) - self.evaluate(t_min, t0, t_ref)
         return -t0 * value / self.time_sum(t_min, t_max)
-
-
 
 
 class GaussianTemporalModel(TemporalModel):
@@ -434,6 +433,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     def from_dict(cls, data):
         return cls.read(data["filename"])
 
-    def to_dict(self, overwrite=False):
+    def to_dict(self, full_output=True, overwrite=False):
         """Create dict for YAML serilisation"""
         return {"type": self.tag[0], "filename": self.filename}

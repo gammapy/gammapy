@@ -38,6 +38,7 @@ def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
 
 class SpatialModel(Model):
     """Spatial model base class."""
+
     _type = "spatial"
 
     def __init__(self, **kwargs):
@@ -142,9 +143,9 @@ class SpatialModel(Model):
         data = values * geom.solid_angle()
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
-    def to_dict(self):
+    def to_dict(self, full_output=True):
         """Create dict for YAML serilisation"""
-        data = super().to_dict()
+        data = super().to_dict(full_output)
         data["frame"] = self.frame
         data["parameters"] = data.pop("parameters")
         return data
@@ -605,10 +606,10 @@ class ConstantSpatialModel(SpatialModel):
     evaluation_radius = None
     position = None
 
-    def to_dict(self):
+    def to_dict(self, full_output=True):
         """Create dict for YAML serilisation"""
         # redefined to ignore frame attribute from parent class
-        data = super().to_dict()
+        data = super().to_dict(full_output)
         data.pop("frame")
         data["parameters"] = data.pop("parameters")
         return data
@@ -643,10 +644,10 @@ class ConstantFluxSpatialModel(SpatialModel):
     evaluation_radius = None
     position = None
 
-    def to_dict(self):
+    def to_dict(self, full_output=True):
         """Create dict for YAML serilisation"""
         # redefined to ignore frame attribute from parent class
-        data = super().to_dict()
+        data = super().to_dict(full_output)
         data.pop("frame")
         return data
 
@@ -785,9 +786,9 @@ class TemplateSpatialModel(SpatialModel):
         m = Map.read(filename)
         return cls(m, normalize=normalize, filename=filename)
 
-    def to_dict(self):
+    def to_dict(self, full_output=True):
         """Create dict for YAML serilisation"""
-        data = super().to_dict()
+        data = super().to_dict(full_output)
         data["filename"] = self.filename
         data["normalize"] = self.normalize
         data["unit"] = str(self.map.unit)

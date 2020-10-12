@@ -314,18 +314,18 @@ class SkyModel(SkyModelBase):
 
         return self.__class__(**kwargs)
 
-    def to_dict(self):
+    def to_dict(self, full_output=True):
         """Create dict for YAML serilisation"""
         data = {}
         data["name"] = self.name
         data["type"] = self.tag
-        data["spectral"] = self.spectral_model.to_dict()
+        data["spectral"] = self.spectral_model.to_dict(full_output)
 
         if self.spatial_model is not None:
-            data["spatial"] = self.spatial_model.to_dict()
+            data["spatial"] = self.spatial_model.to_dict(full_output)
 
         if self.temporal_model is not None:
-            data["temporal"] = self.temporal_model.to_dict()
+            data["temporal"] = self.temporal_model.to_dict(full_output)
 
         if self.apply_irf != self._apply_irf_default:
             data["apply_irf"] = self.apply_irf
@@ -488,11 +488,11 @@ class BackgroundModel(Model):
         back_values = self.map.data * value
         return self.map.copy(data=back_values)
 
-    def to_dict(self):
+    def to_dict(self, full_output=True):
         data = {}
         data["name"] = self.name
         data["type"] = self.tag
-        data["spectral"] = self.spectral_model.to_dict()
+        data["spectral"] = self.spectral_model.to_dict(full_output)
 
         if self.filename is not None:
             data["filename"] = self.filename
