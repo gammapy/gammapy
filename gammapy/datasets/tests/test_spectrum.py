@@ -1037,5 +1037,5 @@ class TestFit:
         true_idx = result.parameters["index"].value
         values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
         profile = fit.stat_profile("index", values=values)
-        actual = values[np.argmin(profile["stat"])]
+        actual = values[np.argmin(profile["stat_scan"])]
         assert_allclose(actual, true_idx, rtol=0.01)
