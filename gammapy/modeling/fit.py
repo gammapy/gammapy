@@ -425,7 +425,7 @@ class Fit:
             "x_values": x_values,
             "y_values": y_values,
             "stat": stats,
-            "results": fit_results,
+            "fit_results": fit_results,
         }
 
     def minos_contour(self, x, y, numpoints=10, sigma=1.0):
