@@ -927,7 +927,7 @@ class PiecewiseBrokenPowerLawNormSpectralModel(SpectralModel):
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
             },
-            "norms": {"data": self.norms, "unit":str(self.norms.unit),},
+            "norms": {"data": self.norms.data.tolist(), "unit": str(self.norms.unit),},
         }
 
     @classmethod

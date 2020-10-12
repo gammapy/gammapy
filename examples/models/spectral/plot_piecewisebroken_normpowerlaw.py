@@ -15,7 +15,7 @@ with a free norm parameter at each fixed energy node.
 
 from astropy import units as u
 import matplotlib.pyplot as plt
-from gammapy.modeling.models import  PiecewiseBrokenPowerLawNormSpectralModel
+from gammapy.modeling.models import PiecewiseBrokenPowerLawNormSpectralModel
 
 energy_range = [0.1, 100] * u.TeV
 model = PiecewiseBrokenPowerLawNormSpectralModel(
@@ -23,4 +23,3 @@ model = PiecewiseBrokenPowerLawNormSpectralModel(
 )
 model.plot(energy_range, flux_unit="")
 plt.grid(which="both")
-
