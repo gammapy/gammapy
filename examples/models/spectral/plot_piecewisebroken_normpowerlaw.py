@@ -15,11 +15,7 @@ with a free norm parameter at each fixed energy node.
 
 from astropy import units as u
 import matplotlib.pyplot as plt
-from gammapy.modeling.models import (
-    Models,
-    SkyModel,
-    PiecewiseBrokenPowerLawNormSpectralModel,
-)
+from gammapy.modeling.models import  PiecewiseBrokenPowerLawNormSpectralModel
 
 energy_range = [0.1, 100] * u.TeV
 model = PiecewiseBrokenPowerLawNormSpectralModel(
@@ -28,12 +24,3 @@ model = PiecewiseBrokenPowerLawNormSpectralModel(
 model.plot(energy_range, flux_unit="")
 plt.grid(which="both")
 
-# %%
-# YAML representation
-# -------------------
-# Here is an example YAML file using the model:
-
-model = SkyModel(spectral_model=model, name="piecewise-broken-powerlaw-norm-model")
-models = Models([model])
-
-print(models.to_yaml())
