@@ -23,9 +23,9 @@ from gammapy.modeling.models import (
 
 energy_range = [0.1, 100] * u.TeV
 model = PiecewiseBrokenPowerLawNormSpectralModel(
-    energy=[0.1, 1, 10, 100] * u.TeV, norms=[1, 3, 5, 2],
+    energy=[0.1, 1, 3, 10, 30, 100] * u.TeV, norms=[1, 3, 8, 10, 8, 2],
 )
-model.plot(energy_range)
+model.plot(energy_range, flux_unit="")
 plt.grid(which="both")
 
 # %%

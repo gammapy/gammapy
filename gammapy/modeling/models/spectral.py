@@ -907,7 +907,7 @@ class PiecewiseBrokenPowerLawNormSpectralModel(SpectralModel):
 
     @property
     def norms(self):
-        return np.array([p.value for p in self.parameters])
+        return [p.value for p in self.parameters] * u.Unit("")
 
     def __call__(self, energy):
         return self.evaluate(energy)
@@ -927,7 +927,7 @@ class PiecewiseBrokenPowerLawNormSpectralModel(SpectralModel):
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
             },
-            "norms": {"data": self.norms, "unit": "",},
+            "norms": {"data": self.norms, "unit":str(self.norms.unit),},
         }
 
     @classmethod
