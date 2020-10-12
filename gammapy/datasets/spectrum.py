@@ -126,6 +126,18 @@ class SpectrumDataset(MapDataset):
 
         return np.sum(stat, dtype=np.float64)
 
+    def write(self):
+        raise NotImplementedError
+
+    def read(self):
+        raise NotImplementedError
+
+    def to_hdulist(self):
+        raise NotImplementedError
+
+    def from_hdulist(self):
+        raise NotImplementedError
+
     @property
     # TODO: make this a method to support different methods?
     def energy_range(self):
@@ -297,7 +309,6 @@ class SpectrumDataset(MapDataset):
             models=models,
             name=name,
         )
-
 
     def peek(self, figsize=(16, 4)):
         """Quick-look summary plots."""
