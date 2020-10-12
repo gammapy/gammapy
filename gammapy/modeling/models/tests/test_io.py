@@ -13,7 +13,7 @@ from gammapy.modeling.models import (
     BackgroundModel,
     Model,
     Models,
-    PiecewiseBrokenPowerLawSpectralModel,
+    PiecewiseBrokenPowerLawNormSpectralModel,
 )
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
@@ -108,30 +108,26 @@ def test_sky_models_io(tmp_path):
     # or check serialised dict content
 
 
-def test_PiecewiseBrokenPowerLawSpectralModel_io(tmp_path):
+def test_PiecewiseBrokenPowerLawNormSpectralModel_io(tmp_path):
 
     energy = [1, 3, 7, 10] * u.TeV
-    values = [1, 5, 3, 0.5] * u.Unit("cm-2 s-1 TeV-1")
+    norms = [1, 5, 3, 0.5] * u.Unit("")
     with pytest.raises(ValueError):
-        PiecewiseBrokenPowerLawSpectralModel(
-            energy=[1,] * u.TeV, values=[1, 5] * u.Unit("cm-2 s-1 TeV-1")
-        )
+        PiecewiseBrokenPowerLawNormSpectralModel(energy=[1,] * u.TeV, norms=[1, 5])
     with pytest.raises(ValueError):
-        PiecewiseBrokenPowerLawSpectralModel(
-            energy=[1,] * u.TeV, values=[1,] * u.Unit("cm-2 s-1 TeV-1")
-        )
-    model = PiecewiseBrokenPowerLawSpectralModel(energy=energy, values=values)
+        PiecewiseBrokenPowerLawNormSpectralModel(energy=[1,] * u.TeV, norms=[1,])
+    model = PiecewiseBrokenPowerLawNormSpectralModel(energy=energy, norms=norms)
     model.parameters[0].value = 2
     model_dict = model.to_dict()
     parnames = [_["name"] for _ in model_dict["parameters"]]
     for k, parname in enumerate(parnames):
         assert parname == f"norm{k}"
 
-    new_model = PiecewiseBrokenPowerLawSpectralModel.from_dict(model_dict)
+    new_model = PiecewiseBrokenPowerLawNormSpectralModel.from_dict(model_dict)
     assert_allclose(new_model.parameters[0].value, 2)
     assert_allclose(new_model.energy, energy)
-    assert_allclose(new_model.values, [2, 5, 3, 0.5] * values.unit)
-
+    assert_allclose(new_model.norms, [2, 5, 3, 0.5])
+    
 
 @requires_data()
 def test_absorption_io(tmp_path):
@@ -217,9 +213,9 @@ def make_all_models():
         "TemplateSpectralModel", "spectral", energy=[1, 2] * u.cm, values=[3, 4] * u.cm
     )  # TODO: add unit validation?
     yield Model.create(
-        "PiecewiseBrokenPowerLawSpectralModel",
+        "PiecewiseBrokenPowerLawNormSpectralModel",
         energy=[1, 2] * u.cm,
-        values=[3, 4] * u.cm,
+        norms=[3, 4] * u.cm,
     )
     yield Model.create("GaussianSpectralModel")
     # TODO: yield Model.create("AbsorbedSpectralModel")

@@ -857,113 +857,81 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
         return pwl * brk
 
 
-class PiecewiseBrokenPowerLawSpectralModel(SpectralModel):
-    """Piecewise broken power-law at fixed energy nodes.
+class PiecewiseBrokenPowerLawNormSpectralModel(SpectralModel):
+    """Template spectral model renormalization at fixed energy nodes.
 
     Parameters
     ----------
     energy : `~astropy.units.Quantity`
         Array of energies at which the model values are given (nodes).
-    values : array
-        Array with the initial values of the model at energies ``energy``.
+    norms : array
+        Array with the initial norms of the model at energies ``energy``.
         A normalisation parameters is created for each value.
     """
 
-    tag = "PiecewiseBrokenPowerLawSpectralModel"
+    tag = ["PiecewiseBrokenPowerLawNormSpectralModel", "pbpl-norm"]
 
-    def __init__(self, energy, values, parameters=None):
+    def __init__(self, energy, norms):
         self._energy = energy
-        self.init_values = values
-        if len(values) != len(energy):
+        if len(norms) != len(energy):
             raise ValueError("dimension mismatch")
-        if len(values) < 2:
+        if len(norms) < 2:
             raise ValueError("Input arrays must contians at least 2 elements")
-        if parameters is None:
-            parameters = Parameters(
-                [Parameter(f"norm{k}", 1.0) for k, _ in enumerate(values)]
-            )
-        for parameter in parameters:
-            setattr(self, parameter.name, parameter)
-        self.default_parameters = parameters
+        parameters = Parameters(
+            [Parameter(f"norm{k}", norm) for k, norm in enumerate(norms)]
+        )
+        self._set_default_parameters(parameters)
 
     @classmethod
     def from_parameters(cls, parameters, **kwargs):
-        return cls(kwargs["energy"], kwargs["values"], parameters=parameters)
+        norms = [p.value for p in parameters]
+        model = cls(kwargs["energy"], norms)
+        model._set_default_parameters(parameters)
+        return model
 
-    @classmethod
-    def from_template(cls, model, energy=None):
-        """Create from TemplateSpectralModel.
-
-        Parameters
-        ----------
-        model : `~gammapy.modeling.models.TemplateSpectralModel`
-            Template evaluated to determine values at given `energy`
-        energy : `~astropy.units.Quantity`
-            Array of energies at which the model values are given (nodes).
-            By default energy are set as model.energy.
-        """
-
-        if not isinstance(model, TemplateSpectralModel):
-            raise TypeError("model must be a TemplateSpectralModel")
-        if energy is None:
-            energy = model.energy
-        return cls(energy, model(energy))
-
-    @property
-    def values(self):
-        return np.array([p.value for p in self.parameters]) * self.init_values
+    def _set_default_parameters(self, parameters):
+        for parameter in parameters:
+            setattr(self, parameter.name, parameter)
+        self.default_parameters = parameters
 
     @property
     def energy(self):
         return self._energy
 
+    @property
+    def norms(self):
+        return np.array([p.value for p in self.parameters])
+
     def __call__(self, energy):
         return self.evaluate(energy)
 
     def evaluate(self, energy):
-        logedata = np.log10(np.atleast_1d(energy.value))
+        loge_data = np.log10(np.atleast_1d(energy.value))
         loge = np.log10(self.energy.to(energy.unit).value)
-        logv = np.log10(self.values.value)
-        ne = len(loge)
-        conds = (
-            [(logedata < loge[1])]
-            + [
-                (logedata >= loge[k]) & (logedata < loge[k + 1])
-                for k in range(1, ne - 2)
-            ]
-            + [(logedata >= loge[-2])]
-        )
-        a = (logv[1:] - logv[:-1]) / (loge[1:] - loge[:-1])
-        b = logv[1:] - a * loge[1:]
-
-        output = np.zeros(logedata.shape)
-        for k in range(ne - 1):
-            output[conds[k]] = 10 ** (a[k] * logedata[conds[k]] + b[k])
-        return output * self.values.unit
+        logv = np.log10(self.norms)
+        log_interp = 10**np.interp(loge_data, loge, logv)
+        return log_interp
 
     def to_dict(self):
         return {
-            "type": self.tag,
+            "type": self.tag[0],
             "parameters": self.parameters.to_dict(),
             "energy": {
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
             },
-            "values": {
-                "data": self.init_values.data.tolist(),
-                "unit": str(self.values.unit),
-            },
+            "norms": {"data": self.norms, "unit": "",},
         }
 
     @classmethod
     def from_dict(cls, data):
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
-        values = u.Quantity(data["values"]["data"], data["values"]["unit"])
+        norms = u.Quantity(data["norms"]["data"], data["norms"]["unit"])
         if "parameters" in data:
             parameters = Parameters.from_dict(data["parameters"])
-            return cls.from_parameters(parameters, energy=energy, values=values)
+            return cls.from_parameters(parameters, energy=energy)
         else:
-            return cls(energy=energy, values=values)
+            return cls(energy=energy, norms=norms)
 
 
 class ExpCutoffPowerLawSpectralModel(SpectralModel):

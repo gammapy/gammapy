@@ -25,7 +25,7 @@ from gammapy.modeling.models import (
     SmoothBrokenPowerLawSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     TemplateSpectralModel,
-    PiecewiseBrokenPowerLawSpectralModel,
+    PiecewiseBrokenPowerLawNormSpectralModel,
 )
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -276,13 +276,12 @@ TEST_MODELS = [
     ),
     dict(
         name="pbpl",
-        model=PiecewiseBrokenPowerLawSpectralModel(
-            energy=[1, 3, 7, 10] * u.TeV,
-            values=[1, 5, 3, 0.5] * u.Unit("cm-2 s-1 TeV-1"),
+        model=PiecewiseBrokenPowerLawNormSpectralModel(
+            energy=[1, 3, 7, 10] * u.TeV, norms=[1, 5, 3, 0.5] * u.Unit(""),
         ),
-        val_at_2TeV=u.Quantity(2.76058404, "cm-2 s-1 TeV-1"),
-        integral_1_10TeV=u.Quantity(24.757573885411876, "cm-2 s-1"),
-        eflux_1_10TeV=u.Quantity(117.74087966682515, "TeV cm-2 s-1"),
+        val_at_2TeV=u.Quantity(2.76058404,),
+        integral_1_10TeV=u.Quantity(24.757573885411876, "TeV"),
+        eflux_1_10TeV=u.Quantity(117.74087966682515, "TeV2"),
     ),
 ]
 
@@ -345,7 +344,7 @@ def test_models(spectrum):
         assert_quantity_allclose(model.e_peak, spectrum["e_peak"], rtol=1e-2)
 
     # inverse for ConstantSpectralModel is irrelevant.
-    # inverse for Gaussian and PiecewiseBrokenPowerLawSpectralModel have a degeneracy
+    # inverse for Gaussian and PiecewiseBrokenPowerLawNormSpectralModel have a degeneracy
     if not (
         isinstance(model, ConstantSpectralModel)
         or spectrum["name"] == "compound6"
