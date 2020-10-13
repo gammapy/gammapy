@@ -4,7 +4,7 @@ r"""
 Piecewise Broken Power Law Norm Spectral Model
 ==============================================
 
-This model parametrises a piecewise broken power law 
+This model parametrises a piecewise broken power law
 with a free norm parameter at each fixed energy node.
 """
 
