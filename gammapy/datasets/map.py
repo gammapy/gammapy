@@ -168,7 +168,7 @@ class MapDataset(Dataset):
         self.mask_safe = mask_safe
 
         # TODO: should we rely on pre-defined background models?
-        if models is None:
+        if models is None and background:
             models = [BackgroundIRFModel(dataset_name=self.name)]
 
         self.models = models
@@ -558,8 +558,8 @@ class MapDataset(Dataset):
         if self.exposure:
             self.exposure *= self.mask_safe_image.data
 
-        if self.background_model:
-            self.background_model.map *= self.mask_safe
+        if self.background and self.stat_type == "cash":
+            self._background *= self.mask_safe
 
         if self.psf:
             self.psf.psf_map *= self.mask_safe_psf.data
