@@ -887,7 +887,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
             if len(norms) != len(energy):
                 raise ValueError("dimension mismatch")
             if len(norms) < 2:
-                raise ValueError("Input arrays must contians at least 2 elements")
+                raise ValueError("Input arrays must contain at least 2 elements")
 
         if parameters is None:
             parameters = Parameters(
