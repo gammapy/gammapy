@@ -1702,7 +1702,7 @@ class NaimaSpectralModel(SpectralModel):
         return dnde.to(unit)
 
     def to_dict(self, full_output=True):
-        #for full_output to True otherwise broken
+        # for full_output to True otherwise broken
         return super().to_dict(full_output=True)
 
     @classmethod
