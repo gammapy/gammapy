@@ -132,6 +132,7 @@ def test_stat_profile():
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
+    assert len(result["fit_results"]) == 0
 
     # Check that original value state wasn't changed
     assert_allclose(dataset.models.parameters["x"].value, 2)
@@ -147,6 +148,7 @@ def test_stat_profile_reoptimize():
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
+    assert_allclose(result["fit_results"][0].total_stat, result["stat"][0], atol=1e-7)
 
 
 def test_stat_surface():
@@ -165,6 +167,7 @@ def test_stat_surface():
         [1.0001e04, 1.0000e00, 1.0001e04],
     ]
     assert_allclose(list(result["stat_scan"]), expected_stat, atol=1e-7)
+    assert len(result["fit_results"]) == 0
 
     # Check that original value state wasn't changed
     assert_allclose(dataset.models.parameters["x"].value, 2)
@@ -192,6 +195,9 @@ def test_stat_surface_reoptimize():
     ]
 
     assert_allclose(list(result["stat_scan"]), expected_stat, atol=1e-7)
+    assert_allclose(
+        result["fit_results"][0][0].total_stat, result["stat"][0][0], atol=1e-7
+    )
 
 
 def test_minos_contour():

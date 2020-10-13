@@ -326,7 +326,8 @@ class Fit:
         Returns
         -------
         results : dict
-            Dictionary containing the scan of parameter and stat (-2 loglike) values.
+            Dictionary with keys "values", "stat" and "fit_results". The latter contains an
+            empty list, if `reoptimize` is set to False
         """
         parameters = self._parameters
         parameter = parameters[parameter]
@@ -346,6 +347,7 @@ class Fit:
             values = np.linspace(parmin, parmax, nvalues)
 
         stats = []
+        fit_results = []
         with parameters.restore_values:
             for value in values:
                 parameter.value = value
@@ -353,11 +355,12 @@ class Fit:
                     parameter.frozen = True
                     result = self.optimize(**optimize_opts)
                     stat = result.total_stat
+                    fit_results.append(result)
                 else:
                     stat = self.datasets.stat_sum()
                 stats.append(stat)
 
-        return {f"{parameter.name}_scan": values, "stat_scan": np.array(stats)}
+        return {f"{parameter.name}_scan": values, "stat_scan": np.array(stats), "fit_results": fit_results}
 
     def stat_surface(self, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
         """Compute fit statistic surface.
@@ -383,14 +386,15 @@ class Fit:
         Returns
         -------
         results : dict
-            Dictionary containing the scan of parameters and stat (-2 loglike) values.
-
+            Dictionary with keys "x_values", "y_values", "stat" and "fit_results". The latter contains an
+            empty list, if `reoptimize` is set to False
         """
         parameters = self._parameters
         x = parameters[x]
         y = parameters[y]
 
         stats = []
+        fit_results = []
         with parameters.restore_values:
             for x_value, y_value in itertools.product(x_values, y_values):
                 # TODO: Remove log.info() and provide a nice progress bar
@@ -402,20 +406,24 @@ class Fit:
                     y.frozen = True
                     result = self.optimize(**optimize_opts)
                     stat = result.total_stat
+                    fit_results.append(result)
                 else:
                     stat = self.datasets.stat_sum()
 
                 stats.append(stat)
 
+        shape = (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
         stats = np.array(stats)
-        stats = stats.reshape(
-            (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
-        )
+        stats = stats.reshape(shape)
+        if reoptimize:
+            fit_results = np.array(fit_results)
+            fit_results = fit_results.reshape(shape)
 
         return {
             f"{x.name}_scan": x_values,
             f"{y.name}_scan": y_values,
             "stat_scan": stats,
+            "fit_results": fit_results,
         }
 
     def minos_contour(self, x, y, numpoints=10, sigma=1.0):

@@ -777,6 +777,10 @@ class Map(abc.ABC):
             kwargs.setdefault("interp", 0)
 
         data = self.interp_by_coord(coords, **kwargs)
+
+        if self.data.dtype == bool:
+            data = data.astype(bool)
+
         return Map.from_geom(geom, data=data, unit=self.unit)
 
     def fill_events(self, events):
