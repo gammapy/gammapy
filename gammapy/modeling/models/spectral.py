@@ -872,34 +872,37 @@ class PiecewiseBrokenPowerLawNormSpectralModel(SpectralModel):
         Array with the initial norms of the model at energies ``energy``.
         A normalisation parameters is created for each value.
         Default is one at each node.
+    paremters : list
+        List of of `gammapy.modeling.Parameter`. Optional.
+        norms argument is ignored if parameters argument is defined.
     """
 
     tag = ["PiecewiseBrokenPowerLawNormSpectralModel", "pbpl-norm"]
 
-    def __init__(self, energy, norms=None):
+    def __init__(self, energy, norms=None, parameters=None):
         self._energy = energy
         if norms is None:
             norms = np.ones(len(energy))
-        if len(norms) != len(energy):
-            raise ValueError("dimension mismatch")
-        if len(norms) < 2:
-            raise ValueError("Input arrays must contians at least 2 elements")
-        parameters = Parameters(
-            [Parameter(f"norm{k}", norm) for k, norm in enumerate(norms)]
-        )
-        self._set_default_parameters(parameters)
+        else:
+            if len(norms) != len(energy):
+                raise ValueError("dimension mismatch")
+            if len(norms) < 2:
+                raise ValueError("Input arrays must contians at least 2 elements")
 
-    @classmethod
-    def from_parameters(cls, parameters, **kwargs):
-        norms = [p.value for p in parameters]
-        model = cls(kwargs["energy"], norms)
-        model._set_default_parameters(parameters)
-        return model
+        if parameters is None:
+            parameters = Parameters(
+                [Parameter(f"norm_{k}", norm) for k, norm in enumerate(norms)]
+            )
+        else:
+            norms = np.array([p.value for p in parameters])
 
-    def _set_default_parameters(self, parameters):
         for parameter in parameters:
             setattr(self, parameter.name, parameter)
         self.default_parameters = parameters
+
+    @classmethod
+    def from_parameters(cls, parameters, **kwargs):
+        return cls(kwargs["energy"], parameters)
 
     @property
     def energy(self):
@@ -927,18 +930,13 @@ class PiecewiseBrokenPowerLawNormSpectralModel(SpectralModel):
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
             },
-            "norms": {"data": self.norms.data.tolist(), "unit": str(self.norms.unit),},
         }
 
     @classmethod
     def from_dict(cls, data):
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
-        norms = u.Quantity(data["norms"]["data"], data["norms"]["unit"])
-        if "parameters" in data:
-            parameters = Parameters.from_dict(data["parameters"])
-            return cls.from_parameters(parameters, energy=energy)
-        else:
-            return cls(energy=energy, norms=norms)
+        parameters = Parameters.from_dict(data["parameters"])
+        return cls.from_parameters(parameters, energy=energy)
 
 
 class ExpCutoffPowerLawSpectralModel(SpectralModel):
