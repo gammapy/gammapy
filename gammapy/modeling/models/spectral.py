@@ -472,7 +472,7 @@ class CompoundSpectralModel(SpectralModel):
         val2 = self.model2(energy)
         return self.operator(val1, val2)
 
-    def to_dict(self, full_output=True):
+    def to_dict(self, full_output=False):
         return {
             "type": self.tag[0],
             "model1": self.model1.to_dict(full_output),
@@ -1250,7 +1250,7 @@ class TemplateSpectralModel(SpectralModel):
         """Evaluate the model (static function)."""
         return self._evaluate((energy,), clip=True)
 
-    def to_dict(self, full_output=True):
+    def to_dict(self, full_output=False):
         return {
             "type": self.tag[0],
             "energy": {
@@ -1335,7 +1335,7 @@ class Absorption:
             points=(self.param, self.energy), values=self.data, **interp_kwargs
         )
 
-    def to_dict(self, full_output=True):
+    def to_dict(self, full_output=False):
         if self.filename is None:
             return {
                 "type": self.tag,
@@ -1540,7 +1540,7 @@ class AbsorbedSpectralModel(SpectralModel):
         absorption = np.power(absorption, alpha_norm)
         return dnde * absorption
 
-    def to_dict(self, full_output=True):
+    def to_dict(self, full_output=False):
         return {
             "type": self.tag,
             "base_model": self.spectral_model.to_dict(full_output),

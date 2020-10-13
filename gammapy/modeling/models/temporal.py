@@ -433,6 +433,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     def from_dict(cls, data):
         return cls.read(data["filename"])
 
-    def to_dict(self, full_output=True, overwrite=False):
+    def to_dict(self, full_output=False, overwrite=False):
         """Create dict for YAML serilisation"""
         return {"type": self.tag[0], "filename": self.filename}

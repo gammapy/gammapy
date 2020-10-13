@@ -314,7 +314,7 @@ class SkyModel(SkyModelBase):
 
         return self.__class__(**kwargs)
 
-    def to_dict(self, full_output=True):
+    def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         data = {}
         data["name"] = self.name
@@ -488,7 +488,7 @@ class BackgroundModel(Model):
         back_values = self.map.data * value
         return self.map.copy(data=back_values)
 
-    def to_dict(self, full_output=True):
+    def to_dict(self, full_output=False):
         data = {}
         data["name"] = self.name
         data["type"] = self.tag

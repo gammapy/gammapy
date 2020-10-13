@@ -236,10 +236,10 @@ def test_missing_parameters():
 
 def test_simplified_output():
     model = PowerLawSpectralModel()
-    full = model.to_dict()
-    simplified = model.to_dict(full_output=False)
+    full = model.to_dict(full_output=True)
+    simplified = model.to_dict()
     for k, name in enumerate(model.parameters.names):
-        for item in ["min", "max", "frozen", "error"]:
+        for item in ["min", "max", "error"]:
             assert item in full["parameters"][k]
             assert item not in simplified["parameters"][k]
 

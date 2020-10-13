@@ -143,7 +143,7 @@ class SpatialModel(Model):
         data = values * geom.solid_angle()
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
-    def to_dict(self, full_output=True):
+    def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         data = super().to_dict(full_output)
         data["frame"] = self.frame
@@ -606,7 +606,7 @@ class ConstantSpatialModel(SpatialModel):
     evaluation_radius = None
     position = None
 
-    def to_dict(self, full_output=True):
+    def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         # redefined to ignore frame attribute from parent class
         data = super().to_dict(full_output)
@@ -644,7 +644,7 @@ class ConstantFluxSpatialModel(SpatialModel):
     evaluation_radius = None
     position = None
 
-    def to_dict(self, full_output=True):
+    def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         # redefined to ignore frame attribute from parent class
         data = super().to_dict(full_output)
@@ -786,7 +786,7 @@ class TemplateSpatialModel(SpatialModel):
         m = Map.read(filename)
         return cls(m, normalize=normalize, filename=filename)
 
-    def to_dict(self, full_output=True):
+    def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         data = super().to_dict(full_output)
         data["filename"] = self.filename
