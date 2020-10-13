@@ -11,7 +11,10 @@ from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
-from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.interpolation import (
+    ScaledRegularGridInterpolator,
+    interpolation_scale,
+)
 from gammapy.utils.scripts import make_path
 from .core import Model
 
@@ -875,12 +878,15 @@ class PiecewiseNormSpectralModel(SpectralModel):
     paremters : list
         List of of `gammapy.modeling.Parameter`. Optional.
         norms argument is ignored if parameters argument is defined.
+    interp : str
+        Interpolation scaling in {"log", "lin"}. Default is "log"
     """
 
     tag = ["PiecewiseNormSpectralModel", "pbpl-norm"]
 
-    def __init__(self, energy, norms=None, parameters=None):
+    def __init__(self, energy, norms=None, parameters=None, interp="log"):
         self._energy = energy
+        self._interp = interp
         if norms is None:
             norms = np.ones(len(energy))
         else:
@@ -916,10 +922,11 @@ class PiecewiseNormSpectralModel(SpectralModel):
         return self.evaluate(energy)
 
     def evaluate(self, energy):
-        loge_data = np.log10(np.atleast_1d(energy.value))
-        loge = np.log10(self.energy.to(energy.unit).value)
-        logv = np.log10(self.norms)
-        log_interp = 10 ** np.interp(loge_data, loge, logv)
+        scale = interpolation_scale(scale=self._interp)
+        e_eval = scale(np.atleast_1d(energy.value))
+        e_nodes = scale(self.energy.to(energy.unit).value)
+        v_nodes = scale(self.norms)
+        log_interp = scale.inverse(np.interp(e_eval, e_nodes, v_nodes))
         return log_interp
 
     def to_dict(self):
