@@ -121,7 +121,7 @@ def test_PiecewiseBrokenPowerLawNormSpectralModel_io(tmp_path):
     model_dict = model.to_dict()
     parnames = [_["name"] for _ in model_dict["parameters"]]
     for k, parname in enumerate(parnames):
-        assert parname == f"norm{k}"
+        assert parname == f"norm_{k}"
 
     new_model = PiecewiseBrokenPowerLawNormSpectralModel.from_dict(model_dict)
     assert_allclose(new_model.parameters[0].value, 2)

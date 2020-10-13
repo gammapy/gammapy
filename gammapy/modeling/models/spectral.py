@@ -902,7 +902,7 @@ class PiecewiseBrokenPowerLawNormSpectralModel(SpectralModel):
 
     @classmethod
     def from_parameters(cls, parameters, **kwargs):
-        return cls(kwargs["energy"], parameters)
+        return cls(kwargs["energy"], parameters=parameters)
 
     @property
     def energy(self):
