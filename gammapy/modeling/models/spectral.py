@@ -1701,6 +1701,10 @@ class NaimaSpectralModel(SpectralModel):
         unit = 1 / (energy.unit * u.cm ** 2 * u.s)
         return dnde.to(unit)
 
+    def to_dict(self, full_output=True):
+        #for full_output to True otherwise broken
+        return super().to_dict(full_output=True)
+
     @classmethod
     def from_dict(cls, data):
         raise NotImplementedError(

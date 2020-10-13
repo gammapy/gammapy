@@ -97,7 +97,7 @@ def test_sky_models_io(tmp_path):
     filename = get_pkg_data_filename("data/examples.yaml")
     models = Models.read(filename)
     models.covariance = np.eye(len(models.parameters))
-    models.write(tmp_path / "tmp.yaml")
+    models.write(tmp_path / "tmp.yaml", full_output=True)
     models = Models.read(tmp_path / "tmp.yaml")
     assert models._covar_file == "tmp_covariance.dat"
     assert_allclose(models.covariance.data, np.eye(len(models.parameters)))

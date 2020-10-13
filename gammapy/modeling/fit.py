@@ -359,9 +359,7 @@ class Fit:
 
         return {"values": values, "stat": np.array(stats)}
 
-    def stat_surface(
-        self, x, y, x_values, y_values, reoptimize=False, **optimize_opts
-    ):
+    def stat_surface(self, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
         """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.

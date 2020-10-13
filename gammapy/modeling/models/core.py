@@ -323,7 +323,7 @@ class Models(collections.abc.MutableSequence):
             self.write_covariance(base_path / filecovar, **kwargs)
             self._covar_file = filecovar
 
-        path.write_text(self.to_yaml())
+        path.write_text(self.to_yaml(full_output))
 
     def to_yaml(self, full_output=False):
         """Convert to YAML string."""
