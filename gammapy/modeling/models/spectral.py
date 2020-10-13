@@ -859,10 +859,10 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
 
 
 class PiecewiseNormSpectralModel(SpectralModel):
-    """ Piecewise broken power-law spectral model
-       with renormalization at fixed energy nodes.
+    """ Piecewise spectral correction
+       with a free normalization at each fixed energy nodes.
        
-       For more information see :ref:`piecewise-broken-powerlaw-norm-spectral`.
+       For more information see :ref:`piecewise-norm-spectral`.
 
     Parameters
     ----------
