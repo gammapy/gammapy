@@ -262,7 +262,7 @@ class PSFMap(IRFMap):
         )
 
     @classmethod
-    def from_energy_dependent_table_psf(cls, table_psf):
+    def from_energy_dependent_table_psf(cls, table_psf, geom=None):
         """Create PSF map from table PSF object.
 
         Helper function to create an allsky PSF map from
@@ -278,9 +278,10 @@ class PSFMap(IRFMap):
         psf_map : `PSFMap`
             Point spread function map.
         """
-        geom = WcsGeom.create(
-            npix=(2, 1), proj="CAR", binsz=180, axes=[table_psf.rad_axis, table_psf.energy_axis_true]
-        )
+        if geom is None:
+            geom = WcsGeom.create(
+                npix=(2, 1), proj="CAR", binsz=180, axes=[table_psf.rad_axis, table_psf.energy_axis_true]
+            )
         coords = geom.get_coord()
 
         # TODO: support broadcasting in .evaluate()

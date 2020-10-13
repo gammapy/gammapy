@@ -2246,6 +2246,7 @@ class MapEvaluator:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
 
         self.evaluation_mode = evaluation_mode
+        self.psf_after_edisp = False
 
         # TODO: this is preliminary solution until we have further unified the model handling
         if isinstance(self.model, BackgroundModel) or self.model.spatial_model is None:
@@ -2294,6 +2295,7 @@ class MapEvaluator:
             position = self.model.position
             separation = self._init_position.separation(position)
             update = separation > (self.model.evaluation_radius + CUTOUT_MARGIN)
+
         return update
 
     def update(self, exposure, psf, edisp, geom):
@@ -2322,8 +2324,15 @@ class MapEvaluator:
             )
 
         if isinstance(psf, PSFMap):
+            energy_axis_psf = psf.psf_map.geom.axes["energy_true"]
+            if energy_axis.is_aligned(energy_axis_psf):
+                geom = geom.to_image()
+                self.psf_after_edisp = True
+            else:
+                geom = exposure.geom
+
             # lookup psf
-            self.psf = psf.get_psf_kernel(self.model.position, geom=exposure.geom)
+            self.psf = psf.get_psf_kernel(self.model.position, geom=geom)
         else:
             self.psf = psf
 
@@ -2447,6 +2456,23 @@ class MapEvaluator:
 
         return npred
 
+    # TODO: remove again if possible...
+    def _compute_npred_psf_after_edisp(self):
+        if isinstance(self.model, BackgroundModel):
+            return self.model.evaluate()
+
+        flux = self.compute_flux()
+
+        npred = self.apply_exposure(flux)
+
+        if self.model.apply_irf["edisp"]:
+            npred = self.apply_edisp(npred)
+
+        if self.model.apply_irf["psf"]:
+            npred = self.apply_psf(npred)
+
+        return npred
+
     def compute_npred(self):
         """Evaluate model predicted counts.
 
@@ -2455,6 +2481,9 @@ class MapEvaluator:
         npred : `~gammapy.maps.Map`
             Predicted counts on the map (in reco energy bins)
         """
+        if self.psf_after_edisp:
+            return self._compute_npred_psf_after_edisp()
+
         if self.parameters_changed or not self.use_cache:
             self._compute_npred.cache_clear()
 
