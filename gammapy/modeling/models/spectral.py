@@ -858,7 +858,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
         return pwl * brk
 
 
-class PiecewiseBrokenPowerLawNormSpectralModel(SpectralModel):
+class PiecewiseNormSpectralModel(SpectralModel):
     """ Piecewise broken power-law spectral model
        with renormalization at fixed energy nodes.
        
@@ -877,7 +877,7 @@ class PiecewiseBrokenPowerLawNormSpectralModel(SpectralModel):
         norms argument is ignored if parameters argument is defined.
     """
 
-    tag = ["PiecewiseBrokenPowerLawNormSpectralModel", "pbpl-norm"]
+    tag = ["PiecewiseNormSpectralModel", "pbpl-norm"]
 
     def __init__(self, energy, norms=None, parameters=None):
         self._energy = energy
