@@ -115,7 +115,7 @@ class Model:
             names = self.parameters.names
             for k, name in enumerate(names):
                 init = base.__dict__[name].to_dict()
-                for item in ["min", "max", "error"]:
+                for item in ["min", "max", "frozen", "error"]:
                     if params[k][item] == init[item] or np.isnan(init[item]):
                         del params[k][item]
         return {"type": tag, "parameters": params}

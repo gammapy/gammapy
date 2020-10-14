@@ -238,8 +238,8 @@ def test_simplified_output():
     model = PowerLawSpectralModel()
     full = model.to_dict(full_output=True)
     simplified = model.to_dict()
-    for k, name in enumerate(model.parameters.names):
-        for item in ["min", "max", "error"]:
+    for k, _ in enumerate(model.parameters.names):
+        for item in ["min", "max", "frozen", "error"]:
             assert item in full["parameters"][k]
             assert item not in simplified["parameters"][k]
 
